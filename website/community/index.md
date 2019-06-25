@@ -58,13 +58,13 @@ permalink: /community/index.html
         <div class="col-sm-6 col-md-6">
             <h2> Events and Conferences </h2>
             
-            <p >Events</p>
-            <p style="line-height:5px;"><a href="https://www.huodongxing.com/event/4489409598500">Apache Kylin Meetup @Chengdu</a></p>
-            <p style="line-height:5px;"><a href="https://www.huodongxing.com/event/7484371439700">Apache Kylin Meetup @Beijing</a></p>
+            <p style="line-height:3px;">Events</p>
+            <p style="line-height:3px;"><a href="https://www.huodongxing.com/event/4489409598500">Apache Kylin Meetup @Chengdu</a></p>
+            <p><a href="https://www.huodongxing.com/event/7484371439700">Apache Kylin Meetup @Beijing</a></p>
             
-            <p>Conferences</p>
-            <p style="line-height:5px;"><a href="https://berlinbuzzwords.de/19/session/accelerate-big-data-analytics-apache-kylin">Accelerate big data analytics with Apache Kylin</a></p>
-            <p style="line-height:5px;"><a href="https://conferences.oreilly.com/strata/strata-ny/public/schedule/speaker/313314">Refactor your data warehouse with mobile analytics products</a></p>
+            <p style="line-height:3px;">Conferences</p>
+            <p style="line-height:3px;"><a href="https://berlinbuzzwords.de/19/session/accelerate-big-data-analytics-apache-kylin">Accelerate big data analytics with Apache Kylin</a></p>
+            <p><a href="https://conferences.oreilly.com/strata/strata-ny/public/schedule/speaker/313314">Refactor your data warehouse with mobile analytics products</a></p>
 
             <p><a href="http://kyligence-apache-kylin.mikecrm.com/SJFewHC">Propose a talk</a></p>
             <p><a href="http://kylin.apache.org/docs/gettingstarted/events.html">More Events and Conferences</a></p>
