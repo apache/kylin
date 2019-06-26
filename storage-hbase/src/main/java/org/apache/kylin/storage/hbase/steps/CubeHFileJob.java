@@ -53,8 +53,6 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Locale;
-
 import static org.apache.hadoop.hbase.HBaseConfiguration.merge;
 
 /**
@@ -106,7 +104,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
             Configuration hbaseConf = HBaseConfiguration.create(getConf());
 
-            String hTableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase(Locale.ROOT);
+            String hTableName = getOptionValue(OPTION_HTABLE_NAME);
             connection = ConnectionFactory.createConnection(hbaseConf);
             Table table = connection.getTable(TableName.valueOf(hTableName));
             RegionLocator regionLocator = connection.getRegionLocator(TableName.valueOf(hTableName));
