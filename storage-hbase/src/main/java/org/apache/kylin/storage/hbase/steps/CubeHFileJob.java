@@ -105,7 +105,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
             Configuration hbaseConf = HBaseConfiguration.create(getConf());
 
-            String hTableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase(Locale.ROOT);
+            String hTableName = getOptionValue(OPTION_HTABLE_NAME);
             connection = ConnectionFactory.createConnection(hbaseConf);
             Table table = connection.getTable(TableName.valueOf(hTableName));
             RegionLocator regionLocator = connection.getRegionLocator(TableName.valueOf(hTableName));
