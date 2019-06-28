@@ -31,7 +31,7 @@ Kylin JDBC 驱动程序, `kylin-jdbc-<version>.jar`, 在 Kylin 二进制包的 "
 
 #### ODBC 驱动程序
 
-Apache Kylin 不再提供预先构建的 ODBC 驱动程序。你可以自行从源代码来编译构建 (在 "odbc" 子目录)。请阅读此[通知](http://apache-kylin.74782.x6.nabble.com/Kylin-ODBC-driver-is-removed-from-download-page-td12928.html)。
+Apache Kylin 不再提供预先构建的 ODBC 驱动程序。你可以自行从源代码来编译构建 (在 "odbc" 子目录)，或者从第三方厂商获得。请阅读此[通知](http://apache-kylin.74782.x6.nabble.com/Kylin-ODBC-driver-is-removed-from-download-page-td12928.html)。
 
 #### 以前的版本  
 Apache Kylin的旧版本可以从 [https://archive.apache.org/dist/kylin/](https://archive.apache.org/dist/kylin/) 下载。

@@ -132,4 +132,6 @@ $ python
      u'KYLIN_STREAMING_TABLE']
 ```
 
+### Use Python for Data Science with Apache Kylin
 
+Please refer to the blog [Use Python for Data Science with Apache Kylin](/blog/2019/06/26/use-python-for-data-science-with-apache-kylin/).

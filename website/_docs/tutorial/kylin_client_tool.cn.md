@@ -121,3 +121,7 @@ kylin://<username>:<password>@<hostname>:<port>/<project>?version=<v1|v2>&prefix
      u'KYLIN_SALES',
      u'KYLIN_STREAMING_TABLE']
 ```
+
+### 使用 Python 和 Apache Kylin 做数据科学分析 
+
+请参考此博客：[Use Python for Data Science with Apache Kylin](/blog/2019/06/26/use-python-for-data-science-with-apache-kylin/).

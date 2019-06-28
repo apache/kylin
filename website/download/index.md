@@ -32,7 +32,7 @@ Kylin JDBC Driver, `kylin-jdbc-<version>.jar`, is in the "lib" folder of the bin
 
 #### ODBC Driver
 
-Apache Kylin no longer provides the download for pre-built ODBC driver binary package. You can compile it from the source code (in the "odbc" sub-folder). Read this [announcement](http://apache-kylin.74782.x6.nabble.com/Kylin-ODBC-driver-is-removed-from-download-page-td12928.html).
+Apache Kylin no longer provides the download for pre-built ODBC driver binary package. You can compile it from the source code (in the "odbc" sub-folder), or get from a vendor. Read this [announcement](http://apache-kylin.74782.x6.nabble.com/Kylin-ODBC-driver-is-removed-from-download-page-td12928.html).
 
 #### Previous Release
 
