@@ -83,7 +83,7 @@ public class BuildCubeWithEngine {
     private CubeManager cubeManager;
     private CubeDescManager cubeDescManager;
     private DefaultScheduler scheduler;
-    protected ExecutableManager jobService;
+    private ExecutableManager jobService;
     private static boolean fastBuildMode = false;
     private static int engineType;
 
@@ -131,8 +131,6 @@ public class BuildCubeWithEngine {
         String specifiedEngineType = System.getProperty("engineType");
         if (StringUtils.isNotEmpty(specifiedEngineType)) {
             engineType = Integer.parseInt(specifiedEngineType);
-        } else {
-            engineType = 2;
         }
 
         System.setProperty(KylinConfig.KYLIN_CONF, confDir);
@@ -195,6 +193,9 @@ public class BuildCubeWithEngine {
         }
 
         cubeDescManager = CubeDescManager.getInstance(kylinConfig);
+
+        // update enginType
+        updateCubeEngineType(Lists.newArrayList("ci_inner_join_cube", "ci_left_join_cube"));
     }
 
     public void after() {
@@ -353,12 +354,15 @@ public class BuildCubeWithEngine {
         return doBuildAndMergeOnCube(cubeName);
     }
 
-    @SuppressWarnings("unused")
-    private void updateCubeEngineType(String cubeName) throws IOException {
-        CubeDesc cubeDesc = cubeDescManager.getCubeDesc(cubeName);
-        if (cubeDesc.getEngineType() != engineType) {
-            cubeDesc.setEngineType(engineType);
-            cubeDescManager.updateCubeDesc(cubeDesc);
+    private void updateCubeEngineType(List<String> cubeNames) throws IOException {
+        if (engineType != 0) {
+            for(String cubeName : cubeNames) {
+                CubeDesc cubeDesc = cubeDescManager.getCubeDesc(cubeName);
+                if (cubeDesc.getEngineType() != engineType) {
+                    cubeDesc.setEngineType(engineType);
+                    cubeDescManager.updateCubeDesc(cubeDesc);
+                }
+            }
         }
     }
 
