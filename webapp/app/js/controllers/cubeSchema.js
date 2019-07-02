@@ -129,7 +129,8 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
 
 
-    $scope.allCubes = [];
+    $scope.allCubeNames = [];
+    $scope.cubeService = CubeService;
 
     $scope.getTypeVersion=function(typename){
       var searchResult=/\[v(\d+)\]/.exec(typename);
@@ -151,6 +152,11 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     }
 
     $scope.$watch('cubeMetaFrame', function (newValue, oldValue) {
+        if(($scope.state.mode === "edit") && ($scope.cubeMode=="addNewCube")){
+          $scope.getAllCubeNames();
+        }
+
+
         if(!newValue){
             return;
         }
@@ -160,17 +166,19 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     });
 
-    var queryParam = {offset: 0, limit: 65535};
-
-    CubeService.list(queryParam, function (all_cubes) {
-      if($scope.allCubes.length > 0){
-        $scope.allCubes.splice(0,$scope.allCubes.length);
+    $scope.getAllCubeNames = function(){
+      if($scope.allCubeNames.length > 0){
+        $scope.allCubeNames.splice(0,$scope.allCubeNames.length);
       }
 
-      for (var i = 0; i < all_cubes.length; i++) {
-        $scope.allCubes.push(all_cubes[i].name.toUpperCase());
-      }
-    });
+      var queryParam = {offset: 0, limit: 65535};
+      CubeService.list(queryParam, function (all_cubes) {
+        for (var i = 0; i < all_cubes.length; i++) {
+          $scope.allCubeNames.push(all_cubes[i].name.toUpperCase());
+        }
+      });
+    }
+
 
     // ~ public methods
     $scope.filterProj = function(project){
@@ -303,7 +311,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
   $scope.check_cube_info = function(){
 
-    if(($scope.state.mode === "edit") &&$scope.cubeMode=="addNewCube"&&($scope.allCubes.indexOf($scope.cubeMetaFrame.name.toUpperCase()) >= 0)){
+    if(($scope.state.mode === "edit") &&$scope.cubeMode=="addNewCube"&&($scope.allCubeNames.indexOf($scope.cubeMetaFrame.name.toUpperCase()) >= 0)){
       SweetAlert.swal('Oops...', "The cube named [" + $scope.cubeMetaFrame.name.toUpperCase() + "] already exists", 'warning');
       return false;
     }
