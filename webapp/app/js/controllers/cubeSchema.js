@@ -148,12 +148,14 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     }
 
     $scope.$watch('cubeMetaFrame', function (newValue, oldValue) {
-        if(($scope.state.mode === "edit") && ($scope.cubeMode=="addNewCube")){
+        if (($scope.state.mode === "edit") && ($scope.cubeMode == "addNewCube")) {
           $scope.getAllCubeNames();
         }
+
         if(!newValue){
             return;
         }
+        
         if ($scope.cubeMode=="editExistCube"&&newValue && !newValue.project) {
             initProject();
         }
@@ -171,10 +173,11 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
     };
 
-    $scope.getAllCubeNames = function(){
-      if($scope.allCubeNames.length > 0){
-        $scope.allCubeNames.splice(0,$scope.allCubeNames.length);
+    $scope.getAllCubeNames = function () {
+      if ($scope.allCubeNames.length > 0) {
+        $scope.allCubeNames.splice(0, $scope.allCubeNames.length);
       }
+
       var queryParam = {offset: 0, limit: 65535};
       CubeService.list(queryParam, function (all_cubes) {
         for (var i = 0; i < all_cubes.length; i++) {
@@ -301,8 +304,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     };
 
   $scope.check_cube_info = function(){
-
-    if(($scope.state.mode === "edit") &&$scope.cubeMode=="addNewCube"&&($scope.allCubeNames.indexOf($scope.cubeMetaFrame.name.toUpperCase()) >= 0)){
+    if(($scope.state.mode === "edit") && ($scope.cubeMode=="addNewCube") && ($scope.allCubeNames.indexOf($scope.cubeMetaFrame.name.toUpperCase()) >= 0)){
       SweetAlert.swal('Oops...', "The cube named [" + $scope.cubeMetaFrame.name.toUpperCase() + "] already exists", 'warning');
       return false;
     }
