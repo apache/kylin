@@ -60,7 +60,7 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
             List<RealizationEntry> realizationEntries = project.getRealizationEntries();
             String lookupTableName = olapContext.firstTableScan.getTableName();
             CubeManager cubeMgr = CubeManager.getInstance(cube.getConfig());
-            cube = cubeMgr.findLatestSnapshot(realizationEntries, lookupTableName);
+            cube = cubeMgr.findLatestSnapshot(realizationEntries, lookupTableName, cube);
             olapContext.realization = cube;
         } else if (olapContext.realization instanceof HybridInstance) {
             final HybridInstance hybridInstance = (HybridInstance) olapContext.realization;
