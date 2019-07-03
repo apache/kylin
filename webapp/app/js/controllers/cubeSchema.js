@@ -36,6 +36,8 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     ];
 
     $scope.curStep = $scope.wizardSteps[0];
+    $scope.allCubeNames = [];
+    $scope.cubeService = CubeService;
 
   $scope.getTypeVersion=function(typename){
     var searchResult=/\[v(\d+)\]/.exec(typename);
@@ -126,12 +128,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     }
     return filterEncoding;
   }
-
-
-
-    $scope.allCubeNames = [];
-    $scope.cubeService = CubeService;
-
     $scope.getTypeVersion=function(typename){
       var searchResult=/\[v(\d+)\]/.exec(typename);
       if(searchResult&&searchResult.length){
@@ -155,8 +151,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         if(($scope.state.mode === "edit") && ($scope.cubeMode=="addNewCube")){
           $scope.getAllCubeNames();
         }
-
-
         if(!newValue){
             return;
         }
@@ -165,21 +159,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
 
     });
-
-    $scope.getAllCubeNames = function(){
-      if($scope.allCubeNames.length > 0){
-        $scope.allCubeNames.splice(0,$scope.allCubeNames.length);
-      }
-
-      var queryParam = {offset: 0, limit: 65535};
-      CubeService.list(queryParam, function (all_cubes) {
-        for (var i = 0; i < all_cubes.length; i++) {
-          $scope.allCubeNames.push(all_cubes[i].name.toUpperCase());
-        }
-      });
-    }
-
-
     // ~ public methods
     $scope.filterProj = function(project){
         return $scope.userService.hasRole('ROLE_ADMIN') || $scope.hasPermission(project,$scope.permissions.ADMINISTRATION.mask);
@@ -190,6 +169,18 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         if (index > -1) {
             arr.splice(index, 1);
         }
+    };
+
+    $scope.getAllCubeNames = function(){
+      if($scope.allCubeNames.length > 0){
+        $scope.allCubeNames.splice(0,$scope.allCubeNames.length);
+      }
+      var queryParam = {offset: 0, limit: 65535};
+      CubeService.list(queryParam, function (all_cubes) {
+        for (var i = 0; i < all_cubes.length; i++) {
+          $scope.allCubeNames.push(all_cubes[i].name.toUpperCase());
+        }
+      });
     };
 
     $scope.open = function ($event) {
