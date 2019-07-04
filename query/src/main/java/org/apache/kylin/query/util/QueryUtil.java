@@ -52,6 +52,21 @@ public class QueryUtil {
     static final String KEYWORD_WITH = "with";
     static final String KEYWORD_EXPLAIN = "explain";
 
+    private static String appendLimitOffsetToSql(String sql, int limit, int offset) {
+        String retSql = sql;
+        if (0 != limit && 0 != offset) {
+            retSql = "select * from (" + sql + ") limit " + String.valueOf(limit) +
+                    " offset " + String.valueOf(offset);
+        } else if (0 == limit && 0 != offset) {
+            retSql = "select * from (" + sql + ") offset " + String.valueOf(offset);
+        } else if (0 != limit && 0 == offset) {
+            retSql = "select * from (" + sql + ") limit " + String.valueOf(limit);
+        } else {
+            // do nothing
+        }
+        return retSql;
+    }
+
     /**
      * @deprecated Deprecated because of KYLIN-3594
      */
@@ -73,20 +88,24 @@ public class QueryUtil {
         Pattern pattern = Pattern.compile(suffixPattern);
         Matcher matcher = pattern.matcher(sql.toLowerCase(Locale.ROOT) + "  ");
 
+        int toAppendLimit = 0;
+        int toAppendOffset = 0;
         if (matcher.find()) {
             if (limit > 0 && matcher.group(1) == null) {
-                sql1 += ("\nLIMIT " + limit);
+                toAppendLimit = limit;
             }
             if (offset > 0 && matcher.group(2) == null) {
-                sql1 += ("\nOFFSET " + offset);
+                toAppendOffset = offset;
             }
         }
 
         // https://issues.apache.org/jira/browse/KYLIN-2649
         if (kylinConfig.getForceLimit() > 0 && limit <= 0 && matcher.group(1) == null
                 && sql1.toLowerCase(Locale.ROOT).matches("^select\\s+\\*\\p{all}*")) {
-            sql1 += ("\nLIMIT " + kylinConfig.getForceLimit());
+            toAppendLimit = kylinConfig.getForceLimit();
         }
+
+        sql1 = appendLimitOffsetToSql(sql1, toAppendLimit, toAppendOffset);
 
         // customizable SQL transformation
         if (queryTransformers == null) {
