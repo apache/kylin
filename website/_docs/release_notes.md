@@ -71,6 +71,32 @@ Bug
 * [KYLIN-3922] - Fail to update coprocessor when run DeployCoprocessorCLI
 * [KYLIN-3923] - UT GeneralColumnDataTest fail
 
+## v2.6.3 - 2019-07-06
+_Tag:_ [kylin-2.6.3](https://github.com/apache/kylin/tree/kylin-2.6.3)
+This is a bugfix release after 2.6.2, with 7 enhancements and 9 bug fixes.
+
+__Improvement__
+
+* [KYLIN-4024] - Support pushdown to Presto
+* [KYLIN-3977] - Avoid mistaken deleting dicts by storage cleanup while building jobs are running
+* [KYLIN-4023] - Convert to local time for column with timestamp or date type of queries by Jdbc
+* [KYLIN-3893] - Cube build failed for wrong row key column description
+* [KYLIN-4020] - Add  check for the input of fix_length rowkey encoding
+* [KYLIN-3998] - Make "bpus-min-benefit-ratio" configurable in cube planner phase 1
+* [KYLIN-4025] - Add detail exception in kylin http response
+
+__Bug Fix__
+
+* [KYLIN-4015] - Fix build cube error at the "Build UHC Dictionary" step
+* [KYLIN-4022] - Error with message "Unrecognized column type: DECIMAL(xx,xx)" happens when do query pushdown
+* [KYLIN-3994] - Storage cleanup job may delete data of newly built segment because of cube cache in CubeManager
+* [KYLIN-2620] - Result of sum measure may by replaced by the TopN measure with the same column during query
+* [KYLIN-4041] - Concat function with null value does not work correctly
+* [KYLIN-3978] - InternalErrorException happens for queries with precise count distinct measures
+* [KYLIN-3845] - Streaming cube build error if the Kafka data source lacks selected dimensions or metrics
+* [KYLIN-3980] - Cube planner cuboid id error there are too many dimensions
+* [KYLIN-4049] - Storage should be cleaned after cube refreshing with config kylin.storage.clean-after-delete-operation set to true
+
 ## v2.6.2 - 2019-05-19
 _Tag:_ [kylin-2.6.2](https://github.com/apache/kylin/tree/kylin-2.6.2)
 This is a bugfix release after 2.6.1, with 9 enhancements and 27 bug fixes.
