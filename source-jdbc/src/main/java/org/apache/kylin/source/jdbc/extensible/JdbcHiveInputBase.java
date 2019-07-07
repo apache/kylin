@@ -20,6 +20,7 @@ package org.apache.kylin.source.jdbc.extensible;
 
 import org.apache.hadoop.util.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.SourceDialect;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -75,17 +76,26 @@ public class JdbcHiveInputBase extends org.apache.kylin.source.jdbc.JdbcHiveInpu
             splitDatabase = splitColRef.getColumnDesc().getTable().getDatabase().toLowerCase(Locale.ROOT);
 
             //using sqoop to extract data from jdbc source and dump them to hive
+            boolean isPostgresql = config.getJdbcSourceDialect().equals(SourceDialect.POSTGRESQL.source);
             String selectSql = JoinedFlatTable.generateSelectDataStatement(flatDesc, true, new String[] { partCol });
-            selectSql = escapeQuotationInSql(dataSource.convertSql(selectSql));
+            if (!isPostgresql) {
+                selectSql = escapeQuotationInSql(dataSource.convertSql(selectSql));
+            }
 
             String hiveTable = flatDesc.getTableName();
             String sqoopHome = config.getSqoopHome();
             String filedDelimiter = config.getJdbcSourceFieldDelimiter();
             int mapperNum = config.getSqoopMapperNum();
 
-            String bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM `%s`.%s as `%s`", splitColumn,
-                    splitColumn, splitDatabase, splitTable, splitTableAlias);
-            bquery = dataSource.convertSql(bquery);
+            String bquery;
+            if (!isPostgresql) {
+                bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM `%s`.%s as `%s`",
+                        splitColumn, splitColumn, splitDatabase, splitTable, splitTableAlias);
+                bquery = dataSource.convertSql(bquery);
+            } else {
+                bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM %s.%s as %s",
+                        splitColumn, splitColumn, splitDatabase, splitTable, splitTableAlias);
+            }
             if (partitionDesc.isPartitioned()) {
                 SegmentRange segRange = flatDesc.getSegRange();
                 if (segRange != null && !segRange.isInfinite()) {
@@ -101,7 +111,9 @@ public class JdbcHiveInputBase extends org.apache.kylin.source.jdbc.JdbcHiveInpu
             }
             bquery = escapeQuotationInSql(bquery);
 
-            splitColumn = escapeQuotationInSql(dataSource.convertColumn(splitColumn, FlatTableSqlQuoteUtils.getQuote()));
+            if (!isPostgresql) {
+                splitColumn = escapeQuotationInSql(dataSource.convertColumn(splitColumn, FlatTableSqlQuoteUtils.getQuote()));
+            }
 
             String cmd = StringUtils.format(
                     "--connect \"%s\" --driver %s --username %s --password %s --query \"%s AND \\$CONDITIONS\" "

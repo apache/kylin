@@ -36,12 +36,14 @@ public enum SourceDialect {
 
     VERTICA("vertica"),
 
+    POSTGRESQL("postgresql"),
+
     /**
      * Others
      */
     UNKNOWN("unknown");
 
-    String source;
+    public String source;
 
     SourceDialect(String source) {
         this.source = source;
