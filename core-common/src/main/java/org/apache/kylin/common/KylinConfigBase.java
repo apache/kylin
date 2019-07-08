@@ -2670,4 +2670,12 @@ public abstract class KylinConfigBase implements Serializable {
     public int getDefaultTimeFilter() {
         return Integer.parseInt(getOptional("kylin.web.default-time-filter", "2"));
     }
+
+    public boolean jobStatusWriteKafka() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.job-status.write.kafka", FALSE));
+    }
+
+    public Map<String, String> getJobStatusKafkaConfig() {
+        return getPropertiesByPrefix("kylin.engine.job-status.kafka.");
+    }
 }
