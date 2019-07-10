@@ -7,7 +7,7 @@ permalink: /cn/development/dev_env.html
 
 开发者想要在他们的开发机器上运行 Kylin 测试用例或应用。
 
-跟随这个教程，您可以通过运行一个具体测试样例构建 Kylin 测试 cubes，且您能针对已构建的 cube 进一步运行其它测试样例
+跟随这个教程，您可以通过运行一个具体测试样例构建 Kylin 测试 cubes，且您能针对已构建的 cube 进一步运行其它测试样例。
 
 ## Hadoop 客户端环境
 
@@ -83,25 +83,30 @@ chmod 777 /hadoop/hbase/local/jars
 git clone https://github.com/apache/kylin.git
 {% endhighlight %}
 	
-将 Kylin 工件安装到 maven 仓库
+将 Kylin 工件安装到 maven 仓库：
 
 {% highlight Groff markup %}
 mvn clean install -DskipTests
 {% endhighlight %}
+如果遇到关于某个插件不存在或是没有找到的错误，请检查pom.xml文件中是否有插件的版本号被注释，并根据注释说明操作。
 
 ### 修改本地配置
 
-必须修改本地配置以指向 hadoop 沙箱（或 CLI）机器。 
+必须修改本地配置以指向 hadoop 沙箱（或 CLI）机器。你可以选择以下两种方式的其中一种：
+
+第一种方式：修改配置文件 
 
 * 在 **examples/test_case_data/sandbox/kylin.properties** 中
    * 找到 `sandbox` 并替换成您的 hadoop hosts（如果您使用的是 HDP 沙箱，这步可以跳过)
    * 找到 `kylin.job.use-remote-cli` 并修改为 "true"（在代码库中其默认值为 false，假定其运行在 hadoop CLI 上）
    * 找到 `kylin.job.remote.cli.username` 和 `kylin.job.remote.cli.password`，填写用于登录 hadoop 集群执行 hadoop 命令的用户名和密码；如果您使用的是 HDP 沙箱，默认用户名使 `root` 密码是 `hadoop`。
 
-* 在 **examples/test_case_data/sandbox** 中
+ * 在 **examples/test_case_data/sandbox** 中
    * 遍历每一个 xml 配置文件，找到所有的 `sandbox` 和 `sandbox.hortonworks.com`，替换成您的 hadoop hosts;（如果您使用的是 HDP 沙箱，这步可以跳过）
 
-host 替换的替代方法是更新您的 `hosts` 文件，来解决 `sandbox` 和 `sandbox.hortonworks.com` 映射为沙箱机器的 IP 的问题。
+第二种方式：替换host
+
+* 更新您的 `hosts` 文件，将`sandbox` 和 `sandbox.hortonworks.com` 映射为沙箱机器的 IP 。
 
 ### 运行单元测试
 运行单元测试来测试每一个 classes 基本功能的有效性。
@@ -149,7 +154,7 @@ git config --global url."git://".insteadOf https://
 bower.cmd --allow-root install
 {% endhighlight %}
 
-在 IDE，运行 `org.apache.kylin.rest.DebugTomcat` 将工作目录设置为 /server 文件夹，使用 "kylin-server" 的 classpath。对于 IntelliJ IDEA  2017 或之前的用户，需要修改 "server/kylin-server.iml" 文件，将所有的 "PROVIDED" 替换为 "COMPILE"；对于 IntelliJ IDEA 2018 用户，请勾选 “Include dependencies with 'Provided' scope”，否则可能会抛出 "java.lang.NoClassDefFoundError: org/apache/catalina/LifecycleListener" 错误。
+在 IDE，运行 `org.apache.kylin.rest.DebugTomcat`。将工作目录设置为 /server 文件夹，使用 "kylin-server" 的 classpath。在运行之前，请在IDE安装Scala插件，以保证能够编译spark代码。对于 IntelliJ IDEA  2017 或之前的用户，需要修改 "server/kylin-server.iml" 文件，将所有的 "PROVIDED" 替换为 "COMPILE"；对于 IntelliJ IDEA 2018 用户，请勾选 “Include dependencies with 'Provided' scope”，否则可能会抛出 "java.lang.NoClassDefFoundError: org/apache/catalina/LifecycleListener" 错误。
 
 调节 VM options，例如:
 
