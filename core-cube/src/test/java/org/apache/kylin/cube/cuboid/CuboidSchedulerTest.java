@@ -35,6 +35,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.cube.model.validation.rule.AggregationGroupRule;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -95,8 +96,13 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     private CubeDesc getFiftyDimCubeDesc() {
         return getCubeDescManager().getCubeDesc("fifty_dim");
     }
+
     private CubeDesc getFiftyDimFiveCapCubeDesc() {
-        return getCubeDescManager().getCubeDesc("fifty_dim_five_cap");
+        File metaFile = new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA, "cube_desc/fifty_dim_five_cap.json.bad");
+        assertTrue(metaFile.exists());
+        String path = metaFile.getPath();
+        metaFile.renameTo(new File(path.substring(0, path.length() - 4)));
+        return CubeDescManager.getInstance(getTestConfig()).getCubeDesc("fifty_dim_five_cap");
     }
 
     private CubeDesc getTwentyDimCubeDesc() {
@@ -319,19 +325,16 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testTooLargeCube() {
-        CubeDesc cube = getFiftyDimFiveCapCubeDesc();
+        CubeDesc cubeDesc = getFiftyDimFiveCapCubeDesc();
         AggregationGroupRule rule = new AggregationGroupRule();
         ValidateContext context = new ValidateContext();
-        rule.validate(cube, context);
+        rule.validate(cubeDesc, context);
         assertFalse(context.ifPass());
         assertEquals(1, context.getResults().length);
 
         try {
-            CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
-            long start = System.currentTimeMillis();
-            System.out.println(cuboidScheduler.getCuboidCount());
-            System.out.println("build tree takes: " + (System.currentTimeMillis() - start) + "ms");
-            assertTrue("Never be here", false);
+            cubeDesc.getInitialCuboidScheduler();
+            Assert.fail();
         } catch (RuntimeException e) {
         }
     }
