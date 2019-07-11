@@ -23,10 +23,10 @@
 
     <bean id="blockingReservoir" class="org.apache.kylin.metrics.lib.impl.BlockingReservoir">
         <constructor-arg index="0">
-            <value>10</value>
+            <value>100</value>
         </constructor-arg>
         <constructor-arg index="1">
-            <value>10</value>
+            <value>500</value>
         </constructor-arg>
         <constructor-arg index="2">
             <value>10</value>
