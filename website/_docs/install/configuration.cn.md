@@ -370,6 +370,7 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 ### 超高基维度的处理 {#uhc-config}
 
 Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一列分配一个 Reducer，对于超高基维度，可以通过以下参数增加 Reducer 个数
+
 - `kylin.engine.mr.build-uhc-dict-in-additional-step`：默认值为 FALSE，设置为 TRUE
 - `kylin.engine.mr.uhc-reducer-count`：默认值为 1，可以设置为 5，即为每个超高基的列分配 5 个 Reducer。
 
