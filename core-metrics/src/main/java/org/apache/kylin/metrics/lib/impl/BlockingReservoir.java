@@ -95,7 +95,7 @@ public class BlockingReservoir extends AbstractActiveReservoir {
         for (ActiveReservoirListener listener : listeners) {
             if (!notifyListenerOfUpdatedRecord(listener, records)) {
                 ifSucceed = false;
-                logger.warn("It fails to notify listener " + listener.toString() + " of updated records "
+                logger.warn("It fails to notify listener " + listener.toString() + " of updated record size "
                         + records.size());
             }
         }
@@ -109,7 +109,7 @@ public class BlockingReservoir extends AbstractActiveReservoir {
     }
 
     private boolean notifyListenerHAOfUpdatedRecord(List<Record> records) {
-        logger.info("The HA listener " + listenerHA.toString() + " for updated records " + records.size()
+        logger.info("The HA listener " + listenerHA.toString() + " for updated record size " + records.size()
                 + " will be started");
         if (!notifyListenerOfUpdatedRecord(listenerHA, records)) {
             logger.error("The HA listener also fails!!!");

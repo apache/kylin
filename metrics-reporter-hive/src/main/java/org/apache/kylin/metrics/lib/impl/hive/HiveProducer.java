@@ -57,18 +57,15 @@ public class HiveProducer {
     private static final Logger logger = LoggerFactory.getLogger(HiveProducer.class);
 
     private static final int CACHE_MAX_SIZE = 10;
-
-    private String metricType;
     private final HiveConf hiveConf;
     private final FileSystem fs;
     private final LoadingCache<Pair<String, String>, Pair<String, List<FieldSchema>>> tableFieldSchemaCache;
     private final String CONTENT_FILE_PREFIX;
-
+    private String metricType;
     private String prePartitionPath;
     private Path curPartitionContentPath;
     private int id = 0;
     private FSDataOutputStream fout;
-
 
     public HiveProducer(String metricType, Properties props) throws Exception {
         this(metricType, props, new HiveConf());
@@ -83,21 +80,28 @@ public class HiveProducer {
 
         fs = FileSystem.get(hiveConf);
 
-        tableFieldSchemaCache = CacheBuilder.newBuilder().removalListener(new RemovalListener<Pair<String, String>, Pair<String, List<FieldSchema>>>() {
-            @Override
-            public void onRemoval(RemovalNotification<Pair<String, String>, Pair<String, List<FieldSchema>>> notification) {
-                logger.info("Field schema with table " + ActiveReservoirReporter.getTableName(notification.getKey()) + " is removed due to " + notification.getCause());
-            }
-        }).maximumSize(CACHE_MAX_SIZE).build(new CacheLoader<Pair<String, String>, Pair<String, List<FieldSchema>>>() {
-            @Override
-            public Pair<String, List<FieldSchema>> load(Pair<String, String> tableName) throws Exception {
-                HiveMetaStoreClient metaStoreClient = new HiveMetaStoreClient(hiveConf);
-                String tableLocation = metaStoreClient.getTable(tableName.getFirst(), tableName.getSecond()).getSd().getLocation();
-                List<FieldSchema> fields = metaStoreClient.getFields(tableName.getFirst(), tableName.getSecond());
-                metaStoreClient.close();
-                return new Pair(tableLocation, fields);
-            }
-        });
+        tableFieldSchemaCache = CacheBuilder.newBuilder()
+                .removalListener(new RemovalListener<Pair<String, String>, Pair<String, List<FieldSchema>>>() {
+                    @Override
+                    public void onRemoval(
+                            RemovalNotification<Pair<String, String>, Pair<String, List<FieldSchema>>> notification) {
+                        logger.info(
+                                "Field schema with table " + ActiveReservoirReporter.getTableName(notification.getKey())
+                                        + " is removed due to " + notification.getCause());
+                    }
+                }).maximumSize(CACHE_MAX_SIZE)
+                .build(new CacheLoader<Pair<String, String>, Pair<String, List<FieldSchema>>>() {
+                    @Override
+                    public Pair<String, List<FieldSchema>> load(Pair<String, String> tableName) throws Exception {
+                        HiveMetaStoreClient metaStoreClient = new HiveMetaStoreClient(hiveConf);
+                        String tableLocation = metaStoreClient.getTable(tableName.getFirst(), tableName.getSecond())
+                                .getSd().getLocation();
+                        List<FieldSchema> fields = metaStoreClient.getFields(tableName.getFirst(),
+                                tableName.getSecond());
+                        metaStoreClient.close();
+                        return new Pair(tableLocation, fields);
+                    }
+                });
 
         String hostName;
         try {
@@ -133,7 +137,8 @@ public class HiveProducer {
     }
 
     private void write(RecordKey recordKey, Iterable<HiveProducerRecord> recordItr) throws Exception {
-        String tableLocation = tableFieldSchemaCache.get(new Pair<>(recordKey.database(), recordKey.table())).getFirst();
+        String tableLocation = tableFieldSchemaCache.get(new Pair<>(recordKey.database(), recordKey.table()))
+                .getFirst();
         StringBuilder sb = new StringBuilder();
         sb.append(tableLocation);
         for (Map.Entry<String, String> e : recordKey.partition().entrySet()) {
@@ -166,28 +171,31 @@ public class HiveProducer {
         }
 
         if (fout == null || prePartitionPath == null || prePartitionPath.compareTo(partitionPath.toString()) != 0) {
-          if (fout != null) {
-            closeFout();
-          }
+            if (fout != null) {
+                closeFout();
+            }
 
-          Path partitionContentPath = new Path(partitionPath, CONTENT_FILE_PREFIX + String.format(Locale.ROOT, "%04d", id));
-          logger.info("Try to use new partition content path: " + partitionContentPath.toString() + " for metric: " + metricType);
-          if (!fs.exists(partitionContentPath)) {
-            int nRetry = 0;
-            while (!fs.createNewFile(partitionContentPath) && nRetry++ < 5) {
-              if (fs.exists(partitionContentPath)) {
-                break;
-              }
-              Thread.sleep(500L * nRetry);
-            }
+            Path partitionContentPath = new Path(partitionPath,
+                    CONTENT_FILE_PREFIX + String.format(Locale.ROOT, "%04d", id));
+            logger.info("Try to use new partition content path: " + partitionContentPath.toString() + " for metric: "
+                    + metricType);
             if (!fs.exists(partitionContentPath)) {
-              throw new RuntimeException("Fail to create HDFS file: " + partitionContentPath + " after " + nRetry + " retries");
+                int nRetry = 0;
+                while (!fs.createNewFile(partitionContentPath) && nRetry++ < 5) {
+                    if (fs.exists(partitionContentPath)) {
+                        break;
+                    }
+                    Thread.sleep(500L * nRetry);
+                }
+                if (!fs.exists(partitionContentPath)) {
+                    throw new RuntimeException(
+                            "Fail to create HDFS file: " + partitionContentPath + " after " + nRetry + " retries");
+                }
             }
-          }
-          fout = fs.append(partitionContentPath);
-          prePartitionPath = partitionPath.toString();
-          curPartitionContentPath = partitionContentPath;
-          id = (id + 1) % 10;
+            fout = fs.append(partitionContentPath);
+            prePartitionPath = partitionPath.toString();
+            curPartitionContentPath = partitionContentPath;
+            id = (id + 1) % 10;
         }
 
         try {
@@ -196,30 +204,32 @@ public class HiveProducer {
                 fout.writeBytes(elem.valueToString() + "\n");
                 count++;
             }
-            logger.info("Success to write " + count + " metrics(" + metricType + ") to file " + curPartitionContentPath.toString());
+            logger.info("Success to write " + count + " metrics(" + metricType + ") to file "
+                    + curPartitionContentPath.toString());
         } catch (IOException e) {
-            logger.error("Fails to write metrics(" + metricType + ") to file " + curPartitionContentPath.toString() + " due to ", e);
+            logger.error("Fails to write metrics(" + metricType + ") to file " + curPartitionContentPath.toString()
+                    + " due to ", e);
             closeFout();
         }
     }
 
     private void closeFout() {
-      if (fout != null) {
-        try {
-          fout.close();
-        } catch (Exception e) {
-          logger.error("Close the path: " + curPartitionContentPath + " failed", e);
-          if (fs instanceof DistributedFileSystem) {
-            DistributedFileSystem hdfs = (DistributedFileSystem) fs;
+        if (fout != null) {
             try {
-              boolean recovered = hdfs.recoverLease(curPartitionContentPath);
-            } catch (Exception e1) {
-              logger.error("Recover lease for path: " + curPartitionContentPath + " failed", e1);
+                fout.close();
+            } catch (Exception e) {
+                logger.error("Close the path: " + curPartitionContentPath + " failed", e);
+                if (fs instanceof DistributedFileSystem) {
+                    DistributedFileSystem hdfs = (DistributedFileSystem) fs;
+                    try {
+                        boolean recovered = hdfs.recoverLease(curPartitionContentPath);
+                    } catch (Exception e1) {
+                        logger.error("Recover lease for path: " + curPartitionContentPath + " failed", e1);
+                    }
+                }
             }
-          }
         }
-      }
-      fout = null;
+        fout = null;
     }
 
     private HiveProducerRecord convertTo(Record record) throws Exception {
@@ -227,12 +237,15 @@ public class HiveProducer {
 
         //Set partition values for hive table
         Map<String, String> partitionKVs = Maps.newHashMapWithExpectedSize(1);
-        partitionKVs.put(TimePropertyEnum.DAY_DATE.toString(), rawValue.get(TimePropertyEnum.DAY_DATE.toString()).toString());
+        partitionKVs.put(TimePropertyEnum.DAY_DATE.toString(),
+                rawValue.get(TimePropertyEnum.DAY_DATE.toString()).toString());
 
-        return parseToHiveProducerRecord(HiveReservoirReporter.getTableFromSubject(record.getType()), partitionKVs, rawValue);
+        return parseToHiveProducerRecord(HiveReservoirReporter.getTableFromSubject(record.getType()), partitionKVs,
+                rawValue);
     }
 
-    public HiveProducerRecord parseToHiveProducerRecord(String tableName, Map<String, String> partitionKVs, Map<String, Object> rawValue) throws Exception {
+    public HiveProducerRecord parseToHiveProducerRecord(String tableName, Map<String, String> partitionKVs,
+            Map<String, Object> rawValue) throws Exception {
         Pair<String, String> tableNameSplits = ActiveReservoirReporter.getTableNameSplits(tableName);
         List<FieldSchema> fields = tableFieldSchemaCache.get(tableNameSplits).getSecond();
         List<Object> columnValues = Lists.newArrayListWithExpectedSize(fields.size());
@@ -240,7 +253,8 @@ public class HiveProducer {
             columnValues.add(rawValue.get(fieldSchema.getName().toUpperCase(Locale.ROOT)));
         }
 
-        return new HiveProducerRecord(tableNameSplits.getFirst(), tableNameSplits.getSecond(), partitionKVs, columnValues);
+        return new HiveProducerRecord(tableNameSplits.getFirst(), tableNameSplits.getSecond(), partitionKVs,
+                columnValues);
     }
 
 }

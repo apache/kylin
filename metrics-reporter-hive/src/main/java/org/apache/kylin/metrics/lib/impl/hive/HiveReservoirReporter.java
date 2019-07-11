@@ -110,11 +110,12 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
     private class HiveReservoirListener implements ActiveReservoirListener {
         private Properties props;
         private Map<String, HiveProducer> producerMap = new HashMap<String, HiveProducer>();
+
         private HiveReservoirListener(Properties props) throws Exception {
             this.props = props;
         }
 
-        private synchronized  HiveProducer getProducer(String metricType)throws Exception {
+        private synchronized HiveProducer getProducer(String metricType) throws Exception {
             HiveProducer producer = producerMap.get(metricType);
             if (producer == null) {
                 producer = new HiveProducer(metricType, props);
@@ -122,6 +123,7 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
             }
             return producer;
         }
+
         public boolean onRecordUpdate(final List<Record> records) {
             if (records.size() == 0) {
                 return true;
@@ -129,17 +131,17 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
             logger.info("Try to write " + records.size() + " records");
             try {
                 Map<String, List<Record>> queues = new HashMap<>();
-                for (Record record: records) {
-                  List<Record> recordQueues =  queues.get(record.getType());
-                  if (recordQueues == null) {
-                    recordQueues = new ArrayList<>();
-                    queues.put(record.getType(), recordQueues);
-                  }
-                  recordQueues.add(record);
+                for (Record record : records) {
+                    List<Record> recordQueues = queues.get(record.getType());
+                    if (recordQueues == null) {
+                        recordQueues = new ArrayList<>();
+                        queues.put(record.getType(), recordQueues);
+                    }
+                    recordQueues.add(record);
                 }
-                for (Map.Entry<String, List<Record>> entry: queues.entrySet()) {
-                  HiveProducer producer = getProducer(entry.getKey());
-                  producer.send(entry.getValue());
+                for (Map.Entry<String, List<Record>> entry : queues.entrySet()) {
+                    HiveProducer producer = getProducer(entry.getKey());
+                    producer.send(entry.getValue());
                 }
                 queues.clear();
             } catch (Exception e) {
@@ -161,7 +163,7 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
         }
 
         public void close() {
-            for(HiveProducer producer: producerMap.values()) {
+            for (HiveProducer producer : producerMap.values()) {
                 producer.close();
             }
             producerMap.clear();
