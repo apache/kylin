@@ -21,12 +21,13 @@ package org.apache.kylin.exception;
 /**
  *
  */
-public class QueryOnCubeException extends RuntimeException{
+public class QueryOnCubeException extends RuntimeException {
+
+    private static final long serialVersionUID = 1L;
 
     public QueryOnCubeException() {
         super();
     }
-
 
     public QueryOnCubeException(String s) {
         super(s);
@@ -36,10 +37,7 @@ public class QueryOnCubeException extends RuntimeException{
         super(message, cause);
     }
 
-
     public QueryOnCubeException(Throwable cause) {
         super(cause);
     }
-
-    private static final long serialVersionUID = 1L;
 }
