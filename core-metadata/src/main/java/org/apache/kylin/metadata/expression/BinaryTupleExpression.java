@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.kylin.common.util.DecimalUtil;
+import org.apache.kylin.exception.QueryOnCubeException;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
@@ -64,7 +65,7 @@ public class BinaryTupleExpression extends TupleExpression {
     private void verifyMultiply() {
         if (ExpressionColCollector.collectMeasureColumns(getLeft()).size() > 0 //
                 && ExpressionColCollector.collectMeasureColumns(getRight()).size() > 0) {
-            throw new IllegalArgumentException(
+            throw new QueryOnCubeException(
                     "That both of the two sides of the BinaryTupleExpression own columns is not supported for "
                             + operator.toString());
         }
@@ -72,7 +73,7 @@ public class BinaryTupleExpression extends TupleExpression {
 
     private void verifyDivide() {
         if (ExpressionColCollector.collectMeasureColumns(getRight()).size() > 0) {
-            throw new IllegalArgumentException(
+            throw new QueryOnCubeException(
                     "That the right side of the BinaryTupleExpression owns columns is not supported for "
                             + operator.toString());
         }
