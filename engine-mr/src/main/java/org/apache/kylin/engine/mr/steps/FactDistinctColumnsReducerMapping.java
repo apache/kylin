@@ -57,7 +57,7 @@ public class FactDistinctColumnsReducerMapping {
         for (TblColRef colRef : allCols) {
             if (dictCols.contains(colRef)) {
                 allDimDictCols.add(colRef);
-            } else if (dimCols.indexOf(colRef) >= 0){
+            } else if (dimCols.indexOf(colRef) >= 0) {
                 allDimDictCols.add(colRef);
             }
         }
@@ -92,15 +92,19 @@ public class FactDistinctColumnsReducerMapping {
             }
         }
     }
-    
+
     public List<TblColRef> getAllDimDictCols() {
         return allDimDictCols;
     }
-    
+
     public int getTotalReducerNum() {
         return nTotalReducers;
     }
-    
+
+    public int getDimReducerNum() {
+        return nDimReducers;
+    }
+
     public int getCuboidRowCounterReducerNum() {
         return nCuboidRowCounters;
     }
@@ -108,14 +112,16 @@ public class FactDistinctColumnsReducerMapping {
     public int getReducerIdForCol(int colId, Object fieldValue) {
         int begin = colIdToReducerBeginId[colId];
         int span = colIdToReducerBeginId[colId + 1] - begin;
-        
+
         if (span == 1)
             return begin;
-        
+
         int hash = fieldValue == null ? 0 : fieldValue.hashCode();
-        return begin + Math.abs(hash % span);
+        long absHash = Math.abs((long) hash);
+        long reducerId = begin + absHash % span;
+        return (int) reducerId;
     }
-    
+
     public int[] getAllRolePlaysForReducers() {
         return reducerRolePlay;
     }
@@ -123,7 +129,7 @@ public class FactDistinctColumnsReducerMapping {
     public int getRolePlayOfReducer(int reducerId) {
         return reducerRolePlay[reducerId % nTotalReducers];
     }
-    
+
     public boolean isCuboidRowCounterReducer(int reducerId) {
         return getRolePlayOfReducer(reducerId) == MARK_FOR_HLL_COUNTER;
     }
@@ -132,7 +138,7 @@ public class FactDistinctColumnsReducerMapping {
         int role = getRolePlayOfReducer(reducerId % nTotalReducers);
         if (role < 0)
             throw new IllegalStateException();
-        
+
         return allDimDictCols.get(role);
     }
 
@@ -145,5 +151,5 @@ public class FactDistinctColumnsReducerMapping {
         int rowCounterId = (int) (Math.abs(cuboidId) % nCuboidRowCounters);
         return nDimReducers + rowCounterId;
     }
-    
+
 }
