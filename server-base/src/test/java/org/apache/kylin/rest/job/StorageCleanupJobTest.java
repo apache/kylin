@@ -84,15 +84,15 @@ public class StorageCleanupJobTest {
         FileStatus f2 = mock(FileStatus.class);
         FileStatus f3 = mock(FileStatus.class);
         // only remove FINISHED and DISCARDED job intermediate files, so this exclude.
-        when(f1.getPath()).thenReturn(new Path("kylin-091a0322-249c-43e7-91df-205603ab6883"));
+        when(f1.getPath()).thenReturn(new Path("file:///tmp/examples/test_metadata/kylin-091a0322-249c-43e7-91df-205603ab6883"));
         // remove every segment working dir from deletion list, so this exclude.
-        when(f2.getPath()).thenReturn(new Path("kylin-bcf2f125-9b0b-40dd-9509-95ec59b31333"));
-        when(f3.getPath()).thenReturn(new Path("kylin-to-be-delete"));
+        when(f2.getPath()).thenReturn(new Path("file:///tmp/examples/test_metadata/kylin-bcf2f125-9b0b-40dd-9509-95ec59b31333"));
+        when(f3.getPath()).thenReturn(new Path("file:///tmp/examples/test_metadata/kylin-to-be-delete"));
         statuses[0] = f1;
         statuses[1] = f2;
         statuses[2] = f3;
 
-        when(mockFs.listStatus(p1)).thenReturn(statuses);
+        when(mockFs.listStatus(Path.getPathWithoutSchemeAndAuthority(p1))).thenReturn(statuses);
         Path p2 = new Path("file:///tmp/examples/test_metadata/kylin-to-be-delete");
         when(mockFs.exists(p2)).thenReturn(true);
     }
