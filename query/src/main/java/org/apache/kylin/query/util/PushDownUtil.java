@@ -42,6 +42,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.exception.QueryOnCubeException;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
@@ -143,7 +144,8 @@ public class PushDownUtil {
             return (rootCause != null //
                     && (rootCause instanceof NoRealizationFoundException //
                             || rootCause instanceof SqlValidatorException //
-                            || rootCause instanceof RoutingIndicatorException)); //
+                            || rootCause instanceof RoutingIndicatorException //
+                            || rootCause instanceof QueryOnCubeException)); //
         }
     }
 

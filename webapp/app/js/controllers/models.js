@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, modelConfig, ProjectModel, ModelService, MetaModel, modelsManager, cubesManager, TableModel, AccessService, MessageBox) {
+KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, modelConfig, ProjectModel, ModelService, MetaModel, modelsManager, cubesManager, TableModel, AccessService, MessageBox, CubeList) {
 
   //tree data
 
@@ -171,6 +171,34 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
     });
   }
 
+  $scope.listCubes = function(model) {
+    var defer = $q.defer();
+    var queryParam = {modelName: model.name};
+    if (!$scope.projectModel.isSelectedProjectValid() || !$scope.projectModel.projects.length) {
+      SweetAlert.swal('Oops...', "Please select target project.", 'info');
+      defer.resolve([]);
+      return defer.promise;
+    }
+
+    queryParam.projectName = $scope.projectModel.selectedProject;
+
+    $scope.loading = true;
+    CubeList.removeAll();
+    return CubeList.list(queryParam).then(function (resp) {
+      angular.forEach(CubeList.cubes, function(cube, index) {
+      })
+
+      $scope.loading = false;
+      defer.resolve(resp);
+      return defer.promise;
+
+    }, function(resp) {
+      $scope.loading = false;
+      defer.resolve([]);
+      SweetAlert.swal('Oops...', resp, 'error');
+      return defer.promise;
+    });
+  }
 
 
   $scope.openModal = function (model) {

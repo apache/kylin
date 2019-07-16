@@ -99,7 +99,7 @@ public class RestClient {
     public RestClient(String uri, Integer httpConnectionTimeoutMs, Integer httpSocketTimeoutMs) {
         Matcher m = fullRestPattern.matcher(uri);
         if (!m.matches())
-            throw new IllegalArgumentException("URI: " + uri + " -- does not match pattern " + fullRestPattern);
+            throw new IllegalArgumentException("URI: " + uri.replaceAll(":.+@", ":*****@") + " -- does not match pattern " + fullRestPattern);
 
         String user = m.group(1);
         String pwd = m.group(2);
