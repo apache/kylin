@@ -71,12 +71,8 @@ public class JDBCSqlQueryFormat {
         return getSqlFromProperties("format.sql.insert-without-content");
     }
 
-    public String getUpdateSqlWithoutContent() {
-        return getSqlFromProperties("format.sql.update-without-content");
-    }
-
-    public String getUpdateContentSql() {
-        return getSqlFromProperties("format.sql.update-content");
+    public String getUpdateContentAndTsSql() {
+        return getSqlFromProperties("format.sql.update-content-ts");
     }
 
     public String getTestCreateSql() {

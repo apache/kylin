@@ -456,7 +456,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
                                 int result = pstat.executeUpdate();
                                 if (result != 1)
                                     throw new SQLException();
-                            } catch (Exception e) {
+                            } catch (Throwable e) {
                                 pushdown.rollback();
                                 throw e;
                             } finally {
@@ -471,43 +471,32 @@ public class JDBCResourceStore extends PushdownResourceStore {
                         }
                     } else {
                         // Note the checkAndPut trick:
-                        // update {0} set {1}=? where {2}=? and {3}=?
-                        pstat = connection.prepareStatement(sqls.getUpdateSqlWithoutContent());
+                        // update {0} set {1}=?,{2}=? where {3}=? and {4}=?
+                        pstat = connection.prepareStatement(sqls.getUpdateContentAndTsSql());
                         pstat.setLong(1, newTS);
-                        pstat.setString(2, resPath);
-                        pstat.setLong(3, oldTS);
-                        int result = pstat.executeUpdate();
-                        if (result != 1) {
-                            long realTime = getResourceTimestamp(resPath);
-                            throw new WriteConflictException("Overwriting conflict " + resPath + ", expect old TS "
-                                    + oldTS + ", but it is " + realTime);
-                        }
-                        PreparedStatement pstat2 = null;
-                        try {
-                            // "update {0} set {1}=? where {3}=?"
-                            pstat2 = connection.prepareStatement(sqls.getUpdateContentSql());
-                            if (isContentOverflow(content, resPath)) {
-                                logger.debug("Overflow! resource path: {}, content size: {}", resPath, content.length);
-                                pstat2.setNull(1, Types.BLOB);
-                                pstat2.setString(2, resPath);
-                                RollbackablePushdown pushdown = writePushdown(resPath, ContentWriter.create(content));
-                                try {
-                                    int result2 = pstat2.executeUpdate();
-                                    if (result2 != 1)
-                                        throw new SQLException();
-                                } catch (Exception e) {
-                                    pushdown.rollback();
-                                    throw e;
-                                } finally {
-                                    pushdown.close();
-                                }
-                            } else {
-                                pstat2.setBinaryStream(1, new BufferedInputStream(new ByteArrayInputStream(content)));
-                                pstat2.setString(2, resPath);
-                                pstat2.executeUpdate();
+                        pstat.setString(3, resPath);
+                        pstat.setLong(4, oldTS);
+                        if (isContentOverflow(content, resPath)) {
+                            pstat.setNull(2, Types.BLOB);
+                            RollbackablePushdown pushdown = writePushdown(resPath, ContentWriter.create(content));
+                            try {
+                                int result = pstat.executeUpdate();
+                                if (result != 1)
+                                    throw new SQLException();
+                            } catch (Throwable e) {
+                                pushdown.rollback();
+                                throw e;
+                            } finally {
+                                pushdown.close();
                             }
-                        } finally {
-                            JDBCConnectionManager.closeQuietly(pstat2);
+                        } else {
+                            pstat.setBinaryStream(2, new BufferedInputStream(new ByteArrayInputStream(content)));
+                            int result = pstat.executeUpdate();
+                            if (result != 1) {
+                                long realTime = getResourceTimestamp(resPath);
+                                throw new WriteConflictException("Overwriting conflict " + resPath + ", expect old TS "
+                                        + oldTS + ", but it is " + realTime);
+                            }
                         }
                     }
                 }
