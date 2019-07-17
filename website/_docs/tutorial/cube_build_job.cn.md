@@ -21,7 +21,7 @@ since: v0.7.1
 
 3. 点击 `Submit` 提交请求。成功之后，你将会在 `Monitor` 页面看到新建的 job。
 
-   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/4 jobs-page.png)
+   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/4 jobs-page.PNG)
 
 4. 新建的 job 是 “pending” 状态；一会儿，它就会开始运行并且你可以通过刷新 web 页面或者点击刷新按钮来查看进度。
 
