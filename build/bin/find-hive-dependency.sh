@@ -37,7 +37,7 @@ else
     hive_env=`hive ${hive_conf_properties} -e set 2>&1 | grep 'env:CLASSPATH'`
 fi
 
-if [ -z $hive_env ]
+if [ -z "${hive_env}" ]
 then
     hive_permission=`hive ${hive_conf_properties} -e set 2>&1 | grep 'No valid credentials provided'`
     if [ -n "$hive_permission" ]
