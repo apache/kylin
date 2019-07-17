@@ -106,6 +106,7 @@ public class CubingJob extends DefaultChainedExecutable {
     private static final String DEPLOY_ENV_NAME = "envName";
     private static final String PROJECT_INSTANCE_NAME = "projectName";
     private static final String JOB_TYPE = "jobType";
+    private static final String SEGMENT_NAME = "segmentName";
 
     public static CubingJob createBuildJob(CubeSegment seg, String submitter, JobEngineConfig config) {
         return initCubingJob(seg, CubingJobTypeEnum.BUILD.toString(), submitter, config);
@@ -183,6 +184,10 @@ public class CubingJob extends DefaultChainedExecutable {
 
     public String getJobType() {
         return getParam(JOB_TYPE);
+    }
+
+    public String getSegmentName() {
+        return getParam(SEGMENT_NAME);
     }
 
     void setJobType(String jobType) {

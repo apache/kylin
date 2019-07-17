@@ -684,7 +684,7 @@ public class CubeService extends BasicService implements InitializingBean {
             try {
                 cube = getCubeManager().getCube(cubeName);
                 SegmentRange offsets = cube.autoMergeCubeSegments();
-                if (offsets != null) {
+                if (offsets != null && !isMergingJobBeenDiscarded(cube, cubeName, cube.getProject(), offsets)) {
                     CubeSegment newSeg = getCubeManager().mergeSegments(cube, null, offsets, true);
                     logger.debug("Will submit merge job on " + newSeg);
                     DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(newSeg, "SYSTEM");
@@ -697,6 +697,22 @@ public class CubeService extends BasicService implements InitializingBean {
             }
         }
     }
+
+    //Don't merge the job that has been discarded manually before
+    private boolean isMergingJobBeenDiscarded(CubeInstance cubeInstance, String cubeName, String projectName, SegmentRange offsets) {
+        SegmentRange.TSRange tsRange = new SegmentRange.TSRange((Long) offsets.start.v, (Long) offsets.end.v);
+        String segmentName = CubeSegment.makeSegmentName(tsRange, null, cubeInstance.getModel());
+        final List<CubingJob> jobInstanceList = jobService.listJobsByRealizationName(cubeName, projectName, EnumSet.of(ExecutableState.DISCARDED));
+        for (CubingJob cubingJob : jobInstanceList) {
+            if (cubingJob.getSegmentName().equals(segmentName)) {
+                logger.debug("Merge job {} has been discarded before, will not merge.", segmentName);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 
     public void validateCubeDesc(CubeDesc desc, boolean isDraft) {
         Message msg = MsgPicker.getMsg();
