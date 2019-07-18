@@ -155,7 +155,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         if(!newValue){
             return;
         }
-        
+
         if ($scope.cubeMode=="editExistCube"&&newValue && !newValue.project) {
             initProject();
         }
@@ -303,10 +303,18 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
     };
 
-  $scope.check_cube_info = function(){
-    if(($scope.state.mode === "edit") && ($scope.cubeMode=="addNewCube") && ($scope.allCubeNames.indexOf($scope.cubeMetaFrame.name.toUpperCase()) >= 0)){
-      SweetAlert.swal('Oops...', "The cube named [" + $scope.cubeMetaFrame.name.toUpperCase() + "] already exists", 'warning');
-      return false;
+  $scope.checkDuplicatedCubeName = function (cubeName) {
+    return ($scope.allCubeNames.indexOf(cubeName.toUpperCase())) >= 0;
+  }
+
+  $scope.check_cube_info = function () {
+    if (($scope.state.mode === "edit") && ($scope.cubeMode == "addNewCube")) {
+      // check duplicated cube name when add new cube.
+      var cubeName = $scope.cubeMetaFrame.name;
+      if ($scope.checkDuplicatedCubeName(cubeName)) {
+        SweetAlert.swal('Oops...', "The cube named [" + cubeName.toUpperCase() + "] already exists", 'warning');
+        return false;
+      }
     }
     // Update storage type according to the streaming table in model
     if(TableModel.selectProjectTables.some(function(table) {
