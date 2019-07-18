@@ -139,7 +139,8 @@ public class PushDownUtil {
         if (!isPushDownUpdateEnabled) {
             return rootCause != null //
                     && (rootCause instanceof NoRealizationFoundException //
-                            || rootCause instanceof RoutingIndicatorException); //
+                            || rootCause instanceof RoutingIndicatorException
+                            || rootCause instanceof QueryOnCubeException);
         } else {
             return (rootCause != null //
                     && (rootCause instanceof NoRealizationFoundException //
