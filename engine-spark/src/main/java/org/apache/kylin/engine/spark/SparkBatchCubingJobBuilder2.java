@@ -115,7 +115,7 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
         sparkExecutable.setParam(SparkFactDistinct.OPTION_STATS_SAMPLING_PERCENT.getOpt(), String.valueOf(config.getConfig().getCubingInMemSamplingPercent()));
 
         sparkExecutable.setJobId(jobId);
-        sparkExecutable.setName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
+        sparkExecutable.setName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS + ":" + seg.toString());
         sparkExecutable.setCounterSaveAs(CubingJob.SOURCE_RECORD_COUNT + "," + CubingJob.SOURCE_SIZE_BYTES, getCounterOutputPath(jobId));
 
         StringBuilder jars = new StringBuilder();
@@ -154,7 +154,7 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
 
         StringUtil.appendWithSeparator(jars, seg.getConfig().getSparkAdditionalJars());
         sparkExecutable.setJars(jars.toString());
-        sparkExecutable.setName(ExecutableConstants.STEP_NAME_BUILD_SPARK_CUBE);
+        sparkExecutable.setName(ExecutableConstants.STEP_NAME_BUILD_SPARK_CUBE + ":" + seg.toString());
     }
 
     public String getSegmentMetadataUrl(KylinConfig kylinConfig, String jobId) {

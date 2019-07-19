@@ -88,7 +88,7 @@ public class SparkBatchMergeJobBuilder2 extends JobBuilderSupport {
         sparkExecutable.setParam(SparkMergingDictionary.OPTION_OUTPUT_PATH_STAT.getOpt(), getStatisticsPath(jobID));
 
         sparkExecutable.setJobId(jobID);
-        sparkExecutable.setName(ExecutableConstants.STEP_NAME_MERGE_DICTIONARY);
+        sparkExecutable.setName(ExecutableConstants.STEP_NAME_MERGE_DICTIONARY + ":" + seg.toString());
         sparkExecutable.setSparkConfigName(ExecutableConstants.SPARK_SPECIFIC_CONFIG_NAME_MERGE_DICTIONARY);
 
         StringBuilder jars = new StringBuilder();
@@ -117,7 +117,7 @@ public class SparkBatchMergeJobBuilder2 extends JobBuilderSupport {
         sparkExecutable.setParam(SparkCubingMerge.OPTION_OUTPUT_PATH.getOpt(), outputPath);
 
         sparkExecutable.setJobId(jobID);
-        sparkExecutable.setName(ExecutableConstants.STEP_NAME_MERGE_CUBOID);
+        sparkExecutable.setName(ExecutableConstants.STEP_NAME_MERGE_CUBOID + ":" + seg.toString());
 
         StringBuilder jars = new StringBuilder();
 

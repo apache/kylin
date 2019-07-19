@@ -47,7 +47,7 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
     private static final Pattern HDFS_LOCATION = Pattern.compile("LOCATION \'(.*)\';");
 
     protected void createFlatHiveTable(KylinConfig config) throws IOException {
-        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(getName());
         hiveCmdBuilder.overwriteHiveProps(config.getHiveConfigOverride());
         hiveCmdBuilder.addStatement(getInitStatement());
         hiveCmdBuilder.addStatement(getCreateTableStatement());

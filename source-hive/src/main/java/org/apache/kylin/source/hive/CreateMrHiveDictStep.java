@@ -77,7 +77,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
                 stepLogger.log("zookeeper get lock costTime : " + ((System.currentTimeMillis() - lockStartTime) / 1000) + " s");
                 lock.lock(lockPath);
             }
-            final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+            final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(getName());
             hiveCmdBuilder.overwriteHiveProps(config.getHiveConfigOverride());
             hiveCmdBuilder.addStatement(getInitStatement());
 
