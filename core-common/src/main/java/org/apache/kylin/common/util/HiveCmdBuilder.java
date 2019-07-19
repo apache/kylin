@@ -44,9 +44,16 @@ public class HiveCmdBuilder {
     private final List<String> statements = Lists.newArrayList();
 
     public HiveCmdBuilder() {
+        this("");
+    }
+
+    public HiveCmdBuilder(String jobName) {
         kylinConfig = KylinConfig.getInstanceFromEnv();
         hiveConfProps = SourceConfigurationUtil.loadHiveConfiguration();
         hiveConfProps.putAll(kylinConfig.getHiveConfigOverride());
+        if (StringUtils.isNotEmpty(jobName)) {
+            addStatement("set mapred.job.name='" + jobName + "';");
+        }
     }
 
     public String build() {

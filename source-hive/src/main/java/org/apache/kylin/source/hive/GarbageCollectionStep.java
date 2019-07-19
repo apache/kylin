@@ -60,7 +60,7 @@ public class GarbageCollectionStep extends AbstractExecutable {
     private String cleanUpIntermediateFlatTable(KylinConfig config) throws IOException {
         String quoteCharacter = FlatTableSqlQuoteUtils.getQuote();
         StringBuffer output = new StringBuffer();
-        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(getName());
         final List<String> hiveTables = this.getIntermediateTables();
         if (!config.isHiveKeepFlatTable()) {
             for (String hiveTable : hiveTables) {

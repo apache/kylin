@@ -76,6 +76,7 @@ public class SparkExecutable extends AbstractExecutable {
         this.setParam(CLASS_NAME, className);
     }
 
+
     public void setJobId(String jobId) {
         this.setParam(JOB_ID, jobId);
     }
@@ -257,6 +258,10 @@ public class SparkExecutable extends AbstractExecutable {
             } else {
                 stringBuilder.append(
                         "export HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class org.apache.kylin.common.util.SparkEntry ");
+            }
+
+            if (getName() != null) {
+                stringBuilder.append("--name \"" + getName() + "\"");
             }
 
             Map<String, String> sparkConfs = config.getSparkConfigOverride();
