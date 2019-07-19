@@ -172,8 +172,8 @@ public class StreamingSegmentManager implements Closeable {
         latestEventIngestTime = currentTime;
         segment.addEvent(event);
         segment.setLastUpdateTime(currentTime);
-        if (event.getTimestamp() > latestEventTime) {
-            latestEventTime = event.getTimestamp();
+        if (eventTime > latestEventTime) {
+            latestEventTime = eventTime;
         }
         ingestCount.incrementAndGet();
         // update the segment start source position
@@ -431,8 +431,6 @@ public class StreamingSegmentManager implements Closeable {
 
     /**
      * get the smallest source offsets in all other segments that larger than the specified segment
-     * @param currSegment
-     * @return
      */
     public ISourcePosition getSmallestSourcePosition(StreamingCubeSegment currSegment) {
         List<ISourcePosition> allSegmentStartPositions = Lists.newArrayList();
@@ -558,7 +556,7 @@ public class StreamingSegmentManager implements Closeable {
 
     @Override
     public void close() {
-        logger.warn("Closing Streaming Cube store, cubeName=" + cubeName);
+        logger.warn("Closing Streaming Cube store, cubeName={}", cubeName);
         checkpoint();
         logger.warn("{} ingested {} , dropped {}, long latency {}", cubeName, ingestCount.get(), dropCounts.get(),
                 longLatencyInfo.getTotalLongLatencyEventCnt());
@@ -601,7 +599,7 @@ public class StreamingSegmentManager implements Closeable {
         }
         cp.setSegmentSourceStartPosition(segmentSourceStartPosStr);
         if (logger.isInfoEnabled()) {
-            logger.info("Print check point for cube " + cubeName + " ," + cp.toString());
+            logger.info("Print check point for cube {}", cubeName + " ," + cp.toString());
         }
 
         checkPointStore.saveCheckPoint(cp);
