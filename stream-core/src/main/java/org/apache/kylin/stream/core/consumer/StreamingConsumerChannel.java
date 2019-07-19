@@ -144,7 +144,8 @@ public class StreamingConsumerChannel implements Runnable {
 
     private void removeMetrics() {
         for (Map.Entry<Integer, Meter> meterEntry : eventConsumeMeters.entrySet()) {
-            StreamingMetrics.getInstance().getMetrics().remove(MetricRegistry.name(StreamingMetrics.CONSUME_RATE_PFX,
+            StreamingMetrics.getInstance().getMetricRegistry().remove(MetricRegistry
+                    .name(StreamingMetrics.CONSUME_RATE_PFX,
                     cubeName, String.valueOf(meterEntry.getKey())));
         }
     }

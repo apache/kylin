@@ -2200,6 +2200,18 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.stream.settled.storage", null);
     }
 
+    public String getStreamMetrics() {
+        return getOptional("kylin.stream.metrics.option", "");
+    }
+
+    public long getStreamMetricsInterval() {
+        return Long.parseLong(getOptional("kylin.stream.metrics.interval", "5"));
+    }
+
+    // ============================================================================
+    // Health Check CLI
+    // ============================================================================
+
     public int getWarningSegmentNum() {
         return Integer.parseInt(getOptional("kylin.tool.health-check.warning-segment-num", "-1"));
     }
