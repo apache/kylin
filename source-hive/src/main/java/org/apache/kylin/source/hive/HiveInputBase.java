@@ -91,8 +91,7 @@ public class HiveInputBase {
             // create global dict
             KylinConfig dictConfig = (flatDesc.getSegment()).getConfig();
             String[] mrHiveDictColumns = dictConfig.getMrHiveDictColumns();
-            if (Objects.nonNull(mrHiveDictColumns) && mrHiveDictColumns.length > 0
-                    && !"".equals(mrHiveDictColumns[0])) {
+            if (mrHiveDictColumns.length > 0) {
                 String globalDictDatabase = dictConfig.getMrHiveDictDB();
                 if (null == globalDictDatabase) {
                     throw new IllegalArgumentException("Mr-Hive Global dict database is null.");

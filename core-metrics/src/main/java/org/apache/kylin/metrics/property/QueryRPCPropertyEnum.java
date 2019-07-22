@@ -18,14 +18,24 @@
 
 package org.apache.kylin.metrics.property;
 
-import java.util.Locale;
-
 import com.google.common.base.Strings;
 
+/**
+ * Definition of Metrics dimension and measure for HBase RPC
+ */
 public enum QueryRPCPropertyEnum {
-    PROJECT("PROJECT"), REALIZATION("REALIZATION"), RPC_SERVER("RPC_SERVER"), EXCEPTION("EXCEPTION"), //
-    CALL_TIME("CALL_TIME"), SKIP_COUNT("COUNT_SKIP"), SCAN_COUNT("COUNT_SCAN"), RETURN_COUNT(
-            "COUNT_RETURN"), AGGR_FILTER_COUNT("COUNT_AGGREGATE_FILTER"), AGGR_COUNT("COUNT_AGGREGATE");
+
+    PROJECT("PROJECT"),
+    REALIZATION("REALIZATION"),
+    RPC_SERVER("RPC_SERVER"),
+    EXCEPTION("EXCEPTION"),
+
+    CALL_TIME("CALL_TIME"),
+    SKIP_COUNT("COUNT_SKIP"),
+    SCAN_COUNT("COUNT_SCAN"),
+    RETURN_COUNT("COUNT_RETURN"),
+    AGGR_FILTER_COUNT("COUNT_AGGREGATE_FILTER"),
+    AGGR_COUNT("COUNT_AGGREGATE");
 
     private final String propertyName;
 
@@ -38,7 +48,7 @@ public enum QueryRPCPropertyEnum {
             return null;
         }
         for (QueryRPCPropertyEnum property : QueryRPCPropertyEnum.values()) {
-            if (property.propertyName.equals(name.toUpperCase(Locale.ROOT))) {
+            if (property.propertyName.equalsIgnoreCase(name)) {
                 return property;
             }
         }

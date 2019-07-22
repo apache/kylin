@@ -109,7 +109,7 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
 
     private class HiveReservoirListener implements ActiveReservoirListener {
         private Properties props;
-        private Map<String, HiveProducer> producerMap = new HashMap<String, HiveProducer>();
+        private Map<String, HiveProducer> producerMap = new HashMap<>();
 
         private HiveReservoirListener(Properties props) throws Exception {
             this.props = props;
@@ -125,10 +125,10 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
         }
 
         public boolean onRecordUpdate(final List<Record> records) {
-            if (records.size() == 0) {
+            if (records.isEmpty()) {
                 return true;
             }
-            logger.info("Try to write " + records.size() + " records");
+            logger.info("Try to write {} records", records.size());
             try {
                 Map<String, List<Record>> queues = new HashMap<>();
                 for (Record record : records) {
