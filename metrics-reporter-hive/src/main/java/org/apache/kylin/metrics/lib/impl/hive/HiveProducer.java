@@ -55,12 +55,11 @@ import com.google.common.collect.Maps;
 public class HiveProducer {
 
     private static final Logger logger = LoggerFactory.getLogger(HiveProducer.class);
-
     private static final int CACHE_MAX_SIZE = 10;
     private final HiveConf hiveConf;
     private final FileSystem fs;
     private final LoadingCache<Pair<String, String>, Pair<String, List<FieldSchema>>> tableFieldSchemaCache;
-    private final String CONTENT_FILE_PREFIX;
+    private final String contentFilePrefix;
     private String metricType;
     private String prePartitionPath;
     private Path curPartitionContentPath;
@@ -99,7 +98,7 @@ public class HiveProducer {
                         List<FieldSchema> fields = metaStoreClient.getFields(tableName.getFirst(),
                                 tableName.getSecond());
                         metaStoreClient.close();
-                        return new Pair(tableLocation, fields);
+                        return new Pair<>(tableLocation, fields);
                     }
                 });
 
@@ -109,7 +108,7 @@ public class HiveProducer {
         } catch (UnknownHostException e) {
             hostName = "UNKNOWN";
         }
-        CONTENT_FILE_PREFIX = hostName + "-" + System.currentTimeMillis() + "-part-";
+        contentFilePrefix = hostName + "-" + System.currentTimeMillis() + "-part-";
     }
 
     public void close() {
@@ -137,6 +136,8 @@ public class HiveProducer {
     }
 
     private void write(RecordKey recordKey, Iterable<HiveProducerRecord> recordItr) throws Exception {
+
+        // Step 1: determine partitionPath by record 's RecordKey
         String tableLocation = tableFieldSchemaCache.get(new Pair<>(recordKey.database(), recordKey.table()))
                 .getFirst();
         StringBuilder sb = new StringBuilder();
@@ -148,6 +149,8 @@ public class HiveProducer {
             sb.append(e.getValue());
         }
         Path partitionPath = new Path(sb.toString());
+
+        // Step 2: create partition for hive table if not exists
         if (!fs.exists(partitionPath)) {
             StringBuilder hql = new StringBuilder();
             hql.append("ALTER TABLE ");
@@ -164,21 +167,22 @@ public class HiveProducer {
                 hql.append("='" + e.getValue() + "'");
             }
             hql.append(")");
+            logger.debug("create partition by {}.", hql);
             Driver driver = new Driver(hiveConf);
             SessionState.start(new CliSessionState(hiveConf));
             driver.run(hql.toString());
             driver.close();
         }
 
+        // Step 3: create path for new partition if it is the first time write metrics message or new partition should be used
         if (fout == null || prePartitionPath == null || prePartitionPath.compareTo(partitionPath.toString()) != 0) {
             if (fout != null) {
+                logger.debug("Flush output stream of previous partition path {}. Using a new one {}. ", prePartitionPath, partitionPath);
                 closeFout();
             }
 
-            Path partitionContentPath = new Path(partitionPath,
-                    CONTENT_FILE_PREFIX + String.format(Locale.ROOT, "%04d", id));
-            logger.info("Try to use new partition content path: " + partitionContentPath.toString() + " for metric: "
-                    + metricType);
+            Path partitionContentPath = new Path(partitionPath, contentFilePrefix + String.format(Locale.ROOT, "%04d", id));
+            logger.info("Try to use new partition content path: {} for metric: {}", partitionContentPath, metricType);
             if (!fs.exists(partitionContentPath)) {
                 int nRetry = 0;
                 while (!fs.createNewFile(partitionContentPath) && nRetry++ < 5) {
@@ -188,7 +192,7 @@ public class HiveProducer {
                     Thread.sleep(500L * nRetry);
                 }
                 if (!fs.exists(partitionContentPath)) {
-                    throw new RuntimeException(
+                    throw new IllegalStateException(
                             "Fail to create HDFS file: " + partitionContentPath + " after " + nRetry + " retries");
                 }
             }
@@ -198,14 +202,14 @@ public class HiveProducer {
             id = (id + 1) % 10;
         }
 
+        // Step 4: append record to HDFS without flush
         try {
             int count = 0;
             for (HiveProducerRecord elem : recordItr) {
                 fout.writeBytes(elem.valueToString() + "\n");
                 count++;
             }
-            logger.info("Success to write " + count + " metrics(" + metricType + ") to file "
-                    + curPartitionContentPath.toString());
+            logger.info("Success to write {} metrics ({}) to file {}", count, metricType, curPartitionContentPath);
         } catch (IOException e) {
             logger.error("Fails to write metrics(" + metricType + ") to file " + curPartitionContentPath.toString()
                     + " due to ", e);
@@ -256,5 +260,4 @@ public class HiveProducer {
         return new HiveProducerRecord(tableNameSplits.getFirst(), tableNameSplits.getSecond(), partitionKVs,
                 columnValues);
     }
-
 }

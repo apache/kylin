@@ -28,6 +28,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
+/**
+ * A Reservoir which don't staged metrics message at all, emit them in no time.
+ */
 public class InstantReservoir extends AbstractActiveReservoir {
 
     private static final Logger logger = LoggerFactory.getLogger(InstantReservoir.class);

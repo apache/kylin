@@ -20,6 +20,9 @@ package org.apache.kylin.metrics.lib;
 
 import java.util.Map;
 
+/**
+ * Metrics message
+ */
 public interface Record {
 
     /**

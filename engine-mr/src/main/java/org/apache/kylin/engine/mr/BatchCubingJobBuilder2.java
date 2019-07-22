@@ -49,7 +49,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
     }
 
     public CubingJob build() {
-        logger.info("MR_V2 new job to BUILD segment " + seg);
+        logger.info("MR_V2 new job to BUILD segment {}", seg);
 
         final CubingJob result = CubingJob.createBuildJob(seg, submitter, config);
         final String jobId = result.getId();

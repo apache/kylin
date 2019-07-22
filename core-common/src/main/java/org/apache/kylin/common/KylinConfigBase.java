@@ -556,12 +556,16 @@ public abstract class KylinConfigBase implements Serializable {
     // mr-hive dict
     // ============================================================================
 
+    /**
+     * @return  if mr-hive dict not enabled, return empty array;
+     *          else return array contains "{TABLE_NAME}_{COLUMN_NAME}"
+     */
     public String[] getMrHiveDictColumns() {
         String columnStr = getOptional("kylin.dictionary.mr-hive.columns", "");
-        if (!StringUtils.isEmpty(columnStr)) {
+        if (!columnStr.equals("")) {
             return columnStr.split(",");
         }
-        return null;
+        return new String[0];
     }
 
     public String getMrHiveDictDB() {
@@ -1444,6 +1448,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isLivyEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.livy-conf.livy-enabled", FALSE));
+    }
+
+    public String getLivyRestApiBacktick() {
+        return getOptional("kylin.engine.livy.backtick.quote", "");
     }
 
     public String getLivyUrl() {
