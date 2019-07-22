@@ -61,6 +61,9 @@ public abstract class AbstractActiveReservoir implements ActiveReservoir {
         isReady = false;
     }
 
+    /**
+     * closed by shutdown hook at MetricsSystem
+     */
     public void close() {
         stop();
         removeAllListener();

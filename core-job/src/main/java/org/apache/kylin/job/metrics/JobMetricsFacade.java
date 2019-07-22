@@ -35,9 +35,6 @@ public class JobMetricsFacade {
         if (!KylinConfig.getInstanceFromEnv().isKylinMetricsReporterForJobEnabled()) {
             return;
         }
-        /**
-         * report job related metrics
-         */
         RecordEvent metricsEvent;
         if (jobStats.throwable == null) {
             metricsEvent = new TimedRecordEvent(KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectJob());

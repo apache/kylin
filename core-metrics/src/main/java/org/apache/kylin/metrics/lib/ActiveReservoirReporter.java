@@ -26,6 +26,9 @@ import org.apache.kylin.common.util.Pair;
 
 import com.google.common.base.Strings;
 
+/**
+ * ActiveReservoirReporter report metrics message from ActiveReservoir
+ */
 public abstract class ActiveReservoirReporter implements Closeable {
 
     public static final String KYLIN_PREFIX = KylinConfig.getInstanceFromEnv().getKylinMetricsPrefix();
@@ -39,7 +42,7 @@ public abstract class ActiveReservoirReporter implements Closeable {
         int i = 0;
         String database = splits.length == 1 ? KYLIN_PREFIX : splits[i++];
         String tableNameOnly = splits[i];
-        return new Pair(database, tableNameOnly);
+        return new Pair<>(database, tableNameOnly);
     }
 
     public static String getTableName(Pair<String, String> tableNameSplits) {
