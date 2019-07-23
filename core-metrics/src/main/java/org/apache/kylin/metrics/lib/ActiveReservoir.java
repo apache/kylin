@@ -14,18 +14,32 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metrics.lib;
 
 import java.io.Closeable;
 
+/**
+ * Reservoir for mertics message, a Reservoir(something like cache)'s duty is store mertics message temporarily
+ * and emit messages to external Sink by notifying specific ActiveReservoirListener.
+ */
 public interface ActiveReservoir extends Closeable {
 
+    /**
+     * @return how many mertics message was currently cached(not emit)
+     */
     int size();
 
+    /**
+     * stage metrics message into Reservoir, but whether to emit it to external storage
+     * immediately is decided by specific implemention
+     */
     void update(Record record);
 
+    /**
+     * add listener which responsed to message update
+     */
     void addListener(ActiveReservoirListener listener);
 
     void removeListener(ActiveReservoirListener listener);
@@ -34,6 +48,9 @@ public interface ActiveReservoir extends Closeable {
 
     void setHAListener(ActiveReservoirListener listener);
 
+    /**
+     * do some prepare to accept metrics message
+     */
     void start();
 
     void stop();

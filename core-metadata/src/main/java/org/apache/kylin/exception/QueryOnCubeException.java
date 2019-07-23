@@ -14,27 +14,30 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+*/
+
+package org.apache.kylin.exception;
+
+/**
+ *
  */
+public class QueryOnCubeException extends RuntimeException {
 
-package org.apache.kylin.job.util;
+    private static final long serialVersionUID = 1L;
 
-import java.io.InterruptedIOException;
-import java.nio.channels.ClosedByInterruptException;
-
-public class ThrowableUtils {
-
-    private ThrowableUtils() {
-        // Utils class
+    public QueryOnCubeException() {
+        super();
     }
 
-    public static boolean isInterruptedException(Throwable e) {
-        while (e != null) {
-            if (e instanceof InterruptedException || e instanceof InterruptedIOException
-                    || e instanceof ClosedByInterruptException) {
-                return true;
-            }
-            e = e.getCause();
-        }
-        return false;
+    public QueryOnCubeException(String s) {
+        super(s);
+    }
+
+    public QueryOnCubeException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public QueryOnCubeException(Throwable cause) {
+        super(cause);
     }
 }

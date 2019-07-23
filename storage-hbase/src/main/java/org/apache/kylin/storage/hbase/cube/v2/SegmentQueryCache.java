@@ -45,7 +45,7 @@ public class SegmentQueryCache {
         memcachedCacheConfig.setTimeout(kylinConfig.getQuerySegmentCacheTimeout());
         // set max object size a little less than 1024 * 1024, because the key of the segment result cache is long
         // if set to 1024 * 1024 will cause memcached client exceed max size error
-        memcachedCacheConfig.setMaxObjectSize(1040000);
+        memcachedCacheConfig.setMaxObjectSize(1000000);
         memcachedCacheConfig.setHosts(configHosts);
         //Reverse the compression setting between Hbase coprocessor and memcached, if Hbase result is compressed, memcached will not compress.
         memcachedCacheConfig.setEnableCompression(!kylinConfig.getCompressionResult());

@@ -109,7 +109,7 @@ public class ColumnarSegmentStore implements IStreamingSegmentStore {
         try {
             StreamingMetrics
                     .getInstance()
-                    .getMetrics()
+                    .getMetricRegistry()
                     .register(MetricRegistry.name("streaming.inMem.row.cnt", cubeInstance.getName(), segmentName),
                             new Gauge<Integer>() {
                                 @Override
@@ -447,7 +447,7 @@ public class ColumnarSegmentStore implements IStreamingSegmentStore {
 
     public void close() throws IOException {
         logger.warn("closing the streaming cube segment, cube {}, segment {}.", cubeName, segmentName);
-        StreamingMetrics.getInstance().getMetrics()
+        StreamingMetrics.getInstance().getMetricRegistry()
                 .remove(MetricRegistry.name("streaming.inMem.row.cnt", cubeName, segmentName));
     }
 

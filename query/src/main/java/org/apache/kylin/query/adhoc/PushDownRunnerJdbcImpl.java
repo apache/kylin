@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.adhoc;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DBUtils;
@@ -33,10 +34,36 @@ import java.sql.Types;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class PushDownRunnerJdbcImpl extends AbstractPushdownRunner {
 
     private JdbcPushDownConnectionManager manager = null;
+
+    private static final Map<String, Integer> SQL_TYPE_MAPPING = Maps.newConcurrentMap();
+
+    static {
+        SQL_TYPE_MAPPING.put("string", Types.VARCHAR);
+        SQL_TYPE_MAPPING.put("varchar", Types.VARCHAR);
+        SQL_TYPE_MAPPING.put("char", Types.CHAR);
+        SQL_TYPE_MAPPING.put("float", Types.FLOAT);
+        SQL_TYPE_MAPPING.put("real", Types.REAL);
+        SQL_TYPE_MAPPING.put("double", Types.DOUBLE);
+        SQL_TYPE_MAPPING.put("boolean", Types.BOOLEAN);
+        SQL_TYPE_MAPPING.put("tinyint", Types.TINYINT);
+        SQL_TYPE_MAPPING.put("smallint", Types.SMALLINT);
+        SQL_TYPE_MAPPING.put("int", Types.INTEGER);
+        SQL_TYPE_MAPPING.put("bigint", Types.BIGINT);
+        SQL_TYPE_MAPPING.put("date", Types.DATE);
+        SQL_TYPE_MAPPING.put("timestamp", Types.TIMESTAMP);
+        SQL_TYPE_MAPPING.put("binary", Types.BINARY);
+        SQL_TYPE_MAPPING.put("map", Types.JAVA_OBJECT);
+        SQL_TYPE_MAPPING.put("array", Types.ARRAY);
+        SQL_TYPE_MAPPING.put("struct", Types.STRUCT);
+        SQL_TYPE_MAPPING.put("integer", Types.INTEGER);
+        SQL_TYPE_MAPPING.put("time", Types.VARCHAR);
+        SQL_TYPE_MAPPING.put("varbinary", Types.BINARY);
+    }
 
     @Override
     public void init(KylinConfig config) {
@@ -222,49 +249,13 @@ public class PushDownRunnerJdbcImpl extends AbstractPushdownRunner {
 
     // calcite does not understand all java SqlTypes, for example LONGNVARCHAR -16, thus need this mapping (KYLIN-2966)
     public static int toSqlType(String type) throws SQLException {
-        if ("string".equalsIgnoreCase(type)) {
-            return Types.VARCHAR;
-        } else if ("varchar".equalsIgnoreCase(type)) {
-            return Types.VARCHAR;
-        } else if ("char".equalsIgnoreCase(type)) {
-            return Types.CHAR;
-        } else if ("float".equalsIgnoreCase(type)) {
-            return Types.FLOAT;
-        } else if ("real".equalsIgnoreCase(type)) {
-            return Types.REAL;
-        } else if ("double".equalsIgnoreCase(type)) {
-            return Types.DOUBLE;
-        } else if ("boolean".equalsIgnoreCase(type)) {
-            return Types.BOOLEAN;
-        } else if ("tinyint".equalsIgnoreCase(type)) {
-            return Types.TINYINT;
-        } else if ("smallint".equalsIgnoreCase(type)) {
-            return Types.SMALLINT;
-        } else if ("int".equalsIgnoreCase(type)) {
-            return Types.INTEGER;
-        } else if ("bigint".equalsIgnoreCase(type)) {
-            return Types.BIGINT;
-        } else if ("date".equalsIgnoreCase(type)) {
-            return Types.DATE;
-        } else if ("timestamp".equalsIgnoreCase(type)) {
-            return Types.TIMESTAMP;
-        } else if (type.toLowerCase(Locale.ROOT).startsWith("decimal")) {
+        type = type.toLowerCase(Locale.ROOT);
+        if (type.startsWith("decimal")) {
             return Types.DECIMAL;
-        } else if ("binary".equalsIgnoreCase(type)) {
-            return Types.BINARY;
-        } else if ("map".equalsIgnoreCase(type)) {
-            return Types.JAVA_OBJECT;
-        } else if ("array".equalsIgnoreCase(type)) {
-            return Types.ARRAY;
-        } else if ("struct".equalsIgnoreCase(type)) {
-            return Types.STRUCT;
-        } else if ("integer".equalsIgnoreCase(type)) {
-            return Types.INTEGER;
-        } else if ("time".equalsIgnoreCase(type)) {
-            return Types.VARCHAR;
-        } else if ("varbinary".equalsIgnoreCase(type)) {
-            return Types.BINARY;
+        } else if (SQL_TYPE_MAPPING.containsKey(type)) {
+            return SQL_TYPE_MAPPING.get(type);
         }
+
         throw new SQLException("Unrecognized column type: " + type);
     }
 

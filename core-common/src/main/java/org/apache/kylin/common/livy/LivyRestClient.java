@@ -70,7 +70,7 @@ public class LivyRestClient {
 
         // Because livy submit job use JDK's ProcessBuilder, here we need to quote backtick
         // otherwise backtick make livy throw org.apache.spark.sql.catalyst.parser.ParseException
-        String json = jobJson.replace("`", "\\\\`");
+        String json = jobJson.replace("`", config.getLivyRestApiBacktick());
 
         post.setEntity(new StringEntity(json, "UTF-8"));
         HttpResponse response = client.execute(post);

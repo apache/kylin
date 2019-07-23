@@ -1510,12 +1510,19 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public boolean isShrunkenDictFromGlobalEnabled() {
-        return config.isShrunkenDictFromGlobalEnabled() && !getAllGlobalDictColumns().isEmpty();
+        boolean needShrunkenDict = config.isShrunkenDictFromGlobalEnabled() && !getAllGlobalDictColumns().isEmpty();
+        boolean needMrHiveDict = config.getMrHiveDictColumns().length > 0;
+        if (needMrHiveDict && needShrunkenDict) {
+            logger.info("ShrunkenDict cannot work with MrHiveDict, so shutdown ShrunkenDict.");
+            return false;
+        } else {
+            return needShrunkenDict;
+        }
     }
 
     // UHC (ultra high cardinality column): contain the ShardByColumns and the GlobalDictionaryColumns
     public List<TblColRef> getAllUHCColumns() {
-        List<TblColRef> uhcColumns = new ArrayList<TblColRef>();
+        List<TblColRef> uhcColumns = new ArrayList<>();
         uhcColumns.addAll(getAllGlobalDictColumns());
         uhcColumns.addAll(getShardByColumns());
         return uhcColumns;

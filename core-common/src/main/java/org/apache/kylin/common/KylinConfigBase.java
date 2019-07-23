@@ -496,8 +496,8 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.dictionary.forest-trie-max-mb", "500"));
     }
 
-    public int getCachedDictMaxEntrySize() {
-        return Integer.parseInt(getOptional("kylin.dictionary.max-cache-entry", "3000"));
+    public long getCachedDictMaxEntrySize() {
+        return Long.parseLong(getOptional("kylin.dictionary.max-cache-entry", "3000"));
     }
 
     public boolean isGrowingDictEnabled() {
@@ -506,6 +506,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isDictResuable() {
         return Boolean.parseBoolean(this.getOptional("kylin.dictionary.resuable", FALSE));
+    }
+
+    public long getCachedDictionaryMaxEntrySize() {
+        return Long.parseLong(getOptional("kylin.dictionary.cached-dict-max-cache-entry", "50000"));
     }
 
     public int getAppendDictEntrySize() {
@@ -552,12 +556,16 @@ public abstract class KylinConfigBase implements Serializable {
     // mr-hive dict
     // ============================================================================
 
+    /**
+     * @return  if mr-hive dict not enabled, return empty array;
+     *          else return array contains "{TABLE_NAME}_{COLUMN_NAME}"
+     */
     public String[] getMrHiveDictColumns() {
         String columnStr = getOptional("kylin.dictionary.mr-hive.columns", "");
-        if (!StringUtils.isEmpty(columnStr)) {
+        if (!columnStr.equals("")) {
             return columnStr.split(",");
         }
-        return null;
+        return new String[0];
     }
 
     public String getMrHiveDictDB() {
@@ -1442,6 +1450,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.engine.livy-conf.livy-enabled", FALSE));
     }
 
+    public String getLivyRestApiBacktick() {
+        return getOptional("kylin.engine.livy.backtick.quote", "");
+    }
+
     public String getLivyUrl() {
         return getOptional("kylin.engine.livy-conf.livy-url");
     }
@@ -2195,6 +2207,18 @@ public abstract class KylinConfigBase implements Serializable {
     public String getLocalStorageImpl() {
         return getOptional("kylin.stream.settled.storage", null);
     }
+
+    public String getStreamMetrics() {
+        return getOptional("kylin.stream.metrics.option", "");
+    }
+
+    public long getStreamMetricsInterval() {
+        return Long.parseLong(getOptional("kylin.stream.metrics.interval", "5"));
+    }
+
+    // ============================================================================
+    // Health Check CLI
+    // ============================================================================
 
     public int getWarningSegmentNum() {
         return Integer.parseInt(getOptional("kylin.tool.health-check.warning-segment-num", "-1"));

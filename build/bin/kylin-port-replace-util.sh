@@ -89,6 +89,15 @@ then
     #replace ports in kylin.properties
     new_kylin_port=`expr ${KYLIN_DEFAULT_PORT} + ${OFFSET}`
 
+    #replace kylin.stream.node for Streaming Coordinator
+    stream_node="kylin.stream.node=`hostname -f`:$new_kylin_port"
+    echo "Using new kylin.stream.node: $stream_node"
+    line_count=$(awk '$0 ~ /kylin.stream.node/ {print $0}' ${KYLIN_CONFIG_FILE} | wc -l)
+    if [[ $line_count -eq 0 ]]; then
+        echo "kylin.stream.node=`hostname -f`:7070" >> ${KYLIN_CONFIG_FILE}
+    fi
+    sed -i "s/^kylin\.stream\.node=.*$/$stream_node/g" ${KYLIN_CONFIG_FILE}
+
     sed -i "s/#*kylin.server.cluster-servers=\(.*\).*:\(.*\)/kylin.server.cluster-servers=\1:${new_kylin_port}/g" ${KYLIN_CONFIG_FILE}
 
     echo "New kylin port is : ${new_kylin_port}"

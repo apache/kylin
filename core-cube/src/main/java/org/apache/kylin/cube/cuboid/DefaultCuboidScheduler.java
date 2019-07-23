@@ -175,11 +175,11 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
         long maxCombination = config.getCubeAggrGroupMaxCombination() * 10;
         maxCombination = maxCombination < 0 ? Long.MAX_VALUE : maxCombination;
         while (!children.isEmpty()) {
+            cuboidHolder.addAll(children);
             if (cuboidHolder.size() > maxCombination) {
                 throw new IllegalStateException("Too many cuboids for the cube. Cuboid combination reached "
-                        + cuboidHolder.size() + " and limit is " + maxCombination + ". Abort calculation.");
+                    + cuboidHolder.size() + " and limit is " + maxCombination + ". Abort calculation.");
             }
-            cuboidHolder.addAll(children);
             children = getOnTreeParentsByLayer(children);
         }
         cuboidHolder.add(Cuboid.getBaseCuboidId(cubeDesc));
