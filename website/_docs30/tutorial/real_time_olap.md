@@ -32,9 +32,7 @@ The detail can be found at [Deep Dive into Real-time OLAP](http://kylin.apache.o
 - MapReduce [**distributed computation**]
 - HDFS [**distributed storage**]
 
-
 ![image](/images/RealtimeOlap/realtime-olap-architecture.png)
-
 
 ### Streaming Coordinator
 Streaming coordinator works as the master node of streaming receiver cluster. It's main responsibility include assign/unassign specific topic partition to specific repilca set, pause or resume cosuming behavior, collect mertics such as cosume rate (message per second).
@@ -62,7 +60,7 @@ A replica set is a group of streaming receivers. Replica set is the minimum unit
 ## Prepare environment
 
 ### Install Kafka 
-Don’t use HDP 2.2.4’s build-in Kafka as it is too old, stop it first if it is running. Please download Kafka 1.0 binary package from Kafka project page, and then uncompress it under a folder like /usr/local/.
+Don’t use HDP’s build-in Kafka as it is too old, stop it first if it is running. Please download Kafka 1.0 binary package from Kafka project page, and then uncompress it under a folder like /usr/local/.
 
 {% highlight Groff markup %}
 tar -zxvf kafka_2.12-1.0.2.tgz
@@ -101,7 +99,7 @@ bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 -
 Created topic "kylin_streaming_topic".
 {% endhighlight %}
 
-Put sample data to this topic, you can write a python script to do that. Please do not send multi-level json such as `{"name":"Kitty", "location": {"state":"NY", "country":"US"}}` because Receiver cannot parse it currently.
+Put sample data to this topic, you can write a python script to do that.
 
 {% highlight Groff markup %}
 python user_action.py --max-uid 2000 --max-vid 2000 --msg-sec 100 --enable-hour-power false | bin/kafka-console-producer.sh --broker-list localhost:9092 --topic kylin_streaming_topic
