@@ -34,14 +34,14 @@ public class SQLResponseTest {
     public void testInterfaceConsistency() throws IOException {
         String[] attrArray = new String[] { "columnMetas", "results", "cube", "affectedRowCount", "isException",
                 "exceptionMessage", "duration", "partial", "totalScanCount", "hitExceptionCache", "storageCacheUsed",
-                "pushDown", "traceUrl", "totalScanBytes" };
+                "pushDown", "traceUrl", "totalScanBytes", "missMeasureMessage" };
 
         SQLResponse sqlResponse = new SQLResponse(null, null, "learn_cube", 100, false, null, false, false);
         String jsonStr = JsonUtil.writeValueAsString(sqlResponse);
         System.out.println(jsonStr);
 
         JsonNode jnode = JsonUtil.readValueAsTree(jsonStr);
-        assertEquals(jnode.size(), attrArray.length);
+        assertEquals(attrArray.length, jnode.size());
         for (String attr : attrArray) {
             Assert.assertTrue(attr + " doesn't exist", jnode.has(attr));
         }
