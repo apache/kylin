@@ -32,7 +32,6 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.job.util.FlatTableSqlQuoteUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
