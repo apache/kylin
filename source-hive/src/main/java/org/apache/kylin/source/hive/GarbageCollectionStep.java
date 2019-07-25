@@ -58,7 +58,6 @@ public class GarbageCollectionStep extends AbstractExecutable {
     }
 
     private String cleanUpIntermediateFlatTable(KylinConfig config) throws IOException {
-        String quoteCharacter = FlatTableSqlQuoteUtils.getQuote();
         StringBuffer output = new StringBuffer();
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         final List<String> hiveTables = this.getIntermediateTables();
@@ -67,7 +66,7 @@ public class GarbageCollectionStep extends AbstractExecutable {
                 if (StringUtils.isNotEmpty(hiveTable)) {
                     hiveCmdBuilder.addStatement("USE " + config.getHiveDatabaseForIntermediateTable() + ";");
                     hiveCmdBuilder
-                            .addStatement("DROP TABLE IF EXISTS " + quoteCharacter + hiveTable + quoteCharacter + ";");
+                            .addStatement("DROP TABLE IF EXISTS " + hiveTable + ";");
 
                     output.append("Hive table " + hiveTable + " is dropped. \n");
                 }
