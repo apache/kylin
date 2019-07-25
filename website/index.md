@@ -259,6 +259,9 @@ title: Home
             <a class="sponsor" href="https://www.ele.me/home/"> 
                 <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/ele.png">
             </a>
+            <a class="sponsor" href="https://www.teld.cn/"> 
+                <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/teld.png">
+            </a>
         </div>
         <!-- /container --> 
       </div>
