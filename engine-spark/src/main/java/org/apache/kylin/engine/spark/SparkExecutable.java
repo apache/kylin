@@ -267,6 +267,16 @@ public class SparkExecutable extends AbstractExecutable {
                 sparkConfs.putAll(sparkSpecificConfs);
             }
 
+            // Add hbase fs to spark conf: spark.yarn.access.hadoopFileSystems
+            if (StringUtils.isNotEmpty(config.getHBaseClusterFs())) {
+                String fileSystems = sparkConfs.get("spark.yarn.access.hadoopFileSystems");
+                if (StringUtils.isNotEmpty(fileSystems)) {
+                    sparkConfs.put("spark.yarn.access.hadoopFileSystems", fileSystems + "," + config.getHBaseClusterFs());
+                } else {
+                    sparkConfs.put("spark.yarn.access.hadoopFileSystems", config.getHBaseClusterFs());
+                }
+            }
+
             for (Map.Entry<String, String> entry : sparkConfs.entrySet()) {
                 stringBuilder.append(" --conf ").append(entry.getKey()).append("=").append(entry.getValue())
                         .append(" ");
