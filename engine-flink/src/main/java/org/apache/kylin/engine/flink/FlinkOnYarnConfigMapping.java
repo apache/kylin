@@ -74,6 +74,9 @@ public class FlinkOnYarnConfigMapping {
             }
         }
 
+        //config options do not have mapping with config file key
+        flinkOnYarnConfigMap.put("yarn.queue", "-yqu");
+        flinkOnYarnConfigMap.put("yarn.nodelabel", "-ynl");
     }
 
 }
