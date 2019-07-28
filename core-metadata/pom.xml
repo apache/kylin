@@ -98,6 +98,10 @@
             <groupId>com.tdunning</groupId>
             <artifactId>t-digest</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.objenesis</groupId>
+            <artifactId>objenesis</artifactId>
+        </dependency>
 
         <!-- Env & Test -->
         <dependency>

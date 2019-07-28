@@ -1023,6 +1023,11 @@
         <version>${tomcat.version}</version>
         <scope>provided</scope>
       </dependency>
+      <dependency>
+        <groupId>org.objenesis</groupId>
+        <artifactId>objenesis</artifactId>
+        <version>3.0.1</version>
+      </dependency>
 
       <dependency>
         <groupId>org.scala-lang</groupId>
