@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -378,7 +379,10 @@ public class StorageCleanupJob extends AbstractApplication {
 
         if (delete) {
             try {
-                deleteHiveTables(allHiveTablesNeedToBeDeleted, segmentId2JobId);
+                List<List<String>> tablesList = Lists.partition(allHiveTablesNeedToBeDeleted, 20);
+                for (List<String> tables: tablesList) {
+                    deleteHiveTables(tables, segmentId2JobId);
+                }
             } catch (IOException e) {
                 logger.error("Error during deleting Hive tables", e);
             }
