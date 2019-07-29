@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableMap;
 public class BitmapMeasureType extends MeasureType<BitmapCounter> {
     public static final String FUNC_COUNT_DISTINCT = FunctionDesc.FUNC_COUNT_DISTINCT;
     public static final String FUNC_INTERSECT_COUNT_DISTINCT = "INTERSECT_COUNT";
+    public static final String FUNC_INTERSECT_VALUE = "INTERSECT_VALUE";
     public static final String DATATYPE_BITMAP = "bitmap";
 
     public static class Factory extends MeasureTypeFactory<BitmapCounter> {
@@ -164,7 +165,8 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
 
     static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.of(
             FUNC_COUNT_DISTINCT, BitmapDistinctCountAggFunc.class,
-            FUNC_INTERSECT_COUNT_DISTINCT, BitmapIntersectDistinctCountAggFunc.class);
+            FUNC_INTERSECT_COUNT_DISTINCT, BitmapIntersectDistinctCountAggFunc.class,
+            FUNC_INTERSECT_VALUE, BitmapIntersectValueAggFunc.class);
 
     @Override
     public Map<String, Class<?>> getRewriteCalciteAggrFunctions() {
@@ -174,7 +176,8 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
     @Override
     public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
         for (SQLCall call : sqlDigest.aggrSqlCalls) {
-            if (FUNC_INTERSECT_COUNT_DISTINCT.equals(call.function)) {
+            if (FUNC_INTERSECT_COUNT_DISTINCT.equals(call.function)
+                    || FUNC_INTERSECT_VALUE.equals(call.function)) {
                 TblColRef col = (TblColRef) call.args.get(1);
                 if (!sqlDigest.groupbyColumns.contains(col))
                     sqlDigest.groupbyColumns.add(col);
