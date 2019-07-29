@@ -597,8 +597,9 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             }
         }
         for (SQLDigest.SQLCall aggrSQLCall : aggrSQLCalls) {
-            if (aggrSQLCall.function.equals(BitmapMeasureType.FUNC_INTERSECT_COUNT_DISTINCT)) {
-                logger.info("exactAggregation is false because has INTERSECT_COUNT");
+            if (aggrSQLCall.function.equals(BitmapMeasureType.FUNC_INTERSECT_COUNT_DISTINCT)
+            || aggrSQLCall.function.equals(BitmapMeasureType.FUNC_INTERSECT_VALUE)) {
+                logger.info("exactAggregation is false because has INTERSECT_COUNT OR INTERSECT_VALUE");
                 return false;
             }
         }

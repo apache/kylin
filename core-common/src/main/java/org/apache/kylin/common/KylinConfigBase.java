@@ -2793,4 +2793,7 @@ public abstract class KylinConfigBase implements Serializable {
     public String getKerberosPrincipal() {
         return getOptional("kap.kerberos.principal");
     }
+    public String getIntersectFilterOrSeparator() {
+        return getOptional("kylin.query.intersect.separator", "|");
+    }
 }
