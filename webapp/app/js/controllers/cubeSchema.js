@@ -37,7 +37,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     $scope.curStep = $scope.wizardSteps[0];
     $scope.allCubeNames = [];
-    $scope.cubeService = CubeService;
 
   $scope.getTypeVersion=function(typename){
     var searchResult=/\[v(\d+)\]/.exec(typename);
