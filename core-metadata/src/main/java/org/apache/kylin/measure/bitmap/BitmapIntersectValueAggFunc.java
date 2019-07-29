@@ -17,9 +17,9 @@
 */
 package org.apache.kylin.measure.bitmap;
 
-import org.apache.kylin.measure.ParamAsMeasureCount;
-
 import java.util.List;
+
+import org.apache.kylin.measure.ParamAsMeasureCount;
 
 /**
  * BitmapIntersectDistinctCountAggFunc is an UDAF used for calculating the intersection of two or more bitmaps
@@ -27,7 +27,7 @@ import java.util.List;
  * Example: intersect_count(uuid, event, array['A', 'B', 'C']), meaning find the count of uuid in all A/B/C 3 bitmaps
  *          requires an bitmap count distinct measure of uuid, and an dimension of event
  */
-public class BitmapIntersectDistinctCountAggFunc implements ParamAsMeasureCount {
+public class BitmapIntersectValueAggFunc implements ParamAsMeasureCount {
 
     @Override
     public int getParamAsMeasureCount() {
@@ -47,8 +47,8 @@ public class BitmapIntersectDistinctCountAggFunc implements ParamAsMeasureCount 
         return add(result, value, key, keyList);
     }
 
-    public static long result(RetentionPartialResult result) {
-        return result.countResult();
+    public static String result(RetentionPartialResult result) {
+        return result.valueResult();
     }
 }
 

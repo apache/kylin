@@ -2463,4 +2463,7 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.tool.health-check.stale-job-threshold-days", "30"));
     }
 
+    public String getIntersectFilterOrSeparator() {
+        return getOptional("kylin.query.intersect.separator", "|");
+    }
 }
