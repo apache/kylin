@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager,StreamingService,CubeService,VdmUtil,tableConfig) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager,StreamingService,CubeService,VdmUtil,tableConfig,$http) {
     $scope.modelsManager = modelsManager;
     $scope.cubesManager = cubesManager;
     $scope.projects = [];
@@ -127,10 +127,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     return filterEncoding;
   }
 
-
-
-    $scope.allCubes = [];
-
     $scope.getTypeVersion=function(typename){
       var searchResult=/\[v(\d+)\]/.exec(typename);
       if(searchResult&&searchResult.length){
@@ -158,18 +154,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             initProject();
         }
 
-    });
-
-    var queryParam = {offset: 0, limit: 65535};
-
-    CubeService.list(queryParam, function (all_cubes) {
-      if($scope.allCubes.length > 0){
-        $scope.allCubes.splice(0,$scope.allCubes.length);
-      }
-
-      for (var i = 0; i < all_cubes.length; i++) {
-        $scope.allCubes.push(all_cubes[i].name.toUpperCase());
-      }
     });
 
     // ~ public methods
@@ -260,7 +244,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
   });
 
-    $scope.checkCubeForm = function(stepIndex){
+    $scope.checkCubeForm = async function(stepIndex){
       // do not check for Prev Step
       if (stepIndex + 1 < $scope.curStep.step) {
         return true;
@@ -281,7 +265,10 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
                 //business rule check
                 switch($scope.curStep.form){
                     case 'cube_info_form':
-                      return $scope.check_cube_info();
+                      var result = await $scope.check_cube_info().then(function(res){
+                        return res.data
+                      });
+                      return result
                       break;
                     case 'cube_dimension_form':
                         return $scope.check_cube_dimension();
@@ -303,9 +290,16 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
   $scope.check_cube_info = function(){
 
-    if(($scope.state.mode === "edit") &&$scope.cubeMode=="addNewCube"&&($scope.allCubes.indexOf($scope.cubeMetaFrame.name.toUpperCase()) >= 0)){
-      SweetAlert.swal('Oops...', "The cube named [" + $scope.cubeMetaFrame.name.toUpperCase() + "] already exists", 'warning');
-      return false;
+    if ($scope.state.mode === "edit" && $scope.cubeMode === "addNewCube") {
+      var cubeName = $scope.cubeMetaFrame.name;
+      return new Promise(function (resolve) {
+        $http.get(Config.service.url + "cubes/validate/" + cubeName).success(function (res) {
+          if (!res.data) {
+            SweetAlert.swal('Oops...', "The cube named [" + cubeName.toUpperCase() + "] already exists", 'warning');
+          }
+          resolve(res);
+        })
+      })
     }
     // Update storage type according to the streaming table in model
     if(TableModel.selectProjectTables.some(function(table) {
