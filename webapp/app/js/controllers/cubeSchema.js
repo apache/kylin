@@ -36,6 +36,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     ];
 
     $scope.curStep = $scope.wizardSteps[0];
+    $scope.allCubeNames = [];
 
   $scope.getTypeVersion=function(typename){
     var searchResult=/\[v(\d+)\]/.exec(typename);
@@ -126,11 +127,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     }
     return filterEncoding;
   }
-
-
-
-    $scope.allCubes = [];
-
     $scope.getTypeVersion=function(typename){
       var searchResult=/\[v(\d+)\]/.exec(typename);
       if(searchResult&&searchResult.length){
@@ -151,27 +147,19 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     }
 
     $scope.$watch('cubeMetaFrame', function (newValue, oldValue) {
+        if (($scope.state.mode === "edit") && ($scope.cubeMode == "addNewCube")) {
+          $scope.getAllCubeNames();
+        }
+
         if(!newValue){
             return;
         }
+
         if ($scope.cubeMode=="editExistCube"&&newValue && !newValue.project) {
             initProject();
         }
 
     });
-
-    var queryParam = {offset: 0, limit: 65535};
-
-    CubeService.list(queryParam, function (all_cubes) {
-      if($scope.allCubes.length > 0){
-        $scope.allCubes.splice(0,$scope.allCubes.length);
-      }
-
-      for (var i = 0; i < all_cubes.length; i++) {
-        $scope.allCubes.push(all_cubes[i].name.toUpperCase());
-      }
-    });
-
     // ~ public methods
     $scope.filterProj = function(project){
         return $scope.userService.hasRole('ROLE_ADMIN') || $scope.hasPermission(project,$scope.permissions.ADMINISTRATION.mask);
@@ -182,6 +170,19 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         if (index > -1) {
             arr.splice(index, 1);
         }
+    };
+
+    $scope.getAllCubeNames = function () {
+      if ($scope.allCubeNames.length > 0) {
+        $scope.allCubeNames.splice(0, $scope.allCubeNames.length);
+      }
+
+      var queryParam = {offset: 0, limit: 65535};
+      CubeService.list(queryParam, function (all_cubes) {
+        for (var i = 0; i < all_cubes.length; i++) {
+          $scope.allCubeNames.push(all_cubes[i].name.toUpperCase());
+        }
+      });
     };
 
     $scope.open = function ($event) {
@@ -301,11 +302,18 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
     };
 
-  $scope.check_cube_info = function(){
+  $scope.checkDuplicatedCubeName = function (cubeName) {
+    return ($scope.allCubeNames.indexOf(cubeName.toUpperCase())) >= 0;
+  }
 
-    if(($scope.state.mode === "edit") &&$scope.cubeMode=="addNewCube"&&($scope.allCubes.indexOf($scope.cubeMetaFrame.name.toUpperCase()) >= 0)){
-      SweetAlert.swal('Oops...', "The cube named [" + $scope.cubeMetaFrame.name.toUpperCase() + "] already exists", 'warning');
-      return false;
+  $scope.check_cube_info = function () {
+    if (($scope.state.mode === "edit") && ($scope.cubeMode == "addNewCube")) {
+      // check duplicated cube name when add new cube.
+      var cubeName = $scope.cubeMetaFrame.name;
+      if ($scope.checkDuplicatedCubeName(cubeName)) {
+        SweetAlert.swal('Oops...', "The cube named [" + cubeName.toUpperCase() + "] already exists", 'warning');
+        return false;
+      }
     }
     // Update storage type according to the streaming table in model
     if(TableModel.selectProjectTables.some(function(table) {
