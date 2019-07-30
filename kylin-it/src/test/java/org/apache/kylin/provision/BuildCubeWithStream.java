@@ -89,7 +89,7 @@ public class BuildCubeWithStream {
     private MockKafka kafkaServer;
     private ZkConnection zkConnection;
     private final String kafkaZkPath = ZKUtil.getZkRootBasedPath("streaming") + "/" + RandomUtil.randomUUID().toString();
-    protected static boolean fastBuildMode = false;
+    protected static boolean simpleBuildMode = false;
     private volatile boolean generateData = true;
     private volatile boolean generateDataDone = false;
 
@@ -97,13 +97,11 @@ public class BuildCubeWithStream {
 
     public void before() throws Exception {
         deployEnv();
-
-        String fastModeStr = System.getProperty("fastBuildMode");
-        if (fastModeStr != null && fastModeStr.equalsIgnoreCase("true")) {
-            fastBuildMode = true;
-            logger.info("Will use fast build mode");
+        simpleBuildMode = isSimpleBuildMode();
+        if (simpleBuildMode) {
+            logger.info("Will use simple build mode");
         } else {
-            logger.info("Will not use fast build mode");
+            logger.info("Will not use simple build mode");
         }
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -128,6 +126,13 @@ public class BuildCubeWithStream {
         KafkaConfigManager.getInstance(kylinConfig).updateKafkaConfig(kafkaConfig);
 
         startEmbeddedKafka(topicName, brokerConfig);
+    }
+    private static boolean isSimpleBuildMode() {
+        String simpleModeStr = System.getProperty("simpleBuildMode");
+        if (simpleModeStr == null)
+            simpleModeStr = System.getenv("KYLIN_CI_SIMPLEBUILD");
+
+        return "true".equalsIgnoreCase(simpleModeStr);
     }
 
     private void startEmbeddedKafka(String topicName, BrokerConfig brokerConfig) {
@@ -241,7 +246,7 @@ public class BuildCubeWithStream {
 
         Assert.assertTrue(segments.size() + joinTableSegments.size() == succeedBuild);
 
-        if (fastBuildMode == false) {
+        if (simpleBuildMode == false) {
             long endOffset = (Long) segments.get(segments.size() - 1).getSegRange().end.v;
             //merge
             ExecutableState result = mergeSegment(cubeName, new SegmentRange(0L, endOffset));

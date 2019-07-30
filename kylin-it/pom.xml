@@ -35,6 +35,7 @@
     <properties>
         <hdp.version />
         <fastBuildMode />
+        <simpleBuildMode/>
         <buildCubeUsingProvidedData />
         <engineType />
     </properties>
@@ -473,6 +474,7 @@
                                     <arguments>
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
+                                        <argument>-DsimpleBuildMode=${simpleBuildMode}</argument>
                                         <argument>
                                               -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
                                         </argument>
