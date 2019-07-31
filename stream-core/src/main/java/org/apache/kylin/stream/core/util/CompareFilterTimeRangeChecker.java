@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.dimension.TimeDerivedColumnType;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 
 /**

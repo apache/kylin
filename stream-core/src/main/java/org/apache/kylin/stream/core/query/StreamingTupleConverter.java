@@ -18,8 +18,12 @@
 
 package org.apache.kylin.stream.core.query;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.TimeZone;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureType.IAdvMeasureFiller;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -27,14 +31,19 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.stream.core.storage.Record;
+import org.apache.kylin.dimension.TimeDerivedColumnType;
 
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Convert Streaming Record to Tuple
- * 
  */
 public class StreamingTupleConverter {
+
+    private static final Logger logger = LoggerFactory.getLogger(StreamingTupleConverter.class);
+
     final TupleInfo tupleInfo;
 
     final int[] dimTupleIdx;
@@ -42,10 +51,13 @@ public class StreamingTupleConverter {
     final int dimCnt;
     final int metricsCnt;
     final MeasureType<?>[] measureTypes;
+    final Set<Integer> timestampColumn = new HashSet<>();
 
     final List<MeasureType.IAdvMeasureFiller> advMeasureFillers;
     final List<Integer> advMeasureIndexInGTValues;
-
+    final boolean autoTimezone = KylinConfig.getInstanceFromEnv().isStreamingAutoJustTimezone();
+    private static final long TIME_ZONE_OFFSET = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone())
+            .getRawOffset();
 
     public StreamingTupleConverter(ResponseResultSchema schema, TupleInfo returnTupleInfo) {
         this.tupleInfo = returnTupleInfo;
@@ -64,6 +76,8 @@ public class StreamingTupleConverter {
         // pre-calculate dimension index mapping to tuple
         for (TblColRef dim : schema.getDimensions()) {
             dimTupleIdx[idx] = tupleInfo.hasColumn(dim) ? tupleInfo.getColumnIndex(dim) : -1;
+            if (dim.getType().isDateTimeFamily() && TimeDerivedColumnType.isTimeDerivedColumn(dim.getName()))
+                timestampColumn.add(dimTupleIdx[idx]);
             idx++;
         }
 
@@ -95,7 +109,16 @@ public class StreamingTupleConverter {
         for (int i = 0; i < dimCnt; i++) {
             int ti = dimTupleIdx[i];
             if (ti >= 0) {
-                tuple.setDimensionValue(ti, dimValues[i]);
+                if (autoTimezone && timestampColumn.contains(ti)) {
+                    try {
+                        tuple.setDimensionValue(ti, Long.toString(Long.parseLong(dimValues[i]) + TIME_ZONE_OFFSET));
+                    } catch (NumberFormatException nfe) {
+                        logger.warn("{} is not a long value.", dimValues[i]);
+                        tuple.setDimensionValue(ti, dimValues[i]);
+                    }
+                } else {
+                    tuple.setDimensionValue(ti, dimValues[i]);
+                }
             }
         }
 

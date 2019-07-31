@@ -29,12 +29,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
@@ -93,8 +95,8 @@ public class StreamingSegmentManager implements Closeable {
 
     private final ISourcePositionHandler sourcePositionHandler;
     private final ISourcePosition consumePosition;
-
-    //TODO long latency event may not be dropped directly
+    private static final long TIME_ZONE_OFFSET = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone())
+            .getRawOffset();
     private volatile LongLatencyInfo longLatencyInfo;
     private volatile long nextCheckPoint = 0;
     private volatile long lastCheckPointCount = 0;
@@ -543,9 +545,9 @@ public class StreamingSegmentManager implements Closeable {
         for (StreamingCubeSegment segment : allSegments) {
             SegmentStats segmentStats = new SegmentStats();
             segmentStats.setSegmentState(segment.getState().name());
-            segmentStats.setSegmentCreateTime(segment.getCreateTime());
-            segmentStats.setSegmentLastUpdateTime(segment.getLastUpdateTime());
-            segmentStats.setLatestEventTime(segment.getLatestEventTimeStamp());
+            segmentStats.setSegmentCreateTime(resetTimestampByTimeZone(segment.getCreateTime()));
+            segmentStats.setSegmentLastUpdateTime(resetTimestampByTimeZone(segment.getLastUpdateTime()));
+            segmentStats.setLatestEventTime(resetTimestampByTimeZone(segment.getLatestEventTimeStamp()));
             segmentStats.setLatestEventLatency(segment.getLatestEventLatecy());
             SegmentStoreStats storeStats = segment.getSegmentStore().getStoreStats();
             segmentStats.setStoreStats(storeStats);
@@ -622,5 +624,9 @@ public class StreamingSegmentManager implements Closeable {
 
     private long truncateTime(long timestamp, long windowLength) {
         return (timestamp / windowLength) * windowLength;
+    }
+
+    public static long resetTimestampByTimeZone(long ts) {
+        return ts + TIME_ZONE_OFFSET;
     }
 }

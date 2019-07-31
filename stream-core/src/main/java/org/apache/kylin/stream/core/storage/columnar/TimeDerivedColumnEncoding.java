@@ -19,7 +19,7 @@
 package org.apache.kylin.stream.core.storage.columnar;
 
 import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.stream.core.util.TimeDerivedColumnType;
+import org.apache.kylin.dimension.TimeDerivedColumnType;
 
 public class TimeDerivedColumnEncoding {
     private String columnName;
