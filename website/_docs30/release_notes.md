@@ -15,6 +15,58 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v3.0.0-alpha2 - 2019-07-31
+_Tag:_ [kylin-3.0.0-alpha2](https://github.com/apache/kylin/tree/kylin-3.0.0-alpha2)
+This is the alpha2 release of Kylin's next generation after 2.x, with the new real-time OLAP feature.
+
+__New Feature__
+
+* [KYLIN-3843] - List kylin instances with their server mode on web
+
+__Improvement__
+
+* [KYLIN-3628] - Query with lookup table always use latest snapshot
+* [KYLIN-3812] - optimize the child CompareTupleFilter in a CompareTupleFilter
+* [KYLIN-3813] - don't do push down when both of the children of CompareTupleFilter are CompareTupleFilter with column included
+* [KYLIN-3841] - Build Global Dict by MR/Hive
+* [KYLIN-3912] - Support cube level mapreduce queue config for BeelineHiveClient
+* [KYLIN-3918] - Add project name in cube and job pages
+* [KYLIN-3925] - Add reduce step for FilterRecommendCuboidDataJob & UpdateOldCuboidShardJob to avoid generating small hdfs files
+* [KYLIN-3932] - KafkaConfigOverride to take effect
+* [KYLIN-3958] - MrHive-Dict support build by livy
+* [KYLIN-3960] - Only update user when login in LDAP environment
+* [KYLIN-3997] - Add a health check job of Kylin
+* [KYLIN-4001] - Allow user-specified time format using real-time
+* [KYLIN-4012] - optimize cache in TrieDictionary/TrieDictionaryForest
+* [KYLIN-4013] - Only show the cubes under one model
+* [KYLIN-4026] - Avoid too many file append operations in HiveProducer of hive metrics reporter
+* [KYLIN-4028] - Speed up startup progress using cached dependency
+* [KYLIN-4031] - RestClient will throw exception with message contains clear-text password
+* [KYLIN-4033] - Can not access Kerberized Cluster with DebugTomcat
+* [KYLIN-4035] - Calculate column cardinality by using spark engine
+* [KYLIN-4041] - CONCAT NULL not working properly
+* [KYLIN-4062] - Too many "if else" clause in PushDownRunnerJdbcImpl#toSqlType
+* [KYLIN-4081] - Use absolute path instead of relative path for local segment cache
+* [KYLIN-4084] - Reset kylin.stream.node in kylin-port-replace-util.sh
+* [KYLIN-4086] - Support connect Kylin with Tableau by JDBC
+
+__Bug Fix__
+
+* [KYLIN-3935] - ZKUtil acquire the wrong Zookeeper Path on windows
+* [KYLIN-3942] - Rea-time OLAP don't support multi-level json event
+* [KYLIN-3946] - No cube for AVG measure after include count column
+* [KYLIN-3959] - Realtime OLAP query result should not be cached
+* [KYLIN-3981] - Auto Merge Job failed to execute on windows
+* [KYLIN-4005] - Saving Cube of a aggregation Groups(40 Dimensions, Max Dimension Combination:5) may cause kylin server OOM
+* [KYLIN-4017] - Build engine get zk(zookeeper) lock failed when building job, it causes the whole build engine doesn't work.
+* [KYLIN-4027] - Kylin-jdbc module has tcp resource leak
+* [KYLIN-4037] - Can't Cleanup Data in Hbase's HDFS Storage When Deploy Apache Kylin with Standalone HBase Cluster
+* [KYLIN-4039] - ZookeeperDistributedLock may not release lock when unlock operation was interrupted
+* [KYLIN-4044] - CuratorScheduler may throw NPE when init service Cache
+* [KYLIN-4046] - Refine JDBC Source(source.default=8)
+* [KYLIN-4064] - parameter 'engineType' is not working when running integration test
+* [KYLIN-4072] - CDH 6.x find-hbase-dependency.sh return with "base-common lib not found"
+* [KYLIN-4074] - Exception in thread "Memcached IO over {MemcachedConnection to ..." java.lang.NullPointerException
 
 ## v3.0.0-alpha - 2019-04-12
 _Tag:_ [kylin-3.0.0-alpha](https://github.com/apache/kylin/tree/kylin-3.0.0-alpha)
@@ -55,7 +107,6 @@ __Bug Fix__
 
 * [KYLIN-3787] - NPE throws when dimension value has null when query real-time data
 * [KYLIN-3789] - Stream receiver admin page issue fix
-Bug
 * [KYLIN-3800] - Real-time streaming count distinct result wrong
 * [KYLIN-3817] - Duration in Cube building is a negative number
 * [KYLIN-3818] - After Cube disabled, auto-merge cube job still running
@@ -71,6 +122,77 @@ Bug
 * [KYLIN-3922] - Fail to update coprocessor when run DeployCoprocessorCLI
 * [KYLIN-3923] - UT GeneralColumnDataTest fail
 
+## v2.6.3 - 2019-07-06
+_Tag:_ [kylin-2.6.3](https://github.com/apache/kylin/tree/kylin-2.6.3)
+This is a bugfix release after 2.6.2, with 7 enhancements and 9 bug fixes.
+
+__Improvement__
+
+* [KYLIN-4024] - Support pushdown to Presto
+* [KYLIN-3977] - Avoid mistaken deleting dicts by storage cleanup while building jobs are running
+* [KYLIN-4023] - Convert to local time for column with timestamp or date type of queries by Jdbc
+* [KYLIN-3893] - Cube build failed for wrong row key column description
+* [KYLIN-4020] - Add  check for the input of fix_length rowkey encoding
+* [KYLIN-3998] - Make "bpus-min-benefit-ratio" configurable in cube planner phase 1
+* [KYLIN-4025] - Add detail exception in kylin http response
+
+__Bug Fix__
+
+* [KYLIN-4015] - Fix build cube error at the "Build UHC Dictionary" step
+* [KYLIN-4022] - Error with message "Unrecognized column type: DECIMAL(xx,xx)" happens when do query pushdown
+* [KYLIN-3994] - Storage cleanup job may delete data of newly built segment because of cube cache in CubeManager
+* [KYLIN-2620] - Result of sum measure may by replaced by the TopN measure with the same column during query
+* [KYLIN-4041] - Concat function with null value does not work correctly
+* [KYLIN-3978] - InternalErrorException happens for queries with precise count distinct measures
+* [KYLIN-3845] - Streaming cube build error if the Kafka data source lacks selected dimensions or metrics
+* [KYLIN-3980] - Cube planner cuboid id error there are too many dimensions
+* [KYLIN-4049] - Storage should be cleaned after cube refreshing with config kylin.storage.clean-after-delete-operation set to true
+
+## v2.6.2 - 2019-05-19
+_Tag:_ [kylin-2.6.2](https://github.com/apache/kylin/tree/kylin-2.6.2)
+This is a bugfix release after 2.6.1, with 9 enhancements and 27 bug fixes.
+
+__Improvement__
+
+* [KYLIN-3905] - Enable shrunken dictionary default
+* [KYLIN-3571] - Do not package Spark in Kylin's binary package
+* [KYLIN-3866] - Add config to determine whether use local classpath for mapreduce's classpath
+* [KYLIN-3839] - Storage clean up after refreshing or deleting a segment
+* [KYLIN-3885] - Build dimension dictionary with spark costs too much time
+* [KYLIN-3873] - Fix inappropriate use of memory in SparkFactDistinct.java
+* [KYLIN-3892] - Enable set job's building priority
+* [KYLIN-3857] - Add parameter to change sql quoting character for sqoop
+* [KYLIN-3987] - Give more reducer for ultra high cardinality columns in fact distinct job
+
+__Bug Fix__
+
+* [KYLIN-3835] - Source table reloading does not check table's reference by models
+* [KYLIN-2620] - Result of sum(measure) may not be accurate if there exists a topn measure for the same column
+* [KYLIN-3838] - Retry mechanism is invalid when build cube with spark
+* [KYLIN-3808] - Some time fields in response of rest api for listing jobs are always 0
+* [KYLIN-3818] - After Cube disabled, auto-merge cube job still running
+* [KYLIN-3830] - Wrong result for query 'SELECT SUM(dim1)' without setting a relative measure of dim1
+* [KYLIN-3817] - Duration in Cube building is a negative number
+* [KYLIN-3874] - Building step "Convert Cuboid Data to HFile" failed when HBase and MR use different HDFS clusters
+* [KYLIN-3880] - DataType is incompatible in Kylin HBase coprocessor
+* [KYLIN-3888] - TableNotDisabledException when run step "Convert Lookup Table to HFile"
+* [KYLIN-3884] - Loading hfile to HBase failed for temporary dir in output path
+* [KYLIN-3474] - Tableau 10.5 gets malformed token after connected with Kylin
+* [KYLIN-3895] - Failed to register new MBean when "kylin.server.query-metrics-enabled" set true
+* [KYLIN-3909] - Spark cubing job failed for MappeableRunContainer is not registered
+* [KYLIN-3898] - Cube level properties are ineffective in the some build steps
+* [KYLIN-3911] - Check if HBase table is enabled before disabling tables when update coprocessor
+* [KYLIN-3922] - Fail to update coprocessor when run DeployCoprocessorCLI
+* [KYLIN-3938] - Can't delete job with type "OPTIMIZE CHECKPOINT"
+* [KYLIN-3950] - Cube planner optimize job only use inmem algorithm
+* [KYLIN-3788] - Incorrect time zone conversion in parsing Kafka Streaming Data
+* [KYLIN-3957] - Query system cube get exception "cannot cast java.math.BigDecimal to java.lang.Double"
+* [KYLIN-3943] - Fix hardcode in system-cube.sh
+* [KYLIN-3936] - MR/Spark task will still run after the job is stopped
+* [KYLIN-3968] - Customized precision of sum measure doesn't work on web
+* [KYLIN-3965] - SQLException with message "No suitable driver found for jdbc:kylin://" when try to connect Kylin with JDBC
+* [KYLIN-3926] - Set source record count for cubes with topn and count distinct measures when updating statistics
+* [KYLIN-3934] - Sqoop import param '--null-string' result in null value become blank string in hive table
 
 ## v2.6.1 - 2019-03-08
 _Tag:_ [kylin-2.6.1](https://github.com/apache/kylin/tree/kylin-2.6.1)
