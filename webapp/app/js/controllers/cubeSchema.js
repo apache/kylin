@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager,StreamingService,CubeService,VdmUtil,tableConfig) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager,StreamingService,CubeService,VdmUtil,tableConfig,$q) {
     $scope.modelsManager = modelsManager;
     $scope.cubesManager = cubesManager;
     $scope.projects = [];
@@ -261,7 +261,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
   });
 
-    $scope.checkCubeForm = function(stepIndex){
+    $scope.checkCubeForm = async function(stepIndex){
       // do not check for Prev Step
       if (stepIndex + 1 < $scope.curStep.step) {
         return true;
@@ -282,7 +282,10 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
                 //business rule check
                 switch($scope.curStep.form){
                     case 'cube_info_form':
-                      return $scope.check_cube_info();
+                      var result =  await $scope.check_cube_info().then(function(res){
+                        return res.data
+                      });
+                      return result
                       break;
                     case 'cube_dimension_form':
                         return $scope.check_cube_dimension();
@@ -307,13 +310,16 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
   }
 
   $scope.check_cube_info = function () {
-    if (($scope.state.mode === "edit") && ($scope.cubeMode == "addNewCube")) {
-      // check duplicated cube name when add new cube.
+    if ($scope.state.mode === "edit" && $scope.cubeMode === "addNewCube") {
       var cubeName = $scope.cubeMetaFrame.name;
-      if ($scope.checkDuplicatedCubeName(cubeName)) {
-        SweetAlert.swal('Oops...', "The cube named [" + cubeName.toUpperCase() + "] already exists", 'warning');
-        return false;
-      }
+      var defer = $q.defer();
+      CubeService.getAllCubes({cubeName: cubeName}, {}, function (res) {
+        if (!res.data) {
+          SweetAlert.swal('Oops...', "The cube named [" + cubeName.toUpperCase() + "] already exists", 'warning');
+        }
+        defer.resolve(res.data)
+      })
+      return defer.promise
     }
     // Update storage type according to the streaming table in model
     if(TableModel.selectProjectTables.some(function(table) {

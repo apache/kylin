@@ -36,7 +36,7 @@ KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
     iterator(data.root, data.root.row_count);
     return cuboids;
   };
-  return $resource(Config.service.url + 'cubes/:cubeId/:propName/:propValue/:action', {}, {
+  return $resource(Config.service.url + 'cubes/:cubeId/:propName/:propValue/:action/:cubeName', {}, {
     list: {method: 'GET', params: {}, isArray: true},
     getValidEncodings: {method: 'GET', params: {action:"validEncodings"}, isArray: false},
     getCube: {method: 'GET', params: {}, isArray: false},
@@ -80,6 +80,7 @@ KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
     },
     optimize: {method: 'PUT', params: {action: 'optimize'}, isArray: false},
     autoMigrate: {method: 'POST', params: {action: 'migrate'}, isArray: false},
-    lookupRefresh: {method: 'PUT', params: {action: 'refresh_lookup'}, isArray: false}
+    lookupRefresh: {method: 'PUT', params: {action: 'refresh_lookup'}, isArray: false},
+    getAllCubes: {method: 'GET', params: {action: 'validate'}, isArray: false}
   });
 }]);
