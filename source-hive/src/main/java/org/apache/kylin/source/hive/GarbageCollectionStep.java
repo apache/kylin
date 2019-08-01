@@ -46,8 +46,6 @@ public class GarbageCollectionStep extends AbstractExecutable {
         StringBuffer output = new StringBuffer();
         try {
             output.append(cleanUpIntermediateFlatTable(config));
-            // don't drop view to avoid concurrent issue
-            //output.append(cleanUpHiveViewIntermediateTable(config));
         } catch (IOException e) {
             logger.error("job:" + getId() + " execute finished with exception", e);
             return ExecuteResult.createError(e);
@@ -56,6 +54,7 @@ public class GarbageCollectionStep extends AbstractExecutable {
         return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());
     }
 
+    //clean up both hive intermediate flat table and view table
     private String cleanUpIntermediateFlatTable(KylinConfig config) throws IOException {
         StringBuffer output = new StringBuffer();
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
@@ -92,9 +91,11 @@ public class GarbageCollectionStep extends AbstractExecutable {
         setParam("oldHiveTables", StringUtil.join(tableIdentity, ","));
     }
 
+    //get intermediate fact table and lookup table(if exists)
     private List<String> getIntermediateTables() {
         List<String> intermediateTables = Lists.newArrayList();
-        String[] tables = StringUtil.splitAndTrim(getParam("oldHiveTables"), ",");
+        final String hiveTables = getParam("oldHiveTables") + "," + getParam("oldHiveViewIntermediateTables");
+        String[] tables = StringUtil.splitAndTrim(hiveTables, ",");
         for (String t : tables) {
             intermediateTables.add(t);
         }
