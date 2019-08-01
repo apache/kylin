@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager,StreamingService,CubeService,VdmUtil,tableConfig,$http) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager,StreamingService,CubeService,VdmUtil,tableConfig,$q) {
     $scope.modelsManager = modelsManager;
     $scope.cubesManager = cubesManager;
     $scope.projects = [];
@@ -292,14 +292,14 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     if ($scope.state.mode === "edit" && $scope.cubeMode === "addNewCube") {
       var cubeName = $scope.cubeMetaFrame.name;
-      return new Promise(function (resolve) {
-        $http.get(Config.service.url + "cubes/validate/" + cubeName).success(function (res) {
-          if (!res.data) {
-            SweetAlert.swal('Oops...', "The cube named [" + cubeName.toUpperCase() + "] already exists", 'warning');
-          }
-          resolve(res);
-        })
+      var defer = $q.defer();
+      CubeService.getAllCubes({cubeName: cubeName}, {}, function (res) {
+        if (!res.data) {
+          SweetAlert.swal('Oops...', "The cube named [" + cubeName.toUpperCase() + "] already exists", 'warning');
+        }
+        defer.resolve(res.data)
       })
+      return defer.promise
     }
     // Update storage type according to the streaming table in model
     if(TableModel.selectProjectTables.some(function(table) {
