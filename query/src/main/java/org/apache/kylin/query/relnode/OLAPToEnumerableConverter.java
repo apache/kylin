@@ -19,6 +19,7 @@
 package org.apache.kylin.query.relnode;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
 import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
@@ -40,6 +41,7 @@ import org.apache.kylin.query.security.QueryInterceptor;
 import org.apache.kylin.query.security.QueryInterceptorUtil;
 
 import com.google.common.collect.Lists;
+import org.apache.kylin.query.util.QueryInfoCollector;
 
 /**
  * If you're renaming this class, please keep it ending with OLAPToEnumerableConverter
@@ -92,6 +94,11 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         }
 
         RealizationChooser.selectRealization(contexts);
+
+        QueryInfoCollector.current().setCubeNames(contexts.stream()
+                .filter(olapContext -> olapContext.realization != null)
+                .map(olapContext -> olapContext.realization.getCanonicalName())
+                .collect(Collectors.toList()));
 
         doAccessControl(contexts);
 
