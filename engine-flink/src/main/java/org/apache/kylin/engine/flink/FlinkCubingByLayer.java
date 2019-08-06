@@ -559,7 +559,7 @@ public class FlinkCubingByLayer extends AbstractApplication implements Serializa
 
                 // if still empty or null
                 if (myChildren == null || myChildren.size() == 0) {
-                    return;
+                    continue;
                 }
                 rowKeySplitter.split(key);
                 final Cuboid parentCuboid = Cuboid.findForMandatory(cubeDesc, cuboidId);
