@@ -158,6 +158,10 @@ public class QueryService extends BasicService {
     private ModelService modelService;
 
     @Autowired
+    @Qualifier("TableAclService")
+    private TableACLService tableAclService;
+
+    @Autowired
     private AclEvaluate aclEvaluate;
 
     private GenericKeyedObjectPool<PreparedContextKey, PreparedContext> preparedContextPool;
@@ -775,6 +779,10 @@ public class QueryService extends BasicService {
         }
 
         return tableMetas;
+    }
+
+    public List<TableMetaWithType> getMetadataV2FilterByUser(String project) throws SQLException, IOException {
+        return tableAclService.filterTableMetasByAcl(getMetadataV2(project), project);
     }
 
     public List<TableMetaWithType> getMetadataV2(String project) throws SQLException, IOException {
