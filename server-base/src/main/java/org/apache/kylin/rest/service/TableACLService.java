@@ -18,16 +18,24 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.metadata.MetadataConstants.TYPE_USER;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.metadata.acl.TableACL;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import com.google.common.collect.Lists;
 
 @Component("TableAclService")
 public class TableACLService extends BasicService {
@@ -73,5 +81,41 @@ public class TableACLService extends BasicService {
     public void deleteFromTableACLByTbl(String project, String table) throws IOException {
         aclEvaluate.checkProjectAdminPermission(project);
         getTableACLManager().deleteTableACLByTbl(project, table);
+    }
+
+    public List<TableMetaWithType> filterTableMetasByAcl(List<TableMetaWithType> tableMetaWithTypes, String project) throws IOException {
+        return filterByAcl(tableMetaWithTypes, project, new AclFilter<TableMetaWithType>() {
+            @Override
+            public boolean filter(TableMetaWithType table, Set<String> blockedTables) {
+                String identity = table.getTABLE_SCHEM() + "." + table.getTABLE_NAME();
+                return !blockedTables.contains(identity);
+            }
+        });
+    }
+
+    private interface AclFilter<T> {
+        boolean filter(T table, Set<String> blockedTables);
+    }
+
+    private <T> List<T> filterByAcl(List<T> tables, String project, AclFilter filter) throws IOException {
+        ProjectManager projectManager = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
+
+        if (aclEvaluate.hasProjectAdminPermission(projectManager.getProject(project))) {
+            return tables;
+        }
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Set<String> blockedTables = getBlockedTablesByUser(project, username, TYPE_USER);
+        List<T> result = Lists.newArrayList();
+        for (T table : tables) {
+            if (filter.filter(table, blockedTables)) {
+                result.add(table);
+            }
+        }
+        return result;
+    }
+
+    private Set<String> getBlockedTablesByUser(String project, String username, String type) throws IOException {
+        return getTableACLByProject(project).getBlockedTablesByUser(username, type);
     }
 }
