@@ -25,6 +25,7 @@ import java.util.Locale;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -35,8 +36,10 @@ import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.security.KylinUserManager;
 import org.apache.kylin.rest.security.ManagedUser;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -46,6 +49,8 @@ import com.google.common.base.Preconditions;
 public class KylinUserService implements UserService {
 
     private Logger logger = LoggerFactory.getLogger(KylinUserService.class);
+    @Autowired
+    private AclEvaluate aclEvaluate;
 
     public static final String DIR_PREFIX = "/user/";
 
@@ -131,6 +136,18 @@ public class KylinUserService implements UserService {
     }
 
     @Override
+    public List<ManagedUser> listUsers(String userName, Boolean isFuzzMatch) throws IOException {
+        List<ManagedUser> userList = getKylinUserManager().list();
+        return getManagedUsersByFuzzMatching(userName, isFuzzMatch, userList, null);
+    }
+
+    @Override
+    public List<ManagedUser> listUsers(String userName, String groupName, Boolean isFuzzMatch) throws IOException {
+        List<ManagedUser> userList = getKylinUserManager().list();
+        return getManagedUsersByFuzzMatching(userName, isFuzzMatch, userList, groupName);
+    }
+
+    @Override
     public List<String> listAdminUsers() throws IOException {
         List<String> adminUsers = new ArrayList<>();
         for (ManagedUser managedUser : listUsers()) {
@@ -151,5 +168,31 @@ public class KylinUserService implements UserService {
 
     private KylinUserManager getKylinUserManager() {
         return KylinUserManager.getInstance(KylinConfig.getInstanceFromEnv());
+    }
+
+    private List<ManagedUser> getManagedUsersByFuzzMatching(String nameSeg, boolean isFuzzMatch,
+            List<ManagedUser> userList, String groupName) {
+        aclEvaluate.checkIsGlobalAdmin();
+        //for name fuzzy matching
+        if (StringUtils.isBlank(nameSeg) && StringUtils.isBlank(groupName)) {
+            return userList;
+        }
+
+        List<ManagedUser> usersByFuzzyMatching = new ArrayList<>();
+        for (ManagedUser u : userList) {
+            if (!isFuzzMatch && StringUtils.equals(u.getUsername(), nameSeg) && isUserInGroup(u, groupName)) {
+                usersByFuzzyMatching.add(u);
+            }
+            if (isFuzzMatch && StringUtils.containsIgnoreCase(u.getUsername(), nameSeg)
+                    && isUserInGroup(u, groupName)) {
+                usersByFuzzyMatching.add(u);
+            }
+
+        }
+        return usersByFuzzyMatching;
+    }
+
+    private boolean isUserInGroup(ManagedUser user, String groupName) {
+        return StringUtils.isBlank(groupName) || user.getAuthorities().contains(new SimpleGrantedAuthority(groupName));
     }
 }

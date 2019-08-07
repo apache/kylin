@@ -41,11 +41,12 @@
                 <td style="width: 40%" >
                     <label><b>Name&nbsp;</b> </label>
                     <input ng-model="newAccess.sid" ng-if="newAccess.principal==true" placeholder=" User NT Account..." style="width: 80%" />
+                    <input ng-model="newAccess.sid" ng-if="newAccess.principal==false" placeholder=" User NT Account..." style="width: 80%" />
 
-                    <select chosen ng-model="newAccess.sid" ng-if="newAccess.principal==false" style="width: 80%"
+                    <!-- <select chosen ng-model="newAccess.sid" ng-if="newAccess.principal==false" style="width: 80%"
                             ng-options="authority as authority for authority in authorities">
                             <option value=""></option>
-                            </select>
+                            </select> -->
                 </td>
                 <td >
                     <label><b>Permission&nbsp;</b> </label>

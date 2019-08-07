@@ -18,13 +18,6 @@
 
 package org.apache.kylin.rest.controller;
 
-import static junit.framework.TestCase.fail;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.AccessRequest;
@@ -34,9 +27,9 @@ import org.apache.kylin.rest.security.AclEntityType;
 import org.apache.kylin.rest.security.AclPermissionType;
 import org.apache.kylin.rest.security.ManagedUser;
 import org.apache.kylin.rest.service.CubeService;
-import org.apache.kylin.rest.service.IUserGroupService;
 import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.ServiceTestBase;
+import org.apache.kylin.rest.service.UserGroupService;
 import org.apache.kylin.rest.service.UserService;
 import org.junit.Assert;
 import org.junit.Before;
@@ -47,6 +40,13 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.io.IOException;
+import java.util.List;
+
+import static junit.framework.TestCase.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author xduo
@@ -81,7 +81,7 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
 
     @Autowired
     @Qualifier("userGroupService")
-    private IUserGroupService userGroupService;
+    private UserGroupService userGroupService;
 
     @Before
     public void setup() throws Exception {
@@ -97,6 +97,11 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         List<ProjectInstance> projects = projectController.getProjects(10000, 0);
         assertTrue(projects.size() > 0);
         ProjectInstance project = projects.get(0);
+        userGroupService.addGroup("g1");
+        userGroupService.addGroup("g2");
+        userGroupService.addGroup("g3");
+        userGroupService.addGroup("g4");
+
         ManagedUser user = new ManagedUser("u", "kylin", false, "all_users", "g1", "g2", "g3", "g4");
         userService.createUser(user);
 
