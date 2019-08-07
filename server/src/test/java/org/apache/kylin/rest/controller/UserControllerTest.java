@@ -18,50 +18,50 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.security.ManagedUser;
 import org.apache.kylin.rest.service.ServiceTestBase;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.io.IOException;
 
 /**
  * @author xduo
  */
 public class UserControllerTest extends ServiceTestBase {
 
+    @Autowired
     private UserController userController;
 
-    @BeforeClass
-    public static void setupResource() {
-        staticCreateTestMetadata();
-        List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
-        ManagedUser user = new ManagedUser("ADMIN", "ADMIN", false, authorities);
-        Authentication authentication = new TestingAuthenticationToken(user, "ADMIN", Constant.ROLE_ADMIN);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
+    private ManagedUser userAdmin = new ManagedUser("ADMIN", "KYLIN", false, Constant.ROLE_ADMIN);
 
-    @Before
-    public void setup() throws Exception {
-        super.setup();
+    private ManagedUser userModeler = new ManagedUser("MODELER", "MODELER", false, Constant.ROLE_MODELER);
 
-        userController = new UserController();
+    @Test
+    public void testLogin() throws IOException {
+        logInWithUser(userAdmin);
+        UserDetails userDetail = userController.authenticatedUser();
+        ManagedUser user = (ManagedUser) userDetail;
+        Assert.assertTrue(user.equals(userAdmin));
     }
 
     @Test
-    public void testBasics() throws IOException {
-        UserDetails user = userController.authenticate();
-        Assert.assertNotNull(user);
-        Assert.assertTrue(user.getUsername().equals("ADMIN"));
+    public void testLoginAsAnotherUser() throws IOException {
+        logInWithUser(userModeler);
+        UserDetails userDetail = userController.authenticate();
+        ManagedUser user = (ManagedUser) userDetail;
+        Assert.assertTrue(user.equals(userModeler));
+    }
+
+    private void logInWithUser(ManagedUser user) {
+        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(user, user.getPassword(),
+                user.getAuthorities());
+        token.setDetails(SecurityContextHolder.getContext().getAuthentication().getDetails());
+        SecurityContextHolder.getContext().setAuthentication(token);
     }
 }

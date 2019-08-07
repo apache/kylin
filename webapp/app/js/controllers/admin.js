@@ -21,7 +21,18 @@
 KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, TableService, loadingRequest, MessageService, ProjectService, $modal, SweetAlert,kylinConfig,ProjectModel,$window, MessageBox) {
   $scope.configStr = "";
   $scope.envStr = "";
-
+  $scope.active = {
+    tab_instance: true
+  }
+  $scope.tabData = {}
+  $scope.activateTab = function(tab) {
+    $scope.active = {}; //reset
+    $scope.active[tab] = true;
+  }
+  $scope.$on('change.active', function(event, data) {  
+    $scope.activateTab(data.activeTab);
+    $scope.tabData.groupName = data.groupName
+  });
   $scope.isCacheEnabled = function(){
     return kylinConfig.isCacheEnabled();
   }

@@ -1,0 +1,108 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+<div class="container">
+    <div class="row" style="margin-top:15px;" ng-if="!allowUseUserAndGroupModule">User management does not apply to the current security configuration, go to the correct permissions management page for editing.</div>
+    <div class="row" style="margin-top:15px;" ng-if="allowUseUserAndGroupModule">
+    <!--No Instances-->
+    <div ng-if="!userloading && usersTotal == 0">
+      <div no-result text="No user"></div>
+    </div>
+    <!--Loading Instances-->
+    <div ng-if="userloading">
+      <loading text="Loading user list ..."></loading>
+    </div>
+    <div class="row">
+      <div class="col-xs-9">
+        <label class="table-header-text">User List</label>
+      </div>
+      <div class="col-xs-3">
+      <form style="float:right;" >
+          <span class="input-icon input-icon-right nav-search">
+            <input type="text" placeholder="Search by user name" class="nav-search-input" ng-model="filter.name" />
+            <i class="ace-icon fa fa-search blue" ng-click="listUsers();"></i>
+          </span>
+      </form>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-sm" ng-click="createUser()"><i class="fa fa-plus"></i> User</button>
+    <span class="label label-success" style="float:right;margin-top:10px;" ng-if="tabData.groupName">Group Name: {{tabData.groupName}} <i class="fa fa-close" style="cursor: pointer;" ng-click="removeGroupFilter()"></i></span>
+    <!--Queries Table Content-->
+    <table ng-if="usersTotal > 0" style="margin-top:20px;table-layout: fixed;" class="table table-striped table-bordered table-hover  table-condensed dataTable no-footer">
+      <thead>
+      <tr style="cursor: pointer">
+        <th width="7%">
+          ID
+        </th>
+        <th width="15%">
+          User Name
+        </th>
+        <th>
+          Group
+        </th>
+        <th width="8%">
+          Status
+        </th>
+        <th width="15%">
+          Actions
+        </th>
+      </tr>
+      </thead>
+      <tbody class="odd table table-striped table-bordered table-hover dataTable no-footer">
+      <tr ng-repeat="(i, user) in users" style="cursor: pointer">
+        <td>
+          {{i+1 + page.limit * (page.curpage - 1)}}
+        </td>
+        <td>
+          {{user.username}}
+        </td>
+        <th>
+          <span class="label label-primary" style="margin-left:4px;display:inline-block" ng-repeat="auth in user.authorities">{{auth.authority}}</span>
+        </th>
+        <th >
+          <span ng-if="!user.disabled" class="label label-success">Enabled</span>
+          <span ng-if="user.disabled" class="label label-warning">Disabled</span>
+        </th>
+        <td>
+          <div class="btn-group">
+            <button type="button" tooltip="Assign group" class="btn btn-default btn-xs" ng-if="user.username!='ADMIN'" ng-click="assignToGroup(user.username, user.authorities)">
+              <i class="fa fa-group fa-fw"></i>
+            </button>
+            <button type="button" tooltip="Delete user" class="btn btn-default btn-xs" ng-if="user.username!='ADMIN'" ng-click="delUser(user.username)">
+              <i class="fa fa-trash-o fa-fw"></i>
+            </button>
+            <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">Actions<span class="ace-icon fa fa-caret-down icon-on-right"></span></button>
+            <ul class="dropdown-menu" role="menu" style="right:0;left:auto;">
+              <li ng-if="user.disabled"><a ng-click="enableUser(user)">Enable</a></li>
+              <li ng-if="!user.disabled"><a ng-click="disableUser(user)">Disable</a></li>
+              <li><a ng-click="changePwd(user)">Change Password</a></li>
+            </ul>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    <div class="row" ng-if="users.length>0">
+        <div class="col-xs-12">
+            <pagination total-items="usersTotal" boundary-link-numbers="true" rotate="false" boundary-links="true" force-ellipses="true" page="page.curpage" max-size="10" items-per-page="page.limit" on-select-page="listUsers(page)"  class="pagination-sm"></pagination>
+        </div>
+    </div>
+  </div>
+</div>
+<div ng-include="'partials/admin/user_create.html'"></div>
+<div ng-include="'partials/admin/change_pwd.html'"></div>
+<div ng-include="'partials/admin/group_assign.html'"></div>

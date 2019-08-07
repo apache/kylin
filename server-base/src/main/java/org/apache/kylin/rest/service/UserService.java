@@ -18,11 +18,11 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.kylin.rest.security.ManagedUser;
 import org.springframework.security.provisioning.UserDetailsManager;
+
+import java.io.IOException;
+import java.util.List;
 
 public interface UserService extends UserDetailsManager {
 
@@ -31,6 +31,10 @@ public interface UserService extends UserDetailsManager {
     void setEvictCacheFlag(boolean evictCacheFlag);
 
     List<ManagedUser> listUsers() throws IOException;
+
+    List<ManagedUser> listUsers(String userName, Boolean isFuzzyMatch) throws IOException;
+
+    List<ManagedUser> listUsers(String userName, String groupName, Boolean isFuzzyMatch) throws IOException;
 
     List<String> listAdminUsers() throws IOException;
 

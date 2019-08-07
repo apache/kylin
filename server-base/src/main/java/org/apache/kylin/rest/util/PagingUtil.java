@@ -16,5 +16,30 @@
  * limitations under the License.
  */
 
-//Kylin Application Module
-KylinApp = angular.module('kylin', ['ngRoute', 'ngResource', 'ngGrid', 'ui.grid', 'ui.grid.resizeColumns', 'ui.grid.grouping', 'ui.bootstrap', 'ui.bootstrap.pagination', 'ui.ace', 'base64', 'angularLocalStorage', 'localytics.directives', 'treeControl', 'ngLoadingRequest', 'oitozero.ngSweetAlert', 'ngCookies', 'angular-underscore', 'ngAnimate', 'ui.sortable', 'angularBootstrapNavTree', 'toggle-switch', 'ngSanitize', 'ui.select', 'ui.bootstrap.datetimepicker', 'nvd3', 'ngTagsInput']);
+package org.apache.kylin.rest.util;
+
+import java.util.Collections;
+import java.util.List;
+
+public class PagingUtil {
+
+    public static <T> List<T> cutPage(List<T> full, int offset, int limit) {
+        if (full == null)
+            return null;
+
+        int begin = offset;
+        int end = offset + limit;
+
+        return cut(full, begin, end);
+    }
+
+    private static <T> List<T> cut(List<T> full, int begin, int end) {
+        if (begin >= full.size())
+            return Collections.emptyList();
+
+        if (end > full.size())
+            end = full.size();
+
+        return full.subList(begin, end);
+    }
+}

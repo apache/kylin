@@ -21,7 +21,6 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
   var timezone;
   var deployEnv;
 
-
   this.init = function () {
     return AdminService.publicConfig({}, function (config) {
       _config = config.config;
@@ -169,6 +168,14 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
       return '0';
     }
     return this.sourceType;
+  }
+  this.getSecurityType = function () {
+    this.securityType = this.getProperty("kylin.security.profile").trim();
+    return this.securityType;
+  }
+  this.page = {
+    offset: 1,
+    limit: 15
   }
 });
 

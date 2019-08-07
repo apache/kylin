@@ -16,5 +16,13 @@
  * limitations under the License.
  */
 
-//Kylin Application Module
-KylinApp = angular.module('kylin', ['ngRoute', 'ngResource', 'ngGrid', 'ui.grid', 'ui.grid.resizeColumns', 'ui.grid.grouping', 'ui.bootstrap', 'ui.bootstrap.pagination', 'ui.ace', 'base64', 'angularLocalStorage', 'localytics.directives', 'treeControl', 'ngLoadingRequest', 'oitozero.ngSweetAlert', 'ngCookies', 'angular-underscore', 'ngAnimate', 'ui.sortable', 'angularBootstrapNavTree', 'toggle-switch', 'ngSanitize', 'ui.select', 'ui.bootstrap.datetimepicker', 'nvd3', 'ngTagsInput']);
+KylinApp.factory('UserGroupService', ['$resource', function ($resource, config) {
+  return $resource(Config.service.url + 'user_group/:action/:group', {}, {
+    listGroups: {method: 'GET', params: {action:'groups'}, isArray: false},
+    addGroup: {method: 'POST', params: {}, isArray: false},
+    delGroup: {method: 'DELETE', params: {}, isArray: false},
+    editGroup: {method: 'PUT', params: {}, isArray: false},
+    assignUsers: {method: 'PUT', params: {action: 'users'}, isArray: false},
+    getUsersByGroup: {method: 'GET', params: {action:'users'}, isArray: false}
+  });
+}]);

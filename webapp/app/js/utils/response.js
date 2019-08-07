@@ -16,5 +16,30 @@
  * limitations under the License.
  */
 
-//Kylin Application Module
-KylinApp = angular.module('kylin', ['ngRoute', 'ngResource', 'ngGrid', 'ui.grid', 'ui.grid.resizeColumns', 'ui.grid.grouping', 'ui.bootstrap', 'ui.bootstrap.pagination', 'ui.ace', 'base64', 'angularLocalStorage', 'localytics.directives', 'treeControl', 'ngLoadingRequest', 'oitozero.ngSweetAlert', 'ngCookies', 'angular-underscore', 'ngAnimate', 'ui.sortable', 'angularBootstrapNavTree', 'toggle-switch', 'ngSanitize', 'ui.select', 'ui.bootstrap.datetimepicker', 'nvd3', 'ngTagsInput']);
+'use strict';
+
+/* utils */
+
+KylinApp.factory('ResponseUtil', function (SweetAlert) {
+  return {
+    handleError: function (e, cb) {
+      if (typeof cb === 'function') {
+        return cb(e)
+      }
+      if (e.data&& e.data.exception){
+        var message =e.data.exception;
+        var msg = !!(message) ? message : 'Failed to take action.';
+        SweetAlert.swal('Oops...', msg, 'error');
+      } else{
+        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+      }
+    },
+    // use in standard api response  res = {data: {}, code:000, msg: ''}
+    handleSuccess: function (res, cb) {
+      let data = res && res.data || {}
+      if (typeof cb === 'function') {
+        return cb(data, res.code, res.msg)
+      }
+    }
+  }
+});
