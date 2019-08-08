@@ -18,6 +18,8 @@
 
 package org.apache.kylin.query.relnode;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -33,20 +35,29 @@ import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory.FieldInfoBuilder;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexOver;
 import org.apache.calcite.rex.RexProgram;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.fun.SqlCaseOperator;
+import org.apache.calcite.sql.type.ArraySqlType;
+import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelUtils;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.expression.ColumnTupleExpression;
 import org.apache.kylin.metadata.expression.ExpressionColCollector;
@@ -54,8 +65,10 @@ import org.apache.kylin.metadata.expression.NoneTupleExpression;
 import org.apache.kylin.metadata.expression.NumberTupleExpression;
 import org.apache.kylin.metadata.expression.StringTupleExpression;
 import org.apache.kylin.metadata.expression.TupleExpression;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
+import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.relnode.visitor.TupleExpressionVisitor;
 import org.apache.kylin.query.schema.OLAPTable;
 
@@ -77,17 +90,27 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     boolean isMerelyPermutation = false;//project additionally added by OLAPJoinPushThroughJoinRule
     private int caseCount = 0;
 
+    private final BasicSqlType dateType = new BasicSqlType(getCluster().getTypeFactory().getTypeSystem(), SqlTypeName.DATE);
+    private final BasicSqlType timestampType = new BasicSqlType(getCluster().getTypeFactory().getTypeSystem(), SqlTypeName.TIMESTAMP);
+    private final ArraySqlType dateArrayType = new ArraySqlType(dateType, true);
+    private final ArraySqlType timestampArrayType = new ArraySqlType(timestampType, true);
+
+    /**
+     * A flag indicate whether has intersect_count in query
+     */
+    private boolean hasIntersect = false;
+
     public OLAPProjectRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, List<RexNode> exps,
             RelDataType rowType) {
         super(cluster, traitSet, child, exps, rowType);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         Preconditions.checkArgument(child.getConvention() == OLAPRel.CONVENTION);
-        this.rewriteProjects = exps;
+        this.rewriteProjects = new ArrayList<>(exps); // make is modifiable
         this.hasJoin = false;
         this.afterJoin = false;
         this.rowType = getRowType();
         for (RexNode exp : exps) {
-                caseCount += RelUtils.countOperatorCall(SqlCaseOperator.INSTANCE, exp);
+            caseCount += RelUtils.countOperatorCall(SqlCaseOperator.INSTANCE, exp);
         }
     }
 
@@ -137,6 +160,17 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         this.afterAggregate = context.afterAggregate;
 
         this.columnRowType = buildColumnRowType();
+        RelNode parentNode = implementor.getParentNode();
+        if (parentNode instanceof OLAPAggregateRel) {
+            OLAPAggregateRel rel = (OLAPAggregateRel) parentNode;
+            for (AggregateCall call : rel.getRewriteAggCalls()) {
+                if (call.getAggregation().getName().equalsIgnoreCase(BitmapMeasureType.FUNC_INTERSECT_COUNT_DISTINCT)) {
+                    hasIntersect = true;
+                    logger.trace("Find intersect count in query.");
+                    break;
+                }
+            }
+        }
     }
 
     ColumnRowType buildColumnRowType() {
@@ -305,7 +339,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
 
         // rebuild columns
         this.columnRowType = this.buildColumnRowType();
-
+        rewriteProjectsForArrayDataType();
         this.rewriting = false;
     }
 
@@ -335,5 +369,82 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     public RelWriter explainTerms(RelWriter pw) {
         return super.explainTerms(pw).item("ctx",
                 context == null ? "" : String.valueOf(context.id) + "@" + context.realization);
+    }
+
+    /**
+     * Change Array[String] to Array[Specific Type] for intersect_count
+     * https://github.com/apache/kylin/pull/785
+     */
+    private void rewriteProjectsForArrayDataType() {
+        if (hasIntersect) {
+            Set<TblColRef> tblColRefs = new HashSet<>(context.allColumns); // all column
+            IRealization realization = context.realization;
+            TblColRef groupBy = null;
+            DataType groupByType = null;
+            if (realization instanceof CubeInstance) {
+                CubeDesc cubeDesc = ((CubeInstance) realization).getDescriptor();
+                for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
+                    if (measureDesc.getFunction().getMeasureType() instanceof BitmapMeasureType) {
+                        TblColRef col1 = measureDesc.getFunction().getParameter().getColRef();
+                        tblColRefs.remove(col1); // Remove all column included in COUNT_DISTINCT
+                        logger.trace("Remove {}", col1);
+                    }
+                }
+                // After remove all columns included in COUNT_DISTINCT, last one should be a group by column
+                if (tblColRefs.size() == 1) {
+                    for (TblColRef colRef : tblColRefs) {
+                        groupBy = colRef;
+                        groupByType = groupBy.getType();
+                        logger.trace("Group By Column in intersect_count should be {}.", groupBy);
+                    }
+                    // only auto change to date/timestamp type from string type
+                    if (groupByType != null && groupByType.isDateTimeFamily()) {
+                        for (int i = 0; i < this.rewriteProjects.size(); i++) {
+                            RexNode rex = this.rewriteProjects.get(i);
+                            if (groupByType.isTimestamp()) {
+                                rewriteProjectForIntersect(rex, SqlTypeName.TIMESTAMP, timestampType,
+                                        timestampArrayType, i);
+                            } else if (groupByType.isDate()) {
+                                rewriteProjectForIntersect(rex, SqlTypeName.DATE, dateType, dateArrayType, i);
+                            }
+                        }
+                    }
+                } else {
+                    logger.trace("After remove, {}.", tblColRefs.size());
+                }
+            }
+        }
+    }
+
+    private void rewriteProjectForIntersect(RexNode rex, SqlTypeName sqlTypeName, BasicSqlType eleSqlType,
+            ArraySqlType arraySqlType, int idx) {
+        if (rex.isA(SqlKind.ARRAY_VALUE_CONSTRUCTOR)) { // somethings like ['2012-01-01', '2012-01-02', '2012-01-03']
+            List<RexNode> nodeList = ((RexCall) rex).getOperands();
+            RexLiteral newNode = null;
+            boolean needChange = true;
+            List<RexNode> newerList = new ArrayList<>();
+            if (!nodeList.isEmpty()) {
+                for (RexNode node : nodeList) {
+                    if (node instanceof RexLiteral) {
+                        RexLiteral literal = (RexLiteral) node;
+                        if (literal.getTypeName() == sqlTypeName) {
+                            needChange = false;
+                            break;
+                        } else {
+                            newNode = RexLiteral.fromJdbcString(eleSqlType, sqlTypeName,
+                                    literal.getValue2().toString());
+                        }
+                    }
+                    if (newNode != null) {
+                        newerList.add(newNode);
+                    }
+                    newNode = null;
+                }
+                if (needChange) {
+                    rewriteProjects.set(idx, ((RexCall) rex).clone(arraySqlType, newerList));
+                    logger.debug("Rewrite project REL {} for intersect count.", rewriteProjects.get(idx));
+                }
+            }
+        }
     }
 }
