@@ -25,7 +25,7 @@
                 <ul class="wizard-steps">
                     <li ng-repeat="step in wizardSteps"
                         class="{{step==curStep?'active':''}} {{step.isComplete?'complete':''}}">
-                        <span style="cursor:pointer;" ng-click="checkCubeForm($index)?goToStep($index):''" class="step">{{step.step = ($index + 1)}}</span>
+                        <span style="cursor:pointer;" ng-click="nextStep($index, goToStep)" class="step">{{step.step = ($index + 1)}}</span>
                         <span class="title">{{step.title}}</span>
                      </li>
                 </ul>
@@ -46,7 +46,7 @@
                             <i class="ace-icon fa fa-arrow-left"></i>
                             Prev
                         </button>
-                        <button id="nextButton" class="btn btn-success btn-next"  ng-click="checkCubeForm($index)?nextView():''" ng-disabled="forms[curStep.form].$invalid"
+                        <button id="nextButton" class="btn btn-success btn-next"  ng-click="nextStep($index, nextView)" ng-disabled="forms[curStep.form].$invalid"
                                 ng-show="curStep.title!='Overview'">
                             Next
                             <i class="ace-icon fa fa-arrow-right icon-on-right"></i>
