@@ -20,12 +20,12 @@
  *jobListModel will manage data in list job page
  */
 
-KylinApp.service('JobList',function(JobService,$q){
+KylinApp.service('JobList',function(JobService, $q, kylinConfig){
     var _this = this;
     this.jobs={};
     this.jobFilter = {
         cubeName : null,
-        timeFilterId : 1,
+        timeFilterId : kylinConfig.getJobTimeFilterId(),
         searchModeId: 2,
         statusIds: []
     };
@@ -33,7 +33,7 @@ KylinApp.service('JobList',function(JobService,$q){
     this.clearJobFilter = function(){
         this.jobFilter = {
           cubeName : null,
-          timeFilterId : 1,
+          timeFilterId : kylinConfig.getJobTimeFilterId(),
           searchModeId: 2,
           statusIds: []
         };
@@ -41,6 +41,7 @@ KylinApp.service('JobList',function(JobService,$q){
 
     this.list = function(jobRequest){
         var defer = $q.defer();
+        console.log();
         JobService.list(jobRequest, function (jobs) {
             angular.forEach(jobs, function (job) {
                 var id = job.uuid;

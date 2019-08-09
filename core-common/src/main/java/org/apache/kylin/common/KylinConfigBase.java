@@ -1906,7 +1906,7 @@ public abstract class KylinConfigBase implements Serializable {
                 + "kylin.security.profile,"
                 + "kylin.htrace.show-gui-trace-toggle,kylin.web.export-allow-admin,kylin.web.export-allow-other,"
                 + "kylin.cube.cubeplanner.enabled,kylin.web.dashboard-enabled,kylin.tool.auto-migrate-cube.enabled,"
-                + "kylin.job.scheduler.default");
+                + "kylin.job.scheduler.default,kylin.web.default-time-filter");
     }
 
     // ============================================================================
