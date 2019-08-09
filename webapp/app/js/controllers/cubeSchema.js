@@ -260,76 +260,77 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     }
 
   });
-
-    $scope.checkCubeForm = async function(stepIndex){
-      // do not check for Prev Step
-      if (stepIndex + 1 < $scope.curStep.step) {
-        return true;
+  $scope.nextStep = async function (stepIndex, cb) {
+    var validResult = await $scope.checkCubeForm(stepIndex);
+    if (validResult) {
+      if (typeof cb === 'function') {
+        cb(stepIndex)
       }
+    }
+  }
+  $scope.checkCubeForm = async function(stepIndex){
+    // do not check for Prev Step
+    if (stepIndex + 1 < $scope.curStep.step) {
+      return true;
+    }
 
-      if(!$scope.curStep.form){
-            return true;
-        }
-        if($scope.state.mode==='view'){
-            return true;
-        }
-        else{
-            //form validation
-            if($scope.forms[$scope.curStep.form].$invalid){
-                $scope.forms[$scope.curStep.form].$submitted = true;
-                return false;
-            }else{
-                //business rule check
-                switch($scope.curStep.form){
-                    case 'cube_info_form':
-                      var result =  await $scope.check_cube_info().then(function(res){
-                        return res.data
-                      });
-                      return result
-                      break;
-                    case 'cube_dimension_form':
-                        return $scope.check_cube_dimension();
-                        break;
-                    case 'cube_measure_form':
-                        return $scope.check_cube_measure();
-                        break;
-                    case 'cube_setting_form':
-                        return $scope.check_cube_setting();
-                    case 'cube_overwrite_prop_form':
-                        return $scope.cube_overwrite_prop_check();
-                    default:
-                        return true;
-                        break;
-                }
-            }
-        }
-    };
+    if(!$scope.curStep.form){
+          return true;
+      }
+      if($scope.state.mode==='view'){
+          return true;
+      }
+      else{
+          //form validation
+          if($scope.forms[$scope.curStep.form].$invalid){
+              $scope.forms[$scope.curStep.form].$submitted = true;
+              return false;
+          }else{
+              //business rule check
+              switch($scope.curStep.form){
+                  case 'cube_info_form':
+                    return await $scope.check_cube_info(); 
+                  case 'cube_dimension_form':
+                      return $scope.check_cube_dimension();
+                  case 'cube_measure_form':
+                      return $scope.check_cube_measure();
+                  case 'cube_setting_form':
+                      return $scope.check_cube_setting();
+                  case 'cube_overwrite_prop_form':
+                      return $scope.cube_overwrite_prop_check();
+                  default:
+                      return true;
+              }
+          }
+      }
+  };
 
   $scope.checkDuplicatedCubeName = function (cubeName) {
     return ($scope.allCubeNames.indexOf(cubeName.toUpperCase())) >= 0;
   }
 
   $scope.check_cube_info = function () {
+    // Update storage type according to the streaming table in model
+    if(TableModel.selectProjectTables.some(function(table) {
+      return (table.name === $scope.metaModel.model.fact_table && _.values(tableConfig.streamingSourceType).indexOf(table.source_type) > -1)
+    })) {
+      $scope.cubeMetaFrame.storage_type = 3;
+    } else {
+      $scope.cubeMetaFrame.storage_type = 2;
+    }
+    var defer = $q.defer();
     if ($scope.state.mode === "edit" && $scope.cubeMode === "addNewCube") {
       var cubeName = $scope.cubeMetaFrame.name;
-      var defer = $q.defer();
-      CubeService.getAllCubes({cubeName: cubeName}, {}, function (res) {
+      CubeService.checkDuplicateCubeName({cubeName: cubeName}, {}, function (res) {
         if (!res.data) {
           SweetAlert.swal('Oops...', "The cube named [" + cubeName.toUpperCase() + "] already exists", 'warning');
         }
-        defer.resolve(res.data)
+        return defer.resolve(res.data);
       })
-      return defer.promise
-    }
-    // Update storage type according to the streaming table in model
-    if(TableModel.selectProjectTables.some(function(table) {
-        return (table.name === $scope.metaModel.model.fact_table && _.values(tableConfig.streamingSourceType).indexOf(table.source_type) > -1)
-    })) {
-        $scope.cubeMetaFrame.storage_type = 3;
     } else {
-        $scope.cubeMetaFrame.storage_type = 2;
+      defer.resolve(true);
     }
-    return true;
+    return defer.promise;
   }
 
     $scope.check_cube_dimension = function(){
