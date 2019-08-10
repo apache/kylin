@@ -200,11 +200,4 @@ public class DefaultAssigner implements Assigner {
         }
         return result;
     }
-
-    private static class TaskInfo {
-        public String cubeName;
-        public List<Partition> partitions;
-
-    }
-
 }
