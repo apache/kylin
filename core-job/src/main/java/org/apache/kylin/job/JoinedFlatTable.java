@@ -217,10 +217,6 @@ public class JoinedFlatTable {
         sql.append(" CLUSTER BY CAST(").append(colName(clusterCol)).append(" AS STRING);\n");
     }
 
-    private static void appendWhereStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql) {
-        appendWhereStatement(flatDesc, sql, false);
-    }
-
     private static void appendWhereStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, boolean singleLine) {
         final String sep = singleLine ? " " : "\n";
 
