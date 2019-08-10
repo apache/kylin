@@ -122,9 +122,6 @@ public class ColumnToRowJob extends AbstractHadoopJob {
     }
 
     public static void main(String[] args) throws Exception {
-        String[] params = { "-input", "/stream_index/test_streaming_table_cube", "-cubename",
-                "test_streaming_table_cube", "-segmentname", "20130331080000_20131212080000", "-output",
-                "target/test-output/7d_cuboid", "-jobname", "streaming_create_baseCuboid" };
         ColumnToRowJob job = new ColumnToRowJob();
         int exitCode = ToolRunner.run(job, args);
         System.exit(exitCode);
