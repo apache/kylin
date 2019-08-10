@@ -20,7 +20,6 @@ package org.apache.kylin.stream.core.storage;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
@@ -178,10 +177,5 @@ public class StreamingCubeSegment implements Comparable<StreamingCubeSegment> {
 
     public enum State {
         ACTIVE, IMMUTABLE, REMOTE_PERSISTED
-    }
-
-    public static class SegmentInfo {
-        private Map<Integer, Long> sourceStartOffsets;
-
     }
 }
