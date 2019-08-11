@@ -63,6 +63,7 @@ import org.apache.kylin.metadata.expression.ColumnTupleExpression;
 import org.apache.kylin.metadata.expression.ExpressionColCollector;
 import org.apache.kylin.metadata.expression.NoneTupleExpression;
 import org.apache.kylin.metadata.expression.NumberTupleExpression;
+import org.apache.kylin.metadata.expression.RexCallTupleExpression;
 import org.apache.kylin.metadata.expression.StringTupleExpression;
 import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -80,8 +81,14 @@ import com.google.common.collect.Maps;
  */
 public class OLAPProjectRel extends Project implements OLAPRel {
 
-    OLAPContext context;
+    private final BasicSqlType dateType = new BasicSqlType(getCluster().getTypeFactory().getTypeSystem(),
+            SqlTypeName.DATE);
+    private final BasicSqlType timestampType = new BasicSqlType(getCluster().getTypeFactory().getTypeSystem(),
+            SqlTypeName.TIMESTAMP);
+    private final ArraySqlType dateArrayType = new ArraySqlType(dateType, true);
+    private final ArraySqlType timestampArrayType = new ArraySqlType(timestampType, true);
     public List<RexNode> rewriteProjects;
+    OLAPContext context;
     boolean rewriting;
     ColumnRowType columnRowType;
     boolean hasJoin;
@@ -89,12 +96,6 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     boolean afterAggregate;
     boolean isMerelyPermutation = false;//project additionally added by OLAPJoinPushThroughJoinRule
     private int caseCount = 0;
-
-    private final BasicSqlType dateType = new BasicSqlType(getCluster().getTypeFactory().getTypeSystem(), SqlTypeName.DATE);
-    private final BasicSqlType timestampType = new BasicSqlType(getCluster().getTypeFactory().getTypeSystem(), SqlTypeName.TIMESTAMP);
-    private final ArraySqlType dateArrayType = new ArraySqlType(dateType, true);
-    private final ArraySqlType timestampArrayType = new ArraySqlType(timestampType, true);
-
     /**
      * A flag indicate whether has intersect_count in query
      */
@@ -187,7 +188,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
             String fieldName = columnField.getName();
 
             TupleExpression tupleExpr = rex.accept(visitor);
-            TblColRef column = translateRexNode(tupleExpr, fieldName);
+            TblColRef column = translateRexNode(rex, inputColumnRowType, tupleExpr, fieldName);
             if (!this.rewriting && !this.afterAggregate && !isMerelyPermutation) {
                 Set<TblColRef> srcCols = ExpressionColCollector.collectColumns(tupleExpr);
                 // remove cols not belonging to context tables
@@ -219,7 +220,8 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         return new ColumnRowType(columns, sourceColumns);
     }
 
-    private TblColRef translateRexNode(TupleExpression tupleExpr, String fieldName) {
+    private TblColRef translateRexNode(RexNode rexNode, ColumnRowType inputColumnRowType, TupleExpression tupleExpr,
+            String fieldName) {
         if (tupleExpr instanceof ColumnTupleExpression) {
             return ((ColumnTupleExpression) tupleExpr).getColumn();
         } else if (tupleExpr instanceof NumberTupleExpression) {
@@ -228,6 +230,12 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         } else if (tupleExpr instanceof StringTupleExpression) {
             Object value = ((StringTupleExpression) tupleExpr).getValue();
             return TblColRef.newInnerColumn(value == null ? "null" : value.toString(), InnerDataTypeEnum.LITERAL);
+        } else if (tupleExpr instanceof RexCallTupleExpression && rexNode instanceof RexInputRef) {
+            RexInputRef inputRef = (RexInputRef) rexNode;
+            int index = inputRef.getIndex();
+            if (index < inputColumnRowType.size()) {
+                return inputColumnRowType.getColumnByIndex(index);
+            }
         }
         return TblColRef.newInnerColumn(fieldName, InnerDataTypeEnum.LITERAL, tupleExpr.getDigest());
     }
