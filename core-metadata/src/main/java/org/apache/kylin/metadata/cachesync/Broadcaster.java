@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.Closeable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.util.ClassUtil;
@@ -57,7 +58,7 @@ import com.google.common.collect.Maps;
  * - on all servers, model listener is invoked, reload the model, and notify a "project_schema" update event
  * - all listeners respond to the "project_schema" update -- reload cube desc, clear project L2 cache, clear calcite data source etc
  */
-public class Broadcaster {
+public class Broadcaster implements Closeable {
 
     private static final Logger logger = LoggerFactory.getLogger(Broadcaster.class);
 
@@ -153,6 +154,11 @@ public class Broadcaster {
         });
     }
 
+    @Override
+    public void close() {
+        stopAnnounce();
+    }
+
     private SyncErrorHandler getSyncErrorHandler(KylinConfig config) {
         String clzName = config.getCacheSyncErrorHandler();
         if (StringUtils.isEmpty(clzName)) {
@@ -166,8 +172,8 @@ public class Broadcaster {
     }
     
     public void stopAnnounce() {
-        announceThreadPool.shutdown();
-        announceMainLoop.shutdown();
+        announceThreadPool.shutdownNow();
+        announceMainLoop.shutdownNow();
     }
 
     // static listener survives cache wipe and goes after normal listeners
