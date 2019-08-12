@@ -1313,7 +1313,6 @@ public class Coordinator implements CoordinatorClient {
 
     private class StreamingBuildJobStatusChecker implements Runnable {
         private int maxJobTryCnt = 5;
-        private CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         private ConcurrentMap<String, ConcurrentSkipListSet<SegmentJobBuildInfo>> segmentBuildJobMap = Maps
                 .newConcurrentMap();
         private CopyOnWriteArrayList<String> pendingCubeName = Lists.newCopyOnWriteArrayList();
@@ -1369,6 +1368,7 @@ public class Coordinator implements CoordinatorClient {
                     ExecutableState jobState = cubingJob.getStatus();
                     if (ExecutableState.SUCCEED.equals(jobState)) {
                         logger.info("job:{} is complete", segmentBuildJob);
+                        CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
                         CubeInstance cubeInstance = cubeManager.getCube(segmentBuildJob.cubeName).latestCopyForWrite();
                         CubeSegment cubeSegment = cubeInstance.getSegment(segmentBuildJob.segmentName, null);
                         logger.info("the cube:{} segment:{} is ready", segmentBuildJob.cubeName,
