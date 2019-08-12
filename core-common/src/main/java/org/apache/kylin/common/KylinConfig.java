@@ -475,7 +475,22 @@ public class KylinConfig extends KylinConfigBase {
             return;
         }
 
+        Map<Class, Closeable> closableManagers = new ConcurrentHashMap<>();
+
+        managersCache.forEach((key, value) -> {
+            if (value instanceof Closeable) {
+                closableManagers.put(key, (Closeable) value);
+            }
+        });
+
         managersCache.clear();
+
+        if (closableManagers.size() > 0) {
+            closableManagers.forEach((key, value) -> {
+                logger.info("Close manager {}", key.getSimpleName());
+                value.close();
+            });
+        }
     }
 
     public Properties exportToProperties() {
