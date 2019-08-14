@@ -25,7 +25,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.kylin.common.persistence.ContentReader;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -122,12 +124,35 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         cache.clear();
         loadErrors.clear();
 
-        List<String> paths = store.collectResourceRecursively(resRootPath, resPathSuffix);
-        for (String path : paths) {
-            reloadQuietlyAt(path);
+        Map<String, T> entities = store.getAllResourcesMap(resRootPath, true, null, new ContentReader(serializer));
+        for (Map.Entry<String,T> entitySet: entities.entrySet()) {
+            String path = entitySet.getKey();
+            if (!path.endsWith(resPathSuffix)) {
+                continue;
+            }
+            
+            T entity = entitySet.getValue();
+            try {
+                if (entity == null) {
+                    logger.warn("No " + entityType.getSimpleName() + " found at " + path + ", returning null");
+                    cache.removeLocal(resourceName(path));
+                    continue;
+                }
+
+                // mark cached object
+                entity.setCachedAndShared(true);
+                entity = initEntityAfterReload(entity, resourceName(path));
+
+                if (path.equals(resourcePath(entity.resourceName()))) {
+                    cache.putLocal(entity.resourceName(), entity);
+                }
+            } catch (Exception ex) {
+                logger.error("Error loading " + entityType.getSimpleName() + " at " + path, ex);
+                loadErrors.add(path);
+            }
         }
 
-        logger.debug("Loaded " + cache.size() + " " + entityType.getSimpleName() + "(s) out of " + paths.size()
+        logger.debug("Loaded " + cache.size() + " " + entityType.getSimpleName() + "(s) out of " + entities.size()
                 + " resource with " + loadErrors.size() + " errors");
     }
 

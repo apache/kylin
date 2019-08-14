@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -239,6 +240,33 @@ abstract public class ResourceStore {
                 });
                 return collector;
             }
+        });
+    }
+
+    /**
+     * Read all resources under a folder having last modified time between given range. Return empty map if folder not exist.
+     *
+     * NOTE: Different from the getAllResources, this return value will contain the resource path.
+     */
+    final public <T extends RootPersistentEntity> Map<String, T> getAllResourcesMap(final String folderPath,
+                                                                                    final boolean recursive, final VisitFilter filter, final ContentReader<T> reader) throws IOException {
+
+        return new ExponentialBackoffRetry(this).doWithRetry(() -> {
+            final LinkedHashMap<String, T> collector = new LinkedHashMap<>();
+            visitFolderAndContent(folderPath, recursive, filter, new Visitor() {
+                @Override
+                public void visit(RawResource resource) throws IOException {
+                    try {
+                        T entity = reader.readContent(resource);
+                        if (entity != null) {
+                            collector.put(resource.path(), entity);
+                        }
+                    } catch (Exception ex) {
+                        logger.error("Error reading resource " + resource.path(), ex);
+                    }
+                }
+            });
+            return collector;
         });
     }
 
