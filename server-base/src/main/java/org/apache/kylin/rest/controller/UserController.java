@@ -78,10 +78,6 @@ public class UserController extends BasicController {
 
     private static final SimpleGrantedAuthority ALL_USERS_AUTH = new SimpleGrantedAuthority(Constant.GROUP_ALL_USERS);
 
-    private static final String ADMIN = "ADMIN";
-    private static final String ANALYST = "ANALYST";
-    private static final String MODELER = "MODELER";
-    private static final String ADMIN_DEFAULT = "KYLIN";
     private static final String ACTIVE_PROFILES_NAME = "spring.profiles.active";
 
     @Autowired
@@ -135,15 +131,6 @@ public class UserController extends BasicController {
         passwordPattern = Pattern.compile("^(?=.*\\d)(?=.*[a-zA-Z])(?=.*[~!@#$%^&*(){}|:\"<>?\\[\\];',./`]).{8,}$");
         bcryptPattern = Pattern.compile("\\A\\$2a?\\$\\d\\d\\$[./0-9A-Za-z]{53}");
         pwdEncoder = new BCryptPasswordEncoder();
-
-        List<ManagedUser> all = userService.listUsers();
-        logger.info("All {} users", all.size());
-        if (all.isEmpty() && "testing".equals(System.getProperty(ACTIVE_PROFILES_NAME))) {
-            create(ADMIN, new ManagedUser(ADMIN, ADMIN_DEFAULT, true, Constant.ROLE_ADMIN, Constant.GROUP_ALL_USERS));
-            create(ANALYST, new ManagedUser(ANALYST, ANALYST, true, Constant.GROUP_ALL_USERS));
-            create(MODELER, new ManagedUser(MODELER, MODELER, true, Constant.GROUP_ALL_USERS));
-        }
-
     }
 
     private void checkProfileEditAllowed() {

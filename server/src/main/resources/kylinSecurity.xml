@@ -203,6 +203,14 @@
                 <bean class="org.springframework.security.authentication.dao.DaoAuthenticationProvider">
                     <property name="userDetailsService">
                         <bean class="org.apache.kylin.rest.service.KylinUserService">
+                            <constructor-arg>
+                                <util:list
+                                        value-type="org.springframework.security.core.userdetails.User">
+                                    <ref bean="adminUser"></ref>
+                                    <ref bean="modelerUser"></ref>
+                                    <ref bean="analystUser"></ref>
+                                </util:list>
+                            </constructor-arg>
                         </bean>
                     </property>
 

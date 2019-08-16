@@ -27,6 +27,7 @@ import javax.annotation.PostConstruct;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
@@ -41,8 +42,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.google.common.base.Preconditions;
 
@@ -57,6 +60,55 @@ public class KylinUserService implements UserService {
     public static final String SUPER_ADMIN = "ADMIN";
 
     public static final Serializer<ManagedUser> SERIALIZER = new JsonSerializer<>(ManagedUser.class);
+
+    private static final String ACTIVE_PROFILES_NAME = "spring.profiles.active";
+
+    private static final String ADMIN = "ADMIN";
+    private static final String MODELER = "MODELER";
+    private static final String ANALYST = "ANALYST";
+    private static final String ADMIN_DEFAULT = "KYLIN";
+    private BCryptPasswordEncoder pwdEncoder;
+    public List<User> configUsers;
+
+    public KylinUserService() {
+    }
+
+    public KylinUserService(List<User> users) throws IOException {
+        pwdEncoder = new BCryptPasswordEncoder();
+        synchronized (KylinUserService.class) {
+            if (!StringUtils.equals("testing", System.getProperty(ACTIVE_PROFILES_NAME))) {
+                return;
+            }
+            List<ManagedUser> all = listUsers();
+            configUsers = users;
+            // old security.xml config user pwd sync to user metadata
+            if (!configUsers.isEmpty()) {
+                for (User cuser : configUsers) {
+                    try {
+                        String username = cuser.getUsername();
+                        ManagedUser userDetail = (ManagedUser) loadUserByUsername(username);
+                        if (userDetail != null && new KylinVersion(userDetail.getVersion()).major < KylinVersion
+                                .getCurrentVersion().major) {
+                            updateUser(new ManagedUser(cuser.getUsername(), cuser.getPassword(), false,
+                                    cuser.getAuthorities()));
+                        }
+                    } catch (UsernameNotFoundException e) {
+                        // add new security user in security.xml if it is not in metadata
+                        createUser(new ManagedUser(cuser.getUsername(), cuser.getPassword(), false,
+                                cuser.getAuthorities()));
+                    }
+                }
+            }
+            // add default user info in metadata
+            if (all.isEmpty() && configUsers.isEmpty()) {
+                createUser(new ManagedUser(ADMIN, pwdEncoder.encode(ADMIN_DEFAULT), true, Constant.ROLE_ADMIN,
+                        Constant.GROUP_ALL_USERS));
+                createUser(new ManagedUser(ANALYST, pwdEncoder.encode(ANALYST), true, Constant.GROUP_ALL_USERS));
+                createUser(new ManagedUser(MODELER, pwdEncoder.encode(MODELER), true, Constant.GROUP_ALL_USERS));
+            }
+        }
+
+    }
 
     protected ResourceStore aclStore;
 
@@ -88,6 +140,9 @@ public class KylinUserService implements UserService {
     public void updateUser(UserDetails user) {
         Preconditions.checkState(user instanceof ManagedUser, "User {} is not ManagedUser", user);
         ManagedUser managedUser = (ManagedUser) user;
+        if (!managedUser.getAuthorities().contains(new SimpleGrantedAuthority(Constant.GROUP_ALL_USERS))) {
+            managedUser.addAuthorities(Constant.GROUP_ALL_USERS);
+        }
         getKylinUserManager().update(managedUser);
         logger.trace("update user : {}", user.getUsername());
         setEvictCacheFlag(true);
@@ -98,7 +153,6 @@ public class KylinUserService implements UserService {
         if (userName.equalsIgnoreCase(SUPER_ADMIN)) {
             throw new InternalErrorException("User " + userName + " is not allowed to be deleted.");
         }
-
         getKylinUserManager().delete(userName);
         logger.trace("delete user : {}", userName);
         setEvictCacheFlag(true);
