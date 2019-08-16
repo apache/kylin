@@ -18,8 +18,14 @@
 
 package org.apache.kylin.rest.service;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -34,16 +40,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.annotation.PostConstruct;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class KylinUserGroupService extends UserGroupService {
     public static final Logger logger = LoggerFactory.getLogger(KylinUserGroupService.class);
@@ -57,18 +57,6 @@ public class KylinUserGroupService extends UserGroupService {
 
     @Autowired
     private AclEvaluate aclEvaluate;
-
-    List<String> getAllUserAuthorities() throws IOException {
-        List<String> all = new ArrayList<>();
-        for (UserDetails user : userService.listUsers()) {
-            for (GrantedAuthority auth : user.getAuthorities()) {
-                if (!all.contains(auth.getAuthority())) {
-                    all.add(auth.getAuthority());
-                }
-            }
-        }
-        return all;
-    }
 
     @Override
     public boolean exists(String name) throws IOException {
