@@ -30,7 +30,6 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.SourceDialect;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
@@ -51,7 +50,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
     private static final Logger logger = LoggerFactory.getLogger(JdbcExplorer.class);
 
     private final KylinConfig config;
-    private final SourceDialect dialect;
+    private final String dialect;
     private final DBConnConf dbconf;
     private final IJdbcMetadata jdbcMetadataDialect;
 
@@ -62,7 +61,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
         String jdbcUser = config.getJdbcSourceUser();
         String jdbcPass = config.getJdbcSourcePass();
         this.dbconf = new DBConnConf(driverClass, connectionUrl, jdbcUser, jdbcPass);
-        this.dialect = SourceDialect.getDialect(config.getJdbcSourceDialect());
+        this.dialect = config.getJdbcSourceDialect();
         this.jdbcMetadataDialect = JdbcMetadataFactory.getJdbcMetadata(dialect, dbconf);
     }
 
@@ -118,7 +117,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
     }
 
     private String getSqlDataType(String javaDataType) {
-        if (SourceDialect.VERTICA.equals(dialect) || SourceDialect.MYSQL.equals(dialect)) {
+        if (JdbcDialect.DIALECT_VERTICA.equals(dialect) || JdbcDialect.DIALECT_MSSQL.equals(dialect)) {
             if (javaDataType.toLowerCase(Locale.ROOT).equals("double")) {
                 return "float";
             }
@@ -133,9 +132,9 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
     }
 
     private String generateCreateSchemaSql(String schemaName) {
-        if (SourceDialect.VERTICA.equals(dialect) || SourceDialect.MYSQL.equals(dialect)) {
+        if (JdbcDialect.DIALECT_VERTICA.equals(dialect) || JdbcDialect.DIALECT_MYSQL.equals(dialect)) {
             return String.format(Locale.ROOT, "CREATE schema IF NOT EXISTS %s", schemaName);
-        } else if (SourceDialect.SQL_SERVER.equals(dialect)) {
+        } else if (JdbcDialect.DIALECT_MSSQL.equals(dialect)) {
             return String.format(Locale.ROOT,
                     "IF NOT EXISTS (SELECT name FROM sys.schemas WHERE name = N'%s') EXEC('CREATE SCHEMA"
                             + " [%s] AUTHORIZATION [dbo]')",
@@ -152,13 +151,13 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
     }
 
     private String generateLoadDataSql(String tableName, String tableFileDir) {
-        if (SourceDialect.VERTICA.equals(dialect)) {
+        if (JdbcDialect.DIALECT_VERTICA.equals(dialect)) {
             return String.format(Locale.ROOT, "copy %s from local '%s/%s.csv' delimiter as ',';", tableName,
                     tableFileDir, tableName);
-        } else if (SourceDialect.MYSQL.equals(dialect)) {
+        } else if (JdbcDialect.DIALECT_MYSQL.equals(dialect)) {
             return String.format(Locale.ROOT, "LOAD DATA INFILE '%s/%s.csv' INTO %s FIELDS TERMINATED BY ',';",
                     tableFileDir, tableName, tableName);
-        } else if (SourceDialect.SQL_SERVER.equals(dialect)) {
+        } else if (JdbcDialect.DIALECT_MSSQL.equals(dialect)) {
             return String.format(Locale.ROOT, "BULK INSERT %s FROM '%s/%s.csv' WITH(FIELDTERMINATOR = ',')", tableName,
                     tableFileDir, tableName);
         } else {

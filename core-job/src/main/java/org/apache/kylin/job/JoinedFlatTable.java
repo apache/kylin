@@ -241,7 +241,7 @@ public class JoinedFlatTable {
                 if (segRange != null && !segRange.isInfinite()) {
                     whereBuilder.append(" AND (");
                     String quotedPartitionCond = quoteIdentifierInSqlExpr(flatDesc,
-                            partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc, flatDesc.getSegment(), segRange, null));
+                            partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc, flatDesc.getSegment(), segRange));
                     whereBuilder.append(quotedPartitionCond);
                     whereBuilder.append(")" + sep);
                 }

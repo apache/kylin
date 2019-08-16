@@ -23,8 +23,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.io.Serializable;
 
 import java.util.Locale;
-import java.util.function.Function;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.metadata.datatype.DataType;
 
@@ -121,15 +119,6 @@ public class TblColRef implements Serializable {
     private ColumnDesc column;
     private String identity;
     private String parserDescription;
-
-    /**
-     * Function used to get quoted identitier
-     */
-    private transient Function<TblColRef, String> quotedFunc;
-
-    public void setQuotedFunc(Function<TblColRef, String> quotedFunc) {
-        this.quotedFunc = quotedFunc;
-    }
 
     TblColRef(ColumnDesc column) {
         this.column = column;
@@ -247,13 +236,6 @@ public class TblColRef implements Serializable {
         if (identity == null)
             identity = getTableAlias() + "." + getName();
         return identity;
-    }
-
-    public String getQuotedIdentity() {
-        if (quotedFunc == null)
-            return getIdentity();
-        else
-            return quotedFunc.apply(this);
     }
 
     @Override

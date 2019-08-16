@@ -1640,9 +1640,6 @@
             <groupId>org.apache.rat</groupId>
             <artifactId>apache-rat-plugin</artifactId>
             <configuration>
-              <!-- Used to print file with unapproved licenses in project to stand output -->
-              <consoleOutput>true</consoleOutput>
-
               <!-- Exclude files/folders for apache release -->
               <excludes>
                 <exclude>DEPENDENCIES</exclude>

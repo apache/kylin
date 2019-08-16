@@ -24,7 +24,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.kylin.common.SourceDialect;
 import org.apache.kylin.source.hive.DBConnConf;
 import org.apache.kylin.source.jdbc.SqlUtil;
 
@@ -64,10 +63,5 @@ public class MySQLJdbcMetadata extends DefaultJdbcMetadata {
     @Override
     public ResultSet getTable(final DatabaseMetaData dbmd, String catalog, String table) throws SQLException {
         return dbmd.getTables(catalog, null, table, null);
-    }
-
-    @Override
-    public SourceDialect getDialect() {
-        return SourceDialect.MYSQL;
     }
 }

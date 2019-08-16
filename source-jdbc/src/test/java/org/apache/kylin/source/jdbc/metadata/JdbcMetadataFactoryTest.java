@@ -14,20 +14,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 package org.apache.kylin.source.jdbc.metadata;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
+import org.apache.kylin.source.jdbc.JdbcDialect;
+import org.junit.Assert;
+import org.junit.Test;
 
-public interface IJdbcMetadata {
-    List<String> listDatabases() throws SQLException;
+public class JdbcMetadataFactoryTest {
 
-    List<String> listTables(String database) throws SQLException;
-
-    ResultSet getTable(final DatabaseMetaData dbmd, String database, String table) throws SQLException;
-
-    ResultSet listColumns(final DatabaseMetaData dbmd, String database, String table) throws SQLException;
+    @Test
+    public void testGetJdbcMetadata() {
+        Assert.assertTrue(
+                JdbcMetadataFactory.getJdbcMetadata(JdbcDialect.DIALECT_MSSQL, null) instanceof SQLServerJdbcMetadata);
+        Assert.assertTrue(
+                JdbcMetadataFactory.getJdbcMetadata(JdbcDialect.DIALECT_MYSQL, null) instanceof MySQLJdbcMetadata);
+        Assert.assertTrue(
+                JdbcMetadataFactory.getJdbcMetadata(JdbcDialect.DIALECT_VERTICA, null) instanceof DefaultJdbcMetadata);
+    }
 }

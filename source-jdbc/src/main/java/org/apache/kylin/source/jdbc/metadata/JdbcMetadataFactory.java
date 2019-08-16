@@ -17,19 +17,17 @@
 */
 package org.apache.kylin.source.jdbc.metadata;
 
-import org.apache.kylin.common.SourceDialect;
+import java.util.Locale;
 import org.apache.kylin.source.hive.DBConnConf;
+import org.apache.kylin.source.jdbc.JdbcDialect;
 
-public class JdbcMetadataFactory {
-
-    private JdbcMetadataFactory() {
-    }
-
-    public static IJdbcMetadata getJdbcMetadata(SourceDialect jdbcDialect, final DBConnConf dbConnConf) {
+public abstract class JdbcMetadataFactory {
+    public static IJdbcMetadata getJdbcMetadata(String dialect, final DBConnConf dbConnConf) {
+        String jdbcDialect = (null == dialect) ? "" : dialect.toLowerCase(Locale.ROOT);
         switch (jdbcDialect) {
-        case SQL_SERVER:
+        case (JdbcDialect.DIALECT_MSSQL):
             return new SQLServerJdbcMetadata(dbConnConf);
-        case MYSQL:
+        case (JdbcDialect.DIALECT_MYSQL):
             return new MySQLJdbcMetadata(dbConnConf);
         default:
             return new DefaultJdbcMetadata(dbConnConf);

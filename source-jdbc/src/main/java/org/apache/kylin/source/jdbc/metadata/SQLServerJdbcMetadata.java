@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.SourceDialect;
 import org.apache.kylin.source.hive.DBConnConf;
 import org.apache.kylin.source.jdbc.SqlUtil;
 
@@ -59,10 +58,5 @@ public class SQLServerJdbcMetadata extends DefaultJdbcMetadata {
             }
         }
         return new ArrayList<>(ret);
-    }
-
-    @Override
-    public SourceDialect getDialect() {
-        return SourceDialect.SQL_SERVER;
     }
 }
