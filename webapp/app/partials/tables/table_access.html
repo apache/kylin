@@ -25,7 +25,7 @@
        Id
       </th>
       <th>
-        User / Role name
+        User / Group name
       </th>
       <th>
         Actions
@@ -98,7 +98,7 @@
           </div>
           <div class="row">
             <div class="form-group" ng-show="newTableAcl.type == 'user'">
-              <b>User / Role name</b>
+              <b>User / Group name</b>
               <br/>
               <select ng-required="true" chosen ng-model="newTableAcl.name"
                       ng-options="black as black for black in tableUserAclBlackList"
