@@ -59,8 +59,8 @@ permalink: /community/index.html
             <h2> Events and Conferences </h2>
             
             <p style="line-height:3px;">Events</p>
-            <p style="line-height:3px;"><a href="https://www.huodongxing.com/event/4489409598500">Apache Kylin Meetup @Chengdu</a></p>
-            <p><a href="https://www.huodongxing.com/event/7484371439700">Apache Kylin Meetup @Beijing</a></p>
+            <p style="line-height:3px;"><a href="https://www.huodongxing.com/event/3506680147611">Apache Kylin Meetup @Shenzhen</a></p>
+            <p><a href="https://www.huodongxing.com/event/4489409598500">Apache Kylin Meetup @Chengdu</a></p>
             
             <p><a href="http://kyligence-apache-kylin.mikecrm.com/SJFewHC">Propose a talk</a></p>
 

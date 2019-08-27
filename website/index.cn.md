@@ -238,13 +238,13 @@ title: 首页
                 <img style="width: 200px;height: 80px;margin-bottom: 10px;text-align: left;" src="/images/logo/mininglamp.png">
             </a>
             <a class="sponsor" href="https://www.ele.me/home/"> 
-                <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/ele.png">
+                <img src="/images/logo/ele.png">
             </a>
             <a class="sponsor" href="https://www.teld.cn/"> 
-                <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/teld.png">
+                <img src="/images/logo/teld.png">
             </a>
             <a class="sponsor" href="https://www.qq.com/"> 
-                <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/qq.png">
+                <img src="/images/logo/qq.png">
             </a>
         </div>
         <!-- /container --> 
