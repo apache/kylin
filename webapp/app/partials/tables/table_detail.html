@@ -179,6 +179,11 @@
         <!--streamingV2-->
         <div id="streamingV2" ng-if="values(tableConfig.streamingSourceType).indexOf(tableModel.selectedSrcTable.source_type) > -1" class="tab-pane" ng-controller="StreamConfigDisplayCtrl">
           <div class="table-responsive">
+            <div class="col-xs-12 pdb-12 pdt-12" ng-if="userService.hasRole('ROLE_ADMIN')">
+              <div class="ofh">
+                <a class="btn btn-info floatR" ng-click="editStreamingConfigV2(currentStreamingConfig)"><i class="fa fa-edit"></i> Edit</a>
+              </div>
+            </div>
             <table class="table">
               <tbody>
                 <tr>
