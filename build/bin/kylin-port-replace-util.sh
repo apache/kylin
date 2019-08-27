@@ -81,10 +81,7 @@ then
     #back or reset
     if [ ! -f ${KYLIN_BACKUP_FILE} ]; then  #backup if not exist
         cp -f ${KYLIN_CONFIG_FILE} ${KYLIN_BACKUP_FILE}
-    else
-        cp -r ${KYLIN_BACKUP_FILE} ${KYLIN_CONFIG_FILE} #reset if exist
     fi
-
 
     #replace ports in kylin.properties
     new_kylin_port=`expr ${KYLIN_DEFAULT_PORT} + ${OFFSET}`
