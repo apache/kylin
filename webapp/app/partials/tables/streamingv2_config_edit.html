@@ -1,0 +1,76 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+<form class="form-horizontal" name="kafka_config_from_v2" novalidate>
+  <div class="modal-header">
+    <div class="box-header">
+      <h3 class="box-title">Kafka Config Edit</h3>
+      <div class="box-tools pull-right">
+        <button type="button" class="btn btn-box-tool" ng-click="cancel()"><i class="fa fa-times"></i></button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-body streaming-source">
+    <div class="form-group required row">
+      <label for="topic" class="col-sm-3 control-label font-color-default">Topic</label>
+      <div class="col-sm-6">
+        <input type="text" class="form-control" id="topic" ng-model="streamingConfig.properties.topic" name="topic" placeholder="Input Kafka Topic" required autofocus>
+        <small class="help-block" ng-show="kafka_config_from_v2.topic.$error.required && kafka_config_from_v2.topic.$dirty">
+          Topic is empty
+        </small>
+      </div>
+    </div>
+    <div class="form-group required row">
+      <label class="col-sm-3 control-label font-color-default">Bootstrap Servers</label>
+      <div class="col-sm-9">
+        <div class="row">
+          <div class="col-sm-5 font-color-default text-center" style="font-weight:bolder;">Host</div>
+          <div class="col-sm-3 font-color-default text-center" style="font-weight:bolder;">Port</div>
+          <div class="col-sm-2 font-color-default text-center" style="font-weight:bolder;">Action</div>
+        </div>
+        <div ng-repeat="bootstrapServer in streamingConfig.properties.bootstrapServers track by $index" class="row"  style="margin-top:5px;">
+          <div class="col-sm-5">
+            <input type="text" class="form-control" ng-model="bootstrapServer.host" name="host" placeholder="Enter Bootstrap Server Host" required autofocus>
+          </div>
+          <div class="col-sm-3">
+            <input type="number" class="form-control" ng-model="bootstrapServer.port" name="port" placeholder="Enter Bootstrap Server Port" required>
+          </div>
+          <div class="col-sm-2 text-center">
+            <i class="fa fa-minus" style="margin-top:10px;cursor:pointer;" ng-click="removeBootstrapServer($index)"></i>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-offset-8 col-sm-2 text-center">
+            <i class="fa fa-plus" style="margin-top:10px;cursor:pointer;" ng-click="addBootstrapServer()"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <div class="row">
+      <div class="col-sm-4 col-sm-offset-8">
+        <button id="nextButton" class="btn"  ng-click="cancel()">
+          Cancel
+        </button>
+        <button id="nextButton" class="btn btn-primary"  ng-click="updateStreamingV2Config()"  ng-disabled="kafka_config_from_v2.topic.$error.required || bootstrapServerValidation(streamingConfig.properties.bootstrapServers)">
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
