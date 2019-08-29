@@ -33,9 +33,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 
 import org.springframework.cache.CacheManager;
 
-import java.io.IOException;
-import java.sql.SQLException;
-
 /**
  * @author xduo
  */
@@ -80,8 +77,8 @@ public class QueryControllerTest extends ServiceTestBase {
     }
 
     @Test
-    public void testGetMetadata() throws IOException, SQLException {
-        queryController.getMetadataV2(new MetaRequest(ProjectInstance.DEFAULT_PROJECT_NAME));
+    public void testGetMetadata() {
+        queryController.getMetadata(new MetaRequest(ProjectInstance.DEFAULT_PROJECT_NAME));
     }
 
 }
