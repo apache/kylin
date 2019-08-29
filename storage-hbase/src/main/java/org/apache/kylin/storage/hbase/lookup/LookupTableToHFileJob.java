@@ -165,6 +165,8 @@ public class LookupTableToHFileJob extends AbstractHadoopJob {
         extSnapshotInfoManager.removeSnapshot(tableName, lookupSnapshotID);
         String hTableName = snapshotInfo.getStorageLocationIdentifier();
         logger.info("remove related HBase table:{} for snapshot:{}", hTableName, lookupSnapshotID);
+        if(admin.isTableEnabled(TableName.valueOf(hTableName)))
+            admin.disableTable(TableName.valueOf(hTableName));
         HBaseConnection.deleteTable(kylinConfig.getStorageUrl(), hTableName);
     }
 
