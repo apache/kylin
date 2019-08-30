@@ -158,6 +158,10 @@ public class QueryService extends BasicService {
     private ModelService modelService;
 
     @Autowired
+    @Qualifier("TableAclService")
+    private TableACLService tableAclService;
+
+    @Autowired
     private AclEvaluate aclEvaluate;
 
     private GenericKeyedObjectPool<PreparedContextKey, PreparedContext> preparedContextPool;
@@ -195,6 +199,10 @@ public class QueryService extends BasicService {
     @PostConstruct
     public void init() throws IOException {
         Preconditions.checkNotNull(cacheManager, "cacheManager is not injected yet");
+    }
+
+    public List<TableMeta> getMetadataFilterByUser(String project) throws SQLException, IOException {
+        return tableAclService.filterTableMetasByAcl(getMetadata(project), project);
     }
 
     public List<TableMeta> getMetadata(String project) throws SQLException {
