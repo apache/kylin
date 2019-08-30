@@ -34,6 +34,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE,
@@ -84,6 +85,11 @@ public class TableACL extends RootPersistentEntity {
 
     public List<String> getCanAccessList(String table, Set<String> allIdentifiers, String type) {
         return currentEntry(type).getCanAccessList(table, allIdentifiers);
+    }
+
+    public Set<String> getBlockedTablesByUser(String username, String type) {
+        return currentEntry(type).get(username) == null ? Sets.<String>newHashSet()
+                : currentEntry(type).get(username).getTables();
     }
 
     public TableACL add(String name, String table, String type) {
