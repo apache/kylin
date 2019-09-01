@@ -139,7 +139,7 @@ abstract public class ResourceStore {
                     StringEntity.serializer);
         }
         StringEntity entity = getResource(ResourceStore.METASTORE_UUID_TAG, StringEntity.serializer);
-        return entity.toString();
+        return entity == null ? "":entity.toString();
     }
 
     /**
@@ -316,12 +316,7 @@ abstract public class ResourceStore {
 
     private RawResource getResourceWithRetry(final String resPath) throws IOException {
         ExponentialBackoffRetry retry = new ExponentialBackoffRetry(this);
-        return retry.doWithRetry(new Callable<RawResource>() {
-            @Override
-            public RawResource call() throws IOException {
-                return getResourceImpl(resPath);
-            }
-        });
+        return retry.doWithRetry(() -> getResourceImpl(resPath));
     }
 
     final public long getResourceTimestamp(String resPath) throws IOException {
@@ -337,12 +332,7 @@ abstract public class ResourceStore {
         final String path = norm(resPath);
 
         ExponentialBackoffRetry retry = new ExponentialBackoffRetry(this);
-        return retry.doWithRetry(new Callable<Long>() {
-            @Override
-            public Long call() throws IOException {
-                return getResourceTimestampImpl(path);
-            }
-        });
+        return retry.doWithRetry(() -> getResourceTimestampImpl(path));
     }
 
     /**
@@ -394,19 +384,16 @@ abstract public class ResourceStore {
     protected void putResourceWithRetry(final String resPath, final ContentWriter content, final long ts)
             throws IOException {
         ExponentialBackoffRetry retry = new ExponentialBackoffRetry(this);
-        retry.doWithRetry(new Callable() {
-            @Override
-            public Object call() throws IOException {
-                putResourceImpl(resPath, content, ts);
-                return null;
-            }
+        retry.doWithRetry(() -> {
+            putResourceImpl(resPath, content, ts);
+            return null;
         });
     }
 
     /**
      * check & set, overwrite a resource
      */
-    final public <T extends RootPersistentEntity> void checkAndPutResource(String resPath, T obj,
+    public final <T extends RootPersistentEntity> void checkAndPutResource(String resPath, T obj,
             Serializer<T> serializer) throws IOException, WriteConflictException {
         checkAndPutResource(resPath, obj, System.currentTimeMillis(), serializer);
     }
@@ -414,7 +401,7 @@ abstract public class ResourceStore {
     /**
      * check & set, overwrite a resource
      */
-    final public <T extends RootPersistentEntity> void checkAndPutResource(String resPath, T obj, long newTS,
+    public final <T extends RootPersistentEntity> void checkAndPutResource(String resPath, T obj, long newTS,
             Serializer<T> serializer) throws IOException, WriteConflictException {
         resPath = norm(resPath);
 
@@ -443,7 +430,7 @@ abstract public class ResourceStore {
      *
      * @return a confirmed TS, as some store may lose timestamp precision.
      */
-    final public long checkAndPutResource(String resPath, byte[] content, long oldTS, long newTS)
+    public final long checkAndPutResource(String resPath, byte[] content, long oldTS, long newTS)
             throws IOException, WriteConflictException {
         return checkAndPutResourceCheckpoint(norm(resPath), content, oldTS, newTS);
     }
@@ -457,24 +444,19 @@ abstract public class ResourceStore {
     /**
      * checks old timestamp when overwriting existing
      */
-    abstract protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS)
+    protected abstract long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS)
             throws IOException, WriteConflictException;
 
     private long checkAndPutResourceWithRetry(final String resPath, final byte[] content, final long oldTS,
             final long newTS) throws IOException, WriteConflictException {
         ExponentialBackoffRetry retry = new ExponentialBackoffRetry(this);
-        return retry.doWithRetry(new Callable<Long>() {
-            @Override
-            public Long call() throws IOException {
-                return checkAndPutResourceImpl(resPath, content, oldTS, newTS);
-            }
-        });
+        return retry.doWithRetry(() -> checkAndPutResourceImpl(resPath, content, oldTS, newTS));
     }
 
     /**
      * update resource timestamp to timestamp
      */
-    final public void updateTimestamp(String resPath, long timestamp) throws IOException {
+    public final void updateTimestamp(String resPath, long timestamp) throws IOException {
         logger.trace("Updating resource: {} with timestamp {} (Store {})", resPath, timestamp,
                 kylinConfig.getMetadataUrl());
         updateTimestampCheckPoint(norm(resPath), timestamp);
@@ -487,21 +469,18 @@ abstract public class ResourceStore {
 
     private void updateTimestampWithRetry(final String resPath, final long timestamp) throws IOException {
         ExponentialBackoffRetry retry = new ExponentialBackoffRetry(this);
-        retry.doWithRetry(new Callable() {
-            @Override
-            public Object call() throws IOException {
-                updateTimestampImpl(resPath, timestamp);
-                return null;
-            }
+        retry.doWithRetry(() -> {
+            updateTimestampImpl(resPath, timestamp);
+            return null;
         });
     }
 
-    abstract protected void updateTimestampImpl(String resPath, long timestamp) throws IOException;
+    protected abstract void updateTimestampImpl(String resPath, long timestamp) throws IOException;
 
     /**
      * delete a resource, does nothing on a folder
      */
-    final public void deleteResource(String resPath) throws IOException {
+    public final void deleteResource(String resPath) throws IOException {
         logger.trace("Deleting resource {} (Store {})", resPath, kylinConfig.getMetadataUrl());
         deleteResourceCheckpoint(norm(resPath));
     }
@@ -512,7 +491,7 @@ abstract public class ResourceStore {
      * throw an IOException when the resource lastModified >= timestamp + 1000
      * See  https://issues.apache.org/jira/browse/KYLIN-4030
      */
-    final public void deleteResource(String resPath, long timestamp) throws IOException {
+    public final void deleteResource(String resPath, long timestamp) throws IOException {
         logger.trace("Deleting resource {} within timestamp {} (Store {})", resPath, timestamp,
                 kylinConfig.getMetadataUrl());
         deleteResourceCheckpoint(norm(resPath), timestamp);
@@ -528,29 +507,23 @@ abstract public class ResourceStore {
         deleteResourceWithRetry(resPath, timestamp);
     }
 
-    abstract protected void deleteResourceImpl(String resPath) throws IOException;
+    protected abstract void deleteResourceImpl(String resPath) throws IOException;
 
-    abstract protected void deleteResourceImpl(String resPath, long timestamp) throws IOException;
+    protected abstract void deleteResourceImpl(String resPath, long timestamp) throws IOException;
 
     private void deleteResourceWithRetry(final String resPath) throws IOException {
         ExponentialBackoffRetry retry = new ExponentialBackoffRetry(this);
-        retry.doWithRetry(new Callable() {
-            @Override
-            public Object call() throws IOException {
-                deleteResourceImpl(resPath);
-                return null;
-            }
+        retry.doWithRetry(() -> {
+            deleteResourceImpl(resPath);
+            return null;
         });
     }
 
     private void deleteResourceWithRetry(final String resPath, final long timestamp) throws IOException {
         ExponentialBackoffRetry retry = new ExponentialBackoffRetry(this);
-        retry.doWithRetry(new Callable() {
-            @Override
-            public Object call() throws IOException {
-                deleteResourceImpl(resPath, timestamp);
-                return null;
-            }
+        retry.doWithRetry(() -> {
+            deleteResourceImpl(resPath, timestamp);
+            return null;
         });
     }
 
@@ -604,11 +577,11 @@ abstract public class ResourceStore {
     /**
      * get a readable string of a resource path
      */
-    final public String getReadableResourcePath(String resPath) {
+    public final String getReadableResourcePath(String resPath) {
         return getReadableResourcePathImpl(norm(resPath));
     }
 
-    abstract protected String getReadableResourcePathImpl(String resPath);
+    protected abstract String getReadableResourcePathImpl(String resPath);
 
     private String norm(String resPath) {
         resPath = resPath.trim();
@@ -757,7 +730,7 @@ abstract public class ResourceStore {
      * Visit all resource under a folder (optionally recursively), without loading the content of resource.
      * Low level API, DON'T support ExponentialBackoffRetry, caller should do necessary retry
      */
-    final public void visitFolder(String folderPath, boolean recursive, Visitor visitor) throws IOException {
+    public final void visitFolder(String folderPath, boolean recursive, Visitor visitor) throws IOException {
         visitFolderInner(folderPath, recursive, null, false, visitor);
     }
 
@@ -765,7 +738,7 @@ abstract public class ResourceStore {
      * Visit all resource under a folder (optionally recursively), without loading the content of resource.
      * Low level API, DON'T support ExponentialBackoffRetry, caller should do necessary retry
      */
-    final public void visitFolder(String folderPath, boolean recursive, VisitFilter filter, Visitor visitor)
+    public final void visitFolder(String folderPath, boolean recursive, VisitFilter filter, Visitor visitor)
             throws IOException {
         visitFolderInner(folderPath, recursive, filter, false, visitor);
     }
@@ -774,7 +747,7 @@ abstract public class ResourceStore {
      * Visit all resource and their content under a folder (optionally recursively).
      * Low level API, DON'T support ExponentialBackoffRetry, caller should do necessary retry
      */
-    final public void visitFolderAndContent(String folderPath, boolean recursive, VisitFilter filter, Visitor visitor)
+    public final void visitFolderAndContent(String folderPath, boolean recursive, VisitFilter filter, Visitor visitor)
             throws IOException {
         visitFolderInner(folderPath, recursive, filter, true, visitor);
     }
@@ -804,7 +777,7 @@ abstract public class ResourceStore {
      *
      * NOTE: Broken content exception should be wrapped by RawResource, and return to caller to decide how to handle.
      */
-    abstract protected void visitFolderImpl(String folderPath, boolean recursive, VisitFilter filter,
+    protected abstract void visitFolderImpl(String folderPath, boolean recursive, VisitFilter filter,
             boolean loadContent, Visitor visitor) throws IOException;
 
     public static String dumpResources(KylinConfig kylinConfig, Collection<String> dumpList) throws IOException {
