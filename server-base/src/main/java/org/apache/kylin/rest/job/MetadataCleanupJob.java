@@ -242,7 +242,7 @@ public class MetadataCleanupJob {
     }
 
     private NavigableSet<String> noNull(NavigableSet<String> list) {
-        return (list == null) ? new TreeSet<String>() : list;
+        return (list == null) ? new TreeSet<>() : list;
     }
 
     private long getTimestamp(String resPath) {
