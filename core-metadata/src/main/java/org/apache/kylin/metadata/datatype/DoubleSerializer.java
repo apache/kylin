@@ -35,6 +35,8 @@ public class DoubleSerializer extends DataTypeSerializer<Double> {
             out.putDouble(Double.NaN);
             return;
         }
+
+        out.putDouble(value);
     }
 
     @Override

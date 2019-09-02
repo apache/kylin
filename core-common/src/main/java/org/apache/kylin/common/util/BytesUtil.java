@@ -26,6 +26,10 @@ import com.google.common.primitives.Shorts;
 
 public class BytesUtil {
 
+    private BytesUtil() {
+        throw new IllegalStateException("Class BytesUtil is an utility class !");
+    }
+
     public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
     // for there are some extra available code, just like binary {-113, 0}, when using variable-length serialization method to compress a Long number value.
     // as for binary {-113, 0}, it should represents the 0L according to the #org.apache.kylin.common.util.BytesUtil.writeVLong alogrithm. However, the 0L value
@@ -502,6 +506,20 @@ public class BytesUtil {
             sb.append(String.format(Locale.ROOT, "\\x%02X", b & 0xFF));
         }
         return sb.toString();
+    }
+
+    /**
+     * @param hex String value of a byte array in hex, e.g, "\\x00\\x0A";
+     * @return the byte array that the hex represented.
+     */
+    public static byte[] fromHex(String hex) {
+        byte[] b = new byte[hex.length() / 4];
+        for (int i = 0; i < b.length; i++) {
+            int index = i * 4;
+            int v = Integer.parseInt(hex.substring(index + 2, index + 4), 16);
+            b[i] = (byte) v;
+        }
+        return b;
     }
 
     private static boolean equalsNullByteArray(Byte... bytes) {
