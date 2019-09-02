@@ -19,7 +19,7 @@
 package org.apache.kylin.job.constant;
 
 public enum JobTimeFilterEnum {
-    LAST_ONE_DAY(0), LAST_ONE_WEEK(1), LAST_ONE_MONTH(2), LAST_ONE_YEAR(3), ALL(4);
+    CURRENT_DAY(0), LAST_ONE_DAY(1), LAST_ONE_WEEK(2), LAST_ONE_MONTH(3), LAST_ONE_YEAR(4), ALL(5);
 
     private final int code;
 

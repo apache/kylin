@@ -194,6 +194,12 @@ public class JobService extends BasicService implements InitializingBean {
         case LAST_ONE_YEAR:
             calendar.add(Calendar.YEAR, -1);
             return calendar.getTimeInMillis();
+        case CURRENT_DAY:
+            calendar.add(Calendar.DAY_OF_MONTH, 0);
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            return calendar.getTimeInMillis();
         case ALL:
             return 0;
         default:

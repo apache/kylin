@@ -25,7 +25,8 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
     $log.debug(data);
     kylinConfig.initWebConfigInfo();
     $rootScope.isShowCubeplanner = kylinConfig.getProperty('kylin.cube.cubeplanner.enabled') === 'true';
-    $rootScope.isShowDashboard = kylinConfig.getProperty('kylin.web.dashboard-enabled') === 'true'
+    $rootScope.isShowDashboard = kylinConfig.getProperty('kylin.web.dashboard-enabled') === 'true';
+    JobList.jobFilter.timeFilterId = kylinConfig.getJobTimeFilterId();
   });
   $rootScope.userAction = {
     'islogout': false
