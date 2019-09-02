@@ -860,6 +860,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.job.cube-inmem-builder-class", "org.apache.kylin.cube.inmemcubing.DoggedCubeBuilder");
     }
 
+    public int getJobOutputMaxSize() {
+        return Integer.parseInt(getOptional("kylin.job.execute-output.max-size", "10485760"));
+    }
+
     // ============================================================================
     // SOURCE.HIVE
     // ============================================================================
@@ -1440,6 +1444,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isSparkCardinalityEnabled(){
         return Boolean.parseBoolean(getOptional("kylin.engine.spark-cardinality", "false"));
+    }
+
+    public int getSparkOutputMaxSize() {
+        return Integer.valueOf(getOptional("kylin.engine.spark.output.max-size", "10485760"));
     }
 
     // ============================================================================
