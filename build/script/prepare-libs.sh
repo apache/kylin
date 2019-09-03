@@ -33,6 +33,7 @@ mkdir build/lib build/tool
 mkdir build/lib/streaming
 cp assembly/target/kylin-assembly-${version}-job.jar build/lib/kylin-job-${version}.jar
 cp storage-hbase/target/kylin-storage-hbase-${version}-coprocessor.jar build/lib/kylin-coprocessor-${version}.jar
+cp storage-stream/target/kylin-storage-stream-${version}.jar build/lib/kylin-storage-stream-${version}.jar
 cp jdbc/target/kylin-jdbc-${version}.jar build/lib/kylin-jdbc-${version}.jar
 cp tool-assembly/target/kylin-tool-assembly-${version}-assembly.jar build/tool/kylin-tool-${version}.jar
 cp datasource-sdk/target/kylin-datasource-sdk-${version}-lib.jar build/lib/kylin-datasource-sdk-${version}.jar
