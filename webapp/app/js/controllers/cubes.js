@@ -42,18 +42,11 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
 
     $scope.refreshCube = function(cube){
       var queryParam = {
-        cubeName: cube.name,
-        projectName: $scope.projectModel.selectedProject
+        cubeName: cube.name
       };
       var defer = $q.defer();
-      CubeService.list(queryParam, function(cubes){
-        for(var index in cubes){
-          if(cube.name === cubes[index].name){
-            defer.resolve(cubes[index]);
-            break;
-          }
-        }
-        defer.resolve([]);
+      CubeService.getCube(queryParam, function(cube){
+        defer.resolve(cube);
       },function(e){
         defer.resolve([]);
       })
@@ -297,7 +290,6 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
 
           loadingRequest.show();
           CubeService.disable({cubeId: cube.name}, {}, function (result) {
-
             loadingRequest.hide();
             $scope.refreshCube(cube).then(function(_cube){
               if(_cube && _cube.name){
