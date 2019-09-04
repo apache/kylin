@@ -17,6 +17,7 @@
 */
 package org.apache.kylin.engine.flink;
 
+import org.apache.flink.configuration.FallbackKey;
 import org.apache.flink.configuration.JobManagerOptions;
 import org.apache.flink.configuration.TaskManagerOptions;
 import org.junit.Assert;
@@ -41,11 +42,11 @@ public class FlinkOnYarnConfigMappingTest {
                 boolean matchedAnyOne;
                 matchedAnyOne = flinkConfigOption.equals(JobManagerOptions.JOB_MANAGER_HEAP_MEMORY.key());
                 if (!matchedAnyOne) {
-                    if (JobManagerOptions.JOB_MANAGER_HEAP_MEMORY.hasDeprecatedKeys()) {
-                        Iterator<String> deprecatedKeyIterator = JobManagerOptions.JOB_MANAGER_HEAP_MEMORY
-                                .deprecatedKeys().iterator();
+                    if (JobManagerOptions.JOB_MANAGER_HEAP_MEMORY.hasFallbackKeys()) {
+                        Iterator<FallbackKey> deprecatedKeyIterator = JobManagerOptions.JOB_MANAGER_HEAP_MEMORY
+                                .fallbackKeys().iterator();
                         while (deprecatedKeyIterator.hasNext()) {
-                            matchedAnyOne = matchedAnyOne && flinkConfigOption.equals(deprecatedKeyIterator.next());
+                            matchedAnyOne = matchedAnyOne && flinkConfigOption.equals(deprecatedKeyIterator.next().getKey());
                         }
                     }
                 }
@@ -66,11 +67,11 @@ public class FlinkOnYarnConfigMappingTest {
                 boolean matchedAnyOne;
                 matchedAnyOne = flinkConfigOption.equals(TaskManagerOptions.TASK_MANAGER_HEAP_MEMORY.key());
                 if (!matchedAnyOne) {
-                    if (TaskManagerOptions.TASK_MANAGER_HEAP_MEMORY.hasDeprecatedKeys()) {
-                        Iterator<String> deprecatedKeyIterator = TaskManagerOptions.TASK_MANAGER_HEAP_MEMORY
-                                .deprecatedKeys().iterator();
+                    if (TaskManagerOptions.TASK_MANAGER_HEAP_MEMORY.hasFallbackKeys()) {
+                        Iterator<FallbackKey> deprecatedKeyIterator = TaskManagerOptions.TASK_MANAGER_HEAP_MEMORY
+                                .fallbackKeys().iterator();
                         while (deprecatedKeyIterator.hasNext()) {
-                            matchedAnyOne = matchedAnyOne && flinkConfigOption.equals(deprecatedKeyIterator.next());
+                            matchedAnyOne = matchedAnyOne && flinkConfigOption.equals(deprecatedKeyIterator.next().getKey());
                         }
                     }
                 }
@@ -91,11 +92,11 @@ public class FlinkOnYarnConfigMappingTest {
                 boolean matchedAnyOne;
                 matchedAnyOne = flinkConfigOption.equals(TaskManagerOptions.NUM_TASK_SLOTS.key());
                 if (!matchedAnyOne) {
-                    if (TaskManagerOptions.NUM_TASK_SLOTS.hasDeprecatedKeys()) {
-                        Iterator<String> deprecatedKeyIterator = TaskManagerOptions.NUM_TASK_SLOTS
-                                .deprecatedKeys().iterator();
+                    if (TaskManagerOptions.NUM_TASK_SLOTS.hasFallbackKeys()) {
+                        Iterator<FallbackKey> deprecatedKeyIterator = TaskManagerOptions.NUM_TASK_SLOTS
+                                .fallbackKeys().iterator();
                         while (deprecatedKeyIterator.hasNext()) {
-                            matchedAnyOne = matchedAnyOne && flinkConfigOption.equals(deprecatedKeyIterator.next());
+                            matchedAnyOne = matchedAnyOne && flinkConfigOption.equals(deprecatedKeyIterator.next().getKey());
                         }
                     }
                 }
