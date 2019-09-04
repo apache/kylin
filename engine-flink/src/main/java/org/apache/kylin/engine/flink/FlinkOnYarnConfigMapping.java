@@ -18,6 +18,7 @@
 package org.apache.kylin.engine.flink;
 
 import org.apache.flink.configuration.ConfigOption;
+import org.apache.flink.configuration.FallbackKey;
 import org.apache.flink.configuration.JobManagerOptions;
 import org.apache.flink.configuration.TaskManagerOptions;
 
@@ -39,38 +40,38 @@ public class FlinkOnYarnConfigMapping {
         //mapping job manager heap size -> -yjm
         ConfigOption<String> jmHeapSizeOption = JobManagerOptions.JOB_MANAGER_HEAP_MEMORY;
         flinkOnYarnConfigMap.put(jmHeapSizeOption.key(), "-yjm");
-        if (jmHeapSizeOption.hasDeprecatedKeys()) {
-            Iterator<String> deprecatedKeyIterator = jmHeapSizeOption.deprecatedKeys().iterator();
+        if (jmHeapSizeOption.hasFallbackKeys()) {
+            Iterator<FallbackKey> deprecatedKeyIterator = jmHeapSizeOption.fallbackKeys().iterator();
             while (deprecatedKeyIterator.hasNext()) {
-                flinkOnYarnConfigMap.put(deprecatedKeyIterator.next(), "-yjm");
+                flinkOnYarnConfigMap.put(deprecatedKeyIterator.next().getKey(), "-yjm");
             }
         }
 
         //mapping task manager heap size -> -ytm
         ConfigOption<String> tmHeapSizeOption = TaskManagerOptions.TASK_MANAGER_HEAP_MEMORY;
         flinkOnYarnConfigMap.put(tmHeapSizeOption.key(), "-ytm");
-        if (tmHeapSizeOption.hasDeprecatedKeys()) {
-            Iterator<String> deprecatedKeyIterator = tmHeapSizeOption.deprecatedKeys().iterator();
+        if (tmHeapSizeOption.hasFallbackKeys()) {
+            Iterator<FallbackKey> deprecatedKeyIterator = tmHeapSizeOption.fallbackKeys().iterator();
             while (deprecatedKeyIterator.hasNext()) {
-                flinkOnYarnConfigMap.put(deprecatedKeyIterator.next(), "-ytm");
+                flinkOnYarnConfigMap.put(deprecatedKeyIterator.next().getKey(), "-ytm");
             }
         }
 
         ConfigOption<Integer> taskSlotNumOption = TaskManagerOptions.NUM_TASK_SLOTS;
         flinkOnYarnConfigMap.put(taskSlotNumOption.key(), "-ys");
-        if (taskSlotNumOption.hasDeprecatedKeys()) {
-            Iterator<String> deprecatedKeyIterator = taskSlotNumOption.deprecatedKeys().iterator();
+        if (taskSlotNumOption.hasFallbackKeys()) {
+            Iterator<FallbackKey> deprecatedKeyIterator = taskSlotNumOption.fallbackKeys().iterator();
             while (deprecatedKeyIterator.hasNext()) {
-                flinkOnYarnConfigMap.put(deprecatedKeyIterator.next(), "-ys");
+                flinkOnYarnConfigMap.put(deprecatedKeyIterator.next().getKey(), "-ys");
             }
         }
 
         ConfigOption<Boolean> tmMemoryPreallocate = TaskManagerOptions.MANAGED_MEMORY_PRE_ALLOCATE;
         flinkOnYarnConfigMap.put(tmMemoryPreallocate.key(), "-yD taskmanager.memory.preallocate");
-        if (taskSlotNumOption.hasDeprecatedKeys()) {
-            Iterator<String> deprecatedKeyIterator = tmMemoryPreallocate.deprecatedKeys().iterator();
+        if (taskSlotNumOption.hasFallbackKeys()) {
+            Iterator<FallbackKey> deprecatedKeyIterator = tmMemoryPreallocate.fallbackKeys().iterator();
             while (deprecatedKeyIterator.hasNext()) {
-                flinkOnYarnConfigMap.put(deprecatedKeyIterator.next(), "-yD taskmanager.memory.preallocate");
+                flinkOnYarnConfigMap.put(deprecatedKeyIterator.next().getKey(), "-yD taskmanager.memory.preallocate");
             }
         }
 
