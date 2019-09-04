@@ -61,7 +61,7 @@ function retrieveDependency() {
     fi
 
     export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/conf:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH_PREFIX}
-    export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${hive_dependency}:${kafka_dependency}:${spark_dependency}
+    export HBASE_CLASSPATH_PREFIX=${HBASE_CLASSPATH_PREFIX}:${hive_dependency}:${kafka_dependency}:${spark_dependency}
 
     verbose "HBASE_CLASSPATH: ${HBASE_CLASSPATH}"
 }
