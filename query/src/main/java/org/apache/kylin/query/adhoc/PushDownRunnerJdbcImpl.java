@@ -132,7 +132,7 @@ public class PushDownRunnerJdbcImpl extends AbstractPushdownRunner {
             columnLabel = resultSetMetaData.getColumnLabel(columnIndex);
             // Suppose column label has format [table name].[column name]
             if (columnLabel.contains(".")) {
-                columnLabel = StringUtils.substringAfterLast(columnLabel, ".");
+                columnLabel = StringUtils.substringAfterLast(columnLabel, ".").toUpperCase(Locale.ROOT);
             }
         } catch (SQLException e) {
             // Fall back to default value
@@ -140,7 +140,7 @@ public class PushDownRunnerJdbcImpl extends AbstractPushdownRunner {
 
         String columnName = null;
         try {
-            columnName = resultSetMetaData.getColumnName(columnIndex);
+            columnName = resultSetMetaData.getColumnName(columnIndex).toUpperCase(Locale.ROOT);
         } catch (SQLException e) {
             // Fall back to default value
         }
