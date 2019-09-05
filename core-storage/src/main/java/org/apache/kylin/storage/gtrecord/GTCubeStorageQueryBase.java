@@ -102,7 +102,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             return ITupleIterator.EMPTY_TUPLE_ITERATOR;
 
         return new SequentialCubeTupleIterator(scanners, request.getCuboid(), request.getDimensions(),
-                request.getDynGroups(), request.getGroups(), request.getMetrics(), returnTupleInfo, request.getContext(), sqlDigest);
+                request.getDynGroups(), request.getGroups(), request.getMetrics(), returnTupleInfo,
+                request.getContext(), sqlDigest);
     }
 
     public GTCubeStorageQueryRequest getStorageQueryRequest(StorageContext context, SQLDigest sqlDigest,
@@ -176,7 +177,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
         // set limit push down
         enableStorageLimitIfPossible(cuboid, groups, dynGroups, derivedPostAggregation, groupsD, filterD,
-                loosenedColumnD, sqlDigest.aggregations, context);
+                loosenedColumnD, sqlDigest, context);
         // set whether to aggregate results from multiple partitions
         enableStreamAggregateIfBeneficial(cuboid, groupsD, context);
         // check query deadline
@@ -422,7 +423,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
     private void enableStorageLimitIfPossible(Cuboid cuboid, Collection<TblColRef> groups, List<TblColRef> dynGroups,
             Set<TblColRef> derivedPostAggregation, Collection<TblColRef> groupsD, TupleFilter filter,
-            Set<TblColRef> loosenedColumnD, Collection<FunctionDesc> functionDescs, StorageContext context) {
+            Set<TblColRef> loosenedColumnD, SQLDigest sqlDigest, StorageContext context) {
+        Collection<FunctionDesc> functionDescs = sqlDigest.aggregations;
 
         StorageLimitLevel storageLimitLevel = StorageLimitLevel.LIMIT_ON_SCAN;
 
@@ -468,6 +470,11 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
                 storageLimitLevel = StorageLimitLevel.NO_LIMIT;
                 logger.debug("storageLimitLevel set to NO_LIMIT because {} isDimensionAsMetric ", functionDesc);
             }
+        }
+
+        if (sqlDigest.groupByExpression) {
+            storageLimitLevel = StorageLimitLevel.NO_LIMIT;
+            logger.debug("storageLimitLevel set to NO_LIMIT because group by clause is an expression");
         }
 
         context.applyLimitPushDown(cubeInstance, storageLimitLevel);
