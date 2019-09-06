@@ -186,8 +186,7 @@ public class CubeController extends BasicController {
     @ResponseBody
     public CubeInstance getCube(@PathVariable String cubeName) {
         checkCubeExists(cubeName);
-        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-        return cube;
+        return cubeService.getCubeManager().getCube(cubeName);
     }
 
     /**
@@ -426,7 +425,7 @@ public class CubeController extends BasicController {
             String jobID = cubeService.mergeCubeSegment(cubeName);
             if (jobID == null) {
                 throw new BadRequestException(String.format(Locale.ROOT,
-                    "Cube: %s merging is not supported or no segments to merge", cubeName));
+                        "Cube: %s merging is not supported or no segments to merge", cubeName));
             }
             return jobService.getJobInstance(jobID);
         } catch (Exception e) {
@@ -667,7 +666,8 @@ public class CubeController extends BasicController {
             String encodingName = (String) encodingConf[0];
             String[] encodingArgs = (String[]) encodingConf[1];
 
-            if (!DimensionEncodingFactory.isValidEncoding(encodingName, encodingArgs, rowKeyColDesc.getEncodingVersion())) {
+            if (!DimensionEncodingFactory.isValidEncoding(encodingName, encodingArgs,
+                    rowKeyColDesc.getEncodingVersion())) {
                 throw new BadRequestException("Illegal row key column desc: " + rowKeyColDesc);
             }
         }

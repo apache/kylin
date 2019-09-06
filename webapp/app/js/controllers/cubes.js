@@ -45,8 +45,20 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
         cubeName: cube.name
       };
       var defer = $q.defer();
-      CubeService.getCube(queryParam, function(cube){
-        defer.resolve(cube);
+      CubeService.getCube(queryParam, function(newCube){
+        var segmentsLen = newCube.segments && newCube.segments.length || 0
+        newCube.input_records_count = 0;
+        for(var i = segmentsLen - 1;i >= 0;i--){
+          var curSeg = newCube.segments[i]
+          if(curSeg.status === "READY"){
+            newCube.input_records_count += curSeg.input_records
+            if(newCube.last_build_time === undefined || newCube.last_build_time < curSeg.last_build_time) {
+              newCube.last_build_time = curSeg.last_build_time;
+            }
+          }
+        }
+        newCube.project = cube.project;
+        defer.resolve(newCube);
       },function(e){
         defer.resolve([]);
       })
