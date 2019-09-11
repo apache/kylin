@@ -32,7 +32,7 @@ public class BytesUtil {
 
     public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
     // for there are some extra available code, just like binary {-113, 0}, when using variable-length serialization method to compress a Long number value.
-    // as for binary {-113, 0}, it should represents the 0L according to the #org.apache.kylin.common.util.BytesUtil.writeVLong alogrithm. However, the 0L value
+    // as for binary {-113, 0}, it should represents the 0L according to the #org.apache.kylin.common.util.BytesUtil.writeVLong algorithm. However, the 0L value
     // is just use {0} rather than {-113, 0} or {-114, 0, 0}.
     public static final byte[] VNULL_BYTE_ARRAY = new byte[] { -113, 0 };
 
