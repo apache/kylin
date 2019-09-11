@@ -47,8 +47,7 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
     @Override
     public void serialize(BigDecimal value, ByteBuffer out) {
         if (value == null) {
-            BytesUtil.writeVInt(0, out);
-            BytesUtil.writeVInt(-1, out);
+            BytesUtil.writeVLongObject(null, out);
             return;
         }
 
@@ -63,24 +62,25 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
             throw new IllegalArgumentException("'" + value + "' exceeds the expected length for type " + type);
         }
 
-        BytesUtil.writeVInt(value.scale(), out);
+        BytesUtil.writeVLong(value.scale(), out);
         BytesUtil.writeVInt(bytes.length, out);
         out.put(bytes);
     }
 
     @Override
     public BigDecimal deserialize(ByteBuffer in) {
-        int scale = BytesUtil.readVInt(in);
-        int n = BytesUtil.readVInt(in);
-
-        if (n < 0) {
+        Long scale = BytesUtil.readVLongObject(in);
+        if (scale == null)
             return null;
-        }
 
+        if ((scale > Integer.MAX_VALUE) || (scale < Integer.MIN_VALUE)) {
+            throw new IllegalArgumentException("value too long to fit in integer");
+        }
+        int n = BytesUtil.readVInt(in);
         byte[] bytes = new byte[n];
         in.get(bytes);
 
-        return new BigDecimal(new BigInteger(bytes), scale);
+        return new BigDecimal(new BigInteger(bytes), scale.intValue());
     }
 
     @Override

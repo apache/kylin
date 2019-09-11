@@ -36,10 +36,15 @@ public class BigDecimalMinAggregator extends MeasureAggregator<BigDecimal> {
 
     @Override
     public void aggregate(BigDecimal value) {
-        if (min == null)
-            min = value;
-        else if (min.compareTo(value) > 0)
-            min = value;
+        if (value != null) {
+            if (min == null) {
+                min = value;
+                return;
+            }
+
+            if (min.compareTo(value) > 0)
+                min = value;
+        }
     }
 
     @Override
