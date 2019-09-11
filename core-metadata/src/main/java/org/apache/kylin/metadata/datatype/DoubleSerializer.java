@@ -30,12 +30,23 @@ public class DoubleSerializer extends DataTypeSerializer<Double> {
 
     @Override
     public void serialize(Double value, ByteBuffer out) {
+        // use Double.NaN binary represent NULL，for Double.NaN is replaced by NULL in Hive
+        if (value == null) {
+            out.putDouble(Double.NaN);
+            return;
+        }
+
         out.putDouble(value);
     }
 
     @Override
     public Double deserialize(ByteBuffer in) {
-        return in.getDouble();
+        Double value = in.getDouble();
+        if (Double.compare(Double.NaN, value) == 0) {
+            return null;
+        }
+
+        return value;
     }
 
     @Override
