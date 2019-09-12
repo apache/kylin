@@ -4,6 +4,7 @@
 package org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated;
 
 public final class CubeVisitProtos {
+  private static final int DEFAULT_SIZE_LIMIT = Integer.MAX_VALUE;
   private CubeVisitProtos() {}
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
@@ -2296,6 +2297,7 @@ public final class CubeVisitProtos {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       initFields();
+      input.setSizeLimit(DEFAULT_SIZE_LIMIT);
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
