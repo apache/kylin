@@ -18,6 +18,9 @@
 
 package org.apache.kylin.cube.model.validation;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.rule.AggregationGroupRule;
@@ -28,9 +31,6 @@ import org.apache.kylin.cube.model.validation.rule.StreamingCubeRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.List;
-
 /**
  * For cube metadata validator
  * 
@@ -40,22 +40,17 @@ import java.util.List;
 public class CubeMetadataValidator {
     protected static final Logger logger = LoggerFactory.getLogger(CubeMetadataValidator.class);
     @SuppressWarnings("unchecked")
-    private IValidatorRule<CubeDesc>[] defaultRules = new IValidatorRule[] {
-        new FunctionRule(),
-        new AggregationGroupRule(),
-        new RowKeyAttrRule(),
-        new DictionaryRule(),
-        new StreamingCubeRule()
-    };
+    private IValidatorRule<CubeDesc>[] defaultRules = new IValidatorRule[] { new FunctionRule(),
+            new AggregationGroupRule(), new RowKeyAttrRule(), new DictionaryRule(), new StreamingCubeRule() };
 
     private List<IValidatorRule<CubeDesc>> rules;
 
     public CubeMetadataValidator(KylinConfig config) {
-        rules =  Arrays.asList(defaultRules);
+        rules = Arrays.asList(defaultRules);
         for (String ruleName : config.getCubeMetadataExtraValidators()) {
             try {
-                IValidatorRule<CubeDesc> rule = (IValidatorRule<CubeDesc>)
-                        Class.forName(ruleName).getConstructor().newInstance();
+                IValidatorRule<CubeDesc> rule = (IValidatorRule<CubeDesc>) Class.forName(ruleName).getConstructor()
+                        .newInstance();
                 rules.add(rule);
             } catch (Exception e) {
                 logger.error("Construct cube metadata validator rule: {} failed. Ignore this rule", ruleName, e);

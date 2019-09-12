@@ -657,6 +657,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.cube.is-automerge-enabled", TRUE));
     }
 
+    public String[] getCubeMetadataExtraValidators() {
+        return getOptionalStringArray("kylin.cube.metadata-extra-validators", new String[0]);
+    }
+
     // ============================================================================
     // Cube Planner
     // ============================================================================
@@ -2220,7 +2224,4 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.tool.health-check.stale-job-threshold-days", "30"));
     }
 
-    public String[] getCubeMetadataExtraValidators() {
-        return getOptionalStringArray("kylin.cube.metadata.extra.validators", new String[0]);
-    }
 }
