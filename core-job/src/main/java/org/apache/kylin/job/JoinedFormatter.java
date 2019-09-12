@@ -18,13 +18,6 @@
 
 package org.apache.kylin.job;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.PartitionDesc;
-import org.apache.kylin.metadata.model.SegmentRange;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,30 +26,37 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.model.SegmentRange;
+
 /**
  * Joined Formatter for JoinedFlatTable
  */
 
 public class JoinedFormatter {
 
-    private static String REG_SEPARATOR = "\\$\\{(?<KEY>.*?)\\}";
-    private static Pattern REG_PATTERN = Pattern.compile(REG_SEPARATOR,
+    private static final String REG_SEPARATOR = "\\$\\{(?<KEY>.*?)\\}";
+    private static final Pattern REG_PATTERN = Pattern.compile(REG_SEPARATOR,
             Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     //
-    public static String START_DATE = "START_DATE";
-    public static String END_DATE = "END_DATE";
-    public static String ENV_KEY = "KEY";
+    private static final String START_DATE = "START_DATE";
+    private static final String END_DATE = "END_DATE";
+    private static final String ENV_KEY = "KEY";
     //
     private Map<String, Object> mapEnv = new HashMap<>();
 
-    public JoinedFormatter() {
+    JoinedFormatter() {
     }
 
-    public JoinedFormatter(IJoinedFlatTableDesc flatDesc) {
+    JoinedFormatter(IJoinedFlatTableDesc flatDesc) {
         setDateEnv(flatDesc);
     }
 
-    public void setDateEnv(IJoinedFlatTableDesc flatDesc) {
+    private void setDateEnv(IJoinedFlatTableDesc flatDesc) {
         DataModelDesc model = flatDesc.getDataModel();
         PartitionDesc partDesc = model.getPartitionDesc();
         SegmentRange segRange = flatDesc.getSegRange();
@@ -83,10 +83,10 @@ public class JoinedFormatter {
         return value == null ? "" : value;
     }
 
-    public String formatSentense(String sentense) {
-        String[] cArray = REG_PATTERN.split(sentense);
+    String formatSentence(String sentence) {
+        String[] cArray = REG_PATTERN.split(sentence);
         StringBuilder sbr = new StringBuilder();
-        List<String> keys = getKeys(sentense);
+        List<String> keys = getKeys(sentence);
         int length = Math.max(cArray.length, keys.size());
         for (int i = 0; i < length; i++) {
             if (i < cArray.length) {
@@ -99,7 +99,7 @@ public class JoinedFormatter {
         return sbr.toString();
     }
 
-    public List<String> getKeys(String condition) {
+    private List<String> getKeys(String condition) {
         List<String> keys = new ArrayList<>();
         Matcher matcher = REG_PATTERN.matcher(condition);
         while (matcher.find()) {
@@ -108,20 +108,20 @@ public class JoinedFormatter {
         return keys;
     }
 
-    public void setKeyValue(String key, Object value) {
+    private void setKeyValue(String key, Object value) {
         String fmtKey = StringUtils.trimToEmpty(key).toUpperCase(Locale.ROOT);
         mapEnv.put(fmtKey, value);
     }
 
-    public void setStartDate(String dateStr) {
+    void setStartDate(String dateStr) {
         setKeyValue(START_DATE, dateStr);
     }
 
-    public void setEndDate(String dateStr) {
+    void setEndDate(String dateStr) {
         setKeyValue(END_DATE, dateStr);
     }
 
-    public void printEnv() {
+    void printEnv() {
         System.out.println(mapEnv);
     }
 }

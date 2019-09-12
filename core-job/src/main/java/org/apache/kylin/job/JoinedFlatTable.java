@@ -226,7 +226,7 @@ public class JoinedFlatTable {
         DataModelDesc model = flatDesc.getDataModel();
         if (StringUtils.isNotEmpty(model.getFilterCondition())) {
             JoinedFormatter formatter = new JoinedFormatter(flatDesc);
-            String fmtFilterCondition = formatter.formatSentense(model.getFilterCondition());
+            String fmtFilterCondition = formatter.formatSentence(model.getFilterCondition());
             String quotedFilterCondition = quoteIdentifierInSqlExpr(flatDesc, fmtFilterCondition);
             whereBuilder.append(" AND (").append(quotedFilterCondition).append(") "); // -> filter condition contains special character may cause bug
         }

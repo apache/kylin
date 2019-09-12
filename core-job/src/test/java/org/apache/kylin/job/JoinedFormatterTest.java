@@ -48,7 +48,7 @@ public class JoinedFormatterTest extends LocalFileMetadataTestCase {
     public void testConditionFormat() {
         String expected = "date_str>='20190710' and date_str<'20190711'";
         String condition = "date_str>='${start_date}' and date_str<'${end_date}'";
-        String fmtCondition = formatter.formatSentense(condition);
+        String fmtCondition = formatter.formatSentence(condition);
         assertEquals(expected, fmtCondition);
     }
 
@@ -56,7 +56,7 @@ public class JoinedFormatterTest extends LocalFileMetadataTestCase {
     public void testSqlFormat() {
         String expected = "select * from table where date_str>=20190710 and date_str<20190711";
         String sql = "select * from table where date_str>=${start_date} and date_str<${end_date}";
-        String fmtSql = formatter.formatSentense(sql);
+        String fmtSql = formatter.formatSentence(sql);
         assertEquals(expected, fmtSql);
     }
 }
