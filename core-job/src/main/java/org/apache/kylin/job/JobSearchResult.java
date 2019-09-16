@@ -18,6 +18,8 @@
 
 package org.apache.kylin.job;
 
+import org.apache.kylin.job.constant.JobStatusEnum;
+
 public class JobSearchResult implements Comparable<JobSearchResult> {
     private String id;
 
@@ -26,6 +28,8 @@ public class JobSearchResult implements Comparable<JobSearchResult> {
     private String cubeName;
 
     private long lastModified;
+
+    private JobStatusEnum jobStatus;
 
     public String getId() {
         return id;
@@ -57,6 +61,14 @@ public class JobSearchResult implements Comparable<JobSearchResult> {
 
     public void setLastModified(long lastModified) {
         this.lastModified = lastModified;
+    }
+
+    public JobStatusEnum getJobStatus() {
+        return jobStatus;
+    }
+
+    public void setJobStatus(JobStatusEnum jobStatus) {
+        this.jobStatus = jobStatus;
     }
 
     @Override
