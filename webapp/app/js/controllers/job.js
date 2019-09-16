@@ -110,11 +110,35 @@ KylinApp
               SweetAlert.swal('Oops...', resp, 'error');
               return defer.promise;
             });
-        }
+        };
+
+        $scope.overview = function () {
+          var defer = $q.defer();
+          var statusIds = [];
+          angular.forEach($scope.status, function (statusObj, index) {
+            statusIds.push(statusObj.value);
+          });
+          var jobRequest = {
+            cubeName: $scope.cubeName,
+            projectName: $scope.state.projectName,
+            status: statusIds,
+            timeFilter: $scope.timeFilter.value,
+            jobSearchMode: $scope.searchMode.value
+          };
+          return JobList.overview(jobRequest).then(function(resp){
+            defer.resolve(resp);
+            return defer.promise;
+          },function(resp){
+            defer.resolve([]);
+            SweetAlert.swal('Oops...', resp, 'error');
+            return defer.promise;
+          });
+        };
 
         $scope.reload = function () {
             // trigger reload action in pagination directive
             $scope.action.reload = !$scope.action.reload;
+            $scope.overview()
         };
 
 

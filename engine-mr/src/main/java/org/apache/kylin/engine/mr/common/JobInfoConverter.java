@@ -237,6 +237,7 @@ public class JobInfoConverter {
         result.setId(job.getId());
         result.setJobName(job.getName());
         result.setLastModified(output.getLastModified());
+        result.setJobStatus(JobInfoConverter.parseToJobStatus(job.getStatus()));
         return result;
     }
 }
