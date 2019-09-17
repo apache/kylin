@@ -109,5 +109,8 @@ public class PatternedLogger extends BufferedLogger {
     public interface ILogListener{
         void onLogEvent(String infoKey, Map<String, String> info);
     }
-    
+
+    public void setILogListener(ILogListener listener){
+        this.listener = listener;
+    }
 }
