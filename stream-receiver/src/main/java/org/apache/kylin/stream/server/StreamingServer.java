@@ -219,7 +219,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
         int i = 0;
         for (StreamingCubeSegment segment : segments) {
             futureList.get(i).get();
-            logger.info("save remote store state to metadata store.");
+            logger.info("Save remote store state to metadata store.");
             streamMetadataStore.addCompleteReplicaSetForSegmentBuild(segment.getCubeName(), segment.getSegmentName(),
                     replicaSetID);
 

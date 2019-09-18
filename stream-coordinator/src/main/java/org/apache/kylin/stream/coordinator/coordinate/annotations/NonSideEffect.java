@@ -14,29 +14,28 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
+package org.apache.kylin.stream.coordinator.coordinate.annotations;
 
-package org.apache.kylin.stream.coordinator.exception;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.apache.kylin.stream.core.exception.StreamingException;
-
-public class NotLeadCoordinatorException extends StreamingException {
-    @SuppressWarnings("unused")
-    public NotLeadCoordinatorException() {
-        super();
-    }
-
-    public NotLeadCoordinatorException(String s) {
-        super(s);
-    }
-
-    public NotLeadCoordinatorException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    @SuppressWarnings("unused")
-    public NotLeadCoordinatorException(Throwable cause) {
-        super(cause);
-    }
-
+/**
+ * <pre>
+ *  This annotation is a marker for developer.
+ *  It indicate this method which be annotated may failed in some steps.
+ *  But there no need to retry because has no bad influence to other parts.
+ * </pre>
+ *
+ * @see NotAtomicAndNotIdempotent
+ */
+@Documented
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.METHOD)
+@Inherited
+public @interface NonSideEffect {
 }

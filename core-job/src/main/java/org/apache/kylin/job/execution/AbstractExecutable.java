@@ -265,7 +265,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     @Override
-    public final String getId() {
+    public String getId() {
         return this.id;
     }
 

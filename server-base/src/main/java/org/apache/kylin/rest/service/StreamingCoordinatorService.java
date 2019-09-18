@@ -22,10 +22,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.stream.coordinator.Coordinator;
 import org.apache.kylin.stream.coordinator.StreamMetadataStore;
 import org.apache.kylin.stream.coordinator.StreamMetadataStoreFactory;
+import org.apache.kylin.stream.coordinator.client.CoordinatorClient;
+import org.apache.kylin.stream.coordinator.coordinate.StreamingCoordinator;
 import org.apache.kylin.stream.core.model.CubeAssignment;
 import org.apache.kylin.stream.core.model.ReplicaSet;
 import org.apache.kylin.stream.core.model.Node;
@@ -42,12 +45,17 @@ public class StreamingCoordinatorService extends BasicService {
 
     private StreamMetadataStore streamMetadataStore;
 
-    private Coordinator streamingCoordinator;
+    private CoordinatorClient streamingCoordinator;
 
-    public StreamingCoordinatorService(){
+    public StreamingCoordinatorService() {
         streamMetadataStore = StreamMetadataStoreFactory.getStreamMetaDataStore();
-        //TODO coordinator operation should go to the only one lead coordinator
-        streamingCoordinator = Coordinator.getInstance();
+        if (KylinConfig.getInstanceFromEnv().isNewCoordinatorEnabled()) {
+            logger.info("Use new version coordinator.");
+            streamingCoordinator = StreamingCoordinator.getInstance();
+        } else {
+            logger.info("Use old version coordinator.");
+            streamingCoordinator = Coordinator.getInstance();
+        }
     }
 
     public synchronized Map<Integer, Map<String, List<Partition>>> reBalanceRecommend() {
@@ -55,7 +63,7 @@ public class StreamingCoordinatorService extends BasicService {
     }
 
     public synchronized void reBalance(Map<Integer, Map<String, List<Partition>>> reBalancePlan) {
-         streamingCoordinator.reBalance(reBalancePlan);
+        streamingCoordinator.reBalance(reBalancePlan);
     }
 
     public void assignCube(String cubeName) {
@@ -94,24 +102,23 @@ public class StreamingCoordinatorService extends BasicService {
         streamingCoordinator.replicaSetLeaderChange(replicaSetID, newLeader);
     }
 
-    public void createReplicaSet(ReplicaSet rs){
+    public void createReplicaSet(ReplicaSet rs) {
         streamingCoordinator.createReplicaSet(rs);
     }
 
-    public void removeReplicaSet(int rsID){
+    public void removeReplicaSet(int rsID) {
         streamingCoordinator.removeReplicaSet(rsID);
     }
 
-    public void addNodeToReplicaSet(Integer replicaSetID, String nodeID){
+    public void addNodeToReplicaSet(Integer replicaSetID, String nodeID) {
         streamingCoordinator.addNodeToReplicaSet(replicaSetID, nodeID);
     }
 
-    public void removeNodeFromReplicaSet(Integer replicaSetID, String nodeID){
+    public void removeNodeFromReplicaSet(Integer replicaSetID, String nodeID) {
         streamingCoordinator.removeNodeFromReplicaSet(replicaSetID, nodeID);
     }
 
     public void onSegmentRemoteStoreComplete(String cubeName, Pair<Long, Long> segment, Node receiver) {
         streamingCoordinator.segmentRemoteStoreComplete(receiver, cubeName, segment);
     }
-
 }

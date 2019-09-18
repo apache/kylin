@@ -121,6 +121,7 @@ import javax.annotation.Nullable;
  * request, others process will become standby/candidate, so single point of failure will be eliminated.
  * </pre>
  */
+@Deprecated
 public class Coordinator implements CoordinatorClient {
     private static final Logger logger = LoggerFactory.getLogger(Coordinator.class);
     private static final int DEFAULT_PORT = 7070;
@@ -1109,7 +1110,7 @@ public class Coordinator implements CoordinatorClient {
             logger.info("submit streaming segment build, cube:{} segment:{}", cubeName, segmentName);
             CubeSegment newSeg = getCubeManager().appendSegment(cubeInstance,
                     new TSRange(segmentRange.getFirst(), segmentRange.getSecond()));
-            DefaultChainedExecutable executable = new StreamingCubingEngine().createStreamingCubingBuilder(newSeg,
+            DefaultChainedExecutable executable = new StreamingCubingEngine().createStreamingCubingJob(newSeg,
                     "SYSTEM");
             getExecutableManager().addJob(executable);
             CubingJob cubingJob = (CubingJob) executable;
