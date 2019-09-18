@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Home
+title: OLAP engine on big data
 ---
 
 
@@ -13,7 +13,7 @@ title: Home
           <div class="row" style="margin-top:-20px;">
             <div class="col-sm-12 col-md-12">              
               <p class="title_text">Apache Kylin™ is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop/Spark supporting extremely large datasets, original contributed from eBay Inc.</p>
-              <p class="title_text">Apache Kylin™ lets you query massive data set at sub-second latency in 3 steps.</p>
+              <p class="title_text">Apache Kylin™ lets you query massively big data set at sub-second latency in 3 steps.</p>
               <div align="left">
                 <ol class="none-icon">
                   <li>
@@ -29,7 +29,8 @@ title: Home
                     Query with ANSI-SQL and get results in sub-second, via ODBC, JDBC or RESTful API.
                   </li>
                 </ol>
-              </div>
+              </div>  
+              <p class="title_text">Kylin offers integration capability with data visualization softwares like Tableau, PowerBI, etc., which enables data analysis with BI tools on Hadoop.</p>
               <img id="diagram" src="assets/images/kylin_diagram.png">
             </div>
           </div>
@@ -53,7 +54,7 @@ title: Home
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_olap.png">
                 </div>
-                <b>Extremely Fast OLAP Engine at Scale: </b><br/>
+                <b>Extremely Fast OLAP Engine for Big Data at Scale: </b><br/>
                 <div class="indent" style="margin-top: 25px">Kylin is designed to reduce query latency on Hadoop/Spark for 10+ billions of rows of data</div>
               </div>
             </div>
@@ -63,7 +64,7 @@ title: Home
                   <img width="30" src="assets/images/icon_index_hadoop.png">
                 </div>
                 <b>ANSI SQL Interface on Hadoop: </b><br/>
-                <div class="indent" style="margin-top: 25px">Kylin offers ANSI SQL on Hadoop/Spark and supports most ANSI SQL query functions</div>
+                <div class="indent" style="margin-top: 25px">As an OLAP engine, Kylin offers ANSI SQL on Hadoop/Spark and supports most ANSI SQL query functions</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">
@@ -84,13 +85,22 @@ title: Home
                 <div class="indent" style="margin-top: 25px">User can define a data model and pre-build in Kylin with more than 10+ billions of raw data records</div>
               </div>
             </div>
-            <div class="col-sm-12 col-md-12">
+            <div class="col-sm-6 col-md-6">
+              <div class="card-s">
+                <div class="home-pic">
+                  <img width="30" src="assets/images/icon_index_streaming.png">
+                </div>
+                <b>Real-time OLAP:</b><br/>
+                <div class="indent">Kylin is able to compute streaming data once it is generated, user is capable of doing real-time data analysis with latencey on second level</div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-md-6">
               <div class="card-s">
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_shape.png">
                 </div>
                 <b>Seamless Integration with BI Tools:</b><br/>
-                <div class="indent">Kylin currently offers integration capability with BI Tools like Tableau, PowerBI/Excel, MSTR, QlikSense, Hue and SuperSet. </div>
+                <div class="indent">Kylin currently offers integration capability with BI Tools like Tableau, PowerBI/Excel, MSTR, QlikSense, Hue and SuperSet</div>
               </div>
             </div>
           </div>
