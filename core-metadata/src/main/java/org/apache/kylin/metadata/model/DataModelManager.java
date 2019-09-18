@@ -88,7 +88,7 @@ public class DataModelManager {
             protected DataModelDesc initEntityAfterReload(DataModelDesc model, String resourceName) {
                 String prj = ProjectManager.getInstance(config).getProjectOfModel(model.getName()).getName();
                 if (!model.isDraft()) {
-                    model.init(config, getAllTablesMap(prj), getModels(prj), true);
+                    model.init(config, getAllTablesMap(prj), null, true);
                 }
                 return model;
             }
