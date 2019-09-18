@@ -1,6 +1,6 @@
 ---
 layout: default
-title: OLAP engine on big data
+title: OLAP engine for big data
 ---
 
 
@@ -54,8 +54,17 @@ title: OLAP engine on big data
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_olap.png">
                 </div>
-                <b>Extremely Fast OLAP Engine for Big Data at Scale: </b><br/>
+                <h5>Extremely Fast OLAP Engine for Big Data at Scale: </h5>
                 <div class="indent" style="margin-top: 25px">Kylin is designed to reduce query latency on Hadoop/Spark for 10+ billions of rows of data</div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-md-6">
+              <div class="card-s">
+                <div class="home-pic">
+                  <img width="30" src="assets/images/icon_index_shape.png">
+                </div>
+                <h5>Seamless Integration with BI Tools:</h5>
+                <div class="indent">Kylin currently offers integration capability with BI Tools like Tableau, PowerBI/Excel, MSTR, QlikSense, Hue and SuperSet</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">
@@ -63,7 +72,7 @@ title: OLAP engine on big data
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_hadoop.png">
                 </div>
-                <b>ANSI SQL Interface on Hadoop: </b><br/>
+                <h5>ANSI SQL Interface for Big Data on Hadoop: </h5>
                 <div class="indent" style="margin-top: 25px">As an OLAP engine, Kylin offers ANSI SQL on Hadoop/Spark and supports most ANSI SQL query functions</div>
               </div>
             </div>
@@ -72,17 +81,8 @@ title: OLAP engine on big data
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_query.png">
                 </div>
-                <b>Interactive Query Capability: </b><br/>
+                <h5>Interactive Query with Low Latency and High Performance: </h5>
                 <div class="indent" style="margin-top: 25px">Users can interact with Hadoop data via Kylin at sub-second latency, better than Hive queries for the same dataset</div>
-              </div>
-            </div>
-            <div class="col-sm-6 col-md-6"> 
-              <div class="card-s">
-                <div class="home-pic">
-                  <img width="30" src="assets/images/icon_index_cube.png"> 
-                </div>
-                <b>MOLAP Cube:</b><br/>
-                <div class="indent" style="margin-top: 25px">User can define a data model and pre-build in Kylin with more than 10+ billions of raw data records</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">
@@ -90,22 +90,22 @@ title: OLAP engine on big data
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_streaming.png">
                 </div>
-                <b>Real-time OLAP:</b><br/>
+                <h5>Real-time OLAP for Streaming Big Data:</h5>
                 <div class="indent">Kylin is able to compute streaming data once it is generated, user is capable of doing real-time data analysis with latencey on second level</div>
               </div>
             </div>
-            <div class="col-sm-6 col-md-6">
+            <div class="col-sm-6 col-md-6"> 
               <div class="card-s">
                 <div class="home-pic">
-                  <img width="30" src="assets/images/icon_index_shape.png">
+                  <img width="30" src="assets/images/icon_index_cube.png"> 
                 </div>
-                <b>Seamless Integration with BI Tools:</b><br/>
-                <div class="indent">Kylin currently offers integration capability with BI Tools like Tableau, PowerBI/Excel, MSTR, QlikSense, Hue and SuperSet</div>
+                <h5>MOLAP Cube:</h5>
+                <div class="indent" style="margin-top: 25px">User can define a data model and pre-build in Kylin with more than 10+ billions of raw data records</div>
               </div>
             </div>
           </div>
           <div class="col-sm-4 col-md-4 card-l">
-            <b>Other Highlights:</b> <br/>
+            <b>Other Highlights: </b> <br/>
             <ul class="indent">
               <li>Job Management and Monitoring </li>
               <li>Compression and Encoding Support </li>
