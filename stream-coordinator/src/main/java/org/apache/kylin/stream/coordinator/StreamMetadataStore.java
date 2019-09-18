@@ -88,11 +88,12 @@ public interface StreamMetadataStore {
     Map<Integer, String> getSourceCheckpoint(String cubeName, String segmentName);
 
     /**
-     * add group id to the segment info, indicate that the segment data
-     * has been hand over to the remote store
-     * @param cubeName
-     * @param segmentName
-     * @param rsID
+     * Add replica set id to the segment info, indicate that the segment data belong to current replica set
+     * has been hand over to the deep storage.
+     *
+     * This should be a indicator of integrity of sepcific segment 
+     *
+     * @param rsID id of replica set which has upload data to deep storage
      */
     void addCompleteReplicaSetForSegmentBuild(String cubeName, String segmentName, int rsID);
 

@@ -38,6 +38,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.google.common.collect.Lists;
 
+/**
+ * @see org.apache.kylin.stream.core.client.ReceiverAdminClient
+ */
 @Controller
 @RequestMapping(value = "/admin")
 public class AdminController extends BasicController {
@@ -138,8 +141,11 @@ public class AdminController extends BasicController {
     }
 
     /**
-     * re submit segment to hadoop
-     * @param cubeName
+     * <pre>
+     * If some receiver failed to upload local segment cache to HDFS automatically for some reason,
+     *  coordinator cannot sumbit a building job because data is incomplete.
+     * In this case, kylin admin may use this API to re-upload local segment cache.
+     * </pre>
      */
     @RequestMapping(value = "/data/{cubeName}/{segmentName}/reSubmit", method = RequestMethod.PUT, produces = { "application/json" })
     @ResponseBody

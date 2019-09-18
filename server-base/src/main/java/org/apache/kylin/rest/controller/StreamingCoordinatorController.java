@@ -51,8 +51,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * StreamingCoordinatorController is defined as Restful API entrance for stream coordinator.
- *
+ * <pre>
+ * When current process is not the coordinator leader(such as coordinator follower or non coordinator),
+ *  calling admin operation will lead NotLeadCoordinatorException be thrown.
+ * So this class should only be called by streaming receiver (because they know who is the real coordinator leader),
+ *  not kylin user.
+ * </pre>
  */
 @Controller
 @RequestMapping(value = "/streaming_coordinator")

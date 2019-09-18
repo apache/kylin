@@ -178,6 +178,9 @@ public class StreamingConsumerChannel implements Runnable {
         }
     }
 
+    /**
+     * Called by another thread.
+     */
     public void stop(long timeoutInMs) {
         this.stopped = true;
         waitConsumerStop(timeoutInMs);
@@ -211,6 +214,9 @@ public class StreamingConsumerChannel implements Runnable {
         }
     }
 
+    /**
+     * Called by another thread.
+     */
     public void pause(boolean wait) {
         this.paused = true;
         if (wait) {
@@ -224,6 +230,9 @@ public class StreamingConsumerChannel implements Runnable {
         }
     }
 
+    /**
+     * Called by another thread.
+     */
     public void resumeToStopCondition(IStopConsumptionCondition newStopCondition) {
         this.paused = false;
         if (newStopCondition != IStopConsumptionCondition.NEVER_STOP) {
@@ -239,6 +248,9 @@ public class StreamingConsumerChannel implements Runnable {
         }
     }
 
+    /**
+     * Called by another thread.
+     */
     public void resume() {
         this.paused = false;
     }
