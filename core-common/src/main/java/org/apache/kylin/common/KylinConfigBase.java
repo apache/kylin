@@ -2200,6 +2200,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.stream.segment.concurrent.scan", "false"));
     }
 
+    public boolean isPrintRealtimeDictEnabled(){
+        return Boolean.parseBoolean(getOptional("kylin.stream.receiver-print-encode", "false"));
+    }
+
     public boolean isStreamingStandAloneMode() {
         return Boolean.parseBoolean(getOptional("kylin.stream.stand-alone.mode", "false"));
     }

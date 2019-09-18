@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureAggregators;
 import org.apache.kylin.measure.topn.TopNAggregator;
@@ -71,6 +72,12 @@ public class SegmentMemoryStore implements IStreamingGTSearcher {
     private long minEventTime = Long.MAX_VALUE;
     private long maxEventTime = 0;
 
+    private Map<TblColRef, Dictionary<String>> dictionaryMap;
+
+    public void setDictionaryMap(Map<TblColRef, Dictionary<String>> dictionaryMap) {
+        this.dictionaryMap = dictionaryMap;
+    }
+
     public SegmentMemoryStore(ParsedStreamingCubeInfo parsedStreamingCubeInfo, String segmentName) {
         this.parsedStreamingCubeInfo = parsedStreamingCubeInfo;
         this.segmentName = segmentName;
@@ -84,7 +91,6 @@ public class SegmentMemoryStore implements IStreamingGTSearcher {
                         StringArrayComparator.INSTANCE));
             }
         }
-
     }
 
     public int index(StreamingMessage event) {
@@ -162,8 +168,7 @@ public class SegmentMemoryStore implements IStreamingGTSearcher {
             }
             inputToMeasure[i] = value;
         }
-
-        return parsedStreamingCubeInfo.measureIngesters[idxOfMeasure].valueOf(inputToMeasure, measure, null);
+        return parsedStreamingCubeInfo.measureIngesters[idxOfMeasure].valueOf(inputToMeasure, measure, dictionaryMap);
     }
 
     @SuppressWarnings("unchecked")

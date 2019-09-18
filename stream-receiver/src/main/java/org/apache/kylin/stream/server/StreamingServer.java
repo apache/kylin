@@ -606,6 +606,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
         StreamingSegmentManager segmentManager = getStreamingSegmentManager(cubeName);
         if (segmentManager != null) {
             streamingSegmentManagerMap.remove(cubeName);
+            segmentManager.close();
             segmentManager.purgeAllSegments();
         }
     }

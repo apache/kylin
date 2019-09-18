@@ -20,7 +20,10 @@ package org.apache.kylin.stream.core.storage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
+import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.stream.core.model.StreamingMessage;
 import org.apache.kylin.stream.core.model.stats.SegmentStoreStats;
 import org.apache.kylin.stream.core.query.IStreamingGTSearcher;
@@ -29,6 +32,8 @@ public interface IStreamingSegmentStore extends IStreamingGTSearcher {
     void init();
 
     int addEvent(StreamingMessage event);
+
+    default void addExternalDict(Map<TblColRef, Dictionary<String>> dictMap){}
 
     File getStorePath();
 
