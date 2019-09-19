@@ -25,7 +25,7 @@
       <div class="row">
 
         <!--Cube Name: -->
-        <div class="col-xs-3">
+        <div class="job-search-box">
           <form class="" ng-submit="jobList.removeAll();reload()" style="display: inline" >
             <span><b>Cube Name:</b>
               <span class="input-icon input-icon-right nav-search" style="font-size:14px;">
@@ -35,11 +35,10 @@
             </span>
           </form>
         </div>
-
         <!--<div class="col-xs-2"><label class="table-header-text">Jobs</label></div>-->
         <div class="col-xs-12">
           <!--STATUS-->
-          <div class="pull-right">
+          <div style="text-align:right;margin-top:4px;">
             <!--Job History Time Filter-->
             <label>Jobs in:
               <select data-ng-model="timeFilter"
