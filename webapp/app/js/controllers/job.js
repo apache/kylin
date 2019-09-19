@@ -135,10 +135,11 @@ KylinApp
           });
         };
 
+        $scope.overview();
         $scope.reload = function () {
             // trigger reload action in pagination directive
             $scope.action.reload = !$scope.action.reload;
-            $scope.overview()
+            $scope.overview();
         };
 
 
