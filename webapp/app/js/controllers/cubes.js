@@ -42,7 +42,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
 
     $scope.refreshCube = function(cube){
       var queryParam = {
-        cubeName: cube.name
+        cubeId: cube.name
       };
       var defer = $q.defer();
       CubeService.getCube(queryParam, function(newCube){

@@ -131,9 +131,9 @@ public class CubeController extends BasicController {
     @Autowired
     private AclEvaluate aclEvaluate;
 
-    @RequestMapping(value = "/validate/{cubeName}", method = RequestMethod.GET, produces = { "application/json" })
+    @RequestMapping(value = "{cubeName}/validate", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
-    public EnvelopeResponse<Boolean> validateModelName(@PathVariable String cubeName) {
+    public EnvelopeResponse<Boolean> validateCubeName(@PathVariable String cubeName) {
         return new EnvelopeResponse<>(ResponseCode.CODE_SUCCESS, cubeService.isCubeNameVaildate(cubeName), "");
     }
 

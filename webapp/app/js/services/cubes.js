@@ -36,7 +36,7 @@ KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
     iterator(data.root, data.root.row_count);
     return cuboids;
   };
-  return $resource(Config.service.url + 'cubes/:cubeId/:propName/:propValue/:action/:cubeName', {}, {
+  return $resource(Config.service.url + 'cubes/:cubeId/:propName/:propValue/:action', {}, {
     list: {method: 'GET', params: {}, isArray: true},
     getValidEncodings: {method: 'GET', params: {action:"validEncodings"}, isArray: false},
     getCube: {method: 'GET', params: {}, isArray: false},
