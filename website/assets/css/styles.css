@@ -77,7 +77,7 @@ blockquote p {
 }
 .card-s {
 	height: 240px;
-    padding: 25px;
+    padding: 10px;
 }
 .card-m {
 	height: 500px;
@@ -747,7 +747,7 @@ a.section-menu-title:hover {
     bottom: 0;
 }
 .card-s .indent {
-	margin-top: 25px;
+	margin-top: 15px;
 }
 .card-l ul{
 	margin: 45px 0 0 20px;
