@@ -229,7 +229,7 @@ public class JdbcHiveInputBase extends HiveInputBase {
             splitTableAlias = splitColRef.getTableAlias();
 
             splitColumn = getColumnIdentityQuoted(splitColRef, jdbcMetadataDialect, metaMap, true);
-            quoteFullNamedColumn = quoteIdentifier(partCol, jdbcMetadataDialect.getDialect()).toLowerCase(Locale.ROOT);
+            quoteFullNamedColumn = quoteIdentifier(partCol, jdbcMetadataDialect.getDialect());
             splitDatabase = splitColRef.getColumnDesc().getTable().getDatabase();
 
             String selectSql = generateSelectDataStatementRDBMS(flatDesc, true, new String[] { partCol },
