@@ -321,7 +321,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     var defer = $q.defer();
     if ($scope.state.mode === "edit" && $scope.cubeMode === "addNewCube") {
       var cubeName = $scope.cubeMetaFrame.name;
-      CubeService.checkDuplicateCubeName({cubeName: cubeName}, {}, function (res) {
+      CubeService.checkDuplicateCubeName({cubeId: cubeName}, {}, function (res) {
         if (!res.data) {
           SweetAlert.swal('Oops...', "The cube named [" + cubeName.toUpperCase() + "] already exists", 'warning');
         }
