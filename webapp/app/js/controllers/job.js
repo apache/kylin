@@ -138,17 +138,18 @@ KylinApp
         $scope.reload = function () {
             // trigger reload action in pagination directive
             $scope.action.reload = !$scope.action.reload;
-            $scope.overview()
+            $scope.overview();
         };
-
+        $scope.overview();
 
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
             if(newValue!=oldValue||newValue==null){
                 JobList.removeAll();
                 $scope.state.projectName = newValue;
-                $scope.reload();
+                if (oldValue !== "_null") {
+                  $scope.reload();
+                }
             }
-
         });
         $scope.resume = function (job) {
             SweetAlert.swal({
