@@ -38,6 +38,7 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexProgram;
 import org.apache.calcite.rex.RexProgramBuilder;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.filter.FilterOptimizeTransformer;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
@@ -54,6 +55,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
 
     ColumnRowType columnRowType;
     OLAPContext context;
+    boolean autoJustTimezone = KylinConfig.getInstanceFromEnv().isStreamingAutoJustTimezone();
 
     public OLAPFilterRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode condition) {
         super(cluster, traits, child, condition);
@@ -105,6 +107,9 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         }
 
         TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType);
+        boolean isRealtimeTable = columnRowType.getColumnByIndex(0).getColumnDesc().getTable().isStreamingTable() ;
+        autoJustTimezone = isRealtimeTable && autoJustTimezone;
+        visitor.setAutoJustByTimezone(autoJustTimezone);
         TupleFilter filter = this.condition.accept(visitor);
 
         // optimize the filter, the optimization has to be segment-irrelevant

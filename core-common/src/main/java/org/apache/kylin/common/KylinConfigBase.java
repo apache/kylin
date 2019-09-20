@@ -2228,6 +2228,13 @@ public abstract class KylinConfigBase implements Serializable {
         return Long.parseLong(getOptional("kylin.stream.metrics.interval", "5"));
     }
 
+    /**
+     * whether realtime query should add timezone offset by kylin's web-timezone, please refer to KYLIN-4010 for detail
+     */
+    public boolean isStreamingAutoJustTimezone() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.auto.just.by.timezone", "false"));
+    }
+
     // ============================================================================
     // Health Check CLI
     // ============================================================================

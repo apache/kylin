@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.stream.core.util;
+package org.apache.kylin.dimension;
 
 import org.apache.kylin.common.util.DateFormat;
 import org.junit.Test;

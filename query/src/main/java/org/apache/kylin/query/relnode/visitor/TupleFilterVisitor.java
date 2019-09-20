@@ -37,6 +37,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.util.NlsString;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.filter.CaseTupleFilter;
@@ -57,10 +58,16 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
 
     final ColumnRowType inputRowType;
+
+    // is the fact table is a streamingv2 table
+    private boolean autoJustByTimezone = false;
+    private static final long TIME_ZONE_OFFSET = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone())
+            .getRawOffset();
 
     public TupleFilterVisitor(ColumnRowType inputRowType) {
         super(true);
@@ -210,10 +217,17 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
                 || type.getFamily() == SqlTypeFamily.TIMESTAMP) {
             List<String> newValues = Lists.newArrayList();
             for (Object v : constFilter.getValues()) {
-                if (v == null)
+                if (v == null) {
                     newValues.add(null);
-                else
-                    newValues.add(String.valueOf(DateFormat.stringToMillis(v.toString())));
+                } else {
+                    long ts = DateFormat.stringToMillis(v.toString());
+                    //  minus offset by timezone in RelNode level
+                    // this will affect request sent to storage level
+                    if (autoJustByTimezone) {
+                        ts -= TIME_ZONE_OFFSET;
+                    }
+                    newValues.add(String.valueOf(ts));
+                }
             }
             constFilter = new ConstantTupleFilter(newValues);
         }
@@ -313,5 +327,9 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
         String name = dynamicParam.getName();
         TupleFilter filter = new DynamicTupleFilter(name);
         return filter;
+    }
+
+    public void setAutoJustByTimezone(boolean autoJustByTimezone) {
+        this.autoJustByTimezone = autoJustByTimezone;
     }
 }
