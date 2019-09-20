@@ -477,8 +477,10 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
             Map<String, SegmentStats> segmentStatsMap = segmentManager.getSegmentStats();
             receiverCubeStats.setSegmentStatsMap(segmentStatsMap);
             receiverCubeStats.setTotalIngest(segmentManager.getIngestCount());
-            receiverCubeStats.setLatestEventTime(segmentManager.getLatestEventTime());
-            receiverCubeStats.setLatestEventIngestTime(segmentManager.getLatestEventIngestTime());
+            receiverCubeStats.setLatestEventTime(
+                    StreamingSegmentManager.resetTimestampByTimeZone(segmentManager.getLatestEventTime()));
+            receiverCubeStats.setLatestEventIngestTime(
+                    StreamingSegmentManager.resetTimestampByTimeZone(segmentManager.getLatestEventIngestTime()));
             receiverCubeStats.setLongLatencyInfo(segmentManager.getLongLatencyInfo());
         }
         return receiverCubeStats;
