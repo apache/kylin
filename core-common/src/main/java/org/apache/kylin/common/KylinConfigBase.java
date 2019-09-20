@@ -2224,6 +2224,13 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.stream.metrics.option", "");
     }
 
+    /**
+     * whether to print encode integer value for count distinct string value, only for debug/test purpose
+     */
+    public boolean isPrintRealtimeDictEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.print-realtime-dict-enabled", "false"));
+    }
+
     public long getStreamMetricsInterval() {
         return Long.parseLong(getOptional("kylin.stream.metrics.interval", "5"));
     }

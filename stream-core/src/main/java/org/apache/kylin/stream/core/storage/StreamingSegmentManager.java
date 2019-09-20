@@ -26,21 +26,31 @@ import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.apache.commons.io.FileUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.measure.bitmap.BitmapMeasureType;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.stream.core.consumer.IConsumerProvider;
 import org.apache.kylin.stream.core.consumer.StreamingConsumerChannel;
+import org.apache.kylin.stream.core.dict.StreamingDictionaryClient;
+import org.apache.kylin.stream.core.dict.StreamingDistributedDictionary;
 import org.apache.kylin.stream.core.model.StreamingMessage;
 import org.apache.kylin.stream.core.model.stats.LongLatencyInfo;
 import org.apache.kylin.stream.core.model.stats.SegmentStats;
@@ -61,6 +71,7 @@ public class StreamingSegmentManager implements Closeable {
     private static Logger logger = LoggerFactory.getLogger(StreamingSegmentManager.class);
     private final String cubeName;
     private final CubeInstance cubeInstance;
+    private AtomicBoolean closed = new AtomicBoolean(false);
 
     /**
      * Cube window defines how streaming events are divided and put into different segments , for example 1 hour per segment(indexer).
@@ -105,6 +116,8 @@ public class StreamingSegmentManager implements Closeable {
     private AtomicLong dropCounts = new AtomicLong();
     private volatile long latestEventTime = 0;
     private volatile long latestEventIngestTime = 0;
+    private Map<TblColRef, Dictionary<String>> dictionaryMap = new HashMap<>();
+    private StreamingDictionaryClient streamingDictionaryClient;
 
     public StreamingSegmentManager(String baseStorePath, CubeInstance cubeInstance, ISourcePositionHandler sourcePosHandler, IConsumerProvider consumerProvider) {
         this.baseStorePath = baseStorePath;
@@ -125,6 +138,27 @@ public class StreamingSegmentManager implements Closeable {
         this.longLatencyInfo = new LongLatencyInfo();
         this.checkPointStore = new CheckPointStore(cubeName, cubeDataFolder, cubeInstance.getConfig()
                 .getStreamingCheckPointFileMaxNum());
+
+        // Prepare for realtime dictionary encoder.
+        CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
+        List<MeasureDesc> bitmapMeasureList = cube.getDescriptor().getMeasures().stream()
+                .filter(measureDesc -> measureDesc.getFunction().getMeasureType() instanceof BitmapMeasureType)
+                .collect(Collectors.toList());
+        if (!bitmapMeasureList.isEmpty()) {
+            List<String> realtimeDictColumn = bitmapMeasureList.stream()
+                    .map(measureDesc -> measureDesc.getFunction().getParameter().getColRef().getIdentity())
+                    .collect(Collectors.toList());
+            String str = String.join(", ", realtimeDictColumn);
+            logger.info("Find these columns {} need to be encoded realtime.", str);
+            List<TblColRef> tblColRefs = bitmapMeasureList.stream()
+                    .map(measureDesc -> measureDesc.getFunction().getParameter().getColRef())
+                    .collect(Collectors.toList());
+
+            streamingDictionaryClient = new StreamingDictionaryClient(cubeName,
+                    realtimeDictColumn.toArray(new String[0]));
+            tblColRefs.forEach(col -> dictionaryMap.put(col,
+                    new StreamingDistributedDictionary(col.getIdentity(), streamingDictionaryClient)));
+        }
     }
 
     public void addEvent(StreamingMessage event) {
@@ -365,6 +399,7 @@ public class StreamingSegmentManager implements Closeable {
             Constructor<IStreamingSegmentStore> constructor = clazz.getConstructor(String.class, CubeInstance.class,
                     String.class);
             segmentStore = constructor.newInstance(baseStorePath, cubeInstance, segmentName);
+            segmentStore.addExternalDict(dictionaryMap);
         } catch (Exception e) {
             logger.warn("Fail to construct an instance for " + storeClassName
                     + ". Will use the default store: ColumnarSegmentStore");
@@ -556,6 +591,10 @@ public class StreamingSegmentManager implements Closeable {
 
     @Override
     public void close() {
+        if (closed.get()){
+            logger.debug("Already close it, skip.");
+            return;
+        }
         logger.warn("Closing Streaming Cube store, cubeName={}", cubeName);
         checkpoint();
         logger.warn("{} ingested {} , dropped {}, long latency {}", cubeName, ingestCount.get(), dropCounts.get(),
@@ -567,6 +606,10 @@ public class StreamingSegmentManager implements Closeable {
                 logger.error("fail to close cube segment, segment :" + cubesegment.getSegmentName(), e);
             }
         }
+        if (streamingDictionaryClient != null) {
+            streamingDictionaryClient.close();
+        }
+        closed.set(true);
     }
 
     public synchronized void checkpoint() {
