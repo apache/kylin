@@ -34,21 +34,14 @@ public class DoubleMaxAggregator extends MeasureAggregator<Double> {
 
     @Override
     public void aggregate(Double value) {
-        if (value != null) {
-            if (max == null)
-                max = -Double.MAX_VALUE;
-
-            max = Math.max(max, value);
-        }
+        if (max == null)
+            max = value;
+        else if (max < value)
+            max = value;
     }
 
     @Override
     public Double aggregate(Double value1, Double value2) {
-        if (value1 == null)
-            return value2;
-        if (value2 == null)
-            return value1;
-
         return Math.max(value1, value2);
     }
 

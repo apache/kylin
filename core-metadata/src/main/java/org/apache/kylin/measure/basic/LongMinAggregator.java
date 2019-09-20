@@ -34,21 +34,14 @@ public class LongMinAggregator extends MeasureAggregator<Long> {
 
     @Override
     public void aggregate(Long value) {
-        if (value != null) {
-            if (min == null)
-                min = Long.MAX_VALUE;
-
-            min = Math.min(value, min);
-        }
+        if (min == null)
+            min = value;
+        else if (min > value)
+            min = value;
     }
 
     @Override
     public Long aggregate(Long value1, Long value2) {
-        if (value1 == null)
-            return value2;
-        if (value2 == null)
-            return value1;
-
         return Math.min(value1, value2);
     }
 

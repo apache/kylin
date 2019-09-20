@@ -36,15 +36,10 @@ public class BigDecimalMaxAggregator extends MeasureAggregator<BigDecimal> {
 
     @Override
     public void aggregate(BigDecimal value) {
-        if (value != null) {
-            if (max == null) {
-                max = value;
-                return;
-            }
-
-            if (max.compareTo(value) < 0)
-                max = value;
-        }
+        if (max == null)
+            max = value;
+        else if (max.compareTo(value) < 0)
+            max = value;
     }
 
     @Override

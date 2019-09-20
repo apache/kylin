@@ -32,12 +32,12 @@ public class LongSerializer extends DataTypeSerializer<Long> {
 
     @Override
     public void serialize(Long value, ByteBuffer out) {
-        BytesUtil.writeVLongObject(value, out);
+        BytesUtil.writeVLong(value, out);
     }
 
     @Override
     public Long deserialize(ByteBuffer in) {
-        return BytesUtil.readVLongObject(in);
+        return BytesUtil.readVLong(in);
     }
 
     @Override

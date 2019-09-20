@@ -33,7 +33,7 @@ public class LongIngester extends MeasureIngester<Long> {
             throw new IllegalArgumentException();
 
         if (values[0] == null || values[0].length() == 0)
-            return null;
+            return new Long(0L);
         else
             return Long.valueOf(values[0]);
     }

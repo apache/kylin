@@ -36,12 +36,12 @@ public class BigDecimalSumAggregator extends MeasureAggregator<BigDecimal> {
 
     @Override
     public void aggregate(BigDecimal value) {
-        if (value != null) {
-            if (sum == null)
-                sum = new BigDecimal(0);
-
-            sum = sum.add(value);
+        if (value == null)
+            return;
+        if (sum == null) {
+            sum = new BigDecimal(0);
         }
+        sum = sum.add(value);
     }
 
     @Override

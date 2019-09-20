@@ -25,30 +25,20 @@ import org.apache.kylin.measure.MeasureAggregator;
 @SuppressWarnings("serial")
 public class DoubleSumAggregator extends MeasureAggregator<Double> {
 
-    Double sum = null;
+    Double sum = new Double(0);
 
     @Override
     public void reset() {
-        sum = null;
+        sum = new Double(0);
     }
 
     @Override
     public void aggregate(Double value) {
-        if (value != null) {
-            if (sum == null)
-                sum = 0d;
-
-            sum = sum + value;
-        }
+        sum = sum + value;
     }
 
     @Override
     public Double aggregate(Double value1, Double value2) {
-        if (value1 == null)
-            return value2;
-        if (value2 == null)
-            return value1;
-
         return Double.valueOf(value1 + value2);
     }
 
