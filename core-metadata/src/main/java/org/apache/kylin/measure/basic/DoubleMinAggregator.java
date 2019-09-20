@@ -34,21 +34,14 @@ public class DoubleMinAggregator extends MeasureAggregator<Double> {
 
     @Override
     public void aggregate(Double value) {
-        if (value != null) {
-            if (min == null)
-                min = Double.MAX_VALUE;
-
-            min = Math.min(value, min);
-        }
+        if (min == null)
+            min = value;
+        else if (min > value)
+            min = value;
     }
 
     @Override
     public Double aggregate(Double value1, Double value2) {
-        if (value1 == null)
-            return value2;
-        if (value2 == null)
-            return value1;
-
         return Math.min(value1, value2);
     }
 
