@@ -104,7 +104,12 @@ public class BuildJobSubmitter implements Runnable {
                 buildInfos = previousValue;
             }
         }
-        buildInfos.add(segmentBuildJob);
+        boolean addSucceed = buildInfos.add(segmentBuildJob);
+        if (!addSucceed) {
+            logger.debug("Add {} failed because we have a duplicated one.", segmentBuildJob);
+            buildInfos.remove(segmentBuildJob);
+            buildInfos.add(segmentBuildJob);
+        }
     }
 
     void addToCheckList(String cubeName) {

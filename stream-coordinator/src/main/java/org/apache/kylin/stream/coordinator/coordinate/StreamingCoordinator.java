@@ -237,7 +237,8 @@ public class StreamingCoordinator implements CoordinatorClient {
     @Override
     public void segmentRemoteStoreComplete(Node receiver, String cubeName, Pair<Long, Long> segment) {
         checkLead();
-        logger.info("Segment remote store complete signal received for cube:{}, segment:{}", cubeName, segment);
+        logger.info("Segment remote store complete signal received for cube:{}, segment:{}, by {}.", cubeName, segment,
+                receiver);
         buildJobSubmitter.addToCheckList(cubeName);
     }
 
