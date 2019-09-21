@@ -41,6 +41,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class TimezoneRewriteVisitor extends RexVisitorImpl<RexNode> {
     public static final Logger logger = LoggerFactory.getLogger(TimezoneRewriteVisitor.class);
@@ -69,8 +70,8 @@ public class TimezoneRewriteVisitor extends RexVisitorImpl<RexNode> {
                         // this will affect code gen
                         int minusHours = 0;
                         String afetrModify = LocalDateTime
-                                .parse(toBeModify, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).minusHours(minusHours)
-                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                                .parse(toBeModify, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ROOT)).minusHours(minusHours)
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ROOT));
                         logger.info("{}  ->  {}", toBeModify, afetrModify);
                         RexLiteral newliteral = RexLiteral.fromJdbcString(literal.getType(), literal.getTypeName(),
                                 afetrModify);

@@ -14,29 +14,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
-package org.apache.kylin.stream.coordinator.exception;
+package org.apache.kylin.stream.coordinator.doctor;
 
-import org.apache.kylin.stream.core.exception.StreamingException;
-
-public class NotLeadCoordinatorException extends StreamingException {
-    @SuppressWarnings("unused")
-    public NotLeadCoordinatorException() {
-        super();
-    }
-
-    public NotLeadCoordinatorException(String s) {
-        super(s);
-    }
-
-    public NotLeadCoordinatorException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    @SuppressWarnings("unused")
-    public NotLeadCoordinatorException(Throwable cause) {
-        super(cause);
-    }
-
+/**
+ * <pre>
+ * Basic step of this class:
+ *  1. stop coordinator to avoid underlying concurrency issue
+ *  2. check inconsistent state of all receiver cluster
+ *  3. send summary via mail to kylin admin
+ *  4. if need, call ClusterDoctor to repair inconsistent issue
+ * </pre>
+ * @see org.apache.kylin.stream.coordinator.coordinate.annotations.NotAtomicAndNotIdempotent
+ * @see ClusterDoctor
+ */
+public class ClusterStateChecker {
+    // TO BE IMPLEMENTED
 }
