@@ -28,9 +28,24 @@ import org.apache.kylin.stream.core.model.Node;
 import org.apache.kylin.stream.core.source.Partition;
 
 public interface CoordinatorClient {
+
+    // ================================================================================
+    // ============================= Receiver side ====================================
+
+    /**
+     * Notified by a receiver that a part of segment data has been uploaded to Deep Storage.
+     * Coordinator will try to find any segment which is ready to build into HBase and sumbit building job.
+     */
     void segmentRemoteStoreComplete(Node receiverNode, String cubeName, Pair<Long, Long> segmentRange);
 
+    /**
+     * Notified by replica set leader that a leader has been changed to it. No influence now.
+     */
     void replicaSetLeaderChange(int replicaSetId, Node newLeader);
+
+
+    // ================================================================================
+    // =========================== Coordinator side ===================================
 
     Map<Integer, Map<String, List<Partition>>> reBalanceRecommend();
 

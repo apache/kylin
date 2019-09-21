@@ -96,7 +96,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
         try {
             client.delete().forPath(ZKPaths.makePath(cubeRoot, cubeName, CUBE_ASSIGNMENT));
         } catch (Exception e) {
-            logger.error("error when remove cube assignment", e);
+            logger.error("Error when remove cube assignment " + cubeName, e);
             throw new StoreException(e);
         }
     }
@@ -116,7 +116,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
             }
             return cubeAssignmentList;
         } catch (Exception e) {
-            logger.error("error when get assignments");
+            logger.error("Error when get assignments", e);
             throw new StoreException(e);
         }
     }
@@ -127,7 +127,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
             List<CubeAssignment> cubeAssignmentList = getAllCubeAssignments();
             return AssignmentUtil.convertCubeAssign2ReplicaSetAssign(cubeAssignmentList);
         } catch (Exception e) {
-            logger.error("error when get assignments");
+            logger.error("Error when get assignments", e);
             throw new StoreException(e);
         }
     }
@@ -138,7 +138,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
             Map<Integer, Map<String, List<Partition>>> replicaSetAssignmentsMap = getAllReplicaSetAssignments();
             return replicaSetAssignmentsMap.get(replicaSetID);
         } catch (Exception e) {
-            logger.error("error when get assignments");
+            logger.error("Error when get assignment for replica set " + replicaSetID, e);
             throw new StoreException(e);
         }
     }
@@ -154,7 +154,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
             CubeAssignment assignment = CubeAssignment.deserializeCubeAssignment(data);
             return assignment;
         } catch (Exception e) {
-            logger.error("error when get cube assignment");
+            logger.error("Error when get cube assignment for " + cubeName, e);
             throw new StoreException(e);
         }
     }
@@ -169,7 +169,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
                 result.add(replicaSet);
             }
         } catch (Exception e) {
-            logger.error("error when get replica sets", e);
+            logger.error("Error when get replica sets", e);
             throw new StoreException(e);
         }
         return result;
@@ -187,7 +187,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
                 }
             });
         } catch (Exception e) {
-            logger.error("error when get replica sets", e);
+            logger.error("Error when get replica sets", e);
             throw new StoreException(e);
         }
     }
@@ -219,7 +219,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
             client.create().creatingParentsIfNeeded().forPath(replicaSetPath, serializeReplicaSet(rs));
             return newReplicaSetID;
         } catch (Exception e) {
-            logger.error("error when create replicaSet:" + rs);
+            logger.error("Error when create replicaSet " + rs, e);
             throw new StoreException(e);
         }
     }
@@ -231,7 +231,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
             client.setData().forPath(ZKPaths.makePath(replicaSetRoot, String.valueOf(rs.getReplicaSetID())),
                     replicaSetData);
         } catch (Exception e) {
-            logger.error("error when update replicaSet:" + rs.getReplicaSetID());
+            logger.error("error when update replicaSet " + rs, e);
             throw new StoreException(e);
         }
     }
@@ -242,7 +242,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
             byte[] nodeData = client.getData().forPath(coordinatorRoot);
             return JsonUtil.readValue(nodeData, Node.class);
         } catch (Exception e) {
-            logger.error("error when get coordinator", e);
+            logger.error("Error when get coordinator leader", e);
             throw new StoreException(e);
         }
     }
@@ -253,7 +253,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
             byte[] coordinatorBytes = JsonUtil.writeValueAsBytes(coordinator);
             client.setData().forPath(coordinatorRoot, coordinatorBytes);
         } catch (Exception e) {
-            logger.error("error when set coordinator", e);
+            logger.error("Error when set coordinator leader to " + coordinator, e);
             throw new StoreException(e);
         }
     }
@@ -266,11 +266,11 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
             if (client.checkExists().forPath(path) == null) {
                 client.create().creatingParentsIfNeeded().forPath(path);
             } else {
-                logger.warn("checkpoint path already existed under path {}", path);
+                logger.warn("Checkpoint path already existed under path {}, overwrite with new one.", path);
             }
             client.setData().forPath(path, Bytes.toBytes(sourceCheckpoint));
         } catch (Exception e) {
-            logger.error("fail to add replicaSet Id to segment build state", e);
+            logger.error("Error when save remote checkpoint for " + cubeName + " " + segmentName , e);
             throw new StoreException(e);
         }
     }
@@ -295,7 +295,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
             }
             return result;
         } catch (Exception e) {
-            logger.error("fail to add replicaSet Id to segment build state", e);
+            logger.error("Error to fetch remote checkpoint for " + cubeName + " " + segmentName, e);
             throw new StoreException(e);
         }
     }
@@ -317,7 +317,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
 
             return result;
         } catch (Exception e) {
-            logger.error("error when get replica set:" + rsID);
+            logger.error("Error when get replica set " + rsID, e);
             throw new StoreException(e);
         }
     }
@@ -327,7 +327,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
         try {
             client.delete().forPath(ZKPaths.makePath(replicaSetRoot, String.valueOf(rsID)));
         } catch (Exception e) {
-            logger.error("error when remove replica set:" + rsID);
+            logger.error("Error when remove replica set " + rsID, e);
             throw new StoreException(e);
         }
     }
@@ -342,7 +342,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
                 result.add(node);
             }
         } catch (Exception e) {
-            logger.error("error when fetch receivers", e);
+            logger.error("Error when fetch receivers", e);
             throw new StoreException(e);
         }
         return result;
@@ -353,7 +353,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
         try {
             return client.getChildren().forPath(cubeRoot);
         } catch (Exception e) {
-            logger.error("error when fetch cubes", e);
+            logger.error("Error when fetch cubes", e);
             throw new StoreException(e);
         }
     }
@@ -366,7 +366,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
                 client.create().creatingParentsIfNeeded().forPath(path);
             }
         } catch (Exception e) {
-            logger.error("error when add cube", e);
+            logger.error("Error when add cube " + cube, e);
             throw new StoreException(e);
         }
     }
@@ -379,7 +379,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
                 client.delete().deletingChildrenIfNeeded().forPath(ZKPaths.makePath(cubeRoot, cube));
             }
         } catch (Exception e) {
-            logger.error("error when remove cube", e);
+            logger.error("Error when remove cube " + cube, e);
             throw new StoreException(e);
         }
     }
@@ -399,7 +399,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
                 return StreamingCubeConsumeState.RUNNING;
             }
         } catch (Exception e) {
-            logger.error("error when get streaming cube consume state", e);
+            logger.error("Error when get streaming cube consume state " + cube, e);
             throw new StoreException(e);
         }
     }
@@ -414,7 +414,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
                 client.create().creatingParentsIfNeeded().forPath(path, JsonUtil.writeValueAsBytes(state));
             }
         } catch (Exception e) {
-            logger.error("error when save streaming cube consume state", e);
+            logger.error("Error when save streaming cube consume state " + cube + " with " + state, e);
             throw new StoreException(e);
         }
     }
@@ -427,7 +427,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
                 client.create().creatingParentsIfNeeded().forPath(receiverPath);
             }
         } catch (Exception e) {
-            logger.error("error when add new receiver", e);
+            logger.error("Error when add new receiver " + receiver, e);
             throw new StoreException(e);
         }
     }
@@ -440,14 +440,14 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
                 client.delete().deletingChildrenIfNeeded().forPath(receiverPath);
             }
         } catch (Exception e) {
-            logger.error("error when remove receiver:" + receiver, e);
+            logger.error("Error when remove receiver " + receiver, e);
             throw new StoreException(e);
         }
     }
 
     @Override
     public void saveNewCubeAssignment(CubeAssignment newCubeAssignment) {
-        logger.info("try saving new cube assignment for:" + newCubeAssignment.getCubeName());
+        logger.info("Try saving new cube assignment for: {}.", newCubeAssignment);
         try {
             String path = getCubeAssignmentPath(newCubeAssignment.getCubeName());
             if (client.checkExists().forPath(path) == null) {
@@ -457,7 +457,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
                 client.setData().forPath(path, CubeAssignment.serializeCubeAssignment(newCubeAssignment));
             }
         } catch (Exception e) {
-            logger.error("fail to save cube assignment", e);
+            logger.error("Fail to save cube assignment", e);
             throw new StoreException(e);
         }
     }
@@ -466,7 +466,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
         try {
             client.close();
         } catch (Exception e) {
-            logger.error("exception throws when close assignmentManager", e);
+            logger.error("Exception throws when close assignmentManager", e);
         }
     }
 
@@ -481,7 +481,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
                 logger.warn("ReplicaSet id {} existed under path {}", rsID, path);
             }
         } catch (Exception e) {
-            logger.error("fail to add replicaSet Id to segment build state", e);
+            logger.error("Fail to add replicaSet Id to segment build state for " + segmentName + " " + rsID, e);
             throw new StoreException(e);
         }
     }
@@ -493,7 +493,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
             String path = ZKPaths.makePath(cubeRoot, cubeName, CUBE_BUILD_STATE, segmentName);
             client.setData().forPath(path, Bytes.toBytes(stateStr));
         } catch (Exception e) {
-            logger.error("fail to update segment build state", e);
+            logger.error("Fail to update segment build state for " + segmentName + " to " + state, e);
             throw new StoreException(e);
         }
     }
@@ -513,7 +513,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
             }
             return result;
         } catch (Exception e) {
-            logger.error("fail to get segment build states", e);
+            logger.error("Fail to get segment build states " + cubeName, e);
             throw new StoreException(e);
         }
     }
@@ -524,7 +524,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
             String cubePath = getCubeBuildStatePath(cubeName);
             return doGetSegmentBuildState(cubePath, segmentName);
         } catch (Exception e) {
-            logger.error("fail to get cube segment remote store state", e);
+            logger.error("Fail to get segment build state for " + cubeName + " " +segmentName, e);
             throw new StoreException(e);
         }
     }
@@ -555,11 +555,11 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
                 client.delete().deletingChildrenIfNeeded().forPath(path);
                 return true;
             } else {
-                logger.warn("cube segment deep store state does not exisit!, path {} ", path);
+                logger.warn("Cube segment deep store state does not exisit!, path {} ", path);
                 return false;
             }
         } catch (Exception e) {
-            logger.error("fail to remove cube segment deep store state", e);
+            logger.error("Fail to remove cube segment deep store state " + cubeName + " " + segmentName, e);
             throw new StoreException(e);
         }
     }

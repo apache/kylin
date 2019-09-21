@@ -32,9 +32,13 @@ public class ClusterState {
     @JsonProperty("rs_states")
     private List<ReplicaSetState> replicaSetStates = Lists.newArrayList();
 
+    /**
+     * Receiver which don't belong to any replica set.
+     */
     @JsonProperty("available_receivers")
     private List<ReceiverState> availableReceivers = Lists.newArrayList();
 
+    @SuppressWarnings("unused")
     public long getLastUpdateTime() {
         return lastUpdateTime;
     }
@@ -43,18 +47,22 @@ public class ClusterState {
         this.lastUpdateTime = lastUpdateTime;
     }
 
+    @SuppressWarnings("unused")
     public List<ReplicaSetState> getReplicaSetStates() {
         return replicaSetStates;
     }
 
+    @SuppressWarnings("unused")
     public void setReplicaSetStates(List<ReplicaSetState> replicaSetStates) {
         this.replicaSetStates = replicaSetStates;
     }
 
+    @SuppressWarnings("unused")
     public List<ReceiverState> getAvailableReceivers() {
         return availableReceivers;
     }
 
+    @SuppressWarnings("unused")
     public void setAvailableReceivers(List<ReceiverState> availableReceivers) {
         this.availableReceivers = availableReceivers;
     }

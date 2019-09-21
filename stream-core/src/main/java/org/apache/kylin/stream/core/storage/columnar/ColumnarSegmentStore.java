@@ -66,7 +66,7 @@ public class ColumnarSegmentStore implements IStreamingSegmentStore {
     private static ExecutorService fragmentMergeExecutor;
     {
         fragmentMergeExecutor = new ThreadPoolExecutor(0, 10, 60L, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("fragments-merge"));
+                new LinkedBlockingQueue<>(), new NamedThreadFactory("fragments-merge"));
     }
 
     private volatile SegmentMemoryStore activeMemoryStore;
