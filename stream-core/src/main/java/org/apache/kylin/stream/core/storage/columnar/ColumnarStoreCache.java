@@ -37,6 +37,13 @@ import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Maps;
 
+/**
+ * In streaming receiver side, data was divided into two part, memory store and fragment file. As the literal means,
+ *  memory store is located at JVM heap (actually a SortedMap), and fragment file usually located at disk.
+ *
+ * Since the size of fragment file is often very large, reducing times of IO will improve performance remarkably. So we
+ *  cache fragment file into off-heap memory as much as possible.
+ */
 public class ColumnarStoreCache {
     private static Logger logger = LoggerFactory.getLogger(ColumnarStoreCache.class);
     private static ColumnarStoreCache instance = new ColumnarStoreCache();
@@ -50,7 +57,9 @@ public class ColumnarStoreCache {
 
     private ConcurrentMap<DataSegmentFragment, AtomicLong> refCounters = Maps.newConcurrentMap();
     public LoadingCache<DataSegmentFragment, FragmentData> fragmentDataCache = CacheBuilder.newBuilder()
-            .initialCapacity(INIT_CACHE_SIZE).concurrencyLevel(8).maximumSize(CACHE_SIZE)
+            .initialCapacity(INIT_CACHE_SIZE)
+            .concurrencyLevel(8)
+            .maximumSize(CACHE_SIZE)
             .expireAfterAccess(6, TimeUnit.HOURS)
             .removalListener(new RemovalListener<DataSegmentFragment, FragmentData>() {
                 @Override
@@ -76,7 +85,8 @@ public class ColumnarStoreCache {
                         logger.debug("no ref counter found for fragment: " + fragment);
                     }
                 }
-            }).build(new CacheLoader<DataSegmentFragment, FragmentData>() {
+            })
+            .build(new CacheLoader<DataSegmentFragment, FragmentData>() {
                 @Override
                 public FragmentData load(DataSegmentFragment fragment) throws Exception {
                     if (currentBufferedSize.get() >= MAX_BUFFERED_SIZE) {
@@ -133,7 +143,7 @@ public class ColumnarStoreCache {
         if (refCounter != null) {
             refCounter.decrementAndGet();
         } else {
-            logger.warn("ref counter not exist for fragment:" + fragment);
+            logger.warn("Ref counter not exist for fragment:{}", fragment);
         }
     }
 

@@ -958,7 +958,7 @@ public class CubeManager implements IRealizationProvider {
                 throw new IllegalStateException(String.format(Locale.ROOT,
                         "For cube %s, segment %s missing LastBuildJobID", cubeCopy.toString(), newSegCopy.toString()));
 
-            if (isReady(newSegCopy) == true) {
+            if (isReady(newSegCopy)) {
                 logger.warn("For cube {}, segment {} state should be NEW but is READY", cubeCopy, newSegCopy);
             }
 

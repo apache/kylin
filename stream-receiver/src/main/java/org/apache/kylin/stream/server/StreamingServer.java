@@ -33,7 +33,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -238,7 +237,6 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
                     StreamingCubeSegment.State.REMOTE_PERSISTED.name());
             i++;
         }
-
     }
 
     private void purgeSegments(String cubeName, Collection<StreamingCubeSegment> segments,
