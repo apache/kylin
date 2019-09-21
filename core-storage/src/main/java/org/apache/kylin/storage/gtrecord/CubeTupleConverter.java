@@ -163,7 +163,7 @@ public class CubeTupleConverter implements ITupleConverter {
             int ti = tupleIdx[i];
             if (ti >= 0) {
                 // add offset to return result according to timezone
-                if (autoJustByTimezone && timestampColumn.contains(i)) {
+                if (autoJustByTimezone && timestampColumn.contains(ti)) {
                     try {
                         String v = toString(gtValues[i]);
                         if (v != null) {
