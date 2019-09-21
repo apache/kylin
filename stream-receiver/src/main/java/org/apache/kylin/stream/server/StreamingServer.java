@@ -59,6 +59,7 @@ import org.apache.kylin.stream.coordinator.StreamMetadataStoreFactory;
 import org.apache.kylin.stream.coordinator.StreamingUtils;
 import org.apache.kylin.stream.coordinator.client.CoordinatorClient;
 import org.apache.kylin.stream.coordinator.client.HttpCoordinatorClient;
+import org.apache.kylin.stream.coordinator.coordinate.annotations.NotAtomicIdempotent;
 import org.apache.kylin.stream.core.consumer.ConsumerStartProtocol;
 import org.apache.kylin.stream.core.consumer.EndPositionStopCondition;
 import org.apache.kylin.stream.core.consumer.IConsumerProvider;
@@ -202,6 +203,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
         }
     }
 
+    @NotAtomicIdempotent
     private void sendSegmentsToFullBuild(String cubeName, StreamingSegmentManager segmentManager,
             Collection<StreamingCubeSegment> segments) throws Exception {
         List<Future<?>> futureList = Lists.newArrayList();
@@ -218,7 +220,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
         int i = 0;
         for (StreamingCubeSegment segment : segments) {
             futureList.get(i).get();
-            logger.info("save remote store state to metadata store.");
+            logger.info("Save remote store state to metadata store.");
             streamMetadataStore.addCompleteReplicaSetForSegmentBuild(segment.getCubeName(), segment.getSegmentName(),
                     replicaSetID);
 
@@ -228,12 +230,12 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
             streamMetadataStore.saveSourceCheckpoint(segment.getCubeName(), segment.getSegmentName(), replicaSetID,
                     smallestSourcePosStr);
 
-            logger.info("send notification to coordinator for cube {} segment {}.", cubeName, segment.getSegmentName());
+            logger.info("Send notification to coordinator for cube {} segment {}.", cubeName, segment.getSegmentName());
             coordinatorClient.segmentRemoteStoreComplete(currentNode, segment.getCubeName(),
                     new Pair<>(segment.getDateRangeStart(), segment.getDateRangeEnd()));
-            logger.info("send notification success.");
+            logger.info("Send notification success.");
             segment.saveState(StreamingCubeSegment.State.REMOTE_PERSISTED);
-            logger.info("cube {} segment {}  status converted to {}", segment.getCubeName(), segment.getSegmentName(),
+            logger.info("Commit cube {} segment {}  status converted to {}.", segment.getCubeName(), segment.getSegmentName(),
                     StreamingCubeSegment.State.REMOTE_PERSISTED.name());
             i++;
         }

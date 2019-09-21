@@ -14,29 +14,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
-package org.apache.kylin.stream.coordinator.exception;
+package org.apache.kylin.stream.coordinator.doctor;
 
-import org.apache.kylin.stream.core.exception.StreamingException;
+/**
+ * Repair inconsistent state according to result of ClusterStateChecker
+ *
+ * @see org.apache.kylin.stream.coordinator.coordinate.annotations.NotAtomicAndNotIdempotent
+ * @see ClusterStateChecker
+ */
+public class ClusterDoctor implements Runnable {
 
-public class NotLeadCoordinatorException extends StreamingException {
-    @SuppressWarnings("unused")
-    public NotLeadCoordinatorException() {
-        super();
+    @Override
+    public void run() {
+        // TO BE IMPLEMENTED
     }
-
-    public NotLeadCoordinatorException(String s) {
-        super(s);
-    }
-
-    public NotLeadCoordinatorException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    @SuppressWarnings("unused")
-    public NotLeadCoordinatorException(Throwable cause) {
-        super(cause);
-    }
-
 }
