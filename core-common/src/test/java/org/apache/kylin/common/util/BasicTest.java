@@ -18,14 +18,11 @@
 
 package org.apache.kylin.common.util;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -56,19 +53,13 @@ import com.google.common.collect.Maps;
 @SuppressWarnings("unused")
 public class BasicTest {
     protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(BasicTest.class);
-
-    private enum MetricType {
-        Count, DimensionAsMetric, DistinctCount, Normal
-    }
-
     public static int counter = 1;
 
-    class X {
-        byte[] mm = new byte[100];
-
-        public X() {
-            counter++;
-        }
+    private static String time(long t) {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.ROOT);
+        Calendar cal = Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT);
+        cal.setTimeInMillis(t);
+        return dateFormat.format(cal.getTime());
     }
 
     @Test
@@ -151,13 +142,14 @@ public class BasicTest {
     }
 
     @Test
-    @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
 
         System.out.println(org.apache.kylin.common.util.DateFormat.formatToTimeStr(1433833611000L));
         System.out.println(org.apache.kylin.common.util.DateFormat.formatToTimeStr(1433250517000L));
         System.out.println(org.apache.kylin.common.util.DateFormat.stringToMillis("2015-06-01 00:00:00"));
         System.out.println(org.apache.kylin.common.util.DateFormat.stringToMillis("2015-05-15 17:00:00"));
+        Assert.assertEquals(1568960682251L,
+                org.apache.kylin.common.util.DateFormat.stringToMillis("2019-09-20T14:24:42.251+08:00"));
 
         String bb = "\\x00\\x00\\x00\\x00\\x01\\x3F\\xD0\\x2D\\58\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00";//2013/07/12 07:59:37
         String cc = "\\x00\\x00\\x00\\x00\\x01\\x41\\xBE\\x8F\\xD8\\x00\\x00\\x00\\x00\\x00\\x00\\x00";//2013/10/16 08:00:00
@@ -195,22 +187,10 @@ public class BasicTest {
     }
 
     @Test
-    @Ignore("fix it later")
-    public void test2() throws IOException {
-        ArrayList<String> x = Lists.newArrayListWithCapacity(10);
-        x.set(2, "dd");
-        for (String y : x) {
-            System.out.println(y);
-        }
-    }
-
-    @Test
-    @Ignore("for dev only")
     public void test3() throws Exception {
-        FastDateFormat formatter = org.apache.kylin.common.util.DateFormat.getDateFormat("MMM dd, yyyy hh:mm:ss aa");
-        System.out.println(formatter.format(new Date()));
+        FastDateFormat formatter = org.apache.kylin.common.util.DateFormat.getDateFormat("MM dd, yyyy hh:mm:ss a");
 
-        String timeStr = "Jul 20, 2016 9:59:17 AM";
+        String timeStr = "07 20, 2016 09:59:17 AM";
 
         System.out.println(formatter.parse(timeStr).getTime());
     }
@@ -218,7 +198,7 @@ public class BasicTest {
     @Test
     public void testStringSplit() throws Exception {
 
-        String[] origin = new String[] {"ab,c", "cd|e"};
+        String[] origin = new String[] { "ab,c", "cd|e" };
 
         // test with sequence file default delimiter
         String delimiter = "\01"; //"\u001F"; "\t";
@@ -232,10 +212,15 @@ public class BasicTest {
         Assert.assertEquals(origin, newValues);
     }
 
-    private static String time(long t) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.ROOT);
-        Calendar cal = Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT);
-        cal.setTimeInMillis(t);
-        return dateFormat.format(cal.getTime());
+    private enum MetricType {
+        Count, DimensionAsMetric, DistinctCount, Normal
+    }
+
+    class X {
+        byte[] mm = new byte[100];
+
+        public X() {
+            counter++;
+        }
     }
 }
