@@ -1115,6 +1115,14 @@ public abstract class KylinConfigBase implements Serializable {
         return StorageURL.valueOf(url);
     }
 
+    public StorageURL getSecondaryStorageUrl() {
+        String url = getOptional("kylin.secondary.storage.url", "");
+        if (StringUtils.isEmpty(url)) {
+            return null;
+        }
+        return StorageURL.valueOf(url);
+    }
+
     public String getHBaseTableNamePrefix() {
         return getOptional("kylin.storage.hbase.table-name-prefix", "KYLIN_");
     }
