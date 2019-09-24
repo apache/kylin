@@ -38,6 +38,13 @@ fi
 
 spark_version="2.3.2"
 spark_pkg_md5="01b3e6aef0ef574e066d15e035b9b2dd"
+hdp_version="2.4.0.0-169"
+cdh_version="5.7.5"
+cdh_path="/opt/cloudera/parcels/CDH"
+hdp_path="/usr/hdp"
+hive_site_path="/etc/hive/conf/hive-site.xml"
+spark_jars_path="${KYLIN_HOME}/spark/jars"
+spark_conf_path="${KYLIN_HOME}/spark/conf"
 
 if [ ! -f "spark-${spark_version}-bin-hadoop2.7.tgz" ]
 then
@@ -71,3 +78,28 @@ mv spark ${KYLIN_HOME}
 echo "Download spark binary done"
 
 rm -rf ${spark_package_dir}
+
+if [ ! -f "${spark_conf_path}/hive-site.xml" ]; then
+        echo "Copy hive-site.xml to ${spark_conf_path}"
+        cp ${hive_site_path} ${spark_conf_path}
+fi
+
+
+if [ -d "${cdh_path}" ]; then
+        if [ ! -f "${spark_jars_path}/hive-hcatalog-core-1.1.0-cdh${cdh_version}.jar" ]; then
+                echo "Download hive hcatalog dependency for cdh-${cdh_version}"
+                wget --directory-prefix=${spark_jars_path} https://repository.cloudera.com/content/repositories/releases/org/apache/hive/hcatalog/hive-hcatalog-core/1.1.0-cdh${cdh_version}/hive-hcatalog-core-1.1.0-cdh${cdh_version}.jar || echo "Download hive hcatalog dependency for cdh-${cdh_version}failed."
+        fi
+elif [ -d "${hdp_path}" ]; then
+        if [ ! -f "${spark_jars_path}/hive-hcatalog-core-1.2.1000.${hdp_version}.jar" ]; then
+                echo "Download hive hcatalog dependency for cdh-${hdp_version}"
+                mkdir ${spark_jars_path}/old-hive-jars
+                mv ${spark_jars_path}/hive-*.jar ${spark_jars_path}/old-hive-jars
+                wget --directory-prefix=${spark_jars_path} https://repo.hortonworks.com/content/repositories/releases/org/apache/hive/hcatalog/hive-hcatalog-core/1.2.1000.${hdp_version}/hive-hcatalog-core-1.2.1000.${hdp_version}.jar || echo "Download hive hcatalog dependency for hdp-${hdp_version} failed."
+                wget --directory-prefix=${spark_jars_path} https://repo.hortonworks.com/content/repositories/releases/org/apache/hive/hive-exec/1.2.1000.${hdp_version}/hive-exec-1.2.1000.${hdp_version}.jar || echo "Download hive exec dependency for hdp-${hdp_version} failed."
+                wget --directory-prefix=${spark_jars_path} https://repo.hortonworks.com/content/repositories/releases/org/apache/hive/hive-common/1.2.1000.${hdp_version}/hive-common-1.2.1000.${hdp_version}.jar || echo "Download hive common dependency for hdp-${hdp_version} failed."
+                wget --directory-prefix=${spark_jars_path} https://repo.hortonworks.com/content/repositories/releases/org/apache/hive/hive-jdbc/1.2.1000.${hdp_version}/hive-jdbc-1.2.1000.${hdp_version}.jar || echo "Download hive jdbc dependency for hdp-${hdp_version} failed."
+                wget --directory-prefix=${spark_jars_path} https://repo.hortonworks.com/content/repositories/releases/org/apache/hive/hive-metastore/1.2.1000.${hdp_version}/hive-metastore-1.2.1000.${hdp_version}.jar || echo "Download hive metastore dependency for hdp-${hdp_version} failed."
+                wget --directory-prefix=${spark_jars_path} https://repo.hortonworks.com/content/repositories/releases/org/apache/hive/hive-service/1.2.1000.${hdp_version}/hive-service-1.2.1000.${hdp_version}.jar || echo "Download hive service dependency for hdp-${hdp_version} failed."
+        fi
+fi
