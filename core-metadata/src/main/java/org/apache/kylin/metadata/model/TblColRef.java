@@ -279,6 +279,11 @@ public class TblColRef implements Serializable {
         return (getTableWithSchema() + "." + column.getName()).toUpperCase(Locale.ROOT);
     }
 
+
+    public String getColumnWithTable() {
+        return (getTable() + "." + column.getName()).toUpperCase(Locale.ROOT);
+    }
+
     // used by projection rewrite, see OLAPProjectRel
     public enum InnerDataTypeEnum {
 
