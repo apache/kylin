@@ -19,10 +19,10 @@
 'use strict';
 
 KylinApp
-    .controller('BadQueryCtrl', function ($scope,BadQueryService, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,ProjectModel,$window) {
+    .controller('BadQueryCtrl', function ($scope,BadQueryService, jobConfig, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,ProjectModel,$window) {
 
       $scope.badQueryList = [];
-
+      $scope.jobConfig = jobConfig;
       $scope.bqstate={
         loading:true,
         filterAttr: 'last_modified',
