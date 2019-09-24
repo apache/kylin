@@ -251,6 +251,10 @@ public class JobBuilderSupport {
         return true;
     }
 
+    public boolean isEnabledSparkDimensionDictionary() {
+        return config.getConfig().isSparkDimensionDictionaryEnabled();
+    }
+
     public LookupMaterializeContext addMaterializeLookupTableSteps(final CubingJob result) {
         LookupMaterializeContext lookupMaterializeContext = new LookupMaterializeContext(result);
         CubeDesc cubeDesc = seg.getCubeDesc();
