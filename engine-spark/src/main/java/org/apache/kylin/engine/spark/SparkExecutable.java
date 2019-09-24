@@ -26,6 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -42,7 +43,9 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
 import org.apache.kylin.engine.spark.exception.SparkException;
@@ -367,6 +370,12 @@ public class SparkExecutable extends AbstractExecutable {
                     }
                     readCounters(joblogInfo);
                     getManager().addJobInfo(getId(), joblogInfo);
+                    if (joblogInfo.containsKey(ExecutableConstants.SPARK_DIMENSION_DIC_SEGMENT_ID)) {
+                        updateSparkDimensionDicMetadata(config, cube, joblogInfo.get(ExecutableConstants.SPARK_DIMENSION_DIC_SEGMENT_ID));
+                        logger.info("Finished update dictionaries and snapshot info from {} to {}.",
+                                this.getParam(SparkBuildDictionary.OPTION_META_URL.getOpt()),
+                                config.getMetadataUrl());
+                    }
                     return new ExecuteResult(ExecuteResult.State.SUCCEED, patternedLogger.getBufferedLog());
                 }
                 // clear SPARK_JOB_ID on job failure.
@@ -401,6 +410,28 @@ public class SparkExecutable extends AbstractExecutable {
         } catch (IOException e) {
             throw new ExecuteException("meta dump failed");
         }
+    }
+
+    //to update metadata from hdfs due to the step build dimension dic using spark dump metadata to hdfs
+    private void updateSparkDimensionDicMetadata(KylinConfig config, CubeInstance cube, String segmentId) throws IOException{
+        KylinConfig hdfsConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(this.getParam(SparkBuildDictionary.OPTION_META_URL.getOpt()));
+        CubeInstance cubeInstance = CubeManager.getInstance(hdfsConfig).reloadCube(cube.getName());
+        CubeSegment segment = cubeInstance.getSegmentById(segmentId);
+
+        CubeSegment oldSeg = cube.getSegmentById(segmentId);
+        oldSeg.setDictionaries((ConcurrentHashMap<String, String>) segment.getDictionaries());
+        oldSeg.setSnapshots((ConcurrentHashMap)segment.getSnapshots());
+        oldSeg.getRowkeyStats().addAll(segment.getRowkeyStats());
+        CubeInstance cubeCopy = cube.latestCopyForWrite();
+        CubeUpdate update = new CubeUpdate(cubeCopy);
+        update.setToUpdateSegs(oldSeg);
+        CubeManager.getInstance(config).updateCube(update);
+
+        Set<String> dumpList = new LinkedHashSet<>();
+        dumpList.addAll(segment.getDictionaryPaths());
+        dumpList.addAll(segment.getSnapshotPaths());
+
+        JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segment.getConfig(), config.getMetadataUrl().toString());
     }
 
     // Spark Cubing can only work in layer algorithm

@@ -1454,6 +1454,11 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.valueOf(getOptional("kylin.engine.spark.output.max-size", "10485760"));
     }
 
+    public boolean isSparkDimensionDictionaryEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark-dimension-dictionary", "false"));
+    }
+
+
     // ============================================================================
     // ENGINE.LIVY
     // ============================================================================

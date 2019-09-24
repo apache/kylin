@@ -33,9 +33,11 @@ public final class ExecutableConstants {
     public static final String HDFS_BYTES_WRITTEN = "hdfs_bytes_written";
     public static final String SOURCE_RECORDS_COUNT = "source_records_count";
     public static final String SOURCE_RECORDS_SIZE = "source_records_size";
+    public static final String SPARK_DIMENSION_DIC_SEGMENT_ID = "spark_dimension_dic_segment_id";
 
     public static final String STEP_NAME_EXTRACT_DICTIONARY_FROM_GLOBAL = "Extract Dictionary from Global Dictionary";
     public static final String STEP_NAME_BUILD_DICTIONARY = "Build Dimension Dictionary";
+    public static final String STEP_NAME_BUILD_SPARK_DICTIONARY = "Build Dimension Dictionary with Spark";
     public static final String STEP_NAME_BUILD_UHC_DICTIONARY = "Build UHC Dictionary";
     public static final String STEP_NAME_CREATE_FLAT_HIVE_TABLE = "Create Intermediate Flat Hive Table";
     public static final String STEP_NAME_SQOOP_TO_FLAT_HIVE_TABLE = "Sqoop To Flat Hive Table";
