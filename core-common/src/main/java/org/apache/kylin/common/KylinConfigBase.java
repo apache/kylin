@@ -21,6 +21,7 @@ package org.apache.kylin.common;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -907,6 +908,14 @@ public abstract class KylinConfigBase implements Serializable {
 
     public Integer getSchedulerPollIntervalSecond() {
         return Integer.parseInt(getOptional("kylin.job.scheduler.poll-interval-second", "30"));
+    }
+
+    public boolean isSchedulerSafeMode() {
+        return Boolean.parseBoolean(getOptional("kylin.job.scheduler.safemode", "false"));
+    }
+
+    public List<String> getSafeModeRunnableProjects() {
+        return Arrays.asList(getOptionalStringArray("kylin.job.scheduler.safemode.runnable-projects", null));
     }
 
     public Integer getErrorRecordThreshold() {

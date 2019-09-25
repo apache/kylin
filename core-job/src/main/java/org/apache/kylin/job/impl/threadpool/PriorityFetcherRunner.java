@@ -22,8 +22,10 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.Executable;
@@ -107,6 +109,18 @@ public class PriorityFetcherRunner extends FetcherRunner {
                 if (!executable.isReady()) {
                     nOthers++;
                     continue;
+                }
+
+                KylinConfig config = jobEngineConfig.getConfig();
+                if(config.isSchedulerSafeMode()) {
+                    String cubeName = executable.getCubeName();
+                    String projectName = CubeManager.getInstance(config).getCube(cubeName).getProject();
+                    if (!config.getSafeModeRunnableProjects().contains(projectName) &&
+                            executable.getStartTime() == 0) {
+                        logger.info("New job is pending for scheduler in safe mode. Project: {}, job: {}",
+                                projectName, executable.getName());
+                        continue;
+                    }
                 }
 
                 nReady++;

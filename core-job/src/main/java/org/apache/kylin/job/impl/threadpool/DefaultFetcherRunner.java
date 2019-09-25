@@ -20,7 +20,9 @@ package org.apache.kylin.job.impl.threadpool;
 
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.SetThreadName;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.Executable;
@@ -75,6 +77,18 @@ public class DefaultFetcherRunner extends FetcherRunner {
                 if (!executable.isReady()) {
                     nOthers++;
                     continue;
+                }
+
+                KylinConfig config = jobEngineConfig.getConfig();
+                if(config.isSchedulerSafeMode()) {
+                    String cubeName = executable.getCubeName();
+                    String projectName = CubeManager.getInstance(config).getCube(cubeName).getProject();
+                    if (!config.getSafeModeRunnableProjects().contains(projectName) &&
+                            executable.getStartTime() == 0) {
+                        logger.info("New job is pending for scheduler in safe mode. Project: {}, job: {}",
+                                projectName, executable.getName());
+                        continue;
+                    }
                 }
 
                 nReady++;
