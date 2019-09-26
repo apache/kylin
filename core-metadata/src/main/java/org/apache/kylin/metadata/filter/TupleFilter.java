@@ -286,6 +286,15 @@ public abstract class TupleFilter {
     private List<TupleFilter> cartesianProduct(List<TupleFilter> leftOrFilters, TupleFilter partialAndFilter, int maxFlatChildrenSize) {
         List<TupleFilter> oldProductFilters = new LinkedList<TupleFilter>();
         oldProductFilters.add(partialAndFilter);
+
+        int flatChildrenSize = 1;
+        for (TupleFilter orFilter : leftOrFilters) {
+            flatChildrenSize *= orFilter.getChildren().size();
+            if (flatChildrenSize > maxFlatChildrenSize) {
+                throw new IllegalStateException("the filter is too large after do the flat, size="
+                        + flatChildrenSize);
+            }
+        }
         for (TupleFilter orFilter : leftOrFilters) {
             List<TupleFilter> newProductFilters = new LinkedList<TupleFilter>();
             for (TupleFilter orChildFilter : orFilter.getChildren()) {
@@ -293,10 +302,6 @@ public abstract class TupleFilter {
                     TupleFilter fullAndFilter = productFilter.copy();
                     fullAndFilter.addChildren(orChildFilter.getChildren());
                     newProductFilters.add(fullAndFilter);
-                    if (newProductFilters.size() > maxFlatChildrenSize) {
-                        throw new IllegalStateException("the filter is too large after do the flat, size="
-                                + newProductFilters.size());
-                    }
                 }
             }
             oldProductFilters = newProductFilters;
