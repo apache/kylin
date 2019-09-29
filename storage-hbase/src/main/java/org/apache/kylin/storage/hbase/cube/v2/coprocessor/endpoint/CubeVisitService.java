@@ -242,7 +242,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
         // if user change kylin.properties on kylin server, need to manually redeploy coprocessor jar to update KylinConfig of Env.
         KylinConfig kylinConfig = KylinConfig.createKylinConfig(request.getKylinProperties());
-        
+
+        String cubeSegNameStr = request.hasCubeSegNameStr() ? request.getCubeSegNameStr() : "UnknownCubeSegNameStr";
         String queryId = request.hasQueryId() ? request.getQueryId() : "UnknownId";
         logger.info("start query {} in thread {}", queryId, Thread.currentThread().getName());
         try (SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(kylinConfig);
