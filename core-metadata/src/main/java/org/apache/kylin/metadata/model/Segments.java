@@ -178,15 +178,13 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
         }
         Segments volatileSegs = new Segments();
         for(T seg: segs) {
-            if(seg.getTSRange().end.v + volatileRange >= latestSegEndTs) {
-                logger.warn("segment in volatile range: seg: " + seg.toString() +
-                        ", rangeStart:" + seg.getTSRange().start.v + ", rangeEnd" + seg.getTSRange().end.v);
+            if (seg.getTSRange().end.v + volatileRange > latestSegEndTs) {
+                logger.warn("Segment in volatile range, seg: {}, rangeStart:{}, rangeEnd {}.", seg,
+                        seg.getTSRange().start.v, seg.getTSRange().end.v);
                 volatileSegs.add(seg);
             }
         }
-
         segs.removeAll(volatileSegs);
-
     }
 
     public SegmentRange autoMergeCubeSegments(boolean needAutoMerge, String cubeName, long[] timeRanges, long volatileRange) throws IOException {
