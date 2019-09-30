@@ -1075,7 +1075,7 @@ var lookupRefreshCtrl = function($scope, scope, CubeList, $modalInstance, CubeSe
         SweetAlert.swal('Warning', 'Lookup table not existed in cube', 'warning');
         return;
       } else {
-        if ($scope.lookup.select.segments.length == 0) {
+        if (!$scope.lookup.select.segments || $scope.lookup.select.segments.length == 0) {
           SweetAlert.swal('Warning', 'Segment should not be empty', 'warning');
           return;
         }
