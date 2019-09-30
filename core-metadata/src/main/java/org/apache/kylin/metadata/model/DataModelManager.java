@@ -88,7 +88,7 @@ public class DataModelManager {
             protected DataModelDesc initEntityAfterReload(DataModelDesc model, String resourceName) {
                 String prj = ProjectManager.getInstance(config).getProjectOfModel(model.getName()).getName();
                 if (!model.isDraft()) {
-                    model.init(config, getAllTablesMap(prj), null, true);
+                    model.init(config, getAllTablesMap(prj));
                 }
                 return model;
             }
@@ -279,7 +279,7 @@ public class DataModelManager {
         String prj = ProjectManager.getInstance(config).getProjectOfModel(dataModelDesc.getName()).getName();
 
         if (!dataModelDesc.isDraft())
-            dataModelDesc.init(config, this.getAllTablesMap(prj), getModels(prj), false);
+            dataModelDesc.init(config, this.getAllTablesMap(prj));
 
         crud.save(dataModelDesc);
 
