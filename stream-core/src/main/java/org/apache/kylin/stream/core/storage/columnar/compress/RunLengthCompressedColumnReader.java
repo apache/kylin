@@ -31,7 +31,7 @@ public class RunLengthCompressedColumnReader implements ColumnDataReader {
     private ByteBuffer currBlockBuffer;
     private int currBlockNum;
 
-    private byte[] readBuffer;
+    //private byte[] readBuffer;
     private int rowCount;
     private GeneralColumnDataReader blockDataReader;
 
@@ -45,7 +45,7 @@ public class RunLengthCompressedColumnReader implements ColumnDataReader {
 
         this.blockDataReader = new GeneralColumnDataReader(dataBuffer, columnDataStartOffset, columnDataLength - 8);
         this.currBlockNum = -1;
-        this.readBuffer = new byte[valLen];
+        //this.readBuffer = new byte[valLen];
     }
 
     private void loadBuffer(int targetBlockNum) {
@@ -64,6 +64,8 @@ public class RunLengthCompressedColumnReader implements ColumnDataReader {
 
     @Override
     public byte[] read(int rowNum) {
+        byte[] readBuffer = new byte[valLen];
+
         int targetBlockNum = rowNum / numValInBlock;
         if (targetBlockNum != currBlockNum) {
             loadBuffer(targetBlockNum);
