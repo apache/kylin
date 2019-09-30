@@ -323,7 +323,7 @@ public class StreamingV2Service extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT') or hasPermission(#cube.getProjectInstance(), 'MANAGEMENT') or hasPermission(#cube.getProjectInstance(), 'ADMINISTRATION')")
     public CubeRealTimeState getCubeRealTimeState(CubeInstance cube) {
         CubeRealTimeState result = new CubeRealTimeState();
         result.setCubeName(cube.getName());

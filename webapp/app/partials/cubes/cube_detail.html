@@ -38,13 +38,13 @@
             <a href="" ng-click="cube.visiblePage='notification';getNotifyListString(cube);">Notification</a>
         </li>
         <li class="{{cube.visiblePage=='hbase'? 'active':''}}"
-            ng-if="userService.hasRole('ROLE_ADMIN')">
+            ng-if="userService.hasRole('ROLE_ADMIN')  || hasPermission('cube' ,cube, permissions.ADMINISTRATION.mask) && !newAccess">
             <a href="" ng-click="cube.visiblePage='hbase';getHbaseInfo(cube)">Storage</a>
         </li>
-        <li class="{{cube.visiblePage=='planner'? 'active':''}}" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube', cube, permissions.ADMINISTRATION.mask)) && isShowCubeplanner">
+        <li class="{{cube.visiblePage=='planner'? 'active':''}}" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube', cube, permissions.ADMINISTRATION.mask) && !newAccess) && isShowCubeplanner">
             <a href="" ng-click="cube.visiblePage='planner';getCubePlanner(cube);">Planner</a>
         </li>
-        <li class="{{cube.visiblePage=='streaming'? 'active':''}}" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube', cube, permissions.ADMINISTRATION.mask)) && cube.streamingV2">
+        <li class="{{cube.visiblePage=='streaming'? 'active':''}}" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube', cube, permissions.ADMINISTRATION.mask)  && !newAccess) && cube.streamingV2">
             <a href="" ng-click="cube.visiblePage='streaming';getStreamingInfo(cube)">Streaming</a>
        </li>
     </ul>
