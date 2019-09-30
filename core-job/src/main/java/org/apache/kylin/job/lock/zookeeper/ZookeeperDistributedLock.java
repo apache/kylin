@@ -132,6 +132,34 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
         }
     }
 
+    @Override
+    public boolean globalPermanentLock(String lockPath) {
+        logger.debug("{} trying to lock {}", client, lockPath);
+
+        // curator closed in some case(like Expired),restart it
+        if (curator.getState() != CuratorFrameworkState.STARTED) {
+            curator = ZKUtil.getZookeeperClient(KylinConfig.getInstanceFromEnv());
+        }
+
+        try {
+            curator.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(lockPath, clientBytes);
+        } catch (KeeperException.NodeExistsException ex) {
+            logger.debug("{} see {} is already locked", client, lockPath);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error while " + client + " trying to lock " + lockPath, ex);
+        }
+
+        String lockOwner = peekLock(lockPath);
+        if (client.equals(lockOwner)) {
+            logger.info("{} acquired lock at {}", client, lockPath);
+            return true;
+        } else {
+            logger.debug("{} failed to acquire lock at {}, which is held by {}", client, lockPath, lockOwner);
+            return false;
+        }
+    }
+
+
     private void lockInternal(String lockPath) {
         try {
             curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(lockPath, clientBytes);
