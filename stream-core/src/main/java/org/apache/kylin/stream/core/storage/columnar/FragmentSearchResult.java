@@ -344,10 +344,6 @@ public class FragmentSearchResult implements IStreamingSearchResult {
 
             public boolean aggregate(RawRecord r) {
                 byte[][] dimVals = r.getDimensions();
-//            for (int i = 0; i < dimVals.length; i++) {
-//                copyDimVals[i] = new byte[dimVals[i].length];
-//                System.arraycopy(dimVals[i], 0, copyDimVals[i], 0, dimVals[i].length);
-//            }
                 byte[][] metricsVals = r.getMetrics();
                 MeasureAggregator[] aggrs = aggBufMap.get(dimVals);
                 if (aggrs == null) {
@@ -356,7 +352,12 @@ public class FragmentSearchResult implements IStreamingSearchResult {
                         return false;
                     }
                     byte[][] copyDimVals = new byte[schema.getDimensionCount()][];
-                    System.arraycopy(dimVals, 0, copyDimVals, 0, dimVals.length);
+
+                    for(int i=0;i<dimVals.length;i++){
+                        copyDimVals[i] = new byte[dimVals[i].length];
+                        System.arraycopy(dimVals[i], 0, copyDimVals[i], 0, dimVals[i].length);
+                    }
+
                     aggrs = newAggregators();
                     aggBufMap.put(copyDimVals, aggrs);
                 }

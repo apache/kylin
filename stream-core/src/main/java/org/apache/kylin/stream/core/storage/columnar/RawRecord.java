@@ -38,14 +38,32 @@ public class RawRecord {
         if (another.getDimensions().length != dimensions.length || another.getMetrics().length != metrics.length) {
             throw new IllegalStateException("cannot copy record with different schema");
         }
-        System.arraycopy(another.dimensions, 0, this.dimensions, 0, another.dimensions.length);
-        System.arraycopy(another.metrics, 0, this.metrics, 0, another.metrics.length);
+
+        for(int i=0;i<another.dimensions.length;i++){
+            this.dimensions[i] = new byte[another.dimensions[i].length];
+            System.arraycopy(another.dimensions[i], 0, this.dimensions[i], 0, another.dimensions[i].length);
+        }
+
+        for(int i=0;i<another.metrics.length;i++){
+            this.metrics[i]=new byte[another.metrics[i].length];
+            System.arraycopy(another.metrics[i], 0, this.metrics[i], 0, another.metrics[i].length);
+        }
+
     }
 
     public RawRecord clone() {
         RawRecord rawRecord = new RawRecord(dimensions.length, metrics.length);
-        System.arraycopy(dimensions, 0, rawRecord.dimensions, 0, dimensions.length);
-        System.arraycopy(metrics, 0, rawRecord.metrics, 0, metrics.length);
+
+        for(int i=0;i<dimensions.length;i++){
+            rawRecord.dimensions[i]=new byte[dimensions[i].length];
+            System.arraycopy(dimensions[i], 0, rawRecord.dimensions[i], 0, dimensions[i].length);
+        }
+
+        for(int i=0;i<metrics.length;i++){
+            rawRecord.metrics[i]=new byte[metrics[i].length];
+            System.arraycopy(metrics[i], 0, rawRecord.metrics[i], 0, metrics[i].length);
+        }
+
         return rawRecord;
     }
 
