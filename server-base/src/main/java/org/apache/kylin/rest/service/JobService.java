@@ -36,6 +36,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -46,6 +47,7 @@ import org.apache.kylin.engine.mr.BatchOptimizeJobCheckpointBuilder;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.LookupSnapshotBuildJob;
 import org.apache.kylin.engine.mr.LookupSnapshotJobBuilder;
+import org.apache.kylin.engine.mr.common.CubeJobLockUtil;
 import org.apache.kylin.engine.mr.common.JobInfoConverter;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.JobInstance;
@@ -602,6 +604,19 @@ public class JobService extends BasicService implements InitializingBean {
             AbstractExecutable executable = getExecutableManager().getJob(job.getId());
             if (executable instanceof CubingJob) {
                 cancelCubingJobInner((CubingJob) executable);
+                //release global mr hive dict lock if exists
+                if (executable.getStatus().isFinalState()) {
+                    DistributedLock lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentThread();
+                    if(lock.isLocked(CubeJobLockUtil.getLockPath(executable.getCubeName(), job.getId()))){//release cube job dict lock if exists
+                        lock.purgeLocks(CubeJobLockUtil.getLockPath(executable.getCubeName(), null));
+                        logger.info("{} unlock cube job dict lock path({}) success", job.getId(), CubeJobLockUtil.getLockPath(executable.getCubeName(), null));
+
+                        if (lock.isLocked(CubeJobLockUtil.getEphemeralLockPath(executable.getCubeName()))) {//release cube job Ephemeral lock if exists
+                            lock.purgeLocks(CubeJobLockUtil.getEphemeralLockPath(executable.getCubeName()));
+                            logger.info("{} unlock cube job ephemeral lock path({}) success", job.getId(), CubeJobLockUtil.getEphemeralLockPath(executable.getCubeName()));
+                        }
+                    }
+                }
             } else if (executable instanceof CheckpointExecutable) {
                 cancelCheckpointJobInner((CheckpointExecutable) executable);
             } else {
