@@ -163,12 +163,12 @@ public class KylinVersion implements Comparable {
                 SIGNATURE_INCOMPATIBLE_REVISIONS, new Predicate<KylinVersion>() {
                     @Override
                     public boolean apply(@Nullable KylinVersion input) {
-                        return v.major == input.major && v.minor == input.minor;
+                        return input == null ? false : v.major == input.major && v.minor == input.minor;
                     }
                 }), new Predicate<KylinVersion>() {
                     @Override
                     public boolean apply(@Nullable KylinVersion input) {
-                        return input.revision > v.revision;
+                        return input == null ? false : input.revision > v.revision;
                     }
                 });
 
