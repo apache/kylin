@@ -126,7 +126,7 @@ title: Home
                 <img src="/images/logo/ebay.png">
             </a>
             <a class="sponsor" href="https://www.cisco.com/"> 
-                <img src="/images/logo/cisco.png">
+                <img src="/images/logo/cisco.jpg">
             </a>
             <a class="sponsor" href="https://about.yahoo.co.jp/info/en/"> 
                 <img src="/images/logo/yahoo.png">
@@ -155,13 +155,13 @@ title: Home
             </a>
             <!-- 3 -->
             <a class="sponsor" href="http://www.jd.com/"> 
-                <img src="/images/logo/jd.png">
+                <img src="/images/logo/jd.jpg">
             </a>
             <a class="sponsor" href="http://www.4399.com/"> 
                 <img src="/images/logo/4399.png">
             </a>
             <a class="sponsor" href="http://www.exponential.com/"> 
-                <img src="/images/logo/exponential.png">
+                <img src="/images/logo/exponential.jpg">
             </a>
             <a class="sponsor" href="http://www.ctrip.com/"> 
                 <img style="width: 200px;height: 80px" src="/images/logo/ctrip.png">
@@ -174,7 +174,7 @@ title: Home
                 <img src="/images/logo/dreamsoft.png">
             </a>
             <a class="sponsor" href="http://www.meituan.com/"> 
-                <img src="/images/logo/meituan.png">
+                <img src="/images/logo/meituan.jpg">
             </a>
             <a class="sponsor" href="https://kyligence.io/"> 
                 <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/kyligence.jpg">
@@ -260,11 +260,72 @@ title: Home
                 <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/ele.png">
             </a>
             <a class="sponsor" href="https://www.teld.cn/"> 
-                <img src="/images/logo/teld.png">
+                <img src="/images/logo/teld.jpg">
             </a>
             <a class="sponsor" href="https://www.qq.com/"> 
-                <img src="/images/logo/qq.png">
+                <img src="/images/logo/qq.jpg">
             </a>
+            <!-- 10 -->
+            <a class="sponsor" href="http://www.xiaomi.com/"> 
+                <img src="/images/logo/xiaomi.jpg">
+            </a>
+            <a class="sponsor" href="https://wmsj.qq.com/">
+                <img src="/images/logo/wanmei.jpg">
+            </a>
+            <a class="sponsor" href="http://www.powerbi.com.cn/">
+                <img src="/images/logo/aowei.jpg">
+            </a>
+            <a class="sponsor" href="http://www.qukuaiwang.com.cn/">
+                <img src="/images/logo/huobi.jpg">
+            </a>
+            <a class="sponsor" href="https://www.jianshu.com/">
+                <img src="/images/logo/jianshu.jpg">
+            </a>
+            <!-- 11 -->
+            <a class="sponsor" href="http://www.keruyun.com/"> 
+                <img src="/images/logo/keruyun.jpg">
+            </a>
+            <a class="sponsor" href="https://www.qutoutiao.net/">
+                <img src="/images/logo/qutoutiao.jpg">
+            </a>
+            <a class="sponsor" href="http://www.bianfeng.com/">
+                <img src="/images/logo/bianfeng.jpg">
+            </a>
+            <a class="sponsor" href="https://www.missfresh.cn/">
+                <img src="/images/logo/meiriyouxian.jpg">
+            </a>
+            <a class="sponsor" href="https://www.meitu.com/">
+                <img src="/images/logo/meitu.jpg">
+            </a>
+            <!-- 12 -->
+            <a class="sponsor" href="https://www.neusoft.com/"> 
+                <img src="/images/logo/neusoft.jpg">
+            </a>
+            <a class="sponsor" href="https://www.wenjuan.com/">
+                <img src="/images/logo/wenjuanwang.jpg">
+            </a>
+            <a class="sponsor" href="http://www.yidianzixun.com/">
+                <img src="/images/logo/yidianzixun.jpg">
+            </a>
+            <a class="sponsor" href="https://www.bestpay.com.cn/">
+                <img src="/images/logo/yizhifu.jpg">
+            </a>
+            <a class="sponsor" href="https://www.zybang.com/">
+                <img src="/images/logo/zuoyebang.jpg">
+            </a>
+            <!-- 13 -->
+            <a class="sponsor" href="http://www.zqykj.com/"> 
+                <img src="/images/logo/zhiqiyun.jpg">
+            </a>
+            <a class="sponsor" href="https://www.epam.com/"> 
+                <img src="/images/logo/epam.jpg">
+            </a>
+            <a class="sponsor" href="http://www.moji.com/"> 
+                <img src="/images/logo/moji.jpg">
+            </a>
+            <a class="sponsor" href="http://www.ke.com/"> 
+                <img src="/images/logo/beike.jpg">
+            </a>                        
         </div>
         <!-- /container --> 
       </div>
