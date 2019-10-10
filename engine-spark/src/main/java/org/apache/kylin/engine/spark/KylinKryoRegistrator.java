@@ -116,6 +116,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         addClassQuitely(kyroClasses, "org.apache.spark.internal.io.FileCommitProtocol$TaskCommitMessage");
         addClassQuitely(kyroClasses, "scala.collection.immutable.Set$EmptySet$");
         addClassQuitely(kyroClasses, "scala.reflect.ManifestFactory$$anon$2");
+        addClassQuitely(kyroClasses, "scala.collection.mutable.WrappedArray$ofRef");
 
         for (Class kyroClass : kyroClasses) {
             kryo.register(kyroClass);
