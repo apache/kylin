@@ -424,6 +424,7 @@ KylinApp
             });
 
             if (isExecuting && (next.replace(current, "").indexOf("#") != 0)) {
+                event.preventDefault();
                 SweetAlert.swal({
                     title: '',
                     text: "You've executing query in current page, are you sure to leave this page?",
@@ -433,8 +434,8 @@ KylinApp
                     confirmButtonText: "Yes",
                     closeOnConfirm: true
                 }, function(isConfirm) {
-                    if(!isConfirm){
-                        event.preventDefault();
+                    if(isConfirm){
+                        $location.path($location.url(next).hash());
                     }
 
                 });
