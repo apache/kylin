@@ -57,7 +57,7 @@ public class HiveProducer {
     private static final Logger logger = LoggerFactory.getLogger(HiveProducer.class);
     private static final int CACHE_MAX_SIZE = 10;
     private final HiveConf hiveConf;
-    private final FileSystem fs;
+    private FileSystem fs;
     private final LoadingCache<Pair<String, String>, Pair<String, List<FieldSchema>>> tableFieldSchemaCache;
     private final String contentFilePrefix;
     private String metricType;
@@ -149,6 +149,11 @@ public class HiveProducer {
             sb.append(e.getValue());
         }
         Path partitionPath = new Path(sb.toString());
+        //for hdfs router-based federation,  authority is different with hive table location path and defaultFs
+        if (partitionPath.toUri().getScheme() != null && !partitionPath.toUri().toString().startsWith(fs.getUri().toString())) {
+            fs.close();
+            fs = partitionPath.getFileSystem(hiveConf);
+        }
 
         // Step 2: create partition for hive table if not exists
         if (!fs.exists(partitionPath)) {
