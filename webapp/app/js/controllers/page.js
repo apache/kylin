@@ -31,6 +31,29 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
   $rootScope.userAction = {
     'islogout': false
   }
+
+  $scope.showHelpInfo = function (helpName) {
+    if (helpName === 'aboutKylin') {
+      $scope.showAboutKylinDialog()
+    }
+  }
+  var aboutKylinCtr = function ($scope, AdminService, $modalInstance) {
+    $scope.cancel = function () {
+      $modalInstance.dismiss('cancel');
+    }
+    AdminService.getVersionInfo({}, function(versionInfo){
+      $scope.versionInfo = versionInfo || {}
+    })
+  }
+  $scope.showAboutKylinDialog = function () {
+    $modal.open({
+      templateUrl: 'aboutKylin.html',
+      controller: aboutKylinCtr,
+      windowClass: 'modal-about-kylin',
+      resolve: {
+      }
+    });
+  }
   $scope.kylinConfig = kylinConfig;
 
   $scope.header = {show: true};

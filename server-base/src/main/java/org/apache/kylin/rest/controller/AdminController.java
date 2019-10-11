@@ -23,6 +23,8 @@ import java.io.UnsupportedEncodingException;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinVersion;
+import org.apache.kylin.common.util.VersionUtil;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
@@ -68,6 +70,20 @@ public class AdminController extends BasicController {
             return envRes;
         } catch (ConfigurationException | UnsupportedEncodingException e) {
             throw new RuntimeException(msg.getGET_ENV_CONFIG_FAIL(), e);
+        }
+    }
+
+    @RequestMapping(value = "/version", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public GeneralResponse getKylinVersions() {
+        try {
+            GeneralResponse versionRes = new GeneralResponse();
+            String commitId = KylinVersion.getGitCommitInfo();
+            versionRes.put("kylin.version", VersionUtil.getKylinVersion());
+            versionRes.put("kylin.version.commitId", commitId.replace(";", ""));
+            return versionRes;
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 

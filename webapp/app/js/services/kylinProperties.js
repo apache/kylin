@@ -108,6 +108,12 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
         _doc.link = this.getProperty("kylin.web.help." + i).trim().split("|")[2];
         Config.documents.push(_doc);
       }
+      // Other help list
+      // 1. apache kylin version info
+      Config.documents.push({
+        name: 'aboutKylin',
+        displayName: 'About Kylin'
+      });
     } catch (e) {
       $log.error("failed to load kylin web info");
     }
