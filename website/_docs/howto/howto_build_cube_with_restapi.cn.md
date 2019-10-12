@@ -50,5 +50,5 @@ Content-Type: application/json;charset=UTF-8
 *   `GET http://localhost:7070/kylin/api/jobs/{job_uuid}`
 *   返回的 `job_status` 代表job的当前状态。
 
-	## 5.	如果构建任务出现错误，可以重新开始它
+### 5.	如果构建任务出现错误，可以重新开始它
 *   `PUT http://localhost:7070/kylin/api/jobs/{job_uuid}/resume`

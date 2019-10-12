@@ -14,7 +14,7 @@ permalink: /cn/docs/install/configuration.html
 		- [Cube 级别配置重写](#cube-config-override)
 		- [重写 MapReduce 参数](#mr-config-override)
 		- [重写 Hive 参数](#hive-config-override)
-                - [重写 Spark 参数](#spark-config-override)
+		- [重写 Spark 参数](#spark-config-override)
 - [部署配置](#kylin-deploy)
     - [部署 Kylin](#deploy-config)
 	- [分配更多内存给 Kylin 实例](#kylin-jvm-settings)
