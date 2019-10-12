@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Home
+title: OLAP engine for big data
 ---
 
 
@@ -13,7 +13,7 @@ title: Home
           <div class="row" style="margin-top:-20px;">
             <div class="col-sm-12 col-md-12">              
               <p class="title_text">Apache Kylin™ is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop/Spark supporting extremely large datasets, original contributed from eBay Inc.</p>
-              <p class="title_text">Apache Kylin™ lets you query massive data set at sub-second latency in 3 steps.</p>
+              <p class="title_text">Apache Kylin™ lets you query massively big data set at sub-second latency in 3 steps.</p>
               <div align="left">
                 <ol class="none-icon">
                   <li>
@@ -29,7 +29,8 @@ title: Home
                     Query with ANSI-SQL and get results in sub-second, via ODBC, JDBC or RESTful API.
                   </li>
                 </ol>
-              </div>
+              </div>  
+              <p class="title_text">Kylin offers integration capability with data visualization softwares like Tableau, PowerBI, etc., which enables data analysis with BI tools on Hadoop.</p>
               <img id="diagram" src="assets/images/kylin_diagram.png">
             </div>
           </div>
@@ -53,8 +54,17 @@ title: Home
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_olap.png">
                 </div>
-                <b>Extremely Fast OLAP Engine at Scale: </b><br/>
+                <h6><b>Extremely Fast OLAP Engine for Big Data at Scale: </b></h6>
                 <div class="indent" style="margin-top: 25px">Kylin is designed to reduce query latency on Hadoop/Spark for 10+ billions of rows of data</div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-md-6">
+              <div class="card-s">
+                <div class="home-pic">
+                  <img width="30" src="assets/images/icon_index_shape.png">
+                </div>
+                <h6><b>Seamless Integration with BI Tools:</b></h6>
+                <div class="indent">Kylin currently offers integration capability with BI Tools like Tableau, PowerBI/Excel, MSTR, QlikSense, Hue and SuperSet</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">
@@ -62,8 +72,8 @@ title: Home
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_hadoop.png">
                 </div>
-                <b>ANSI SQL Interface on Hadoop: </b><br/>
-                <div class="indent" style="margin-top: 25px">Kylin offers ANSI SQL on Hadoop/Spark and supports most ANSI SQL query functions</div>
+                <h6><b>ANSI SQL Interface for Big Data on Hadoop: </b></h6>
+                <div class="indent" style="margin-top: 25px">As an OLAP engine, Kylin offers ANSI SQL on Hadoop/Spark and supports most ANSI SQL query functions</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">
@@ -71,8 +81,17 @@ title: Home
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_query.png">
                 </div>
-                <b>Interactive Query Capability: </b><br/>
+                <h6><b>Interactive Query with Low Latency and High Performance: </b></h6>
                 <div class="indent" style="margin-top: 25px">Users can interact with Hadoop data via Kylin at sub-second latency, better than Hive queries for the same dataset</div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-md-6">
+              <div class="card-s">
+                <div class="home-pic">
+                  <img width="30" src="assets/images/icon_index_streaming.png">
+                </div>
+                <h6><b>Real-time OLAP for Streaming Big Data:</b></h6>
+                <div class="indent">Kylin is able to compute streaming data once it is generated, user is capable of doing real-time data analysis with latencey on second level</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6"> 
@@ -80,22 +99,13 @@ title: Home
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_cube.png"> 
                 </div>
-                <b>MOLAP Cube:</b><br/>
+                <h6><b>MOLAP Cube:</b></h6>
                 <div class="indent" style="margin-top: 25px">User can define a data model and pre-build in Kylin with more than 10+ billions of raw data records</div>
-              </div>
-            </div>
-            <div class="col-sm-12 col-md-12">
-              <div class="card-s">
-                <div class="home-pic">
-                  <img width="30" src="assets/images/icon_index_shape.png">
-                </div>
-                <b>Seamless Integration with BI Tools:</b><br/>
-                <div class="indent">Kylin currently offers integration capability with BI Tools like Tableau, PowerBI/Excel, MSTR, QlikSense, Hue and SuperSet. </div>
               </div>
             </div>
           </div>
           <div class="col-sm-4 col-md-4 card-l">
-            <b>Other Highlights:</b> <br/>
+            <b>Other Highlights: </b> <br/>
             <ul class="indent">
               <li>Job Management and Monitoring </li>
               <li>Compression and Encoding Support </li>
@@ -126,7 +136,7 @@ title: Home
                 <img src="/images/logo/ebay.png">
             </a>
             <a class="sponsor" href="https://www.cisco.com/"> 
-                <img src="/images/logo/cisco.png">
+                <img src="/images/logo/cisco.jpg">
             </a>
             <a class="sponsor" href="https://about.yahoo.co.jp/info/en/"> 
                 <img src="/images/logo/yahoo.png">
@@ -155,13 +165,13 @@ title: Home
             </a>
             <!-- 3 -->
             <a class="sponsor" href="http://www.jd.com/"> 
-                <img src="/images/logo/jd.png">
+                <img src="/images/logo/jd.jpg">
             </a>
             <a class="sponsor" href="http://www.4399.com/"> 
                 <img src="/images/logo/4399.png">
             </a>
             <a class="sponsor" href="http://www.exponential.com/"> 
-                <img src="/images/logo/exponential.png">
+                <img src="/images/logo/exponential.jpg">
             </a>
             <a class="sponsor" href="http://www.ctrip.com/"> 
                 <img style="width: 200px;height: 80px" src="/images/logo/ctrip.png">
@@ -174,7 +184,7 @@ title: Home
                 <img src="/images/logo/dreamsoft.png">
             </a>
             <a class="sponsor" href="http://www.meituan.com/"> 
-                <img src="/images/logo/meituan.png">
+                <img src="/images/logo/meituan.jpg">
             </a>
             <a class="sponsor" href="https://kyligence.io/"> 
                 <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/kyligence.jpg">
@@ -260,11 +270,72 @@ title: Home
                 <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/ele.png">
             </a>
             <a class="sponsor" href="https://www.teld.cn/"> 
-                <img src="/images/logo/teld.png">
+                <img src="/images/logo/teld.jpg">
             </a>
             <a class="sponsor" href="https://www.qq.com/"> 
-                <img src="/images/logo/qq.png">
+                <img src="/images/logo/qq.jpg">
             </a>
+            <!-- 10 -->
+            <a class="sponsor" href="http://www.xiaomi.com/"> 
+                <img src="/images/logo/xiaomi.jpg">
+            </a>
+            <a class="sponsor" href="https://wmsj.qq.com/">
+                <img src="/images/logo/wanmei.jpg">
+            </a>
+            <a class="sponsor" href="http://www.powerbi.com.cn/">
+                <img src="/images/logo/aowei.jpg">
+            </a>
+            <a class="sponsor" href="http://www.qukuaiwang.com.cn/">
+                <img src="/images/logo/huobi.jpg">
+            </a>
+            <a class="sponsor" href="https://www.jianshu.com/">
+                <img src="/images/logo/jianshu.jpg">
+            </a>
+            <!-- 11 -->
+            <a class="sponsor" href="http://www.keruyun.com/"> 
+                <img src="/images/logo/keruyun.jpg">
+            </a>
+            <a class="sponsor" href="https://www.qutoutiao.net/">
+                <img src="/images/logo/qutoutiao.jpg">
+            </a>
+            <a class="sponsor" href="http://www.bianfeng.com/">
+                <img src="/images/logo/bianfeng.jpg">
+            </a>
+            <a class="sponsor" href="https://www.missfresh.cn/">
+                <img src="/images/logo/meiriyouxian.jpg">
+            </a>
+            <a class="sponsor" href="https://www.meitu.com/">
+                <img src="/images/logo/meitu.jpg">
+            </a>
+            <!-- 12 -->
+            <a class="sponsor" href="https://www.neusoft.com/"> 
+                <img src="/images/logo/neusoft.jpg">
+            </a>
+            <a class="sponsor" href="https://www.wenjuan.com/">
+                <img src="/images/logo/wenjuanwang.jpg">
+            </a>
+            <a class="sponsor" href="http://www.yidianzixun.com/">
+                <img src="/images/logo/yidianzixun.jpg">
+            </a>
+            <a class="sponsor" href="https://www.bestpay.com.cn/">
+                <img src="/images/logo/yizhifu.jpg">
+            </a>
+            <a class="sponsor" href="https://www.zybang.com/">
+                <img src="/images/logo/zuoyebang.jpg">
+            </a>
+            <!-- 13 -->
+            <a class="sponsor" href="http://www.zqykj.com/"> 
+                <img src="/images/logo/zhiqiyun.jpg">
+            </a>
+            <a class="sponsor" href="https://www.epam.com/"> 
+                <img src="/images/logo/epam.jpg">
+            </a>
+            <a class="sponsor" href="http://www.moji.com/"> 
+                <img src="/images/logo/moji.jpg">
+            </a>
+            <a class="sponsor" href="http://www.ke.com/"> 
+                <img src="/images/logo/beike.jpg">
+            </a>                        
         </div>
         <!-- /container --> 
       </div>
