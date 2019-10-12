@@ -9,11 +9,11 @@ title: OLAP engine for big data
     <div id="zero" class=" main" >
       <header style=" padding:2em 0 4em 0;">
         <div class="container" >
-          <h4 class="index-title"><span>Apache Kylin™ Overview</span></h4>
+          <h4 class="index-title"><span>Bring OLAP Back to Big Data!</span></h4>
           <div class="row" style="margin-top:-20px;">
             <div class="col-sm-12 col-md-12">              
-              <p class="title_text">Apache Kylin™ is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop/Spark supporting extremely large datasets, original contributed from eBay Inc.</p>
-              <p class="title_text">Apache Kylin™ lets you query massively big data set at sub-second latency in 3 steps.</p>
+              <p class="title_text">Apache Kylin™ is an open source distributed analytical engine designed to provide OLAP (Online Analytical Processing) capability in the big data era. By renovating the multi-dimensional cube and precalculation technology on Hadoop and Spark, Kylin is able to achieve near constant query speed regardless of the ever-growing data volume. Reducing query latency from minutes to sub-second, Kylin brings online analytics back to big data.</p>
+              <p class="title_text">Apache Kylin™ lets you query billions of rows at sub-second latency in 3 steps.</p>
               <div align="left">
                 <ol class="none-icon">
                   <li>
@@ -26,12 +26,12 @@ title: OLAP engine for big data
                   </li>
                   <li>
                     <span class="li-circle">3</span>
-                    Query with ANSI-SQL and get results in sub-second, via ODBC, JDBC or RESTful API.
+                    Query using ANSI-SQL and get results in sub-second, via ODBC, JDBC or RESTful API.
                   </li>
                 </ol>
               </div>  
-              <p class="title_text">Kylin offers integration capability with data visualization softwares like Tableau, PowerBI, etc., which enables data analysis with BI tools on Hadoop.</p>
-              <img id="diagram" src="assets/images/kylin_diagram.png">
+              <p class="title_text">Apache Kylin™ can also integrate with your favorite BI tools like Tableau and PowerBI etc., to enable <b>BI on Hadoop</b>.</p>
+              <p class="title_text">Kylin is originally contributed from eBay Inc. in 2015.</p>
             </div>
           </div>
         </div>
@@ -44,8 +44,9 @@ title: OLAP engine for big data
   <section id="second" class="main">
     <header style="background-color:#efefef;">
       <div class="container">
-        <h4 class="index-title"><span> What is Kylin? </span></h4>
+        <h4 class="index-title"><span> Why Apache Kylin? </span></h4>
         <img id="intro_logo" src="assets/images/kylin_logo.png">
+        <img src="assets/images/kylin_diagram.png">
         <!-- second-->
         <div class="row">
           <div class="col-sm-8 col-md-8">
@@ -54,8 +55,8 @@ title: OLAP engine for big data
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_olap.png">
                 </div>
-                <h6><b>Extremely Fast OLAP Engine for Big Data at Scale: </b></h6>
-                <div class="indent" style="margin-top: 25px">Kylin is designed to reduce query latency on Hadoop/Spark for 10+ billions of rows of data</div>
+                <h6><b>Timely Decision Making on Big Data</b></h6>
+                <div class="indent" style="margin-top: 25px">Kylin can analyze 10+ billions of rows in less than a second. No more waiting on reports for critical decisions.</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">
@@ -63,8 +64,8 @@ title: OLAP engine for big data
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_shape.png">
                 </div>
-                <h6><b>Seamless Integration with BI Tools:</b></h6>
-                <div class="indent">Kylin currently offers integration capability with BI Tools like Tableau, PowerBI/Excel, MSTR, QlikSense, Hue and SuperSet</div>
+                <h6><b>BI on Hadoop Accelerated</b></h6>
+                <div class="indent">Kylin connects data on Hadoop to BI tools like Tableau, PowerBI/Excel, MSTR, QlikSense, Hue and SuperSet, making the BI on Hadoop faster than ever.</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">
@@ -72,8 +73,8 @@ title: OLAP engine for big data
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_hadoop.png">
                 </div>
-                <h6><b>ANSI SQL Interface for Big Data on Hadoop: </b></h6>
-                <div class="indent" style="margin-top: 25px">As an OLAP engine, Kylin offers ANSI SQL on Hadoop/Spark and supports most ANSI SQL query functions</div>
+                <h6><b>ANSI SQL Interface for Big Data on Hadoop</b></h6>
+                <div class="indent" style="margin-top: 25px">As an OLAP engine, Kylin offers ANSI SQL on Hadoop/Spark and supports most ANSI SQL query functions.</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">
@@ -81,8 +82,8 @@ title: OLAP engine for big data
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_query.png">
                 </div>
-                <h6><b>Interactive Query with Low Latency and High Performance: </b></h6>
-                <div class="indent" style="margin-top: 25px">Users can interact with Hadoop data via Kylin at sub-second latency, better than Hive queries for the same dataset</div>
+                <h6><b>Interactive Queries at High Concurrency</b></h6>
+                <div class="indent" style="margin-top: 25px">Kylin can support thousands of interactive queries at the same time, thanks to the low resource consumption of each query.</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">
@@ -90,8 +91,8 @@ title: OLAP engine for big data
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_streaming.png">
                 </div>
-                <h6><b>Real-time OLAP for Streaming Big Data:</b></h6>
-                <div class="indent">Kylin is able to compute streaming data once it is generated, user is capable of doing real-time data analysis with latencey on second level</div>
+                <h6><b>Real-time OLAP for Streaming Big Data</b></h6>
+                <div class="indent">Kylin is able to compute streaming data as soon as it is generated, allowing real-time data analysis at second-level latency.</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6"> 
@@ -99,13 +100,13 @@ title: OLAP engine for big data
                 <div class="home-pic">
                   <img width="30" src="assets/images/icon_index_cube.png"> 
                 </div>
-                <h6><b>MOLAP Cube:</b></h6>
-                <div class="indent" style="margin-top: 25px">User can define a data model and pre-build in Kylin with more than 10+ billions of raw data records</div>
+                <h6><b>MOLAP Cube Precalculation</b></h6>
+                <div class="indent" style="margin-top: 25px">Analysts can define their favorite multi-dimensional model and precalculate the cube in Kylin.</div>
               </div>
             </div>
           </div>
           <div class="col-sm-4 col-md-4 card-l">
-            <b>Other Highlights: </b> <br/>
+            <b>Other Highlights</b> <br/>
             <ul class="indent">
               <li>Job Management and Monitoring </li>
               <li>Compression and Encoding Support </li>

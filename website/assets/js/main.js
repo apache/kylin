@@ -43,7 +43,7 @@ jQuery(document).ready(function ($) {
         }
         if (logoTop > 0 && logoTop< currentPosition) {
 
-            $('#intro_logo').addClass("animated fadeInRight");
+            //$('#intro_logo').addClass("animated fadeInRight");
         } else {
             $('#intro_logo').removeClass("animated fadeInRight");
         }
