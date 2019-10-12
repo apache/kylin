@@ -122,6 +122,41 @@ __Bug Fix__
 * [KYLIN-3922] - Fail to update coprocessor when run DeployCoprocessorCLI
 * [KYLIN-3923] - UT GeneralColumnDataTest fail
 
+## v2.6.4 - 2019-10-12
+_Tag:_ [kylin-2.6.4](https://github.com/apache/kylin/tree/kylin-2.6.4)
+This is a bugfix release after 2.6.3, with 10 enhancements and 17 bug fixes.
+
+__Improvement__
+* [KYLIN-3628] - Query with lookup table always use latest snapshot
+* [KYLIN-3797] - Too many or filters may break Kylin server when flatting filter
+* [KYLIN-4013] - Only show the cubes under one model
+* [KYLIN-4047] - Use push-down query when division dynamic column cube query is not supported
+* [KYLIN-4055] - cube quey and ad-hoc query return different meta info
+* [KYLIN-4093] - Slow query pages should be open to all users of the project
+* [KYLIN-4099] - Using no blocking RDD unpersist in spark cubing job
+* [KYLIN-4121] - Cleanup hive view intermediate tables after job be finished
+* [KYLIN-4140] - Add the time filter for current day jobs and make default values for web configurable
+* [KYLIN-4160] - Auto redirect to host:port/kylin when user only enter host:port in broswer
+
+__Bug Fix__
+* [KYLIN-1856] - Kylin shows old error in job step output after resume - specifically in #4 Step Name: Build Dimension Dictionary
+* [KYLIN-4034] - The table should not display in Insight page when the user has no access to the table
+* [KYLIN-4037] - Can't Cleanup Data in Hbase's HDFS Storage When Deploy Apache Kylin with Standalone HBase Cluster
+* [KYLIN-4046] - Refine JDBC Source(source.default=8)
+* [KYLIN-4057] - autoMerge job can not stop
+* [KYLIN-4066] - No planner for not ROLE_ADMIN user on WebSite
+* [KYLIN-4074] - Exception in thread "Memcached IO over {MemcachedConnection to ..." java.lang.NullPointerException
+* [KYLIN-4103] - Make the user string in granting operation of project is case insensitive
+* [KYLIN-4106] - Illegal partition for SelfDefineSortableKey when “Extract Fact Table Distinct Columns”
+* [KYLIN-4111] - drop table failed with no valid privileges after KYLIN-3857
+* [KYLIN-4115] - Always load KafkaConsumerProperties
+* [KYLIN-4131] - Broadcaster memory leak
+* [KYLIN-4152] - Should Disable Before Deleting HBase Table using HBaseAdmin
+* [KYLIN-4153] - Failed to read big resource  /dict/xxxx at "Build Dimension Dictionary" Step
+* [KYLIN-4157] - When using PrepareStatement query, functions within WHERE will cause InternalErrorException
+* [KYLIN-4158] - Query failed for GroupBy an expression of column with limit in SQL
+* [KYLIN-4159] - The first step of build cube job will fail and throw "Column 'xx' in where clause is ambiguous" in jdbc datasource.
+
 ## v2.6.3 - 2019-07-06
 _Tag:_ [kylin-2.6.3](https://github.com/apache/kylin/tree/kylin-2.6.3)
 This is a bugfix release after 2.6.2, with 7 enhancements and 9 bug fixes.
