@@ -127,6 +127,7 @@ _Tag:_ [kylin-2.6.4](https://github.com/apache/kylin/tree/kylin-2.6.4)
 This is a bugfix release after 2.6.3, with 10 enhancements and 17 bug fixes.
 
 __Improvement__
+
 * [KYLIN-3628] - Query with lookup table always use latest snapshot
 * [KYLIN-3797] - Too many or filters may break Kylin server when flatting filter
 * [KYLIN-4013] - Only show the cubes under one model
@@ -139,6 +140,7 @@ __Improvement__
 * [KYLIN-4160] - Auto redirect to host:port/kylin when user only enter host:port in broswer
 
 __Bug Fix__
+
 * [KYLIN-1856] - Kylin shows old error in job step output after resume - specifically in #4 Step Name: Build Dimension Dictionary
 * [KYLIN-4034] - The table should not display in Insight page when the user has no access to the table
 * [KYLIN-4037] - Can't Cleanup Data in Hbase's HDFS Storage When Deploy Apache Kylin with Standalone HBase Cluster
