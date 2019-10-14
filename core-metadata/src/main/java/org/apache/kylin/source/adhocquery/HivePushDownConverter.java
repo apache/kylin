@@ -56,6 +56,8 @@ public class HivePushDownConverter implements IPushDownConverter {
             .from(calciteKeyWords) //
             .filter(not(equalTo("AS"))) //
             .toSet(); //
+    private static final Pattern ARRAY_PATTERN = Pattern.compile("(?:[^a-z]|^)(ARRAY\\s*)\\[",
+            Pattern.CASE_INSENSITIVE);
 
     public static String replaceString(String originString, String fromString, String toString) {
         return originString.replace(fromString, toString);
@@ -82,6 +84,21 @@ public class HivePushDownConverter implements IPushDownConverter {
                     functionStr + "(" + extractInner + ")");
         }
 
+        return replacedString;
+    }
+
+    public static String arrayReplace(String originString) {
+        Matcher castMatcher = ARRAY_PATTERN.matcher(originString);
+        String replacedString = originString;
+        Map<Integer, Integer> indexPairs = findParenthesesPairs(originString, '[', ']');
+        while (castMatcher.find()) {
+            int leftIndex = castMatcher.end() - 1;
+            int rightIndex = indexPairs.get(leftIndex);
+            String arrayContent = replacedString.substring(castMatcher.end(), rightIndex);
+            String arrayKey = castMatcher.group(1);
+            replacedString = replacedString.replace(arrayKey + "[" + arrayContent + "]",
+                    arrayKey + "(" + arrayContent + ")");
+        }
         return replacedString;
     }
 
@@ -219,29 +236,31 @@ public class HivePushDownConverter implements IPushDownConverter {
         if (isPrepare) {
             convertedSql = addLimit(convertedSql);
         }
+        // step10. convert array[1,2,3] to array(1,2,3)
+        convertedSql = arrayReplace(convertedSql);
 
         return convertedSql;
     }
 
     private static Map<Integer, Integer> findParenthesesPairs(String sql) {
+        return findParenthesesPairs(sql, '(', ')');
+    }
+
+    private static Map<Integer, Integer> findParenthesesPairs(String sql, char leftSymbol, char rightSymbol) {
         Map<Integer, Integer> result = new HashMap<>();
         if (sql.length() > 1) {
             Stack<Integer> lStack = new Stack<>();
             boolean inStrVal = false;
             for (int i = 0; i < sql.length(); i++) {
-                switch (sql.charAt(i)) {
-                case '(':
+                char c = sql.charAt(i);
+                if (c == leftSymbol) {
                     if (!inStrVal) {
                         lStack.push(i);
                     }
-                    break;
-                case ')':
+                } else if (c == rightSymbol) {
                     if (!inStrVal && !lStack.empty()) {
                         result.put(lStack.pop(), i);
                     }
-                    break;
-                default:
-                    break;
                 }
             }
         }
