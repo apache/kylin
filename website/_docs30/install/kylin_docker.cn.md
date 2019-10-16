@@ -36,7 +36,7 @@ docker run -d \
 -p 50070:50070 \
 -p 8032:8032 \
 -p 8042:8042 \
--p 60010:60010 \
+-p 16010:16010 \
 apachekylin/apache-kylin-standalone:3.0.0-alpha2
 {% endhighlight %}
 
@@ -55,7 +55,7 @@ apachekylin/apache-kylin-standalone:3.0.0-alpha2
 - Kylin 页面：[http://127.0.0.1:7070/kylin/login](http://127.0.0.1:7070/kylin/login)
 - Hdfs NameNode 页面：[http://127.0.0.1:50070](http://127.0.0.1:50070/)
 - Yarn ResourceManager 页面：[http://127.0.0.1:8088](http://127.0.0.1:8088/)
-- HBase 页面：[http://127.0.0.1:60010](http://127.0.0.1:60010/)
+- HBase 页面：[http://127.0.0.1:16010](http://127.0.0.1:16010/)
 
 容器内，相关环境变量如下：
 
@@ -108,7 +108,7 @@ docker run -d \
 -p 50070:50070 \
 -p 8032:8032 \
 -p 8042:8042 \
--p 60010:60010 \
+-p 16010:16010 \
 apache-kylin-standalone
 {% endhighlight %}
 
