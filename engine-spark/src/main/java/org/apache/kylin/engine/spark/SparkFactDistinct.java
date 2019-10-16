@@ -673,6 +673,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         private String minValue = null;
         private boolean isDimensionCol;
         private boolean isDictCol;
+        private KylinConfig kConfig;
         private List<Tuple2<String, Tuple3<Writable, Writable, String>>> result;
 
         public MultiOutputFunction(String cubeName, String metaurl, SerializableConfiguration conf,
@@ -685,7 +686,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
 
         private void init() throws IOException {
             taskId = TaskContext.getPartitionId();
-            KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
+            kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
             try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
                     .setAndUnsetThreadLocalConfig(kConfig)) {
                 CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
@@ -771,8 +772,11 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
 
                 // output dict object
                 if (buildDictInReducer) {
-                    Dictionary<String> dict = builder.build();
-                    outputDict(col, dict, result);
+                    try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                            .setAndUnsetThreadLocalConfig(kConfig)) {
+                        Dictionary<String> dict = builder.build();
+                        outputDict(col, dict, result);
+                    }
                 }
             }
 
