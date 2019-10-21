@@ -92,8 +92,15 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
         this.bytesConvert = metadata.bytesConverter;
 
         // see: https://github.com/google/guava/wiki/CachesExplained
-        CacheBuilder cacheBuilder = CacheBuilder.newBuilder().softValues().recordStats();
+        this.evictionThreshold = KylinConfig.getInstanceFromEnv().getDictionarySliceEvicationThreshold();
         int cacheMaximumSize = KylinConfig.getInstanceFromEnv().getCachedDictMaxSize();
+        CacheBuilder cacheBuilder = CacheBuilder.newBuilder().softValues();
+
+        // To be compatible with Guava 11
+        boolean methodExists = methodExistsInClass(CacheBuilder.class, "recordStats");
+        if (methodExists) {
+            cacheBuilder = cacheBuilder.recordStats();
+        }
         if (cacheMaximumSize > 0) {
             cacheBuilder = cacheBuilder.maximumSize(cacheMaximumSize);
             logger.info("Set dict cache maximum size to " + cacheMaximumSize);
@@ -115,7 +122,6 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
                         return slice;
                     }
                 });
-        this.evictionThreshold = KylinConfig.getInstanceFromEnv().getDictionarySliceEvicationThreshold();
     }
 
     @Override
@@ -260,6 +266,17 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
             throw new RuntimeException(
                     "the basic directory of global dictionary only support the format which contains '/resources/GlobalDict/' or '/resources/SegmentDict/'");
         }
+    }
+
+    private boolean methodExistsInClass(Class clazz, String method) {
+        boolean existence = false;
+        try {
+            clazz.getMethod(method);
+            existence = true;
+        } catch (NoSuchMethodException e) {
+            logger.info("Class " + clazz.getName() + " doesn't have method " + method);
+        }
+        return existence;
     }
 
     /**
