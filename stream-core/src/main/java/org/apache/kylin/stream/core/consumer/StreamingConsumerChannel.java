@@ -144,7 +144,8 @@ public class StreamingConsumerChannel implements Runnable {
 
     private void removeMetrics() {
         for (Map.Entry<Integer, Meter> meterEntry : eventConsumeMeters.entrySet()) {
-            StreamingMetrics.getInstance().getMetrics().remove(MetricRegistry.name(StreamingMetrics.CONSUME_RATE_PFX,
+            StreamingMetrics.getInstance().getMetricRegistry().remove(MetricRegistry
+                    .name(StreamingMetrics.CONSUME_RATE_PFX,
                     cubeName, String.valueOf(meterEntry.getKey())));
         }
     }
@@ -177,6 +178,9 @@ public class StreamingConsumerChannel implements Runnable {
         }
     }
 
+    /**
+     * Called by another thread.
+     */
     public void stop(long timeoutInMs) {
         this.stopped = true;
         waitConsumerStop(timeoutInMs);
@@ -210,6 +214,9 @@ public class StreamingConsumerChannel implements Runnable {
         }
     }
 
+    /**
+     * Called by another thread.
+     */
     public void pause(boolean wait) {
         this.paused = true;
         if (wait) {
@@ -223,6 +230,9 @@ public class StreamingConsumerChannel implements Runnable {
         }
     }
 
+    /**
+     * Called by another thread.
+     */
     public void resumeToStopCondition(IStopConsumptionCondition newStopCondition) {
         this.paused = false;
         if (newStopCondition != IStopConsumptionCondition.NEVER_STOP) {
@@ -238,6 +248,9 @@ public class StreamingConsumerChannel implements Runnable {
         }
     }
 
+    /**
+     * Called by another thread.
+     */
     public void resume() {
         this.paused = false;
     }

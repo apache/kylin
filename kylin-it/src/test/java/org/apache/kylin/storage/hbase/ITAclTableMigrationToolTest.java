@@ -47,6 +47,7 @@ import org.apache.kylin.rest.service.AclTableMigrationTool;
 import org.apache.kylin.rest.service.KylinUserService;
 import org.apache.kylin.rest.util.Serializer;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -78,10 +79,10 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
     public void setup() throws Exception {
         this.createTestMetadata();
         kylinConfig = KylinConfig.getInstanceFromEnv();
-        if (!(ResourceStore.getStore(kylinConfig) instanceof HBaseResourceStore)) {
-            logger.info("HBase Enviroment not found. Ignore this test");
-            return;
-        }
+
+        // if not HBaseResourceStore, the following tests will be skipped
+        Assume.assumeTrue((ResourceStore.getStore(kylinConfig) instanceof HBaseResourceStore));
+
         cleanUpAll();
         createTestHTables();
         addRecordsToTable();

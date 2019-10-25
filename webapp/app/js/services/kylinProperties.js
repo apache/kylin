@@ -20,7 +20,7 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
   var _config;
   var timezone;
   var deployEnv;
-
+  var jobTimeFilterId;
 
   this.init = function () {
     return AdminService.publicConfig({}, function (config) {
@@ -169,6 +169,23 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
       return '0';
     }
     return this.sourceType;
+  }
+
+  this.getJobTimeFilterId = function() {
+    var jobTimeFilterId = parseInt(this.getProperty("kylin.web.default-time-filter"));
+    if(isNaN(jobTimeFilterId)) {
+      jobTimeFilterId = 2;
+    }
+    return jobTimeFilterId;
+  }
+
+  this.getSecurityType = function () {
+    this.securityType = this.getProperty("kylin.security.profile").trim();
+    return this.securityType;
+  }
+  this.page = {
+    offset: 1,
+    limit: 15
   }
 });
 

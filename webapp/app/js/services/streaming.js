@@ -32,6 +32,7 @@ KylinApp.factory('StreamingServiceV2', ['$resource', function ($resource, config
         'getConfig': {method: 'GET',params: {action:'getConfig'},isArray:true},
         'getParserTemplate': {method: 'GET', params: {propName:'parserTemplate'}, isArray: false},
         save: {method: 'POST', params: {}, isArray: false},
+        update: {method: 'PUT', params: {action: 'updateConfig'}, isArray: false}
     });
 }]);
 

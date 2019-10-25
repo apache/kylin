@@ -29,6 +29,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -45,9 +47,12 @@ import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
+import org.apache.kylin.engine.spark.SparkColumnCardinality;
+import org.apache.kylin.engine.spark.SparkExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
@@ -74,6 +79,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -290,7 +297,14 @@ public class TableService extends BasicService {
     public List<String> getSourceTableNames(String project, String database) throws Exception {
         ISourceMetadataExplorer explr = SourceManager.getInstance(getConfig()).getProjectSource(project)
                 .getSourceMetadataExplorer();
-        return explr.listTables(database);
+        List<String> hiveTableNames = explr.listTables(database);
+        Iterable<String> kylinApplicationTableNames = Iterables.filter(hiveTableNames, new Predicate<String>() {
+            @Override
+            public boolean apply(@Nullable String input) {
+                return input != null && !input.startsWith(MetadataConstants.KYLIN_INTERMEDIATE_PREFIX);
+            }
+        });
+        return Lists.newArrayList(kylinApplicationTableNames);
     }
 
     private TableDescResponse cloneTableDesc(TableDesc table, String prj) {
@@ -486,13 +500,21 @@ public class TableService extends BasicService {
         String outPath = getConfig().getHdfsWorkingDirectory() + "cardinality/" + job.getId() + "/" + tableName;
         String param = "-table " + tableName + " -output " + outPath + " -project " + prj;
 
-        MapReduceExecutable step1 = new MapReduceExecutable();
-
-        step1.setMapReduceJobClass(HiveColumnCardinalityJob.class);
-        step1.setMapReduceParams(param);
-        step1.setParam("segmentId", tableName);
-
-        job.addTask(step1);
+        if (getConfig().isSparkCardinalityEnabled()) { // use spark engine to calculate cardinality
+            SparkExecutable step1 = new SparkExecutable();
+            step1.setClassName(SparkColumnCardinality.class.getName());
+            step1.setParam(SparkColumnCardinality.OPTION_OUTPUT.getOpt(), outPath);
+            step1.setParam(SparkColumnCardinality.OPTION_PRJ.getOpt(), prj);
+            step1.setParam(SparkColumnCardinality.OPTION_TABLE_NAME.getOpt(), tableName);
+            step1.setParam(SparkColumnCardinality.OPTION_COLUMN_COUNT.getOpt(), String.valueOf(table.getColumnCount()));
+            job.addTask(step1);
+        } else {
+            MapReduceExecutable step1 = new MapReduceExecutable();
+            step1.setMapReduceJobClass(HiveColumnCardinalityJob.class);
+            step1.setMapReduceParams(param);
+            step1.setParam("segmentId", tableName);
+            job.addTask(step1);
+        }
 
         HadoopShellExecutable step2 = new HadoopShellExecutable();
 

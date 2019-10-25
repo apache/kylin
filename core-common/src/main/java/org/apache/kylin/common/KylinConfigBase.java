@@ -496,8 +496,8 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.dictionary.forest-trie-max-mb", "500"));
     }
 
-    public int getCachedDictMaxEntrySize() {
-        return Integer.parseInt(getOptional("kylin.dictionary.max-cache-entry", "3000"));
+    public long getCachedDictMaxEntrySize() {
+        return Long.parseLong(getOptional("kylin.dictionary.max-cache-entry", "3000"));
     }
 
     public boolean isGrowingDictEnabled() {
@@ -506,6 +506,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isDictResuable() {
         return Boolean.parseBoolean(this.getOptional("kylin.dictionary.resuable", FALSE));
+    }
+
+    public long getCachedDictionaryMaxEntrySize() {
+        return Long.parseLong(getOptional("kylin.dictionary.cached-dict-max-cache-entry", "50000"));
     }
 
     public int getAppendDictEntrySize() {
@@ -552,12 +556,16 @@ public abstract class KylinConfigBase implements Serializable {
     // mr-hive dict
     // ============================================================================
 
+    /**
+     * @return  if mr-hive dict not enabled, return empty array;
+     *          else return array contains "{TABLE_NAME}_{COLUMN_NAME}"
+     */
     public String[] getMrHiveDictColumns() {
         String columnStr = getOptional("kylin.dictionary.mr-hive.columns", "");
-        if (!StringUtils.isEmpty(columnStr)) {
+        if (!columnStr.equals("")) {
             return columnStr.split(",");
         }
-        return null;
+        return new String[0];
     }
 
     public String getMrHiveDictDB() {
@@ -651,6 +659,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isAutoMergeEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.cube.is-automerge-enabled", TRUE));
+    }
+
+    public String[] getCubeMetadataExtraValidators() {
+        return getOptionalStringArray("kylin.cube.metadata-extra-validators", new String[0]);
     }
 
     // ============================================================================
@@ -787,7 +799,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     // retry interval in milliseconds
-    public int getJobRetryInterval(){
+    public int getJobRetryInterval() {
         return Integer.parseInt(getOptional("kylin.job.retry-interval", "30000"));
     }
 
@@ -852,6 +864,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.job.cube-inmem-builder-class", "org.apache.kylin.cube.inmemcubing.DoggedCubeBuilder");
     }
 
+    public int getJobOutputMaxSize() {
+        return Integer.parseInt(getOptional("kylin.job.execute-output.max-size", "10485760"));
+    }
+
     // ============================================================================
     // SOURCE.HIVE
     // ============================================================================
@@ -873,11 +889,11 @@ public abstract class KylinConfigBase implements Serializable {
         return r;
     }
 
-    public boolean enableHiveDdlQuote(){
+    public boolean enableHiveDdlQuote() {
         return Boolean.parseBoolean(getOptional("kylin.source.hive.quote-enabled", TRUE));
     }
 
-    public String getQuoteCharacter(){
+    public String getQuoteCharacter() {
         return getOptional("kylin.source.quote.character", "`");
     }
 
@@ -1386,12 +1402,11 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.engine.mr.use-local-classpath", TRUE));
     }
 
-
     /**
      * different version hive use different UNION style
      * https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Union
      */
-    public String getHiveUnionStyle(){
+    public String getHiveUnionStyle() {
         return getOptional("kylin.hive.union.style", "UNION");
     }
 
@@ -1430,13 +1445,25 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isSparkFactDistinctEnable() {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark-fact-distinct", "false"));
     }
-    
+
+    public boolean isSparkCardinalityEnabled(){
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark-cardinality", "false"));
+    }
+
+    public int getSparkOutputMaxSize() {
+        return Integer.valueOf(getOptional("kylin.engine.spark.output.max-size", "10485760"));
+    }
+
     // ============================================================================
     // ENGINE.LIVY
     // ============================================================================
 
     public boolean isLivyEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.livy-conf.livy-enabled", FALSE));
+    }
+
+    public String getLivyRestApiBacktick() {
+        return getOptional("kylin.engine.livy.backtick.quote", "");
     }
 
     public String getLivyUrl() {
@@ -1512,7 +1539,7 @@ public abstract class KylinConfigBase implements Serializable {
     // check KYLIN-3358, need deploy coprocessor if enabled
     // finally should be deprecated
     public boolean isDynamicColumnEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.enable-dynamic-column", FALSE));
+        return Boolean.parseBoolean(getOptional("kylin.query.enable-dynamic-column", TRUE));
     }
 
     //check KYLIN-1684, in most cases keep the default value
@@ -1891,7 +1918,7 @@ public abstract class KylinConfigBase implements Serializable {
                 + "kylin.security.profile,"
                 + "kylin.htrace.show-gui-trace-toggle,kylin.web.export-allow-admin,kylin.web.export-allow-other,"
                 + "kylin.cube.cubeplanner.enabled,kylin.web.dashboard-enabled,kylin.tool.auto-migrate-cube.enabled,"
-                + "kylin.job.scheduler.default");
+                + "kylin.job.scheduler.default,kylin.web.default-time-filter");
     }
 
     // ============================================================================
@@ -2189,7 +2216,58 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.stream.stand-alone.mode", "false"));
     }
 
+    public boolean isNewCoordinatorEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.new.coordinator-enabled", "true"));
+    }
+
     public String getLocalStorageImpl() {
         return getOptional("kylin.stream.settled.storage", null);
     }
+
+    public String getStreamMetrics() {
+        return getOptional("kylin.stream.metrics.option", "");
+    }
+
+    /**
+     * whether to print encode integer value for count distinct string value, only for debug/test purpose
+     */
+    public boolean isPrintRealtimeDictEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.print-realtime-dict-enabled", "false"));
+    }
+
+    public long getStreamMetricsInterval() {
+        return Long.parseLong(getOptional("kylin.stream.metrics.interval", "5"));
+    }
+
+    /**
+     * whether realtime query should add timezone offset by kylin's web-timezone, please refer to KYLIN-4010 for detail
+     */
+    public boolean isStreamingAutoJustTimezone() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.auto.just.by.timezone", "false"));
+    }
+
+    // ============================================================================
+    // Health Check CLI
+    // ============================================================================
+
+    public int getWarningSegmentNum() {
+        return Integer.parseInt(getOptional("kylin.tool.health-check.warning-segment-num", "-1"));
+    }
+
+    public int getWarningCubeExpansionRate() {
+        return Integer.parseInt(getOptional("kylin.tool.health-check.warning-cube-expansion-rate", "5"));
+    }
+
+    public int getExpansionCheckMinCubeSizeInGb() {
+        return Integer.parseInt(getOptional("kylin.tool.health-check.expansion-check.min-cube-size-gb", "500"));
+    }
+
+    public int getStaleCubeThresholdInDays() {
+        return Integer.parseInt(getOptional("kylin.tool.health-check.stale-cube-threshold-days", "100"));
+    }
+
+    public int getStaleJobThresholdInDays() {
+        return Integer.parseInt(getOptional("kylin.tool.health-check.stale-job-threshold-days", "30"));
+    }
+
 }

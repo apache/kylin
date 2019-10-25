@@ -32,7 +32,6 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.job.util.FlatTableSqlQuoteUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,8 +46,6 @@ public class GarbageCollectionStep extends AbstractExecutable {
         StringBuffer output = new StringBuffer();
         try {
             output.append(cleanUpIntermediateFlatTable(config));
-            // don't drop view to avoid concurrent issue
-            //output.append(cleanUpHiveViewIntermediateTable(config));
         } catch (IOException e) {
             logger.error("job:" + getId() + " execute finished with exception", e);
             return ExecuteResult.createError(e);
@@ -57,17 +54,17 @@ public class GarbageCollectionStep extends AbstractExecutable {
         return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());
     }
 
+    //clean up both hive intermediate flat table and view table
     private String cleanUpIntermediateFlatTable(KylinConfig config) throws IOException {
-        String quoteCharacter = FlatTableSqlQuoteUtils.getQuote();
         StringBuffer output = new StringBuffer();
-        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(getName());
         final List<String> hiveTables = this.getIntermediateTables();
         if (!config.isHiveKeepFlatTable()) {
             for (String hiveTable : hiveTables) {
                 if (StringUtils.isNotEmpty(hiveTable)) {
                     hiveCmdBuilder.addStatement("USE " + config.getHiveDatabaseForIntermediateTable() + ";");
                     hiveCmdBuilder
-                            .addStatement("DROP TABLE IF EXISTS " + quoteCharacter + hiveTable + quoteCharacter + ";");
+                            .addStatement("DROP TABLE IF EXISTS " + hiveTable + ";");
 
                     output.append("Hive table " + hiveTable + " is dropped. \n");
                 }
@@ -94,9 +91,14 @@ public class GarbageCollectionStep extends AbstractExecutable {
         setParam("oldHiveTables", StringUtil.join(tableIdentity, ","));
     }
 
+    //get intermediate fact table and lookup table(if exists)
     private List<String> getIntermediateTables() {
         List<String> intermediateTables = Lists.newArrayList();
-        String[] tables = StringUtil.splitAndTrim(getParam("oldHiveTables"), ",");
+        String hiveTables = getParam("oldHiveTables");
+        if (this.getParams().containsKey("oldHiveViewIntermediateTables")) {
+            hiveTables += ("," + getParam("oldHiveViewIntermediateTables"));
+        }
+        String[] tables = StringUtil.splitAndTrim(hiveTables, ",");
         for (String t : tables) {
             intermediateTables.add(t);
         }

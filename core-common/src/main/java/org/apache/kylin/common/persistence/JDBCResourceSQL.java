@@ -111,17 +111,9 @@ public class JDBCResourceSQL {
         return sql;
     }
 
-    public String getUpdateSqlWithoutContent() {
-        final String sql = new MessageFormat(format.getUpdateSqlWithoutContent(), Locale.ROOT)
-                .format(new Object[] { tableName, metaTableTs, metaTableKey, metaTableTs }, new StringBuffer(),
-                        new FieldPosition(0))
-                .toString();
-        return sql;
-    }
-
-    public String getUpdateContentSql() {
-        final String sql = new MessageFormat(format.getUpdateContentSql(), Locale.ROOT)
-                .format(new Object[] { tableName, metaTableContent, metaTableKey }, new StringBuffer(),
+    public String getUpdateContentAndTsSql() {
+        final String sql = new MessageFormat(format.getUpdateContentAndTsSql(), Locale.ROOT)
+                .format(new Object[] { tableName, metaTableTs, metaTableContent, metaTableKey, metaTableTs }, new StringBuffer(),
                         new FieldPosition(0))
                 .toString();
         return sql;

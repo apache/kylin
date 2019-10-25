@@ -59,14 +59,14 @@ public class HiveCmdBuilderTest {
         hiveProps.put("hive.execution.engine", "mr");
         Map<String, String> hivePropsOverwrite = new HashMap<>();
         hivePropsOverwrite.put("hive.execution.engine", "tez");
-        HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder("test HiveCLI");
         hiveCmdBuilder.addStatement("USE default;");
         hiveCmdBuilder.addStatement("DROP TABLE `test`;");
         hiveCmdBuilder.addStatement("SHOW\n TABLES;");
         hiveCmdBuilder.setHiveConfProps(hiveProps);
         hiveCmdBuilder.overwriteHiveProps(hivePropsOverwrite);
         assertEquals(
-                "hive -e \"USE default;\nDROP TABLE \\`test\\`;\nSHOW\n TABLES;\n\" --hiveconf hive.execution.engine=tez",
+                "hive -e \"set mapred.job.name='test HiveCLI';\nUSE default;\nDROP TABLE \\`test\\`;\nSHOW\n TABLES;\n\" --hiveconf hive.execution.engine=tez",
                 hiveCmdBuilder.build());
     }
 

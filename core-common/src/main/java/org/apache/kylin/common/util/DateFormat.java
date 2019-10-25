@@ -37,11 +37,14 @@ public class DateFormat {
     public static final String YYYYMMDDHHMMSS = "yyyyMMddHHmmss";
     public static final String YYYYMMDDHHMM = "yyyyMMddHHmm";
     public static final String YYYYMMDDHH = "yyyyMMddHH";
+    public static final String ISO_8601_24H_FULL_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
+
     public static final String[] SUPPORTED_DATETIME_PATTERN = { //
             DEFAULT_DATE_PATTERN, //
             DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS, //
             DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS, //
-            COMPACT_DATE_PATTERN };
+            COMPACT_DATE_PATTERN, //
+            ISO_8601_24H_FULL_FORMAT};
 
     static final private Map<String, FastDateFormat> formatMap = new ConcurrentHashMap<String, FastDateFormat>();
 
@@ -132,7 +135,11 @@ public class DateFormat {
         } else if (str.length() == 19) {
             return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS).getTime();
         } else if (str.length() > 19) {
-            return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS).getTime();
+            if (str.contains("T")) {
+                return stringToDate(str, ISO_8601_24H_FULL_FORMAT).getTime();
+            } else {
+                return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS).getTime();
+            }
         } else {
             throw new IllegalArgumentException("there is no valid date pattern for:" + str);
         }

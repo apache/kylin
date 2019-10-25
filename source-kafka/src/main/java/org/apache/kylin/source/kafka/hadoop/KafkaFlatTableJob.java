@@ -107,7 +107,6 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
             job.getConfiguration().addResource(new Path(jobEngineConfig.getHadoopJobConfFilePath(null)));
             KafkaConsumerProperties kafkaConsumerProperties = KafkaConsumerProperties.getInstanceFromEnv();
             job.getConfiguration().addResource(new Path(kafkaConsumerProperties.getKafkaConsumerHadoopJobConf()));
-            appendKafkaOverrideProperties(cube.getConfig(), job.getConfiguration());
             job.getConfiguration().set(CONFIG_KAFKA_BROKERS, brokers);
             job.getConfiguration().set(CONFIG_KAFKA_TOPIC, topic);
             job.getConfiguration().set(CONFIG_KAFKA_TIMEOUT, String.valueOf(kafkaConfig.getTimeout()));
@@ -115,6 +114,7 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
             job.getConfiguration().set(CONFIG_KAFKA_PARSER_NAME, kafkaConfig.getParserName());
             job.getConfiguration().set(CONFIG_KAFKA_SPLIT_ROWS, String.valueOf(kafkaConfig.getSplitRows()));
             job.getConfiguration().set(CONFIG_KAFKA_CONSUMER_GROUP, cubeName); // use cubeName as consumer group name
+            appendKafkaOverrideProperties(cube.getConfig(), job.getConfiguration());
             setupMapper(cube.getSegmentById(segmentId));
             job.setNumReduceTasks(0);
             FileOutputFormat.setOutputPath(job, output);
@@ -158,7 +158,6 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
         job.setOutputKeyClass(BytesWritable.class);
         job.setOutputValueClass(Text.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
-        job.setNumReduceTasks(0);
     }
 
     private static void appendKafkaOverrideProperties(final KylinConfig kylinConfig, Configuration conf) {

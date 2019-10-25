@@ -22,7 +22,6 @@ KylinApp.controller('DashboardCtrl', function ($scope, $location, storage, kylin
 
   $scope.init = function(){
     $scope.timezone = 'GMT';
-
     // Init date range
     storage.bind($scope, 'dateRange', {defaultValue: {
       startDate: moment().subtract(7, 'days').clone().tz($scope.timezone).startOf('day').format('x'),
@@ -183,12 +182,12 @@ KylinApp.controller('DashboardCtrl', function ($scope, $location, storage, kylin
               value.color = '#ddd';
             }
           });
-        } 
+        }
       }, function(e) {
           SweetAlert.swal('Oops...', 'Failed to load bar chart.', 'error');
           console.error('bar chart error:', e.data);
       });
-    }    
+    }
   };
 
   // Clean and remove chart
@@ -210,7 +209,7 @@ KylinApp.controller('DashboardCtrl', function ($scope, $location, storage, kylin
 
   // Click query count square
   $scope.queryCountChart = function() {
-    $scope.currentSquare = 'queryCount'; 
+    $scope.currentSquare = 'queryCount';
     $scope.barchartCategory = dashboardConfig.categories[0];
     $scope.barchartMetric = dashboardConfig.metrics[0];
     $scope.linechartCategory = dashboardConfig.categories[0];

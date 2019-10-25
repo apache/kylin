@@ -186,9 +186,9 @@ public class QueryController extends BasicController {
 
     @RequestMapping(value = "/tables_and_columns", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
-    public List<TableMeta> getMetadata(MetaRequest metaRequest) {
+    public List<TableMeta> getMetadata(MetaRequest metaRequest) throws IOException {
         try {
-            return queryService.getMetadata(metaRequest.getProject());
+            return queryService.getMetadataFilterByUser(metaRequest.getProject());
         } catch (SQLException e) {
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }

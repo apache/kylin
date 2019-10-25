@@ -47,13 +47,13 @@
           class="org.springframework.security.acls.domain.AclAuthorizationStrategyImpl">
         <constructor-arg>
             <list>
-				<bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
+                <bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
                     <constructor-arg value="ROLE_ADMIN"/>
                 </bean>
-				<bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
+                <bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
                     <constructor-arg value="ROLE_ADMIN"/>
                 </bean>
-				<bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
+                <bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
                     <constructor-arg value="ROLE_ADMIN"/>
                 </bean>
             </list>
@@ -68,9 +68,9 @@
         <constructor-arg ref="auditLogger"/>
     </bean>
 
-    <bean id="userService" class="org.apache.kylin.rest.service.KylinUserService" />
+    <bean id="userService" class="org.apache.kylin.rest.service.KylinUserService"/>
 
-    <bean id="userGroupService" class="org.apache.kylin.rest.service.KylinUserGroupService" />
+    <bean id="userGroupService" class="org.apache.kylin.rest.service.KylinUserGroupService"/>
 
     <beans profile="ldap,saml">
         <bean id="ldapSource"
@@ -202,7 +202,7 @@
             <constructor-arg>
                 <bean class="org.springframework.security.authentication.dao.DaoAuthenticationProvider">
                     <property name="userDetailsService">
-                        <bean class="org.springframework.security.provisioning.InMemoryUserDetailsManager">
+                        <bean class="org.apache.kylin.rest.service.KylinUserService">
                             <constructor-arg>
                                 <util:list
                                         value-type="org.springframework.security.core.userdetails.User">
@@ -242,7 +242,7 @@
             <scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/**/metrics" access="permitAll"/>
             <scr:intercept-url pattern="/api/cache*/**" access="permitAll"/>
-            <scr:intercept-url pattern="/api/streaming_coordinator/**" access="permitAll" />
+            <scr:intercept-url pattern="/api/streaming_coordinator/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/service_discovery/state/is_active_job_node" access="permitAll"/>
             <scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST')"/>
             <scr:intercept-url pattern="/api/cubes*/**" access="isAuthenticated()"/>
@@ -255,8 +255,9 @@
             <scr:intercept-url pattern="/api/tables/**/snapshotLocalCache/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/**" access="isAuthenticated()"/>
 
-            <scr:form-login login-page="/login" />
-            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/j_spring_security_logout" logout-success-url="/." />
+            <scr:form-login login-page="/login"/>
+            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/j_spring_security_logout"
+                        logout-success-url="/."/>
             <scr:session-management session-fixation-protection="newSession"/>
         </scr:http>
     </beans>
@@ -290,7 +291,7 @@
             <scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/**/metrics" access="permitAll"/>
             <scr:intercept-url pattern="/api/cache*/**" access="permitAll"/>
-            <scr:intercept-url pattern="/api/streaming_coordinator/**" access="permitAll" />
+            <scr:intercept-url pattern="/api/streaming_coordinator/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST')"/>
             <scr:intercept-url pattern="/api/cubes*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/models*/**" access="isAuthenticated()"/>
@@ -302,8 +303,9 @@
             <scr:intercept-url pattern="/api/tables/**/snapshotLocalCache/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/**" access="isAuthenticated()"/>
 
-            <scr:form-login login-page="/login" />
-            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/j_spring_security_logout" logout-success-url="/." />
+            <scr:form-login login-page="/login"/>
+            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/j_spring_security_logout"
+                        logout-success-url="/."/>
             <scr:session-management session-fixation-protection="newSession"/>
         </scr:http>
 

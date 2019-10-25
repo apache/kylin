@@ -138,7 +138,7 @@ public class SegmentBuildState implements Comparable<SegmentBuildState> {
         }
 
         public enum State {
-            WAIT, BUILDING, COMPLETE
+            WAIT, BUILDING
         }
     }
 }

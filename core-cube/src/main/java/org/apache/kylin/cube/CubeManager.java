@@ -45,6 +45,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
@@ -218,6 +219,10 @@ public class CubeManager implements IRealizationProvider {
             }
             return null;
         }
+    }
+
+    public List<String> getErrorCubes() {
+        return crud.getLoadFailedEntities();
     }
 
     /**
@@ -953,7 +958,7 @@ public class CubeManager implements IRealizationProvider {
                 throw new IllegalStateException(String.format(Locale.ROOT,
                         "For cube %s, segment %s missing LastBuildJobID", cubeCopy.toString(), newSegCopy.toString()));
 
-            if (isReady(newSegCopy) == true) {
+            if (isReady(newSegCopy)) {
                 logger.warn("For cube {}, segment {} state should be NEW but is READY", cubeCopy, newSegCopy);
             }
 
@@ -1223,28 +1228,61 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    public CubeInstance findLatestSnapshot(List<RealizationEntry> realizationEntries, String lookupTableName) {
+    /**
+     * To keep "select * from LOOKUP_TABLE" has consistent and latest result, we manually choose
+     * CubeInstance here to answer such query.
+     */
+    public CubeInstance findLatestSnapshot(List<RealizationEntry> realizationEntries, String lookupTableName,
+            CubeInstance cubeInstance) {
         CubeInstance cube = null;
-        if (realizationEntries.size() > 0) {
-            long maxBuildTime = Long.MIN_VALUE;
-            RealizationRegistry registry = RealizationRegistry.getInstance(config);
-            for (RealizationEntry entry : realizationEntries) {
-                IRealization realization = registry.getRealization(entry.getType(), entry.getRealization());
-                if (realization != null && realization.isReady() && realization instanceof CubeInstance) {
-                    if (realization.getModel().isLookupTable(lookupTableName)) {
+        try {
+            if (!realizationEntries.isEmpty()) {
+                long maxBuildTime = Long.MIN_VALUE;
+                RealizationRegistry registry = RealizationRegistry.getInstance(config);
+                for (RealizationEntry entry : realizationEntries) {
+                    IRealization realization = registry.getRealization(entry.getType(), entry.getRealization());
+                    if (realization != null && realization.isReady() && realization instanceof CubeInstance) {
                         CubeInstance current = (CubeInstance) realization;
-                        CubeSegment segment = current.getLatestReadySegment();
-                        if (segment != null) {
-                            long latestBuildTime = segment.getLastBuildTime();
-                            if (latestBuildTime > maxBuildTime) {
-                                maxBuildTime = latestBuildTime;
-                                cube = current;
+                        if (checkMeetSnapshotTable(current, lookupTableName)) {
+                            CubeSegment segment = current.getLatestReadySegment();
+                            if (segment != null) {
+                                long latestBuildTime = segment.getLastBuildTime();
+                                if (latestBuildTime > maxBuildTime) {
+                                    maxBuildTime = latestBuildTime;
+                                    cube = current;
+                                }
                             }
                         }
                     }
                 }
             }
+        } catch (Exception e) {
+            logger.info("Unexpected error.", e);
         }
-        return cube;
+        if (!cubeInstance.equals(cube)) {
+            logger.debug("Picked cube {} over {} as it provides a more recent snapshot of the lookup table {}", cube,
+                    cubeInstance, lookupTableName);
+        }
+        return cube == null ? cubeInstance : cube;
+    }
+
+    /**
+     * check if {toCheck} has snapshot of {lookupTableName}
+     * @param lookupTableName look like {SCHMEA}.{TABLE}
+     */
+    private boolean checkMeetSnapshotTable(CubeInstance toCheck, String lookupTableName) {
+        boolean checkRes = false;
+        String lookupTbl = lookupTableName;
+        String[] strArr = lookupTableName.split("\\.");
+        if (strArr.length > 1) {
+            lookupTbl = strArr[strArr.length - 1];
+        }
+        for (DimensionDesc dimensionDesc : toCheck.getDescriptor().getDimensions()) {
+            if (dimensionDesc.getTableRef().getTableName().equalsIgnoreCase(lookupTbl)) {
+                checkRes = true;
+                break;
+            }
+        }
+        return checkRes;
     }
 }

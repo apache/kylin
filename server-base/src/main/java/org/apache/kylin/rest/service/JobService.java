@@ -24,6 +24,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -193,6 +194,12 @@ public class JobService extends BasicService implements InitializingBean {
             return calendar.getTimeInMillis();
         case LAST_ONE_YEAR:
             calendar.add(Calendar.YEAR, -1);
+            return calendar.getTimeInMillis();
+        case CURRENT_DAY:
+            calendar.add(Calendar.DAY_OF_MONTH, 0);
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
             return calendar.getTimeInMillis();
         case ALL:
             return 0;
@@ -986,6 +993,28 @@ public class JobService extends BasicService implements InitializingBean {
         }
 
         return jobInstanceList;
+    }
+
+    public Map<JobStatusEnum, Integer> searchJobsOverview(final String cubeNameSubstring, final String projectName,
+                                          final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter,
+                                          JobSearchMode jobSearchMode) {
+        // TODO: can be optimized here
+        List<JobSearchResult> jobSearchResultList = searchJobsByCubeNameV2(cubeNameSubstring, projectName, statusList,
+                timeFilter, jobSearchMode);
+        Map<JobStatusEnum, Integer> jobOverview = new HashMap<>();
+        if (statusList == null || statusList.isEmpty()) {
+            for (JobStatusEnum  status: JobStatusEnum.values()) {
+                jobOverview.put(status, 0);
+            }
+        } else {
+            for (JobStatusEnum  status: statusList) {
+                jobOverview.put(status, 0);
+            }
+        }
+        for (JobSearchResult result : jobSearchResultList) {
+            jobOverview.put(result.getJobStatus(), jobOverview.get(result.getJobStatus()) + 1);
+        }
+        return jobOverview;
     }
 
     /**

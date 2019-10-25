@@ -33,7 +33,7 @@
 
 <div class="row models-main dataTables_wrapper"  style="padding-top:10px;padding-left: 5px;">
   <div ng-class="row">
-    <tabset ng-if="userService.hasRole('ROLE_ADMIN')">
+    <tabset>
       <tab heading="Jobs" select="jobTabSelected('jobs')" active="tabs[2].active">
         <div class="col-xs-12" ng-include src="'partials/jobs/jobList.html'"></div>
       </tab>
@@ -41,7 +41,6 @@
         <div class="col-xs-12" ng-include src="'partials/jobs/badQuery.html'"></div>
       </tab>
     </tabset>
-    <div ng-if="!userService.hasRole('ROLE_ADMIN')" class="col-xs-12" ng-include src="'partials/jobs/jobList.html'"></div>
   </div>
 </div>
 

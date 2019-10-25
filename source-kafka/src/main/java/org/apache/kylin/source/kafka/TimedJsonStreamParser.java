@@ -70,6 +70,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
     private boolean strictCheck = true;
     private final Map<String, Object> root = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private final Map<String, Object> tempMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private final Map<String, String> colLowerCaseMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private final Map<String, String[]> nameMap = new HashMap<>();
     public static final String EMBEDDED_PROPERTY_SEPARATOR = "|";
 
@@ -105,6 +106,10 @@ public final class TimedJsonStreamParser extends StreamingParser {
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         mapper.disable(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE);
         mapper.enable(DeserializationFeature.USE_JAVA_ARRAY_FOR_JSON_ARRAY);
+
+        for (TblColRef col : allColumns) {
+            colLowerCaseMap.put(col.getName(), col.getName().toLowerCase(Locale.ROOT));
+        }
     }
 
     @Override
@@ -118,7 +123,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
             ArrayList<String> result = Lists.newArrayList();
 
             for (TblColRef column : allColumns) {
-                final String columnName = column.getName().toLowerCase(Locale.ROOT);
+                final String columnName = colLowerCaseMap.get(column.getName());
                 if (populateDerivedTimeColumns(columnName, result, t) == false) {
                     result.add(getValueByKey(column, root));
                 }

@@ -77,3 +77,4 @@ function find_hadoop_conf_dir() {
     done
 }
 find_hadoop_conf_dir
+echo "export kylin_hadoop_conf_dir=$kylin_hadoop_conf_dir" > ${dir}/cached-hadoop-conf-dir.sh

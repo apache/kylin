@@ -67,7 +67,7 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
         KylinConfig kylinConfig = getTestConfig();
         BadQueryHistoryManager manager = BadQueryHistoryManager.getInstance(kylinConfig);
         BadQueryEntry entry = new BadQueryEntry("sql", "adj", 1459362239992L, 100, "server", "t-0", "user",
-                RandomUtil.randomUUID().toString());
+                RandomUtil.randomUUID().toString(), "cube");
         BadQueryHistory history = manager.upsertEntryToProject(entry, "default");
         NavigableSet<BadQueryEntry> entries = history.getEntries();
         assertEquals(4, entries.size());
@@ -84,7 +84,7 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
 
         for (int i = 0; i < kylinConfig.getBadQueryHistoryNum(); i++) {
             BadQueryEntry tmp = new BadQueryEntry("sql", "adj", 1459362239993L + i, 100 + i, "server", "t-0", "user",
-                    RandomUtil.randomUUID().toString());
+                    RandomUtil.randomUUID().toString(), "cube");
             history = manager.upsertEntryToProject(tmp, "default");
         }
         assertEquals(kylinConfig.getBadQueryHistoryNum(), history.getEntries().size());
@@ -97,14 +97,14 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
 
         String queryId = RandomUtil.randomUUID().toString();
         manager.upsertEntryToProject(
-                new BadQueryEntry("sql", "adj", 1459362239000L, 100, "server", "t-0", "user", queryId),
+                new BadQueryEntry("sql", "adj", 1459362239000L, 100, "server", "t-0", "user", queryId, "cube"),
                 "default");
         BadQueryHistory history = manager.upsertEntryToProject(
-                new BadQueryEntry("sql", "adj2", 1459362239000L, 120, "server2", "t-1", "user", queryId), "default");
+                new BadQueryEntry("sql", "adj2", 1459362239000L, 120, "server2", "t-1", "user", queryId, "cube"), "default");
 
         NavigableSet<BadQueryEntry> entries = history.getEntries();
         BadQueryEntry newEntry = entries
-                .floor(new BadQueryEntry("sql", "adj2", 1459362239000L, 120, "server2", "t-1", "user", queryId));
+                .floor(new BadQueryEntry("sql", "adj2", 1459362239000L, 120, "server2", "t-1", "user", queryId, "cube"));
         System.out.println(newEntry);
         assertEquals("adj2", newEntry.getAdj());
         assertEquals("server2", newEntry.getServer());

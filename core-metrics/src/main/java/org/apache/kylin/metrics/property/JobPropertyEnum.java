@@ -18,19 +18,31 @@
 
 package org.apache.kylin.metrics.property;
 
-import java.util.Locale;
-
 import com.google.common.base.Strings;
 
+/**
+ * Definition of Metrics dimension and measure for Cube building job
+ */
 public enum JobPropertyEnum {
-    ID_CODE("JOB_ID"), USER("KUSER"), PROJECT("PROJECT"), CUBE("CUBE_NAME"), TYPE("JOB_TYPE"), ALGORITHM(
-            "CUBING_TYPE"), STATUS("JOB_STATUS"), EXCEPTION("EXCEPTION"), //
-    SOURCE_SIZE("TABLE_SIZE"), CUBE_SIZE("CUBE_SIZE"), BUILD_DURATION("DURATION"), WAIT_RESOURCE_TIME(
-            "WAIT_RESOURCE_TIME"), PER_BYTES_TIME_COST("PER_BYTES_TIME_COST"), STEP_DURATION_DISTINCT_COLUMNS(
-                    "STEP_DURATION_DISTINCT_COLUMNS"), STEP_DURATION_DICTIONARY(
-                            "STEP_DURATION_DICTIONARY"), STEP_DURATION_INMEM_CUBING(
-                                    "STEP_DURATION_INMEM_CUBING"), STEP_DURATION_HFILE_CONVERT(
-                                            "STEP_DURATION_HFILE_CONVERT");
+
+    ID_CODE("JOB_ID"),
+    USER("KUSER"),
+    PROJECT("PROJECT"),
+    CUBE("CUBE_NAME"),
+    TYPE("JOB_TYPE"),
+    ALGORITHM("CUBING_TYPE"),
+    STATUS("JOB_STATUS"),
+    EXCEPTION("EXCEPTION"),
+
+    SOURCE_SIZE("TABLE_SIZE"),
+    CUBE_SIZE("CUBE_SIZE"),
+    BUILD_DURATION("DURATION"),
+    WAIT_RESOURCE_TIME("WAIT_RESOURCE_TIME"),
+    PER_BYTES_TIME_COST("PER_BYTES_TIME_COST"),
+    STEP_DURATION_DISTINCT_COLUMNS("STEP_DURATION_DISTINCT_COLUMNS"),
+    STEP_DURATION_DICTIONARY("STEP_DURATION_DICTIONARY"),
+    STEP_DURATION_INMEM_CUBING("STEP_DURATION_INMEM_CUBING"),
+    STEP_DURATION_HFILE_CONVERT("STEP_DURATION_HFILE_CONVERT");
 
     private final String propertyName;
 
@@ -43,11 +55,10 @@ public enum JobPropertyEnum {
             return null;
         }
         for (JobPropertyEnum property : JobPropertyEnum.values()) {
-            if (property.propertyName.equals(name.toUpperCase(Locale.ROOT))) {
+            if (property.propertyName.equalsIgnoreCase(name)) {
                 return property;
             }
         }
-
         return null;
     }
 

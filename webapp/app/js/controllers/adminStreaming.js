@@ -79,7 +79,7 @@ KylinApp.controller('AdminStreamingCtrl', function ($scope, $timeout, $modal, Ad
             drawLiquidChart(reId, receiverState.rate, receiverState.state, 'isAvailable');
           }
         });
-        callback();
+        callback && callback();
       }, 100);
     }, function(e) {
       if (e.data && e.data.exception) {
@@ -89,7 +89,7 @@ KylinApp.controller('AdminStreamingCtrl', function ($scope, $timeout, $modal, Ad
       } else {
         SweetAlert.swal('Oops...', 'Failed get replica set', 'error');
       }
-      callback();
+      callback && callback();
     });
   };
 
@@ -136,20 +136,19 @@ KylinApp.controller('AdminStreamingCtrl', function ($scope, $timeout, $modal, Ad
                 });
                 $scope.replicaSet = newReplicaSet;
                 scope.listReplicaSet(function() {
+                  $scope.availableNodes = scope.availableReceiver;
                   loadingRequest.hide();
-                  location.reload();
                 });
               }, function(e) {
                 scope.listReplicaSet(function() {
+                  $scope.availableNodes = scope.availableReceiver;
                   loadingRequest.hide();
-                  location.reload();
                 });
                 errorMessage(e, 'Failed get replica set');
               });
             }, function(e) {
               scope.listReplicaSet(function() {
                 loadingRequest.hide();
-                location.reload();
               });
               errorMessage(e, 'Failed remove receiver');
             });
@@ -167,20 +166,19 @@ KylinApp.controller('AdminStreamingCtrl', function ($scope, $timeout, $modal, Ad
                 $scope.replicaSet = newReplicaSet;
                 $scope.node.selected = '';
                 scope.listReplicaSet(function() {
+                  $scope.availableNodes = scope.availableReceiver;
                   loadingRequest.hide();
-                  location.reload();
                 });
               }, function(e) {
                 scope.listReplicaSet(function() {
+                  $scope.availableNodes = scope.availableReceiver;
                   loadingRequest.hide();
-                  location.reload();
                 });
                 errorMessage(e, 'Failed get replica set');
               });
             }, function(e) {
               scope.listReplicaSet(function() {
                 loadingRequest.hide();
-                location.reload();
               });
               errorMessage(e, 'Failed to add node');
             });

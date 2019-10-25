@@ -25,7 +25,7 @@
       <div class="row">
 
         <!--Cube Name: -->
-        <div class="col-xs-3">
+        <div class="job-search-box">
           <form class="" ng-submit="jobList.removeAll();reload()" style="display: inline" >
             <span><b>Cube Name:</b>
               <span class="input-icon input-icon-right nav-search" style="font-size:14px;">
@@ -35,11 +35,10 @@
             </span>
           </form>
         </div>
-
         <!--<div class="col-xs-2"><label class="table-header-text">Jobs</label></div>-->
-        <div class="col-xs-9">
+        <div class="col-xs-12">
           <!--STATUS-->
-          <div class="pull-right">
+          <div style="text-align:right;margin-top:4px;">
             <!--Job History Time Filter-->
             <label>Jobs in:
               <select data-ng-model="timeFilter"
@@ -53,7 +52,7 @@
               <input  type="checkbox"
                       value="{{s.name}}"
                       ng-checked="status.indexOf(s) > -1"
-                      ng-click="toggleSelection(s);" />{{s.name}}
+                      ng-click="toggleSelection(s);" />{{s.name}}{{s.count}}
             </label>
             <!--Refresh Jobs-->
             <button class="btn btn-success btn-xs" style="margin-left: 10px" ng-click="jobList.removeAll();reload();"><i class="fa fa-refresh"></i></button>

@@ -30,6 +30,9 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -217,11 +220,11 @@ public class KylinClient implements IRemoteClient {
         case Types.LONGVARBINARY:
             return value.getBytes(StandardCharsets.UTF_8);
         case Types.DATE:
-            return Date.valueOf(value);
+            return dateConvert(value);
         case Types.TIME:
             return Time.valueOf(value);
         case Types.TIMESTAMP:
-            return Timestamp.valueOf(value);
+            return timestampConvert(value);
         default:
             //do nothing
             break;
@@ -380,6 +383,18 @@ public class KylinClient implements IRemoteClient {
                 columnStub.getIS_NULLABLE());
     }
 
+    private static Date dateConvert(String value) {
+        ZoneId utc = ZoneId.of("UTC");
+        LocalDate localDate = Date.valueOf(value).toLocalDate();
+        return new Date(localDate.atStartOfDay(utc).toInstant().toEpochMilli());
+    }
+
+    private static Timestamp timestampConvert(String value) {
+        ZoneId utc = ZoneId.of("UTC");
+        LocalDateTime localDate = Timestamp.valueOf(value).toLocalDateTime();
+        return new Timestamp(localDate.atZone(utc).toInstant().toEpochMilli());
+    }
+
     @Override
     public QueryResult executeQuery(String sql, List<Object> paramValues,
             Map<String, String> queryToggles) throws IOException {
@@ -426,8 +441,8 @@ public class KylinClient implements IRemoteClient {
         StringEntity requestEntity = new StringEntity(postBody, ContentType.create("application/json", "UTF-8"));
         post.setEntity(requestEntity);
 
-        HttpResponse response = httpClient.execute(post);
         try {
+            HttpResponse response = httpClient.execute(post);
             if (response.getStatusLine().getStatusCode() != 200 && response.getStatusLine().getStatusCode() != 201) {
                 throw asIOException(post, response);
             }

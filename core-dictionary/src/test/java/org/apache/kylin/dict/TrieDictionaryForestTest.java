@@ -45,6 +45,9 @@ import java.util.Random;
 import java.util.TreeSet;
 
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -53,6 +56,15 @@ import org.junit.Test;
  */
 
 public class TrieDictionaryForestTest {
+    @BeforeClass
+    public static void setUp() {
+        LocalFileMetadataTestCase.staticCreateTestMetadata();
+    }
+
+    @AfterClass
+    public static void after() {
+        LocalFileMetadataTestCase.staticCleanupTestMetadata();
+    }
 
     @Test
     public void testEmptyDict() {

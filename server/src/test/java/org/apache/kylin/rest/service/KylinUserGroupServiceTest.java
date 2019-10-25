@@ -36,7 +36,8 @@ public class KylinUserGroupServiceTest extends ServiceTestBase {
 
     @Test
     public void testGetAllUserAuthorities() throws IOException {
-        List<String> allUserAuthorities = userGroupService.getAllUserAuthorities();
-        Assert.assertEquals(Lists.newArrayList("ROLE_ADMIN", "ROLE_ANALYST", "ROLE_MODELER"), allUserAuthorities);
+        List<String> allUserAuthorities = userGroupService.getAllUserGroups();
+        Assert.assertEquals(Lists.newArrayList("ALL_USERS", "ROLE_ADMIN", "ROLE_ANALYST", "ROLE_MODELER"),
+                allUserAuthorities);
     }
 }

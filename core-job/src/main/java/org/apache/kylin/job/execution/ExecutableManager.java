@@ -348,7 +348,7 @@ public class ExecutableManager {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {
                 if (task.getStatus() == ExecutableState.ERROR || task.getStatus() == ExecutableState.STOPPED) {
-                    updateJobOutput(task.getId(), ExecutableState.READY, null, null);
+                    updateJobOutput(task.getId(), ExecutableState.READY, null, "no output");
                     break;
                 }
             }
@@ -465,6 +465,9 @@ public class ExecutableManager {
                 jobOutput.setInfo(info);
             }
             if (output != null) {
+                if (output.length() > config.getJobOutputMaxSize()) {
+                    output = output.substring(0, config.getJobOutputMaxSize());
+                }
                 jobOutput.setContent(output);
             }
             executableDao.updateJobOutput(jobOutput);

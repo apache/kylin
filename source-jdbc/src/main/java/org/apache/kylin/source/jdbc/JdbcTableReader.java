@@ -23,10 +23,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.SourceDialect;
 import org.apache.kylin.source.IReadableTable.TableReader;
 import org.apache.kylin.source.hive.DBConnConf;
+import org.apache.kylin.source.jdbc.metadata.IJdbcMetadata;
+import org.apache.kylin.source.jdbc.metadata.JdbcMetadataFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +66,15 @@ public class JdbcTableReader implements TableReader {
         String jdbcPass = config.getJdbcSourcePass();
         dbconf = new DBConnConf(driverClass, connectionUrl, jdbcUser, jdbcPass);
         jdbcCon = SqlUtil.getConnection(dbconf);
-        String sql = String.format(Locale.ROOT, "select * from %s.%s", dbName, tableName);
+        IJdbcMetadata meta = JdbcMetadataFactory
+                .getJdbcMetadata(SourceDialect.getDialect(config.getJdbcSourceDialect()), dbconf);
+
+        Map<String, String> metadataCache = new TreeMap<>();
+        JdbcHiveInputBase.JdbcBaseBatchCubingInputSide.calCachedJdbcMeta(metadataCache, dbconf, meta);
+        String database = JdbcHiveInputBase.getSchemaQuoted(metadataCache, dbName, meta, true);
+        String table = JdbcHiveInputBase.getTableIdentityQuoted(dbName, tableName, metadataCache, meta, true);
+
+        String sql = String.format(Locale.ROOT, "select * from %s.%s", database, table);
         try {
             statement = jdbcCon.createStatement();
             rs = statement.executeQuery(sql);

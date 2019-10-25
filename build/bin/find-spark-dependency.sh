@@ -48,4 +48,5 @@ else
     verbose "spark dependency: $spark_dependency"
     export spark_dependency
 fi
+echo "export spark_dependency=$spark_dependency" > ${dir}/cached-spark-dependency.sh
 

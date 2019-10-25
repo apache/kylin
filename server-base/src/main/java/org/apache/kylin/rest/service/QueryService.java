@@ -97,6 +97,7 @@ import org.apache.kylin.metrics.MetricsManager;
 import org.apache.kylin.query.QueryConnection;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.util.PushDownUtil;
+import org.apache.kylin.query.util.QueryInfoCollector;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.query.util.TempStatementUtil;
 import org.apache.kylin.rest.constant.Constant;
@@ -157,6 +158,10 @@ public class QueryService extends BasicService {
     private ModelService modelService;
 
     @Autowired
+    @Qualifier("TableAclService")
+    private TableACLService tableAclService;
+
+    @Autowired
     private AclEvaluate aclEvaluate;
 
     private GenericKeyedObjectPool<PreparedContextKey, PreparedContext> preparedContextPool;
@@ -194,6 +199,10 @@ public class QueryService extends BasicService {
     @PostConstruct
     public void init() throws IOException {
         Preconditions.checkNotNull(cacheManager, "cacheManager is not injected yet");
+    }
+
+    public List<TableMeta> getMetadataFilterByUser(String project) throws SQLException, IOException {
+        return tableAclService.filterTableMetasByAcl(getMetadata(project), project);
     }
 
     public List<TableMeta> getMetadata(String project) throws SQLException {
@@ -446,6 +455,7 @@ public class QueryService extends BasicService {
         } finally {
             BackdoorToggles.cleanToggles();
             QueryContextFacade.resetCurrent();
+            QueryInfoCollector.reset();
         }
     }
 

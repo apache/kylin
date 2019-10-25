@@ -14,22 +14,30 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+*/
+
+package org.apache.kylin.exception;
+
+/**
+ *
  */
-package org.apache.kylin.source.jdbc.metadata;
+public class QueryOnCubeException extends RuntimeException {
 
-import org.apache.kylin.source.jdbc.JdbcDialect;
-import org.junit.Assert;
-import org.junit.Test;
+    private static final long serialVersionUID = 1L;
 
-public class JdbcMetadataFactoryTest {
+    public QueryOnCubeException() {
+        super();
+    }
 
-    @Test
-    public void testGetJdbcMetadata() {
-        Assert.assertTrue(
-                JdbcMetadataFactory.getJdbcMetadata(JdbcDialect.DIALECT_MSSQL, null) instanceof SQLServerJdbcMetadata);
-        Assert.assertTrue(
-                JdbcMetadataFactory.getJdbcMetadata(JdbcDialect.DIALECT_MYSQL, null) instanceof MySQLJdbcMetadata);
-        Assert.assertTrue(
-                JdbcMetadataFactory.getJdbcMetadata(JdbcDialect.DIALECT_VERTICA, null) instanceof DefaultJdbcMetadata);
+    public QueryOnCubeException(String s) {
+        super(s);
+    }
+
+    public QueryOnCubeException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public QueryOnCubeException(Throwable cause) {
+        super(cause);
     }
 }

@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -33,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.Closeable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.util.ClassUtil;
@@ -57,7 +59,7 @@ import com.google.common.collect.Maps;
  * - on all servers, model listener is invoked, reload the model, and notify a "project_schema" update event
  * - all listeners respond to the "project_schema" update -- reload cube desc, clear project L2 cache, clear calcite data source etc
  */
-public class Broadcaster {
+public class Broadcaster implements Closeable {
 
     private static final Logger logger = LoggerFactory.getLogger(Broadcaster.class);
 
@@ -86,6 +88,7 @@ public class Broadcaster {
     private BlockingDeque<BroadcastEvent> broadcastEvents = new LinkedBlockingDeque<>();
     private Map<String, List<Listener>> listenerMap = Maps.newConcurrentMap();
     private AtomicLong counter = new AtomicLong(); // a counter for testing purpose
+    private final BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>();
     
     private Broadcaster(final KylinConfig config) {
         this.config = config;
@@ -101,7 +104,7 @@ public class Broadcaster {
         int corePoolSize = (nodes == null || nodes.length < 1)? 1 : nodes.length;
         int maximumPoolSize = (nodes == null || nodes.length < 1)? 10 : nodes.length * 2;
         this.announceThreadPool = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, 60L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<Runnable>(), new DaemonThreadFactory());
+            workQueue, new DaemonThreadFactory());
 
         announceMainLoop.execute(new Runnable() {
             @Override
@@ -153,6 +156,11 @@ public class Broadcaster {
         });
     }
 
+    @Override
+    public void close() {
+        new Thread(this::stopAnnounce).start();
+    }
+
     private SyncErrorHandler getSyncErrorHandler(KylinConfig config) {
         String clzName = config.getCacheSyncErrorHandler();
         if (StringUtils.isEmpty(clzName)) {
@@ -166,8 +174,21 @@ public class Broadcaster {
     }
     
     public void stopAnnounce() {
-        announceThreadPool.shutdown();
-        announceMainLoop.shutdown();
+        synchronized (workQueue) {
+            while (!workQueue.isEmpty() || !broadcastEvents.isEmpty()){
+                try {
+                    workQueue.wait(100);
+                } catch (InterruptedException e) {
+                    logger.warn("InterruptedException is caught when waiting workQueue empty.", e);
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+
+        logger.info("AnnounceThreadPool shutdown.");
+        announceThreadPool.shutdownNow();
+        logger.info("AnnounceMainLoop shutdown.");
+        announceMainLoop.shutdownNow();
     }
 
     // static listener survives cache wipe and goes after normal listeners

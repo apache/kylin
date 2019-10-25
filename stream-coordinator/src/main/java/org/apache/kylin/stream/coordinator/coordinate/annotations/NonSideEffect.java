@@ -14,13 +14,28 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
-package org.apache.kylin.source.jdbc;
+ */
+package org.apache.kylin.stream.coordinator.coordinate.annotations;
 
-public class JdbcDialect {
-    public static final String DIALECT_VERTICA = "vertica";
-    public static final String DIALECT_ORACLE = "oracle";
-    public static final String DIALECT_MYSQL = "mysql";
-    public static final String DIALECT_HIVE = "hive";
-    public static final String DIALECT_MSSQL = "mssql";
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * <pre>
+ *  This annotation is a marker for developer.
+ *  It indicate this method which be annotated may failed in some steps.
+ *  But there no need to retry because has no bad influence to other parts.
+ * </pre>
+ *
+ * @see NotAtomicAndNotIdempotent
+ */
+@Documented
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.METHOD)
+@Inherited
+public @interface NonSideEffect {
 }

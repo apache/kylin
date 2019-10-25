@@ -35,17 +35,29 @@ import java.util.Random;
 
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.dict.Number2BytesConverter;
 import org.apache.kylin.dict.NumberDictionary;
 import org.apache.kylin.dict.NumberDictionaryBuilder;
 import org.apache.kylin.dict.NumberDictionaryForestBuilder;
 import org.apache.kylin.dict.TrieDictionaryForest;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
  * Created by xiefan on 16-11-2.
  */
 public class NumberDictionaryForestTest {
+    @BeforeClass
+    public static void setUp() {
+        LocalFileMetadataTestCase.staticCreateTestMetadata();
+    }
+
+    @AfterClass
+    public static void after() {
+        LocalFileMetadataTestCase.staticCleanupTestMetadata();
+    }
 
     @Test
     public void testNumberDictionaryForestLong() {

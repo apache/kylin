@@ -40,6 +40,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.engine.mr.steps.filter.UHCDictPathFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +82,7 @@ public class UHCDictionaryJob extends AbstractHadoopJob {
                 Path path = new Path(input.toString() + "/" + tblColRef.getIdentity());
                 if (HadoopUtil.getFileSystem(path).exists(path)) {
                     FileInputFormat.addInputPath(job, path);
+                    FileInputFormat.setInputPathFilter(job, UHCDictPathFilter.class);
                     hasUHCValue = true;
                 }
             }

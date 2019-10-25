@@ -217,10 +217,6 @@ public class JoinedFlatTable {
         sql.append(" CLUSTER BY CAST(").append(colName(clusterCol)).append(" AS STRING);\n");
     }
 
-    private static void appendWhereStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql) {
-        appendWhereStatement(flatDesc, sql, false);
-    }
-
     private static void appendWhereStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, boolean singleLine) {
         final String sep = singleLine ? " " : "\n";
 
@@ -229,8 +225,9 @@ public class JoinedFlatTable {
 
         DataModelDesc model = flatDesc.getDataModel();
         if (StringUtils.isNotEmpty(model.getFilterCondition())) {
-            String quotedFilterCondition = quoteIdentifierInSqlExpr(flatDesc,
-                    model.getFilterCondition());
+            JoinedFormatter formatter = new JoinedFormatter(flatDesc);
+            String fmtFilterCondition = formatter.formatSentence(model.getFilterCondition());
+            String quotedFilterCondition = quoteIdentifierInSqlExpr(flatDesc, fmtFilterCondition);
             whereBuilder.append(" AND (").append(quotedFilterCondition).append(") "); // -> filter condition contains special character may cause bug
         }
         if (flatDesc.getSegment() != null) {
@@ -241,7 +238,7 @@ public class JoinedFlatTable {
                 if (segRange != null && !segRange.isInfinite()) {
                     whereBuilder.append(" AND (");
                     String quotedPartitionCond = quoteIdentifierInSqlExpr(flatDesc,
-                            partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc, flatDesc.getSegment(), segRange));
+                            partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc, flatDesc.getSegment(), segRange, null));
                     whereBuilder.append(quotedPartitionCond);
                     whereBuilder.append(")" + sep);
                 }

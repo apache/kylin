@@ -21,6 +21,8 @@ package org.apache.kylin.stream.coordinator.exception;
 import org.apache.kylin.stream.core.exception.StreamingException;
 
 public class CoordinateException extends StreamingException {
+
+    @SuppressWarnings("unused")
     public CoordinateException() {
         super();
     }
@@ -29,6 +31,7 @@ public class CoordinateException extends StreamingException {
         super(s);
     }
 
+    @SuppressWarnings("unused")
     public CoordinateException(String message, Throwable cause) {
         super(message, cause);
     }

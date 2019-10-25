@@ -18,6 +18,7 @@
 
 package org.apache.kylin.common.persistence;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -28,19 +29,32 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.NavigableSet;
 
 public class ResourceToolTest extends LocalFileMetadataTestCase {
     private static final String dstPath = "../examples/test_metadata2/";
+    private static final File DIR_1 = new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + ResourceStore.EXECUTE_RESOURCE_ROOT);
+    private static final File DIR_2 = new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT);
+    private static final String FILE_1 = ResourceStore.EXECUTE_RESOURCE_ROOT + "/1.json";
+    private static final String FILE_2 = ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/2.json";
+    private static final List<String> EXEC_FILES = Lists.newArrayList(FILE_1, FILE_2);
 
     @Before
     public void setup() throws Exception {
-        this.createTestMetadata();
+        FileUtils.forceMkdir(DIR_1);
+        FileUtils.forceMkdir(DIR_2);
+        FileUtils.write(new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + FILE_1), "");
+        FileUtils.write(new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + FILE_2), "");
         FileUtils.forceMkdir(new File(dstPath));
         FileUtils.cleanDirectory(new File(dstPath));
+        this.createTestMetadata();
     }
 
     @After
     public void after() throws Exception {
+        FileUtils.deleteQuietly(new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + FILE_1));
+        FileUtils.deleteQuietly(new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + FILE_2));
         File directory = new File(dstPath);
         try {
             FileUtils.deleteDirectory(directory);
@@ -63,6 +77,11 @@ public class ResourceToolTest extends LocalFileMetadataTestCase {
         new ResourceTool().copy(KylinConfig.getInstanceFromEnv(), dstConfig, "/");
 
         //After copy, two paths have same metadata
-        Assert.assertEquals(srcStore.listResources("/"), dstStore.listResources("/"));
+        NavigableSet<String> dstFiles = dstStore.listResourcesRecursively("/");
+        NavigableSet<String> srcFiles = srcStore.listResourcesRecursively("/");
+        Assert.assertTrue(srcFiles.containsAll(EXEC_FILES));
+        Assert.assertFalse(dstFiles.containsAll(EXEC_FILES));
+        srcFiles.removeAll(EXEC_FILES);
+        Assert.assertEquals(srcFiles, dstFiles);
     }
 }
