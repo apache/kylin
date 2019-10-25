@@ -32,7 +32,6 @@ public interface MetadataConstants {
     /**
      * The value is an array
      */
-    String TABLE_EXD_CARDINALITY = "cardinality";
 
     String KYLIN_INTERMEDIATE_PREFIX = "kylin_intermediate_";
 
@@ -54,4 +53,7 @@ public interface MetadataConstants {
     String P_DATA_RANGE_END = "dataRangeEnd";
     String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
 
+    public static final String TABLE_EXD_CARDINALITY = "cardinality";
+    public static final String TABLE_EXD_DELIM = "delim";
+    public static final String TABLE_EXD_DEFAULT_VALUE = "unknown";
 }
