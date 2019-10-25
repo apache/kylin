@@ -54,7 +54,6 @@ import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.storage.hbase.HBaseConnection;
@@ -307,14 +306,14 @@ public class StorageCleanupJob extends AbstractApplication {
 
     private void cleanUnusedIntermediateHiveTableInternal() throws Exception {
         final int uuidLength = 36;
-        final String prefix = MetadataConstants.KYLIN_INTERMEDIATE_PREFIX;
+        final String prefix = config.getHiveIntermediateTablePrefix();
         final String uuidPattern = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
         List<String> hiveTableNames = getHiveTables();
         Iterable<String> kylinIntermediates = Iterables.filter(hiveTableNames, new Predicate<String>() {
             @Override
             public boolean apply(@Nullable String input) {
-                return input != null && input.startsWith(MetadataConstants.KYLIN_INTERMEDIATE_PREFIX);
+                return input != null && input.startsWith(prefix);
             }
         });
 

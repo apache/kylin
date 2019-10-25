@@ -28,7 +28,6 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringSplitter;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
@@ -373,14 +372,14 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     }
 
     public String getMaterializedName() {
-        return MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + database.getName() + "_" + name;
+        return config.getHiveIntermediateTablePrefix() + database.getName() + "_" + name;
     }
 
     public String getMaterializedName(String uuid) {
         if (uuid == null) {
             return getMaterializedName();
         } else
-            return MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + database.getName() + "_" + name + "_"
+            return config.getHiveIntermediateTablePrefix() + database.getName() + "_" + name + "_"
                     + uuid.replaceAll("-", "_");
     }
 
