@@ -24,7 +24,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
@@ -66,7 +65,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, Serializab
     public CubeJoinedFlatTableDesc(CubeSegment cubeSegment, boolean includingDerived) {
         this(cubeSegment.getCubeDesc(), cubeSegment, includingDerived);
     }
-    
+
     private CubeJoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment /* can be null */,
             boolean includingDerived) {
         this.cubeDesc = cubeDesc;
@@ -79,9 +78,9 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, Serializab
 
     protected String makeTableName(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         if (cubeSegment == null) {
-            return MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + cubeDesc.getName().toLowerCase(Locale.ROOT);
+            return cubeDesc.getConfig().getHiveIntermediateTablePrefix() + cubeDesc.getName().toLowerCase(Locale.ROOT);
         } else {
-            return MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + cubeDesc.getName().toLowerCase(Locale.ROOT) + "_"
+            return cubeDesc.getConfig().getHiveIntermediateTablePrefix() + cubeDesc.getName().toLowerCase(Locale.ROOT) + "_"
                     + cubeSegment.getUuid().replaceAll("-", "_");
         }
     }

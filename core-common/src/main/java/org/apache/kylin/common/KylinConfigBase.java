@@ -1048,6 +1048,10 @@ public abstract class KylinConfigBase implements Serializable {
         }
     }
 
+    public String getHiveIntermediateTablePrefix() {
+        return getOptional("kylin.source.hive.intermediate-table-prefix", "kylin_intermediate_");
+    }
+
     // ============================================================================
     // SOURCE.KAFKA
     // ============================================================================

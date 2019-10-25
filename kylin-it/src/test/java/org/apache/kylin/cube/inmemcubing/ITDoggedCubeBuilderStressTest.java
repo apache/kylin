@@ -33,7 +33,6 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GridTable;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.AfterClass;
@@ -68,7 +67,7 @@ public class ITDoggedCubeBuilderStressTest extends LocalFileMetadataTestCase {
         CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
 
         cube = cubeManager.getCube("ssb");
-        flatTable = LOCALMETA_TEST_DATA + "/data/" + MetadataConstants.KYLIN_INTERMEDIATE_PREFIX
+        flatTable = LOCALMETA_TEST_DATA + "/data/" + kylinConfig.getHiveIntermediateTablePrefix()
                 + "ssb_19920101000000_19920201000000.csv";
         dictionaryMap = ITInMemCubeBuilderTest.getDictionaryMap(cube, flatTable);
     }

@@ -51,6 +51,4 @@ public interface MetadataConstants {
     public static final String TABLE_EXD_CARDINALITY = "cardinality";
     public static final String TABLE_EXD_DELIM = "delim";
     public static final String TABLE_EXD_DEFAULT_VALUE = "unknown";
-
-    public static final String KYLIN_INTERMEDIATE_PREFIX = "kylin_intermediate_";
 }
