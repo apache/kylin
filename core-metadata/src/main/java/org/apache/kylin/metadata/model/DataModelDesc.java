@@ -342,13 +342,11 @@ public class DataModelDesc extends RootPersistentEntity {
     /**
      * @param isOnlineModel will affect the exposed view of project specific tables
      */
-    public void init(KylinConfig config, Map<String, TableDesc> tables, List<DataModelDesc> otherModels,
-            boolean isOnlineModel) {
-        initInternal(config, tables, otherModels, isOnlineModel);
+    public void init(KylinConfig config, Map<String, TableDesc> tables) {
+        initInternal(config, tables);
     }
 
-    public void initInternal(KylinConfig config, Map<String, TableDesc> tables, List<DataModelDesc> otherModels,
-            boolean isOnlineModel) {
+    public void initInternal(KylinConfig config, Map<String, TableDesc> tables) {
         this.config = config;
 
         initJoinTablesForUpgrade();
@@ -362,7 +360,7 @@ public class DataModelDesc extends RootPersistentEntity {
 
         boolean reinit = validate();
         if (reinit) { // model slightly changed by validate() and must init() again
-            initInternal(config, tables, otherModels, isOnlineModel);
+            initInternal(config, tables);
         }
     }
 
