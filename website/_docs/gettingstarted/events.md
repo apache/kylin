@@ -23,6 +23,7 @@ __Conferences__
 
 __Meetup__
 
+* [Apache Kylin Meetup @Berlin](https://www.meetup.com/Apache-Kylin-Meetup-Berlin/events/264945114) ([Slides](https://www.slideshare.net/ssuser931288/presentations)), Berlin, Germany; 7:00PM - 8:30PM, Thursday, 2019-10-24
 * [Apache Kylin Meetup @Shenzhen](https://www.huodongxing.com/event/3506680147611), China; 12:30PM - 17:00PM, Saturday, 2019-09-07
 * [Apache Kylin Meetup @California](https://www.meetup.com/Apache-Kylin/events/263433976), San Jose, US; 6:30 PM - 8:30 PM, Wednesday, 2019-08-07
 * [Apache Kylin Meetup @Chengdu](https://www.huodongxing.com/event/4489409598500), China; 1:00 PM - 5:00 PM, Saturday, 2019-05-25
