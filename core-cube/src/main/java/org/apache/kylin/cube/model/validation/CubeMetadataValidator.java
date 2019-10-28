@@ -18,6 +18,7 @@
 
 package org.apache.kylin.cube.model.validation;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class CubeMetadataValidator {
     private List<IValidatorRule<CubeDesc>> rules;
 
     public CubeMetadataValidator(KylinConfig config) {
-        rules = Arrays.asList(defaultRules);
+        rules = new ArrayList<>(Arrays.asList(defaultRules));
         for (String ruleName : config.getCubeMetadataExtraValidators()) {
             try {
                 IValidatorRule<CubeDesc> rule = (IValidatorRule<CubeDesc>) Class.forName(ruleName).getConstructor()
