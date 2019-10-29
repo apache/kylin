@@ -63,7 +63,7 @@ public class LivyRestExecutor {
                     livyLog(stateJson, logAppender);
                 }
                 state = stateJson.getString("state");
-                Thread.sleep(10*1000);
+                Thread.sleep(10*1000L);
             }
             if (!LivyStateEnum.success.toString().equalsIgnoreCase(state)) {
                 logAppender.log("livy start execute failed. state is " + state);
