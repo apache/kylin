@@ -293,7 +293,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
 
     private TableDesc createTestTableDesc() {
         TableDesc tableDesc = new TableDesc();
-        tableDesc.setDatabase("TEST_DB");
+        tableDesc.setDatabase("testDb");
         tableDesc.setName("TEST_TABLE");
         tableDesc.setUuid(RandomUtil.randomUUID().toString());
         tableDesc.setLastModified(0);

@@ -21,25 +21,29 @@ package org.apache.kylin.common;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TimeZone;
+import java.util.Locale;
+import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
 import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.JsonUtil;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -884,6 +888,7 @@ public abstract class KylinConfigBase implements Serializable {
         Map<Integer, String> r = Maps.newLinkedHashMap();
         // ref constants in ISourceAware
         r.put(0, "org.apache.kylin.source.hive.HiveSource");
+        r.put(5, "org.apache.kylin.source.spark.SparkSqlSource");
         r.put(1, "org.apache.kylin.source.kafka.KafkaSource");
         r.put(8, "org.apache.kylin.source.jdbc.JdbcSource");
         r.put(16, "org.apache.kylin.source.jdbc.extensible.JdbcSource");
@@ -1084,6 +1089,79 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getJdbcSourceFieldDelimiter() {
         return getOptional("kylin.source.jdbc.field-delimiter", "|");
+    }
+
+    // ============================================================================
+    // SOURCE.SPARKSQL
+    // ============================================================================
+
+    public String getSparkSqlDefaultDatabase() {
+        return getOptional("kylin.source.sparksql.db", "spark_datasource");
+    }
+
+    public String[] getSparkSqlSourceIds() {
+        return getOptional("kylin.source.sparksql.ds-ids", "").split(",");
+    }
+
+    public String getSparkSqlDataSourceClassName(String id) {
+        return getSparkSqlDataSourceConfig(id, "className", true);
+    }
+
+    public List<String> getSparkSqlDataSourcePaths(String id) {
+         String pathsStr = getSparkSqlDataSourceConfig(id, "paths", false);
+         if (StringUtils.isEmpty(pathsStr)) {
+            return Lists.newArrayList();
+         } else {
+            return Lists.newArrayList(pathsStr.split(","));
+         }
+    }
+
+    public String getSparkSqlDataSourceSchema(String id) {
+        return getSparkSqlDataSourceConfig(id, "schema", false);
+    }
+
+    public List<String> getSparkSqlDataSourcePartitionCols(String id) {
+        String colsStr = getSparkSqlDataSourceConfig(id, "partitionColumns", false);
+        if (StringUtils.isEmpty(colsStr)) {
+            return Lists.newArrayList();
+        } else {
+            return Lists.newArrayList(colsStr.split(","));
+        }
+    }
+
+    public String getSparkSqlDataSourceBucketSpec(String id) {
+        return getSparkSqlDataSourceConfig(id, "bucketSpec", false);
+    }
+
+    public Map<String, String> getSparkSqlDatasourceOptions(String id) {
+        String options = getSparkSqlDataSourceConfig(id, "options", false);
+        if (null == options) {
+            return null;
+        } else {
+            try {
+                return JsonUtil.readValueAsMap(options);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public String getSparkSqlDatasourceTableName(String id) {
+        return getSparkSqlDataSourceConfig(id, "tableName", true);
+    }
+
+    private String getSparkSqlDataSourceConfig(String id, String config, boolean necessary) {
+        String key = "kylin.source.sparksql." + id + "." + config;
+        String value = getOptional(key, null);
+        if (StringUtils.isEmpty(value)) {
+            if (necessary) {
+                throw new IllegalArgumentException("Configuration " + key + " not found");
+            } else {
+                return value;
+            }
+        } else {
+            return value;
+        }
     }
 
     // ============================================================================

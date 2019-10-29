@@ -253,10 +253,21 @@ public class HiveInputBase {
             final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
             CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
 
-            if (kylinConfig.isLivyEnabled() && cubeInstance.getEngineType() == IEngineAware.ID_SPARK) {
-                jobFlow.addTask(createFlatHiveTableByLivyStep(hiveInitStatements, jobWorkingDir, cubeName, flatDesc));
+            String selectDataSql = JoinedFlatTable.generateSelectDataStatement(flatDesc);
+            if (cubeInstance.getEngineType() == IEngineAware.ID_SPARK) {
+                CreateSparkDataSourceTableStep createDataSourceTableStep =
+                        new CreateSparkDataSourceTableStep("default", selectDataSql);
+                jobFlow.addTask(createDataSourceTableStep);
+
+                if (kylinConfig.isLivyEnabled()) {
+                    jobFlow.addTask(createFlatHiveTableByLivyStep(hiveInitStatements,
+                            jobWorkingDir, cubeName, flatDesc)
+                    );
+                }
             } else {
-                jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName, flatDesc));
+                jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir,
+                        cubeName, flatDesc)
+                );
             }
             //jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName, flatDesc));
         }

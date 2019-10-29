@@ -115,7 +115,8 @@ public class SourceManager {
             return ClassUtil.forName(sourceClazz, ISource.class).getDeclaredConstructor(KylinConfig.class)
                     .newInstance(aware.getConfig());
         } catch (Throwable e) {
-            logger.error("Failed to create source: SourceType={}", aware.getSourceType(), e);
+            logger.error("Failed to create source: SourceType={}, sourceClazz={}",
+                    aware.getSourceType(), sourceClazz, e);
             return null;
         }
     }
