@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -35,7 +36,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.stream.core.exception.IllegalStorageException;
 import org.apache.kylin.stream.core.metrics.StreamingMetrics;
 import org.apache.kylin.stream.core.model.StreamingMessage;
@@ -63,7 +66,7 @@ public class ColumnarSegmentStore implements IStreamingSegmentStore {
     private static ExecutorService fragmentMergeExecutor;
     {
         fragmentMergeExecutor = new ThreadPoolExecutor(0, 10, 60L, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("fragments-merge"));
+                new LinkedBlockingQueue<>(), new NamedThreadFactory("fragments-merge"));
     }
 
     private volatile SegmentMemoryStore activeMemoryStore;
@@ -91,6 +94,8 @@ public class ColumnarSegmentStore implements IStreamingSegmentStore {
 
     private List<DataSegmentFragment> fragments = Lists.newCopyOnWriteArrayList();
     protected int latestCheckpointFragment = 0;
+
+    private Map<TblColRef, Dictionary<String>> dictionaryMap;
 
     public ColumnarSegmentStore(String baseStorePath, CubeInstance cubeInstance, String segmentName) {
         this.maxRowsInMemory = cubeInstance.getConfig().getStreamingIndexMaxRows();
@@ -139,6 +144,12 @@ public class ColumnarSegmentStore implements IStreamingSegmentStore {
     }
 
     @Override
+    public void addExternalDict(Map<TblColRef, Dictionary<String>> dictMap) {
+        this.dictionaryMap = dictMap;
+        this.activeMemoryStore.setDictionaryMap(dictMap);
+    }
+
+    @Override
     public File getStorePath() {
         return dataSegmentFolder;
     }
@@ -163,6 +174,7 @@ public class ColumnarSegmentStore implements IStreamingSegmentStore {
             newFragment = createNewFragment();
             persistingMemoryStore = activeMemoryStore;
             activeMemoryStore = new SegmentMemoryStore(parsedStreamingCubeInfo, segmentName);
+            activeMemoryStore.setDictionaryMap(dictionaryMap);
         } finally {
             persistWriteLock.unlock();
         }

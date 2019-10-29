@@ -25,4 +25,8 @@
         <name>hbase.zookeeper.property.dataDir</name>
         <value>/data/zookeeper</value>
     </property>
+    <property>  
+        <name>hbase.master.info.port</name>  
+        <value>60010</value>  
+    </property>
 </configuration>

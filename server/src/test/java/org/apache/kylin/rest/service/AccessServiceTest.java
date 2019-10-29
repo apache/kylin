@@ -47,6 +47,9 @@ import org.springframework.security.acls.model.Permission;
 import org.springframework.security.acls.model.Sid;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  */
@@ -182,5 +185,33 @@ public class AccessServiceTest extends ServiceTestBase {
             Sid sid = accessService.getSid("USER" + i, true);
             accessService.grant(ae, AclPermission.OPERATION, sid);
         }
+    }
+
+    @Test
+    public void testCaseInsensitiveProjectPermission() {
+        List<ProjectInstance> projects = projectService.listProjects(10000, 0);
+        assertTrue(projects.size() > 0);
+        ProjectInstance project = projects.get(0);
+        PrincipalSid sid = new PrincipalSid("ANALYST");
+        RootPersistentEntity ae = accessService.getAclEntity(PROJECT_INSTANCE, project.getUuid());
+        accessService.grant(ae, AclPermission.READ, sid);
+        Assert.assertEquals(1, accessService.getAcl(ae).getEntries().size());
+
+        Authentication admin = SecurityContextHolder.getContext().getAuthentication();
+        // Upper case username
+        Authentication analystAuth = new TestingAuthenticationToken("ANALYST", "ANALYST", "ROLE_ANALYST");
+        SecurityContextHolder.getContext().setAuthentication(analystAuth);
+        Assert.assertEquals("ANALYST",  SecurityContextHolder.getContext().getAuthentication().getName());
+        Assert.assertEquals("READ", accessService.getUserPermissionInPrj(project.getName()));
+
+        // lower case username
+        analystAuth = new TestingAuthenticationToken("analyst", "ANALYST", "ROLE_ANALYST");
+        SecurityContextHolder.getContext().setAuthentication(analystAuth);
+        Assert.assertEquals("analyst",  SecurityContextHolder.getContext().getAuthentication().getName());
+        Assert.assertEquals("READ", accessService.getUserPermissionInPrj(project.getName()));
+
+        SecurityContextHolder.getContext().setAuthentication(admin);
+        accessService.revokeProjectPermission("ANALYST", MetadataConstants.TYPE_USER);
+        Assert.assertEquals(0, accessService.getAcl(ae).getEntries().size());
     }
 }

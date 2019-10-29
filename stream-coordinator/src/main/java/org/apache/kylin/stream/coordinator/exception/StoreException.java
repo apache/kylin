@@ -22,6 +22,7 @@ public class StoreException extends RuntimeException {
 
     private static final long serialVersionUID = -9149609663117728575L;
 
+    @SuppressWarnings("unused")
     public StoreException() {
         super();
     }
@@ -30,6 +31,7 @@ public class StoreException extends RuntimeException {
         super(t);
     }
 
+    @SuppressWarnings("unused")
     public StoreException(String message, Throwable t) {
         super(message, t);
     }

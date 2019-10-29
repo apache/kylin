@@ -238,6 +238,25 @@ table .radio {
 
 .cube-detail {
   background-color: white;
+  .cube-segment-list {
+    margin-bottom:10px;
+    padding: 4px 8px;
+    border:solid 1px #ddd;
+    ul {
+      li {
+        font-weight: 500;
+        span {
+          font-weight: normal;
+        }
+      }
+    }
+    &.cube-broken-segment {
+      color:#808080;
+      opacity: 0.6;
+      border-color: #808080;
+      border-style: dashed;
+    }
+  }
 }
 
 .model-detail {

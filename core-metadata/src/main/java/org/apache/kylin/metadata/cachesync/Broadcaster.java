@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -87,6 +88,7 @@ public class Broadcaster implements Closeable {
     private BlockingDeque<BroadcastEvent> broadcastEvents = new LinkedBlockingDeque<>();
     private Map<String, List<Listener>> listenerMap = Maps.newConcurrentMap();
     private AtomicLong counter = new AtomicLong(); // a counter for testing purpose
+    private final BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>();
     
     private Broadcaster(final KylinConfig config) {
         this.config = config;
@@ -102,7 +104,7 @@ public class Broadcaster implements Closeable {
         int corePoolSize = (nodes == null || nodes.length < 1)? 1 : nodes.length;
         int maximumPoolSize = (nodes == null || nodes.length < 1)? 10 : nodes.length * 2;
         this.announceThreadPool = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, 60L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<Runnable>(), new DaemonThreadFactory());
+            workQueue, new DaemonThreadFactory());
 
         announceMainLoop.execute(new Runnable() {
             @Override
@@ -156,7 +158,7 @@ public class Broadcaster implements Closeable {
 
     @Override
     public void close() {
-        stopAnnounce();
+        new Thread(this::stopAnnounce).start();
     }
 
     private SyncErrorHandler getSyncErrorHandler(KylinConfig config) {
@@ -172,7 +174,20 @@ public class Broadcaster implements Closeable {
     }
     
     public void stopAnnounce() {
+        synchronized (workQueue) {
+            while (!workQueue.isEmpty() || !broadcastEvents.isEmpty()){
+                try {
+                    workQueue.wait(100);
+                } catch (InterruptedException e) {
+                    logger.warn("InterruptedException is caught when waiting workQueue empty.", e);
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+
+        logger.info("AnnounceThreadPool shutdown.");
         announceThreadPool.shutdownNow();
+        logger.info("AnnounceMainLoop shutdown.");
         announceMainLoop.shutdownNow();
     }
 

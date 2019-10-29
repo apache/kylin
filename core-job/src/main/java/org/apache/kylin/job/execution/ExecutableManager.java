@@ -465,6 +465,9 @@ public class ExecutableManager {
                 jobOutput.setInfo(info);
             }
             if (output != null) {
+                if (output.length() > config.getJobOutputMaxSize()) {
+                    output = output.substring(0, config.getJobOutputMaxSize());
+                }
                 jobOutput.setContent(output);
             }
             executableDao.updateJobOutput(jobOutput);

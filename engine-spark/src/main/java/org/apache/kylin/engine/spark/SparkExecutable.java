@@ -374,7 +374,13 @@ public class SparkExecutable extends AbstractExecutable {
                 extra.put(ExecutableConstants.SPARK_JOB_ID, "");
                 getManager().addJobInfo(getId(), extra);
 
-                return ExecuteResult.createFailed(new SparkException(result != null ? result.getSecond() : ""));
+                // when job failure, truncate the result
+                String resultLog = result != null ? result.getSecond() : "";
+                if (resultLog.length() > config.getSparkOutputMaxSize()) {
+                    resultLog = resultLog.substring(0, config.getSparkOutputMaxSize());
+                }
+
+                return ExecuteResult.createFailed(new SparkException(resultLog));
             } catch (Exception e) {
                 logger.error("Error run spark job:", e);
                 return ExecuteResult.createError(e);

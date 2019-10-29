@@ -869,7 +869,6 @@ public class CubeManager implements IRealizationProvider {
         }
 
         private void checkReadyForMerge(Segments<CubeSegment> mergingSegments) {
-
             // check if the segments to be merged are continuous
             for (int i = 0; i < mergingSegments.size() - 1; i++) {
                 if (!mergingSegments.get(i).getSegRange().connects(mergingSegments.get(i + 1).getSegRange()))
@@ -882,6 +881,15 @@ public class CubeManager implements IRealizationProvider {
             for (CubeSegment seg : mergingSegments) {
                 if (seg.getSizeKB() == 0 && seg.getInputRecords() == 0) {
                     emptySegment.add(seg.getName());
+                }
+            }
+            long maxSegMergeSpan = KylinConfig.getInstanceFromEnv().getMaxSegmentMergeSpan();
+
+            for (CubeSegment seg : mergingSegments) {
+                if (maxSegMergeSpan > 0 && seg.getTSRange().duration() > maxSegMergeSpan) {
+                    throw new IllegalArgumentException(
+                        "Segment range is larger than the max segement merge span, couldn't merge unless 'forceMergeEmptySegment' set to true: "
+                            + seg);
                 }
             }
 
@@ -958,7 +966,7 @@ public class CubeManager implements IRealizationProvider {
                 throw new IllegalStateException(String.format(Locale.ROOT,
                         "For cube %s, segment %s missing LastBuildJobID", cubeCopy.toString(), newSegCopy.toString()));
 
-            if (isReady(newSegCopy) == true) {
+            if (isReady(newSegCopy)) {
                 logger.warn("For cube {}, segment {} state should be NEW but is READY", cubeCopy, newSegCopy);
             }
 
@@ -1235,31 +1243,35 @@ public class CubeManager implements IRealizationProvider {
     public CubeInstance findLatestSnapshot(List<RealizationEntry> realizationEntries, String lookupTableName,
             CubeInstance cubeInstance) {
         CubeInstance cube = null;
-        if (!realizationEntries.isEmpty()) {
-            long maxBuildTime = Long.MIN_VALUE;
-            RealizationRegistry registry = RealizationRegistry.getInstance(config);
-            for (RealizationEntry entry : realizationEntries) {
-                IRealization realization = registry.getRealization(entry.getType(), entry.getRealization());
-                if (realization != null && realization.isReady() && realization instanceof CubeInstance) {
-                    CubeInstance current = (CubeInstance) realization;
-                    if (checkMeetSnapshotTable(current, lookupTableName)) {
-                        CubeSegment segment = current.getLatestReadySegment();
-                        if (segment != null) {
-                            long latestBuildTime = segment.getLastBuildTime();
-                            if (latestBuildTime > maxBuildTime) {
-                                maxBuildTime = latestBuildTime;
-                                cube = current;
+        try {
+            if (!realizationEntries.isEmpty()) {
+                long maxBuildTime = Long.MIN_VALUE;
+                RealizationRegistry registry = RealizationRegistry.getInstance(config);
+                for (RealizationEntry entry : realizationEntries) {
+                    IRealization realization = registry.getRealization(entry.getType(), entry.getRealization());
+                    if (realization != null && realization.isReady() && realization instanceof CubeInstance) {
+                        CubeInstance current = (CubeInstance) realization;
+                        if (checkMeetSnapshotTable(current, lookupTableName)) {
+                            CubeSegment segment = current.getLatestReadySegment();
+                            if (segment != null) {
+                                long latestBuildTime = segment.getLastBuildTime();
+                                if (latestBuildTime > maxBuildTime) {
+                                    maxBuildTime = latestBuildTime;
+                                    cube = current;
+                                }
                             }
                         }
                     }
                 }
             }
+        } catch (Exception e) {
+            logger.info("Unexpected error.", e);
         }
         if (!cubeInstance.equals(cube)) {
             logger.debug("Picked cube {} over {} as it provides a more recent snapshot of the lookup table {}", cube,
                     cubeInstance, lookupTableName);
         }
-        return cube;
+        return cube == null ? cubeInstance : cube;
     }
 
     /**
@@ -1274,7 +1286,7 @@ public class CubeManager implements IRealizationProvider {
             lookupTbl = strArr[strArr.length - 1];
         }
         for (DimensionDesc dimensionDesc : toCheck.getDescriptor().getDimensions()) {
-            if (dimensionDesc.getTable().equalsIgnoreCase(lookupTbl)) {
+            if (dimensionDesc.getTableRef().getTableName().equalsIgnoreCase(lookupTbl)) {
                 checkRes = true;
                 break;
             }

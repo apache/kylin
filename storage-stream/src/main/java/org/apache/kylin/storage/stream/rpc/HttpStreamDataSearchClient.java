@@ -128,8 +128,7 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
     public Iterator<ITuple> search(DataRequest dataRequest, CubeInstance cube, StreamingTupleConverter tupleConverter,
             RecordsSerializer recordsSerializer, ReplicaSet rs, TupleInfo tupleInfo) throws Exception {
         List<Node> receivers = Lists.newArrayList(rs.getNodes());
-        Node leader = rs.getLeader();
-        Node queryReceiver = findBestReceiverServeQuery(receivers, leader, cube.getName());
+        Node queryReceiver = findBestReceiverServeQuery(receivers, cube.getName());
         IOException exception;
         try {
             return doSearch(dataRequest, cube, tupleConverter, recordsSerializer, queryReceiver, tupleInfo);
@@ -156,7 +155,7 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
         throw exception;
     }
 
-    private Node findBestReceiverServeQuery(List<Node> receivers, Node lead, String cubeName) {
+    private Node findBestReceiverServeQuery(List<Node> receivers, String cubeName) {
         // stick to one receiver according to cube name
         int receiversSize = receivers.size();
         int receiverNo = Math.abs(cubeName.hashCode()) % receiversSize;

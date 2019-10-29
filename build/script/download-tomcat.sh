@@ -75,3 +75,12 @@ export version
 cp tomcat-ext/target/kylin-tomcat-ext-${version}.jar build/tomcat/lib/kylin-tomcat-ext-${version}.jar
 chmod 644 build/tomcat/lib/kylin-tomcat-ext-${version}.jar
 
+# add ROOT application
+mkdir -p build/tomcat/webapps/ROOT
+cat > build/tomcat/webapps/ROOT/index.html <<EOL
+<html>
+  <head>
+    <meta http-equiv="refresh" content="1;url=kylin">
+  </head>
+</html>
+EOL

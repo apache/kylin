@@ -19,6 +19,7 @@
 package org.apache.kylin.query.relnode.visitor;
 
 import com.google.common.collect.Lists;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
@@ -26,9 +27,15 @@ import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TupleFilterVisitorTest {
+public class TupleFilterVisitorTest extends LocalFileMetadataTestCase {
+
+    @BeforeClass
+    public static void setupResource() {
+        staticCreateTestMetadata();
+    }
 
     @Test
     public void testMergeToInClause1() {

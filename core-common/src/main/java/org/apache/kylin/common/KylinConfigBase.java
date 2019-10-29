@@ -649,6 +649,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.cube.max-building-segments", "10"));
     }
 
+    public long getMaxSegmentMergeSpan() {
+        return Long.parseLong(getOptional("kylin.cube.max-segment-merge.span", "-1"));
+    }
+
     public boolean allowCubeAppearInMultipleProjects() {
         return Boolean.parseBoolean(getOptional("kylin.cube.allow-appear-in-multiple-projects", FALSE));
     }
@@ -659,6 +663,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isAutoMergeEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.cube.is-automerge-enabled", TRUE));
+    }
+
+    public String[] getCubeMetadataExtraValidators() {
+        return getOptionalStringArray("kylin.cube.metadata-extra-validators", new String[0]);
     }
 
     // ============================================================================
@@ -858,6 +866,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getCubeInMemBuilderClass() {
         return getOptional("kylin.job.cube-inmem-builder-class", "org.apache.kylin.cube.inmemcubing.DoggedCubeBuilder");
+    }
+
+    public int getJobOutputMaxSize() {
+        return Integer.parseInt(getOptional("kylin.job.execute-output.max-size", "10485760"));
     }
 
     // ============================================================================
@@ -1440,6 +1452,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isSparkCardinalityEnabled(){
         return Boolean.parseBoolean(getOptional("kylin.engine.spark-cardinality", "false"));
+    }
+
+    public int getSparkOutputMaxSize() {
+        return Integer.valueOf(getOptional("kylin.engine.spark.output.max-size", "10485760"));
     }
 
     // ============================================================================
@@ -2204,6 +2220,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.stream.stand-alone.mode", "false"));
     }
 
+    public boolean isNewCoordinatorEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.new.coordinator-enabled", "true"));
+    }
+
     public String getLocalStorageImpl() {
         return getOptional("kylin.stream.settled.storage", null);
     }
@@ -2212,8 +2232,22 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.stream.metrics.option", "");
     }
 
+    /**
+     * whether to print encode integer value for count distinct string value, only for debug/test purpose
+     */
+    public boolean isPrintRealtimeDictEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.print-realtime-dict-enabled", "false"));
+    }
+
     public long getStreamMetricsInterval() {
         return Long.parseLong(getOptional("kylin.stream.metrics.interval", "5"));
+    }
+
+    /**
+     * whether realtime query should add timezone offset by kylin's web-timezone, please refer to KYLIN-4010 for detail
+     */
+    public boolean isStreamingAutoJustTimezone() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.auto.just.by.timezone", "false"));
     }
 
     // ============================================================================
@@ -2239,4 +2273,5 @@ public abstract class KylinConfigBase implements Serializable {
     public int getStaleJobThresholdInDays() {
         return Integer.parseInt(getOptional("kylin.tool.health-check.stale-job-threshold-days", "30"));
     }
+
 }

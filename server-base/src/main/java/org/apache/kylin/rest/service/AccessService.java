@@ -21,9 +21,9 @@ package org.apache.kylin.rest.service;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -422,7 +422,7 @@ public class AccessService {
     }
 
     private Map<String, Integer> getProjectPermission(String project) {
-        Map<String, Integer> SidWithPermission = new HashMap<>();
+        Map<String, Integer> SidWithPermission = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
         String uuid = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(project).getUuid();
         AclEntity ae = getAclEntity(AclEntityType.PROJECT_INSTANCE, uuid);

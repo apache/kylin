@@ -17,7 +17,18 @@
  */
 package org.apache.kylin.source.jdbc;
 
-import com.google.common.collect.Maps;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.SourceDialect;
@@ -44,17 +55,7 @@ import org.apache.kylin.source.jdbc.metadata.JdbcMetadataFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import com.google.common.collect.Maps;
 
 public class JdbcHiveInputBase extends HiveInputBase {
     private static final Logger logger = LoggerFactory.getLogger(JdbcHiveInputBase.class);
@@ -222,11 +223,13 @@ public class JdbcHiveInputBase extends HiveInputBase {
 
             String splitTableAlias;
             String splitColumn;
+            String quoteFullNamedColumn; // `table.column`
             String splitDatabase;
             TblColRef splitColRef = determineSplitColumn();
             splitTableAlias = splitColRef.getTableAlias();
 
             splitColumn = getColumnIdentityQuoted(splitColRef, jdbcMetadataDialect, metaMap, true);
+            quoteFullNamedColumn = quoteIdentifier(partCol, jdbcMetadataDialect.getDialect());
             splitDatabase = splitColRef.getColumnDesc().getTable().getDatabase();
 
             String selectSql = generateSelectDataStatementRDBMS(flatDesc, true, new String[] { partCol },
@@ -244,8 +247,8 @@ public class JdbcHiveInputBase extends HiveInputBase {
             String filedDelimiter = config.getJdbcSourceFieldDelimiter();
             int mapperNum = config.getSqoopMapperNum();
 
-            String bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM %s.%s ", splitColumn, splitColumn,
-                    getSchemaQuoted(metaMap, splitDatabase, jdbcMetadataDialect, true),
+            String bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM %s.%s ", quoteFullNamedColumn,
+                    quoteFullNamedColumn, getSchemaQuoted(metaMap, splitDatabase, jdbcMetadataDialect, true),
                     getTableIdentityQuoted(splitColRef.getTableRef(), metaMap, jdbcMetadataDialect, true));
             if (partitionDesc.isPartitioned()) {
                 SegmentRange segRange = flatDesc.getSegRange();
@@ -270,7 +273,7 @@ public class JdbcHiveInputBase extends HiveInputBase {
                     + "--connect \"%s\" --driver %s --username %s --password \"%s\" --query \"%s AND \\$CONDITIONS\" "
                     + "--target-dir %s/%s --split-by %s --boundary-query \"%s\" --null-string '%s' "
                     + "--null-non-string '%s' --fields-terminated-by '%s' --num-mappers %d", sqoopHome, connectionUrl,
-                    driverClass, jdbcUser, jdbcPass, selectSql, jobWorkingDir, hiveTable, splitColumn, bquery,
+                    driverClass, jdbcUser, jdbcPass, selectSql, jobWorkingDir, hiveTable, partCol, bquery,
                     sqoopNullString, sqoopNullNonString, filedDelimiter, mapperNum);
             logger.debug("sqoop cmd : {}", cmd);
             CmdStep step = new CmdStep();

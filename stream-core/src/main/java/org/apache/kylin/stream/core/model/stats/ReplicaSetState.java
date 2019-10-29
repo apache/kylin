@@ -50,10 +50,12 @@ public class ReplicaSetState {
         this.rsID = rsID;
     }
 
+    @SuppressWarnings("unused")
     public List<ReceiverState> getReceiverStates() {
         return receiverStates;
     }
 
+    @SuppressWarnings("unused")
     public void setReceiverStates(List<ReceiverState> receiverStates) {
         this.receiverStates = receiverStates;
     }
@@ -81,6 +83,7 @@ public class ReplicaSetState {
         receiverStates.add(receiverState);
     }
 
+    @SuppressWarnings("unused")
     public ReceiverState getReceiverState(Node receiver) {
         for (ReceiverState receiverState : receiverStates) {
             if (receiverState.getReceiver().equals(receiver)) {
