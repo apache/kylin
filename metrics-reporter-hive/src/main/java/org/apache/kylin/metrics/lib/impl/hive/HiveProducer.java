@@ -35,6 +35,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.Driver;
+import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metrics.lib.ActiveReservoirReporter;
@@ -174,8 +175,15 @@ public class HiveProducer {
             hql.append(")");
             logger.debug("create partition by {}.", hql);
             Driver driver = new Driver(hiveConf);
-            SessionState.start(new CliSessionState(hiveConf));
-            driver.run(hql.toString());
+            CliSessionState session = new CliSessionState(hiveConf);
+            SessionState.start(session);
+            CommandProcessorResponse res = driver.run(hql.toString());
+            if (res.getResponseCode() != 0) {
+                logger.warn("Fail to add partition. HQL: {}; Cause by: {}",
+                        hql.toString(),
+                        res.toString());
+            }
+            session.close();
             driver.close();
         }
 
