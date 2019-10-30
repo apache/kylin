@@ -104,7 +104,8 @@ then
     echo "add to a crontab job"
 
     CRONTAB_FILE=$KYLIN_HOME/crontabJob
-	cat <<-EOF > ${CRONTAB_FILE}
+    	crontab -l >> ${CRONTAB_FILE}
+	cat <<-EOF >> ${CRONTAB_FILE}
     0 */2 * * * sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_1} 3600000 1200000
     20 */2 * * * sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_2} 3600000 1200000
     40 */4 * * * sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_3} 3600000 1200000
