@@ -71,7 +71,7 @@ public abstract class FetcherRunner implements Runnable {
     }
     
     protected void jobStateCount(String id) {
-        final Output outputDigest = getExecutableManger().getOutputDigest(id);
+        final Output outputDigest = getExecutableManager().getOutputDigest(id);
         // logger.debug("Job id:" + id + " not runnable");
         if (outputDigest.getState() == ExecutableState.SUCCEED) {
             nSUCCEED++;
@@ -83,7 +83,7 @@ public abstract class FetcherRunner implements Runnable {
             nStopped++;
         } else {
             if (fetchFailed) {
-                getExecutableManger().forceKillJob(id);
+                getExecutableManager().forceKillJob(id);
                 nError++;
             } else {
                 nOthers++;
@@ -96,7 +96,7 @@ public abstract class FetcherRunner implements Runnable {
         this.fetchFailed = fetchFailed;
     }
 
-    ExecutableManager getExecutableManger() {
+    ExecutableManager getExecutableManager() {
         return ExecutableManager.getInstance(jobEngineConfig.getConfig());
     }
 }
