@@ -280,7 +280,7 @@ title: OLAP engine for big data
             <a class="sponsor" href="http://www.xiaomi.com/"> 
                 <img src="/images/logo/xiaomi.jpg">
             </a>
-            <a class="sponsor" href="https://wmsj.qq.com/">
+            <a class="sponsor" href="http://www.wanmei.com/">
                 <img src="/images/logo/wanmei.jpg">
             </a>
             <a class="sponsor" href="http://www.powerbi.com.cn/">
