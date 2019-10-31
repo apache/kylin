@@ -23,11 +23,8 @@ import org.apache.kylin.stream.core.model.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.net.UnknownHostException;
-import java.util.Enumeration;
 import java.util.Map;
 
 public class NodeUtil {
@@ -50,7 +47,7 @@ public class NodeUtil {
                 result = Node.from(configNodeStr);
             } catch (IllegalArgumentException e) {
                 //Configuration format：port
-                result = new Node(getLocalHostIp(), Integer.parseInt(configNodeStr));
+                result = new Node(getLocalhostName(), Integer.parseInt(configNodeStr));
             }
         } else {
             result = new Node(getLocalhostName(), defaultPort);
@@ -70,30 +67,6 @@ public class NodeUtil {
             host = "UNKNOWN";
         }
         return host;
-    }
-
-    private static String getLocalHostIp() {
-        String ipStr = null;
-        try {
-            Enumeration<NetworkInterface> allNetInterfaces = NetworkInterface.getNetworkInterfaces();
-            while (allNetInterfaces.hasMoreElements()) {
-                NetworkInterface netInterface = (NetworkInterface) allNetInterfaces.nextElement();
-                Enumeration<InetAddress> addresses = netInterface.getInetAddresses();
-                while (addresses.hasMoreElements()) {
-                    InetAddress ip = (InetAddress) addresses.nextElement();
-                    if (ip != null && ip instanceof Inet4Address && !ip.isLoopbackAddress()
-                            && ip.getHostAddress().indexOf(":") == -1) {
-                        logger.info("local ip address {} ", ip.getHostAddress());
-                        ipStr = ip.getHostAddress();
-                    }
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Fail to get local ip address", e);
-            ipStr = "UNKNOWN";
-        }
-
-        return ipStr;
     }
 
 }
