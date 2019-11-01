@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
 
 ## ${dir} assigned to $KYLIN_HOME/bin in header.sh
 source ${dir}/find-kafka-dependency.sh
