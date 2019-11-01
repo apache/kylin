@@ -18,7 +18,7 @@
 #
 
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
 
 function printHelp {
     echo "usage: system-cube.sh setup"
