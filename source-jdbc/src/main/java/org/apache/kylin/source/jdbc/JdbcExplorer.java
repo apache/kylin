@@ -50,21 +50,24 @@ import org.slf4j.LoggerFactory;
 public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeployer {
     private static final Logger logger = LoggerFactory.getLogger(JdbcExplorer.class);
 
-    private final KylinConfig config;
     private final SourceDialect dialect;
     private final DBConnConf dbconf;
     private final IJdbcMetadata jdbcMetadataDialect;
 
+    @Deprecated
     public JdbcExplorer() {
-        config = KylinConfig.getInstanceFromEnv();
-        String connectionUrl = config.getJdbcSourceConnectionUrl();
-        String driverClass = config.getJdbcSourceDriver();
-        String jdbcUser = config.getJdbcSourceUser();
-        String jdbcPass = config.getJdbcSourcePass();
-        this.dbconf = new DBConnConf(driverClass, connectionUrl, jdbcUser, jdbcPass);
-        this.dialect = SourceDialect.getDialect(config.getJdbcSourceDialect());
-        this.jdbcMetadataDialect = JdbcMetadataFactory.getJdbcMetadata(dialect, dbconf);
+        this(KylinConfig.getInstanceFromEnv());
     }
+
+    public JdbcExplorer(KylinConfig config) {
+         String connectionUrl = config.getJdbcSourceConnectionUrl();
+         String driverClass = config.getJdbcSourceDriver();
+         String jdbcUser = config.getJdbcSourceUser();
+         String jdbcPass = config.getJdbcSourcePass();
+         this.dbconf = new DBConnConf(driverClass, connectionUrl, jdbcUser, jdbcPass);
+         this.dialect = SourceDialect.getDialect(config.getJdbcSourceDialect());
+         this.jdbcMetadataDialect = JdbcMetadataFactory.getJdbcMetadata(dialect, dbconf);
+     }
 
     @Override
     public List<String> listDatabases() throws SQLException {
