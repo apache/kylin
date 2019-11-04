@@ -19,6 +19,15 @@
 package org.apache.kylin.job;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,5 +67,25 @@ public class JoinedFormatterTest extends LocalFileMetadataTestCase {
         String sql = "select * from table where date_str>=${start_date} and date_str<${end_date}";
         String fmtSql = formatter.formatSentence(sql);
         assertEquals(expected, fmtSql);
+    }
+
+    @Test
+    // For JIRA: KYLIN-4229
+    public void testDateFormatWithFullBuildAndFilter() {
+        this.createTestMetadata();
+        CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("fifty_dim_full_build_cube");
+        CubeSegment mockSeg = new CubeSegment();
+
+        mockSeg.setCubeInstance(cube);
+        mockSeg.setName("FULL_BUILD");
+        mockSeg.setUuid(RandomUtil.randomUUID().toString());
+        mockSeg.setStorageLocationIdentifier(RandomUtil.randomUUID().toString());
+        mockSeg.setStatus(SegmentStatusEnum.READY);
+        mockSeg.setTSRange(new SegmentRange.TSRange(0L, Long.MAX_VALUE));
+        IJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(mockSeg);
+        DataModelDesc model = flatTableDesc.getDataModel();
+        model.setFilterCondition("A > 1");
+
+        JoinedFlatTable.generateSelectDataStatement(flatTableDesc);
     }
 }
