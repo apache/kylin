@@ -337,6 +337,7 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 - `kylin.source.hive.database-for-flat-table`：指定存放 Hive 中间表的 Hive 数据库名字，默认值为 default，请确保启动 Kylin 实例的用户有操作该数据库的权限
 - `kylin.source.hive.flat-table-storage-format`：指定 Hive 中间表的存储格式，默认值为 SEQUENCEFILE
 - `kylin.source.hive.flat-table-field-delimiter`：指定 Hive 中间表的分隔符，默认值为  \u001F 
+- `kylin.source.hive.intermediate-table-prefix`：指定 Hive 中间表的表名前缀，默认值为  kylin\_intermediate\_ 
 - `kylin.source.hive.redistribute-flat-table`：是否重分配 Hive 平表，默认值为 TRUE
 - `kylin.source.hive.redistribute-column-count`：重分配列的数量，默认值为 3
 - `kylin.source.hive.table-dir-create-first`：默认值为 FALSE
