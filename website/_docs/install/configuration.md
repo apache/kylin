@@ -337,6 +337,7 @@ Both Kylin and HBase use compression when writing to disk, so Kylin will multipl
 - `kylin.source.hive.database-for-flat-table`: specifies the name of the Hive database that stores the Hive intermediate table. The default is *default*. Make sure that the user who started the Kylin instance has permission to operate the database.
 - `kylin.source.hive.flat-table-storage-format`: specifies the storage format of the Hive intermediate table. The default value is *SEQUENCEFILE*
 - `kylin.source.hive.flat-table-field-delimiter`: specifies the delimiter of the Hive intermediate table. The default value is *\u001F*
+- - `kylin.source.hive.intermediate-table-prefix`: specifies the table name prefix of the Hive intermediate table. The default value is *kylin\_intermediate\_*
 - `kylin.source.hive.redistribute-flat-table`: whether to redistribute the Hive flat table. The default value is *TRUE*
 - `kylin.source.hive.redistribute-column-count`: number of redistributed columns. The default value is *3*
 - `kylin.source.hive.table-dir-create-first`: the default value is *FALSE*
