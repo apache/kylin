@@ -66,7 +66,7 @@ public class JoinedFormatter {
         String startDate = "";
         String endDate = "";
         String partitionColumnDateFormat = partDesc.getPartitionDateFormat();
-        if (StringUtils.isBlank(partitionColumnDateFormat)) {
+        if (partDesc.getPartitionTimeColumn() == null && partDesc.getPartitionDateColumn() == null) {
             startDate = String.valueOf(startInclusive);
             endDate = String.valueOf(endExclusive);
         } else {

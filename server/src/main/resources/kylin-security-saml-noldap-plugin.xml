@@ -1,0 +1,305 @@
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:scr="http://www.springframework.org/schema/security"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+	http://www.springframework.org/schema/security
+	http://www.springframework.org/schema/security/spring-security-4.2.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- It is nearly the same with the SAML settings in kylinSecurity.xml, except that:
+           1. LDAP authorization components have been removed; 
+           2. SAML filter intercept `/saml/**` only;
+         So that unauthenticated user will not be redirected to SAML IdP. Instead, the `/login` page will show 
+         and user can manually jump to SAML IdP by clicking "SAML Login" button. 
+    -->
+    <beans profile="authn-saml">
+        <!-- Enable auto-wiring -->
+        <context:annotation-config/>
+
+        <!-- Scan for auto-wiring classes in spring saml packages -->
+        <context:component-scan base-package="org.springframework.security.saml"/>
+
+        <!-- Unsecured pages -->
+        <scr:http security="none" pattern="/image/**"/>
+        <scr:http security="none" pattern="/css/**"/>
+        <scr:http security="none" pattern="/less/**"/>
+        <scr:http security="none" pattern="/fonts/**"/>
+        <scr:http security="none" pattern="/js/**"/>
+        <scr:http security="none" pattern="/login/**"/>
+        <scr:http security="none" pattern="/routes.json"/>
+
+        <!-- Secured Rest API urls with LDAP basic authentication -->
+        <scr:http pattern="/api/**" use-expressions="true" authentication-manager-ref="samlAuthenticationManager">
+            <scr:csrf disabled="true"/>
+            <scr:http-basic entry-point-ref="unauthorisedEntryPoint"/>
+
+            <scr:intercept-url pattern="/api/user/authentication*/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/query/runningQueries" access="hasRole('ROLE_ADMIN')"/>
+            <scr:intercept-url pattern="/api/query/*/stop" access="hasRole('ROLE_ADMIN')"/>
+            <scr:intercept-url pattern="/api/query*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/**/metrics" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cache*/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/streaming_coordinator/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST')"/>
+            <scr:intercept-url pattern="/api/cubes*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/models*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/streaming*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/job*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/admin/public_config" access="permitAll"/>
+            <scr:intercept-url pattern="/api/projects*/*" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')"/>
+            <scr:intercept-url pattern="/api/tables/**/snapshotLocalCache/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/**" access="isAuthenticated()"/>
+
+            <scr:form-login login-page="/login"/>
+            <scr:session-management session-fixation-protection="newSession"/>
+        </scr:http>
+        <!-- Secured non-api urls with SAML SSO -->
+        <scr:http pattern="/saml/**" auto-config="false" authentication-manager-ref="samlAuthenticationManager"
+                  entry-point-ref="samlEntryPoint" use-expressions="false">
+            <scr:csrf disabled="true"/>
+            <scr:intercept-url pattern="/saml/**" access="IS_AUTHENTICATED_FULLY"/>
+            <scr:custom-filter before="FIRST" ref="metadataGeneratorFilter"/>
+            <scr:custom-filter after="BASIC_AUTH_FILTER" ref="samlFilter"/>
+        </scr:http>
+        <scr:http auto-config="true" use-expressions="false" authentication-manager-ref="samlAuthenticationManager">
+            <scr:csrf disabled="true"/>
+            <scr:http-basic entry-point-ref="unauthorisedEntryPoint"/>
+            <scr:intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
+            <scr:form-login login-page="/login"/>
+            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-success-url="/login"
+                        logout-url="/j_spring_security_logout"/>
+        </scr:http>
+
+        <!-- Authentication manager -->
+        <bean id="samlUserDetailsService" class="org.apache.kylin.rest.security.saml.SAMLSimpleUserDetailsService">
+            <property name="defaultAuthorities" value="${kylin.security.saml.default-groups:ALL_USERS}"/>
+        </bean>
+        <bean id="samlAuthenticationProvider" class="org.springframework.security.saml.SAMLAuthenticationProvider">
+            <property name="userDetails" ref="samlUserDetailsService"/>
+            <property name="consumer" ref="webSSOProfileConsumer"/>
+            <property name="hokConsumer" ref="hokWebSSOProfileConsumer"/>
+        </bean>
+        <bean id="kylinUserAuthProvider" class="org.apache.kylin.rest.security.KylinAuthenticationProvider">
+            <constructor-arg>
+                <bean class="org.springframework.security.authentication.dao.DaoAuthenticationProvider">
+                    <property name="userDetailsService">
+                        <bean class="org.apache.kylin.rest.service.KylinUserService"/>
+                    </property>
+                    <property name="passwordEncoder">
+                        <bean class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+                    </property>
+                </bean>
+            </constructor-arg>
+        </bean>
+        <scr:authentication-manager id="samlAuthenticationManager">
+            <scr:authentication-provider ref="samlAuthenticationProvider"/>
+            <scr:authentication-provider ref="kylinUserAuthProvider"/>
+        </scr:authentication-manager>
+
+        <!-- Filters for processing of SAML messages -->
+        <bean id="samlFilter" class="org.springframework.security.web.FilterChainProxy">
+            <scr:filter-chain-map request-matcher="ant">
+                <scr:filter-chain pattern="/saml/login/**" filters="samlEntryPoint"/>
+                <scr:filter-chain pattern="/saml/logout/**" filters="samlLogoutFilter"/>
+                <scr:filter-chain pattern="/saml/metadata/**" filters="metadataGeneratorFilter"/>
+                <scr:filter-chain pattern="/saml/SSO/**" filters="samlSSOProcessingFilter"/>
+                <scr:filter-chain pattern="/saml/SLO/**" filters="samlSLOProcessingFilter"/>
+            </scr:filter-chain-map>
+        </bean>
+
+        <bean id="webSSOProfile" class="org.springframework.security.saml.websso.WebSSOProfileImpl"/>
+        <bean id="webSSOProfileConsumer" class="org.springframework.security.saml.websso.WebSSOProfileConsumerImpl">
+            <property name="responseSkew" value="600"/>
+        </bean>
+        <bean id="hokWebSSOProfile" class="org.springframework.security.saml.websso.WebSSOProfileHoKImpl"/>
+        <bean id="hokWebSSOProfileConsumer"
+              class="org.springframework.security.saml.websso.WebSSOProfileConsumerHoKImpl"/>
+        <bean id="ecpWebSSOProfile" class="org.springframework.security.saml.websso.WebSSOProfileECPImpl"/>
+        <bean id="samlSLOProfile" class="org.springframework.security.saml.websso.SingleLogoutProfileImpl">
+            <property name="responseSkew" value="600"/>
+        </bean>
+
+        <bean id="parserPool" class="org.opensaml.xml.parse.StaticBasicParserPool" init-method="initialize">
+            <property name="builderFeatures">
+                <map>
+                    <entry key="http://apache.org/xml/features/dom/defer-node-expansion" value="false"/>
+                </map>
+            </property>
+        </bean>
+        <bean id="parserPoolHolder" class="org.springframework.security.saml.parser.ParserPoolHolder"/>
+        <bean id="velocityEngine" class="org.springframework.security.saml.util.VelocityFactory"
+              factory-method="getEngine"/>
+        <bean id="samlLogger" class="org.springframework.security.saml.log.SAMLDefaultLogger"/>
+        <bean id="keyManager" class="org.springframework.security.saml.key.JKSKeyManager">
+            <constructor-arg value="${kylin.security.saml.keystore-file}"/>
+            <constructor-arg type="java.lang.String" value="changeit"/>
+            <constructor-arg>
+                <map>
+                    <entry key="kylin" value="changeit"/>
+                </map>
+            </constructor-arg>
+            <constructor-arg type="java.lang.String" value="kylin"/>
+        </bean>
+        <bean id="samlBootstrap" class="org.springframework.security.saml.SAMLBootstrap"/>
+
+        <!-- SAML Bindings -->
+        <bean id="samlRedirectBinding" class="org.springframework.security.saml.processor.HTTPRedirectDeflateBinding">
+            <constructor-arg ref="parserPool"/>
+        </bean>
+        <bean id="samlPostBinding" class="org.springframework.security.saml.processor.HTTPPostBinding">
+            <constructor-arg ref="parserPool"/>
+            <constructor-arg ref="velocityEngine"/>
+        </bean>
+        <bean id="samlArtifactBinding"
+              class="org.springframework.security.saml.processor.HTTPArtifactBinding">
+            <constructor-arg ref="parserPool"/>
+            <constructor-arg ref="velocityEngine"/>
+            <constructor-arg>
+                <bean class="org.springframework.security.saml.websso.ArtifactResolutionProfileImpl">
+                    <constructor-arg>
+                        <bean class="org.apache.commons.httpclient.HttpClient">
+                            <constructor-arg>
+                                <bean class="org.apache.commons.httpclient.MultiThreadedHttpConnectionManager"/>
+                            </constructor-arg>
+                        </bean>
+                    </constructor-arg>
+                    <property name="processor">
+                        <bean class="org.springframework.security.saml.processor.SAMLProcessorImpl">
+                            <constructor-arg ref="samlSoapBinding"/>
+                        </bean>
+                    </property>
+                </bean>
+            </constructor-arg>
+        </bean>
+        <bean id="samlSoapBinding"
+              class="org.springframework.security.saml.processor.HTTPSOAP11Binding">
+            <constructor-arg ref="parserPool"/>
+        </bean>
+
+        <bean id="samlPaosBinding"
+              class="org.springframework.security.saml.processor.HTTPPAOS11Binding">
+            <constructor-arg ref="parserPool"/>
+        </bean>
+        <bean id="samlProcessor" class="org.springframework.security.saml.processor.SAMLProcessorImpl">
+            <constructor-arg>
+                <list>
+                    <ref bean="samlRedirectBinding"/>
+                    <ref bean="samlPostBinding"/>
+                    <ref bean="samlSoapBinding"/>
+                    <ref bean="samlPaosBinding"/>
+                </list>
+            </constructor-arg>
+        </bean>
+
+        <!-- SAML metadata -->
+        <bean id="metadataGeneratorFilter" class="org.springframework.security.saml.metadata.MetadataGeneratorFilter">
+            <constructor-arg>
+                <bean class="org.springframework.security.saml.metadata.MetadataGenerator">
+                    <property name="entityBaseURL" value="${kylin.security.saml.metadata-entity-base-url}"/>
+                    <property name="extendedMetadata">
+                        <bean class="org.springframework.security.saml.metadata.ExtendedMetadata">
+                            <property name="signMetadata" value="false"/>
+                            <property name="idpDiscoveryEnabled" value="true"/>
+                        </bean>
+                    </property>
+                </bean>
+            </constructor-arg>
+        </bean>
+        <bean id="metadata"
+              class="org.springframework.security.saml.metadata.CachingMetadataManager">
+            <constructor-arg>
+                <list>
+                    <!-- Example of classpath metadata with Extended Metadata -->
+                    <bean class="org.springframework.security.saml.metadata.ExtendedMetadataDelegate">
+                        <constructor-arg>
+                            <bean class="org.opensaml.saml2.metadata.provider.FilesystemMetadataProvider">
+                                <constructor-arg>
+                                    <value type="java.io.File">${kylin.security.saml.metadata-file}</value>
+                                </constructor-arg>
+                                <property name="parserPool" ref="parserPool"/>
+                            </bean>
+                        </constructor-arg>
+                        <constructor-arg>
+                            <bean class="org.springframework.security.saml.metadata.ExtendedMetadata"/>
+                        </constructor-arg>
+                        <property name="metadataTrustCheck" value="false"/>
+                    </bean>
+                </list>
+            </constructor-arg>
+        </bean>
+
+        <!-- Log in/out -->
+        <bean id="samlContextProvider" class="org.springframework.security.saml.context.SAMLContextProviderLB">
+            <property name="scheme" value="${kylin.security.saml.context-scheme}"/>
+            <property name="serverName" value="${kylin.security.saml.context-server-name}"/>
+            <property name="serverPort" value="${kylin.security.saml.context-server-port}"/>
+            <property name="includeServerPortInRequestURL" value="false"/>
+            <property name="contextPath" value="${kylin.security.saml.context-path}"/>
+        </bean>
+
+        <bean id="samlEntryPoint" class="org.springframework.security.saml.SAMLEntryPoint">
+            <property name="defaultProfileOptions">
+                <bean class="org.springframework.security.saml.websso.WebSSOProfileOptions">
+                    <property name="includeScoping" value="false"/>
+                </bean>
+            </property>
+            <property name="webSSOprofile" ref="webSSOProfile"/>
+            <property name="webSSOprofileHoK" ref="hokWebSSOProfile"/>
+            <property name="webSSOprofileECP" ref="ecpWebSSOProfile"/>
+            <property name="contextProvider" ref="samlContextProvider"/>
+        </bean>
+        <bean id="successLogoutHandler"
+              class="org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler"/>
+        <bean id="logoutHandler"
+              class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler">
+            <property name="invalidateHttpSession" value="false"/>
+        </bean>
+
+        <!-- SAML SSO -->
+        <bean id="samlSSOProcessingFilter" class="org.springframework.security.saml.SAMLProcessingFilter">
+            <property name="authenticationManager" ref="samlAuthenticationManager"/>
+            <property name="authenticationSuccessHandler">
+                <bean class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler">
+                    <property name="defaultTargetUrl" value="/models"/>
+                </bean>
+            </property>
+            <property name="authenticationFailureHandler">
+                <bean class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
+                    <property name="useForward" value="true"/>
+                    <property name="defaultFailureUrl" value="/login"/>
+                </bean>
+            </property>
+        </bean>
+
+        <!-- SAML SLO -->
+        <bean id="samlSLOProcessingFilter" class="org.springframework.security.saml.SAMLLogoutProcessingFilter">
+            <constructor-arg index="0" ref="successLogoutHandler"/>
+            <constructor-arg index="1" ref="logoutHandler"/>
+        </bean>
+        <bean id="samlLogoutFilter" class="org.springframework.security.saml.SAMLLogoutFilter">
+            <constructor-arg index="0" ref="successLogoutHandler"/>
+            <constructor-arg index="1" ref="logoutHandler"/>
+            <constructor-arg index="2" ref="logoutHandler"/>
+            <property name="profile" ref="samlSLOProfile"/>
+        </bean>
+    </beans>
+</beans>
