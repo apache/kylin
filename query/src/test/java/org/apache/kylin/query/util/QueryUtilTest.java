@@ -40,6 +40,41 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
     }
 
     @Test
+    public void testappendLimitOffsetToSql() {
+        {
+            String sql = "select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact";
+            String newsql = QueryUtil.appendLimitOffsetToSql(sql, 100, 100);
+            Assert.assertEquals(
+                    "select * from (select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact) limit 100 offset 100",
+                    newsql);
+        }
+
+        {
+            String sql = "select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact";
+            String newsql = QueryUtil.appendLimitOffsetToSql(sql, 0, 0);
+            Assert.assertEquals(
+                    "select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact",
+                    newsql);
+        }
+
+        {
+            String sql = "explain plan for select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact";
+            String newsql = QueryUtil.appendLimitOffsetToSql(sql, 100, 100);
+            Assert.assertEquals(
+                    "explain plan for select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact limit 100 offset 100",
+                    newsql);
+        }
+
+        {
+            String sql = "explain plan for select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact";
+            String newsql = QueryUtil.appendLimitOffsetToSql(sql, 0, 0);
+            Assert.assertEquals(
+                    "explain plan for select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact",
+                    newsql);
+        }
+    }
+
+    @Test
     public void testMassageSql() {
         {
             String sql = "select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact";
