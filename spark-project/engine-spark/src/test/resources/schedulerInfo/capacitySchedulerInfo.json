@@ -1,0 +1,1061 @@
+{
+  "scheduler": {
+    "schedulerInfo": {
+      "type": "capacityScheduler",
+      "capacity": 100.0,
+      "usedCapacity": 13.541667,
+      "reservedCapacity": 0.0,
+      "maxCapacity": 100.0,
+      "queueName": "root",
+      "queues": {
+        "queue": [
+          {
+            "type": "capacitySchedulerLeafQueueInfo",
+            "capacity": 20.0,
+            "usedCapacity": 0.0,
+            "maxCapacity": 20.0,
+            "absoluteCapacity": 20.0,
+            "absoluteMaxCapacity": 20.0,
+            "absoluteUsedCapacity": 0.0,
+            "numApplications": 0,
+            "queueName": "default",
+            "state": "RUNNING",
+            "resourcesUsed": {
+              "memory": 0,
+              "vCores": 0
+            },
+            "hideReservationQueues": false,
+            "allocatedContainers": 0,
+            "reservedContainers": 0,
+            "pendingContainers": 0,
+            "capacities": {
+              "queueCapacitiesByPartition": [
+                {
+                  "partitionName": "",
+                  "capacity": 20.0,
+                  "usedCapacity": 0.0,
+                  "reservedCapacity": 0.0,
+                  "maxCapacity": 20.0,
+                  "absoluteCapacity": 20.0,
+                  "absoluteUsedCapacity": 0.0,
+                  "absoluteMaxCapacity": 20.0,
+                  "maxAMLimitPercentage": 10.0
+                }
+              ]
+            },
+            "resources": {
+              "resourceUsagesByPartition": [
+                {
+                  "partitionName": "",
+                  "used": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "reserved": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "pending": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "amUsed": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "amLimit": {
+                    "memory": 3072,
+                    "vCores": 1
+                  }
+                }
+              ]
+            },
+            "numActiveApplications": 0,
+            "numPendingApplications": 0,
+            "numContainers": 0,
+            "maxApplications": 1000,
+            "maxApplicationsPerUser": 1000,
+            "userLimit": 30,
+            "users": null,
+            "userLimitFactor": 10.0,
+            "AMResourceLimit": {
+              "memory": 3072,
+              "vCores": 1
+            },
+            "usedAMResource": {
+              "memory": 0,
+              "vCores": 0
+            },
+            "userAMResourceLimit": {
+              "memory": 3072,
+              "vCores": 1
+            },
+            "preemptionDisabled": true
+          },
+          {
+            "type": "capacitySchedulerLeafQueueInfo",
+            "capacity": 0.0,
+            "usedCapacity": 0.0,
+            "maxCapacity": 40.0,
+            "absoluteCapacity": 0.0,
+            "absoluteMaxCapacity": 40.0,
+            "absoluteUsedCapacity": 0.0,
+            "numApplications": 0,
+            "queueName": "dev",
+            "state": "STOPPED",
+            "resourcesUsed": {
+              "memory": 0,
+              "vCores": 0
+            },
+            "hideReservationQueues": false,
+            "allocatedContainers": 0,
+            "reservedContainers": 0,
+            "pendingContainers": 0,
+            "capacities": {
+              "queueCapacitiesByPartition": [
+                {
+                  "partitionName": "",
+                  "capacity": 0.0,
+                  "usedCapacity": 0.0,
+                  "reservedCapacity": 0.0,
+                  "maxCapacity": 40.0,
+                  "absoluteCapacity": 0.0,
+                  "absoluteUsedCapacity": 0.0,
+                  "absoluteMaxCapacity": 40.0,
+                  "maxAMLimitPercentage": 10.0
+                }
+              ]
+            },
+            "resources": {
+              "resourceUsagesByPartition": [
+                {
+                  "partitionName": "",
+                  "used": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "reserved": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "pending": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "amUsed": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "amLimit": {
+                    "memory": 6144,
+                    "vCores": 2
+                  }
+                }
+              ]
+            },
+            "numActiveApplications": 0,
+            "numPendingApplications": 0,
+            "numContainers": 0,
+            "maxApplications": 1000,
+            "maxApplicationsPerUser": 1000,
+            "userLimit": 100,
+            "users": null,
+            "userLimitFactor": 10.0,
+            "AMResourceLimit": {
+              "memory": 6144,
+              "vCores": 2
+            },
+            "usedAMResource": {
+              "memory": 0,
+              "vCores": 0
+            },
+            "userAMResourceLimit": {
+              "memory": 6144,
+              "vCores": 2
+            },
+            "preemptionDisabled": true
+          },
+          {
+            "type": "capacitySchedulerLeafQueueInfo",
+            "capacity": 0.0,
+            "usedCapacity": 0.0,
+            "maxCapacity": 40.0,
+            "absoluteCapacity": 0.0,
+            "absoluteMaxCapacity": 40.0,
+            "absoluteUsedCapacity": 0.0,
+            "numApplications": 0,
+            "queueName": "qa_test",
+            "state": "STOPPED",
+            "resourcesUsed": {
+              "memory": 0,
+              "vCores": 0
+            },
+            "hideReservationQueues": false,
+            "allocatedContainers": 0,
+            "reservedContainers": 0,
+            "pendingContainers": 0,
+            "capacities": {
+              "queueCapacitiesByPartition": [
+                {
+                  "partitionName": "",
+                  "capacity": 0.0,
+                  "usedCapacity": 0.0,
+                  "reservedCapacity": 0.0,
+                  "maxCapacity": 40.0,
+                  "absoluteCapacity": 0.0,
+                  "absoluteUsedCapacity": 0.0,
+                  "absoluteMaxCapacity": 40.0,
+                  "maxAMLimitPercentage": 10.0
+                }
+              ]
+            },
+            "resources": {
+              "resourceUsagesByPartition": [
+                {
+                  "partitionName": "",
+                  "used": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "reserved": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "pending": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "amUsed": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "amLimit": {
+                    "memory": 6144,
+                    "vCores": 2
+                  }
+                }
+              ]
+            },
+            "numActiveApplications": 0,
+            "numPendingApplications": 0,
+            "numContainers": 0,
+            "maxApplications": 1000,
+            "maxApplicationsPerUser": 1000,
+            "userLimit": 100,
+            "users": null,
+            "userLimitFactor": 10.0,
+            "AMResourceLimit": {
+              "memory": 6144,
+              "vCores": 2
+            },
+            "usedAMResource": {
+              "memory": 0,
+              "vCores": 0
+            },
+            "userAMResourceLimit": {
+              "memory": 6144,
+              "vCores": 2
+            },
+            "preemptionDisabled": true
+          },
+          {
+            "type": "capacitySchedulerLeafQueueInfo",
+            "capacity": 0.0,
+            "usedCapacity": 0.0,
+            "maxCapacity": 100.0,
+            "absoluteCapacity": 0.0,
+            "absoluteMaxCapacity": 100.0,
+            "absoluteUsedCapacity": 0.0,
+            "numApplications": 0,
+            "queueName": "root-default",
+            "state": "STOPPED",
+            "resourcesUsed": {
+              "memory": 0,
+              "vCores": 0
+            },
+            "hideReservationQueues": false,
+            "nodeLabels": [
+              "*"
+            ],
+            "allocatedContainers": 0,
+            "reservedContainers": 0,
+            "pendingContainers": 0,
+            "capacities": {
+              "queueCapacitiesByPartition": [
+                {
+                  "partitionName": "",
+                  "capacity": 0.0,
+                  "usedCapacity": 0.0,
+                  "reservedCapacity": 0.0,
+                  "maxCapacity": 100.0,
+                  "absoluteCapacity": 0.0,
+                  "absoluteUsedCapacity": 0.0,
+                  "absoluteMaxCapacity": 100.0,
+                  "maxAMLimitPercentage": 10.0
+                },
+                {
+                  "partitionName": "dev",
+                  "capacity": 100.0,
+                  "usedCapacity": 0.0,
+                  "reservedCapacity": 0.0,
+                  "maxCapacity": 100.0,
+                  "absoluteCapacity": 100.0,
+                  "absoluteUsedCapacity": 0.0,
+                  "absoluteMaxCapacity": 100.0,
+                  "maxAMLimitPercentage": 10.0
+                }
+              ]
+            },
+            "resources": {
+              "resourceUsagesByPartition": [
+                {
+                  "partitionName": "",
+                  "used": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "reserved": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "pending": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "amUsed": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "amLimit": {
+                    "memory": 14848,
+                    "vCores": 5
+                  }
+                },
+                {
+                  "partitionName": "dev",
+                  "used": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "reserved": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "pending": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "amUsed": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "amLimit": {
+                    "memory": 0,
+                    "vCores": 0
+                  }
+                }
+              ]
+            },
+            "numActiveApplications": 0,
+            "numPendingApplications": 0,
+            "numContainers": 0,
+            "maxApplications": 0,
+            "maxApplicationsPerUser": 0,
+            "userLimit": 100,
+            "users": null,
+            "userLimitFactor": 10.0,
+            "AMResourceLimit": {
+              "memory": 14848,
+              "vCores": 5
+            },
+            "usedAMResource": {
+              "memory": 0,
+              "vCores": 0
+            },
+            "userAMResourceLimit": {
+              "memory": 14848,
+              "vCores": 5
+            },
+            "preemptionDisabled": true
+          },
+          {
+            "capacity": 20.0,
+            "usedCapacity": 0.0,
+            "maxCapacity": 20.0,
+            "absoluteCapacity": 20.0,
+            "absoluteMaxCapacity": 20.0,
+            "absoluteUsedCapacity": 0.0,
+            "numApplications": 0,
+            "queueName": "smoke_test",
+            "state": "RUNNING",
+            "queues": {
+              "queue": [
+                {
+                  "type": "capacitySchedulerLeafQueueInfo",
+                  "capacity": 50.0,
+                  "usedCapacity": 0.0,
+                  "maxCapacity": 100.0,
+                  "absoluteCapacity": 10.0,
+                  "absoluteMaxCapacity": 20.0,
+                  "absoluteUsedCapacity": 0.0,
+                  "numApplications": 0,
+                  "queueName": "smoke",
+                  "state": "RUNNING",
+                  "resourcesUsed": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "hideReservationQueues": false,
+                  "allocatedContainers": 0,
+                  "reservedContainers": 0,
+                  "pendingContainers": 0,
+                  "capacities": {
+                    "queueCapacitiesByPartition": [
+                      {
+                        "partitionName": "",
+                        "capacity": 50.0,
+                        "usedCapacity": 0.0,
+                        "reservedCapacity": 0.0,
+                        "maxCapacity": 100.0,
+                        "absoluteCapacity": 10.0,
+                        "absoluteUsedCapacity": 0.0,
+                        "absoluteMaxCapacity": 20.0,
+                        "maxAMLimitPercentage": 10.0
+                      }
+                    ]
+                  },
+                  "resources": {
+                    "resourceUsagesByPartition": [
+                      {
+                        "partitionName": "",
+                        "used": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "reserved": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "pending": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "amUsed": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "amLimit": {
+                          "memory": 3072,
+                          "vCores": 1
+                        }
+                      }
+                    ]
+                  },
+                  "numActiveApplications": 0,
+                  "numPendingApplications": 0,
+                  "numContainers": 0,
+                  "maxApplications": 1000,
+                  "maxApplicationsPerUser": 1000,
+                  "userLimit": 100,
+                  "users": null,
+                  "userLimitFactor": 10.0,
+                  "AMResourceLimit": {
+                    "memory": 3072,
+                    "vCores": 1
+                  },
+                  "usedAMResource": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "userAMResourceLimit": {
+                    "memory": 3072,
+                    "vCores": 1
+                  },
+                  "preemptionDisabled": true
+                },
+                {
+                  "type": "capacitySchedulerLeafQueueInfo",
+                  "capacity": 50.0,
+                  "usedCapacity": 0.0,
+                  "maxCapacity": 100.0,
+                  "absoluteCapacity": 10.0,
+                  "absoluteMaxCapacity": 20.0,
+                  "absoluteUsedCapacity": 0.0,
+                  "numApplications": 0,
+                  "queueName": "smoke_test-default",
+                  "state": "STOPPED",
+                  "resourcesUsed": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "hideReservationQueues": false,
+                  "allocatedContainers": 0,
+                  "reservedContainers": 0,
+                  "pendingContainers": 0,
+                  "capacities": {
+                    "queueCapacitiesByPartition": [
+                      {
+                        "partitionName": "",
+                        "capacity": 50.0,
+                        "usedCapacity": 0.0,
+                        "reservedCapacity": 0.0,
+                        "maxCapacity": 100.0,
+                        "absoluteCapacity": 10.0,
+                        "absoluteUsedCapacity": 0.0,
+                        "absoluteMaxCapacity": 20.0,
+                        "maxAMLimitPercentage": 10.0
+                      }
+                    ]
+                  },
+                  "resources": {
+                    "resourceUsagesByPartition": [
+                      {
+                        "partitionName": "",
+                        "used": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "reserved": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "pending": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "amUsed": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "amLimit": {
+                          "memory": 3072,
+                          "vCores": 1
+                        }
+                      }
+                    ]
+                  },
+                  "numActiveApplications": 0,
+                  "numPendingApplications": 0,
+                  "numContainers": 0,
+                  "maxApplications": 1000,
+                  "maxApplicationsPerUser": 1000,
+                  "userLimit": 100,
+                  "users": null,
+                  "userLimitFactor": 1.0,
+                  "AMResourceLimit": {
+                    "memory": 3072,
+                    "vCores": 1
+                  },
+                  "usedAMResource": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "userAMResourceLimit": {
+                    "memory": 3072,
+                    "vCores": 1
+                  },
+                  "preemptionDisabled": true
+                }
+              ]
+            },
+            "resourcesUsed": {
+              "memory": 0,
+              "vCores": 0
+            },
+            "hideReservationQueues": false,
+            "allocatedContainers": 0,
+            "reservedContainers": 0,
+            "pendingContainers": 0,
+            "capacities": {
+              "queueCapacitiesByPartition": [
+                {
+                  "partitionName": "",
+                  "capacity": 20.0,
+                  "usedCapacity": 0.0,
+                  "reservedCapacity": 0.0,
+                  "maxCapacity": 20.0,
+                  "absoluteCapacity": 20.0,
+                  "absoluteUsedCapacity": 0.0,
+                  "absoluteMaxCapacity": 20.0,
+                  "maxAMLimitPercentage": 0.0
+                }
+              ]
+            },
+            "resources": {
+              "resourceUsagesByPartition": [
+                {
+                  "partitionName": "",
+                  "used": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "reserved": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "pending": {
+                    "memory": 0,
+                    "vCores": 0
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "capacity": 60.000004,
+            "usedCapacity": 22.5696,
+            "maxCapacity": 100.0,
+            "absoluteCapacity": 60.000004,
+            "absoluteMaxCapacity": 100.0,
+            "absoluteUsedCapacity": 13.541667,
+            "numApplications": 1,
+            "queueName": "dev-1",
+            "state": "RUNNING",
+            "queues": {
+              "queue": [
+                {
+                  "type": "capacitySchedulerLeafQueueInfo",
+                  "capacity": 0.0,
+                  "usedCapacity": 0.0,
+                  "maxCapacity": 100.0,
+                  "absoluteCapacity": 0.0,
+                  "absoluteMaxCapacity": 100.0,
+                  "absoluteUsedCapacity": 0.0,
+                  "numApplications": 0,
+                  "queueName": "dev-1-default",
+                  "state": "STOPPED",
+                  "resourcesUsed": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "hideReservationQueues": false,
+                  "allocatedContainers": 0,
+                  "reservedContainers": 0,
+                  "pendingContainers": 0,
+                  "capacities": {
+                    "queueCapacitiesByPartition": [
+                      {
+                        "partitionName": "",
+                        "capacity": 0.0,
+                        "usedCapacity": 0.0,
+                        "reservedCapacity": 0.0,
+                        "maxCapacity": 100.0,
+                        "absoluteCapacity": 0.0,
+                        "absoluteUsedCapacity": 0.0,
+                        "absoluteMaxCapacity": 100.0,
+                        "maxAMLimitPercentage": 10.0
+                      },
+                      {
+                        "partitionName": "dev",
+                        "capacity": 0.0,
+                        "usedCapacity": 0.0,
+                        "reservedCapacity": 0.0,
+                        "maxCapacity": 100.0,
+                        "absoluteCapacity": 0.0,
+                        "absoluteUsedCapacity": 0.0,
+                        "absoluteMaxCapacity": 0.0,
+                        "maxAMLimitPercentage": 10.0
+                      }
+                    ]
+                  },
+                  "resources": {
+                    "resourceUsagesByPartition": [
+                      {
+                        "partitionName": "",
+                        "used": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "reserved": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "pending": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "amUsed": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "amLimit": {
+                          "memory": 14848,
+                          "vCores": 5
+                        }
+                      }
+                    ]
+                  },
+                  "numActiveApplications": 0,
+                  "numPendingApplications": 0,
+                  "numContainers": 0,
+                  "maxApplications": 0,
+                  "maxApplicationsPerUser": 0,
+                  "userLimit": 100,
+                  "users": null,
+                  "userLimitFactor": 1.0,
+                  "AMResourceLimit": {
+                    "memory": 14848,
+                    "vCores": 5
+                  },
+                  "usedAMResource": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "userAMResourceLimit": {
+                    "memory": 14848,
+                    "vCores": 5
+                  },
+                  "preemptionDisabled": true
+                },
+                {
+                  "type": "capacitySchedulerLeafQueueInfo",
+                  "capacity": 50.0,
+                  "usedCapacity": 0.0,
+                  "maxCapacity": 50.0,
+                  "absoluteCapacity": 30.000002,
+                  "absoluteMaxCapacity": 50.0,
+                  "absoluteUsedCapacity": 0.0,
+                  "numApplications": 0,
+                  "queueName": "qa_test-1",
+                  "state": "RUNNING",
+                  "resourcesUsed": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "hideReservationQueues": false,
+                  "allocatedContainers": 0,
+                  "reservedContainers": 0,
+                  "pendingContainers": 0,
+                  "capacities": {
+                    "queueCapacitiesByPartition": [
+                      {
+                        "partitionName": "",
+                        "capacity": 50.0,
+                        "usedCapacity": 0.0,
+                        "reservedCapacity": 0.0,
+                        "maxCapacity": 50.0,
+                        "absoluteCapacity": 30.000002,
+                        "absoluteUsedCapacity": 0.0,
+                        "absoluteMaxCapacity": 50.0,
+                        "maxAMLimitPercentage": 10.0
+                      }
+                    ]
+                  },
+                  "resources": {
+                    "resourceUsagesByPartition": [
+                      {
+                        "partitionName": "",
+                        "used": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "reserved": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "pending": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "amUsed": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "amLimit": {
+                          "memory": 7680,
+                          "vCores": 3
+                        }
+                      }
+                    ]
+                  },
+                  "numActiveApplications": 0,
+                  "numPendingApplications": 0,
+                  "numContainers": 0,
+                  "maxApplications": 1000,
+                  "maxApplicationsPerUser": 1000,
+                  "userLimit": 100,
+                  "users": null,
+                  "userLimitFactor": 10.0,
+                  "AMResourceLimit": {
+                    "memory": 7680,
+                    "vCores": 3
+                  },
+                  "usedAMResource": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "userAMResourceLimit": {
+                    "memory": 7680,
+                    "vCores": 3
+                  },
+                  "preemptionDisabled": true
+                },
+                {
+                  "type": "capacitySchedulerLeafQueueInfo",
+                  "capacity": 50.0,
+                  "usedCapacity": 45.139706,
+                  "maxCapacity": 50.0,
+                  "absoluteCapacity": 30.000002,
+                  "absoluteMaxCapacity": 50.0,
+                  "absoluteUsedCapacity": 13.541667,
+                  "numApplications": 1,
+                  "queueName": "dev_test",
+                  "state": "RUNNING",
+                  "resourcesUsed": {
+                    "memory": 19968,
+                    "vCores": 5
+                  },
+                  "hideReservationQueues": false,
+                  "allocatedContainers": 3,
+                  "reservedContainers": 0,
+                  "pendingContainers": 0,
+                  "capacities": {
+                    "queueCapacitiesByPartition": [
+                      {
+                        "partitionName": "",
+                        "capacity": 50.0,
+                        "usedCapacity": 45.139706,
+                        "reservedCapacity": 0.0,
+                        "maxCapacity": 50.0,
+                        "absoluteCapacity": 30.000002,
+                        "absoluteUsedCapacity": 13.541667,
+                        "absoluteMaxCapacity": 50.0,
+                        "maxAMLimitPercentage": 10.0
+                      }
+                    ]
+                  },
+                  "resources": {
+                    "resourceUsagesByPartition": [
+                      {
+                        "partitionName": "",
+                        "used": {
+                          "memory": 19968,
+                          "vCores": 5
+                        },
+                        "reserved": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "pending": {
+                          "memory": 0,
+                          "vCores": 0
+                        },
+                        "amUsed": {
+                          "memory": 1536,
+                          "vCores": 1
+                        },
+                        "amLimit": {
+                          "memory": 7680,
+                          "vCores": 3
+                        }
+                      }
+                    ]
+                  },
+                  "numActiveApplications": 1,
+                  "numPendingApplications": 0,
+                  "numContainers": 3,
+                  "maxApplications": 1000,
+                  "maxApplicationsPerUser": 1000,
+                  "userLimit": 100,
+                  "users": {
+                    "user": [
+                      {
+                        "username": "dev_test",
+                        "resourcesUsed": {
+                          "memory": 19968,
+                          "vCores": 5
+                        },
+                        "numPendingApplications": 0,
+                        "numActiveApplications": 1,
+                        "AMResourceUsed": {
+                          "memory": 1536,
+                          "vCores": 1
+                        },
+                        "userResourceLimit": {
+                          "memory": 44544,
+                          "vCores": 15
+                        },
+                        "resources": {
+                          "resourceUsagesByPartition": [
+                            {
+                              "partitionName": "",
+                              "used": {
+                                "memory": 19968,
+                                "vCores": 5
+                              },
+                              "reserved": {
+                                "memory": 0,
+                                "vCores": 0
+                              },
+                              "pending": {
+                                "memory": 0,
+                                "vCores": 0
+                              },
+                              "amUsed": {
+                                "memory": 1536,
+                                "vCores": 1
+                              },
+                              "amLimit": {
+                                "memory": 7680,
+                                "vCores": 3
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "userLimitFactor": 10.0,
+                  "AMResourceLimit": {
+                    "memory": 7680,
+                    "vCores": 3
+                  },
+                  "usedAMResource": {
+                    "memory": 1536,
+                    "vCores": 1
+                  },
+                  "userAMResourceLimit": {
+                    "memory": 7680,
+                    "vCores": 3
+                  },
+                  "preemptionDisabled": true
+                }
+              ]
+            },
+            "resourcesUsed": {
+              "memory": 19968,
+              "vCores": 5
+            },
+            "hideReservationQueues": false,
+            "allocatedContainers": 3,
+            "reservedContainers": 0,
+            "pendingContainers": 0,
+            "capacities": {
+              "queueCapacitiesByPartition": [
+                {
+                  "partitionName": "",
+                  "capacity": 60.000004,
+                  "usedCapacity": 22.5696,
+                  "reservedCapacity": 0.0,
+                  "maxCapacity": 100.0,
+                  "absoluteCapacity": 60.000004,
+                  "absoluteUsedCapacity": 13.541667,
+                  "absoluteMaxCapacity": 100.0,
+                  "maxAMLimitPercentage": 0.0
+                }
+              ]
+            },
+            "resources": {
+              "resourceUsagesByPartition": [
+                {
+                  "partitionName": "",
+                  "used": {
+                    "memory": 19968,
+                    "vCores": 5
+                  },
+                  "reserved": {
+                    "memory": 0,
+                    "vCores": 0
+                  },
+                  "pending": {
+                    "memory": 0,
+                    "vCores": 0
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "capacities": {
+        "queueCapacitiesByPartition": [
+          {
+            "partitionName": "",
+            "capacity": 100.0,
+            "usedCapacity": 13.541667,
+            "reservedCapacity": 0.0,
+            "maxCapacity": 100.0,
+            "absoluteCapacity": 100.0,
+            "absoluteUsedCapacity": 13.541667,
+            "absoluteMaxCapacity": 100.0,
+            "maxAMLimitPercentage": 0.0
+          },
+          {
+            "partitionName": "dev",
+            "capacity": 100.0,
+            "usedCapacity": 0.0,
+            "reservedCapacity": 0.0,
+            "maxCapacity": 100.0,
+            "absoluteCapacity": 100.0,
+            "absoluteUsedCapacity": 0.0,
+            "absoluteMaxCapacity": 100.0,
+            "maxAMLimitPercentage": 0.0
+          }
+        ]
+      },
+      "health": {
+        "lastrun": 1555481605894,
+        "operationsInfo": {
+          "entry": {
+            "key": "last-preemption",
+            "value": {
+              "nodeId": "N/A",
+              "containerId": "N/A",
+              "queue": "N/A"
+            }
+          },
+          "entry": {
+            "key": "last-reservation",
+            "value": {
+              "nodeId": "N/A",
+              "containerId": "N/A",
+              "queue": "N/A"
+            }
+          },
+          "entry": {
+            "key": "last-allocation",
+            "value": {
+              "nodeId": "c70-host76:26009",
+              "containerId": "container_e18_1555418119116_0051_01_000003",
+              "queue": "root.default"
+            }
+          },
+          "entry": {
+            "key": "last-release",
+            "value": {
+              "nodeId": "c70-host72:26009",
+              "containerId": "container_e18_1555418119116_0051_01_000001",
+              "queue": "root.default"
+            }
+          }
+        },
+        "lastRunDetails": [
+          {
+            "operation": "releases",
+            "count": 0,
+            "resources": {
+              "memory": 0,
+              "vCores": 0
+            }
+          },
+          {
+            "operation": "allocations",
+            "count": 0,
+            "resources": {
+              "memory": 0,
+              "vCores": 0
+            }
+          },
+          {
+            "operation": "reservations",
+            "count": 0,
+            "resources": {
+              "memory": 0,
+              "vCores": 0
+            }
+          }
+        ]
+      }
+    }
+  }
+}
