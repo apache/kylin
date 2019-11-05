@@ -1,0 +1,13 @@
+{
+  "uuid" : "8161776b-4096-4b62-aba3-769c21bab46a",
+  "last_modified" : 0,
+  "version" : "3.0.0.0",
+  "mvcc" : -1,
+  "conds" : [ {
+    "@class" : "io.kyligence.kap.metadata.favorite.FavoriteRule$Condition",
+    "leftThreshold" : null,
+    "rightThreshold" : "0.1"
+  } ],
+  "name" : "frequency",
+  "enabled" : true
+}

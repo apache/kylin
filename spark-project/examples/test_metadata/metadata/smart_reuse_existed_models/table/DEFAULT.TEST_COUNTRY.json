@@ -1,0 +1,30 @@
+{
+  "uuid" : "cd93deff-ef3e-4c87-b7d1-8c336d88fd03",
+  "last_modified" : 0,
+  "create_time" : 1568865575544,
+  "version" : "4.0.0.0",
+  "name" : "TEST_COUNTRY",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "COUNTRY",
+    "datatype" : "varchar(4096)"
+  }, {
+    "id" : "2",
+    "name" : "LATITUDE",
+    "datatype" : "double"
+  }, {
+    "id" : "3",
+    "name" : "LONGITUDE",
+    "datatype" : "double"
+  }, {
+    "id" : "4",
+    "name" : "NAME",
+    "datatype" : "varchar(4096)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT"
+}

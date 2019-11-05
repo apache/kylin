@@ -1,0 +1,517 @@
+{
+  "uuid" : "9e62971a-f5e9-4982-b3d0-c9377c4022e7",
+  "last_modified" : 0,
+  "create_time" : 1568874483355,
+  "version" : "4.0.0.0",
+  "alias" : "AUTO_MODEL_TEST_KYLIN_FACT_1",
+  "owner" : null,
+  "config_last_modifier" : null,
+  "config_last_modified" : 0,
+  "is_draft" : false,
+  "description" : "",
+  "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
+  "fact_table_alias" : null,
+  "management_type" : "TABLE_ORIENTED",
+  "join_tables" : [ {
+    "table" : "DEFAULT.KYLIN_CAL_DT",
+    "kind" : "FACT",
+    "alias" : "KYLIN_CAL_DT",
+    "join" : {
+      "type" : "left",
+      "primary_key" : [ "KYLIN_CAL_DT.CAL_DT" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.CAL_DT" ],
+      "non_equi_join_condition" : null,
+      "primary_table" : "KYLIN_CAL_DT",
+      "foreign_table" : "TEST_KYLIN_FACT"
+    }
+  } ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : null,
+    "partition_date_start" : 0,
+    "partition_date_format" : null,
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "segment_config" : {
+    "auto_merge_enabled" : null,
+    "auto_merge_time_ranges" : null,
+    "volatile_range" : null,
+    "retention_range" : null
+  },
+  "data_check_desc" : null,
+  "semantic_version" : 0,
+  "all_named_columns" : [ {
+    "id" : 0,
+    "name" : "KYLIN_CAL_DT_AGE_FOR_CS_WEEK_ID",
+    "column" : "KYLIN_CAL_DT.AGE_FOR_CS_WEEK_ID"
+  }, {
+    "id" : 1,
+    "name" : "KYLIN_CAL_DT_AGE_FOR_DT_ID",
+    "column" : "KYLIN_CAL_DT.AGE_FOR_DT_ID"
+  }, {
+    "id" : 2,
+    "name" : "KYLIN_CAL_DT_AGE_FOR_MONTH_ID",
+    "column" : "KYLIN_CAL_DT.AGE_FOR_MONTH_ID"
+  }, {
+    "id" : 3,
+    "name" : "KYLIN_CAL_DT_AGE_FOR_QTR_ID",
+    "column" : "KYLIN_CAL_DT.AGE_FOR_QTR_ID"
+  }, {
+    "id" : 4,
+    "name" : "KYLIN_CAL_DT_AGE_FOR_RTL_MONTH_ID",
+    "column" : "KYLIN_CAL_DT.AGE_FOR_RTL_MONTH_ID"
+  }, {
+    "id" : 5,
+    "name" : "KYLIN_CAL_DT_AGE_FOR_RTL_QTR_ID",
+    "column" : "KYLIN_CAL_DT.AGE_FOR_RTL_QTR_ID"
+  }, {
+    "id" : 6,
+    "name" : "KYLIN_CAL_DT_AGE_FOR_RTL_WEEK_ID",
+    "column" : "KYLIN_CAL_DT.AGE_FOR_RTL_WEEK_ID"
+  }, {
+    "id" : 7,
+    "name" : "KYLIN_CAL_DT_AGE_FOR_RTL_YEAR_ID",
+    "column" : "KYLIN_CAL_DT.AGE_FOR_RTL_YEAR_ID"
+  }, {
+    "id" : 8,
+    "name" : "KYLIN_CAL_DT_AGE_FOR_WEEK_ID",
+    "column" : "KYLIN_CAL_DT.AGE_FOR_WEEK_ID"
+  }, {
+    "id" : 9,
+    "name" : "KYLIN_CAL_DT_AGE_FOR_YEAR_ID",
+    "column" : "KYLIN_CAL_DT.AGE_FOR_YEAR_ID"
+  }, {
+    "id" : 10,
+    "name" : "KYLIN_CAL_DT_CAL_DATE",
+    "column" : "KYLIN_CAL_DT.CAL_DATE"
+  }, {
+    "id" : 11,
+    "name" : "KYLIN_CAL_DT_CAL_DT",
+    "column" : "KYLIN_CAL_DT.CAL_DT"
+  }, {
+    "id" : 12,
+    "name" : "KYLIN_CAL_DT_CAL_DT_DESC",
+    "column" : "KYLIN_CAL_DT.CAL_DT_DESC"
+  }, {
+    "id" : 13,
+    "name" : "KYLIN_CAL_DT_CAL_DT_MNS_1MONTH_DT",
+    "column" : "KYLIN_CAL_DT.CAL_DT_MNS_1MONTH_DT"
+  }, {
+    "id" : 14,
+    "name" : "KYLIN_CAL_DT_CAL_DT_MNS_1QTR_DT",
+    "column" : "KYLIN_CAL_DT.CAL_DT_MNS_1QTR_DT"
+  }, {
+    "id" : 15,
+    "name" : "KYLIN_CAL_DT_CAL_DT_MNS_1WEEK_DT",
+    "column" : "KYLIN_CAL_DT.CAL_DT_MNS_1WEEK_DT"
+  }, {
+    "id" : 16,
+    "name" : "KYLIN_CAL_DT_CAL_DT_MNS_1YEAR_DT",
+    "column" : "KYLIN_CAL_DT.CAL_DT_MNS_1YEAR_DT"
+  }, {
+    "id" : 17,
+    "name" : "KYLIN_CAL_DT_CAL_DT_MNS_2MONTH_DT",
+    "column" : "KYLIN_CAL_DT.CAL_DT_MNS_2MONTH_DT"
+  }, {
+    "id" : 18,
+    "name" : "KYLIN_CAL_DT_CAL_DT_MNS_2QTR_DT",
+    "column" : "KYLIN_CAL_DT.CAL_DT_MNS_2QTR_DT"
+  }, {
+    "id" : 19,
+    "name" : "KYLIN_CAL_DT_CAL_DT_MNS_2WEEK_DT",
+    "column" : "KYLIN_CAL_DT.CAL_DT_MNS_2WEEK_DT"
+  }, {
+    "id" : 20,
+    "name" : "KYLIN_CAL_DT_CAL_DT_MNS_2YEAR_DT",
+    "column" : "KYLIN_CAL_DT.CAL_DT_MNS_2YEAR_DT"
+  }, {
+    "id" : 21,
+    "name" : "KYLIN_CAL_DT_CAL_DT_NAME",
+    "column" : "KYLIN_CAL_DT.CAL_DT_NAME"
+  }, {
+    "id" : 22,
+    "name" : "KYLIN_CAL_DT_CAL_DT_SHORT_NAME",
+    "column" : "KYLIN_CAL_DT.CAL_DT_SHORT_NAME"
+  }, {
+    "id" : 23,
+    "name" : "KYLIN_CAL_DT_CS_WEEK_BEG_DT",
+    "column" : "KYLIN_CAL_DT.CS_WEEK_BEG_DT"
+  }, {
+    "id" : 24,
+    "name" : "KYLIN_CAL_DT_CURR_CAL_DT_MNS_1MONTH_YN_ID",
+    "column" : "KYLIN_CAL_DT.CURR_CAL_DT_MNS_1MONTH_YN_ID"
+  }, {
+    "id" : 25,
+    "name" : "KYLIN_CAL_DT_CURR_CAL_DT_MNS_1QTR_YN_ID",
+    "column" : "KYLIN_CAL_DT.CURR_CAL_DT_MNS_1QTR_YN_ID"
+  }, {
+    "id" : 26,
+    "name" : "KYLIN_CAL_DT_CURR_CAL_DT_MNS_1WEEK_YN_IND",
+    "column" : "KYLIN_CAL_DT.CURR_CAL_DT_MNS_1WEEK_YN_IND"
+  }, {
+    "id" : 27,
+    "name" : "KYLIN_CAL_DT_CURR_CAL_DT_MNS_1YEAR_YN_ID",
+    "column" : "KYLIN_CAL_DT.CURR_CAL_DT_MNS_1YEAR_YN_ID"
+  }, {
+    "id" : 28,
+    "name" : "KYLIN_CAL_DT_CURR_CAL_DT_MNS_2MONTH_YN_ID",
+    "column" : "KYLIN_CAL_DT.CURR_CAL_DT_MNS_2MONTH_YN_ID"
+  }, {
+    "id" : 29,
+    "name" : "KYLIN_CAL_DT_CURR_CAL_DT_MNS_2QTR_YN_ID",
+    "column" : "KYLIN_CAL_DT.CURR_CAL_DT_MNS_2QTR_YN_ID"
+  }, {
+    "id" : 30,
+    "name" : "KYLIN_CAL_DT_CURR_CAL_DT_MNS_2WEEK_YN_IND",
+    "column" : "KYLIN_CAL_DT.CURR_CAL_DT_MNS_2WEEK_YN_IND"
+  }, {
+    "id" : 31,
+    "name" : "KYLIN_CAL_DT_CURR_CAL_DT_MNS_2YEAR_YN_ID",
+    "column" : "KYLIN_CAL_DT.CURR_CAL_DT_MNS_2YEAR_YN_ID"
+  }, {
+    "id" : 32,
+    "name" : "KYLIN_CAL_DT_DAY_IN_MONTH_COUNT",
+    "column" : "KYLIN_CAL_DT.DAY_IN_MONTH_COUNT"
+  }, {
+    "id" : 33,
+    "name" : "KYLIN_CAL_DT_DAY_IN_QTR_COUNT",
+    "column" : "KYLIN_CAL_DT.DAY_IN_QTR_COUNT"
+  }, {
+    "id" : 34,
+    "name" : "KYLIN_CAL_DT_DAY_IN_WEEK_COUNT",
+    "column" : "KYLIN_CAL_DT.DAY_IN_WEEK_COUNT"
+  }, {
+    "id" : 35,
+    "name" : "KYLIN_CAL_DT_DAY_IN_YEAR_COUNT",
+    "column" : "KYLIN_CAL_DT.DAY_IN_YEAR_COUNT"
+  }, {
+    "id" : 36,
+    "name" : "KYLIN_CAL_DT_DAY_OF_CAL_ID",
+    "column" : "KYLIN_CAL_DT.DAY_OF_CAL_ID"
+  }, {
+    "id" : 37,
+    "name" : "KYLIN_CAL_DT_DAY_OF_MONTH_ID",
+    "column" : "KYLIN_CAL_DT.DAY_OF_MONTH_ID"
+  }, {
+    "id" : 38,
+    "name" : "KYLIN_CAL_DT_DAY_OF_QTR_ID",
+    "column" : "KYLIN_CAL_DT.DAY_OF_QTR_ID"
+  }, {
+    "id" : 39,
+    "name" : "KYLIN_CAL_DT_DAY_OF_WEEK",
+    "column" : "KYLIN_CAL_DT.DAY_OF_WEEK"
+  }, {
+    "id" : 40,
+    "name" : "KYLIN_CAL_DT_DAY_OF_WEEK_ID",
+    "column" : "KYLIN_CAL_DT.DAY_OF_WEEK_ID"
+  }, {
+    "id" : 41,
+    "name" : "KYLIN_CAL_DT_DAY_OF_YEAR_ID",
+    "column" : "KYLIN_CAL_DT.DAY_OF_YEAR_ID"
+  }, {
+    "id" : 42,
+    "name" : "KYLIN_CAL_DT_KYLIN_CAL_DT_CRE_DATE",
+    "column" : "KYLIN_CAL_DT.KYLIN_CAL_DT_CRE_DATE"
+  }, {
+    "id" : 43,
+    "name" : "KYLIN_CAL_DT_KYLIN_CAL_DT_CRE_USER",
+    "column" : "KYLIN_CAL_DT.KYLIN_CAL_DT_CRE_USER"
+  }, {
+    "id" : 44,
+    "name" : "KYLIN_CAL_DT_KYLIN_CAL_DT_UPD_DATE",
+    "column" : "KYLIN_CAL_DT.KYLIN_CAL_DT_UPD_DATE"
+  }, {
+    "id" : 45,
+    "name" : "KYLIN_CAL_DT_KYLIN_CAL_DT_UPD_USER",
+    "column" : "KYLIN_CAL_DT.KYLIN_CAL_DT_UPD_USER"
+  }, {
+    "id" : 46,
+    "name" : "KYLIN_CAL_DT_MONTH_BEG_DT",
+    "column" : "KYLIN_CAL_DT.MONTH_BEG_DT"
+  }, {
+    "id" : 47,
+    "name" : "KYLIN_CAL_DT_MONTH_END_DT",
+    "column" : "KYLIN_CAL_DT.MONTH_END_DT"
+  }, {
+    "id" : 48,
+    "name" : "KYLIN_CAL_DT_MONTH_ID",
+    "column" : "KYLIN_CAL_DT.MONTH_ID"
+  }, {
+    "id" : 49,
+    "name" : "KYLIN_CAL_DT_MONTH_OF_CAL_ID",
+    "column" : "KYLIN_CAL_DT.MONTH_OF_CAL_ID"
+  }, {
+    "id" : 50,
+    "name" : "KYLIN_CAL_DT_MONTH_OF_QTR_ID",
+    "column" : "KYLIN_CAL_DT.MONTH_OF_QTR_ID"
+  }, {
+    "id" : 51,
+    "name" : "KYLIN_CAL_DT_MONTH_OF_YEAR_ID",
+    "column" : "KYLIN_CAL_DT.MONTH_OF_YEAR_ID"
+  }, {
+    "id" : 52,
+    "name" : "KYLIN_CAL_DT_MTD_YN_ID",
+    "column" : "KYLIN_CAL_DT.MTD_YN_ID"
+  }, {
+    "id" : 53,
+    "name" : "KYLIN_CAL_DT_PRD_DESC",
+    "column" : "KYLIN_CAL_DT.PRD_DESC"
+  }, {
+    "id" : 54,
+    "name" : "KYLIN_CAL_DT_PRD_FLAG",
+    "column" : "KYLIN_CAL_DT.PRD_FLAG"
+  }, {
+    "id" : 55,
+    "name" : "KYLIN_CAL_DT_PRD_ID",
+    "column" : "KYLIN_CAL_DT.PRD_ID"
+  }, {
+    "id" : 56,
+    "name" : "KYLIN_CAL_DT_PRD_IND",
+    "column" : "KYLIN_CAL_DT.PRD_IND"
+  }, {
+    "id" : 57,
+    "name" : "KYLIN_CAL_DT_QTD_YN_ID",
+    "column" : "KYLIN_CAL_DT.QTD_YN_ID"
+  }, {
+    "id" : 58,
+    "name" : "KYLIN_CAL_DT_QTR_BEG_DT",
+    "column" : "KYLIN_CAL_DT.QTR_BEG_DT"
+  }, {
+    "id" : 59,
+    "name" : "KYLIN_CAL_DT_QTR_DESC",
+    "column" : "KYLIN_CAL_DT.QTR_DESC"
+  }, {
+    "id" : 60,
+    "name" : "KYLIN_CAL_DT_QTR_END_DT",
+    "column" : "KYLIN_CAL_DT.QTR_END_DT"
+  }, {
+    "id" : 61,
+    "name" : "KYLIN_CAL_DT_QTR_ID",
+    "column" : "KYLIN_CAL_DT.QTR_ID"
+  }, {
+    "id" : 62,
+    "name" : "KYLIN_CAL_DT_QTR_IND",
+    "column" : "KYLIN_CAL_DT.QTR_IND"
+  }, {
+    "id" : 63,
+    "name" : "KYLIN_CAL_DT_QTR_OF_CAL_ID",
+    "column" : "KYLIN_CAL_DT.QTR_OF_CAL_ID"
+  }, {
+    "id" : 64,
+    "name" : "KYLIN_CAL_DT_QTR_OF_YEAR_ID",
+    "column" : "KYLIN_CAL_DT.QTR_OF_YEAR_ID"
+  }, {
+    "id" : 65,
+    "name" : "KYLIN_CAL_DT_RETAIL_START_DATE",
+    "column" : "KYLIN_CAL_DT.RETAIL_START_DATE"
+  }, {
+    "id" : 66,
+    "name" : "KYLIN_CAL_DT_RETAIL_WEEK",
+    "column" : "KYLIN_CAL_DT.RETAIL_WEEK"
+  }, {
+    "id" : 67,
+    "name" : "KYLIN_CAL_DT_RETAIL_WK_END_DATE",
+    "column" : "KYLIN_CAL_DT.RETAIL_WK_END_DATE"
+  }, {
+    "id" : 68,
+    "name" : "KYLIN_CAL_DT_RETAIL_YEAR",
+    "column" : "KYLIN_CAL_DT.RETAIL_YEAR"
+  }, {
+    "id" : 69,
+    "name" : "KYLIN_CAL_DT_RTL_MONTH_BEG_DT",
+    "column" : "KYLIN_CAL_DT.RTL_MONTH_BEG_DT"
+  }, {
+    "id" : 70,
+    "name" : "KYLIN_CAL_DT_RTL_MONTH_OF_RTL_YEAR_ID",
+    "column" : "KYLIN_CAL_DT.RTL_MONTH_OF_RTL_YEAR_ID"
+  }, {
+    "id" : 71,
+    "name" : "KYLIN_CAL_DT_RTL_QTR_BEG_DT",
+    "column" : "KYLIN_CAL_DT.RTL_QTR_BEG_DT"
+  }, {
+    "id" : 72,
+    "name" : "KYLIN_CAL_DT_RTL_QTR_OF_RTL_YEAR_ID",
+    "column" : "KYLIN_CAL_DT.RTL_QTR_OF_RTL_YEAR_ID"
+  }, {
+    "id" : 73,
+    "name" : "KYLIN_CAL_DT_RTL_WEEK_BEG_DT",
+    "column" : "KYLIN_CAL_DT.RTL_WEEK_BEG_DT"
+  }, {
+    "id" : 74,
+    "name" : "KYLIN_CAL_DT_RTL_WEEK_OF_RTL_YEAR_ID",
+    "column" : "KYLIN_CAL_DT.RTL_WEEK_OF_RTL_YEAR_ID"
+  }, {
+    "id" : 75,
+    "name" : "KYLIN_CAL_DT_RTL_YEAR_BEG_DT",
+    "column" : "KYLIN_CAL_DT.RTL_YEAR_BEG_DT"
+  }, {
+    "id" : 76,
+    "name" : "KYLIN_CAL_DT_SEASON_BEG_DT",
+    "column" : "KYLIN_CAL_DT.SEASON_BEG_DT"
+  }, {
+    "id" : 77,
+    "name" : "KYLIN_CAL_DT_SEASON_OF_YEAR_ID",
+    "column" : "KYLIN_CAL_DT.SEASON_OF_YEAR_ID"
+  }, {
+    "id" : 78,
+    "name" : "KYLIN_CAL_DT_WEEK_BEG_DATE",
+    "column" : "KYLIN_CAL_DT.WEEK_BEG_DATE"
+  }, {
+    "id" : 79,
+    "name" : "KYLIN_CAL_DT_WEEK_BEG_DT",
+    "column" : "KYLIN_CAL_DT.WEEK_BEG_DT"
+  }, {
+    "id" : 80,
+    "name" : "KYLIN_CAL_DT_WEEK_BEG_END_DESC_MD",
+    "column" : "KYLIN_CAL_DT.WEEK_BEG_END_DESC_MD"
+  }, {
+    "id" : 81,
+    "name" : "KYLIN_CAL_DT_WEEK_BEG_END_DESC_MDY",
+    "column" : "KYLIN_CAL_DT.WEEK_BEG_END_DESC_MDY"
+  }, {
+    "id" : 82,
+    "name" : "KYLIN_CAL_DT_WEEK_END_DATE",
+    "column" : "KYLIN_CAL_DT.WEEK_END_DATE"
+  }, {
+    "id" : 83,
+    "name" : "KYLIN_CAL_DT_WEEK_END_DT",
+    "column" : "KYLIN_CAL_DT.WEEK_END_DT"
+  }, {
+    "id" : 84,
+    "name" : "KYLIN_CAL_DT_WEEK_ID",
+    "column" : "KYLIN_CAL_DT.WEEK_ID"
+  }, {
+    "id" : 85,
+    "name" : "KYLIN_CAL_DT_WEEK_IND",
+    "column" : "KYLIN_CAL_DT.WEEK_IND"
+  }, {
+    "id" : 86,
+    "name" : "KYLIN_CAL_DT_WEEK_IN_YEAR_ID",
+    "column" : "KYLIN_CAL_DT.WEEK_IN_YEAR_ID"
+  }, {
+    "id" : 87,
+    "name" : "KYLIN_CAL_DT_WEEK_NUM_DESC",
+    "column" : "KYLIN_CAL_DT.WEEK_NUM_DESC"
+  }, {
+    "id" : 88,
+    "name" : "KYLIN_CAL_DT_WEEK_OF_CAL_ID",
+    "column" : "KYLIN_CAL_DT.WEEK_OF_CAL_ID"
+  }, {
+    "id" : 89,
+    "name" : "KYLIN_CAL_DT_WEEK_OF_YEAR_ID",
+    "column" : "KYLIN_CAL_DT.WEEK_OF_YEAR_ID"
+  }, {
+    "id" : 90,
+    "name" : "KYLIN_CAL_DT_WTD_YN_ID",
+    "column" : "KYLIN_CAL_DT.WTD_YN_ID"
+  }, {
+    "id" : 91,
+    "name" : "KYLIN_CAL_DT_YEAR_BEG_DT",
+    "column" : "KYLIN_CAL_DT.YEAR_BEG_DT"
+  }, {
+    "id" : 92,
+    "name" : "KYLIN_CAL_DT_YEAR_END_DT",
+    "column" : "KYLIN_CAL_DT.YEAR_END_DT"
+  }, {
+    "id" : 93,
+    "name" : "KYLIN_CAL_DT_YEAR_ID",
+    "column" : "KYLIN_CAL_DT.YEAR_ID"
+  }, {
+    "id" : 94,
+    "name" : "KYLIN_CAL_DT_YEAR_IND",
+    "column" : "KYLIN_CAL_DT.YEAR_IND"
+  }, {
+    "id" : 95,
+    "name" : "KYLIN_CAL_DT_YEAR_OF_CAL_ID",
+    "column" : "KYLIN_CAL_DT.YEAR_OF_CAL_ID"
+  }, {
+    "id" : 96,
+    "name" : "KYLIN_CAL_DT_YTD_YN_ID",
+    "column" : "KYLIN_CAL_DT.YTD_YN_ID"
+  }, {
+    "id" : 97,
+    "name" : "KYLIN_CAL_DT_YTM_YN_ID",
+    "column" : "KYLIN_CAL_DT.YTM_YN_ID"
+  }, {
+    "id" : 98,
+    "name" : "KYLIN_CAL_DT_YTQ_YN_ID",
+    "column" : "KYLIN_CAL_DT.YTQ_YN_ID"
+  }, {
+    "id" : 99,
+    "name" : "KYLIN_CAL_DT_YTW_YN_ID",
+    "column" : "KYLIN_CAL_DT.YTW_YN_ID"
+  }, {
+    "id" : 100,
+    "name" : "TEST_KYLIN_FACT_CAL_DT",
+    "column" : "TEST_KYLIN_FACT.CAL_DT"
+  }, {
+    "id" : 101,
+    "name" : "TEST_KYLIN_FACT_CC_2",
+    "column" : "TEST_KYLIN_FACT.CC_AUTO_2"
+  }, {
+    "id" : 102,
+    "name" : "TEST_KYLIN_FACT_ITEM_COUNT",
+    "column" : "TEST_KYLIN_FACT.ITEM_COUNT"
+  }, {
+    "id" : 103,
+    "name" : "TEST_KYLIN_FACT_LEAF_CATEG_ID",
+    "column" : "TEST_KYLIN_FACT.LEAF_CATEG_ID"
+  }, {
+    "id" : 104,
+    "name" : "TEST_KYLIN_FACT_LSTG_FORMAT_NAME",
+    "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME"
+  }, {
+    "id" : 105,
+    "name" : "TEST_KYLIN_FACT_LSTG_SITE_ID",
+    "column" : "TEST_KYLIN_FACT.LSTG_SITE_ID"
+  }, {
+    "id" : 106,
+    "name" : "TEST_KYLIN_FACT_ORDER_ID",
+    "column" : "TEST_KYLIN_FACT.ORDER_ID"
+  }, {
+    "id" : 107,
+    "name" : "TEST_KYLIN_FACT_PRICE",
+    "column" : "TEST_KYLIN_FACT.PRICE"
+  }, {
+    "id" : 108,
+    "name" : "TEST_KYLIN_FACT_SELLER_ID",
+    "column" : "TEST_KYLIN_FACT.SELLER_ID"
+  }, {
+    "id" : 109,
+    "name" : "TEST_KYLIN_FACT_SLR_SEGMENT_CD",
+    "column" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD"
+  }, {
+    "id" : 110,
+    "name" : "TEST_KYLIN_FACT_TEST_COUNT_DISTINCT_BITMAP",
+    "column" : "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
+  }, {
+    "id" : 111,
+    "name" : "TEST_KYLIN_FACT_TRANS_ID",
+    "column" : "TEST_KYLIN_FACT.TRANS_ID"
+  } ],
+  "all_measures" : [ {
+    "name" : "COUNT_ALL",
+    "function" : {
+      "expression" : "COUNT",
+      "parameters" : [ {
+        "type" : "constant",
+        "value" : "1"
+      } ],
+      "returntype" : "bigint"
+    },
+    "id" : 100000
+  } ],
+  "column_correlations" : [ ],
+  "multilevel_partition_cols" : [ ],
+  "computed_columns" : [ {
+    "tableIdentity" : "DEFAULT.TEST_KYLIN_FACT",
+    "tableAlias" : "TEST_KYLIN_FACT",
+    "columnName" : "CC_AUTO_2",
+    "expression" : "TEST_KYLIN_FACT.ITEM_COUNT + TEST_KYLIN_FACT.PRICE",
+    "innerExpression" : "TEST_KYLIN_FACT.ITEM_COUNT + TEST_KYLIN_FACT.PRICE",
+    "datatype" : "DECIMAL(30,4)",
+    "comment" : "Auto suggested from: TEST_KYLIN_FACT.ITEM_COUNT + TEST_KYLIN_FACT.PRICE"
+  }  ]
+}

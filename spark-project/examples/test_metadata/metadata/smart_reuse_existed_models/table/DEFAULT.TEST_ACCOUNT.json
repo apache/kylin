@@ -1,0 +1,34 @@
+{
+  "uuid" : "4d13df8a-76ee-4420-8ecd-5ddbc76d87b9",
+  "last_modified" : 0,
+  "create_time" : 1568865575543,
+  "version" : "4.0.0.0",
+  "name" : "TEST_ACCOUNT",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ACCOUNT_ID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "ACCOUNT_BUYER_LEVEL",
+    "datatype" : "integer"
+  }, {
+    "id" : "3",
+    "name" : "ACCOUNT_SELLER_LEVEL",
+    "datatype" : "integer"
+  }, {
+    "id" : "4",
+    "name" : "ACCOUNT_COUNTRY",
+    "datatype" : "varchar(4096)"
+  }, {
+    "id" : "5",
+    "name" : "ACCOUNT_CONTACT",
+    "datatype" : "varchar(4096)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT"
+}
