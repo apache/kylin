@@ -1,0 +1,58 @@
+{
+  "uuid" : "bace48a0-5c7d-42c1-8f67-9524024606b5",
+  "last_modified" : 0,
+  "create_time" : 1568865575533,
+  "version" : "4.0.0.0",
+  "name" : "TEST_KYLIN_FACT",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "TRANS_ID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "2",
+    "name" : "ORDER_ID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "3",
+    "name" : "CAL_DT",
+    "datatype" : "date"
+  }, {
+    "id" : "4",
+    "name" : "LSTG_FORMAT_NAME",
+    "datatype" : "varchar(4096)"
+  }, {
+    "id" : "5",
+    "name" : "LEAF_CATEG_ID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "6",
+    "name" : "LSTG_SITE_ID",
+    "datatype" : "integer"
+  }, {
+    "id" : "7",
+    "name" : "SLR_SEGMENT_CD",
+    "datatype" : "smallint"
+  }, {
+    "id" : "8",
+    "name" : "SELLER_ID",
+    "datatype" : "integer"
+  }, {
+    "id" : "9",
+    "name" : "PRICE",
+    "datatype" : "decimal(19,4)"
+  }, {
+    "id" : "10",
+    "name" : "ITEM_COUNT",
+    "datatype" : "integer"
+  }, {
+    "id" : "11",
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
+    "datatype" : "varchar(4096)"
+  } ],
+  "source_type" : 9,
+  "table_type" : "MANAGED",
+  "top" : false,
+  "increment_loading" : false,
+  "last_snapshot_path" : null,
+  "database" : "DEFAULT"
+}

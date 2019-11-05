@@ -1,0 +1,13 @@
+{
+  "uuid" : "dcaceac3-d117-4e5c-8078-0b1303947883",
+  "last_modified" : 0,
+  "version" : "3.0.0.0",
+  "mvcc" : 0,
+  "conds" : [ {
+    "@class" : "io.kyligence.kap.metadata.favorite.FavoriteRule$Condition",
+    "leftThreshold" : null,
+    "rightThreshold" : "ADMIN"
+  } ],
+  "name" : "submitter",
+  "enabled" : true
+}

@@ -1,0 +1,37 @@
+{
+  "uuid" : "9e62971a-f5e9-4982-b3d0-c9377c4022e7",
+  "last_modified" : 0,
+  "create_time" : 1568874487604,
+  "version" : "4.0.0.0",
+  "description" : "",
+  "rule_based_index" : null,
+  "indexes" : [ {
+    "id" : 0,
+    "dimensions" : [ ],
+    "measures" : [ 100000, 100001 ],
+    "layouts" : [ {
+      "id" : 1,
+      "name" : null,
+      "owner" : null,
+      "col_order" : [ 100000, 100001 ],
+      "shard_by_columns" : [ ],
+      "sort_by_columns" : [ ],
+      "storage_type" : 20,
+      "update_time" : 1568874487616,
+      "manual" : false,
+      "auto" : true,
+      "draft_version" : null
+    } ],
+    "next_layout_offset" : 2
+  } ],
+  "override_properties" : { },
+  "segment_range_start" : 0,
+  "segment_range_end" : 9223372036854775807,
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "notify_list" : [ ],
+  "status_need_notify" : [ ],
+  "engine_type" : 80,
+  "next_aggregation_index_id" : 10000,
+  "next_table_index_id" : 20000000000
+}

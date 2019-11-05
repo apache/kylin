@@ -1,0 +1,18 @@
+{
+  "uuid" : "e26b09eb-5236-40f6-9e1f-26f32b17f17b",
+  "last_modified" : 1568878090467,
+  "create_time" : 1568878090465,
+  "version" : "4.0.0.0",
+  "dataflow" : "01438364-580c-4ea9-92eb-4b5b221b4838",
+  "layout_instances" : [ {
+    "layout_id" : 1,
+    "build_job_id" : "5ee0e238-d2cd-4be7-a0dd-8c7f866a1362",
+    "rows" : 731,
+    "byte_size" : 5025,
+    "file_count" : 1,
+    "source_rows" : 10000,
+    "source_byte_size" : 0,
+    "partition_num" : 1,
+    "create_time" : 1568878226842
+  } ]
+}
