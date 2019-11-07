@@ -2282,4 +2282,16 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.tool.health-check.stale-job-threshold-days", "30"));
     }
 
+    public boolean isSecurityConfigDynamicLoadEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.security.auth.config.dynamic.load.enabled", "true"));
+    }
+
+    public String getAuthConfigFile() {
+        return getOptional("kylin.security.auth.config.filename", "kylin-user.properties");
+    }
+
+    public Integer getSecurityConfigDynamicLoadIntervel() {
+        return Integer.parseInt(getOptional("kylin.security.auth.config.dynamic.load.intervel-in-minute", "100"));
+    }
+
 }

@@ -1,0 +1,6 @@
+users:
+- userId: 0
+  username: hello
+  password: world
+  userRole:
+  - ROLE_ADMIN

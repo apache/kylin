@@ -35,6 +35,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 
 public class JsonUtil {
 
@@ -46,6 +48,7 @@ public class JsonUtil {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final ObjectMapper indentMapper = new ObjectMapper();
     private static final ObjectMapper typeMapper = new ObjectMapper();
+    private static final ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
 
     static {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -121,5 +124,9 @@ public class JsonUtil {
 
     public static void writeValueWithTyping(OutputStream out, Object value) throws IOException {
         typeMapper.writeValue(out, value);
+    }
+
+    public static <T> T  readYamlValue(InputStream is, Class<T> o) throws IOException{
+        return yamlMapper.readValue(is, o);
     }
 }
