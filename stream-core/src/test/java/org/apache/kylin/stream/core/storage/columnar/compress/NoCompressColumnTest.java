@@ -52,7 +52,7 @@ public class NoCompressColumnTest {
         writeNoCompressedData(rowCnt);
 
         ByteBuffer byteBuffer = Files.map(tmpColFile, MapMode.READ_ONLY);
-        try (NoCompressedColumnReader reader = new NoCompressedColumnReader(byteBuffer, 0, 4, rowCnt)) {
+        try (NoCompressedColumnReader reader = new NoCompressedColumnReader(byteBuffer, 0, 40000, rowCnt)) {
             int k = 0;
             for (byte[] val : reader) {
                 assertEquals(k, Bytes.toInt(val));
