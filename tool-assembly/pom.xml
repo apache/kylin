@@ -106,6 +106,7 @@
                                     <include>org.springframework.security:spring-security-acl</include>
                                     <include>org.springframework:spring-core</include>
                                     <include>com.fasterxml.jackson*:*</include>
+                                    <include>com.tdunning*:*</include>
                                 </includes>
                             </artifactSet>
                             <relocations>
@@ -132,6 +133,10 @@
                                 <relocation>
                                     <pattern>com.fasterxml.jackson</pattern>
                                     <shadedPattern>${shadeBase}.com.fasterxml.jackson</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.tdunning</pattern>
+                                    <shadedPattern>${shadeBase}.com.tdunning</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
