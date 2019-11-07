@@ -28,15 +28,15 @@ public class NoCompressedColumnReader implements ColumnDataReader {
     private ByteBuffer dataBuffer;
     private byte[] readBuffer;
     private int colDataStartOffset;
-    private int colValLength;
     private int rowCount;
+    private int valLen;
 
     public NoCompressedColumnReader(ByteBuffer dataBuffer, int colDataStartOffset, int colValLength, int rowCount) {
         this.dataBuffer = dataBuffer;
         this.colDataStartOffset = colDataStartOffset;
-        this.colValLength = colValLength;
         this.rowCount = rowCount;
-        this.readBuffer = new byte[colValLength];
+        this.valLen = colValLength / rowCount;
+        this.readBuffer = new byte[valLen];
     }
 
     public Iterator<byte[]> iterator() {
@@ -44,7 +44,7 @@ public class NoCompressedColumnReader implements ColumnDataReader {
     }
 
     public byte[] read(int rowNum) {
-        dataBuffer.position(colDataStartOffset + rowNum * colValLength);
+        dataBuffer.position(colDataStartOffset + rowNum * valLen);
         dataBuffer.get(readBuffer);
         return readBuffer;
     }
