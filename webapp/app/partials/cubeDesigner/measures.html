@@ -123,7 +123,7 @@
                           <div class="row">
                               <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Param Type</b></label>
                               <div class="col-xs-12 col-sm-6">
-                                  <select class="form-control" ng-if="newMeasure.function.expression != 'COUNT'&&newMeasure.function.expression != 'PERCENTILE'"
+                                  <select class="form-control" ng-if="newMeasure.function.expression != 'PERCENTILE'"
                                       ng-init="newMeasure.function.parameter.type=(!!newMeasure.function.parameter.type)?newMeasure.function.parameter.type: 'column' "
                                       chosen ng-model="newMeasure.function.parameter.type" required
                                       ng-change="measureReturnTypeUpdate();"
@@ -131,7 +131,7 @@
                                       <option value=""></option>
                                   </select>
                                   <span class="font-color-default"
-                                         ng-if="newMeasure.function.expression == 'COUNT'||newMeasure.function.expression == 'PERCENTILE'"
+                                         ng-if="newMeasure.function.expression == 'PERCENTILE'"
                                          ><b>{{newMeasure.function.parameter.type}}</b>
                                   </span>
                               </div>

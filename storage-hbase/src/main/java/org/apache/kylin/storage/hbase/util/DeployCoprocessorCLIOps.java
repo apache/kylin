@@ -14,13 +14,36 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
-package org.apache.kylin.source.jdbc;
+ */
 
-public class JdbcDialect {
-    public static final String DIALECT_VERTICA = "vertica";
-    public static final String DIALECT_ORACLE = "oracle";
-    public static final String DIALECT_MYSQL = "mysql";
-    public static final String DIALECT_HIVE = "hive";
-    public static final String DIALECT_MSSQL = "mssql";
+package org.apache.kylin.storage.hbase.util;
+
+public class DeployCoprocessorCLIOps {
+    private String localCoprocessorJar;
+    private int maxThreads;
+    private String filterType;
+    private String[] entities;
+
+    public DeployCoprocessorCLIOps(String localCoprocessorJar, int maxThreads, String filterType, String[] entities) {
+        this.localCoprocessorJar = localCoprocessorJar;
+        this.maxThreads = maxThreads;
+        this.filterType = filterType;
+        this.entities = entities;
+    }
+
+    String getLocalCoprocessorJar() {
+        return this.localCoprocessorJar;
+    }
+
+    int getMaxThreads() {
+        return this.maxThreads;
+    }
+
+    String getFilterType() {
+        return this.filterType;
+    }
+
+    String[] getEntities() {
+        return this.entities;
+    }
 }

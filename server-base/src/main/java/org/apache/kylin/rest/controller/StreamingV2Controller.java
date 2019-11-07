@@ -218,7 +218,7 @@ public class StreamingV2Controller extends BasicController {
                     incompatibleMsgs.add(msg);
                 }
             }
-            if (incompatibleMsgs.size() > 0) {
+            if (!incompatibleMsgs.isEmpty()) {
                 logger.info("incompatible for hive and input table schema:{}", incompatibleMsgs);
                 throw new BadRequestException("incompatible for hive schema and input table schema:" + incompatibleMsgs);
             }

@@ -80,6 +80,7 @@ KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
     },
     optimize: {method: 'PUT', params: {action: 'optimize'}, isArray: false},
     autoMigrate: {method: 'POST', params: {action: 'migrate'}, isArray: false},
-    lookupRefresh: {method: 'PUT', params: {action: 'refresh_lookup'}, isArray: false}
+    lookupRefresh: {method: 'PUT', params: {action: 'refresh_lookup'}, isArray: false},
+    checkDuplicateCubeName: {method: 'GET', params: {action: 'validate'}, isArray: false}
   });
 }]);

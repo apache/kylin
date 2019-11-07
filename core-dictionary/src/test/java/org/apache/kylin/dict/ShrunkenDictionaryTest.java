@@ -26,10 +26,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class ShrunkenDictionaryTest {
+    @BeforeClass
+    public static void setUp() {
+        LocalFileMetadataTestCase.staticCreateTestMetadata();
+    }
+
+    @AfterClass
+    public static void after() {
+        LocalFileMetadataTestCase.staticCleanupTestMetadata();
+    }
 
     @Test
     public void testStringDictionary() {

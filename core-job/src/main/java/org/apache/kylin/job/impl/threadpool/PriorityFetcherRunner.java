@@ -83,37 +83,27 @@ public class PriorityFetcherRunner extends FetcherRunner {
                         executableWithPriority.getSecond() + 1);
             }
 
-            int nRunning = 0, nReady = 0, nStopped = 0, nOthers = 0, nError = 0, nDiscarded = 0, nSUCCEED = 0;
-            for (final String id : getExecutableManger().getAllJobIdsInCache()) {
+            nRunning = 0;
+            nReady = 0;
+            nStopped = 0;
+            nOthers = 0;
+            nError = 0;
+            nDiscarded = 0;
+            nSUCCEED = 0;
+            for (final String id : getExecutableManager().getAllJobIdsInCache()) {
                 if (runningJobs.containsKey(id)) {
                     // logger.debug("Job id:" + id + " is already running");
                     nRunning++;
                     continue;
                 }
 
-                final Output outputDigest = getExecutableManger().getOutputDigest(id);
+                final Output outputDigest = getExecutableManager().getOutputDigest(id);
                 if ((outputDigest.getState() != ExecutableState.READY)) {
-                    // logger.debug("Job id:" + id + " not runnable");
-                    if (outputDigest.getState() == ExecutableState.SUCCEED) {
-                        nSUCCEED++;
-                    } else if (outputDigest.getState() == ExecutableState.ERROR) {
-                        nError++;
-                    } else if (outputDigest.getState() == ExecutableState.DISCARDED) {
-                        nDiscarded++;
-                    } else if (outputDigest.getState() == ExecutableState.STOPPED) {
-                        nStopped++;
-                    } else {
-                        if (fetchFailed) {
-                            getExecutableManger().forceKillJob(id);
-                            nError++;
-                        } else {
-                            nOthers++;
-                        }
-                    }
+                    jobStateCount(id);
                     continue;
                 }
 
-                AbstractExecutable executable = getExecutableManger().getJob(id);
+                AbstractExecutable executable = getExecutableManager().getJob(id);
                 if (!executable.isReady()) {
                     nOthers++;
                     continue;
@@ -122,7 +112,7 @@ public class PriorityFetcherRunner extends FetcherRunner {
                 nReady++;
                 Integer priority = leftJobPriorities.get(id);
                 if (priority == null) {
-                    priority = executable.getDefaultPriority();
+                    priority = executable.getPriority();
                 }
                 jobPriorityQueue.add(new Pair<>(executable, priority));
             }

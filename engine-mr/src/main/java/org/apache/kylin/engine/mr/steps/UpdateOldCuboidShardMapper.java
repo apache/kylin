@@ -18,17 +18,9 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import static org.apache.kylin.engine.mr.JobBuilderSupport.PathNameCuboidBase;
-import static org.apache.kylin.engine.mr.JobBuilderSupport.PathNameCuboidOld;
-
 import java.io.IOException;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.cube.CubeInstance;
@@ -50,9 +42,6 @@ public class UpdateOldCuboidShardMapper extends KylinMapper<Text, Text, Text, Te
 
     private static final Logger logger = LoggerFactory.getLogger(UpdateOldCuboidShardMapper.class);
 
-    private MultipleOutputs mos;
-    private long baseCuboid;
-
     private CubeDesc cubeDesc;
     private RowKeySplitter rowKeySplitter;
     private RowKeyEncoderProvider rowKeyEncoderProvider;
@@ -64,7 +53,6 @@ public class UpdateOldCuboidShardMapper extends KylinMapper<Text, Text, Text, Te
     @Override
     protected void doSetup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
-        mos = new MultipleOutputs(context);
 
         String cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME);
         String segmentID = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_ID);
@@ -76,7 +64,6 @@ public class UpdateOldCuboidShardMapper extends KylinMapper<Text, Text, Text, Te
         CubeSegment oldSegment = cube.getOriginalSegmentToOptimize(cubeSegment);
 
         cubeDesc = cube.getDescriptor();
-        baseCuboid = cube.getCuboidScheduler().getBaseCuboidId();
 
         rowKeySplitter = new RowKeySplitter(oldSegment);
         rowKeyEncoderProvider = new RowKeyEncoderProvider(cubeSegment);
@@ -90,11 +77,7 @@ public class UpdateOldCuboidShardMapper extends KylinMapper<Text, Text, Text, Te
         int fullKeySize = buildKey(cuboid, rowKeySplitter.getSplitBuffers());
         outputKey.set(newKeyBuf.array(), 0, fullKeySize);
 
-        String baseOutputPath = PathNameCuboidOld;
-        if (cuboidID == baseCuboid) {
-            baseOutputPath = PathNameCuboidBase;
-        }
-        mos.write(outputKey, value, generateFileName(baseOutputPath));
+        context.write(outputKey, value);
     }
 
     private int buildKey(Cuboid cuboid, ByteArray[] splitBuffers) {
@@ -104,7 +87,8 @@ public class UpdateOldCuboidShardMapper extends KylinMapper<Text, Text, Text, Te
         int endIdx = startIdx + Long.bitCount(cuboid.getId());
         int offset = 0;
         for (int i = startIdx; i < endIdx; i++) {
-            System.arraycopy(splitBuffers[i].array(), splitBuffers[i].offset(), newKeyBodyBuf, offset, splitBuffers[i].length());
+            System.arraycopy(splitBuffers[i].array(), splitBuffers[i].offset(), newKeyBodyBuf, offset,
+                    splitBuffers[i].length());
             offset += splitBuffers[i].length();
         }
 
@@ -117,25 +101,5 @@ public class UpdateOldCuboidShardMapper extends KylinMapper<Text, Text, Text, Te
         rowkeyEncoder.encode(new ByteArray(newKeyBodyBuf, 0, offset), newKeyBuf);
 
         return fullKeySize;
-    }
-
-    @Override
-    public void doCleanup(Context context) throws IOException, InterruptedException {
-        mos.close();
-
-        Path outputDirBase = new Path(context.getConfiguration().get(FileOutputFormat.OUTDIR), PathNameCuboidBase);
-        FileSystem fs = FileSystem.get(context.getConfiguration());
-        if (!fs.exists(outputDirBase)) {
-            fs.mkdirs(outputDirBase);
-            SequenceFile
-                    .createWriter(context.getConfiguration(),
-                            SequenceFile.Writer.file(new Path(outputDirBase, "part-m-00000")),
-                            SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(Text.class))
-                    .close();
-        }
-    }
-
-    private String generateFileName(String subDir) {
-        return subDir + "/part";
     }
 }

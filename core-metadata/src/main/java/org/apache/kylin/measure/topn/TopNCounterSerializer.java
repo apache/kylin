@@ -73,7 +73,7 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
     public void serialize(TopNCounter<ByteArray> value, ByteBuffer out) {
         double[] counters = value.getCounters();
         List<Counter<ByteArray>> peek = value.topK(1);
-        int keyLength = peek.size() > 0 ? peek.get(0).getItem().length() : 0;
+        int keyLength = !peek.isEmpty() ? peek.get(0).getItem().length() : 0;
         out.putInt(value.getCapacity());
         out.putInt(value.size());
         out.putInt(keyLength);

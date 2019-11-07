@@ -202,7 +202,7 @@ public class CubeDescManager {
                 return cubeDesc;
             }
             // Semantic validation
-            CubeMetadataValidator validator = new CubeMetadataValidator();
+            CubeMetadataValidator validator = new CubeMetadataValidator(config);
             ValidateContext context = validator.validate(cubeDesc);
             if (!context.ifPass()) {
                 return cubeDesc;
@@ -241,7 +241,7 @@ public class CubeDescManager {
 
             postProcessCubeDesc(desc);
             // Semantic validation
-            CubeMetadataValidator validator = new CubeMetadataValidator();
+            CubeMetadataValidator validator = new CubeMetadataValidator(config);
             ValidateContext context = validator.validate(desc);
             if (!context.ifPass()) {
                 return desc;

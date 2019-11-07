@@ -93,6 +93,47 @@ public class JobController extends BasicController {
     }
 
     /**
+     * get job status overview
+     *
+     * @return
+     * @throws IOException
+     */
+    @RequestMapping(value = "/overview", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public Map<JobStatusEnum, Integer> jobOverview(JobListRequest jobRequest) {
+        Map<JobStatusEnum, Integer> jobOverview = new HashMap<>();
+        List<JobStatusEnum> statusList = new ArrayList<JobStatusEnum>();
+        if (null != jobRequest.getStatus()) {
+            for (int status : jobRequest.getStatus()) {
+                statusList.add(JobStatusEnum.getByCode(status));
+            }
+        }
+
+        JobTimeFilterEnum timeFilter = JobTimeFilterEnum.LAST_ONE_WEEK;
+        if (null != jobRequest.getTimeFilter()) {
+            timeFilter = JobTimeFilterEnum.getByCode(jobRequest.getTimeFilter());
+        }
+
+        JobService.JobSearchMode jobSearchMode = JobService.JobSearchMode.CUBING_ONLY;
+        if (null != jobRequest.getJobSearchMode()) {
+            try {
+                jobSearchMode = JobService.JobSearchMode.valueOf(jobRequest.getJobSearchMode());
+            } catch (IllegalArgumentException e) {
+                logger.warn("Invalid value for JobSearchMode: '" + jobRequest.getJobSearchMode() + "', skip it.");
+            }
+        }
+
+        try {
+            jobOverview = jobService.searchJobsOverview(jobRequest.getCubeName(), jobRequest.getProjectName(), statusList,
+                    timeFilter, jobSearchMode);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e);
+        }
+        return jobOverview;
+    }
+
+    /**
      * Get a cube job
      * 
      * @return
@@ -180,7 +221,8 @@ public class JobController extends BasicController {
 
         try {
             final JobInstance jobInstance = jobService.getJobInstance(jobId);
-            return jobService.pauseJob(jobInstance);
+            jobService.pauseJob(jobInstance);
+            return jobService.getJobInstance(jobId);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e);

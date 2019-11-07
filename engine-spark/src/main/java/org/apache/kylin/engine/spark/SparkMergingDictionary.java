@@ -18,8 +18,13 @@
 
 package org.apache.kylin.engine.spark;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -62,14 +67,11 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.PairFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Tuple2;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
+import scala.Tuple2;
 
 /**
     merge dictionary
@@ -236,14 +238,16 @@ public class SparkMergingDictionary extends AbstractApplication implements Seria
                     Map<Long, HLLCounter> cuboidHLLMap = Maps.newHashMap();
                     Configuration conf = null;
                     int averageSamplingPercentage = 0;
+                    long sourceRecordCount = 0;
+                    long effectiveTimeRange = 0;
 
                     for (CubeSegment cubeSegment : mergingSegments) {
                         String filePath = cubeSegment.getStatisticsResourcePath();
 
                         File tempFile = File.createTempFile(segmentId, ".seq");
 
-                        try(InputStream is = rs.getResource(filePath).content();
-                            FileOutputStream tempFileStream = new FileOutputStream(tempFile)) {
+                        try (InputStream is = rs.getResource(filePath).content();
+                                FileOutputStream tempFileStream = new FileOutputStream(tempFile)) {
 
                             org.apache.commons.io.IOUtils.copy(is, tempFileStream);
                         }
@@ -252,15 +256,24 @@ public class SparkMergingDictionary extends AbstractApplication implements Seria
 
                         conf = HadoopUtil.getCurrentConfiguration();
 
-                        try(SequenceFile.Reader reader = new SequenceFile.Reader(fs, new Path(tempFile.getAbsolutePath()), conf)) {
+                        try (SequenceFile.Reader reader = new SequenceFile.Reader(fs,
+                                new Path(tempFile.getAbsolutePath()), conf)) {
                             //noinspection deprecation
                             LongWritable key = (LongWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-                            BytesWritable value = (BytesWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+                            BytesWritable value = (BytesWritable) ReflectionUtils.newInstance(reader.getValueClass(),
+                                    conf);
 
                             while (reader.next(key, value)) {
                                 if (key.get() == 0L) {
                                     // sampling percentage
                                     averageSamplingPercentage += Bytes.toInt(value.getBytes());
+                                } else if (key.get() == -3) {
+                                    long perSourceRecordCount = Bytes.toLong(value.getBytes());
+                                    if (perSourceRecordCount > 0) {
+                                        sourceRecordCount += perSourceRecordCount;
+                                        CubeSegment iSegment = cubeInstance.getSegmentById(segmentId);
+                                        effectiveTimeRange += iSegment.getTSRange().duration();
+                                    }
                                 } else if (key.get() > 0) {
                                     HLLCounter hll = new HLLCounter(kylinConfig.getCubeStatsHLLPrecision());
                                     ByteArray byteArray = new ByteArray(value.getBytes());
@@ -276,9 +289,13 @@ public class SparkMergingDictionary extends AbstractApplication implements Seria
                         }
                     }
 
+                    sourceRecordCount *= effectiveTimeRange == 0 ? 0
+                            : (double) newSegment.getTSRange().duration() / effectiveTimeRange;
                     averageSamplingPercentage = averageSamplingPercentage / mergingSegments.size();
-                    CubeStatsWriter.writeCuboidStatistics(conf, new Path(statOutputPath), cuboidHLLMap, averageSamplingPercentage);
-                    Path statisticsFilePath = new Path(statOutputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+                    CubeStatsWriter.writeCuboidStatistics(conf, new Path(statOutputPath), cuboidHLLMap,
+                            averageSamplingPercentage, sourceRecordCount);
+                    Path statisticsFilePath = new Path(statOutputPath,
+                            BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
 
                     FileSystem fs = HadoopUtil.getFileSystem(statisticsFilePath, conf);
                     FSDataInputStream fis = fs.open(statisticsFilePath);

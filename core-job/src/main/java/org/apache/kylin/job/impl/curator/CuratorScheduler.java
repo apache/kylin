@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -99,9 +100,10 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
                 curatorClient = ZKUtil.getZookeeperClient(kylinConfig);
             }
 
+            final String serverMode = jobEngineConfig.getConfig().getServerMode();
             final String restAddress = kylinConfig.getServerRestAddress();
             try {
-                registerInstance(restAddress);
+                registerInstance(restAddress, serverMode);
             } catch (Exception e) {
                 throw new SchedulerException(e);
             }
@@ -124,7 +126,7 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
         }
     }
 
-    private void registerInstance(String restAddress) throws Exception {
+    private void registerInstance(String restAddress, String mode) throws Exception {
         final String host = restAddress.substring(0, restAddress.indexOf(":"));
         final String port = restAddress.substring(restAddress.indexOf(":") + 1);
 
@@ -156,18 +158,28 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
                             }
                         });
 
-                final String restServersInCluster = StringUtil.join(instanceNodes, ",");
+                final String restServersInCluster = //
+                        StringUtil.join(instanceNodes.stream().map(input -> { //
+                            String[] split = input.split(":"); //
+                            return split[0] + ":" + split[1]; //
+                        }).collect(Collectors.toList()), ","); //
+
 
                 logger.info("kylin.server.cluster-servers update to " + restServersInCluster);
                 // update cluster servers
                 System.setProperty("kylin.server.cluster-servers", restServersInCluster);
+
+                // get servers and its mode(query, job, all)
+                final String restServersInClusterWithMode = StringUtil.join(instanceNodes, ",");
+                logger.info("kylin.server.cluster-servers-with-mode update to " + restServersInClusterWithMode);
+                System.setProperty("kylin.server.cluster-servers-with-mode", restServersInClusterWithMode);
             }
         });
         serviceCache.start();
 
         final LinkedHashMap<String, String> instanceDetail = new LinkedHashMap<>();
 
-        instanceDetail.put(SERVICE_PAYLOAD_DESCRIPTION, restAddress);
+        instanceDetail.put(SERVICE_PAYLOAD_DESCRIPTION, restAddress + ":" + mode);
         ServiceInstance<LinkedHashMap> thisInstance = ServiceInstance.<LinkedHashMap> builder().name(SERVICE_NAME)
                 .payload(instanceDetail).port(Integer.valueOf(port)).address(host).build();
 

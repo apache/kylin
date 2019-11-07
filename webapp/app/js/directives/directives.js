@@ -99,7 +99,7 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
     }
   };
 })
-  .directive('loading', function ($parse, $q) {
+.directive('loading', function ($parse, $q) {
     return {
       restrict: 'E',
       scope: {},

@@ -19,7 +19,12 @@
 package org.apache.kylin.jdbc;
 
 import java.io.IOException;
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -65,13 +70,23 @@ public class DummyClient implements IRemoteClient {
     @Override
     public QueryResult executeQuery(String sql, List<Object> paramValues, Map<String, String> queryToggles) throws IOException {
         List<Object> data = new ArrayList<Object>();
-        Object[] row = new Object[] { "foo", "bar", "tool" };
+
+        ZoneId utc = ZoneId.of("UTC");
+        LocalDate localDate = Date.valueOf("2019-04-27").toLocalDate();
+        LocalDateTime localDateTime = Timestamp.valueOf("2019-04-27 17:30:03").toLocalDateTime();
+        Date date = new Date(localDate.atStartOfDay(utc).toInstant().toEpochMilli());
+        Timestamp timestamp = new Timestamp(localDateTime.atZone(utc).toInstant().toEpochMilli());
+
+        Object[] row = new Object[] { "foo", "bar", "tool", date, timestamp };
         data.add(row);
 
         List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
         meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
         meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
         meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
+        meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.DATE, "date", Rep.JAVA_SQL_DATE), true));
+        meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.TIMESTAMP, "timestamp", Rep.JAVA_SQL_TIMESTAMP),
+                true));
 
         return new QueryResult(meta, data);
     }

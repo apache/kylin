@@ -18,13 +18,8 @@
 
 package org.apache.kylin.source.hive;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.livy.LivyRestBuilder;
-import org.apache.kylin.common.livy.LivyRestExecutor;
-import org.apache.kylin.common.livy.LivyTypeEnum;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -48,32 +43,16 @@ public class RedistributeFlatHiveTableByLivyStep extends AbstractExecutable {
     }
 
     private void redistributeTable(KylinConfig config, int numReducers) throws Exception {
-        final LivyRestBuilder livyRestBuilder = new LivyRestBuilder();
-        livyRestBuilder.overwriteHiveProps(config.getHiveConfigOverride());
         StringBuffer statement = new StringBuffer();
-        statement.append(livyRestBuilder.parseProps());
         statement.append(getInitStatement());
         statement.append("set mapreduce.job.reduces=" + numReducers + ";\n");
         statement.append("set hive.merge.mapredfiles=false;\n");
         statement.append(getRedistributeDataStatement());
-        livyRestBuilder.addArgs(statement.toString());
-        final String cmd = livyRestBuilder.toString();
 
         stepLogger.log("Redistribute table, cmd: ");
-        stepLogger.log(cmd);
+        stepLogger.log(statement.toString());
 
-        livyRestBuilder.setLivyTypeEnum(LivyTypeEnum.sql);
-
-        LivyRestExecutor executor = new LivyRestExecutor();
-        executor.execute(livyRestBuilder, stepLogger);
-        getManager().addJobInfo(getId(), stepLogger.getInfo());
-    }
-
-    private KylinConfig getCubeSpecificConfig() {
-        String cubeName = CubingExecutableUtil.getCubeName(getParams());
-        CubeManager manager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-        CubeInstance cube = manager.getCube(cubeName);
-        return cube.getConfig();
+        MRHiveDictUtil.runLivySqlJob(stepLogger, config, ImmutableList.of(statement.toString()), getManager(), getId());
     }
 
     @Override

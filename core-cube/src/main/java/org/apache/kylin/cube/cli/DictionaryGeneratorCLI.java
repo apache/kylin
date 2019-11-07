@@ -20,18 +20,24 @@ package org.apache.kylin.cube.cli;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.hadoop.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.DimensionDesc;
+import org.apache.kylin.dict.DictionaryInfo;
+import org.apache.kylin.dict.DictionaryInfoSerializer;
 import org.apache.kylin.dict.DictionaryProvider;
 import org.apache.kylin.dict.DistinctColumnValuesProvider;
 import org.apache.kylin.dict.lookup.ILookupTable;
+import org.apache.kylin.dict.lookup.SnapshotTable;
+import org.apache.kylin.dict.lookup.SnapshotTableSerializer;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -43,7 +49,8 @@ import com.google.common.collect.Sets;
 
 public class DictionaryGeneratorCLI {
 
-    private DictionaryGeneratorCLI(){}
+    private DictionaryGeneratorCLI() {
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGeneratorCLI.class);
 
@@ -52,7 +59,26 @@ public class DictionaryGeneratorCLI {
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         CubeSegment segment = cube.getSegmentById(segmentID);
 
-        processSegment(config, segment, uuid, factTableValueProvider, dictProvider);
+        int retryTime = 0;
+        while (retryTime < 3) {
+            if (retryTime > 0) {
+                logger.info("Rebuild dictionary and snapshot for Cube: {}, Segment: {}, {} times.", cubeName, segmentID,
+                        retryTime);
+            }
+
+            processSegment(config, segment, uuid, factTableValueProvider, dictProvider);
+
+            if (isAllDictsAndSnapshotsReady(config, cubeName, segmentID)) {
+                break;
+            }
+            retryTime++;
+        }
+
+        if (retryTime >= 3) {
+            logger.error("Not all dictionaries and snapshots ready for cube segment: {}", segmentID);
+        } else {
+            logger.info("Succeed to build all dictionaries and snapshots for cube segment: {}", segmentID);
+        }
     }
 
     private static void processSegment(KylinConfig config, CubeSegment cubeSeg, String uuid,
@@ -113,4 +139,51 @@ public class DictionaryGeneratorCLI {
         }
     }
 
+    private static boolean isAllDictsAndSnapshotsReady(KylinConfig config, String cubeName, String segmentID) {
+        CubeInstance cube = CubeManager.getInstance(config).reloadCube(cubeName);
+        CubeSegment segment = cube.getSegmentById(segmentID);
+        ResourceStore store = ResourceStore.getStore(config);
+
+        // check dicts
+        logger.info("Begin to check if all dictionaries exist of Segment: {}", segmentID);
+        Map<String, String> dictionaries = segment.getDictionaries();
+        for (Map.Entry<String, String> entry : dictionaries.entrySet()) {
+            String dictResPath = entry.getValue();
+            String dictKey = entry.getKey();
+            try {
+                DictionaryInfo dictInfo = store.getResource(dictResPath, DictionaryInfoSerializer.INFO_SERIALIZER);
+                if (dictInfo == null) {
+                    logger.warn("Dictionary=[key: {}, resource path: {}] doesn't exist in resource store", dictKey,
+                            dictResPath);
+                    return false;
+                }
+            } catch (IOException e) {
+                logger.warn("Dictionary=[key: {}, path: {}] failed to check, details: {}", dictKey, dictResPath, e);
+                return false;
+            }
+        }
+
+        // check snapshots
+        logger.info("Begin to check if all snapshots exist of Segment: {}", segmentID);
+        Map<String, String> snapshots = segment.getSnapshots();
+        for (Map.Entry<String, String> entry : snapshots.entrySet()) {
+            String snapshotKey = entry.getKey();
+            String snapshotResPath = entry.getValue();
+            try {
+                SnapshotTable snapshot = store.getResource(snapshotResPath, SnapshotTableSerializer.INFO_SERIALIZER);
+                if (snapshot == null) {
+                    logger.info("SnapshotTable=[key: {}, resource path: {}] doesn't exist in resource store",
+                            snapshotKey, snapshotResPath);
+                    return false;
+                }
+            } catch (IOException e) {
+                logger.warn("SnapshotTable=[key: {}, resource path: {}]  failed to check, details: {}", snapshotKey,
+                        snapshotResPath, e);
+                return false;
+            }
+        }
+
+        logger.info("All dictionaries and snapshots exist checking succeed for Cube Segment: {}", segmentID);
+        return true;
+    }
 }

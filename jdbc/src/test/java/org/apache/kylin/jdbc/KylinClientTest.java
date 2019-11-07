@@ -18,12 +18,7 @@
 
 package org.apache.kylin.jdbc;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Properties;
-
+import com.google.common.collect.Lists;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -31,10 +26,16 @@ import org.apache.http.message.BasicStatusLine;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Properties;
 
 import static org.apache.http.HttpVersion.HTTP_1_1;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
@@ -111,4 +112,22 @@ public class KylinClientTest {
         ArrayList<Object> list = Lists.newArrayList(iterable);
         assertEquals(1, list.size());
     }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testWrapObjectThrowsIllegalArgumentExceptionUsingDateType() {
+      KylinClient.wrapObject("OQ? PYC6BWm`kOE", Types.DATE);
+  }
+
+
+  @Test
+  public void testWrapObjectUsingNull() {
+      assertNull(KylinClient.wrapObject(null, 1));
+  }
+
+
+  @Test
+  public void testConvertBooleanType() {
+      assertEquals("java.lang.Boolean", KylinClient.convertType(Types.BOOLEAN).getName());
+  }
+
 }

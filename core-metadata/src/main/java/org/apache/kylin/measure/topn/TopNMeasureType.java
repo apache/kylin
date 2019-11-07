@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Dictionary;
@@ -332,23 +333,32 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         return null;
     }
 
-    private boolean hasOneElement(List<? extends Object> list) {
-        return list != null && list.size() == 1;
+    private boolean checkSortAndOrder(List<TblColRef> sort, List<SQLDigest.OrderEnum> order) {
+        return CollectionUtils.isNotEmpty(sort) && CollectionUtils.isNotEmpty(order) && sort.size() == order.size();
     }
 
     private boolean totallyMatchTopN(SQLDigest digest) {
-        boolean sortColumnMatch = false;
-        if (hasOneElement(digest.sortColumns)) {
-            TblColRef sortColumn = digest.sortColumns.get(0);
-            if (!digest.groupbyColumns.contains(sortColumn)) {
-                // only have one aggregation
-                sortColumnMatch = sortColumn.getColumnDesc().getZeroBasedIndex() == 0;
-            }
+        if (!checkSortAndOrder(digest.sortColumns, digest.sortOrders)) {
+            return false;
         }
 
-        return sortColumnMatch
-                && hasOneElement(digest.sortOrders) && DESCENDING.equals(digest.sortOrders.get(0))
-                && digest.hasLimit;
+        TblColRef sortColumn = digest.sortColumns.get(0);
+
+        // first sort column must be sum()
+        if (digest.groupbyColumns.contains(sortColumn)) {
+            return false;
+        }
+
+        // first order must be desc
+        if (!DESCENDING.equals(digest.sortOrders.get(0))) {
+            return false;
+        }
+
+        if (!digest.hasLimit) {
+            return false;
+        }
+
+        return true;
     }
 
     private boolean isTopNCompatibleSum(FunctionDesc topN, FunctionDesc sum) {

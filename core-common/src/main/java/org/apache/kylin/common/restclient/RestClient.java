@@ -49,6 +49,7 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +99,7 @@ public class RestClient {
     public RestClient(String uri, Integer httpConnectionTimeoutMs, Integer httpSocketTimeoutMs) {
         Matcher m = fullRestPattern.matcher(uri);
         if (!m.matches())
-            throw new IllegalArgumentException("URI: " + uri + " -- does not match pattern " + fullRestPattern);
+            throw new IllegalArgumentException("URI: " + uri.replaceAll(":.+@", ":*****@") + " -- does not match pattern " + fullRestPattern);
 
         String user = m.group(1);
         String pwd = m.group(2);
@@ -151,6 +152,25 @@ public class RestClient {
             UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(userName, password);
             provider.setCredentials(AuthScope.ANY, credentials);
             client.setCredentialsProvider(provider);
+        }
+    }
+
+    // return pair {serverAddress, isActiveJobNode}
+    public Pair<String, String> getJobServerWithState() throws IOException {
+        String url = baseUrl + "/service_discovery/state/is_active_job_node";
+        HttpGet get = new HttpGet(url);
+        HttpResponse response = null;
+        try {
+            response = client.execute(get);
+            String msg = EntityUtils.toString(response.getEntity());
+
+            if (response.getStatusLine().getStatusCode() != 200) {
+                throw new IOException(INVALID_RESPONSE + response.getStatusLine().getStatusCode()
+                        + " with getting job server state  " + url + "\n" + msg);
+            }
+            return Pair.newPair(host + ":" + port, msg);
+        } finally {
+            cleanup(get, response);
         }
     }
 

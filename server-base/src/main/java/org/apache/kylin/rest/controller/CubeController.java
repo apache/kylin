@@ -45,6 +45,7 @@ import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.engine.mr.common.CuboidStatsReaderUtil;
 import org.apache.kylin.job.JobInstance;
@@ -78,6 +79,8 @@ import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.service.QueryService;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.ValidateUtil;
 import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.slf4j.Logger;
@@ -121,9 +124,16 @@ public class CubeController extends BasicController {
     @Qualifier("projectService")
     private ProjectService projectService;
 
-    @RequestMapping(value = "/validate/{cubeName}", method = RequestMethod.GET, produces = { "application/json" })
+    @Autowired
+    @Qualifier("queryService")
+    private QueryService queryService;
+
+    @Autowired
+    private AclEvaluate aclEvaluate;
+
+    @RequestMapping(value = "{cubeName}/validate", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
-    public EnvelopeResponse<Boolean> validateModelName(@PathVariable String cubeName) {
+    public EnvelopeResponse<Boolean> validateCubeName(@PathVariable String cubeName) {
         return new EnvelopeResponse<>(ResponseCode.CODE_SUCCESS, cubeService.isCubeNameVaildate(cubeName), "");
     }
 
@@ -176,8 +186,7 @@ public class CubeController extends BasicController {
     @ResponseBody
     public CubeInstance getCube(@PathVariable String cubeName) {
         checkCubeExists(cubeName);
-        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-        return cube;
+        return cubeService.getCubeManager().getCube(cubeName);
     }
 
     /**
@@ -248,9 +257,8 @@ public class CubeController extends BasicController {
             cubeService.updateCubeNotifyList(cube, notifyList);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
-
     }
 
     @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT }, produces = { "application/json" })
@@ -283,7 +291,7 @@ public class CubeController extends BasicController {
             return cubeService.rebuildLookupSnapshot(cube, segmentName, lookupTable);
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -305,7 +313,7 @@ public class CubeController extends BasicController {
                     submitter);
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -330,7 +338,7 @@ public class CubeController extends BasicController {
             return cubeService.deleteSegment(cube, segmentName);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -352,7 +360,7 @@ public class CubeController extends BasicController {
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest req) {
         return buildInternal(cubeName, new TSRange(req.getStartTime(), req.getEndTime()), null, null, null,
-                req.getBuildType(), req.isForce() || req.isForceMergeEmptySegment());
+                req.getBuildType(), req.isForce() || req.isForceMergeEmptySegment(), req.getPriorityOffset());
     }
 
     /**
@@ -380,22 +388,49 @@ public class CubeController extends BasicController {
     public JobInstance rebuild2(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
         return buildInternal(cubeName, null, new SegmentRange(req.getSourceOffsetStart(), req.getSourceOffsetEnd()),
                 req.getSourcePartitionOffsetStart(), req.getSourcePartitionOffsetEnd(), req.getBuildType(),
-                req.isForce());
+                req.isForce(), req.getPriorityOffset());
     }
 
     private JobInstance buildInternal(String cubeName, TSRange tsRange, SegmentRange segRange, //
             Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
-            String buildType, boolean force) {
+            String buildType, boolean force, Integer priorityOffset) {
         try {
             String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
             CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
 
             checkBuildingSegment(cube);
             return jobService.submitJob(cube, tsRange, segRange, sourcePartitionOffsetStart, sourcePartitionOffsetEnd,
-                    CubeBuildTypeEnum.valueOf(buildType), force, submitter);
+                    CubeBuildTypeEnum.valueOf(buildType), force, submitter, priorityOffset);
         } catch (Throwable e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
+    /**
+     * Send a auto merge cube job
+     *
+     * @param cubeName Cube ID
+     * @return JobInstance of merging cube
+     */
+    @RequestMapping(value = "/{cubeName}/automerge", method = { RequestMethod.PUT })
+    @ResponseBody
+    public JobInstance autoMerge(@PathVariable String cubeName) {
+        try {
+            checkCubeExists(cubeName);
+
+            CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
+            aclEvaluate.checkProjectAdminPermission(cube.getProject());
+
+            String jobID = cubeService.mergeCubeSegment(cubeName);
+            if (jobID == null) {
+                throw new BadRequestException(String.format(Locale.ROOT,
+                        "Cube: %s merging is not supported or no segments to merge", cubeName));
+            }
+            return jobService.getJobInstance(jobID);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage());
         }
     }
 
@@ -423,7 +458,7 @@ public class CubeController extends BasicController {
             throw new BadRequestException(e.getLocalizedMessage());
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -451,7 +486,7 @@ public class CubeController extends BasicController {
             throw new BadRequestException(e.getLocalizedMessage());
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -625,6 +660,17 @@ public class CubeController extends BasicController {
             throw new BadRequestException(
                     "the number of input measure and the number of measure defined in cubedesc are not consistent");
         }
+
+        for (RowKeyColDesc rowKeyColDesc : cubeDesc.getRowkey().getRowKeyColumns()) {
+            Object[] encodingConf = DimensionEncoding.parseEncodingConf(rowKeyColDesc.getEncoding());
+            String encodingName = (String) encodingConf[0];
+            String[] encodingArgs = (String[]) encodingConf[1];
+
+            if (!DimensionEncodingFactory.isValidEncoding(encodingName, encodingArgs,
+                    rowKeyColDesc.getEncodingVersion())) {
+                throw new BadRequestException("Illegal row key column desc: " + rowKeyColDesc);
+            }
+        }
     }
 
     /**
@@ -677,7 +723,7 @@ public class CubeController extends BasicController {
             throw new ForbiddenException("You don't have right to update this cube.");
         } catch (Exception e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage(), e);
         }
 
         if (desc.isBroken()) {
@@ -846,7 +892,7 @@ public class CubeController extends BasicController {
             writer.write(JsonUtil.writeValueAsString(dimensionSetList));
         } catch (IOException e) {
             logger.error("", e);
-            throw new InternalErrorException("Failed to write: " + e.getLocalizedMessage());
+            throw new InternalErrorException("Failed to write: " + e.getLocalizedMessage(), e);
         }
     }
 

@@ -122,8 +122,8 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
             .withDescription("Hive Intermediate Table").create("hiveTable");
     public static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg()
             .isRequired(true).withDescription("Hive Intermediate Table PATH").create(BatchConstants.ARG_INPUT);
-    public static final Option OPTION_COUNTER_PATH = OptionBuilder.withArgName(BatchConstants.ARG_COUNTER_OUPUT)
-            .hasArg().isRequired(true).withDescription("counter output path").create(BatchConstants.ARG_COUNTER_OUPUT);
+    public static final Option OPTION_COUNTER_PATH = OptionBuilder.withArgName(BatchConstants.ARG_COUNTER_OUTPUT)
+            .hasArg().isRequired(true).withDescription("counter output path").create(BatchConstants.ARG_COUNTER_OUTPUT);
 
     private Options options;
 
@@ -192,12 +192,23 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
 
             final JavaRDD<String[]> recordRDD = SparkUtil.hiveRecordInputRDD(isSequenceFile, sc, inputPath, hiveTable);
 
+            // read record from flat table
+            // output:
+            //   1, statistic
+            //   2, field value of dict col
+            //   3, min/max field value of not dict col
             JavaPairRDD<SelfDefineSortableKey, Text> flatOutputRDD = recordRDD.mapPartitionsToPair(
                     new FlatOutputFucntion(cubeName, segmentId, metaUrl, sConf, samplingPercent, bytesWritten));
 
-            JavaPairRDD<SelfDefineSortableKey, Iterable<Text>> aggredRDD = flatOutputRDD.groupByKey(
-                    new FactDistinctPartitioner(cubeName, metaUrl, sConf, reducerMapping.getTotalReducerNum()));
+            // repartition data, make each reducer handle only one col data or the statistic data
+            JavaPairRDD<SelfDefineSortableKey, Text> aggredRDD = flatOutputRDD
+                .repartitionAndSortWithinPartitions(new FactDistinctPartitioner(cubeName, metaUrl, sConf, reducerMapping.getTotalReducerNum()));
 
+            // multiple output result
+            // 1, CFG_OUTPUT_COLUMN: field values of dict col, which will not be built in reducer, like globalDictCol
+            // 2, CFG_OUTPUT_DICT: dictionary object built in reducer
+            // 3, CFG_OUTPUT_STATISTICS: cube statistic: hll of cuboids ...
+            // 4, CFG_OUTPUT_PARTITION: dimension value range(min,max)
             JavaPairRDD<String, Tuple3<Writable, Writable, String>> outputRDD = aggredRDD
                     .mapPartitionsToPair(new MultiOutputFunction(cubeName, metaUrl, sConf, samplingPercent));
 
@@ -236,6 +247,12 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         }
     }
 
+    /**
+     * output: Tuple2<SelfDefineSortableKey, Text>
+     * 1, for statistics, SelfDefineSortableKey = reducerId + cuboidId, Text = hll of cuboidId
+     * 2, for dict col, SelfDefineSortableKey = reducerId + field value, Text = ""
+     * 3, for not dict col, SelfDefineSortableKey = reducerId + min/max value, Text = ""
+     */
     static class FlatOutputFucntion implements PairFlatMapFunction<Iterator<String[]>, SelfDefineSortableKey, Text> {
         private transient volatile boolean initialized = false;
         private String cubeName;
@@ -631,7 +648,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
     }
 
     static class MultiOutputFunction implements
-            PairFlatMapFunction<Iterator<Tuple2<SelfDefineSortableKey, Iterable<Text>>>, String, Tuple3<Writable, Writable, String>> {
+            PairFlatMapFunction<Iterator<Tuple2<SelfDefineSortableKey, Text>>, String, Tuple3<Writable, Writable, String>> {
         private transient volatile boolean initialized = false;
         private String DICT_FILE_POSTFIX = ".rldict";
         private String DIMENSION_COL_INFO_FILE_POSTFIX = ".dci";
@@ -654,6 +671,9 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         private CubeDesc cubeDesc;
         private String maxValue = null;
         private String minValue = null;
+        private boolean isDimensionCol;
+        private boolean isDictCol;
+        private KylinConfig kConfig;
         private List<Tuple2<String, Tuple3<Writable, Writable, String>>> result;
 
         public MultiOutputFunction(String cubeName, String metaurl, SerializableConfiguration conf,
@@ -666,7 +686,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
 
         private void init() throws IOException {
             taskId = TaskContext.getPartitionId();
-            KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
+            kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
             try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
                     .setAndUnsetThreadLocalConfig(kConfig)) {
                 CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
@@ -688,6 +708,9 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
                     // normal col
                     col = reducerMapping.getColForReducer(taskId);
                     Preconditions.checkNotNull(col);
+
+                    isDimensionCol = cubeDesc.listDimensionColumnsExcludingDerived(true).contains(col) && col.getType().needCompare();
+                    isDictCol = cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col);
 
                     // local build dict
                     buildDictInReducer = kConfig.isBuildDictInReducerEnabled();
@@ -718,7 +741,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
 
         @Override
         public Iterator<Tuple2<String, Tuple3<Writable, Writable, String>>> call(
-                Iterator<Tuple2<SelfDefineSortableKey, Iterable<Text>>> tuple2Iterator) throws Exception {
+                Iterator<Tuple2<SelfDefineSortableKey, Text>> tuple2Iterator) throws Exception {
             if (initialized == false) {
                 synchronized (SparkFactDistinct.class) {
                     if (initialized == false) {
@@ -727,66 +750,11 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
                 }
             }
 
-            while(tuple2Iterator.hasNext()) {
-
-                Tuple2<SelfDefineSortableKey, Iterable<Text>> tuple = tuple2Iterator.next();
-                Text key = tuple._1.getText();
-
-                if (isStatistics) {
-                    // for hll
-                    long cuboidId = Bytes.toLong(key.getBytes(), 1, Bytes.SIZEOF_LONG);
-
-                    for (Text value : tuple._2) {
-                        HLLCounter hll = new HLLCounter(cubeConfig.getCubeStatsHLLPrecision());
-                        ByteBuffer bf = ByteBuffer.wrap(value.getBytes(), 0, value.getLength());
-                        hll.readRegisters(bf);
-
-                        totalRowsBeforeMerge += hll.getCountEstimate();
-
-                        if (cuboidId == baseCuboidId) {
-                            baseCuboidRowCountInMappers.add(hll.getCountEstimate());
-                        }
-
-                        if (cuboidHLLMap.get(cuboidId) != null) {
-                            cuboidHLLMap.get(cuboidId).merge(hll);
-                        } else {
-                            cuboidHLLMap.put(cuboidId, hll);
-                        }
-                    }
-
-                } else {
-                    String value = Bytes.toString(key.getBytes(), 1, key.getLength() - 1);
-                    logAFewRows(value);
-                    // if dimension col, compute max/min value
-                    if (cubeDesc.listDimensionColumnsExcludingDerived(true).contains(col) && col.getType().needCompare()) {
-                        if (minValue == null || col.getType().compare(minValue, value) > 0) {
-                            minValue = value;
-                        }
-                        if (maxValue == null || col.getType().compare(maxValue, value) < 0) {
-                            maxValue = value;
-                        }
-                    }
-
-                    //if dict column
-                    if (cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col)) {
-                        if (buildDictInReducer) {
-                            builder.addValue(value);
-                        } else {
-                            byte[] keyBytes = Bytes.copy(key.getBytes(), 1, key.getLength() - 1);
-                            // output written to baseDir/colName/-r-00000 (etc)
-                            String fileName = col.getIdentity() + "/";
-                            result.add(new Tuple2<String, Tuple3<Writable, Writable, String>>(
-                                    BatchConstants.CFG_OUTPUT_COLUMN, new Tuple3<Writable, Writable, String>(
-                                            NullWritable.get(), new Text(keyBytes), fileName)));
-                        }
-                    }
-                }
-
-                rowCount++;
-            }
-
             if (isStatistics) {
-                //output the hll info
+                // calculate hll
+                calculateStatistics(tuple2Iterator);
+
+                // output the hll info
                 List<Long> allCuboids = Lists.newArrayList();
                 allCuboids.addAll(cuboidHLLMap.keySet());
                 Collections.sort(allCuboids);
@@ -794,18 +762,83 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
                 logMapperAndCuboidStatistics(allCuboids); // for human check
                 outputStatistics(allCuboids, result);
             } else {
-                //dimension col
-                if (cubeDesc.listDimensionColumnsExcludingDerived(true).contains(col)) {
+                // calculate dict/dimRange/
+                calculateColData(tuple2Iterator);
+
+                // output dim range
+                if (isDimensionCol) {
                     outputDimRangeInfo(result);
                 }
-                // dic col
+
+                // output dict object
                 if (buildDictInReducer) {
-                    Dictionary<String> dict = builder.build();
-                    outputDict(col, dict, result);
+                    try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                            .setAndUnsetThreadLocalConfig(kConfig)) {
+                        Dictionary<String> dict = builder.build();
+                        outputDict(col, dict, result);
+                    }
                 }
             }
 
             return result.iterator();
+        }
+
+        private void calculateStatistics(Iterator<Tuple2<SelfDefineSortableKey, Text>> tuple2Iterator) throws IOException {
+            while (tuple2Iterator.hasNext()) {
+                HLLCounter hll = new HLLCounter(cubeConfig.getCubeStatsHLLPrecision());
+
+                Tuple2<SelfDefineSortableKey, Text> tuple = tuple2Iterator.next();
+                long cuboidId = Bytes.toLong(tuple._1.getText().getBytes(), 1);
+
+                ByteBuffer bf = ByteBuffer.wrap(tuple._2.getBytes(), 0, tuple._2.getLength());
+                hll.readRegisters(bf);
+
+                totalRowsBeforeMerge += hll.getCountEstimate();
+
+                if (cuboidId == baseCuboidId) {
+                    baseCuboidRowCountInMappers.add(hll.getCountEstimate());
+                }
+
+                if (cuboidHLLMap.get(cuboidId) != null) {
+                    cuboidHLLMap.get(cuboidId).merge(hll);
+                } else {
+                    cuboidHLLMap.put(cuboidId, hll);
+                }
+            }
+        }
+
+        private void calculateColData(Iterator<Tuple2<SelfDefineSortableKey, Text>> tuple2Iterator) {
+            while (tuple2Iterator.hasNext()) {
+                Tuple2<SelfDefineSortableKey, Text> tuple = tuple2Iterator.next();
+
+                String value = Bytes.toString(tuple._1.getText().getBytes(), 1, tuple._1.getText().getLength() - 1);
+                logAFewRows(value);
+
+                // if dimension col, compute max/min value
+                // include the col which is both dict col and dim col
+                if (isDimensionCol) {
+                    if (minValue == null || col.getType().compare(minValue, value) > 0) {
+                        minValue = value;
+                    }
+                    if (maxValue == null || col.getType().compare(maxValue, value) < 0) {
+                        maxValue = value;
+                    }
+                }
+
+                //if dict column
+                if (isDictCol) {
+                    if (buildDictInReducer) {
+                        builder.addValue(value);
+                    } else {
+                        // output written to baseDir/colName/-r-00000 (etc)
+                        result.add(new Tuple2<String, Tuple3<Writable, Writable, String>>(
+                                BatchConstants.CFG_OUTPUT_COLUMN, new Tuple3<Writable, Writable, String>(
+                                NullWritable.get(), new Text(value.getBytes(StandardCharsets.UTF_8)), col.getIdentity() + "/")));
+                    }
+                }
+
+                rowCount++;
+            }
         }
 
         private void logMapperAndCuboidStatistics(List<Long> allCuboids) {

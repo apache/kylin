@@ -43,7 +43,7 @@ public class FileResourceStore extends ResourceStore {
     public FileResourceStore(KylinConfig kylinConfig) {
         super(kylinConfig);
         root = new File(getPath(kylinConfig)).getAbsoluteFile();
-        if (root.exists() == false)
+        if (!root.exists())
             throw new IllegalArgumentException(
                     "File not exist by '" + kylinConfig.getMetadataUrl() + "': " + root.getAbsolutePath());
     }
@@ -60,7 +60,7 @@ public class FileResourceStore extends ResourceStore {
 
     @Override
     protected void visitFolderImpl(String folderPath, boolean recursive, VisitFilter filter, boolean loadContent,
-                                   Visitor visitor) throws IOException {
+            Visitor visitor) throws IOException {
         if (--failVisitFolderCountDown == 0)
             throw new IOException("for test");
 
@@ -178,12 +178,43 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
+    protected void updateTimestampImpl(String resPath, long timestamp) throws IOException {
+        File f = file(resPath);
+        if (f.exists()) {
+            // note file timestamp may lose precision for last two digits of timestamp
+            boolean success = f.setLastModified(timestamp);
+            if (!success) {
+                throw new IOException(
+                        "Update resource timestamp failed, resPath:" + resPath + ", timestamp: " + timestamp);
+            }
+        }
+    }
+
+    @Override
     protected void deleteResourceImpl(String resPath) throws IOException {
 
         File f = file(resPath);
         try {
             if (f.exists())
                 FileUtils.forceDelete(f);
+        } catch (FileNotFoundException e) {
+            // FileNotFoundException is not a problem in case of delete
+        }
+    }
+
+    @Override
+    protected void deleteResourceImpl(String resPath, long timestamp) throws IOException {
+        File f = file(resPath);
+        try {
+            if (f.exists()) {
+                long origLastModified = getResourceTimestampImpl(resPath);
+                if (checkTimeStampBeforeDelete(origLastModified, timestamp)) {
+                    FileUtils.forceDelete(f);
+                } else {
+                    throw new IOException("Resource " + resPath + " timestamp not match, [originLastModified: "
+                            + origLastModified + ", timestampToDelete: " + timestamp + "]");
+                }
+            }
         } catch (FileNotFoundException e) {
             // FileNotFoundException is not a problem in case of delete
         }

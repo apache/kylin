@@ -30,7 +30,6 @@ import java.util.TreeMap;
 import static com.google.common.base.Preconditions.checkState;
 
 public class AppendTrieDictionaryBuilder {
-
     private final String baseDir;
     private final String workingDir;
     private final int maxEntriesPerSlice;

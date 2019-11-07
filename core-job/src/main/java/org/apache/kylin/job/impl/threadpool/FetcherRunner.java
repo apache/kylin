@@ -24,6 +24,8 @@ import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.Executable;
 import org.apache.kylin.job.execution.ExecutableManager;
+import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.Output;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +39,7 @@ public abstract class FetcherRunner implements Runnable {
     protected DefaultContext context;
     protected JobExecutor jobExecutor;
     protected volatile boolean fetchFailed = false;
+    protected static int nRunning, nReady, nStopped, nOthers, nError, nDiscarded, nSUCCEED;
 
     public FetcherRunner(JobEngineConfig jobEngineConfig, DefaultContext context, JobExecutor jobExecutor) {
         this.jobEngineConfig = jobEngineConfig;
@@ -66,13 +69,34 @@ public abstract class FetcherRunner implements Runnable {
             logger.warn(jobDesc + " fail to schedule", ex);
         }
     }
+    
+    protected void jobStateCount(String id) {
+        final Output outputDigest = getExecutableManager().getOutputDigest(id);
+        // logger.debug("Job id:" + id + " not runnable");
+        if (outputDigest.getState() == ExecutableState.SUCCEED) {
+            nSUCCEED++;
+        } else if (outputDigest.getState() == ExecutableState.ERROR) {
+            nError++;
+        } else if (outputDigest.getState() == ExecutableState.DISCARDED) {
+            nDiscarded++;
+        } else if (outputDigest.getState() == ExecutableState.STOPPED) {
+            nStopped++;
+        } else {
+            if (fetchFailed) {
+                getExecutableManager().forceKillJob(id);
+                nError++;
+            } else {
+                nOthers++;
+            }
+        }
+    }
 
     @VisibleForTesting
     void setFetchFailed(boolean fetchFailed) {
         this.fetchFailed = fetchFailed;
     }
 
-    ExecutableManager getExecutableManger() {
+    ExecutableManager getExecutableManager() {
         return ExecutableManager.getInstance(jobEngineConfig.getConfig());
     }
 }

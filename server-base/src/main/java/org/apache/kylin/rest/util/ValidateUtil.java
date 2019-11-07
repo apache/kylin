@@ -149,7 +149,7 @@ public class ValidateUtil {
     }
 
     public void validateColumn(String project, String table, Collection<String> columns) throws IOException {
-        Preconditions.checkState(columns != null && columns.size() > 0);
+        Preconditions.checkState(columns != null && !columns.isEmpty());
         Set<String> cols = getAllColumns(project, table);
         for (String c : columns) {
             if (!cols.contains(c)) {

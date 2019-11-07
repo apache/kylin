@@ -18,18 +18,10 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import static org.apache.kylin.engine.mr.JobBuilderSupport.PathNameCuboidBase;
-import static org.apache.kylin.engine.mr.JobBuilderSupport.PathNameCuboidOld;
-
 import java.io.IOException;
 import java.util.Set;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -43,16 +35,13 @@ import com.google.common.base.Preconditions;
 
 public class FilterRecommendCuboidDataMapper extends KylinMapper<Text, Text, Text, Text> {
 
-    private MultipleOutputs mos;
-
-    private RowKeySplitter rowKeySplitter;
+    private boolean enableSharding;
     private long baseCuboid;
     private Set<Long> recommendCuboids;
 
     @Override
     protected void doSetup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
-        mos = new MultipleOutputs(context);
 
         String cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME);
         String segmentID = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_ID);
@@ -64,7 +53,7 @@ public class FilterRecommendCuboidDataMapper extends KylinMapper<Text, Text, Tex
         CubeSegment optSegment = cube.getSegmentById(segmentID);
         CubeSegment originalSegment = cube.getOriginalSegmentToOptimize(optSegment);
 
-        rowKeySplitter = new RowKeySplitter(originalSegment);
+        enableSharding = originalSegment.isEnableSharding();
         baseCuboid = cube.getCuboidScheduler().getBaseCuboidId();
 
         recommendCuboids = cube.getCuboidsRecommend();
@@ -73,35 +62,11 @@ public class FilterRecommendCuboidDataMapper extends KylinMapper<Text, Text, Tex
 
     @Override
     public void doMap(Text key, Text value, Context context) throws IOException, InterruptedException {
-        long cuboidID = rowKeySplitter.split(key.getBytes());
+        long cuboidID = RowKeySplitter.getCuboidId(key.getBytes(), enableSharding);
         if (cuboidID != baseCuboid && !recommendCuboids.contains(cuboidID)) {
             return;
         }
 
-        String baseOutputPath = PathNameCuboidOld;
-        if (cuboidID == baseCuboid) {
-            baseOutputPath = PathNameCuboidBase;
-        }
-        mos.write(key, value, generateFileName(baseOutputPath));
-    }
-
-    @Override
-    public void doCleanup(Context context) throws IOException, InterruptedException {
-        mos.close();
-
-        Path outputDirBase = new Path(context.getConfiguration().get(FileOutputFormat.OUTDIR), PathNameCuboidBase);
-        FileSystem fs = FileSystem.get(context.getConfiguration());
-        if (!fs.exists(outputDirBase)) {
-            fs.mkdirs(outputDirBase);
-            SequenceFile
-                    .createWriter(context.getConfiguration(),
-                            SequenceFile.Writer.file(new Path(outputDirBase, "part-m-00000")),
-                            SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(Text.class))
-                    .close();
-        }
-    }
-
-    private String generateFileName(String subDir) {
-        return subDir + "/part";
+        context.write(key, value);
     }
 }

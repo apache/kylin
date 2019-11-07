@@ -96,7 +96,7 @@ public class MailService {
             email.setSmtpPort(Integer.parseInt(port));
         }
         
-        if (username != null && username.trim().length() > 0) {
+        if (username != null && !username.trim().isEmpty()) {
             email.setAuthentication(username, password);
         }
 

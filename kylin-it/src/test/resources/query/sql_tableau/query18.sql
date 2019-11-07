@@ -16,6 +16,6 @@
 -- limitations under the License.
 --
 
-select test_kylin_fact.lstg_format_name, sum(price) as GMV, count(seller_id) as TRANS_CNT 
- from test_kylin_fact 
- group by test_kylin_fact.lstg_format_name 
+select test_kylin_fact.lstg_format_name, sum(price) as GMV, count(price) as GMV_CNT
+ from test_kylin_fact
+ group by test_kylin_fact.lstg_format_name

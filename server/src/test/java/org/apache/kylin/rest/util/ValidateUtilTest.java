@@ -18,11 +18,7 @@
 
 package org.apache.kylin.rest.util;
 
-import static org.apache.kylin.metadata.MetadataConstants.TYPE_GROUP;
-import static org.apache.kylin.metadata.MetadataConstants.TYPE_USER;
-
-import java.io.IOException;
-
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.service.AccessService;
@@ -32,7 +28,10 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+
+import static org.apache.kylin.metadata.MetadataConstants.TYPE_GROUP;
+import static org.apache.kylin.metadata.MetadataConstants.TYPE_USER;
 
 public class ValidateUtilTest extends ServiceTestBase {
     private final String PROJECT = "default";

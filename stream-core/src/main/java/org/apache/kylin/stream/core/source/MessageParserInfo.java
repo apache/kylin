@@ -28,6 +28,12 @@ public class MessageParserInfo {
     @JsonProperty("ts_col_name")
     private String tsColName;
 
+    @JsonProperty("ts_parser")
+    private String tsParser;
+
+    @JsonProperty("ts_pattern")
+    private String tsPattern;
+
     @JsonProperty("format_ts")
     private boolean formatTs;
 
@@ -40,6 +46,22 @@ public class MessageParserInfo {
 
     public void setTsColName(String tsColName) {
         this.tsColName = tsColName;
+    }
+
+    public String getTsParser() {
+        return tsParser;
+    }
+
+    public void setTsParser(String tsParser) {
+        this.tsParser = tsParser;
+    }
+
+    public String getTsPattern() {
+        return tsPattern;
+    }
+
+    public void setTsPattern(String tsPattern) {
+        this.tsPattern = tsPattern;
     }
 
     public boolean isFormatTs() {

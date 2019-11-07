@@ -48,6 +48,9 @@ public class ExecutablePO extends RootPersistentEntity {
     @JsonProperty("params")
     private Map<String, String> params = Maps.newHashMap();
 
+    @JsonProperty("priority")
+    private Integer priority;
+
     public String getName() {
         return name;
     }
@@ -88,4 +91,12 @@ public class ExecutablePO extends RootPersistentEntity {
         this.params = params;
     }
 
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+    
 }

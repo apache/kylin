@@ -17,17 +17,24 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
             http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
 
-    <description>Kylin Metrics Related Configuration</description>
+    <description>Kylin Metrics Related Configuration (SystemCube)</description>
 
+    <!-- A Reservoir which don't staged metrics message at all, emit it in no time. Maybe good for debug purpose.-->
     <bean id="instantReservoir" class="org.apache.kylin.metrics.lib.impl.InstantReservoir"/>
 
+    <!-- A Reservoir which staged metrics message in memory, and emit them in fixed rate. -->
     <bean id="blockingReservoir" class="org.apache.kylin.metrics.lib.impl.BlockingReservoir">
+        <!-- minReportSize, only if currently count of staged message exceed minReportSize, will Reservoir try to write message-->
         <constructor-arg index="0">
-            <value>10</value>
+            <value>100</value>
         </constructor-arg>
+
+        <!-- maxReportSize, max size of report in one time -->
         <constructor-arg index="1">
-            <value>10</value>
+            <value>500</value>
         </constructor-arg>
+
+        <!-- minReportTime, min duration(in minute) between two report action-->
         <constructor-arg index="2">
             <value>10</value>
         </constructor-arg>

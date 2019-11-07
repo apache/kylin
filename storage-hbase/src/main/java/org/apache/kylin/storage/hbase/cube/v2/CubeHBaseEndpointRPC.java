@@ -67,6 +67,7 @@ import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.Cub
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse.Stats;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitService;
+import org.apache.kylin.storage.hbase.util.HBaseUnionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,9 +141,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         // primary key (also the 0th column block) is always selected
         final ImmutableBitSet selectedColBlocks = scanRequest.getSelectedColBlocks().set(0);
-
-        // globally shared connection, does not require close
-        final Connection conn = HBaseConnection.get(cubeSeg.getCubeInstance().getConfig().getStorageUrl());
 
         final List<IntList> hbaseColumnsToGTIntList = Lists.newArrayList();
         List<List<Integer>> hbaseColumnsToGT = getHBaseColumnsGTMapping(selectedColBlocks);
@@ -241,7 +239,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             executorService.submit(new Runnable() {
                 @Override
                 public void run() {
-                    runEPRange(queryContext, logHeader, compressionResult, builder.build(), conn, epRange.getFirst(),
+                    runEPRange(queryContext, logHeader, compressionResult, builder.build(), epRange.getFirst(),
                             epRange.getSecond(), epResultItr, querySegmentCacheEnabled, segmentQueryResultBuilder,
                             segmentQueryCacheKey);
                 }
@@ -252,13 +250,14 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
     }
 
     private void runEPRange(final QueryContext queryContext, final String logHeader, final boolean compressionResult,
-            final CubeVisitProtos.CubeVisitRequest request, final Connection conn, byte[] startKey, byte[] endKey,
+            final CubeVisitProtos.CubeVisitRequest request, byte[] startKey, byte[] endKey,
             final ExpectedSizeIterator epResultItr, final boolean querySegmentCacheEnabled,
             final SegmentQueryResult.Builder segmentQueryResultBuilder, final String segmentQueryCacheKey) {
 
         final String queryId = queryContext.getQueryId();
 
         try {
+            final Connection conn =  HBaseUnionUtil.getConnection(cubeSeg.getConfig(), cubeSeg.getStorageLocationIdentifier());
             final Table table = conn.getTable(TableName.valueOf(cubeSeg.getStorageLocationIdentifier()),
                     HBaseConnection.getCoprocessorPool());
 
@@ -559,6 +558,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                 BytesUtil.writeVInt(scanRequest.getStorageScanRowNumThreshold(), out);
                 BytesUtil.writeVInt(scanRequest.getStoragePushDownLimit(), out);
                 BytesUtil.writeUTFString(scanRequest.getStorageBehavior(), out);
+                BytesUtil.writeBooleanArray(new boolean[]{storageContext.isExactAggregation()}, out);
                 out.flip();
                 return Bytes.toStringBinary(out.array(), out.position(), out.limit());
             } catch (BufferOverflowException boe) {

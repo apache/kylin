@@ -15,21 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.source.jdbc.metadata;
+package org.apache.kylin.stream.coordinator.coordinate.annotations;
 
-import org.apache.kylin.source.jdbc.JdbcDialect;
-import org.junit.Assert;
-import org.junit.Test;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public class JdbcMetadataFactoryTest {
-
-    @Test
-    public void testGetJdbcMetadata() {
-        Assert.assertTrue(
-                JdbcMetadataFactory.getJdbcMetadata(JdbcDialect.DIALECT_MSSQL, null) instanceof SQLServerJdbcMetadata);
-        Assert.assertTrue(
-                JdbcMetadataFactory.getJdbcMetadata(JdbcDialect.DIALECT_MYSQL, null) instanceof MySQLJdbcMetadata);
-        Assert.assertTrue(
-                JdbcMetadataFactory.getJdbcMetadata(JdbcDialect.DIALECT_VERTICA, null) instanceof DefaultJdbcMetadata);
-    }
+/**
+ * <pre>
+ *  This annotation is a marker for developer.
+ *  It indicate this method which be annotated may failed in some steps.
+ *  But there no need to retry because has no bad influence to other parts.
+ * </pre>
+ *
+ * @see NotAtomicAndNotIdempotent
+ */
+@Documented
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.METHOD)
+@Inherited
+public @interface NonSideEffect {
 }

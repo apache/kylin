@@ -42,14 +42,14 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
     private final IMRBatchCubingInputSide inputSide;
     private final IMRBatchCubingOutputSide2 outputSide;
 
-    public BatchCubingJobBuilder2(CubeSegment newSegment, String submitter) {
-        super(newSegment, submitter);
+    public BatchCubingJobBuilder2(CubeSegment newSegment, String submitter, Integer priorityOffset) {
+        super(newSegment, submitter, priorityOffset);
         this.inputSide = MRUtil.getBatchCubingInputSide(seg);
         this.outputSide = MRUtil.getBatchCubingOutputSide2(seg);
     }
 
     public CubingJob build() {
-        logger.info("MR_V2 new job to BUILD segment " + seg);
+        logger.info("MR_V2 new job to BUILD segment {}", seg);
 
         final CubingJob result = CubingJob.createBuildJob(seg, submitter, config);
         final String jobId = result.getId();
@@ -86,6 +86,10 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         result.addTask(createUpdateCubeInfoAfterBuildStep(jobId, lookupMaterializeContext));
         inputSide.addStepPhase4_Cleanup(result);
         outputSide.addStepPhase4_Cleanup(result);
+        
+        // Set the task priority if specified
+        result.setPriorityBasedOnPriorityOffset(priorityOffset);
+        result.getTasks().forEach(task -> task.setPriorityBasedOnPriorityOffset(priorityOffset));
 
         return result;
     }

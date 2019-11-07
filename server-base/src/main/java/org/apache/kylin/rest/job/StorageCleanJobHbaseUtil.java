@@ -48,13 +48,18 @@ public class StorageCleanJobHbaseUtil {
     protected static final Logger logger = LoggerFactory.getLogger(StorageCleanJobHbaseUtil.class);
 
     @SuppressWarnings("deprecation")
-    public static List<String> cleanUnusedHBaseTables(boolean delete, int deleteTimeout) throws IOException {
+    public static List<String> cleanUnusedHBaseTables(boolean delete, int deleteTimeout, int threadsNum) throws IOException {
         try (HBaseAdmin hbaseAdmin = new HBaseAdmin(HBaseConfiguration.create())) {
-            return cleanUnusedHBaseTables(hbaseAdmin, delete, deleteTimeout);
+            return cleanUnusedHBaseTables(hbaseAdmin, delete, deleteTimeout, threadsNum);
         }
     }
 
     static List<String> cleanUnusedHBaseTables(HBaseAdmin hbaseAdmin, boolean delete, int deleteTimeout) throws IOException {
+        return cleanUnusedHBaseTables(hbaseAdmin, delete, deleteTimeout, 1);
+    }
+
+    static List<String> cleanUnusedHBaseTables(HBaseAdmin hbaseAdmin, boolean delete, int deleteTimeout,
+        int threadsNum) throws IOException {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         CubeManager cubeMgr = CubeManager.getInstance(config);
         
@@ -81,7 +86,7 @@ public class StorageCleanJobHbaseUtil {
         }
 
         // remove every segment htable from drop list
-        for (CubeInstance cube : cubeMgr.listAllCubes()) {
+        for (CubeInstance cube : cubeMgr.reloadAndListAllCubes()) {
             for (CubeSegment seg : cube.getSegments()) {
                 String tablename = seg.getStorageLocationIdentifier();
                 if (allTablesNeedToBeDropped.contains(tablename)) {
@@ -106,7 +111,8 @@ public class StorageCleanJobHbaseUtil {
         }
         if (delete) {
             // drop tables
-            ExecutorService executorService = Executors.newSingleThreadExecutor();
+            logger.info("Use {} threads to drop unused hbase tables", threadsNum);
+            ExecutorService executorService = Executors.newFixedThreadPool(threadsNum);
             for (String htableName : allTablesNeedToBeDropped) {
                 FutureTask futureTask = new FutureTask(new DeleteHTableRunnable(hbaseAdmin, htableName));
                 executorService.execute(futureTask);

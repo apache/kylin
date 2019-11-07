@@ -18,7 +18,7 @@
 
 KylinApp.service('MessageService', ['config_ui_messenger', function (config_ui_messenger,$log) {
 
-  this.sendMsg = function (msg, type, actions, sticky, position) {
+  this.sendMsg = function (msg, type, actions, sticky, position, msgid) {
     var options = {
       'theme': config_ui_messenger.theme
     };
@@ -29,6 +29,10 @@ KylinApp.service('MessageService', ['config_ui_messenger', function (config_ui_m
       actions: actions,
       showCloseButton: true
     };
+
+    if (angular.isDefined(msgid)) {
+      data.id = msgid;
+    }
 
     // Whether sticky the message, otherwise it will hide after a period.
     if (angular.isDefined(sticky) && sticky === true) {

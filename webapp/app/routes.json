@@ -3,8 +3,7 @@
     "url": "/jobs",
     "params": {
       "templateUrl": "partials/jobs/jobs.html",
-      "tab": "jobs",
-      "controller": "JobCtrl"
+      "tab": "jobs"
     }
   },
   {

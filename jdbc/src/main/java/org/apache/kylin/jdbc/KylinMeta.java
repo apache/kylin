@@ -6,15 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.jdbc;
 
@@ -86,22 +86,15 @@ public class KylinMeta extends MetaImpl {
     @Override
     @Deprecated
     public ExecuteResult prepareAndExecute(StatementHandle sh, String sql, long maxRowCount, PrepareCallback callback) {
-        try {
-            synchronized (callback.getMonitor()) {
-                callback.clear();
-                sh.signature = connection().mockPreparedSignature(sql);
-                callback.assign(sh.signature, null, -1);
-            }
-            callback.execute();
-            final MetaResultSet metaResultSet = MetaResultSet.create(sh.connectionId, sh.id, false, sh.signature, null);
-            return new ExecuteResult(Collections.singletonList(metaResultSet));
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return getPreparedExecuteResult(sh, sql, callback);
     }
 
     @Override
     public ExecuteResult prepareAndExecute(StatementHandle sh, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) throws NoSuchStatementException {
+        return getPreparedExecuteResult(sh, sql, callback);
+    }
+
+    private ExecuteResult getPreparedExecuteResult(StatementHandle sh, String sql, PrepareCallback callback) {
         try {
             synchronized (callback.getMonitor()) {
                 callback.clear();
@@ -195,7 +188,7 @@ public class KylinMeta extends MetaImpl {
                 "IS_GENERATEDCOLUMN");
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private MetaResultSet createResultSet(List iterable, Class clazz, String... names) {
         final List<ColumnMetaData> columns = new ArrayList<ColumnMetaData>();
         final List<Field> fields = new ArrayList<Field>();
@@ -274,20 +267,20 @@ public class KylinMeta extends MetaImpl {
                 buf.append('[').append(c).append(']');
             } else {
                 switch (c) {
-                case '\\':
-                    slash = i;
-                    break;
-                case '%':
-                    buf.append(".*");
-                    break;
-                case '[':
-                    buf.append("\\[");
-                    break;
-                case ']':
-                    buf.append("\\]");
-                    break;
-                default:
-                    buf.append('[').append(c).append(']');
+                    case '\\':
+                        slash = i;
+                        break;
+                    case '%':
+                        buf.append(".*");
+                        break;
+                    case '[':
+                        buf.append("\\[");
+                        break;
+                    case ']':
+                        buf.append("\\]");
+                        break;
+                    default:
+                        buf.append('[').append(c).append(']');
                 }
             }
         }
@@ -299,6 +292,7 @@ public class KylinMeta extends MetaImpl {
     // ============================================================================
 
     private static final List<MetaTableType> metaTableTypes = new ArrayList<MetaTableType>();
+
     static {
         metaTableTypes.add(new MetaTableType("TABLE"));
     }

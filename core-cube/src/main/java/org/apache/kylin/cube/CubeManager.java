@@ -45,6 +45,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
@@ -182,10 +183,26 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
+    /**
+     * List all cubes from cache. Note the metadata may be out of date
+     * @return
+     */
     public List<CubeInstance> listAllCubes() {
         try (AutoLock lock = cubeMapLock.lockForRead()) {
             return new ArrayList<CubeInstance>(cubeMap.values());
         }
+    }
+
+    /**
+     * Reload the cubes from database and list all cubes
+     * @return
+     * @throws IOException
+     */
+    public List<CubeInstance> reloadAndListAllCubes() throws IOException {
+        try (AutoLock lock = cubeMapLock.lockForWrite()) {
+            crud.reloadAll();
+        }
+        return listAllCubes();
     }
 
     public CubeInstance getCube(String cubeName) {
@@ -202,6 +219,10 @@ public class CubeManager implements IRealizationProvider {
             }
             return null;
         }
+    }
+
+    public List<String> getErrorCubes() {
+        return crud.getLoadFailedEntities();
     }
 
     /**
@@ -308,6 +329,16 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
+    public CubeInstance dropOptmizingSegments(CubeInstance cube, CubeSegment... segsToDrop) throws IOException {
+        try (AutoLock lock = cubeMapLock.lockForWrite()) {
+            cube = cube.latestCopyForWrite(); // get a latest copy
+            CubeUpdate update = new CubeUpdate(cube);
+            update.setToRemoveSegs(segsToDrop);
+            update.setCuboidsRecommend(Sets.<Long> newHashSet()); //Set recommend cuboids to be null
+            return updateCube(update);
+        }
+    }
+
     public CubeInstance updateCubeSegStatus(CubeSegment seg, SegmentStatusEnum status) throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
             CubeInstance cube = seg.getCubeInstance().latestCopyForWrite();
@@ -320,7 +351,8 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    public CubeInstance updateCubeLookupSnapshot(CubeInstance cube, String lookupTableName, String newSnapshotResPath) throws IOException {
+    public CubeInstance updateCubeLookupSnapshot(CubeInstance cube, String lookupTableName, String newSnapshotResPath)
+            throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
             cube = cube.latestCopyForWrite();
 
@@ -409,7 +441,7 @@ public class CubeManager implements IRealizationProvider {
         }
 
         if (update.getUpdateTableSnapshotPath() != null) {
-            for(Map.Entry<String, String> lookupSnapshotPathEntry : update.getUpdateTableSnapshotPath().entrySet()) {
+            for (Map.Entry<String, String> lookupSnapshotPathEntry : update.getUpdateTableSnapshotPath().entrySet()) {
                 cube.putSnapshotResPath(lookupSnapshotPathEntry.getKey(), lookupSnapshotPathEntry.getValue());
             }
         }
@@ -434,7 +466,8 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    private void processToRemoveSegments(CubeUpdate update, Segments<CubeSegment> newSegs, List<String> toRemoveResources) {
+    private void processToRemoveSegments(CubeUpdate update, Segments<CubeSegment> newSegs,
+            List<String> toRemoveResources) {
         Iterator<CubeSegment> iterator = newSegs.iterator();
         while (iterator.hasNext()) {
             CubeSegment currentSeg = iterator.next();
@@ -450,7 +483,7 @@ public class CubeManager implements IRealizationProvider {
     }
 
     // for test
-    CubeInstance reloadCube(String cubeName) {
+    public CubeInstance reloadCube(String cubeName) {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
             return crud.reload(cubeName);
         }
@@ -512,7 +545,8 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    private ILookupTable getInMemLookupTable(CubeSegment cubeSegment, JoinDesc join, SnapshotTableDesc snapshotTableDesc) {
+    private ILookupTable getInMemLookupTable(CubeSegment cubeSegment, JoinDesc join,
+            SnapshotTableDesc snapshotTableDesc) {
         String tableName = join.getPKSide().getTableIdentity();
         String snapshotResPath = getSnapshotResPath(cubeSegment, tableName, snapshotTableDesc);
         String[] pkCols = join.getPrimaryKey();
@@ -527,11 +561,12 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    private ILookupTable getExtLookupTable(CubeSegment cubeSegment, String tableName, SnapshotTableDesc snapshotTableDesc) {
+    private ILookupTable getExtLookupTable(CubeSegment cubeSegment, String tableName,
+            SnapshotTableDesc snapshotTableDesc) {
         String snapshotResPath = getSnapshotResPath(cubeSegment, tableName, snapshotTableDesc);
 
-        ExtTableSnapshotInfo extTableSnapshot = ExtTableSnapshotInfoManager.getInstance(config).getSnapshot(
-                snapshotResPath);
+        ExtTableSnapshotInfo extTableSnapshot = ExtTableSnapshotInfoManager.getInstance(config)
+                .getSnapshot(snapshotResPath);
         TableDesc tableDesc = getMetadataManager().getTableDesc(tableName, cubeSegment.getProject());
         return LookupProviderFactory.getExtLookupTable(tableDesc, extTableSnapshot);
     }
@@ -834,7 +869,6 @@ public class CubeManager implements IRealizationProvider {
         }
 
         private void checkReadyForMerge(Segments<CubeSegment> mergingSegments) {
-
             // check if the segments to be merged are continuous
             for (int i = 0; i < mergingSegments.size() - 1; i++) {
                 if (!mergingSegments.get(i).getSegRange().connects(mergingSegments.get(i + 1).getSegRange()))
@@ -847,6 +881,15 @@ public class CubeManager implements IRealizationProvider {
             for (CubeSegment seg : mergingSegments) {
                 if (seg.getSizeKB() == 0 && seg.getInputRecords() == 0) {
                     emptySegment.add(seg.getName());
+                }
+            }
+            long maxSegMergeSpan = KylinConfig.getInstanceFromEnv().getMaxSegmentMergeSpan();
+
+            for (CubeSegment seg : mergingSegments) {
+                if (maxSegMergeSpan > 0 && seg.getTSRange().duration() > maxSegMergeSpan) {
+                    throw new IllegalArgumentException(
+                        "Segment range is larger than the max segement merge span, couldn't merge unless 'forceMergeEmptySegment' set to true: "
+                            + seg);
                 }
             }
 
@@ -864,8 +907,7 @@ public class CubeManager implements IRealizationProvider {
                 if (pair == null)
                     throw new IllegalArgumentException(
                             "Find no segments to merge by " + tsRange + " for cube " + cubeCopy);
-                segRange = new SegmentRange(pair.getFirst().getSegRange().start,
-                        pair.getSecond().getSegRange().end);
+                segRange = new SegmentRange(pair.getFirst().getSegRange().start, pair.getSecond().getSegRange().end);
             }
             return segRange;
         }
@@ -921,11 +963,10 @@ public class CubeManager implements IRealizationProvider {
                                 cubeCopy.toString(), newSegCopy.toString()));
 
             if (StringUtils.isBlank(newSegCopy.getLastBuildJobID()))
-                throw new IllegalStateException(
-                        String.format(Locale.ROOT, "For cube %s, segment %s missing LastBuildJobID",
-                                cubeCopy.toString(), newSegCopy.toString()));
+                throw new IllegalStateException(String.format(Locale.ROOT,
+                        "For cube %s, segment %s missing LastBuildJobID", cubeCopy.toString(), newSegCopy.toString()));
 
-            if (isReady(newSegCopy) == true) {
+            if (isReady(newSegCopy)) {
                 logger.warn("For cube {}, segment {} state should be NEW but is READY", cubeCopy, newSegCopy);
             }
 
@@ -975,9 +1016,9 @@ public class CubeManager implements IRealizationProvider {
             CubeSegment[] optSegCopy = cubeCopy.regetSegments(optimizedSegments);
 
             if (cubeCopy.getSegments().size() != optSegCopy.length * 2) {
-                throw new IllegalStateException(
-                        String.format(Locale.ROOT, "For cube %s, every READY segment should be optimized and all segments should be READY before optimizing",
-                                cubeCopy.toString()));
+                throw new IllegalStateException(String.format(Locale.ROOT,
+                        "For cube %s, every READY segment should be optimized and all segments should be READY before optimizing",
+                        cubeCopy.toString()));
             }
 
             CubeSegment[] originalSegments = new CubeSegment[optSegCopy.length];
@@ -991,15 +1032,14 @@ public class CubeManager implements IRealizationProvider {
                                     cubeCopy.toString(), seg.toString()));
 
                 if (StringUtils.isBlank(seg.getLastBuildJobID()))
-                    throw new IllegalStateException(
-                            String.format(Locale.ROOT, "For cube %s, segment %s missing LastBuildJobID",
-                                    cubeCopy.toString(), seg.toString()));
+                    throw new IllegalStateException(String.format(Locale.ROOT,
+                            "For cube %s, segment %s missing LastBuildJobID", cubeCopy.toString(), seg.toString()));
 
                 seg.setStatus(SegmentStatusEnum.READY);
             }
 
-            logger.info("Promoting cube {}, new segments {}, to remove segments {}",
-                         cubeCopy, Arrays.toString(optSegCopy), originalSegments);
+            logger.info("Promoting cube {}, new segments {}, to remove segments {}", cubeCopy,
+                    Arrays.toString(optSegCopy), originalSegments);
 
             CubeUpdate update = new CubeUpdate(cubeCopy);
             update.setToRemoveSegs(originalSegments) //
@@ -1016,9 +1056,9 @@ public class CubeManager implements IRealizationProvider {
             List<CubeSegment> tobe = cube.calculateToBeSegments(newSegments);
             List<CubeSegment> newList = Arrays.asList(newSegments);
             if (tobe.containsAll(newList) == false) {
-                throw new IllegalStateException(
-                        String.format(Locale.ROOT, "For cube %s, the new segments %s do not fit in its current %s; the resulted tobe is %s",
-                                cube.toString(), newList.toString(), cube.getSegments().toString(), tobe.toString()));
+                throw new IllegalStateException(String.format(Locale.ROOT,
+                        "For cube %s, the new segments %s do not fit in its current %s; the resulted tobe is %s",
+                        cube.toString(), newList.toString(), cube.getSegments().toString(), tobe.toString()));
             }
         }
 
@@ -1161,7 +1201,8 @@ public class CubeManager implements IRealizationProvider {
             return (Dictionary<String>) info.getDictionaryObject();
         }
 
-        public SnapshotTable buildSnapshotTable(CubeSegment cubeSeg, String lookupTable, String uuid) throws IOException {
+        public SnapshotTable buildSnapshotTable(CubeSegment cubeSeg, String lookupTable, String uuid)
+                throws IOException {
             // work on copy instead of cached objects
             CubeInstance cubeCopy = cubeSeg.getCubeInstance().latestCopyForWrite(); // get a latest copy
             CubeSegment segCopy = cubeCopy.getSegmentById(cubeSeg.getUuid());
@@ -1195,28 +1236,61 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    public CubeInstance findLatestSnapshot(List<RealizationEntry> realizationEntries, String lookupTableName) {
+    /**
+     * To keep "select * from LOOKUP_TABLE" has consistent and latest result, we manually choose
+     * CubeInstance here to answer such query.
+     */
+    public CubeInstance findLatestSnapshot(List<RealizationEntry> realizationEntries, String lookupTableName,
+            CubeInstance cubeInstance) {
         CubeInstance cube = null;
-        if (realizationEntries.size() > 0) {
-            long maxBuildTime = Long.MIN_VALUE;
-            RealizationRegistry registry = RealizationRegistry.getInstance(config);
-            for (RealizationEntry entry : realizationEntries) {
-                IRealization realization = registry.getRealization(entry.getType(), entry.getRealization());
-                if (realization != null && realization.isReady() && realization instanceof CubeInstance) {
-                    if (realization.getModel().isLookupTable(lookupTableName)) {
+        try {
+            if (!realizationEntries.isEmpty()) {
+                long maxBuildTime = Long.MIN_VALUE;
+                RealizationRegistry registry = RealizationRegistry.getInstance(config);
+                for (RealizationEntry entry : realizationEntries) {
+                    IRealization realization = registry.getRealization(entry.getType(), entry.getRealization());
+                    if (realization != null && realization.isReady() && realization instanceof CubeInstance) {
                         CubeInstance current = (CubeInstance) realization;
-                        CubeSegment segment = current.getLatestReadySegment();
-                        if (segment != null) {
-                            long latestBuildTime = segment.getLastBuildTime();
-                            if (latestBuildTime > maxBuildTime) {
-                                maxBuildTime = latestBuildTime;
-                                cube = current;
+                        if (checkMeetSnapshotTable(current, lookupTableName)) {
+                            CubeSegment segment = current.getLatestReadySegment();
+                            if (segment != null) {
+                                long latestBuildTime = segment.getLastBuildTime();
+                                if (latestBuildTime > maxBuildTime) {
+                                    maxBuildTime = latestBuildTime;
+                                    cube = current;
+                                }
                             }
                         }
                     }
                 }
             }
+        } catch (Exception e) {
+            logger.info("Unexpected error.", e);
         }
-        return cube;
+        if (!cubeInstance.equals(cube)) {
+            logger.debug("Picked cube {} over {} as it provides a more recent snapshot of the lookup table {}", cube,
+                    cubeInstance, lookupTableName);
+        }
+        return cube == null ? cubeInstance : cube;
+    }
+
+    /**
+     * check if {toCheck} has snapshot of {lookupTableName}
+     * @param lookupTableName look like {SCHMEA}.{TABLE}
+     */
+    private boolean checkMeetSnapshotTable(CubeInstance toCheck, String lookupTableName) {
+        boolean checkRes = false;
+        String lookupTbl = lookupTableName;
+        String[] strArr = lookupTableName.split("\\.");
+        if (strArr.length > 1) {
+            lookupTbl = strArr[strArr.length - 1];
+        }
+        for (DimensionDesc dimensionDesc : toCheck.getDescriptor().getDimensions()) {
+            if (dimensionDesc.getTableRef().getTableName().equalsIgnoreCase(lookupTbl)) {
+                checkRes = true;
+                break;
+            }
+        }
+        return checkRes;
     }
 }

@@ -70,7 +70,7 @@ public class JdbcHiveMRInputTest extends TestBase {
         String cmd = executable.getParam("cmd");
         Assert.assertTrue(cmd.contains("org.h2.Driver"));
         Assert.assertTrue(cmd.contains(
-                "--boundary-query \"SELECT MIN(\\\"TEST_KYLIN_FACT\\\".\\\"LEAF_CATEG_ID\\\"), MAX(\\\"TEST_KYLIN_FACT\\\".\\\"LEAF_CATEG_ID\\\")\n"
+                "--boundary-query \"SELECT MIN(\\\"TEST_KYLIN_FACT\\\".\\\"LEAF_CATEG_ID\\\"), MAX(\\\"TEST_KYLIN_FACT\\\".\\\"LEAF_CATEG_ID\\\")" + System.lineSeparator()
                         + "FROM \\\"DEFAULT\\\".\\\"TEST_KYLIN_FACT\\\" AS \\\"TEST_KYLIN_FACT\\\""));
         source.close();
     }
@@ -95,7 +95,7 @@ public class JdbcHiveMRInputTest extends TestBase {
         String cmd = executable.getParam("cmd");
         Assert.assertTrue(cmd.contains("org.h2.Driver"));
         Assert.assertTrue(
-                cmd.contains("--boundary-query \"SELECT MIN(\\\"TEST_KYLIN_FACT\\\".\\\"CAL_DT\\\"), MAX(\\\"TEST_KYLIN_FACT\\\".\\\"CAL_DT\\\")\n"
+                cmd.contains("--boundary-query \"SELECT MIN(\\\"TEST_KYLIN_FACT\\\".\\\"CAL_DT\\\"), MAX(\\\"TEST_KYLIN_FACT\\\".\\\"CAL_DT\\\")" + System.lineSeparator()
                         + "FROM \\\"DEFAULT\\\".\\\"TEST_KYLIN_FACT\\\" AS \\\"TEST_KYLIN_FACT\\\"\""));
         source.close();
     }
@@ -121,7 +121,7 @@ public class JdbcHiveMRInputTest extends TestBase {
         String cmd = executable.getParam("cmd");
         Assert.assertTrue(cmd.contains("org.h2.Driver"));
         Assert.assertTrue(cmd.contains(
-                "--boundary-query \"SELECT MIN(\\\"TEST_CATEGORY_GROUPINGS\\\".\\\"META_CATEG_NAME\\\"), MAX(\\\"TEST_CATEGORY_GROUPINGS\\\".\\\"META_CATEG_NAME\\\")\n"
+                "--boundary-query \"SELECT MIN(\\\"TEST_CATEGORY_GROUPINGS\\\".\\\"META_CATEG_NAME\\\"), MAX(\\\"TEST_CATEGORY_GROUPINGS\\\".\\\"META_CATEG_NAME\\\")" + System.lineSeparator()
                         + "FROM \\\"DEFAULT\\\".\\\"TEST_CATEGORY_GROUPINGS\\\" AS \\\"TEST_CATEGORY_GROUPINGS\\\"\""));
 
         source.close();

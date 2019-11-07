@@ -36,9 +36,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-/**
- *
- */
 public class LivyRestClient {
 
     private int httpConnectionTimeoutMs = 30000;
@@ -71,7 +68,11 @@ public class LivyRestClient {
         String url = baseUrl + "/batches";
         HttpPost post = newPost(url);
 
-        post.setEntity(new StringEntity(jobJson, "UTF-8"));
+        // Because livy submit job use JDK's ProcessBuilder, here we need to quote backtick
+        // otherwise backtick make livy throw org.apache.spark.sql.catalyst.parser.ParseException
+        String json = jobJson.replace("`", config.getLivyRestApiBacktick());
+
+        post.setEntity(new StringEntity(json, "UTF-8"));
         HttpResponse response = client.execute(post);
         String content = getContent(response);
         if (response.getStatusLine().getStatusCode() != 201) {

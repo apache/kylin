@@ -36,16 +36,17 @@
                 <td style="width: 20%">
                     <label><b>Type&nbsp;</b> </label>
                     <input type="radio" ng-model="newAccess.principal" ng-value=true />  <span tooltip="Username">User</span>
-                    <input type="radio" ng-model="newAccess.principal" ng-value=false /> <span tooltip="User Role">Role</span>
+                    <input type="radio" ng-model="newAccess.principal" ng-value=false /> <span tooltip="User Role">Group</span>
                 </td>
                 <td style="width: 40%" >
                     <label><b>Name&nbsp;</b> </label>
                     <input ng-model="newAccess.sid" ng-if="newAccess.principal==true" placeholder=" User NT Account..." style="width: 80%" />
+                    <input ng-model="newAccess.sid" ng-if="newAccess.principal==false" placeholder=" User NT Account..." style="width: 80%" />
 
-                    <select chosen ng-model="newAccess.sid" ng-if="newAccess.principal==false" style="width: 80%"
+                    <!-- <select chosen ng-model="newAccess.sid" ng-if="newAccess.principal==false" style="width: 80%"
                             ng-options="authority as authority for authority in authorities">
                             <option value=""></option>
-                            </select>
+                            </select> -->
                 </td>
                 <td >
                     <label><b>Permission&nbsp;</b> </label>
@@ -84,7 +85,7 @@
                 </td>
                 <td>
                     <span ng-if="accessEntity.sid.principal" >User</span>
-                    <span ng-if="accessEntity.sid.grantedAuthority">Role</span>
+                    <span ng-if="accessEntity.sid.grantedAuthority">Group</span>
                 </td>
                 <td>
                   <span ng-if="accessEntity.permission.mask == permissions.READ.mask">QUERY</span>

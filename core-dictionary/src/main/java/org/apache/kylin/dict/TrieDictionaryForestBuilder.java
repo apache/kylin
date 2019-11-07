@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TrieDictionaryForestBuilder<T> {
 
-    public static int DEFAULT_MAX_TRIE_TREE_SIZE_MB = 500;
+    public static long DEFAULT_MAX_TRIE_TREE_SIZE_MB = 500;
 
     private static final Logger logger = LoggerFactory.getLogger(TrieDictionaryForestBuilder.class);
 
@@ -52,7 +52,7 @@ public class TrieDictionaryForestBuilder<T> {
 
     private int curOffset;
 
-    private int maxTrieTreeSize;
+    private long maxTrieTreeSize;
 
     private boolean isOrdered = true;
 
@@ -64,7 +64,7 @@ public class TrieDictionaryForestBuilder<T> {
         this(bytesConverter, baseId, getMaxTrieSizeInMB());
     }
 
-    public TrieDictionaryForestBuilder(BytesConverter<T> bytesConverter, int baseId, int maxTrieTreeSizeMB) {
+    public TrieDictionaryForestBuilder(BytesConverter<T> bytesConverter, int baseId, long maxTrieTreeSizeMB) {
         this.bytesConverter = bytesConverter;
         this.trieBuilder = new TrieDictionaryBuilder<T>(bytesConverter);
         this.baseId = baseId;
@@ -89,7 +89,7 @@ public class TrieDictionaryForestBuilder<T> {
             if (comp > 0) {
                 logger.info("values not in ascending order, previous '{}', current '{}'", previousValue, valueByteArray);
                 isOrdered = false;
-                if (trees.size() > 0) {
+                if (!trees.isEmpty()) {
                     throw new IllegalStateException("Invalid input data. Unordered data cannot be split into multi trees");
                 }
             }
@@ -119,11 +119,11 @@ public class TrieDictionaryForestBuilder<T> {
         return forest;
     }
 
-    public int getMaxTrieTreeSize() {
+    public long getMaxTrieTreeSize() {
         return maxTrieTreeSize;
     }
 
-    void setMaxTrieTreeSize(int maxTrieTreeSize) {
+    void setMaxTrieTreeSize(long maxTrieTreeSize) {
         this.maxTrieTreeSize = maxTrieTreeSize;
         logger.info("maxTrieSize is set to:" + maxTrieTreeSize + "B");
     }
@@ -154,14 +154,14 @@ public class TrieDictionaryForestBuilder<T> {
         trieBuilder = new TrieDictionaryBuilder<T>(bytesConverter);
     }
 
-    public static int getMaxTrieSizeInMB() {
+    public static long getMaxTrieSizeInMB() {
         KylinConfig config = null;
         try {
             config = KylinConfig.getInstanceFromEnv();
         } catch (RuntimeException e) {
             logger.info("cannot get KylinConfig from env.Use default setting:" + DEFAULT_MAX_TRIE_TREE_SIZE_MB + "MB");
         }
-        int maxTrieTreeSizeMB;
+        long maxTrieTreeSizeMB;
         if (config != null) {
             maxTrieTreeSizeMB = config.getTrieDictionaryForestMaxTrieSizeMB();
         } else {

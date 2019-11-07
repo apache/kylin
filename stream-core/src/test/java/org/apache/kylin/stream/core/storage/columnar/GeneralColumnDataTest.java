@@ -29,14 +29,22 @@ import java.nio.channels.FileChannel.MapMode;
 import java.util.Arrays;
 import java.util.Random;
 
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.io.CountingOutputStream;
 import com.google.common.io.Files;
 
-public class GeneralColumnDataTest {
+public class GeneralColumnDataTest extends LocalFileMetadataTestCase {
+
+    @Before
+    public void setUp() throws Exception {
+        this.createTestMetadata();
+    }
+
     @Test
     public void testWriteRead() throws Exception {
         File tmpColFile = File.createTempFile("testCol", ".general");

@@ -18,7 +18,10 @@
 
 package org.apache.kylin.metrics.lib.impl.hive;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.kylin.metrics.lib.ActiveReservoir;
@@ -105,16 +108,42 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
     }
 
     private class HiveReservoirListener implements ActiveReservoirListener {
-
-        HiveProducer producer;
+        private Properties props;
+        private Map<String, HiveProducer> producerMap = new HashMap<>();
 
         private HiveReservoirListener(Properties props) throws Exception {
-            producer = new HiveProducer(props);
+            this.props = props;
+        }
+
+        private synchronized HiveProducer getProducer(String metricType) throws Exception {
+            HiveProducer producer = producerMap.get(metricType);
+            if (producer == null) {
+                producer = new HiveProducer(metricType, props);
+                producerMap.put(metricType, producer);
+            }
+            return producer;
         }
 
         public boolean onRecordUpdate(final List<Record> records) {
+            if (records.isEmpty()) {
+                return true;
+            }
+            logger.info("Try to write {} records", records.size());
             try {
-                producer.send(records);
+                Map<String, List<Record>> queues = new HashMap<>();
+                for (Record record : records) {
+                    List<Record> recordQueues = queues.get(record.getType());
+                    if (recordQueues == null) {
+                        recordQueues = new ArrayList<>();
+                        queues.put(record.getType(), recordQueues);
+                    }
+                    recordQueues.add(record);
+                }
+                for (Map.Entry<String, List<Record>> entry : queues.entrySet()) {
+                    HiveProducer producer = getProducer(entry.getKey());
+                    producer.send(entry.getValue());
+                }
+                queues.clear();
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 return false;
@@ -124,6 +153,7 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
 
         public boolean onRecordUpdate(final Record record) {
             try {
+                HiveProducer producer = getProducer(record.getType());
                 producer.send(record);
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
@@ -133,7 +163,10 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
         }
 
         public void close() {
-            producer.close();
+            for (HiveProducer producer : producerMap.values()) {
+                producer.close();
+            }
+            producerMap.clear();
         }
     }
 }

@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.stream.core.util;
+package org.apache.kylin.dimension;
 
 import java.util.Locale;
 import java.util.Map;

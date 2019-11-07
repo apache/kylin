@@ -24,8 +24,8 @@ import java.util.Map;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.response.HBaseResponse;
-import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
+import org.apache.kylin.storage.hbase.util.HBaseUnionUtil;
 
 public class HBaseInfoUtil {
     
@@ -34,7 +34,7 @@ public class HBaseInfoUtil {
         if (!config.getStorageUrl().getScheme().equals("hbase"))
             return null;
         
-        Connection conn = HBaseConnection.get(config.getStorageUrl());
+        Connection conn = HBaseUnionUtil.getConnection(config, tableName);
         HBaseResponse hr = null;
         long tableSize = 0;
         int regionCount = 0;

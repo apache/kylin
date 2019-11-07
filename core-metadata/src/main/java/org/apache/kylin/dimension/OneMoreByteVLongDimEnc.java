@@ -59,6 +59,16 @@ public class OneMoreByteVLongDimEnc extends DimensionEncoding implements Seriali
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
             return new OneMoreByteVLongDimEnc(Integer.parseInt(args[0]));
         }
+
+        @Override
+        public boolean isValidDimensionEncoding(String encodingName, String[] args) {
+            try {
+                int length = Integer.parseInt(args[0]);
+                return length >= 1 && length < CAP.length;
+            } catch (Exception e) {
+                return false;
+            }
+        }
     };
 
     // ============================================================================

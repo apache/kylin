@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -80,6 +81,11 @@ public class QueryController extends BasicController {
     @Autowired
     @Qualifier("queryService")
     private QueryService queryService;
+
+    private static String BOM_CHARACTER;
+    {
+        BOM_CHARACTER = new String(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF}, StandardCharsets.UTF_8);
+    }
 
     @RequestMapping(value = "/query", method = RequestMethod.POST, produces = { "application/json" })
     @ResponseBody
@@ -154,6 +160,17 @@ public class QueryController extends BasicController {
                 headerList.add(column.getLabel());
             }
 
+            // KYLIN-3939
+            // Add BOM character,slove the bug that it shows Chinese garbled when using
+            // excel to open scv file on windows.
+            // BOM character should add on head of CSV file.
+            // So add it to the head of the first index of headerList.
+            if (headerList.size() > 0) {
+                String tmpHeaderFirst = headerList.get(0);
+                String headerFirst = BOM_CHARACTER.concat(tmpHeaderFirst);
+                headerList.set(0, headerFirst);
+            }
+
             String[] headers = new String[headerList.size()];
             csvWriter.writeHeader(headerList.toArray(headers));
 
@@ -169,9 +186,9 @@ public class QueryController extends BasicController {
 
     @RequestMapping(value = "/tables_and_columns", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
-    public List<TableMeta> getMetadata(MetaRequest metaRequest) {
+    public List<TableMeta> getMetadata(MetaRequest metaRequest) throws IOException {
         try {
-            return queryService.getMetadata(metaRequest.getProject());
+            return queryService.getMetadataFilterByUser(metaRequest.getProject());
         } catch (SQLException e) {
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }

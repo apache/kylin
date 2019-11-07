@@ -111,14 +111,14 @@ public class CuratorSchedulerTest extends LocalFileMetadataTestCase {
                         }
                     });
 
-            Assert.assertTrue(instanceNodes.contains(server1.getAddress()));
-            Assert.assertTrue(instanceNodes.contains(server2.getAddress()));
+            Assert.assertTrue(instanceNodes.contains(server1.getAddress() + ":query"));
+            Assert.assertTrue(instanceNodes.contains(server2.getAddress() + ":query"));
 
             // stop one server
             server1.close();
             instances = serviceDiscovery.queryForInstances(CuratorScheduler.SERVICE_NAME);
             Assert.assertTrue(instances.size() == 1);
-            Assert.assertEquals(server2.getAddress(),
+            Assert.assertEquals(server2.getAddress() + ":query",
                     instances.iterator().next().getPayload().get(CuratorScheduler.SERVICE_PAYLOAD_DESCRIPTION));
 
             // all stop

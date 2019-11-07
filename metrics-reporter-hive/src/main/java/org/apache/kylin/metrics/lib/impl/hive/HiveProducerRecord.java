@@ -106,6 +106,9 @@ public class HiveProducerRecord {
         return result;
     }
 
+    /**
+     * Use to organize metrics message
+     */
     public class RecordKey {
         public static final String DEFAULT_DB_NAME = "DEFAULT";
 

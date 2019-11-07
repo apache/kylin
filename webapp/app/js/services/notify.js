@@ -17,8 +17,8 @@
 */
 
 KylinApp.service('MessageBox', function (SweetAlert, MessageService) {
-  this.successNotify = function(message) {
-    MessageService.sendMsg(message, 'success', {});
+  this.successNotify = function(message, msgid) {
+    MessageService.sendMsg(message, 'success', {}, null, null, msgid);
   }
 
   this.successAlert = function(message, callback) {

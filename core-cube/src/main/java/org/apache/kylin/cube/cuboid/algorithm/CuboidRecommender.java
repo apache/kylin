@@ -128,6 +128,10 @@ public class CuboidRecommender {
         int allCuboidCount = cuboidStats.getAllCuboidsForMandatory().size()
                 + cuboidStats.getAllCuboidsForSelection().size();
 
+        if (!ifForceRecommend && allCuboidCount <= threshold1) {
+            return null;
+        }
+
         BenefitPolicy benefitPolicy = new PBPUSCalculator(cuboidStats);
         CuboidRecommendAlgorithm algorithm = null;
 
@@ -157,9 +161,6 @@ public class CuboidRecommender {
             }
         }
 
-        if (!ifForceRecommend && allCuboidCount <= threshold1) {
-            return null;
-        }
         return recommendCuboidsWithStats;
     }
 

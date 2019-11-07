@@ -18,6 +18,8 @@
 
 package org.apache.kylin.query.relnode;
 
+import static org.apache.kylin.metadata.expression.TupleExpression.ExpressionOperatorEnum.COLUMN;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -85,7 +87,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import static org.apache.kylin.metadata.expression.TupleExpression.ExpressionOperatorEnum.COLUMN;
 /**
  */
 public class OLAPAggregateRel extends Aggregate implements OLAPRel {
@@ -111,11 +112,30 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         for (String func : udafs.keySet()) {
             try {
                 AGGR_FUNC_PARAM_AS_MEASURE_MAP.put(func,
-                        ((ParamAsMeasureCount) (udafs.get(func).getDeclaredConstructor().newInstance())).getParamAsMeasureCount());
+                        ((ParamAsMeasureCount) (udafs.get(func).getDeclaredConstructor().newInstance()))
+                                .getParamAsMeasureCount());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    OLAPContext context;
+    ColumnRowType columnRowType;
+    private boolean afterAggregate;
+    private Map<Integer, AggregateCall> hackAggCalls;
+    private List<AggregateCall> rewriteAggCalls;
+    private List<TblColRef> groups;
+    private List<FunctionDesc> aggregations;
+    private boolean rewriting;
+    public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, boolean indicator,
+            ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls)
+            throws InvalidRelException {
+        super(cluster, traits, child, indicator, groupSet, groupSets, aggCalls);
+        Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
+        this.afterAggregate = false;
+        this.rewriteAggCalls = aggCalls;
+        this.rowType = getRowType();
     }
 
     static String getSqlFuncName(AggregateCall aggCall) {
@@ -133,25 +153,6 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             throw new IllegalStateException("Non-support aggregation " + sqlName);
         }
         return funcName;
-    }
-
-    OLAPContext context;
-    ColumnRowType columnRowType;
-    private boolean afterAggregate;
-    private Map<Integer, AggregateCall> hackAggCalls;
-    private List<AggregateCall> rewriteAggCalls;
-    private List<TblColRef> groups;
-    private List<FunctionDesc> aggregations;
-    private boolean rewriting;
-
-    public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, boolean indicator,
-            ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls)
-            throws InvalidRelException {
-        super(cluster, traits, child, indicator, groupSet, groupSets, aggCalls);
-        Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
-        this.afterAggregate = false;
-        this.rewriteAggCalls = aggCalls;
-        this.rowType = getRowType();
     }
 
     @Override
@@ -268,17 +269,18 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
         this.groups = Lists.newArrayList();
         for (int i = getGroupSet().nextSetBit(0); i >= 0; i = getGroupSet().nextSetBit(i + 1)) {
-            TupleExpression tupleExpression = inputColumnRowType.getSourceColumnsByIndex(i);
+            TupleExpression tupleExpression = inputColumnRowType.getTupleExpressionByIndex(i);
 
             // group by column with operator
-            if (this.context.groupByExpression == false && !(COLUMN.equals(tupleExpression.getOperator()) && tupleExpression.getChildren().isEmpty())) {
+            if (this.context.groupByExpression == false
+                    && !(COLUMN.equals(tupleExpression.getOperator()) && tupleExpression.getChildren().isEmpty())) {
                 this.context.groupByExpression = true;
             }
 
             TblColRef groupOutCol = inputColumnRowType.getColumnByIndex(i);
             if (tupleExpression instanceof ColumnTupleExpression) {
                 this.groups.add(((ColumnTupleExpression) tupleExpression).getColumn());
-            } else if (this.context.isDynamicColumnEnabled()) {
+            } else if (this.context.isDynamicColumnEnabled() && tupleExpression.ifForDynamicColumn()) {
                 Pair<Set<TblColRef>, Set<TblColRef>> cols = ExpressionColCollector.collectColumnsPair(tupleExpression);
 
                 // push down only available for the innermost aggregation
@@ -350,7 +352,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             // Check dynamic aggregation
             if (this.context.isDynamicColumnEnabled() && !afterAggregate && !rewriting && argList.size() == 1) {
                 int iRowIdx = argList.get(0);
-                TupleExpression tupleExpr = inputColumnRowType.getSourceColumnsByIndex(iRowIdx);
+                TupleExpression tupleExpr = inputColumnRowType.getTupleExpressionByIndex(iRowIdx);
                 if (aggCall.getAggregation() instanceof SqlSumAggFunction
                         || aggCall.getAggregation() instanceof SqlSumEmptyIsZeroAggFunction) {
                     // sum (expression)
@@ -497,10 +499,28 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
     FunctionDesc findInMeasures(FunctionDesc aggFunc, List<MeasureDesc> measures) {
         for (MeasureDesc m : measures) {
-            if (aggFunc.equals(m.getFunction()))
+            if (aggFunc.equals(m.getFunction())) {
                 return m.getFunction();
+            }
         }
+
+        // no count(col) measure found, use count(1) to replace it.
+        if (aggFunc.isCount()) {
+            FunctionDesc func = findCountConstantFunc(measures);
+            if (func != null)
+                return func;
+        }
+
         return aggFunc;
+    }
+
+    private FunctionDesc findCountConstantFunc(List<MeasureDesc> measures) {
+        for (MeasureDesc measure : measures) {
+            if (measure.getFunction().isCountConstant()) {
+                return measure.getFunction();
+            }
+        }
+        return null;
     }
 
     void buildRewriteFieldsAndMetricsColumns() {
@@ -553,7 +573,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         String callName = getSqlFuncName(aggCall);
         RelDataType fieldType = aggCall.getType();
         SqlAggFunction newAgg = aggCall.getAggregation();
-        
+
         Map<String, Class<?>> udafMap = func.getMeasureType().getRewriteCalciteAggrFunctions();
         if (func.isCount()) {
             newAgg = SqlStdOperatorTable.SUM0;

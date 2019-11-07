@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.SegmentRange.Endpoint;
@@ -154,12 +155,17 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
         if (mergedSegment == null)
             return result;
 
+        long maxSegMergeSpan = KylinConfig.getInstanceFromEnv().getMaxSegmentMergeSpan();
         for (T seg : this) {
             if (seg.getStatus() != SegmentStatusEnum.READY && seg.getStatus() != SegmentStatusEnum.READY_PENDING)
                 continue;
 
             if (seg == mergedSegment)
                 continue;
+
+            if (maxSegMergeSpan > 0 && seg.getTSRange().duration() > maxSegMergeSpan) {
+                continue;
+            }
 
             if (mergedSegment.getSegRange().contains(seg.getSegRange())) {
                 result.add(seg);
@@ -178,15 +184,29 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
         }
         Segments volatileSegs = new Segments();
         for(T seg: segs) {
-            if(seg.getTSRange().end.v + volatileRange > latestSegEndTs) {
-                logger.warn("segment in volatile range: seg:" + seg.toString() +
-                        "rangeStart:" + seg.getTSRange().start.v + ", rangeEnd" + seg.getTSRange().end.v);
+            if (seg.getTSRange().end.v + volatileRange > latestSegEndTs) {
+                logger.warn("Segment in volatile range, seg: {}, rangeStart:{}, rangeEnd {}.", seg,
+                        seg.getTSRange().start.v, seg.getTSRange().end.v);
                 volatileSegs.add(seg);
             }
         }
-
         segs.removeAll(volatileSegs);
+    }
 
+    public void removeMaxSpanSegment(Segments<T> segs, long maxSegSpan) {
+        if (maxSegSpan <= 0) {
+            return;
+        }
+        Segments maxSpanSegs = new Segments();
+        for (T seg : segs) {
+            if (seg.getTSRange().duration() >= maxSegSpan) {
+
+                logger.warn("segment with max span: seg:" + seg.toString() +
+                        "rangeStart:" + seg.getTSRange().start.v + ", rangeEnd" + seg.getTSRange().end.v);
+                maxSpanSegs.add(seg);
+            }
+        }
+        segs.removeAll(maxSpanSegs);
     }
 
     public SegmentRange autoMergeCubeSegments(boolean needAutoMerge, String cubeName, long[] timeRanges, long volatileRange) throws IOException {
@@ -214,9 +234,8 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
                 }
             }
         }
-
         removeLatestSegmentByVolatileRange(readySegs, volatileRange);
-
+        removeMaxSpanSegment(readySegs, KylinConfig.getInstanceFromEnv().getMaxSegmentMergeSpan());
         // exclude those already under merging segments
         readySegs.removeAll(mergingSegs);
 

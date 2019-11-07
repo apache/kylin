@@ -23,8 +23,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 import java.util.Locale;
+import org.apache.kylin.common.SourceDialect;
 import org.apache.kylin.source.hive.DBConnConf;
 import org.apache.kylin.source.jdbc.SqlUtil;
 import org.slf4j.Logger;
@@ -73,5 +73,9 @@ public class DefaultJdbcMetadata implements IJdbcMetadata {
     @Override
     public ResultSet listColumns(final DatabaseMetaData dbmd, String schema, String table) throws SQLException {
         return dbmd.getColumns(null, schema, table, null);
+    }
+
+    public SourceDialect getDialect() {
+        return SourceDialect.UNKNOWN;
     }
 }

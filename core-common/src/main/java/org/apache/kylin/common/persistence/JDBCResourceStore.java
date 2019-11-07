@@ -128,7 +128,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
                     pstat = connection.prepareStatement(createIndexSql);
                     pstat.executeUpdate();
                 } catch (SQLException ex) {
-                    logger.error("Failed to create index on " + META_TABLE_TS, ex);
+                    logger.error("Failed to create index on {}", META_TABLE_TS, ex);
                 }
             }
 
@@ -171,7 +171,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
 
     @Override
     protected void visitFolderImpl(final String folderPath, final boolean recursive, final VisitFilter filter,
-                                   final boolean loadContent, final Visitor visitor) throws IOException {
+            final boolean loadContent, final Visitor visitor) throws IOException {
 
         try {
             executeSql(new SqlOperation() {
@@ -184,8 +184,8 @@ public class JDBCResourceStore extends PushdownResourceStore {
                         lookForPrefix = filter.pathPrefix;
                     }
 
-                    if (isRootPath(folderPath)){
-                        for (int i=0; i<tableNames.length; i++){
+                    if (isRootPath(folderPath)) {
+                        for (int i = 0; i < tableNames.length; i++) {
                             final String tableName = tableNames[i];
                             JDBCResourceSQL sqls = getJDBCResourceSQL(tableName);
                             String sql = sqls.getAllResourceSqlString(loadContent);
@@ -212,7 +212,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
                                 }
                             }
                         }
-                    }else{
+                    } else {
                         JDBCResourceSQL sqls = getJDBCResourceSQL(getMetaTableName(folderPath));
                         String sql = sqls.getAllResourceSqlString(loadContent);
                         pstat = connection.prepareStatement(sql);
@@ -400,12 +400,12 @@ public class JDBCResourceStore extends PushdownResourceStore {
 
             if (content.length > smallCellMetadataWarningThreshold) {
                 logger.warn(
-                        "A JSON metadata entry's size is not supposed to exceed kap.metadata.jdbc.small-cell-meta-size-warning-threshold({}), resPath: {}, actual size: {}",
+                        "A JSON metadata entry's size is not supposed to exceed kylin.metadata.jdbc.small-cell-meta-size-warning-threshold({}), resPath: {}, actual size: {}",
                         smallCellMetadataWarningThreshold, resPath, content.length);
             }
             if (content.length > smallCellMetadataErrorThreshold) {
                 throw new SQLException(new IllegalArgumentException(
-                        "A JSON metadata entry's size is not supposed to exceed kap.metadata.jdbc.small-cell-meta-size-error-threshold("
+                        "A JSON metadata entry's size is not supposed to exceed kylin.metadata.jdbc.small-cell-meta-size-error-threshold("
                                 + smallCellMetadataErrorThreshold + "), resPath: " + resPath + ", actual size: "
                                 + content.length));
             }
@@ -456,7 +456,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
                                 int result = pstat.executeUpdate();
                                 if (result != 1)
                                     throw new SQLException();
-                            } catch (Exception e) {
+                            } catch (Throwable e) {
                                 pushdown.rollback();
                                 throw e;
                             } finally {
@@ -471,49 +471,64 @@ public class JDBCResourceStore extends PushdownResourceStore {
                         }
                     } else {
                         // Note the checkAndPut trick:
-                        // update {0} set {1}=? where {2}=? and {3}=?
-                        pstat = connection.prepareStatement(sqls.getUpdateSqlWithoutContent());
+                        // update {0} set {1}=?,{2}=? where {3}=? and {4}=?
+                        pstat = connection.prepareStatement(sqls.getUpdateContentAndTsSql());
                         pstat.setLong(1, newTS);
-                        pstat.setString(2, resPath);
-                        pstat.setLong(3, oldTS);
-                        int result = pstat.executeUpdate();
-                        if (result != 1) {
-                            long realTime = getResourceTimestamp(resPath);
-                            throw new WriteConflictException("Overwriting conflict " + resPath + ", expect old TS "
-                                    + oldTS + ", but it is " + realTime);
-                        }
-                        PreparedStatement pstat2 = null;
-                        try {
-                            // "update {0} set {1}=? where {3}=?"
-                            pstat2 = connection.prepareStatement(sqls.getUpdateContentSql());
-                            if (isContentOverflow(content, resPath)) {
-                                logger.debug("Overflow! resource path: {}, content size: {}", resPath, content.length);
-                                pstat2.setNull(1, Types.BLOB);
-                                pstat2.setString(2, resPath);
-                                RollbackablePushdown pushdown = writePushdown(resPath, ContentWriter.create(content));
-                                try {
-                                    int result2 = pstat2.executeUpdate();
-                                    if (result2 != 1)
-                                        throw new SQLException();
-                                } catch (Exception e) {
-                                    pushdown.rollback();
-                                    throw e;
-                                } finally {
-                                    pushdown.close();
-                                }
-                            } else {
-                                pstat2.setBinaryStream(1,
-                                        new BufferedInputStream(new ByteArrayInputStream(content)));
-                                pstat2.setString(2, resPath);
-                                pstat2.executeUpdate();
+                        pstat.setString(3, resPath);
+                        pstat.setLong(4, oldTS);
+                        if (isContentOverflow(content, resPath)) {
+                            pstat.setNull(2, Types.BLOB);
+                            RollbackablePushdown pushdown = writePushdown(resPath, ContentWriter.create(content));
+                            try {
+                                int result = pstat.executeUpdate();
+                                if (result != 1)
+                                    throw new SQLException();
+                            } catch (Throwable e) {
+                                pushdown.rollback();
+                                throw e;
+                            } finally {
+                                pushdown.close();
                             }
-                        } finally {
-                            JDBCConnectionManager.closeQuietly(pstat2);
+                        } else {
+                            pstat.setBinaryStream(2, new BufferedInputStream(new ByteArrayInputStream(content)));
+                            int result = pstat.executeUpdate();
+                            if (result != 1) {
+                                long realTime = getResourceTimestamp(resPath);
+                                throw new WriteConflictException("Overwriting conflict " + resPath + ", expect old TS "
+                                        + oldTS + ", but it is " + realTime);
+                            }
                         }
                     }
                 }
             }
         });
+    }
+
+    @Override
+    protected void updateTimestampImpl(final String resPath, final long timestamp) throws IOException {
+        try {
+            boolean skipHdfs = isJsonMetadata(resPath);
+            JDBCResourceSQL sqls = getJDBCResourceSQL(getMetaTableName(resPath));
+            executeSql(new SqlOperation() {
+                @Override
+                public void execute(Connection connection) throws SQLException {
+                    pstat = connection.prepareStatement(sqls.getReplaceSqlWithoutContent());
+                    pstat.setLong(1, timestamp);
+                    pstat.setString(2, resPath);
+                    pstat.executeUpdate();
+                }
+            });
+
+            if (!skipHdfs) {
+                try {
+                    updateTimestampPushdown(resPath, timestamp);
+                } catch (Throwable e) {
+                    throw new SQLException(e);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
     }
 
     @Override
@@ -540,6 +555,18 @@ public class JDBCResourceStore extends PushdownResourceStore {
             }
         } catch (SQLException e) {
             throw new IOException(e);
+        }
+    }
+
+    @Override
+    protected void deleteResourceImpl(String resPath, long timestamp) throws IOException {
+        // considering deletePushDown operation, check timestamp at the beginning
+        long origLastModified = getResourceTimestampImpl(resPath);
+        if (checkTimeStampBeforeDelete(origLastModified, timestamp)) {
+            deleteResourceImpl(resPath);
+        } else {
+            throw new IOException("Resource " + resPath + " timestamp not match, [originLastModified: "
+                    + origLastModified + ", timestampToDelete: " + timestamp + "]");
         }
     }
 

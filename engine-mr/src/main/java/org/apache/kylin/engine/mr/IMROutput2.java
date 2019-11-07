@@ -58,7 +58,7 @@ public interface IMROutput2 {
         /** Add step that does any necessary clean up. */
         public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow);
 
-        public IMROutputFormat getOuputFormat();
+        public IMROutputFormat getOutputFormat();
 
     }
 
@@ -100,7 +100,7 @@ public interface IMROutput2 {
         /** Add step that does any necessary clean up. */
         public void addStepPhase3_Cleanup(DefaultChainedExecutable jobFlow);
 
-        public IMRMergeOutputFormat getOuputFormat();
+        public IMRMergeOutputFormat getOutputFormat();
     }
 
     public interface IMRMergeOutputFormat {

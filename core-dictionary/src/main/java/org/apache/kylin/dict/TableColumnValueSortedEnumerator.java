@@ -72,7 +72,7 @@ public class TableColumnValueSortedEnumerator implements IDictionaryValueEnumera
 
     @Override
     public boolean moveNext() throws IOException {
-        while (pq.size() > 0) {
+        while (!pq.isEmpty()) {
             ReaderBuffer buffer = pq.poll();
             String minEntry = buffer.pop();
             this.colValue = minEntry;

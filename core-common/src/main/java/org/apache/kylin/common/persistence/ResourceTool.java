@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.NavigableSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceParallelCopier.Stats;
@@ -52,8 +51,8 @@ public class ResourceTool {
 
         if (args.length == 0) {
             System.out.println("Usage: ResourceTool list  RESOURCE_PATH");
-            System.out.println("Usage: ResourceTool download  LOCAL_DIR");
-            System.out.println("Usage: ResourceTool upload    LOCAL_DIR");
+            System.out.println("Usage: ResourceTool download  LOCAL_DIR [RESOURCE_PATH_PREFIX]");
+            System.out.println("Usage: ResourceTool upload    LOCAL_DIR [RESOURCE_PATH_PREFIX]");
             System.out.println("Usage: ResourceTool reset");
             System.out.println("Usage: ResourceTool remove RESOURCE_PATH");
             System.out.println("Usage: ResourceTool cat RESOURCE_PATH");
@@ -85,15 +84,29 @@ public class ResourceTool {
                 tool.list(KylinConfig.getInstanceFromEnv(), args[1]);
                 break;
             case "download":
-                tool.copyParallel(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]), "/");
-                System.out.println("Metadata backed up to " + args[1]);
+                if (args.length == 2) {
+                    tool.copyParallel(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]), "/");
+                    System.out.println("Metadata backed up to " + args[1]);
+                } else if (args.length == 3) {
+                    tool.copyParallel(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]), args[2]);
+                    System.out.println("Metadata with prefix: " + args[2] + " backed up to " + args[1]);
+                } else {
+                    System.err.println("Illegal args : " + args);
+                }
                 break;
             case "fetch":
                 tool.copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]), args[2], true);
                 break;
             case "upload":
-                tool.copyParallel(KylinConfig.createInstanceFromUri(args[1]), KylinConfig.getInstanceFromEnv(), "/");
-                System.out.println("Metadata restored from " + args[1]);
+                if (args.length == 2) {
+                    tool.copyParallel(KylinConfig.createInstanceFromUri(args[1]), KylinConfig.getInstanceFromEnv(), "/");
+                    System.out.println("Metadata restored from " + args[1]);
+                } else if (args.length == 3) {
+                    tool.copyParallel(KylinConfig.createInstanceFromUri(args[1]), KylinConfig.getInstanceFromEnv(), args[2]);
+                    System.out.println("Metadata with prefix: " + args[2] + " restored from " + args[1]);
+                } else {
+                    System.err.println("Illegal args : " + args);
+                }
                 break;
             case "remove":
                 tool.remove(KylinConfig.getInstanceFromEnv(), args[1]);
@@ -208,7 +221,7 @@ public class ResourceTool {
 
         logger.info("Copy from {} to {}", src, dst);
 
-        copyR(src, dst, path, getPathsSkipChildren(src), copyImmutableResource);
+        copyR(src, dst, path, copyImmutableResource);
     }
 
     public void copy(KylinConfig srcConfig, KylinConfig dstConfig, List<String> paths) throws IOException {
@@ -224,7 +237,7 @@ public class ResourceTool {
         logger.info("Copy from {} to {}", src, dst);
 
         for (String path : paths) {
-            copyR(src, dst, path, getPathsSkipChildren(src), copyImmutableResource);
+            copyR(src, dst, path, copyImmutableResource);
         }
     }
 
@@ -238,18 +251,19 @@ public class ResourceTool {
         copy(srcConfig, dstConfig, "/", copyImmutableResource);
     }
 
-    private void copyR(ResourceStore src, ResourceStore dst, String path, TreeSet<String> pathsSkipChildrenCheck, boolean copyImmutableResource)
+    private void copyR(ResourceStore src, ResourceStore dst, String path, boolean copyImmutableResource)
             throws IOException {
 
         if (!copyImmutableResource && IMMUTABLE_PREFIX.contains(path)) {
             return;
         }
 
-        NavigableSet<String> children = null;
+        boolean isSkip = SKIP_CHILDREN_CHECK_RESOURCE_ROOT.stream()
+                .anyMatch(prefixToSkip -> (path.startsWith(prefixToSkip)));
+        if (isSkip)
+            return;
 
-        if (!pathsSkipChildrenCheck.contains(path)) {
-            children = src.listResources(path);
-        }
+        NavigableSet<String> children = src.listResources(path);
 
         if (children == null) {
             // case of resource (not a folder)
@@ -257,6 +271,7 @@ public class ResourceTool {
                 try {
                     RawResource res = src.getResource(path);
                     if (res != null) {
+                        logger.info("Copy path: {} from {} to {}", path, src, dst);
                         try {
                             dst.putResource(path, res.content(), res.lastModified());
                         } finally {
@@ -273,22 +288,9 @@ public class ResourceTool {
         } else {
             // case of folder
             for (String child : children)
-                copyR(src, dst, child, pathsSkipChildrenCheck, copyImmutableResource);
+                copyR(src, dst, child, copyImmutableResource);
         }
 
-    }
-
-    private TreeSet<String> getPathsSkipChildren(ResourceStore src) throws IOException {
-        TreeSet<String> pathsSkipChildrenCheck = new TreeSet<>();
-
-        for (String resourceRoot : SKIP_CHILDREN_CHECK_RESOURCE_ROOT) {
-            NavigableSet<String> all = src.listResourcesRecursively(resourceRoot);
-            if (all != null) {
-                pathsSkipChildrenCheck.addAll(src.listResourcesRecursively(resourceRoot));
-            }
-        }
-
-        return pathsSkipChildrenCheck;
     }
 
     static boolean matchFilter(String path, String[] includePrefix, String[] excludePrefix) {

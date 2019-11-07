@@ -42,18 +42,23 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
 
     $scope.refreshCube = function(cube){
       var queryParam = {
-        cubeName: cube.name,
-        projectName: $scope.projectModel.selectedProject
+        cubeId: cube.name
       };
       var defer = $q.defer();
-      CubeService.list(queryParam, function(cubes){
-        for(var index in cubes){
-          if(cube.name === cubes[index].name){
-            defer.resolve(cubes[index]);
-            break;
+      CubeService.getCube(queryParam, function(newCube){
+        var segmentsLen = newCube.segments && newCube.segments.length || 0
+        newCube.input_records_count = 0;
+        for(var i = segmentsLen - 1;i >= 0;i--){
+          var curSeg = newCube.segments[i]
+          if(curSeg.status === "READY"){
+            newCube.input_records_count += curSeg.input_records
+            if(newCube.last_build_time === undefined || newCube.last_build_time < curSeg.last_build_time) {
+              newCube.last_build_time = curSeg.last_build_time;
+            }
           }
         }
-        defer.resolve([]);
+        newCube.project = cube.project;
+        defer.resolve(newCube);
       },function(e){
         defer.resolve([]);
       })
@@ -297,7 +302,6 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
 
           loadingRequest.show();
           CubeService.disable({cubeId: cube.name}, {}, function (result) {
-
             loadingRequest.hide();
             $scope.refreshCube(cube).then(function(_cube){
               if(_cube && _cube.name){
@@ -618,7 +622,16 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
     // streaming cube action
     $scope.startCube = function(cube) {
       AdminStreamingService.assignCube({cubeName:cube.name}, {}, function(data){
-        SweetAlert.swal('Success!', 'Cube start successful', 'success');
+        SweetAlert.swal({
+          title: 'Success!',
+          text: 'Cube start successful',
+          type: 'success',
+          confirmButtonText: 'OK',
+          confirmButtonClass: 'btn-primary',
+          closeOnConfirm: true
+        }, function () {
+          location.reload();
+        });
       }, function(e){
         if(e.data&& e.data.exception){
           var message =e.data.exception;
@@ -632,7 +645,16 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
 
     $scope.pauseCube = function(cube) {
       AdminStreamingService.suspendCubeConsume({cubeName:cube.name}, {}, function(data){
-        SweetAlert.swal('Success!', 'Cube pause successful', 'success');
+        SweetAlert.swal({
+          title: 'Success!',
+          text: 'Cube pause successful',
+          type: 'success',
+          confirmButtonText: 'OK',
+          confirmButtonClass: 'btn-primary',
+          closeOnConfirm: true
+        }, function () {
+          location.reload();
+        });
       }, function(e){
         if(e.data&& e.data.exception){
           var message =e.data.exception;
@@ -646,7 +668,16 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
 
     $scope.resumeCube = function(cube) {
       AdminStreamingService.resumeCubeConsume({cubeName:cube.name}, {}, function(data){
-        SweetAlert.swal('Success!', 'Cube resume successful', 'success');
+        SweetAlert.swal({
+          title: 'Success!',
+          text: 'Cube resume successful',
+          type: 'success',
+          confirmButtonText: 'OK',
+          confirmButtonClass: 'btn-primary',
+          closeOnConfirm: true
+        }, function () {
+          location.reload();
+        });
       }, function(e){
         if(e.data&& e.data.exception){
           var message =e.data.exception;
@@ -1044,7 +1075,7 @@ var lookupRefreshCtrl = function($scope, scope, CubeList, $modalInstance, CubeSe
         SweetAlert.swal('Warning', 'Lookup table not existed in cube', 'warning');
         return;
       } else {
-        if ($scope.lookup.select.segments.length == 0) {
+        if (!$scope.lookup.select.segments || $scope.lookup.select.segments.length == 0) {
           SweetAlert.swal('Warning', 'Segment should not be empty', 'warning');
           return;
         }

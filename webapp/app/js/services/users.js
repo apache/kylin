@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-KylinApp.service('UserService', function ($http, $q) {
+KylinApp.service('UserService', function ($resource) {
     var curUser = {};
 
     this.getCurUser = function () {
@@ -43,4 +43,14 @@ KylinApp.service('UserService', function ($http, $q) {
     this.getHomePage = function () {
         return this.isAuthorized()? "/models" : "/login";
     }
+
+    var apiService = $resource(Config.service.url + 'user/:action/:userName', {}, {
+      listUsers: {method: 'GET', params: {action: 'users'}, isArray: false},
+      delUser: {method: 'DELETE', isArray: false},
+      addUser: {method: 'POST',  params: {} ,isArray: false},
+      changePwd: {method: 'PUT', params: {action: 'password'}, isArray: false},
+      updateUser: {method: 'PUT', params: {}, isArray: false},
+      assignGroup: {method: 'PUT', params: {}, isArray: false}
+    });
+    angular.extend(this, apiService)
 });

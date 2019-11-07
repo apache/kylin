@@ -619,8 +619,6 @@ public final class CubeVisitProtos {
           maybeForceBuilderInitialization();
         }
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-          }
         }
         private static Builder create() {
           return new Builder();
@@ -3370,8 +3368,6 @@ public final class CubeVisitProtos {
           maybeForceBuilderInitialization();
         }
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-          }
         }
         private static Builder create() {
           return new Builder();
@@ -4446,8 +4442,6 @@ public final class CubeVisitProtos {
           maybeForceBuilderInitialization();
         }
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-          }
         }
         private static Builder create() {
           return new Builder();

@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.job.util.FlatTableSqlQuoteUtils;
 import org.apache.kylin.source.kafka.model.StreamCubeFactTableDesc;
 import org.apache.kylin.engine.mr.IInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
@@ -34,7 +35,6 @@ import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.job.util.FlatTableSqlQuoteUtils;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.source.hive.CreateFlatHiveTableStep;
 import org.apache.kylin.source.hive.GarbageCollectionStep;
@@ -158,7 +158,7 @@ public class KafkaInputBase {
         final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);
         final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatDesc, baseLocation);
         String insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatDesc);
-        insertDataHqls = insertDataHqls.replace(flatDesc.getDataModel().getRootFactTable().getTableIdentityQuoted(FlatTableSqlQuoteUtils.QUOTE) + " ",
+        insertDataHqls = insertDataHqls.replace(flatDesc.getDataModel().getRootFactTable().getTableIdentityQuoted(FlatTableSqlQuoteUtils.getQuote()) + " ",
                 quoteTableIdentity(hiveTableDatabase, streamFactDesc.getTableName()) + " ");
 
         CreateFlatHiveTableStep step = new CreateFlatHiveTableStep();

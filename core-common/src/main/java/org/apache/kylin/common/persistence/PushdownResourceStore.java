@@ -39,21 +39,21 @@ import org.slf4j.LoggerFactory;
  * - The big resource is saved as HDFS file according to its resource path.
  * - Method like checkAndPut() does not work on big resource like such, because HDFS lack of transaction support.
  */
-abstract public class PushdownResourceStore extends ResourceStore {
-    private static final Logger logger = LoggerFactory.getLogger(HDFSResourceStore.class);
+public abstract class PushdownResourceStore extends ResourceStore {
+    private static final Logger logger = LoggerFactory.getLogger(PushdownResourceStore.class);
 
     protected PushdownResourceStore(KylinConfig kylinConfig) {
         super(kylinConfig);
     }
 
-    final protected void putResourceImpl(String resPath, ContentWriter content, long ts) throws IOException {
+    protected final void putResourceImpl(String resPath, ContentWriter content, long ts) throws IOException {
         if (content.isBigContent())
             putBigResource(resPath, content, ts);
         else
             putSmallResource(resPath, content, ts);
     }
 
-    abstract protected void putSmallResource(String resPath, ContentWriter content, long ts) throws IOException;
+    protected abstract void putSmallResource(String resPath, ContentWriter content, long ts) throws IOException;
 
     final void putBigResource(String resPath, ContentWriter content, long newTS) throws IOException {
 
@@ -84,12 +84,14 @@ abstract public class PushdownResourceStore extends ResourceStore {
         Path backPath;
         boolean hasOldFile;
         boolean hasRollback = false;
+        String resPathStr;
 
         private RollbackablePushdown(String resPath, ContentWriter content) throws IOException {
             int salt = System.identityHashCode(resPath) + System.identityHashCode(content);
             tempPath = pushdownPath(resPath + ".temp." + salt);
             realPath = pushdownPath(resPath);
             backPath = pushdownPath(resPath + ".orig." + salt);
+            resPathStr = resPath;
             fs = pushdownFS();
 
             if (fs.exists(tempPath))
@@ -136,9 +138,12 @@ abstract public class PushdownResourceStore extends ResourceStore {
                 if (fs.exists(realPath))
                     fs.delete(realPath, true);
 
-                if (hasOldFile)
+                if (hasOldFile) {
                     fs.rename(backPath, realPath);
-
+                } else {
+                    logger.warn("Try delete empty entry {}", resPathStr);
+                    deleteResourceImpl(resPathStr);
+                }
             } catch (IOException ex2) {
                 logger.error("Rollback failed", ex2);
             }
@@ -167,23 +172,25 @@ abstract public class PushdownResourceStore extends ResourceStore {
         try {
             Path p = pushdownPath(resPath);
             FileSystem fs = pushdownFS();
-            if (fs.exists(p))
+            if (fs.exists(p)) {
                 return fs.open(p);
-            else
+            } else {
+                logger.error("Marker exists but real file not found, delete marker.");
+                deleteResourceImpl(resPath);
                 throw new FileNotFoundException(p.toString() + "  (FS: " + fs + ")");
-
+            }
         } catch (Exception ex) {
             throw new IOException("Failed to read big resource " + resPath, ex);
         }
     }
 
-    abstract protected String pushdownRootPath();
+    protected abstract String pushdownRootPath();
 
     protected FileSystem pushdownFS() {
         return HadoopUtil.getFileSystem(new Path(kylinConfig.getMetastoreBigCellHdfsDirectory()));
     }
 
-    final protected Path pushdownPath(String resPath) {
+    protected final Path pushdownPath(String resPath) {
         Path p = new Path(pushdownRootPath() + resPath);
         return Path.getPathWithoutSchemeAndAuthority(p);
     }
@@ -198,6 +205,21 @@ abstract public class PushdownResourceStore extends ResourceStore {
         if (fileSystem.exists(path)) {
             fileSystem.delete(path, true);
             logger.debug("Delete temp file success. Temp file: {} .", path);
+        } else {
+            logger.debug("{} is not exists in the file system.", path);
+        }
+    }
+
+    protected void updateTimestampPushdown(String resPath, long timestamp) throws IOException {
+        updateTimestampPushdownFile(pushdownPath(resPath), timestamp);
+    }
+
+    private void updateTimestampPushdownFile(Path path, long timestamp) throws IOException {
+        FileSystem fileSystem = pushdownFS();
+
+        if (fileSystem.exists(path)) {
+            fileSystem.setTimes(path, timestamp, -1);
+            logger.debug("Update temp file timestamp success. Temp file: {} .", path);
         } else {
             logger.debug("{} is not exists in the file system.", path);
         }

@@ -26,7 +26,10 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
  */
 public class StreamingCubingEngine {
 
-    public DefaultChainedExecutable createStreamingCubingBuilder(CubeSegment seg, String submitter) {
+    /**
+     * A factory which used to create building job which input data were columnar storage cache upload be receiver
+     */
+    public DefaultChainedExecutable createStreamingCubingJob(CubeSegment seg, String submitter) {
         return new StreamingCubingJobBuilder(seg, submitter).build();
     }
 }

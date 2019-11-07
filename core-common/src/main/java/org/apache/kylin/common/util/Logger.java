@@ -24,4 +24,6 @@ package org.apache.kylin.common.util;
  */
 public interface Logger {
     public void log(String message);
+
+    public void log(String message, Object... var2);
 }

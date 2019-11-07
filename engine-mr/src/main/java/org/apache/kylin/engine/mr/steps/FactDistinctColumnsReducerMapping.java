@@ -113,7 +113,7 @@ public class FactDistinctColumnsReducerMapping {
             return begin;
         
         int hash = fieldValue == null ? 0 : fieldValue.hashCode();
-        return begin + Math.abs(hash) % span;
+        return begin + Math.abs(hash % span);
     }
     
     public int[] getAllRolePlaysForReducers() {

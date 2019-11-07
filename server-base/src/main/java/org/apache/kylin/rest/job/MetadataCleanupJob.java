@@ -20,13 +20,14 @@ package org.apache.kylin.rest.job;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -39,12 +40,14 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryInfoSerializer;
 import org.apache.kylin.job.dao.ExecutableDao;
+import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
+import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class MetadataCleanupJob {
@@ -56,37 +59,39 @@ public class MetadataCleanupJob {
     // ============================================================================
 
     final KylinConfig config;
-    
-    private List<String> garbageResources = Collections.emptyList();
-    
+
+    private Map<String, Long> garbageResources = Maps.newHashMap();
+    private ResourceStore store;
+
     public MetadataCleanupJob() {
         this(KylinConfig.getInstanceFromEnv());
     }
-    
+
     public MetadataCleanupJob(KylinConfig config) {
         this.config = config;
+        this.store = ResourceStore.getStore(config);
     }
-    
-    public List<String> getGarbageResources() {
+
+    public Map<String, Long> getGarbageResources() {
         return garbageResources;
     }
 
     // function entrance
-    public List<String> cleanup(boolean delete, int jobOutdatedDays) throws Exception {
+    public Map<String, Long> cleanup(boolean delete, int jobOutdatedDays) throws Exception {
         CubeManager cubeManager = CubeManager.getInstance(config);
-        ResourceStore store = ResourceStore.getStore(config);
         long newResourceTimeCut = System.currentTimeMillis() - NEW_RESOURCE_THREADSHOLD_MS;
         FileSystem fs = HadoopUtil.getWorkingFileSystem(HadoopUtil.getCurrentConfiguration());
 
-        List<String> toDeleteCandidates = Lists.newArrayList();
+        Map<String, Long> toDeleteCandidates = Maps.newHashMap();
 
         // two level resources, snapshot tables and cube statistics
         for (String resourceRoot : new String[] { ResourceStore.SNAPSHOT_RESOURCE_ROOT,
-                ResourceStore.CUBE_STATISTICS_ROOT, ResourceStore.EXT_SNAPSHOT_RESOURCE_ROOT}) {
+                ResourceStore.CUBE_STATISTICS_ROOT, ResourceStore.EXT_SNAPSHOT_RESOURCE_ROOT }) {
             for (String dir : noNull(store.listResources(resourceRoot))) {
                 for (String res : noNull(store.listResources(dir))) {
-                    if (store.getResourceTimestamp(res) < newResourceTimeCut)
-                        toDeleteCandidates.add(res);
+                    long timestamp = getTimestamp(res);
+                    if (timestamp < newResourceTimeCut)
+                        toDeleteCandidates.put(res, timestamp);
                 }
             }
         }
@@ -94,14 +99,18 @@ public class MetadataCleanupJob {
         // find all of the global dictionaries in HDFS
         try {
             FileStatus[] fStatus = new FileStatus[0];
-            fStatus = ArrayUtils.addAll(fStatus, fs.listStatus(new Path(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "resources/GlobalDict/dict")));
-            fStatus = ArrayUtils.addAll(fStatus, fs.listStatus(new Path(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "resources/SegmentDict/dict")));
+            fStatus = ArrayUtils.addAll(fStatus, fs.listStatus(new Path(
+                    KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "resources/GlobalDict/dict")));
+            fStatus = ArrayUtils.addAll(fStatus, fs.listStatus(new Path(
+                    KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "resources/SegmentDict/dict")));
             for (FileStatus status : fStatus) {
                 String path = status.getPath().toString();
                 FileStatus[] globalDicts = fs.listStatus(new Path(path));
                 for (FileStatus globalDict : globalDicts) {
                     String globalDictPath = globalDict.getPath().toString();
-                    toDeleteCandidates.add(globalDictPath);
+                    long timestamp = getTimestamp(globalDict);
+                    if (timestamp < newResourceTimeCut)
+                        toDeleteCandidates.put(globalDictPath, timestamp);
                 }
             }
         } catch (FileNotFoundException e) {
@@ -113,8 +122,9 @@ public class MetadataCleanupJob {
             for (String dir : noNull(store.listResources(resourceRoot))) {
                 for (String dir2 : noNull(store.listResources(dir))) {
                     for (String res : noNull(store.listResources(dir2))) {
-                        if (store.getResourceTimestamp(res) < newResourceTimeCut)
-                            toDeleteCandidates.add(res);
+                        long timestamp = getTimestamp(res);
+                        if (timestamp < newResourceTimeCut)
+                            toDeleteCandidates.put(res, timestamp);
                     }
                 }
             }
@@ -122,7 +132,7 @@ public class MetadataCleanupJob {
 
         // exclude resources in use
         Set<String> activeResources = Sets.newHashSet();
-        for (CubeInstance cube : cubeManager.listAllCubes()) {
+        for (CubeInstance cube : cubeManager.reloadAndListAllCubes()) {
             activeResources.addAll(cube.getSnapshots().values());
             for (CubeSegment segment : cube.getSegments()) {
                 activeResources.addAll(segment.getSnapshotPaths());
@@ -130,13 +140,16 @@ public class MetadataCleanupJob {
                 activeResources.add(segment.getStatisticsResourcePath());
                 for (String dictPath : segment.getDictionaryPaths()) {
                     DictionaryInfo dictInfo = store.getResource(dictPath, DictionaryInfoSerializer.FULL_SERIALIZER);
-                    if ("org.apache.kylin.dict.AppendTrieDictionary".equals(dictInfo != null ? dictInfo.getDictionaryClass() : null)){
+                    if ("org.apache.kylin.dict.AppendTrieDictionary"
+                            .equals(dictInfo != null ? dictInfo.getDictionaryClass() : null)) {
                         String dictObj = dictInfo.getDictionaryObject().toString();
                         String basedir = dictObj.substring(dictObj.indexOf("(") + 1, dictObj.indexOf(")") - 1);
-                        if (basedir.startsWith(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/resources/GlobalDict")) {
+                        if (basedir.startsWith(
+                                KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/resources/GlobalDict")) {
                             activeResources.add(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()
                                     + "resources/GlobalDict" + dictInfo.getResourceDir());
-                        } else if (basedir.startsWith(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/resources/SegmentDict")) {
+                        } else if (basedir.startsWith(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()
+                                + "/resources/SegmentDict")) {
                             activeResources.add(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()
                                     + "resources/SegmentDict" + dictInfo.getResourceDir());
                         }
@@ -144,7 +157,7 @@ public class MetadataCleanupJob {
                 }
             }
         }
-        toDeleteCandidates.removeAll(activeResources);
+        toDeleteCandidates.keySet().removeAll(activeResources);
 
         // delete old and completed jobs
         long outdatedJobTimeCut = System.currentTimeMillis() - jobOutdatedDays * 24 * 3600 * 1000L;
@@ -152,56 +165,97 @@ public class MetadataCleanupJob {
         List<ExecutablePO> allExecutable = executableDao.getJobs();
         for (ExecutablePO executable : allExecutable) {
             long lastModified = executable.getLastModified();
-            String jobStatus = executableDao.getJobOutput(executable.getUuid()).getStatus();
+            if (lastModified < outdatedJobTimeCut && isJobComplete(executableDao, executable)) {
+                String jobResPath = ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + executable.getUuid();
+                String jobOutputResPath = ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + executable.getUuid();
+                long outputLastModified = getTimestamp(jobOutputResPath);
+                toDeleteCandidates.put(jobResPath, lastModified);
+                toDeleteCandidates.put(jobOutputResPath, outputLastModified);
 
-            if (lastModified < outdatedJobTimeCut && (ExecutableState.SUCCEED.toString().equals(jobStatus)
-                    || ExecutableState.DISCARDED.toString().equals(jobStatus))) {
-                toDeleteCandidates.add(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + executable.getUuid());
-                toDeleteCandidates.add(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + executable.getUuid());
-
-                for (ExecutablePO task : executable.getTasks()) {
-                    toDeleteCandidates.add(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + task.getUuid());
+                List<ExecutablePO> tasks = executable.getTasks();
+                if (tasks != null && !tasks.isEmpty()) {
+                    for (ExecutablePO task : executable.getTasks()) {
+                        String taskId = task.getUuid();
+                        if (StringUtils.isNotBlank(taskId)) {
+                            String resPath = ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + task.getUuid();
+                            long timestamp = getTimestamp(resPath);
+                            toDeleteCandidates.put(resPath, timestamp);
+                        }
+                    }
                 }
             }
         }
-        
+
         garbageResources = cleanupConclude(delete, toDeleteCandidates);
         return garbageResources;
     }
 
-    private List<String> cleanupConclude(boolean delete, List<String> toDeleteResources) throws IOException {
+    private boolean isJobComplete(ExecutableDao executableDao, ExecutablePO job) {
+        String jobId = job.getUuid();
+        boolean isComplete = false;
+        try {
+            ExecutableOutputPO output = executableDao.getJobOutput(jobId);
+            String status = output.getStatus();
+            if (StringUtils.equals(status, ExecutableState.SUCCEED.toString())
+                    || StringUtils.equals(status, ExecutableState.DISCARDED.toString())) {
+                isComplete = true;
+            }
+        } catch (PersistentException e) {
+            logger.error("Get job output failed for job uuid: {}", jobId, e);
+            isComplete = true; // job output broken --> will be treat as complete
+        }
+
+        return isComplete;
+    }
+
+    private Map<String, Long> cleanupConclude(boolean delete, Map<String, Long> toDeleteResources) throws IOException {
         if (toDeleteResources.isEmpty()) {
             logger.info("No metadata resource to clean up");
             return toDeleteResources;
         }
-        
-        logger.info(toDeleteResources.size() + " metadata resource to clean up");
+
+        logger.info("{} metadata resource to clean up", toDeleteResources.size());
 
         if (delete) {
             ResourceStore store = ResourceStore.getStore(config);
             FileSystem fs = HadoopUtil.getWorkingFileSystem(HadoopUtil.getCurrentConfiguration());
-            for (String res : toDeleteResources) {
-                logger.info("Deleting metadata " + res);
+            for (String res : toDeleteResources.keySet()) {
+                long timestamp = toDeleteResources.get(res);
+                logger.info("Deleting metadata=[resource_path: {}, timestamp: {}]", res, timestamp);
                 try {
                     if (res.startsWith(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory())) {
                         fs.delete(new Path(res), true);
                     } else {
-                        store.deleteResource(res);
+                        store.deleteResource(res, timestamp);
                     }
                 } catch (IOException e) {
-                    logger.error("Failed to delete resource " + res, e);
+                    logger.error("Failed to delete metadata=[resource_path: {}, timestamp: {}] ", res, timestamp, e);
                 }
             }
         } else {
-            for (String res : toDeleteResources) {
-                logger.info("Dry run, pending delete metadata " + res);
+            for (String res : toDeleteResources.keySet()) {
+                long timestamp = toDeleteResources.get(res);
+                logger.info("Dry run, pending delete metadata=[resource_path: {}, timestamp: {}] ", res, timestamp);
             }
         }
         return toDeleteResources;
     }
 
     private NavigableSet<String> noNull(NavigableSet<String> list) {
-        return (list == null) ? new TreeSet<String>() : list;
+        return (list == null) ? new TreeSet<>() : list;
     }
 
+    private long getTimestamp(String resPath) {
+        long timestamp = Long.MAX_VALUE;
+        try {
+            timestamp = store.getResourceTimestamp(resPath);
+        } catch (IOException e) {
+            logger.warn("Failed to get resource timestamp from remote resource store, details:{}", e);
+        }
+        return timestamp;
+    }
+
+    private long getTimestamp(FileStatus filestatus) {
+        return filestatus.getModificationTime();
+    }
 }

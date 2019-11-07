@@ -88,7 +88,7 @@ public class DataModelManager {
             protected DataModelDesc initEntityAfterReload(DataModelDesc model, String resourceName) {
                 String prj = ProjectManager.getInstance(config).getProjectOfModel(model.getName()).getName();
                 if (!model.isDraft()) {
-                    model.init(config, getAllTablesMap(prj), getModels(prj), true);
+                    model.init(config, getAllTablesMap(prj));
                 }
                 return model;
             }
@@ -106,7 +106,7 @@ public class DataModelManager {
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {
             //clean up the current project's table desc
             TableMetadataManager.getInstance(config).resetProjectSpecificTableDesc(project);
-
+            logger.info("Update models in project: " + project);
             try (AutoLock lock = modelMapLock.lockForWrite()) {
                 for (String model : ProjectManager.getInstance(config).getProject(project).getModels()) {
                     crud.reloadQuietly(model);
@@ -128,6 +128,10 @@ public class DataModelManager {
                 broadcaster.notifyProjectSchemaUpdate(prj.getName());
             }
         }
+    }
+
+    public List<String> getErrorModels() {
+        return crud.getLoadFailedEntities();
     }
 
     private Class<DataModelDesc> getDataModelImplClass() {
@@ -275,7 +279,7 @@ public class DataModelManager {
         String prj = ProjectManager.getInstance(config).getProjectOfModel(dataModelDesc.getName()).getName();
 
         if (!dataModelDesc.isDraft())
-            dataModelDesc.init(config, this.getAllTablesMap(prj), getModels(prj), false);
+            dataModelDesc.init(config, this.getAllTablesMap(prj));
 
         crud.save(dataModelDesc);
 

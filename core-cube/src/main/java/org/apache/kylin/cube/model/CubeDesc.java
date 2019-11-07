@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1339,6 +1340,25 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             }
         }
 
+        //mr - hive global dict
+        if (overrideKylinProps.containsKey("kylin.dictionary.mr-hive.columns")) {
+            String mrHiveDictColumns = overrideKylinProps.get("kylin.dictionary.mr-hive.columns");
+            if (StringUtils.isNotEmpty(mrHiveDictColumns)) {
+                String[] mrHiveDictColumnArr = mrHiveDictColumns.split(",");
+                for (String dictColumn : mrHiveDictColumnArr) {
+                    Iterator<TblColRef> it = result.iterator();
+                    while (it.hasNext()) {
+                        TblColRef colRef = it.next();
+                        String aliasCol = colRef.getTableAlias() + "_" + colRef.getName();
+                        if (aliasCol.equalsIgnoreCase(dictColumn)) {
+                            logger.debug("Remove column {} because it has been built by MR", aliasCol);
+                            it.remove();
+                        }
+                    }
+                }
+            }
+        }
+
         return result;
     }
 
@@ -1490,12 +1510,19 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public boolean isShrunkenDictFromGlobalEnabled() {
-        return config.isShrunkenDictFromGlobalEnabled() && !getAllGlobalDictColumns().isEmpty();
+        boolean needShrunkenDict = config.isShrunkenDictFromGlobalEnabled() && !getAllGlobalDictColumns().isEmpty();
+        boolean needMrHiveDict = config.getMrHiveDictColumns().length > 0;
+        if (needMrHiveDict && needShrunkenDict) {
+            logger.info("ShrunkenDict cannot work with MrHiveDict, so shutdown ShrunkenDict.");
+            return false;
+        } else {
+            return needShrunkenDict;
+        }
     }
 
     // UHC (ultra high cardinality column): contain the ShardByColumns and the GlobalDictionaryColumns
     public List<TblColRef> getAllUHCColumns() {
-        List<TblColRef> uhcColumns = new ArrayList<TblColRef>();
+        List<TblColRef> uhcColumns = new ArrayList<>();
         uhcColumns.addAll(getAllGlobalDictColumns());
         uhcColumns.addAll(getShardByColumns());
         return uhcColumns;

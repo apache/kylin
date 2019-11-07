@@ -34,11 +34,21 @@ source ${dir}/set-java-home.sh
 
 function retrieveDependency() {
     #retrive $hive_dependency and $hbase_dependency
-    source ${dir}/find-hive-dependency.sh
-    source ${dir}/find-hbase-dependency.sh
-    source ${dir}/find-hadoop-conf-dir.sh
-    source ${dir}/find-kafka-dependency.sh
-    source ${dir}/find-spark-dependency.sh
+    if [[ -z $reload_dependency && `ls -1 ${dir}/cached-* 2>/dev/null | wc -l` -eq 5 ]]
+    then
+        echo "Using cached dependency..."
+        source ${dir}/cached-hive-dependency.sh
+        source ${dir}/cached-hbase-dependency.sh
+        source ${dir}/cached-hadoop-conf-dir.sh
+        source ${dir}/cached-kafka-dependency.sh
+        source ${dir}/cached-spark-dependency.sh
+    else
+        source ${dir}/find-hive-dependency.sh
+        source ${dir}/find-hbase-dependency.sh
+        source ${dir}/find-hadoop-conf-dir.sh
+        source ${dir}/find-kafka-dependency.sh
+        source ${dir}/find-spark-dependency.sh
+    fi
 
     #retrive $KYLIN_EXTRA_START_OPTS
     if [ -f "${dir}/setenv.sh" ]; then
@@ -126,6 +136,11 @@ function retrieveStartCommand() {
     org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start"
 }
 
+if [ "$2" == "--reload-dependency" ]
+then
+    reload_dependency=1
+fi
+
 # start command
 if [ "$1" == "start" ]
 then
@@ -135,9 +150,7 @@ then
     echo ""
     echo "A new Kylin instance is started by $USER. To stop it, run 'kylin.sh stop'"
     echo "Check the log at ${KYLIN_HOME}/logs/kylin.log"
-    kylin_server_port=`sed -n "s/<Connector port=\"\(.*\)\" protocol=\"HTTP\/1.1\"/\1/"p ${KYLIN_HOME}/tomcat/conf/server.xml`
-    kylin_server_port=`echo ${kylin_server_port}` #ignore white space
-    echo "Web UI is at http://<hostname>:${kylin_server_port}/kylin"
+    echo "Web UI is at http://${kylin_rest_address_arr}/kylin"
     exit 0
     
 # run command
@@ -320,10 +333,14 @@ then
 
     #retrive $KYLIN_EXTRA_START_OPTS from a separate file called setenv-tool.sh
     unset KYLIN_EXTRA_START_OPTS # unset the global server setenv config first
-    if [ -f "${dir}/setenv-tool.sh" ]
-        then source ${dir}/setenv-tool.sh
+    if [ -f "${dir}/setenv-tool.sh" ]; then
+        echo "WARNING: ${dir}/setenv-tool.sh is deprecated and ignored, please remove it and use ${KYLIN_HOME}/conf/setenv-tool.sh instead"
+        source ${dir}/setenv-tool.sh
     fi
 
+    if [ -f "${KYLIN_HOME}/conf/setenv-tool.sh" ]; then
+        source ${KYLIN_HOME}/conf/setenv-tool.sh
+    fi
     hbase_pre_original=${HBASE_CLASSPATH_PREFIX}
     export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/tool/*:${HBASE_CLASSPATH_PREFIX}
     exec hbase ${KYLIN_EXTRA_START_OPTS} -Dkylin.hive.dependency=${hive_dependency} -Dkylin.hbase.dependency=${hbase_dependency} -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties "$@"

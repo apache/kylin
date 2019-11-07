@@ -121,6 +121,7 @@ import javax.annotation.Nullable;
  * request, others process will become standby/candidate, so single point of failure will be eliminated.
  * </pre>
  */
+@Deprecated
 public class Coordinator implements CoordinatorClient {
     private static final Logger logger = LoggerFactory.getLogger(Coordinator.class);
     private static final int DEFAULT_PORT = 7070;
@@ -1109,7 +1110,7 @@ public class Coordinator implements CoordinatorClient {
             logger.info("submit streaming segment build, cube:{} segment:{}", cubeName, segmentName);
             CubeSegment newSeg = getCubeManager().appendSegment(cubeInstance,
                     new TSRange(segmentRange.getFirst(), segmentRange.getSecond()));
-            DefaultChainedExecutable executable = new StreamingCubingEngine().createStreamingCubingBuilder(newSeg,
+            DefaultChainedExecutable executable = new StreamingCubingEngine().createStreamingCubingJob(newSeg,
                     "SYSTEM");
             getExecutableManager().addJob(executable);
             CubingJob cubingJob = (CubingJob) executable;
@@ -1313,7 +1314,6 @@ public class Coordinator implements CoordinatorClient {
 
     private class StreamingBuildJobStatusChecker implements Runnable {
         private int maxJobTryCnt = 5;
-        private CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         private ConcurrentMap<String, ConcurrentSkipListSet<SegmentJobBuildInfo>> segmentBuildJobMap = Maps
                 .newConcurrentMap();
         private CopyOnWriteArrayList<String> pendingCubeName = Lists.newCopyOnWriteArrayList();
@@ -1369,6 +1369,7 @@ public class Coordinator implements CoordinatorClient {
                     ExecutableState jobState = cubingJob.getStatus();
                     if (ExecutableState.SUCCEED.equals(jobState)) {
                         logger.info("job:{} is complete", segmentBuildJob);
+                        CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
                         CubeInstance cubeInstance = cubeManager.getCube(segmentBuildJob.cubeName).latestCopyForWrite();
                         CubeSegment cubeSegment = cubeInstance.getSegment(segmentBuildJob.segmentName, null);
                         logger.info("the cube:{} segment:{} is ready", segmentBuildJob.cubeName,

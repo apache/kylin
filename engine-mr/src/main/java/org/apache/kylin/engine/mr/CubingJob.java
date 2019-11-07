@@ -62,7 +62,6 @@ public class CubingJob extends DefaultChainedExecutable {
     public enum AlgorithmEnum {
         LAYER, INMEM
     }
-
     public enum CubingJobTypeEnum {
         BUILD("BUILD", 20), OPTIMIZE("OPTIMIZE", 5), MERGE("MERGE", 25), STREAM("STREAM", 30);
 
@@ -106,6 +105,7 @@ public class CubingJob extends DefaultChainedExecutable {
     private static final String DEPLOY_ENV_NAME = "envName";
     private static final String PROJECT_INSTANCE_NAME = "projectName";
     private static final String JOB_TYPE = "jobType";
+    private static final String SEGMENT_NAME = "segmentName";
 
     public static CubingJob createBuildJob(CubeSegment seg, String submitter, JobEngineConfig config) {
         return initCubingJob(seg, CubingJobTypeEnum.BUILD.toString(), submitter, config);
@@ -189,6 +189,10 @@ public class CubingJob extends DefaultChainedExecutable {
         return getParam(JOB_TYPE);
     }
 
+    public String getSegmentName() {
+        return getParam(SEGMENT_NAME);
+    }
+
     void setJobType(String jobType) {
         setParam(JOB_TYPE, jobType);
     }
@@ -251,6 +255,12 @@ public class CubingJob extends DefaultChainedExecutable {
         String title = MailNotificationUtil.getMailTitle("JOB", state.toString(), getDeployEnvName(), getProjectName(),
                 cubeInstance.getName());
         return Pair.newPair(title, content);
+    }
+
+    @Override
+    protected void onExecuteStart(ExecutableContext executableContext) {
+        KylinConfig.setAndUnsetThreadLocalConfig(getCubeSpecificConfig());
+        super.onExecuteStart(executableContext);
     }
 
     @Override

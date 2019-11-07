@@ -36,6 +36,7 @@ import org.apache.curator.utils.ZKPaths;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.Shell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +60,11 @@ public class ZKUtil {
         String path = ZKPaths.makePath(parent, child);
 
         try {
-            return new File(path).getCanonicalPath();
+            if (Shell.WINDOWS) {
+                return new File(path).toURI().getPath();
+            } else {
+                return new File(path).getCanonicalPath();
+            }
         } catch (IOException e) {
             logger.error("get canonical path failed, use original path", e);
             return path;
@@ -79,7 +84,7 @@ public class ZKUtil {
                         logger.error("Error at closing " + curator, ex);
                     }
                 }
-            }).expireAfterWrite(1, TimeUnit.DAYS).build();
+            }).expireAfterWrite(10000, TimeUnit.DAYS).build();//never expired
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {

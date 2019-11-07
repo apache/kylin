@@ -18,17 +18,34 @@
 
 package org.apache.kylin.rest.request;
 
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Sets;
+import javax.annotation.Nullable;
+
 import java.util.Set;
 
 public class JobOptimizeRequest {
 
-    private Set<Long> cuboidsRecommend;
+    private Set<String> cuboidsRecommend;
 
     public Set<Long> getCuboidsRecommend() {
-        return cuboidsRecommend;
+        return Sets.newHashSet(FluentIterable.from(cuboidsRecommend).transform(new Function<String, Long>() {
+            @Nullable
+            @Override
+            public Long apply(@Nullable String cuboid) {
+                return Long.valueOf(cuboid);
+            }
+        }));
     }
 
     public void setCuboidsRecommend(Set<Long> cuboidsRecommend) {
-        this.cuboidsRecommend = cuboidsRecommend;
+        this.cuboidsRecommend = Sets.newHashSet(FluentIterable.from(cuboidsRecommend).transform(new Function<Long, String>() {
+            @Nullable
+            @Override
+            public String apply(@Nullable Long cuboid) {
+                return Long.toString(cuboid);
+            }
+        }));
     }
 }

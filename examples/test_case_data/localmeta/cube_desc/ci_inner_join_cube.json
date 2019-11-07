@@ -165,6 +165,17 @@
       }
     },
     {
+      "name": "GMV_CNT",
+      "function": {
+        "expression": "COUNT",
+        "parameter": {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.PRICE"
+        },
+        "returntype": "bigint"
+      }
+    },
+    {
       "name": "GMV_MIN",
       "function": {
         "expression": "MIN",
@@ -318,6 +329,17 @@
         },
         "returntype": "raw"
       }
+    },
+    {
+      "name": "TEST_COUNT_COLUMN_CNT",
+      "function": {
+        "expression": "COUNT",
+        "parameter": {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.TEST_COUNT_COLUMN"
+        },
+        "returntype": "bigint"
+      }
     }
   ],
   "dictionaries": [
@@ -429,8 +451,10 @@
               "TRANS_CNT",
               "ITEM_COUNT_SUM",
               "GMV_SUM",
+              "GMV_CNT",
               "GMV_MIN",
-              "GMV_MAX"
+              "GMV_MAX",
+              "TEST_COUNT_COLUMN_CNT"
             ]
           }
         ]
@@ -569,7 +593,9 @@
   "engine_type": 4,
   "storage_type": 2,
   "override_kylin_properties": {
-    "kylin.cube.algorithm": "LAYER"
+    "kylin.cube.algorithm": "LAYER",
+    "kylin.dictionary.shrunken-from-global-enabled": "false",
+    "kylin.dictionary.mr-hive.columns": "TEST_KYLIN_FACT_TEST_COUNT_DISTINCT_BITMAP"
   },
   "partition_date_start": 0
 }

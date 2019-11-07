@@ -366,10 +366,6 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       $scope.nextParameterInit();
     }
 
-    if($scope.newMeasure.function.expression == 'COUNT'){
-      $scope.newMeasure.function.parameter.type= 'constant';
-    }
-
     if($scope.newMeasure.function.parameter.type=="constant"&&$scope.newMeasure.function.expression!=="COUNT_DISTINCT"){
       switch($scope.newMeasure.function.expression){
         case "SUM":
@@ -466,7 +462,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
          if(colType.indexOf('decimal') != -1) {
             var returnRegex = new RegExp('(\\w+)(?:\\((\\w+?)(?:\\,(\\w+?))?\\))?');
             var returnValue = returnRegex.exec(colType);
-            var precision = 19;
+            var precision = returnValue[2] || 0;
             var scale = returnValue[3] || 0;
             return 'decimal(' + precision + ',' + scale + ')';
           }else{

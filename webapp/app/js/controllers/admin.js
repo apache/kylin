@@ -21,7 +21,18 @@
 KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, TableService, loadingRequest, MessageService, ProjectService, $modal, SweetAlert,kylinConfig,ProjectModel,$window, MessageBox) {
   $scope.configStr = "";
   $scope.envStr = "";
-
+  $scope.active = {
+    tab_instance: true
+  }
+  $scope.tabData = {}
+  $scope.activateTab = function(tab) {
+    $scope.active = {}; //reset
+    $scope.active[tab] = true;
+  }
+  $scope.$on('change.active', function(event, data) {  
+    $scope.activateTab(data.activeTab);
+    $scope.tabData.groupName = data.groupName
+  });
   $scope.isCacheEnabled = function(){
     return kylinConfig.isCacheEnabled();
   }
@@ -29,7 +40,7 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
   $scope.getEnv = function () {
     AdminService.env({}, function (env) {
       $scope.envStr = env.env;
-      MessageBox.successNotify('Server environment get successfully');
+      MessageBox.successNotify('Server environment get successfully', "server-env");
 //            SweetAlert.swal('Success!', 'Server environment get successfully', 'success');
     }, function (e) {
       if (e.data && e.data.exception) {
@@ -45,7 +56,7 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
   $scope.getConfig = function () {
     AdminService.config({}, function (config) {
       $scope.configStr = config.config;
-      MessageBox.successNotify('Server config get successfully');
+      MessageBox.successNotify('Server config get successfully', "server-config");
     }, function (e) {
       if (e.data && e.data.exception) {
         var message = e.data.exception;
@@ -296,6 +307,9 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
     $window.open(downloadUrl);
   }
 
+  $scope.isCuratorScheduler = function() {
+    return kylinConfig.getProperty("kylin.job.scheduler.default") === "100";
+  }
 
   $scope.getEnv();
   $scope.getConfig();

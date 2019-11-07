@@ -19,7 +19,7 @@
 package org.apache.kylin.cube;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotEquals;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -73,14 +73,17 @@ public class ITDictionaryManagerTest extends LocalFileMetadataTestCase {
         DictionaryInfo info1 = dictMgr.buildDictionary(col, mockupData.getDistinctValuesFor(col));
         System.out.println(JsonUtil.writeValueAsIndentString(info1));
 
+        Thread.sleep(1000);
+
         DictionaryInfo info2 = dictMgr.buildDictionary(col, mockupData.getDistinctValuesFor(col));
         System.out.println(JsonUtil.writeValueAsIndentString(info2));
 
         // test check duplicate
-        assertTrue(info1.getUuid() == info2.getUuid());
-        assertTrue(info1 == dictMgr.getDictionaryInfo(info1.getResourcePath()));
-        assertTrue(info2 == dictMgr.getDictionaryInfo(info2.getResourcePath()));
-        assertTrue(info1.getDictionaryObject() == info2.getDictionaryObject());
+        assertEquals(info1.getUuid(), info2.getUuid());
+        assertEquals(info1.getResourcePath(), info1.getResourcePath());
+        assertNotEquals(info1.getLastModified(), info2.getLastModified());
+        assertNotEquals(info1, info2);
+        assertEquals(info1.getDictionaryObject(), info2.getDictionaryObject());
 
         // verify dictionary entries
         @SuppressWarnings("unchecked")

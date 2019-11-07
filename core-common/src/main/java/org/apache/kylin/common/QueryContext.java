@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.apache.kylin.common.util.RandomUtil;
@@ -59,7 +60,7 @@ public class QueryContext {
     private Object calcitePlan;
 
     private AtomicBoolean isRunning = new AtomicBoolean(true);
-    private volatile Throwable throwable;
+    private AtomicReference<Throwable> throwable = new AtomicReference<>();
     private String stopReason;
     private List<QueryStopListener> stopListeners = Lists.newCopyOnWriteArrayList();
 
@@ -171,7 +172,7 @@ public class QueryContext {
         if (!isRunning.compareAndSet(true, false)) {
             return;
         }
-        this.throwable = t;
+        this.throwable.set(t);
         this.stopReason = reason;
         for (QueryStopListener stopListener : stopListeners) {
             stopListener.stop(this);
@@ -179,7 +180,7 @@ public class QueryContext {
     }
 
     public Throwable getThrowable() {
-        return throwable;
+        return throwable.get();
     }
 
     public void addContext(int ctxId, String type, boolean ifCube) {

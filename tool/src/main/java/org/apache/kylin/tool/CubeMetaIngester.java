@@ -170,13 +170,13 @@ public class CubeMetaIngester extends AbstractApplication {
             TableDesc existing = metadataManager.getTableDesc(tableDesc.getIdentity(), targetProjectName);
             if (existing != null && !existing.equals(tableDesc)) {
                 logger.info("Table {} already has a different version in target metadata store", tableDesc.getIdentity());
-                logger.info("Existing version: " + existing);
-                logger.info("New version: " + tableDesc);
+                logger.info("Existing version: {}", existing);
+                logger.info("New version: {}", tableDesc);
 
                 if (!forceIngest && !overwriteTables) {
                     throw new IllegalStateException("table already exists with a different version: " + tableDesc.getIdentity() + ". Consider adding -overwriteTables option to force overwriting (with caution)");
                 } else {
-                    logger.warn("Overwriting the old table desc: " + tableDesc.getIdentity());
+                    logger.warn("Overwriting the old table desc: {}", tableDesc.getIdentity());
                 }
             }
             requiredResources.add(tableDesc.getResourcePath());
@@ -207,7 +207,7 @@ public class CubeMetaIngester extends AbstractApplication {
             if (!forceIngest) {
                 throw new IllegalStateException("Already exist a " + type + " called " + name);
             } else {
-                logger.warn("Overwriting the old {0} desc: {1}", type, name);
+                logger.warn("Overwriting the old {} desc: {}", type, name);
             }
         }
     }
