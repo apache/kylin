@@ -28,11 +28,12 @@ public class JdbcPushDownConnectionManager {
 
     private volatile static JdbcPushDownConnectionManager manager = null;
 
-    static JdbcPushDownConnectionManager getConnectionManager() throws ClassNotFoundException {
+    static JdbcPushDownConnectionManager getConnectionManager(String id) throws ClassNotFoundException {
         if (manager == null) {
             synchronized (JdbcPushDownConnectionManager.class) {
                 if (manager == null) {
-                    manager = new JdbcPushDownConnectionManager(KylinConfig.getInstanceFromEnv());
+                    manager = new JdbcPushDownConnectionManager(KylinConfig.getInstanceFromEnv(),
+                            id);
                 }
             }
         }
@@ -41,17 +42,17 @@ public class JdbcPushDownConnectionManager {
 
     private final BasicDataSource dataSource;
 
-    private JdbcPushDownConnectionManager(KylinConfig config) throws ClassNotFoundException {
+    private JdbcPushDownConnectionManager(KylinConfig config, String id) throws ClassNotFoundException {
         dataSource = new BasicDataSource();
 
-        Class.forName(config.getJdbcDriverClass());
-        dataSource.setDriverClassName(config.getJdbcDriverClass());
-        dataSource.setUrl(config.getJdbcUrl());
-        dataSource.setUsername(config.getJdbcUsername());
-        dataSource.setPassword(config.getJdbcPassword());
-        dataSource.setMaxActive(config.getPoolMaxTotal());
-        dataSource.setMaxIdle(config.getPoolMaxIdle());
-        dataSource.setMinIdle(config.getPoolMinIdle());
+        Class.forName(config.getJdbcDriverClass(id));
+        dataSource.setDriverClassName(config.getJdbcDriverClass(id));
+        dataSource.setUrl(config.getJdbcUrl(id));
+        dataSource.setUsername(config.getJdbcUsername(id));
+        dataSource.setPassword(config.getJdbcPassword(id));
+        dataSource.setMaxActive(config.getPoolMaxTotal(id));
+        dataSource.setMaxIdle(config.getPoolMaxIdle(id));
+        dataSource.setMinIdle(config.getPoolMinIdle(id));
 
         // Default settings
         dataSource.setTestOnBorrow(true);
