@@ -48,9 +48,9 @@ public class QueryUtil {
         String transform(String sql, String project, String defaultSchema);
     }
 
-    static final String KEYWORD_SELECT = "select";
-    static final String KEYWORD_WITH = "with";
-    static final String KEYWORD_EXPLAIN = "explain";
+    private static final String KEYWORD_SELECT = "select";
+    private static final String KEYWORD_WITH = "with";
+    private static final String KEYWORD_EXPLAIN = "explain";
 
     private static String appendLimitOffsetToSql(String sql, int limit, int offset) {
         String retSql = sql;

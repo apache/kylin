@@ -31,9 +31,9 @@ public class SourceConnectorFactory {
         String adaptorClazz = config.getJdbcSourceAdaptor();
 
         AdaptorConfig jdbcConf = new AdaptorConfig(jdbcUrl, jdbcDriver, jdbcUser, jdbcPass);
-        jdbcConf.poolMaxIdle = config.getPoolMaxIdle();
-        jdbcConf.poolMinIdle = config.getPoolMinIdle();
-        jdbcConf.poolMaxTotal = config.getPoolMaxTotal();
+        jdbcConf.poolMaxIdle = config.getPoolMaxIdle(null);
+        jdbcConf.poolMinIdle = config.getPoolMinIdle(null);
+        jdbcConf.poolMaxTotal = config.getPoolMaxTotal(null);
         jdbcConf.datasourceId = config.getJdbcSourceDialect();
 
         if (adaptorClazz == null)

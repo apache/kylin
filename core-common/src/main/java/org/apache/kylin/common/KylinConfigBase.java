@@ -1730,7 +1730,8 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean isPushDownEnabled() {
-        return StringUtils.isNotEmpty(getPushDownRunnerClassName());
+        return Boolean.parseBoolean(this.getOptional("kylin.query.pushdown.enabled", FALSE))
+               || StringUtils.isNotEmpty(getPushDownRunnerClassName());
     }
 
     public boolean isPushDownUpdateEnabled() {
@@ -1745,6 +1746,17 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.query.pushdown.runner-class-name", "");
     }
 
+    public List<String> getPushDownRunnerIds() {
+        List<String> ids = Lists.newArrayList();
+        String idsStr = getOptional("kylin.query.pushdown.runner.ids", "");
+        if (StringUtils.isNotEmpty(idsStr)) {
+            for (String id: idsStr.split(",")) {
+                ids.add(id);
+            }
+        }
+        return ids;
+    }
+
     public String[] getPushDownConverterClassNames() {
         return getOptionalStringArray("kylin.query.pushdown.converter-class-names",
                 new String[] { "org.apache.kylin.source.adhocquery.HivePushDownConverter" });
@@ -1754,32 +1766,72 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.query.pushdown.cache-enabled", FALSE));
     }
 
-    public String getJdbcUrl() {
-        return getOptional("kylin.query.pushdown.jdbc.url", "");
+    public String getJdbcUrl(String id) {
+        if (null == id) {
+            return getOptional("kylin.query.pushdown.jdbc.url", "");
+        } else {
+            return getOptional("kylin.query.pushdown." + id + ".jdbc.url", "");
+        }
     }
 
-    public String getJdbcDriverClass() {
-        return getOptional("kylin.query.pushdown.jdbc.driver", "");
+    public String getJdbcDriverClass(String id) {
+        if (null == id) {
+            return getOptional("kylin.query.pushdown.jdbc.driver", "");
+        } else {
+            return getOptional("kylin.query.pushdown." + id + ".jdbc.driver", "");
+        }
     }
 
-    public String getJdbcUsername() {
-        return getOptional("kylin.query.pushdown.jdbc.username", "");
+    public String getJdbcUsername(String id) {
+        if (null == id) {
+            return getOptional("kylin.query.pushdown.jdbc.username", "");
+        } else {
+            return getOptional("kylin.query.pushdown." + id + ".jdbc.username", "");
+        }
     }
 
-    public String getJdbcPassword() {
-        return getOptional("kylin.query.pushdown.jdbc.password", "");
+    public String getJdbcPassword(String id) {
+        if (null == id) {
+            return getOptional("kylin.query.pushdown.jdbc.password", "");
+        } else {
+            return getOptional("kylin.query.pushdown." + id + ".jdbc.password", "");
+        }
     }
 
-    public int getPoolMaxTotal() {
-        return Integer.parseInt(this.getOptional("kylin.query.pushdown.jdbc.pool-max-total", "8"));
+    public int getPoolMaxTotal(String id) {
+        if (null == id) {
+            return Integer.parseInt(
+                    this.getOptional("kylin.query.pushdown.jdbc.pool-max-total", "8")
+            );
+        } else {
+            return Integer.parseInt(
+                    this.getOptional("kylin.query.pushdown." + id + ".jdbc.pool-max-total", "8")
+            );
+        }
     }
 
-    public int getPoolMaxIdle() {
-        return Integer.parseInt(this.getOptional("kylin.query.pushdown.jdbc.pool-max-idle", "8"));
+    public int getPoolMaxIdle(String id) {
+        if (null == id) {
+            return Integer.parseInt(
+                    this.getOptional("kylin.query.pushdown.jdbc.pool-max-idle", "8")
+            );
+        } else {
+            return Integer.parseInt(
+                    this.getOptional("kylin.query.pushdown." + id + ".jdbc.pool-max-idle", "8")
+            );
+        }
     }
 
-    public int getPoolMinIdle() {
-        return Integer.parseInt(this.getOptional("kylin.query.pushdown.jdbc.pool-min-idle", "0"));
+    public int getPoolMinIdle(String id) {
+        if (null == id) {
+            return Integer.parseInt(
+                    this.getOptional("kylin.query.pushdown.jdbc.pool-min-idle", "0")
+            );
+        } else {
+            return Integer.parseInt(
+                    this.getOptional("kylin.query.pushdown." + id + ".jdbc.pool-min-idle", "0")
+            );
+        }
     }
 
     public boolean isTableACLEnabled() {
