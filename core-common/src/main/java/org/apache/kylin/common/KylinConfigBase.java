@@ -791,6 +791,36 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.cube.cubeplanner.algorithm-threshold-genetic", "23"));
     }
 
+    /**
+     * get assigned server array, which a empty string array in default
+     * @return
+     */
+    public String[] getAssignedServers() {
+        return getOptionalStringArray("kylin.cube.schedule.assigned-servers", new String[] {});
+    }
+
+    /**
+     * Determine if the target node is in the assigned node
+     * @param targetServers target task servers
+     * @return
+     */
+    public boolean isOnAssignedServer(String... targetServers) {
+
+        String[] servers = this.getAssignedServers();
+        if (null == servers || servers.length == 0) {
+            return true;
+        }
+
+        for (String s : servers) {
+            for (String ts : targetServers) {
+                if (s.equalsIgnoreCase(ts)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     // ============================================================================
     // JOB
     // ============================================================================

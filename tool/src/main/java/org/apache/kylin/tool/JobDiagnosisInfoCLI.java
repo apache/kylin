@@ -36,7 +36,7 @@ import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
-import org.apache.kylin.tool.util.ToolUtil;
+import org.apache.kylin.common.util.ToolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
