@@ -1560,7 +1560,7 @@ public abstract class KylinConfigBase implements Serializable {
     // check KYLIN-3358, need deploy coprocessor if enabled
     // finally should be deprecated
     public boolean isDynamicColumnEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.enable-dynamic-column", TRUE));
+        return Boolean.parseBoolean(getOptional("kylin.query.enable-dynamic-column", FALSE));
     }
 
     //check KYLIN-1684, in most cases keep the default value
