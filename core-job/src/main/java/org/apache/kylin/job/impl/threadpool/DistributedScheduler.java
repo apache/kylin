@@ -34,6 +34,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.ToolUtil;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -102,7 +103,13 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable> {
         public void run() {
             try (SetThreadName ignored = new SetThreadName("Scheduler %s Job %s",
                     System.identityHashCode(DistributedScheduler.this), executable.getId())) {
-                if (jobLock.lock(getLockPath(executable.getId()))) {
+
+                KylinConfig config = executable.getCubeSpecificConfig();
+                boolean isAssigned = config.isOnAssignedServer(ToolUtil.getHostName(),
+                        ToolUtil.getFirstIPV4NonLoopBackAddress().getHostAddress());
+                logger.debug("cube = " + executable.getCubeName() + "; jobId=" + executable.getId()
+                        + (isAssigned ? " is " : " is not ") + "assigned on this server : " + ToolUtil.getHostName());
+                if (isAssigned && jobLock.lock(getLockPath(executable.getId()))) {
                     logger.info(executable.toString() + " scheduled in server: " + serverName);
 
                     context.addRunningJob(executable);
