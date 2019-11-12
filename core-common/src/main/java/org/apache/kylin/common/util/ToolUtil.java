@@ -17,18 +17,36 @@
  *
  */
 
-package org.apache.kylin.tool.util;
+package org.apache.kylin.common.util;
 
-import com.google.common.collect.Maps;
+import java.io.File;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Enumeration;
+import java.util.Map;
+import java.util.Set;
+
+import javax.management.AttributeNotFoundException;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.Query;
+import javax.management.QueryExp;
+import javax.management.ReflectionException;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Map;
+import com.google.common.collect.Maps;
 
 public class ToolUtil {
 
@@ -89,5 +107,50 @@ public class ToolUtil {
             }
         }
         return hostname;
+    }
+
+    public static InetAddress getFirstNonLoopbackAddress(boolean preferIpv4, boolean preferIPv6)
+            throws SocketException {
+        Enumeration en = NetworkInterface.getNetworkInterfaces();
+        while (en.hasMoreElements()) {
+            NetworkInterface element = (NetworkInterface) en.nextElement();
+            for (Enumeration en2 = element.getInetAddresses(); en2.hasMoreElements();) {
+                InetAddress addr = (InetAddress) en2.nextElement();
+                if (!addr.isLoopbackAddress()) {
+                    if (addr instanceof Inet4Address) {
+                        if (preferIPv6) {
+                            continue;
+                        }
+                        return addr;
+                    }
+                    if (addr instanceof Inet6Address) {
+                        if (preferIpv4) {
+                            continue;
+                        }
+                        return addr;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public static InetAddress getFirstIPV4NonLoopBackAddress() throws SocketException {
+        return getFirstNonLoopbackAddress(true, false);
+    }
+
+    public static InetAddress getFirstIPV6NonLoopBackAddress() throws SocketException {
+        return getFirstNonLoopbackAddress(true, false);
+    }
+
+    public static String getListenPort() throws AttributeNotFoundException, MBeanException, ReflectionException,
+            InstanceNotFoundException, MalformedObjectNameException {
+        MBeanServer beanServer = ManagementFactory.getPlatformMBeanServer();
+        final QueryExp queryExp = Query.and(Query.eq(Query.attr("protocol"), Query.value("HTTP/1.1")),
+                Query.eq(Query.attr("scheme"), Query.value("http")));
+        Set<ObjectName> objectNames = beanServer.queryNames(new ObjectName("*:type=Connector,*"), queryExp);
+        ObjectName objectName = objectNames.iterator().next();
+        String port = objectName.getKeyProperty("port");
+        return port;
     }
 }

@@ -346,6 +346,19 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.env.zookeeper-base-path", "/kylin");
     }
 
+    public Boolean isBroadcastBasedOnRegistry() {
+        return Boolean.parseBoolean(getOptional("kylin.rest.servers.base-on-registry", "false"));
+    }
+
+    public String getZookeeperRestServersBasePath() {
+        return getOptional("kylin.env.restserver.zookeeper-base-path",
+                getZookeeperBasePath() + "/" + getClusterName() + getRestServersZookeeperNode());
+    }
+
+    public String getRestServersZookeeperNode() {
+        return getOptional("kylin.env.restserver.zookeeper-node", "/rest_server");
+    }
+
     /**
      * A comma separated list of host:port pairs, each corresponding to a ZooKeeper server
      */
@@ -1458,7 +1471,7 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark-fact-distinct", "false"));
     }
 
-    public boolean isSparkCardinalityEnabled(){
+    public boolean isSparkCardinalityEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark-cardinality", "false"));
     }
 

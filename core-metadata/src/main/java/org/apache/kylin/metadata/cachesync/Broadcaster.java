@@ -39,6 +39,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DaemonThreadFactory;
+import org.apache.kylin.common.util.ZookeeperRegister;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,22 +90,22 @@ public class Broadcaster implements Closeable {
     private Map<String, List<Listener>> listenerMap = Maps.newConcurrentMap();
     private AtomicLong counter = new AtomicLong(); // a counter for testing purpose
     private final BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>();
-    
+
     private Broadcaster(final KylinConfig config) {
         this.config = config;
         this.syncErrorHandler = getSyncErrorHandler(config);
         this.announceMainLoop = Executors.newSingleThreadExecutor(new DaemonThreadFactory());
-        
+
         final String[] nodes = config.getRestServers();
         if (nodes == null || nodes.length < 1) {
             logger.warn("There is no available rest server; check the 'kylin.server.cluster-servers' config");
         }
         logger.debug("{} nodes in the cluster: {}", (nodes == null ? 0 : nodes.length), Arrays.toString(nodes));
-        
-        int corePoolSize = (nodes == null || nodes.length < 1)? 1 : nodes.length;
-        int maximumPoolSize = (nodes == null || nodes.length < 1)? 10 : nodes.length * 2;
+
+        int corePoolSize = (nodes == null || nodes.length < 1) ? 1 : nodes.length;
+        int maximumPoolSize = (nodes == null || nodes.length < 1) ? 10 : nodes.length * 2;
         this.announceThreadPool = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, 60L, TimeUnit.SECONDS,
-            workQueue, new DaemonThreadFactory());
+                workQueue, new DaemonThreadFactory());
 
         announceMainLoop.execute(new Runnable() {
             @Override
@@ -115,7 +116,13 @@ public class Broadcaster implements Closeable {
                     try {
                         final BroadcastEvent broadcastEvent = broadcastEvents.takeFirst();
 
-                        String[] restServers = config.getRestServers();
+                        String[] restServers = null;
+                        if (config.isBroadcastBasedOnRegistry()) {
+                            restServers = (String[]) ZookeeperRegister.getInstance().getServers().toArray();
+                        } else {
+                            restServers = config.getRestServers();
+                        }
+
                         logger.debug("Servers in the cluster: {}", Arrays.toString(restServers));
                         for (final String node : restServers) {
                             if (restClientMap.containsKey(node) == false) {
@@ -127,11 +134,11 @@ public class Broadcaster implements Closeable {
                         if (toWhere == null)
                             toWhere = "all";
                         logger.debug("Announcing new broadcast to {}: {}", toWhere, broadcastEvent);
-                        
+
                         for (final String node : restServers) {
                             if (!(toWhere.equals("all") || toWhere.equals(node)))
                                 continue;
-                            
+
                             announceThreadPool.execute(new Runnable() {
                                 @Override
                                 public void run() {
@@ -172,10 +179,10 @@ public class Broadcaster implements Closeable {
     public KylinConfig getConfig() {
         return config;
     }
-    
+
     public void stopAnnounce() {
         synchronized (workQueue) {
-            while (!workQueue.isEmpty() || !broadcastEvents.isEmpty()){
+            while (!workQueue.isEmpty() || !broadcastEvents.isEmpty()) {
                 try {
                     workQueue.wait(100);
                 } catch (InterruptedException e) {
@@ -404,7 +411,7 @@ public class Broadcaster implements Closeable {
     public static class BroadcastEvent {
         private int retryTime;
         private String targetNode; // NULL means to all
-        
+
         private String entity;
         private String event;
         private String cacheKey;
