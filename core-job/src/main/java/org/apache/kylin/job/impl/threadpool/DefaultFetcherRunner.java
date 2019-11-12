@@ -64,7 +64,14 @@ public class DefaultFetcherRunner extends FetcherRunner {
                     continue;
                 }
 
-                final Output outputDigest = getExecutableManger().getOutputDigest(id);
+                final Output outputDigest;
+                try {
+                    outputDigest = getExecutableManger().getOutputDigest(id);
+                } catch (IllegalArgumentException e) {
+                    logger.warn("job " + id + " output digest is null, skip.", e);
+                    nOthers++;
+                    continue;
+                }
                 if ((outputDigest.getState() != ExecutableState.READY)) {
                     // logger.debug("Job id:" + id + " not runnable");
                     jobStateCount(id);
@@ -72,6 +79,11 @@ public class DefaultFetcherRunner extends FetcherRunner {
                 }
 
                 final AbstractExecutable executable = getExecutableManger().getJob(id);
+                if (executable == null) {
+                    logger.info("job " + id + " getJob is null, skip.");
+                    nOthers++;
+                    continue;
+                }
                 if (!executable.isReady()) {
                     nOthers++;
                     continue;
