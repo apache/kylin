@@ -33,12 +33,6 @@ public class RegistryDiscoveryInitialTask extends InitialTask {
         ZookeeperRegister register = ZookeeperRegister.getInstance();
 
         try {
-            register.listen();
-        } catch (Exception e) {
-            LOG.error("registry client based on zookeeper listen occur error", e);
-            throw new RuntimeException(e);
-        }
-        try {
             register.register();
         } catch (Exception e) {
             LOG.error("registry client based on zookeeper register to zookeeper occur error ", e);

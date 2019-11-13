@@ -26,6 +26,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.restclient.RestClient;
+import org.apache.kylin.common.util.ZookeeperRegister;
 import org.apache.kylin.dict.lookup.IExtLookupTableCache.CacheState;
 import org.apache.kylin.engine.mr.steps.lookup.LookupExecutableUtil;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -35,6 +36,7 @@ import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.ExecuteResult.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
 public class UpdateSnapshotCacheForQueryServersStep extends AbstractExecutable {
     private static final Logger logger = LoggerFactory.getLogger(UpdateSnapshotCacheForQueryServersStep.class);
@@ -51,7 +53,15 @@ public class UpdateSnapshotCacheForQueryServersStep extends AbstractExecutable {
 
         StringWriter outputWriter = new StringWriter();
         PrintWriter pw = new PrintWriter(outputWriter);
-        String[] restServers = config.getRestServers();
+        String[] restServers = new String[0];
+        if (config.isBroadcastBasedOnRegistry()) {
+            List<String> servers = ZookeeperRegister.getInstance().getServers();
+            if(!CollectionUtils.isEmpty(servers)){
+                restServers = (String[]) servers.toArray();
+            }
+        } else {
+            restServers = config.getRestServers();
+        }
         List<String> serversNeedCheck = Lists.newArrayList();
         for (String restServer : restServers) {
             logger.info("send build lookup table cache request to server: " + restServer);

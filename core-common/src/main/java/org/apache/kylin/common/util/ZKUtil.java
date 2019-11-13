@@ -20,7 +20,9 @@ package org.apache.kylin.common.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -35,8 +37,10 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.Shell;
+import org.apache.zookeeper.Watcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -222,6 +226,73 @@ public class ZKUtil {
                         return input + ":" + port;
                     }
                 }), ",");
+    }
+
+    public static void initPstPath(CuratorFramework client, String path) throws Exception {
+
+        try {
+            if (client.checkExists().forPath(path) == null) {
+                client.create().withMode(CreateMode.PERSISTENT).forPath(path, new byte[0]);
+            }
+        } catch (Exception e) {
+            logger.error("Create Persistent Path Error , Path = " + path, e);
+            throw e;
+        }
+    }
+
+
+    public static void initPstPathWithParents(CuratorFramework client, String path) throws Exception {
+
+        try {
+            if (client.checkExists().forPath(path) == null) {
+                client.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(path, new byte[0]);
+            }
+        } catch (Exception e) {
+            logger.error("Create Persistent Path Error , Path = " + path, e);
+            throw e;
+        }
+    }
+
+    public static void initEphPstPathWithParents(CuratorFramework client, String path) throws Exception {
+        initEphPstPathWithParentsAndData(client, path, new byte[] { 0 });
+    }
+
+    public static void initEphPstPathWithParentsAndData(CuratorFramework client, String path, byte[] data)
+            throws Exception {
+
+        try {
+            if (client.checkExists().forPath(path) == null) {
+                client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path, data);
+            }
+        } catch (Exception e) {
+            logger.error("Create Ephemeral Path Error , Path = " + path, e);
+            throw e;
+        }
+    }
+
+    public static String getData(CuratorFramework client, String path) {
+
+        try {
+            if (client.checkExists().forPath(path) != null) {
+                byte[] data = client.getData().forPath(path);
+                return new String(data, Charset.forName("UTF-8"));
+            }
+        } catch (Exception e) {
+            logger.error("Get Data Error , Path = " + path, e);
+        }
+        return null;
+    }
+
+    /**
+     * Get children and set the given watcher on the node.
+     */
+    public static List<String> watchedGetChildren(CuratorFramework client, String path, Watcher watcher)
+            throws Exception {
+
+        if (client.checkExists().forPath(path) != null) {
+            return client.getChildren().usingWatcher(watcher).forPath(path);
+        }
+        return null;
     }
 
     public static void cleanZkPath(String path) {

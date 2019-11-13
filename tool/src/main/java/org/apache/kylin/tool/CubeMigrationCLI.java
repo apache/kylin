@@ -45,6 +45,7 @@ import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.common.util.ZookeeperRegister;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -69,6 +70,7 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.stream.core.source.StreamingSourceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
 /**
  * <p/>
@@ -645,7 +647,15 @@ public class CubeMigrationCLI extends AbstractApplication {
     }
 
     private void updateMeta(KylinConfig config, String projectName, String cubeName, DataModelDesc model) {
-        String[] nodes = config.getRestServers();
+        String[] nodes = new String[0];
+        if (config.isBroadcastBasedOnRegistry()) {
+            List<String> servers = ZookeeperRegister.getInstance().getServers();
+            if(!CollectionUtils.isEmpty(servers)){
+                nodes = (String[]) servers.toArray();
+            }
+        } else {
+            nodes = config.getRestServers();
+        }
         Map<String, String> tableToProjects = new HashMap<>();
         for (TableRef tableRef : model.getAllTables()) {
             tableToProjects.put(tableRef.getTableIdentity(), tableRef.getTableDesc().getProject());

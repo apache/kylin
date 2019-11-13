@@ -22,9 +22,7 @@ import java.net.InetAddress;
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
-import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
@@ -47,20 +45,22 @@ public class ZookeeperRegister {
     }
 
     private void init() {
-
         this.kylinConfig = KylinConfig.getInstanceFromEnv();
-        String connectString = kylinConfig.getZookeeperConnectString();
-        this.curatorClient = CuratorFrameworkFactory.builder().connectString(connectString).sessionTimeoutMs(6000)
-                .retryPolicy(new ExponentialBackoffRetry(1000, 3)).build();
+        this.curatorClient = ZKUtil.newZookeeperClient();
         this.serverNodeWatcher = new ServerNodeWatcher();
-
-        this.curatorClient.start();
     }
 
     public static synchronized ZookeeperRegister getInstance() {
         if (instance == null) {
+
             instance = new ZookeeperRegister();
             instance.init();
+            try {
+                instance.listen();
+            } catch (Exception e) {
+                LOG.error("registry client based on zookeeper listen occur error", e);
+                throw new RuntimeException(e);
+            }
         }
         return instance;
     }
@@ -75,7 +75,7 @@ public class ZookeeperRegister {
     public void listen() throws Exception {
         String registryBasePath = this.kylinConfig.getZookeeperRestServersBasePath();
         LOG.info("Rest server registry client is listening this path:{}", registryBasePath);
-        CuratorUtil.initPstPathWithParents(this.curatorClient, registryBasePath);
+        ZKUtil.initPstPathWithParents(this.curatorClient, registryBasePath);
         this.servers = this.listServers(this.curatorClient, registryBasePath, this.serverNodeWatcher);
     }
 
@@ -84,8 +84,8 @@ public class ZookeeperRegister {
         String serverNode = this.getServerNode(restServersBasePath);
 
         LOG.info("Start to register server address to zookeeper, znode is :" + serverNode);
-        long startTime = System.currentTimeMillis();
-        CuratorUtil.initEphPstPathWithParentsAndData(this.curatorClient, serverNode, Bytes.toBytes(startTime));
+        ZKUtil.initEphPstPathWithParentsAndData(this.curatorClient, serverNode,
+                Bytes.toBytes(System.currentTimeMillis()));
     }
 
     public List<String> getServers() {
@@ -95,7 +95,7 @@ public class ZookeeperRegister {
     private List<String> listServers(CuratorFramework curatorClient, String registryBasePath, Watcher watcher) {
         List<String> servers = null;
         try {
-            servers = CuratorUtil.watchedGetChildren(curatorClient, registryBasePath, watcher);
+            servers = ZKUtil.watchedGetChildren(curatorClient, registryBasePath, watcher);
         } catch (Exception e) {
             LOG.error("Rest server register get zookeeper children error, path = {}", registryBasePath, e);
         }
@@ -125,5 +125,4 @@ public class ZookeeperRegister {
             }
         }
     }
-
 }
