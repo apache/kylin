@@ -119,6 +119,7 @@ function retrieveStartCommand() {
     start_command="hbase ${KYLIN_EXTRA_START_OPTS} \
     -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
     -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
+    -Dlog4j.configurationFile=file:${KYLIN_HOME}/conf/kylin-server-log4j2.properties \
     -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-server-log4j.properties \
     -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true \
     -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
