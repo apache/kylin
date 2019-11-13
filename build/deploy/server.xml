@@ -74,6 +74,7 @@
                    compressionMinSize="2048"
                    noCompressionUserAgents="gozilla,traviata"
                    compressableMimeType="text/html,text/xml,text/javascript,application/javascript,application/json,text/css,text/plain"
+                   URIEncoding="UTF-8"
         />
         <!-- A "Connector" using the shared thread pool-->
         <!-- Define a SSL HTTP/1.1 Connector on port 8443
