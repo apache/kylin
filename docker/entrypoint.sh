@@ -47,6 +47,18 @@ rm -rf /tmp/kafka-logs
 rm -rf /data/zookeeper/*
 nohup $KAFKA_HOME/bin/kafka-server-start.sh $KAFKA_HOME/config/server.properties &
 
+# start livy
+hdfs dfs -mkdir -p /kylin/livy
+hdfs dfs -put -f $HBASE_HOME/lib/hbase-client-$HBASE_VERSION.jar hdfs://localhost:9000/kylin/livy/
+hdfs dfs -put -f $HBASE_HOME/lib/hbase-common-$HBASE_VERSION.jar hdfs://localhost:9000/kylin/livy/
+hdfs dfs -put -f $HBASE_HOME/lib/hbase-hadoop-compat-$HBASE_VERSION.jar hdfs://localhost:9000/kylin/livy/
+hdfs dfs -put -f $HBASE_HOME/lib/hbase-hadoop2-compat-$HBASE_VERSION.jar hdfs://localhost:9000/kylin/livy/
+hdfs dfs -put -f $HBASE_HOME/lib/hbase-server-$HBASE_VERSION.jar hdfs://localhost:9000/kylin/livy/
+hdfs dfs -put -f $HBASE_HOME/lib/htrace-core-*-incubating.jar hdfs://localhost:9000/kylin/livy/
+hdfs dfs -put -f $HBASE_HOME/lib/metrics-core-*.jar hdfs://localhost:9000/kylin/livy/
+hdfs dfs -put -f $KYLIN_HOME/lib/kylin-job-$KYLIN_VERSION.jar hdfs://localhost:9000/kylin/livy/
+$LIVY_HOME/bin/livy-server start
+
 # prepare kafka topic and data
 $KAFKA_HOME/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 3 --topic kylin_streaming_topic
 
