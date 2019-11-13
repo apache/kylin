@@ -507,11 +507,11 @@ KylinApp
                 $scope.chart = undefined;
 
                 var selectedDimension = query.graph.state.dimensions;
-                if (selectedDimension && query.graph.type.dimension.types.indexOf(selectedDimension.type) > -1) {
+                var selectedMetric = query.graph.state.metrics;
+                if (selectedDimension && selectedMetric && query.graph.type.dimension.types.indexOf(selectedDimension.type) > -1) {
                     $scope.chart = {};
 
                     var chartType = query.graph.type.value;
-                    var selectedMetric = query.graph.state.metrics;
 
                     var dataValues = [];
                     angular.forEach(query.result.results, function(result, ind) {
