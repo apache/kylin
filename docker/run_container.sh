@@ -23,4 +23,5 @@ docker run -d \
 -p 8032:8032 \
 -p 8042:8042 \
 -p 60010:60010 \
+-p 8998:8998 \
 apache-kylin-standalone
