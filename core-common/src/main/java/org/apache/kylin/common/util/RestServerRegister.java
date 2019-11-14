@@ -127,9 +127,8 @@ public class RestServerRegister {
                 servers = newServers;
                 break;
             }
-            default: {
+            default:
                 break;
-            }
             }
         }
     }
