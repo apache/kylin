@@ -29,11 +29,11 @@ import org.apache.zookeeper.Watcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ZookeeperRegister {
+public class RestServerRegister {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ZookeeperRegister.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RestServerRegister.class);
 
-    private static ZookeeperRegister instance = null;
+    private static RestServerRegister instance = null;
 
     private KylinConfig kylinConfig;
     private CuratorFramework curatorClient = null;
@@ -41,20 +41,24 @@ public class ZookeeperRegister {
     private Watcher serverNodeWatcher;
     private List<String> servers;
 
-    private ZookeeperRegister() {
+    private RestServerRegister() {
     }
 
-    private void init() {
-        this.kylinConfig = KylinConfig.getInstanceFromEnv();
-        this.curatorClient = ZKUtil.newZookeeperClient();
+    private void init(KylinConfig config) {
+        this.kylinConfig = config;
+        this.curatorClient = ZKUtil.newZookeeperClient(this.kylinConfig);
         this.serverNodeWatcher = new ServerNodeWatcher();
     }
 
-    public static synchronized ZookeeperRegister getInstance() {
+    public static RestServerRegister getInstance() {
+        return getInstance(KylinConfig.getInstanceFromEnv());
+    }
+
+    public static synchronized RestServerRegister getInstance(KylinConfig config) {
         if (instance == null) {
 
-            instance = new ZookeeperRegister();
-            instance.init();
+            instance = new RestServerRegister();
+            instance.init(config);
             try {
                 instance.listen();
             } catch (Exception e) {
@@ -73,15 +77,15 @@ public class ZookeeperRegister {
     }
 
     public void listen() throws Exception {
-        String registryBasePath = this.kylinConfig.getZookeeperRestServersBasePath();
-        LOG.info("Rest server registry client is listening this path:{}", registryBasePath);
-        ZKUtil.initPstPathWithParents(this.curatorClient, registryBasePath);
-        this.servers = this.listServers(this.curatorClient, registryBasePath, this.serverNodeWatcher);
+        String restNode = this.kylinConfig.getRestServersZookeeperNode();
+        LOG.info("Rest server registry client is listening this path:{}", restNode);
+        ZKUtil.initPstPathWithParents(this.curatorClient, restNode);
+        this.servers = this.listServers(this.curatorClient, restNode, this.serverNodeWatcher);
     }
 
     public void register() throws Exception {
-        String restServersBasePath = this.kylinConfig.getZookeeperRestServersBasePath();
-        String serverNode = this.getServerNode(restServersBasePath);
+        String restNode = this.kylinConfig.getRestServersZookeeperNode();
+        String serverNode = this.getServerNode(restNode);
 
         LOG.info("Start to register server address to zookeeper, znode is :" + serverNode);
         ZKUtil.initEphPstPathWithParentsAndData(this.curatorClient, serverNode,
@@ -105,8 +109,9 @@ public class ZookeeperRegister {
     private String getServerNode(String basePath) throws Exception {
 
         InetAddress address = ToolUtil.getFirstIPV4NonLoopBackAddress();
-        String port = ToolUtil.getListenPort();
-        String serverNode = basePath + "/" + address.getHostAddress() + ":" + port;
+        String listenPort = ToolUtil.getListenPort();
+        listenPort = listenPort == null ? "7070" : listenPort;
+        String serverNode = basePath + "/" + address.getHostAddress() + ":" + listenPort;
         return serverNode;
     }
 
@@ -115,11 +120,14 @@ public class ZookeeperRegister {
         public void process(WatchedEvent watchedEvent) {
             switch (watchedEvent.getType()) {
             case NodeChildrenChanged: {
-                List<String> newServers = listServers(curatorClient, kylinConfig.getZookeeperRestServersBasePath(),
+                List<String> newServers = listServers(curatorClient, kylinConfig.getRestServersZookeeperNode(),
                         serverNodeWatcher);
                 LOG.info("Rest server node on zookeeper ({}) whose children has changed, "
                         + "old servers: {}, new servers: {}", watchedEvent.getPath(), servers, newServers);
                 servers = newServers;
+                break;
+            }
+            default: {
                 break;
             }
             }

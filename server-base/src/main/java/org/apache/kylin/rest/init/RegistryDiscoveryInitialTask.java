@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.init;
 
-import org.apache.kylin.common.util.ZookeeperRegister;
+import org.apache.kylin.common.util.RestServerRegister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +30,7 @@ public class RegistryDiscoveryInitialTask extends InitialTask {
     public void execute() {
 
         LOG.info(" rest server based on zookeeper is starting");
-        ZookeeperRegister register = ZookeeperRegister.getInstance();
+        RestServerRegister register = RestServerRegister.getInstance();
 
         try {
             register.register();
