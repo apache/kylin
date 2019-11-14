@@ -45,7 +45,7 @@ import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OptionsHelper;
-import org.apache.kylin.common.util.ZookeeperRegister;
+import org.apache.kylin.common.util.RestServerRegister;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -649,7 +649,7 @@ public class CubeMigrationCLI extends AbstractApplication {
     private void updateMeta(KylinConfig config, String projectName, String cubeName, DataModelDesc model) {
         String[] nodes = new String[0];
         if (config.isBroadcastBasedOnRegistry()) {
-            List<String> servers = ZookeeperRegister.getInstance().getServers();
+            List<String> servers = RestServerRegister.getInstance().getServers();
             if(!CollectionUtils.isEmpty(servers)){
                 nodes = (String[]) servers.toArray();
             }

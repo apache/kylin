@@ -32,23 +32,22 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.Set;
 
-import javax.management.AttributeNotFoundException;
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanException;
 import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.Query;
 import javax.management.QueryExp;
-import javax.management.ReflectionException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
 public class ToolUtil {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ToolUtil.class);
 
     private ToolUtil() {
         throw new IllegalStateException("Class ToolUtil is an utility class !");
@@ -143,14 +142,19 @@ public class ToolUtil {
         return getFirstNonLoopbackAddress(true, false);
     }
 
-    public static String getListenPort() throws AttributeNotFoundException, MBeanException, ReflectionException,
-            InstanceNotFoundException, MalformedObjectNameException {
+    public static String getListenPort() {
         MBeanServer beanServer = ManagementFactory.getPlatformMBeanServer();
-        final QueryExp queryExp = Query.and(Query.eq(Query.attr("protocol"), Query.value("HTTP/1.1")),
-                Query.eq(Query.attr("scheme"), Query.value("http")));
-        Set<ObjectName> objectNames = beanServer.queryNames(new ObjectName("*:type=Connector,*"), queryExp);
-        ObjectName objectName = objectNames.iterator().next();
-        String port = objectName.getKeyProperty("port");
+        String port = null;
+        try {
+            final QueryExp queryExp = Query.and(Query.eq(Query.attr("protocol"), Query.value("HTTP/1.1")),
+                    Query.eq(Query.attr("scheme"), Query.value("http")));
+            Set<ObjectName> objectNames = beanServer.queryNames(new ObjectName("*:type=Connector,*"), queryExp);
+            ObjectName objectName = objectNames.iterator().next();
+            port = objectName.getKeyProperty("port");
+        } catch (Exception e) {
+            LOG.error("GET Http Listen Port Error", e);
+        }
+
         return port;
     }
 }

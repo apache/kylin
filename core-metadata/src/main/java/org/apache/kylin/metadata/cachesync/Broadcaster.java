@@ -39,7 +39,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DaemonThreadFactory;
-import org.apache.kylin.common.util.ZookeeperRegister;
+import org.apache.kylin.common.util.RestServerRegister;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,7 +118,7 @@ public class Broadcaster implements Closeable {
 
                         String[] restServers = null;
                         if (config.isBroadcastBasedOnRegistry()) {
-                            restServers = (String[]) ZookeeperRegister.getInstance().getServers().toArray();
+                            restServers = (String[]) RestServerRegister.getInstance().getServers().toArray();
                         } else {
                             restServers = config.getRestServers();
                         }

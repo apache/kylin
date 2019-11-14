@@ -26,7 +26,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.restclient.RestClient;
-import org.apache.kylin.common.util.ZookeeperRegister;
+import org.apache.kylin.common.util.RestServerRegister;
 import org.apache.kylin.dict.lookup.IExtLookupTableCache.CacheState;
 import org.apache.kylin.engine.mr.steps.lookup.LookupExecutableUtil;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -55,7 +55,7 @@ public class UpdateSnapshotCacheForQueryServersStep extends AbstractExecutable {
         PrintWriter pw = new PrintWriter(outputWriter);
         String[] restServers = new String[0];
         if (config.isBroadcastBasedOnRegistry()) {
-            List<String> servers = ZookeeperRegister.getInstance().getServers();
+            List<String> servers = RestServerRegister.getInstance().getServers();
             if(!CollectionUtils.isEmpty(servers)){
                 restServers = (String[]) servers.toArray();
             }
