@@ -28,10 +28,10 @@ public class MiniZookeeperClusterUtil {
 
     private static MiniLocalZookeeperCluster zookeeperCluster;
 
-    public static MiniLocalZookeeperCluster startMiniZookeeperCluster(KylinConfig config) throws Exception {
+    public static MiniLocalZookeeperCluster startMiniZookeeperCluster() throws Exception {
 
         if (zookeeperCluster == null) {
-            zookeeperCluster = new MiniLocalZookeeperCluster(config);
+            zookeeperCluster = new MiniLocalZookeeperCluster();
         }
         if (zookeeperCluster.isStarted()) {
             throw new RuntimeException("Mini Zookeeper cluster has already started");

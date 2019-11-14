@@ -37,10 +37,9 @@ public class RestServerRegisterTest {
 
     @Before
     public void setUp() throws Exception {
-
-        LocalFileResourceStoreTest.staticCreateTestMetadata();
+        System.setProperty("KYLIN_CONF", LocalFileResourceStoreTest.LOCALMETA_TEST_DATA);
         this.config = KylinConfig.getInstanceFromEnv();
-        MiniZookeeperClusterUtil.startMiniZookeeperCluster(config);
+        MiniZookeeperClusterUtil.startMiniZookeeperCluster();
         MiniLocalZookeeperCluster zk = MiniZookeeperClusterUtil.getZookeeperCluster();
         if (!zk.isStarted()) {
             throw new RuntimeException("mini zookeeper has not started");

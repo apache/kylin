@@ -30,7 +30,6 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.zookeeper.server.NIOServerCnxnFactory;
 import org.apache.zookeeper.server.ZooKeeperServer;
 import org.apache.zookeeper.server.persistence.FileTxnLog;
@@ -40,16 +39,13 @@ import org.slf4j.LoggerFactory;
 public class MiniLocalZookeeperCluster {
 
     private static final Logger LOG = LoggerFactory.getLogger(MiniLocalZookeeperCluster.class);
-    private KylinConfig config;
-
     private NIOServerCnxnFactory serverCnxnFactory;
     private ZooKeeperServer zkServer;
     private File baseDir;
     private int zkClientPort = -1;
     private boolean started = false;
 
-    public MiniLocalZookeeperCluster(KylinConfig config) {
-        this.config = config;
+    public MiniLocalZookeeperCluster() {
     }
 
     public boolean isStarted() {
@@ -60,7 +56,7 @@ public class MiniLocalZookeeperCluster {
         if (started) {
             throw new RuntimeException("Mini Zookeeper Cluster has started");
         }
-        this.baseDir = this.getBaseDir(config);
+        this.baseDir = this.getBaseDir();
         int clientPort = this.selectClientPort();
         ZooKeeperServer server = new ZooKeeperServer(baseDir, baseDir, 2000);
         server.setMinSessionTimeout(-1);
@@ -103,10 +99,25 @@ public class MiniLocalZookeeperCluster {
             throw new IOException("Waiting for shutdown of standalone server");
         }
         this.zkServer.getZKDatabase().clear();
-        this.baseDir.delete();
+        this.deleteDirectory(this.baseDir);
         if (started) {
             started = false;
             LOG.info("Shutdown MiniZK cluster with all ZK servers");
+        }
+    }
+
+    public void deleteDirectory(File file) {
+
+        if (file.isFile()) {
+            file.delete();
+        } else {
+            File list[] = file.listFiles();
+            if (list != null) {
+                for (File f : list) {
+                    deleteDirectory(f);
+                }
+                file.delete();
+            }
         }
     }
 
@@ -114,12 +125,8 @@ public class MiniLocalZookeeperCluster {
         return 0xc000 + new Random().nextInt(0x3f00);
     }
 
-    private File getBaseDir(KylinConfig config) {
-        File confdir = config.getKylinConfDir();
-        if (!confdir.exists()) {
-            throw new RuntimeException("Mini zookeeper cluster need to specifiy KYLIN_CONF dir");
-        }
-        File baseDir = new File(confdir, "zookeeper_test").getAbsoluteFile();
+    private File getBaseDir() {
+        File baseDir = new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA, "zookeeper_test").getAbsoluteFile();
         if (!baseDir.exists()) {
             baseDir.mkdir();
         }
