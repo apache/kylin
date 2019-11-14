@@ -513,6 +513,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Long.parseLong(getOptional("kylin.dictionary.max-cache-entry", "3000"));
     }
 
+    public int getCachedDictMaxSize() {
+        return Integer.parseInt(getOptional("kylin.dictionary.max-cache-size", "-1"));
+    }
+
     public boolean isGrowingDictEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.dictionary.growing-enabled", FALSE));
     }
@@ -564,6 +568,11 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isShrunkenDictFromGlobalEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.dictionary.shrunken-from-global-enabled", TRUE));
     }
+
+    public int getDictionarySliceEvicationThreshold() {
+        return Integer.parseInt(getOptional("kylin.dictionary.slice.eviction.threshold", "5"));
+    }
+
 
     // ============================================================================
     // mr-hive dict
@@ -1564,7 +1573,7 @@ public abstract class KylinConfigBase implements Serializable {
     // check KYLIN-3358, need deploy coprocessor if enabled
     // finally should be deprecated
     public boolean isDynamicColumnEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.enable-dynamic-column", TRUE));
+        return Boolean.parseBoolean(getOptional("kylin.query.enable-dynamic-column", FALSE));
     }
 
     //check KYLIN-1684, in most cases keep the default value
