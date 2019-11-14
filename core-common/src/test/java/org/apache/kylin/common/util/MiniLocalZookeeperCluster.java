@@ -107,11 +107,10 @@ public class MiniLocalZookeeperCluster {
     }
 
     public void deleteDirectory(File file) {
-
         if (file.isFile()) {
             file.delete();
         } else {
-            File list[] = file.listFiles();
+            File[] list = file.listFiles();
             if (list != null) {
                 for (File f : list) {
                     deleteDirectory(f);

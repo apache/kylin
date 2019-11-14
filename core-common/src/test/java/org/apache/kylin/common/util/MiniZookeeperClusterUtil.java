@@ -18,7 +18,6 @@
 
 package org.apache.kylin.common.util;
 
-import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
