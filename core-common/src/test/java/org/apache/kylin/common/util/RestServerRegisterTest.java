@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RestServerRegisterTest extends LocalFileResourceStoreTest {
+public class RestServerRegisterTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(RestServerRegisterTest.class);
 
@@ -37,7 +37,8 @@ public class RestServerRegisterTest extends LocalFileResourceStoreTest {
 
     @Before
     public void setUp() throws Exception {
-        super.setup();
+
+        LocalFileResourceStoreTest.staticCreateTestMetadata();
         this.config = KylinConfig.getInstanceFromEnv();
         MiniZookeeperClusterUtil.startMiniZookeeperCluster(config);
         MiniLocalZookeeperCluster zk = MiniZookeeperClusterUtil.getZookeeperCluster();
@@ -52,32 +53,11 @@ public class RestServerRegisterTest extends LocalFileResourceStoreTest {
 
     @After
     public void after() throws Exception {
-        super.after();
         MiniZookeeperClusterUtil.shutdownMiniZookeeperCluster();
     }
 
     @Test
-    public void testRegister() throws Exception {
-
-        RestServerRegister rs = RestServerRegister.getInstance(this.config);
-        rs.register();
-        //need watch event callback
-        Thread.sleep(1000);
-        List<String> servers = rs.getServers();
-        Assert.assertEquals(1, servers.size());
-    }
-
-    @Test
-    public void testListServers() throws Exception {
-
-        RestServerRegister rs = RestServerRegister.getInstance(this.config);
-        List<String> servers = rs.getServers();
-        Assert.assertEquals(0, servers.size());
-    }
-
-    @Test
-    public void testListServersWithAddServer() throws Exception {
-
+    public void testListServersWithRegister() throws Exception {
         RestServerRegister rs = RestServerRegister.getInstance(this.config);
         List<String> servers = rs.getServers();
         Assert.assertEquals(0, servers.size());
@@ -85,5 +65,6 @@ public class RestServerRegisterTest extends LocalFileResourceStoreTest {
         //need watch event callback
         Thread.sleep(10);
         Assert.assertEquals(1, rs.getServers().size());
+
     }
 }

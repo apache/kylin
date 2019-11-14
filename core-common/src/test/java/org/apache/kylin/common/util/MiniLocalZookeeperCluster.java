@@ -44,6 +44,7 @@ public class MiniLocalZookeeperCluster {
 
     private NIOServerCnxnFactory serverCnxnFactory;
     private ZooKeeperServer zkServer;
+    private File baseDir;
     private int zkClientPort = -1;
     private boolean started = false;
 
@@ -59,7 +60,7 @@ public class MiniLocalZookeeperCluster {
         if (started) {
             throw new RuntimeException("Mini Zookeeper Cluster has started");
         }
-        File baseDir = this.getBaseDir(config);
+        this.baseDir = this.getBaseDir(config);
         int clientPort = this.selectClientPort();
         ZooKeeperServer server = new ZooKeeperServer(baseDir, baseDir, 2000);
         server.setMinSessionTimeout(-1);
@@ -102,6 +103,7 @@ public class MiniLocalZookeeperCluster {
             throw new IOException("Waiting for shutdown of standalone server");
         }
         this.zkServer.getZKDatabase().clear();
+        this.baseDir.delete();
         if (started) {
             started = false;
             LOG.info("Shutdown MiniZK cluster with all ZK servers");

@@ -78,7 +78,7 @@ public class RestServerRegister {
 
     public void listen() throws Exception {
         String restNode = this.kylinConfig.getRestServersZookeeperNode();
-        LOG.info("Rest server registry client is listening this path:{}", restNode);
+        LOG.info("Rest server registry client is listening this node:{}", restNode);
         ZKUtil.initPstPathWithParents(this.curatorClient, restNode);
         this.servers = this.listServers(this.curatorClient, restNode, this.serverNodeWatcher);
     }
