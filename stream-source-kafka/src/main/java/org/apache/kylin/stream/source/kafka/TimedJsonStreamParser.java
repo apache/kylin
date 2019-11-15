@@ -142,7 +142,7 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
                         if (pathToValue != null) {
                             result.add(processMultiLevelJson(pathToValue, root));
                         } else {
-                            result.add(StringUtils.EMPTY);
+                            result.add(null);
                         }
                     } else {
                         result.add(value.toString());
