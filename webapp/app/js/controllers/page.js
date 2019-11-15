@@ -31,6 +31,29 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
   $rootScope.userAction = {
     'islogout': false
   }
+
+  $scope.showHelpInfo = function (helpName) {
+    if (helpName === 'aboutKylin') {
+      $scope.showAboutKylinDialog()
+    }
+  }
+  var aboutKylinCtr = function ($scope, AdminService, $modalInstance) {
+    $scope.cancel = function () {
+      $modalInstance.dismiss('cancel');
+    }
+    AdminService.getVersionInfo({}, function(versionInfo){
+      $scope.versionInfo = versionInfo || {}
+    })
+  }
+  $scope.showAboutKylinDialog = function () {
+    $modal.open({
+      templateUrl: 'aboutKylin.html',
+      controller: aboutKylinCtr,
+      windowClass: 'modal-about-kylin',
+      resolve: {
+      }
+    });
+  }
   $scope.kylinConfig = kylinConfig;
 
   $scope.header = {show: true};
@@ -153,6 +176,9 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
 
   // Compute data size so as to auto convert to KB/MB/GB/TB)
   $scope.dataSize = function (data) {
+    if(!data){
+      return '0 KB';
+    }
     var size;
     if (data / 1024 / 1024 / 1024 / 1024 >= 1) {
       size = (data / 1024 / 1024 / 1024 / 1024).toFixed(2) + ' TB';

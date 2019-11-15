@@ -102,28 +102,27 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty").latestCopyForWrite();
 
         cube.getDescriptor().setAutoMergeTimeRanges(new long[] { 2000, 6000 });
-        mgr.updateCube(new CubeUpdate(cube));
 
-        if (cube.getStatus() == RealizationStatusEnum.READY) {
-            assertTrue(cube.needAutoMerge());
+        mgr.updateCube(new CubeUpdate(cube).setStatus(RealizationStatusEnum.READY));
+        assertEquals(RealizationStatusEnum.READY, cube.getStatus());
+        assertTrue(cube.needAutoMerge());
 
-            // no segment at first
-            assertEquals(0, cube.getSegments().size());
+        // no segment at first
+        assertEquals(0, cube.getSegments().size());
 
-            // append first
-            CubeSegment seg1 = mgr.appendSegment(cube, new TSRange(0L, 1000L), null, null, null);
-            mgr.updateCubeSegStatus(seg1, SegmentStatusEnum.READY);
+        // append first
+        CubeSegment seg1 = mgr.appendSegment(cube, new TSRange(0L, 1000L), null, null, null);
+        mgr.updateCubeSegStatus(seg1, SegmentStatusEnum.READY);
 
-            CubeSegment seg2 = mgr.appendSegment(cube, new TSRange(1000L, 2000L), null, null, null);
-            mgr.updateCubeSegStatus(seg2, SegmentStatusEnum.READY);
+        CubeSegment seg2 = mgr.appendSegment(cube, new TSRange(1000L, 2000L), null, null, null);
+        mgr.updateCubeSegStatus(seg2, SegmentStatusEnum.READY);
 
-            cube = mgr.getCube(cube.getName());
-            assertEquals(2, cube.getSegments().size());
+        cube = mgr.getCube(cube.getName());
+        assertEquals(2, cube.getSegments().size());
 
-            SegmentRange mergedSeg = cube.autoMergeCubeSegments();
+        SegmentRange mergedSeg = cube.autoMergeCubeSegments();
 
-            assertTrue(mergedSeg != null);
-        }
+        assertTrue(mergedSeg != null);
     }
 
     @Test
@@ -265,54 +264,53 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty").latestCopyForWrite();
 
         cube.getDescriptor().setAutoMergeTimeRanges(new long[] { 2000, 6000 });
-        mgr.updateCube(new CubeUpdate(cube));
 
-        if (cube.getStatus() == RealizationStatusEnum.READY) {
-            assertTrue(cube.needAutoMerge());
+        mgr.updateCube(new CubeUpdate(cube).setStatus(RealizationStatusEnum.READY));
+        assertEquals(RealizationStatusEnum.READY, cube.getStatus());
+        assertTrue(cube.needAutoMerge());
 
-            // no segment at first
-            assertEquals(0, cube.getSegments().size());
+        // no segment at first
+        assertEquals(0, cube.getSegments().size());
 
-            // append first
-            CubeSegment seg1 = mgr.appendSegment(cube, new TSRange(0L, 1000L));
-            mgr.updateCubeSegStatus(seg1, SegmentStatusEnum.READY);
+        // append first
+        CubeSegment seg1 = mgr.appendSegment(cube, new TSRange(0L, 1000L));
+        mgr.updateCubeSegStatus(seg1, SegmentStatusEnum.READY);
 
-            CubeSegment seg3 = mgr.appendSegment(cube, new TSRange(2000L, 4000L));
-            mgr.updateCubeSegStatus(seg3, SegmentStatusEnum.READY);
+        CubeSegment seg3 = mgr.appendSegment(cube, new TSRange(2000L, 4000L));
+        mgr.updateCubeSegStatus(seg3, SegmentStatusEnum.READY);
 
-            cube = mgr.getCube(cube.getName());
-            assertEquals(2, cube.getSegments().size());
+        cube = mgr.getCube(cube.getName());
+        assertEquals(2, cube.getSegments().size());
 
-            SegmentRange mergedSeg = cube.autoMergeCubeSegments();
+        SegmentRange mergedSeg = cube.autoMergeCubeSegments();
 
-            assertTrue(mergedSeg == null);
+        assertTrue(mergedSeg == null);
 
-            // append a new seg which will be merged
+        // append a new seg which will be merged
 
-            CubeSegment seg4 = mgr.appendSegment(cube, new TSRange(4000L, 8000L));
-            mgr.updateCubeSegStatus(seg4, SegmentStatusEnum.READY);
+        CubeSegment seg4 = mgr.appendSegment(cube, new TSRange(4000L, 8000L));
+        mgr.updateCubeSegStatus(seg4, SegmentStatusEnum.READY);
 
-            cube = mgr.getCube(cube.getName());
-            assertEquals(3, cube.getSegments().size());
+        cube = mgr.getCube(cube.getName());
+        assertEquals(3, cube.getSegments().size());
 
-            mergedSeg = cube.autoMergeCubeSegments();
+        mergedSeg = cube.autoMergeCubeSegments();
 
-            assertTrue(mergedSeg != null);
-            assertTrue((Long) mergedSeg.start.v == 2000 && (Long) mergedSeg.end.v == 8000);
+        assertTrue(mergedSeg != null);
+        assertTrue((Long) mergedSeg.start.v == 2000 && (Long) mergedSeg.end.v == 8000);
 
-            // fill the gap
+        // fill the gap
 
-            CubeSegment seg2 = mgr.appendSegment(cube, new TSRange(1000L, 2000L));
-            mgr.updateCubeSegStatus(seg2, SegmentStatusEnum.READY);
+        CubeSegment seg2 = mgr.appendSegment(cube, new TSRange(1000L, 2000L));
+        mgr.updateCubeSegStatus(seg2, SegmentStatusEnum.READY);
 
-            cube = mgr.getCube(cube.getName());
-            assertEquals(4, cube.getSegments().size());
+        cube = mgr.getCube(cube.getName());
+        assertEquals(4, cube.getSegments().size());
 
-            mergedSeg = cube.autoMergeCubeSegments();
+        mergedSeg = cube.autoMergeCubeSegments();
 
-            assertTrue(mergedSeg != null);
-            assertTrue((Long) mergedSeg.start.v == 0 && (Long) mergedSeg.end.v == 8000);
-        }
+        assertTrue(mergedSeg != null);
+        assertTrue((Long) mergedSeg.start.v == 0 && (Long) mergedSeg.end.v == 8000);
     }
 
     @Test
@@ -323,74 +321,124 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         CubeDesc desc = cube.getDescriptor();
         desc.setAutoMergeTimeRanges(new long[] { 2000, 6000 });
         CubeDescManager.getInstance(getTestConfig()).updateCubeDesc(desc);
+        cube.setStatus(RealizationStatusEnum.READY);
+
+        assertEquals(RealizationStatusEnum.READY, cube.getStatus());
+        assertTrue(cube.needAutoMerge());
+
+        // no segment at first
+        assertEquals(0, cube.getSegments().size());
+
+        // append first
+        CubeSegment seg1 = mgr.appendSegment(cube, new TSRange(0L, 1000L));
+        mgr.updateCubeSegStatus(seg1, SegmentStatusEnum.READY);
+
+        CubeSegment seg3 = mgr.appendSegment(cube, new TSRange(2000L, 4000L));
+        mgr.updateCubeSegStatus(seg3, SegmentStatusEnum.READY);
 
         cube = mgr.getCube(cube.getName());
-        if (cube.getStatus() == RealizationStatusEnum.READY) {
-            assertTrue(cube.needAutoMerge());
+        assertEquals(2, cube.getSegments().size());
 
-            // no segment at first
-            assertEquals(0, cube.getSegments().size());
+        SegmentRange mergedSeg = cube.autoMergeCubeSegments();
+        assertTrue(mergedSeg == null);
 
-            // append first
-            CubeSegment seg1 = mgr.appendSegment(cube, new TSRange(0L, 1000L));
-            mgr.updateCubeSegStatus(seg1, SegmentStatusEnum.READY);
+        assertEquals(2, cube.getSegments().size());
 
-            CubeSegment seg3 = mgr.appendSegment(cube, new TSRange(2000L, 4000L));
-            mgr.updateCubeSegStatus(seg3, SegmentStatusEnum.READY);
+        // append a new seg
+        CubeSegment seg4 = mgr.appendSegment(cube, new TSRange(4000L, 8000L));
+        mgr.updateCubeSegStatus(seg4, SegmentStatusEnum.READY);
 
-            cube = mgr.getCube(cube.getName());
-            assertEquals(2, cube.getSegments().size());
+        cube = mgr.getCube(cube.getName());
+        assertEquals(3, cube.getSegments().size());
 
-            SegmentRange mergedSeg = cube.autoMergeCubeSegments();
-            assertTrue(mergedSeg == null);
+        cube.getDescriptor().setVolatileRange(10000);
 
-            assertEquals(2, cube.getSegments().size());
+        mergedSeg = cube.autoMergeCubeSegments();
+        assertTrue(mergedSeg == null);
 
-            // append a new seg
-            CubeSegment seg4 = mgr.appendSegment(cube, new TSRange(4000L, 8000L));
-            mgr.updateCubeSegStatus(seg4, SegmentStatusEnum.READY);
+        //will merge after change the volatile_range
 
-            cube = mgr.getCube(cube.getName());
-            assertEquals(3, cube.getSegments().size());
+        cube.getDescriptor().setVolatileRange(0);
 
-            cube.getDescriptor().setVolatileRange(10000);
+        mergedSeg = cube.autoMergeCubeSegments();
+        assertTrue(mergedSeg != null);
+        assertTrue((Long) mergedSeg.start.v == 2000 && (Long) mergedSeg.end.v == 8000);
 
-            mergedSeg = cube.autoMergeCubeSegments();
-            assertTrue(mergedSeg == null);
+        // fill the gap
+        CubeSegment seg2 = mgr.appendSegment(cube, new TSRange(1000L, 2000L));
+        mgr.updateCubeSegStatus(seg2, SegmentStatusEnum.READY);
 
-            //will merge after change the volatile_range
+        cube = mgr.getCube(cube.getName());
+        assertEquals(4, cube.getSegments().size());
 
-            cube.getDescriptor().setVolatileRange(0);
+        cube.getDescriptor().setVolatileRange(10000);
 
-            mergedSeg = cube.autoMergeCubeSegments();
-            assertTrue(mergedSeg != null);
-            assertTrue((Long) mergedSeg.start.v == 2000 && (Long) mergedSeg.end.v == 8000);
+        mergedSeg = cube.autoMergeCubeSegments();
+        assertTrue(mergedSeg == null);
 
-            // fill the gap
-            CubeSegment seg2 = mgr.appendSegment(cube, new TSRange(1000L, 2000L));
-            mgr.updateCubeSegStatus(seg2, SegmentStatusEnum.READY);
+        //will merge after change the volatile_range
+        cube.getDescriptor().setVolatileRange(0);
 
-            cube = mgr.getCube(cube.getName());
-            assertEquals(4, cube.getSegments().size());
+        mergedSeg = cube.autoMergeCubeSegments();
+        assertTrue(mergedSeg != null);
+        assertTrue((Long) mergedSeg.start.v == 0 && (Long) mergedSeg.end.v == 8000);
 
-            cube.getDescriptor().setVolatileRange(10000);
+        cube.getDescriptor().setVolatileRange(1000);
 
-            mergedSeg = cube.autoMergeCubeSegments();
-            assertTrue(mergedSeg == null);
+        mergedSeg = cube.autoMergeCubeSegments();
+        assertTrue(mergedSeg != null);
+        assertTrue((Long) mergedSeg.start.v == 0 && (Long) mergedSeg.end.v == 2000);
+    }
 
-            //will merge after change the volatile_range
-            cube.getDescriptor().setVolatileRange(0);
+    @Test
+    public void testAutoMergeWithMaxSegmentMergeSpan() throws Exception {
+        KylinConfig kylinConfig = getTestConfig();
+        kylinConfig.setProperty("kylin.cube.max-segment-merge.span", "4000");
+        CubeManager mgr = CubeManager.getInstance(kylinConfig);
+        CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty").latestCopyForWrite();
 
-            mergedSeg = cube.autoMergeCubeSegments();
-            assertTrue(mergedSeg != null);
-            assertTrue((Long) mergedSeg.start.v == 0 && (Long) mergedSeg.end.v == 8000);
+        cube.getDescriptor().setAutoMergeTimeRanges(new long[] { 2000 });
+        mgr.updateCube(new CubeUpdate(cube).setStatus(RealizationStatusEnum.READY));
+        assertEquals(RealizationStatusEnum.READY, cube.getStatus());
+        assertTrue(cube.needAutoMerge());
 
-            cube.getDescriptor().setVolatileRange(1000);
+        // no segment at first
+        assertEquals(0, cube.getSegments().size());
 
-            mergedSeg = cube.autoMergeCubeSegments();
-            assertTrue(mergedSeg != null);
-            assertTrue((Long) mergedSeg.start.v == 0 && (Long) mergedSeg.end.v == 2000);
-        }
+        // append first
+        CubeSegment seg1 = mgr.appendSegment(cube, new TSRange(0L, 1000L));
+        mgr.updateCubeSegStatus(seg1, SegmentStatusEnum.READY);
+
+        CubeSegment seg2 = mgr.appendSegment(cube, new TSRange(1000L, 5000L));
+        mgr.updateCubeSegStatus(seg2, SegmentStatusEnum.READY);
+
+        CubeSegment seg3 = mgr.appendSegment(cube, new TSRange(5000L, 6000L));
+        mgr.updateCubeSegStatus(seg3, SegmentStatusEnum.READY);
+
+        cube = mgr.getCube(cube.getName());
+        assertEquals(3, cube.getSegments().size());
+
+        SegmentRange mergedSeg = cube.autoMergeCubeSegments();
+
+        assertTrue(mergedSeg == null);
+
+        CubeSegment seg4 = mgr.appendSegment(cube, new TSRange(7000L, 8000L));
+        mgr.updateCubeSegStatus(seg4, SegmentStatusEnum.READY);
+
+        cube = mgr.getCube(cube.getName());
+        assertEquals(4, cube.getSegments().size());
+        mergedSeg = cube.autoMergeCubeSegments();
+        assertTrue(mergedSeg == null);
+
+        CubeSegment seg5 = mgr.appendSegment(cube, new TSRange(6000L, 7000L));
+        mgr.updateCubeSegStatus(seg5, SegmentStatusEnum.READY);
+
+        cube = mgr.getCube(cube.getName());
+        assertEquals(5, cube.getSegments().size());
+
+        mergedSeg = cube.autoMergeCubeSegments();
+        assertTrue(mergedSeg != null);
+        assertTrue((Long) mergedSeg.start.v == 5000 && (Long) mergedSeg.end.v == 7000);
     }
 
     @Test

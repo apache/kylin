@@ -286,8 +286,7 @@ public class ModelService extends BasicService {
 
         StringBuilder checkRet = new StringBuilder();
         if (cubes != null && cubes.size() != 0 && !historyModels.isEmpty()) {
-            dataModelDesc.init(getConfig(), getTableManager().getAllTablesMap(project),
-                    getDataModelManager().getModels(project), false);
+            dataModelDesc.init(getConfig(), getTableManager().getAllTablesMap(project));
 
             List<String> curModelDims = getModelCols(dataModelDesc);
             List<String> curModelMeasures = getModelMeasures(dataModelDesc);
