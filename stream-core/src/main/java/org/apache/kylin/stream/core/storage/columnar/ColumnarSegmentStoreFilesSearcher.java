@@ -65,7 +65,7 @@ public class ColumnarSegmentStoreFilesSearcher implements IStreamingGTSearcher {
             FragmentMetaInfo fragmentMetaInfo = fragmentData.getFragmentMetaInfo();
             StreamingDataQueryPlanner queryPlanner = searchContext.getQueryPlanner();
             if (fragmentMetaInfo.hasValidEventTimeRange()
-                    && queryPlanner.canSkip(fragmentMetaInfo.getMinEventTime(), fragmentMetaInfo.getMaxEventTime())) {
+                    && queryPlanner.canSkip(fragmentMetaInfo.getMinEventTime(), fragmentMetaInfo.getMaxEventTime(), true)) {
                 continue;
             }
             queryProfile.incScanFile(fragmentData.getSize());
