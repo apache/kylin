@@ -45,10 +45,14 @@ public class StreamingDataQueryPlanner {
     }
 
     public boolean canSkip(long timeStart, long timeEnd) {
+        return canSkip(timeStart, timeEnd, false);
+    }
+
+    public boolean canSkip(long timeStart, long timeEnd, boolean endInclude) {
         if (flatFilter == null) {
             return false;
         }
-        CompareFilterTimeRangeChecker timeRangeChecker = new CompareFilterTimeRangeChecker(timeStart, timeEnd);
+        CompareFilterTimeRangeChecker timeRangeChecker = new CompareFilterTimeRangeChecker(timeStart, timeEnd, endInclude);
         for (TupleFilter andFilter : flatFilter.getChildren()) {
             if (andFilter.getOperator() != FilterOperatorEnum.AND) {
                 throw new IllegalStateException("Filter should be AND instead of " + andFilter);

@@ -432,7 +432,12 @@ public class FragmentSearchResult implements IStreamingSearchResult {
 
             public boolean aggregate(RawRecord r) {
                 if (rawDimValues == null) {
-                    rawDimValues = r.getDimensions();
+                    byte[][] tmpDimValues = r.getDimensions();
+                    rawDimValues = new byte[tmpDimValues.length][];
+                    for (int i = 0; i < tmpDimValues.length; i++) {
+                        rawDimValues[i] = new byte[tmpDimValues[i].length];
+                        System.arraycopy(tmpDimValues[i], 0, rawDimValues[i], 0, tmpDimValues[i].length);
+                    }
                 }
                 byte[][] metricsVals = r.getMetrics();
                 for (int i = 0; i < aggrs.length; i++) {
