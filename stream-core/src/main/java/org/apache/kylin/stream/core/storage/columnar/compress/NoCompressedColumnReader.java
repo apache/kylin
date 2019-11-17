@@ -26,7 +26,6 @@ import org.apache.kylin.stream.core.storage.columnar.ColumnDataReader;
 
 public class NoCompressedColumnReader implements ColumnDataReader {
     private ByteBuffer dataBuffer;
-    private byte[] readBuffer;
     private int colDataStartOffset;
     private int colValLength;
     private int rowCount;
@@ -36,7 +35,6 @@ public class NoCompressedColumnReader implements ColumnDataReader {
         this.colDataStartOffset = colDataStartOffset;
         this.colValLength = colValLength;
         this.rowCount = rowCount;
-        this.readBuffer = new byte[colValLength];
     }
 
     public Iterator<byte[]> iterator() {
@@ -44,6 +42,7 @@ public class NoCompressedColumnReader implements ColumnDataReader {
     }
 
     public byte[] read(int rowNum) {
+        byte[] readBuffer = new byte[colValLength];
         dataBuffer.position(colDataStartOffset + rowNum * colValLength);
         dataBuffer.get(readBuffer);
         return readBuffer;
@@ -68,6 +67,7 @@ public class NoCompressedColumnReader implements ColumnDataReader {
 
         @Override
         public byte[] next() {
+            byte[] readBuffer = new byte[colValLength];
             dataBuffer.get(readBuffer);
             readRowCount++;
             return readBuffer;
