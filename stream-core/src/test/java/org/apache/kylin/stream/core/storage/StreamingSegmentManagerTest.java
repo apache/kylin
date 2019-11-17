@@ -19,10 +19,10 @@
 package org.apache.kylin.stream.core.storage;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
@@ -49,7 +49,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.Sets;
 
 public class StreamingSegmentManagerTest extends LocalFileMetadataTestCase {
@@ -92,16 +91,7 @@ public class StreamingSegmentManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testAddEventAndScan() {
-        int eventNum = 80000;
-        long time = DateFormat.stringToMillis("2018-07-30 20:00:00");
-        Stopwatch sw = new Stopwatch();
-        sw.start();
-        StreamingDataSimulator simulator = new StreamingDataSimulator();
-        Iterator<StreamingMessage> messageIterator = simulator.simulate(eventNum, time);
-        while (messageIterator.hasNext()) {
-            StreamingMessage message = messageIterator.next();
-            streamingSegmentManager.addEvent(message);
-        }
+        genEvents(80000);
         StreamingCubeDataSearcher searcher = streamingSegmentManager.getSearcher();
 
         Set<TblColRef> dimensions = testHelper.simulateDimensions("STREAMING_V2_TABLE.SITE");
@@ -115,7 +105,6 @@ public class StreamingSegmentManagerTest extends LocalFileMetadataTestCase {
         for (Record record : segmentResults1) {
             recordNum++;
         }
-        System.out.println("record cnt is:" + recordNum);
         assertEquals(10, recordNum);
 
         dimensions = testHelper.simulateDimensions("STREAMING_V2_TABLE.ITM");
@@ -128,8 +117,7 @@ public class StreamingSegmentManagerTest extends LocalFileMetadataTestCase {
         for (Record record : segmentResults1) {
             recordNum++;
         }
-        System.out.println("record cnt is:" + recordNum);
-        assertEquals(eventNum, recordNum);
+        assertEquals(80000, recordNum);
 
         dimensions = testHelper.simulateDimensions("STREAMING_V2_TABLE.MINUTE_START", "STREAMING_V2_TABLE.SITE");
         groups = testHelper.simulateDimensions("STREAMING_V2_TABLE.SITE");
@@ -148,30 +136,91 @@ public class StreamingSegmentManagerTest extends LocalFileMetadataTestCase {
             long cnt = (Long)record.getMetrics()[0];
             assertEquals(4000, cnt);
         }
-        System.out.println("record cnt is:" + recordNum);
         assertEquals(10, recordNum);
+
+        CompareTupleFilter filter3 = testHelper.buildCompareFilter("STREAMING_V2_TABLE.MINUTE_START",
+            FilterOperatorEnum.GTE, String.valueOf(DateFormat.stringToMillis("2018-07-30 20:04:00")));
+        CompareTupleFilter filter4 = testHelper.buildCompareFilter("STREAMING_V2_TABLE.MINUTE_START",
+            FilterOperatorEnum.LTE, String.valueOf(DateFormat.stringToMillis("2018-07-30 20:06:00")));
+        filter = testHelper.buildAndFilter(filter3, filter4);
+        groups = testHelper.simulateDimensions("STREAMING_V2_TABLE.MINUTE_START");
+        dimensions = groups;
+        searchRequest = new StreamingSearchContext(cubeDesc, dimensions, groups, metrics, filter,
+            null);
+        segmentResults1 = searcher.doSearch(searchRequest, -1, true);
+        recordNum = 0;
+        for (Record record : segmentResults1) {
+            recordNum++;
+            System.out.println(record);
+        }
+        assertEquals(3, recordNum);
     }
 
-    private TupleFilter simulateAndFilter() {
-        CompareTupleFilter filter1 = testHelper.buildCompareFilter("STREAMING_V2_TABLE.DAY_START",
-                FilterOperatorEnum.EQ, "2016-10-20");
-        CompareTupleFilter filter2 = testHelper.buildCompareFilter("STREAMING_V2_TABLE.SITE", FilterOperatorEnum.EQ,
-                "site2");
-        TupleFilter andFilter = testHelper.buildAndFilter(filter1, filter2);
-        return andFilter;
+    @Test
+    public void testIndexFilter() {
+        genEvents(80000);
+        StreamingCubeDataSearcher searcher = streamingSegmentManager.getSearcher();
+        String startTimeStr = "2018-07-30 20:00:00";
+        long startTime = DateFormat.stringToMillis(startTimeStr);
+        CompareTupleFilter filter1 = testHelper.buildCompareFilter("STREAMING_V2_TABLE.MINUTE_START",
+            FilterOperatorEnum.GTE, startTimeStr);
+        CompareTupleFilter filter2 = testHelper.buildCompareFilter("STREAMING_V2_TABLE.MINUTE_START",
+            FilterOperatorEnum.LTE, "2018-07-30 20:04:00");
+        TupleFilter filter = testHelper.buildAndFilter(filter1, filter2);
+        TupleFilter filter3 = testHelper.buildCompareFilter("STREAMING_V2_TABLE.SITE",
+            FilterOperatorEnum.EQ, "SITE0");
+        filter = testHelper.buildAndFilter(filter, filter3);
+        Set<FunctionDesc> metrics = Sets.newHashSet(testHelper.simulateCountMetric());
+        Set<TblColRef> dimensions = testHelper.simulateDimensions("STREAMING_V2_TABLE.MINUTE_START", "STREAMING_V2_TABLE.SITE");
+        Set<TblColRef> groups = testHelper.simulateDimensions("STREAMING_V2_TABLE.MINUTE_START");
+        StreamingSearchContext searchRequest = new StreamingSearchContext(cubeDesc, dimensions, groups, metrics, filter,
+            null);
+        IStreamingSearchResult segmentResults1 = searcher.doSearch(searchRequest, -1, true);
+        int recordNum = 0;
+        for (Record record : segmentResults1) {
+            long cnt = (Long)record.getMetrics()[0];
+            assertEquals(String.valueOf(startTime + 60 * 1000 * recordNum), record.getDimensions()[0]);
+            assertEquals(1000, cnt);
+            recordNum++;
+            System.out.println(record);
+        }
+        assertEquals(5, recordNum);
     }
 
-    private TupleFilter simulateOrFilter(List<TblColRef> columns) {
-        CompareTupleFilter filter1 = testHelper.buildCompareFilter("STREAMING_V2_TABLE.DAY_START",
-                FilterOperatorEnum.EQ, "2016-10-20");
-        CompareTupleFilter filter2 = testHelper.buildCompareFilter("STREAMING_V2_TABLE.SITE", FilterOperatorEnum.EQ,
-                "site2");
-        TupleFilter orFilter = testHelper.buildOrFilter(filter1, filter2);
-        return orFilter;
+    @Test
+    public void testOneValueAggregation() {
+        genEvents(80000);
+        StreamingCubeDataSearcher searcher = streamingSegmentManager.getSearcher();
+        String startTimeStr = "2018-07-30 20:00:00";
+        long startTime = DateFormat.stringToMillis(startTimeStr);
+        String endTimeStr = "2018-07-30 20:04:00";
+        long endTime = DateFormat.stringToMillis(endTimeStr);
+        CompareTupleFilter filter1 = testHelper.buildCompareFilter("STREAMING_V2_TABLE.MINUTE_START",
+            FilterOperatorEnum.GTE, startTimeStr);
+        CompareTupleFilter filter2 = testHelper.buildCompareFilter("STREAMING_V2_TABLE.MINUTE_START",
+            FilterOperatorEnum.LT, endTimeStr);
+        TupleFilter filter = testHelper.buildAndFilter(filter1, filter2);
+        Set<FunctionDesc> metrics = Sets.newHashSet(testHelper.simulateCountMetric());
+        Set<TblColRef> dimensions = testHelper.simulateDimensions("STREAMING_V2_TABLE.MINUTE_START");
+        Set<TblColRef> groups = Sets.newHashSet();
+        StreamingSearchContext searchRequest = new StreamingSearchContext(cubeDesc, dimensions, groups, metrics, filter,
+            null);
+        IStreamingSearchResult segmentResults1 = searcher.doSearch(searchRequest, -1, true);
+        for (Record record : segmentResults1) {
+            long minStart = Long.valueOf(record.getDimensions()[0]);
+            assertTrue(startTime <= minStart && minStart < endTime);
+            System.out.println(record);
+        }
     }
 
-    private Set<FunctionDesc> simulateMetrics() {
-        return Sets.newHashSet(testHelper.simulateMetric("STREAMING_V2_TABLE.GMV", "SUM", "decimal(19,6)"));
+    private void genEvents(int numEvents) {
+        long time = DateFormat.stringToMillis("2018-07-30 20:00:00");
+        StreamingDataSimulator simulator = new StreamingDataSimulator();
+        Iterator<StreamingMessage> messageIterator = simulator.simulate(numEvents, time);
+        while (messageIterator.hasNext()) {
+            StreamingMessage message = messageIterator.next();
+            streamingSegmentManager.addEvent(message);
+        }
     }
 
     private void cleanupSegments() {
