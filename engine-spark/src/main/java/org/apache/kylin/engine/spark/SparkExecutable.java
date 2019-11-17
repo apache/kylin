@@ -246,7 +246,8 @@ public class SparkExecutable extends AbstractExecutable {
             if (StringUtils.isEmpty(jars)) {
                 jars = jobJar;
             }
-            if (cube != null) {
+
+            if (cube != null && !isCreateFlatTable()) {
                 setAlgorithmLayer();
                 String segmentID = this.getParam(SparkCubingByLayer.OPTION_SEGMENT_ID.getOpt());
                 CubeSegment segment = cube.getSegmentById(segmentID);
@@ -534,5 +535,9 @@ public class SparkExecutable extends AbstractExecutable {
         if (saveAsNames.length > i && StringUtils.isBlank(saveAsNames[i]) == false) {
             info.put(saveAsNames[i].trim(), counter);
         }
+    }
+
+    private boolean isCreateFlatTable() {
+        return ExecutableConstants.STEP_NAME_CREATE_FLAT_TABLE_WITH_SPARK.equals(getName());
     }
 }
