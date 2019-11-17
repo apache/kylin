@@ -78,12 +78,11 @@ import io.kyligence.kap.engine.spark.job.UdfManager;
 import io.kyligence.kap.engine.spark.utils.JobMetricsUtils;
 import io.kyligence.kap.engine.spark.utils.SparkConfHelper;
 import io.kyligence.kap.metadata.cube.model.NBatchConstants;
-import io.kyligence.kap.spark.common.CredentialUtils;
 import lombok.val;
 import scala.runtime.AbstractFunction1;
 import scala.runtime.BoxedUnit;
 
-public abstract class SparkApplication implements Application, IKeep {
+public abstract class SparkApplication {
     private static final Logger logger = LoggerFactory.getLogger(SparkApplication.class);
     private Map<String, String> params = Maps.newHashMap();
     protected volatile KylinConfig config;
@@ -235,7 +234,6 @@ public abstract class SparkApplication implements Application, IKeep {
             }
 
             // for wrapping credential
-            CredentialUtils.wrap(sparkConf, project);
 
             TimeZoneUtils.setDefaultTimeZone(config);
 

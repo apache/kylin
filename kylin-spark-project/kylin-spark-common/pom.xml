@@ -25,33 +25,21 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <name>KAP - Spark Common</name>
+    <name>KYLIN - Spark Common</name>
     <url>http://kyligence.io</url>
+    <packaging>jar</packaging>
     <description>Kyligence Job Engine - SPARK</description>
-
-    <artifactId>kap-spark-common</artifactId>
-
-
+    <artifactId>kylin-spark-common</artifactId>
+    <version>3.0.0-SNAPSHOT</version>
     <parent>
-        <artifactId>kap-spark-project</artifactId>
-        <groupId>io.kyligence.ke</groupId>
-        <version>4.0.0-SNAPSHOT</version>
+        <artifactId>kylin-spark-project</artifactId>
+        <groupId>org.apache.kylin</groupId>
+        <version>3.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <dependencies>
-        <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-core-common</artifactId>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-core-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-core-job</artifactId>
-        </dependency>
+      
     </dependencies>
     
 

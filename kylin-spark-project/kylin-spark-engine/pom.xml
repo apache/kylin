@@ -2,16 +2,16 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>kap-engine-spark</artifactId>
+    <artifactId>kylin-spark-engine</artifactId>
     <packaging>jar</packaging>
     <name>KAP - SPARK Engine</name>
     <url>http://kyligence.io</url>
     <description>Kyligence Job Engine - SPARK</description>
 
     <parent>
-        <groupId>io.kyligence.ke</groupId>
-        <artifactId>kap-spark-project</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-spark-project</artifactId>
+        <version>3.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -20,33 +20,33 @@
     </properties>
 
     <dependencies>
+<!--        <dependency>-->
+<!--            <groupId>io.kyligence.ke</groupId>-->
+<!--            <artifactId>kap-core-job</artifactId>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>io.kyligence.ke</groupId>-->
+<!--            <artifactId>kap-core-storage</artifactId>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>io.kyligence.ke</groupId>-->
+<!--            <artifactId>kap-sparder</artifactId>-->
+<!--        </dependency>-->
         <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-core-job</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-core-storage</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-sparder</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-spark-common</artifactId>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>kylin-spark-common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <!-- Env & Test -->
+<!--        <dependency>-->
+<!--            <groupId>io.kyligence.ke</groupId>-->
+<!--            <artifactId>kap-core-common</artifactId>-->
+<!--            <type>test-jar</type>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
         <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-core-common</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-spark-common</artifactId>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>kylin-spark-common</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
         </dependency>
@@ -81,19 +81,19 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-source-hive</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.kyligence.ke</groupId>-->
+<!--            <artifactId>kap-source-hive</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.hive.hcatalog</groupId>
             <artifactId>hive-hcatalog-core</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>io.kyligence.ke</groupId>
-            <artifactId>kap-query</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.kyligence.ke</groupId>-->
+<!--            <artifactId>kap-query</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-core</artifactId>

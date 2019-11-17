@@ -80,14 +80,16 @@
     <kafka.version>1.0.0</kafka.version>
 
     <!-- Spark versions -->
-    <spark.version>2.3.2</spark.version>
+    <spark.version>2.4.0</spark.version>
+    <janino.version>3.0.9</janino.version>
+
     <kryo.version>4.0.0</kryo.version>
 
     <!-- mysql versions -->
     <mysql-connector.version>5.1.8</mysql-connector.version>
 
     <!-- Scala versions -->
-    <scala.version>2.11.0</scala.version>
+    <scala.version>2.11.8</scala.version>
 
     <reflections.version>0.9.10</reflections.version>
 
@@ -719,6 +721,16 @@
 
       <!-- Spark dependency -->
       <dependency>
+        <groupId>org.codehaus.janino</groupId>
+        <artifactId>janino</artifactId>
+        <version>${janino.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.janino</groupId>
+        <artifactId>commons-compiler</artifactId>
+        <version>${janino.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.spark</groupId>
         <artifactId>spark-core_2.11</artifactId>
         <version>${spark.version}</version>
@@ -1334,6 +1346,7 @@
     <module>stream-coordinator</module>
     <module>stream-core</module>
     <module>stream-source-kafka</module>
+    <module>kylin-spark-project</module>
   </modules>
 
   <reporting>
