@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.Locale;
 import java.util.function.Function;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DateFormat;
@@ -321,9 +322,8 @@ public class PartitionDesc implements Serializable {
             long endExclusive = (Long) segRange.end.v;
 
             TblColRef partitionColumn = partDesc.getPartitionDateColumnRef();
-            if (partitionColumn != null) {
-                partitionColumn.setQuotedFunc(func);
-            }
+            Preconditions.checkNotNull(partitionColumn);
+            partitionColumn.setQuotedFunc(func);
             String tableAlias = partitionColumn.getTableAlias();
 
             String concatField = String.format(Locale.ROOT, "CONCAT(%s.YEAR,'-',%s.MONTH,'-',%s.DAY)", tableAlias,
