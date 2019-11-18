@@ -432,7 +432,6 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
 
             sqlDigest.aggregations = Lists.newArrayList(topnFunc);
-            sqlDigest.groupbyColumns.removeAll(topnLiteralCol);
             sqlDigest.metricColumns.addAll(topnLiteralCol);
             break;
         }
