@@ -52,20 +52,14 @@ public class AssignmentsCache {
     }
 
     public List<ReplicaSet> getReplicaSetsByCube(String cubeName) {
-        if (cubeAssignmentCache.get(cubeName) == null) {
-            synchronized (cubeAssignmentCache) {
-                if (cubeAssignmentCache.get(cubeName) == null) {
-                    List<ReplicaSet> result = Lists.newArrayList();
-
-                    CubeAssignment assignment = metadataStore.getAssignmentsByCube(cubeName);
-                    for (Integer replicaSetID : assignment.getReplicaSetIDs()) {
-                        result.add(metadataStore.getReplicaSet(replicaSetID));
-                    }
-                    cubeAssignmentCache.put(cubeName, result);
-                }
+        return cubeAssignmentCache.computeIfAbsent(cubeName, cube -> {
+            List<ReplicaSet> result = Lists.newArrayList();
+            CubeAssignment assignment = metadataStore.getAssignmentsByCube(cube);
+            for (Integer replicaSetID : assignment.getReplicaSetIDs()) {
+                result.add(metadataStore.getReplicaSet(replicaSetID));
             }
-        }
-        return cubeAssignmentCache.get(cubeName);
+            return result;
+        });
     }
 
     public void clearCubeCache(String cubeName) {
