@@ -552,7 +552,13 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("id", getId()).add("name", getName()).add("state", getStatus())
+        ExecutableState state = null;
+        try {
+            state = getStatus();
+        } catch (RuntimeException e) {
+            logger.error("failed to get job status:" + getId(), e);
+        }
+        return Objects.toStringHelper(this).add("id", getId()).add("name", getName()).add("state", state)
                 .toString();
     }
 }
