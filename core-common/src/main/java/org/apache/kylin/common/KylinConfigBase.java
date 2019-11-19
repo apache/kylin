@@ -1297,6 +1297,7 @@ public abstract class KylinConfigBase implements Serializable {
         r.put(0, "org.apache.kylin.engine.mr.MRBatchCubingEngine"); //IEngineAware.ID_MR_V1
         r.put(2, "org.apache.kylin.engine.mr.MRBatchCubingEngine2"); //IEngineAware.ID_MR_V2
         r.put(4, "org.apache.kylin.engine.spark.SparkBatchCubingEngine2"); //IEngineAware.ID_SPARK
+        r.put(6, "org.apache.kylin.engine.spark2.SparkBatchCubingEngineParquet"); //IEngineAware.ID_SPARK_PARQUET
         r.putAll(convertKeyToInteger(getPropertiesByPrefix("kylin.engine.provider.")));
         return r;
     }
