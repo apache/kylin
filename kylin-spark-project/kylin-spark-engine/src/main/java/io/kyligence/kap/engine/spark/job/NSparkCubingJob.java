@@ -31,6 +31,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.engine.spark.job.execution.DefaultChainedExecutableOnModel;
+import org.apache.kylin.engine.spark.metadata.LayoutEntity;
+import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.engine.spark.metadata.cube.model.NBatchConstants;
+import org.apache.kylin.engine.spark.metadata.cube.model.NDataflow;
+import org.apache.kylin.engine.spark.metadata.model.SegmentRange;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutableOnModel;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
@@ -54,29 +61,28 @@ public class NSparkCubingJob extends DefaultChainedExecutableOnModel {
     private static final Logger logger = LoggerFactory.getLogger(NSparkCubingJob.class);
 
     // for test use only
-    public static NSparkCubingJob create(Set<NDataSegment> segments, Set<LayoutEntity> layouts, String submitter) {
-        return create(segments, layouts, submitter, JobTypeEnum.INDEX_BUILD, UUID.randomUUID().toString());
+    public static NSparkCubingJob create(NDataflow df, Set<SegmentRange> segments, Set<LayoutEntity> layouts, String submitter) {
+        return create(df, segments, layouts, submitter, JobTypeEnum.INDEX_BUILD, UUID.randomUUID().toString());
     }
 
-    public static NSparkCubingJob create(Set<NDataSegment> segments, Set<LayoutEntity> layouts, String submitter,
+    public static NSparkCubingJob create(NDataflow df, Set<SegmentRange> segments, Set<LayoutEntity> layouts, String submitter,
             JobTypeEnum jobType, String jobId) {
         Preconditions.checkArgument(!segments.isEmpty());
         Preconditions.checkArgument(!layouts.isEmpty());
         Preconditions.checkArgument(submitter != null);
-        NDataflow df = segments.iterator().next().getDataflow();
         NSparkCubingJob job = new NSparkCubingJob();
         long startTime = Long.MAX_VALUE - 1;
         long endTime = 0L;
-        for (NDataSegment segment : segments) {
-            startTime = startTime < Long.parseLong(segment.getSegRange().getStart().toString()) ? startTime
-                    : Long.parseLong(segment.getSegRange().getStart().toString());
-            endTime = endTime > Long.parseLong(segment.getSegRange().getStart().toString()) ? endTime
-                    : Long.parseLong(segment.getSegRange().getEnd().toString());
+        for (SegmentRange segment : segments) {
+            startTime = startTime < Long.parseLong(segment.getStart().toString()) ? startTime
+                    : Long.parseLong(segment.getStart().toString());
+            endTime = endTime > Long.parseLong(segment.getStart().toString()) ? endTime
+                    : Long.parseLong(segment.getEnd().toString());
         }
         job.setId(jobId);
         job.setName(jobType.toString());
         job.setJobType(jobType);
-        job.setTargetSubject(segments.iterator().next().getModel().getUuid());
+        job.setTargetSubject(df.getId());
         job.setTargetSegments(segments.stream().map(x -> String.valueOf(x.getId())).collect(Collectors.toList()));
         job.setProject(df.getProject());
         job.setSubmitter(submitter);

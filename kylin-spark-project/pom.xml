@@ -42,6 +42,7 @@
         <module>kylin-spark-common</module>
         <module>kylin-spark-engine</module>
         <module>kylin-spark-metadata</module>
+        <module>kylin-spark-job</module>
     </modules>
 
     <dependencies>
