@@ -158,6 +158,10 @@ public class KylinConfig extends KylinConfigBase {
         }
     }
 
+    public static void setEnvInstance(KylinConfig config) {
+        SYS_ENV_INSTANCE = config;
+    }
+
     // Only used in test cases!!!
     public static void destroyInstance() {
         synchronized (KylinConfig.class) {
