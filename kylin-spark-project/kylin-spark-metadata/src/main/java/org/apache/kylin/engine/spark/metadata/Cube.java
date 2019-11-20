@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,40 +16,22 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.engine.spark.metadata.cube.model;
+package org.apache.kylin.engine.spark.metadata;
 
-import org.apache.kylin.engine.spark.metadata.LayoutEntity;
-import org.apache.kylin.metadata.model.TableRef;
-import org.apche.kylin.engine.spark.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.KylinConfig;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-public class NDataflow extends RootPersistentEntity {
-
-    public static final String DATAFLOW_RESOURCE_ROOT = "/dataflow";
-    public static final String FILE_SURFIX = ".json";
-
+public class Cube {
+    private KylinConfig config;
     private String project;
-
-    private List<LayoutEntity> layoutEntities;
-
-    public String getProject() {
-        return project;
-    }
-
-    public void setProject(String project) {
-        this.project = project;
-    }
-
-    public List<LayoutEntity> getLayoutEntities() {
-        return layoutEntities;
-    }
-
-    public void setLayoutEntities(List<LayoutEntity> layoutEntities) {
-        this.layoutEntities = layoutEntities;
-    }
+    private ModelDesc modelDesc;
+    private List<IndexEntity> IndexEntities = new ArrayList<>();
+    private List<DimensionDesc> dimensions = new ArrayList<>();
+    private List<MeasureDesc> measures = new ArrayList<>();
 
     //used to dump resource before spark job submit
     public String getResourcePath() {
@@ -80,4 +62,52 @@ public class NDataflow extends RootPersistentEntity {
 
         return r;
     }
+
+    public KylinConfig getConfig() {
+        return config;
+    }
+
+    public void setConfig(KylinConfig config) {
+        this.config = config;
+    }
+
+    public ModelDesc getModelDesc() {
+        return modelDesc;
+    }
+
+    public void setModelDesc(ModelDesc modelDesc) {
+        this.modelDesc = modelDesc;
+    }
+
+    public List<IndexEntity> getIndexEntities() {
+        return IndexEntities;
+    }
+
+    public void setIndexEntities(List<IndexEntity> indexEntities) {
+        IndexEntities = indexEntities;
+    }
+
+    public List<DimensionDesc> getDimensions() {
+        return dimensions;
+    }
+
+    public void setDimensions(List<DimensionDesc> dimensions) {
+        this.dimensions = dimensions;
+    }
+
+    public List<MeasureDesc> getMeasures() {
+        return measures;
+    }
+
+    public void setMeasures(List<MeasureDesc> measures) {
+        this.measures = measures;
+    }
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
+    }
+
 }

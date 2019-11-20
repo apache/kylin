@@ -18,27 +18,20 @@
 
 package org.apache.kylin.engine.spark.metadata;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.TableRef;
 
-import java.util.List;
+public class DimensionDesc {
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("table")
+    private String table;
+    @JsonProperty("column")
+    private String column;
+    @JsonProperty("derived")
+    private String[] derived;
 
-public class IndexEntity {
-    @JsonProperty("id")
-    private long id;
-
-    @JsonProperty("dimensions")
-    private List<Integer> dimensions = Lists.newArrayList();
-
-    @JsonProperty("measures")
-    private List<Integer> measures = Lists.newArrayList();
-
-    @JsonProperty("layouts")
-    private List<LayoutEntity> layouts = Lists.newArrayList();
-git in
-
+    private TableRef tableRef;
+    private JoinDesc join;
 }
