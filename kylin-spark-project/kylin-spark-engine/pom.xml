@@ -17,7 +17,6 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <awaitility.version>3.0.0</awaitility.version>
     </properties>
 
     <dependencies>
@@ -33,16 +32,11 @@
 <!--            <groupId>io.kyligence.ke</groupId>-->
 <!--            <artifactId>kap-sparder</artifactId>-->
 <!--        </dependency>-->
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-spark-metadata</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-spark-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.spark</groupId>-->
+<!--            <artifactId>kylin-spark-common</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
         <!-- Env & Test -->
 <!--        <dependency>-->
 <!--            <groupId>io.kyligence.ke</groupId>-->
@@ -51,7 +45,7 @@
 <!--            <scope>test</scope>-->
 <!--        </dependency>-->
         <dependency>
-            <groupId>org.apache.kylin</groupId>
+            <groupId>org.apache.spark</groupId>
             <artifactId>kylin-spark-common</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
