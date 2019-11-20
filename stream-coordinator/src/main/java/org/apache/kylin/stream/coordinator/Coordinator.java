@@ -1193,6 +1193,8 @@ public class Coordinator implements CoordinatorClient {
                         state.setJobId(cubingJob.getId());
                         streamMetadataStore.updateSegmentBuildState(cubeName, segmentState.getSegmentName(), state);
                         segmentState.setState(state);
+                        logger.info("segment:{} is discard", segmentState.getSegmentName());
+                        continue;
                     } else {
                         logger.info("job:{} is in running, job state: {}", jobId, jobState);
                         continue;
