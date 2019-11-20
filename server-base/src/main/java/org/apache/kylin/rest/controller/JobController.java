@@ -190,6 +190,24 @@ public class JobController extends BasicController {
     }
 
     /**
+     * resubmit streaming segment
+     *
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{jobId}/resubmit", method = { RequestMethod.PUT }, produces = {
+            "application/json" })
+    @ResponseBody
+    public void resubmitJob(@PathVariable String jobId) throws IOException {
+        try {
+            final JobInstance jobInstance = jobService.getJobInstance(jobId);
+            jobService.resubmitJob(jobInstance);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
      * Cancel/discard a job
      * 
      * @return
