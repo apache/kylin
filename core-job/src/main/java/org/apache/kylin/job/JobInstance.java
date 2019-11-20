@@ -58,6 +58,8 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
     private String displayCubeName;
     @JsonProperty("related_segment")
     private String relatedSegment;
+    @JsonProperty("related_segment_name")
+    private String relatedSegmentName;
     @JsonProperty("exec_start_time")
     private long execStartTime;
     @JsonProperty("exec_end_time")
@@ -208,6 +210,14 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
     public void setRelatedSegment(String relatedSegment) {
         this.relatedSegment = relatedSegment;
+    }
+
+    public String getRelatedSegmentName() {
+        return relatedSegmentName;
+    }
+
+    public void setRelatedSegmentName(String relatedSegmentName) {
+        this.relatedSegmentName = relatedSegmentName;
     }
 
     /**
