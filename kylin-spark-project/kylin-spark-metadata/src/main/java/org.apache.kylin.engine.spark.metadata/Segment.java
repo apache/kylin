@@ -6,25 +6,35 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
-package org.apache.kylin.metadata.model;
+package org.apache.kylin.engine.spark.metadata;
 
-public interface IStorageAware {
+public class Segment {
+    private long start;
+    private long end;
 
-    public static final int ID_HBASE = 0;
-    public static final int ID_HYBRID = 1;
-    public static final int ID_SHARDED_HBASE = 2;
-    public static final int ID_REALTIME_AND_HBASE = 3;
-    public static final int ID_PARQUET = 4;
+    public long getStart() {
+        return start;
+    }
 
-    int getStorageType();
+    public void setStart(long start) {
+        this.start = start;
+    }
+
+    public long getEnd() {
+        return end;
+    }
+
+    public void setEnd(long end) {
+        this.end = end;
+    }
 }
