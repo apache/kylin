@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.CsvColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -245,6 +246,12 @@ public class TableController extends BasicController {
     public List<TableSnapshotResponse> getTableSnapshots(@PathVariable final String project,
             @PathVariable final String tableName) throws IOException {
         return tableService.getLookupTableSnapshots(project, tableName);
+    }
+
+    @RequestMapping(value = "/supported_datetime_patterns", method = { RequestMethod.GET })
+    @ResponseBody
+    public String[] getSupportedDatetimePatterns() {
+        return DateFormat.SUPPORTED_DATETIME_PATTERN;
     }
 
     @RequestMapping(value = "/fetchCsvData", method = { RequestMethod.POST })
