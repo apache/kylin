@@ -1,0 +1,31 @@
+{
+  "uuid" : "217470d0-71f1-4de2-ad2d-88ed4d0b496d",
+  "last_modified" : 1568865455592,
+  "create_time" : 1568865455592,
+  "version" : "4.0.0.0",
+  "name" : "smart_reuse_existed_models",
+  "owner" : "ADMIN",
+  "status" : "ENABLED",
+  "create_time_utc" : 1568865455592,
+  "description" : "",
+  "ext_filters" : [ ],
+  "maintain_model_type" : "AUTO_MAINTAIN",
+  "override_kylin_properties" : {
+    "kylin.source.default" : "9"
+  },
+  "push_down_range_limited" : true,
+  "segment_config" : {
+    "auto_merge_enabled" : true,
+    "auto_merge_time_ranges" : [ "WEEK", "MONTH", "QUARTER", "YEAR" ],
+    "volatile_range" : {
+      "volatile_range_number" : 0,
+      "volatile_range_enabled" : false,
+      "volatile_range_type" : "DAY"
+    },
+    "retention_range" : {
+      "retention_range_number" : 1,
+      "retention_range_enabled" : false,
+      "retention_range_type" : "MONTH"
+    }
+  }
+}
