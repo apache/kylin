@@ -18,8 +18,8 @@
 
 package org.apache.kylin.engine.mr;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.common.BatchConstants;
@@ -30,7 +30,8 @@ import org.apache.kylin.job.engine.JobEngineConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 public class BatchMergeJobBuilder2 extends JobBuilderSupport {
     private static final Logger logger = LoggerFactory.getLogger(BatchMergeJobBuilder2.class);
@@ -78,7 +79,7 @@ public class BatchMergeJobBuilder2 extends JobBuilderSupport {
         MapReduceExecutable mergeDictionaryStep = new MapReduceExecutable();
         mergeDictionaryStep.setName(ExecutableConstants.STEP_NAME_MERGE_DICTIONARY);
         StringBuilder cmd = new StringBuilder();
-        appendMapReduceParameters(cmd, JobEngineConfig.CUBE_MERGE_JOB_CONF_SUFFIX);
+        appendMapReduceParameters(cmd, JobEngineConfig.IN_MEM_JOB_CONF_SUFFIX);
 
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getCubeInstance().getName());
         appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
