@@ -18,5 +18,56 @@
 
 package org.apache.kylin.engine.spark.metadata.cube.model;
 
-public class MeasureDesc {
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.kylin.metadata.model.FunctionDesc;
+
+import java.io.Serializable;
+import java.util.Objects;
+
+public class MeasureDesc implements Serializable {
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("function")
+    private FunctionDesc function;
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(function);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        MeasureDesc that = (MeasureDesc) o;
+
+        if (!function.equals(that.getFunction()))
+            return false;
+
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "MeasureDesc [name=" + name + ", function=" + function + "]";
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public FunctionDesc getFunction() {
+        return function;
+    }
+
+    public void setFunction(FunctionDesc function) {
+        this.function = function;
+    }
 }

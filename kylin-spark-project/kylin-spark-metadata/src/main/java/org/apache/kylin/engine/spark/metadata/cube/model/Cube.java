@@ -20,6 +20,7 @@ package org.apache.kylin.engine.spark.metadata.cube.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.engine.spark.metadata.ModelDesc;
 
 import java.util.ArrayList;
@@ -30,16 +31,19 @@ import java.util.UUID;
 
 import static org.apache.kylin.metadata.MetadataConstants.FILE_SURFIX;
 
-public class Cube {
+public class Cube extends RootPersistentEntity {
     public static final String CUBE_RESOURCE_ROOT = "/cube";
 
-    @JsonProperty("uuid")
-    protected String uuid = UUID.randomUUID().toString();
     private KylinConfig config;
+
     private String project;
-    private ModelDesc modelDesc;
+
+    private DataModel dataModel;
+
     private List<IndexEntity> IndexEntities = new ArrayList<>();
+
     private List<DimensionDesc> dimensions = new ArrayList<>();
+
     private List<MeasureDesc> measures = new ArrayList<>();
 
     public String getUuid() {
@@ -90,14 +94,6 @@ public class Cube {
 
     public void setConfig(KylinConfig config) {
         this.config = config;
-    }
-
-    public ModelDesc getModelDesc() {
-        return modelDesc;
-    }
-
-    public void setModelDesc(ModelDesc modelDesc) {
-        this.modelDesc = modelDesc;
     }
 
     public List<IndexEntity> getIndexEntities() {
