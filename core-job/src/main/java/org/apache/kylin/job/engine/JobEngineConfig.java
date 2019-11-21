@@ -18,15 +18,15 @@
 
 package org.apache.kylin.job.engine;
 
+import java.io.File;
+import java.io.IOException;
+
+import java.util.Locale;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Locale;
 
 /**
  * @author ysong1
@@ -36,7 +36,6 @@ public class JobEngineConfig {
     public static final String HADOOP_JOB_CONF_FILENAME = "kylin_job_conf";
     public static final String DEFAULT_JOB_CONF_SUFFIX = "";
     public static final String IN_MEM_JOB_CONF_SUFFIX = "inmem";
-    public static final String CUBE_MERGE_JOB_CONF_SUFFIX = "cube_merge";
 
     private static File getJobConfig(String fileName) {
         String path = System.getProperty(KylinConfig.KYLIN_CONF);

@@ -79,7 +79,7 @@ public class BatchMergeJobBuilder2 extends JobBuilderSupport {
         MapReduceExecutable mergeDictionaryStep = new MapReduceExecutable();
         mergeDictionaryStep.setName(ExecutableConstants.STEP_NAME_MERGE_DICTIONARY);
         StringBuilder cmd = new StringBuilder();
-        appendMapReduceParameters(cmd, JobEngineConfig.CUBE_MERGE_JOB_CONF_SUFFIX);
+        appendMapReduceParameters(cmd, JobEngineConfig.IN_MEM_JOB_CONF_SUFFIX);
 
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getCubeInstance().getName());
         appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
