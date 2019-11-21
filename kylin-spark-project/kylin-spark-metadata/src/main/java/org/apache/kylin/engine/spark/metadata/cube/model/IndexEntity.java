@@ -16,14 +16,10 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.engine.spark.metadata;
+package org.apache.kylin.engine.spark.metadata.cube.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.BiMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import org.apache.kylin.metadata.model.TblColRef;
 
 import java.util.List;
 

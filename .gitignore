@@ -91,3 +91,7 @@ webapp/app/kylin-servlet.xml
 webapp/app/web.xml
 dependency-reduced-pom.xml
 webapp/package-lock.json
+
+#kylin
+src/examples/test_metadata/*
+src/spark-project/examples/test_metadata/*
