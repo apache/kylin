@@ -1050,6 +1050,8 @@ KylinApp
             template: '',
             dataTypeArr: tableConfig.dataTypes,
             TSColumnArr: [],
+            TSPatternArr: ['MS', 'S'],
+            TSParserArr: ['org.apache.kylin.stream.source.kafka.LongTimeParser', 'org.apache.kylin.stream.source.kafka.DateTimeParser'],
             TSColumnSelected: '',
             TSParser: 'org.apache.kylin.stream.source.kafka.LongTimeParser',
             TSPattern: 'MS',
@@ -1290,6 +1292,23 @@ KylinApp
               $scope.streaming.TSColumnSelected = '';
             }
           }
+        }
+      };
+
+      $scope.updateDateTimeParserOption = function(parser) {
+        if (parser === $scope.streaming.TSParserArr[0]) {
+          $scope.streaming.TSPatternArr = [];
+          $scope.streaming.TSPatternArr.push('MS');
+          $scope.streaming.TSPatternArr.push('S');
+          $scope.streaming.TSPattern = 'MS';
+        } else if (parser === $scope.streaming.TSParserArr[1]) {
+          $scope.streaming.TSPatternArr = [];
+          TableService.getSupportedDatetimePatterns({}, function (patterns) {
+            $scope.streaming.TSPatternArr = patterns;
+            $scope.streaming.TSPattern = 'yyyy-MM-dd HH:mm:ss.SSS';
+          }, function (e) {
+            return;
+          });
         }
       };
 
