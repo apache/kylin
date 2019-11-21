@@ -44,7 +44,13 @@ public class DateFormat {
             DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS, //
             DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS, //
             COMPACT_DATE_PATTERN, //
-            ISO_8601_24H_FULL_FORMAT};
+            ISO_8601_24H_FULL_FORMAT,
+            YYYY_MM_DD_HH_MM,
+            YYYY_MM_DD_HH,
+            YYYYMMDDHHMMSS,
+            YYYYMMDDHHMM,
+            YYYYMMDDHH
+    };
 
     static final private Map<String, FastDateFormat> formatMap = new ConcurrentHashMap<String, FastDateFormat>();
 
