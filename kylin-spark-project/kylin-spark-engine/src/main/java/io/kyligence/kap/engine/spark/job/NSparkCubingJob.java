@@ -33,11 +33,9 @@ import java.util.stream.Collectors;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.job.execution.DefaultChainedExecutableOnModel;
 import org.apache.kylin.engine.spark.metadata.LayoutEntity;
-import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
 import org.apache.kylin.engine.spark.metadata.cube.model.NBatchConstants;
-import org.apache.kylin.engine.spark.metadata.cube.model.NDataflow;
-import org.apache.kylin.engine.spark.metadata.model.SegmentRange;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.engine.spark.metadata.cube.model.SegmentRange;
 import org.apache.kylin.job.execution.DefaultChainedExecutableOnModel;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
@@ -49,7 +47,7 @@ import org.spark_project.guava.base.Preconditions;
 import io.kyligence.kap.metadata.cube.model.LayoutEntity;
 import io.kyligence.kap.metadata.cube.model.NBatchConstants;
 import io.kyligence.kap.metadata.cube.model.NDataSegment;
-import io.kyligence.kap.metadata.cube.model.NDataflow;
+import io.kyligence.kap.metadata.cube.model.Cube;
 import io.kyligence.kap.metadata.cube.model.NDataflowManager;
 import io.kyligence.kap.metadata.cube.model.NDataflowUpdate;
 
@@ -61,11 +59,11 @@ public class NSparkCubingJob extends DefaultChainedExecutableOnModel {
     private static final Logger logger = LoggerFactory.getLogger(NSparkCubingJob.class);
 
     // for test use only
-    public static NSparkCubingJob create(NDataflow df, Set<SegmentRange> segments, Set<LayoutEntity> layouts, String submitter) {
+    public static NSparkCubingJob create(Cube df, Set<SegmentRange> segments, Set<LayoutEntity> layouts, String submitter) {
         return create(df, segments, layouts, submitter, JobTypeEnum.INDEX_BUILD, UUID.randomUUID().toString());
     }
 
-    public static NSparkCubingJob create(NDataflow df, Set<SegmentRange> segments, Set<LayoutEntity> layouts, String submitter,
+    public static NSparkCubingJob create(Cube df, Set<SegmentRange> segments, Set<LayoutEntity> layouts, String submitter,
             JobTypeEnum jobType, String jobId) {
         Preconditions.checkArgument(!segments.isEmpty());
         Preconditions.checkArgument(!layouts.isEmpty());
@@ -120,7 +118,7 @@ public class NSparkCubingJob extends DefaultChainedExecutableOnModel {
     @Override
     public void cancelJob() {
         NDataflowManager nDataflowManager = NDataflowManager.getInstance(getConfig(), getProject());
-        NDataflow dataflow = nDataflowManager.getDataflow(getSparkCubingStep().getDataflowId());
+        Cube dataflow = nDataflowManager.getDataflow(getSparkCubingStep().getDataflowId());
         List<NDataSegment> segments = new ArrayList<>();
         for (String id : getSparkCubingStep().getSegmentIds()) {
             NDataSegment segment = dataflow.getSegment(id);

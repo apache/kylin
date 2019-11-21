@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.engine.spark.metadata;
+package org.apache.kylin.engine.spark.metadata.cube.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.metadata.model.JoinDesc;

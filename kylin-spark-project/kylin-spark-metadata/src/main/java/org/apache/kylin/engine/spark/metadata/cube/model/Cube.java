@@ -16,16 +16,25 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.engine.spark.metadata;
+package org.apache.kylin.engine.spark.metadata.cube.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.engine.spark.metadata.ModelDesc;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+
+import static org.apache.kylin.metadata.MetadataConstants.FILE_SURFIX;
 
 public class Cube {
+    public static final String CUBE_RESOURCE_ROOT = "/cube";
+
+    @JsonProperty("uuid")
+    protected String uuid = UUID.randomUUID().toString();
     private KylinConfig config;
     private String project;
     private ModelDesc modelDesc;
@@ -33,12 +42,24 @@ public class Cube {
     private List<DimensionDesc> dimensions = new ArrayList<>();
     private List<MeasureDesc> measures = new ArrayList<>();
 
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
+
+    public String getId() {
+        return uuid;
+    }
+
     //used to dump resource before spark job submit
     public String getResourcePath() {
-        return concatResourcePath(getId(), project);
+        return concatResourcePath(getUuid(), project);
     }
     public static String concatResourcePath(String name, String project) {
-        return "/" + project + DATAFLOW_RESOURCE_ROOT + "/" + name + FILE_SURFIX;
+        return "/" + project + CUBE_RESOURCE_ROOT + "/" + name + FILE_SURFIX;
     }
 
     public Set<String> collectPrecalculationResource() {
