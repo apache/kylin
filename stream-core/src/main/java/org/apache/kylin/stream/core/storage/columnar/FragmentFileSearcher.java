@@ -55,7 +55,7 @@ import org.apache.kylin.stream.core.storage.columnar.protocol.CuboidMetaInfo;
 import org.apache.kylin.stream.core.storage.columnar.protocol.FragmentMetaInfo;
 import org.apache.kylin.stream.core.util.CompareFilterTimeRangeChecker;
 import org.apache.kylin.stream.core.util.CompareFilterTimeRangeChecker.CheckResult;
-import org.apache.kylin.stream.core.util.TimeDerivedColumnType;
+import org.apache.kylin.dimension.TimeDerivedColumnType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

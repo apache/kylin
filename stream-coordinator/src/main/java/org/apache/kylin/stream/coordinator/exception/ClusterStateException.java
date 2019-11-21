@@ -18,10 +18,13 @@
 
 package org.apache.kylin.stream.coordinator.exception;
 
+import org.apache.kylin.stream.core.exception.StreamingException;
+
 import java.util.Locale;
 
-public class ClusterStateException extends CoordinateException {
+public class ClusterStateException extends StreamingException {
 
+    @SuppressWarnings("unused")
     private final String cubeName;
     private final ClusterState clusterState;
     private final TransactionStep transactionStep;
@@ -35,6 +38,7 @@ public class ClusterStateException extends CoordinateException {
         return transactionStep;
     }
 
+    @SuppressWarnings("unused")
     public String getInconsistentPart() {
         return inconsistentPart;
     }

@@ -21,6 +21,7 @@ package org.apache.kylin.stream.coordinator.exception;
 import org.apache.kylin.stream.core.exception.StreamingException;
 
 public class NotLeadCoordinatorException extends StreamingException {
+    @SuppressWarnings("unused")
     public NotLeadCoordinatorException() {
         super();
     }
@@ -33,6 +34,7 @@ public class NotLeadCoordinatorException extends StreamingException {
         super(message, cause);
     }
 
+    @SuppressWarnings("unused")
     public NotLeadCoordinatorException(Throwable cause) {
         super(cause);
     }

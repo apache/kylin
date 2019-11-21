@@ -33,7 +33,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.framework.CuratorFramework;
@@ -60,6 +59,7 @@ import org.apache.kylin.stream.coordinator.StreamMetadataStoreFactory;
 import org.apache.kylin.stream.coordinator.StreamingUtils;
 import org.apache.kylin.stream.coordinator.client.CoordinatorClient;
 import org.apache.kylin.stream.coordinator.client.HttpCoordinatorClient;
+import org.apache.kylin.stream.coordinator.coordinate.annotations.NotAtomicIdempotent;
 import org.apache.kylin.stream.core.consumer.ConsumerStartProtocol;
 import org.apache.kylin.stream.core.consumer.EndPositionStopCondition;
 import org.apache.kylin.stream.core.consumer.IConsumerProvider;
@@ -203,6 +203,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
         }
     }
 
+    @NotAtomicIdempotent
     private void sendSegmentsToFullBuild(String cubeName, StreamingSegmentManager segmentManager,
             Collection<StreamingCubeSegment> segments) throws Exception {
         List<Future<?>> futureList = Lists.newArrayList();
@@ -219,7 +220,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
         int i = 0;
         for (StreamingCubeSegment segment : segments) {
             futureList.get(i).get();
-            logger.info("save remote store state to metadata store.");
+            logger.info("Save remote store state to metadata store.");
             streamMetadataStore.addCompleteReplicaSetForSegmentBuild(segment.getCubeName(), segment.getSegmentName(),
                     replicaSetID);
 
@@ -229,16 +230,15 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
             streamMetadataStore.saveSourceCheckpoint(segment.getCubeName(), segment.getSegmentName(), replicaSetID,
                     smallestSourcePosStr);
 
-            logger.info("send notification to coordinator for cube {} segment {}.", cubeName, segment.getSegmentName());
+            logger.info("Send notification to coordinator for cube {} segment {}.", cubeName, segment.getSegmentName());
             coordinatorClient.segmentRemoteStoreComplete(currentNode, segment.getCubeName(),
                     new Pair<>(segment.getDateRangeStart(), segment.getDateRangeEnd()));
-            logger.info("send notification success.");
+            logger.info("Send notification success.");
             segment.saveState(StreamingCubeSegment.State.REMOTE_PERSISTED);
-            logger.info("cube {} segment {}  status converted to {}", segment.getCubeName(), segment.getSegmentName(),
+            logger.info("Commit cube {} segment {}  status converted to {}.", segment.getCubeName(), segment.getSegmentName(),
                     StreamingCubeSegment.State.REMOTE_PERSISTED.name());
             i++;
         }
-
     }
 
     private void purgeSegments(String cubeName, Collection<StreamingCubeSegment> segments,
@@ -477,8 +477,10 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
             Map<String, SegmentStats> segmentStatsMap = segmentManager.getSegmentStats();
             receiverCubeStats.setSegmentStatsMap(segmentStatsMap);
             receiverCubeStats.setTotalIngest(segmentManager.getIngestCount());
-            receiverCubeStats.setLatestEventTime(segmentManager.getLatestEventTime());
-            receiverCubeStats.setLatestEventIngestTime(segmentManager.getLatestEventIngestTime());
+            receiverCubeStats.setLatestEventTime(
+                    StreamingSegmentManager.resetTimestampByTimeZone(segmentManager.getLatestEventTime()));
+            receiverCubeStats.setLatestEventIngestTime(
+                    StreamingSegmentManager.resetTimestampByTimeZone(segmentManager.getLatestEventIngestTime()));
             receiverCubeStats.setLongLatencyInfo(segmentManager.getLongLatencyInfo());
         }
         return receiverCubeStats;
@@ -606,6 +608,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
         StreamingSegmentManager segmentManager = getStreamingSegmentManager(cubeName);
         if (segmentManager != null) {
             streamingSegmentManagerMap.remove(cubeName);
+            segmentManager.close();
             segmentManager.purgeAllSegments();
         }
     }

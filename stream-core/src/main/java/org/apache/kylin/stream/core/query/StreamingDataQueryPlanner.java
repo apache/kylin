@@ -27,7 +27,7 @@ import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.stream.core.util.CompareFilterTimeRangeChecker;
 import org.apache.kylin.stream.core.util.CompareFilterTimeRangeChecker.CheckResult;
-import org.apache.kylin.stream.core.util.TimeDerivedColumnType;
+import org.apache.kylin.dimension.TimeDerivedColumnType;
 
 /**
  * Scan planner for Streaming data segments, take derived time columns into consideration.

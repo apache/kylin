@@ -40,7 +40,7 @@ import org.apache.kylin.stream.core.exception.StreamingException;
 import org.apache.kylin.stream.core.model.StreamingMessage;
 import org.apache.kylin.stream.core.source.IStreamingMessageParser;
 import org.apache.kylin.stream.core.source.MessageParserInfo;
-import org.apache.kylin.stream.core.util.TimeDerivedColumnType;
+import org.apache.kylin.dimension.TimeDerivedColumnType;
 import org.apache.kylin.stream.source.kafka.KafkaPosition.KafkaPartitionPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -142,7 +142,7 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
                         if (pathToValue != null) {
                             result.add(processMultiLevelJson(pathToValue, root));
                         } else {
-                            result.add(StringUtils.EMPTY);
+                            result.add(null);
                         }
                     } else {
                         result.add(value.toString());

@@ -238,6 +238,25 @@ table .radio {
 
 .cube-detail {
   background-color: white;
+  .cube-segment-list {
+    margin-bottom:10px;
+    padding: 4px 8px;
+    border:solid 1px #ddd;
+    ul {
+      li {
+        font-weight: 500;
+        span {
+          font-weight: normal;
+        }
+      }
+    }
+    &.cube-broken-segment {
+      color:#808080;
+      opacity: 0.6;
+      border-color: #808080;
+      border-style: dashed;
+    }
+  }
 }
 
 .model-detail {
@@ -322,6 +341,19 @@ body .modal-dialog {
   /* place center */
   margin-left: auto;
   margin-right: auto;
+  .fa {
+    &.fa-close {
+      float: left;
+      position: absolute;
+      right: 20px;
+      top: 0;
+      /* font-weight: 200; */
+      line-height: 70px;
+      color: grey;
+      cursor: pointer;
+      font-weight: lighter;
+    }
+  }
 }
 
 pre {
@@ -972,7 +1004,6 @@ div.hybrid-detail {
     margin-top: 7px;
   }
   .split-line {
-    border-bottom: 1px solid #DDDDDD;
     margin: 5px 0 20px 0;
   }
   .table {

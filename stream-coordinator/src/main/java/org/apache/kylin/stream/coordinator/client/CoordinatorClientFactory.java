@@ -21,8 +21,10 @@ package org.apache.kylin.stream.coordinator.client;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.stream.coordinator.Coordinator;
 import org.apache.kylin.stream.coordinator.StreamMetadataStore;
+import org.apache.kylin.stream.coordinator.coordinate.StreamingCoordinator;
 import org.apache.kylin.stream.core.model.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +32,18 @@ import org.slf4j.LoggerFactory;
 public class CoordinatorClientFactory {
     private static final Logger logger = LoggerFactory.getLogger(CoordinatorClientFactory.class);
 
+    private CoordinatorClientFactory() {
+    }
+
     public static CoordinatorClient createCoordinatorClient(StreamMetadataStore streamMetadataStore) {
         if (isCoordinatorCoLocate(streamMetadataStore)) {
-            return Coordinator.getInstance();
+            if (KylinConfig.getInstanceFromEnv().isNewCoordinatorEnabled()) {
+                logger.info("Use new version coordinator.");
+                return StreamingCoordinator.getInstance();
+            } else {
+                logger.info("Use old version coordinator.");
+                return Coordinator.getInstance();
+            }
         } else {
             return new HttpCoordinatorClient(streamMetadataStore);
         }
@@ -43,12 +54,12 @@ public class CoordinatorClientFactory {
             Node coordinatorNode = streamMetadataStore.getCoordinatorNode();
             if (coordinatorNode == null) {
                 logger.warn("no coordinator node registered");
-                return true;
+                return false;
             }
             InetAddress inetAddress = InetAddress.getByName(coordinatorNode.getHost());
             return NetworkInterface.getByInetAddress(inetAddress) != null;
         } catch (Exception e) {
-            logger.error("error when ");
+            logger.error("Error when check network interface.", e);
         }
         return true;
     }

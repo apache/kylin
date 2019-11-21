@@ -294,6 +294,37 @@ KylinApp.controller('AdminStreamingCtrl', function ($scope, $timeout, $modal, Ad
     });
   };
 
+  $scope.removeReceiver = function(receiverID) {
+    SweetAlert.swal({
+      title: '',
+      text: 'Are you sure to remove receiver with id \'' + receiverID + '\'?',
+      type: '',
+      showCancelButton: true,
+      confirmButtonColor: '#DD6B55',
+      confirmButtonText: "Yes",
+      closeOnConfirm: true
+    }, function(isConfirm) {
+      if(isConfirm){
+        AdminStreamingService.removeReceiver({receiverID: receiverID}, {}, function (result) {
+          SweetAlert.swal({title: 'Success!', text:'Receiver remove success'}, function (isConfirm) {
+            if (isConfirm) {
+              $timeout(function() {}, 2000);
+              $scope.listReplicaSet();
+            }
+          });
+        }, function(e){
+          if (e.data && e.data.exception) {
+            var message = e.data.exception;
+            var msg = !!(message) ? message : 'Failed to remove receiver';
+            SweetAlert.swal('Oops...', msg, 'error');
+          } else {
+            SweetAlert.swal('Oops...', 'Failed to remove receiver', 'error');
+          }
+        });
+      }
+    });
+  };
+
 }).filter('formatId', function () {
   return function (item) {
     return item.split('.').join('_');

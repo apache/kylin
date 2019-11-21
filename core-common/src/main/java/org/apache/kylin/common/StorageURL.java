@@ -94,7 +94,7 @@ public class StorageURL {
             }
         }
 
-        this.identifier = n.isEmpty() ? "kylin_metadata" : n;
+        this.identifier = n.isEmpty() || n==null ? "kylin_metadata" : n;
         this.scheme = s;
         this.params = ImmutableMap.copyOf(m);
     }

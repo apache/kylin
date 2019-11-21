@@ -500,6 +500,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Long.parseLong(getOptional("kylin.dictionary.max-cache-entry", "3000"));
     }
 
+    public int getCachedDictMaxSize() {
+        return Integer.parseInt(getOptional("kylin.dictionary.max-cache-size", "-1"));
+    }
+
     public boolean isGrowingDictEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.dictionary.growing-enabled", FALSE));
     }
@@ -551,6 +555,11 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isShrunkenDictFromGlobalEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.dictionary.shrunken-from-global-enabled", TRUE));
     }
+
+    public int getDictionarySliceEvicationThreshold() {
+        return Integer.parseInt(getOptional("kylin.dictionary.slice.eviction.threshold", "5"));
+    }
+
 
     // ============================================================================
     // mr-hive dict
@@ -647,6 +656,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public int getMaxBuildingSegments() {
         return Integer.parseInt(getOptional("kylin.cube.max-building-segments", "10"));
+    }
+
+    public long getMaxSegmentMergeSpan() {
+        return Long.parseLong(getOptional("kylin.cube.max-segment-merge.span", "-1"));
     }
 
     public boolean allowCubeAppearInMultipleProjects() {
@@ -1111,6 +1124,14 @@ public abstract class KylinConfigBase implements Serializable {
         return StorageURL.valueOf(url);
     }
 
+    public StorageURL getSecondaryStorageUrl() {
+        String url = getOptional("kylin.secondary.storage.url", "");
+        if (StringUtils.isEmpty(url)) {
+            return null;
+        }
+        return StorageURL.valueOf(url);
+    }
+
     public String getHBaseTableNamePrefix() {
         return getOptional("kylin.storage.hbase.table-name-prefix", "KYLIN_");
     }
@@ -1539,7 +1560,7 @@ public abstract class KylinConfigBase implements Serializable {
     // check KYLIN-3358, need deploy coprocessor if enabled
     // finally should be deprecated
     public boolean isDynamicColumnEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.enable-dynamic-column", TRUE));
+        return Boolean.parseBoolean(getOptional("kylin.query.enable-dynamic-column", FALSE));
     }
 
     //check KYLIN-1684, in most cases keep the default value
@@ -2216,6 +2237,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.stream.stand-alone.mode", "false"));
     }
 
+    public boolean isNewCoordinatorEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.new.coordinator-enabled", "true"));
+    }
+
     public String getLocalStorageImpl() {
         return getOptional("kylin.stream.settled.storage", null);
     }
@@ -2224,8 +2249,22 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.stream.metrics.option", "");
     }
 
+    /**
+     * whether to print encode integer value for count distinct string value, only for debug/test purpose
+     */
+    public boolean isPrintRealtimeDictEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.print-realtime-dict-enabled", "false"));
+    }
+
     public long getStreamMetricsInterval() {
         return Long.parseLong(getOptional("kylin.stream.metrics.interval", "5"));
+    }
+
+    /**
+     * whether realtime query should add timezone offset by kylin's web-timezone, please refer to KYLIN-4010 for detail
+     */
+    public boolean isStreamingAutoJustTimezone() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.auto.just.by.timezone", "false"));
     }
 
     // ============================================================================

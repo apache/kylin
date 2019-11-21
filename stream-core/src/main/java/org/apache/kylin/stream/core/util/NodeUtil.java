@@ -30,16 +30,29 @@ import java.util.Map;
 public class NodeUtil {
     private static final Logger logger = LoggerFactory.getLogger(NodeUtil.class);
 
+    /*
+    * support three kylin.stream.node config format
+    * ip:prot or port or not set the config
+    * if set ip:port , then kylin will set the config ip and port as the currentNode,
+    * if set port only, then kylin will get the node ip address and set the node ip and port as the currentNode,
+    * if not set the config ,then kylin will get the node hostname address and set the hostname and defaultPort(7070) as the currentNode.
+    */
     public static Node getCurrentNode(int defaultPort) {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         String configNodeStr = kylinConfig.getStreamingNode();
         Node result;
         if (configNodeStr != null) {
-            result = Node.from(configNodeStr);
+            try {
+                //Configuration format： ip:port
+                result = Node.from(configNodeStr);
+            } catch (IllegalArgumentException e) {
+                //Configuration format：port
+                result = new Node(getLocalhostName(), Integer.parseInt(configNodeStr));
+            }
         } else {
             result = new Node(getLocalhostName(), defaultPort);
         }
-        Map<String, String> nodeProperties =  kylinConfig.getStreamingNodeProperties();
+        Map<String, String> nodeProperties = kylinConfig.getStreamingNodeProperties();
         result.setProperties(nodeProperties);
         return result;
     }
@@ -55,4 +68,5 @@ public class NodeUtil {
         }
         return host;
     }
+
 }

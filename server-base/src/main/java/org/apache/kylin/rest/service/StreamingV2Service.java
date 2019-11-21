@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -34,7 +33,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -76,9 +74,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+/**
+ * StreamingCoordinatorService will try to forward request to corrdinator leader by HttpClient.
+ */
 @Component("streamingServiceV2")
 public class StreamingV2Service extends BasicService {
     private static final Logger logger = LoggerFactory.getLogger(StreamingV2Service.class);
+    private static final String CLUSTER_STATE = "cluster_state";
 
     private StreamMetadataStore streamMetadataStore;
 
@@ -88,7 +90,7 @@ public class StreamingV2Service extends BasicService {
             .expireAfterWrite(10, TimeUnit.SECONDS).build();
 
     private ExecutorService clusterStateExecutor = new ThreadPoolExecutor(0, 20, 60L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("fetch_receiver_state"));
+            new LinkedBlockingQueue<>(), new NamedThreadFactory("fetch_receiver_state"));
 
     public StreamingV2Service() {
         streamMetadataStore = StreamMetadataStoreFactory.getStreamMetaDataStore();
@@ -246,13 +248,6 @@ public class StreamingV2Service extends BasicService {
         getCoordinatorClient().resumeConsumers(cube.getName());
     }
 
-    public void onSegmentRemoteStoreComplete(String cubeName, Pair<Long, Long> segment, Node receiver) {
-        logger.info(
-                "segment remote store complete signal received for cube:{}, segment:{}, try to find proper segment to build",
-                cubeName, segment);
-        getCoordinatorClient().segmentRemoteStoreComplete(receiver, cubeName, segment);
-    }
-
     public StreamingSourceConfigManager getStreamingManagerV2() {
         return StreamingSourceConfigManager.getInstance(getConfig());
     }
@@ -284,25 +279,25 @@ public class StreamingV2Service extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void createReplicaSet(ReplicaSet rs) {
         getCoordinatorClient().createReplicaSet(rs);
-        clusterStateCache.invalidate("cluster_state");
+        clusterStateCache.invalidate(CLUSTER_STATE);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void removeReplicaSet(int rsID) {
         getCoordinatorClient().removeReplicaSet(rsID);
-        clusterStateCache.invalidate("cluster_state");
+        clusterStateCache.invalidate(CLUSTER_STATE);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void addNodeToReplicaSet(Integer replicaSetID, String nodeID) {
         getCoordinatorClient().addNodeToReplicaSet(replicaSetID, nodeID);
-        clusterStateCache.invalidate("cluster_state");
+        clusterStateCache.invalidate(CLUSTER_STATE);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void removeNodeFromReplicaSet(Integer replicaSetID, String nodeID) {
         getCoordinatorClient().removeNodeFromReplicaSet(replicaSetID, nodeID);
-        clusterStateCache.invalidate("cluster_state");
+        clusterStateCache.invalidate(CLUSTER_STATE);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
@@ -328,7 +323,7 @@ public class StreamingV2Service extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT') or hasPermission(#cube.getProjectInstance(), 'MANAGEMENT') or hasPermission(#cube.getProjectInstance(), 'ADMINISTRATION')")
     public CubeRealTimeState getCubeRealTimeState(CubeInstance cube) {
         CubeRealTimeState result = new CubeRealTimeState();
         result.setCubeName(cube.getName());
@@ -362,8 +357,12 @@ public class StreamingV2Service extends BasicService {
         return result;
     }
 
+    /**
+     * Fetch and calculate total cluster state.
+     * @return
+     */
     public ClusterState getClusterState() {
-        ClusterState clusterState = clusterStateCache.getIfPresent("cluster_state");
+        ClusterState clusterState = clusterStateCache.getIfPresent(CLUSTER_STATE);
         if (clusterState != null) {
             return clusterState;
         }
@@ -373,12 +372,7 @@ public class StreamingV2Service extends BasicService {
 
         Map<Node, Future<ReceiverStats>> statsFuturesMap = Maps.newHashMap();
         for (final Node receiver : allReceivers) {
-            Future<ReceiverStats> receiverStatsFuture = clusterStateExecutor.submit(new Callable<ReceiverStats>() {
-                @Override
-                public ReceiverStats call() throws Exception {
-                    return receiverAdminClient.getReceiverStats(receiver);
-                }
-            });
+            Future<ReceiverStats> receiverStatsFuture = clusterStateExecutor.submit(() -> receiverAdminClient.getReceiverStats(receiver));
             statsFuturesMap.put(receiver, receiverStatsFuture);
         }
 
@@ -435,9 +429,7 @@ public class StreamingV2Service extends BasicService {
                 String cubeName = cubeStatsEntry.getKey();
                 ReceiverCubeStats cubeStats = cubeStatsEntry.getValue();
                 Long latestEventTime = cubeLatestEventMap.get(cubeName);
-                if (latestEventTime != null && latestEventTime < cubeStats.getLatestEventTime()) {
-                    cubeLatestEventMap.put(cubeName, cubeStats.getLatestEventTime());
-                } else if (latestEventTime == null) {
+                if (latestEventTime == null || latestEventTime < cubeStats.getLatestEventTime()) {
                     cubeLatestEventMap.put(cubeName, cubeStats.getLatestEventTime());
                 }
             }

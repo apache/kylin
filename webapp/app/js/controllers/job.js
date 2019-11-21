@@ -146,9 +146,7 @@ KylinApp
             if(newValue!=oldValue||newValue==null){
                 JobList.removeAll();
                 $scope.state.projectName = newValue;
-                if (oldValue !== "_null") {
-                  $scope.reload();
-                }
+                $scope.reload();
             }
         });
         $scope.resume = function (job) {
