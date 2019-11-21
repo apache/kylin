@@ -107,7 +107,7 @@ public class StreamingCubingJobBuilder extends JobBuilderSupport {
         mergeDict.setName(ExecutableConstants.STEP_NAME_STREAMING_CREATE_DICTIONARY);
         StringBuilder cmd = new StringBuilder();
 
-        appendMapReduceParameters(cmd, JobEngineConfig.IN_MEM_JOB_CONF_SUFFIX);
+        appendMapReduceParameters(cmd, JobEngineConfig.CUBE_MERGE_JOB_CONF_SUFFIX);
         appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME,
                 ExecutableConstants.STEP_NAME_STREAMING_CREATE_DICTIONARY);
         appendExecCmdParameters(cmd, BatchConstants.ARG_INPUT, streamingStoragePath);
