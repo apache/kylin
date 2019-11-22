@@ -285,6 +285,35 @@ KylinApp
         });
       }
 
+      $scope.resubmit = function (job) {
+        SweetAlert.swal({
+          title: '',
+          text: 'Are you sure to re-submit the job?',
+          type: '',
+          showCancelButton: true,
+          confirmButtonColor: '#DD6B55',
+          confirmButtonText: "Yes",
+          closeOnConfirm: true
+        }, function(isConfirm) {
+          if(isConfirm) {
+            loadingRequest.show();
+            JobService.resubmit({jobId: job.uuid}, {}, function (result) {
+              loadingRequest.hide();
+              MessageBox.successNotify('Job has been re-submitted successfully!');
+            },function(e){
+              loadingRequest.hide();
+              if(e.data&& e.data.exception){
+                var message =e.data.exception;
+                var msg = !!(message) ? message : 'Failed to re-submit the job.';
+                SweetAlert.swal('Oops...', msg, 'error');
+              }else{
+                SweetAlert.swal('Oops...', "Failed to re-submit the job.", 'error');
+              }
+            });
+          }
+        });
+      }
+
       $scope.diagnosisJob =function(job) {
         if (!job){
           SweetAlert.swal('', "No job selected.", 'info');
