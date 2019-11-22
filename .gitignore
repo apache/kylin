@@ -96,3 +96,5 @@ webapp/package-lock.json
 #kylin
 examples/test_case_data/*
 src/spark-project/examples/test_metadata/*
+# stream_index
+stream-receiver/stream_index
