@@ -30,21 +30,21 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.dimension.TimeDerivedColumnType;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.stream.core.exception.StreamingException;
 import org.apache.kylin.stream.core.model.StreamingMessage;
 import org.apache.kylin.stream.core.source.IStreamingMessageParser;
 import org.apache.kylin.stream.core.source.MessageParserInfo;
-import org.apache.kylin.dimension.TimeDerivedColumnType;
 import org.apache.kylin.stream.source.kafka.KafkaPosition.KafkaPartitionPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
@@ -86,8 +86,9 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
             Map<String, String> mapping = parserInfo.getColumnToSourceFieldMapping();
             if (mapping != null && !mapping.isEmpty()) {
                 for (String col : mapping.keySet()) {
-                    if (mapping.get(col) != null && mapping.get(col).contains("."))
+                    if ((mapping.get(col) != null && mapping.get(col).contains(".")) || !col.equals(mapping.get(col))) {
                         columnToSourceFieldMapping.put(col, mapping.get(col).split("\\."));
+                    }
                 }
                 logger.info("Using parser field mapping by {}", parserInfo.getColumnToSourceFieldMapping());
             }
@@ -99,7 +100,8 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
                     Constructor constructor = clazz.getConstructor(MessageParserInfo.class);
                     streamTimeParser = (AbstractTimeParser) constructor.newInstance(parserInfo);
                 } catch (Exception e) {
-                    throw new IllegalStateException("Invalid StreamingConfig, tsParser " + tsParser + ", tsPattern " + parserInfo.getTsPattern() + ".", e);
+                    throw new IllegalStateException("Invalid StreamingConfig, tsParser " + tsParser + ", tsPattern "
+                            + parserInfo.getTsPattern() + ".", e);
                 }
             } else {
                 parserInfo.setTsParser("org.apache.kylin.stream.source.kafka.LongTimeParser");
@@ -111,6 +113,14 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
         mapper.disable(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE);
         mapper.enable(DeserializationFeature.USE_JAVA_ARRAY_FOR_JSON_ARRAY);
         logger.info("TimedJsonStreamParser with formatTs {} tsColName {}", formatTs, tsColName);
+    }
+
+    public static String objToString(Object value) {
+        if (value == null)
+            return StringUtils.EMPTY;
+        if (value.getClass().isArray())
+            return String.valueOf(Arrays.asList((Object[]) value));
+        return String.valueOf(value);
     }
 
     @Override
@@ -151,7 +161,7 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
             }
 
             return new StreamingMessage(result, new KafkaPartitionPosition(record.partition(), record.offset()), t,
-                    Collections.<String, Object>emptyMap());
+                    Collections.<String, Object> emptyMap());
         } catch (IOException e) {
             logger.error("error", e);
             throw new RuntimeException(e);
@@ -181,13 +191,5 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
             }
         }
         return objToString(value);
-    }
-
-    public static String objToString(Object value) {
-        if (value == null)
-            return StringUtils.EMPTY;
-        if (value.getClass().isArray())
-            return String.valueOf(Arrays.asList((Object[]) value));
-        return String.valueOf(value);
     }
 }

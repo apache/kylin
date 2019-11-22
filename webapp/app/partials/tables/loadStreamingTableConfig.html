@@ -99,7 +99,9 @@
               <td>
                 <i class="fa fa-minus" style="margin-top:10px;cursor:pointer;" ng-click="removeColumn($index)"></i>
               </td>
-              <td>{{column.name}}</td>
+              <td>
+                <input type="text" class="form-control" ng-readonly="isDerived(column)" ng-model="column.name" placeholder="Input Column Name" />
+              </td>
               <td>
                 <select chosen ng-model="column.datatype" ng-options="datatype as datatype for datatype in streaming.dataTypeArr" data-placeholder="select a column type" style="width: 120px !important;" class="chosen-select" ng-change="updateTSColumnOption(column)">
                 </select>
