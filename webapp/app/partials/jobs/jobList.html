@@ -150,6 +150,9 @@
                 <li ng-if="job.job_status=='FINISHED' || job.job_status=='DISCARDED'">
                   <a ng-click="drop(job)">Drop</a>
                 </li>
+                <li ng-if="job.job_status=='DISCARDED' && job.name.startsWith('STREAM CUBE')">
+                  <a ng-click="resubmit(job)">Resubmit</a>
+                </li>
                 <li>
                   <a ng-click="diagnosisJob(job)" tooltip="Download Diagnosis Info For This Job">Diagnosis</a>
                 </li>
