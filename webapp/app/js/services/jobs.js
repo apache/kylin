@@ -25,6 +25,7 @@ KylinApp.factory('JobService', ['$resource', function ($resource, config) {
     resume: {method: 'PUT', params: {action: 'resume'}, isArray: false},
     cancel: {method: 'PUT', params: {action: 'cancel'}, isArray: false},
     pause: {method: 'PUT', params: {action: 'pause'}, isArray: false},
-    drop: {method: 'DELETE', params: {action: 'drop'}, isArray: false}
+    drop: {method: 'DELETE', params: {action: 'drop'}, isArray: false},
+    resubmit: {method: 'PUT', params: {action: 'resubmit'}, isArray: false}
   });
 }]);
