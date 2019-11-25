@@ -107,6 +107,11 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
         return isCachedAndShared;
     }
 
+    public void checkIsNotCachedAndShared() {
+        if (isCachedAndShared)
+            throw new IllegalStateException();
+    }
+
     public void setCachedAndShared(boolean isCachedAndShared) {
         this.isCachedAndShared = isCachedAndShared;
     }

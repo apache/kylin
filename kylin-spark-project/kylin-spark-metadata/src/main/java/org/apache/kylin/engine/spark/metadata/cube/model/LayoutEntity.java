@@ -20,17 +20,14 @@ package org.apache.kylin.engine.spark.metadata.cube.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Lists;
-import org.apache.kylin.engine.spark.metadata.Measure;
 import org.apache.kylin.metadata.model.IStorageAware;
-import org.apache.kylin.metadata.model.TblColRef;
 
 import java.util.List;
 
 public class LayoutEntity implements IStorageAware {
     @JsonBackReference
-    private IndexEntity index;
+    private IndexEntity indexEntity;
 
     @JsonProperty("id")
     private long id;
@@ -50,12 +47,20 @@ public class LayoutEntity implements IStorageAware {
     @JsonProperty("storage_type")
     private int storageType = IStorageAware.ID_PARQUET;
 
-    private ImmutableBiMap<Integer, TblColRef> orderedDimensions;
-    private ImmutableBiMap<Integer, Measure> orderedMeasures;
+//    private ImmutableBiMap<Integer, TblColRef> orderedDimensions;
+//    private ImmutableBiMap<Integer, Measure> orderedMeasures;
 
     @Override
     public int getStorageType() {
         return this.storageType;
+    }
+
+    public IndexEntity getIndexEntity() {
+        return indexEntity;
+    }
+
+    public void setIndexEntity(IndexEntity indexEntity) {
+        this.indexEntity = indexEntity;
     }
 
     public long getId() {
@@ -64,5 +69,21 @@ public class LayoutEntity implements IStorageAware {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 }

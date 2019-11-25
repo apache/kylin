@@ -20,6 +20,7 @@ package org.apache.kylin.common.util;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
 import java.util.Iterator;
+import java.util.List;
 
 public class ImmutableBitSet implements Iterable<Integer> {
 
@@ -30,6 +31,11 @@ public class ImmutableBitSet implements Iterable<Integer> {
         for (int i : values)
             set.set(i);
         return new ImmutableBitSet(set);
+    }
+
+    public static ImmutableBitSet valueOf(List<Integer> values) {
+        return new ImmutableBitSet(BitSets.valueOf(values.stream().mapToInt(i -> i).toArray()), false);
+
     }
 
     // ============================================================================
@@ -43,6 +49,20 @@ public class ImmutableBitSet implements Iterable<Integer> {
 
     public ImmutableBitSet(BitSet set) {
         this.set = (BitSet) set.clone();
+        this.arr = new int[set.cardinality()];
+
+        int j = 0;
+        for (int i = set.nextSetBit(0); i >= 0; i = set.nextSetBit(i + 1)) {
+            arr[j++] = i;
+        }
+    }
+
+    private ImmutableBitSet(BitSet set, boolean needClone) {
+        if (needClone) {
+            this.set = (BitSet) set.clone();
+        } else {
+            this.set = set;
+        }
         this.arr = new int[set.cardinality()];
 
         int j = 0;

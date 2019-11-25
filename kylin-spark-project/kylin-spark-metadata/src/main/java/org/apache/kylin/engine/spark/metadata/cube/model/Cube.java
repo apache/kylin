@@ -18,51 +18,27 @@
 
 package org.apache.kylin.engine.spark.metadata.cube.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.metadata.MetadataConstants;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.apache.kylin.metadata.MetadataConstants.FILE_SURFIX;
 
 public class Cube extends RootPersistentEntity {
     public static final String CUBE_RESOURCE_ROOT = "/cube";
 
-    @JsonIgnore
     private KylinConfig config;
 
-    @JsonProperty("projefct")
     private String project;
 
     private DataModel dataModel;
-
-    private Cube(KylinConfig config) {}
-
-    public static Cube getInstance(KylinConfig config) {
-        return new Cube(config);
-    }
-
-    //add layout when build cube
-    public Cube updateCube(IndexEntity[] indexes) {
-        List<IndexEntity> indexEntities = Arrays.asList(indexes);
-        this.addIndexEntities(indexEntities);
-        return this;
-    }
-
-    public DataModel getDataModel() {
-        return dataModel;
-    }
-
-    public void setDataModel(DataModel dataModel) {
-        this.dataModel = dataModel;
-    }
 
     private List<IndexEntity> IndexEntities = new ArrayList<>();
 
@@ -86,6 +62,7 @@ public class Cube extends RootPersistentEntity {
     public String getResourcePath() {
         return concatResourcePath(getUuid(), project);
     }
+
     public static String concatResourcePath(String name, String project) {
         return "/" + project + CUBE_RESOURCE_ROOT + "/" + name + FILE_SURFIX;
     }
@@ -112,8 +89,8 @@ public class Cube extends RootPersistentEntity {
         return r;
     }
 
-    public KylinConfigExt getConfig() {
-        return (KylinConfigExt) config;
+    public KylinConfig getConfig() {
+        return config;
     }
 
     public void setConfig(KylinConfig config) {
@@ -125,11 +102,7 @@ public class Cube extends RootPersistentEntity {
     }
 
     public void setIndexEntities(List<IndexEntity> indexEntities) {
-        this.IndexEntities = indexEntities;
-    }
-
-    public void addIndexEntities(List<IndexEntity> indexes) {
-        this.IndexEntities.addAll(indexes);
+        IndexEntities = indexEntities;
     }
 
     public List<DimensionDesc> getDimensions() {
