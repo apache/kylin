@@ -24,33 +24,42 @@ package org.apache.kylin.metadata;
  */
 public interface MetadataConstants {
 
-    public static final String FILE_SURFIX = ".json";
+    String FILE_SURFIX = ".json";
     //Identifier Type, user or group
-    public static final String TYPE_USER = "user";
-    public static final String TYPE_GROUP = "group";
+    String TYPE_USER = "user";
+    String TYPE_GROUP = "group";
 
     // Extended attribute keys
-    public static final String TABLE_EXD_STATUS_KEY = "EXD_STATUS";
-    public static final String TABLE_EXD_MINFS = "minFileSize";
-    public static final String TABLE_EXD_TNF = "totalNumberFiles";
-    public static final String TABLE_EXD_LOCATION = "location";
-    public static final String TABLE_EXD_LUT = "lastUpdateTime";
-    public static final String TABLE_EXD_LAT = "lastAccessTime";
-    public static final String TABLE_EXD_COLUMN = "columns";
-    public static final String TABLE_EXD_PC = "partitionColumns";
-    public static final String TABLE_EXD_MAXFS = "maxFileSize";
-    public static final String TABLE_EXD_IF = "inputformat";
-    public static final String TABLE_EXD_PARTITIONED = "partitioned";
-    public static final String TABLE_EXD_TABLENAME = "tableName";
-    public static final String TABLE_EXD_OWNER = "owner";
-    public static final String TABLE_EXD_TFS = "totalFileSize";
-    public static final String TABLE_EXD_OF = "outputformat";
+    String TABLE_EXD_STATUS_KEY = "EXD_STATUS";
+    String TABLE_EXD_MINFS = "minFileSize";
+    String TABLE_EXD_TNF = "totalNumberFiles";
+    String TABLE_EXD_LOCATION = "location";
+    String TABLE_EXD_LUT = "lastUpdateTime";
+    String TABLE_EXD_LAT = "lastAccessTime";
+    String TABLE_EXD_COLUMN = "columns";
+    String TABLE_EXD_PC = "partitionColumns";
+    String TABLE_EXD_MAXFS = "maxFileSize";
+    String TABLE_EXD_IF = "inputformat";
+    String TABLE_EXD_PARTITIONED = "partitioned";
+    String TABLE_EXD_TABLENAME = "tableName";
+    String TABLE_EXD_OWNER = "owner";
+    String TABLE_EXD_TFS = "totalFileSize";
+    String TABLE_EXD_OF = "outputformat";
     /**
      * The value is an array
      */
-    public static final String TABLE_EXD_CARDINALITY = "cardinality";
-    public static final String TABLE_EXD_DELIM = "delim";
-    public static final String TABLE_EXD_DEFAULT_VALUE = "unknown";
+    String TABLE_EXD_CARDINALITY = "cardinality";
+    String TABLE_EXD_DELIM = "delim";
+    String TABLE_EXD_DEFAULT_VALUE = "unknown";
 
-    public static final String KYLIN_INTERMEDIATE_PREFIX = "kylin_intermediate_";
+    String KYLIN_INTERMEDIATE_PREFIX = "kylin_intermediate_";
+
+    //kylin on parquetv2
+    String P_CUBE_ID = "cubeId";
+    String P_JOB_ID = "jobId";
+    String P_LAYOUT_IDS = "layoutIds";
+    String P_PROJECT_NAME = "project";
+    String P_TARGET_MODEL = "targetModel";
+    String P_DATA_RANGE_START = "dataRangeStart";
+    String P_DATA_RANGE_END = "dataRangeEnd";
 }

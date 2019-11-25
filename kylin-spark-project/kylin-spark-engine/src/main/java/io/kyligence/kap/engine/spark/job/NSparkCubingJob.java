@@ -24,10 +24,10 @@ import java.util.UUID;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
-import org.apache.kylin.engine.spark.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.engine.spark.metadata.cube.model.SegmentRange;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spark_project.guava.base.Preconditions;
@@ -69,14 +69,14 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
         job.setProject(cube.getProject());
         job.setSubmitter(submitter);
 
-        job.setParam(NBatchConstants.P_JOB_ID, jobId);
-        job.setParam(NBatchConstants.P_PROJECT_NAME, cube.getProject());
-        job.setParam(NBatchConstants.P_TARGET_MODEL, job.getTargetSubject());
-        job.setParam(NBatchConstants.P_CUBE_ID, cube.getId());
-        job.setParam(NBatchConstants.P_LAYOUT_IDS, NSparkCubingUtil.ids2Str(NSparkCubingUtil.toLayoutIds(layouts)));
-        //job.setParam(NBatchConstants.P_SEGMENT_IDS, String.join(",", job.getTargetSegments()));
-        job.setParam(NBatchConstants.P_DATA_RANGE_START, String.valueOf(startTime));
-        job.setParam(NBatchConstants.P_DATA_RANGE_END, String.valueOf(endTime));
+        job.setParam(MetadataConstants.P_JOB_ID, jobId);
+        job.setParam(MetadataConstants.P_PROJECT_NAME, cube.getProject());
+        job.setParam(MetadataConstants.P_TARGET_MODEL, job.getTargetSubject());
+        job.setParam(MetadataConstants.P_CUBE_ID, cube.getId());
+        job.setParam(MetadataConstants.P_LAYOUT_IDS, NSparkCubingUtil.ids2Str(NSparkCubingUtil.toLayoutIds(layouts)));
+        //job.setParam(MetadataConstants.P_SEGMENT_IDS, String.join(",", job.getTargetSegments()));
+        job.setParam(MetadataConstants.P_DATA_RANGE_START, String.valueOf(startTime));
+        job.setParam(MetadataConstants.P_DATA_RANGE_END, String.valueOf(endTime));
 
         JobStepFactory.addStep(job, JobStepType.RESOURCE_DETECT, cube);
         JobStepFactory.addStep(job, JobStepType.CUBING, cube);

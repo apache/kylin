@@ -75,7 +75,7 @@ public class JobStepFactory {
         step.setJobType(parent.getJobType());
         /*if (step instanceof NSparkCleanupAfterMergeStep) {
             final Segments<NDataSegment> mergingSegments = df.getMergingSegments(segments.iterator().next());
-            step.setParam(NBatchConstants.P_SEGMENT_IDS,
+            step.setParam(MetadataConstants.P_SEGMENT_IDS,
                     String.join(",", NSparkCubingUtil.toSegmentIds(mergingSegments)));
         }*/
         parent.addTask(step);
