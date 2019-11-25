@@ -24,6 +24,7 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.engine.spark.metadata.ModelDesc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +40,20 @@ public class Cube extends RootPersistentEntity {
     private String project;
 
     private DataModel dataModel;
+
+    private Cube(KylinConfig config) {}
+
+    public static Cube getInstance(KylinConfig config) {
+        return new Cube(config);
+    }
+
+    //add layout when build cube
+    public Cube updateCube(IndexEntity[] indexes) {
+        List<IndexEntity> indexEntities = Arrays.asList(indexes);
+        this.addIndexEntities(indexEntities);
+        return this;
+    }
+
 
     private List<IndexEntity> IndexEntities = new ArrayList<>();
 
@@ -104,6 +119,10 @@ public class Cube extends RootPersistentEntity {
         IndexEntities = indexEntities;
     }
 
+    public void addIndexEntities(List<IndexEntity> indexEntities) {
+        this.getIndexEntities().addAll(indexEntities);
+    }
+
     public List<DimensionDesc> getDimensions() {
         return dimensions;
     }
@@ -126,5 +145,7 @@ public class Cube extends RootPersistentEntity {
     public void setProject(String project) {
         this.project = project;
     }
+
+
 
 }
