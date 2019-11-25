@@ -18,12 +18,25 @@
 
 package org.apache.kylin.engine.spark.metadata.cube.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import org.apache.kylin.common.util.ImmutableBitSet;
 
 import java.util.List;
 
 public class IndexEntity {
+    /**
+     * Here suppose cuboid's number is not bigger than 1_000_000, so if the id is bigger than 1_000_000 * 1_000
+     * means it should be a table index cuboid.
+     */
+    public static final long TABLE_INDEX_START_ID = 20_000_000_000L;
+    public static final long INDEX_ID_STEP = 10000L;
+
+    @JsonBackReference
+    private Cube cube;
+
     @JsonProperty("id")
     private long id;
 
@@ -36,4 +49,102 @@ public class IndexEntity {
     @JsonProperty("layouts")
     private List<LayoutEntity> layouts = Lists.newArrayList();
 
+    private final ImmutableBitSet dimensionBitset = initDimensionBitset();
+
+    private ImmutableBitSet initDimensionBitset() {
+        return ImmutableBitSet.valueOf(dimensions);
+    }
+
+    private final ImmutableBitSet measureBitset = initMeasureBitset();
+
+    private ImmutableBitSet initMeasureBitset() {
+        return ImmutableBitSet.valueOf(measures);
+    }
+
+    public void checkIsNotCachedAndShared() {
+        if (cube != null)
+            cube.checkIsNotCachedAndShared();
+    }
+
+    public boolean isCachedAndShared() {
+        return cube != null && cube.isCachedAndShared();
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        checkIsNotCachedAndShared();
+        this.id = id;
+    }
+
+    /**
+     * If there is no need to consider the order of dimensions,
+     * please use getDimensionBitset() instead of this method.
+     */
+    public List<Integer> getDimensions() {
+        return getColIds(dimensions);
+    }
+
+    public void setDimensions(List<Integer> dimensions) {
+        checkIsNotCachedAndShared();
+        this.dimensions = dimensions;
+    }
+
+    /**
+     * If there is no need to consider the order of measures,
+     * please use getDimensionBitset() instead of this method.
+     */
+    public List<Integer> getMeasures() {
+        return getColIds(measures);
+    }
+
+    public void setMeasures(List<Integer> measures) {
+        checkIsNotCachedAndShared();
+        this.measures = measures;
+    }
+
+    private List<Integer> getColIds(List<Integer> cols) {
+        return isCachedAndShared() ? Lists.newArrayList(cols) : cols;
+    }
+
+    public List<LayoutEntity> getLayouts() {
+        return isCachedAndShared() ? ImmutableList.copyOf(layouts) : layouts;
+    }
+
+    public void setLayouts(List<LayoutEntity> layouts) {
+        checkIsNotCachedAndShared();
+        this.layouts = layouts;
+    }
+
+    public ImmutableBitSet getDimensionBitset() {
+        return dimensionBitset;
+    }
+
+    public ImmutableBitSet getMeasureBitset() {
+        return measureBitset;
+    }
+
+    public boolean isTableIndex() {
+        return id >= TABLE_INDEX_START_ID;
+    }
+
+    private int totalFieldSize(IndexEntity entity) {
+        return entity.getDimensions().size() + entity.getMeasures().size();
+    }
+
+    public boolean fullyDerive(IndexEntity child) {
+        // both table index or not.
+        if (!this.isTableIndex() == child.isTableIndex()) {
+            return false;
+        }
+
+        if (totalFieldSize(child) >= totalFieldSize(this)) {
+            return false;
+        }
+
+        return child.getDimensionBitset().andNot(getDimensionBitset()).isEmpty()
+                && child.getMeasureBitset().andNot(getMeasureBitset()).isEmpty();
+    }
 }
