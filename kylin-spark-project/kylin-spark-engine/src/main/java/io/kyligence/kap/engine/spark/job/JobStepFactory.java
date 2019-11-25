@@ -57,7 +57,7 @@ public class JobStepFactory {
             step = new NResourceDetectStep(parent);
             break;
         case CUBING:
-            step = new NSparkCubingStep(config.getSparkBuildClassName());
+            step = new NSparkCubingStep(cube, config.getSparkBuildClassName());
             break;
         /*case MERGING:
             step = new NSparkMergingStep(config.getSparkMergeClassName());
