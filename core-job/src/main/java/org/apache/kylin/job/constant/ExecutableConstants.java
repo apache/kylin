@@ -83,4 +83,7 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_BUILD_DICTVAL = "Build Global Dict - merge to dict table";
     public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_REPLACE_DICTVAL = "Build Global Dict - replace intermediate table";
 
+    //kylin on parquetv2
+    public static final String STEP_NAME_DETECT_RESOURCE = "Detect Resource";
+
 }
