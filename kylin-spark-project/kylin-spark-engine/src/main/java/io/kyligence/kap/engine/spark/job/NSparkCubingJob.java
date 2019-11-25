@@ -24,51 +24,41 @@
 
 package io.kyligence.kap.engine.spark.job;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.engine.spark.job.execution.DefaultChainedExecutableOnModel;
-import org.apache.kylin.engine.spark.metadata.LayoutEntity;
 import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
+import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.engine.spark.metadata.cube.model.NBatchConstants;
 import org.apache.kylin.engine.spark.metadata.cube.model.SegmentRange;
-import org.apache.kylin.job.execution.DefaultChainedExecutableOnModel;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.job.impl.threadpool.NDefaultScheduler;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spark_project.guava.base.Preconditions;
 
-import io.kyligence.kap.metadata.cube.model.LayoutEntity;
-import io.kyligence.kap.metadata.cube.model.NBatchConstants;
-import io.kyligence.kap.metadata.cube.model.NDataSegment;
-import io.kyligence.kap.metadata.cube.model.Cube;
-import io.kyligence.kap.metadata.cube.model.NDataflowManager;
-import io.kyligence.kap.metadata.cube.model.NDataflowUpdate;
-
 /**
  */
-public class NSparkCubingJob extends DefaultChainedExecutableOnModel {
+public class NSparkCubingJob extends DefaultChainedExecutable {
 
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(NSparkCubingJob.class);
 
+    private static Cube cubeInstance;
+
     // for test use only
-    public static NSparkCubingJob create(Cube df, Set<SegmentRange> segments, Set<LayoutEntity> layouts, String submitter) {
-        return create(df, segments, layouts, submitter, JobTypeEnum.INDEX_BUILD, UUID.randomUUID().toString());
+    public static NSparkCubingJob create(Cube cube, Set<SegmentRange> segments, Set<LayoutEntity> layouts, String submitter) {
+        return create(cube, segments, layouts, submitter, JobTypeEnum.INDEX_BUILD, UUID.randomUUID().toString());
     }
 
-    public static NSparkCubingJob create(Cube df, Set<SegmentRange> segments, Set<LayoutEntity> layouts, String submitter,
+    public static NSparkCubingJob create(Cube cube, Set<SegmentRange> segments, Set<LayoutEntity> layouts, String submitter,
             JobTypeEnum jobType, String jobId) {
         Preconditions.checkArgument(!segments.isEmpty());
         Preconditions.checkArgument(!layouts.isEmpty());
         Preconditions.checkArgument(submitter != null);
         NSparkCubingJob job = new NSparkCubingJob();
+        cubeInstance = cube;
         long startTime = Long.MAX_VALUE - 1;
         long endTime = 0L;
         for (SegmentRange segment : segments) {
@@ -80,42 +70,39 @@ public class NSparkCubingJob extends DefaultChainedExecutableOnModel {
         job.setId(jobId);
         job.setName(jobType.toString());
         job.setJobType(jobType);
-        job.setTargetSubject(df.getId());
-        job.setTargetSegments(segments.stream().map(x -> String.valueOf(x.getId())).collect(Collectors.toList()));
-        job.setProject(df.getProject());
+        job.setTargetSubject(cube.getDataModel().getId());
+        //job.setTargetSegments(segments.stream().map(x -> String.valueOf(x.getId())).collect(Collectors.toList()));
+        job.setProject(cube.getProject());
         job.setSubmitter(submitter);
 
         job.setParam(NBatchConstants.P_JOB_ID, jobId);
-        job.setParam(NBatchConstants.P_PROJECT_NAME, df.getProject());
+        job.setParam(NBatchConstants.P_PROJECT_NAME, cube.getProject());
         job.setParam(NBatchConstants.P_TARGET_MODEL, job.getTargetSubject());
-        job.setParam(NBatchConstants.P_DATAFLOW_ID, df.getId());
+        job.setParam(NBatchConstants.P_CUBE_ID, cube.getId());
         job.setParam(NBatchConstants.P_LAYOUT_IDS, NSparkCubingUtil.ids2Str(NSparkCubingUtil.toLayoutIds(layouts)));
-        job.setParam(NBatchConstants.P_SEGMENT_IDS, String.join(",", job.getTargetSegments()));
+        //job.setParam(NBatchConstants.P_SEGMENT_IDS, String.join(",", job.getTargetSegments()));
         job.setParam(NBatchConstants.P_DATA_RANGE_START, String.valueOf(startTime));
         job.setParam(NBatchConstants.P_DATA_RANGE_END, String.valueOf(endTime));
 
-        JobStepFactory.addStep(job, JobStepType.RESOURCE_DETECT, segments);
-        JobStepFactory.addStep(job, JobStepType.CUBING, segments);
+        JobStepFactory.addStep(job, JobStepType.RESOURCE_DETECT, cube);
+        JobStepFactory.addStep(job, JobStepType.CUBING, cube);
         return job;
     }
 
     @Override
     public Set<String> getMetadataDumpList(KylinConfig config) {
-        final String dataflowId = getParam(NBatchConstants.P_DATAFLOW_ID);
-        return NDataflowManager.getInstance(config, getProject()) //
-                .getDataflow(dataflowId) //
-                .collectPrecalculationResource();
+        return cubeInstance.collectPrecalculationResource();
     }
 
-    public NSparkCubingStep getSparkCubingStep() {
+   /* public NSparkCubingStep getSparkCubingStep() {
         return getTask(NSparkCubingStep.class);
     }
 
     NResourceDetectStep getResourceDetectStep() {
         return getTask(NResourceDetectStep.class);
-    }
+    }*/
 
-    @Override
+    /*@Override
     public void cancelJob() {
         NDataflowManager nDataflowManager = NDataflowManager.getInstance(getConfig(), getProject());
         Cube dataflow = nDataflowManager.getDataflow(getSparkCubingStep().getDataflowId());
@@ -132,6 +119,6 @@ public class NSparkCubingJob extends DefaultChainedExecutableOnModel {
         nDataflowUpdate.setToRemoveSegs(nDataSegments);
         nDataflowManager.updateDataflow(nDataflowUpdate);
         NDefaultScheduler.stopThread(getId());
-    }
+    }*/
 
 }

@@ -71,6 +71,9 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     private AbstractExecutable parentExecutable = null;
     private Map<String, String> params = Maps.newHashMap();
     protected Integer priority;
+    private JobTypeEnum jobType;
+    protected String project;
+    private String targetSubject;
 
     public AbstractExecutable() {
         setId(RandomUtil.randomUUID().toString());
@@ -548,6 +551,33 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     private static boolean isRetryableException(String exceptionName) {
         String[] jobRetryExceptions = KylinConfig.getInstanceFromEnv().getJobRetryExceptions();
         return ArrayUtils.isEmpty(jobRetryExceptions) || ArrayUtils.contains(jobRetryExceptions, exceptionName);
+    }
+
+    public final String getProject() {
+        if (project == null) {
+            throw new IllegalStateException("project is not set for abstract executable " + getId());
+        }
+        return project;
+    }
+
+    public final void setProject(String project) {
+        this.project = project;
+    }
+
+    public JobTypeEnum getJobType() {
+        return jobType;
+    }
+
+    public void setJobType(JobTypeEnum jobType) {
+        this.jobType = jobType;
+    }
+
+    public String getTargetSubject() {
+        return targetSubject;
+    }
+
+    public void setTargetSubject(String targetSubject) {
+        this.targetSubject = targetSubject;
     }
 
     @Override
