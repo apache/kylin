@@ -46,7 +46,7 @@ public class HDFSResourceStore extends ResourceStore {
 
     private FileSystem fs;
 
-    private static final String HDFS_SCHEME = "hdfs";
+    public static final String HDFS_SCHEME = "hdfs";
 
     public HDFSResourceStore(KylinConfig kylinConfig) throws Exception {
         this(kylinConfig, kylinConfig.getMetadataUrl());

@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLockFactory;
@@ -48,6 +49,10 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         for (AbstractExecutable sub : subTasks) {
             sub.initConfig(config);
         }
+    }
+
+    public Set<String> getMetadataDumpList(KylinConfig config) {
+        return Collections.emptySet();
     }
 
     @Override

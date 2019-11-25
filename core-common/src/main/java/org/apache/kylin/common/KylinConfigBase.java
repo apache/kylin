@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -37,6 +38,7 @@ import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.lock.DistributedLockFactory;
+import org.apache.kylin.common.persistence.HDFSResourceStore;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -2281,6 +2283,39 @@ public abstract class KylinConfigBase implements Serializable {
 
     public int getStaleJobThresholdInDays() {
         return Integer.parseInt(getOptional("kylin.tool.health-check.stale-job-threshold-days", "30"));
+    }
+
+    // ============================================================================
+    // Kylin on parquetv2 related
+    // ============================================================================
+
+    public String getSparkBuildClassName() {
+        return getOptional("kylin.engine.spark.build-class-name", "io.kyligence.kap.engine.spark.job.DFBuildJob");
+    }
+
+    public String getSparkTableSamplingClassName() {
+        return getOptional("kylin.engine.spark.sampling-class-name",
+                "io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob");
+    }
+
+    public StorageURL getJobTmpMetaStoreUrl(String project, String jobId) {
+        Map<String, String> params = new HashMap<>();
+        params.put("path", getJobTmpDir(project) + getNestedPath(jobId) + "meta");
+        return new StorageURL(getMetadataUrlPrefix(), HDFSResourceStore.HDFS_SCHEME, params);
+    }
+
+    // a_b => a/b/
+    private String getNestedPath(String id) {
+        String[] ids = id.split("_");
+        StringBuilder builder = new StringBuilder();
+        for (String subId : ids) {
+            builder.append(subId).append("/");
+        }
+        return builder.toString();
+    }
+
+    public String getJobTmpDir(String project) {
+        return getHdfsWorkingDirectory(project) + "/job_tmp/";
     }
 
 }

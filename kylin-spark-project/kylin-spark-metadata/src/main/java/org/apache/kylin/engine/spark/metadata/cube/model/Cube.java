@@ -18,25 +18,27 @@
 
 package org.apache.kylin.engine.spark.metadata.cube.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.engine.spark.metadata.ModelDesc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.apache.kylin.metadata.MetadataConstants.FILE_SURFIX;
 
 public class Cube extends RootPersistentEntity {
     public static final String CUBE_RESOURCE_ROOT = "/cube";
 
+    @JsonIgnore
     private KylinConfig config;
 
+    @JsonProperty("projefct")
     private String project;
 
     private DataModel dataModel;
@@ -54,6 +56,13 @@ public class Cube extends RootPersistentEntity {
         return this;
     }
 
+    public DataModel getDataModel() {
+        return dataModel;
+    }
+
+    public void setDataModel(DataModel dataModel) {
+        this.dataModel = dataModel;
+    }
 
     private List<IndexEntity> IndexEntities = new ArrayList<>();
 
@@ -103,8 +112,8 @@ public class Cube extends RootPersistentEntity {
         return r;
     }
 
-    public KylinConfig getConfig() {
-        return config;
+    public KylinConfigExt getConfig() {
+        return (KylinConfigExt) config;
     }
 
     public void setConfig(KylinConfig config) {
@@ -116,11 +125,11 @@ public class Cube extends RootPersistentEntity {
     }
 
     public void setIndexEntities(List<IndexEntity> indexEntities) {
-        IndexEntities = indexEntities;
+        this.IndexEntities = indexEntities;
     }
 
-    public void addIndexEntities(List<IndexEntity> indexEntities) {
-        this.getIndexEntities().addAll(indexEntities);
+    public void addIndexEntities(List<IndexEntity> indexes) {
+        this.IndexEntities.addAll(indexes);
     }
 
     public List<DimensionDesc> getDimensions() {
@@ -145,7 +154,5 @@ public class Cube extends RootPersistentEntity {
     public void setProject(String project) {
         this.project = project;
     }
-
-
 
 }
