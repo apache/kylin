@@ -855,7 +855,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public List<String> getSafeModeRunnableProjects() {
-        return Arrays.asList(getOptionalStringArray("kylin.job.scheduler.safemode.runnable-projects", null));
+        return Arrays.asList(getOptionalStringArray("kylin.job.scheduler.safemode.runnable-projects", new String[0]));
     }
 
     public Integer getErrorRecordThreshold() {
