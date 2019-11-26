@@ -217,7 +217,6 @@ __Improvement__
 * [KYLIN-4099] - Using no blocking RDD unpersist in spark cubing job
 * [KYLIN-4121] - Cleanup hive view intermediate tables after job be finished
 * [KYLIN-4140] - Add the time filter for current day jobs and make default values for web configurable
-* [KYLIN-4160] - Auto redirect to host:port/kylin when user only enter host:port in broswer
 
 __Bug Fix__
 
