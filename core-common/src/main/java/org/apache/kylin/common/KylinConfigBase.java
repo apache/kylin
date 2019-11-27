@@ -2304,6 +2304,11 @@ public abstract class KylinConfigBase implements Serializable {
         return new StorageURL(getMetadataUrlPrefix(), HDFSResourceStore.HDFS_SCHEME, params);
     }
 
+    public Path getJobTmpShareDir(String project, String jobId) {
+        String path = getJobTmpDir(project) + jobId + "/share/";
+        return new Path(path);
+    }
+
     // a_b => a/b/
     private String getNestedPath(String id) {
         String[] ids = id.split("_");

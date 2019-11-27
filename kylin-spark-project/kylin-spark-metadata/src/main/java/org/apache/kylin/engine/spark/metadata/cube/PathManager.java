@@ -18,27 +18,34 @@
 
 package org.apache.kylin.engine.spark.metadata.cube;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.metadata.MetadataConstants;
-
-import static org.apache.kylin.engine.spark.metadata.cube.model.Cube.CUBE_RESOURCE_ROOT;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PathManager {
+    private static final Logger logger = LoggerFactory.getLogger(PathManager.class);
 
-    private String projectName = "default";
-    private String cubeId;
-
-    public PathManager(String projectName, String cubeId) {
-        this.projectName = projectName;
-        this.cubeId = cubeId;
+    public static String getCubePath(String projectName, String cubeId) {
+        return "/" + projectName + ResourceStore.CUBE_RESOURCE_ROOT + "/" + cubeId + MetadataConstants.FILE_SURFIX;
     }
 
-    public String getCubePath() {
-        return "/" + projectName + CUBE_RESOURCE_ROOT + "/" + cubeId + MetadataConstants.FILE_SURFIX;
-    }
-
-    public String getModelPath() {
+    public static String getModelPath(String projectName, String cubeId) {
         return new StringBuilder().append("/").append(projectName).append(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT)
                 .append("/").append(cubeId).append(MetadataConstants.FILE_SURFIX).toString();
+    }
+
+    public static String getProjectPath(String projectName) {
+        return ResourceStore.PROJECT_RESOURCE_ROOT + "/" + projectName + MetadataConstants.FILE_SURFIX;
+    }
+
+    public static String resourcePath(String resRootPath, String resourceName) {
+        if (StringUtils.isEmpty(resourceName) || StringUtils.containsWhitespace(resourceName)) {
+            logger.error("the resourceName \"{}\" cannot contain white character", resourceName);
+            throw new IllegalArgumentException(
+                    "the resourceName \"" + resourceName + "\" cannot contain white character");
+        }
+        return resRootPath + "/" + resourceName + MetadataConstants.FILE_SURFIX;
     }
 }

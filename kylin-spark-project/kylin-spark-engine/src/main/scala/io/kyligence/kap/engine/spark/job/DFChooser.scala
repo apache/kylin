@@ -26,11 +26,9 @@ import com.google.common.base.Preconditions
 import com.google.common.collect.{Lists, Maps}
 import io.kyligence.kap.engine.spark.builder._
 import io.kyligence.kap.engine.spark.utils.SparkDataSource._
-import io.kyligence.kap.metadata.cube.cuboid.{NCuboidLayoutChooser, NSpanningTree}
-import io.kyligence.kap.metadata.cube.model._
-import io.kyligence.kap.metadata.model.NDataModel
-import io.kyligence.kap.metadata.model.NDataModel.TableKind
+
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree
 import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.functions.col
@@ -39,7 +37,7 @@ import org.apache.spark.sql.{Dataset, Row, SaveMode, SparkSession}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class DFChooser(toBuildTree: NSpanningTree,
+class DFChooser(toBuildTree: SpanningTree,
                 var seg: NDataSegment,
                 jobId: String,
                 ss: SparkSession,
