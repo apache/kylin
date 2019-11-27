@@ -56,6 +56,8 @@ KylinApp
             selectedProject: null
         };
 
+        $scope.locationChangeConfirmed = false;
+
         var Query = {
             createNew: function (sql, project) {
                 var query = {
@@ -424,21 +426,23 @@ KylinApp
             });
 
             if (isExecuting && (next.replace(current, "").indexOf("#") != 0)) {
-                event.preventDefault();
-                SweetAlert.swal({
-                    title: '',
-                    text: "You've executing query in current page, are you sure to leave this page?",
-                    type: '',
-                    showCancelButton: true,
-                    confirmButtonColor: '#DD6B55',
-                    confirmButtonText: "Yes",
-                    closeOnConfirm: true
-                }, function(isConfirm) {
-                    if(isConfirm){
-                        $location.path($location.url(next).hash());
-                    }
-
-                });
+                if (!$scope.locationChangeConfirmed) {
+                    event.preventDefault();
+                    SweetAlert.swal({
+                      title: '',
+                      text: "You've executing query in current page, are you sure to leave this page?",
+                      type: '',
+                      showCancelButton: true,
+                      confirmButtonColor: '#DD6B55',
+                      confirmButtonText: "Yes",
+                      closeOnConfirm: true
+                    }, function(isConfirm) {
+                        if(isConfirm){
+                          $scope.locationChangeConfirmed = true;
+                          $location.path($location.url(next).hash());
+                        }
+                    });
+                }
             }
         });
 
