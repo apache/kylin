@@ -27,10 +27,12 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.StreamingCubingEngine;
+import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.stream.coordinator.StreamingCubeInfo;
 import org.apache.kylin.stream.coordinator.coordinate.annotations.NonSideEffect;
 import org.apache.kylin.stream.coordinator.coordinate.annotations.NotAtomicIdempotent;
@@ -148,7 +150,7 @@ public class BuildJobSubmitter implements Runnable {
         if (checkTimes % 100 == 1) {
             logger.info("Force traverse all cubes periodically.");
             for (StreamingCubeInfo cubeInfo : coordinator.getEnableStreamingCubes()) {
-                List<String> segmentList = checkSegmentBuidJobFromMetadata(cubeInfo.getCubeName());
+                List<String> segmentList = checkSegmentBuildJobFromMetadata(cubeInfo.getCubeName());
                 for (String segmentName : segmentList) {
                     submitSegmentBuildJob(cubeInfo.getCubeName(), segmentName);
                 }
@@ -218,7 +220,7 @@ public class BuildJobSubmitter implements Runnable {
         Iterator<String> iterator = cubeCheckList.iterator();
         while (iterator.hasNext()) {
             String cubeName = iterator.next();
-            List<String> segmentList = checkSegmentBuidJobFromMetadata(cubeName);
+            List<String> segmentList = checkSegmentBuildJobFromMetadata(cubeName);
             boolean allSubmited = true;
             for (String segmentName : segmentList) {
                 boolean ok = submitSegmentBuildJob(cubeName, segmentName);
@@ -241,16 +243,23 @@ public class BuildJobSubmitter implements Runnable {
      * @return list of segment which could be submitted a segment build job
      */
     @NonSideEffect
-    List<String> checkSegmentBuidJobFromMetadata(String cubeName) {
+    List<String> checkSegmentBuildJobFromMetadata(String cubeName) {
         List<String> result = Lists.newArrayList();
         CubeInstance cubeInstance = coordinator.getCubeManager().getCube(cubeName);
+        // in optimization
+        if (isInOptimize(cubeInstance)) {
+            return result;
+        }
+        int allowMaxBuildingSegments = cubeInstance.getConfig().getMaxBuildingSegments();
         CubeSegment latestHistoryReadySegment = cubeInstance.getLatestReadySegment();
-
         long minSegmentStart = -1;
         if (latestHistoryReadySegment != null) {
             minSegmentStart = latestHistoryReadySegment.getTSRange().end.v;
+        } else {
+            // there is no ready segment, to make cube planner work, only 1 segment can build
+            logger.info("there is no ready segments for cube:{}, so only allow 1 segment build concurrently", cubeName);
+            allowMaxBuildingSegments = 1;
         }
-        int allowMaxBuildingSegments = cubeInstance.getConfig().getMaxBuildingSegments();
 
         CubeAssignment assignments = coordinator.getStreamMetadataStore().getAssignmentsByCube(cubeName);
         Set<Integer> cubeAssignedReplicaSets = assignments.getReplicaSetIDs();
@@ -306,6 +315,31 @@ public class BuildJobSubmitter implements Runnable {
             logger.debug("Candidate {} : {}.", cubeName, String.join(", ", result));
         }
         return result;
+    }
+
+    private boolean isInOptimize(CubeInstance cube) {
+        Segments<CubeSegment> readyPendingSegments = cube.getSegments(SegmentStatusEnum.READY_PENDING);
+        if (readyPendingSegments.size() > 0) {
+            logger.info("The cube {} has READY_PENDING segments {}. It's not allowed for building",
+                cube.getName(), readyPendingSegments);
+            return true;
+        }
+        Segments<CubeSegment> newSegments = cube.getSegments(SegmentStatusEnum.NEW);
+        for (CubeSegment newSegment : newSegments) {
+            String jobId = newSegment.getLastBuildJobID();
+            if (jobId == null) {
+                continue;
+            }
+            AbstractExecutable job = coordinator.getExecutableManager().getJob(jobId);
+            if (job != null && job instanceof CubingJob) {
+                CubingJob cubingJob = (CubingJob) job;
+                if (CubingJob.CubingJobTypeEnum.OPTIMIZE.toString().equals(cubingJob.getJobType())) {
+                    logger.info("The cube {} is in optimization. It's not allowed to build new segments during optimization.", cube.getName());
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
