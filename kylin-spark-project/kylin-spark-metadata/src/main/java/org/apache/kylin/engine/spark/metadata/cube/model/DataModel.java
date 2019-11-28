@@ -20,10 +20,12 @@ package org.apache.kylin.engine.spark.metadata.cube.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.engine.spark.metadata.Measure;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.PartitionDesc;
@@ -84,6 +86,8 @@ public class DataModel extends RootPersistentEntity {
     @JsonProperty("capacity")
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
+    private ImmutableBiMap<Integer, MeasureDesc> effectiveMeasures; // excluding DELETED cols
+
     // computed attributes
     private TableRef rootFactTableRef;
     private Set<TableRef> factTableRefs = Sets.newLinkedHashSet();
@@ -92,6 +96,13 @@ public class DataModel extends RootPersistentEntity {
     private Map<String, TableRef> aliasMap = Maps.newHashMap(); // alias => TableRef, a table has exactly one alias
     private Map<String, TableRef> tableNameMap = Maps.newHashMap(); // name => TableRef, a table maybe referenced by multiple names
     private JoinsTree joinsTree;
+
+    /**
+     * returns ID <==> Measure
+     */
+    public ImmutableBiMap<Integer, MeasureDesc> getEffectiveMeasureMap() {
+        return effectiveMeasures;
+    }
 
     public KylinConfig getConfig() {
         return config;

@@ -33,6 +33,12 @@ import java.util.stream.Collectors;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.StringUtils;
+import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
+import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree;
+import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTreeFactory;
+import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
@@ -45,18 +51,10 @@ import com.google.common.collect.Sets;
 import io.kyligence.kap.engine.spark.utils.SparkUtils;
 import io.kyligence.kap.engine.spark.application.SparkApplication;
 import io.kyligence.kap.engine.spark.builder.NBuildSourceInfo;
-import io.kyligence.kap.metadata.cube.cuboid.NSpanningTree;
-import io.kyligence.kap.metadata.cube.cuboid.NSpanningTreeFactory;
-import io.kyligence.kap.metadata.cube.model.IndexPlan;
-import io.kyligence.kap.metadata.cube.model.LayoutEntity;
-import io.kyligence.kap.metadata.cube.model.NBatchConstants;
-import io.kyligence.kap.metadata.cube.model.NDataSegment;
-import io.kyligence.kap.metadata.cube.model.NDataflowManager;
 import scala.collection.JavaConversions;
-import lombok.val;
 
 public class ResourceDetectBeforeCubingJob extends SparkApplication {
-    protected volatile NSpanningTree nSpanningTree;
+    protected volatile SpanningTree spanningTree;
     protected volatile List<NBuildSourceInfo> sources = new ArrayList<>();
     protected static final Logger logger = LoggerFactory.getLogger(ResourceDetectBeforeCubingJob.class);
 
@@ -64,20 +62,19 @@ public class ResourceDetectBeforeCubingJob extends SparkApplication {
     protected void doExecute() throws Exception {
         logger.info("Start detect resource before cube.");
 
-        String dataflowId = getParam(NBatchConstants.P_DATAFLOW_ID);
-        Set<String> segmentIds = Sets.newHashSet(StringUtils.split(getParam(NBatchConstants.P_SEGMENT_IDS)));
-        Set<Long> layoutIds = NSparkCubingUtil.str2Longs(getParam(NBatchConstants.P_LAYOUT_IDS));
+        String cubeId = getParam(MetadataConstants.P_CUBE_ID);
+        Set<String> segmentIds = Sets.newHashSet(StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS)));
+        Set<Long> layoutIds = NSparkCubingUtil.str2Longs(getParam(MetadataConstants.P_LAYOUT_IDS));
 
-        NDataflowManager dfMgr = NDataflowManager.getInstance(config, project);
-        IndexPlan indexPlan = dfMgr.getDataflow(dataflowId).getIndexPlan();
-        Set<LayoutEntity> cuboids = NSparkCubingUtil.toLayouts(indexPlan, layoutIds).stream().filter(Objects::nonNull)
+        Cube cube = Cube.getInstance(config);
+        Set<LayoutEntity> cuboids = NSparkCubingUtil.toLayouts(cube, layoutIds).stream().filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        nSpanningTree = NSpanningTreeFactory.fromLayouts(cuboids, dataflowId);
+        spanningTree = SpanningTreeFactory.fromLayouts(cuboids, cubeId);
 
         ResourceDetectUtils.write(new Path(config.getJobTmpShareDir(project, jobId), ResourceDetectUtils.countDistinctSuffix()), ResourceDetectUtils.findCountDistinctMeasure(cuboids));
         for (String segId : segmentIds) {
-            NDataSegment seg = dfMgr.getDataflow(dataflowId).getSegment(segId);
-            DFChooser datasetChooser = new DFChooser(nSpanningTree, seg, jobId, ss, config, false);
+            NDataSegment seg = dfMgr.getDataflow(cubeId).getSegment(segId);
+            DFChooser datasetChooser = new DFChooser(spanningTree, seg, jobId, ss, config, false);
             datasetChooser.decideSources();
             NBuildSourceInfo buildFromFlatTable = datasetChooser.flatTableSource();
             if (buildFromFlatTable != null) {
@@ -91,7 +88,7 @@ public class ResourceDetectBeforeCubingJob extends SparkApplication {
             infos.clearSparkPlans();
             for (NBuildSourceInfo source : sources) {
                 Dataset<Row> dataset = source.getParentDS();
-                val actionRdd = dataset.queryExecution().toRdd();
+                RDD actionRdd = dataset.queryExecution().toRdd();
                 logger.info("leaf nodes is: {} ", SparkUtils.leafNodes(actionRdd));
                 infos.recordSparkPlan(dataset.queryExecution().sparkPlan());
                 List<Path> paths = JavaConversions

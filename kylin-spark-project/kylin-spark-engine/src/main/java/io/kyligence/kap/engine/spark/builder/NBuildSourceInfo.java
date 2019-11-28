@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.engine.spark.metadata.cube.model.IndexEntity;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;

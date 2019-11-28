@@ -57,6 +57,7 @@ public interface MetadataConstants {
     //kylin on parquetv2
     String P_CUBE_ID = "cubeId";
     String P_JOB_ID = "jobId";
+    String P_SEGMENT_IDS = "segmentIds";
     String P_LAYOUT_IDS = "layoutIds";
     String P_PROJECT_NAME = "project";
     String P_TARGET_MODEL = "targetModel";
