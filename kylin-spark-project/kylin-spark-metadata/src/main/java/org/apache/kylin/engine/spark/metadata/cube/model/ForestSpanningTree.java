@@ -19,17 +19,21 @@
 package org.apache.kylin.engine.spark.metadata.cube.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
+import java.util.function.Function;
 
 public class ForestSpanningTree extends SpanningTree {
     // IndexEntity <> TreeNode
@@ -44,9 +48,63 @@ public class ForestSpanningTree extends SpanningTree {
 
     private static final Logger logger = LoggerFactory.getLogger(ForestSpanningTree.class);
 
-    public ForestSpanningTree(Map<IndexEntity, Collection<LayoutEntity>> cuboids, String cacheKey) {
+    private static final Function<TreeNode, IndexEntity> TRANSFORM_FUNC = new Function<TreeNode, IndexEntity>() {
+        @Nullable
+        @Override
+        public IndexEntity apply(@Nullable TreeNode input) {
+            return input == null ? null : input.indexEntity;
+        }
+    };
+
+    public ForestSpanningTree(Map<IndexEntity, Collection<LayoutEntity>> cuboids) {
         super(cuboids);
         init();
+    }
+
+    @Override
+    public boolean isValid(long requestCuboid) {
+        return nodesMap.containsKey(requestCuboid);
+    }
+
+    @Override
+    public int getCuboidCount() {
+        return nodesMap.size();
+    }
+
+    @Override
+    public Collection<IndexEntity> getRootIndexEntities() {
+        return Collections2.transform(roots, TRANSFORM_FUNC::apply);
+    }
+
+    @Override
+    public Collection<LayoutEntity> getLayouts(IndexEntity indexEntity) {
+        return cuboids.get(indexEntity);
+    }
+
+    @Override
+    public IndexEntity getIndexEntity(long cuboidId) {
+        if (nodesMap.get(cuboidId) == null) {
+            throw new IllegalStateException("Cuboid（ID:" + cuboidId + ") does not exist!");
+        }
+        return nodesMap.get(cuboidId).indexEntity;
+    }
+
+    @Override
+    public LayoutEntity getCuboidLayout(long cuboidLayoutId) {
+        return layoutMap.get(cuboidLayoutId);
+    }
+
+    @Override
+    public Collection<IndexEntity> getChildrenByIndexPlan(IndexEntity parent) {
+        // only meaningful when parent has been called in decideTheNextLayer
+        TreeNode parentNode = nodesMap.get(parent.getId());
+        Preconditions.checkState(parentNode.hasBeenDecided, "Node must have been decided before get its children.");
+        return Collections2.transform(parentNode.children, TRANSFORM_FUNC::apply);
+    }
+
+    @Override
+    public Collection<IndexEntity> getAllIndexEntities() {
+        return Collections2.transform(nodesMap.values(), TRANSFORM_FUNC::apply);
     }
 
     private void init() {
