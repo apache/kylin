@@ -1119,19 +1119,6 @@
           </configuration>
         </plugin>
         <plugin>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>3.0.0</version>
-          <executions>
-            <execution>
-              <id>auto-clean</id>
-              <phase>initialize</phase>
-              <goals>
-                <goal>clean</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-site-plugin</artifactId>
           <version>${maven-site.version}</version>
