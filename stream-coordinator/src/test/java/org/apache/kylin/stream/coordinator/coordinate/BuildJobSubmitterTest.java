@@ -103,7 +103,7 @@ public class BuildJobSubmitterTest extends StreamingTestBase {
         assertEquals(0, buildJobSubmitter.getCubeCheckList().size());
     }
 
-    void prepareTestCheckSegmentBuidJobFromMetadata() {
+    void prepareTestCheckSegmentBuildJobFromMetadata() {
         CubeSegment cubeSegment = stubCubSegment(SegmentStatusEnum.NEW, 100L, 200L);
         CubeInstance cubeInstance = stubCubeInstance(cubeSegment);
         config = stubKylinConfig();
@@ -124,24 +124,24 @@ public class BuildJobSubmitterTest extends StreamingTestBase {
     }
 
     @Test
-    public void testCheckSegmentBuidJobFromMetadata() {
-        prepareTestCheckSegmentBuidJobFromMetadata();
+    public void testCheckSegmentBuildJobFromMetadata() {
+        prepareTestCheckSegmentBuildJobFromMetadata();
         BuildJobSubmitter buildJobSubmitter = new BuildJobSubmitter(streamingCoordinator);
         buildJobSubmitter.restore();
-        List<String> segmentReadyList = buildJobSubmitter.checkSegmentBuidJobFromMetadata(cubeName2);
+        List<String> segmentReadyList = buildJobSubmitter.checkSegmentBuildJobFromMetadata(cubeName2);
         assertEquals(1, segmentReadyList.size());
 
-        segmentReadyList = buildJobSubmitter.checkSegmentBuidJobFromMetadata(cubeName3);
+        segmentReadyList = buildJobSubmitter.checkSegmentBuildJobFromMetadata(cubeName3);
         assertEquals(1, segmentReadyList.size());
     }
 
     @Test
-    public void testCheckSegmentBuidJobFromMetadata1() {
-        prepareTestCheckSegmentBuidJobFromMetadata();
+    public void testCheckSegmentBuildJobFromMetadata1() {
+        prepareTestCheckSegmentBuildJobFromMetadata();
         BuildJobSubmitter buildJobSubmitter = new BuildJobSubmitter(streamingCoordinator);
         buildJobSubmitter.restore();
 
-        List<String> segmentReadyList = buildJobSubmitter.checkSegmentBuidJobFromMetadata(cubeName4);
+        List<String> segmentReadyList = buildJobSubmitter.checkSegmentBuildJobFromMetadata(cubeName4);
         verify(executableManager, times(1)).resumeJob(eq(mockBuildJob4));
         assertEquals(0, segmentReadyList.size());
     }
