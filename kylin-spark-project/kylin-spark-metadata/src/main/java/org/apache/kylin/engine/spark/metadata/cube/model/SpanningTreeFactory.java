@@ -25,10 +25,16 @@ import org.apache.kylin.common.util.ClassUtil;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 public class SpanningTreeFactory {
-    //TODO: KapConfig
+    public static SpanningTree fromCube(Cube cube) {
+        Map<IndexEntity, Collection<LayoutEntity>> descLayouts = Maps.newHashMap();
+        for (IndexEntity indexEntity : cube.getAllIndexes()) {
+            descLayouts.put(indexEntity, indexEntity.getLayouts());
+        }
+        return newInstance(cube.getConfig(), descLayouts, cube.getUuid());
+    }
+
     public static SpanningTree fromLayouts(Collection<LayoutEntity> layoutEntities, String cacheKey) {
         Map<IndexEntity, Collection<LayoutEntity>> descLayouts = getIndexEntity2Layouts(layoutEntities);
         return fromIndexes(descLayouts, cacheKey);
@@ -39,7 +45,7 @@ public class SpanningTreeFactory {
     }
 
     private static SpanningTree newInstance(KylinConfig kylinConfig, Map<IndexEntity, Collection<LayoutEntity>> cuboids,
-                                            String cacheKey) {
+            String cacheKey) {
         try {
             String clzName = kylinConfig.getCuboidSpanningTree();
             Class<? extends SpanningTree> clz = ClassUtil.forName(clzName, SpanningTree.class);
@@ -53,14 +59,7 @@ public class SpanningTreeFactory {
             Collection<LayoutEntity> layoutEntities) {
         Map<IndexEntity, Collection<LayoutEntity>> descLayouts = Maps.newHashMap();
         for (LayoutEntity layout : layoutEntities) {
-            IndexEntity cuboidDesc = layout.getIndexEntity();
-            if (descLayouts.get(cuboidDesc) == null) {
-                Set<LayoutEntity> layouts = Sets.newHashSet();
-                layouts.add(layout);
-                descLayouts.put(cuboidDesc, layouts);
-            } else {
-                descLayouts.get(cuboidDesc).add(layout);
-            }
+            descLayouts.computeIfAbsent(layout.getIndexEntity(), k -> Sets.newHashSet()).add(layout);
         }
         return descLayouts;
     }

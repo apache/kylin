@@ -44,6 +44,26 @@ public abstract class SpanningTree implements Serializable {
         this.cuboids = cuboids;
     }
 
+    abstract public boolean isValid(long cuboidId);
+
+    abstract public int getCuboidCount();
+
+    abstract public Collection<IndexEntity> getRootIndexEntities();
+
+    abstract public Collection<LayoutEntity> getLayouts(IndexEntity cuboidDesc);
+
+    abstract public IndexEntity getIndexEntity(long cuboidId);
+
+    abstract public LayoutEntity getCuboidLayout(long cuboidLayoutId);
+
+    abstract public Collection<IndexEntity> getChildrenByIndexPlan(IndexEntity parent);
+
+    abstract public Collection<IndexEntity> getAllIndexEntities();
+
+    public Map<IndexEntity, Collection<LayoutEntity>> getCuboids() {
+        return cuboids;
+    }
+
     public static class TreeNode implements Serializable {
         @JsonProperty("cuboid")
         protected final IndexEntity indexEntity;

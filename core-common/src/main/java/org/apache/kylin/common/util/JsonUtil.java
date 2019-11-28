@@ -122,4 +122,30 @@ public class JsonUtil {
     public static void writeValueWithTyping(OutputStream out, Object value) throws IOException {
         typeMapper.writeValue(out, value);
     }
+
+    public static <T> T deepCopy(T src, Class<T> valueType) throws IOException {
+        String s = mapper.writeValueAsString(src);
+        return mapper.readValue(s, valueType);
+    }
+
+    public static <T> T deepCopy(T src, TypeReference<T> valueType) throws IOException {
+        String s = mapper.writeValueAsString(src);
+        return mapper.readValue(s, valueType);
+    }
+
+    public static <T> T deepCopyQuietly(T src, Class<T> valueType) {
+        try {
+            return deepCopy(src, valueType);
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot copy " + valueType.getName(), e);
+        }
+    }
+
+    public static <T> T deepCopyQuietly(T src, TypeReference<T> typeReference) {
+        try {
+            return deepCopy(src, typeReference);
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot copy " + typeReference.getType(), e);
+        }
+    }
 }

@@ -2288,11 +2288,17 @@ public abstract class KylinConfigBase implements Serializable {
     // ============================================================================
     // Kylin on parquetv2 related
     // ============================================================================
+    public String getCuboidSpanningTree() {
+        return getOptional("kylin.cube.cuboid-spanning-tree",
+                "kylin.engine.spark.metadata.cube.model.ForestSpanningTree");
+    }
 
+    //TODO: Class name needs to be change
     public String getSparkBuildClassName() {
         return getOptional("kylin.engine.spark.build-class-name", "io.kyligence.kap.engine.spark.job.DFBuildJob");
     }
 
+    //TODO: Class name needs to be change
     public String getSparkTableSamplingClassName() {
         return getOptional("kylin.engine.spark.sampling-class-name",
                 "io.kyligence.kap.engine.spark.stats.analyzer.TableAnalyzerJob");

@@ -118,6 +118,14 @@ public class IndexEntity {
         this.layouts = layouts;
     }
 
+    public Cube getCube() {
+        return cube;
+    }
+
+    public void setCube(Cube cube) {
+        this.cube = cube;
+    }
+
     public ImmutableBitSet getDimensionBitset() {
         return dimensionBitset;
     }
