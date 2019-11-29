@@ -296,120 +296,120 @@ abstract public class SegmentRange<T extends Comparable> implements Comparable<S
 
     }
 
-    public static class KafkaOffsetPartitionedSegmentRange extends BasicSegmentRange {
-
-        @JsonProperty("source_partition_offset_start")
-        private Map<Integer, Long> sourcePartitionOffsetStart;
-
-        @JsonProperty("source_partition_offset_end")
-        private Map<Integer, Long> sourcePartitionOffsetEnd;
-
-        public static KafkaOffsetPartitionedSegmentRange createInfinite() {
-            return new KafkaOffsetPartitionedSegmentRange(0L, Long.MAX_VALUE, null, null);
-        }
-
-        public KafkaOffsetPartitionedSegmentRange() {
-        }
-
-        public KafkaOffsetPartitionedSegmentRange(Long startOffset, Long endOffset,
-                Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd) {
-            super(startOffset, endOffset);
-            this.sourcePartitionOffsetStart = sourcePartitionOffsetStart == null ? Maps.<Integer, Long> newHashMap()
-                    : sourcePartitionOffsetStart;
-            this.sourcePartitionOffsetEnd = sourcePartitionOffsetEnd == null ? Maps.<Integer, Long> newHashMap()
-                    : sourcePartitionOffsetEnd;
-        }
-
-        private KafkaOffsetPartitionedSegmentRange convertToKafkaOffset(SegmentRange o) {
-            Preconditions.checkState(o instanceof KafkaOffsetPartitionedSegmentRange);
-            return (KafkaOffsetPartitionedSegmentRange) o;
-        }
-
-        @Override
-        public SegmentRange coverWith(SegmentRange o) {
-            KafkaOffsetPartitionedSegmentRange other = convertToKafkaOffset(o);
-            return new KafkaOffsetPartitionedSegmentRange(this.start, other.end, this.getSourcePartitionOffsetStart(),
-                    other.getSourcePartitionOffsetEnd());
-        }
-
-        @Override
-        public SegmentRange gapTill(SegmentRange o) {
-            KafkaOffsetPartitionedSegmentRange other = convertToKafkaOffset(o);
-            return new KafkaOffsetPartitionedSegmentRange(this.end, other.start, this.getSourcePartitionOffsetEnd(),
-                    other.getSourcePartitionOffsetStart());
-        }
-
-        @Override
-        public SegmentRange getStartDeviation(SegmentRange o) {
-            KafkaOffsetPartitionedSegmentRange other = convertToKafkaOffset(o);
-            return new KafkaOffsetPartitionedSegmentRange(this.start, other.start, this.getSourcePartitionOffsetStart(),
-                    other.getSourcePartitionOffsetStart());
-        }
-
-        @Override
-        public SegmentRange getEndDeviation(SegmentRange o) {
-            KafkaOffsetPartitionedSegmentRange other = convertToKafkaOffset(o);
-            return new KafkaOffsetPartitionedSegmentRange(this.end, other.end, this.getSourcePartitionOffsetEnd(),
-                    other.getSourcePartitionOffsetEnd());
-        }
-
-        @Override
-        public SegmentRange getOverlapRange(SegmentRange o) {
-            KafkaOffsetPartitionedSegmentRange other = convertToKafkaOffset(o);
-            if (!this.overlaps(o)) {
-                return null;
-            }
-            Long start = this.start < other.start ? other.start : this.start;
-            Long end = this.end < other.end ? this.start : other.start;
-            return new TimePartitionedSegmentRange(start, end);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o)
-                return true;
-            if (o == null || getClass() != o.getClass())
-                return false;
-            if (!super.equals(o))
-                return false;
-            KafkaOffsetPartitionedSegmentRange that = (KafkaOffsetPartitionedSegmentRange) o;
-            return java.util.Objects.equals(sourcePartitionOffsetStart, that.sourcePartitionOffsetStart)
-                    && java.util.Objects.equals(sourcePartitionOffsetEnd, that.sourcePartitionOffsetEnd);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(super.hashCode(), sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
-        }
-
-        public Map<Integer, Long> getSourcePartitionOffsetStart() {
-            return sourcePartitionOffsetStart;
-        }
-
-        public Map<Integer, Long> getSourcePartitionOffsetEnd() {
-            return sourcePartitionOffsetEnd;
-        }
-
-        @JsonProperty("source_offset_start")
-        public Long getStart() {
-            return start;
-        }
-
-        @JsonProperty("source_offset_start")
-        public void setStart(Long start) {
-            this.start = start;
-        }
-
-        @JsonProperty("source_offset_end")
-        public Long getEnd() {
-            return end;
-        }
-
-        @JsonProperty("source_offset_end")
-        public void setEnd(Long end) {
-            this.end = end;
-        }
-    }
+//    public static class KafkaOffsetPartitionedSegmentRange extends BasicSegmentRange {
+//
+//        @JsonProperty("source_partition_offset_start")
+//        private Map<Integer, Long> sourcePartitionOffsetStart;
+//
+//        @JsonProperty("source_partition_offset_end")
+//        private Map<Integer, Long> sourcePartitionOffsetEnd;
+//
+//        public static KafkaOffsetPartitionedSegmentRange createInfinite() {
+//            return new KafkaOffsetPartitionedSegmentRange(0L, Long.MAX_VALUE, null, null);
+//        }
+//
+//        public KafkaOffsetPartitionedSegmentRange() {
+//        }
+//
+//        public KafkaOffsetPartitionedSegmentRange(Long startOffset, Long endOffset,
+//                Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd) {
+//            super(startOffset, endOffset);
+//            this.sourcePartitionOffsetStart = sourcePartitionOffsetStart == null ? Maps.<Integer, Long> newHashMap()
+//                    : sourcePartitionOffsetStart;
+//            this.sourcePartitionOffsetEnd = sourcePartitionOffsetEnd == null ? Maps.<Integer, Long> newHashMap()
+//                    : sourcePartitionOffsetEnd;
+//        }
+//
+//        private KafkaOffsetPartitionedSegmentRange convertToKafkaOffset(SegmentRange o) {
+//            Preconditions.checkState(o instanceof KafkaOffsetPartitionedSegmentRange);
+//            return (KafkaOffsetPartitionedSegmentRange) o;
+//        }
+//
+//        @Override
+//        public SegmentRange coverWith(SegmentRange o) {
+//            KafkaOffsetPartitionedSegmentRange other = convertToKafkaOffset(o);
+//            return new KafkaOffsetPartitionedSegmentRange(this.start, other.end, this.getSourcePartitionOffsetStart(),
+//                    other.getSourcePartitionOffsetEnd());
+//        }
+//
+//        @Override
+//        public SegmentRange gapTill(SegmentRange o) {
+//            KafkaOffsetPartitionedSegmentRange other = convertToKafkaOffset(o);
+//            return new KafkaOffsetPartitionedSegmentRange(this.end, other.start, this.getSourcePartitionOffsetEnd(),
+//                    other.getSourcePartitionOffsetStart());
+//        }
+//
+//        @Override
+//        public SegmentRange getStartDeviation(SegmentRange o) {
+//            KafkaOffsetPartitionedSegmentRange other = convertToKafkaOffset(o);
+//            return new KafkaOffsetPartitionedSegmentRange(this.start, other.start, this.getSourcePartitionOffsetStart(),
+//                    other.getSourcePartitionOffsetStart());
+//        }
+//
+//        @Override
+//        public SegmentRange getEndDeviation(SegmentRange o) {
+//            KafkaOffsetPartitionedSegmentRange other = convertToKafkaOffset(o);
+//            return new KafkaOffsetPartitionedSegmentRange(this.end, other.end, this.getSourcePartitionOffsetEnd(),
+//                    other.getSourcePartitionOffsetEnd());
+//        }
+//
+//        @Override
+//        public SegmentRange getOverlapRange(SegmentRange o) {
+//            KafkaOffsetPartitionedSegmentRange other = convertToKafkaOffset(o);
+//            if (!this.overlaps(o)) {
+//                return null;
+//            }
+//            Long start = this.start < other.start ? other.start : this.start;
+//            Long end = this.end < other.end ? this.start : other.start;
+//            return new TimePartitionedSegmentRange(start, end);
+//        }
+//
+//        @Override
+//        public boolean equals(Object o) {
+//            if (this == o)
+//                return true;
+//            if (o == null || getClass() != o.getClass())
+//                return false;
+//            if (!super.equals(o))
+//                return false;
+//            KafkaOffsetPartitionedSegmentRange that = (KafkaOffsetPartitionedSegmentRange) o;
+//            return java.util.Objects.equals(sourcePartitionOffsetStart, that.sourcePartitionOffsetStart)
+//                    && java.util.Objects.equals(sourcePartitionOffsetEnd, that.sourcePartitionOffsetEnd);
+//        }
+//
+//        @Override
+//        public int hashCode() {
+//            return java.util.Objects.hash(super.hashCode(), sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
+//        }
+//
+//        public Map<Integer, Long> getSourcePartitionOffsetStart() {
+//            return sourcePartitionOffsetStart;
+//        }
+//
+//        public Map<Integer, Long> getSourcePartitionOffsetEnd() {
+//            return sourcePartitionOffsetEnd;
+//        }
+//
+//        @JsonProperty("source_offset_start")
+//        public Long getStart() {
+//            return start;
+//        }
+//
+//        @JsonProperty("source_offset_start")
+//        public void setStart(Long start) {
+//            this.start = start;
+//        }
+//
+//        @JsonProperty("source_offset_end")
+//        public Long getEnd() {
+//            return end;
+//        }
+//
+//        @JsonProperty("source_offset_end")
+//        public void setEnd(Long end) {
+//            this.end = end;
+//        }
+//    }
 
     public static Long dateToLong(String dateString) {
         return DateFormat.stringToMillis(dateString);

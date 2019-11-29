@@ -29,11 +29,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ForestSpanningTree extends SpanningTree {
     // IndexEntity <> TreeNode
@@ -111,6 +114,72 @@ public class ForestSpanningTree extends SpanningTree {
         new TreeBuilder(cuboids.keySet()).build();
     }
 
+    @Override
+    public void decideTheNextLayer(Collection<IndexEntity> currentLayer, DataSegment segment) {
+        // After built, we know each cuboid's size.
+        // Then we will find each cuboid's children.
+        // Smaller cuboid has smaller cost, and has higher priority when finding children.
+        Comparator<IndexEntity> c1 = Comparator.comparingLong(o -> getRows(o, segment));
+
+        // for deterministic
+        Comparator<IndexEntity> c2 = Comparator.comparingLong(IndexEntity::getId);
+
+        List<IndexEntity> orderedIndexes = currentLayer.stream() //
+                .sorted(c1.thenComparing(c2)) //
+                .collect(Collectors.toList()); //
+
+        orderedIndexes.forEach(index -> {
+            adjustTree(index, segment);
+
+            logger.info("Adjust spanning tree." + //
+                            " Current cube: {}." + //
+                            " Current index entity: {}." + //
+                            " Its children: {}\n" //
+                    , index.getCube().getUuid() //
+                    , index.getId() //
+                    , Arrays.toString(getChildrenByIndexPlan(index).stream() //
+                            .map(IndexEntity::getId).toArray())//
+            );
+        });
+
+    }
+
+    private void adjustTree(IndexEntity parent, DataSegment seg) {
+        TreeNode parentNode = nodesMap.get(parent.getId());
+
+        List<TreeNode> children = nodesMap.values().stream() //
+                .filter(node -> shouldBeAdded(node, parent, seg))
+                .collect(Collectors.toList());//
+
+        // update child node's parent.
+        children.forEach(node -> {
+            node.level = parentNode.level + 1;
+            node.parent = parentNode;
+        });
+
+        // update parent node's children.
+        parentNode.children.addAll(children);
+        parentNode.hasBeenDecided = true;
+    }
+
+    private boolean shouldBeAdded(TreeNode node, IndexEntity parent, DataSegment seg) {
+        return node.parent == null // already has been decided
+                && node.parentCandidates != null //it is root node
+                && node.parentCandidates.stream().allMatch(c -> isBuilt(c, seg)) // its parents candidates is not all ready.
+                && node.parentCandidates.contains(parent); //its parents candidates did not contains this IndexEntity.
+    }
+
+    public boolean isBuilt(IndexEntity ie, DataSegment seg) {
+        return getLayoutFromSeg(ie, seg) != null;
+    }
+
+    private long getRows(IndexEntity ie, DataSegment seg) {
+        return getLayoutFromSeg(ie, seg).getRows();
+    }
+
+    private DataLayout getLayoutFromSeg(IndexEntity ie, DataSegment seg) {
+        return seg.getLayout(Lists.newArrayList(getLayouts(ie)).get(0).getId());
+    }
 
     private class TreeBuilder {
         // Sort in descending order of dimension and measure number to make sure children is in front

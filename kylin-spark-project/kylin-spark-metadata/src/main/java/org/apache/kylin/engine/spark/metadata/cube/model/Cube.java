@@ -20,21 +20,29 @@ package org.apache.kylin.engine.spark.metadata.cube.model;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.base.Preconditions;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.engine.spark.metadata.cube.PathManager;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableRef;
+import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.apache.kylin.common.persistence.ResourceStore.CUBE_RESOURCE_ROOT;
+import static org.apache.kylin.metadata.MetadataConstants.FILE_SURFIX;
 
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
@@ -46,21 +54,23 @@ public class Cube extends RootPersistentEntity {
     @JsonProperty("projefct")
     private String project;
 
+    @JsonProperty("")
     private DataModel dataModel;
 
+    @JsonManagedReference
+    @JsonProperty("segments")
+    private List<DataSegment> segments = new ArrayList<>();
+
+    private Cube(KylinConfig config) {}
+
+    private transient SpanningTree spanningTree = null; // transient, because can self recreate
+
+    @JsonProperty("indexes")
     private List<IndexEntity> indexEntities = new ArrayList<>();
 
     private List<DimensionDesc> dimensions = new ArrayList<>();
 
     private List<MeasureDesc> measures = new ArrayList<>();
-
-    private transient SpanningTree spanningTree = null; // transient, because can self recreate
-
-    private Cube(KylinConfig config) {
-        String resourceRootPath = "/" + project + CUBE_RESOURCE_ROOT;
-        Preconditions.checkArgument(resourceRootPath.equals("") || resourceRootPath.startsWith("/"));
-        Preconditions.checkArgument(!resourceRootPath.endsWith("/"));
-    }
 
     public static Cube getInstance(KylinConfig config) {
         return new Cube(config);
@@ -71,6 +81,14 @@ public class Cube extends RootPersistentEntity {
         List<IndexEntity> indexEntities = Arrays.asList(indexes);
         this.addIndexEntities(indexEntities);
         return this;
+    }
+
+    public DataSegment getSegment(String segId) {
+        for (DataSegment seg : segments) {
+            if (seg.getId().equals(segId))
+                return seg;
+        }
+        return null;
     }
   
     public DataModel getDataModel() {
@@ -110,6 +128,55 @@ public class Cube extends RootPersistentEntity {
     }
 
     //used to dump resource before spark job submit
+    public String getResourcePath() {
+        return concatResourcePath(getUuid(), project);
+    }
+
+    public static String concatResourcePath(String name, String project) {
+        return "/" + project + CUBE_RESOURCE_ROOT + "/" + name + FILE_SURFIX;
+    }
+
+    public List<IndexEntity> getAllIndexes() {
+        Map<Long, Integer> retSubscriptMap = Maps.newHashMap();
+        List<IndexEntity> mergedIndexes = Lists.newArrayList();
+        int retSubscript = 0;
+        for (IndexEntity indexEntity : indexEntities) {
+            IndexEntity copy = JsonUtil.deepCopyQuietly(indexEntity, IndexEntity.class);
+            retSubscriptMap.put(indexEntity.getId(), retSubscript);
+            mergedIndexes.add(copy);
+            retSubscript++;
+        }
+
+        //TODO: comment out for now
+//        for (LayoutEntity ruleBasedLayout : ruleBasedLayouts) {
+//            val ruleRelatedIndex = ruleBasedLayout.getIndex();
+//            if (!retSubscriptMap.containsKey(ruleRelatedIndex.getId())) {
+//                val copy = JsonUtil.deepCopyQuietly(ruleRelatedIndex, IndexEntity.class);
+//                retSubscriptMap.put(ruleRelatedIndex.getId(), retSubscript);
+//                mergedIndexes.add(copy);
+//                retSubscript++;
+//            }
+//            val subscript = retSubscriptMap.get(ruleRelatedIndex.getId());
+//            val targetIndex = mergedIndexes.get(subscript);
+//            val originLayouts = targetIndex.getLayouts();
+//            boolean isMatch = originLayouts.stream().filter(originLayout -> originLayout.equals(ruleBasedLayout))
+//                    .peek(originLayout -> originLayout.setManual(true)).count() > 0;
+//            LayoutEntity copyRuleBasedLayout;
+//            copyRuleBasedLayout = JsonUtil.deepCopyQuietly(ruleBasedLayout, LayoutEntity.class);
+//            if (!isMatch) {
+//                originLayouts.add(copyRuleBasedLayout);
+//            }
+//            targetIndex.setLayouts(originLayouts);
+//            targetIndex.setNextLayoutOffset(Math.max(targetIndex.getNextLayoutOffset(),
+//                    originLayouts.stream().mapToLong(LayoutEntity::getId).max().orElse(0) % INDEX_ID_STEP + 1));
+//            copyRuleBasedLayout.setIndex(targetIndex);
+//        }
+
+        mergedIndexes.forEach(value -> value.setCube(this));
+        return mergedIndexes;
+
+    }
+
     public Set<String> collectPrecalculationResource() {
         Set<String> r = new LinkedHashSet<>();
 
@@ -124,6 +191,10 @@ public class Cube extends RootPersistentEntity {
         }
 
         return r;
+    }
+
+    public LayoutEntity getCuboidLayout(Long cuboidLayoutId) {
+        return getSpanningTree().getCuboidLayout(cuboidLayoutId);
     }
 
     public KylinConfigExt getConfig() {
@@ -143,7 +214,7 @@ public class Cube extends RootPersistentEntity {
     }
 
     public void addIndexEntities(List<IndexEntity> indexEntities) {
-        this.getIndexEntities().addAll(indexEntities);
+        this.indexEntities.addAll(indexEntities);
     }
 
     public List<DimensionDesc> getDimensions() {
@@ -168,9 +239,4 @@ public class Cube extends RootPersistentEntity {
     public void setProject(String project) {
         this.project = project;
     }
-
-    public LayoutEntity getCuboidLayout(Long cuboidLayoutId) {
-        return getSpanningTree().getCuboidLayout(cuboidLayoutId);
-    }
-
 }
