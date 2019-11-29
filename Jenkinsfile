@@ -6,7 +6,8 @@ node ('nsn_builder_budapest') {
         }
         stage("Set Java to 1.8"){
             sh"export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/; \
-            export PATH=$JAVA_HOME/bin:$PATH;"
+            export PATH=$JAVA_HOME/bin:$PATH; \
+            mvn -version;"
         }
         stage("Build Kylin Binaries"){
             sh"build/script/package.sh; \
