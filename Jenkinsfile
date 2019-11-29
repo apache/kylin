@@ -1,24 +1,4 @@
-switch(env.ENV) {
-  case "dev":
-    exec_node = 'nsn_deployer'
-    break
-  case "qa":
-    exec_node = 'nsn_deployer'
-    break
-  case "cicd":
-    exec_node = 'nsn_deployer'
-    break
-  case "pentest.pentest":
-    exec_node = 'pentest_deployer'
-    break
-  case "pentest2.pentest":
-    exec_node = 'pentest_eployer'
-    break
-  default:
-    exec_node = 'nsn_deployer'
-    break
-}
-node (exec_node) {
+node ('nsn_deployer') {
     // This displays colors using the 'xterm' ansi color map.
   ansiColor('xterm') {
         stage("Checkout code") {
@@ -29,7 +9,7 @@ node (exec_node) {
             export PATH=$JAVA_HOME/bin:$PATH;"
         }
         stage("Build Kylin Binaries"){
-            sh"build/script/package.sh; \
+            sh"cd kylin && build/script/package.sh; \
             aws s3 cp --recursive dist ${S3_PATH};"
         }
   }
