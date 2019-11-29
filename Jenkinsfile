@@ -9,7 +9,7 @@ node ('nsn_deployer') {
             export PATH=$JAVA_HOME/bin:$PATH;"
         }
         stage("Build Kylin Binaries"){
-            sh"cd kylin && build/script/package.sh; \
+            sh"build/script/package.sh; \
             aws s3 cp --recursive dist ${S3_PATH};"
         }
   }
