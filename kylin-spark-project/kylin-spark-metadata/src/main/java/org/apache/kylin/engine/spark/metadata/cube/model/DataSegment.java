@@ -56,14 +56,18 @@ public class DataSegment implements Serializable {
     private transient DataSegDetails segDetails; // transient, not required by spark cubing
     private transient Map<Long, DataLayout> layoutsMap = Collections.emptyMap(); // transient, not required by spark cubing
 
+    public DataLayout getLayout(long layoutId) {
+        return layoutsMap.get(layoutId);
+    }
+
     public DataModel getModel() {
         return this.cube.getDataModel();
     }
 
-    public boolean isOffsetCube() {
-        return segmentRange instanceof SegmentRange.KafkaOffsetPartitionedSegmentRange;
-    }
-
+//    public boolean isOffsetCube() {
+//        return segmentRange instanceof SegmentRange.KafkaOffsetPartitionedSegmentRange;
+//    }
+//
     public void setSegmentRange(SegmentRange segmentRange) {
         this.segmentRange = segmentRange;
     }
@@ -110,6 +114,14 @@ public class DataSegment implements Serializable {
 
     public void setLastBuildTime(long lastBuildTime) {
         this.lastBuildTime = lastBuildTime;
+    }
+
+    public Map<Long, DataLayout> getLayoutsMap() {
+        return layoutsMap;
+    }
+
+    public void setLayoutsMap(Map<Long, DataLayout> layoutsMap) {
+        this.layoutsMap = layoutsMap;
     }
 
     public DataSegDetails getSegDetails() {

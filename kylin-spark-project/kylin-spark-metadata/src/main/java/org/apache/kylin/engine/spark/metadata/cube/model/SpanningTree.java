@@ -56,6 +56,8 @@ public abstract class SpanningTree implements Serializable {
 
     abstract public LayoutEntity getCuboidLayout(long cuboidLayoutId);
 
+    abstract public void decideTheNextLayer(Collection<IndexEntity> currentLayer, DataSegment segment);
+
     abstract public Collection<IndexEntity> getChildrenByIndexPlan(IndexEntity parent);
 
     abstract public Collection<IndexEntity> getAllIndexEntities();
@@ -90,8 +92,4 @@ public abstract class SpanningTree implements Serializable {
                     ", children:{" + children.toString() + "}";//
         }
     }
-
-    abstract public LayoutEntity getCuboidLayout(long cuboidLayoutId);
-
-    abstract public Collection<IndexEntity> getRootIndexEntities();
 }
