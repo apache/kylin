@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.engine.spark.metadata.Measure;
 
 import java.util.List;
 
@@ -53,8 +52,6 @@ public class IndexEntity {
 
     private final ImmutableBitSet dimensionBitset = initDimensionBitset();
 
-    private DataModel model = new DataModel();
-
     private final ImmutableBiMap<Integer, MeasureDesc> effectiveMeasures = initEffectiveMeasures();
 
     public ImmutableBiMap<Integer, MeasureDesc> getEffectiveMeasures() {
@@ -64,8 +61,8 @@ public class IndexEntity {
     private ImmutableBiMap<Integer, MeasureDesc> initEffectiveMeasures() {
         ImmutableBiMap.Builder<Integer, MeasureDesc> measuresBuilder = ImmutableBiMap.builder();
         for (int m : measures) {
-            if (model.getEffectiveMeasureMap().containsKey(m)) {
-                measuresBuilder.put(m, model.getEffectiveMeasureMap().get(m));
+            if (this.cube.getDataModel().getEffectiveMeasureMap().containsKey(m)) {
+                measuresBuilder.put(m, this.cube.getDataModel().getEffectiveMeasureMap().get(m));
             }
         }
         return measuresBuilder.build();
