@@ -1,4 +1,4 @@
-node ('nsn_deployer') {
+node ('nsn_builder_budapest') {
     // This displays colors using the 'xterm' ansi color map.
   ansiColor('xterm') {
         stage("Checkout code") {
