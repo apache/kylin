@@ -74,6 +74,7 @@ public class HybridInstanceTest {
                 new LinkedList<>(),
                 true,
                 true,
+                false,
                 new LinkedHashSet<>());
         CapabilityResult capabilityResult = hybridInstance.isCapable(sQLDigest);
 
