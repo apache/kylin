@@ -57,6 +57,7 @@ Apache Kylin™是一个开源的分布式分析引擎，提供Hadoop之上的SQ
 9. [Qlik Sense 集成](tutorial/Qlik.html)
 10. [Apache Superset](tutorial/superset.html)
 11. [Redash](/blog/2018/05/08/redash-kylin-plugin-strikingly/)
+12. [Davinci](/blog/2019/11/29/davinci-kylin-insight/)
 
 
 帮助
