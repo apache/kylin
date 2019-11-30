@@ -696,6 +696,13 @@ public class QueryService extends BasicService {
             DBUtils.closeQuietly(conn);
             if (preparedContext != null) {
                 if (borrowPrepareContext) {
+                    // Set tag isBorrowedContext true, when return preparedContext back
+                    for (OLAPContext olapContext : preparedContext.olapContexts) {
+                        if (borrowPrepareContext) {
+                            olapContext.isBorrowedContext = true;
+                        }
+                    }
+
                     preparedContextPool.returnObject(preparedContextKey, preparedContext);
                 } else {
                     preparedContext.close();
@@ -1253,6 +1260,10 @@ public class QueryService extends BasicService {
         Connection conn = QueryConnection.getConnection(project);
         PreparedStatement preparedStatement = conn.prepareStatement(sql);
         Collection<OLAPContext> olapContexts = OLAPContext.getThreadLocalContexts();
+        // If the preparedContext is first initialized, then set the borrowed tag to false
+        for (OLAPContext olapContext : olapContexts) {
+            olapContext.isBorrowedContext = false;
+        }
         return new PreparedContext(conn, preparedStatement, olapContexts);
     }
 
