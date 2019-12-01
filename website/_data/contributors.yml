@@ -65,11 +65,11 @@
   org: MapR
   role: Champion
   avatar: https://www.mapr.com/sites/default/files/otherpageimages/ted-circle-80.png
-- name: Shaofeng Shi (史少锋) (Chair)
+- name: Shaofeng Shi (史少锋)
   apacheId: shaofengshi
   githubId: shaofengshi
   org: Kyligence Inc.
-  role: PMC
+  role: PMC Chair
 - name: Xiaodong Duo (朵晓东)
   apacheId: xduo
   githubId: xduo

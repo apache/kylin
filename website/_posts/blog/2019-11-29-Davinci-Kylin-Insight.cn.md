@@ -1,7 +1,7 @@
 ---
 layout: post-blog
 title:  你离可视化酷炫大屏只差一套 Kylin + Davinci
-date:   2019-05-23 15:00:00
+date:   2019-11-29 15:00:00
 author: 高亚山、夏邢
 categories: cn_blog
 ---
