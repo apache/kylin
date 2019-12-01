@@ -184,7 +184,7 @@
   apacheId: nic
   githubId: nichunen
   org: Kyligence Inc.
-  role: committer
+  role: PMC
 - name: Jiatao Tao (陶加涛)
   apacheId: tao
   githubId: aaaaaaron
@@ -202,6 +202,6 @@
   role: committer
 - name: Temple Zhou (周天鹏)
   apacheId: ztp
-  githubId:
+  githubId: TempleZhou
   org: DXY.cn
-  role:committer
+  role: committer
