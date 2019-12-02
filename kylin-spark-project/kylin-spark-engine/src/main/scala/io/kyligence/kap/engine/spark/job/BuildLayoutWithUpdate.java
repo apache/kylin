@@ -36,12 +36,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.engine.spark.metadata.cube.model.DataLayout;
+import org.apache.kylin.engine.spark.metadata.cube.model.DataSegment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.kyligence.kap.engine.spark.utils.BuildUtils;
-import io.kyligence.kap.metadata.cube.model.NDataLayout;
-import io.kyligence.kap.metadata.cube.model.NDataSegment;
 
 public class BuildLayoutWithUpdate {
     protected static final Logger logger = LoggerFactory.getLogger(BuildLayoutWithUpdate.class);
@@ -55,21 +55,21 @@ public class BuildLayoutWithUpdate {
             public JobResult call() throws Exception {
                 KylinConfig.setAndUnsetThreadLocalConfig(config);
                 Thread.currentThread().setName("thread-" + job.getName());
-                List<NDataLayout> nDataLayouts = new LinkedList<>();
+                List<DataLayout> dataLayouts = new LinkedList<>();
                 Throwable throwable = null;
                 try {
-                    nDataLayouts = job.build();
+                    dataLayouts = job.build();
                 } catch (Throwable t) {
                     logger.error("Error occurred when run " + job.getName(), t);
                     throwable = t;
                 }
-                return new JobResult(nDataLayouts, throwable);
+                return new JobResult(dataLayouts, throwable);
             }
         });
         currentLayoutsNum++;
     }
 
-    public void updateLayout(NDataSegment seg, KylinConfig config, String project) {
+    public void updateLayout(DataSegment seg, KylinConfig config, String project) {
         for (int i = 0; i < currentLayoutsNum; i++) {
             try {
                 logger.info("Wait to take job result.");
@@ -79,7 +79,7 @@ public class BuildLayoutWithUpdate {
                     shutDownPool();
                     throw new RuntimeException(result.getThrowable());
                 }
-                for (NDataLayout layout : result.getLayouts()) {
+                for (DataLayout layout : result.getLayouts()) {
                     BuildUtils.updateDataFlow(seg, layout, config, project);
                 }
             } catch (InterruptedException | ExecutionException e) {
@@ -101,10 +101,10 @@ public class BuildLayoutWithUpdate {
     }
 
     private static class JobResult {
-        private List<NDataLayout> layouts;
+        private List<DataLayout> layouts;
         private Throwable throwable;
 
-        JobResult(List<NDataLayout> layouts, Throwable throwable) {
+        JobResult(List<DataLayout> layouts, Throwable throwable) {
             this.layouts = layouts;
             this.throwable = throwable;
         }
@@ -117,7 +117,7 @@ public class BuildLayoutWithUpdate {
             return throwable;
         }
 
-        List<NDataLayout> getLayouts() {
+        List<DataLayout> getLayouts() {
             return layouts;
         }
     }
@@ -126,6 +126,6 @@ public class BuildLayoutWithUpdate {
 
         public abstract String getName();
 
-        public abstract List<NDataLayout> build() throws IOException;
+        public abstract List<DataLayout> build() throws IOException;
     }
 }

@@ -29,7 +29,7 @@ import java.util.List;
 
 public class LayoutEntity implements IStorageAware {
     @JsonBackReference
-    private IndexEntity index;
+    private IndexEntity indexEntity;
 
     @JsonProperty("id")
     private long id;
@@ -52,39 +52,6 @@ public class LayoutEntity implements IStorageAware {
     private ImmutableBiMap<Integer, TblColRef> orderedDimensions;
     private ImmutableBiMap<Integer, MeasureDesc> orderedMeasures;
 
-    @Override
-    public int getStorageType() {
-        return this.storageType;
-    }
-
-    public IndexEntity getIndex() {
-        return index;
-    }
-
-    public void setIndex(IndexEntity index) {
-        this.index = index;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getOwner() {
-        return owner;
-    }
-
     public ImmutableBiMap<Integer, TblColRef> getOrderedDimensions() { // dimension order abides by rowkey_col_desc
         if (orderedDimensions != null)
             return orderedDimensions;
@@ -97,7 +64,7 @@ public class LayoutEntity implements IStorageAware {
 
             for (int colId : colOrder) {
                 if (colId < DataModel.MEASURE_ID_BASE)
-                    dimsBuilder.put(colId, index.getEffectiveDimCols().get(colId));
+                    dimsBuilder.put(colId, indexEntity.getEffectiveDimCols().get(colId));
             }
 
             orderedDimensions = dimsBuilder.build();
@@ -117,12 +84,45 @@ public class LayoutEntity implements IStorageAware {
 
             for (int colId : colOrder) {
                 if (colId >= DataModel.MEASURE_ID_BASE)
-                    measureBuilder.put(colId, index.getEffectiveMeasures().get(colId));
+                    measureBuilder.put(colId, indexEntity.getEffectiveMeasures().get(colId));
             }
 
             orderedMeasures = measureBuilder.build();
             return orderedMeasures;
         }
+    }
+
+    @Override
+    public int getStorageType() {
+        return this.storageType;
+    }
+
+    public IndexEntity getIndexEntity() {
+        return indexEntity;
+    }
+
+    public void setIndexEntity(IndexEntity indexEntity) {
+        this.indexEntity = indexEntity;
+    }
+  
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getOwner() {
+        return owner;
     }
 
     public void setOwner(String owner) {

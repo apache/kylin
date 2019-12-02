@@ -59,8 +59,9 @@ public class DataSegDetails extends RootPersistentEntity {
     private String project;
 
     public Cube getCube() {
-        // TODO: CubeManager
-        return CubeManager.getInstance(getConfig(), project).getCube(cubeId);
+        // TODO: Get Cube obj via MetadataConverter method
+        return null;
+//        return MetaConverter.getCubeViaId(String cubeId);
     }
 
     public KylinConfigExt getConfig() {
@@ -93,5 +94,9 @@ public class DataSegDetails extends RootPersistentEntity {
 
     public void setProject(String project) {
         this.project = project;
+    }
+
+    public DataSegment getDataSegment() {
+        return getCube().getSegment(uuid);
     }
 }

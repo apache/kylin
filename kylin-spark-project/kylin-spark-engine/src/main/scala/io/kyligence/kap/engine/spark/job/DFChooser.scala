@@ -30,7 +30,7 @@ import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc
 import org.apache.kylin.engine.spark.metadata.cube.model.DataModel.TableKind
 import org.apache.kylin.engine.spark.metadata.cube.model.{CuboidLayoutChooser, DataModel, DataSegment, IndexEntity, LayoutEntity, SpanningTree}
-import org.apache.kylin.engine.spark.metadata.cube.utils.MetadataConverter
+import org.apache.kylin.engine.spark.metadata.cube.MetadataConverter
 import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.functions.col

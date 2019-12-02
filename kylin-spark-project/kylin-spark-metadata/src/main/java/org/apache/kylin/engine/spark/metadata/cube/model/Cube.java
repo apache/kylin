@@ -54,6 +54,9 @@ public class Cube extends RootPersistentEntity {
     @JsonProperty("projefct")
     private String project;
 
+    @JsonProperty("name")
+    private String cubeName;
+
     @JsonProperty("")
     private DataModel dataModel;
 
@@ -109,6 +112,14 @@ public class Cube extends RootPersistentEntity {
             }
             return spanningTree;
         }
+    }
+
+    public String getCubeName() {
+        return cubeName;
+    }
+
+    public void setCubeName(String cubeName) {
+        this.cubeName = cubeName;
     }
 
     public void setSpanningTree(SpanningTree spanningTree) {

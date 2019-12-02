@@ -21,10 +21,6 @@ package org.apache.kylin.engine.spark.metadata.cube.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.ISegment;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -54,6 +50,9 @@ public class DataSegment implements Serializable {
 
     @JsonProperty("segRange")
     private SegmentRange segmentRange;
+
+    @JsonProperty("source_bytes_size")
+    private long sourceBytesSize = -1;
 
     private transient DataSegDetails segDetails; // transient, not required by spark cubing
     private transient Map<Long, DataLayout> layoutsMap = Collections.emptyMap(); // transient, not required by spark cubing
@@ -140,5 +139,14 @@ public class DataSegment implements Serializable {
 
     public void setSegDetails(DataSegDetails segDetails) {
         this.segDetails = segDetails;
+    }
+
+    public long getSourceBytesSize() {
+        return sourceBytesSize;
+    }
+
+    public void setSourceBytesSize(long sourceBytesSize) {
+//        checkIsNotCachedAndShared();
+        this.sourceBytesSize = sourceBytesSize;
     }
 }

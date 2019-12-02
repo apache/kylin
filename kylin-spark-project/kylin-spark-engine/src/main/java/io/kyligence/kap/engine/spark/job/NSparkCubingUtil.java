@@ -18,10 +18,15 @@
 
 package io.kyligence.kap.engine.spark.job;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
+import org.apache.kylin.engine.spark.metadata.cube.model.DataLayout;
+import org.apache.kylin.engine.spark.metadata.cube.model.DataSegDetails;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
+import org.apache.spark.sql.Column;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -52,5 +57,45 @@ public class NSparkCubingUtil {
             r.add(cube.getCuboidLayout(id));
         }
         return r;
+    }
+
+    public static Column[] getColumns(Set<Integer> indices1, Set<Integer> indices2) {
+        Set<Integer> ret = new LinkedHashSet<>();
+        ret.addAll(indices1);
+        ret.addAll(indices2);
+        return getColumns(ret);
+    }
+
+    public static Column[] getColumns(Set<Integer> indices) {
+        Column[] ret = new Column[indices.size()];
+        int index = 0;
+        for (Integer i : indices) {
+            ret[index] = new Column(String.valueOf(i));
+            index++;
+        }
+        return ret;
+    }
+
+    public static Column[] getColumns(List<Integer> indices) {
+        Column[] ret = new Column[indices.size()];
+        int index = 0;
+        for (Integer i : indices) {
+            ret[index] = new Column(String.valueOf(i));
+            index++;
+        }
+        return ret;
+    }
+
+    public static String getStoragePath(DataLayout dataCuboid) {
+        DataSegDetails segDetails = dataCuboid.getSegDetails();
+//        KapConfig config = KapConfig.wrap(dataCuboid.getConfig());
+        KylinConfig config = dataCuboid.getConfig();
+        String hdfsWorkingDir = config.getReadHdfsWorkingDirectory();
+        return hdfsWorkingDir + getStoragePathWithoutPrefix(segDetails, dataCuboid.getLayoutId());
+    }
+
+    public static String getStoragePathWithoutPrefix(DataSegDetails segDetails, long layoutId) {
+        return segDetails.getProject() + "/parquet/" + segDetails.getDataSegment().getCube().getUuid() + "/"
+                + segDetails.getUuid() + "/" + layoutId;
     }
 }

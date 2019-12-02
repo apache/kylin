@@ -53,13 +53,16 @@ public class IndexEntity {
     @JsonProperty("layouts")
     private List<LayoutEntity> layouts = Lists.newArrayList();
 
+    private final BiMap<Integer, TblColRef> effectiveDimCols = initEffectiveDimCols();
+
+    private BiMap<Integer, TblColRef> initEffectiveDimCols() {
+        return Maps.filterKeys(getModel().getEffectiveColsMap(),
+                input -> input != null && getDimensionBitset().get(input));
+    }
+
     private final ImmutableBitSet dimensionBitset = initDimensionBitset();
 
     private final ImmutableBiMap<Integer, MeasureDesc> effectiveMeasures = initEffectiveMeasures();
-
-    public ImmutableBiMap<Integer, MeasureDesc> getEffectiveMeasures() {
-        return effectiveMeasures;
-    }
 
     private ImmutableBiMap<Integer, MeasureDesc> initEffectiveMeasures() {
         ImmutableBiMap.Builder<Integer, MeasureDesc> measuresBuilder = ImmutableBiMap.builder();
@@ -79,6 +82,18 @@ public class IndexEntity {
 
     private ImmutableBitSet initMeasureBitset() {
         return ImmutableBitSet.valueOf(measures);
+    }
+
+    public DataModel getModel() {
+        return cube.getDataModel();
+    }
+
+    public ImmutableBiMap<Integer, MeasureDesc> getEffectiveMeasures() {
+        return effectiveMeasures;
+    }
+
+    public BiMap<Integer, TblColRef> getEffectiveDimCols() {
+        return effectiveDimCols;
     }
 
     public void checkIsNotCachedAndShared() {
@@ -152,21 +167,6 @@ public class IndexEntity {
 
     public ImmutableBitSet getMeasureBitset() {
         return measureBitset;
-    }
-
-    private final BiMap<Integer, TblColRef> effectiveDimCols = initEffectiveDimCols();
-
-    public BiMap<Integer, TblColRef> getEffectiveDimCols() {
-        return effectiveDimCols;
-    }
-
-    private BiMap<Integer, TblColRef> initEffectiveDimCols() {
-        return Maps.filterKeys(getModel().getEffectiveColsMap(),
-                input -> input != null && getDimensionBitset().get(input));
-    }
-
-    public DataModel getModel() {
-        return cube.getDataModel();
     }
 
     public boolean isTableIndex() {
