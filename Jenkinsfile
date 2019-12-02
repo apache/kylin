@@ -6,10 +6,10 @@ node ('nsn_builder_budapest') {
         }
         stage("Set Java to 1.8"){
             sh"export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/; \
-            export PATH=$JAVA_HOME/bin:$PATH; \
-            mvn -version;"
+            export MVN_HOME=/opt/maven/bin; \
+            export PATH=$JAVA_HOME/bin:$MVN_HOME:$PATH;"
         }
-        stage("Build Kylin Binaries"){
+        stage("Build Kylin Binaries and Export to S3 bucket"){
             sh"build/script/package.sh; \
             aws s3 cp --recursive dist ${S3_PATH};"
         }
