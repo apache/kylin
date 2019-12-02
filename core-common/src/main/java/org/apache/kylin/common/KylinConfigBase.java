@@ -559,7 +559,7 @@ public abstract class KylinConfigBase implements Serializable {
     // ============================================================================
 
     /**
-     * @return  if mr-hive dict not enabled, return empty array;
+     * @return  if mr-hive dict not enabled, return empty array
      *          else return array contains "{TABLE_NAME}_{COLUMN_NAME}"
      */
     public String[] getMrHiveDictColumns() {
@@ -1461,7 +1461,7 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark-fact-distinct", "false"));
     }
 
-    public boolean isSparkCardinalityEnabled(){
+    public boolean isSparkCardinalityEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark-cardinality", "false"));
     }
 
@@ -2293,15 +2293,21 @@ public abstract class KylinConfigBase implements Serializable {
                 "kylin.engine.spark.metadata.cube.model.ForestSpanningTree");
     }
 
-    //TODO: Class name needs to be change
     public String getSparkBuildClassName() {
         return getOptional("kylin.engine.spark.build-class-name", "org.apache.kylin.engine.spark.job.DFBuildJob");
     }
 
-    //TODO: Class name needs to be change
     public String getSparkTableSamplingClassName() {
         return getOptional("kylin.engine.spark.sampling-class-name",
                 "org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob");
+    }
+
+    public Boolean getSparkEngineTaskImpactInstanceEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark.task-impact-instance-enabled", "true"));
+    }
+
+    public int getSparkEngineTaskCoreFactor() {
+        return Integer.parseInt(getOptional("kylin.engine.spark.task-core-factor", "3"));
     }
 
     public StorageURL getJobTmpMetaStoreUrl(String project, String jobId) {

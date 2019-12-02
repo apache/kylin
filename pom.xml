@@ -1346,7 +1346,7 @@
     <module>stream-coordinator</module>
     <module>stream-core</module>
     <module>stream-source-kafka</module>
-<!--    <module>kylin-spark-project</module>-->
+    <module>kylin-spark-project</module>
   </modules>
 
   <reporting>

@@ -57,6 +57,17 @@ public class DataLayout implements Serializable {
         return segDetails.getConfig();
     }
 
+    public static DataLayout newDataLayout(Cube cube, String segId, long layoutId) {
+        return newDataLayout(DataSegDetails.newSegDetails(cube, segId), layoutId);
+    }
+
+    public static DataLayout newDataLayout(DataSegDetails segDetails, long layoutId) {
+        DataLayout r = new DataLayout();
+        r.setSegDetails(segDetails);
+        r.setLayoutId(layoutId);
+        return r;
+    }
+
     public LayoutEntity getLayout() {
         return segDetails.getCube().getSpanningTree().getCuboidLayout(layoutId);
     }
