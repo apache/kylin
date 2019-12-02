@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.measure.basic.BasicMeasureType;
@@ -78,6 +80,8 @@ public class FunctionDesc implements Serializable {
     private String expression;
     @JsonProperty("parameter")
     private ParameterDesc parameter;
+    @JsonProperty("parameters")
+    private List<ParameterDesc> parameters;
     @JsonProperty("returntype")
     private String returnType;
 
@@ -350,6 +354,21 @@ public class FunctionDesc implements Serializable {
         }
         // NOTE: don't compare returnType, FunctionDesc created at query engine does not have a returnType
         return true;
+    }
+
+    public List<ParameterDesc> getParameters() {
+        return parameters;
+    }
+
+    public void setParameters(List<ParameterDesc> parameters) {
+        this.parameters = parameters;
+    }
+
+    public List<TblColRef> getColRefs() {
+        if (CollectionUtils.isEmpty(parameters))
+            return Lists.newArrayList();
+
+        return parameters.stream().filter(ParameterDesc::isColumnType).map(ParameterDesc::getColRef).collect(Collectors.toList());
     }
 
     @Override

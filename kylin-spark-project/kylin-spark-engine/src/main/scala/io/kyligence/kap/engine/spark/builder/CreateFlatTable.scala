@@ -28,10 +28,8 @@ import com.google.common.collect.Sets
 import io.kyligence.kap.engine.spark.builder.DFBuilderHelper.{ENCODE_SUFFIX, _}
 import io.kyligence.kap.engine.spark.job.NSparkCubingUtil._
 import io.kyligence.kap.engine.spark.utils.SparkDataSource._
-import io.kyligence.kap.metadata.cube.cuboid.NSpanningTree
-import io.kyligence.kap.metadata.cube.model.{NCubeJoinedFlatTableDesc, NDataSegment}
-import io.kyligence.kap.metadata.model.NDataModel
 import org.apache.commons.lang3.StringUtils
+import org.apache.kylin.engine.spark.metadata.cube.model.{DataSegment, SpanningTree}
 import org.apache.kylin.metadata.model._
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.parser.ParseException
@@ -43,8 +41,8 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class CreateFlatTable(val flatTable: IJoinedFlatTableDesc,
-                      val seg: NDataSegment,
-                      val toBuildTree: NSpanningTree,
+                      val seg: DataSegment,
+                      val toBuildTree: SpanningTree,
                       val ss: SparkSession,
                       val sourceInfo: NBuildSourceInfo) extends Logging {
 

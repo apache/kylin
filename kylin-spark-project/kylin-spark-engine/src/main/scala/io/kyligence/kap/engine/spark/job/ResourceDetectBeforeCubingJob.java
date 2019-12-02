@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
+import org.apache.kylin.engine.spark.metadata.cube.model.DataSegment;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree;
 import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTreeFactory;
@@ -73,7 +74,7 @@ public class ResourceDetectBeforeCubingJob extends SparkApplication {
 
         ResourceDetectUtils.write(new Path(config.getJobTmpShareDir(project, jobId), ResourceDetectUtils.countDistinctSuffix()), ResourceDetectUtils.findCountDistinctMeasure(cuboids));
         for (String segId : segmentIds) {
-            NDataSegment seg = dfMgr.getDataflow(cubeId).getSegment(segId);
+            DataSegment seg = cube.getSegment(segId);
             DFChooser datasetChooser = new DFChooser(spanningTree, seg, jobId, ss, config, false);
             datasetChooser.decideSources();
             NBuildSourceInfo buildFromFlatTable = datasetChooser.flatTableSource();
