@@ -20,10 +20,13 @@ package org.apache.kylin.engine.spark.metadata.cube.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.metadata.model.TblColRef;
 
 import java.util.List;
 
@@ -149,6 +152,21 @@ public class IndexEntity {
 
     public ImmutableBitSet getMeasureBitset() {
         return measureBitset;
+    }
+
+    private final BiMap<Integer, TblColRef> effectiveDimCols = initEffectiveDimCols();
+
+    public BiMap<Integer, TblColRef> getEffectiveDimCols() {
+        return effectiveDimCols;
+    }
+
+    private BiMap<Integer, TblColRef> initEffectiveDimCols() {
+        return Maps.filterKeys(getModel().getEffectiveColsMap(),
+                input -> input != null && getDimensionBitset().get(input));
+    }
+
+    public DataModel getModel() {
+        return cube.getDataModel();
     }
 
     public boolean isTableIndex() {

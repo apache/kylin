@@ -60,7 +60,7 @@ public class SpanningTreeFactory {
             Collection<LayoutEntity> layoutEntities) {
         Map<IndexEntity, Collection<LayoutEntity>> descLayouts = Maps.newHashMap();
         for (LayoutEntity layout : layoutEntities) {
-            descLayouts.computeIfAbsent(layout.getIndexEntity(), k -> Sets.newHashSet()).add(layout);
+            descLayouts.computeIfAbsent(layout.getIndex(), k -> Sets.newHashSet()).add(layout);
         }
         return descLayouts;
     }

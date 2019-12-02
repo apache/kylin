@@ -28,8 +28,9 @@ import io.kyligence.kap.engine.spark.builder._
 import io.kyligence.kap.engine.spark.utils.SparkDataSource._
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc
-import org.apache.kylin.engine.spark.metadata.cube.cuboid.NCuboidLayoutChooser
-import org.apache.kylin.engine.spark.metadata.cube.model.{IndexEntity, LayoutEntity, SpanningTree}
+import org.apache.kylin.engine.spark.metadata.cube.model.DataModel.TableKind
+import org.apache.kylin.engine.spark.metadata.cube.model.{CuboidLayoutChooser, DataModel, DataSegment, IndexEntity, LayoutEntity, SpanningTree}
+import org.apache.kylin.engine.spark.metadata.cube.utils.MetadataConverter
 import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.functions.col
@@ -39,7 +40,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 class DFChooser(toBuildTree: SpanningTree,
-                var seg: NDataSegment,
+                var seg: DataSegment,
                 jobId: String,
                 ss: SparkSession,
                 config: KylinConfig,
@@ -48,15 +49,16 @@ class DFChooser(toBuildTree: SpanningTree,
   var reuseSources: java.util.Map[java.lang.Long, NBuildSourceInfo] =
     Maps.newHashMap[java.lang.Long, NBuildSourceInfo]()
   var flatTableSource: NBuildSourceInfo = _
+	val cubeDesc = MetadataConverter.getCubeDesc(seg.getCube)
   val flatTableDesc =
-    new CubeJoinedFlatTableDesc(seg.getIndexPlan, seg.getSegRange, DFChooser.needJoinLookupTables(seg.getModel, toBuildTree))
+    new CubeJoinedFlatTableDesc(cubeDesc, DFChooser.needJoinLookupTables(seg.getModel, toBuildTree))
 
   @throws[Exception]
   def decideSources(): Unit = {
     var map = Map.empty[Long, NBuildSourceInfo]
     toBuildTree.getRootIndexEntities.asScala
       .foreach { desc =>
-        val layout = NCuboidLayoutChooser.selectLayoutForBuild(seg, desc)
+        val layout = CuboidLayoutChooser.selectLayoutForBuild(seg, desc)
 
         if (layout != null) {
           if (map.contains(layout.getId)) {
@@ -156,7 +158,7 @@ class DFChooser(toBuildTree: SpanningTree,
     sourceInfo.setViewFactTablePath(viewPath)
 
     val needJoin = DFChooser.needJoinLookupTables(seg.getModel, toBuildTree)
-    val flatTableDesc = new NCubeJoinedFlatTableDesc(seg.getIndexPlan, seg.getSegRange, needJoin)
+    val flatTableDesc = new CubeJoinedFlatTableDesc(seg.getIndexPlan, seg.getSegRange, needJoin)
     val flatTable = new CreateFlatTable(flatTableDesc, seg, toBuildTree, ss, sourceInfo)
     val afterJoin: Dataset[Row] = flatTable.generateDataset(needEncoding, needJoin)
     sourceInfo.setFlattableDS(afterJoin)
@@ -167,14 +169,14 @@ class DFChooser(toBuildTree: SpanningTree,
 }
 
 object DFChooser {
-  def apply(toBuildTree: NSpanningTree,
-            seg: NDataSegment,
+  def apply(toBuildTree: SpanningTree,
+            seg: DataSegment,
             jobId: String,
             ss: SparkSession,
             config: KylinConfig,
             needEncoding: Boolean): DFChooser =
-    new DFChooser(toBuildTree: NSpanningTree,
-      seg: NDataSegment,
+    new DFChooser(toBuildTree: SpanningTree,
+      seg: DataSegment,
       jobId,
       ss: SparkSession,
       config: KylinConfig,
@@ -182,7 +184,7 @@ object DFChooser {
 
   val FLAT_TABLE_FLAG: Long = -1L
 
-  def needJoinLookupTables(model: NDataModel, toBuildTree: NSpanningTree): Boolean = {
+  def needJoinLookupTables(model: DataModel, toBuildTree: SpanningTree): Boolean = {
     val conf = KylinConfig.getInstanceFromEnv
     if (!conf.isFlatTableJoinWithoutLookup) {
       return true

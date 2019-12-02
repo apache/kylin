@@ -32,14 +32,12 @@ import com.google.common.collect.Maps
 import io.kyligence.kap.engine.spark.NSparkCubingEngine
 import io.kyligence.kap.engine.spark.job.KylinBuildEnv
 import io.kyligence.kap.engine.spark.utils.FileNames
-import io.kyligence.kap.metadata.cube.model.{NDataflowManager, NDataflowUpdate, NDataSegment}
-import io.kyligence.kap.metadata.model.NDataModel
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path, PathFilter}
-import org.apache.kylin.common.{KapConfig, KylinConfig}
+import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.engine.spark.metadata.cube.model.{Cube, DataModel, DataSegment}
 import org.apache.kylin.metadata.model.TableDesc
-import org.apache.kylin.source.SourceFactory
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
@@ -54,15 +52,22 @@ import scala.util.{Failure, Success, Try}
 class DFSnapshotBuilder extends Logging {
 
   var ss: SparkSession = _
-  var seg: NDataSegment = _
+  var seg: DataSegment = _
+  var cube: Cube = _
 
   private val MD5_SUFFIX = ".md5"
   private val PARQUET_SUFFIX = ".parquet"
   private val MB = 1024 * 1024
 
-  def this(seg: NDataSegment, ss: SparkSession) {
+  def this(seg: DataSegment, ss: SparkSession) {
     this()
     this.seg = seg
+    this.ss = ss
+  }
+
+  def this(cube: Cube, ss: SparkSession) {
+    this()
+    this.cube = cube
     this.ss = ss
   }
 
@@ -79,22 +84,22 @@ class DFSnapshotBuilder extends Logging {
   }
 
   @throws[IOException]
-  def buildSnapshot: NDataSegment = {
+  def buildSnapshot: DataSegment = {
     logInfo(s"Building snapshots for: $seg")
-    val model = seg.getDataflow.getModel
+    val model = seg.getCube.getDataModel
     val newSnapMap = Maps.newHashMap[String, String]
     val fs = HadoopUtil.getWorkingFileSystem
-    val baseDir = KapConfig.wrap(seg.getConfig).getReadHdfsWorkingDirectory
+    val kylinConf = seg.getCube.getConfig
+    val baseDir = kylinConf.getReadHdfsWorkingDirectory
     val toBuildTableDesc = distinctTableDesc(model)
-    val kylinConf = KylinConfig.getInstanceFromEnv
-    if (seg.getConfig.isSnapshotParallelBuildEnabled) {
+    if (kylinConf.isSnapshotParallelBuildEnabled) {
       val service = Executors.newCachedThreadPool()
       implicit val executorContext = ExecutionContext.fromExecutorService(service)
       val futures = toBuildTableDesc
         .map {
           tableDesc =>
             Future[(String, String)] {
-              if (seg.getConfig.isUTEnv) {
+              if (kylinConf.isUTEnv) {
                 Thread.sleep(1000L)
               }
               try {
@@ -111,7 +116,7 @@ class DFSnapshotBuilder extends Logging {
       try {
         val eventualTuples = Future.sequence(futures.toList)
         // only throw the first exception
-        val result = ProxyThreadUtils.awaitResult(eventualTuples, seg.getConfig.snapshotParallelBuildTimeoutSeconds seconds)
+        val result = ProxyThreadUtils.awaitResult(eventualTuples, kylinConf.snapshotParallelBuildTimeoutSeconds seconds)
         if (result.nonEmpty) {
           newSnapMap.putAll(result.toMap.asJava)
         }
@@ -127,18 +132,13 @@ class DFSnapshotBuilder extends Logging {
           newSnapMap.put(tuple._1, tuple._2)
       }
     }
-    val dataflow = seg.getDataflow
+    val cube = seg.getCube
     // make a copy of the changing segment, avoid changing the cached object
-    val dfCopy = dataflow.copy
-    val segCopy = dfCopy.getSegment(seg.getId)
-    val update = new NDataflowUpdate(dataflow.getUuid)
-    segCopy.getSnapshots.putAll(newSnapMap)
-    update.setToUpdateSegs(segCopy)
-    val updatedDataflow = NDataflowManager.getInstance(seg.getConfig, seg.getProject).updateDataflow(update)
-    updatedDataflow.getSegment(seg.getId)
+    // To do: add snapshots to segment with copy
+    seg
   }
 
-  def distinctTableDesc(model: NDataModel): Set[TableDesc] = {
+  def distinctTableDesc(model: DataModel): Set[TableDesc] = {
     model.getJoinTables.asScala
       .filter(lookupDesc => {
         val tableDesc = lookupDesc.getTableRef.getTableDesc

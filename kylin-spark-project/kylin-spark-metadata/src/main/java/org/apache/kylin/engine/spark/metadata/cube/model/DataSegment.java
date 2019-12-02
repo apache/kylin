@@ -38,6 +38,8 @@ public class DataSegment implements Serializable {
     @JsonBackReference
     private Cube cube;
 
+    private String project;
+
     @JsonProperty("id")
     private String id; // Sequence ID within Cube
 
@@ -90,6 +92,14 @@ public class DataSegment implements Serializable {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
     }
 
     public String getName() {

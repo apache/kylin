@@ -2333,4 +2333,30 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.engine.persist-flattable-threshold", "1"));
     }
 
+    public boolean isFlatTableJoinWithoutLookup() {
+        return Boolean.parseBoolean(getOptional("kylin.job.flat-table-join-without-lookup", "false"));
+    }
+
+    public Path getJobTmpFlatTableDir(String project, String jobId) {
+        String path = getJobTmpDir(project) + jobId + "/flat_table/";
+        return new Path(path);
+    }
+
+    public Path getJobTmpViewFactTableDir(String project, String jobId) {
+        String path = getJobTmpDir(project) + jobId + "/view_fact_table/";
+        return new Path(path);
+    }
+
+    public boolean isSnapshotParallelBuildEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.snapshot.parallel-build-enabled", "true"));
+    }
+
+    public boolean isUTEnv() {
+        return "UT".equals(getDeployEnv());
+    }
+
+    public int snapshotParallelBuildTimeoutSeconds() {
+        return Integer.parseInt(getOptional("kylin.snapshot.parallel-build-timeout-seconds", "3600"));
+    }
+
 }
