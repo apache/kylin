@@ -142,6 +142,8 @@ public class CubeControllerTest extends ServiceTestBase {
         String segmentName = "20131212000000_20140112000000";
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        cubeController.disableCube(cubeName);
+
         CubeSegment toDelete = null;
         for (CubeSegment seg : cube.getSegments()) {
             if (seg.getName().equals(segmentName)) {
@@ -159,6 +161,7 @@ public class CubeControllerTest extends ServiceTestBase {
         if (cubeService.isOrphonSegment(cube, segId)){
             throw new InternalErrorException();
         }
+        cubeController.enableCube(cubeName);
     }
 
     @Test(expected = NotFoundException.class)
@@ -167,7 +170,11 @@ public class CubeControllerTest extends ServiceTestBase {
         CubeDesc[] cubes = cubeDescController.getCube(cubeName);
         Assert.assertNotNull(cubes);
 
+        cubeController.disableCube(cubeName);
+
         cubeController.deleteSegment(cubeName, "not_exist_segment");
+
+        cubeController.enableCube(cubeName);
     }
 
     @Test
@@ -175,14 +182,17 @@ public class CubeControllerTest extends ServiceTestBase {
         String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
         CubeDesc[] cubes = cubeDescController.getCube(cubeName);
         Assert.assertNotNull(cubes);
-
         int segNumber = cubeService.getCubeManager().getCube(cubeName).getSegments().size();
+
+        cubeController.disableCube(cubeName);
 
         cubeController.deleteSegment(cubeName, "19691231160000_20131112000000");
 
         int newSegNumber = cubeService.getCubeManager().getCube(cubeName).getSegments().size();
 
         Assert.assertTrue(segNumber == newSegNumber + 1);
+
+        cubeController.enableCube(cubeName);
     }
 
     @Test
@@ -193,6 +203,8 @@ public class CubeControllerTest extends ServiceTestBase {
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         List<CubeSegment> segments = cube.getSegments();
+
+        cubeController.disableCube(cubeName);
 
         final long dateEnd = segments.get(segments.size() - 1).getTSRange().end.v;
 
