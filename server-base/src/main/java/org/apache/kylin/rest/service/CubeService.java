@@ -587,6 +587,10 @@ public class CubeService extends BasicService implements InitializingBean {
         aclEvaluate.checkProjectOperationPermission(cube);
         Message msg = MsgPicker.getMsg();
 
+        if (cube.getStatus() == RealizationStatusEnum.READY) {
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getDELETE_SEG_FROM_READY_CUBE(), segmentName, cube.getName()));
+        }
+
         CubeSegment toDelete = null;
         for (CubeSegment seg : cube.getSegments()) {
             if (seg.getName().equals(segmentName)) {
