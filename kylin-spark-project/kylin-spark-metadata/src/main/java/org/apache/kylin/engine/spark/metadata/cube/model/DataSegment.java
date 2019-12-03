@@ -62,7 +62,7 @@ public class DataSegment implements Serializable {
     }
 
     public DataModel getModel() {
-        return this.cube.getDataModel();
+        return this.cube.getModel();
     }
 
 //    public boolean isOffsetCube() {

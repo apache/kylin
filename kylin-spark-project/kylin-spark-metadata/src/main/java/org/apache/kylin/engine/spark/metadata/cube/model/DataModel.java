@@ -20,6 +20,7 @@ package org.apache.kylin.engine.spark.metadata.cube.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Maps;
@@ -34,6 +35,7 @@ import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -88,6 +90,13 @@ public class DataModel extends RootPersistentEntity {
     @JsonProperty("capacity")
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
+    @JsonProperty("all_named_columns")
+    private List<NamedColumn> allNamedColumns = new ArrayList<>(); // including deleted ones
+
+    @JsonProperty("all_measures")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<MeasureDesc> allMeasures = new ArrayList<>(); // including deleted ones
+
     private ImmutableBiMap<Integer, TblColRef> effectiveCols; // excluding DELETED cols
 
     private ImmutableBiMap<Integer, TblColRef> effectiveDimensions; // including DIMENSION cols
@@ -127,6 +136,9 @@ public class DataModel extends RootPersistentEntity {
         return effectiveDimCols;
     }
 
+    public BiMap<Integer, MeasureDesc> getEffectiveMeasures() {
+        return effectiveMeasures;
+    }
     public KylinConfig getConfig() {
         return config;
     }
@@ -291,6 +303,14 @@ public class DataModel extends RootPersistentEntity {
         this.joinsTree = joinsTree;
     }
 
+    public List<NamedColumn> getAllNamedColumns() {
+        return allNamedColumns;
+    }
+
+    public void setAllNamedColumns(List<NamedColumn> allNamedColumns) {
+        this.allNamedColumns = allNamedColumns;
+    }
+
     // find by unique name, that must uniquely identifies a table in the model
     public TableRef findTable(String table) throws IllegalArgumentException {
         TableRef result = tableNameMap.get(table.toUpperCase(Locale.ROOT));
@@ -349,26 +369,78 @@ public class DataModel extends RootPersistentEntity {
         throw new IllegalArgumentException("Table not found by " + tableIdentity + " in model " + uuid);
     }
 
+    public int getColumnIdByColumnName(String aliasDotName) {
+        for (NamedColumn col : allNamedColumns) {
+            if (col.aliasDotColumn.equalsIgnoreCase(aliasDotName))
+                return col.id;
+        }
+        return -1;
+    }
+
     @Override
     public String toString() {
         return "Cube [" + alias + "]";
     }
 
-    public void initInternal(KylinConfig config, Map<String, TableDesc> tables) {
-        this.config = config;
+//    public void initInternal(KylinConfig config, Map<String, TableDesc> tables) {
+//        this.config = config;
+//
+//        initJoinTablesForUpgrade();
+//        initTableAlias(tables);
+//        initJoinColumns();
+//        reorderJoins(tables);
+//        initJoinsTree();
+//        initDimensionsAndMetrics();
+//        initPartitionDesc();
+//        initFilterCondition();
+//
+//        boolean reinit = validate();
+//        if (reinit) { // model slightly changed by validate() and must init() again
+//            initInternal(config, tables);
+//        }
+//    }
 
-        initJoinTablesForUpgrade();
-        initTableAlias(tables);
-        initJoinColumns();
-        reorderJoins(tables);
-        initJoinsTree();
-        initDimensionsAndMetrics();
-        initPartitionDesc();
-        initFilterCondition();
+    public enum ColumnStatus {
+        TOMB, EXIST, DIMENSION
+    }
 
-        boolean reinit = validate();
-        if (reinit) { // model slightly changed by validate() and must init() again
-            initInternal(config, tables);
+    public enum BrokenReason {
+        SCHEMA, NULL, EVENT
+    }
+
+    public static class NamedColumn {
+        @JsonProperty("id")
+        private int id;
+
+        @JsonProperty("name")
+        private String name;
+
+        @JsonProperty("column")
+        private String aliasDotColumn;
+
+        // logical delete symbol
+        @JsonProperty("status")
+        @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+        private ColumnStatus status = ColumnStatus.EXIST;
+
+        public boolean isExist() {
+            return status != ColumnStatus.TOMB;
         }
+
+        public boolean isDimension() {
+            return status == ColumnStatus.DIMENSION;
+        }
+    }
+
+    public static class ColumnCorrelation {
+        @JsonProperty("name")
+        public String name;
+        @JsonProperty("correlation_type") // "hierarchy" or "joint"
+        public String corrType;
+        @JsonProperty("columns")
+        public String[] aliasDotColumns;
+
+        public TblColRef[] cols;
+
     }
 }

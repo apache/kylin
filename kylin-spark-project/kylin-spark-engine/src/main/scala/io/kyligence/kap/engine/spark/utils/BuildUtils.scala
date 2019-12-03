@@ -26,12 +26,12 @@ import java.io.IOException
 
 import io.kyligence.kap.engine.spark.NSparkCubingEngine
 import io.kyligence.kap.engine.spark.job.NSparkCubingUtil
-import io.kyligence.kap.metadata.cube.model._
-import io.kyligence.kap.metadata.model.NDataModel
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.yarn.conf.YarnConfiguration
 import org.apache.kylin.common.util.{HadoopUtil, JsonUtil}
-import org.apache.kylin.common.{KapConfig, KylinConfig}
+import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.engine.spark.metadata.cube.ManagerHub
+import org.apache.kylin.engine.spark.metadata.cube.model.{CubeUpdate2, DataLayout, DataSegment, LayoutEntity, MeasureDesc}
 import org.apache.kylin.measure.bitmap.BitmapMeasureType
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
@@ -41,29 +41,29 @@ import scala.collection.JavaConverters._
 object BuildUtils extends Logging {
 
   def findCountDistinctMeasure(layout: LayoutEntity): Boolean =
-    layout.getOrderedMeasures.values.asScala.exists((measure: NDataModel.Measure) =>
+    layout.getOrderedMeasures.values.asScala.exists((measure: MeasureDesc) =>
       measure.getFunction.getReturnType.equalsIgnoreCase(BitmapMeasureType.DATATYPE_BITMAP))
 
   @throws[IOException]
   def repartitionIfNeed(
                          layout: LayoutEntity,
-                         dataCuboid: NDataLayout,
+                         dataCuboid: DataLayout,
                          storage: NSparkCubingEngine.NSparkCubingStorage,
                          path: String,
                          tempPath: String,
-                         kapConfig: KapConfig,
+                         config: KylinConfig,
                          sparkSession: SparkSession): Int = {
     val fs = HadoopUtil.getWorkingFileSystem()
     if (fs.exists(new Path(tempPath))) {
       val summary = HadoopUtil.getContentSummary(fs, new Path(tempPath))
-      var repartitionThresholdSize = kapConfig.getParquetStorageShardSizeRowCount
+      var repartitionThresholdSize = config.getParquetStorageShardSizeRowCount
       if (findCountDistinctMeasure(layout)) {
-        repartitionThresholdSize = kapConfig.getParquetStorageCountDistinctShardSizeRowCount
+        repartitionThresholdSize = config.getParquetStorageCountDistinctShardSizeRowCount
       }
       val shardByColumns = layout.getShardByColumns
       val repartitioner = new Repartitioner(
-        kapConfig.getParquetStorageShardSizeMB,
-        kapConfig.getParquetStorageRepartitionThresholdSize,
+        config.getParquetStorageShardSizeMB,
+        config.getParquetStorageRepartitionThresholdSize,
         dataCuboid.getRows,
         repartitionThresholdSize,
         summary,
@@ -72,7 +72,7 @@ object BuildUtils extends Logging {
 
       val sortCols = NSparkCubingUtil.getColumns(layout.getOrderedDimensions.keySet)
 
-      val extConfig = layout.getIndex.getModel.getProjectInstance.getConfig.getExtendedOverrides
+      val extConfig = layout.getIndex.getCube.getConfig.getExtendedOverrides
       val configJson = extConfig.get("kylin.engine.shard-num-json")
 
       val numByFileStorage = repartitioner.getRepartitionNumByStorage
@@ -106,7 +106,7 @@ object BuildUtils extends Logging {
   }
 
   @throws[IOException]
-  def fillCuboidInfo(cuboid: NDataLayout): Unit = {
+  def fillCuboidInfo(cuboid: DataLayout): Unit = {
     val strPath = NSparkCubingUtil.getStoragePath(cuboid)
     val fs = HadoopUtil.getWorkingFileSystem
     if (fs.exists(new Path(strPath))) {
@@ -119,11 +119,12 @@ object BuildUtils extends Logging {
     }
   }
 
-  def updateDataFlow(seg: NDataSegment, dataCuboid: NDataLayout, conf: KylinConfig, project: String): Unit = {
+  def updateDataFlow(seg: DataSegment, dataCuboid: DataLayout, conf: KylinConfig, project: String): Unit = {
     logInfo(s"Update layout ${dataCuboid.getLayoutId} in dataflow ${seg.getId}, segment ${seg.getId}")
-    val update = new NDataflowUpdate(seg.getDataflow.getUuid)
+    val update = new CubeUpdate2(seg.getCube.getUuid)
     update.setToAddOrUpdateLayouts(dataCuboid)
-    NDataflowManager.getInstance(conf, project).updateDataflow(update)
+//    NDataflowManager.getInstance(conf, project).updateDataflow(update)
+    ManagerHub.updateCube(conf, update)
   }
 
   def getCurrentYarnConfiguration: YarnConfiguration = {

@@ -24,13 +24,10 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.base.Preconditions;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.metadata.MetadataConstants;
-import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 
@@ -57,7 +54,7 @@ public class Cube extends RootPersistentEntity {
     @JsonProperty("name")
     private String cubeName;
 
-    @JsonProperty("")
+    @JsonProperty("model")
     private DataModel dataModel;
 
     @JsonManagedReference
@@ -94,7 +91,7 @@ public class Cube extends RootPersistentEntity {
         return null;
     }
   
-    public DataModel getDataModel() {
+    public DataModel getModel() {
         return dataModel;
     }
 
@@ -197,7 +194,7 @@ public class Cube extends RootPersistentEntity {
         // project & model & tables
         r.add(PathManager.getProjectPath(project));
         r.add(PathManager.getModelPath(project, getId()));
-        for (TableRef t : getDataModel().getAllTableRefs()) {
+        for (TableRef t : getModel().getAllTableRefs()) {
             r.add(t.getTableDesc().getResourcePath());
         }
 

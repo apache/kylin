@@ -49,6 +49,9 @@ public class LayoutEntity implements IStorageAware {
     @JsonProperty("storage_type")
     private int storageType = IStorageAware.ID_PARQUET;
 
+    @JsonProperty("shard_by_columns")
+    private List<Integer> shardByColumns = Lists.newArrayList();
+
     private ImmutableBiMap<Integer, TblColRef> orderedDimensions;
     private ImmutableBiMap<Integer, MeasureDesc> orderedMeasures;
 
@@ -127,5 +130,9 @@ public class LayoutEntity implements IStorageAware {
 
     public void setOwner(String owner) {
         this.owner = owner;
+    }
+
+    public List<Integer> getShardByColumns() {
+        return shardByColumns;
     }
 }

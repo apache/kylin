@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -37,6 +38,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.common.storage.IStorageProvider;
 import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -260,5 +262,12 @@ public class HadoopUtil {
         } else {
             return true;
         }
+    }
+
+    public static ContentSummary getContentSummary(FileSystem fileSystem, Path path) throws IOException {
+        IStorageProvider provider = (IStorageProvider) ClassUtil
+                .newInstance(KylinConfig.getInstanceFromEnv().getStorageProvider());
+        logger.debug("Use provider:{}", provider.getClass().getCanonicalName());
+        return provider.getContentSummary(fileSystem, path);
     }
 }
