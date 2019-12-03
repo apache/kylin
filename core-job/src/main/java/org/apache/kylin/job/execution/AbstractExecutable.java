@@ -56,6 +56,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     public static final String CUBE_NAME = "cubeName";
     protected static final String SUBMITTER = "submitter";
     protected static final String NOTIFY_LIST = "notify_list";
+    protected static final String PARENT_ID = "parentId";
     protected static final String START_TIME = "startTime";
     protected static final String END_TIME = "endTime";
     protected static final String INTERRUPT_TIME = "interruptTime";
@@ -584,5 +585,13 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     public String toString() {
         return Objects.toStringHelper(this).add("id", getId()).add("name", getName()).add("state", getStatus())
                 .toString();
+    }
+
+    //kylin on parquet
+    public final String getParentId() {
+        return getParam(PARENT_ID);
+    }
+    public final void setParentId(String parentId) {
+        setParam(PARENT_ID, parentId);
     }
 }

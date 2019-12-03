@@ -302,6 +302,12 @@ public class KylinConfig extends KylinConfigBase {
             THREAD_ENV_INSTANCE.set(config);
         }
 
+        public KylinConfig get() {
+            Preconditions.checkNotNull(THREAD_ENV_INSTANCE.get(),
+                    "KylinConfig thread local instance is already closed");
+            return THREAD_ENV_INSTANCE.get();
+        }
+
         @Override
         public void close() {
             THREAD_ENV_INSTANCE.remove();

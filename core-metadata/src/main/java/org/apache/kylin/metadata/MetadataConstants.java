@@ -56,11 +56,21 @@ public interface MetadataConstants {
 
     //kylin on parquetv2
     String P_CUBE_ID = "cubeId";
-    String P_JOB_ID = "jobId";
+    String P_CUBOID_AGG_UDF = "newtenCuboidAggUDF";
     String P_SEGMENT_IDS = "segmentIds";
+    String P_JOB_ID = "jobId";
+    String P_JOB_TYPE = "jobType";
     String P_LAYOUT_IDS = "layoutIds";
+    String P_LAYOUT_ID_PATH = "layoutIdPath";
+    String P_CLASS_NAME = "className";
+    String P_JARS = "jars";
+    String P_DIST_META_URL = "distMetaUrl";
+    String P_OUTPUT_META_URL = "outputMetaUrl";
     String P_PROJECT_NAME = "project";
+    String P_TABLE_NAME = "table";
+    String P_SAMPLING_ROWS = "samplingRows";
     String P_TARGET_MODEL = "targetModel";
     String P_DATA_RANGE_START = "dataRangeStart";
     String P_DATA_RANGE_END = "dataRangeEnd";
+
 }

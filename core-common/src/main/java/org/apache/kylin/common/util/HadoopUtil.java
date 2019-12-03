@@ -79,7 +79,7 @@ public class HadoopUtil {
         return conf;
     }
 
-    public static FileSystem getWorkingFileSystem() throws IOException {
+    public static FileSystem getWorkingFileSystem() {
         return getFileSystem(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
     }
 
@@ -92,7 +92,7 @@ public class HadoopUtil {
         return getFileSystem(KylinConfig.getInstanceFromEnv().getReadHdfsWorkingDirectory());
     }
 
-    public static FileSystem getFileSystem(String path) throws IOException {
+    public static FileSystem getFileSystem(String path) {
         return getFileSystem(new Path(makeURI(path)));
     }
 
