@@ -1,25 +1,19 @@
 /*
- * Copyright (C) 2016 Kyligence Inc. All rights reserved.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://kyligence.io
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * This software is the confidential and proprietary information of
- * Kyligence Inc. ("Confidential Information"). You shall not disclose
- * such Confidential Information and shall use it only in accordance
- * with the terms of the license agreement you entered into with
- * Kyligence Inc.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package io.kyligence.kap.engine.spark.application;
@@ -34,6 +28,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apche.kylin.engine.spark.common.util.TimeZoneUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
@@ -46,18 +41,11 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.Application;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.TimeZoneUtils;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.spark.SparkConf;
-import org.apache.spark.sql.SparderEnv;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.SparkSessionExtensions;
-import org.apache.spark.sql.execution.JoinMemoryManager;
-import org.apache.spark.sql.execution.KylinJoinSelection;
-import org.apache.spark.sql.execution.SparkStrategy;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.apache.spark.util.Utils;
 import org.apache.spark.utils.ResourceUtils;
@@ -68,19 +56,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
-import io.kyligence.kap.common.obf.IKeep;
-import io.kyligence.kap.common.persistence.metadata.MetadataStore;
 import io.kyligence.kap.engine.spark.job.BuildJobInfos;
 import io.kyligence.kap.engine.spark.job.KylinBuildEnv;
 import io.kyligence.kap.engine.spark.job.LogJobInfoUtils;
 import io.kyligence.kap.engine.spark.job.SparkJobConstants;
-import io.kyligence.kap.engine.spark.job.UdfManager;
 import io.kyligence.kap.engine.spark.utils.JobMetricsUtils;
 import io.kyligence.kap.engine.spark.utils.SparkConfHelper;
-import io.kyligence.kap.metadata.cube.model.NBatchConstants;
-import lombok.val;
-import scala.runtime.AbstractFunction1;
-import scala.runtime.BoxedUnit;
 
 public abstract class SparkApplication {
     private static final Logger logger = LoggerFactory.getLogger(SparkApplication.class);
@@ -205,11 +186,11 @@ public abstract class SparkApplication {
     }
 
     final protected void execute() throws Exception {
-        String hdfsMetalUrl = getParam(NBatchConstants.P_DIST_META_URL);
-        jobId = getParam(NBatchConstants.P_JOB_ID);
-        project = getParam(NBatchConstants.P_PROJECT_NAME);
-        if (getParam(NBatchConstants.P_LAYOUT_IDS) != null) {
-            layoutSize = StringUtils.split(getParam(NBatchConstants.P_LAYOUT_IDS), ",").length;
+        String hdfsMetalUrl = getParam(MetadataConstants.P_DIST_META_URL);
+        jobId = getParam(MetadataConstants.P_JOB_ID);
+        project = getParam(MetadataConstants.P_PROJECT_NAME);
+        if (getParam(MetadataConstants.P_LAYOUT_IDS) != null) {
+            layoutSize = StringUtils.split(getParam(MetadataConstants.P_LAYOUT_IDS), ",").length;
         }
         try (KylinConfig.SetAndUnsetThreadLocalConfig autoCloseConfig = KylinConfig
                 .setAndUnsetThreadLocalConfig(KylinConfig.loadKylinConfigFromHdfs(hdfsMetalUrl))) {
@@ -253,7 +234,7 @@ public abstract class SparkApplication {
                 }
             }
 
-            ss = SparkSession.builder().withExtensions(new AbstractFunction1<SparkSessionExtensions, BoxedUnit>() {
+            ss = SparkSession.builder()/*.withExtensions(new AbstractFunction1<SparkSessionExtensions, BoxedUnit>() {
                 @Override
                 public BoxedUnit apply(SparkSessionExtensions v1) {
                     v1.injectPlannerStrategy(new AbstractFunction1<SparkSession, SparkStrategy>() {
@@ -264,20 +245,20 @@ public abstract class SparkApplication {
                     });
                     return BoxedUnit.UNIT;
                 }
-            }).enableHiveSupport().config(sparkConf).config("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false")
+            })*/.enableHiveSupport().config(sparkConf).config("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false")
                     .getOrCreate();
 
             if (isJobOnCluster(sparkConf)) {
                 updateSparkJobExtraInfo(project, jobId, ss.sparkContext().applicationId());
             }
 
-            JoinMemoryManager.releaseAllMemory();
+            //JoinMemoryManager.releaseAllMemory();
             // for spark metrics
             JobMetricsUtils.registerListener(ss);
 
             //#8341
-            SparderEnv.setSparkSession(ss);
-            UdfManager.create(ss);
+            /*SparderEnv.setSparkSession(ss);
+            UdfManager.create(ss);*/
 
             if (!config.isUTEnv()) {
                 System.setProperty("kylin.env", config.getDeployEnv());
@@ -285,10 +266,11 @@ public abstract class SparkApplication {
             infos.startJob();
             doExecute();
             // Output metadata to another folder
-            val resourceStore = ResourceStore.getKylinMetaStore(config);
+            //Todo: dump metadata
+            /*val resourceStore = ResourceStore.getKylinMetaStore(config);
             val outputConfig = KylinConfig.createKylinConfig(config);
-            outputConfig.setMetadataUrl(getParam(NBatchConstants.P_OUTPUT_META_URL));
-            MetadataStore.createMetadataStore(outputConfig).dump(resourceStore);
+            outputConfig.setMetadataUrl(getParam(MetadataConstants.P_OUTPUT_META_URL));
+            MetadataStore.createMetadataStore(outputConfig).dump(resourceStore);*/
         } finally {
             if (infos != null) {
                 infos.jobEnd();

@@ -811,4 +811,30 @@ abstract public class ResourceStore {
 
         return metaDirURI;
     }
+
+    /**
+     * Get a resource store for Kylin's metadata.
+     */
+    public static ResourceStore getKylinMetaStore(KylinConfig config) {
+        ResourceStore store = CACHE.get(config);
+        if (store != null)
+            return store;
+
+        synchronized (ResourceStore.class) {
+            store = CACHE.get(config);
+            if (store == null) {
+                store = createResourceStore(config);
+                CACHE.put(config, store);
+
+                if (isPotentialMemoryLeak()) {
+                    logger.warn("Cached {} kylin meta stores, memory leak?", CACHE.size(), new RuntimeException());
+                }
+            }
+        }
+        return store;
+    }
+
+    public static boolean isPotentialMemoryLeak() {
+        return CACHE.size() > 100;
+    }
 }

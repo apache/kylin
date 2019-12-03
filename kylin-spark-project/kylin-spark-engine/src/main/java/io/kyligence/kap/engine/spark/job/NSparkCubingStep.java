@@ -69,7 +69,7 @@ public class NSparkCubingStep extends NSparkExecutable {
         return true;
     }
 
-    @Override
+    /*@Override
     public Set<String> getDependencies(KylinConfig config) {
         String dataflowId = getDataflowId();
         Set<String> segmentIds = getSegmentIds();
@@ -101,5 +101,5 @@ public class NSparkCubingStep extends NSparkExecutable {
             }
         });
         return result;
-    }
+    }*/
 }

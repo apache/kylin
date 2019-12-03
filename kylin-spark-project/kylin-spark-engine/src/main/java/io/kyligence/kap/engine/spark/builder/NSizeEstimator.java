@@ -1,25 +1,19 @@
 /*
- * Copyright (C) 2016 Kyligence Inc. All rights reserved.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://kyligence.io
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * This software is the confidential and proprietary information of
- * Kyligence Inc. ("Confidential Information"). You shall not disclose
- * such Confidential Information and shall use it only in accordance
- * with the terms of the license agreement you entered into with
- * Kyligence Inc.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package io.kyligence.kap.engine.spark.builder;
@@ -31,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
@@ -45,8 +40,6 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
 import com.google.common.base.Preconditions;
-
-import io.kyligence.kap.metadata.cube.model.NBatchConstants;
 
 public class NSizeEstimator {
     public static long estimate(Dataset<Row> ds, float ratio) {
@@ -87,8 +80,8 @@ public class NSizeEstimator {
             cols[i] = new Column(ds.schema().fields()[i].name());
         }
         EstimateAggregateUdf udf = new EstimateAggregateUdf(ds.schema().size(), ratio);
-        ss.udf().register(NBatchConstants.P_CUBOID_AGG_UDF, udf);
-        List<Row> rows = ds.agg(callUDF(NBatchConstants.P_CUBOID_AGG_UDF, cols)).collectAsList();
+        ss.udf().register(MetadataConstants.P_CUBOID_AGG_UDF, udf);
+        List<Row> rows = ds.agg(callUDF(MetadataConstants.P_CUBOID_AGG_UDF, cols)).collectAsList();
         Row row = (Row) rows.get(0).get(0);
         return Pair.newPair(row.getLong(0), row.getLong(1));
     }
