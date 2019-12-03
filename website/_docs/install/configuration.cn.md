@@ -19,6 +19,7 @@ permalink: /cn/docs/install/configuration.html
     - [部署 Kylin](#deploy-config)
 	- [分配更多内存给 Kylin 实例](#kylin-jvm-settings)
 	- [任务引擎高可用](#job-engine-ha)
+	- [任务引擎安全模式](#job-engine-safemode)
 	- [读写分离配置](#rw-deploy)
 	- [RESTful Webservice](#rest-config)
 - [Metastore 配置](#kylin_metastore)
@@ -180,6 +181,12 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 > 提示：更多信息请参考 [集群模式部署](/cn/docs/install/kylin_cluster.html) 中的**任务引擎高可用**部分。
 
 
+### 任务引擎安全模式   {#job-engine-safemode}
+
+安全模式仅在默认调度器中生效
+
+- `kylin.job.scheduler.safemode=TRUE`: 启用安全模式，新提交的任务不会被执行。
+- `kylin.job.scheduler.safemode.runable-projects=project1,project2`: 安全模式下仍然可以执行的项目列表，支持设置多个。
 
 ### 读写分离配置   {#rw-deploy}
 

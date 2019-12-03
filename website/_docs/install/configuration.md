@@ -18,6 +18,7 @@ permalink: /docs/install/configuration.html
     - [Deploy Kylin](#deploy-config)
 	- [Allocate More Memory for Kylin](#kylin-jvm-settings)
 	- [Job Engine HA](#job-engine-ha)
+	- [Job Engine Safemode](#job-engine-safemode)
 	- [Read/Write Separation](#rw-deploy)
 	- [RESTful Webservice](#rest-config)
 - [Metastore Configuration](#kylin_metastore)
@@ -180,6 +181,13 @@ Export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 
 > Note: For more information, please refer to the **Enable Job Engine HA** section in [Deploy in Cluster Mode](/docs/install/kylin_cluster.html) 
 
+
+### Job Engine Safemode {#job-engine-safemode}
+
+Safemode can be only used in default schedule.
+
+- `kylin.job.scheduler.safemode=TRUE`: to enable job scheduler safemode. In safemode, Newly submitted job will not be executed
+- `kylin.job.scheduler.safemode.runable-projects=project1,project2`: provide list of projects as exceptional case in safemode.
 
 
 ### Read/Write Separation   {#rw-deploy}
