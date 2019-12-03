@@ -132,6 +132,11 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-core-storage</artifactId>
+        </dependency>
+
         <!--For update spark job info from cluster-->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>

@@ -20,7 +20,6 @@ package org.apache.kylin.common;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
@@ -2366,26 +2365,49 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.snapshot.parallel-build-timeout-seconds", "3600"));
     }
 
-    public static KylinConfig loadKylinConfigFromHdfs(String uri) {
-        if (uri == null)
-            throw new IllegalArgumentException("StorageUrl should not be null");
-        if (!uri.contains("@hdfs"))
-            throw new IllegalArgumentException("StorageUrl should like @hdfs schema");
-        logger.info("Ready to load KylinConfig from uri: {}", uri);
-        StorageURL url = StorageURL.valueOf(uri);
-        String metaDir = url.getParameter("path") + "/" + KylinConfig.KYLIN_CONF_PROPERTIES_FILE;
-        Path path = new Path(metaDir);
-        try(InputStream is = path.getFileSystem(HadoopUtil.getCurrentConfiguration()).open(new Path(metaDir))) {
-            Properties prop = KylinConfig.streamToProps(is);
-            return KylinConfig.createKylinConfig(prop);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    //https://github.com/Kyligence/KAP/issues/12865
+    public String getStorageProvider() {
+        return getOptional("kylin.storage.provider", "org.apache.kylin.common.storage.DefaultStorageProvider");
     }
 
-    public boolean isAutoSetSparkConf() {
-        return Boolean.parseBoolean(getOptional("kylin.spark-conf.auto.prior", "true"));
+    /**
+     * parquet shard size, in MB
+     */
+    public int getParquetStorageShardSizeMB() {
+        return Integer.valueOf(getOptional("kylin.storage.columnar.shard-size-mb", "128"));
     }
 
+    public long getParquetStorageShardSizeRowCount() {
+        return Long.valueOf(getOptional("kylin.storage.columnar.shard-rowcount", "2500000"));
+    }
 
+    public long getParquetStorageCountDistinctShardSizeRowCount() {
+        return Long.valueOf(getOptional("kylin.storage.columnar.shard-countdistinct-rowcount", "1000000"));
+    }
+
+    public int getParquetStorageRepartitionThresholdSize() {
+        return Integer.valueOf(getOptional("kylin.storage.columnar.repartition-threshold-size-mb", "128"));
+    }
+
+    public int getParquetStorageShardMin() {
+        return Integer.valueOf(getOptional("kylin.storage.columnar.shard-min", "1"));
+    }
+
+    public int getParquetStorageShardMax() {
+        return Integer.valueOf(getOptional("kylin.storage.columnar.shard-max", "1000"));
+    }
+
+    public int getParquetStorageBlockSize() {
+        int defaultBlockSize = 5 * getParquetStorageShardSizeMB() * 1024 * 1024; //default (5 * shard_size)
+        return Integer.valueOf(getOptional("kylin.storage.columnar.hdfs-blocksize-bytes",
+                String.valueOf(defaultBlockSize < 0 ? Integer.MAX_VALUE : defaultBlockSize)));
+    }
+
+    public int getParquetSpliceShardExpandFactor() {
+        return Integer.valueOf(getOptional("kylin.storage.columnar.shard-expand-factor", "10"));
+    }
+
+    public int getParquetDfsReplication() {
+        return Integer.valueOf(getOptional("kylin.storage.columnar.dfs-replication", "3"));
+    }
 }

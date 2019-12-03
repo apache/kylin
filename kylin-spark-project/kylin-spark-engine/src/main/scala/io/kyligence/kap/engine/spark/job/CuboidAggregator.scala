@@ -30,6 +30,7 @@ import io.kyligence.kap.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
 import io.kyligence.kap.metadata.cube.cuboid.NSpanningTree
 import io.kyligence.kap.metadata.cube.model.{NCubeJoinedFlatTableDesc, NDataSegment}
 import io.kyligence.kap.metadata.model.NDataModel
+import org.apache.kylin.engine.spark.metadata.cube.model.{DataModel, DataSegment, MeasureDesc, SpanningTree}
 import org.apache.kylin.measure.bitmap.BitmapMeasureType
 import org.apache.kylin.measure.hllc.HLLCMeasureType
 import org.apache.kylin.metadata.model.TblColRef
@@ -47,9 +48,9 @@ object CuboidAggregator {
   def agg(ss: SparkSession,
           dataSet: DataFrame,
           dimensions: util.Set[Integer],
-          measures: util.Map[Integer, NDataModel.Measure],
-          seg: NDataSegment,
-          st: NSpanningTree): DataFrame = {
+          measures: util.Map[Integer, MeasureDesc],
+          seg: DataSegment,
+          st: SpanningTree): DataFrame = {
     val needJoin = st match {
       // when merge cuboid st is null
       case null => true

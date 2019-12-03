@@ -64,7 +64,7 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
         job.setId(jobId);
         job.setName(jobType.toString());
         job.setJobType(jobType);
-        job.setTargetSubject(cube.getDataModel().getId());
+        job.setTargetSubject(cube.getModel().getId());
         //job.setTargetSegments(segments.stream().map(x -> String.valueOf(x.getId())).collect(Collectors.toList()));
         job.setProject(cube.getProject());
         job.setSubmitter(submitter);

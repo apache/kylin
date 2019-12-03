@@ -21,6 +21,7 @@ package io.kyligence.kap.engine.spark.job;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import io.kyligence.kap.engine.spark.NSparkCubingEngine;
 import io.kyligence.kap.engine.spark.application.SparkApplication;
 
 import java.io.IOException;
@@ -36,6 +37,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import io.kyligence.kap.engine.spark.builder.NBuildSourceInfo;
+import io.kyligence.kap.engine.spark.utils.BuildUtils;
+import io.kyligence.kap.engine.spark.utils.JobMetrics;
+import io.kyligence.kap.engine.spark.utils.JobMetricsUtils;
+import io.kyligence.kap.engine.spark.utils.Metrics;
+import io.kyligence.kap.engine.spark.utils.QueryExecutionCache;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -52,6 +58,7 @@ import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree;
 import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTreeFactory;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.storage.StorageFactory;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
@@ -336,8 +343,8 @@ public class DFBuildJob extends SparkApplication {
         }
         dataCuboid.setRows(rowCount);
         dataCuboid.setSourceRows(metrics.getMetrics(Metrics.SOURCE_ROWS_CNT()));
-        val partitionNum = BuildUtils.repartitionIfNeed(layout, dataCuboid, storage, path, tempPath,
-                KapConfig.wrap(config), ss);
+        int partitionNum = BuildUtils.repartitionIfNeed(layout, dataCuboid, storage, path, tempPath,
+                config, ss);
         dataCuboid.setPartitionNum(partitionNum);
         ss.sparkContext().setLocalProperty(QueryExecutionCache.N_EXECUTION_ID_KEY(), null);
         QueryExecutionCache.removeQueryExecution(queryExecutionId);

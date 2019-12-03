@@ -86,7 +86,7 @@ class DFSnapshotBuilder extends Logging {
   @throws[IOException]
   def buildSnapshot: DataSegment = {
     logInfo(s"Building snapshots for: $seg")
-    val model = seg.getCube.getDataModel
+    val model = seg.getCube.getModel
     val newSnapMap = Maps.newHashMap[String, String]
     val fs = HadoopUtil.getWorkingFileSystem
     val kylinConf = seg.getCube.getConfig

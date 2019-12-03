@@ -41,8 +41,8 @@ public class CubeUpdate2 {
 
     private int cost = -1;
 
-    public CubeUpdate2(String dataflowId) {
-        this.cubeId = dataflowId;
+    public CubeUpdate2(String cubeId) {
+        this.cubeId = cubeId;
     }
 
     public CubeUpdate2 setToAddSegs(DataSegment... toAddSegs) {
