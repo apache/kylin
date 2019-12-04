@@ -55,8 +55,8 @@ public class StreamingTupleConverter {
 
     final List<MeasureType.IAdvMeasureFiller> advMeasureFillers;
     final List<Integer> advMeasureIndexInGTValues;
-    final boolean autoTimezone = KylinConfig.getInstanceFromEnv().isStreamingAutoJustTimezone();
-    private static final long TIME_ZONE_OFFSET = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone())
+    final boolean autoTimezone = KylinConfig.getInstanceFromEnv().getStreamingDerivedTimeTimezone().length() > 0;
+    private static final long TIME_ZONE_OFFSET = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getStreamingDerivedTimeTimezone())
             .getRawOffset();
 
     public StreamingTupleConverter(ResponseResultSchema schema, TupleInfo returnTupleInfo) {

@@ -66,7 +66,7 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
 
     // is the fact table is a streamingv2 table
     private boolean autoJustByTimezone = false;
-    private static final long TIME_ZONE_OFFSET = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone())
+    private static final long TIME_ZONE_OFFSET = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getStreamingDerivedTimeTimezone())
             .getRawOffset();
 
     public TupleFilterVisitor(ColumnRowType inputRowType) {
@@ -221,8 +221,8 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
                     newValues.add(null);
                 } else {
                     long ts = DateFormat.stringToMillis(v.toString());
-                    //  minus offset by timezone in RelNode level
-                    // this will affect request sent to storage level
+                    // Change column value of date/timestamp type from local timezone to UTC timezone by minus offset in RelNode level.
+                    // This will change request sent to storage level(receiver), thus affect segment/fragment level purge.
                     if (autoJustByTimezone) {
                         ts -= TIME_ZONE_OFFSET;
                     }

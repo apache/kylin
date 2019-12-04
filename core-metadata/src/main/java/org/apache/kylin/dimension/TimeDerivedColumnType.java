@@ -178,6 +178,14 @@ public enum TimeDerivedColumnType {
         return nameColumnsMap.containsKey(columnName.toLowerCase(Locale.ROOT));
     }
 
+    public static boolean isTimeDerivedColumnAboveDayLavel(String columnName) {
+        if (!isTimeDerivedColumn(columnName))
+            return false;
+        else {
+            return !columnName.equalsIgnoreCase(MINUTE_START_NAME) && !columnName.equalsIgnoreCase(HOUR_START_NAME);
+        }
+    }
+
     public static TimeDerivedColumnType getTimeDerivedColumnType(String columnName) {
         return nameColumnsMap.get(columnName.toLowerCase(Locale.ROOT));
     }

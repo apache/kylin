@@ -2281,8 +2281,8 @@ public abstract class KylinConfigBase implements Serializable {
     /**
      * whether realtime query should add timezone offset by kylin's web-timezone, please refer to KYLIN-4010 for detail
      */
-    public boolean isStreamingAutoJustTimezone() {
-        return Boolean.parseBoolean(getOptional("kylin.stream.auto.just.by.timezone", "false"));
+    public String getStreamingDerivedTimeTimezone() {
+        return (getOptional("kylin.stream.event.timezone", ""));
     }
 
     // ============================================================================

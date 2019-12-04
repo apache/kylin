@@ -37,7 +37,7 @@ public class DateFormat {
     public static final String YYYYMMDDHHMMSS = "yyyyMMddHHmmss";
     public static final String YYYYMMDDHHMM = "yyyyMMddHHmm";
     public static final String YYYYMMDDHH = "yyyyMMddHH";
-    public static final String ISO_8601_24H_FULL_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
+    public static final String ISO_8601_24H_FULL_FORMAT = "yyyy-MM-dd HH:mm:ss.SSSZZ";
 
     public static final String[] SUPPORTED_DATETIME_PATTERN = { //
             DEFAULT_DATE_PATTERN, //
