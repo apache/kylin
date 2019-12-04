@@ -104,6 +104,9 @@ public class DataModelDesc extends RootPersistentEntity {
     @JsonProperty("capacity")
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
+    @JsonProperty("projectName")
+    private String projectName; //for KYLIN-4080
+
     // computed attributes
     private TableRef rootFactTableRef;
     private Set<TableRef> factTableRefs = Sets.newLinkedHashSet();
@@ -765,6 +768,14 @@ public class DataModelDesc extends RootPersistentEntity {
         return ProjectManager.getInstance(getConfig()).getProjectOfModel(this.getName());
     }
 
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
+    }
+
     public static DataModelDesc getCopyOf(DataModelDesc orig) {
         return copy(orig, new DataModelDesc());
     }
@@ -781,6 +792,7 @@ public class DataModelDesc extends RootPersistentEntity {
         copy.metrics = orig.metrics;
         copy.filterCondition = orig.filterCondition;
         copy.capacity = orig.capacity;
+        copy.projectName = orig.projectName;
         if (orig.getPartitionDesc() != null) {
             copy.partitionDesc = PartitionDesc.getCopyOf(orig.getPartitionDesc());
         }
