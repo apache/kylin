@@ -253,18 +253,18 @@ public class MapReduceExecutable extends AbstractExecutable {
                 }
                 return new ExecuteResult(ExecuteResult.State.DISCARDED, e.getMessage());
             } else {
-                if (isDiscarded()) {
-                    if (getIsNeedLock()) {
-                        releaseLock(lock);
-                    }
-                    return new ExecuteResult(ExecuteResult.State.DISCARDED, e.getMessage());
-                } else {
-                    return ExecuteResult.createError(e);
-                }
+                return ExecuteResult.createError(e);
             }
         } catch (Exception e) {
             logger.error("error execute " + this.toString(), e);
-            return ExecuteResult.createError(e);
+            if (isDiscarded()) {
+                if (getIsNeedLock()) {
+                    releaseLock(lock);
+                }
+                return new ExecuteResult(ExecuteResult.State.DISCARDED, e.getMessage());
+            } else {
+                return ExecuteResult.createError(e);
+            }
         }
     }
 
