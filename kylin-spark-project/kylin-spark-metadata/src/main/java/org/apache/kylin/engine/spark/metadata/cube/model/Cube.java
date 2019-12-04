@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.BiMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
@@ -31,11 +30,9 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.engine.spark.metadata.cube.PathManager;
-import org.apache.kylin.metadata.model.TblColRef;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -75,35 +72,12 @@ public class Cube extends RootPersistentEntity {
 
     private List<MeasureDesc> measures = new ArrayList<>();
 
-    private transient BiMap<Integer, TblColRef> effectiveDimCols; // BiMap impl (com.google.common.collect.Maps$FilteredEntryBiMap) is not serializable
-    private transient BiMap<Integer, MeasureDesc> effectiveMeasures; // BiMap impl (com.google.common.collect.Maps$FilteredEntryBiMap) is not serializable
-
     public static Cube getInstance(KylinConfig config) {
         return new Cube(config);
     }
 
-    //TODO[xyxy]: if exists another way to init
-    private void initDimensionAndMeasures() {
-        List<IndexEntity> indexes = getAllIndexes();
-        int size1 = 1;
-        int size2 = 1;
-        for (IndexEntity cuboid : indexes) {
-            size1 = Math.max(cuboid.getDimensionBitset().size(), size1);
-            size2 = Math.max(cuboid.getMeasureBitset().size(), size2);
-        }
-
-        final BitSet dimBitSet = new BitSet(size1);
-        final BitSet measureBitSet = new BitSet(size2);
-
-        for (IndexEntity cuboid : indexes) {
-            dimBitSet.or(cuboid.getDimensionBitset().mutable());
-            measureBitSet.or(cuboid.getMeasureBitset().mutable());
-        }
-
-        this.effectiveDimCols = Maps.filterKeys(getModel().getEffectiveColsMap(),
-                input -> input != null && dimBitSet.get(input));
-        this.effectiveMeasures = Maps.filterKeys(getModel().getEffectiveMeasureMap(),
-                input -> input != null && measureBitSet.get(input));
+    public static Cube getInstance(KylinConfig config, String uuid) {
+        return new Cube(config);
     }
 
     //add layout when build cube
@@ -121,22 +95,12 @@ public class Cube extends RootPersistentEntity {
         return null;
     }
 
-    public BiMap<Integer, TblColRef> getEffectiveDimCols() {
-        return effectiveDimCols;
+    public DataSegment appendSegment(SegmentRange segmentRange) {
+        DataSegment segment = new DataSegment(this, segmentRange);
+        segments.add(segment);
+        return segment;
     }
-
-    public void setEffectiveDimCols(BiMap<Integer, TblColRef> effectiveDimCols) {
-        this.effectiveDimCols = effectiveDimCols;
-    }
-
-    public BiMap<Integer, MeasureDesc> getEffectiveMeasures() {
-        return effectiveMeasures;
-    }
-
-    public void setEffectiveMeasures(BiMap<Integer, MeasureDesc> effectiveMeasures) {
-        this.effectiveMeasures = effectiveMeasures;
-    }
-
+  
     public DataModel getModel() {
         return dataModel;
     }
@@ -191,15 +155,15 @@ public class Cube extends RootPersistentEntity {
     }
 
     public List<IndexEntity> getAllIndexes() {
-//        Map<Long, Integer> retSubscriptMap = Maps.newHashMap();
-//        List<IndexEntity> mergedIndexes = Lists.newArrayList();
-//        int retSubscript = 0;
-//        for (IndexEntity indexEntity : indexEntities) {
-//            IndexEntity copy = JsonUtil.deepCopyQuietly(indexEntity, IndexEntity.class);
-//            retSubscriptMap.put(indexEntity.getId(), retSubscript);
-//            mergedIndexes.add(copy);
-//            retSubscript++;
-//        }
+        Map<Long, Integer> retSubscriptMap = Maps.newHashMap();
+        List<IndexEntity> mergedIndexes = Lists.newArrayList();
+        int retSubscript = 0;
+        for (IndexEntity indexEntity : indexEntities) {
+            IndexEntity copy = JsonUtil.deepCopyQuietly(indexEntity, IndexEntity.class);
+            retSubscriptMap.put(indexEntity.getId(), retSubscript);
+            mergedIndexes.add(copy);
+            retSubscript++;
+        }
 
         //TODO: comment out for now
 //        for (LayoutEntity ruleBasedLayout : ruleBasedLayouts) {
@@ -226,9 +190,9 @@ public class Cube extends RootPersistentEntity {
 //            copyRuleBasedLayout.setIndex(targetIndex);
 //        }
 
-//        mergedIndexes.forEach(value -> value.setCube(this));
-//        return mergedIndexes;
-        return indexEntities;
+        mergedIndexes.forEach(value -> value.setCube(this));
+        return mergedIndexes;
+
     }
 
     public Set<String> collectPrecalculationResource() {
@@ -292,5 +256,9 @@ public class Cube extends RootPersistentEntity {
 
     public void setProject(String project) {
         this.project = project;
+    }
+
+    public List<DataSegment> getSegments() {
+        return segments;
     }
 }

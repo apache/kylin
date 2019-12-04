@@ -44,6 +44,11 @@
             <artifactId>kylin-spark-job</artifactId>
             <version>3.0.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-core-common</artifactId>
+            <type>test-jar</type>
+        </dependency>
     </dependencies>
     
 

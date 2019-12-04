@@ -82,4 +82,8 @@ public enum ExecutableState {
         return VALID_STATE_TRANSFER.containsEntry(from, to);
     }
 
+    public boolean isProgressing() {
+        return this == READY || this == RUNNING;
+    }
+
 }
