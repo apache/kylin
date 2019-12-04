@@ -21,10 +21,14 @@ package org.apache.kylin.engine.spark.metadata.cube.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.kylin.metadata.model.Segments;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Map;
+import java.util.TimeZone;
+import java.util.UUID;
 
 /**
  * Simplify segment description, only preserve start and end timestamp
@@ -53,6 +57,17 @@ public class DataSegment implements Serializable {
 
     @JsonProperty("source_bytes_size")
     private long sourceBytesSize = -1;
+
+    public DataSegment() { }
+
+    public DataSegment(Cube cube, SegmentRange segmentRange) {
+        DataSegment segment = new DataSegment();
+        segment.setId(UUID.randomUUID().toString());
+        segment.setName(makeSegmentName(segmentRange));
+        segment.setCreateTimeUTC(System.currentTimeMillis());
+        segment.setCube(cube);
+        segment.setSegmentRange(segmentRange);
+    }
 
     private transient DataSegDetails segDetails; // transient, not required by spark cubing
     private transient Map<Long, DataLayout> layoutsMap = Collections.emptyMap(); // transient, not required by spark cubing
@@ -148,5 +163,21 @@ public class DataSegment implements Serializable {
     public void setSourceBytesSize(long sourceBytesSize) {
 //        checkIsNotCachedAndShared();
         this.sourceBytesSize = sourceBytesSize;
+    }
+
+    public String makeSegmentName(SegmentRange segRange) {
+        if (segRange == null || segRange.isInfinite()) {
+            return "FULL_BUILD";
+        }
+
+        if (segRange instanceof SegmentRange.TimePartitionedSegmentRange) {
+            // using time
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+            dateFormat.setTimeZone(TimeZone.getDefault());
+            return dateFormat.format(segRange.getStart()) + "_" + dateFormat.format(segRange.getEnd());
+        } else {
+            return segRange.getStart() + "_" + segRange.getEnd();
+        }
+
     }
 }

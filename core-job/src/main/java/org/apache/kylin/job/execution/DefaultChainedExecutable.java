@@ -210,4 +210,15 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         }
         return dft;
     }
+
+    @Override
+    public <T extends AbstractExecutable> T getTask(Class<T> clz) {
+        List<AbstractExecutable> tasks = getTasks();
+        for (AbstractExecutable task : tasks) {
+            if (task.getClass().equals(clz)) {
+                return (T) task;
+            }
+        }
+        return null;
+    }
 }

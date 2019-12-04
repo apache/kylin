@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
+import org.apache.kylin.engine.spark.metadata.cube.model.DataSegment;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.engine.spark.metadata.cube.model.SegmentRange;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
@@ -42,11 +43,11 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
     private static Cube cubeInstance;
 
     // for test use only
-    public static NSparkCubingJob create(Cube cube, Set<SegmentRange> segments, Set<LayoutEntity> layouts, String submitter) {
+    public static NSparkCubingJob create(Cube cube, Set<DataSegment> segments, Set<LayoutEntity> layouts, String submitter) {
         return create(cube, segments, layouts, submitter, JobTypeEnum.INDEX_BUILD, UUID.randomUUID().toString());
     }
 
-    public static NSparkCubingJob create(Cube cube, Set<SegmentRange> segments, Set<LayoutEntity> layouts, String submitter,
+    public static NSparkCubingJob create(Cube cube, Set<DataSegment> segments, Set<LayoutEntity> layouts, String submitter,
             JobTypeEnum jobType, String jobId) {
         Preconditions.checkArgument(!segments.isEmpty());
         Preconditions.checkArgument(!layouts.isEmpty());
@@ -55,11 +56,11 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
         cubeInstance = cube;
         long startTime = Long.MAX_VALUE - 1;
         long endTime = 0L;
-        for (SegmentRange segment : segments) {
-            startTime = startTime < Long.parseLong(segment.getStart().toString()) ? startTime
-                    : Long.parseLong(segment.getStart().toString());
-            endTime = endTime > Long.parseLong(segment.getStart().toString()) ? endTime
-                    : Long.parseLong(segment.getEnd().toString());
+        for (DataSegment segment : segments) {
+            startTime = startTime < Long.parseLong(segment.getSegRange().getStart().toString()) ? startTime
+                    : Long.parseLong(segment.getSegRange().getStart().toString());
+            endTime = endTime > Long.parseLong(segment.getSegRange().getStart().toString()) ? endTime
+                    : Long.parseLong(segment.getSegRange().getEnd().toString());
         }
         job.setId(jobId);
         job.setName(jobType.toString());
@@ -88,13 +89,13 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
         return cubeInstance.collectPrecalculationResource();
     }
 
-   /* public NSparkCubingStep getSparkCubingStep() {
+    public NSparkCubingStep getSparkCubingStep() {
         return getTask(NSparkCubingStep.class);
     }
 
     NResourceDetectStep getResourceDetectStep() {
         return getTask(NResourceDetectStep.class);
-    }*/
+    }
 
     /*@Override
     public void cancelJob() {
