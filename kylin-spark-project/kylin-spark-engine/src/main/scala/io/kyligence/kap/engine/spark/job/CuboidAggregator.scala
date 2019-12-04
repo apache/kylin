@@ -27,17 +27,12 @@ package io.kyligence.kap.engine.spark.job
 import java.util
 
 import io.kyligence.kap.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
-import io.kyligence.kap.metadata.cube.cuboid.NSpanningTree
-import io.kyligence.kap.metadata.cube.model.{NCubeJoinedFlatTableDesc, NDataSegment}
-import io.kyligence.kap.metadata.model.NDataModel
-import org.apache.kylin.engine.spark.metadata.cube.model.{DataModel, DataSegment, MeasureDesc, SpanningTree}
+import org.apache.kylin.engine.spark.metadata.cube.model.{CubeJoinedFlatTableDesc, DataModel, DataSegment, MeasureDesc, SpanningTree}
 import org.apache.kylin.measure.bitmap.BitmapMeasureType
 import org.apache.kylin.measure.hllc.HLLCMeasureType
 import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.sql.functions.{col, _}
 import org.apache.spark.sql.types.{StringType, _}
-import org.apache.spark.sql.util.SparderTypeUtil
-import org.apache.spark.sql.util.SparderTypeUtil.toSparkType
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.apache.spark.sql.udaf._
 
@@ -57,15 +52,15 @@ object CuboidAggregator {
       case _ => DFChooser.needJoinLookupTables(seg.getModel, st)
     }
     val flatTableDesc =
-      new NCubeJoinedFlatTableDesc(seg.getIndexPlan, seg.getSegRange, needJoin)
+      new CubeJoinedFlatTableDesc(seg.getCube, seg.getSegRange, needJoin)
     agg(ss, dataSet, dimensions, measures, flatTableDesc, isSparkSql = false)
   }
 
   def agg(ss: SparkSession,
           dataSet: DataFrame,
           dimensions: util.Set[Integer],
-          measures: util.Map[Integer, NDataModel.Measure],
-          flatTableDesc: NCubeJoinedFlatTableDesc,
+          measures: util.Map[Integer, MeasureDesc],
+          flatTableDesc: CubeJoinedFlatTableDesc,
           isSparkSql: Boolean): DataFrame = {
     if (measures.isEmpty) {
       return dataSet
@@ -100,6 +95,7 @@ object CuboidAggregator {
         } else {
           if (function.getExpression.equalsIgnoreCase("SUM")) {
             val parameteter = parameters.head.getValue
+            //TODO[xyxy] SparderTypeUtil
             columns.append(lit(parameteter).cast(SparderTypeUtil.toSparkType(function.getReturnDataType)))
           } else {
             columns.append(lit(parameters.head.getValue))

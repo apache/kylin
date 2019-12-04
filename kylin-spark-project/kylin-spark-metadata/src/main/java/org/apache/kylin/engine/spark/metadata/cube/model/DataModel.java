@@ -20,7 +20,6 @@ package org.apache.kylin.engine.spark.metadata.cube.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Maps;
@@ -30,7 +29,6 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.PartitionDesc;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -103,8 +101,6 @@ public class DataModel extends RootPersistentEntity {
 
     private ImmutableBiMap<Integer, MeasureDesc> effectiveMeasures; // excluding DELETED cols
 
-    private transient BiMap<Integer, TblColRef> effectiveDimCols; // BiMap impl (com.google.common.collect.Maps$FilteredEntryBiMap) is not serializable
-
     // computed attributes
     private TableRef rootFactTableRef;
     private Set<TableRef> factTableRefs = Sets.newLinkedHashSet();
@@ -132,13 +128,14 @@ public class DataModel extends RootPersistentEntity {
         return effectiveMeasures;
     }
 
-    public BiMap<Integer, TblColRef> getEffectiveDimCols() {
-        return effectiveDimCols;
-    }
-
     public BiMap<Integer, MeasureDesc> getEffectiveMeasures() {
         return effectiveMeasures;
     }
+
+    public TblColRef getColRef(Integer colId) {
+        return effectiveCols.get(colId);
+    }
+
     public KylinConfig getConfig() {
         return config;
     }
@@ -309,6 +306,14 @@ public class DataModel extends RootPersistentEntity {
 
     public void setAllNamedColumns(List<NamedColumn> allNamedColumns) {
         this.allNamedColumns = allNamedColumns;
+    }
+
+    public List<MeasureDesc> getAllMeasures() {
+        return allMeasures;
+    }
+
+    public void setAllMeasures(List<MeasureDesc> allMeasures) {
+        this.allMeasures = allMeasures;
     }
 
     // find by unique name, that must uniquely identifies a table in the model

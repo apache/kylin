@@ -215,4 +215,8 @@ public class ImmutableBitSet implements Iterable<Integer> {
             }
         };
     }
+
+    public int size() {
+        return set.size();
+    }
 }

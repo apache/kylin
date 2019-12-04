@@ -25,16 +25,26 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.yarn.api.records.ApplicationReport;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.client.api.YarnClient;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.StorageURL;
@@ -42,9 +52,13 @@ import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ClassUtil;
 
+import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.exception.ShellException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
@@ -113,8 +127,7 @@ public class NSparkExecutable extends AbstractExecutable {
         //context.setLogPath(getSparkDriverLogHdfsPath(context.getConfig()));
         final KylinConfig config = wrapConfig(context);
 
-        //Todo For running spark on cluster
-        /*String sparkHome = KylinConfig.getSparkHome();
+        String sparkHome = KylinConfig.getSparkHome();
         if (StringUtils.isEmpty(sparkHome) && !config.isUTEnv()) {
             throw new RuntimeException("Missing spark home");
         }
@@ -138,12 +151,12 @@ public class NSparkExecutable extends AbstractExecutable {
         if (!hiveConfFile.exists() && !config.isUTEnv()) {
             throw new RuntimeException("Cannot find hive-site.xml in kylin_hadoop_conf_dir: " + hadoopConf + //
                     ". In order to enable spark cubing, you must set kylin.env.hadoop-conf-dir to a dir which contains at least core-site.xml, hdfs-site.xml, hive-site.xml, mapred-site.xml, yarn-site.xml");
-        }*/
+        }
 
-        /*String jars = getJars();
+        String jars = getJars();
         if (StringUtils.isEmpty(jars)) {
             jars = kylinJobJar;
-        }*/
+        }
 
         deleteJobTmpDirectoryOnExists();
         onExecuteStart(context);
@@ -158,10 +171,9 @@ public class NSparkExecutable extends AbstractExecutable {
             return runLocalMode(filePath);
         } else {
             //Todo running spark on cluster
-            /*killOrphanApplicationIfExists(config);
+            killOrphanApplicationIfExists(config);
             return runSparkSubmit(config, sparkHome, hadoopConf, jars, kylinJobJar,
-                    "-className " + getSparkSubmitClassName() + " " + filePath, getParent().getId());*/
-            return runLocalMode(filePath);
+                    "-className " + getSparkSubmitClassName() + " " + filePath);
         }
     }
 
@@ -202,7 +214,6 @@ public class NSparkExecutable extends AbstractExecutable {
         KylinConfigExt kylinConfigExt = null;
         String project = getProject();
         Preconditions.checkState(StringUtils.isNotBlank(project), "job " + getId() + " project info is empty");
-        String cubeId = getParam(MetadataConstants.P_CUBE_ID);
         /*if (StringUtils.isNotBlank(cubeId)) {
             val dataflowManager = NDataflowManager.getInstance(originalConfig, project);
             kylinConfigExt = dataflowManager.getDataflow(dataflow).getConfig();
@@ -224,7 +235,7 @@ public class NSparkExecutable extends AbstractExecutable {
         return KylinConfigExt.createInstance(kylinConfigExt, jobOverrides);
     }
 
-    /*private void killOrphanApplicationIfExists(KylinConfig config) {
+    private void killOrphanApplicationIfExists(KylinConfig config) {
         PatternedLogger patternedLogger = new PatternedLogger(logger);
         String orphanApplicationId = null;
 
@@ -238,7 +249,7 @@ public class NSparkExecutable extends AbstractExecutable {
             Set<String> types = Sets.newHashSet("SPARK");
             EnumSet<YarnApplicationState> states = EnumSet.of(YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
                     YarnApplicationState.SUBMITTED, YarnApplicationState.ACCEPTED, YarnApplicationState.RUNNING);
-            val applicationReports = yarnClient.getApplications(types, states);
+            List<ApplicationReport> applicationReports = yarnClient.getApplications(types, states);
 
             if (CollectionUtils.isEmpty(applicationReports))
                 return;
@@ -251,15 +262,15 @@ public class NSparkExecutable extends AbstractExecutable {
                     config.getCliCommandExecutor().execute(killApplicationCmd, patternedLogger);
                 }
             }
-        } catch (ShellException ex1) {
+        } /*catch (ShellException ex1) {
             logger.error("kill orphan yarn application {} failed.", orphanApplicationId);
-        } catch (YarnException | IOException ex2) {
+        } */catch (YarnException | IOException ex2) {
             logger.error("get yarn application failed");
         }
     }
 
     private ExecuteResult runSparkSubmit(KylinConfig config, String sparkHome, String hadoopConf, String jars,
-            String kylinJobJar, String appArgs, String jobId) {
+            String kylinJobJar, String appArgs) {
         PatternedLogger patternedLogger;
         if (config.isJobLogPrintEnabled()) {
             patternedLogger = new PatternedLogger(logger);
@@ -271,16 +282,16 @@ public class NSparkExecutable extends AbstractExecutable {
             String cmd = generateSparkCmd(config, hadoopConf, jars, kylinJobJar, appArgs);
 
             CliCommandExecutor exec = new CliCommandExecutor();
-            Pair<Integer, String> result = exec.execute(cmd, patternedLogger, jobId);
+            Pair<Integer, String> result = exec.execute(cmd, patternedLogger);
 
             Map<String, String> extraInfo = makeExtraInfo(patternedLogger.getInfo());
-            val ret = ExecuteResult.createSucceed(result.getSecond());
+            ExecuteResult ret = ExecuteResult.createSucceed(result.getSecond());
             ret.getExtraInfo().putAll(extraInfo);
             return ret;
         } catch (Exception e) {
             return ExecuteResult.createError(e);
         }
-    }*/
+    }
 
     protected Map<String, String> getSparkConfigOverride(KylinConfig config) {
         Map<String, String> sparkConfigOverride = config.getSparkConfigOverride();

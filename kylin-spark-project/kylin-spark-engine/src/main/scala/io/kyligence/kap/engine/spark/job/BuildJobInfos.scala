@@ -24,8 +24,7 @@ package io.kyligence.kap.engine.spark.job
 
 import java.util
 
-import io.kyligence.kap.metadata.cube.cuboid.NSpanningTree
-import io.kyligence.kap.metadata.cube.model.{NDataLayout, NDataSegment}
+import org.apache.kylin.engine.spark.metadata.cube.model.{DataLayout, DataSegment, SpanningTree}
 import org.apache.spark.application.RetryInfo
 import org.apache.spark.sql.execution.SparkPlan
 
@@ -33,14 +32,14 @@ class BuildJobInfos {
   // BUILD
   private val seg2cuboidsNumPerLayer: util.Map[String, util.List[Int]] = new util.HashMap[String, util.List[Int]]
 
-  private val seg2SpanningTree: java.util.Map[String, NSpanningTree] = new util.HashMap[String, NSpanningTree]
+  private val seg2SpanningTree: java.util.Map[String, SpanningTree] = new util.HashMap[String, SpanningTree]
 
-  private val parent2Children: util.Map[NDataLayout, util.List[Long]] = new util.HashMap[NDataLayout, util.List[Long]]
+  private val parent2Children: util.Map[DataLayout, util.List[Long]] = new util.HashMap[DataLayout, util.List[Long]]
 
   // MERGE
   private val sparkPlans: java.util.List[SparkPlan] = new util.LinkedList[SparkPlan]
 
-  private val mergingSegments: java.util.List[NDataSegment] = new util.LinkedList[NDataSegment]
+  private val mergingSegments: java.util.List[DataSegment] = new util.LinkedList[DataSegment]
 
   // COMMON
   private val abnormalLayouts: util.Map[Long, util.List[String]] = new util.HashMap[Long, util.List[String]]
@@ -74,15 +73,15 @@ class BuildJobInfos {
     waitTime = System.currentTimeMillis() - waitStartTime
   }
 
-  def recordSpanningTree(segId: String, tree: NSpanningTree): Unit = {
+  def recordSpanningTree(segId: String, tree: SpanningTree): Unit = {
     seg2SpanningTree.put(segId, tree)
   }
 
-  def getSpanningTree(segId: String): NSpanningTree = {
+  def getSpanningTree(segId: String): SpanningTree = {
     seg2SpanningTree.get(segId)
   }
 
-  def recordMergingSegments(segments: util.List[NDataSegment]): Unit = {
+  def recordMergingSegments(segments: util.List[DataSegment]): Unit = {
     mergingSegments.addAll(segments)
   }
 
@@ -90,7 +89,7 @@ class BuildJobInfos {
     mergingSegments.clear()
   }
 
-  def getMergingSegments: util.List[NDataSegment] = {
+  def getMergingSegments: util.List[DataSegment] = {
     mergingSegments
   }
 
@@ -164,11 +163,11 @@ class BuildJobInfos {
     seg2cuboidsNumPerLayer
   }
 
-  def recordParent2Children(key: NDataLayout, value: util.List[Long]): Unit = {
+  def recordParent2Children(key: DataLayout, value: util.List[Long]): Unit = {
     parent2Children.put(key, value)
   }
 
-  def getParent2Children: util.Map[NDataLayout, util.List[Long]] = {
+  def getParent2Children: util.Map[DataLayout, util.List[Long]] = {
     parent2Children
   }
 }

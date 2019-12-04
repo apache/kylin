@@ -19,6 +19,9 @@
 package org.apache.kylin.job.execution;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
+
+import java.util.Map;
 
 /**
  */
@@ -31,6 +34,8 @@ public final class ExecuteResult {
     private final State state;
     private final String output;
     private final Throwable throwable;
+    private Map<String, String> extraInfo = Maps.newHashMap();
+
 
     /**
      * Default constructor to indicate a success ExecuteResult.
@@ -58,6 +63,10 @@ public final class ExecuteResult {
         return new ExecuteResult(State.SUCCEED, "succeed");
     }
 
+    public static ExecuteResult createSucceed(String output) {
+        return new ExecuteResult(State.SUCCEED, output, null);
+    }
+
     public static ExecuteResult createError(Throwable throwable) {
         Preconditions.checkArgument(throwable != null, "throwable cannot be null");
         return new ExecuteResult(State.ERROR, throwable.getLocalizedMessage(), throwable);
@@ -82,5 +91,9 @@ public final class ExecuteResult {
 
     public Throwable getThrowable() {
         return throwable;
+    }
+
+    public Map<String, String> getExtraInfo() {
+        return extraInfo;
     }
 }

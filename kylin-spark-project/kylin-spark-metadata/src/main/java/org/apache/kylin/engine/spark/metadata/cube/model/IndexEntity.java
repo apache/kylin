@@ -60,8 +60,6 @@ public class IndexEntity {
                 input -> input != null && getDimensionBitset().get(input));
     }
 
-    private final ImmutableBitSet dimensionBitset = initDimensionBitset();
-
     private final ImmutableBiMap<Integer, MeasureDesc> effectiveMeasures = initEffectiveMeasures();
 
     private ImmutableBiMap<Integer, MeasureDesc> initEffectiveMeasures() {
@@ -73,6 +71,8 @@ public class IndexEntity {
         }
         return measuresBuilder.build();
     }
+
+    private final ImmutableBitSet dimensionBitset = initDimensionBitset();
 
     private ImmutableBitSet initDimensionBitset() {
         return ImmutableBitSet.valueOf(dimensions);

@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.engine.spark.metadata.cube.ManagerHub;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,9 +60,7 @@ public class DataSegDetails extends RootPersistentEntity {
     private String project;
 
     public Cube getCube() {
-        // TODO: Get Cube obj via MetadataConverter method
-        return null;
-//        return MetaConverter.getCubeViaId(String cubeId);
+        return ManagerHub.getCube(config, cubeId);
     }
 
     public KylinConfigExt getConfig() {
@@ -98,5 +97,13 @@ public class DataSegDetails extends RootPersistentEntity {
 
     public DataSegment getDataSegment() {
         return getCube().getSegment(uuid);
+    }
+
+    public DataLayout getLayoutById(long layoutId) {
+        for (DataLayout cuboid : getLayouts()) {
+            if (cuboid.getLayoutId() == layoutId)
+                return cuboid;
+        }
+        return null;
     }
 }
