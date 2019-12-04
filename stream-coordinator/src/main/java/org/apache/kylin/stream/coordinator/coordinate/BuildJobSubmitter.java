@@ -17,7 +17,6 @@
  */
 package org.apache.kylin.stream.coordinator.coordinate;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -36,6 +35,7 @@ import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.stream.coordinator.StreamingCubeInfo;
 import org.apache.kylin.stream.coordinator.coordinate.annotations.NonSideEffect;
 import org.apache.kylin.stream.coordinator.coordinate.annotations.NotAtomicIdempotent;
+import org.apache.kylin.stream.coordinator.exception.StoreException;
 import org.apache.kylin.stream.core.model.CubeAssignment;
 import org.apache.kylin.stream.core.model.SegmentBuildState;
 import org.slf4j.Logger;
@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -106,6 +107,7 @@ public class BuildJobSubmitter implements Runnable {
                 buildInfos = previousValue;
             }
         }
+        logger.trace("Add job {} of segment [{} - {}] to track.", segmentBuildJob.jobID, segmentBuildJob.cubeName, segmentBuildJob.segmentName);
         boolean addSucceed = buildInfos.add(segmentBuildJob);
         if (!addSucceed) {
             logger.debug("Add {} failed because we have a duplicated one.", segmentBuildJob);
@@ -136,12 +138,15 @@ public class BuildJobSubmitter implements Runnable {
 
     void doRun() {
         checkTimes++;
-        logger.info("\n----------------------------------------------------------- {}", checkTimes);
+        logger.debug("\n========================================================================= {}", checkTimes);
+        dumpSegmentBuildJobCheckList();
+        coordinator.getStreamMetadataStore().reportStat();
         List<SegmentJobBuildInfo> successJobs = traceEarliestSegmentBuildJob();
 
         for (SegmentJobBuildInfo successJob : successJobs) {
             ConcurrentSkipListSet<SegmentJobBuildInfo> submittedBuildJobs = segmentBuildJobCheckList
                     .get(successJob.cubeName);
+            logger.trace("Remove job {} from check list.", successJob.jobID);
             submittedBuildJobs.remove(successJob);
         }
 
@@ -170,8 +175,11 @@ public class BuildJobSubmitter implements Runnable {
     @NonSideEffect
     List<SegmentJobBuildInfo> traceEarliestSegmentBuildJob() {
         List<SegmentJobBuildInfo> successJobs = Lists.newArrayList();
-        for (ConcurrentSkipListSet<SegmentJobBuildInfo> buildInfos : segmentBuildJobCheckList.values()) {
+        for (Map.Entry<String, ConcurrentSkipListSet<SegmentJobBuildInfo>> entry :
+                segmentBuildJobCheckList.entrySet()) {
+            ConcurrentSkipListSet<SegmentJobBuildInfo> buildInfos = entry.getValue();
             if (buildInfos.isEmpty()) {
+                logger.trace("Skip {}", entry.getKey());
                 continue;
             }
 
@@ -186,6 +194,7 @@ public class BuildJobSubmitter implements Runnable {
                     continue;
                 }
                 ExecutableState jobState = cubingJob.getStatus();
+                logger.debug("Current job state {}", jobState);
                 if (ExecutableState.SUCCEED.equals(jobState)) {
                     CubeManager cubeManager = coordinator.getCubeManager();
                     CubeInstance cubeInstance = cubeManager.getCube(segmentBuildJob.cubeName).latestCopyForWrite();
@@ -205,11 +214,10 @@ public class BuildJobSubmitter implements Runnable {
                         logger.warn("Job:{} is error, exceed max retry. Kylin admin could resume it or discard it"
                                 + "(to let new building job be sumbitted) .", segmentBuildJob);
                     }
-                } else {
-                    logger.debug("Current job state {}", jobState);
                 }
-            } catch (Exception e) {
-                logger.error("Error when check streaming segment job build state:" + segmentBuildJob, e);
+            } catch (StoreException storeEx) {
+                logger.error("Error when check streaming segment job build state:" + segmentBuildJob, storeEx);
+                throw storeEx;
             }
         }
         return successJobs;
@@ -226,7 +234,7 @@ public class BuildJobSubmitter implements Runnable {
                 boolean ok = submitSegmentBuildJob(cubeName, segmentName);
                 allSubmited = allSubmited && ok;
                 if (!ok) {
-                    logger.debug("Failed to submit building job.");
+                    logger.debug("Failed to submit building job for {}.", segmentName);
                 }
             }
             if (allSubmited) {
@@ -267,15 +275,16 @@ public class BuildJobSubmitter implements Runnable {
         List<SegmentBuildState> segmentStates = coordinator.getStreamMetadataStore().getSegmentBuildStates(cubeName);
         int inBuildingSegments = cubeInstance.getBuildingSegments().size();
         int leftQuota = allowMaxBuildingSegments - inBuildingSegments;
+        boolean stillQuotaForNewSegment = true;
 
         // Sort it so we can iterate segments from eariler one to newer one
         Collections.sort(segmentStates);
 
         for (int i = 0; i < segmentStates.size(); i++) {
-
+            boolean needRebuild = false;
             if (leftQuota <= 0) {
-                logger.info("No left quota to build segments for cube:{}", cubeName);
-                break;
+                logger.info("No left quota to build segments for cube:{} at {}", cubeName, leftQuota);
+                stillQuotaForNewSegment = false;
             }
 
             SegmentBuildState segmentState = segmentStates.get(i);
@@ -293,26 +302,24 @@ public class BuildJobSubmitter implements Runnable {
 
             // We already have a building job for current segment
             if (segmentState.isInBuilding()) {
-                boolean needRebuild = checkSegmentBuildingJob(segmentState, cubeName, cubeInstance);
+                needRebuild = checkSegmentBuildingJob(segmentState, cubeName, cubeInstance);
                 if (!needRebuild)
                     continue;
             } else if (segmentState.isInWaiting()) {
-                // The data has not been uploaded to remote completely, or job is discard
+                // The data maybe uploaded to remote completely, or job is discard
                 // These two case should be submit a building job, just let go through it
             }
 
             boolean readyToBuild = checkSegmentIsReadyToBuild(segmentStates, i, cubeAssignedReplicaSets);
             if (!readyToBuild) {
                 logger.debug("Segment {} {} is not ready to submit a building job.", cubeName, segmentState);
-                // use break instead continue here, because we should transfer to next queue in sequential way (no jump the queue)
-                break;
-            } else {
+            } else if (stillQuotaForNewSegment || needRebuild) {
                 result.add(segmentState.getSegmentName());
                 leftQuota--;
             }
         }
-        if (logger.isDebugEnabled() && result.isEmpty()) {
-            logger.debug("Candidate {} : {}.", cubeName, String.join(", ", result));
+        if (logger.isDebugEnabled() && !result.isEmpty()) {
+            logger.debug("{} Candidate segment list to be built : {}.", cubeName, String.join(", ", result));
         }
         return result;
     }
@@ -364,13 +371,14 @@ public class BuildJobSubmitter implements Runnable {
                 }
             }
 
-            if (!segmentExists) {
-                logger.debug("Create segment for {} {} .", cubeName, segmentName);
-                newSeg = coordinator.getCubeManager().appendSegment(cubeInstance,
-                        new SegmentRange.TSRange(segmentRange.getFirst(), segmentRange.getSecond()));
-            } else {
-                logger.info("Segment {} exists.", segmentName);
+            if (segmentExists) {
+                logger.warn("Segment {} exists, it will be forced deleted.", segmentName);
+                coordinator.getCubeManager().updateCubeDropSegments(cubeInstance, newSeg);
             }
+            
+            logger.debug("Create segment for {} {} .", cubeName, segmentName);
+            newSeg = coordinator.getCubeManager().appendSegment(cubeInstance,
+                    new SegmentRange.TSRange(segmentRange.getFirst(), segmentRange.getSecond()));
 
             // Step 2. create and submit new build job
             DefaultChainedExecutable executable = getStreamingCubingJob(newSeg);
@@ -414,7 +422,11 @@ public class BuildJobSubmitter implements Runnable {
                 return false;
             }
             CubingJob cubingJob = (CubingJob) coordinator.getExecutableManager().getJob(jobId);
-            Preconditions.checkNotNull(cubingJob, "CubingJob should not be null.");
+            if (cubingJob == null) {
+                // Cubing job is dropped manually, or metadata is broken.
+                logger.warn("Looks like cubing job is dropped manually, it will be submitted a new one.");
+                return true;
+            }
             ExecutableState jobState = cubingJob.getStatus();
 
             // If job is already succeed and HBase segment in ready state, remove the build state
@@ -484,7 +496,12 @@ public class BuildJobSubmitter implements Runnable {
                     }
                 }
             }
-            return notCompleteReplicaSets.isEmpty();
+            if (notCompleteReplicaSets.isEmpty()) {
+                return true;
+            } else {
+                logger.debug("Not ready data for replica sets: {}", notCompleteReplicaSets);
+                return false;
+            }
         }
     }
 
@@ -494,5 +511,17 @@ public class BuildJobSubmitter implements Runnable {
 
     public DefaultChainedExecutable getStreamingCubingJob(CubeSegment segment){
         return new StreamingCubingEngine().createStreamingCubingJob(segment, "SYSTEM");
+    }
+
+    void dumpSegmentBuildJobCheckList() {
+        if (!logger.isTraceEnabled())
+            return;
+        StringBuilder sb = new StringBuilder("Dump JobCheckList:\t");
+        for (Map.Entry<String, ConcurrentSkipListSet<SegmentJobBuildInfo>> cube : segmentBuildJobCheckList.entrySet()) {
+            sb.append(cube.getKey()).append(":").append(cube.getValue());
+        }
+        if (logger.isTraceEnabled()) {
+            logger.trace(sb.toString());
+        }
     }
 }
