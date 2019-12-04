@@ -64,8 +64,8 @@ class DFChooser(toBuildTree: SpanningTree,
           if (map.contains(layout.getId)) {
             map.apply(layout.getId).addCuboid(desc)
           } else {
-            val nBuildSourceInfo = getSourceFromLayout(layout, desc)
-            map += (layout.getId -> nBuildSourceInfo)
+            val BuildSourceInfo = getSourceFromLayout(layout, desc)
+            map += (layout.getId -> BuildSourceInfo)
           }
         } else {
           if (flatTableSource == null) {

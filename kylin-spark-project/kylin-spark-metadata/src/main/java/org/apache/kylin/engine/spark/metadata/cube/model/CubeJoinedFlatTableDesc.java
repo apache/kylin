@@ -81,7 +81,7 @@ public class CubeJoinedFlatTableDesc {
 
     // check what columns from hive tables are required, and index them
     private void initParseCube() {
-        for (Map.Entry<Integer, TblColRef> dimEntry : cube.getModel().getEffectiveDimCols().entrySet()) {
+        for (Map.Entry<Integer, TblColRef> dimEntry : cube.getEffectiveDimCols().entrySet()) {
             initAddColumn(dimEntry.getValue());
         }
 

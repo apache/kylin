@@ -87,7 +87,6 @@ public class DFBuildJob extends SparkApplication {
         try {
 //            IndexPlan indexPlan = dfMgr.getDataflow(dataflowId).getIndexPlan();
             Cube cube = ManagerHub.getCube(config, MetadataConstants.P_CUBE_ID);
-            //TODO[xyxy]: NSparkCubingUtil
             Set<LayoutEntity> cuboids = NSparkCubingUtil.toLayouts(cube, layoutIds).stream()
                     .filter(Objects::nonNull).collect(Collectors.toSet());
 
@@ -99,7 +98,6 @@ public class DFBuildJob extends SparkApplication {
                 // choose source
                 DFChooser datasetChooser = new DFChooser(SpanningTree, seg, jobId, ss, config, true);
                 datasetChooser.decideSources();
-                //TODO[xyxy]: NBuildSourceInfo
                 NBuildSourceInfo buildFromFlatTable = datasetChooser.flatTableSource();
                 Map<Long, NBuildSourceInfo> buildFromLayouts = datasetChooser.reuseSources();
 
@@ -315,7 +313,6 @@ public class DFBuildJob extends SparkApplication {
         return layouts;
     }
 
-    //TODO[xyxy]: evaluate JobMetrics
     private DataLayout saveAndUpdateLayout(Dataset<Row> dataset, DataSegment seg, LayoutEntity layout)
             throws IOException {
         long layoutId = layout.getId();

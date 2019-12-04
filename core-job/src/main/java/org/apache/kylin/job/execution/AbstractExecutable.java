@@ -21,6 +21,7 @@ package org.apache.kylin.job.execution;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collections;
+import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -46,6 +47,10 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import static org.apache.kylin.job.constant.ExecutableConstants.MR_JOB_ID;
+import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
+import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
 
 /**
  */
@@ -593,5 +598,33 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
     public final void setParentId(String parentId) {
         setParam(PARENT_ID, parentId);
+    }
+
+    //will modify input info
+    public Map<String, String> makeExtraInfo(Map<String, String> info) {
+        if (info == null) {
+            return Maps.newHashMap();
+        }
+
+        // post process
+        if (info.containsKey(MR_JOB_ID) && !info.containsKey(YARN_APP_ID)) {
+            String jobId = info.get(MR_JOB_ID);
+            if (jobId.startsWith("job_")) {
+                info.put(YARN_APP_ID, jobId.replace("job_", "application_"));
+            }
+        }
+
+        if (info.containsKey(YARN_APP_ID)
+                && !org.apache.commons.lang3.StringUtils.isEmpty(getConfig().getJobTrackingURLPattern())) {
+            String pattern = getConfig().getJobTrackingURLPattern();
+            try {
+                String newTrackingURL = String.format(pattern, info.get(YARN_APP_ID));
+                info.put(YARN_APP_URL, newTrackingURL);
+            } catch (IllegalFormatException ife) {
+                logger.error("Illegal tracking url pattern: {}", getConfig().getJobTrackingURLPattern());
+            }
+        }
+
+        return info;
     }
 }
