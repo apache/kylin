@@ -555,6 +555,30 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.dictionary.shrunken-from-global-enabled", TRUE));
     }
 
+    public int getGlobalDictV2MinHashPartitions() {
+        return Integer.parseInt(getOptional("kylin.dictionary.globalV2-min-hash-partitions", "10"));
+    }
+
+    public int getGlobalDictV2ThresholdBucketSize() {
+        return Integer.parseInt(getOptional("kylin.dictionary.globalV2-threshold-bucket-size", "500000"));
+    }
+
+    public double getGlobalDictV2InitLoadFactor() {
+        return Double.parseDouble(getOptional("kylin.dictionary.globalV2-init-load-factor", "0.5"));
+    }
+
+    public double getGlobalDictV2BucketOverheadFactor() {
+        return Double.parseDouble(getOptional("kylin.dictionary.globalV2-bucket-overhead-factor", "1.5"));
+    }
+
+    public int getGlobalDictV2MaxVersions() {
+        return Integer.parseInt(getOptional("kylin.dictionary.globalV2-max-versions", "3"));
+    }
+
+    public long getGlobalDictV2VersionTTL() {
+        return Long.parseLong(getOptional("kylin.dictionary.globalV2-version-ttl", "259200000"));
+    }
+
     // ============================================================================
     // mr-hive dict
     // ============================================================================
