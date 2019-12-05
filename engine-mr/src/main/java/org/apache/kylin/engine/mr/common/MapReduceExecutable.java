@@ -25,7 +25,10 @@ import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+import com.google.common.base.Strings;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -40,6 +43,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.JobStatus;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeManager;
@@ -67,6 +71,7 @@ public class MapReduceExecutable extends AbstractExecutable {
     private static final String KEY_MR_JOB = "MR_JOB_CLASS";
     private static final String KEY_PARAMS = "MR_JOB_PARAMS";
     private static final String KEY_COUNTER_SAVEAS = "MR_COUNTER_SAVEAS";
+    private final Lock threadLock = new ReentrantLock();
 
     protected static final Logger logger = LoggerFactory.getLogger(MapReduceExecutable.class);
 
@@ -109,8 +114,16 @@ public class MapReduceExecutable extends AbstractExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final String mapReduceJobClass = getMapReduceJobClass();
+        DistributedLock lock = null;
+
         Preconditions.checkNotNull(mapReduceJobClass);
         try {
+
+            if (getIsNeedLock()) {
+                lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentThread();
+                getLock(lock);
+            }
+
             Job job;
             ExecutableManager mgr = getManager();
             Configuration conf = new Configuration(HadoopUtil.getCurrentConfiguration());
@@ -131,7 +144,15 @@ public class MapReduceExecutable extends AbstractExecutable {
                     hadoopJob.run(jobArgs);
 
                     if (hadoopJob.isSkipped()) {
-                        return new ExecuteResult(ExecuteResult.State.SUCCEED, "skipped");
+                        if (isDiscarded()) {
+                            if (getIsNeedLock()) {
+                                releaseLock(lock);
+                            }
+                            return new ExecuteResult(ExecuteResult.State.DISCARDED, "skipped");
+                        } else {
+                            return new ExecuteResult(ExecuteResult.State.SUCCEED, "skipped");
+                        }
+
                     }
                 } catch (Exception ex) {
                     StringBuilder log = new StringBuilder();
@@ -140,7 +161,14 @@ public class MapReduceExecutable extends AbstractExecutable {
                     ex.printStackTrace(new PrintWriter(stringWriter));
                     log.append(stringWriter.toString()).append("\n");
                     log.append("result code:").append(2);
-                    return new ExecuteResult(ExecuteResult.State.ERROR, log.toString(), ex);
+                    if (isDiscarded()) {
+                        if (getIsNeedLock()) {
+                            releaseLock(lock);
+                        }
+                        return new ExecuteResult(ExecuteResult.State.DISCARDED, log.toString());
+                    } else {
+                        return new ExecuteResult(ExecuteResult.State.ERROR, log.toString(), ex);
+                    }
                 }
                 job = hadoopJob.getJob();
             }
@@ -153,7 +181,15 @@ public class MapReduceExecutable extends AbstractExecutable {
                 JobStepStatusEnum newStatus = HadoopJobStatusChecker.checkStatus(job, output);
                 if (status == JobStepStatusEnum.KILLED) {
                     mgr.updateJobOutput(getId(), ExecutableState.ERROR, hadoopCmdOutput.getInfo(), "killed by admin");
-                    return new ExecuteResult(ExecuteResult.State.FAILED, "killed by admin");
+                    if (isDiscarded()) {
+                        if (getIsNeedLock()) {
+                            releaseLock(lock);
+                        }
+                        return new ExecuteResult(ExecuteResult.State.DISCARDED, "killed by admin");
+                    } else {
+                        return new ExecuteResult(ExecuteResult.State.FAILED, "killed by admin");
+                    }
+
                 }
                 if (status == JobStepStatusEnum.WAITING && (newStatus == JobStepStatusEnum.FINISHED
                         || newStatus == JobStepStatusEnum.ERROR || newStatus == JobStepStatusEnum.RUNNING)) {
@@ -168,9 +204,24 @@ public class MapReduceExecutable extends AbstractExecutable {
                     mgr.addJobInfo(getId(), info);
 
                     if (status == JobStepStatusEnum.FINISHED) {
-                        return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());
+                        if (isDiscarded()) {
+                            if (getIsNeedLock()) {
+                                releaseLock(lock);
+                            }
+                            return new ExecuteResult(ExecuteResult.State.DISCARDED, output.toString());
+                        } else {
+                            return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());
+                        }
+
                     } else {
-                        return ExecuteResult.createFailed(new MapReduceException(output.toString()));
+                        if (isDiscarded()) {
+                            if (getIsNeedLock()) {
+                                releaseLock(lock);
+                            }
+                            return new ExecuteResult(ExecuteResult.State.DISCARDED, output.toString());
+                        } else {
+                            return ExecuteResult.createFailed(new MapReduceException(output.toString()));
+                        }
                     }
                 }
                 Thread.sleep(context.getConfig().getYarnStatusCheckIntervalSeconds() * 1000L);
@@ -186,6 +237,9 @@ public class MapReduceExecutable extends AbstractExecutable {
             }
 
             if (isDiscarded()) {
+                if (getIsNeedLock()) {
+                    releaseLock(lock);
+                }
                 return new ExecuteResult(ExecuteResult.State.DISCARDED, output.toString());
             } else {
                 return new ExecuteResult(ExecuteResult.State.STOPPED, output.toString());
@@ -193,10 +247,24 @@ public class MapReduceExecutable extends AbstractExecutable {
 
         } catch (ReflectiveOperationException e) {
             logger.error("error getMapReduceJobClass, class name:" + getParam(KEY_MR_JOB), e);
-            return ExecuteResult.createError(e);
+            if (isDiscarded()) {
+                if (getIsNeedLock()) {
+                    releaseLock(lock);
+                }
+                return new ExecuteResult(ExecuteResult.State.DISCARDED, e.getMessage());
+            } else {
+                return ExecuteResult.createError(e);
+            }
         } catch (Exception e) {
             logger.error("error execute " + this.toString(), e);
-            return ExecuteResult.createError(e);
+            if (isDiscarded()) {
+                if (getIsNeedLock()) {
+                    releaseLock(lock);
+                }
+                return new ExecuteResult(ExecuteResult.State.DISCARDED, e.getMessage());
+            } else {
+                return ExecuteResult.createError(e);
+            }
         }
     }
 
@@ -248,6 +316,154 @@ public class MapReduceExecutable extends AbstractExecutable {
     public void setCounterSaveAs(String value) {
         setParam(KEY_COUNTER_SAVEAS, value);
     }
+
+    public void setIsNeedLock(Boolean isNeedLock) {
+        setParam("isNeedLock", String.valueOf(isNeedLock));
+    }
+
+    public boolean getIsNeedLock() {
+        String isNeedLock = getParam("isNeedLock");
+        return Strings.isNullOrEmpty(isNeedLock) ? false : Boolean.parseBoolean(isNeedLock);
+    }
+
+    public void setIsNeedReleaseLock(Boolean isNeedReleaseLock) {
+        setParam("isNeedReleaseLock", String.valueOf(isNeedReleaseLock));
+    }
+
+    public boolean getIsNeedReleaseLock() {
+        String isNeedReleaseLock = getParam("isNeedReleaseLock");
+        return Strings.isNullOrEmpty(isNeedReleaseLock) ? false : Boolean.parseBoolean(isNeedReleaseLock);
+    }
+
+    public void setLockPathName(String pathName) {
+        setParam("lockPathName", pathName);
+    }
+
+    public String getLockPathName() {
+        return getParam("lockPathName");
+    }
+
+    public void setJobFlowJobId(String jobId) {
+        setParam("jobFlowJobId", jobId);
+    }
+
+    public String getJobFlowJobId() {
+        return getParam("jobFlowJobId");
+    }
+
+    private void getLock(DistributedLock lock) throws InterruptedException {
+        logger.info("{} try to get zk lock, zk client {} ", getId(), lock.getClient());
+        String ephemeralLockPath = getEphemeralLockPathName();
+        String fullLockPath = getCubeJobLockPathName();
+        boolean isLockedByOther = true;
+        boolean getLocked = false;
+        long lockStartTime = System.currentTimeMillis();
+
+        boolean isLockedByTheJob = lock.isLocked(fullLockPath);
+        logger.info("cube job {} zk lock is isLockedByTheJob:{}", getId(), isLockedByTheJob);
+        if (!isLockedByTheJob) {//not lock by the job
+            while (isLockedByOther) {
+                isLockedByOther = lock.isLocked(getCubeJobLockParentPathName());//other job global lock
+
+                if (!isLockedByOther) {//not lock by other job
+                    isLockedByOther = lock.isLocked(ephemeralLockPath);//check the ephemeral current lock
+                    logger.info("zookeeper lock path :{}, is locked by other job result is {}", ephemeralLockPath,
+                            isLockedByOther);
+
+                    if (!isLockedByOther) {//the ephemeral lock not lock by other job
+                        //try to get ephemeral lock
+                        try {
+                            logger.debug("{} before start to get lock ephemeralLockPath {}", getId(),
+                                    ephemeralLockPath);
+                            threadLock.lock();
+                            logger.debug("{} start to get lock ephemeralLockPath {}", getId(), ephemeralLockPath);
+                            getLocked = lock.lock(ephemeralLockPath);
+                            logger.debug("{} finish get lock ephemeralLockPath {},getLocked {}", getId(),
+                                    ephemeralLockPath, getLocked);
+                        } finally {
+                            threadLock.unlock();
+                            logger.debug("{} finish unlock the thread lock ,ephemeralLockPath {} ", getId(),
+                                    ephemeralLockPath);
+                        }
+
+                        if (getLocked) {//get ephemeral lock success
+                            try {
+                                getLocked = lock.globalPermanentLock(fullLockPath);//add the fullLockPath lock in case of the server crash then the other server can run the same job can get the lock
+                                if (getLocked) {
+                                    break;
+                                } else {
+                                    if (lock.isLocked(ephemeralLockPath)) {
+                                        lock.unlock(ephemeralLockPath);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                if (lock.isLocked(ephemeralLockPath)) {
+                                    lock.unlock(ephemeralLockPath);
+                                }
+                            }
+                        }
+                        isLockedByOther = true;//get lock fail,will try again
+                    }
+                }
+                // wait 1 min and try again
+                logger.info(
+                        "{}, parent lock path({}) is locked by other job result is {} ,ephemeral lock path :{} is locked by other job result is {},will try after one minute",
+                        getId(), getCubeJobLockParentPathName(), isLockedByOther, ephemeralLockPath, isLockedByOther);
+                Thread.sleep(60000);
+            }
+        } else {
+            lock.lock(ephemeralLockPath);
+        }
+
+        long useSec = ((System.currentTimeMillis() - lockStartTime) / 1000);
+        logger.info("job {} get zookeeper lock path:{} success,zookeeper get lock costTime : {} s", getId(),
+                fullLockPath, useSec);
+    }
+
+    private void releaseLock(DistributedLock lock) {
+        String parentLockPath = getCubeJobLockParentPathName();
+        String ephemeralLockPath = getEphemeralLockPathName();
+        if (lock.isLocked(getCubeJobLockPathName())) {//release cube job dict lock if exists
+            lock.purgeLocks(parentLockPath);
+            logger.info("{} unlock cube job dict lock path({}) success", getJobFlowJobId(), parentLockPath);
+
+            if (lock.isLocked(ephemeralLockPath)) {//release cube job Ephemeral lock if exists
+                lock.purgeLocks(ephemeralLockPath);
+                logger.info("{} unlock cube job ephemeral lock path({}) success", getJobFlowJobId(), ephemeralLockPath);
+            }
+        }
+    }
+
+    private String getEphemeralLockPathName() {
+        String pathName = getLockPathName();
+        if (Strings.isNullOrEmpty(pathName)) {
+            throw new IllegalArgumentException("cube job lock path name is null");
+        }
+
+        return CubeJobLockUtil.getEphemeralLockPath(pathName);
+    }
+
+    private String getCubeJobLockPathName() {
+        String pathName = getLockPathName();
+        if (Strings.isNullOrEmpty(pathName)) {
+            throw new IllegalArgumentException("cube job lock path name is null");
+        }
+
+        String flowJobId = getJobFlowJobId();
+        if (Strings.isNullOrEmpty(flowJobId)) {
+            throw new IllegalArgumentException("cube job lock path flowJobId is null");
+        }
+        return CubeJobLockUtil.getLockPath(pathName, flowJobId);
+    }
+
+    private String getCubeJobLockParentPathName() {
+        String pathName = getLockPathName();
+        if (Strings.isNullOrEmpty(pathName)) {
+            throw new IllegalArgumentException(" create mr hive dict lock path name is null");
+        }
+        return CubeJobLockUtil.getLockPath(pathName, null);
+    }
+
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_JOB_CONF = OptionBuilder.withArgName(BatchConstants.ARG_CONF).hasArg()
