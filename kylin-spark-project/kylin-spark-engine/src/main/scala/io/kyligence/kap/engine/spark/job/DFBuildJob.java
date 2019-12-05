@@ -137,7 +137,7 @@ public class DFBuildJob extends SparkApplication {
     }
 
     private void updateSegmentSourceBytesSize(Cube cube, Map<String, Object> toUpdateSegmentSourceSize)
-            throws IOException {
+            throws Exception {
         //TODO[xyxy]: is this CopyOnWrite supposed to be preserved?
 //        NDataflow dataflow = dfMgr.getDataflow(dataflowId);
 //        NDataflow newDF = dataflow.copy();
@@ -293,7 +293,6 @@ public class DFBuildJob extends SparkApplication {
                 layouts.add(saveAndUpdateLayout(afterSort, seg, layout));
             }
         } else {
-            //TODO[xyxy]: CuboidAggregator
             Dataset<Row> afterAgg = CuboidAggregator.agg(ss, parent, dimIndexes, cuboid.getEffectiveMeasures(), seg,
                     nSpanningTree);
             for (LayoutEntity layout : nSpanningTree.getLayouts(cuboid)) {

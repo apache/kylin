@@ -154,6 +154,15 @@ public class Cube extends RootPersistentEntity {
         return "/" + project + CUBE_RESOURCE_ROOT + "/" + name + FILE_SURFIX;
     }
 
+    public List<LayoutEntity> getAllLayouts() {
+        List<LayoutEntity> r = Lists.newArrayList();
+
+        for (IndexEntity cd : getAllIndexes()) {
+            r.addAll(cd.getLayouts());
+        }
+        return r;
+    }
+
     public List<IndexEntity> getAllIndexes() {
         Map<Long, Integer> retSubscriptMap = Maps.newHashMap();
         List<IndexEntity> mergedIndexes = Lists.newArrayList();
