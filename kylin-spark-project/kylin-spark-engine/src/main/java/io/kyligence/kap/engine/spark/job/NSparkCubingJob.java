@@ -25,7 +25,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
 import org.apache.kylin.engine.spark.metadata.cube.model.DataSegment;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
-import org.apache.kylin.engine.spark.metadata.cube.model.SegmentRange;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.MetadataConstants;

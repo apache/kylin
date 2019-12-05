@@ -25,12 +25,12 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <name>KYLIN - Spark Common</name>
-    <url>http://kyligence.io</url>
+
+    <name>Kylin Spark Common</name>
     <packaging>jar</packaging>
-    <description>Kyligence Job Engine - SPARK</description>
     <artifactId>kylin-spark-common</artifactId>
     <version>3.0.0-SNAPSHOT</version>
+
     <parent>
         <artifactId>kylin-spark-project</artifactId>
         <groupId>org.apache.kylin</groupId>
@@ -41,13 +41,13 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-spark-job</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <artifactId>kylin-core-common</artifactId>
+            <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-core-common</artifactId>
-            <type>test-jar</type>
+            <artifactId>kylin-spark-metadata</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
     
