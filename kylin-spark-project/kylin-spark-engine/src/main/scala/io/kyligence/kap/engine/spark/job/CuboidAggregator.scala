@@ -35,6 +35,7 @@ import org.apache.spark.sql.functions.{col, _}
 import org.apache.spark.sql.types.{StringType, _}
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.apache.spark.sql.udaf._
+import org.apache.spark.sql.util.SparkTypeUtil
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -96,7 +97,7 @@ object CuboidAggregator {
           if (function.getExpression.equalsIgnoreCase("SUM")) {
             val parameteter = parameters.head.getValue
             //TODO[xyxy] SparderTypeUtil
-            columns.append(lit(parameteter).cast(SparderTypeUtil.toSparkType(function.getReturnDataType)))
+            columns.append(lit(parameteter).cast(SparkTypeUtil.toSparkType(function.getReturnDataType)))
           } else {
             columns.append(lit(parameters.head.getValue))
           }
@@ -152,7 +153,7 @@ object CuboidAggregator {
           val measure = function.getParameters.get(0).getColRef.getColumnDesc
 
           val schema = StructType(parameters.map(_.getColRef.getColumnDesc).map { col =>
-            val dateType = toSparkType(col.getType)
+            val dateType = SparkTypeUtil.toSparkType(col.getType)
             if (col == measure) {
               StructField(s"MEASURE_${col.getName}", dateType)
             } else {
