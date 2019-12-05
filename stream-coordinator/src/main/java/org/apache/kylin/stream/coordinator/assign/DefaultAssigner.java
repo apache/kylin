@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class DefaultAssigner implements Assigner {
-    private static final Logger logger = LoggerFactory.getLogger(Assigner.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultAssigner.class);
 
     @Override
     public Map<Integer, Map<String, List<Partition>>> reBalancePlan(List<ReplicaSet> replicaSets,
@@ -197,7 +197,7 @@ public class DefaultAssigner implements Assigner {
         int cubeConsumerTaskNum = getCubeConsumerTasks(cube, replicaSetNum);
         int partitionsPerReceiver = partitionsOfCube.size()/cubeConsumerTaskNum ;
         if (partitionsPerReceiver > 3 && replicaSetNum > cubeConsumerTaskNum) {
-            logger.debug(
+            logger.info(
                     "You may consider improve `kylin.stream.cube-num-of-consumer-tasks` because you still some quta left.");
         }
         List<List<Partition>> result = Lists.newArrayListWithCapacity(cubeConsumerTaskNum);

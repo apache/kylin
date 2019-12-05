@@ -2116,7 +2116,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     // ============================================================================
-    // streaming
+    // Realtime streaming
     // ============================================================================
     public String getStreamingStoreClass() {
         return getOptional("kylin.stream.store.class",
@@ -2283,6 +2283,10 @@ public abstract class KylinConfigBase implements Serializable {
      */
     public String getStreamingDerivedTimeTimezone() {
         return (getOptional("kylin.stream.event.timezone", ""));
+    }
+
+    public boolean isAutoResubmitDiscardJob(){
+        return Boolean.parseBoolean(getOptional("kylin.stream.auto-resubmit-after-discard-enabled", "true"));
     }
 
     // ============================================================================

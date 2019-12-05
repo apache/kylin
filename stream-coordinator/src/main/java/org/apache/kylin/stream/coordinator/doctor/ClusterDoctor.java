@@ -30,7 +30,4 @@ public class ClusterDoctor implements Runnable {
     public void run() {
         // TO BE IMPLEMENTED
     }
-
-    // repair cube
-    // report cube state
 }

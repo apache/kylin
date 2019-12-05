@@ -55,7 +55,7 @@ public class AssignmentsCache {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         cubeAssignmentCache = CacheBuilder.newBuilder()
                 .removalListener((RemovalNotification<String, List<ReplicaSet>> notification) -> logger
-                        .warn("{} is removed because {} ", notification.getKey(), notification.getCause()))
+                        .debug("{} is removed because {} ", notification.getKey(), notification.getCause()))
                 .expireAfterWrite(300, TimeUnit.SECONDS)
                 .build();
          Broadcaster.getInstance(config).registerListener(new AssignCacheSyncListener(), ASSIGNMENT_ENTITY);

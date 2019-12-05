@@ -108,7 +108,8 @@ public class CubeTupleConverter implements ITupleConverter {
         // pre-calculate dimension index mapping to tuple
         for (TblColRef dim : selectedDimensions) {
             tupleIdx[i] = tupleInfo.hasColumn(dim) ? tupleInfo.getColumnIndex(dim) : -1;
-            if (!TimeDerivedColumnType.isTimeDerivedColumnAboveDayLavel(dim.getName())) {
+            if (TimeDerivedColumnType.isTimeDerivedColumn(dim.getName())
+                    && !TimeDerivedColumnType.isTimeDerivedColumnAboveDayLevel(dim.getName())) {
                 timestampColumn.add(tupleIdx[i]);
             }
             i++;

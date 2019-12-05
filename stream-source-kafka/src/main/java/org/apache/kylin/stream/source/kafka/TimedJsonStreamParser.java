@@ -149,7 +149,7 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
                 String columnName = column.getName();
                 TimeDerivedColumnType columnType = TimeDerivedColumnType.getTimeDerivedColumnType(columnName);
                 if (columnType != null) {
-                    if (timeZoneOffset > 0 && TimeDerivedColumnType.isTimeDerivedColumnAboveDayLavel(columnName)) {
+                    if (timeZoneOffset > 0 && TimeDerivedColumnType.isTimeDerivedColumnAboveDayLevel(columnName)) {
                         result.add(String.valueOf(columnType.normalize(t + timeZoneOffset)));
                     } else {
                         result.add(String.valueOf(columnType.normalize(t)));

@@ -31,9 +31,9 @@ public class TimeUtil {
     }
 
     private static TimeZone gmt = TimeZone.getTimeZone("GMT");
-    public static long ONE_MINUTE_TS = 60 * 1000L;
-    public static long ONE_HOUR_TS = 60 * ONE_MINUTE_TS;
-    public static long ONE_DAY_TS = 24 * ONE_HOUR_TS;
+    public static final long ONE_MINUTE_TS = 60 * 1000L;
+    public static final long ONE_HOUR_TS = 60 * ONE_MINUTE_TS;
+    public static final long ONE_DAY_TS = 24 * ONE_HOUR_TS;
 
     public static long getMinuteStart(long ts) {
         return ts / ONE_MINUTE_TS * ONE_MINUTE_TS;

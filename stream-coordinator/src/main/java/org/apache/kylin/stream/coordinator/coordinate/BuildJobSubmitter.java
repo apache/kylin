@@ -20,6 +20,7 @@ package org.apache.kylin.stream.coordinator.coordinate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -450,8 +451,13 @@ public class BuildJobSubmitter implements Runnable {
 
             // If a job is discard, we will try to resumbit it later.
             if (ExecutableState.DISCARDED.equals(jobState)) {
-                logger.info("Job:{} is discard, resubmit it later.", jobId);
-                return true;
+                if (KylinConfig.getInstanceFromEnv().isAutoResubmitDiscardJob()) {
+                    logger.debug("Job:{} is discard, resubmit it later.", jobId);
+                    return true;
+                } else {
+                    logger.debug("Job:{} is discard, please resubmit yourself.", jobId);
+                    return false;
+                }
             } else {
                 logger.info("Job:{} is in running, job state: {}.", jobId, jobState);
             }
