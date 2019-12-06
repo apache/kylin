@@ -26,6 +26,7 @@ import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class CubeJoinedFlatTableDesc {
@@ -59,9 +60,9 @@ public class CubeJoinedFlatTableDesc {
 
     protected String makeTableName() {
         if (segmentRange == null) {
-            return "kylin_intermediate_" + cube.getUuid().toLowerCase();
+            return "kylin_intermediate_" + cube.getUuid().toLowerCase(Locale.ROOT);
         } else {
-            return "kylin_intermediate_" + cube.getUuid().toLowerCase() + "_" + segmentRange.toString();
+            return "kylin_intermediate_" + cube.getUuid().toLowerCase(Locale.ROOT) + "_" + segmentRange.toString();
         }
     }
 
