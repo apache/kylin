@@ -80,6 +80,7 @@ public class StreamingConsumerChannel implements Runnable {
 
     public void start() {
         this.consumerThread = new Thread(this, cubeName + "_channel");
+        consumerThread.setPriority(Thread.MAX_PRIORITY); // Improve the priority of consumer thread to make ingest rate stable
         connector.open();
         consumerThread.start();
     }

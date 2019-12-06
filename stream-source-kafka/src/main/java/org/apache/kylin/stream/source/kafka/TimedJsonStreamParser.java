@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
@@ -65,6 +66,7 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
     private String tsColName = "timestamp";
     private String tsParser = null;
     private AbstractTimeParser streamTimeParser;
+    private long timeZoneOffset = 0;
 
     /**
      * the path of {"user" : {"name": "kite", "sex":"female"}}
@@ -76,6 +78,9 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
 
     public TimedJsonStreamParser(CubeDesc cubeDesc, MessageParserInfo parserInfo) {
         this(new CubeJoinedFlatTableDesc(cubeDesc).getAllColumns(), parserInfo);
+        String timeZone = cubeDesc.getConfig().getStreamingDerivedTimeTimezone();
+        if(timeZone.length() > 0)
+            timeZoneOffset = TimeZone.getTimeZone(timeZone).getRawOffset();
     }
 
     public TimedJsonStreamParser(List<TblColRef> cols, MessageParserInfo parserInfo) {
@@ -144,7 +149,11 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
                 String columnName = column.getName();
                 TimeDerivedColumnType columnType = TimeDerivedColumnType.getTimeDerivedColumnType(columnName);
                 if (columnType != null) {
-                    result.add(String.valueOf(columnType.normalize(t)));
+                    if (timeZoneOffset > 0 && TimeDerivedColumnType.isTimeDerivedColumnAboveDayLevel(columnName)) {
+                        result.add(String.valueOf(columnType.normalize(t + timeZoneOffset)));
+                    } else {
+                        result.add(String.valueOf(columnType.normalize(t)));
+                    }
                 } else {
                     Object value = root.get(columnName.toLowerCase(Locale.ROOT));
                     if (value == null) {

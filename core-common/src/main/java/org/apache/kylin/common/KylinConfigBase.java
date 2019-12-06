@@ -2172,7 +2172,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     // ============================================================================
-    // streaming
+    // Realtime streaming
     // ============================================================================
     public String getStreamingStoreClass() {
         return getOptional("kylin.stream.store.class",
@@ -2337,8 +2337,12 @@ public abstract class KylinConfigBase implements Serializable {
     /**
      * whether realtime query should add timezone offset by kylin's web-timezone, please refer to KYLIN-4010 for detail
      */
-    public boolean isStreamingAutoJustTimezone() {
-        return Boolean.parseBoolean(getOptional("kylin.stream.auto.just.by.timezone", "false"));
+    public String getStreamingDerivedTimeTimezone() {
+        return (getOptional("kylin.stream.event.timezone", ""));
+    }
+
+    public boolean isAutoResubmitDiscardJob(){
+        return Boolean.parseBoolean(getOptional("kylin.stream.auto-resubmit-after-discard-enabled", "true"));
     }
 
     // ============================================================================

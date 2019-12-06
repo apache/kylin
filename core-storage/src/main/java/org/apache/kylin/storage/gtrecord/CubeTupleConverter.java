@@ -69,9 +69,9 @@ public class CubeTupleConverter implements ITupleConverter {
     private List<ILookupTable> usedLookupTables;
 
     final Set<Integer> timestampColumn = new HashSet<>();
+    String eventTimezone;
     boolean autoJustByTimezone;
-    private static final long TIME_ZONE_OFFSET = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone())
-            .getRawOffset();
+    private final long timeZoneOffset;
 
     public final int nSelectedDims;
 
@@ -92,11 +92,14 @@ public class CubeTupleConverter implements ITupleConverter {
         advMeasureFillers = Lists.newArrayListWithCapacity(1);
         advMeasureIndexInGTValues = Lists.newArrayListWithCapacity(1);
         usedLookupTables = Lists.newArrayList();
-        autoJustByTimezone = cubeSeg.getConfig().isStreamingAutoJustTimezone();
-        autoJustByTimezone = autoJustByTimezone
+        eventTimezone = cubeSeg.getConfig().getStreamingDerivedTimeTimezone();
+        autoJustByTimezone = eventTimezone.length() > 0
                 && cubeSeg.getCubeDesc().getModel().getRootFactTable().getTableDesc().isStreamingTable();
         if (autoJustByTimezone) {
             logger.debug("Will ajust dimsension for Time Derived Column.");
+            timeZoneOffset = TimeZone.getTimeZone(eventTimezone).getRawOffset();
+        } else {
+            timeZoneOffset = 0;
         }
         ////////////
 
@@ -105,8 +108,10 @@ public class CubeTupleConverter implements ITupleConverter {
         // pre-calculate dimension index mapping to tuple
         for (TblColRef dim : selectedDimensions) {
             tupleIdx[i] = tupleInfo.hasColumn(dim) ? tupleInfo.getColumnIndex(dim) : -1;
-            if (dim.getType().isDateTimeFamily() && TimeDerivedColumnType.isTimeDerivedColumn(dim.getName()))
+            if (TimeDerivedColumnType.isTimeDerivedColumn(dim.getName())
+                    && !TimeDerivedColumnType.isTimeDerivedColumnAboveDayLevel(dim.getName())) {
                 timestampColumn.add(tupleIdx[i]);
+            }
             i++;
         }
 
@@ -167,7 +172,7 @@ public class CubeTupleConverter implements ITupleConverter {
                     try {
                         String v = toString(gtValues[i]);
                         if (v != null) {
-                            tuple.setDimensionValue(ti, Long.toString(Long.parseLong(v) + TIME_ZONE_OFFSET));
+                            tuple.setDimensionValue(ti, Long.toString(Long.parseLong(v) + timeZoneOffset));
                         }
                     } catch (NumberFormatException nfe) {
                         logger.warn("{} is not a long value.", gtValues[i]);
