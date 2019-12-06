@@ -18,17 +18,65 @@
 
 package org.apache.kylin.stream.coordinator.doctor;
 
+import org.apache.hadoop.hbase.util.Threads;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 /**
- * <pre>
- * Basic step of this class:
- *  1. stop coordinator to avoid underlying concurrency issue
- *  2. check inconsistent state of all receiver cluster
- *  3. send summary via mail to kylin admin
- *  4. if need, call ClusterDoctor to repair inconsistent issue
- * </pre>
+ *
+ * <h2>Something need to check</h2>
+ * <dl>
+ *     <dt>Zookeeper Avaliable</dt>
+ *     <dd>Check Avaliable</dd>
+ *
+ *     <dt>Receiver Avaliable</dt>
+ *     <dd>Check Avaliable</dd>
+ *
+ *     <dt>Metadata RW failure</dt>
+ *     <dd>Coordinator write consistent state into metadata, statistics of r/w failure
+ *      is important of cluster health</dd>
+ *
+ *     <dt>RPC failure</dt>
+ *     <dd>Coordinator send request to streaming receiver, statistics
+ *      of failure is important of cluster health</dd>
+ *
+ *     <dt>Segment Build Job & Promotion Failure</dt>
+ *
+ *
+ *     <dt>Cube Assignment Consistency</dt>
+ *     <dd>If receiver's behvaior is not aligned with central metdadata, it indicated there must be something wrong.</dd>
+ *
+ *     <dt>Active segments Count & Immutable segments Count</dt>
+ *     <dd>If receivers have too many active segments, it indicated that promotion is blocked,
+ *      for each query it received, it has to scan too much segment/fragment file,
+ *      so performance will be impacted badly.  </dd>
+ *
+ *     <dt>Consume lag</dt>
+ *     <dd>If receivers cannot catch the rate by producer, much active will be accumulated,
+ *      and performance will be impacted badly.  </dd>
+ *
+ * </dl>
+ *
+ * <h2>Check and Report</h2>
+ * Basic step:
+ * <ol>
+ *  <li> stop coordinator to avoid underlying concurrency issue </li>
+ *  <li> check inconsistent state of all receiver cluster </li>
+ *  <li> send summary via mail to kylin admin </li>
+ *  <li> if need, call ClusterDoctor to repair inconsistent issue </li>
+ * </ol>
+ *
  * @see org.apache.kylin.stream.coordinator.coordinate.annotations.NotAtomicAndNotIdempotent
  * @see ClusterDoctor
  */
 public class ClusterStateChecker {
-    // TO BE IMPLEMENTED
+
+    ThreadPoolExecutor tpe = new ThreadPoolExecutor(1, 10, 20, TimeUnit.MINUTES,
+            new LinkedBlockingQueue<Runnable>(10 * 100), //
+            Threads.newDaemonThreadFactory("Cluster-checker-"));
+
+
+
+
 }

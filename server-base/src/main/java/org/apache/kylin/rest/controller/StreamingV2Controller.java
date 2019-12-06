@@ -34,6 +34,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.dimension.TimeDerivedColumnType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
@@ -189,7 +190,7 @@ public class StreamingV2Controller extends BasicController {
             List<FieldSchema> fields;
             try {
                 HiveMetaStoreClient metaStoreClient = new HiveMetaStoreClient(new HiveConf());
-                fields = metaStoreClient.getFields(tableDesc.getDatabase(), tableDesc.getName());
+                fields = metaStoreClient.getFields(KylinConfig.getInstanceFromEnv().getHiveDatabaseForIntermediateTable(), tableDesc.getName());
             } catch (NoSuchObjectException noObjectException) {
                 logger.info("table not exist in hive meta store for table:" + tableDesc.getIdentity(),
                         noObjectException);
@@ -208,8 +209,12 @@ public class StreamingV2Controller extends BasicController {
             for (ColumnDesc columnDesc : tableDesc.getColumns()) {
                 FieldSchema fieldSchema = fieldSchemaMap.get(columnDesc.getName().toUpperCase(Locale.ROOT));
                 if (fieldSchema == null) {
-                    incompatibleMsgs.add("column not exist in hive table:" + columnDesc.getName());
-                    continue;
+                    if (!TimeDerivedColumnType.isTimeDerivedColumn(columnDesc.getName())) {
+                        incompatibleMsgs.add("column not exist in hive table:" + columnDesc.getName());
+                        continue;
+                    } else {
+                        continue;
+                    }
                 }
                 if (!checkHiveTableFieldCompatible(fieldSchema, columnDesc)) {
                     String msg = String.format(Locale.ROOT,

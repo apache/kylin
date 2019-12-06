@@ -262,7 +262,6 @@ public class StreamingTestBase extends LocalFileMetadataTestCase {
         ReceiverClusterManager clusterManager = mock(ReceiverClusterManager.class);
         when(clusterManager.getCoordinator()).thenReturn(coordinator);
         return clusterManager;
-        // return new ReceiverClusterManager(coordinator);
     }
 
     KylinConfig stubKylinConfig() {
