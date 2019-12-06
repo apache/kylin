@@ -23,6 +23,7 @@ import java.io.StringWriter;
 import java.util.Collections;
 import java.util.IllegalFormatException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -570,10 +571,6 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         this.project = project;
     }
 
-    public JobTypeEnum getJobType() {
-        return jobType;
-    }
-
     public void setJobType(JobTypeEnum jobType) {
         this.jobType = jobType;
     }
@@ -618,7 +615,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                 && !org.apache.commons.lang3.StringUtils.isEmpty(getConfig().getJobTrackingURLPattern())) {
             String pattern = getConfig().getJobTrackingURLPattern();
             try {
-                String newTrackingURL = String.format(pattern, info.get(YARN_APP_ID));
+                String newTrackingURL = String.format(Locale.ROOT, pattern, info.get(YARN_APP_ID));
                 info.put(YARN_APP_URL, newTrackingURL);
             } catch (IllegalFormatException ife) {
                 logger.error("Illegal tracking url pattern: {}", getConfig().getJobTrackingURLPattern());

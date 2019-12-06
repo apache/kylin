@@ -26,6 +26,7 @@ import org.apache.kylin.metadata.model.Segments;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -172,7 +173,7 @@ public class DataSegment implements Serializable {
 
         if (segRange instanceof SegmentRange.TimePartitionedSegmentRange) {
             // using time
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.ROOT);
             dateFormat.setTimeZone(TimeZone.getDefault());
             return dateFormat.format(segRange.getStart()) + "_" + dateFormat.format(segRange.getEnd());
         } else {
