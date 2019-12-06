@@ -18,10 +18,13 @@
 
 package org.apache.kylin.stream.coordinator.assign;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalNotification;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
@@ -30,21 +33,32 @@ import org.apache.kylin.stream.coordinator.StreamMetadataStore;
 import org.apache.kylin.stream.coordinator.StreamMetadataStoreFactory;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.kylin.stream.core.model.CubeAssignment;
 import org.apache.kylin.stream.core.model.ReplicaSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * Introduce AssignmentsCache to reduce pressure of
+ * @see StreamMetadataStore .
+ */
 public class AssignmentsCache {
-    private static volatile AssignmentsCache instance = new AssignmentsCache();
+    private static final Logger logger = LoggerFactory.getLogger(AssignmentsCache.class);
+
+    private static final AssignmentsCache instance = new AssignmentsCache();
     private static final String ASSIGNMENT_ENTITY = "cube_assign";
     private StreamMetadataStore metadataStore;
-    private ConcurrentMap<String, List<ReplicaSet>> cubeAssignmentCache;
+    private Cache<String, List<ReplicaSet>> cubeAssignmentCache;
 
     private AssignmentsCache() {
         this.metadataStore = StreamMetadataStoreFactory.getStreamMetaDataStore();
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        cubeAssignmentCache = Maps.newConcurrentMap();
-        Broadcaster.getInstance(config).registerListener(new AssignCacheSyncListener(), ASSIGNMENT_ENTITY);
+        cubeAssignmentCache = CacheBuilder.newBuilder()
+                .removalListener((RemovalNotification<String, List<ReplicaSet>> notification) -> logger
+                        .debug("{} is removed because {} ", notification.getKey(), notification.getCause()))
+                .expireAfterWrite(300, TimeUnit.SECONDS)
+                .build();
+         Broadcaster.getInstance(config).registerListener(new AssignCacheSyncListener(), ASSIGNMENT_ENTITY);
     }
 
     public static AssignmentsCache getInstance() {
@@ -52,32 +66,38 @@ public class AssignmentsCache {
     }
 
     public List<ReplicaSet> getReplicaSetsByCube(String cubeName) {
-        if (cubeAssignmentCache.get(cubeName) == null) {
-            synchronized (cubeAssignmentCache) {
-                if (cubeAssignmentCache.get(cubeName) == null) {
-                    List<ReplicaSet> result = Lists.newArrayList();
-
-                    CubeAssignment assignment = metadataStore.getAssignmentsByCube(cubeName);
-                    for (Integer replicaSetID : assignment.getReplicaSetIDs()) {
-                        result.add(metadataStore.getReplicaSet(replicaSetID));
-                    }
-                    cubeAssignmentCache.put(cubeName, result);
+        List<ReplicaSet> ret ;
+        try {
+            ret = cubeAssignmentCache.get(cubeName, () -> {
+                List<ReplicaSet> result = Lists.newArrayList();
+                CubeAssignment assignment = metadataStore.getAssignmentsByCube(cubeName);
+                if(assignment == null){
+                    logger.error("Inconsistent metadata for assignment of {}, do check it.", cubeName);
+                    return result;
                 }
-            }
+                for (Integer replicaSetID : assignment.getReplicaSetIDs()) {
+                    result.add(metadataStore.getReplicaSet(replicaSetID));
+                }
+                logger.trace("Update assignment with {}", result);
+                return result;
+            });
+        } catch (ExecutionException e){
+            logger.warn("Failed to load CubeAssignment", e);
+            throw new IllegalStateException("Failed to load CubeAssignment", e);
         }
-        return cubeAssignmentCache.get(cubeName);
+        return ret;
     }
 
     public void clearCubeCache(String cubeName) {
         Broadcaster.getInstance(KylinConfig.getInstanceFromEnv()).announce(ASSIGNMENT_ENTITY,
                 Broadcaster.Event.UPDATE.getType(), cubeName);
-        cubeAssignmentCache.remove(cubeName);
+        cubeAssignmentCache.invalidate(cubeName);
     }
 
     private class AssignCacheSyncListener extends Listener {
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
-                throws IOException {
-            cubeAssignmentCache.remove(cacheKey);
+        @Override
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) {
+            cubeAssignmentCache.invalidate(cacheKey);
         }
     }
 }

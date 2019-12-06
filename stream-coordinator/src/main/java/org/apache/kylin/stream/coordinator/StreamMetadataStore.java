@@ -28,21 +28,42 @@ import org.apache.kylin.stream.core.model.SegmentBuildState;
 import org.apache.kylin.stream.core.model.StreamingCubeConsumeState;
 import org.apache.kylin.stream.core.source.Partition;
 
+/**
+ * Independent metadata store for realtime streaming cluster, these metadata is transient.
+ */
 public interface StreamMetadataStore {
+    /**
+     * @return all streaming receivers, whether alive or not
+     */
     List<Node> getReceivers();
 
+    /**
+     * @return all streaming cube which in enable state
+     */
     List<String> getCubes();
 
+    /**
+     * @param cubeName the cube which need to be enable
+     */
     void addStreamingCube(String cubeName);
 
+    /**
+     * @param cubeName the cube which need to be disable(stop consuming)
+     */
     void removeStreamingCube(String cubeName);
 
     StreamingCubeConsumeState getStreamingCubeConsumeState(String cubeName);
 
     void saveStreamingCubeConsumeState(String cubeName, StreamingCubeConsumeState state);
 
+    /**
+     * @param receiver the streaming receiver which should be created
+     */
     void addReceiver(Node receiver);
 
+    /**
+     * @param receiver the streaming receiver which need to remove
+     */
     void removeReceiver(Node receiver);
 
     void removeCubeAssignment(String cubeName);
@@ -115,4 +136,6 @@ public interface StreamMetadataStore {
     SegmentBuildState getSegmentBuildState(String cubeName, String segmentName);
 
     boolean removeSegmentBuildState(String cubeName, String segmentName);
+
+    default void reportStat(){}
 }

@@ -106,7 +106,7 @@ public class StreamStorageQuery extends CubeStorageQuery {
 
         ITupleIterator realTimeResult;
         if (segmentsPlanner.canSkip(maxHistorySegmentTime, Long.MAX_VALUE)) {
-            logger.info("Skip scan realTime data");
+            logger.info("Skip scan realTime data, {}", maxHistorySegmentTime);
             realTimeResult = ITupleIterator.EMPTY_TUPLE_ITERATOR;
         } else {
             boolean isSelectAllQuery = isSelectAllQuery(request.getCuboid(), request.getGroups(), request.getFilter());
