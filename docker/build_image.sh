@@ -18,17 +18,20 @@
 #
 
 echo "start build kylin image base on current source code"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd ${DIR}
+echo "build image in dir "${DIR}
 
 rm -rf ./kylin
 mkdir -p ./kylin
 
 echo "start copy kylin source code"
 
-for file in `ls ../../kylin/`
+for file in `ls ../`
 do
     if [ docker != $file ]
     then
-        cp -r ../../kylin/$file ./kylin/
+        cp -r ../$file ./kylin/
     fi
 done
 
