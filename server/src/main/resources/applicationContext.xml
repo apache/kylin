@@ -96,12 +96,10 @@
               p:cacheManager-ref="ehcache"/>
     </beans>
     <beans profile="testing">
+        <context:property-placeholder location="classpath*:kylin.properties"/>
         <bean id="ehcache"
               class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
               p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
-
-        <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
-              p:cacheManager-ref="ehcache"/>
 
         <!--
                 <bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
@@ -117,6 +115,58 @@
                     <property name="hosts" value="${kylin.cache.memcached.hosts}" />
                 </bean>
         -->
+        <bean id="localCacheManager" class="org.apache.kylin.cache.cachemanager.InstrumentedEhCacheCacheManager"
+              p:cacheManager-ref="ehcache"/>
+        <!--
+        <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+            <property name="maxTotal" value="30"/>
+            <property name="maxIdle" value="10"/>
+            <property name="numTestsPerEvictionRun" value="1024"/>
+            <property name="timeBetweenEvictionRunsMillis" value="30000"/>
+            <property name="minEvictableIdleTimeMillis" value="1800000"/>
+            <property name="softMinEvictableIdleTimeMillis" value="10000"/>
+            <property name="maxWaitMillis" value="1500"/>
+            <property name="testOnBorrow" value="true"/>
+            <property name="testWhileIdle" value="true"/>
+            <property name="blockWhenExhausted" value="false"/>
+        </bean>
+
+        <bean id="connectionFactory"
+              class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+            <property name="poolConfig" ref="jedisPoolConfig"/>
+            <property name="port" value="${kylin.cache.redis.port}"/>
+            <property name="hostName" value="${kylin.cache.redis.host}"/>
+            <property name="password" value="${kylin.cache.redis.passwd}"/>
+            <property name="timeout" value="${kylin.cache.redis.timeout}"/>
+        </bean>
+
+        <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+            <property name="connectionFactory" ref="connectionFactory"/>
+            <property name="keySerializer">
+                <bean class="org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer"/>
+            </property>
+            <property name="valueSerializer">
+                <bean class="org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer"/>
+            </property>
+        </bean>
+        <bean id="remoteCacheManager" class="org.apache.kylin.cache.cachemanager.RedisCacheManagerAdaptor">
+            <constructor-arg name="redisOperations" ref="redisTemplate"/>
+            <constructor-arg name="cacheNames">
+                <list>
+                    <value>StorageCache</value>
+                    <value>ExceptionQueryCache</value>
+                    <value>UserCache</value>
+                </list>
+            </constructor-arg>
+            <property name="expires" >
+                <map key-type="java.lang.String" value-type="java.lang.Long">
+                    <entry key="StorageCache" value="86400"/>
+                    <entry key="ExceptionQueryCache" value="86400"/>
+                    <entry key="UserCache" value="10800"/>
+                </map>
+            </property>
+        </bean>-->
+        <bean id="cacheManager" class="org.apache.kylin.cache.cachemanager.RemoteLocalFailOverCacheManager"/>
     </beans>
 
 </beans>

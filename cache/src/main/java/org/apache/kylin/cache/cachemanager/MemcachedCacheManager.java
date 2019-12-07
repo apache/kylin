@@ -43,7 +43,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import net.spy.memcached.MemcachedClientIF;
 
-public class MemcachedCacheManager extends AbstractCacheManager {
+public class MemcachedCacheManager extends AbstractCacheManager implements RemoteCacheManager {
 
     private static final Logger logger = LoggerFactory.getLogger(MemcachedCacheManager.class);
     private static final Long ONE_MINUTE = 60 * 1000L;
@@ -73,12 +73,14 @@ public class MemcachedCacheManager extends AbstractCacheManager {
         return caches;
     }
 
+    @Override
     public boolean isClusterDown() {
         return !clusterHealth.get();
     }
 
     @VisibleForTesting
-    void setClusterHealth(boolean ifHealth) {
+    @Override
+    public void setClusterHealth(boolean ifHealth) {
         clusterHealth.set(ifHealth);
     }
 

@@ -34,7 +34,7 @@ public class RemoteLocalFailOverCacheManager extends AbstractCacheManager {
     private static final Logger logger = LoggerFactory.getLogger(RemoteLocalFailOverCacheManager.class);
 
     @Autowired
-    private MemcachedCacheManager remoteCacheManager;
+    private CacheManager remoteCacheManager;
 
     @Autowired
     private CacheManager localCacheManager;
@@ -51,7 +51,8 @@ public class RemoteLocalFailOverCacheManager extends AbstractCacheManager {
 
     @Override
     public Cache getCache(String name) {
-        if (remoteCacheManager == null || remoteCacheManager.isClusterDown()) {
+        if (remoteCacheManager == null || (remoteCacheManager instanceof RemoteCacheManager
+                && ((RemoteCacheManager) remoteCacheManager).isClusterDown())) {
             logger.info("use local cache, because remote cache is not configured or down");
             return localCacheManager.getCache(name);
         } else {
@@ -61,11 +62,16 @@ public class RemoteLocalFailOverCacheManager extends AbstractCacheManager {
 
     @VisibleForTesting
     void disableRemoteCacheManager() {
-        remoteCacheManager.setClusterHealth(false);
+        if (remoteCacheManager instanceof RemoteCacheManager) {
+            ((RemoteCacheManager) remoteCacheManager).setClusterHealth(false);
+        }
     }
 
     @VisibleForTesting
     void enableRemoteCacheManager() {
-        remoteCacheManager.setClusterHealth(true);
+        if (remoteCacheManager instanceof RemoteCacheManager) {
+            ((RemoteCacheManager) remoteCacheManager).setClusterHealth(true);
+        }
     }
+
 }
