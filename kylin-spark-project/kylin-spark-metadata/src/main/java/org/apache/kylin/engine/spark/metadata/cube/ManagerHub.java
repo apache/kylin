@@ -21,6 +21,7 @@ package org.apache.kylin.engine.spark.metadata.cube;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
 import org.apache.kylin.engine.spark.metadata.cube.model.CubeUpdate2;
 
@@ -31,15 +32,21 @@ public class ManagerHub {
     private ManagerHub() {}
 
     public static Cube getCube(KylinConfig kylinConfig, String cubeName) {
-        return MetadataConverter.convertCubeInstance2Cube(
+        return MetadataConverter.getCube(
                 CubeManager.getInstance(kylinConfig).getCube(cubeName)
         );
     }
 
     public static CubeInstance updateCube(KylinConfig kylinConfig, CubeUpdate2 cubeUpdate)
             throws IOException {
-        return CubeManager.getInstance(kylinConfig).updateCube(
-                MetadataConverter.convertCubeUpdate(cubeUpdate));
+        return CubeManager.getInstance(kylinConfig)
+                .updateCube(MetadataConverter.getCubeUpdate(cubeUpdate));
+    }
+
+    public static CubeDesc getCubeDesc(Cube cube) {
+        return CubeManager.getInstance(cube.getConfig())
+                .getCube(cube.getCubeName())
+                .getDescriptor();
     }
 }
 

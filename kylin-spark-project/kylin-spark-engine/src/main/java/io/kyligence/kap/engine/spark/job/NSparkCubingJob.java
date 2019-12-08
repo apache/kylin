@@ -20,6 +20,7 @@ package io.kyligence.kap.engine.spark.job;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
@@ -39,20 +40,20 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(NSparkCubingJob.class);
 
-    private static Cube cubeInstance;
+    private Cube cube;
 
     // for test use only
-    public static NSparkCubingJob create(Cube cube, Set<DataSegment> segments, Set<LayoutEntity> layouts, String submitter) {
-        return create(cube, segments, layouts, submitter, JobTypeEnum.INDEX_BUILD, UUID.randomUUID().toString());
+    public static NSparkCubingJob create(Set<DataSegment> segments, Set<LayoutEntity> layouts, String submitter) {
+        return create(segments, layouts, submitter, JobTypeEnum.INDEX_BUILD, UUID.randomUUID().toString());
     }
 
-    public static NSparkCubingJob create(Cube cube, Set<DataSegment> segments, Set<LayoutEntity> layouts, String submitter,
+    public static NSparkCubingJob create(Set<DataSegment> segments, Set<LayoutEntity> layouts, String submitter,
             JobTypeEnum jobType, String jobId) {
         Preconditions.checkArgument(!segments.isEmpty());
         Preconditions.checkArgument(!layouts.isEmpty());
         Preconditions.checkArgument(submitter != null);
         NSparkCubingJob job = new NSparkCubingJob();
-        cubeInstance = cube;
+        job.cube = segments.iterator().next().getCube();
         long startTime = Long.MAX_VALUE - 1;
         long endTime = 0L;
         for (DataSegment segment : segments) {
@@ -64,28 +65,30 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
         job.setId(jobId);
         job.setName(jobType.toString());
         job.setJobType(jobType);
-        job.setTargetSubject(cube.getModel().getId());
-        //job.setTargetSegments(segments.stream().map(x -> String.valueOf(x.getId())).collect(Collectors.toList()));
-        job.setProject(cube.getProject());
+        job.setTargetSubject(job.cube.getModel().getId());
+        job.setTargetSegments(segments.stream().map(x -> String.valueOf(x.getId())).collect(Collectors.toList()));
+        job.setProject(job.cube.getProject());
         job.setSubmitter(submitter);
 
         job.setParam(MetadataConstants.P_JOB_ID, jobId);
-        job.setParam(MetadataConstants.P_PROJECT_NAME, cube.getProject());
+        job.setParam(MetadataConstants.P_PROJECT_NAME, job.cube.getProject());
         job.setParam(MetadataConstants.P_TARGET_MODEL, job.getTargetSubject());
-        job.setParam(MetadataConstants.P_CUBE_ID, cube.getId());
+        job.setParam(MetadataConstants.P_CUBE_ID, job.cube.getId());
         job.setParam(MetadataConstants.P_LAYOUT_IDS, NSparkCubingUtil.ids2Str(NSparkCubingUtil.toLayoutIds(layouts)));
-        //job.setParam(MetadataConstants.P_SEGMENT_IDS, String.join(",", job.getTargetSegments()));
+        job.setParam(MetadataConstants.P_SEGMENT_IDS, String.join(",", job.getTargetSegments()));
         job.setParam(MetadataConstants.P_DATA_RANGE_START, String.valueOf(startTime));
         job.setParam(MetadataConstants.P_DATA_RANGE_END, String.valueOf(endTime));
 
-        JobStepFactory.addStep(job, JobStepType.RESOURCE_DETECT, cube);
-        JobStepFactory.addStep(job, JobStepType.CUBING, cube);
+        JobStepFactory.addStep(job, JobStepType.RESOURCE_DETECT, job.cube);
+        JobStepFactory.addStep(job, JobStepType.CUBING, job.cube);
         return job;
     }
 
     @Override
     public Set<String> getMetadataDumpList(KylinConfig config) {
-        return cubeInstance.collectPrecalculationResource();
+//        return cube.collectPrecalculationResource();
+        //TODO: dump metadata first, convert to metadata interface in spark
+        return null;
     }
 
     public NSparkCubingStep getSparkCubingStep() {
@@ -94,6 +97,14 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
 
     NResourceDetectStep getResourceDetectStep() {
         return getTask(NResourceDetectStep.class);
+    }
+
+    public Cube getCube() {
+        return cube;
+    }
+
+    public void setCube(Cube cube) {
+        this.cube = cube;
     }
 
     /*@Override

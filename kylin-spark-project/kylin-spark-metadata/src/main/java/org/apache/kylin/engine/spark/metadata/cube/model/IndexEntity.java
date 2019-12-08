@@ -60,10 +60,10 @@ public class IndexEntity {
                 input -> input != null && getDimensionBitset().get(input));
     }
 
-    private final ImmutableBiMap<Integer, MeasureDesc> effectiveMeasures = initEffectiveMeasures();
+    private final ImmutableBiMap<Integer, DataModel.Measure> effectiveMeasures = initEffectiveMeasures();
 
-    private ImmutableBiMap<Integer, MeasureDesc> initEffectiveMeasures() {
-        ImmutableBiMap.Builder<Integer, MeasureDesc> measuresBuilder = ImmutableBiMap.builder();
+    private ImmutableBiMap<Integer, DataModel.Measure> initEffectiveMeasures() {
+        ImmutableBiMap.Builder<Integer, DataModel.Measure> measuresBuilder = ImmutableBiMap.builder();
         for (int m : measures) {
             if (this.cube.getModel().getEffectiveMeasureMap().containsKey(m)) {
                 measuresBuilder.put(m, this.cube.getModel().getEffectiveMeasureMap().get(m));
@@ -88,7 +88,7 @@ public class IndexEntity {
         return cube.getModel();
     }
 
-    public ImmutableBiMap<Integer, MeasureDesc> getEffectiveMeasures() {
+    public ImmutableBiMap<Integer, DataModel.Measure> getEffectiveMeasures() {
         return effectiveMeasures;
     }
 

@@ -27,8 +27,9 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration
 import org.apache.kylin.common.util.{HadoopUtil, JsonUtil}
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.metadata.cube.ManagerHub
-import org.apache.kylin.engine.spark.metadata.cube.model.{CubeUpdate2, DataLayout, DataSegment, LayoutEntity, MeasureDesc}
+import org.apache.kylin.engine.spark.metadata.cube.model.{CubeUpdate2, DataLayout, DataSegment, LayoutEntity}
 import org.apache.kylin.measure.bitmap.BitmapMeasureType
+import org.apache.kylin.metadata.model.MeasureDesc
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 

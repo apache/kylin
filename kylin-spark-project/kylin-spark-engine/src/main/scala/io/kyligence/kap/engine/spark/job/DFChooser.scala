@@ -23,9 +23,8 @@ import com.google.common.collect.{Lists, Maps}
 import io.kyligence.kap.engine.spark.builder._
 import io.kyligence.kap.engine.spark.utils.SparkDataSource._
 import org.apache.kylin.common.KylinConfig
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc
 import org.apache.kylin.engine.spark.metadata.cube.model.DataModel.TableKind
-import org.apache.kylin.engine.spark.metadata.cube.model.{CuboidLayoutChooser, DataModel, DataSegment, IndexEntity, LayoutEntity, SpanningTree}
+import org.apache.kylin.engine.spark.metadata.cube.model.{CubeJoinedFlatTableDesc, CuboidLayoutChooser, DataModel, DataSegment, IndexEntity, LayoutEntity, SpanningTree}
 import org.apache.kylin.engine.spark.metadata.cube.MetadataConverter
 import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.internal.Logging
@@ -45,9 +44,8 @@ class DFChooser(toBuildTree: SpanningTree,
   var reuseSources: java.util.Map[java.lang.Long, NBuildSourceInfo] =
     Maps.newHashMap[java.lang.Long, NBuildSourceInfo]()
   var flatTableSource: NBuildSourceInfo = _
-	val cubeDesc = MetadataConverter.getCubeDesc(seg.getCube)
   val flatTableDesc =
-    new CubeJoinedFlatTableDesc(cubeDesc, DFChooser.needJoinLookupTables(seg.getModel, toBuildTree))
+    new CubeJoinedFlatTableDesc(seg.getCube, DFChooser.needJoinLookupTables(seg.getModel, toBuildTree))
 
   @throws[Exception]
   def decideSources(): Unit = {
@@ -154,7 +152,7 @@ class DFChooser(toBuildTree: SpanningTree,
     sourceInfo.setViewFactTablePath(viewPath)
 
     val needJoin = DFChooser.needJoinLookupTables(seg.getModel, toBuildTree)
-    val flatTableDesc = new CubeJoinedFlatTableDesc(seg.getIndexPlan, seg.getSegRange, needJoin)
+    val flatTableDesc = new CubeJoinedFlatTableDesc(seg.getCube, seg.getSegRange, needJoin)
     val flatTable = new CreateFlatTable(flatTableDesc, seg, toBuildTree, ss, sourceInfo)
     val afterJoin: Dataset[Row] = flatTable.generateDataset(needEncoding, needJoin)
     sourceInfo.setFlattableDS(afterJoin)

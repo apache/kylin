@@ -231,7 +231,6 @@ public class ForestSpanningTree extends SpanningTree {
                 }
 
                 // only add direct parent
-                // [XY's Note] ABC, ABD are both parent candidates for AB, while ABCD will not be considered if ABC exists
                 if (candidates.stream().noneMatch(candidate -> cuboid.fullyDerive(candidate))) {
                     candidates.add(cuboid);
                 }

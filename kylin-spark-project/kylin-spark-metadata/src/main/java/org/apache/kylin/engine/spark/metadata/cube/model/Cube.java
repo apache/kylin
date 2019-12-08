@@ -22,21 +22,20 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.BiMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.engine.spark.metadata.cube.PathManager;
+import org.apache.kylin.cube.model.DimensionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
+import java.util.BitSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import static org.apache.kylin.common.persistence.ResourceStore.CUBE_RESOURCE_ROOT;
 import static org.apache.kylin.metadata.MetadataConstants.FILE_SURFIX;
@@ -61,7 +60,9 @@ public class Cube extends RootPersistentEntity {
     @JsonProperty("segments")
     private List<DataSegment> segments = new ArrayList<>();
 
-    private Cube(KylinConfig config) {}
+    private Cube(KylinConfig config) {
+        this.config = config;
+    }
 
     private transient SpanningTree spanningTree = null; // transient, because can self recreate
 
@@ -72,12 +73,39 @@ public class Cube extends RootPersistentEntity {
 
     private List<MeasureDesc> measures = new ArrayList<>();
 
+    private transient BiMap<Integer, TblColRef> effectiveDimCols; // BiMap impl (com.google.common.collect.Maps$FilteredEntryBiMap) is not serializable
+    private transient BiMap<Integer, DataModel.Measure> effectiveMeasures; // BiMap impl (com.google.common.collect.Maps$FilteredEntryBiMap) is not serializable
+
     public static Cube getInstance(KylinConfig config) {
         return new Cube(config);
     }
-
+  
     public static Cube getInstance(KylinConfig config, String uuid) {
         return new Cube(config);
+    }
+  
+    //TODO[xyxy]: if exists another way to init
+    private void initDimensionAndMeasures() {
+        List<IndexEntity> indexes = getAllIndexes();
+        int size1 = 1;
+        int size2 = 1;
+        for (IndexEntity cuboid : indexes) {
+            size1 = Math.max(cuboid.getDimensionBitset().size(), size1);
+            size2 = Math.max(cuboid.getMeasureBitset().size(), size2);
+        }
+
+        final BitSet dimBitSet = new BitSet(size1);
+        final BitSet measureBitSet = new BitSet(size2);
+
+        for (IndexEntity cuboid : indexes) {
+            dimBitSet.or(cuboid.getDimensionBitset().mutable());
+            measureBitSet.or(cuboid.getMeasureBitset().mutable());
+        }
+
+        this.effectiveDimCols = Maps.filterKeys(getModel().getEffectiveColsMap(),
+                input -> input != null && dimBitSet.get(input));
+        this.effectiveMeasures = Maps.filterKeys(getModel().getEffectiveMeasureMap(),
+                input -> input != null && measureBitSet.get(input));
     }
 
     //add layout when build cube
@@ -93,6 +121,22 @@ public class Cube extends RootPersistentEntity {
                 return seg;
         }
         return null;
+    }
+
+    public BiMap<Integer, TblColRef> getEffectiveDimCols() {
+        return effectiveDimCols;
+    }
+
+    public void setEffectiveDimCols(BiMap<Integer, TblColRef> effectiveDimCols) {
+        this.effectiveDimCols = effectiveDimCols;
+    }
+
+    public BiMap<Integer, DataModel.Measure> getEffectiveMeasures() {
+        return effectiveMeasures;
+    }
+
+    public void setEffectiveMeasures(BiMap<Integer, DataModel.Measure> effectiveMeasures) {
+        this.effectiveMeasures = effectiveMeasures;
     }
 
     public DataSegment appendSegment(SegmentRange segmentRange) {
@@ -164,15 +208,15 @@ public class Cube extends RootPersistentEntity {
     }
 
     public List<IndexEntity> getAllIndexes() {
-        Map<Long, Integer> retSubscriptMap = Maps.newHashMap();
-        List<IndexEntity> mergedIndexes = Lists.newArrayList();
-        int retSubscript = 0;
-        for (IndexEntity indexEntity : indexEntities) {
-            IndexEntity copy = JsonUtil.deepCopyQuietly(indexEntity, IndexEntity.class);
-            retSubscriptMap.put(indexEntity.getId(), retSubscript);
-            mergedIndexes.add(copy);
-            retSubscript++;
-        }
+//        Map<Long, Integer> retSubscriptMap = Maps.newHashMap();
+//        List<IndexEntity> mergedIndexes = Lists.newArrayList();
+//        int retSubscript = 0;
+//        for (IndexEntity indexEntity : indexEntities) {
+//            IndexEntity copy = JsonUtil.deepCopyQuietly(indexEntity, IndexEntity.class);
+//            retSubscriptMap.put(indexEntity.getId(), retSubscript);
+//            mergedIndexes.add(copy);
+//            retSubscript++;
+//        }
 
         //TODO: comment out for now
 //        for (LayoutEntity ruleBasedLayout : ruleBasedLayouts) {
@@ -199,26 +243,26 @@ public class Cube extends RootPersistentEntity {
 //            copyRuleBasedLayout.setIndex(targetIndex);
 //        }
 
-        mergedIndexes.forEach(value -> value.setCube(this));
-        return mergedIndexes;
-
+//        mergedIndexes.forEach(value -> value.setCube(this));
+//        return mergedIndexes;
+        return indexEntities;
     }
 
-    public Set<String> collectPrecalculationResource() {
-        Set<String> r = new LinkedHashSet<>();
-
-        // cube & segments
-        r.add(PathManager.getCubePath(project, getId()));
-
-        // project & model & tables
-        r.add(PathManager.getProjectPath(project));
-        r.add(PathManager.getModelPath(project, getId()));
-        for (TableRef t : getModel().getAllTableRefs()) {
-            r.add(t.getTableDesc().getResourcePath());
-        }
-
-        return r;
-    }
+//    public Set<String> collectPrecalculationResource() {
+//        Set<String> r = new LinkedHashSet<>();
+//
+//        // cube & segments
+//        r.add(PathManager.getCubePath(project, getId()));
+//
+//        // project & model & tables
+//        r.add(PathManager.getProjectPath(project));
+//        r.add(PathManager.getModelPath(project, getId()));
+//        for (TableRef t : getModel().getAllTableRefs()) {
+//            r.add(t.getTableDesc().getResourcePath());
+//        }
+//
+//        return r;
+//    }
 
     public LayoutEntity getCuboidLayout(Long cuboidLayoutId) {
         return getSpanningTree().getCuboidLayout(cuboidLayoutId);

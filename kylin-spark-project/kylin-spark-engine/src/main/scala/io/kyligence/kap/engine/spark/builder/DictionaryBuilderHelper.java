@@ -18,14 +18,13 @@
 
 package io.kyligence.kap.engine.spark.builder;
 
-import static org.apache.spark.dict.NGlobalDictBuilderAssist.resize;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import org.apache.kylin.engine.spark.metadata.cube.model.DataLayout;
+import org.apache.kylin.engine.spark.metadata.cube.model.DataSegment;
+import org.apache.kylin.engine.spark.metadata.cube.model.IndexEntity;
+import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree;
 import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -37,14 +36,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spark_project.guava.collect.Sets;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import io.kyligence.kap.metadata.cube.cuboid.NSpanningTree;
-import io.kyligence.kap.metadata.cube.model.IndexEntity;
-import io.kyligence.kap.metadata.cube.model.LayoutEntity;
-import io.kyligence.kap.metadata.cube.model.NDataLayout;
-import io.kyligence.kap.metadata.cube.model.NDataSegment;
+import static org.apache.spark.dict.NGlobalDictBuilderAssist.resize;
 
 public class DictionaryBuilderHelper {
     protected static final Logger logger = LoggerFactory.getLogger(DictionaryBuilderHelper.class);
@@ -58,16 +56,16 @@ public class DictionaryBuilderHelper {
      *  #3 After the last build, the number of individual buckets in the existing dictionary is greater
      *  than the threshold multiplied by KylinConfigBase.getGlobalDictV2BucketOverheadFactor
      */
-    public static int calculateBucketSize(NDataSegment seg, TblColRef col, Dataset<Row> afterDistinct) throws IOException {
+    public static int calculateBucketSize(DataSegment seg, TblColRef col, Dataset<Row> afterDistinct) throws IOException {
         NGlobalDictionaryV2 globalDict = new NGlobalDictionaryV2(seg.getProject(), col.getTable(), col.getName(),
-                seg.getConfig().getHdfsWorkingDirectory());
-        int bucketPartitionSize = globalDict.getBucketSizeOrDefault(seg.getConfig().getGlobalDictV2MinHashPartitions());
-        int bucketThreshold = seg.getConfig().getGlobalDictV2ThresholdBucketSize();
+                seg.getCube().getConfig().getHdfsWorkingDirectory());
+        int bucketPartitionSize = globalDict.getBucketSizeOrDefault(seg.getCube().getConfig().getGlobalDictV2MinHashPartitions());
+        int bucketThreshold = seg.getCube().getConfig().getGlobalDictV2ThresholdBucketSize();
         int resizeBucketSize = bucketPartitionSize;
 
         if (globalDict.isFirst()) {
             long afterDisCount = afterDistinct.count();
-            double loadFactor = seg.getConfig().getGlobalDictV2InitLoadFactor();
+            double loadFactor = seg.getCube().getConfig().getGlobalDictV2InitLoadFactor();
             resizeBucketSize = Math.max(Math.toIntExact(afterDisCount / (int) (bucketThreshold * loadFactor)),
                     bucketPartitionSize);
             logger.info("Building a global dictionary column first for  {} , the size of the bucket is set to {}",
@@ -77,8 +75,8 @@ public class DictionaryBuilderHelper {
             NGlobalDictMetaInfo metaInfo = globalDict.getMetaInfo();
             long[] bucketCntArray = metaInfo.getBucketCount();
 
-            double loadFactor = seg.getConfig().getGlobalDictV2InitLoadFactor();
-            double bucketOverheadFactor = seg.getConfig().getGlobalDictV2BucketOverheadFactor();
+            double loadFactor = seg.getCube().getConfig().getGlobalDictV2InitLoadFactor();
+            double bucketOverheadFactor = seg.getCube().getConfig().getGlobalDictV2BucketOverheadFactor();
 
             int averageBucketSize = 0;
 
@@ -130,7 +128,7 @@ public class DictionaryBuilderHelper {
         return dictColSet;
     }
 
-    public static Set<TblColRef> extractTreeRelatedGlobalDictToBuild(NDataSegment seg, NSpanningTree toBuildTree) {
+    public static Set<TblColRef> extractTreeRelatedGlobalDictToBuild(DataSegment seg, SpanningTree toBuildTree) {
         Collection<IndexEntity> toBuildIndexEntities = toBuildTree.getAllIndexEntities();
         List<LayoutEntity> toBuildCuboids = Lists.newArrayList();
         for (IndexEntity desc : toBuildIndexEntities) {
@@ -139,7 +137,7 @@ public class DictionaryBuilderHelper {
 
         List<LayoutEntity> buildedLayouts = Lists.newArrayList();
         if (seg.getSegDetails() != null) {
-            for (NDataLayout cuboid : seg.getSegDetails().getLayouts()) {
+            for (DataLayout cuboid : seg.getSegDetails().getLayouts()) {
                 buildedLayouts.add(cuboid.getLayout());
             }
         }
@@ -149,7 +147,7 @@ public class DictionaryBuilderHelper {
         return toBuildColRefSet;
     }
 
-    public static Set<TblColRef> extractTreeRelatedGlobalDicts(NDataSegment seg, NSpanningTree toBuildTree) {
+    public static Set<TblColRef> extractTreeRelatedGlobalDicts(DataSegment seg, SpanningTree toBuildTree) {
         List<LayoutEntity> toBuildCuboids = toBuildTree.getAllIndexEntities().stream()
                 .flatMap(entity -> entity.getLayouts().stream()).collect(Collectors.toList());
         return findNeedDictCols(toBuildCuboids);

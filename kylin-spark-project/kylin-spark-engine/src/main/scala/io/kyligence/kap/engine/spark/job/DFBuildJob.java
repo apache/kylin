@@ -86,7 +86,7 @@ public class DFBuildJob extends SparkApplication {
         Path shareDir = config.getJobTmpShareDir(project, jobId);
         try {
 //            IndexPlan indexPlan = dfMgr.getDataflow(dataflowId).getIndexPlan();
-            Cube cube = ManagerHub.getCube(config, MetadataConstants.P_CUBE_ID);
+            Cube cube = ManagerHub.getCube(config, getParam(MetadataConstants.P_CUBE_ID));
             Set<LayoutEntity> cuboids = NSparkCubingUtil.toLayouts(cube, layoutIds).stream()
                     .filter(Objects::nonNull).collect(Collectors.toSet());
 
@@ -272,7 +272,7 @@ public class DFBuildJob extends SparkApplication {
     }
 
     private List<DataLayout> buildIndex(DataSegment seg, IndexEntity cuboid, Dataset<Row> parent,
-                                        SpanningTree nSpanningTree, long parentId) throws IOException {
+                                        SpanningTree spanningTree, long parentId) throws IOException {
         String parentName = String.valueOf(parentId);
         if (parentId == DFChooser.FLAT_TABLE_FLAG()) {
             parentName = "flat table";
@@ -284,7 +284,7 @@ public class DFBuildJob extends SparkApplication {
             Preconditions.checkArgument(cuboid.getMeasures().isEmpty());
             Dataset<Row> afterPrj = parent.select(NSparkCubingUtil.getColumns(dimIndexes));
             // TODO: shard number should respect the shard column defined in cuboid
-            for (LayoutEntity layout : nSpanningTree.getLayouts(cuboid)) {
+            for (LayoutEntity layout : spanningTree.getLayouts(cuboid)) {
                 logger.info("Build layout:{}, in index:{}", layout.getId(), cuboid.getId());
                 ss.sparkContext().setJobDescription("build " + layout.getId() + " from parent " + parentName);
                 Set<Integer> orderedDims = layout.getOrderedDimensions().keySet();
@@ -294,8 +294,8 @@ public class DFBuildJob extends SparkApplication {
             }
         } else {
             Dataset<Row> afterAgg = CuboidAggregator.agg(ss, parent, dimIndexes, cuboid.getEffectiveMeasures(), seg,
-                    nSpanningTree);
-            for (LayoutEntity layout : nSpanningTree.getLayouts(cuboid)) {
+                    spanningTree);
+            for (LayoutEntity layout : spanningTree.getLayouts(cuboid)) {
                 logger.info("Build layout:{}, in index:{}", layout.getId(), cuboid.getId());
                 ss.sparkContext().setJobDescription("build " + layout.getId() + " from parent " + parentName);
                 Set<Integer> rowKeys = layout.getOrderedDimensions().keySet();

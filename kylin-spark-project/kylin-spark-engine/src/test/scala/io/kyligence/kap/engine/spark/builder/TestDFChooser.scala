@@ -179,7 +179,7 @@ class TestDFChooser extends SparderBaseFunSuite with SharedSparkSession with Loc
         val dimIndexes = layout.getOrderedDimensions.keySet
         val measures = layout.getOrderedMeasures
         val nSpanningTree = NSpanningTreeFactory.fromLayouts(segment.getIndexPlan.getAllLayouts, MODEL_ID)
-        val afterAgg = CuboidAggregator.agg(spark, afterEncode, dimIndexes, measures, segment, nSpanningTree)
+        val afterAgg = CuboidAggregator.aggInternal(spark, afterEncode, dimIndexes, measures, segment, nSpanningTree)
         val aggExp = afterAgg.queryExecution.logical.children.head.output
         val colRefSet = DictionaryBuilderHelper.extractTreeRelatedGlobalDictToBuild(segment, nSpanningTree)
         val needDictColIdSet = Sets.newHashSet[Integer]()

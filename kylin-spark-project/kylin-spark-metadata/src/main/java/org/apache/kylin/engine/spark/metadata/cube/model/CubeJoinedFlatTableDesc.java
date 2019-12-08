@@ -86,7 +86,7 @@ public class CubeJoinedFlatTableDesc {
             initAddColumn(dimEntry.getValue());
         }
 
-        for (Map.Entry<Integer, MeasureDesc> measureEntry : cube.getModel().getEffectiveMeasures().entrySet()) {
+        for (Map.Entry<Integer, DataModel.Measure> measureEntry : cube.getModel().getEffectiveMeasureMap().entrySet()) {
             FunctionDesc func = measureEntry.getValue().getFunction();
             List<TblColRef> colRefs = func.getColRefs();
             if (colRefs != null) {

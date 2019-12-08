@@ -2,6 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <artifactId>kylin-spark-job</artifactId>
+    <packaging>jar</packaging>
+    <name>Kylin Spark Job</name>
+
     <parent>
         <artifactId>kylin-spark-project</artifactId>
         <groupId>org.apache.kylin</groupId>
@@ -9,7 +13,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kylin-spark-job</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.apache.kylin</groupId>
