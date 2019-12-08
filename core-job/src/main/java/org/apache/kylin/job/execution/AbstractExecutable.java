@@ -81,6 +81,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     private JobTypeEnum jobType;
     protected String project;
     private String targetSubject;
+    private List<String> targetSegments = Lists.newArrayList();//uuid of related segments
 
     public AbstractExecutable() {
         setId(RandomUtil.randomUUID().toString());
@@ -583,6 +584,14 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         this.targetSubject = targetSubject;
     }
 
+    public List<String> getTargetSegments() {
+        return targetSegments;
+    }
+
+    public void setTargetSegments(List<String> targetSegments) {
+        this.targetSegments = targetSegments;
+    }
+
     @Override
     public String toString() {
         return Objects.toStringHelper(this).add("id", getId()).add("name", getName()).add("state", getStatus())
@@ -623,5 +632,9 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         }
 
         return info;
+    }
+
+    public JobTypeEnum getJobType() {
+        return jobType;
     }
 }

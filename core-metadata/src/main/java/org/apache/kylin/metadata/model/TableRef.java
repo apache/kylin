@@ -34,7 +34,7 @@ public class TableRef implements Serializable {
     final private Map<String, TblColRef> columns;
     final private String modelName;
 
-    TableRef(DataModelDesc model, String alias, TableDesc table, boolean filterOutComputedColumns) {
+    public TableRef(DataModelDesc model, String alias, TableDesc table, boolean filterOutComputedColumns) {
         this.model = model;
         this.modelName = model.getName();
         this.alias = alias;
