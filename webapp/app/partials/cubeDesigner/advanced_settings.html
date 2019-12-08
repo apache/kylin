@@ -377,7 +377,7 @@
               <select style="width: 100%" chosen
                       ng-model="cubeMetaFrame.engine_type"
                       ng-if="state.mode=='edit'"
-                      ng-options="et.value as et.name for et in cubeConfig.engineType">
+                      ng-options="et.value as et.name for et in cubeConfig.engineType | filter: isAvailableEngine">
                 <option value="">--Select Engine Type--</option>
               </select>
               <span ng-if="state.mode=='view'&&cubeMetaFrame.engine_type==2">MapReduce</span>
