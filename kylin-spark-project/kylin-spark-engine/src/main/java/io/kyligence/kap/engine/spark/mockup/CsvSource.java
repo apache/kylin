@@ -32,15 +32,15 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.engine.spark.metadata.cube.model.ColumnDesc;
 import org.apache.kylin.engine.spark.metadata.cube.model.SegmentRange;
-import org.apache.kylin.engine.spark.metadata.cube.model.TableDesc;
 import org.apache.kylin.engine.spark.metadata.cube.source.ISource;
-import org.apache.kylin.engine.spark.metadata.cube.source.ISourceMetadataExplorer;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.ISampleDataDeployer;
+import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -110,6 +110,15 @@ public class CsvSource implements ISource {
                 return Collections.emptyList();
             }
 
+            @Override
+            public ColumnDesc[] evalQueryMetadata(String query) {
+                return new ColumnDesc[0];
+            }
+
+            @Override
+            public void validateSQL(String query) throws Exception {
+
+            }
         };
     }
 

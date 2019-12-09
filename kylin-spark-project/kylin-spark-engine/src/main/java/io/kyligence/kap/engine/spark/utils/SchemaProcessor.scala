@@ -1,7 +1,7 @@
 package io.kyligence.kap.engine.spark.utils
 
-import org.apache.kylin.engine.spark.metadata.cube.datatype.DataType
-import org.apache.kylin.engine.spark.metadata.cube.model.ColumnDesc
+import org.apache.kylin.metadata.datatype.DataType
+import org.apache.kylin.metadata.model.ColumnDesc
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.types.{BinaryType, BooleanType, ByteType, DateType, DecimalType, DoubleType, FloatType, IntegerType, LongType, ShortType, StringType, StructField, StructType, TimestampType}
 
