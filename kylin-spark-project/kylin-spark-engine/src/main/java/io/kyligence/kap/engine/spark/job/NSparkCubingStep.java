@@ -18,7 +18,6 @@
 
 package io.kyligence.kap.engine.spark.job;
 
-import io.kyligence.kap.engine.spark.merger.MetadataMerger;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -52,11 +51,6 @@ public class NSparkCubingStep extends NSparkExecutable {
         public static void main(String[] args) {
             logger.info(Mockup.class + ".main() invoked, args: " + Arrays.toString(args));
         }
-    }
-
-    @Override
-    public void mergerMetadata(MetadataMerger merger) {
-        merger.merge(this);
     }
 
     @Override

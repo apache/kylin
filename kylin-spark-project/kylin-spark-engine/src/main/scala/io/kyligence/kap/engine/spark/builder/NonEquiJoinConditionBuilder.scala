@@ -18,16 +18,15 @@
 
 package io.kyligence.kap.engine.spark.builder
 
-
 import io.kyligence.kap.engine.spark.job.NSparkCubingUtil
 import io.kyligence.kap.query.runtime.ExpressionConverter
 import org.apache.calcite.rel.`type`.RelDataType
 import org.apache.calcite.sql.`type`.{BasicSqlType, IntervalSqlType, SqlTypeName}
-import org.apache.kylin.metadata.model.NonEquiJoinCondition
+import org.apache.kylin.engine.spark.metadata.cube.model.NonEquiJoinCondition
 import org.apache.kylin.query.calcite.KylinRelDataTypeSystem
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.KapFunctions._
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
+import org.apache.spark.sql.KapFunctions._
 import org.apache.spark.sql.types.{DateType, LongType, TimestampType}
 import org.apache.spark.unsafe.types.UTF8String
 

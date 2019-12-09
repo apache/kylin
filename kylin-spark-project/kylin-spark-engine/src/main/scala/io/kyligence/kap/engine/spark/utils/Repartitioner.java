@@ -21,7 +21,9 @@ package io.kyligence.kap.engine.spark.utils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
+import io.kyligence.kap.engine.spark.job.NSparkCubingUtil;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -36,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 
 import io.kyligence.kap.engine.spark.NSparkCubingEngine;
-import io.kyligence.kap.engine.spark.job.NSparkCubingUtil;
 
 public class Repartitioner {
     private static String tempDirSuffix = "_temp";
@@ -180,7 +181,7 @@ public class Repartitioner {
                 logger.info("Rename temp path to target path successfully. Temp path: {}, target path: {}.", tempPath,
                         path);
             } else {
-                throw new RuntimeException(String.format(
+                throw new RuntimeException(String.format(Locale.ROOT,
                         "Rename temp path to target path wrong. Temp path: %s, target path: %s.", tempPath, path));
             }
         }

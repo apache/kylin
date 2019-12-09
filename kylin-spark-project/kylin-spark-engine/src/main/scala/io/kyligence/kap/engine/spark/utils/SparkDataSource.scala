@@ -20,8 +20,8 @@ package io.kyligence.kap.engine.spark.utils
 
 import com.google.common.collect.Maps
 import io.kyligence.kap.engine.spark.NSparkCubingEngine
-import org.apache.kylin.metadata.model.TableDesc
-import org.apache.kylin.source.SourceFactory
+import org.apache.kylin.engine.spark.metadata.cube.model.TableDesc
+import org.apache.kylin.engine.spark.metadata.cube.source.SourceFactory
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object SparkDataSource {

@@ -37,6 +37,7 @@
 package org.apache.spark.dict;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
@@ -47,7 +48,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -171,7 +171,7 @@ public class NGlobalDictHDFSStore extends NGlobalDictStore {
                 int bytesLength = is.readInt();
                 byte[] bytes = new byte[bytesLength];
                 IOUtils.readFully(is, bytes, 0, bytes.length);
-                object2IntMap.put(new String(bytes), value + offset);
+                object2IntMap.put(new String(bytes, Charset.defaultCharset()), value + offset);
             }
         }
 
@@ -201,7 +201,7 @@ public class NGlobalDictHDFSStore extends NGlobalDictStore {
             dos.writeInt(openHashMap.size());
             for (Object2LongMap.Entry<String> entry : openHashMap.object2LongEntrySet()) {
                 dos.writeLong(entry.getLongValue());
-                byte[] bytes = entry.getKey().getBytes();
+                byte[] bytes = entry.getKey().getBytes(Charset.defaultCharset());
                 dos.writeInt(bytes.length);
                 dos.write(bytes);
             }

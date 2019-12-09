@@ -20,12 +20,9 @@ package io.kyligence.kap.engine.spark.builder
 import java.io.IOException
 import java.util
 
-import io.kyligence.kap.engine.spark.job.NSparkCubingUtil
-import io.kyligence.kap.metadata.cube.model.NDataSegment
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.lock.DistributedLock
 import org.apache.kylin.common.util.HadoopUtil
-import org.apache.kylin.metadata.model.TblColRef
 import org.apache.spark.TaskContext
 import org.apache.spark.dict.NGlobalDictionaryV2
 import org.apache.spark.internal.Logging
@@ -37,9 +34,11 @@ import org.apache.spark.sql.{Column, Dataset, Row, SparkSession}
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import io.kyligence.kap.engine.spark.builder.DFBuilderHelper._
+import io.kyligence.kap.engine.spark.job.NSparkCubingUtil
+import org.apache.kylin.engine.spark.metadata.cube.model.{DataSegment, TblColRef}
 
 class DFDictionaryBuilder(val dataset: Dataset[Row],
-                          val seg: NDataSegment,
+                          val seg: DataSegment,
                           val ss: SparkSession,
                           val colRefSet: util.Set[TblColRef]) extends Logging with Serializable {
 

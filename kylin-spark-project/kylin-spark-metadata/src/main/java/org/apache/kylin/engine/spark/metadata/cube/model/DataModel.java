@@ -18,54 +18,30 @@
 
 package org.apache.kylin.engine.spark.metadata.cube.model;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.metadata.MetadataConstants;
-import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.JoinsTree;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.PartitionDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Queue;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class DataModel extends RootPersistentEntity {
     private static final Logger logger = LoggerFactory.getLogger(DataModel.class);
@@ -435,7 +411,7 @@ public class DataModel extends RootPersistentEntity {
 
     // find by unique name, that must uniquely identifies a table in the model
     public TableRef findTable(String table) throws IllegalArgumentException {
-        TableRef result = tableNameMap.get(table.toUpperCase());
+        TableRef result = tableNameMap.get(table.toUpperCase(Locale.ROOT));
         if (result == null) {
             int endOfDatabaseName = table.indexOf(".");
             if (endOfDatabaseName > -1) {
@@ -577,7 +553,7 @@ public class DataModel extends RootPersistentEntity {
             int id = e.getKey();
             T value = e.getValue();
             if (reverseMap.containsKey(value)) {
-                throw new IllegalStateException(String.format("Illegal model '%d', %s has duplicated ID: %s and %d", id,
+                throw new IllegalStateException(String.format(Locale.ROOT, "Illegal model '%d', %s has duplicated ID: %s and %d", id,
                         value, reverseMap.get(value), id));
             }
             reverseMap.put(value, id);
@@ -588,7 +564,7 @@ public class DataModel extends RootPersistentEntity {
         ImmutableBiMap.Builder<Integer, Measure> mapBuilder = ImmutableBiMap.builder();
         for (Measure m : allMeasures) {
             try {
-                m.setName(m.getName().toUpperCase());
+                m.setName(m.getName().toUpperCase(Locale.ROOT));
                 mapBuilder.put(m.id, m);
 //                if (!m.tomb) {
 //                    mapBuilder.put(m.id, m);
@@ -629,7 +605,7 @@ public class DataModel extends RootPersistentEntity {
         }
         if (countNum != 1)
             throw new IllegalStateException(
-                    String.format("Illegal model '%s', should have one and only one COUNT() measure but there are %d",
+                    String.format(Locale.ROOT, "Illegal model '%s', should have one and only one COUNT() measure but there are %d",
                             uuid, countNum));
 
         // check all measure columns are effective
@@ -639,7 +615,7 @@ public class DataModel extends RootPersistentEntity {
                 List<TblColRef> notEffective = new ArrayList<>(mCols);
                 notEffective.removeAll(effectiveCols.values());
                 throw new IllegalStateException(
-                        String.format("Illegal model '%s', some columns referenced in %s is not on model: %s", uuid, m,
+                        String.format(Locale.ROOT, "Illegal model '%s', some columns referenced in %s is not on model: %s", uuid, m,
                                 notEffective));
             }
         }

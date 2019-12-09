@@ -21,8 +21,7 @@ package org.apache.spark.dict
 import java.io.IOException
 import java.util
 
-import org.apache.kylin.engine.spark.metadata.cube.model.DataSegment
-import org.apache.kylin.metadata.model.TblColRef
+import org.apache.kylin.engine.spark.metadata.cube.model.{DataSegment, TblColRef}
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession

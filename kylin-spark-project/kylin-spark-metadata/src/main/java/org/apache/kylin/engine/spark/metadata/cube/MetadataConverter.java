@@ -33,6 +33,7 @@ import org.apache.kylin.engine.spark.metadata.cube.model.SegmentRange;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,11 +61,11 @@ public class MetadataConverter {
         DataModel dataModel = new DataModel(dataModelDesc.getConfig());
 
         dataModel.setRootFactTableName(dataModelDesc.getRootFactTableName());
-        dataModel.setRootFactTable(dataModelDesc.getRootFactTable());
+       /* dataModel.setRootFactTable(dataModelDesc.getRootFactTable());
         dataModel.setJoinTables(Arrays.asList(dataModelDesc.getJoinTables()));
         dataModel.setAliasMap(dataModelDesc.getAliasMap());
         dataModel.setAllTables(dataModelDesc.getAllTables());
-        dataModel.setPartitionDesc(dataModelDesc.getPartitionDesc());
+        dataModel.setPartitionDesc(dataModelDesc.getPartitionDesc());*/
         dataModel.setFilterCondition(dataModelDesc.getFilterCondition());
         dataModel.setAlias(dataModelDesc.getName());
         dataModel.setUuid(dataModelDesc.getUuid());
@@ -93,7 +94,7 @@ public class MetadataConverter {
             // Measures
             DataModel.Measure measure = new DataModel.Measure();
             measure.setName(measureDesc.getName());
-            measure.setFunction(measureDesc.getFunction());
+            //measure.setFunction(measureDesc.getFunction());
             measure.setId(id++);
             measures.add(measure);
         }

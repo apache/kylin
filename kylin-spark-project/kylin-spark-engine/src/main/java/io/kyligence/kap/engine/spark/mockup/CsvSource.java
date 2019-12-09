@@ -27,39 +27,34 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import io.kyligence.kap.engine.spark.utils.SchemaProcessor;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.engine.spark.metadata.cube.model.ColumnDesc;
+import org.apache.kylin.engine.spark.metadata.cube.model.SegmentRange;
+import org.apache.kylin.engine.spark.metadata.cube.model.TableDesc;
+import org.apache.kylin.engine.spark.metadata.cube.source.ISource;
+import org.apache.kylin.engine.spark.metadata.cube.source.ISourceMetadataExplorer;
 import org.apache.kylin.metadata.model.IBuildable;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.ISampleDataDeployer;
-import org.apache.kylin.source.ISource;
-import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.execution.utils.SchemaProcessor;
 import org.apache.spark.sql.types.StructType;
 
 import com.google.common.collect.Lists;
 
 import io.kyligence.kap.engine.spark.NSparkCubingEngine.NSparkCubingSource;
-import io.kyligence.kap.metadata.project.NProjectManager;
 
 public class CsvSource implements ISource {
 
     @Override
     public ISourceMetadataExplorer getSourceMetadataExplorer() {
         return new ISourceMetadataExplorer() {
-
-            List<ProjectInstance> allProjects = NProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                    .listAllProjects();
 
             @Override
             public List<String> listDatabases() {
@@ -114,6 +109,7 @@ public class CsvSource implements ISource {
             public List<String> getRelatedKylinResources(TableDesc table) {
                 return Collections.emptyList();
             }
+
         };
     }
 

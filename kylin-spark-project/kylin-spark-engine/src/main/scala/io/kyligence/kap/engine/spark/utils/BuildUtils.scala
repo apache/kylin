@@ -19,6 +19,7 @@
 package io.kyligence.kap.engine.spark.utils
 
 import java.io.IOException
+import java.util.Locale
 
 import io.kyligence.kap.engine.spark.NSparkCubingEngine
 import io.kyligence.kap.engine.spark.job.NSparkCubingUtil
@@ -27,9 +28,8 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration
 import org.apache.kylin.common.util.{HadoopUtil, JsonUtil}
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.metadata.cube.ManagerHub
-import org.apache.kylin.engine.spark.metadata.cube.model.{CubeUpdate2, DataLayout, DataSegment, LayoutEntity}
+import org.apache.kylin.engine.spark.metadata.cube.model.{CubeUpdate2, DataLayout, DataSegment, LayoutEntity, MeasureDesc}
 import org.apache.kylin.measure.bitmap.BitmapMeasureType
-import org.apache.kylin.metadata.model.MeasureDesc
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 
@@ -98,7 +98,7 @@ object BuildUtils extends Logging {
       repartitionNum
     } else {
       throw new RuntimeException(
-        String.format("Temp path does not exist before repartition. Temp path: %s.", tempPath))
+        String.format(Locale.ROOT, "Temp path does not exist before repartition. Temp path: %s.", tempPath))
     }
   }
 

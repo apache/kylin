@@ -634,7 +634,4 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return info;
     }
 
-    public JobTypeEnum getJobType() {
-        return jobType;
-    }
 }

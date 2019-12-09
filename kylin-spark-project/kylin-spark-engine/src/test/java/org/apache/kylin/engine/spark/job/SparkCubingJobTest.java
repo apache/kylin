@@ -96,7 +96,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
             Assert.assertNull(layout);
         }
 
-        NSparkCubingJob job = NSparkCubingJob.create(cube, Sets.newHashSet(oneSeg), Sets.newLinkedHashSet(round1), "ADMIN");
+        NSparkCubingJob job = NSparkCubingJob.create(Sets.newHashSet(oneSeg), Sets.newLinkedHashSet(round1), "ADMIN");
         NSparkCubingStep sparkStep = job.getSparkCubingStep();
         StorageURL distMetaUrl = StorageURL.valueOf(sparkStep.getDistMetaUrl());
         Assert.assertEquals("hdfs", distMetaUrl.getScheme());
@@ -124,7 +124,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
             Assert.assertNotNull(layout);
         }
 
-        job = NSparkCubingJob.create(cube, Sets.newHashSet(oneSeg), Sets.newLinkedHashSet(round2), "ADMIN");
+        job = NSparkCubingJob.create(Sets.newHashSet(oneSeg), Sets.newLinkedHashSet(round2), "ADMIN");
         execMgr.addJob(job);
 
         // wait job done

@@ -22,6 +22,8 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.spark.sql.Row;
 
+import java.util.Locale;
+
 public class ColumnSchemaAnalysisDelegate extends AbstractColumnAnalysisDelegate<ColumnSchemaAnalysisDelegate> {
 
     public final String[] HIVE_KEYWORD = new String[] { "ALL", "ALTER", "AND", "ARRAY", "AS", "AUTHORIZATION",
@@ -50,7 +52,7 @@ public class ColumnSchemaAnalysisDelegate extends AbstractColumnAnalysisDelegate
         if (once) {
             // check schema
             if (columnDesc.getName().startsWith("_")
-                    || ArrayUtils.contains(HIVE_KEYWORD, columnDesc.getName().toUpperCase())) {
+                    || ArrayUtils.contains(HIVE_KEYWORD, columnDesc.getName().toUpperCase(Locale.ROOT))) {
                 illegal = true;
             }
 
