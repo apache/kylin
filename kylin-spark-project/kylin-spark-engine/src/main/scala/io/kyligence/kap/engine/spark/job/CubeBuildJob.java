@@ -61,7 +61,7 @@ import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
+import org.apche.kylin.engine.spark.common.util.ResourceDetectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

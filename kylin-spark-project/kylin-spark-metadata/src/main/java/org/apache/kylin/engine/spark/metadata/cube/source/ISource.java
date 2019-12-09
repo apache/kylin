@@ -44,10 +44,11 @@
 package org.apache.kylin.engine.spark.metadata.cube.source;
 
 import org.apache.kylin.engine.spark.metadata.cube.model.SegmentRange;
-import org.apache.kylin.engine.spark.metadata.cube.model.TableDesc;
 import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.ISampleDataDeployer;
+import org.apache.kylin.source.ISourceMetadataExplorer;
 
 /**
  * Represents a kind of source to Kylin, like Hive.
