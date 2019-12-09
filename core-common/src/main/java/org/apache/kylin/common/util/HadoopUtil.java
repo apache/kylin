@@ -38,6 +38,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.storage.IStorageProvider;
 import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.slf4j.Logger;
@@ -46,6 +47,14 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Maps;
 
 public class HadoopUtil {
+
+    public static final String JOB_TMP_ROOT = "/job_tmp";
+    public static final String PARQUET_STORAGE_ROOT = "/parquet";
+    public static final String DICT_STORAGE_ROOT = "/dict";
+    public static final String GLOBAL_DICT_STORAGE_ROOT = DICT_STORAGE_ROOT + "/global_dict";
+    public static final String SNAPSHOT_STORAGE_ROOT = "/table_snapshot";
+    public static final String TABLE_EXD_STORAGE_ROOT = ResourceStore.TABLE_EXD_RESOURCE_ROOT;
+    
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HadoopUtil.class);
     private static final transient InternalThreadLocal<Configuration> hadoopConfig = new InternalThreadLocal<>();

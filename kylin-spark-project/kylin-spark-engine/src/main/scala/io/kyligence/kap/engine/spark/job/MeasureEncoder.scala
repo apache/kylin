@@ -18,10 +18,11 @@
 
 package io.kyligence.kap.engine.spark.job
 
-import org.apache.kylin.measure.bitmap.{RoaringBitmapCounter, RoaringBitmapCounterFactory}
+import org.apache.kylin.engine.spark.metadata.cube.datatype.DataType
+import org.apache.kylin.engine.spark.metadata.cube.measure.bitmap.RoaringBitmapCounter
+import org.apache.kylin.measure.bitmap.RoaringBitmapCounterFactory
 import org.apache.kylin.measure.hllc.HLLCounter
 import org.apache.kylin.measure.percentile.PercentileCounter
-import org.apache.kylin.metadata.datatype.DataType
 
 sealed abstract class MeasureEncoder[T, V](dataType: DataType) {
 

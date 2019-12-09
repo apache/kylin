@@ -28,6 +28,8 @@ import org.apache.spark.sql.Column;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class NSparkCubingUtil {
@@ -97,5 +99,19 @@ public class NSparkCubingUtil {
     public static String getStoragePathWithoutPrefix(DataSegDetails segDetails, long layoutId) {
         return segDetails.getProject() + "/parquet/" + segDetails.getDataSegment().getCube().getUuid() + "/"
                 + segDetails.getUuid() + "/" + layoutId;
+    }
+
+    private static final Pattern DOT_PATTERN = Pattern.compile("(\\S+)\\.(\\D+)");
+
+    public static final String SEPARATOR = "_0_DOT_0_";
+
+    public static String convertFromDot(String withDot) {
+        Matcher m = DOT_PATTERN.matcher(withDot);
+        String withoutDot = withDot;
+        while (m.find()) {
+            withoutDot = m.replaceAll("$1" + SEPARATOR + "$2");
+            m = DOT_PATTERN.matcher(withoutDot);
+        }
+        return withoutDot;
     }
 }

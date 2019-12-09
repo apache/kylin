@@ -24,8 +24,6 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import lombok.val;
-
 public class NGlobalDictionaryV2 implements Serializable {
 
     protected static final Logger logger = LoggerFactory.getLogger(NGlobalDictionaryV2.class);
@@ -63,7 +61,7 @@ public class NGlobalDictionaryV2 implements Serializable {
     }
 
     public NGlobalDictionaryV2(String dictParams) throws IOException {
-        val dictInfo = dictParams.split(SEPARATOR);
+        String[] dictInfo = dictParams.split(SEPARATOR);
         this.project = dictInfo[0];
         this.sourceTable = dictInfo[1];
         this.sourceColumn = dictInfo[2];

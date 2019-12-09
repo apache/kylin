@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apche.kylin.engine.spark.common.util.TimeZoneUtils;
@@ -117,7 +118,7 @@ public abstract class SparkApplication {
     public Boolean updateSparkJobInfo(String json) {
         String serverIp = System.getProperty("spark.driver.rest.server.ip", "127.0.0.1");
         String port = System.getProperty("spark.driver.rest.server.port", "7070");
-        String requestApi = String.format("http://%s:%s/kylin/api/jobs/spark", serverIp, port);
+        String requestApi = String.format(Locale.ROOT, "http://%s:%s/kylin/api/jobs/spark", serverIp, port);
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpPut httpPut = new HttpPut(requestApi);

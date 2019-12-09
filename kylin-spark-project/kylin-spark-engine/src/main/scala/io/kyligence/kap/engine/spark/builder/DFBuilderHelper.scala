@@ -19,7 +19,7 @@
 package io.kyligence.kap.engine.spark.builder
 
 import io.kyligence.kap.engine.spark.job.NSparkCubingUtil._
-import org.apache.kylin.metadata.model.TblColRef
+import org.apache.kylin.engine.spark.metadata.cube.model.TblColRef
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.functions.expr
 import org.apache.spark.sql.{Column, Dataset, Row}

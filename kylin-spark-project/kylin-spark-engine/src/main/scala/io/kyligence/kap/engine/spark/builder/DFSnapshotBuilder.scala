@@ -30,8 +30,8 @@ import org.apache.commons.codec.digest.DigestUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path, PathFilter}
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.HadoopUtil
-import org.apache.kylin.engine.spark.metadata.cube.model.{Cube, DataModel, DataSegment}
-import org.apache.kylin.metadata.model.TableDesc
+import org.apache.kylin.engine.spark.metadata.cube.model.{Cube, DataModel, DataSegment, TableDesc}
+import org.apache.kylin.engine.spark.metadata.cube.source.SourceFactory
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils
 import org.apache.spark.sql.{Dataset, Row, SparkSession}

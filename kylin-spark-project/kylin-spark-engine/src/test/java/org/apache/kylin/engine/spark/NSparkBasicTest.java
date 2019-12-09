@@ -19,7 +19,6 @@
 package org.apache.kylin.engine.spark;
 
 import com.google.common.collect.Lists;
-import io.kyligence.kap.engine.spark.NLocalWithSparkSessionTest;
 import org.apache.commons.io.FileUtils;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.MapFunction;

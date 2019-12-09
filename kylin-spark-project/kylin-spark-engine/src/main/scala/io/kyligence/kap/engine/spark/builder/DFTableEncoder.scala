@@ -21,8 +21,7 @@ import java.util
 
 import io.kyligence.kap.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
 import io.kyligence.kap.engine.spark.job.NSparkCubingUtil._
-import io.kyligence.kap.metadata.cube.model.NDataSegment
-import org.apache.kylin.metadata.model.TblColRef
+import org.apache.kylin.engine.spark.metadata.cube.model.{DataSegment, TblColRef}
 import org.apache.spark.dict.NGlobalDictionaryV2
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.KapFunctions._
@@ -35,7 +34,7 @@ import scala.collection.mutable._
 
 object DFTableEncoder extends Logging {
 
-  def encodeTable(ds: Dataset[Row], seg: NDataSegment, cols: util.Set[TblColRef]): Dataset[Row] = {
+  def encodeTable(ds: Dataset[Row], seg: DataSegment, cols: util.Set[TblColRef]): Dataset[Row] = {
     val structType = ds.schema
     var partitionedDs = ds
 

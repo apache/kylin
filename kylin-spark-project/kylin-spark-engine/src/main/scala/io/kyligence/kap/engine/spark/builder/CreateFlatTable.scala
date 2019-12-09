@@ -19,14 +19,14 @@
 package io.kyligence.kap.engine.spark.builder
 
 import java.util
+import java.util.Locale
 
 import com.google.common.collect.Sets
 import io.kyligence.kap.engine.spark.builder.DFBuilderHelper.{ENCODE_SUFFIX, _}
 import io.kyligence.kap.engine.spark.job.NSparkCubingUtil._
 import io.kyligence.kap.engine.spark.utils.SparkDataSource._
 import org.apache.commons.lang3.StringUtils
-import org.apache.kylin.engine.spark.metadata.cube.model.{DataSegment, SpanningTree}
-import org.apache.kylin.metadata.model._
+import org.apache.kylin.engine.spark.metadata.cube.model.{CubeJoinedFlatTableDesc, DataModel, DataSegment, IJoinedFlatTableDesc, JoinDesc, JoinTableDesc, PartitionDesc, SegmentRange, SpanningTree, TableDesc, TableRef, TblColRef}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.parser.ParseException
 import org.apache.spark.sql.functions.{col, expr}
@@ -78,7 +78,7 @@ class CreateFlatTable(val flatTable: IJoinedFlatTableDesc,
     }
 
     flatTable match {
-      case joined: NCubeJoinedFlatTableDesc =>
+      case joined: CubeJoinedFlatTableDesc =>
         changeSchemeToColumnIndice(rootFactDataset, joined)
       case unsupported =>
         throw new UnsupportedOperationException(
@@ -124,7 +124,7 @@ object CreateFlatTable extends Logging {
 
   @throws(classOf[ParseException])
   @throws(classOf[AnalysisException])
-  def generateFullFlatTable(model: NDataModel, ss: SparkSession): Dataset[Row] = {
+  def generateFullFlatTable(model: DataModel, ss: SparkSession): Dataset[Row] = {
     val rootFact = model.getRootFactTable
     val ccCols = rootFact.getColumns.asScala.filter(_.getColumnDesc.isComputedColumn).toSet
     val rootFactDataset = generateTableDataset(rootFact, ccCols.toSeq, rootFact.getAlias, ss)
@@ -151,7 +151,7 @@ object CreateFlatTable extends Logging {
     dataset.select(selectedCols: _*)
   }
 
-  private def generateLookupTableDataset(model: NDataModel,
+  private def generateLookupTableDataset(model: DataModel,
                                          cols: Seq[TblColRef],
                                          ss: SparkSession): mutable.LinkedHashMap[JoinTableDesc, Dataset[Row]] = {
     val lookupTables = mutable.LinkedHashMap[JoinTableDesc, Dataset[Row]]()
@@ -191,7 +191,7 @@ object CreateFlatTable extends Logging {
 
   def joinFactTableWithLookupTables(rootFactDataset: Dataset[Row],
                                     lookupTableDatasetMap: mutable.LinkedHashMap[JoinTableDesc, Dataset[Row]],
-                                    model: NDataModel,
+                                    model: DataModel,
                                     ss: SparkSession): Dataset[Row] = {
     lookupTableDatasetMap.foldLeft(rootFactDataset)(
       (joinedDataset: Dataset[Row], tuple: (JoinTableDesc, Dataset[Row])) =>
@@ -206,7 +206,7 @@ object CreateFlatTable extends Logging {
     var afterJoin = rootFactDataset
     val join = lookupDesc.getJoin
     if (join != null && !StringUtils.isEmpty(join.getType)) {
-      val joinType = join.getType.toUpperCase
+      val joinType = join.getType.toUpperCase(Locale.ROOT)
       val pk = join.getPrimaryKeyColumns
       val fk = join.getForeignKeyColumns
       if (pk.length != fk.length) {
@@ -235,7 +235,7 @@ object CreateFlatTable extends Logging {
     afterJoin
   }
 
-  def changeSchemeToColumnIndice(ds: Dataset[Row], flatTable: NCubeJoinedFlatTableDesc): Dataset[Row] = {
+  def changeSchemeToColumnIndice(ds: Dataset[Row], flatTable: CubeJoinedFlatTableDesc): Dataset[Row] = {
     val structType = ds.schema
     val colIndices = flatTable.getIndices.asScala
     val columnNameToIndex = flatTable.getAllColumns
@@ -258,15 +258,15 @@ object CreateFlatTable extends Logging {
     ds.select(selectedColumns: _*)
   }
 
-  def replaceDot(original: String, model: NDataModel): String = {
+  def replaceDot(original: String, model: DataModel): String = {
     val sb = new StringBuilder(original)
 
     for (namedColumn <- model.getAllNamedColumns.asScala) {
       var start = 0
-      while (sb.toString.toLowerCase.indexOf(
-        namedColumn.getAliasDotColumn.toLowerCase) != -1) {
-        start = sb.toString.toLowerCase
-          .indexOf(namedColumn.getAliasDotColumn.toLowerCase)
+      while (sb.toString.toLowerCase(Locale.ROOT).indexOf(
+        namedColumn.getAliasDotColumn.toLowerCase(Locale.ROOT)) != -1) {
+        start = sb.toString.toLowerCase(Locale.ROOT)
+          .indexOf(namedColumn.getAliasDotColumn.toLowerCase(Locale.ROOT))
         sb.replace(start,
           start + namedColumn.getAliasDotColumn.length,
           convertFromDot(namedColumn.getAliasDotColumn))
@@ -275,7 +275,7 @@ object CreateFlatTable extends Logging {
     sb.toString()
   }
 
-  def assemblyGlobalDictTuple(seg: NDataSegment, toBuildTree: NSpanningTree): GlobalDictType = {
+  def assemblyGlobalDictTuple(seg: DataSegment, toBuildTree: SpanningTree): GlobalDictType = {
     val toBuildDictSet = DictionaryBuilderHelper.extractTreeRelatedGlobalDictToBuild(seg, toBuildTree)
     val globalDictSet = DictionaryBuilderHelper.extractTreeRelatedGlobalDicts(seg, toBuildTree)
     (toBuildDictSet.asScala.toSet, globalDictSet.asScala.toSet)
@@ -312,7 +312,7 @@ object CreateFlatTable extends Logging {
       val col: TblColRef = flatDesc.getAllColumns.get(i)
       sql.append(",")
       val colTotalName: String =
-        String.format("%s.%s", col.getTableRef.getTableName, col.getName)
+        String.format(Locale.ROOT, "%s.%s", col.getTableRef.getTableName, col.getName)
       if (skipAsList.contains(colTotalName)) {
         sql.append(col.getExpressionInSourceDB + sep)
       } else {
@@ -331,14 +331,14 @@ object CreateFlatTable extends Logging {
       if (singleLine) " "
       else "\n"
     val dimTableCache: util.Set[TableRef] = Sets.newHashSet[TableRef]
-    val model: NDataModel = flatDesc.getDataModel
+    val model: DataModel = flatDesc.getDataModel
     val rootTable: TableRef = model.getRootFactTable
     sql.append(
       "FROM " + flatDesc.getDataModel.getRootFactTable.getTableIdentity + " as " + rootTable.getAlias + " " + sep)
     for (lookupDesc <- model.getJoinTables.asScala) {
       val join: JoinDesc = lookupDesc.getJoin
       if (join != null && join.getType == "" == false) {
-        val joinType: String = join.getType.toUpperCase
+        val joinType: String = join.getType.toUpperCase(Locale.ROOT)
         val dimTable: TableRef = lookupDesc.getTableRef
         if (!dimTableCache.contains(dimTable)) {
           val pk: Array[TblColRef] = join.getPrimaryKeyColumns
@@ -378,7 +378,7 @@ object CreateFlatTable extends Logging {
       else "\n"
     val whereBuilder: StringBuilder = new StringBuilder
     whereBuilder.append("WHERE 1=1")
-    val model: NDataModel = flatDesc.getDataModel
+    val model: DataModel = flatDesc.getDataModel
     if (StringUtils.isNotEmpty(model.getFilterCondition)) {
       whereBuilder
         .append(" AND (")

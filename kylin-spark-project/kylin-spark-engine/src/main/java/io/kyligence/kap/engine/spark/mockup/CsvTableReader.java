@@ -19,7 +19,7 @@ package io.kyligence.kap.engine.spark.mockup;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.engine.spark.metadata.cube.model.TableDesc;
 import org.apache.kylin.source.IReadableTable;
 
 import java.io.File;

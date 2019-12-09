@@ -19,6 +19,7 @@
 package org.apache.spark.sql.hive.utils
 
 import java.io.IOException
+import java.nio.charset.Charset
 import java.util.{Map => JMap}
 
 import com.google.common.collect.Maps
@@ -121,7 +122,7 @@ object ResourceDetectUtils extends Logging {
     try {
       out = fs.create(path)
       val str = json.toJson(item)
-      val bytes = str.getBytes
+      val bytes = str.getBytes(Charset.defaultCharset())
       out.writeInt(bytes.length)
       out.write(bytes)
     } finally {
@@ -147,7 +148,7 @@ object ResourceDetectUtils extends Logging {
       val i = in.readInt()
       val bytes = new Array[Byte](i)
       in.readFully(bytes)
-      json.fromJson(new String(bytes), new TypeToken[T]() {}.getType)
+      json.fromJson(new String(bytes, Charset.defaultCharset()), new TypeToken[T]() {}.getType)
     } finally {
       if (in != null) {
         in.close()

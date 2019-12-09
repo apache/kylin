@@ -19,7 +19,7 @@ package io.kyligence.kap.engine.spark.utils
 
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.util.HadoopUtil
-import org.apache.kylin.metadata.model.TableDesc
+import org.apache.kylin.engine.spark.metadata.cube.model.TableDesc
 
 object FileNames {
   /** Returns the path for a given snapshot file. */

@@ -29,13 +29,14 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.cube.model.DimensionDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.apache.kylin.common.persistence.ResourceStore.CUBE_RESOURCE_ROOT;
 import static org.apache.kylin.metadata.MetadataConstants.FILE_SURFIX;
@@ -248,21 +249,21 @@ public class Cube extends RootPersistentEntity {
         return indexEntities;
     }
 
-//    public Set<String> collectPrecalculationResource() {
-//        Set<String> r = new LinkedHashSet<>();
-//
-//        // cube & segments
-//        r.add(PathManager.getCubePath(project, getId()));
-//
-//        // project & model & tables
-//        r.add(PathManager.getProjectPath(project));
-//        r.add(PathManager.getModelPath(project, getId()));
-//        for (TableRef t : getModel().getAllTableRefs()) {
-//            r.add(t.getTableDesc().getResourcePath());
-//        }
-//
-//        return r;
-//    }
+    public Set<String> collectPrecalculationResource() {
+        Set<String> r = new LinkedHashSet<>();
+
+        // cube & segments
+        r.add(PathManager.getCubePath(project, getId()));
+
+        // project & model & tables
+        r.add(PathManager.getProjectPath(project));
+        r.add(PathManager.getModelPath(project, getId()));
+        /*for (TableRef t : getModel().getAllTableRefs()) {
+            r.add(t.getTableDesc().getResourcePath());
+        }*/
+
+        return r;
+    }
 
     public LayoutEntity getCuboidLayout(Long cuboidLayoutId) {
         return getSpanningTree().getCuboidLayout(cuboidLayoutId);

@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -69,8 +70,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import io.kyligence.kap.engine.spark.merger.MetadataMerger;
 
 /**
  *
@@ -370,7 +369,7 @@ public class NSparkExecutable extends AbstractExecutable {
 
         sb.append("--name job_step_%s ");
         sb.append("--jars %s %s %s");
-        String cmd = String.format(sb.toString(), hadoopConf, KylinConfig.getSparkHome(), getId(), jars, kylinJobJar,
+        String cmd = String.format(Locale.ROOT, sb.toString(), hadoopConf, KylinConfig.getSparkHome(), getId(), jars, kylinJobJar,
                 appArgs);
         logger.info("spark submit cmd: {}", cmd);
         return cmd;
@@ -447,9 +446,5 @@ public class NSparkExecutable extends AbstractExecutable {
 
     public boolean needMergeMetadata() {
         return false;
-    }
-
-    public void mergerMetadata(MetadataMerger merger) {
-        throw new UnsupportedOperationException();
     }
 }

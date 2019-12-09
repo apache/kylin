@@ -18,14 +18,14 @@
 
 package io.kyligence.kap.engine.spark.job
 
-import org.apache.kylin.measure.topn.TopNCounter
+import org.apache.kylin.engine.spark.metadata.cube.measure.topn.TopNCounter
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.expressions.{MutableAggregationBuffer, UserDefinedAggregateFunction}
 import org.apache.spark.sql.types._
 
 import scala.collection.JavaConverters._
 
-class TopNUDAF(dataTp: org.apache.kylin.metadata.datatype.DataType, schema: StructType, isFirst: Boolean)
+class TopNUDAF(dataTp: org.apache.kylin.engine.spark.metadata.cube.datatype.DataType, schema: StructType, isFirst: Boolean)
 extends UserDefinedAggregateFunction {
 
   val counter = new TopNCounter[Seq[Any]](dataTp.getPrecision * TopNCounter.EXTRA_SPACE_RATE)

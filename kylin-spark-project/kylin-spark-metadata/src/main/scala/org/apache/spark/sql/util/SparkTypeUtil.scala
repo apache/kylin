@@ -22,7 +22,7 @@ import java.lang.{Boolean, Byte, Double, Float, Long, Short}
 import java.math.BigDecimal
 import java.sql.{Date, Timestamp, Types}
 import java.util.regex.Pattern
-import java.util.{GregorianCalendar, TimeZone}
+import java.util.{GregorianCalendar, Locale, TimeZone}
 
 import org.apache.calcite.avatica.util.TimeUnitRange
 import org.apache.calcite.rel.`type`.RelDataType
@@ -30,7 +30,6 @@ import org.apache.calcite.rex.RexLiteral
 import org.apache.calcite.sql.`type`.SqlTypeName
 import org.apache.calcite.util.NlsString
 import org.apache.kylin.common.util.DateFormat
-import org.apache.kylin.metadata.datatype.DataType
 import org.apache.kylin.engine.spark.metadata.cube.model.StructField
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.Column
@@ -39,12 +38,13 @@ import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
+import org.apache.kylin.engine.spark.metadata.cube.datatype.DataType
 
 object SparkTypeUtil extends Logging {
   val DATETIME_FAMILY = List("time", "date", "timestamp", "datetime")
 
   def isDateTimeFamilyType(dataType: String): Boolean = {
-    DATETIME_FAMILY.contains(dataType.toLowerCase())
+    DATETIME_FAMILY.contains(dataType.toLowerCase(Locale.ROOT))
   }
 
   def isDateType(dataType: String): Boolean = {

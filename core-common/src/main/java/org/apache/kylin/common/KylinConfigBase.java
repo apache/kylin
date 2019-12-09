@@ -2464,4 +2464,37 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isJobLogPrintEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.job.log-print-enabled", "true"));
     }
+
+    public String getClusterInfoFetcherClassName() {
+        return getOptional("kylin.engine.spark.cluster-info-fetcher-class-name",
+                "io.kyligence.kap.cluster.YarnInfoFetcher");
+    }
+
+    public int getSparkEngineMaxRetryTime() {
+        return Integer.parseInt(getOptional("kylin.engine.max-retry-time", "3"));
+    }
+
+    public double getSparkEngineRetryMemoryGradient() {
+        return Double.parseDouble(getOptional("kylin.engine.retry-memory-gradient", "1.5"));
+    }
+
+    public double getSparkEngineRetryOverheadMemoryGradient() {
+        return Double.parseDouble(getOptional("kylin.engine.retry-overheadMemory-gradient", "0.2"));
+    }
+
+    public Double getMaxAllocationResourceProportion() {
+        return Double.parseDouble(getOptional("kylin.engine.max-allocation-proportion", "0.9"));
+    }
+
+    public int getSparkEngineBaseExuctorInstances() {
+        return Integer.parseInt(getOptional("kylin.engine.base-executor-instance", "5"));
+    }
+
+    public String getSparkEngineExuctorInstanceStrategy() {
+        return getOptional("kylin.engine.executor-instance-strategy", "100,2,500,3,1000,4");
+    }
+
+    public int getSnapshotShardSizeMB() {
+        return Integer.parseInt(getOptional("kylin.snapshot.shard-size-mb", "128"));
+    }
 }

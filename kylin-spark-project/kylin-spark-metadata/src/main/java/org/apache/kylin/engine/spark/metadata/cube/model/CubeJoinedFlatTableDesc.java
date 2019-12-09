@@ -20,16 +20,13 @@ package org.apache.kylin.engine.spark.metadata.cube.model;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.ISegment;
-import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.metadata.model.TblColRef;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class CubeJoinedFlatTableDesc {
+public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc{
     protected final String tableName;
     protected final Cube cube;
     protected final SegmentRange segmentRange;
@@ -43,8 +40,8 @@ public class CubeJoinedFlatTableDesc {
         this(cube, null, true);
     }
 
-    public CubeJoinedFlatTableDesc(DataSegment segment) {
-        this(segment.getCube(), segment.getSegRange(), true);
+    public CubeJoinedFlatTableDesc(DataSegment segment, Boolean needJoinLookup) {
+        this(segment.getCube(), segment.getSegRange(), needJoinLookup);
     }
 
     public CubeJoinedFlatTableDesc(Cube cube, SegmentRange segmentRange, Boolean needJoinLookup) {
