@@ -66,6 +66,14 @@ function retrieveStartCommand() {
         fi
     fi
 
+    lockfile=$KYLIN_HOME/LOCK
+    if [ ! -e $lockfile ]; then
+        trap "rm -f $lockfile; exit" INT TERM EXIT
+        touch $lockfile
+    else
+        quit "Kylin is starting, wait for it"
+    fi
+
     source ${dir}/check-env.sh
 
     tomcat_root=${dir}/../tomcat
@@ -130,6 +138,7 @@ if [ "$1" == "start" ]
 then
     retrieveStartCommand
     ${start_command} >> ${KYLIN_HOME}/logs/kylin.out 2>&1 & echo $! > ${KYLIN_HOME}/pid &
+    rm -f $lockfile
 
     echo ""
     echo "A new Kylin instance is started by $USER. To stop it, run 'kylin.sh stop'"
@@ -142,6 +151,7 @@ elif [ "$1" == "run" ]
 then
     retrieveStartCommand
     ${start_command}
+    rm -f $lockfile
 
 # stop command
 elif [ "$1" == "stop" ]
