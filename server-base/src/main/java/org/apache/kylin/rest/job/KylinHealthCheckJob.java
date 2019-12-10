@@ -58,7 +58,7 @@ public class KylinHealthCheckJob extends AbstractApplication {
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_FIX = OptionBuilder.withArgName("fix").hasArg().isRequired(false)
-            .withDescription("Fix the unhealth cube").create("fix");
+            .withDescription("Fix the unhealthy cube").create("fix");
 
     public static void main(String[] args) throws Exception {
         new KylinHealthCheckJob().execute(args);
@@ -130,7 +130,7 @@ public class KylinHealthCheckJob extends AbstractApplication {
 
     private void sendMail(String content) {
         logger.info("Send Kylin cluster report");
-        String subject = "Kylin Cluster Health Resport of " + config.getClusterName() + " on "
+        String subject = "Kylin Cluster Health Report of " + config.getClusterName() + " on "
                 + new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(new Date());
         List<String> users = Lists.newArrayList(config.getAdminDls());
         new MailService(config).sendMail(users, subject, content, false);
