@@ -137,9 +137,11 @@ public class SegmentPruner {
         switch (comp.getOperator()) {
         case EQ:
         case IN:
-            String filterMin = order.min((Set<String>) comp.getValues());
-            String filterMax = order.max((Set<String>) comp.getValues());
-            return order.compare(filterMin, maxVal) <= 0 && order.compare(minVal, filterMax) <= 0;
+            for (String filterValue : (Set<String>) comp.getValues()) {
+                if (order.compare(filterValue, maxVal) <= 0 && order.compare(minVal, filterValue) <= 0)
+                    return true;
+            }
+            return false;
         case LT:
             return order.compare(minVal, filterVal) < 0;
         case LTE:

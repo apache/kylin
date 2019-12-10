@@ -343,4 +343,29 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
             }
         }
     }
+
+    @Test
+    public void testPruneSegWithFilterIN() {
+        // legacy cube segments does not have DimensionRangeInfo, but with TSRange can do some pruning
+        CubeInstance cube = CubeManager.getInstance(getTestConfig())
+                .getCube("test_kylin_cube_without_slr_left_join_ready_2_segments");
+        TblColRef col = cube.getModel().findColumn("TEST_KYLIN_FACT.CAL_DT");
+        CubeSegment seg = cube.getSegments(SegmentStatusEnum.READY).get(0);
+        TSRange tsRange = seg.getTSRange();
+        String start = DateFormat.formatToTimeStr(tsRange.start.v, "yyyy-MM-dd");
+        CubeSegment seg2 = cube.getSegments(SegmentStatusEnum.READY).get(1);
+        TSRange tsRange2 = seg2.getTSRange();
+        try (SetAndUnsetSystemProp sns = new SetAndUnsetSystemProp("kylin.query.skip-empty-segments", "false")) {
+
+            {
+                TupleFilter inFilter = new ConstantTupleFilter(Sets.newHashSet(start,
+                        DateFormat.formatToTimeStr(tsRange2.end.v + 1000 * 60 * 60 * 24L, "yyyy-MM-dd")));
+                TupleFilter filter = compare(col, FilterOperatorEnum.IN, inFilter);
+                SegmentPruner segmentPruner = new SegmentPruner(filter);
+                Assert.assertTrue(segmentPruner.check(seg));
+                Assert.assertFalse(segmentPruner.check(seg2));
+
+            }
+        }
+    }
 }
