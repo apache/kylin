@@ -99,7 +99,7 @@ public class NSparkMergingStep extends NSparkExecutable {
                 String path = "/" + NSparkCubingUtil.getStoragePathWithoutPrefix(dataCuboid.getSegDetails(),
                         dataCuboid.getLayoutId());
                 result.add(path);
-                result.add(path + DFBuildJob.TEMP_DIR_SUFFIX);
+                result.add(path + CubeBuildJob.TEMP_DIR_SUFFIX);
             }
         }
 

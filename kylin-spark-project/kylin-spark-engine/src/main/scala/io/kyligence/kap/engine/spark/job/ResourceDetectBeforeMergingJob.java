@@ -55,7 +55,7 @@ public class ResourceDetectBeforeMergingJob extends SparkApplication {
         infos.clearMergingSegments();
         Collections.sort(mergingSegments);
         infos.recordMergingSegments(mergingSegments);
-        Map<Long, DFLayoutMergeAssist> mergeCuboidsAssist = DFMergeJob.generateMergeAssist(mergingSegments, ss,
+        Map<Long, DFLayoutMergeAssist> mergeCuboidsAssist = CubeMergeJob.generateMergeAssist(mergingSegments, ss,
                 mergedSeg);
         ResourceDetectUtils.write(new Path(config.getJobTmpShareDir(project, jobId), ResourceDetectUtils.countDistinctSuffix()), ResourceDetectUtils.findCountDistinctMeasure(mergedSeg.getIndexPlan().getAllLayouts()));
         Map<String, List<String>> resourcePaths = Maps.newHashMap();

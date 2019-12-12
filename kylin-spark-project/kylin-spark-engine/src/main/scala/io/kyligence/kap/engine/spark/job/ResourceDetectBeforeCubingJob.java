@@ -69,7 +69,7 @@ public class ResourceDetectBeforeCubingJob extends SparkApplication {
         ResourceDetectUtils.write(new Path(config.getJobTmpShareDir(project, jobId), ResourceDetectUtils.countDistinctSuffix()), ResourceDetectUtils.findCountDistinctMeasure(cuboids));
         for (String segId : segmentIds) {
             DataSegment seg = cube.getSegment(segId);
-            DFChooser datasetChooser = new DFChooser(spanningTree, seg, jobId, ss, config, false);
+            ParentSourceChooser datasetChooser = new ParentSourceChooser(spanningTree, seg, jobId, ss, config, false);
             datasetChooser.decideSources();
             NBuildSourceInfo buildFromFlatTable = datasetChooser.flatTableSource();
             if (buildFromFlatTable != null) {

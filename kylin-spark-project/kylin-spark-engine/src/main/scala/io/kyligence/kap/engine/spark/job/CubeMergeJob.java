@@ -53,8 +53,8 @@ import io.kyligence.kap.metadata.cube.model.NDataflow;
 import io.kyligence.kap.metadata.cube.model.NDataflowManager;
 import io.kyligence.kap.metadata.cube.model.NDataflowUpdate;
 
-public class DFMergeJob extends SparkApplication {
-    protected static final Logger logger = LoggerFactory.getLogger(DFMergeJob.class);
+public class CubeMergeJob extends SparkApplication {
+    protected static final Logger logger = LoggerFactory.getLogger( CubeMergeJob.class);
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
 
     @Override
@@ -175,7 +175,7 @@ public class DFMergeJob extends SparkApplication {
         NSparkCubingEngine.NSparkCubingStorage storage = StorageFactory.createEngineAdapter(layout,
                 NSparkCubingEngine.NSparkCubingStorage.class);
         String path = NSparkCubingUtil.getStoragePath(dataCuboid);
-        String tempPath = path + DFBuildJob.TEMP_DIR_SUFFIX;
+        String tempPath = path + CubeBuildJob.TEMP_DIR_SUFFIX;
         // save to temp path
         storage.saveTo(tempPath, dataset, ss);
 
@@ -208,7 +208,7 @@ public class DFMergeJob extends SparkApplication {
     }
 
     public static void main(String[] args) {
-        DFMergeJob nDataflowBuildJob = new DFMergeJob();
+        CubeMergeJob nDataflowBuildJob = new CubeMergeJob();
         nDataflowBuildJob.execute(args);
     }
 

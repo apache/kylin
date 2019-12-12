@@ -39,7 +39,7 @@ import org.junit.Assert
 import scala.collection.JavaConverters._
 
 // scalastyle:off
-class TestDFChooser extends SparderBaseFunSuite with SharedSparkSession with LocalMetadata {
+class TestParentSourceChooser extends SparderBaseFunSuite with SharedSparkSession with LocalMetadata {
 
   private val DEFAULT_PROJECT = "default"
   private val MODEL_ID = "89af4ee2-2cdb-4b07-b39e-4c29856309aa"
