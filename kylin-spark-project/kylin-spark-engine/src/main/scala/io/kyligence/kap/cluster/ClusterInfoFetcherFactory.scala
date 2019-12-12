@@ -23,6 +23,7 @@
 package io.kyligence.kap.cluster
 
 import org.apache.kylin.common.KylinConfig
+import org.apache.spark.util.KylinReflectUtils
 
 
 object ClusterInfoFetcherFactory {
