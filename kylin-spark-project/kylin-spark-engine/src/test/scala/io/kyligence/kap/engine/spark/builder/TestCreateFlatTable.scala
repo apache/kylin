@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import java.util.{TimeZone, UUID}
 
 import io.kyligence.kap.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
-import io.kyligence.kap.engine.spark.job.DFChooser
+import io.kyligence.kap.engine.spark.job.ParentSourceChooser
 import io.kyligence.kap.metadata.cube.cuboid.NSpanningTreeFactory
 import io.kyligence.kap.metadata.cube.model._
 import org.apache.kylin.common.KylinConfig
@@ -120,7 +120,7 @@ class TestCreateFlatTable extends SparderBaseFunSuite with SharedSparkSession wi
 
   private def generateFlatTable(seg: NDataSegment, df: NDataflow, needEncode: Boolean): Dataset[Row] = {
     val toBuildTree = NSpanningTreeFactory.fromLayouts(seg.getIndexPlan.getAllLayouts, MODEL_NAME1)
-    val needJoin = DFChooser.needJoinLookupTables(seg.getModel, toBuildTree)
+    val needJoin = ParentSourceChooser.needJoinLookupTables(seg.getModel, toBuildTree)
     val flatTableDesc = new NCubeJoinedFlatTableDesc(df.getIndexPlan, seg.getSegRange, needJoin)
     val flatTable = new CreateFlatTable(flatTableDesc, seg, toBuildTree, spark, null)
     val afterJoin = flatTable.generateDataset(needEncode)

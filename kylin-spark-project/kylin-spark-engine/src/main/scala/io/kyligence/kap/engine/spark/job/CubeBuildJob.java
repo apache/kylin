@@ -65,8 +65,8 @@ import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DFBuildJob extends SparkApplication {
-    protected static final Logger logger = LoggerFactory.getLogger(DFBuildJob.class);
+public class CubeBuildJob extends SparkApplication {
+    protected static final Logger logger = LoggerFactory.getLogger( CubeBuildJob.class);
     protected static String TEMP_DIR_SUFFIX = "_temp";
 
 //    private NDataflowManager dfMgr;
@@ -96,7 +96,7 @@ public class DFBuildJob extends SparkApplication {
                 DataSegment seg = getSegment(segId);
 
                 // choose source
-                DFChooser datasetChooser = new DFChooser(SpanningTree, seg, jobId, ss, config, true);
+                ParentSourceChooser datasetChooser = new ParentSourceChooser(SpanningTree, seg, jobId, ss, config, true);
                 datasetChooser.decideSources();
                 NBuildSourceInfo buildFromFlatTable = datasetChooser.flatTableSource();
                 Map<Long, NBuildSourceInfo> buildFromLayouts = datasetChooser.reuseSources();
@@ -274,7 +274,7 @@ public class DFBuildJob extends SparkApplication {
     private List<DataLayout> buildIndex(DataSegment seg, IndexEntity cuboid, Dataset<Row> parent,
                                         SpanningTree spanningTree, long parentId) throws IOException {
         String parentName = String.valueOf(parentId);
-        if (parentId == DFChooser.FLAT_TABLE_FLAG()) {
+        if (parentId == ParentSourceChooser.FLAT_TABLE_FLAG()) {
             parentName = "flat table";
         }
         logger.info("Build index:{}, in segment:{}", cuboid.getId(), seg.getId());
@@ -358,7 +358,7 @@ public class DFBuildJob extends SparkApplication {
     }
 
     public static void main(String[] args) {
-        DFBuildJob nDataflowBuildJob = new DFBuildJob();
+        CubeBuildJob nDataflowBuildJob = new CubeBuildJob();
         nDataflowBuildJob.execute(args);
     }
 }

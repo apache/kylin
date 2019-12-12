@@ -23,5 +23,27 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-cube</artifactId>
         </dependency>
+
+        <!-- Env & Test -->
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-spark-common</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-spark-common</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+        </dependency>
+        <dependency >
+            <groupId >org.apache.kylin</groupId >
+            <artifactId >kylin-spark-engine</artifactId >
+            <version >3.0.0-SNAPSHOT</version >
+            <scope >test</scope >
+        </dependency >
+
     </dependencies>
 </project>

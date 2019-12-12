@@ -24,15 +24,19 @@ import java.util.concurrent.atomic.AtomicReference
 import com.google.common.cache.{Cache, CacheBuilder, RemovalListener, RemovalNotification}
 import org.apache.kylin.metadata.datatype.DataType
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.{FunctionEntity, KapFunctions, SparkSession}
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types.StructType
 
 class UdfManager(sparkSession: SparkSession) extends Logging {
   private var udfCache: Cache[String, String] = _
 
-  KapFunctions.builtin.foreach { case FunctionEntity(name, info, builder) =>
+  registerBuiltInFunc
+
+  private def registerBuiltInFunc(): Unit = {
+    KapFunctions.builtin.foreach { case FunctionEntity(name, info, builder) =>
       sparkSession.sessionState.functionRegistry.registerFunction(name, info, builder)
     }
+  }
 
   udfCache = CacheBuilder.newBuilder
     .maximumSize(100)
@@ -42,11 +46,9 @@ class UdfManager(sparkSession: SparkSession) extends Logging {
         val func = notification.getKey
         logInfo(s"remove function $func")
       }
-    })
-    .build
-    .asInstanceOf[Cache[String, String]]
+    }).build.asInstanceOf[Cache[String, String]]
 
-  def destory(): Unit = {
+  def destroy(): Unit = {
     udfCache.cleanUp()
   }
 
@@ -54,7 +56,7 @@ class UdfManager(sparkSession: SparkSession) extends Logging {
     val name = genKey(dataType, funcName, isFirst, schema)
     val cacheFunc = udfCache.getIfPresent(name)
     if (cacheFunc == null) {
-      if (funcName == "TOP_N") {
+      if (isTopN(funcName)) {
         sparkSession.udf.register(name, new TopNUDAF(dataType, schema, isFirst))
       } else {
         sparkSession.udf.register(name, new FirstUDAF(funcName, dataType, isFirst))
@@ -64,12 +66,17 @@ class UdfManager(sparkSession: SparkSession) extends Logging {
     name
   }
 
+  private def isTopN(funcName: String) = {
+    funcName == "TOP_N"
+  }
+
   def genKey(dataType: DataType, funcName: String, isFirst: Boolean, schema: StructType): String = {
     val key = dataType.toString
       .replace("(", "_")
       .replace(")", "_")
       .replace(",", "_") + funcName + "_" + isFirst
-    if (funcName == "TOP_N") {
+
+    if (isTopN(funcName)) {
       s"${key}_${schema.mkString}"
     } else {
       key

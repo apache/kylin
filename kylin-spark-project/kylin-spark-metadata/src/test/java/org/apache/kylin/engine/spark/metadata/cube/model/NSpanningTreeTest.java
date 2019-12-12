@@ -18,7 +18,30 @@
 
 package org.apache.kylin.engine.spark.metadata.cube.model;
 
-/*public class NSpanningTreeTest extends LocalFileMetadataTestCase {
+/*
+TODO[xyxy]
+import java.io.IOException;
+import java.util.ArrayList;
+
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import io.kyligence.kap.common.util.NLocalFileMetadataTestCase;
+import io.kyligence.kap.metadata.cube.CubeTestUtils;
+import io.kyligence.kap.metadata.cube.model.IndexEntity;
+import io.kyligence.kap.metadata.cube.model.IndexPlan;
+import io.kyligence.kap.metadata.cube.model.LayoutEntity;
+import io.kyligence.kap.metadata.cube.model.NDataflowManager;
+import io.kyligence.kap.metadata.cube.model.NIndexPlanManager;
+import lombok.val;
+import lombok.var;
+
+public class NSpanningTreeTest extends LocalFileMetadataTestCase
+{
     private String projectDefault = "default";
 
     @Before

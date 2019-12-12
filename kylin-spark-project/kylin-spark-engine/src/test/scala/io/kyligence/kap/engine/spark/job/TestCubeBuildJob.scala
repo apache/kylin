@@ -39,9 +39,9 @@ import org.scalatest.WordSpec
 
 
 
-class TestDFBuildJob extends WordSpec with MockFactory with SharedSparkSession with LocalMetadata {
+class TestCubeBuildJob extends WordSpec with MockFactory with SharedSparkSession with LocalMetadata {
   private val path = "./test"
-  private val tempPath = path + DFBuildJob.TEMP_DIR_SUFFIX
+  private val tempPath = path + CubeBuildJob.TEMP_DIR_SUFFIX
   private val storage = new ParquetStorage()
 
   override def beforeAll(): Unit = {
