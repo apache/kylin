@@ -45,9 +45,9 @@ package org.apache.kylin.engine.spark.metadata.cube.measure;
 
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.engine.spark.metadata.cube.model.FunctionDesc;
+import org.apache.kylin.engine.spark.metadata.cube.model.MeasureDesc;
 import org.apache.kylin.engine.spark.metadata.cube.model.TblColRef;
 import org.apache.kylin.measure.MeasureIngester;
-import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.Tuple;

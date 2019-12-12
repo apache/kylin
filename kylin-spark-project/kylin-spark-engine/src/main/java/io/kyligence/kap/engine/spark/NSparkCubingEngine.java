@@ -21,8 +21,8 @@ package io.kyligence.kap.engine.spark;
 import java.util.Map;
 
 import org.apache.kylin.common.util.ImplementationSwitch;
+import org.apache.kylin.engine.spark.metadata.cube.model.TableDesc;
 import org.apache.kylin.engine.spark.metadata.cube.source.NCubingEngine;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
