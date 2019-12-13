@@ -18,12 +18,6 @@
 
 package io.kyligence.kap.engine.spark.job;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import io.kyligence.kap.engine.spark.NSparkCubingEngine;
-import io.kyligence.kap.engine.spark.application.SparkApplication;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,12 +30,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import io.kyligence.kap.engine.spark.builder.NBuildSourceInfo;
-import io.kyligence.kap.engine.spark.utils.BuildUtils;
-import io.kyligence.kap.engine.spark.utils.JobMetrics;
-import io.kyligence.kap.engine.spark.utils.JobMetricsUtils;
-import io.kyligence.kap.engine.spark.utils.Metrics;
-import io.kyligence.kap.engine.spark.utils.QueryExecutionCache;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -65,6 +53,19 @@ import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
+import io.kyligence.kap.engine.spark.NSparkCubingEngine;
+import io.kyligence.kap.engine.spark.application.SparkApplication;
+import io.kyligence.kap.engine.spark.builder.NBuildSourceInfo;
+import io.kyligence.kap.engine.spark.utils.BuildUtils;
+import io.kyligence.kap.engine.spark.utils.JobMetrics;
+import io.kyligence.kap.engine.spark.utils.JobMetricsUtils;
+import io.kyligence.kap.engine.spark.utils.Metrics;
+import io.kyligence.kap.engine.spark.utils.QueryExecutionCache;
+
 public class CubeBuildJob extends SparkApplication {
     protected static final Logger logger = LoggerFactory.getLogger( CubeBuildJob.class);
     protected static String TEMP_DIR_SUFFIX = "_temp";
@@ -75,7 +76,7 @@ public class CubeBuildJob extends SparkApplication {
     @Override
     protected void doExecute() throws Exception {
         long start = System.currentTimeMillis();
-        logger.info("Start Build");
+        logger.info("Start building cube job...");
         buildLayoutWithUpdate = new BuildLayoutWithUpdate();
 //        String dataflowId = getParam(NBatchConstants.P_DATAFLOW_ID);
         Set<String> segmentIds = Sets.newHashSet(StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS)));
@@ -87,8 +88,9 @@ public class CubeBuildJob extends SparkApplication {
         try {
 //            IndexPlan indexPlan = dfMgr.getDataflow(dataflowId).getIndexPlan();
             Cube cube = ManagerHub.getCube(config, getParam(MetadataConstants.P_CUBE_ID));
-            Set<LayoutEntity> cuboids = NSparkCubingUtil.toLayouts(cube, layoutIds).stream()
-                    .filter(Objects::nonNull).collect(Collectors.toSet());
+            Set<LayoutEntity> cuboids = NSparkCubingUtil.toLayouts(cube, layoutIds).stream() //
+                    .filter(Objects::nonNull) //
+                    .collect(Collectors.toSet()); //
 
             //TODO: what if a segment is deleted during building?
             for (String segId : segmentIds) {
@@ -96,21 +98,16 @@ public class CubeBuildJob extends SparkApplication {
                 DataSegment seg = getSegment(segId);
 
                 // choose source
-                ParentSourceChooser datasetChooser = new ParentSourceChooser(SpanningTree, seg, jobId, ss, config, true);
-                datasetChooser.decideSources();
-                NBuildSourceInfo buildFromFlatTable = datasetChooser.flatTableSource();
-                Map<Long, NBuildSourceInfo> buildFromLayouts = datasetChooser.reuseSources();
+                ParentSourceChooser sourceChooser = new ParentSourceChooser(SpanningTree, seg, jobId, ss, config, true);
+                sourceChooser.decideSources();
+                NBuildSourceInfo buildFromFlatTable = sourceChooser.flatTableSource();
+                Map<Long, NBuildSourceInfo> buildFromLayouts = sourceChooser.reuseSources();
 
                 infos.clearCuboidsNumPerLayer(segId);
+                
                 // build cuboids from flat table
                 if (buildFromFlatTable != null) {
-                    String path = datasetChooser.persistFlatTableIfNecessary();
-                    if (!path.isEmpty()) {
-                        persistedFlatTable.add(path);
-                    }
-                    if (!org.apache.commons.lang3.StringUtils.isBlank(buildFromFlatTable.getViewFactTablePath())) {
-                        persistedViewFactTable.add(buildFromFlatTable.getViewFactTablePath());
-                    }
+                    collectPersistedTablePath(persistedFlatTable, persistedViewFactTable, sourceChooser, buildFromFlatTable);
                     build(Collections.singletonList(buildFromFlatTable), segId, SpanningTree);
                 }
 
@@ -120,8 +117,7 @@ public class CubeBuildJob extends SparkApplication {
                 }
                 infos.recordSpanningTree(segId, SpanningTree);
             }
-            Map<String, Object> segmentSourceSize = ResourceDetectUtils.getSegmentSourceSize(shareDir);
-            updateSegmentSourceBytesSize(cube, segmentSourceSize);
+            updateSegmentSourceBytesSize(cube, ResourceDetectUtils.getSegmentSourceSize(shareDir));
         } finally {
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
             for (String viewPath : persistedViewFactTable) {
@@ -133,6 +129,20 @@ public class CubeBuildJob extends SparkApplication {
                 logger.info("Delete persisted flat table: {}.", path);
             }
             logger.info("Building job takes {} ms", (System.currentTimeMillis() - start));
+        }
+    }
+    
+    private void collectPersistedTablePath //
+            (List<String> persistedFlatTable, //
+            List<String> persistedViewFactTable, // 
+            ParentSourceChooser sourceChooser, // 
+            NBuildSourceInfo buildFromFlatTable) { //
+        String flatTablePath = sourceChooser.persistFlatTableIfNecessary();
+        if (!flatTablePath.isEmpty()) {
+            persistedFlatTable.add(flatTablePath);
+        }
+        if (!buildFromFlatTable.getViewFactTablePath().isEmpty()) {
+            persistedViewFactTable.add(buildFromFlatTable.getViewFactTablePath());
         }
     }
 
@@ -155,38 +165,7 @@ public class CubeBuildJob extends SparkApplication {
         ManagerHub.updateCube(config, update);
     }
 
-    @Override
-    protected String calculateRequiredCores() throws Exception {
-        if (config.getSparkEngineTaskImpactInstanceEnabled()) {
-            Path shareDir = config.getJobTmpShareDir(project, jobId);
-            String maxLeafTasksNums = maxLeafTasksNums(shareDir);
-            logger.info("The maximum number of tasks required to run the job is {}", maxLeafTasksNums);
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
-            int factor = config.getSparkEngineTaskCoreFactor();
-            int i = Double.valueOf(maxLeafTasksNums).intValue() / factor;
-            logger.info("require cores: " + i);
-            return String.valueOf(i);
-        } else {
-            return SparkJobConstants.DEFAULT_REQUIRED_CORES;
-        }
-    }
-
-    private String maxLeafTasksNums(Path shareDir) throws IOException {
-        FileSystem fs = HadoopUtil.getWorkingFileSystem();
-        FileStatus[] fileStatuses = fs.listStatus(shareDir,
-                path -> path.toString().endsWith(ResourceDetectUtils.cubingDetectItemFileSuffix()));
-        return ResourceDetectUtils.selectMaxValueInFiles(fileStatuses);
-    }
-
-    private DataSegment getSegment(String segId) {
-        // ensure the seg is the latest.
-//        return dfMgr.getDataflow(dataflowId).getSegment(segId);
-        return ManagerHub.getCube(config, getParam(MetadataConstants.P_CUBE_ID))
-                .getSegment(segId);
-    }
-
-    private void build(Collection<NBuildSourceInfo> buildSourceInfos, String segId, SpanningTree st)
-            throws IOException {
+    private void build(Collection<NBuildSourceInfo> buildSourceInfos, String segId, SpanningTree st) {
 
         List<NBuildSourceInfo> theFirstLevelBuildInfos = buildLayer(buildSourceInfos, segId, st);
         LinkedList<List<NBuildSourceInfo>> queue = new LinkedList<>();
@@ -206,8 +185,7 @@ public class CubeBuildJob extends SparkApplication {
     }
 
     // build current layer and return the next layer to be built.
-    private List<NBuildSourceInfo> buildLayer(Collection<NBuildSourceInfo> buildSourceInfos, String segId,
-            SpanningTree st) throws IOException {
+    private List<NBuildSourceInfo> buildLayer(Collection<NBuildSourceInfo> buildSourceInfos, String segId, SpanningTree st) {
         DataSegment seg = getSegment(segId);
         int cuboidsNumInLayer = 0;
 
@@ -269,6 +247,36 @@ public class CubeBuildJob extends SparkApplication {
         }
         // return the next to be built layer.
         return childrenBuildSourceInfos;
+    }
+
+    @Override
+    protected String calculateRequiredCores() throws Exception {
+        if (config.getSparkEngineTaskImpactInstanceEnabled()) {
+            Path shareDir = config.getJobTmpShareDir(project, jobId);
+            String maxLeafTasksNums = maxLeafTasksNums(shareDir);
+            logger.info("The maximum number of tasks required to run the job is {}", maxLeafTasksNums);
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
+            int factor = config.getSparkEngineTaskCoreFactor();
+            int i = Double.valueOf(maxLeafTasksNums).intValue() / factor;
+            logger.info("require cores: " + i);
+            return String.valueOf(i);
+        } else {
+            return SparkJobConstants.DEFAULT_REQUIRED_CORES;
+        }
+    }
+
+    private String maxLeafTasksNums(Path shareDir) throws IOException {
+        FileSystem fs = HadoopUtil.getWorkingFileSystem();
+        FileStatus[] fileStatuses = fs.listStatus(shareDir,
+                path -> path.toString().endsWith(ResourceDetectUtils.cubingDetectItemFileSuffix()));
+        return ResourceDetectUtils.selectMaxValueInFiles(fileStatuses);
+    }
+
+    private DataSegment getSegment(String segId) {
+        // ensure the seg is the latest.
+//        return dfMgr.getDataflow(dataflowId).getSegment(segId);
+        return ManagerHub.getCube(config, getParam(MetadataConstants.P_CUBE_ID))
+                .getSegment(segId);
     }
 
     private List<DataLayout> buildIndex(DataSegment seg, IndexEntity cuboid, Dataset<Row> parent,
