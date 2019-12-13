@@ -23,17 +23,16 @@ import java.util.Locale
 
 import io.kyligence.kap.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
 import org.apache.kylin.engine.spark.metadata.cube.model.DataModel.Measure
-import org.apache.kylin.engine.spark.metadata.cube.model.{CubeJoinedFlatTableDesc, DataSegment, SpanningTree}
+import org.apache.kylin.engine.spark.metadata.cube.model.{CubeJoinedFlatTableDesc, DataSegment, ParameterDesc, SpanningTree}
 import org.apache.kylin.measure.bitmap.BitmapMeasureType
 import org.apache.kylin.measure.hllc.HLLCMeasureType
-import org.apache.kylin.metadata.datatype
-import org.apache.kylin.metadata.model.ParameterDesc
 import org.apache.spark.sql.catalyst.expressions.aggregate.AggregateFunction
 import org.apache.spark.sql.functions.{col, _}
 import org.apache.spark.sql.types.{StringType, _}
 import org.apache.spark.sql.udaf._
 import org.apache.spark.sql.util.SparkTypeUtil
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
+import org.apache.kylin.engine.spark.metadata.cube.datatype.DataType
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -148,7 +147,7 @@ object CuboidAggregator {
   }
 
   private def getCountDistinctAggregate(columns: ListBuffer[Column],
-                                        returnType: datatype.DataType,
+                                        returnType: DataType,
                                         reuseLayout: Boolean): AggregateFunction = {
     var col = columns.head
     if (isBitmap(returnType)) {
@@ -184,11 +183,11 @@ object CuboidAggregator {
     schema
   }
 
-  private def isMultiHllcCol(columns: ListBuffer[Column], returnDataType: datatype.DataType) = {
+  private def isMultiHllcCol(columns: ListBuffer[Column], returnDataType: DataType) = {
     columns.length > 1 && returnDataType.getName.startsWith(HLLCMeasureType.DATATYPE_HLLC)
   }
 
-  private def isBitmap(returnDataType: datatype.DataType) = {
+  private def isBitmap(returnDataType: DataType) = {
     returnDataType.getName.equalsIgnoreCase(BitmapMeasureType.DATATYPE_BITMAP)
   }
 
