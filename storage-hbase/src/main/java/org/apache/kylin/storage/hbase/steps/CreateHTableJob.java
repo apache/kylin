@@ -38,7 +38,6 @@ import org.apache.hadoop.hbase.KeyValueUtil;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
@@ -136,7 +135,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         Connection conn = HBaseConnection.get(kylinConfig.getStorageUrl());
         HTable htable = (HTable) conn.getTable(TableName.valueOf(hbaseTableName));
 
-        HFileOutputFormat2.configureIncrementalLoadMap(job, htable.getDescriptor());
+        HFileOutputFormat3.configureIncrementalLoadMap(job, htable.getDescriptor());
 
         logger.info("Saving HBase configuration to {}", hbaseConfPath);
         FileSystem fs = HadoopUtil.getWorkingFileSystem();

@@ -33,7 +33,6 @@ import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
-import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
 import org.apache.hadoop.hbase.regionserver.DisabledRegionSplitPolicy;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.mapreduce.Job;
@@ -65,6 +64,7 @@ import org.apache.kylin.source.IReadableTable.TableSignature;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.steps.CubeHTableUtil;
+import org.apache.kylin.storage.hbase.steps.HFileOutputFormat3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,7 +137,7 @@ public class LookupTableToHFileJob extends AbstractHadoopJob {
             HTable htable = (HTable) conn.getTable(TableName.valueOf(hTableNameAndShard.getFirst()));
 
             // Automatic config !
-            HFileOutputFormat2.configureIncrementalLoad(job, htable, htable.getRegionLocator());
+            HFileOutputFormat3.configureIncrementalLoad(job, htable, htable.getRegionLocator());
 
             job.setReducerClass(KVSortReducerWithDupKeyCheck.class);
 
