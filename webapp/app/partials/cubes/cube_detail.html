@@ -109,7 +109,7 @@
             <div ng-repeat="table in cube.hbase" class="cube-segment-list" ng-class="{'cube-broken-segment': table.regionCount === 0}">
                 <h5><b>Segment:</b> {{table.segmentName}}</h5>
                 <ul>
-                    <li ng-if="cube.streaming">Status: <span>{{table.segmentStatus}}</span></li>
+                    <li>Status: <span>{{table.segmentStatus}}</span></li>
                     <li ng-if="cube.model.partition_desc.partition_date_column">Start Time: <span>{{table.dateRangeStart | reverseToGMT0}}</span></li>
                     <li ng-if="cube.model.partition_desc.partition_date_column">End Time: <span>{{table.dateRangeEnd | reverseToGMT0}}</span></li>
                     <li>Source Count: <span>{{table.sourceCount}}</span></li>
