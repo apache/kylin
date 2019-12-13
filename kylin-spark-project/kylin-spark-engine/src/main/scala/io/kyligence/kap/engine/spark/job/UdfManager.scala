@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicReference
 import com.google.common.cache.{Cache, CacheBuilder, RemovalListener, RemovalNotification}
 import org.apache.kylin.engine.spark.metadata.cube.datatype.DataType
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{FunctionEntity, KapFunctions, SparkSession}
 import org.apache.spark.sql.types.StructType
 
 class UdfManager(sparkSession: SparkSession) extends Logging {

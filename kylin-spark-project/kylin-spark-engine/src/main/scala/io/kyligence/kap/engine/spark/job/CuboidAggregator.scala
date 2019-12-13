@@ -19,10 +19,11 @@
 package io.kyligence.kap.engine.spark.job
 
 import java.util
+import java.util.Locale
 
 import io.kyligence.kap.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
 import org.apache.kylin.engine.spark.metadata.cube.model.DataModel.Measure
-import org.apache.kylin.engine.spark.metadata.cube.model.{CubeJoinedFlatTableDesc, DataSegment, SpanningTree}
+import org.apache.kylin.engine.spark.metadata.cube.model.{CubeJoinedFlatTableDesc, DataSegment, SpanningTree, TblColRef}
 import org.apache.kylin.measure.bitmap.BitmapMeasureType
 import org.apache.kylin.measure.hllc.HLLCMeasureType
 import org.apache.spark.sql.functions.{col, _}
@@ -92,7 +93,7 @@ object CuboidAggregator {
         }
       }
 
-      expression.toUpperCase match {
+      expression.toUpperCase(Locale.ROOT) match {
         case "MAX" =>
           max(columns.head).as(e._1.toString)
         case "MIN" =>
@@ -161,37 +162,56 @@ object CuboidAggregator {
       }
     }.toSeq
 
-    val df: DataFrame = if (!dimensions.isEmpty) {
-      dataSet
+    if (!dimensions.isEmpty) {
+      val df = dataSet
         .groupBy(NSparkCubingUtil.getColumns(dimensions): _*)
         .agg(agg.head, agg.drop(1): _*)
-    } else {
-      dataSet
-        .agg(agg.head, agg.drop(1): _*)
-    }
 
-    // Avoid sum(decimal) add more precision
-    // For example: sum(decimal(19,4)) -> decimal(29,4)  sum(sum(decimal(19,4))) -> decimal(38,4)
-    if (reuseLayout) {
-      val columns = NSparkCubingUtil.getColumns(dimensions) ++ measureColumns(dataSet.schema, measures)
-      df.select(columns: _*)
+      // to avoid sum(decimal) add more precision for example: sum(decimal(19,4)) -> decimal(29,4)  sum(sum(decimal(19,4))) -> decimal(38,4)
+      if (reuseLayout) {
+        val seq = dataSet.schema
+        val columns = NSparkCubingUtil.getColumns(dimensions) ++
+          measures.asScala.map {
+            measure =>
+              measure._2.getFunction.getExpression.toUpperCase(Locale.ROOT) match {
+                case "SUM" =>
+                  val measureId = measure._1.toString
+                  val dataType = seq.find(_.name.equals(measureId)).map(_.dataType).get
+                  col(measureId).cast(dataType).as(measureId)
+                case _ =>
+                  val measureId = measure._1.toString
+                  col(measureId)
+              }
+          }
+        df.select(columns: _*)
+      } else {
+        df
+      }
     } else {
-      df
+      val df = dataSet.agg(agg.head, agg.drop(1): _*)
+      if (reuseLayout) {
+        val seq = dataSet.schema
+        val columns = measures.asScala.map {
+          measure =>
+            measure._2.getFunction.getExpression.toUpperCase(Locale.ROOT) match {
+              case "SUM" =>
+                val measureId = measure._1.toString
+                val dataType = seq.find(_.name.equals(measureId)).map(_.dataType).get
+                col(measureId).cast(dataType).as(measureId)
+              case _ =>
+                val measureId = measure._1.toString
+                col(measureId)
+            }
+        }.toSeq
+        df.select(columns: _*)
+      } else {
+        df
+      }
     }
   }
 
-  private def measureColumns(schema: StructType, measures: util.Map[Integer, Measure]): mutable.Iterable[Column] = {
-    measures.asScala.map { e =>
-      e._2.getFunction.getExpression.toUpperCase match {
-        case "SUM" =>
-          val measureId = e._1.toString
-          val dataType = schema.find(_.name.equals(measureId)).map(_.dataType).get
-          col(measureId).cast(dataType).as(measureId)
-        case _ =>
-          val measureId = e._1.toString
-          col(measureId)
-      }
-    }
+  def wrapEncodeColumn(ref: TblColRef, column: Column): Column = {
+    new Column(column.toString() + ENCODE_SUFFIX)
   }
 
   def wrapEncodeColumn(column: Column): Column = {
