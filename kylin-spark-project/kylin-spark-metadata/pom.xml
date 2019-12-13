@@ -24,7 +24,7 @@
             <artifactId>kylin-core-cube</artifactId>
         </dependency>
 
-        <!-- Env & Test -->
+       <!-- &lt;!&ndash; Env & Test &ndash;&gt;
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-spark-common</artifactId>
@@ -43,7 +43,7 @@
             <artifactId >kylin-spark-engine</artifactId >
             <version >3.0.0-SNAPSHOT</version >
             <scope >test</scope >
-        </dependency >
+        </dependency >-->
 
         <dependency>
             <groupId>org.roaringbitmap</groupId>
