@@ -18,11 +18,14 @@
 
 package org.apache.kylin.common.livy;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.kylin.common.util.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  *
@@ -43,32 +46,38 @@ public class LivyRestExecutor {
             LivyRestClient restClient = new LivyRestClient();
             String result = restClient.livySubmitJobBatches(dataJson);
 
-            JSONObject resultJson = new JSONObject(result);
-            String state = resultJson.getString("state");
+            JSONObject jsonObject = new JSONObject(result);
+            String state = jsonObject.getString("state");
             logAppender.log("Livy submit Result: " + state);
             logger.info("Livy submit Result: {}", state);
 
-            livyLog(resultJson, logAppender);
+            livyLog(jsonObject, logAppender);
 
-            final String livyTaskId = resultJson.getString("id");
+            final String livyTaskId = jsonObject.getString("id");
             while (!LivyStateEnum.shutting_down.toString().equalsIgnoreCase(state)
                     && !LivyStateEnum.error.toString().equalsIgnoreCase(state)
                     && !LivyStateEnum.dead.toString().equalsIgnoreCase(state)
                     && !LivyStateEnum.success.toString().equalsIgnoreCase(state)) {
 
                 String statusResult = restClient.livyGetJobStatusBatches(livyTaskId);
-                JSONObject stateJson = new JSONObject(statusResult);
-                if (!state.equalsIgnoreCase(stateJson.getString("state"))) {
-                    logAppender.log("Livy status Result: " + stateJson.getString("state"));
-                    livyLog(stateJson, logAppender);
+                jsonObject = new JSONObject(statusResult);
+                if (!state.equalsIgnoreCase(jsonObject.getString("state"))) {
+                    logAppender.log("Livy status Result: " + jsonObject.getString("state"));
+                    livyLog(jsonObject, logAppender);
                 }
-                state = stateJson.getString("state");
+
+                state = jsonObject.getString("state");
                 Thread.sleep(10*1000L);
             }
             if (!LivyStateEnum.success.toString().equalsIgnoreCase(state)) {
-                logAppender.log("livy start execute failed. state is " + state);
-                logger.info("livy start execute failed. state is {}", state);
-                throw new RuntimeException("livy get status failed. state is " + state);
+                // livy batch failed, get detail log
+                String statusResult = restClient.livyGetJobStatusBatches(livyTaskId);
+                jsonObject = new JSONObject(statusResult);
+                String detailErrorLog = String.join("\n", getLogs(jsonObject));
+
+                logAppender.log("livy start execute failed. state is " + state + ". log is " + detailErrorLog);
+                logger.info("livy start execute failed. state is {}", state + ". log is " + detailErrorLog);
+                throw new RuntimeException("livy get status failed. state is " + state + ". log is " + detailErrorLog);
             }
             logAppender.log("costTime : " + (System.currentTimeMillis() - startTime) / 1000 + " s");
         } catch (Exception e) {
@@ -102,21 +111,28 @@ public class LivyRestExecutor {
     }
 
     private void livyLog(JSONObject logInfo, Logger logger) {
+        for (String log: getLogs(logInfo)) {
+            logger.log(log);
+        }
+        logInfo.remove("log");
+        logger.log(logInfo.toString());
+    }
+
+    private List<String> getLogs(JSONObject logInfo) {
+        List<String> logs = Lists.newArrayList();
         if (logInfo.has("log")) {
             try {
                 JSONArray logArray = logInfo.getJSONArray("log");
 
-                for (int i=0;i<logArray.length();i++) {
-                    String info = logArray.getString(i);
-                    logger.log(info);
+                for (int i=0; i<logArray.length(); i++) {
+                    logs.add(logArray.getString(i));
                 }
 
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            logInfo.remove("log");
-            logger.log(logInfo.toString());
         }
+        return logs;
     }
 
 }
