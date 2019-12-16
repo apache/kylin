@@ -188,9 +188,11 @@ public class StreamingV2Controller extends BasicController {
         // validate the compatibility for input table schema and the underline hive table schema
         if (tableDesc.getSourceType() == ISourceAware.ID_KAFKA_HIVE) {
             List<FieldSchema> fields;
+            String db = tableDesc.getDatabase();
             try {
                 HiveMetaStoreClient metaStoreClient = new HiveMetaStoreClient(new HiveConf());
-                fields = metaStoreClient.getFields(KylinConfig.getInstanceFromEnv().getHiveDatabaseForIntermediateTable(), tableDesc.getName());
+                fields = metaStoreClient.getFields(db, tableDesc.getName());
+                logger.info("Checking the {} in {}", tableDesc.getName(), db);
             } catch (NoSuchObjectException noObjectException) {
                 logger.info("table not exist in hive meta store for table:" + tableDesc.getIdentity(),
                         noObjectException);
@@ -209,10 +211,12 @@ public class StreamingV2Controller extends BasicController {
             for (ColumnDesc columnDesc : tableDesc.getColumns()) {
                 FieldSchema fieldSchema = fieldSchemaMap.get(columnDesc.getName().toUpperCase(Locale.ROOT));
                 if (fieldSchema == null) {
+                    // Partition column cannot be fetched via Hive Metadata API.
                     if (!TimeDerivedColumnType.isTimeDerivedColumn(columnDesc.getName())) {
-                        incompatibleMsgs.add("column not exist in hive table:" + columnDesc.getName());
+                        incompatibleMsgs.add("Column not exist in hive table:" + columnDesc.getName());
                         continue;
                     } else {
+                        logger.info("Column not exist in hive table: {}.", columnDesc.getName());
                         continue;
                     }
                 }
@@ -486,6 +490,7 @@ public class StreamingV2Controller extends BasicController {
 
     private TableDesc deserializeTableDesc(StreamingRequestV2 streamingRequest) {
         TableDesc desc = null;
+        String db = KylinConfig.getInstanceFromEnv().getHiveDatabaseLambdaCube();
         try {
             logger.debug("Saving TableDesc " + streamingRequest.getTableData());
             desc = JsonUtil.readValue(streamingRequest.getTableData(), TableDesc.class);
@@ -502,7 +507,7 @@ public class StreamingV2Controller extends BasicController {
 
         String[] dbTable = HadoopUtil.parseHiveTableName(desc.getName());
         desc.setName(dbTable[1]);
-        desc.setDatabase(dbTable[0]);
+        desc.setDatabase(db);
         desc.getIdentity();
         return desc;
     }
