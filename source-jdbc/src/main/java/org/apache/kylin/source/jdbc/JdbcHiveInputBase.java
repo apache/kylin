@@ -223,13 +223,11 @@ public class JdbcHiveInputBase extends HiveInputBase {
 
             String splitTableAlias;
             String splitColumn;
-            String quoteFullNamedColumn; // `table.column`
             String splitDatabase;
             TblColRef splitColRef = determineSplitColumn();
             splitTableAlias = splitColRef.getTableAlias();
 
             splitColumn = getColumnIdentityQuoted(splitColRef, jdbcMetadataDialect, metaMap, true);
-            quoteFullNamedColumn = quoteIdentifier(partCol, jdbcMetadataDialect.getDialect());
             splitDatabase = splitColRef.getColumnDesc().getTable().getDatabase();
 
             String selectSql = generateSelectDataStatementRDBMS(flatDesc, true, new String[] { partCol },
@@ -247,8 +245,8 @@ public class JdbcHiveInputBase extends HiveInputBase {
             String filedDelimiter = config.getJdbcSourceFieldDelimiter();
             int mapperNum = config.getSqoopMapperNum();
 
-            String bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM %s.%s ", quoteFullNamedColumn,
-                    quoteFullNamedColumn, getSchemaQuoted(metaMap, splitDatabase, jdbcMetadataDialect, true),
+            String bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM %s.%s ", splitColumn,
+                    splitColumn, getSchemaQuoted(metaMap, splitDatabase, jdbcMetadataDialect, true),
                     getTableIdentityQuoted(splitColRef.getTableRef(), metaMap, jdbcMetadataDialect, true));
             if (partitionDesc.isPartitioned()) {
                 SegmentRange segRange = flatDesc.getSegRange();
@@ -273,7 +271,7 @@ public class JdbcHiveInputBase extends HiveInputBase {
                     + "--connect \"%s\" --driver %s --username %s --password \"%s\" --query \"%s AND \\$CONDITIONS\" "
                     + "--target-dir %s/%s --split-by %s --boundary-query \"%s\" --null-string '%s' "
                     + "--null-non-string '%s' --fields-terminated-by '%s' --num-mappers %d", sqoopHome, connectionUrl,
-                    driverClass, jdbcUser, jdbcPass, selectSql, jobWorkingDir, hiveTable, partCol, bquery,
+                    driverClass, jdbcUser, jdbcPass, selectSql, jobWorkingDir, hiveTable, splitColumn, bquery,
                     sqoopNullString, sqoopNullNonString, filedDelimiter, mapperNum);
             logger.debug("sqoop cmd : {}", cmd);
             CmdStep step = new CmdStep();
