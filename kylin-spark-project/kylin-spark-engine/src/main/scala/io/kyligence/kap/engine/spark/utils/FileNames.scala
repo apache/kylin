@@ -19,13 +19,10 @@ package io.kyligence.kap.engine.spark.utils
 
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.util.HadoopUtil
-import org.apache.kylin.engine.spark.metadata.cube.model.TableDesc
+import org.apache.kylin.engine.spark.metadata.TableDesc
 
 object FileNames {
   /** Returns the path for a given snapshot file. */
-  def snapshotFile(tableDesc: TableDesc): Path =
-    new Path(tableDesc.getProject + HadoopUtil.SNAPSHOT_STORAGE_ROOT + "/" + tableDesc.getIdentity)
-
-  def snapshotFileWithWorkingDir(tableDesc: TableDesc, workingDir: String): Path =
-    new Path(workingDir, snapshotFile(tableDesc))
+  def snapshotFile(tableInfo: TableDesc, project: String): Path =
+    new Path(project + HadoopUtil.SNAPSHOT_STORAGE_ROOT + "/" + tableInfo.identity)
 }

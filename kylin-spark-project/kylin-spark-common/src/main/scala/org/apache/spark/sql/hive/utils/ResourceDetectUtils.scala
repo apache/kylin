@@ -82,7 +82,7 @@ object ResourceDetectUtils extends Logging {
   def findCountDistinctMeasure(layouts: java.util.Collection[LayoutEntity]): Boolean = {
     for (layoutEntity <- layouts.asScala) {
       for (measure <- layoutEntity.getOrderedMeasures.values.asScala) {
-        if (measure.getFunction.getExpression.equalsIgnoreCase("COUNT_DISTINCT")) return true
+        if (measure.expression.equalsIgnoreCase("COUNT_DISTINCT")) return true
       }
     }
     false

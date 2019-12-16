@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.engine.spark.metadata.cube.model.IndexEntity;
+import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -40,8 +40,9 @@ public class NBuildSourceInfo {
     private long byteSize;
     private long count;
     private long layoutId;
+    private LayoutEntity layoutEntity;
     private String parentStoragePath;
-    private Collection<IndexEntity> toBuildCuboids = new LinkedHashSet<>();
+    private Collection<LayoutEntity> toBuildCuboids = new LinkedHashSet<>();
 
     public long getByteSize() {
         return byteSize;
@@ -95,19 +96,27 @@ public class NBuildSourceInfo {
         this.layoutId = layoutId;
     }
 
+    public void setLayout(LayoutEntity layoutEntity) {
+        this.layoutEntity = layoutEntity;
+    }
+
+    public LayoutEntity getLayout() {
+        return layoutEntity;
+    }
+
     public long getLayoutId() {
         return layoutId;
     }
 
-    public void setToBuildCuboids(Collection<IndexEntity> toBuildCuboids) {
+    public void setToBuildCuboids(Collection<LayoutEntity> toBuildCuboids) {
         this.toBuildCuboids = toBuildCuboids;
     }
 
-    public Collection<IndexEntity> getToBuildCuboids() {
+    public Collection<LayoutEntity> getToBuildCuboids() {
         return this.toBuildCuboids;
     }
 
-    public void addCuboid(IndexEntity cuboid) {
+    public void addCuboid(LayoutEntity cuboid) {
         this.toBuildCuboids.add(cuboid);
     }
 

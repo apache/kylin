@@ -43,44 +43,14 @@
 
 package org.apache.kylin.engine.spark.metadata.cube.source;
 
-import org.apache.kylin.engine.spark.metadata.cube.model.SegmentRange;
-import org.apache.kylin.engine.spark.metadata.cube.model.TableDesc;
-import org.apache.kylin.metadata.model.IBuildable;
-import org.apache.kylin.source.IReadableTable;
-import org.apache.kylin.source.ISampleDataDeployer;
-
 /**
  * Represents a kind of source to Kylin, like Hive.
  */
 public interface ISource {
 
     /**
-     * Return an explorer to sync table metadata from the data source.
-     */
-    ISourceMetadataExplorer getSourceMetadataExplorer();
-
-    /**
      * Return an adaptor that implements specified interface as requested by the build engine.
      * The IMRInput in particular, is required by the MR build engine.
      */
     <I> I adaptToBuildEngine(Class<I> engineInterface);
-
-    /**
-     * Return a ReadableTable that can iterate through the rows of given table.
-     */
-    IReadableTable createReadableTable(TableDesc tableDesc);
-
-    /**
-     * Give the source a chance to enrich a SourcePartition before build start.
-     * Particularly, Kafka source use this chance to define start/end offsets within each partition.
-     */
-    SegmentRange enrichSourcePartitionBeforeBuild(IBuildable buildable, SegmentRange segmentRange);
-
-    /**
-     * Return an object that is responsible for deploying sample (CSV) data to the source database.
-     * For testing purpose.
-     */
-    ISampleDataDeployer getSampleDataDeployer();
-
-    SegmentRange getSegmentRange(String start, String end);
 }

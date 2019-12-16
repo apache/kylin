@@ -24,10 +24,6 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,9 +33,13 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import org.apache.kylin.engine.spark.metadata.SegmentInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ForestSpanningTree extends SpanningTree {
-    // IndexEntity <> TreeNode
+    // LayoutEntity <> TreeNode
     @JsonProperty("nodes")
     private Map<Long, TreeNode> nodesMap = Maps.newTreeMap();
 
@@ -51,15 +51,15 @@ public class ForestSpanningTree extends SpanningTree {
 
     private static final Logger logger = LoggerFactory.getLogger(ForestSpanningTree.class);
 
-    private static final Function<TreeNode, IndexEntity> TRANSFORM_FUNC = new Function<TreeNode, IndexEntity>() {
+    private static final Function<TreeNode, LayoutEntity> TRANSFORM_FUNC = new Function<TreeNode, LayoutEntity>() {
         @Nullable
         @Override
-        public IndexEntity apply(@Nullable TreeNode input) {
+        public LayoutEntity apply(@Nullable TreeNode input) {
             return input == null ? null : input.indexEntity;
         }
     };
 
-    public ForestSpanningTree(Map<IndexEntity, Collection<LayoutEntity>> cuboids) {
+    public ForestSpanningTree(Collection<LayoutEntity> cuboids) {
         super(cuboids);
         init();
     }
@@ -75,30 +75,22 @@ public class ForestSpanningTree extends SpanningTree {
     }
 
     @Override
-    public Collection<IndexEntity> getRootIndexEntities() {
+    public Collection<LayoutEntity> getRootIndexEntities() {
         return Collections2.transform(roots, TRANSFORM_FUNC::apply);
     }
 
-    @Override
-    public Collection<LayoutEntity> getLayouts(IndexEntity indexEntity) {
-        return cuboids.get(indexEntity);
-    }
 
     @Override
-    public IndexEntity getIndexEntity(long cuboidId) {
+    public LayoutEntity getLayoutEntity(long cuboidId) {
         if (nodesMap.get(cuboidId) == null) {
             throw new IllegalStateException("Cuboid（ID:" + cuboidId + ") does not exist!");
         }
         return nodesMap.get(cuboidId).indexEntity;
     }
 
-    @Override
-    public LayoutEntity getCuboidLayout(long cuboidLayoutId) {
-        return layoutMap.get(cuboidLayoutId);
-    }
 
     @Override
-    public Collection<IndexEntity> getChildrenByIndexPlan(IndexEntity parent) {
+    public Collection<LayoutEntity> getChildrenByIndexPlan(LayoutEntity parent) {
         // only meaningful when parent has been called in decideTheNextLayer
         TreeNode parentNode = nodesMap.get(parent.getId());
         Preconditions.checkState(parentNode.hasBeenDecided, "Node must have been decided before get its children.");
@@ -106,25 +98,25 @@ public class ForestSpanningTree extends SpanningTree {
     }
 
     @Override
-    public Collection<IndexEntity> getAllIndexEntities() {
+    public Collection<LayoutEntity> getAllIndexEntities() {
         return Collections2.transform(nodesMap.values(), TRANSFORM_FUNC::apply);
     }
 
     private void init() {
-        new TreeBuilder(cuboids.keySet()).build();
+        new TreeBuilder(cuboids).build();
     }
 
     @Override
-    public void decideTheNextLayer(Collection<IndexEntity> currentLayer, DataSegment segment) {
+    public void decideTheNextLayer(Collection<LayoutEntity> currentLayer, SegmentInfo segment) {
         // After built, we know each cuboid's size.
         // Then we will find each cuboid's children.
         // Smaller cuboid has smaller cost, and has higher priority when finding children.
-        Comparator<IndexEntity> c1 = Comparator.comparingLong(o -> getRows(o, segment));
+        Comparator<LayoutEntity> c1 = Comparator.comparingLong(o -> o.rows);
 
         // for deterministic
-        Comparator<IndexEntity> c2 = Comparator.comparingLong(IndexEntity::getId);
+        Comparator<LayoutEntity> c2 = Comparator.comparingLong(LayoutEntity::getId);
 
-        List<IndexEntity> orderedIndexes = currentLayer.stream() //
+        List<LayoutEntity> orderedIndexes = currentLayer.stream() //
                 .sorted(c1.thenComparing(c2)) //
                 .collect(Collectors.toList()); //
 
@@ -132,19 +124,17 @@ public class ForestSpanningTree extends SpanningTree {
             adjustTree(index, segment);
 
             logger.info("Adjust spanning tree." + //
-                            " Current cube: {}." + //
                             " Current index entity: {}." + //
                             " Its children: {}\n" //
-                    , index.getCube().getUuid() //
                     , index.getId() //
                     , Arrays.toString(getChildrenByIndexPlan(index).stream() //
-                            .map(IndexEntity::getId).toArray())//
+                            .map(LayoutEntity::getId).toArray())//
             );
         });
 
     }
 
-    private void adjustTree(IndexEntity parent, DataSegment seg) {
+    private void adjustTree(LayoutEntity parent, SegmentInfo seg) {
         TreeNode parentNode = nodesMap.get(parent.getId());
 
         List<TreeNode> children = nodesMap.values().stream() //
@@ -162,50 +152,45 @@ public class ForestSpanningTree extends SpanningTree {
         parentNode.hasBeenDecided = true;
     }
 
-    private boolean shouldBeAdded(TreeNode node, IndexEntity parent, DataSegment seg) {
+    private boolean shouldBeAdded(TreeNode node, LayoutEntity parent, SegmentInfo seg) {
         return node.parent == null // already has been decided
                 && node.parentCandidates != null //it is root node
                 && node.parentCandidates.stream().allMatch(c -> isBuilt(c, seg)) // its parents candidates is not all ready.
-                && node.parentCandidates.contains(parent); //its parents candidates did not contains this IndexEntity.
+                && node.parentCandidates.contains(parent); //its parents candidates did not contains this LayoutEntity.
     }
 
-    public boolean isBuilt(IndexEntity ie, DataSegment seg) {
-        return getLayoutFromSeg(ie, seg) != null;
+    public boolean isBuilt(LayoutEntity ie, SegmentInfo seg) {
+        return seg.toBuildLayouts().contains(ie);
     }
 
-    private long getRows(IndexEntity ie, DataSegment seg) {
-        return getLayoutFromSeg(ie, seg).getRows();
-    }
-
-    private DataLayout getLayoutFromSeg(IndexEntity ie, DataSegment seg) {
-        return seg.getLayout(Lists.newArrayList(getLayouts(ie)).get(0).getId());
-    }
 
     private class TreeBuilder {
         // Sort in descending order of dimension and measure number to make sure children is in front
         // of parent.
-        private SortedSet<IndexEntity> sortedCuboids = Sets.newTreeSet((o1, o2) -> {
-            int c = Integer.compare(o1.getDimensions().size(), o2.getDimensions().size());
-            if (c != 0)
+        private SortedSet<LayoutEntity> sortedCuboids = Sets.newTreeSet((o1, o2) -> {
+            int c = Integer.compare(o1.getOrderedDimensions().keySet().size(), o2.getOrderedMeasures().keySet().size());
+            if (c != 0) {
                 return c;
-            else
+            } else {
                 return Long.compare(o1.getId(), o2.getId());
+            }
         });
 
-        private TreeBuilder(Collection<IndexEntity> cuboids) {
-            if (cuboids != null)
+        private TreeBuilder(Collection<LayoutEntity> cuboids) {
+            if (cuboids != null) {
                 this.sortedCuboids.addAll(cuboids);
+            }
         }
 
         private void build() {
-            for (IndexEntity cuboid : sortedCuboids) {
+            for (LayoutEntity cuboid : sortedCuboids) {
                 addCuboid(cuboid);
             }
         }
 
-        private void addCuboid(IndexEntity cuboid) {
+        private void addCuboid(LayoutEntity cuboid) {
             TreeNode node = new TreeNode(cuboid);
-            List<IndexEntity> candidates = findDirectParentCandidates(cuboid);
+            List<LayoutEntity> candidates = findDirectParentCandidates(cuboid);
             if (!candidates.isEmpty()) {
                 node.parentCandidates = candidates;
             } else {
@@ -214,17 +199,14 @@ public class ForestSpanningTree extends SpanningTree {
             }
 
             nodesMap.put(cuboid.getId(), node);
-            for (LayoutEntity layout : cuboid.getLayouts()) {
-                layoutMap.put(layout.getId(), layout);
-            }
         }
 
         // decide every cuboid's direct parent candidates(eg ABCD->ABC->AB, ABCD is ABC's direct parent, but not AB's).
         // but will not decide the cuboid tree.
         // when in building, will find the best one as the cuboid's parent.
-        private List<IndexEntity> findDirectParentCandidates(IndexEntity entity) {
-            List<IndexEntity> candidates = new ArrayList<>();
-            for (IndexEntity cuboid : sortedCuboids) {
+        private List<LayoutEntity> findDirectParentCandidates(LayoutEntity entity) {
+            List<LayoutEntity> candidates = new ArrayList<>();
+            for (LayoutEntity cuboid : sortedCuboids) {
 
                 if (!cuboid.fullyDerive(entity)) {
                     continue;

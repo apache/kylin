@@ -21,7 +21,7 @@ package org.apache.spark.dict
 import java.io.IOException
 import java.util
 
-import org.apache.kylin.engine.spark.metadata.cube.model.{DataSegment, TblColRef}
+import org.apache.kylin.engine.spark.metadata.{SegmentInfo, ColumnDesc}
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
@@ -34,8 +34,8 @@ import scala.collection.JavaConverters._
 object NGlobalDictBuilderAssist extends Logging {
 
   @throws[IOException]
-  def resize(ref: TblColRef, seg: DataSegment, bucketPartitionSize: Int, ss: SparkSession): Unit = {
-    val globalDict = new NGlobalDictionaryV2(seg.getProject, ref.getTable, ref.getName, seg.getCube.getConfig.getHdfsWorkingDirectory)
+  def resize(ref: ColumnDesc, desc: SegmentInfo, bucketPartitionSize: Int, ss: SparkSession): Unit = {
+    val globalDict = new NGlobalDictionaryV2(desc.project, ref.tableAliasName, ref.columnName, desc.kylinconf.getHdfsWorkingDirectory)
 
     val broadcastDict = ss.sparkContext.broadcast(globalDict)
     globalDict.prepareWrite()
@@ -52,13 +52,13 @@ object NGlobalDictBuilderAssist extends Logging {
           tupleList.asScala.iterator
       }
 
-    ss.sparkContext.setJobDescription("Resize dict " + ref.getIdentity)
+    ss.sparkContext.setJobDescription("Resize dict " + ref.identity)
     existsDictDs
       .repartition(bucketPartitionSize, col(existsDictDs.schema.head.name).cast(StringType))
       .mapPartitions {
         iter =>
           val partitionID = TaskContext.get().partitionId()
-          logInfo(s"Rebuild partition dict col: ${ref.getTable + "." + ref.getName}, partitionId: $partitionID")
+          logInfo(s"Rebuild partition dict col: ${ref.identity}, partitionId: $partitionID")
           val d = broadcastDict.value
           val bucketDict = d.createNewBucketDictionary()
           while (iter.hasNext) {
@@ -71,7 +71,7 @@ object NGlobalDictBuilderAssist extends Logging {
       .count()
 
     globalDict.writeMetaDict(bucketPartitionSize,
-      seg.getCube.getConfig.getGlobalDictV2MaxVersions, seg.getCube.getConfig.getGlobalDictV2VersionTTL)
+      desc.kylinconf.getGlobalDictV2MaxVersions, desc.kylinconf.getGlobalDictV2VersionTTL)
   }
 
 }

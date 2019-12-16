@@ -22,8 +22,8 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
-import org.apache.kylin.engine.spark.metadata.cube.model.CubeUpdate2;
+import org.apache.kylin.engine.spark.metadata.MetadataConverter;
+import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 
 import java.io.IOException;
 
@@ -31,22 +31,15 @@ public class ManagerHub {
 
     private ManagerHub() {}
 
-    public static Cube getCube(KylinConfig kylinConfig, String cubeName) {
-        return MetadataConverter.getCube(
-                CubeManager.getInstance(kylinConfig).getCube(cubeName)
-        );
+    public static SegmentInfo getSegmentInfo(KylinConfig kylinConfig, String cubeName, String segmentId) {
+        return MetadataConverter.getSegmentInfo(
+                CubeManager.getInstance(kylinConfig).getCube(cubeName));
     }
 
-    public static CubeInstance updateCube(KylinConfig kylinConfig, CubeUpdate2 cubeUpdate)
+    public static CubeInstance updateSegment(KylinConfig kylinConfig, SegmentInfo segmentInfo)
             throws IOException {
         return CubeManager.getInstance(kylinConfig)
-                .updateCube(MetadataConverter.getCubeUpdate(cubeUpdate));
-    }
-
-    public static CubeDesc getCubeDesc(Cube cube) {
-        return CubeManager.getInstance(cube.getConfig())
-                .getCube(cube.getCubeName())
-                .getDescriptor();
+                .updateCube(MetadataConverter.getCubeUpdate(segmentInfo));
     }
 }
 

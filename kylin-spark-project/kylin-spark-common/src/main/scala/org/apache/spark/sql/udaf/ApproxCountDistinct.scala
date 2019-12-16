@@ -20,7 +20,7 @@ package org.apache.spark.sql.udaf
 
 import java.nio.ByteBuffer
 
-import org.apache.kylin.engine.spark.metadata.cube.measure.hllc.{HLLCAggregator, HLLCounter}
+import org.apache.kylin.measure.hllc.{HLLCAggregator, HLLCounter}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions._

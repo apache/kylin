@@ -18,29 +18,15 @@
 
 package io.kyligence.kap.engine.spark.builder;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import org.apache.kylin.engine.spark.metadata.cube.model.DataLayout;
-import org.apache.kylin.engine.spark.metadata.cube.model.DataSegment;
-import org.apache.kylin.engine.spark.metadata.cube.model.IndexEntity;
-import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
-import org.apache.kylin.engine.spark.metadata.cube.model.MeasureDesc;
-import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree;
-import org.apache.kylin.engine.spark.metadata.cube.model.TblColRef;
-import org.apache.kylin.measure.bitmap.BitmapMeasureType;
+import java.io.IOException;
+import org.apache.kylin.engine.spark.metadata.SegmentInfo;
+import org.apache.kylin.engine.spark.metadata.ColumnDesc;
 import org.apache.spark.dict.NGlobalDictMetaInfo;
 import org.apache.spark.dict.NGlobalDictionaryV2;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spark_project.guava.collect.Sets;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.apache.spark.dict.NGlobalDictBuilderAssist.resize;
 
@@ -56,27 +42,27 @@ public class DictionaryBuilderHelper {
      *  #3 After the last build, the number of individual buckets in the existing dictionary is greater
      *  than the threshold multiplied by KylinConfigBase.getGlobalDictV2BucketOverheadFactor
      */
-    public static int calculateBucketSize(DataSegment seg, TblColRef col, Dataset<Row> afterDistinct) throws IOException {
-        NGlobalDictionaryV2 globalDict = new NGlobalDictionaryV2(seg.getProject(), col.getTable(), col.getName(),
-                seg.getCube().getConfig().getHdfsWorkingDirectory());
-        int bucketPartitionSize = globalDict.getBucketSizeOrDefault(seg.getCube().getConfig().getGlobalDictV2MinHashPartitions());
-        int bucketThreshold = seg.getCube().getConfig().getGlobalDictV2ThresholdBucketSize();
+    public static int calculateBucketSize(SegmentInfo desc, ColumnDesc col, Dataset<Row> afterDistinct) throws IOException {
+        NGlobalDictionaryV2 globalDict = new NGlobalDictionaryV2(desc.project(), col.tableAliasName(), col.columnName(),
+                desc.kylinconf().getHdfsWorkingDirectory());
+        int bucketPartitionSize = globalDict.getBucketSizeOrDefault(desc.kylinconf().getGlobalDictV2MinHashPartitions());
+        int bucketThreshold = desc.kylinconf().getGlobalDictV2ThresholdBucketSize();
         int resizeBucketSize = bucketPartitionSize;
 
         if (globalDict.isFirst()) {
             long afterDisCount = afterDistinct.count();
-            double loadFactor = seg.getCube().getConfig().getGlobalDictV2InitLoadFactor();
+            double loadFactor = desc.kylinconf().getGlobalDictV2InitLoadFactor();
             resizeBucketSize = Math.max(Math.toIntExact(afterDisCount / (int) (bucketThreshold * loadFactor)),
                     bucketPartitionSize);
             logger.info("Building a global dictionary column first for  {} , the size of the bucket is set to {}",
-                    col.getName(), bucketPartitionSize);
+                    col.columnName(), bucketPartitionSize);
         } else {
             long afterDisCount = afterDistinct.count();
             NGlobalDictMetaInfo metaInfo = globalDict.getMetaInfo();
             long[] bucketCntArray = metaInfo.getBucketCount();
 
-            double loadFactor = seg.getCube().getConfig().getGlobalDictV2InitLoadFactor();
-            double bucketOverheadFactor = seg.getCube().getConfig().getGlobalDictV2BucketOverheadFactor();
+            double loadFactor = desc.kylinconf().getGlobalDictV2InitLoadFactor();
+            double bucketOverheadFactor = desc.kylinconf().getGlobalDictV2BucketOverheadFactor();
 
             int averageBucketSize = 0;
 
@@ -104,10 +90,10 @@ public class DictionaryBuilderHelper {
                     Math.max(peakBucketSize, bucketPartitionSize));
 
             if (resizeBucketSize != bucketPartitionSize) {
-                logger.info("Start building a global dictionary column for {}, need resize from {} to {} ", col.getName(),
+                logger.info("Start building a global dictionary column for {}, need resize from {} to {} ", col.columnName(),
                         bucketPartitionSize, resizeBucketSize);
-                resize(col, seg, resizeBucketSize, afterDistinct.sparkSession());
-                logger.info("End building a global dictionary column for {}, need resize from {} to {} ", col.getName(),
+                resize(col, desc, resizeBucketSize, afterDistinct.sparkSession());
+                logger.info("End building a global dictionary column for {}, need resize from {} to {} ", col.columnName(),
                         bucketPartitionSize, resizeBucketSize);
             }
         }
@@ -115,51 +101,48 @@ public class DictionaryBuilderHelper {
         return resizeBucketSize;
     }
 
-    private static Set<TblColRef> findNeedDictCols(List<LayoutEntity> layouts) {
-        Set<TblColRef> dictColSet = Sets.newHashSet();
-        for (LayoutEntity layout : layouts) {
-            for (MeasureDesc measureDesc : layout.getIndex().getEffectiveMeasures().values()) {
-                if (needGlobalDict(measureDesc) == null)
-                    continue;
-                TblColRef col = measureDesc.getFunction().getParameters().get(0).getColRef();
-                dictColSet.add(col);
-            }
-        }
-        return dictColSet;
-    }
-
-    public static Set<TblColRef> extractTreeRelatedGlobalDictToBuild(DataSegment seg, SpanningTree toBuildTree) {
-        Collection<IndexEntity> toBuildIndexEntities = toBuildTree.getAllIndexEntities();
-        List<LayoutEntity> toBuildCuboids = Lists.newArrayList();
-        for (IndexEntity desc : toBuildIndexEntities) {
-            toBuildCuboids.addAll(desc.getLayouts());
-        }
-
-        List<LayoutEntity> buildedLayouts = Lists.newArrayList();
-        if (seg.getSegDetails() != null) {
-            for (DataLayout cuboid : seg.getSegDetails().getLayouts()) {
-                buildedLayouts.add(cuboid.getLayout());
-            }
-        }
-        Set<TblColRef> buildedColRefSet = findNeedDictCols(buildedLayouts);
-        Set<TblColRef> toBuildColRefSet = findNeedDictCols(toBuildCuboids);
-        toBuildColRefSet.removeIf(col -> buildedColRefSet.contains(col));
-        return toBuildColRefSet;
-    }
-
-    public static Set<TblColRef> extractTreeRelatedGlobalDicts(DataSegment seg, SpanningTree toBuildTree) {
-        List<LayoutEntity> toBuildCuboids = toBuildTree.getAllIndexEntities().stream()
-                .flatMap(entity -> entity.getLayouts().stream()).collect(Collectors.toList());
-        return findNeedDictCols(toBuildCuboids);
-    }
-
-    public static TblColRef needGlobalDict(MeasureDesc measure) {
-        String returnDataTypeName = measure.getFunction().getReturnDataType().getName();
-        if (returnDataTypeName.equalsIgnoreCase(BitmapMeasureType.DATATYPE_BITMAP)) {
-            List<TblColRef> cols = measure.getFunction().getColRefs();
-            Preconditions.checkArgument(cols.size() == 1);
-            return cols.get(0);
-        }
-        return null;
-    }
+//    private static Set<ColumnDesc> findNeedDictCols(List<LayoutEntity> layouts) {
+//        Set<ColumnDesc> dictColSet = Sets.newHashSet();
+//        for (LayoutEntity layout : layouts) {
+//            for (FunctionDesc functionDesc : layout.getOrderedMeasures().values()) {
+//                if (needGlobalDict(functionDesc))
+//                    continue;
+//                ColumnDesc col = functionDesc.pra().head();
+//                dictColSet.add(col);
+//            }
+//        }
+//        return dictColSet;
+//    }
+//
+//    public static Set<ColumnDesc> extractTreeRelatedGlobalDictToBuild(DataSegment seg, SpanningTree toBuildTree) {
+//        Collection<IndexEntity> toBuildIndexEntities = toBuildTree.getAllIndexEntities();
+//        List<LayoutEntity> toBuildCuboids = Lists.newArrayList();
+//        for (IndexEntity desc : toBuildIndexEntities) {
+//            toBuildCuboids.addAll(desc.getLayouts());
+//        }
+//        List<LayoutEntity> buildedLayouts = Lists.newArrayList();
+//        if (seg.getSegDetails() != null) {
+//            for (DataLayout cuboid : seg.getSegDetails().getLayouts()) {
+//                buildedLayouts.add(cuboid.getLayout());
+//            }
+//        }
+//        Set<TblColRef> buildedColRefSet = findNeedDictCols(buildedLayouts);
+//        Set<TblColRef> toBuildColRefSet = findNeedDictCols(toBuildCuboids);
+//        toBuildColRefSet.removeIf(col -> buildedColRefSet.contains(col));
+//        return toBuildColRefSet;
+//    }
+//
+//    public static Set<ColumnDesc> extractTreeRelatedGlobalDicts(DataSegment seg, SpanningTree toBuildTree) {
+//        List<LayoutEntity> toBuildCuboids = toBuildTree.getAllIndexEntities().stream()
+//                .flatMap(entity -> entity.getLayouts().stream()).collect(Collectors.toList());
+//        return findNeedDictCols(toBuildCuboids);
+//    }
+//
+//    public static Boolean needGlobalDict(FunctionDesc functionDesc) {
+//        if (functionDesc.returnType().dataType().equalsIgnoreCase(BitmapMeasureType.DATATYPE_BITMAP)) {
+//            Preconditions.checkArgument(functionDesc.pra().size() == 1);
+//            return true;
+//        }
+//        return false;
+//    }
 }
