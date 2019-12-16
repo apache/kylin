@@ -269,6 +269,11 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
                     consumer.stop(CONSUMER_STOP_WAIT_TIMEOUT);
                     logger.info("finish to stop consumer for cube:{}", consumerEntry.getKey());
                 }
+                try {
+                    removeReceiver();
+                } catch (Exception e) {
+                    logger.warn("remove receiver: {} from metadata store failed.", currentNode);
+                }
                 logger.info("streaming receiver shut down successfully");
             }
         });
@@ -291,6 +296,11 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
     private void registerReceiver() throws Exception {
         logger.info("register receiver: {}", currentNode);
         streamMetadataStore.addReceiver(currentNode);
+    }
+
+    private void removeReceiver() throws Exception {
+        logger.info("remove receiver: {}", currentNode);
+        streamMetadataStore.removeReceiver(currentNode);
     }
 
     private void joinReplicaSetLeaderElection(int replicaSetID) {
