@@ -19,28 +19,19 @@
 package org.apache.kylin.engine.spark.metadata.cube.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import org.apache.kylin.common.KylinConfig;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 
 public abstract class SpanningTree implements Serializable {
-    final protected Map<IndexEntity, Collection<LayoutEntity>> cuboids;
+    final protected Collection<LayoutEntity> cuboids;
 
-    public SpanningTree(Map<IndexEntity, Collection<LayoutEntity>> cuboids) {
-        long totalSize = 0L;
-        for (Collection<LayoutEntity> entities : cuboids.values()) {
-            totalSize += entities.size();
-        }
-        long maxCombination = KylinConfig.getInstanceFromEnv().getCubeAggrGroupMaxCombination() * 10;
-        Preconditions.checkState(totalSize <= maxCombination,
-                "Too many cuboids for the cube. Cuboid combination reached " + totalSize + " and limit is "
-                        + maxCombination + ". Abort calculation.");
+    public SpanningTree( Collection<LayoutEntity> cuboids) {
         this.cuboids = cuboids;
     }
 
@@ -48,27 +39,21 @@ public abstract class SpanningTree implements Serializable {
 
     abstract public int getCuboidCount();
 
-    abstract public Collection<IndexEntity> getRootIndexEntities();
+    abstract public Collection<LayoutEntity> getRootIndexEntities();
 
-    abstract public Collection<LayoutEntity> getLayouts(IndexEntity cuboidDesc);
 
-    abstract public IndexEntity getIndexEntity(long cuboidId);
+    abstract public LayoutEntity getLayoutEntity(long cuboidId);
 
-    abstract public LayoutEntity getCuboidLayout(long cuboidLayoutId);
 
-    abstract public void decideTheNextLayer(Collection<IndexEntity> currentLayer, DataSegment segment);
+    abstract public void decideTheNextLayer(Collection<LayoutEntity> currentLayer, SegmentInfo segment);
 
-    abstract public Collection<IndexEntity> getChildrenByIndexPlan(IndexEntity parent);
+    abstract public Collection<LayoutEntity> getChildrenByIndexPlan(LayoutEntity parent);
 
-    abstract public Collection<IndexEntity> getAllIndexEntities();
-
-    public Map<IndexEntity, Collection<LayoutEntity>> getCuboids() {
-        return cuboids;
-    }
+    abstract public Collection<LayoutEntity> getAllIndexEntities();
 
     public static class TreeNode implements Serializable {
         @JsonProperty("cuboid")
-        protected final IndexEntity indexEntity;
+        protected final LayoutEntity indexEntity;
 
         @JsonProperty("children")
         protected final ArrayList<TreeNode> children = Lists.newArrayList();
@@ -77,18 +62,18 @@ public abstract class SpanningTree implements Serializable {
         protected int level;
 
         protected transient TreeNode parent;
-        protected transient List<IndexEntity> parentCandidates;
+        protected transient List<LayoutEntity> parentCandidates;
         protected transient boolean hasBeenDecided = false;
 
-        public TreeNode(IndexEntity indexEntity) {
+        public TreeNode(LayoutEntity indexEntity) {
             this.indexEntity = indexEntity;
         }
 
         @Override
         public String toString() {
             return "level:" + level + ", node:" + indexEntity.getId() + //
-                    ", dim:" + indexEntity.getDimensionBitset().toString() + //
-                    ", measure:" + indexEntity.getMeasureBitset().toString() + //
+                    ", dim:" + indexEntity.getOrderedDimensions().keySet().toString() + //
+                    ", measure:" + indexEntity.getOrderedMeasures().keySet().toString() + //
                     ", children:{" + children.toString() + "}";//
         }
     }

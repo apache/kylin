@@ -20,7 +20,8 @@ package io.kyligence.kap.engine.spark.job
 
 import java.util
 
-import org.apache.kylin.engine.spark.metadata.cube.model.{DataLayout, DataSegment, SpanningTree}
+import org.apache.kylin.engine.spark.metadata.cube.model.{LayoutEntity, SpanningTree}
+import org.apache.kylin.engine.spark.metadata.SegmentInfo
 import org.apache.spark.application.RetryInfo
 import org.apache.spark.sql.execution.SparkPlan
 
@@ -30,12 +31,12 @@ class BuildJobInfos {
 
   private val seg2SpanningTree: java.util.Map[String, SpanningTree] = new util.HashMap[String, SpanningTree]
 
-  private val parent2Children: util.Map[DataLayout, util.List[Long]] = new util.HashMap[DataLayout, util.List[Long]]
+  private val parent2Children: util.Map[LayoutEntity, util.List[Long]] = new util.HashMap[LayoutEntity, util.List[Long]]
 
   // MERGE
   private val sparkPlans: java.util.List[SparkPlan] = new util.LinkedList[SparkPlan]
 
-  private val mergingSegments: java.util.List[DataSegment] = new util.LinkedList[DataSegment]
+  private val mergingSegments: java.util.List[SegmentInfo] = new util.LinkedList[SegmentInfo]
 
   // COMMON
   private val abnormalLayouts: util.Map[Long, util.List[String]] = new util.HashMap[Long, util.List[String]]
@@ -77,7 +78,7 @@ class BuildJobInfos {
     seg2SpanningTree.get(segId)
   }
 
-  def recordMergingSegments(segments: util.List[DataSegment]): Unit = {
+  def recordMergingSegments(segments: util.List[SegmentInfo]): Unit = {
     mergingSegments.addAll(segments)
   }
 
@@ -85,7 +86,7 @@ class BuildJobInfos {
     mergingSegments.clear()
   }
 
-  def getMergingSegments: util.List[DataSegment] = {
+  def getMergingSegments: util.List[SegmentInfo] = {
     mergingSegments
   }
 
@@ -159,11 +160,11 @@ class BuildJobInfos {
     seg2cuboidsNumPerLayer
   }
 
-  def recordParent2Children(key: DataLayout, value: util.List[Long]): Unit = {
+  def recordParent2Children(key: LayoutEntity, value: util.List[Long]): Unit = {
     parent2Children.put(key, value)
   }
 
-  def getParent2Children: util.Map[DataLayout, util.List[Long]] = {
+  def getParent2Children: util.Map[LayoutEntity, util.List[Long]] = {
     parent2Children
   }
 }

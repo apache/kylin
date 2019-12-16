@@ -71,5 +71,11 @@ public class HLLCAggregator extends MeasureAggregator<HLLCounter> {
                 + 8 // HLLC obj shell
                 + 32 + (1 << precision); // HLLC internal
     }
+    public void add(String s) {
+        if (sum == null) {
+            sum = new HLLCounter(precision);
+        }
+        sum.add(s);
+    }
 
 }

@@ -22,17 +22,16 @@ import java.util
 import java.util.Locale
 
 import io.kyligence.kap.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
-import org.apache.kylin.engine.spark.metadata.cube.model.DataModel.Measure
-import org.apache.kylin.engine.spark.metadata.cube.model.{CubeJoinedFlatTableDesc, DataSegment, ParameterDesc, SpanningTree}
+import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree
+import org.apache.kylin.engine.spark.metadata.{ColumnDesc, DTType, FunctionDesc, LiteralColumnDesc}
 import org.apache.kylin.measure.bitmap.BitmapMeasureType
 import org.apache.kylin.measure.hllc.HLLCMeasureType
 import org.apache.spark.sql.catalyst.expressions.aggregate.AggregateFunction
 import org.apache.spark.sql.functions.{col, _}
 import org.apache.spark.sql.types.{StringType, _}
 import org.apache.spark.sql.udaf._
-import org.apache.spark.sql.util.SparkTypeUtil
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
-import org.apache.kylin.engine.spark.metadata.cube.datatype.DataType
+import org.apache.spark.sql.catalyst.expressions.Literal
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -42,23 +41,15 @@ object CuboidAggregator {
   def agg(ss: SparkSession,
           dataSet: DataFrame,
           dimensions: util.Set[Integer],
-          measures: util.Map[Integer, Measure],
-          seg: DataSegment,
+          measures: util.Map[Integer, FunctionDesc],
           spanningTree: SpanningTree): DataFrame = {
-    val needJoin = spanningTree match {
-      // when merge cuboid spanning tree is null
-      case null => true
-      case _ => ParentSourceChooser.needJoinLookupTables(seg.getModel, spanningTree)
-    }
-    val flatTableDesc = new CubeJoinedFlatTableDesc(seg.getCube, seg.getSegRange, needJoin)
-    aggInternal(ss, dataSet, dimensions, measures, flatTableDesc, isSparkSql = false)
+    aggInternal(ss, dataSet, dimensions, measures, isSparkSql = false)
   }
 
   def aggInternal(ss: SparkSession,
                   dataSet: DataFrame,
                   dimensions: util.Set[Integer],
-                  measures: util.Map[Integer, Measure],
-                  flatTableDesc: CubeJoinedFlatTableDesc,
+                  measures: util.Map[Integer, FunctionDesc],
                   isSparkSql: Boolean): DataFrame = {
     if (measures.isEmpty) {
       return dataSet
@@ -69,60 +60,52 @@ object CuboidAggregator {
     val reuseLayout = dataSet.schema.fieldNames
       .contains(measures.keySet().asScala.head.toString)
 
-    val agg = measures.asScala.map { e =>
-      val function = e._2.getFunction
-      val parameters = function.getParameters.asScala.toList
+    val agg = measures.asScala.map { case(id, measure) =>
       val columns = new mutable.ListBuffer[Column]
-      val returnType = function.getReturnDataType
-      val expression = function.getExpression
 
       if (reuseLayout) {
-        columns.append(col(e._1.toString))
+        columns.append(col(id.toString))
       } else {
-        if (parameters.head.isColumnType) {
+        if (measure.pra.head.isColumnType) {
           val colIndex = dataSet.schema.fieldNames.zipWithIndex.map(tp => (tp._2, tp._1)).toMap
-          columns.appendAll(parameters.map(p => col(colIndex.apply(flatTableDesc.getColumnIndex(p.getColRef)))))
+          columns.appendAll(measure.pra.map(p =>col(colIndex.apply(p.id).toString)))
         } else {
-          val value = parameters.head.getValue
-          if (expression.equalsIgnoreCase("SUM")) {
-            columns.append(lit(value).cast(SparkTypeUtil.toSparkType(returnType)))
-          } else {
-            columns.append(lit(value))
-          }
+          val value = measure.pra.head.asInstanceOf[LiteralColumnDesc].value
+            columns.append(new Column(Literal.create(value, measure.pra.head.dataType)))
         }
       }
 
-      expression.toUpperCase(Locale.ROOT) match {
+      measure.expression.toUpperCase(Locale.ROOT) match {
         case "MAX" =>
-          max(columns.head).as(e._1.toString)
+          max(columns.head).as(id.toString)
         case "MIN" =>
-          min(columns.head).as(e._1.toString)
+          min(columns.head).as(id.toString)
         case "SUM" =>
-          sum(columns.head).as(e._1.toString)
+          sum(columns.head).as(id.toString)
         case "COUNT" =>
           if (reuseLayout) {
-            sum(columns.head).as(e._1.toString)
+            sum(columns.head).as(id.toString)
           } else {
-            count(columns.head).as(e._1.toString)
+            count(columns.head).as(id.toString)
           }
         case "COUNT_DISTINCT" =>
           // for test
           if (isSparkSql) {
-            countDistinct(columns.head).as(e._1.toString)
+            countDistinct(columns.head).as(id.toString)
           } else {
-            val cdAggregate = getCountDistinctAggregate(columns, returnType, reuseLayout)
-            new Column(cdAggregate.toAggregateExpression()).as(e._1.toString)
+            val cdAggregate = getCountDistinctAggregate(columns, measure.returnType, reuseLayout)
+            new Column(cdAggregate.toAggregateExpression()).as(id.toString)
           }
         case "TOP_N" =>
-          val schema: StructType = constructTopNSchema(parameters)
-          val udfName = UdfManager.register(returnType, expression, schema, !reuseLayout)
-          callUDF(udfName, columns: _*).as(e._1.toString)
+          val schema: StructType = constructTopNSchema(measure.pra)
+          val udfName = UdfManager.register(measure.returnType.toKylinDataType, measure.expression, schema, !reuseLayout)
+          callUDF(udfName, columns: _*).as(id.toString)
         case "PERCENTILE_APPROX" =>
-          val udfName = UdfManager.register(returnType, expression, null, !reuseLayout)
+          val udfName = UdfManager.register(measure.returnType.toKylinDataType, measure.expression, null, !reuseLayout)
           if (!reuseLayout) {
-            callUDF(udfName, columns.head.cast(StringType)).as(e._1.toString)
+            callUDF(udfName, columns.head.cast(StringType)).as(id.toString)
           } else {
-            callUDF(udfName, columns.head).as(e._1.toString)
+            callUDF(udfName, columns.head).as(id.toString)
           }
       }
     }.toSeq
@@ -147,7 +130,7 @@ object CuboidAggregator {
   }
 
   private def getCountDistinctAggregate(columns: ListBuffer[Column],
-                                        returnType: DataType,
+                                        returnType: DTType,
                                         reuseLayout: Boolean): AggregateFunction = {
     var col = columns.head
     if (isBitmap(returnType)) {
@@ -157,7 +140,7 @@ object CuboidAggregator {
         ReusePreciseCountDistinct(col.expr)
       }
     } else {
-      val precision = returnType.getPrecision
+      val precision = returnType.precision
 
       if (isMultiHllcCol(columns, returnType)) {
         col = wrapMutilHllcColumn(columns: _*)
@@ -170,30 +153,29 @@ object CuboidAggregator {
     }
   }
 
-  private def constructTopNSchema(parameters: List[ParameterDesc]): StructType = {
-    val measure = parameters.head.getColRef.getColumnDesc
-    val schema = StructType(parameters.map(_.getColRef.getColumnDesc).map { col =>
-      val dateType = SparkTypeUtil.toSparkType(col.getType)
+  private def constructTopNSchema(parameters: List[ColumnDesc]): StructType = {
+    val measure = parameters.head
+    val schema = StructType(parameters.map { col =>
       if (col == measure) {
-        StructField(s"MEASURE_${col.getName}", dateType)
+        StructField(s"MEASURE_${col.columnName}", col.dataType)
       } else {
-        StructField(s"DIMENSION_${col.getName}", dateType)
+        StructField(s"DIMENSION_${col.columnName}", col.dataType)
       }
     })
     schema
   }
 
-  private def isMultiHllcCol(columns: ListBuffer[Column], returnDataType: DataType) = {
-    columns.length > 1 && returnDataType.getName.startsWith(HLLCMeasureType.DATATYPE_HLLC)
+  private def isMultiHllcCol(columns: ListBuffer[Column], returnDataType: DTType) = {
+    columns.length > 1 && returnDataType.dataType.startsWith(HLLCMeasureType.DATATYPE_HLLC)
   }
 
-  private def isBitmap(returnDataType: DataType) = {
-    returnDataType.getName.equalsIgnoreCase(BitmapMeasureType.DATATYPE_BITMAP)
+  private def isBitmap(returnDataType: DTType) = {
+    returnDataType.dataType.equalsIgnoreCase(BitmapMeasureType.DATATYPE_BITMAP)
   }
 
-  private def measureColumns(schema: StructType, measures: util.Map[Integer, Measure]): mutable.Iterable[Column] = {
+  private def measureColumns(schema: StructType, measures: util.Map[Integer, FunctionDesc]): mutable.Iterable[Column] = {
     measures.asScala.map { e =>
-      e._2.getFunction.getExpression.toUpperCase(Locale.ROOT) match {
+      e._2.expression.toUpperCase(Locale.ROOT) match {
         case "SUM" =>
           val measureId = e._1.toString
           val dataType = schema.find(_.name.equals(measureId)).map(_.dataType).get

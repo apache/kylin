@@ -48,7 +48,7 @@ object LogJobInfoUtils {
        |build time: ${infos.buildTime}
        |build from layouts :
        |${infos.getParent2Children.asScala.filter(_._1 != null)
-        .map(entry => s"[layoutId: ${entry._1.getLayoutId}, layoutSize: ${entry._1.getByteSize} bytes," +
+        .map(entry => s"[layoutId: ${entry._1.getId}, layoutSize: ${entry._1.getByteSize} bytes," +
           s" children: ${entry._2}]").mkString("\n")}
        |build from flat table :
        |${infos.getParent2Children.asScala.filter(_._1 == null)

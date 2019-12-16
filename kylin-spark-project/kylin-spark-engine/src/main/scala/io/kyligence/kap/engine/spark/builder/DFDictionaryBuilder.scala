@@ -35,12 +35,12 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import io.kyligence.kap.engine.spark.builder.DFBuilderHelper._
 import io.kyligence.kap.engine.spark.job.NSparkCubingUtil
-import org.apache.kylin.engine.spark.metadata.cube.model.{DataSegment, TblColRef}
+import org.apache.kylin.engine.spark.metadata.{ColumnDesc, SegmentInfo}
 
 class DFDictionaryBuilder(val dataset: Dataset[Row],
-                          val seg: DataSegment,
+                          val seg: SegmentInfo,
                           val ss: SparkSession,
-                          val colRefSet: util.Set[TblColRef]) extends Logging with Serializable {
+                          val colRefSet: util.Set[ColumnDesc]) extends Logging with Serializable {
 
   @transient
   val lock: DistributedLock = KylinConfig.getInstanceFromEnv.getDistributedLockFactory.lockForCurrentThread
@@ -53,13 +53,13 @@ class DFDictionaryBuilder(val dataset: Dataset[Row],
   }
 
   @throws[IOException]
-  private[builder] def safeBuild(ref: TblColRef): Unit = {
-    val sourceColumn = ref.getIdentity
+  private[builder] def safeBuild(ref: ColumnDesc): Unit = {
+    val sourceColumn = ref.identity
     lock.lock(getLockPath(sourceColumn), Long.MaxValue)
     try
         if (lock.lock(getLockPath(sourceColumn))) {
           val dictColDistinct = dataset.select(wrapCol(ref)).distinct
-          ss.sparkContext.setJobDescription("Calculate bucket size " + ref.getIdentity)
+          ss.sparkContext.setJobDescription("Calculate bucket size " + ref.identity)
           val bucketPartitionSize = DictionaryBuilderHelper.calculateBucketSize(seg, ref, dictColDistinct)
           val m = s"Building global dictionaries V2 for $sourceColumn"
           time(m, build(ref, bucketPartitionSize, dictColDistinct))
@@ -68,14 +68,14 @@ class DFDictionaryBuilder(val dataset: Dataset[Row],
   }
 
   @throws[IOException]
-  private[builder] def build(ref: TblColRef, bucketPartitionSize: Int, afterDistinct: Dataset[Row]): Unit = {
-    logInfo(s"Start building global dict V2 for column ${ref.getIdentity}.")
+  private[builder] def build(ref: ColumnDesc, bucketPartitionSize: Int, afterDistinct: Dataset[Row]): Unit = {
+    logInfo(s"Start building global dict V2 for column ${ref.identity}.")
 
-    val globalDict = new NGlobalDictionaryV2(seg.getProject, ref.getTable, ref.getName, seg.getConfig.getHdfsWorkingDirectory)
+    val globalDict = new NGlobalDictionaryV2(seg.project, ref.tableAliasName, ref.columnName, seg.kylinconf.getHdfsWorkingDirectory)
     globalDict.prepareWrite()
     val broadcastDict = ss.sparkContext.broadcast(globalDict)
 
-    ss.sparkContext.setJobDescription("Build dict " + ref.getIdentity)
+    ss.sparkContext.setJobDescription("Build dict " + ref.identity)
     val dictCol = col(afterDistinct.schema.fields.head.name)
     afterDistinct
       .filter(dictCol.isNotNull)
@@ -83,7 +83,7 @@ class DFDictionaryBuilder(val dataset: Dataset[Row],
       .mapPartitions {
         iter =>
           val partitionID = TaskContext.get().partitionId()
-          logInfo(s"Build partition dict col: ${ref.getIdentity}, partitionId: $partitionID")
+          logInfo(s"Build partition dict col: ${ref.identity}, partitionId: $partitionID")
           val broadcastGlobalDict = broadcastDict.value
           val bucketDict = broadcastGlobalDict.loadBucketDictionary(partitionID)
           iter.foreach(dic => bucketDict.addRelativeValue(dic.getString(0)))
@@ -93,13 +93,13 @@ class DFDictionaryBuilder(val dataset: Dataset[Row],
       }(RowEncoder.apply(schema = afterDistinct.schema))
       .count()
 
-    globalDict.writeMetaDict(bucketPartitionSize, seg.getConfig.getGlobalDictV2MaxVersions, seg.getConfig.getGlobalDictV2VersionTTL)
+    globalDict.writeMetaDict(bucketPartitionSize, seg.kylinconf.getGlobalDictV2MaxVersions, seg.kylinconf.getGlobalDictV2VersionTTL)
   }
 
-  private def getLockPath(pathName: String) = s"/${seg.getProject}${HadoopUtil.GLOBAL_DICT_STORAGE_ROOT}/$pathName/lock"
+  private def getLockPath(pathName: String) = s"/${seg.project}${HadoopUtil.GLOBAL_DICT_STORAGE_ROOT}/$pathName/lock"
 
-  def wrapCol(ref: TblColRef): Column = {
-    val colName = NSparkCubingUtil.convertFromDot(ref.getIdentity)
+  def wrapCol(ref: ColumnDesc): Column = {
+    val colName = NSparkCubingUtil.convertFromDot(ref.identity)
     expr(colName).cast(StringType)
   }
 

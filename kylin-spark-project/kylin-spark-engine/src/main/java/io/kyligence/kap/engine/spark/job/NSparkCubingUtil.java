@@ -19,9 +19,6 @@
 package io.kyligence.kap.engine.spark.job;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
-import org.apache.kylin.engine.spark.metadata.cube.model.DataLayout;
-import org.apache.kylin.engine.spark.metadata.cube.model.DataSegDetails;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.spark.sql.Column;
 
@@ -53,7 +50,7 @@ public class NSparkCubingUtil {
         return r;
     }
 
-    static Set<LayoutEntity> toLayouts(Cube cube, Set<Long> ids) {
+    static Set<LayoutEntity> toLayouts(Seg cube, Set<Long> ids) {
         Set<LayoutEntity> r = new LinkedHashSet<>();
         for (Long id : ids) {
             r.add(cube.getCuboidLayout(id));

@@ -20,17 +20,17 @@ package io.kyligence.kap.engine.spark.utils
 
 import com.google.common.collect.Maps
 import io.kyligence.kap.engine.spark.NSparkCubingEngine
-import org.apache.kylin.engine.spark.metadata.cube.model.TableDesc
 import org.apache.kylin.engine.spark.metadata.cube.source.SourceFactory
+import org.apache.kylin.engine.spark.metadata.TableDesc
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object SparkDataSource {
   implicit class SparkSource(sparkSession: SparkSession) {
-    def table(tableDesc: TableDesc) : DataFrame = {
+    def table(tableInfo: TableDesc) : DataFrame = {
       SourceFactory
-        .createEngineAdapter(tableDesc,
+        .getSource(tableInfo.sourceType).adaptToBuildEngine(
           classOf[NSparkCubingEngine.NSparkCubingSource])
-        .getSourceData(tableDesc, sparkSession, Maps.newHashMap())
+        .getSourceData(tableInfo, sparkSession, Maps.newHashMap())
     }
   }
 }

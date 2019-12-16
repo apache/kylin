@@ -19,7 +19,7 @@
 package io.kyligence.kap.engine.spark.builder
 
 import io.kyligence.kap.engine.spark.job.NSparkCubingUtil._
-import org.apache.kylin.engine.spark.metadata.cube.model.TblColRef
+import org.apache.kylin.engine.spark.metadata.{ColumnDesc, ComputedColumnDesc}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.functions.expr
 import org.apache.spark.sql.{Column, Dataset, Row}
@@ -30,13 +30,13 @@ object DFBuilderHelper extends Logging {
 
   val ENCODE_SUFFIX = "_KE_ENCODE"
 
-  def filterCols(dsSeq: Seq[Dataset[Row]], needCheckCols: Set[TblColRef]): Set[TblColRef] = {
+  def filterCols(dsSeq: Seq[Dataset[Row]], needCheckCols: Set[ColumnDesc]): Set[ColumnDesc] = {
     needCheckCols -- dsSeq.flatMap(ds => filterCols(ds, needCheckCols))
   }
 
-  def filterCols(ds: Dataset[Row], needCheckCols: Set[TblColRef]): Set[TblColRef] = {
+  def filterCols(ds: Dataset[Row], needCheckCols: Set[ColumnDesc]): Set[ColumnDesc] = {
     needCheckCols.filter(cc =>
-      isValidExpr(convertFromDot(cc.getExpressionInSourceDB), ds))
+      isValidExpr(convertFromDot(cc.asInstanceOf[ComputedColumnDesc].expression), ds))
   }
 
   def isValidExpr(colExpr: String, ds: Dataset[Row]): Boolean = {
@@ -48,10 +48,10 @@ object DFBuilderHelper extends Logging {
     }
   }
 
-  def chooseSuitableCols(ds: Dataset[Row], needCheckCols: Iterable[TblColRef]): Seq[Column] = {
+  def chooseSuitableCols(ds: Dataset[Row], needCheckCols: Iterable[ColumnDesc]): Seq[Column] = {
     needCheckCols
-      .filter(ref => isValidExpr(ref.getExpressionInSourceDB, ds))
-      .map(ref => expr(convertFromDot(ref.getExpressionInSourceDB)).alias(convertFromDot(ref.getIdentity)))
+      .filter(ref => isValidExpr(ref.asInstanceOf[ComputedColumnDesc].expression, ds))
+      .map(ref => expr(convertFromDot(ref.asInstanceOf[ComputedColumnDesc].expression)).alias(convertFromDot(ref.identity)))
       .toSeq
   }
 

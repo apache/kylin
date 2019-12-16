@@ -18,20 +18,22 @@
 
 package io.kyligence.kap.engine.spark.job;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import io.kyligence.kap.engine.spark.application.SparkApplication;
+import io.kyligence.kap.engine.spark.builder.NBuildSourceInfo;
+import io.kyligence.kap.engine.spark.utils.SparkUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.StringUtils;
-import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
-import org.apache.kylin.engine.spark.metadata.cube.model.DataSegment;
-import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.engine.spark.metadata.SegmentInfo;
+import org.apache.kylin.engine.spark.metadata.cube.ManagerHub;
+import org.apache.kylin.engine.spark.metadata.cube.model.ForestSpanningTree;
 import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree;
-import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTreeFactory;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.Dataset;
@@ -39,13 +41,6 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
-import io.kyligence.kap.engine.spark.utils.SparkUtils;
-import io.kyligence.kap.engine.spark.application.SparkApplication;
-import io.kyligence.kap.engine.spark.builder.NBuildSourceInfo;
 import scala.collection.JavaConversions;
 
 public class ResourceDetectBeforeCubingJob extends SparkApplication {
@@ -56,19 +51,11 @@ public class ResourceDetectBeforeCubingJob extends SparkApplication {
     @Override
     protected void doExecute() throws Exception {
         logger.info("Start detect resource before cube.");
-
-        String cubeId = getParam(MetadataConstants.P_CUBE_ID);
         Set<String> segmentIds = Sets.newHashSet(StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS)));
-        Set<Long> layoutIds = NSparkCubingUtil.str2Longs(getParam(MetadataConstants.P_LAYOUT_IDS));
-
-        Cube cube = Cube.getInstance(config);
-        Set<LayoutEntity> cuboids = NSparkCubingUtil.toLayouts(cube, layoutIds).stream().filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        spanningTree = SpanningTreeFactory.fromLayouts(cuboids, cubeId);
-
-        ResourceDetectUtils.write(new Path(config.getJobTmpShareDir(project, jobId), ResourceDetectUtils.countDistinctSuffix()), ResourceDetectUtils.findCountDistinctMeasure(cuboids));
         for (String segId : segmentIds) {
-            DataSegment seg = cube.getSegment(segId);
+            SegmentInfo seg = ManagerHub.getSegmentInfo(config, getParam(MetadataConstants.P_CUBE_ID), segId);
+            SpanningTree SpanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(seg.toBuildLayouts()));
+            ResourceDetectUtils.write(new Path(config.getJobTmpShareDir(project, jobId), ResourceDetectUtils.countDistinctSuffix()), ResourceDetectUtils.findCountDistinctMeasure(JavaConversions.asJavaCollection(seg.toBuildLayouts())));
             ParentSourceChooser datasetChooser = new ParentSourceChooser(spanningTree, seg, jobId, ss, config, false);
             datasetChooser.decideSources();
             NBuildSourceInfo buildFromFlatTable = datasetChooser.flatTableSource();

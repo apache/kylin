@@ -18,11 +18,10 @@
 
 package io.kyligence.kap.engine.spark.job
 
-import org.apache.kylin.engine.spark.metadata.cube.datatype.DataType
-import org.apache.kylin.engine.spark.metadata.cube.measure.bitmap.RoaringBitmapCounter
-import org.apache.kylin.measure.bitmap.RoaringBitmapCounterFactory
+import org.apache.kylin.measure.bitmap.{RoaringBitmapCounter, RoaringBitmapCounterFactory}
 import org.apache.kylin.measure.hllc.HLLCounter
 import org.apache.kylin.measure.percentile.PercentileCounter
+import org.apache.kylin.metadata.datatype.DataType
 
 sealed abstract class MeasureEncoder[T, V](dataType: DataType) {
 
@@ -50,21 +49,6 @@ class HLLCCountEnc(dataType: DataType) extends MeasureEncoder[Any, HLLCounter](d
     val current: HLLCounter = new HLLCounter(dataType.getPrecision)
     if (value != null) {
       current.add(value.toString)
-    }
-    current
-  }
-}
-
-class BitmapCountEnc(dataType: DataType) extends MeasureEncoder[Any, RoaringBitmapCounter](dataType: DataType) with Serializable {
-  def this() = this(DataType.getType("String"))
-
-  //  TODO: support more args
-  override def encoder(value: Any): RoaringBitmapCounter = {
-    val factory = RoaringBitmapCounterFactory.INSTANCE
-    val bitmapCounter: RoaringBitmapCounter = factory.newBitmap.asInstanceOf[RoaringBitmapCounter]
-    val current: RoaringBitmapCounter = bitmapCounter
-    if (value != null) {
-      current.add(java.lang.Long.parseLong(value.toString))
     }
     current
   }

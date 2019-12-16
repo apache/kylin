@@ -19,8 +19,6 @@
 package io.kyligence.kap.engine.spark.job;
 
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
@@ -30,8 +28,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.engine.spark.metadata.cube.model.DataLayout;
-import org.apache.kylin.engine.spark.metadata.cube.model.DataSegment;
+import org.apache.kylin.engine.spark.metadata.SegmentInfo;
+import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +47,7 @@ public class BuildLayoutWithUpdate {
             public JobResult call() throws Exception {
                 KylinConfig.setAndUnsetThreadLocalConfig(config);
                 Thread.currentThread().setName("thread-" + job.getName());
-                List<DataLayout> dataLayouts = new LinkedList<>();
+                LayoutEntity dataLayouts = null;
                 Throwable throwable = null;
                 try {
                     dataLayouts = job.build();
@@ -63,7 +61,7 @@ public class BuildLayoutWithUpdate {
         currentLayoutsNum++;
     }
 
-    public void updateLayout(DataSegment seg, KylinConfig config, String project) {
+    public void updateLayout(SegmentInfo seg, KylinConfig config) {
         for (int i = 0; i < currentLayoutsNum; i++) {
             try {
                 logger.info("Wait to take job result.");
@@ -73,9 +71,7 @@ public class BuildLayoutWithUpdate {
                     shutDownPool();
                     throw new RuntimeException(result.getThrowable());
                 }
-                for (DataLayout layout : result.getLayouts()) {
-                    BuildUtils.updateDataFlow(seg, layout, config, project);
-                }
+                seg.updateLayout(result.layout);
             } catch (InterruptedException | ExecutionException e) {
                 shutDownPool();
                 throw new RuntimeException(e);
@@ -95,11 +91,11 @@ public class BuildLayoutWithUpdate {
     }
 
     private static class JobResult {
-        private List<DataLayout> layouts;
+        private LayoutEntity layout;
         private Throwable throwable;
 
-        JobResult(List<DataLayout> layouts, Throwable throwable) {
-            this.layouts = layouts;
+        JobResult(LayoutEntity layout, Throwable throwable) {
+            this.layout = layout;
             this.throwable = throwable;
         }
 
@@ -111,8 +107,8 @@ public class BuildLayoutWithUpdate {
             return throwable;
         }
 
-        List<DataLayout> getLayouts() {
-            return layouts;
+        LayoutEntity getLayout() {
+            return layout;
         }
     }
 
@@ -120,6 +116,6 @@ public class BuildLayoutWithUpdate {
 
         public abstract String getName();
 
-        public abstract List<DataLayout> build() throws IOException;
+        public abstract LayoutEntity build() throws IOException;
     }
 }

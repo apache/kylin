@@ -44,7 +44,6 @@ package org.apache.kylin.engine.spark.metadata.cube.source;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ImplementationSwitch;
-import org.apache.kylin.engine.spark.metadata.cube.model.TableDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.source.IReadableTable;
 
@@ -55,7 +54,7 @@ public class SourceFactory {
     // Use thread-local because KylinConfig can be thread-local and implementation might be different among multiple threads.
     private static ThreadLocal<ImplementationSwitch<ISource>> sources = new ThreadLocal<>();
 
-    private static ISource getSource(int sourceType) {
+    public static ISource getSource(int sourceType) {
         ImplementationSwitch<ISource> current = sources.get();
         if (current == null) {
             current = new ImplementationSwitch<>(KylinConfig.getInstanceFromEnv().getSourceEngines(), ISource.class);
@@ -74,10 +73,6 @@ public class SourceFactory {
 
     public static ISource getSource(ISourceAware aware) {
         return getSource(aware.getSourceType());
-    }
-
-    public static IReadableTable createReadableTable(TableDesc table) {
-        return getSource(table).createReadableTable(table);
     }
 
     public static <T> T createEngineAdapter(ISourceAware table, Class<T> engineInterface) {

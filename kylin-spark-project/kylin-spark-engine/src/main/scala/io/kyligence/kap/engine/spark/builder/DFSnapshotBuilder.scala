@@ -23,19 +23,18 @@ import java.util.UUID
 import java.util.concurrent.Executors
 
 import com.google.common.collect.Maps
-import io.kyligence.kap.engine.spark.NSparkCubingEngine
 import io.kyligence.kap.engine.spark.job.KylinBuildEnv
 import io.kyligence.kap.engine.spark.utils.FileNames
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path, PathFilter}
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.HadoopUtil
-import org.apache.kylin.engine.spark.metadata.cube.model.{Cube, DataModel, DataSegment, TableDesc}
-import org.apache.kylin.engine.spark.metadata.cube.source.SourceFactory
+import org.apache.kylin.engine.spark.metadata.{SegmentInfo, TableDesc}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.utils.ProxyThreadUtils
+import io.kyligence.kap.engine.spark.utils.SparkDataSource._
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
@@ -46,22 +45,15 @@ import scala.util.{Failure, Success, Try}
 class DFSnapshotBuilder extends Logging {
 
   var ss: SparkSession = _
-  var seg: DataSegment = _
-  var cube: Cube = _
+  var seg: SegmentInfo = _
 
   private val MD5_SUFFIX = ".md5"
   private val PARQUET_SUFFIX = ".parquet"
   private val MB = 1024 * 1024
 
-  def this(seg: DataSegment, ss: SparkSession) {
+  def this(seg: SegmentInfo, ss: SparkSession) {
     this()
     this.seg = seg
-    this.ss = ss
-  }
-
-  def this(cube: Cube, ss: SparkSession) {
-    this()
-    this.cube = cube
     this.ss = ss
   }
 
@@ -78,30 +70,29 @@ class DFSnapshotBuilder extends Logging {
   }
 
   @throws[IOException]
-  def buildSnapshot: DataSegment = {
+  def buildSnapshot: SegmentInfo = {
     logInfo(s"Building snapshots for: $seg")
-    val model = seg.getCube.getModel
     val newSnapMap = Maps.newHashMap[String, String]
     val fs = HadoopUtil.getWorkingFileSystem
-    val kylinConf = seg.getCube.getConfig
+    val kylinConf = seg.kylinconf
     val baseDir = kylinConf.getReadHdfsWorkingDirectory
-    val toBuildTableDesc = distinctTableDesc(model)
+    val toBuildTableDesc = seg.snapshotTables
     if (kylinConf.isSnapshotParallelBuildEnabled) {
       val service = Executors.newCachedThreadPool()
       implicit val executorContext = ExecutionContext.fromExecutorService(service)
       val futures = toBuildTableDesc
         .map {
-          tableDesc =>
+          tableInfo =>
             Future[(String, String)] {
               if (kylinConf.isUTEnv) {
                 Thread.sleep(1000L)
               }
               try {
                 KylinConfig.setAndUnsetThreadLocalConfig(kylinConf)
-                buildSnapshotWithoutMd5(tableDesc, baseDir)
+                buildSnapshotWithoutMd5(tableInfo, baseDir)
               } catch {
                 case exception: Exception =>
-                  logError(s"Error for build snapshot table with $tableDesc", exception)
+                  logError(s"Error for build snapshot table with ${tableInfo.identity}", exception)
                   throw exception
               }
             }
@@ -126,27 +117,9 @@ class DFSnapshotBuilder extends Logging {
           newSnapMap.put(tuple._1, tuple._2)
       }
     }
-    val cube = seg.getCube
     // make a copy of the changing segment, avoid changing the cached object
     // To do: add snapshots to segment with copy
     seg
-  }
-
-  def distinctTableDesc(model: DataModel): Set[TableDesc] = {
-    model.getJoinTables.asScala
-      .filter(lookupDesc => {
-        val tableDesc = lookupDesc.getTableRef.getTableDesc
-        val isLookupTable = model.isLookupTable(lookupDesc.getTableRef)
-        isLookupTable && seg.getSnapshots.get(tableDesc.getIdentity) == null
-      })
-      .map(_.getTableRef.getTableDesc)
-      .toSet
-  }
-
-  def getSourceData(tableDesc: TableDesc): Dataset[Row] = {
-    SourceFactory
-      .createEngineAdapter(tableDesc, classOf[NSparkCubingEngine.NSparkCubingSource])
-      .getSourceData(tableDesc, ss, Maps.newHashMap[String, String])
   }
 
   def getFileMd5(file: FileStatus): String = {
@@ -163,9 +136,9 @@ class DFSnapshotBuilder extends Logging {
     }
   }
 
-  def buildSingleSnapshot(tableDesc: TableDesc, baseDir: String, fs: FileSystem): (String, String) = {
-    val sourceData = getSourceData(tableDesc)
-    val tablePath = FileNames.snapshotFile(tableDesc)
+  def buildSingleSnapshot(tableInfo: TableDesc, baseDir: String, fs: FileSystem): (String, String) = {
+    val sourceData = ss.table(tableInfo)
+    val tablePath = FileNames.snapshotFile(tableInfo, seg.project)
     var snapshotTablePath = tablePath + "/" + UUID.randomUUID
     val resourcePath = baseDir + "/" + snapshotTablePath
     sourceData.coalesce(1).write.parquet(resourcePath)
@@ -207,12 +180,13 @@ class DFSnapshotBuilder extends Logging {
       logInfo(s"Create md5 file: ${md5Path} for snap: ${currSnapFile}")
     }
 
-    (tableDesc.getIdentity, snapshotTablePath)
+    (tableInfo.identity, snapshotTablePath)
   }
+  import io.kyligence.kap.engine.spark.utils.SparkDataSource._
 
-  def buildSnapshotWithoutMd5(tableDesc: TableDesc, baseDir: String): (String, String) = {
-    val sourceData = getSourceData(tableDesc)
-    val tablePath = FileNames.snapshotFile(tableDesc)
+  def buildSnapshotWithoutMd5(tableInfo: TableDesc, baseDir: String): (String, String) = {
+    val sourceData = ss.table(tableInfo)
+    val tablePath = FileNames.snapshotFile(tableInfo, seg.project)
     val snapshotTablePath = tablePath + "/" + UUID.randomUUID
     val resourcePath = baseDir + "/" + snapshotTablePath
     val repartitionNum = try {
@@ -227,7 +201,7 @@ class DFSnapshotBuilder extends Logging {
         logWarning("Error occurred when estimate repartition number.", t)
         0
     }
-    ss.sparkContext.setJobDescription(s"Build table snapshot ${tableDesc.getIdentity}.")
+    ss.sparkContext.setJobDescription(s"Build table snapshot ${tableInfo.identity}.")
     if (repartitionNum == 0) {
       logInfo(s"Error may occurred or table size is 0, skip repartition.")
       sourceData.write.parquet(resourcePath)
@@ -235,6 +209,6 @@ class DFSnapshotBuilder extends Logging {
       logInfo(s"Repartition snapshot to $repartitionNum partition.")
       sourceData.repartition(repartitionNum).write.parquet(resourcePath)
     }
-    (tableDesc.getIdentity, snapshotTablePath)
+    (tableInfo.identity, snapshotTablePath)
   }
 }
