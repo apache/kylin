@@ -46,6 +46,7 @@ import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.util.FlatTableSqlQuoteUtils;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
@@ -388,7 +389,7 @@ public class HiveInputBase {
         hiveCmdBuilder.overwriteHiveProps(kylinConfig.getHiveConfigOverride());
         hiveCmdBuilder.addStatement(hiveInitStatements);
         for (TableDesc lookUpTableDesc : lookupViewsTables) {
-            String identity = lookUpTableDesc.getIdentityQuoted("`");
+            String identity = FlatTableSqlQuoteUtils.quoteTableIdentity(lookUpTableDesc.getDatabase(), lookUpTableDesc.getName(), null);
             if (lookUpTableDesc.isView()) {
                 String intermediate = lookUpTableDesc.getMaterializedName(uuid);
                 String materializeViewHql = materializeViewHql(intermediate, identity, jobWorkingDir);

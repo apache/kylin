@@ -36,7 +36,7 @@ public class PostgresqlJdbcMetadata extends DefaultJdbcMetadata {
     public List<String> listDatabases() throws SQLException {
         List<String> ret = new ArrayList<>();
         try (Connection con = SqlUtil.getConnection(dbconf)) {
-            ret.add(con.getCatalog());
+            ret.add(con.getSchema());
         }
         return ret;
     }
@@ -49,11 +49,8 @@ public class PostgresqlJdbcMetadata extends DefaultJdbcMetadata {
              ResultSet res = con.getMetaData().getTables(catalog, null, null, tableTypes)) {
             String table;
             while (res.next()) {
-                String schem = res.getString("TABLE_SCHEM");
-                if (schem.equals(catalog)) {
-                    table = res.getString("TABLE_NAME");
-                    ret.add(table);
-                }
+                table = res.getString("TABLE_NAME");
+                ret.add(table);
             }
         }
         return ret;
