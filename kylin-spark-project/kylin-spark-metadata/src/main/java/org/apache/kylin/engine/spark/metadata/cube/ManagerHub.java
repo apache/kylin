@@ -33,7 +33,7 @@ public class ManagerHub {
 
     public static SegmentInfo getSegmentInfo(KylinConfig kylinConfig, String cubeName, String segmentId) {
         return MetadataConverter.getSegmentInfo(
-                CubeManager.getInstance(kylinConfig).getCube(cubeName));
+                CubeManager.getInstance(kylinConfig).getCubeByUuid(cubeName), segmentId);
     }
 
     public static CubeInstance updateSegment(KylinConfig kylinConfig, SegmentInfo segmentInfo)

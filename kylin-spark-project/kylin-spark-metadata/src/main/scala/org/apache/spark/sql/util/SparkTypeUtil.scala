@@ -1,25 +1,27 @@
 package org.apache.spark.sql.util
 
-import org.apache.kylin.common.util.DateFormat
-import org.apache.spark.sql.functions._
-import org.apache.calcite.avatica.util.TimeUnitRange
-import org.apache.calcite.util.NlsString
-import org.apache.calcite.sql.`type`.SqlTypeName
-import org.apache.spark.sql.catalyst.util.DateTimeUtils
-import org.apache.spark.internal.Logging
-import org.apache.spark.sql.Column
-import org.apache.spark.sql.catalyst.expressions.Cast
-import org.apache.kylin.metadata.datatype.DataType
-import org.apache.spark.unsafe.types.UTF8String
 import java.math.BigDecimal
 
+import org.apache.kylin.common.util.DateFormat
+import org.apache.spark.unsafe.types.UTF8String
+import org.apache.calcite.util.NlsString
 import org.apache.calcite.rel.`type`.RelDataType
+import org.apache.calcite.sql.`type`.SqlTypeName
+import org.apache.spark.sql.catalyst.expressions.Cast
 import org.apache.calcite.rex.RexLiteral
-import java.sql.{Date, Timestamp, Types}
+import org.apache.kylin.metadata.datatype.DataType
+import org.apache.spark.internal.Logging
+import java.util.regex.Pattern
+
+import org.apache.spark.sql.catalyst.util.DateTimeUtils
+import org.apache.calcite.avatica.util.TimeUnitRange
+import java.util.{GregorianCalendar, Locale, TimeZone}
+
+import org.apache.spark.sql.Column
+import java.sql.{Date, Timestamp}
 
 import org.apache.spark.sql.types.{BinaryType, BooleanType, ByteType, DateType, DecimalType, DoubleType, FloatType, IntegerType, LongType, ShortType, StringType, StructType, TimestampType}
-import java.util.{GregorianCalendar, Locale, TimeZone}
-import java.util.regex.Pattern
+import org.apache.spark.sql.functions.col
 
 object SparkTypeUtil extends Logging {
   val DATETIME_FAMILY = List("time", "date", "timestamp", "datetime")

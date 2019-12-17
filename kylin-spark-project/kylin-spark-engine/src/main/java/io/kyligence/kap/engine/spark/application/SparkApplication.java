@@ -193,13 +193,11 @@ public abstract class SparkApplication {
         if (getParam(MetadataConstants.P_LAYOUT_IDS) != null) {
             layoutSize = StringUtils.split(getParam(MetadataConstants.P_LAYOUT_IDS), ",").length;
         }
-        try (KylinConfig.SetAndUnsetThreadLocalConfig autoCloseConfig = KylinConfig
-                .setAndUnsetThreadLocalConfig(KylinConfig.loadKylinConfigFromHdfs(hdfsMetalUrl))) {
-            config = autoCloseConfig.get();
+        config = KylinConfig.getInstanceFromEnv();
+        try  {
             // init KylinBuildEnv
             KylinBuildEnv buildEnv = KylinBuildEnv.getOrCreate(config);
             infos = KylinBuildEnv.get().buildJobInfos();
-
             SparkConf sparkConf = buildEnv.sparkConf();
             if (config.isAutoSetSparkConf() && isJobOnCluster(sparkConf)) {
                 try {
