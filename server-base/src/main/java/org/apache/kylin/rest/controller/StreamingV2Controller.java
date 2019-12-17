@@ -81,6 +81,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.base.Preconditions;
 
 /**
  * StreamingController is defined as Restful API entrance for UI.
@@ -500,6 +501,7 @@ public class StreamingV2Controller extends BasicController {
             throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
         }
 
+        Preconditions.checkNotNull(desc, "Failed to deserialize from TableDesc definition");
         String[] dbTable = HadoopUtil.parseHiveTableName(desc.getName());
         desc.setName(dbTable[1]);
         desc.setDatabase(dbTable[0]);
