@@ -18,10 +18,10 @@
 
 package org.apache.kylin.engine.spark.metadata.cube.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Lists;
+import java.util.Map;
 import org.apache.kylin.engine.spark.metadata.ColumnDesc;
 import org.apache.kylin.engine.spark.metadata.FunctionDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
@@ -50,8 +50,8 @@ public class LayoutEntity implements IStorageAware {
     @JsonProperty("shard_by_columns")
     private List<Integer> shardByColumns = Lists.newArrayList();
 
-    private ImmutableBiMap<Integer, ColumnDesc> orderedDimensions;
-    private ImmutableBiMap<Integer, FunctionDesc> orderedMeasures;
+    private Map<Integer, ColumnDesc> orderedDimensions;
+    private Map<Integer, FunctionDesc> orderedMeasures;
 
     long rows;
     long sourceRows;
@@ -84,11 +84,11 @@ public class LayoutEntity implements IStorageAware {
         return owner;
     }
 
-    public ImmutableBiMap<Integer, ColumnDesc> getOrderedDimensions() { // dimension order abides by rowkey_col_desc
+    public Map<Integer, ColumnDesc> getOrderedDimensions() { // dimension order abides by rowkey_col_desc
         return orderedDimensions;
     }
 
-    public ImmutableBiMap<Integer, FunctionDesc> getOrderedMeasures() { // measure order abides by column family
+    public Map<Integer, FunctionDesc> getOrderedMeasures() { // measure order abides by column family
         return orderedMeasures;
     }
 
@@ -143,6 +143,14 @@ public class LayoutEntity implements IStorageAware {
 
     public void setShardNum(long shardNum) {
         this.shardNum = shardNum;
+    }
+
+    public void setOrderedDimensions(Map<Integer, ColumnDesc> orderedDimensions) {
+        this.orderedDimensions = orderedDimensions;
+    }
+
+    public void setOrderedMeasures(Map<Integer, FunctionDesc> orderedMeasures) {
+        this.orderedMeasures = orderedMeasures;
     }
 
     public boolean isTableIndex() {
