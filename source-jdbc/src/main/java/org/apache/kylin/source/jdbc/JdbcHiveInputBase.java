@@ -501,6 +501,8 @@ public class JdbcHiveInputBase extends HiveInputBase {
                 case HIVE:
                     identifierArray[i] = "`" + identifierArray[i] + "`";
                     break;
+                case POSTGRESQL:
+                    break;
                 default:
                     String quote = KylinConfig.getInstanceFromEnv().getQuoteCharacter();
                     identifierArray[i] = quote + identifierArray[i] + quote;
