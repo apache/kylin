@@ -24,28 +24,41 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
-public class GenericSqlConverterTest {
+public class PostgresqlSqlConverterTest {
 
     @Test
     public void testConvertSql() throws SQLException {
         GenericSqlConverter sqlConverter = new GenericSqlConverter();
         // test function
         List<String> functionTestSqls = new LinkedList<>();
-        functionTestSqls.add("SELECT MIN(\"C1\")\nFROM \"TEST_SUITE\"");
-        functionTestSqls.add("SELECT EXP(AVG(LN(EXTRACT(DOY FROM CAST('2018-03-20' AS DATE)))))\nFROM \"TEST_SUITE\"");
+        functionTestSqls.add("SELECT SUBSTR('world', 1, 2)\nFROM \"TEST_SUITE\"");
+        functionTestSqls.add("SELECT LENGHT('kylin')\nFROM \"TEST_SUITE\"");
+        functionTestSqls.add("SELECT LOG(200.0) AS \"Base 10 Logarithm");
+        functionTestSqls.add("SELECT LOG(2.0,16) AS \"Base 2 Logarithm");
+        functionTestSqls.add("SELECT CAST('2015-01-01' AS DATE) - CAST('01-OCT-2015' AS DATE)");
+        functionTestSqls.add("SELECT CAST('2015-01-01' AS DATE) + (12 * INTERVAL '1 DAY') AS NEW_DATE");
+        functionTestSqls.add("SELECT CAST('2015-01-01' AS DATE) + (12 * INTERVAL '1 MONTH') AS NEW_DATE");
+        functionTestSqls.add("SELECT EXTRACT(ISODOW FROM DATE '2016-12-12')");
+        functionTestSqls.add("SELECT RANDOM() * 10 + 1 AS \"RAND_1_10\"");
+        functionTestSqls.add("SELECT RTRIM('enterprise', 'e')");
+        functionTestSqls.add("SELECT LTRIM('testltrim', 'best')");
+        functionTestSqls.add("SELECT EXTRACT(WEEK FROM TIMESTAMP '2001-02-16 20:38:40')");
+        functionTestSqls.add("SELECT EXP(AVG(LN(2.0)))\n" +
+                "FROM \"TEST_SUITE\"");
+        functionTestSqls.add("SELECT EXTRACT(DOY FROM CAST('2018-03-20' AS DATE)))\nFROM \"TEST_SUITE\"");
         functionTestSqls.add("SELECT CASE WHEN SUM(\"C1\" - \"C1\" + 1) = 1 THEN 0 ELSE (SUM(\"C1\" * \"C1\") - SUM(\"C1\") * SUM(\"C1\") / SUM(\"C1\" - \"C1\" + 1)) / (SUM(\"C1\" - \"C1\" + 1) - 1) END\n" +
                 "FROM \"TEST_SUITE\"");
         functionTestSqls.add("SELECT EXTRACT(DAY FROM CAST('2018-03-20' AS DATE))\nFROM \"TEST_SUITE\"");
         functionTestSqls.add("SELECT FIRST_VALUE(\"C1\") OVER (ORDER BY \"C1\")\nFROM \"TEST_SUITE\"");
-        functionTestSqls.add("SELECT SUBSTR('world', 1, CAST(2 AS INTEGER))\nFROM \"TEST_SUITE\"");
+
         functionTestSqls.add("SELECT 2 - TRUNC(2 / NULLIF(3, 0)) * 3\nFROM \"TEST_SUITE\"");
-        functionTestSqls.add("SELECT CASE WHEN SUBSTRING('hello' FROM CAST(LENGTH('llo') - LENGTH('llo') + 1 AS INTEGER) FOR CAST(LENGTH('llo') AS INTEGER)) = 'llo' THEN 1 ELSE 0 END\n" +
+        functionTestSqls.add("SELECT CASE WHEN SUBSTR('hello', 3, 3) = 'llo' THEN 1 ELSE 0 END\n" +
                 "FROM \"TEST_SUITE\"");
-        functionTestSqls.add("SELECT SUBSTRING('world' FROM CAST(LENGTH('world') - 3 + 1 AS INTEGER) FOR CAST(3 AS INTEGER))\n" +
+        functionTestSqls.add("SELECT SUBSTR('world', 1, 3)\n" +
                 "FROM \"TEST_SUITE\"");
 
         for (String originSql : functionTestSqls) {
-            testSqlConvert(originSql, "testing", "default", sqlConverter);
+            testSqlConvert(originSql, "postgresql", "default", sqlConverter);
         }
         // test datatype
         List<String> typeTestSqls = new LinkedList<>();
@@ -58,8 +71,18 @@ public class GenericSqlConverterTest {
         typeTestSqls.add("SELECT CAST(BYTE AS BIT(8))\nFROM \"default\".FACT");
         typeTestSqls.add("SELECT CAST(\"BYTE\" AS VARCHAR(1024))\n" +
                 "FROM \"default\".\"FACT\"");
+        typeTestSqls.add("SELECT CAST(TinyINT AS BIT(8))\nFROM \"default\".\"FACT\"");
+        typeTestSqls.add("SELECT CAST(Binary AS BYTEA)\n" +
+                "FROM \"default\".\"FACT\"");
+        typeTestSqls.add("SELECT CAST(Float AS REAL)\n" +
+                "FROM \"default\".\"FACT\"");
+        typeTestSqls.add("SELECT CAST(INT AS INTEGER)\n" +
+                "FROM \"default\".\"FACT\"");
+        typeTestSqls.add("SELECT CAST(TimeStamp AS TIMESTAMPTZ)\n" +
+                "FROM \"default\".\"FACT\"");
+
         for (String originSql : typeTestSqls) {
-            testSqlConvert(originSql, "testing", "default", sqlConverter);
+            testSqlConvert(originSql, "postgresql", "default", sqlConverter);
         }
     }
 

@@ -21,6 +21,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.sdk.datasource.adaptor.AdaptorConfig;
 import org.apache.kylin.sdk.datasource.adaptor.DefaultAdaptor;
 import org.apache.kylin.sdk.datasource.adaptor.MysqlAdaptor;
+import org.apache.kylin.sdk.datasource.adaptor.PostgresqlAdaptor;
 
 public class SourceConnectorFactory {
     public static JdbcConnector getJdbcConnector(KylinConfig config) {
@@ -50,6 +51,8 @@ public class SourceConnectorFactory {
         switch (dataSourceId) {
         case "mysql":
             return MysqlAdaptor.class.getName();
+        case "postgresql":
+            return PostgresqlAdaptor.class.getName();
         default:
             return DefaultAdaptor.class.getName();
         }
