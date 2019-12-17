@@ -2383,7 +2383,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean isUTEnv() {
-        return "UT".equals(getDeployEnv());
+        return "DEV".equals(getDeployEnv());
     }
 
     public int snapshotParallelBuildTimeoutSeconds() {

@@ -18,16 +18,29 @@
 
 package io.kyligence.kap.engine.spark.job;
 
+import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
+import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.spark.metadata.cube.model.DataSegment;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.ExecutableContext;
+import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.JobTypeEnum;
+import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.job.util.MailNotificationUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,33 +53,32 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(NSparkCubingJob.class);
 
-    private Cube cube;
+    private CubeInstance cube;
 
     // for test use only
-    public static NSparkCubingJob create(Set<DataSegment> segments, Set<LayoutEntity> layouts, String submitter) {
-        return create(segments, layouts, submitter, JobTypeEnum.INDEX_BUILD, UUID.randomUUID().toString());
+    public static NSparkCubingJob create(Set<CubeSegment> segments, String submitter) {
+        return create(segments, submitter, JobTypeEnum.INDEX_BUILD, UUID.randomUUID().toString());
     }
 
-    public static NSparkCubingJob create(Set<DataSegment> segments, Set<LayoutEntity> layouts, String submitter,
+    public static NSparkCubingJob create(Set<CubeSegment> segments, String submitter,
             JobTypeEnum jobType, String jobId) {
         Preconditions.checkArgument(!segments.isEmpty());
-        Preconditions.checkArgument(!layouts.isEmpty());
         Preconditions.checkArgument(submitter != null);
         NSparkCubingJob job = new NSparkCubingJob();
-        job.cube = segments.iterator().next().getCube();
+        job.cube = segments.iterator().next().getCubeInstance();
         long startTime = Long.MAX_VALUE - 1;
         long endTime = 0L;
-        for (DataSegment segment : segments) {
-            startTime = startTime < Long.parseLong(segment.getSegRange().getStart().toString()) ? startTime
-                    : Long.parseLong(segment.getSegRange().getStart().toString());
-            endTime = endTime > Long.parseLong(segment.getSegRange().getStart().toString()) ? endTime
-                    : Long.parseLong(segment.getSegRange().getEnd().toString());
+        for (CubeSegment segment : segments) {
+            startTime = startTime < Long.parseLong(segment.getSegRange().start.toString()) ? startTime
+                    : Long.parseLong(segment.getSegRange().start.toString());
+            endTime = endTime > Long.parseLong(segment.getSegRange().start.toString()) ? endTime
+                    : Long.parseLong(segment.getSegRange().end.toString());
         }
         job.setId(jobId);
         job.setName(jobType.toString());
         job.setJobType(jobType);
         job.setTargetSubject(job.cube.getModel().getId());
-        job.setTargetSegments(segments.stream().map(x -> String.valueOf(x.getId())).collect(Collectors.toList()));
+        job.setTargetSegments(segments.stream().map(x -> String.valueOf(x.getUuid())).collect(Collectors.toList()));
         job.setProject(job.cube.getProject());
         job.setSubmitter(submitter);
 
@@ -74,7 +86,6 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
         job.setParam(MetadataConstants.P_PROJECT_NAME, job.cube.getProject());
         job.setParam(MetadataConstants.P_TARGET_MODEL, job.getTargetSubject());
         job.setParam(MetadataConstants.P_CUBE_ID, job.cube.getId());
-        job.setParam(MetadataConstants.P_LAYOUT_IDS, NSparkCubingUtil.ids2Str(NSparkCubingUtil.toLayoutIds(layouts)));
         job.setParam(MetadataConstants.P_SEGMENT_IDS, String.join(",", job.getTargetSegments()));
         job.setParam(MetadataConstants.P_DATA_RANGE_START, String.valueOf(startTime));
         job.setParam(MetadataConstants.P_DATA_RANGE_END, String.valueOf(endTime));
@@ -86,9 +97,62 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
 
     @Override
     public Set<String> getMetadataDumpList(KylinConfig config) {
-//        return cube.collectPrecalculationResource();
-        //TODO: dump metadata first, convert to metadata interface in spark
-        return null;
+        return JobRelatedMetaUtil.collectCubeMetadata(cube);
+    }
+
+    // KEYS of Output.extraInfo map, info passed across job steps
+    public static final String SOURCE_RECORD_COUNT = "sourceRecordCount";
+    public static final String SOURCE_SIZE_BYTES = "sourceSizeBytes";
+    public static final String CUBE_SIZE_BYTES = "byteSizeBytes";
+    public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
+    private static final String DEPLOY_ENV_NAME = "envName";
+    private static final String PROJECT_INSTANCE_NAME = "projectName";
+    private static final String JOB_TYPE = "jobType";
+    private static final String SEGMENT_NAME = "segmentName";
+
+    @Override
+    protected Pair<String, String> formatNotifications(ExecutableContext context, ExecutableState state) {
+        CubeInstance cubeInstance = CubeManager.getInstance(context.getConfig())
+                .getCube(CubingExecutableUtil.getCubeName(this.getParams()));
+        final Output output = getManager().getOutput(getId());
+        state = output.getState();
+        if (state != ExecutableState.ERROR
+                && !cubeInstance.getDescriptor().getStatusNeedNotify().contains(state.toString())) {
+            logger.info("state:" + state + " no need to notify users");
+            return null;
+        }
+
+        if (!MailNotificationUtil.hasMailNotification(state)) {
+            logger.info("Cannot find email template for job state: " + state);
+            return null;
+        }
+
+        Map<String, Object> dataMap = Maps.newHashMap();
+        dataMap.put("job_name", getName());
+        dataMap.put("env_name", getDeployEnvName());
+        dataMap.put("submitter", StringUtil.noBlank(getSubmitter(), "missing submitter"));
+        dataMap.put("job_engine", MailNotificationUtil.getLocalHostName());
+        dataMap.put("project_name", cubeInstance.getProject());
+        dataMap.put("cube_name", cubeInstance.getName());
+        dataMap.put("source_records_count", String.valueOf(findSourceRecordCount()));
+        dataMap.put("start_time", new Date(getStartTime()).toString());
+        dataMap.put("duration", getDuration() / 60000 + "mins");
+        dataMap.put("mr_waiting", getMapReduceWaitTime() / 60000 + "mins");
+        dataMap.put("last_update_time", new Date(getLastModified()).toString());
+
+        return super.formatNotifications(context, state);
+    }
+
+    public String getDeployEnvName() {
+        return getParam(DEPLOY_ENV_NAME);
+    }
+
+    public long findSourceRecordCount() {
+        return Long.parseLong(findExtraInfo(SOURCE_RECORD_COUNT, "0"));
+    }
+
+    public long getMapReduceWaitTime() {
+        return getExtraInfoAsLong(MAP_REDUCE_WAIT_TIME, 0L);
     }
 
     public NSparkCubingStep getSparkCubingStep() {
@@ -99,11 +163,11 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
         return getTask(NResourceDetectStep.class);
     }
 
-    public Cube getCube() {
+    public CubeInstance getCube() {
         return cube;
     }
 
-    public void setCube(Cube cube) {
+    public void setCube(CubeInstance cube) {
         this.cube = cube;
     }
 

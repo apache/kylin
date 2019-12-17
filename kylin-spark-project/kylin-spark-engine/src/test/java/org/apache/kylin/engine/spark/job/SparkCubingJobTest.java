@@ -19,147 +19,137 @@
 package org.apache.kylin.engine.spark.job;
 
 import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
-import io.kyligence.kap.engine.spark.job.NSparkCubingStep;
-import io.kyligence.kap.engine.spark.job.NSparkCubingUtil;
-import io.kyligence.kap.engine.spark.storage.ParquetStorage;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.common.persistence.ResourceTool;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.cube.CubeDescManager;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
-import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
-import org.apache.kylin.engine.spark.metadata.cube.model.CuboidLayoutChooser;
-import org.apache.kylin.engine.spark.metadata.cube.model.DataLayout;
-import org.apache.kylin.engine.spark.metadata.cube.model.DataSegDetails;
-import org.apache.kylin.engine.spark.metadata.cube.model.DataSegment;
-import org.apache.kylin.engine.spark.metadata.cube.model.IndexEntity;
-import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
-import org.apache.kylin.engine.spark.metadata.cube.model.SegmentRange;
-import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree;
-import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTreeFactory;
+import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.junit.After;
+import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
+import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spark_project.guava.collect.Sets;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class SparkCubingJobTest extends LocalWithSparkSessionTest {
 
-    private KylinConfig config;
+    private static final Logger logger = LoggerFactory.getLogger(SparkCubingJobTest.class);
+
+    private CubeManager cubeManager;
+    private DefaultScheduler scheduler;
+    private ExecutableManager jobService;
+
+    protected void initEnv() throws IOException{
+        deployMetadata(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
+    }
 
     @Before
-    public void setup() {
+    public void setup() throws Exception{
         ss.sparkContext().setLogLevel("ERROR");
         System.setProperty("kylin.job.scheduler.poll-interval-second", "1");
         System.setProperty("kap.engine.persist-flattable-threshold", "0");
-
-        /*NDefaultScheduler.destroyInstance();
-        NDefaultScheduler scheduler = NDefaultScheduler.getInstance(getProject());
-        scheduler.init(new JobEngineConfig(getTestConfig()), new MockJobLock());
+        System.setProperty(KylinConfig.KYLIN_CONF, HBaseMetadataTestCase.SANDBOX_TEST_DATA);
+        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        cubeManager = CubeManager.getInstance(kylinConfig);
+        jobService = ExecutableManager.getInstance(kylinConfig);
+        scheduler = DefaultScheduler.createInstance();
+        scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
-        }*/
+        }
+        for (String jobId : jobService.getAllJobIds()) {
+            AbstractExecutable executable = jobService.getJob(jobId);
+            if (executable instanceof CubingJob || executable instanceof CheckpointExecutable) {
+                jobService.deleteJob(jobId);
+            }
+        }
 
-        config = getTestConfig();
-    }
-
-    @After
-    public void after() {
-        cleanupTestMetadata();
-        System.clearProperty("kylin.job.scheduler.poll-interval-second");
-        System.clearProperty("kap.engine.persist-flattable-threshold");
+        //initEnv();
     }
 
     @Test
-    public void testBuildJob() throws Exception {
-        Cube cube = Cube.getInstance(config);
-        ExecutableManager execMgr = ExecutableManager.getInstance(config);
+    public void testBuildJob() throws Exception{
 
-        Assert.assertTrue(config.getHdfsWorkingDirectory().startsWith("file:"));
+        String cubeName = "ci_inner_join_cube";
+        CubeInstance cubeInstance = cubeManager.getCube(cubeName);
+        clearSegment(cubeInstance);
 
-        // ready cube, segment, cuboid layout
-        DataSegment oneSeg = cube.appendSegment(SegmentRange.TimePartitionedSegmentRange.createInfinite());
-        List<LayoutEntity> round1 = new ArrayList<>();
-        round1.add(cube.getCuboidLayout(20_000_020_001L));
-        round1.add(cube.getCuboidLayout(1_000_001L));
-        round1.add(cube.getCuboidLayout(30001L));
-        round1.add(cube.getCuboidLayout(10002L));
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
+        f.setTimeZone(TimeZone.getTimeZone("GMT"));
+        long date1 = 0;
+        long date2 = f.parse("2012-06-01").getTime();
+        long date3 = f.parse("2013-07-01").getTime();
 
-        SpanningTree nSpanningTree = SpanningTreeFactory.fromLayouts(round1, cube.getUuid());
-        for (IndexEntity rootCuboid : nSpanningTree.getRootIndexEntities()) {
-            LayoutEntity layout = CuboidLayoutChooser.selectLayoutForBuild(oneSeg, rootCuboid);
-            Assert.assertNull(layout);
-        }
-
-        NSparkCubingJob job = NSparkCubingJob.create(Sets.newHashSet(oneSeg), Sets.newLinkedHashSet(round1), "ADMIN");
-        NSparkCubingStep sparkStep = job.getSparkCubingStep();
-        StorageURL distMetaUrl = StorageURL.valueOf(sparkStep.getDistMetaUrl());
-        Assert.assertEquals("hdfs", distMetaUrl.getScheme());
-        Assert.assertTrue(distMetaUrl.getParameter("path").startsWith(config.getHdfsWorkingDirectory()));
-
-        execMgr.addJob(job);
-
+        CubeSegment segment = cubeManager.appendSegment(cubeInstance, new SegmentRange.TSRange(date1, date2));
+        NSparkCubingJob job = NSparkCubingJob.create(Sets.newHashSet(segment), "ADMIN");
+        jobService.addJob(job);
         // wait job done
-        ExecutableState status = wait(job);
-        Assert.assertEquals(ExecutableState.SUCCEED, status);
+        ExecutableState state = waitForJob(job.getId());
+        state = wait(job);
+        Assert.assertEquals(ExecutableState.SUCCEED, state);
 
-        /**
-         * Round2. Build new layouts, should reuse the data from already existing cuboid.
-         * Notice: After round1 the segment has been updated, need to refresh the cache before use the old one.
-         */
-        List<LayoutEntity> round2 = new ArrayList<>();
-        round2.add(cube.getCuboidLayout(1L));
-        round2.add(cube.getCuboidLayout(20_000_000_001L));
-        round2.add(cube.getCuboidLayout(20001L));
-        round2.add(cube.getCuboidLayout(10001L));
-
-        nSpanningTree = SpanningTreeFactory.fromLayouts(round2, cube.getUuid());
-        for (IndexEntity rootCuboid : nSpanningTree.getRootIndexEntities()) {
-            LayoutEntity layout = CuboidLayoutChooser.selectLayoutForBuild(oneSeg, rootCuboid);
-            Assert.assertNotNull(layout);
-        }
-
-        job = NSparkCubingJob.create(Sets.newHashSet(oneSeg), Sets.newLinkedHashSet(round2), "ADMIN");
-        execMgr.addJob(job);
-
+        CubeSegment segment2 = cubeManager.appendSegment(cubeInstance, new SegmentRange.TSRange(date2, date3));
+        NSparkCubingJob job2 = NSparkCubingJob.create(Sets.newHashSet(segment2), "ADMIN");
+        jobService.addJob(job);
         // wait job done
-        status = wait(job);
-        Assert.assertEquals(ExecutableState.SUCCEED, status);
+        ExecutableState state2 = waitForJob(job2.getId());
+        state = wait(job2);
+        Assert.assertEquals(ExecutableState.SUCCEED, state2);
 
-        validateCube(cube.getSegments().get(0).getId());
-        validateTableIndex(cube.getSegments().get(0).getId());
+        //TODO: test merge job
+        //merge
+
     }
 
-    private void validateCube(String segmentId) {
-        Cube cube = Cube.getInstance(config, "89af4ee2-2cdb-4b07-b39e-4c29856309aa");
-        DataSegment seg = cube.getSegment(segmentId);
-
-        // check row count in NDataSegDetails
-        Assert.assertEquals(10000, seg.getLayout(1).getRows());
-        Assert.assertEquals(10000, seg.getLayout(10001).getRows());
-        Assert.assertEquals(10000, seg.getLayout(10002).getRows());
+    private void clearSegment(CubeInstance cube) throws Exception {
+        cubeManager.updateCubeDropSegments(cube, cube.getSegments());
     }
 
-    private void validateTableIndex(String segmentId) {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        Cube cube = Cube.getInstance(config, "89af4ee2-2cdb-4b07-b39e-4c29856309aa");
-        DataSegment seg = cube.getSegment(segmentId);
-        DataSegDetails segCuboids = seg.getSegDetails();
-        DataLayout dataCuboid = DataLayout.newDataLayout(segCuboids, 20000000001L);
-        LayoutEntity layout = dataCuboid.getLayout();
-        Assert.assertEquals(10000, seg.getLayout(20000000001L).getRows());
+    protected ExecutableState waitForJob(String jobId) {
+        while (true) {
+            AbstractExecutable job = jobService.getJob(jobId);
+            if (job.getStatus() == ExecutableState.SUCCEED || job.getStatus() == ExecutableState.ERROR) {
+                return job.getStatus();
+            } else {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
-        ParquetStorage storage = new ParquetStorage();
-        Dataset<Row> ret = storage.getFrom(NSparkCubingUtil.getStoragePath(dataCuboid), ss);
-        List<Row> rows = ret.collectAsList();
-        Assert.assertEquals("Ebay", rows.get(0).apply(1).toString());
-        Assert.assertEquals("Ebaymotors", rows.get(1).apply(1).toString());
-        Assert.assertEquals("Ebay", rows.get(9998).apply(1).toString());
-        Assert.assertEquals("英国", rows.get(9999).apply(1).toString());
+    public static void deployMetadata(String localMetaData) throws IOException {
+        // install metadata to hbase
+        new ResourceTool().reset(config());
+        new ResourceTool().copy(KylinConfig.createInstanceFromUri(localMetaData), config());
+
+        // update cube desc signature.
+        for (CubeInstance cube : CubeManager.getInstance(config()).listAllCubes()) {
+            CubeDescManager.getInstance(config()).updateCubeDesc(cube.getDescriptor());//enforce signature updating
+        }
+    }
+
+    private static KylinConfig config() {
+        return KylinConfig.getInstanceFromEnv();
     }
 }
