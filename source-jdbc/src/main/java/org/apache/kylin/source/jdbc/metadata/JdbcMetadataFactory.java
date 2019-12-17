@@ -27,7 +27,7 @@ public class JdbcMetadataFactory {
 
     public static IJdbcMetadata getJdbcMetadata(SourceDialect jdbcDialect, final DBConnConf dbConnConf) {
         switch (jdbcDialect) {
-        case SQL_SERVER:
+        case MSSQL:
             return new SQLServerJdbcMetadata(dbConnConf);
         case MYSQL:
             return new MySQLJdbcMetadata(dbConnConf);

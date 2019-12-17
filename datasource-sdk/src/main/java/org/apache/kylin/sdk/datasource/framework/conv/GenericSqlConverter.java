@@ -51,7 +51,7 @@ public class GenericSqlConverter {
         DataSourceDef sourceDs = provider.getById(sourceDialect);
         final DataSourceDef targetDs = provider.getById(targetDialect);
         ConvMaster convMaster = new ConvMaster(sourceDs, targetDs);
-        SqlConverter.IConfigurer configurer = new DefaultConfiguer(targetDs);
+        SqlConverter.IConfigurer configurer = new DefaultConfigurer(targetDs);
         return new SqlConverter(configurer, convMaster);
     }
 }

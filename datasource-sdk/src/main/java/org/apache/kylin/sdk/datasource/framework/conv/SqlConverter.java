@@ -93,7 +93,7 @@ public class SqlConverter {
 
         String fixAfterDefaultConvert(String orig);
 
-        SqlDialect getSqlDialect() throws SQLException;
+        SqlDialect getSqlDialect();
 
         boolean allowNoOffset();
 

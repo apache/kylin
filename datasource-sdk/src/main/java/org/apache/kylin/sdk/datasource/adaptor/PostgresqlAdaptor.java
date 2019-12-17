@@ -19,6 +19,7 @@ package org.apache.kylin.sdk.datasource.adaptor;
 
 import javax.sql.rowset.CachedRowSet;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -34,7 +35,12 @@ public class PostgresqlAdaptor extends DefaultAdaptor {
     public List<String> listDatabases() throws SQLException {
         List<String> ret = new ArrayList<>();
         try (Connection con = getConnection()) {
-            ret.add(con.getCatalog());
+            DatabaseMetaData metaData = con.getMetaData();
+            ResultSet schemaList = metaData.getSchemas();
+            while (schemaList.next()) {
+                String schmea = schemaList.getString("TABLE_SCHEM");
+                ret.add(schmea);
+            }
         }
         return ret;
     }
@@ -43,14 +49,11 @@ public class PostgresqlAdaptor extends DefaultAdaptor {
     public List<String> listTables(String catalog) throws SQLException {
         List<String> ret = new ArrayList<>();
         String[] tableTypes = {"TABLE"};
-        try (Connection con = getConnection(); ResultSet res = con.getMetaData().getTables(catalog, null, null, tableTypes)) {
+        try (Connection con = getConnection(); ResultSet res = con.getMetaData().getTables(null, catalog, null, tableTypes)) {
             String table;
             while (res.next()) {
-                String schem = res.getString("TABLE_SCHEM");
-                if (schem.equals(catalog)) {
-                    table = res.getString("TABLE_NAME");
-                    ret.add(table);
-                }
+                table = res.getString("TABLE_NAME");
+                ret.add(table);
             }
         }
         return ret;

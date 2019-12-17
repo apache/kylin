@@ -31,7 +31,7 @@ import javax.sql.rowset.CachedRowSet;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.kylin.sdk.datasource.framework.FixedCachedRowSetImpl;
-import org.apache.kylin.sdk.datasource.framework.conv.DefaultConfiguer;
+import org.apache.kylin.sdk.datasource.framework.conv.DefaultConfigurer;
 import org.apache.kylin.sdk.datasource.framework.conv.SqlConverter;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDef;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDefProvider;
@@ -89,7 +89,7 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
 
         DataSourceDefProvider provider = DataSourceDefProvider.getInstance();
         DataSourceDef jdbcDs = provider.getById(getDataSourceId());
-        configurer = new DefaultConfiguer(this, jdbcDs);
+        configurer = new DefaultConfigurer(this, jdbcDs);
     }
 
     /**

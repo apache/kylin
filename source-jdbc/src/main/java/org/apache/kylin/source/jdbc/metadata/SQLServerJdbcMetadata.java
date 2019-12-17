@@ -63,6 +63,6 @@ public class SQLServerJdbcMetadata extends DefaultJdbcMetadata {
 
     @Override
     public SourceDialect getDialect() {
-        return SourceDialect.SQL_SERVER;
+        return SourceDialect.MSSQL;
     }
 }
