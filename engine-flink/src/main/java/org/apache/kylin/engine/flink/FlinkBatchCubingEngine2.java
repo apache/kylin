@@ -41,8 +41,8 @@ public class FlinkBatchCubingEngine2 implements IBatchCubingEngine {
     }
 
     @Override
-    public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
-        return new FlinkBatchCubingJobBuilder2(newSegment, submitter).build();
+    public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter, Integer priorityOffset) {
+        return new FlinkBatchCubingJobBuilder2(newSegment, submitter, priorityOffset).build();
     }
 
     @Override
