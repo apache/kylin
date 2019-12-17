@@ -21,7 +21,6 @@ package io.kyligence.kap.engine.spark.job;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
-import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
