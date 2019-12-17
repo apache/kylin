@@ -44,8 +44,8 @@ public class FlinkBatchCubingJobBuilder2 extends JobBuilderSupport {
     private final IFlinkInput.IFlinkBatchCubingInputSide inputSide;
     private final IFlinkOutput.IFlinkBatchCubingOutputSide outputSide;
 
-    public FlinkBatchCubingJobBuilder2(CubeSegment newSegment, String submitter) {
-        super(newSegment, submitter);
+    public FlinkBatchCubingJobBuilder2(CubeSegment newSegment, String submitter, Integer priorityOffset) {
+        super(newSegment, submitter, priorityOffset);
         this.inputSide = FlinkUtil.getBatchCubingInputSide(seg);
         this.outputSide = FlinkUtil.getBatchCubingOutputSide(seg);
     }
