@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.SourceDialect;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -36,6 +37,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class FlatTableSqlQuoteUtils {
+    private static KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
     private FlatTableSqlQuoteUtils() {
     }
@@ -45,7 +47,6 @@ public class FlatTableSqlQuoteUtils {
     private static synchronized void setQuote() {
         if (quote != null)
             return;
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         if (kylinConfig.enableHiveDdlQuote()) {
             quote = kylinConfig.getQuoteCharacter();
         } else {
@@ -54,8 +55,12 @@ public class FlatTableSqlQuoteUtils {
     }
 
     public static String getQuote() {
-        setQuote();
-        return quote;
+        if (kylinConfig.getJdbcSourceDialect().equals(SourceDialect.POSTGRESQL.source)) {
+            return "";
+        } else {
+            setQuote();
+            return quote;
+        }
     }
 
     /**
@@ -63,7 +68,7 @@ public class FlatTableSqlQuoteUtils {
      */
     public static String quoteIdentifier(String identifier) {
         setQuote();
-        return quote + identifier + quote;
+        return getQuote() + identifier + getQuote();
     }
 
     /**
@@ -71,8 +76,8 @@ public class FlatTableSqlQuoteUtils {
      */
     public static String quoteTableIdentity(String database, String table) {
         setQuote();
-        String dbName = quote + database + quote;
-        String tableName = quote + table + quote;
+        String dbName = getQuote() + database + getQuote();
+        String tableName = getQuote() + table + getQuote();
         return String.format(Locale.ROOT, "%s.%s", dbName, tableName).toUpperCase(Locale.ROOT);
     }
 
@@ -169,7 +174,7 @@ public class FlatTableSqlQuoteUtils {
     // visible for test
     static String quoteIdentifier(String sqlExpr, String identifier, List<String> identifierPatterns) {
         setQuote();
-        String quotedIdentifier = quote + identifier.trim() + quote;
+        String quotedIdentifier = getQuote() + identifier.trim() + getQuote();
 
         for (String pattern : identifierPatterns) {
             Matcher matcher = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE | Pattern.DOTALL).matcher(sqlExpr);

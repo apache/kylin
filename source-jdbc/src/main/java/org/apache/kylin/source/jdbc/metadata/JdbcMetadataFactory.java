@@ -31,6 +31,8 @@ public class JdbcMetadataFactory {
             return new SQLServerJdbcMetadata(dbConnConf);
         case MYSQL:
             return new MySQLJdbcMetadata(dbConnConf);
+        case POSTGRESQL:
+            return new PostgresqlJdbcMetadata(dbConnConf);
         default:
             return new DefaultJdbcMetadata(dbConnConf);
         }
