@@ -135,7 +135,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
     private String generateCreateSchemaSql(String schemaName) {
         if (SourceDialect.VERTICA.equals(dialect) || SourceDialect.MYSQL.equals(dialect)) {
             return String.format(Locale.ROOT, "CREATE schema IF NOT EXISTS %s", schemaName);
-        } else if (SourceDialect.SQL_SERVER.equals(dialect)) {
+        } else if (SourceDialect.MSSQL.equals(dialect)) {
             return String.format(Locale.ROOT,
                     "IF NOT EXISTS (SELECT name FROM sys.schemas WHERE name = N'%s') EXEC('CREATE SCHEMA"
                             + " [%s] AUTHORIZATION [dbo]')",
@@ -158,7 +158,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
         } else if (SourceDialect.MYSQL.equals(dialect)) {
             return String.format(Locale.ROOT, "LOAD DATA INFILE '%s/%s.csv' INTO %s FIELDS TERMINATED BY ',';",
                     tableFileDir, tableName, tableName);
-        } else if (SourceDialect.SQL_SERVER.equals(dialect)) {
+        } else if (SourceDialect.MSSQL.equals(dialect)) {
             return String.format(Locale.ROOT, "BULK INSERT %s FROM '%s/%s.csv' WITH(FIELDTERMINATOR = ',')", tableName,
                     tableFileDir, tableName);
         } else {

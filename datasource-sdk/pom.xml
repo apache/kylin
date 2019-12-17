@@ -81,6 +81,8 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
+            <version>42.1.1</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

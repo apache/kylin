@@ -18,6 +18,7 @@
 
 package org.apache.kylin.source.jdbc.extensible;
 
+import org.apache.calcite.sql.SqlDialect;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.JoinedFlatTable;
@@ -44,7 +45,7 @@ public class JdbcHiveInputBase extends org.apache.kylin.source.jdbc.JdbcHiveInpu
         private final JdbcConnector dataSource;
 
         public JDBCBaseBatchCubingInputSide(IJoinedFlatTableDesc flatDesc, JdbcConnector dataSource) {
-            super(flatDesc);
+            super(flatDesc, true);
             this.dataSource = dataSource;
         }
 
@@ -57,6 +58,9 @@ public class JdbcHiveInputBase extends org.apache.kylin.source.jdbc.JdbcHiveInpu
             KylinConfig config = flatDesc.getDataModel().getConfig();
             PartitionDesc partitionDesc = flatDesc.getDataModel().getPartitionDesc();
             String partCol = null;
+            boolean enableQuote = dataSource.getSqlConverter().getConfigurer().enableQuote();
+            SqlDialect sqlDialect = enableQuote ? dataSource.getSqlConverter().getConfigurer().getSqlDialect() : FlatTableSqlQuoteUtils.NON_QUOTE_DIALECT;
+            SqlConverter.IConfigurer iconfigurer = dataSource.getSqlConverter().getConfigurer();
 
             if (partitionDesc.isPartitioned()) {
                 partCol = partitionDesc.getPartitionDateColumn(); //tablename.colname
@@ -67,24 +71,30 @@ public class JdbcHiveInputBase extends org.apache.kylin.source.jdbc.JdbcHiveInpu
             String splitColumn;
             String splitDatabase;
             TblColRef splitColRef = determineSplitColumn();
-            splitTable = splitColRef.getTableRef().getTableName();
             splitTable = splitColRef.getTableRef().getTableDesc().getName();
             splitTableAlias = splitColRef.getTableAlias();
-            //to solve case sensitive if necessary
-            splitColumn = JoinedFlatTable.getQuotedColExpressionInSourceDB(flatDesc, splitColRef);
-            splitDatabase = splitColRef.getColumnDesc().getTable().getDatabase().toLowerCase(Locale.ROOT);
+            splitDatabase = splitColRef.getColumnDesc().getTable().getDatabase();
 
-            //using sqoop to extract data from jdbc source and dump them to hive
-            String selectSql = JoinedFlatTable.generateSelectDataStatement(flatDesc, true, new String[] { partCol });
+            if (enableQuote) {
+                splitColumn = sqlDialect.quoteIdentifier(splitColRef.getTableAlias()) + "."
+                        + sqlDialect.quoteIdentifier(splitColRef.getName());
+                splitDatabase = sqlDialect.quoteIdentifier(splitDatabase);
+                splitTable = sqlDialect.quoteIdentifier(splitTable);
+                splitTableAlias = sqlDialect.quoteIdentifier(splitTableAlias);
+            } else {
+                splitColumn = splitColRef.getTableAlias() + "." + splitColRef.getName();
+            }
+
+            String selectSql = JoinedFlatTable.generateSelectDataStatement(flatDesc, true, new String[]{partCol}, sqlDialect);
             selectSql = escapeQuotationInSql(dataSource.convertSql(selectSql));
 
             String hiveTable = flatDesc.getTableName();
-            String sqoopHome = config.getSqoopHome();
             String filedDelimiter = config.getJdbcSourceFieldDelimiter();
             int mapperNum = config.getSqoopMapperNum();
 
-            String bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM `%s`.%s as `%s`", splitColumn,
-                    splitColumn, splitDatabase, splitTable, splitTableAlias);
+            String bquery;
+            bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM %s.%s as %s",
+                    splitColumn, splitColumn, splitDatabase, splitTable, splitTableAlias);
             bquery = dataSource.convertSql(bquery);
 
             if (partitionDesc.isPartitioned()) {
@@ -95,28 +105,24 @@ public class JdbcHiveInputBase extends org.apache.kylin.source.jdbc.JdbcHiveInpu
                                     .getPartitionTimeColumnRef().getTableAlias().equals(splitTableAlias))) {
                         String quotedPartCond = FlatTableSqlQuoteUtils.quoteIdentifierInSqlExpr(flatDesc,
                                 partitionDesc.getPartitionConditionBuilder().buildDateRangeCondition(partitionDesc,
-                                        flatDesc.getSegment(), segRange, null));
+                                        flatDesc.getSegment(), segRange, null), sqlDialect);
                         bquery += " WHERE " + quotedPartCond;
                     }
                 }
             }
+
             bquery = escapeQuotationInSql(bquery);
-
-
-            splitColumn = escapeQuotationInSql(dataSource.convertColumn(splitColumn, FlatTableSqlQuoteUtils.getQuote()));
-
-
+            splitColumn = escapeQuotationInSql(splitColumn);
             String cmd = StringUtils.format(
-                    "--connect \"%s\" --driver %s --username %s --password %s --query \"%s AND \\$CONDITIONS\" "
-                            + "--target-dir %s/%s --split-by %s --boundary-query \"%s\" --null-string '' "
+                    "--connect \"%s\" --driver \"%s\" --username \"%s\" --password \"%s\" --query \"%s AND \\$CONDITIONS\" "
+                            + "--target-dir \"%s/%s\" --split-by \"%s\" --boundary-query \"%s\" --null-string '' "
                             + "--fields-terminated-by '%s' --num-mappers %d",
                     dataSource.getJdbcUrl(), dataSource.getJdbcDriver(), dataSource.getJdbcUser(),
                     dataSource.getJdbcPassword(), selectSql, jobWorkingDir, hiveTable, splitColumn, bquery,
                     filedDelimiter, mapperNum);
-            SqlConverter.IConfigurer configurer = dataSource.getSqlConverter().getConfigurer();
-            if (configurer.getTransactionIsolationLevel() != null) {
+            if (iconfigurer.getTransactionIsolationLevel() != null) {
                 cmd = cmd + " --relaxed-isolation --metadata-transaction-isolation-level "
-                        + configurer.getTransactionIsolationLevel();
+                        + iconfigurer.getTransactionIsolationLevel();
             }
             logger.debug("sqoop cmd: {}", cmd);
 

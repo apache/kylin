@@ -25,6 +25,7 @@
     <PROPERTY NAME="sql.keyword-default-uppercase" VALUE="false"/>
     <PROPERTY NAME="sql.case-sensitive" VALUE="true"/>
     <PROPERTY NAME="metadata.enable-cache" VALUE="true"/>
+<!--    <PROPERTY NAME="sql.enable-quote-all-identifiers" VALUE="false"/>-->
 
     <!--DayOfYear-->
     <FUNCTION_DEF ID="9" EXPRESSION="EXTRACT(DOY FROM CAST($0 AS DATE))"/>
