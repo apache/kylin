@@ -22,8 +22,61 @@
 
         <h3>Partition</h3>
         <div class="box-body">
+          <!--Date Format-->
+          <div class="form-group middle-popover">
+            <div class="row">
+              <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Has separate columns for "year", "month" and "day" ?</b>  <i kylinpopover placement="right" title="Separate Date Columns" template="separateDateColumnsTip.html" class="fa fa-info-circle"></i></label>
+              <div class="col-xs-12 col-sm-6">
+                <toggle-switch on-label="Yes" off-label="No" ng-disabled="state.mode!=='edit'" ng-click="toggleHasSeparateDateColumns()" ng-model="partitionColumn.hasSeparateDateColumns"></toggle-switch>
+              </div>
+            </div>
+          </div>
+
+          <!--Partition Columns-->
+          <div class="form-group" ng-if="partitionColumn.hasSeparateDateColumns">
+            <div class="row middle-popover">
+              <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Date Columns</b> <i kylinpopover placement="right" title="Partition Date Columns" class="fa fa-info-circle"></i></label>
+              <div class="col-xs-12 col-sm-6" ng-if="state.mode=='edit'">
+                <select width="'49%'" chosen data-placeholder="e.g. DEFAULT.TABLE_FACT"
+                        ng-model="selectedTables.fact"
+                        ng-change="tableChange(selectedTables.fact)"
+                        data-placement=""
+                        ng-options="alias as alias for alias in availableFactTables" >
+                  <option value="">--Select Partition Table--</option>
+                </select>
+
+                <select width="'49%'" chosen data-placeholder="e.g. DEFAULT.TABLE_FACT.YEAR"
+                        ng-model="partition_ymd_columns.year_column"
+                        ng-change="partitionYMDColumnChange('Y', partition_ymd_columns.year_column)"
+                        data-placement=""
+                        ng-options="selectedTables.fact+'.'+columns.name as columns.name for columns in getPartitonColumns(selectedTables.fact)" >
+                  <option value="">--Select Partition Column for Year--</option>
+                </select>
+                <select width="'49%'" chosen data-placeholder="e.g. DEFAULT.TABLE_FACT.MONTH"
+                        ng-model="partition_ymd_columns.month_column"
+                        ng-change="partitionYMDColumnChange('M', partition_ymd_columns.month_column)"
+                        data-placement=""
+                        ng-options="selectedTables.fact+'.'+columns.name as columns.name for columns in getPartitonColumns(selectedTables.fact)" >
+                  <option value="">--Select Partition Column for Month--</option>
+                </select>
+                <select width="'49%'" chosen data-placeholder="e.g. DEFAULT.TABLE_FACT.DAY"
+                        ng-model="partition_ymd_columns.day_column"
+                        ng-change="partitionYMDColumnChange('D', partition_ymd_columns.day_column)"
+                        data-placement=""
+                        ng-options="selectedTables.fact+'.'+columns.name as columns.name for columns in getPartitonColumns(selectedTables.fact)" >
+                  <option value="">--Select Partition Column for Day--</option>
+                </select>
+              </div>
+              <div class="col-xs-12 col-sm-6" ng-if="state.mode=='view'">
+                     <span >
+                          {{!!(modelsManager.selectedModel.partition_desc.partition_date_column)?modelsManager.selectedModel.partition_desc.partition_date_column: ''}}
+                     </span>
+              </div>
+            </div>
+          </div>
+
           <!--Partition Column-->
-          <div class="form-group">
+          <div class="form-group" ng-if="!partitionColumn.hasSeparateDateColumns">
               <div class="row middle-popover">
                   <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Date Column</b> <i kylinpopover placement="right" title="Partition Date Column" template="partitionTip.html" class="fa fa-info-circle"></i></label>
                   <div class="col-xs-12 col-sm-6" ng-if="state.mode=='edit'">
@@ -62,7 +115,7 @@
                         ng-if="state.mode=='edit'"
                         ng-model="partition_date.type"
                         ng-required="partition_date.type"
-                        ng-disabled="$parent.isFormatEdit.editable!==true"
+                        ng-disabled="$parent.isFormatEdit.editable!==true || partitionColumn.hasSeparateDateColumns"
                         ng-class="{ 'col-5': partition_date.type === 'other' }"
                         ng-options="ddt as ddt for ddt in cubeConfig.partitionDateFormatOpt"
                         data-placement="">
@@ -85,7 +138,7 @@
             <div class="row">
               <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Has a separate "time of the day" column ?</b>  <i kylinpopover placement="right" title="Separate Time Column" template="separateTimeColumnTip.html" class="fa fa-info-circle"></i></label>
               <div class="col-xs-12 col-sm-6">
-                <toggle-switch on-label="Yes" off-label="No" ng-disabled="state.mode!=='edit'" ng-click="toggleHasSeparateColumn()" ng-model="partitionColumn.hasSeparateTimeColumn"></toggle-switch>
+                <toggle-switch on-label="Yes" off-label="No" ng-disabled="state.mode!=='edit'" ng-click="toggleHasSeparateTimeColumn()" ng-model="partitionColumn.hasSeparateTimeColumn"></toggle-switch>
               </div>
             </div>
           </div>
@@ -198,4 +251,6 @@
 <script type="text/ng-template" id="separateTimeColumnTip.html">
   <p>For cases where fact table saves date and hour at two columns (KYLIN-1427)</p>
 </script>
-
+<script type="text/ng-template" id="separateDateColumnsTip.html">
+  <p>For cases where fact table saves date (year, month and day) in separate columns (KYLIN-4211)</p>
+</script>
