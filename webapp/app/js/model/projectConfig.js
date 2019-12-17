@@ -21,7 +21,7 @@ KylinApp.constant('projectConfig', {
     {attr: 'name', name: 'Name'},
     {attr: 'owner', name: 'Owner'},
     {attr: 'description', name: 'Description'},
-    {attr: 'create_time', name: 'Create Time'}
+    {attr: 'create_time_utc', name: 'Create Time'}
   ]
 
 });
