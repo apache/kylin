@@ -28,15 +28,12 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 public class NResourceDetectStep extends NSparkExecutable {
 
-    private AbstractExecutable parent;
-
     // called by reflection
     public NResourceDetectStep() {
 
     }
 
     public NResourceDetectStep(DefaultChainedExecutable parent) {
-        this.parent = parent;
         if (parent instanceof NSparkCubingJob) {
             this.setSparkSubmitClassName(ResourceDetectBeforeCubingJob.class.getName());
         } /*else if (parent instanceof NSparkMergingJob) {
@@ -51,6 +48,7 @@ public class NResourceDetectStep extends NSparkExecutable {
 
     @Override
     protected Set<String> getMetadataDumpList(KylinConfig config) {
+        AbstractExecutable parent = getParentExecutable();
         if (parent instanceof DefaultChainedExecutable) {
             return ((DefaultChainedExecutable) parent).getMetadataDumpList(config);
         }

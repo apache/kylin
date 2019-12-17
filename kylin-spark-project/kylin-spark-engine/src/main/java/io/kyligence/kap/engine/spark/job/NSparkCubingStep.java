@@ -19,6 +19,8 @@
 package io.kyligence.kap.engine.spark.job;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
 import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.slf4j.Logger;
@@ -34,9 +36,12 @@ public class NSparkCubingStep extends NSparkExecutable {
 
     private static final Logger logger = LoggerFactory.getLogger(NSparkCubingStep.class);
 
-    private Cube cube;
+    private CubeInstance cube;
 
-    public NSparkCubingStep(Cube cube, String sparkSubmitClassName) {
+    // called by reflection
+    public NSparkCubingStep() {}
+
+    public NSparkCubingStep(CubeInstance cube, String sparkSubmitClassName) {
         this.cube = cube;
         this.setSparkSubmitClassName(sparkSubmitClassName);
         this.setName(ExecutableConstants.STEP_NAME_BUILD_SPARK_CUBE);
@@ -44,7 +49,7 @@ public class NSparkCubingStep extends NSparkExecutable {
 
     @Override
     protected Set<String> getMetadataDumpList(KylinConfig config) {
-        return cube.collectPrecalculationResource();
+        return JobRelatedMetaUtil.collectCubeMetadata(cube);
     }
 
     public static class Mockup {

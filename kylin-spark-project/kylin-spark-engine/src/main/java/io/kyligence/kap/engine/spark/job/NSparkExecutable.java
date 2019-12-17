@@ -59,7 +59,6 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.exception.ExecuteException;
-import org.apache.kylin.job.exception.ShellException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
@@ -77,22 +76,6 @@ import com.google.common.collect.Sets;
 public class NSparkExecutable extends AbstractExecutable {
 
     private static final Logger logger = LoggerFactory.getLogger(NSparkExecutable.class);
-
-    void setDataflowId(String cubeId) {
-        this.setParam(MetadataConstants.P_CUBE_ID, cubeId);
-    }
-
-    public String getDataflowId() {
-        return this.getParam(MetadataConstants.P_CUBE_ID);
-    }
-
-    void setJobId(String jobId) {
-        this.setParam(MetadataConstants.P_JOB_ID, jobId);
-    }
-
-    public Set<String> getSegmentIds() {
-        return Sets.newHashSet(StringUtils.split(this.getParam(MetadataConstants.P_SEGMENT_IDS), ","));
-    }
 
     protected void setSparkSubmitClassName(String className) {
         this.setParam(MetadataConstants.P_CLASS_NAME, className);
@@ -210,28 +193,18 @@ public class NSparkExecutable extends AbstractExecutable {
 
     protected KylinConfig wrapConfig(ExecutableContext context) {
         KylinConfig originalConfig = context.getConfig();
-        KylinConfigExt kylinConfigExt = null;
-        String project = getProject();
+        String project = getParam(MetadataConstants.P_PROJECT_NAME);
         Preconditions.checkState(StringUtils.isNotBlank(project), "job " + getId() + " project info is empty");
-        /*if (StringUtils.isNotBlank(cubeId)) {
-            val dataflowManager = NDataflowManager.getInstance(originalConfig, project);
-            kylinConfigExt = dataflowManager.getDataflow(dataflow).getConfig();
-        } else {
-            val projectInstance = NProjectManager.getInstance(originalConfig).getProject(project);
-            kylinConfigExt = projectInstance.getConfig();
-        }*/
 
-        Map<String, String> jobOverrides = Maps.<String, String> newHashMap();
         String parentId = getParentId();
-        jobOverrides.put("job.id", StringUtils.defaultIfBlank(parentId, getId()));
-        jobOverrides.put("job.project", project);
+        originalConfig.setProperty("job.id", StringUtils.defaultIfBlank(parentId, getId()));
+        originalConfig.setProperty("job.project", project);
         if (StringUtils.isNotBlank(parentId)) {
-            jobOverrides.put("job.stepId", getId());
+            originalConfig.setProperty("job.stepId", getId());
         }
-        jobOverrides.put("user.timezone", KylinConfig.getInstanceFromEnv().getTimeZone());
-        //jobOverrides.put("spark.driver.log4j.appender.hdfs.File", Objects.isNull(context.getLogPath()) ? "null" : context.getLogPath());
-        jobOverrides.putAll(kylinConfigExt.getExtendedOverrides());
-        return KylinConfigExt.createInstance(kylinConfigExt, jobOverrides);
+        originalConfig.setProperty("user.timezone", KylinConfig.getInstanceFromEnv().getTimeZone());
+
+        return originalConfig;
     }
 
     private void killOrphanApplicationIfExists(KylinConfig config) {

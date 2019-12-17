@@ -19,8 +19,7 @@
 package io.kyligence.kap.engine.spark.job;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.KylinConfigExt;
-import org.apache.kylin.engine.spark.metadata.cube.model.Cube;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 public class JobStepFactory {
@@ -50,9 +49,9 @@ public class JobStepFactory {
     }
 
     public static NSparkExecutable addStep(DefaultChainedExecutable parent, JobStepType type,
-            Cube cube) {
+            CubeInstance cube) {
         NSparkExecutable step;
-        KylinConfigExt config = cube.getConfig();
+        KylinConfig config = cube.getConfig();
         switch (type) {
         case RESOURCE_DETECT:
             step = new NResourceDetectStep(parent);
