@@ -18,7 +18,6 @@
 
 package io.kyligence.kap.engine.spark.job;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.spark.sql.Column;
 
@@ -30,13 +29,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class NSparkCubingUtil {
-    static Set<Long> toLayoutIds(Set<LayoutEntity> layouts) {
-        Set<Long> r = new LinkedHashSet<>();
-        for (LayoutEntity layout : layouts) {
-            r.add(layout.getId());
-        }
-        return r;
-    }
 
     static String ids2Str(Set<? extends Number> ids) {
         return String.join(",", ids.stream().map(String::valueOf).collect(Collectors.toList()));
@@ -46,14 +38,6 @@ public class NSparkCubingUtil {
         Set<Long> r = new LinkedHashSet<>();
         for (String id : str.split(",")) {
             r.add(Long.parseLong(id));
-        }
-        return r;
-    }
-
-    static Set<LayoutEntity> toLayouts(Seg cube, Set<Long> ids) {
-        Set<LayoutEntity> r = new LinkedHashSet<>();
-        for (Long id : ids) {
-            r.add(cube.getCuboidLayout(id));
         }
         return r;
     }
@@ -83,19 +67,6 @@ public class NSparkCubingUtil {
             index++;
         }
         return ret;
-    }
-
-    public static String getStoragePath(DataLayout dataCuboid) {
-        DataSegDetails segDetails = dataCuboid.getSegDetails();
-//        KapConfig config = KapConfig.wrap(dataCuboid.getConfig());
-        KylinConfig config = dataCuboid.getConfig();
-        String hdfsWorkingDir = config.getReadHdfsWorkingDirectory();
-        return hdfsWorkingDir + getStoragePathWithoutPrefix(segDetails, dataCuboid.getLayoutId());
-    }
-
-    public static String getStoragePathWithoutPrefix(DataSegDetails segDetails, long layoutId) {
-        return segDetails.getProject() + "/parquet/" + segDetails.getDataSegment().getCube().getUuid() + "/"
-                + segDetails.getUuid() + "/" + layoutId;
     }
 
     private static final Pattern DOT_PATTERN = Pattern.compile("(\\S+)\\.(\\D+)");
