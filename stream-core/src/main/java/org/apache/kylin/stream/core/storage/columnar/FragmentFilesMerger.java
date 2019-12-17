@@ -325,58 +325,70 @@ public class FragmentFilesMerger {
             DimensionEncoding encoding = mergedDimEncodings[i];
             int dimFixLen = encoding.getLengthOfEncoding();
             InputStream dimInput = new BufferedInputStream(FileUtils.openInputStream(dimDataWriters[i].getOutputFile()));
-            DimensionMetaInfo dimensionMeta = new DimensionMetaInfo();
-            dimensionMeta.setName(dimensions[i].getName());
-            int startOffset = (int) fragmentDataOutput.getCount();
-            dimensionMeta.setStartOffset(startOffset);
+            try {
+                DimensionMetaInfo dimensionMeta = new DimensionMetaInfo();
+                dimensionMeta.setName(dimensions[i].getName());
+                int startOffset = (int) fragmentDataOutput.getCount();
+                dimensionMeta.setStartOffset(startOffset);
 
-            ColumnarStoreDimDesc cStoreDimDesc = ColumnarStoreDimDesc.getDefaultCStoreDimDesc(parsedCubeInfo.cubeDesc,
-                    dimensions[i].getName(), encoding);
-            ColumnDataWriter columnDataWriter = cStoreDimDesc.getDimWriter(fragmentDataOutput, rowCnt);
-            for (int j = 0; j < rowCnt; j++) {
-                byte[] dimValue = new byte[dimFixLen];
-                dimInput.read(dimValue);
-                if (DimensionEncoding.isNull(dimValue, 0, dimValue.length)) {
-                    dimensionMeta.setHasNull(true);
+                ColumnarStoreDimDesc cStoreDimDesc = ColumnarStoreDimDesc.getDefaultCStoreDimDesc(parsedCubeInfo.cubeDesc,
+                        dimensions[i].getName(), encoding);
+                ColumnDataWriter columnDataWriter = cStoreDimDesc.getDimWriter(fragmentDataOutput, rowCnt);
+                for (int j = 0; j < rowCnt; j++) {
+                    byte[] dimValue = new byte[dimFixLen];
+                    dimInput.read(dimValue);
+                    if (DimensionEncoding.isNull(dimValue, 0, dimValue.length)) {
+                        dimensionMeta.setHasNull(true);
+                    }
+                    invertIndexColDescs[i].getWriter().addValue(dimValue);
+                    columnDataWriter.write(dimValue);
                 }
-                invertIndexColDescs[i].getWriter().addValue(dimValue);
-                columnDataWriter.write(dimValue);
+                columnDataWriter.flush();
+                int dimLen = (int) fragmentDataOutput.getCount() - startOffset;
+                dimensionMeta.setDataLength(dimLen);
+                invertIndexColDescs[i].getWriter().write(fragmentDataOutput);
+                dimensionMeta.setIndexLength((int) fragmentDataOutput.getCount() - startOffset - dimLen);
+                dimensionMeta.setCompression(cStoreDimDesc.getCompression().name());
+                dimensionMetaList.add(dimensionMeta);
+            } finally {
+                if (null != dimInput) {
+                    dimInput.close();
+                }
             }
-            columnDataWriter.flush();
-            int dimLen = (int) fragmentDataOutput.getCount() - startOffset;
-            dimensionMeta.setDataLength(dimLen);
-            invertIndexColDescs[i].getWriter().write(fragmentDataOutput);
-            dimensionMeta.setIndexLength((int) fragmentDataOutput.getCount() - startOffset - dimLen);
-            dimensionMeta.setCompression(cStoreDimDesc.getCompression().name());
-            dimensionMetaList.add(dimensionMeta);
         }
 
         for (int i = 0; i < metricDataWriters.length; i++) {
             DataInputStream metricInput = new DataInputStream(new BufferedInputStream(
                     FileUtils.openInputStream(metricDataWriters[i].getOutputFile())));
-            ColumnarMetricsEncoding metricsEncoding = ColumnarMetricsEncodingFactory
-                    .create(parsedCubeInfo.measureDescs[i].getFunction().getReturnDataType());
-            ColumnarStoreMetricsDesc cStoreMetricsDesc = ColumnarStoreMetricsDesc
-                    .getDefaultCStoreMetricsDesc(metricsEncoding);
-            ColumnDataWriter columnDataWriter = cStoreMetricsDesc.getMetricsWriter(fragmentDataOutput, rowCnt);
-            MetricMetaInfo metricMeta = new MetricMetaInfo();
-            metricMeta.setName(parsedCubeInfo.measureDescs[i].getName());
-            int startOffset = (int) fragmentDataOutput.getCount();
-            metricMeta.setStartOffset(startOffset);
-            for (int j = 0; j < rowCnt; j++) {
-                int metricLen = metricInput.readInt();
-                byte[] metricValue = new byte[metricLen];
-                metricInput.read(metricValue);
-                columnDataWriter.write(metricValue);
-            }
-            columnDataWriter.flush();
-            int metricsLen = (int) fragmentDataOutput.getCount() - startOffset;
-            metricMeta.setMetricLength(metricsLen);
-            metricMeta.setMaxSerializeLength(metricDataWriters[i].getMaxValueLen());
-            metricMeta.setCompression(cStoreMetricsDesc.getCompression().name());
-            metricMetaList.add(metricMeta);
+            try {
+                ColumnarMetricsEncoding metricsEncoding = ColumnarMetricsEncodingFactory
+                        .create(parsedCubeInfo.measureDescs[i].getFunction().getReturnDataType());
+                ColumnarStoreMetricsDesc cStoreMetricsDesc = ColumnarStoreMetricsDesc
+                        .getDefaultCStoreMetricsDesc(metricsEncoding);
+                ColumnDataWriter columnDataWriter = cStoreMetricsDesc.getMetricsWriter(fragmentDataOutput, rowCnt);
+                MetricMetaInfo metricMeta = new MetricMetaInfo();
+                metricMeta.setName(parsedCubeInfo.measureDescs[i].getName());
+                int startOffset = (int) fragmentDataOutput.getCount();
+                metricMeta.setStartOffset(startOffset);
+                for (int j = 0; j < rowCnt; j++) {
+                    int metricLen = metricInput.readInt();
+                    byte[] metricValue = new byte[metricLen];
+                    metricInput.read(metricValue);
+                    columnDataWriter.write(metricValue);
+                }
+                columnDataWriter.flush();
+                int metricsLen = (int) fragmentDataOutput.getCount() - startOffset;
+                metricMeta.setMetricLength(metricsLen);
+                metricMeta.setMaxSerializeLength(metricDataWriters[i].getMaxValueLen());
+                metricMeta.setCompression(cStoreMetricsDesc.getCompression().name());
+                metricMetaList.add(metricMeta);
 
-            ByteStreams.copy(metricInput, fragmentDataOutput);
+                ByteStreams.copy(metricInput, fragmentDataOutput);
+            } finally {
+                if (null != metricInput) {
+                    metricInput.close();
+                }
+            }
         }
         return cuboidMeta;
     }
