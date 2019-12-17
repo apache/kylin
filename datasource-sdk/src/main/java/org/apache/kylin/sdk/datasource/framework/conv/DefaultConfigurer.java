@@ -26,8 +26,7 @@ import org.apache.kylin.sdk.datasource.framework.def.DataSourceDef;
 
 import com.google.common.collect.Maps;
 
-public class DefaultConfiguer implements SqlConverter.IConfigurer{
-
+public class DefaultConfigurer implements SqlConverter.IConfigurer{
     private static final Map<String, SqlDialect> sqlDialectMap = Maps.newHashMap();
 
     static {
@@ -42,19 +41,19 @@ public class DefaultConfiguer implements SqlConverter.IConfigurer{
         sqlDialectMap.put("redshift", SqlDialect.DatabaseProduct.REDSHIFT.getDialect());
         sqlDialectMap.put("hive", SqlDialect.DatabaseProduct.HIVE.getDialect());
         sqlDialectMap.put("h2", SqlDialect.DatabaseProduct.H2.getDialect());
-        sqlDialectMap.put("unkown", SqlDialect.DUMMY);
+        sqlDialectMap.put("unknown", SqlDialect.DUMMY);
     }
 
     private AbstractJdbcAdaptor adaptor;
 
     private DataSourceDef dsDef;
 
-    public DefaultConfiguer(AbstractJdbcAdaptor adaptor, DataSourceDef dsDef) {
+    public DefaultConfigurer(AbstractJdbcAdaptor adaptor, DataSourceDef dsDef) {
         this.adaptor = adaptor;
         this.dsDef = dsDef;
     }
 
-    public DefaultConfiguer(DataSourceDef dsDef) {
+    public DefaultConfigurer(DataSourceDef dsDef) {
         this(null, dsDef);
     }
 

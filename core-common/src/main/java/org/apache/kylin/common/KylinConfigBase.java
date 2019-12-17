@@ -911,12 +911,16 @@ public abstract class KylinConfigBase implements Serializable {
         return r;
     }
 
+    /**
+     * whether to enable quote identifier in create flat table in Kylin, how to quote is chosen by
+     * @see KylinConfigBase#getFactTableDialect
+     */
     public boolean enableHiveDdlQuote() {
         return Boolean.parseBoolean(getOptional("kylin.source.hive.quote-enabled", TRUE));
     }
 
-    public String getQuoteCharacter() {
-        return getOptional("kylin.source.quote.character", "`");
+    public String getFactTableDialect() {
+        return getOptional("kylin.fact.table.dialect", "hive");
     }
 
     /**

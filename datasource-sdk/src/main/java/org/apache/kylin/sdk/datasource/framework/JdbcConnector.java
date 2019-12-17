@@ -30,7 +30,7 @@ import javax.sql.rowset.CachedRowSet;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.sdk.datasource.adaptor.AbstractJdbcAdaptor;
 import org.apache.kylin.sdk.datasource.framework.conv.ConvMaster;
-import org.apache.kylin.sdk.datasource.framework.conv.DefaultConfiguer;
+import org.apache.kylin.sdk.datasource.framework.conv.DefaultConfigurer;
 import org.apache.kylin.sdk.datasource.framework.conv.SqlConverter;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDef;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDefProvider;
@@ -54,7 +54,7 @@ public class JdbcConnector implements Closeable {
         jdbcDs = provider.getById(this.adaptor.getDataSourceId());
         DataSourceDef kylinDs = provider.getDefault();
         convMaster = new ConvMaster(kylinDs, jdbcDs);
-        SqlConverter.IConfigurer configurer = new DefaultConfiguer(this.adaptor, jdbcDs);
+        SqlConverter.IConfigurer configurer = new DefaultConfigurer(this.adaptor, jdbcDs);
         this.sqlConverter = new SqlConverter(configurer, convMaster);
     }
 
