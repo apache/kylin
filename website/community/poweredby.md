@@ -9,6 +9,9 @@ Send a quick description of your organization and usage to the [mailing list](ma
 
 __Companies & Organizations__
 
+* [ZTO](https://www.zto.com/), 2019-12-18
+    * ZTO is the largest express company. Apache Kylin is used for big data analytics and supports a wide range of data products, mainly in data cockpits, dashboard analysis and other products.
+
 * [Kyligence](https://kyligence.io/), 2019-06-18
     * Kyligence provides an AI augmented data platform, powered by Apache Kylin, for analysts and data engineers to build and manage their data services from on-premises to multi-cloud.
 
