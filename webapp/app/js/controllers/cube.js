@@ -53,6 +53,15 @@ KylinApp.controller('CubeCtrl', function ($scope, $rootScope, AccessService, Mes
         }
     };
 
+    $scope.getCallBackString = function (cube) {
+        if (cube.detail.cube_callback) {
+            cube.cube_callback = cube.detail.cube_callback;
+        }
+        else {
+            cube.cube_callback = "";
+        }
+    };
+
     $scope.cleanStatus = function(cube){
 
         if (!cube)
@@ -67,6 +76,21 @@ KylinApp.controller('CubeCtrl', function ($scope, $rootScope, AccessService, Mes
         });
 
         return newCube;
+    };
+
+    $scope.updateCubeCallbackUrl = function (cube) {
+        cube.detail.cube_callback= cube.cube_callback;
+        CubeService.updateCubeCallbackUrl({cubeId: cube.name}, cube.detail.cube_callback, function () {
+            SweetAlert.swal('Success!', 'cube_callback url updated successfully!', 'success');
+        },function(e){
+            if(e.data&& e.data.exception){
+                var message =e.data.exception;
+                var msg = !!(message) ? message : 'Failed to take action.';
+                SweetAlert.swal('Oops...', msg, 'error');
+            }else{
+                SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+            }
+        });
     };
 
     $scope.updateNotifyList = function (cube) {

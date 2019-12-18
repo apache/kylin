@@ -26,12 +26,19 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -44,8 +51,10 @@ import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.metrics.JobMetricsFacade;
 import org.apache.kylin.job.util.MailNotificationUtil;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -257,6 +266,36 @@ public class CubingJob extends DefaultChainedExecutable {
         return Pair.newPair(title, content);
     }
 
+    public void invokeCallback(ExecutableContext executableContext) {
+        try {
+            String cubeName = CubingExecutableUtil.getCubeName(getParams());
+            CubeDesc cubeDesc = CubeDescManager.getInstance(getConfig()).getCubeDesc(cubeName);
+            if (StringUtils.isBlank(cubeDesc.getCubeCallback())) {
+                logger.info("cubeName:" + cubeName + ", callback url is empty");
+                return;
+            }
+            String segmentId = CubingExecutableUtil.getSegmentId(getParams());
+            CubeSegment cubeSegment = CubingExecutableUtil.findSegment(executableContext, cubeName, segmentId);
+            StringBuilder sb = new StringBuilder(cubeDesc.getCubeCallback());
+            SegmentRange.TSRange tsRange = cubeSegment.getTSRange();
+            sb.append("?cube=").append(cubeName)
+                    .append("&date_start=").append(tsRange.start.v)
+                    .append("&date_end=").append(tsRange.end.v);
+
+            HttpParams httpParams = new BasicHttpParams();
+            HttpConnectionParams.setConnectionTimeout(httpParams, 3000);
+            HttpConnectionParams.setSoTimeout(httpParams, 3000);
+            DefaultHttpClient client = new DefaultHttpClient(httpParams);
+            HttpGet httpGet = new HttpGet(sb.toString());
+
+            client.execute(httpGet);
+            logger.info("invoke callback url success:" + sb.toString());
+        }catch (Exception e) {
+            logger.error("cube url callback error,", e);
+        }
+    }
+
+
     @Override
     protected void onExecuteStart(ExecutableContext executableContext) {
         KylinConfig.setAndUnsetThreadLocalConfig(getCubeSpecificConfig());
@@ -266,15 +305,21 @@ public class CubingJob extends DefaultChainedExecutable {
     @Override
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         long time = 0L;
+        boolean allSucced = true;
         for (AbstractExecutable task : getTasks()) {
             final ExecutableState status = task.getStatus();
             if (status != ExecutableState.SUCCEED) {
+                allSucced = false;
                 break;
             }
             if (task instanceof MapReduceExecutable) {
                 time += ((MapReduceExecutable) task).getMapReduceWaitTime();
             }
         }
+        if(allSucced) {
+            invokeCallback(executableContext);
+        }
+
         setMapReduceWaitTime(time);
         super.onExecuteFinished(result, executableContext);
     }

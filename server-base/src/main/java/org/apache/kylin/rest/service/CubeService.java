@@ -568,6 +568,13 @@ public class CubeService extends BasicService implements InitializingBean {
         getCubeDescManager().updateCubeDesc(desc);
     }
 
+    public void updateCallbackUrl(CubeInstance cube, String callback) throws IOException {
+        aclEvaluate.hasProjectOperationPermission(cube.getProjectInstance());
+        CubeDesc desc = cube.getDescriptor();
+        desc.setCubeCallback(callback);
+        getCubeDescManager().updateCubeDesc(desc);
+    }
+
     public CubeInstance rebuildLookupSnapshot(CubeInstance cube, String segmentName, String lookupTable)
             throws IOException {
         aclEvaluate.checkProjectOperationPermission(cube);

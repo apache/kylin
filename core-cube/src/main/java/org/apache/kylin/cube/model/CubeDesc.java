@@ -170,6 +170,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     private List<String> notifyList;
     @JsonProperty("status_need_notify")
     private List<String> statusNeedNotify = Collections.emptyList();
+    @JsonProperty("cube_callback")
+    private String cubeCallback;
 
     @JsonProperty("partition_date_start")
     private long partitionDateStart = 0L;
@@ -354,6 +356,14 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
     private void setConfig(KylinConfigExt config) {
         this.config = config;
+    }
+
+    public String getCubeCallback() {
+        return cubeCallback;
+    }
+
+    public void setCubeCallback(String cubeCallback) {
+        this.cubeCallback = cubeCallback;
     }
 
     public String getName() {
@@ -1560,6 +1570,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         newCubeDesc.setSignature(cubeDesc.getSignature());
         newCubeDesc.setNotifyList(cubeDesc.getNotifyList());
         newCubeDesc.setStatusNeedNotify(cubeDesc.getStatusNeedNotify());
+        newCubeDesc.setCubeCallback(cubeDesc.getCubeCallback());
         newCubeDesc.setAutoMergeTimeRanges(cubeDesc.getAutoMergeTimeRanges());
         newCubeDesc.setPartitionDateStart(cubeDesc.getPartitionDateStart());
         newCubeDesc.setPartitionDateEnd(cubeDesc.getPartitionDateEnd());
