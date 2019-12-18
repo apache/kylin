@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.persistence.WriteConflictException;
 import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.common.util.ClassUtil;
@@ -250,7 +251,13 @@ public class DataModelManager {
             desc = saveDataModelDesc(desc, projectName);
 
             // now that model is saved, update project formally
-            prjMgr.addModelToProject(name, projectName);
+            try {
+                prjMgr.addModelToProject(name, projectName);
+            } catch (WriteConflictException e) {
+                logger.warn("Add model: {} to project: {} failed for write conflicts, rollback", name, projectName, e);
+                crud.delete(desc);
+                throw e;
+            }
 
             return desc;
         }
