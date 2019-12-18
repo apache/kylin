@@ -2335,6 +2335,12 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.engine.spark.task-core-factor", "3"));
     }
 
+    public StorageURL getJobMetaHdfsStoreUrl(String project, String jobId) {
+        Map<String, String> param = new HashMap<>();
+        param.put("path", getHdfsWorkingDirectory(project) + getNestedPath(jobId) + "metadata");
+        return new StorageURL(getMetadataUrlPrefix(), "hdfs", param);
+    }
+
     public StorageURL getJobTmpMetaStoreUrl(String project, String jobId) {
         Map<String, String> params = new HashMap<>();
         params.put("path", getJobTmpDir(project) + getNestedPath(jobId) + "meta");
@@ -2357,7 +2363,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getJobTmpDir(String project) {
-        return getHdfsWorkingDirectory(project) + "/job_tmp/";
+        return getHdfsWorkingDirectory(project) + "job_tmp/";
     }
 
     public int getPersistFlatTableThreshold() {

@@ -95,18 +95,14 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
 
     @Override
     public Set<String> getMetadataDumpList(KylinConfig config) {
-        return JobRelatedMetaUtil.collectCubeMetadata(cube);
+        String cubeId = getParam(MetadataConstants.P_CUBE_ID);
+        return JobRelatedMetaUtil.collectCubeMetadata(CubeManager.getInstance(config).getCubeByUuid(cubeId));
     }
 
     // KEYS of Output.extraInfo map, info passed across job steps
     public static final String SOURCE_RECORD_COUNT = "sourceRecordCount";
-    public static final String SOURCE_SIZE_BYTES = "sourceSizeBytes";
-    public static final String CUBE_SIZE_BYTES = "byteSizeBytes";
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
     private static final String DEPLOY_ENV_NAME = "envName";
-    private static final String PROJECT_INSTANCE_NAME = "projectName";
-    private static final String JOB_TYPE = "jobType";
-    private static final String SEGMENT_NAME = "segmentName";
 
     @Override
     protected Pair<String, String> formatNotifications(ExecutableContext context, ExecutableState state) {

@@ -19,33 +19,23 @@
 package org.apache.kylin.engine.spark.metadata.cube;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+
 public class PathManager {
     private static final Logger logger = LoggerFactory.getLogger(PathManager.class);
 
-    public static String getCubePath(String projectName, String cubeId) {
-        return "/" + projectName + ResourceStore.CUBE_RESOURCE_ROOT + "/" + cubeId + MetadataConstants.FILE_SURFIX;
-    }
-
-    public static String getModelPath(String projectName, String cubeId) {
-        return new StringBuilder().append("/").append(projectName).append(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT)
-                .append("/").append(cubeId).append(MetadataConstants.FILE_SURFIX).toString();
-    }
-
-    public static String getProjectPath(String projectName) {
-        return ResourceStore.PROJECT_RESOURCE_ROOT + "/" + projectName + MetadataConstants.FILE_SURFIX;
-    }
-
-    public static String resourcePath(String resRootPath, String resourceName) {
-        if (StringUtils.isEmpty(resourceName) || StringUtils.containsWhitespace(resourceName)) {
-            logger.error("the resourceName \"{}\" cannot contain white character", resourceName);
-            throw new IllegalArgumentException(
-                    "the resourceName \"" + resourceName + "\" cannot contain white character");
-        }
-        return resRootPath + "/" + resourceName + MetadataConstants.FILE_SURFIX;
+    public static String getParquetStoragePath(KylinConfig config, String cubeId, String segId, String cuboidId) {
+        CubeInstance cube = CubeManager.getInstance(config).getCube(cubeId);
+        String hdfsWorkDir = config.getHdfsWorkingDirectory(cube.getProject());
+        return hdfsWorkDir + "/parquet/" + cubeId + File.separator + segId + File.separator + cuboidId;
     }
 }
