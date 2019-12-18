@@ -141,5 +141,13 @@
       "tab": "admin",
       "controller": "StreamingReceiverCtrl"
     }
+  },
+  {
+    "url": "/user/profile",
+    "params": {
+      "templateUrl": "partials/user/profile.html",
+      "tab": "user",
+      "controller": "UserProfileCtrl"
+    }
   }
 ]
