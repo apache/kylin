@@ -837,6 +837,7 @@ public class CubeManager implements IRealizationProvider {
             }
 
             CubeSegment newSegment = newSegment(cubeCopy, tsRange, segRange);
+            newSegment.setMerged(true);
 
             Segments<CubeSegment> mergingSegments = cubeCopy.getMergingSegments(newSegment);
             if (mergingSegments.size() <= 1)
