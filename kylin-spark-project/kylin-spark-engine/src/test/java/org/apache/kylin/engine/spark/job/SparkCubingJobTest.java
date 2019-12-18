@@ -27,7 +27,6 @@ import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -35,7 +34,7 @@ import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
-import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
+import org.apache.kylin.job.lock.MockJobLock;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.junit.Assert;
 import org.junit.Before;
@@ -57,27 +56,25 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
     private DefaultScheduler scheduler;
     private ExecutableManager jobService;
 
-    protected void initEnv() throws IOException{
-        deployMetadata(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
-    }
 
     @Before
     public void setup() throws Exception{
         ss.sparkContext().setLogLevel("ERROR");
         System.setProperty("kylin.job.scheduler.poll-interval-second", "1");
         System.setProperty("kap.engine.persist-flattable-threshold", "0");
+        System.setProperty("kylin.metadata.distributed-lock-impl", "io.kyligence.kap.engine.spark.utils.MockedDistributedLock$MockedFactory");
         System.setProperty(KylinConfig.KYLIN_CONF, HBaseMetadataTestCase.SANDBOX_TEST_DATA);
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         cubeManager = CubeManager.getInstance(kylinConfig);
         jobService = ExecutableManager.getInstance(kylinConfig);
         scheduler = DefaultScheduler.createInstance();
-        scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
+        scheduler.init(new JobEngineConfig(kylinConfig), new MockJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
         }
         for (String jobId : jobService.getAllJobIds()) {
             AbstractExecutable executable = jobService.getJob(jobId);
-            if (executable instanceof CubingJob || executable instanceof CheckpointExecutable) {
+            if (executable instanceof CheckpointExecutable) {
                 jobService.deleteJob(jobId);
             }
         }

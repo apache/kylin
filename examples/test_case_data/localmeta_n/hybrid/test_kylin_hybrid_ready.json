@@ -1,0 +1,18 @@
+{
+  "uuid": "9iiu8590-64b6-4367-8fb5-7500eb95fd9c",
+ 
+  "name": "test_kylin_hybrid_ready",
+  "realizations": [
+    {
+      "type": "CUBE",
+      "realization": "test_kylin_cube_with_slr_ready_2_segments"
+    },
+    {
+      "type": "CUBE",
+      "realization": "test_kylin_cube_with_slr_ready"
+    }
+  ],
+  "cost": 100,
+  "last_modified": 1420016227424,
+  "create_time": null
+}

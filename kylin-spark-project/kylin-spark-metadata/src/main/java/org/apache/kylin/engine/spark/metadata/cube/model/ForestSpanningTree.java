@@ -207,7 +207,9 @@ public class ForestSpanningTree extends SpanningTree {
         private List<LayoutEntity> findDirectParentCandidates(LayoutEntity entity) {
             List<LayoutEntity> candidates = new ArrayList<>();
             for (LayoutEntity cuboid : sortedCuboids) {
-
+                if (cuboid == entity) {
+                    continue;
+                }
                 if (!cuboid.fullyDerive(entity)) {
                     continue;
                 }

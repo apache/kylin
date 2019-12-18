@@ -1,0 +1,37 @@
+﻿{
+  "uuid": "ba0c9cad-35c1-4f4b-8c10-669248842c2f",
+  "project": "default",
+  "entries": [
+    {
+      "uuid": "ca0c9cad-35c1-4f4b-8c10-669248842c2f",
+      "adj": "Slow",
+      "sql": "select count(*) from test_kylin_fact",
+      "server": "sandbox.hortonworks.com",
+      "thread": "t-0",
+      "last_modified": 0,
+      "start_time": 1459362236585,
+      "running_seconds": 100
+    },
+    {
+      "uuid": "da0c9cad-35c1-4f4b-8c10-669248842c2f",
+      "adj": "Slow",
+      "sql": "select * from test_kylin_fact limit 1",
+      "server": "sandbox.hortonworks.com",
+      "thread": "t-0",
+      "last_modified": 0,
+      "start_time": 1459362239990,
+      "running_seconds": 100
+    },
+    {
+      "uuid": "da0c9cad-35c1-4f4b-8c10-669248842c2f",
+      "adj": "Pushdown",
+      "sql": "select * from test_kylin_fact limit 10",
+      "server": "sandbox.hortonworks.com",
+      "thread": "t-0",
+      "last_modified": 0,
+      "start_time": 1459362230010,
+      "running_seconds": 1000
+    }
+  ],
+  "last_modified": 1459362294902
+}

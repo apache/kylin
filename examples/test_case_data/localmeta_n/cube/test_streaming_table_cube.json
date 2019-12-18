@@ -1,0 +1,15 @@
+{
+  "uuid": "40a27d9d-c5f3-45c4-9b8b-503552419193",
+ 
+  "name": "test_streaming_table_cube",
+  "owner": "ADMIN",
+  "cost": 50,
+  "status": "READY",
+  "segments": [],
+  "last_modified": 1433474940111,
+  "descriptor": "test_streaming_table_cube_desc",
+  "create_time_utc": 1433343833458,
+  "size_kb": 0,
+  "input_records_count": 0,
+  "input_records_size": 0
+}

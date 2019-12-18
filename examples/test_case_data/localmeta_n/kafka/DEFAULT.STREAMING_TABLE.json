@@ -1,0 +1,22 @@
+{
+ 
+  "uuid": "8b2b9dfe-777c-4d39-bf89-8472ec909193",
+  "name": "DEFAULT.STREAMING_TABLE",
+  "topic": "test_streaming_table_topic_xyz",
+  "timeout": 60000,
+  "bufferSize": 65536,
+  "parserName": "org.apache.kylin.source.kafka.TimedJsonStreamParser",
+  "parserProperties": "tsColName=timestamp",
+  "last_modified": 0,
+  "clusters": [
+    {
+      "brokers": [
+        {
+          "id": 0,
+          "host": "sandbox",
+          "port": 6667
+        }
+      ]
+    }
+  ]
+}

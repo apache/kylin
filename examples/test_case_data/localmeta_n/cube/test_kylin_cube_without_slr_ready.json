@@ -1,0 +1,44 @@
+{
+  "uuid" : "daa53e80-41be-49a5-90ca-9fb7294db186",
+ 
+  "last_modified" : 1404098303976,
+  "name" : "test_kylin_cube_without_slr_ready",
+  "owner" : null,
+  "descriptor" : "test_kylin_cube_without_slr_desc",
+  "cost" : 10,
+  "segments" : [ {
+    "name" : "67f668f6-dcff-4cb6-a89b-77f1119df8fa",
+    "uuid" : "67f668f6-dcff-4cb6-a89b-77f1119df8fa",
+    "storage_location_identifier" : "KYLIN-CUBE-TEST_KYLIN_CUBE_WITHOUT_SLR_READY-619D9B4A-DA56-48CA-9C58-29DC8323B200",
+    "date_range_start" : 0,
+    "date_range_end" : 1384243200000,
+    "status" : "READY",
+    "size_kb" : 5600,
+    "source_records" : 10000,
+    "source_records_size" : 608012,
+    "last_build_time" : 1404098303829,
+    "last_build_job_id" : "619d9b4a-da56-48ca-9c58-29dc8323b200",
+    "binary_signature" : null,
+      "dictionaries" : {
+        "DEFAULT.TEST_CATEGORY_GROUPINGS/CATEG_LVL2_NAME" : "/dict/TEST_CATEGORY_GROUPINGS/CATEG_LVL2_NAME/16d8185c-ee6b-4f8c-a919-756d9809f937.dict",
+        "DEFAULT.TEST_KYLIN_FACT/SLR_SEGMENT_CD" : "/dict/TEST_SELLER_TYPE_DIM/SELLER_TYPE_CD/c6bf9b51-6e90-4337-8082-4e2fdf78307f.dict",
+        "DEFAULT.TEST_KYLIN_FACT/LSTG_SITE_ID" : "/dict/TEST_SITES/SITE_ID/652bd393-678a-4f16-a504-fd8ce1229355.dict",
+        "EDW.TEST_SELLER_TYPE_DIM/SELLER_TYPE_CD" : "/dict/TEST_SELLER_TYPE_DIM/SELLER_TYPE_CD/2a44ff38-f64b-42e7-9fcf-66afccac8047.dict",
+        "DEFAULT.TEST_KYLIN_FACT/CAL_DT" : "/dict/PREDEFINED/date(yyyy-mm-dd)/64ac4f82-f2af-476e-85b9-f0805001014e.dict",
+        "DEFAULT.TEST_CATEGORY_GROUPINGS/CATEG_LVL3_NAME" : "/dict/TEST_CATEGORY_GROUPINGS/CATEG_LVL3_NAME/ad09f2d5-054a-4e1b-a776-7cc07399a6c1.dict",
+        "EDW.TEST_CAL_DT/CAL_DT" : "/dict/TEST_CAL_DT/CAL_DT/aa634e3e-22d3-4cc2-9de5-085e9ac35c1f.dict",
+        "DEFAULT.TEST_KYLIN_FACT/LEAF_CATEG_ID" : "/dict/TEST_CATEGORY_GROUPINGS/LEAF_CATEG_ID/494683c1-52d1-4d9a-a3f7-8c53b30fd898.dict",
+        "EDW.TEST_SITES/SITE_ID" : "/dict/TEST_SITES/SITE_ID/ff7e8943-ac0f-4e66-b9ed-510f6a0b875d.dict",
+        "DEFAULT.TEST_CATEGORY_GROUPINGS/META_CATEG_NAME" : "/dict/TEST_CATEGORY_GROUPINGS/META_CATEG_NAME/b298089f-9656-4693-b9b2-8fea46f06dd5.dict"
+      },
+      "snapshots" : {
+        "EDW.TEST_SELLER_TYPE_DIM" : "/table_snapshot/TEST_SELLER_TYPE_DIM.csv/4fe75ccd-9b24-4cdf-ac9d-b4038e947f89.snapshot",
+        "EDW.TEST_CAL_DT" : "/table_snapshot/TEST_CAL_DT.csv/9a1fbc0d-8790-4f32-99e1-7c60a9d124d4.snapshot",
+        "DEFAULT.TEST_CATEGORY_GROUPINGS" : "/table_snapshot/TEST_CATEGORY_GROUPINGS.csv/e172b442-ae10-447e-9071-c7dbb2bb38cc.snapshot",
+        "EDW.TEST_SITES" : "/table_snapshot/TEST_SITES.csv/28130338-fcf4-429e-91b0-cd8dfd397280.snapshot"
+      }
+  } ],
+  "status" : "READY",
+  "create_time" : null,
+  "notify_list" : null
+}

@@ -54,7 +54,6 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -360,13 +359,6 @@ public class NSparkExecutable extends AbstractExecutable {
 
     protected Set<String> getMetadataDumpList(KylinConfig config) {
         return Collections.emptySet();
-    }
-
-    void attachMetadataAndKylinProps(KylinConfig config) throws IOException {
-
-        // The way of Updating metadata is CopyOnWrite. So it is safe to use Reference in the value.
-        Set<String> dumpList = getMetadataDumpList(config);
-        JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, KylinConfigExt.createInstance(config, new HashMap<>()), getDistMetaUrl());
     }
 
     private void deleteJobTmpDirectoryOnExists() {

@@ -1,0 +1,31 @@
+{
+  "domainObjectInfo" : {
+    "id" : "legacy-test-domain-object",
+    "type" : "org.apache.kylin.rest.service.AclServiceTest$MockAclEntity"
+  },
+  "parentDomainObjectInfo" : null,
+  "ownerInfo" : {
+    "sid" : "ADMIN",
+    "principal" : true
+  },
+  "entriesInheriting" : true,
+  "allAceInfo" : {
+    "MODELER" : {
+      "sidInfo" : {
+        "sid" : "MODELER",
+        "principal" : true
+      },
+      "permissionMask" : 1
+    },
+    "ADMIN" : {
+      "sidInfo" : {
+        "sid" : "ADMIN",
+        "principal" : true
+      },
+      "permissionMask" : 16
+    }
+  },
+  "uuid" : null,
+  "last_modified" : 1517017738360,
+  "version" : "2.3.0.20505"
+}

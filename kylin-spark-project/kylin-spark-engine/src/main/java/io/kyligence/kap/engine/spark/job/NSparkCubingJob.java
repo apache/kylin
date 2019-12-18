@@ -19,6 +19,7 @@
 package io.kyligence.kap.engine.spark.job;
 
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -31,8 +32,6 @@ import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
-import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -40,6 +39,9 @@ import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.util.MailNotificationUtil;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableRef;
+import org.apache.kylin.source.SourceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spark_project.guava.base.Preconditions;
@@ -96,7 +98,23 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
     @Override
     public Set<String> getMetadataDumpList(KylinConfig config) {
         String cubeId = getParam(MetadataConstants.P_CUBE_ID);
-        return JobRelatedMetaUtil.collectCubeMetadata(CubeManager.getInstance(config).getCubeByUuid(cubeId));
+        return collectCubeMetadata(cube);
+    }
+    public static Set<String> collectCubeMetadata(CubeInstance cube) {
+        // cube, model_desc, cube_desc, table
+        Set<String> dumpList = new LinkedHashSet<>();
+        dumpList.add(cube.getResourcePath());
+        dumpList.add(cube.getDescriptor().getModel().getResourcePath());
+        dumpList.add(cube.getDescriptor().getResourcePath());
+        dumpList.add(cube.getProjectInstance().getResourcePath());
+
+        for (TableRef tableRef : cube.getDescriptor().getModel().getAllTables()) {
+            TableDesc table = tableRef.getTableDesc();
+            dumpList.add(table.getResourcePath());
+            dumpList.addAll(SourceManager.getMRDependentResources(table));
+        }
+
+        return dumpList;
     }
 
     // KEYS of Output.extraInfo map, info passed across job steps
@@ -107,7 +125,7 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
     @Override
     protected Pair<String, String> formatNotifications(ExecutableContext context, ExecutableState state) {
         CubeInstance cubeInstance = CubeManager.getInstance(context.getConfig())
-                .getCube(CubingExecutableUtil.getCubeName(this.getParams()));
+                .getCube(this.getParams().get(CUBE_NAME));
         final Output output = getManager().getOutput(getId());
         state = output.getState();
         if (state != ExecutableState.ERROR

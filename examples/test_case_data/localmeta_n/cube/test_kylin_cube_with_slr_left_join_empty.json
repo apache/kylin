@@ -1,0 +1,11 @@
+{
+  "uuid" : "1eaca32a-a33e-4b69-83dd-0bb8b1f8dddd",
+ 
+  "last_modified" : 0,
+  "name" : "test_kylin_cube_with_slr_left_join_empty",
+  "owner" : null,
+  "descriptor" : "test_kylin_cube_with_slr_left_join_desc",
+  "segments" : [ ],
+  "status" : "DISABLED",
+  "create_time" : null
+}

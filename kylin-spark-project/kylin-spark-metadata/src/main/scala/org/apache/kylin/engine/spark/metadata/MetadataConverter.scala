@@ -21,42 +21,83 @@ package org.apache.kylin.engine.spark.metadata
 
 import org.apache.kylin.cube.{CubeInstance, CubeUpdate}
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity
+import org.apache.kylin.engine.spark.metadata.cube.BitUtils
 import org.apache.spark.sql.util.SparkTypeUtil
 
 import scala.collection.JavaConverters._
 import org.apache.kylin.metadata.datatype.{DataType => KyDataType}
 import org.apache.kylin.metadata.model.{DataModelDesc, JoinTableDesc, TableRef, TblColRef}
 
+import scala.collection.mutable
+
 object MetadataConverter {
   def getSegmentInfo(cubeInstance: CubeInstance, segmentId: String): SegmentInfo = {
-    extractEntity(cubeInstance)
-    null
+    val allColumnDesc = extractAllColumnDesc(cubeInstance)
+    val ine = extractEntity(cubeInstance)
+    SegmentInfo(segmentId, cubeInstance.getProject, cubeInstance.getConfig, extractFactTable(cubeInstance),
+      extractLookupTable(cubeInstance), List.empty[TableDesc],
+      extractJoinTable(cubeInstance), allColumnDesc.values.toList, ine, mutable.Set[LayoutEntity](ine: _*),
+      Set.empty[ColumnDesc],
+      Set.empty[ColumnDesc], "", "")
   }
 
   def getCubeUpdate(segmentInfo: SegmentInfo): CubeUpdate = {
     null
   }
 
+  def extractFactTable(cubeInstance: CubeInstance): TableDesc = {
+    toTableDesc(cubeInstance.getModel.getRootFactTable)
+  }
+
+  def extractLookupTable(cubeInstance: CubeInstance): List[TableDesc] = {
+    cubeInstance.getModel.getLookupTables.asScala.map(toTableDesc).toList
+  }
 
   def extractJoinTable(cubeInstance: CubeInstance): Array[JoinDesc] = {
     cubeInstance.getModel.getAllTables
       .asScala
       .map(tb => toTableDesc(tb))
+    val table = cubeInstance.getModel.getJoinsTree.getTableChains
+      .asScala.keys.toArray // must to be order
+      .filter(!_.equals(cubeInstance.getModel.getRootFactTable.getAlias))
 
-    cubeInstance.getModel.getJoinTables
-      .map(join => toJoinDesc(join))
+
+
+    val tableMap = cubeInstance.getModel.getJoinTables
+      .map(join => (join.getAlias, toJoinDesc(join)))
+      .toMap
+
+    table.map(tableMap.apply)
   }
 
   def toJoinDesc(joinTableDesc: JoinTableDesc): JoinDesc = {
     val desc = toTableDesc(joinTableDesc.getTableRef)
     val PKS = joinTableDesc.getJoin.getPrimaryKeyColumns.map(col => toColumnDesc(ref = col))
     val FKS = joinTableDesc.getJoin.getForeignKeyColumns.map(col => toColumnDesc(ref = col))
-    JoinDesc(desc, PKS, FKS, joinTableDesc.getJoin.getType, joinTableDesc.getKind.equals(DataModelDesc.TableKind.LOOKUP))
+    JoinDesc(desc, PKS, FKS, joinTableDesc.getJoin.getType)
   }
 
   def toTableDesc(tb: TableRef): TableDesc = {
     TableDesc(tb.getTableName, tb.getTableDesc.getDatabase, tb.getColumns.asScala.map(ref => toColumnDesc(ref = ref)).toList, tb.getAlias, 9)
   }
+
+  def extractAllColumnDesc(cubeInstance: CubeInstance): Map[Int, ColumnDesc] = {
+    val dimensionMapping = cubeInstance.getDescriptor
+      .getRowkey
+      .getRowKeyColumns
+      .map(co => (co.getColRef, co.getBitIndex))
+      .toMap
+    val refs = cubeInstance.getAllColumns.asScala
+      .filter(col => !dimensionMapping.contains(col))
+      .zipWithIndex
+      .map(tp => (tp._1, tp._2 + dimensionMapping.size))
+    val columnIndex = dimensionMapping ++ refs
+    columnIndex
+      .map { co =>
+        (co._2, toColumnDesc(co._2, co._1))
+      }
+  }
+
 
   def extractEntity(cubeInstance: CubeInstance): List[LayoutEntity] = {
     val dimensionMapping = cubeInstance.getDescriptor
@@ -64,23 +105,35 @@ object MetadataConverter {
       .getRowKeyColumns
       .map(co => (co.getColRef, co.getBitIndex))
       .toMap
-    val dimensionMap = dimensionMapping
+    val refs = cubeInstance.getAllColumns.asScala
+      .filter(col => !dimensionMapping.contains(col))
+      .zipWithIndex
+      .map(tp => (tp._1, tp._2 + dimensionMapping.size))
+    val columnIndex = dimensionMapping ++ refs
+    val allColumnDesc = columnIndex
       .map { co =>
         (co._2, toColumnDesc(co._2, co._1))
       }
       .toMap
-    val values = dimensionMap.keys.toList
+    val values = dimensionMapping.values.map(Integer.valueOf).toList
     val measureId = cubeInstance
       .getMeasures
       .asScala
       .zipWithIndex
       .map { case (measure, in) =>
-        val index = in + dimensionMap.size
-        val parametrs = measure.getFunction.getParameter
-          .getColRefs.asScala
-          .map(col => toColumnDesc(dimensionMapping.apply(col), col))
-          .toList
+        val index = in + allColumnDesc.size
+        val parameter = measure.getFunction.getParameter
         val dataType = measure.getFunction.getReturnDataType
+        val parametrs = parameter.getType match {
+          case "column" =>
+            parameter.getColRefs.asScala
+              .map(col => allColumnDesc.apply(columnIndex.apply(col)))
+              .toList
+          case "constant" =>
+            List(LiteralColumnDesc(null,
+              SparkTypeUtil.toSparkType(dataType), null, null, -1, parameter.getValue))
+        }
+
         (Integer.valueOf(index), FunctionDesc(measure.getName, DTType(dataType.getName, dataType.getPrecision),
           parametrs, measure.getFunction.getExpression))
       }.toMap.asJava
@@ -89,8 +142,8 @@ object MetadataConverter {
       .getAllCuboidIds
       .asScala
       .map { long =>
-        val dimension = tailor(values, long)
-        val orderDimension = dimension.map(index => (index, dimensionMap.apply(index))).toMap.asJava
+        val dimension = BitUtils.tailor(values.asJava, long)
+        val orderDimension = dimension.asScala.map(index => (index, allColumnDesc.apply(index))).toMap.asJava
         val entity = new LayoutEntity()
         entity.setOrderedDimensions(orderDimension)
         entity.setOrderedMeasures(measureId)
@@ -110,15 +163,15 @@ object MetadataConverter {
   }
 
   private def tailor(complete: List[Int], cuboidId: Long): Array[Integer] = {
-    val bitCount: Int = java.lang.Long.bitCount(cuboidId)
+    val bitCount = java.lang.Long.bitCount(cuboidId)
     val ret: Array[Integer] = new Array[Integer](bitCount)
     var next: Int = 0
     val size: Int = complete.size
     for (i <- 0 until size) {
       val shift: Int = size - i - 1
       if ((cuboidId & (1L << shift)) != 0)
-        next += 1
-      ret(next) = complete.apply(i)
+        ret(next) = complete.apply(i)
+      next = next + 1
     }
     ret
   }

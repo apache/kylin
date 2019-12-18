@@ -56,7 +56,7 @@ class CreateFlatTable(
         val encodedLookupMap = generateLookupTableDataset(seg, ccCols.toSeq, ss)
           .map(lp => (lp._1, encodeWithCols(lp._2, ccCols, toBuildDictSet, globalDictSet)))
 
-        val allTableDataset = Seq(rootFactDataset) ++ encodedLookupMap.values
+        val allTableDataset = Seq(rootFactDataset) ++ encodedLookupMap.map(_._2)
 
         rootFactDataset = joinFactTableWithLookupTables(rootFactDataset, encodedLookupMap, seg, ss)
         rootFactDataset = encodeWithCols(rootFactDataset,
@@ -134,11 +134,11 @@ object CreateFlatTable extends Logging {
   private def generateLookupTableDataset(
     desc: SegmentInfo,
     cols: Seq[ColumnDesc],
-    ss: SparkSession): Map[JoinDesc, Dataset[Row]] = {
+    ss: SparkSession): Array[(JoinDesc, Dataset[Row])] = {
     desc.joindescs.map {
       joinDesc =>
         (joinDesc, generateTableDataset(joinDesc.lookupTable, cols, ss))
-    }.toMap
+    }
   }
 
   private def applyFilterCondition(desc: SegmentInfo, ds: Dataset[Row]): Dataset[Row] = {
@@ -157,7 +157,7 @@ object CreateFlatTable extends Logging {
 
   def joinFactTableWithLookupTables(
     rootFactDataset: Dataset[Row],
-    lookupTableDatasetMap: Map[JoinDesc, Dataset[Row]],
+    lookupTableDatasetMap: Array[(JoinDesc, Dataset[Row])],
     buildDesc: SegmentInfo,
     ss: SparkSession): Dataset[Row] = {
     lookupTableDatasetMap.foldLeft(rootFactDataset)(
