@@ -336,7 +336,10 @@ title: OLAP engine for big data
             </a>
             <a class="sponsor" href="http://www.ke.com/"> 
                 <img src="/images/logo/beike.jpg">
-            </a>                        
+            </a>
+            <a class="sponsor" href="https://www.zto.com/"> 
+                <img src="/images/logo/zto.jpg">
+            </a>                         
         </div>
         <!-- /container --> 
       </div>

@@ -333,7 +333,10 @@ title: 大数据上的OLAP引擎
             </a>
             <a class="sponsor" href="http://www.ke.com/"> 
                 <img src="/images/logo/beike.jpg">
-            </a>                                                                                               
+            </a>
+            <a class="sponsor" href="https://www.zto.com/"> 
+                <img src="/images/logo/zto.jpg">
+            </a>                                                                                              
         </div>
         <!-- /container --> 
       </div>
