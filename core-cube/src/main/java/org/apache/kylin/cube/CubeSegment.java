@@ -82,6 +82,10 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     private SegmentStatusEnum status;
     @JsonProperty("size_kb")
     private long sizeKB;
+    @JsonProperty("is_merged")
+    private boolean isMerged;
+    @JsonProperty("estimate_ratio")
+    private List<Double> estimateRatio;
     @JsonProperty("input_records")
     private long inputRecords;
     @JsonProperty("input_records_size")
@@ -222,6 +226,22 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
 
     public void setSizeKB(long sizeKB) {
         this.sizeKB = sizeKB;
+    }
+
+    public boolean isMerged() {
+        return isMerged;
+    }
+
+    public void setMerged(boolean isMerged) {
+        this.isMerged = isMerged;
+    }
+
+    public List<Double> getEstimateRatio() {
+        return estimateRatio;
+    }
+
+    public void setEstimateRatio(List<Double> estimateRatio) {
+        this.estimateRatio = estimateRatio;
     }
 
     public long getInputRecords() {

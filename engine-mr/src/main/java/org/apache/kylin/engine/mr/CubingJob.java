@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.mr;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -26,12 +27,18 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 
+import com.google.common.collect.Lists;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
+import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -360,6 +367,65 @@ public class CubingJob extends DefaultChainedExecutable {
     public long findCubeSizeBytes() {
         // look for the info BACKWARD, let the last step that claims the cube size win
         return Long.parseLong(findExtraInfoBackward(CUBE_SIZE_BYTES, "0"));
+    }
+
+    public List<Double> findEstimateRatio(CubeSegment seg, KylinConfig config) {
+        CubeInstance cubeInstance = seg.getCubeInstance();
+        CuboidScheduler cuboidScheduler = cubeInstance.getCuboidScheduler();
+        List<List<Long>> layeredCuboids = cuboidScheduler.getCuboidsByLayer();
+        int totalLevels = cuboidScheduler.getBuildLevel();
+
+        List<Double> result = Lists.newArrayList();
+
+        Map<Long, Double> estimatedSizeMap;
+
+        String cuboidRootPath = getCuboidRootPath(seg, config);
+
+        try {
+            estimatedSizeMap = new CubeStatsReader(seg, config).getCuboidSizeMap(true);
+        } catch (IOException e) {
+            logger.warn("Cannot get segment {} estimated size map", seg.getName());
+
+            return null;
+        }
+
+        for (int level = 0; level <= totalLevels; level++) {
+            double levelEstimatedSize = 0;
+            for (Long cuboidId : layeredCuboids.get(level)) {
+                levelEstimatedSize += estimatedSizeMap.get(cuboidId) == null ? 0.0 : estimatedSizeMap.get(cuboidId);
+            }
+
+            double levelRealSize = getRealSizeByLevel(cuboidRootPath, level);
+
+            if (levelEstimatedSize == 0.0 || levelRealSize == 0.0){
+                result.add(level, -1.0);
+            } else {
+                result.add(level, levelRealSize / levelEstimatedSize);
+            }
+        }
+
+        return result;
+    }
+
+
+    private double getRealSizeByLevel(String rootPath, int level) {
+        try {
+            String levelPath = JobBuilderSupport.getCuboidOutputPathsByLevel(rootPath, level);
+            FileSystem fs = HadoopUtil.getFileSystem(levelPath);
+            return fs.getContentSummary(new Path(levelPath)).getLength() / (1024L * 1024L);
+        } catch (Exception e) {
+            logger.warn("get level real size failed." + e);
+            return 0L;
+        }
+    }
+
+    private String getCuboidRootPath(CubeSegment seg, KylinConfig kylinConfig) {
+        String rootDir = kylinConfig.getHdfsWorkingDirectory();
+        if (!rootDir.endsWith("/")) {
+            rootDir = rootDir + "/";
+        }
+        String jobID = this.getId();
+        return rootDir + "kylin-" + jobID + "/" + seg.getRealization().getName() + "/cuboid/";
     }
 
 }
