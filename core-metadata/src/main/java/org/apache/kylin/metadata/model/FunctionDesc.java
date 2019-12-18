@@ -80,8 +80,6 @@ public class FunctionDesc implements Serializable {
     private String expression;
     @JsonProperty("parameter")
     private ParameterDesc parameter;
-    @JsonProperty("parameters")
-    private List<ParameterDesc> parameters;
     @JsonProperty("returntype")
     private String returnType;
 
@@ -224,7 +222,6 @@ public class FunctionDesc implements Serializable {
         return FUNC_COUNT.equalsIgnoreCase(expression) && (parameter == null || parameter.isConstant());
     }
 
-
     /**
      * Get Full Expression such as sum(amount), count(1), count(*)...
      */
@@ -354,21 +351,6 @@ public class FunctionDesc implements Serializable {
         }
         // NOTE: don't compare returnType, FunctionDesc created at query engine does not have a returnType
         return true;
-    }
-
-    public List<ParameterDesc> getParameters() {
-        return parameters;
-    }
-
-    public void setParameters(List<ParameterDesc> parameters) {
-        this.parameters = parameters;
-    }
-
-    public List<TblColRef> getColRefs() {
-        if (CollectionUtils.isEmpty(parameters))
-            return Lists.newArrayList();
-
-        return parameters.stream().filter(ParameterDesc::isColumnType).map(ParameterDesc::getColRef).collect(Collectors.toList());
     }
 
     @Override
