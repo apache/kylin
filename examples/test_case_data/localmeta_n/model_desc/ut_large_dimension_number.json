@@ -1,0 +1,26 @@
+{
+  "uuid" : "dd250ea4-27f7-4450-b604-fcfdf3578f5a",
+  "last_modified" : 1479206338080,
+  "version" : "1.6.0",
+  "name" : "ut_large_dimension_number",
+  "owner" : "ADMIN",
+  "description" : "",
+  "fact_table" : "DEFAULT.WIDE_TABLE",
+  "lookups" : [],
+  "dimensions" : [ {
+    "table" : "DEFAULT.WIDE_TABLE",
+    "columns" : ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "AA", "AB", "AC", "AD", "AE", "AF", "AG", "AH", "AI", "AJ", "AK", "AL", "AM", "AN", "AO", "AP", "AQ", "AR", "AS", "AT", "AU", "AV", "AW", "AX", "AY", "AZ", "BA", "BB", "BC", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BK", "BL", "BM", "BN", "BO", "BP", "BQ", "BR", "BS", "BT", "BU", "BV", "BW", "BX", "BY", "BZ"]
+  }],
+  "metrics" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "DEFAULT.WIDE_TABLE.A",
+    "partition_time_column" : null,
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyyMMdd",
+    "partition_time_format" : "HH:mm:ss",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM"
+}

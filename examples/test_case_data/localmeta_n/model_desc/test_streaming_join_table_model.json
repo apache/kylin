@@ -1,0 +1,39 @@
+{
+  "uuid" : "acce5b22-4982-53ad-93e3-9100e30cefcc",
+  "last_modified" : 1550561173200,
+  "version" : "2.6.0.20500",
+  "name" : "test_streaming_join_table_model",
+  "owner" : "ADMIN",
+  "is_draft" : false,
+  "description" : "",
+  "fact_table" : "DEFAULT.STREAMING_TABLE",
+  "lookups" : [ {
+    "table" : "DEFAULT.STREAMING_CATEGORY",
+    "kind" : "LOOKUP",
+    "alias" : "STREAMING_CATEGORY",
+    "join" : {
+      "type" : "inner",
+      "primary_key" : [ "STREAMING_CATEGORY.CATEGORY_ID" ],
+      "foreign_key" : [ "STREAMING_TABLE.CATEGORY_ID" ]
+    }
+  } ],
+  "dimensions" : [ {
+    "table" : "STREAMING_TABLE",
+    "columns" : [ "MINUTE_START", "HOUR_START", "DAY_START", "ITM", "SITE", "CATEGORY_ID" ]
+  }, {
+    "table" : "STREAMING_CATEGORY",
+    "columns" : [ "CATEGORY_ID", "NAME" ]
+  } ],
+  "metrics" : [ "STREAMING_TABLE.GMV", "STREAMING_TABLE.ITEM_COUNT" ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "STREAMING_TABLE.MINUTE_START",
+    "partition_time_column" : null,
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd HH:mm:ss",
+    "partition_time_format" : "HH:mm:ss",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM"
+}

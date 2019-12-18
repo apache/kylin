@@ -1,0 +1,6 @@
+{
+  "uuid" : "da93ed8c-aed7-4a98-ba05-28c89cfa8ee2",
+  "session_id" : "DEFAULT_SESSION",
+  "statement_id": "temp_table1",
+  "statement": "as (select * from fact_table1)"
+}

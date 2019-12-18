@@ -18,29 +18,22 @@
 
 package io.kyligence.kap.engine.spark.application;
 
-import static io.kyligence.kap.engine.spark.utils.SparkConfHelper.COUNT_DISTICT;
-
+import com.google.common.collect.Maps;
+import io.kyligence.kap.engine.spark.job.BuildJobInfos;
+import io.kyligence.kap.engine.spark.job.KylinBuildEnv;
+import io.kyligence.kap.engine.spark.job.LogJobInfoUtils;
+import io.kyligence.kap.engine.spark.job.SparkJobConstants;
+import io.kyligence.kap.engine.spark.job.UdfManager;
+import io.kyligence.kap.engine.spark.utils.JobMetricsUtils;
+import io.kyligence.kap.engine.spark.utils.SparkConfHelper;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-
-import org.apche.kylin.engine.spark.common.util.TimeZoneUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
@@ -51,18 +44,11 @@ import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.apache.spark.util.Utils;
 import org.apache.spark.utils.ResourceUtils;
 import org.apache.spark.utils.YarnInfoFetcherUtils;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.apche.kylin.engine.spark.common.util.TimeZoneUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
-
-import io.kyligence.kap.engine.spark.job.BuildJobInfos;
-import io.kyligence.kap.engine.spark.job.KylinBuildEnv;
-import io.kyligence.kap.engine.spark.job.LogJobInfoUtils;
-import io.kyligence.kap.engine.spark.job.SparkJobConstants;
-import io.kyligence.kap.engine.spark.utils.JobMetricsUtils;
-import io.kyligence.kap.engine.spark.utils.SparkConfHelper;
+import static io.kyligence.kap.engine.spark.utils.SparkConfHelper.COUNT_DISTICT;
 
 public abstract class SparkApplication {
     private static final Logger logger = LoggerFactory.getLogger(SparkApplication.class);
@@ -110,35 +96,6 @@ public abstract class SparkApplication {
         // do nothing
     }
 
-    /**
-     * http request the spark job controller
-     *
-     * @param json
-     */
-    public Boolean updateSparkJobInfo(String json) {
-        String serverIp = System.getProperty("spark.driver.rest.server.ip", "127.0.0.1");
-        String port = System.getProperty("spark.driver.rest.server.port", "7070");
-        String requestApi = String.format(Locale.ROOT, "http://%s:%s/kylin/api/jobs/spark", serverIp, port);
-
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpPut httpPut = new HttpPut(requestApi);
-            httpPut.addHeader("Content-Type", "application/vnd.apache.kylin-v2+json");
-            httpPut.setEntity(new StringEntity(json, StandardCharsets.UTF_8));
-
-            HttpResponse response = httpClient.execute(httpPut);
-            int code = response.getStatusLine().getStatusCode();
-            if (code == HttpStatus.SC_OK) {
-                return true;
-            } else {
-                InputStream inputStream = response.getEntity().getContent();
-                String responseContent = IOUtils.toString(inputStream);
-                logger.warn("update spark job yarnAppid and yarnAppUrl failed, info: {}", responseContent);
-            }
-        } catch (IOException e) {
-            logger.error("http request {} failed!", requestApi, e);
-        }
-        return false;
-    }
 
     /**
      * get tracking url by yarn app id
@@ -152,39 +109,6 @@ public abstract class SparkApplication {
         return YarnInfoFetcherUtils.getTrackingUrl(yarnAppId);
     }
 
-    /**
-     * when
-     * update spark job extra info, link yarn_application_tracking_url & yarn_application_id
-     */
-    public Boolean updateSparkJobExtraInfo(String project, String jobId, String yarnAppId) {
-        Map<String, String> payload = new HashMap<>(5);
-        payload.put("project", project);
-        payload.put("jobId", jobId);
-        payload.put("taskId", System.getProperty("spark.driver.param.taskId", jobId));
-        payload.put("yarnAppId", yarnAppId);
-
-        try {
-            payload.put("yarnAppUrl", getTrackingUrl(yarnAppId));
-        } catch (IOException | YarnException e) {
-            logger.error("get yarn tracking url failed!", e);
-        }
-
-        try {
-            String payloadJson = new ObjectMapper().writeValueAsString(payload);
-            int retry = 3;
-            for (int i = 0; i < retry; i++) {
-                if (updateSparkJobInfo(payloadJson)) {
-                    return Boolean.TRUE;
-                }
-                Thread.sleep(3000);
-                logger.warn("retry request rest api update spark job yarnAppId and yarnAppUr!");
-            }
-        } catch (Exception e) {
-            logger.error("update spark job extra info failed!", e);
-        }
-
-        return Boolean.FALSE;
-    }
 
     final protected void execute() throws Exception {
         String hdfsMetalUrl = getParam(MetadataConstants.P_DIST_META_URL);
@@ -247,17 +171,13 @@ public abstract class SparkApplication {
             })*/.enableHiveSupport().config(sparkConf).config("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false")
                     .getOrCreate();
 
-            if (isJobOnCluster(sparkConf)) {
-                updateSparkJobExtraInfo(project, jobId, ss.sparkContext().applicationId());
-            }
-
             //JoinMemoryManager.releaseAllMemory();
             // for spark metrics
             JobMetricsUtils.registerListener(ss);
 
             //#8341
-            /*SparderEnv.setSparkSession(ss);
-            UdfManager.create(ss);*/
+//            SparderEnv.setSparkSession(ss);
+            UdfManager.create(ss);
 
             if (!config.isUTEnv()) {
                 System.setProperty("kylin.env", config.getDeployEnv());

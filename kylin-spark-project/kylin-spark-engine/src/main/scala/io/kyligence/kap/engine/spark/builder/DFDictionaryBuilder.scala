@@ -36,6 +36,7 @@ import scala.collection.mutable.ListBuffer
 import io.kyligence.kap.engine.spark.builder.DFBuilderHelper._
 import io.kyligence.kap.engine.spark.job.NSparkCubingUtil
 import org.apache.kylin.engine.spark.metadata.{ColumnDesc, SegmentInfo}
+import org.apache.kylin.job.lock.MockJobLock
 
 class DFDictionaryBuilder(val dataset: Dataset[Row],
                           val seg: SegmentInfo,

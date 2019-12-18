@@ -1,0 +1,88 @@
+{
+  "uuid": "1eaca32a-a33e-4b69-83dd-0bb8b1f8c91b",
+  "name": "default",
+  "realizations": [
+    {
+      "name": "ci_left_join_cube",
+      "type": "CUBE",
+      "realization": "ci_left_join_cube"
+    },
+    {
+      "name": "ci_inner_join_cube",
+      "type": "CUBE",
+      "realization": "ci_inner_join_cube"
+    },
+    {
+      "name": "test_streaming_table_cube",
+      "type": "CUBE",
+      "realization": "test_streaming_table_cube"
+    },
+    {
+      "name": "ci_inner_join_hybrid",
+      "type": "HYBRID",
+      "realization": "ci_inner_join_hybrid"
+    },
+    {
+      "name": "ssb",
+      "type": "CUBE",
+      "realization": "ssb"
+    },
+    {
+      "name": "fifty_dim_full_build_cube",
+      "type": "CUBE",
+      "realization": "fifty_dim_full_build_cube"
+    }, {
+      "name" : "test_streaming_join_table_cube",
+      "type" : "CUBE",
+      "realization" : "test_streaming_join_table_cube"
+    },
+    {
+      "name": "test_streaming_v2_cube",
+      "type": "CUBE",
+      "realization": "test_streaming_v2_cube"
+    },
+    {
+      "name": "test_streaming_v2_user_info_cube",
+      "type" : "CUBE",
+      "realization" : "test_streaming_v2_user_info_cube"
+    }
+  ],
+  "tables": [
+    "DEFAULT.TEST_KYLIN_FACT",
+    "DEFAULT.TEST_ORDER",
+    "DEFAULT.TEST_ACCOUNT",
+    "DEFAULT.TEST_COUNTRY",
+    "EDW.TEST_CAL_DT",
+    "DEFAULT.TEST_CATEGORY_GROUPINGS",
+    "EDW.TEST_SITES",
+    "EDW.TEST_SELLER_TYPE_DIM",
+    "DEFAULT.STREAMING_TABLE",
+    "SSB.CUSTOMER",
+    "SSB.DATES",
+    "SSB.PART",
+    "SSB.SUPPLIER",
+    "SSB.V_LINEORDER",
+    "DEFAULT.FIFTY_DIM",
+    "DEFAULT.WIDE_TABLE",
+    "DEFAULT.STREAMING_CATEGORY",
+    "DEFAULT.STREAMING_V2_TABLE",
+    "DEFAULT.STREAMING_V2_USER_INFO_TABLE"
+  ],
+  "models": [
+    "ssb",
+    "ci_inner_join_model",
+    "ci_left_join_model",
+    "test_kylin_inner_join_model_desc",
+    "test_kylin_left_join_model_desc",
+    "test_streaming_table_model_desc",
+    "fifty_dim",
+    "twenty_dim",
+    "ut_large_dimension_number",
+    "test_streaming_join_table_model",
+    "test_streaming_v2_model",
+    "test_streaming_v2_user_info_model"
+  ],
+  "override_kylin_properties" :{
+    "kylin.storage.hbase.owner-tag": "kylin@kylin.apache.org"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "uuid" : "0ca9613f-119e-85a4-cbb0-8b1624d002fa",
+  "last_modified" : 1550561034328,
+  "version" : "2.6.0.20500",
+  "name" : "STREAMING_CATEGORY",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "CATEGORY_ID",
+    "datatype" : "integer"
+  }, {
+    "id" : "2",
+    "name" : "NAME",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "REGION",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 0,
+  "table_type" : "MANAGED_TABLE",
+  "database" : "DEFAULT"
+}

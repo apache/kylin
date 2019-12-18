@@ -1,0 +1,220 @@
+{
+  "uuid" : "f216e39e-40d7-44c2-8fa2-41b3656398ae",
+  "name" : "FIFTY_DIM",
+  "data_gen" : "0.5",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "A",
+    "datatype" : "integer"
+  }, {
+    "id" : "2",
+    "name" : "B",
+    "datatype" : "integer"
+  }, {
+    "id" : "3",
+    "name" : "C",
+    "datatype" : "integer"
+  }, {
+    "id" : "4",
+    "name" : "D",
+    "datatype" : "integer"
+  }, {
+    "id" : "5",
+    "name" : "E",
+    "datatype" : "integer"
+  },{
+    "id" : "6",
+    "name" : "F",
+    "datatype" : "integer"
+  },{
+    "id" : "7",
+    "name" : "G",
+    "datatype" : "integer"
+  },{
+    "id" : "8",
+    "name" : "H",
+    "datatype" : "integer"
+  },{
+    "id" : "9",
+    "name" : "I",
+    "datatype" : "integer"
+  },{
+    "id" : "10",
+    "name" : "J",
+    "datatype" : "integer"
+  },{
+    "id" : "11",
+    "name" : "K",
+    "datatype" : "integer"
+  },{
+    "id" : "12",
+    "name" : "L",
+    "datatype" : "integer"
+  },{
+    "id" : "13",
+    "name" : "M",
+    "datatype" : "integer"
+  },{
+    "id" : "14",
+    "name" : "N",
+    "datatype" : "integer"
+  },{
+    "id" : "15",
+    "name" : "O",
+    "datatype" : "integer"
+  },{
+    "id" : "16",
+    "name" : "P",
+    "datatype" : "integer"
+  },{
+    "id" : "17",
+    "name" : "Q",
+    "datatype" : "integer"
+  },{
+    "id" : "18",
+    "name" : "R",
+    "datatype" : "integer"
+  },{
+    "id" : "19",
+    "name" : "S",
+    "datatype" : "integer"
+  },{
+    "id" : "20",
+    "name" : "T",
+    "datatype" : "integer"
+  },{
+    "id" : "21",
+    "name" : "U",
+    "datatype" : "integer"
+  },{
+    "id" : "22",
+    "name" : "V",
+    "datatype" : "integer"
+  },{
+    "id" : "23",
+    "name" : "W",
+    "datatype" : "integer"
+  },{
+    "id" : "24",
+    "name" : "X",
+    "datatype" : "integer"
+  },{
+    "id" : "25",
+    "name" : "Y",
+    "datatype" : "integer"
+  },{
+    "id" : "26",
+    "name" : "Z",
+    "datatype" : "integer"
+  },{
+    "id" : "27",
+    "name" : "AA",
+    "datatype" : "integer"
+  },{
+    "id" : "28",
+    "name" : "BB",
+    "datatype" : "integer"
+  },{
+    "id" : "29",
+    "name" : "CC",
+    "datatype" : "integer"
+  },{
+    "id" : "30",
+    "name" : "DD",
+    "datatype" : "integer"
+  },{
+    "id" : "31",
+    "name" : "EE",
+    "datatype" : "integer"
+  },{
+    "id" : "32",
+    "name" : "FF",
+    "datatype" : "integer"
+  },{
+    "id" : "33",
+    "name" : "GG",
+    "datatype" : "integer"
+  },{
+    "id" : "34",
+    "name" : "HH",
+    "datatype" : "integer"
+  },{
+    "id" : "35",
+    "name" : "II",
+    "datatype" : "integer"
+  },{
+    "id" : "36",
+    "name" : "JJ",
+    "datatype" : "integer"
+  },{
+    "id" : "37",
+    "name" : "KK",
+    "datatype" : "integer"
+  },{
+    "id" : "38",
+    "name" : "LL",
+    "datatype" : "integer"
+  },{
+    "id" : "39",
+    "name" : "MM",
+    "datatype" : "integer"
+  },{
+    "id" : "40",
+    "name" : "NN",
+    "datatype" : "integer"
+  },{
+    "id" : "41",
+    "name" : "OO",
+    "datatype" : "integer"
+  },{
+    "id" : "42",
+    "name" : "PP",
+    "datatype" : "integer"
+  },{
+    "id" : "43",
+    "name" : "QQ",
+    "datatype" : "integer"
+  },{
+    "id" : "44",
+    "name" : "RR",
+    "datatype" : "integer"
+  },{
+    "id" : "45",
+    "name" : "SS",
+    "datatype" : "integer"
+  },{
+    "id" : "46",
+    "name" : "TT",
+    "datatype" : "integer"
+  },{
+    "id" : "47",
+    "name" : "UU",
+    "datatype" : "integer"
+  },{
+    "id" : "48",
+    "name" : "VV",
+    "datatype" : "integer"
+  },{
+    "id" : "49",
+    "name" : "WW",
+    "datatype" : "integer"
+  },{
+    "id" : "50",
+    "name" : "XX",
+    "datatype" : "integer"
+  },{
+    "id" : "51",
+    "name" : "YY",
+    "datatype" : "integer"
+  },{
+    "id" : "52",
+    "name" : "ZZ",
+    "datatype" : "integer"
+  }, {
+    "id" : "53",
+    "name" : "AAA",
+    "datatype" : "integer"
+  } ],
+  "database" : "DEFAULT",
+  "last_modified" : 0
+}

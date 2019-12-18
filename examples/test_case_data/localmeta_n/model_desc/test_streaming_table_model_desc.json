@@ -1,0 +1,29 @@
+{
+  "uuid": "ff527b94-f860-44c3-8452-93b177888732",
+  "name": "test_streaming_table_model_desc",
+  "dimensions": [
+    {
+      "table": "DEFAULT.STREAMING_TABLE",
+      "columns": [
+        "minute_start",
+        "hour_start",
+        "day_start",
+        "itm",
+        "site"
+      ]
+    }
+  ],
+  "lookups": [],
+  "metrics": [
+    "gmv",
+    "item_count"
+  ],
+  "last_modified": 0,
+  "fact_table": "DEFAULT.STREAMING_TABLE",
+  "filter_condition": null,
+  "partition_desc": {
+    "partition_date_column": "DEFAULT.STREAMING_TABLE.MINUTE_START",
+    "partition_date_start": 0,
+    "partition_type": "APPEND"
+  }
+}

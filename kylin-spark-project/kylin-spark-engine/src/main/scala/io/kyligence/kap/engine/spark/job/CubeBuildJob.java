@@ -77,7 +77,6 @@ public class CubeBuildJob extends SparkApplication {
         buildLayoutWithUpdate = new BuildLayoutWithUpdate();
 //        String dataflowId = getParam(NBatchConstants.P_DATAFLOW_ID);
         Set<String> segmentIds = Sets.newHashSet(StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS)));
-        Set<Long> layoutIds = NSparkCubingUtil.str2Longs(getParam(MetadataConstants.P_LAYOUT_IDS));
 //        dfMgr = NDataflowManager.getInstance(config, project);
         List<String> persistedFlatTable = new ArrayList<>();
         List<String> persistedViewFactTable = new ArrayList<>();
@@ -87,9 +86,9 @@ public class CubeBuildJob extends SparkApplication {
             //TODO: what if a segment is deleted during building?
             for (String segId : segmentIds) {
                 SegmentInfo seg = ManagerHub.getSegmentInfo(config, getParam(MetadataConstants.P_CUBE_ID), segId);
-                SpanningTree SpanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(seg.toBuildLayouts()));
+                SpanningTree spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(seg.toBuildLayouts()));
                 // choose source
-                ParentSourceChooser sourceChooser = new ParentSourceChooser(SpanningTree, seg, jobId, ss, config, true);
+                ParentSourceChooser sourceChooser = new ParentSourceChooser(spanningTree, seg, jobId, ss, config, true);
                 sourceChooser.decideSources();
                 NBuildSourceInfo buildFromFlatTable = sourceChooser.flatTableSource();
                 Map<Long, NBuildSourceInfo> buildFromLayouts = sourceChooser.reuseSources();
@@ -99,14 +98,14 @@ public class CubeBuildJob extends SparkApplication {
                 // build cuboids from flat table
                 if (buildFromFlatTable != null) {
                     collectPersistedTablePath(persistedFlatTable, persistedViewFactTable, sourceChooser, buildFromFlatTable);
-                    build(Collections.singletonList(buildFromFlatTable), seg, SpanningTree);
+                    build(Collections.singletonList(buildFromFlatTable), seg, spanningTree);
                 }
 
                 // build cuboids from reused layouts
                 if (!buildFromLayouts.isEmpty()) {
-                    build(buildFromLayouts.values(), seg, SpanningTree);
+                    build(buildFromLayouts.values(), seg, spanningTree);
                 }
-                infos.recordSpanningTree(segId, SpanningTree);
+                infos.recordSpanningTree(segId, spanningTree);
                 updateSegmentSourceBytesSize(seg, ResourceDetectUtils.getSegmentSourceSize(shareDir));
             }
         } finally {
@@ -131,9 +130,6 @@ public class CubeBuildJob extends SparkApplication {
         String flatTablePath = sourceChooser.persistFlatTableIfNecessary();
         if (!flatTablePath.isEmpty()) {
             persistedFlatTable.add(flatTablePath);
-        }
-        if (!buildFromFlatTable.getViewFactTablePath().isEmpty()) {
-            persistedViewFactTable.add(buildFromFlatTable.getViewFactTablePath());
         }
     }
 

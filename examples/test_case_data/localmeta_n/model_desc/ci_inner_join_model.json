@@ -1,0 +1,232 @@
+{
+  "uuid": "72ab4ee2-2cdb-4b07-b39e-4c298563ae27",
+  "name": "ci_inner_join_model",
+  "fact_table": "DEFAULT.TEST_KYLIN_FACT",
+  "join_tables": [
+    {
+      "table": "DEFAULT.TEST_ORDER",
+      "kind": "FACT",
+      "join": {
+        "type": "INNER",
+        "primary_key": [
+          "TEST_ORDER.ORDER_ID"
+        ],
+        "foreign_key": [
+          "TEST_KYLIN_FACT.ORDER_ID"
+        ]
+      }
+    },
+    {
+      "table": "DEFAULT.TEST_ACCOUNT",
+      "alias": "BUYER_ACCOUNT",
+      "kind": "FACT",
+      "join": {
+        "type": "INNER",
+        "primary_key": [
+          "BUYER_ACCOUNT.ACCOUNT_ID"
+        ],
+        "foreign_key": [
+          "TEST_ORDER.BUYER_ID"
+        ]
+      }
+    },
+    {
+      "table": "EDW.TEST_CAL_DT",
+      "join": {
+        "type": "INNER",
+        "primary_key": [
+          "TEST_CAL_DT.CAL_DT"
+        ],
+        "foreign_key": [
+          "TEST_KYLIN_FACT.CAL_DT"
+        ]
+      }
+    },
+    {
+      "table": "DEFAULT.TEST_CATEGORY_GROUPINGS",
+      "join": {
+        "type": "INNER",
+        "primary_key": [
+          "TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID",
+          "TEST_CATEGORY_GROUPINGS.SITE_ID"
+        ],
+        "foreign_key": [
+          "TEST_KYLIN_FACT.LEAF_CATEG_ID",
+          "TEST_KYLIN_FACT.LSTG_SITE_ID"
+        ]
+      }
+    },
+    {
+      "table": "EDW.TEST_SITES",
+      "join": {
+        "type": "INNER",
+        "primary_key": [
+          "TEST_SITES.SITE_ID"
+        ],
+        "foreign_key": [
+          "TEST_KYLIN_FACT.LSTG_SITE_ID"
+        ]
+      }
+    },
+    {
+      "table": "EDW.TEST_SELLER_TYPE_DIM",
+      "join": {
+        "type": "INNER",
+        "primary_key": [
+          "TEST_SELLER_TYPE_DIM.SELLER_TYPE_CD"
+        ],
+        "foreign_key": [
+          "TEST_KYLIN_FACT.SLR_SEGMENT_CD"
+        ]
+      }
+    },
+    {
+      "table": "DEFAULT.TEST_COUNTRY",
+      "alias": "BUYER_COUNTRY",
+      "join": {
+        "type": "INNER",
+        "primary_key": [
+          "BUYER_COUNTRY.COUNTRY"
+        ],
+        "foreign_key": [
+          "BUYER_ACCOUNT.ACCOUNT_COUNTRY"
+        ]
+      }
+    },
+    {
+      "table": "DEFAULT.TEST_COUNTRY",
+      "alias": "SELLER_COUNTRY",
+      "join": {
+        "type": "INNER",
+        "primary_key": [
+          "SELLER_COUNTRY.COUNTRY"
+        ],
+        "foreign_key": [
+          "SELLER_ACCOUNT.ACCOUNT_COUNTRY"
+        ]
+      }
+    },
+    {
+      "table": "DEFAULT.TEST_ACCOUNT",
+      "alias": "SELLER_ACCOUNT",
+      "kind": "FACT",
+      "join": {
+        "type": "INNER",
+        "primary_key": [
+          "SELLER_ACCOUNT.ACCOUNT_ID"
+        ],
+        "foreign_key": [
+          "TEST_KYLIN_FACT.SELLER_ID"
+        ]
+      }
+    }
+  ],
+  "dimensions": [
+    {
+      "table": "TEST_KYLIN_FACT",
+      "columns": [
+        "TRANS_ID",
+        "ORDER_ID",
+        "CAL_DT",
+        "LSTG_FORMAT_NAME",
+        "LSTG_SITE_ID",
+        "LEAF_CATEG_ID",
+        "SLR_SEGMENT_CD",
+        "SELLER_ID",
+        "TEST_COUNT_DISTINCT_BITMAP"
+      ]
+    },
+    {
+      "table": "TEST_ORDER",
+      "columns": [
+        "ORDER_ID",
+        "BUYER_ID",
+        "TEST_DATE_ENC",
+        "TEST_TIME_ENC",
+        "TEST_EXTENDED_COLUMN"
+      ]
+    },
+    {
+      "table": "BUYER_ACCOUNT",
+      "columns": [
+        "ACCOUNT_ID",
+        "ACCOUNT_BUYER_LEVEL",
+        "ACCOUNT_SELLER_LEVEL",
+        "ACCOUNT_COUNTRY",
+        "ACCOUNT_CONTACT"
+      ]
+    },
+    {
+      "table": "SELLER_ACCOUNT",
+      "columns": [
+        "ACCOUNT_ID",
+        "ACCOUNT_BUYER_LEVEL",
+        "ACCOUNT_SELLER_LEVEL",
+        "ACCOUNT_COUNTRY",
+        "ACCOUNT_CONTACT"
+      ]
+    },
+    {
+      "table": "TEST_CATEGORY_GROUPINGS",
+      "columns": [
+        "LEAF_CATEG_ID",
+        "SITE_ID",
+        "META_CATEG_NAME",
+        "CATEG_LVL2_NAME",
+        "CATEG_LVL3_NAME",
+        "USER_DEFINED_FIELD1",
+        "USER_DEFINED_FIELD3",
+        "UPD_DATE",
+        "UPD_USER"
+      ]
+    },
+    {
+      "table": "TEST_SITES",
+      "columns": [
+        "SITE_ID",
+        "SITE_NAME",
+        "CRE_USER"
+      ]
+    },
+    {
+      "table": "TEST_SELLER_TYPE_DIM",
+      "columns": [
+        "SELLER_TYPE_CD",
+        "SELLER_TYPE_DESC"
+      ]
+    },
+    {
+      "table": "TEST_CAL_DT",
+      "columns": [
+        "CAL_DT",
+        "WEEK_BEG_DT"
+      ]
+    },
+    {
+      "table": "BUYER_COUNTRY",
+      "columns": [
+        "COUNTRY",
+        "NAME"
+      ]
+    },
+    {
+      "table": "SELLER_COUNTRY",
+      "columns": [
+        "COUNTRY",
+        "NAME"
+      ]
+    }
+  ],
+  "metrics": [
+    "TEST_KYLIN_FACT.TEST_COUNT_COLUMN",
+    "TEST_KYLIN_FACT.PRICE",
+    "TEST_KYLIN_FACT.ITEM_COUNT"
+  ],
+  "last_modified": 1422435345352,
+  "filter_condition": null,
+  "partition_desc": {
+    "partition_date_column": "DEFAULT.TEST_KYLIN_FACT.CAL_DT",
+    "partition_date_start": 0,
+    "partition_type": "APPEND"
+  }
+}

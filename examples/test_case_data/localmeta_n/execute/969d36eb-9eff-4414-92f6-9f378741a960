@@ -1,0 +1,64 @@
+{
+  "uuid" : "969d36eb-9eff-4414-92f6-9f378741a960",
+  "last_modified" : 1576684526465,
+  "version" : "3.0.0.20500",
+  "name" : "INDEX_BUILD",
+  "tasks" : [ {
+    "uuid" : "969d36eb-9eff-4414-92f6-9f378741a960-00",
+    "last_modified" : 0,
+    "version" : "3.0.0.20500",
+    "name" : "Detect Resource",
+    "tasks" : null,
+    "tasks_check" : null,
+    "type" : "io.kyligence.kap.engine.spark.job.NResourceDetectStep",
+    "params" : {
+      "distMetaUrl" : "/Users/imad/workspace/kyligence_workspace/kylin-on-parquet-v2/examples/test_case_data/localmeta@hdfs,path=file:/Users/imad/workspace/kyligence_workspace/kylin-on-parquet-v2/examples/test_case_data/localmeta/default//job_tmp/969d36eb-9eff-4414-92f6-9f378741a960-00/meta",
+      "submitter" : "ADMIN",
+      "jobId" : "969d36eb-9eff-4414-92f6-9f378741a960",
+      "outputMetaUrl" : "/Users/imad/workspace/kyligence_workspace/kylin-on-parquet-v2/examples/test_case_data/localmeta@hdfs,path=file:/Users/imad/workspace/kyligence_workspace/kylin-on-parquet-v2/examples/test_case_data/localmeta/default//job_tmp/969d36eb-9eff-4414-92f6-9f378741a960-00/meta_output",
+      "dataRangeEnd" : "1338508800000",
+      "targetModel" : "72ab4ee2-2cdb-4b07-b39e-4c298563ae27",
+      "dataRangeStart" : "0",
+      "project" : "default",
+      "className" : "io.kyligence.kap.engine.spark.job.ResourceDetectBeforeCubingJob",
+      "cubeId" : "8372c3b7-a33e-4b69-83dd-0bb8b1f8117e",
+      "segmentIds" : "86b3fdcb-c37c-80b3-1974-5598a10d77c9"
+    },
+    "priority" : 10
+  }, {
+    "uuid" : "969d36eb-9eff-4414-92f6-9f378741a960-01",
+    "last_modified" : 0,
+    "version" : "3.0.0.20500",
+    "name" : "Build Cube with Spark",
+    "tasks" : null,
+    "tasks_check" : null,
+    "type" : "io.kyligence.kap.engine.spark.job.NSparkCubingStep",
+    "params" : {
+      "distMetaUrl" : "/Users/imad/workspace/kyligence_workspace/kylin-on-parquet-v2/examples/test_case_data/localmeta@hdfs,path=file:/Users/imad/workspace/kyligence_workspace/kylin-on-parquet-v2/examples/test_case_data/localmeta/default//job_tmp/969d36eb-9eff-4414-92f6-9f378741a960-01/meta",
+      "submitter" : "ADMIN",
+      "jobId" : "969d36eb-9eff-4414-92f6-9f378741a960",
+      "outputMetaUrl" : "/Users/imad/workspace/kyligence_workspace/kylin-on-parquet-v2/examples/test_case_data/localmeta@hdfs,path=file:/Users/imad/workspace/kyligence_workspace/kylin-on-parquet-v2/examples/test_case_data/localmeta/default//job_tmp/969d36eb-9eff-4414-92f6-9f378741a960-01/meta_output",
+      "dataRangeEnd" : "1338508800000",
+      "targetModel" : "72ab4ee2-2cdb-4b07-b39e-4c298563ae27",
+      "dataRangeStart" : "0",
+      "project" : "default",
+      "className" : "io.kyligence.kap.engine.spark.job.CubeBuildJob",
+      "cubeId" : "8372c3b7-a33e-4b69-83dd-0bb8b1f8117e",
+      "segmentIds" : "86b3fdcb-c37c-80b3-1974-5598a10d77c9"
+    },
+    "priority" : 10
+  } ],
+  "tasks_check" : null,
+  "type" : "io.kyligence.kap.engine.spark.job.NSparkCubingJob",
+  "params" : {
+    "submitter" : "ADMIN",
+    "jobId" : "969d36eb-9eff-4414-92f6-9f378741a960",
+    "dataRangeEnd" : "1338508800000",
+    "targetModel" : "72ab4ee2-2cdb-4b07-b39e-4c298563ae27",
+    "dataRangeStart" : "0",
+    "project" : "default",
+    "cubeId" : "8372c3b7-a33e-4b69-83dd-0bb8b1f8117e",
+    "segmentIds" : "86b3fdcb-c37c-80b3-1974-5598a10d77c9"
+  },
+  "priority" : 10
+}
