@@ -32,8 +32,6 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;
 
-import static io.netty.buffer.PooledByteBufAllocator.defaultNumHeapArena;
-
 public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase implements Serializable {
 
     private Map<String, String> systemProp = Maps.newHashMap();
@@ -61,7 +59,6 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
 
         System.out.println("Check spark sql config [spark.sql.catalogImplementation = "
                 + ss.conf().get("spark.sql.catalogImplementation") + "]");
-        defaultNumHeapArena();
     }
 
     protected ExecutableState wait(AbstractExecutable job) throws InterruptedException {

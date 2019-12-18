@@ -32,7 +32,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import java.util.Properties;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -49,14 +48,13 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.StorageURL;
-import org.apache.kylin.common.persistence.RawResource;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ClassUtil;
 
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -92,9 +90,6 @@ public class NSparkExecutable extends AbstractExecutable {
     protected void setDistMetaUrl(StorageURL storageURL) {
         String fs = HadoopUtil.getWorkingFileSystem().getUri().toString();
         HashMap<String, String> stringStringHashMap = Maps.newHashMap(storageURL.getAllParameters());
-        if (!fs.startsWith("file:")) {
-            stringStringHashMap.put("path", fs + storageURL.getParameter("path"));
-        }
         StorageURL copy = storageURL.copy(stringStringHashMap);
         this.setParam(MetadataConstants.P_DIST_META_URL, copy.toString());
         this.setParam(MetadataConstants.P_OUTPUT_META_URL, copy + "_output");
@@ -370,36 +365,8 @@ public class NSparkExecutable extends AbstractExecutable {
     void attachMetadataAndKylinProps(KylinConfig config) throws IOException {
 
         // The way of Updating metadata is CopyOnWrite. So it is safe to use Reference in the value.
-        Map<String, RawResource> dumpMap = Maps.newHashMap();
-        for (String resPath : getMetadataDumpList(config)) {
-            ResourceStore resourceStore = ResourceStore.getKylinMetaStore(config);
-            RawResource rawResource = resourceStore.getResource(resPath);
-            dumpMap.put(resPath, rawResource);
-        }
-
-        if (dumpMap.isEmpty()) {
-            return;
-        }
-        String metaDumpUrl = getDistMetaUrl();
-        if (StringUtils.isEmpty(metaDumpUrl)) {
-            throw new RuntimeException("Missing metaUrl");
-        }
-
-        File tmpDir = File.createTempFile("kylin_job_meta", "");
-        FileUtils.forceDelete(tmpDir); // we need a directory, so delete the file first
-
-        Properties props = config.exportToProperties();
-        props.setProperty("kylin.metadata.url", metaDumpUrl);
-        // dump metadata
-        //ResourceStore.dumpResourceMaps(config, tmpDir, dumpMap, props);
-        ResourceStore.dumpResources(config, props.stringPropertyNames());
-
-        // copy metadata to target metaUrl
-        KylinConfig dstConfig = KylinConfig.createKylinConfig(props);
-        //MetadataStore.createMetadataStore(dstConfig).uploadFromFile(tmpDir);
-        // clean up
-        logger.debug("Copied metadata to the target metaUrl, delete the temp dir: {}", tmpDir);
-        FileUtils.forceDelete(tmpDir);
+        Set<String> dumpList = getMetadataDumpList(config);
+        JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, KylinConfigExt.createInstance(config, new HashMap<>()), getDistMetaUrl());
     }
 
     private void deleteJobTmpDirectoryOnExists() {

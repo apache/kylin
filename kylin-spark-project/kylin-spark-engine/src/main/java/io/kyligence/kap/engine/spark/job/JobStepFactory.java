@@ -27,27 +27,6 @@ public class JobStepFactory {
     private JobStepFactory() {
     }
 
-    public static NSparkExecutable addStep(DefaultChainedExecutable parent, JobStepType type) {
-        NSparkExecutable step;
-        if (type == JobStepType.RESOURCE_DETECT) {
-            step = new NResourceDetectStep(parent);
-        } else {
-            //KylinConfig config = KylinConfig.getInstanceFromEnv();
-            //step = new NTableSamplingJob.SamplingStep(config.getSparkTableSamplingClassName());
-            step = new NResourceDetectStep(parent);
-        }
-
-        step.setParams(parent.getParams());
-        step.setProject(parent.getProject());
-        //step.setJobType(parent.getJobType());
-        parent.addTask(step);
-        //after addTask, step's id is changed
-
-        step.setDistMetaUrl(
-                KylinConfig.getInstanceFromEnv().getJobTmpMetaStoreUrl(parent.getProject(), step.getId()));
-        return step;
-    }
-
     public static NSparkExecutable addStep(DefaultChainedExecutable parent, JobStepType type,
             CubeInstance cube) {
         NSparkExecutable step;
@@ -72,15 +51,9 @@ public class JobStepFactory {
         step.setParams(parent.getParams());
         step.setProject(parent.getProject());
         step.setTargetSubject(parent.getTargetSubject());
-        //step.setJobType(parent.getJobType());
-        /*if (step instanceof NSparkCleanupAfterMergeStep) {
-            final Segments<NDataSegment> mergingSegments = df.getMergingSegments(segments.iterator().next());
-            step.setParam(MetadataConstants.P_SEGMENT_IDS,
-                    String.join(",", NSparkCubingUtil.toSegmentIds(mergingSegments)));
-        }*/
         parent.addTask(step);
         //after addTask, step's id is changed
-        step.setDistMetaUrl(config.getJobTmpMetaStoreUrl(parent.getProject(), step.getId()));
+        step.setDistMetaUrl(config.getJobMetaHdfsStoreUrl(parent.getProject(), step.getId()));
         return step;
     }
 }

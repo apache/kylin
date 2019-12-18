@@ -38,6 +38,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 import org.apache.kylin.engine.spark.metadata.cube.ManagerHub;
+import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 import org.apache.kylin.engine.spark.metadata.cube.model.ForestSpanningTree;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree;
@@ -277,7 +278,7 @@ public class CubeBuildJob extends SparkApplication {
                 Set<Integer> orderedDims = layoutEntity.getOrderedDimensions().keySet();
                 Dataset<Row> afterSort = afterPrj.select(NSparkCubingUtil.getColumns(orderedDims))
                         .sortWithinPartitions(NSparkCubingUtil.getColumns(orderedDims));
-                saveAndUpdateLayout(afterSort, layoutEntity);
+                saveAndUpdateLayout(afterSort, seg, layoutEntity);
         } else {
             Dataset<Row> afterAgg = CuboidAggregator.agg(ss, parent, dimIndexes, cuboid.getOrderedMeasures(), spanningTree);
                 logger.info("Build layout:{}, in index:{}", layoutEntity.getId(), cuboid.getId());
@@ -288,14 +289,14 @@ public class CubeBuildJob extends SparkApplication {
                         .select(NSparkCubingUtil.getColumns(rowKeys, layoutEntity.getOrderedMeasures().keySet()))
                         .sortWithinPartitions(NSparkCubingUtil.getColumns(rowKeys));
 
-                 saveAndUpdateLayout(afterSort, layoutEntity);
+                 saveAndUpdateLayout(afterSort, seg, layoutEntity);
         }
         ss.sparkContext().setJobDescription(null);
         logger.info("Finished Build index :{}, in segment:{}", cuboid.getId(), seg.id());
         return layoutEntity;
     }
 
-    private void saveAndUpdateLayout(Dataset<Row> dataset, LayoutEntity layout)
+    private void saveAndUpdateLayout(Dataset<Row> dataset, SegmentInfo seg, LayoutEntity layout)
             throws IOException {
         long layoutId = layout.getId();
 
@@ -306,7 +307,7 @@ public class CubeBuildJob extends SparkApplication {
 
         NSparkCubingEngine.NSparkCubingStorage storage = StorageFactory.createEngineAdapter(layout,
                 NSparkCubingEngine.NSparkCubingStorage.class);
-        String path = "NSparkCubingUtil.getStoragePath(dataCuboid)";
+        String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_ID), seg.id(), String.valueOf(layoutId));
         String tempPath = path + TEMP_DIR_SUFFIX;
         // save to temp path
         storage.saveTo(tempPath, dataset, ss);
