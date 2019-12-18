@@ -146,7 +146,8 @@
     "url": "/user/profile",
     "params": {
       "templateUrl": "partials/user/profile.html",
-      "tab": "user"
+      "tab": "user",
+      "controller": "UserProfileCtrl"
     }
   }
 ]
