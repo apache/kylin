@@ -68,7 +68,7 @@ object CuboidAggregator {
       } else {
         if (measure.pra.head.isColumnType) {
           val colIndex = dataSet.schema.fieldNames.zipWithIndex.map(tp => (tp._2, tp._1)).toMap
-          columns.appendAll(measure.pra.map(p =>col(colIndex.apply(p.id).toString)))
+          columns.appendAll(measure.pra.map(p =>col(p.id.toString)))
         } else {
           val value = measure.pra.head.asInstanceOf[LiteralColumnDesc].value
             columns.append(new Column(Literal.create(value, measure.pra.head.dataType)))

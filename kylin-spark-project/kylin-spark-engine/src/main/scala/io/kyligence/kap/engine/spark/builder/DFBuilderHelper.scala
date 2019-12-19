@@ -35,8 +35,16 @@ object DFBuilderHelper extends Logging {
   }
 
   def filterCols(ds: Dataset[Row], needCheckCols: Set[ColumnDesc]): Set[ColumnDesc] = {
-    needCheckCols.filter(cc =>
-      isValidExpr(convertFromDot(cc.asInstanceOf[ComputedColumnDesc].expression), ds))
+    needCheckCols.filter { cc =>
+      val columnName = cc match {
+        case desc: ComputedColumnDesc =>
+          desc.expression
+        case _ =>
+          cc.identity
+      }
+      isValidExpr(convertFromDot(columnName), ds)
+    }
+
   }
 
   def isValidExpr(colExpr: String, ds: Dataset[Row]): Boolean = {
@@ -50,8 +58,23 @@ object DFBuilderHelper extends Logging {
 
   def chooseSuitableCols(ds: Dataset[Row], needCheckCols: Iterable[ColumnDesc]): Seq[Column] = {
     needCheckCols
-      .filter(ref => isValidExpr(ref.asInstanceOf[ComputedColumnDesc].expression, ds))
-      .map(ref => expr(convertFromDot(ref.asInstanceOf[ComputedColumnDesc].expression)).alias(convertFromDot(ref.identity)))
+      .filter { ref =>
+        val columnName = ref match {
+          case desc: ComputedColumnDesc =>
+            desc.expression
+          case _ =>
+            ref.identity
+        }
+        isValidExpr(columnName, ds)
+      }
+      .map{ref =>
+        val columnName = ref match {
+          case desc: ComputedColumnDesc =>
+            desc.expression
+          case _ =>
+            ref.identity
+        }
+        expr(convertFromDot(columnName)).alias(convertFromDot(ref.identity))}
       .toSeq
   }
 

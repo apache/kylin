@@ -37,6 +37,7 @@ import io.kyligence.kap.engine.spark.builder.DFBuilderHelper._
 import io.kyligence.kap.engine.spark.job.NSparkCubingUtil
 import org.apache.kylin.engine.spark.metadata.{ColumnDesc, SegmentInfo}
 import org.apache.kylin.job.lock.MockJobLock
+import org.apache.spark.broadcast.Broadcast
 
 class DFDictionaryBuilder(val dataset: Dataset[Row],
                           val seg: SegmentInfo,
@@ -70,32 +71,28 @@ class DFDictionaryBuilder(val dataset: Dataset[Row],
 
   @throws[IOException]
   private[builder] def build(ref: ColumnDesc, bucketPartitionSize: Int, afterDistinct: Dataset[Row]): Unit = {
-    logInfo(s"Start building global dict V2 for column ${ref.identity}.")
+    val columnName = ref.identity
+    logInfo(s"Start building global dict V2 for column ${columnName}.")
 
     val globalDict = new NGlobalDictionaryV2(seg.project, ref.tableAliasName, ref.columnName, seg.kylinconf.getHdfsWorkingDirectory)
     globalDict.prepareWrite()
     val broadcastDict = ss.sparkContext.broadcast(globalDict)
 
-    ss.sparkContext.setJobDescription("Build dict " + ref.identity)
+    ss.sparkContext.setJobDescription("Build dict " + columnName)
     val dictCol = col(afterDistinct.schema.fields.head.name)
     afterDistinct
       .filter(dictCol.isNotNull)
       .repartition(bucketPartitionSize, dictCol)
       .mapPartitions {
         iter =>
-          val partitionID = TaskContext.get().partitionId()
-          logInfo(s"Build partition dict col: ${ref.identity}, partitionId: $partitionID")
-          val broadcastGlobalDict = broadcastDict.value
-          val bucketDict = broadcastGlobalDict.loadBucketDictionary(partitionID)
-          iter.foreach(dic => bucketDict.addRelativeValue(dic.getString(0)))
-
-          bucketDict.saveBucketDict(partitionID)
-          ListBuffer.empty.iterator
+          DictHelper.genDict(columnName, broadcastDict, iter)
       }(RowEncoder.apply(schema = afterDistinct.schema))
       .count()
 
     globalDict.writeMetaDict(bucketPartitionSize, seg.kylinconf.getGlobalDictV2MaxVersions, seg.kylinconf.getGlobalDictV2VersionTTL)
   }
+
+
 
   private def getLockPath(pathName: String) = s"/${seg.project}${HadoopUtil.GLOBAL_DICT_STORAGE_ROOT}/$pathName/lock"
 

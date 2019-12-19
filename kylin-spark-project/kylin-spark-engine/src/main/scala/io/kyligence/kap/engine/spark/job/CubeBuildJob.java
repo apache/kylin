@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -207,13 +206,12 @@ public class CubeBuildJob extends SparkApplication {
 
         // decided the next layer by current layer's all indexes.
         st.decideTheNextLayer(allIndexesInCurrentLayer, seg);
-        return constructTheNextLayerBuildInfos(st, allIndexesInCurrentLayer);
+        return constructTheNextLayerBuildInfos(st, seg, allIndexesInCurrentLayer);
     }
 
     // decided and construct the next layer.
-    private List<NBuildSourceInfo> constructTheNextLayerBuildInfos( //
-            SpanningTree st, //
-            Collection<LayoutEntity> allIndexesInCurrentLayer) { //
+    private List<NBuildSourceInfo> constructTheNextLayerBuildInfos(SpanningTree st,
+                                                                   SegmentInfo seg, Collection<LayoutEntity> allIndexesInCurrentLayer) { //
 
         List<NBuildSourceInfo> childrenBuildSourceInfos = new ArrayList<>();
         for (LayoutEntity index : allIndexesInCurrentLayer) {
@@ -222,7 +220,7 @@ public class CubeBuildJob extends SparkApplication {
             if (!children.isEmpty()) {
                 NBuildSourceInfo theRootLevelBuildInfos = new NBuildSourceInfo();
                 theRootLevelBuildInfos.setSparkSession(ss);
-                String path = "NSparkCubingUtil.getStoragePath(getDataCuboid(seg, layout.getId()))";
+                String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_ID), seg.id(), String.valueOf(index.getId())) ;
                 theRootLevelBuildInfos.setLayoutId(index.getId());
                 theRootLevelBuildInfos.setParentStoragePath(path);
                 theRootLevelBuildInfos.setToBuildCuboids(children);

@@ -25,7 +25,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 
 public abstract class SpanningTree implements Serializable {

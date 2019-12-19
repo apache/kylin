@@ -59,7 +59,6 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
 
     @Before
     public void setup() throws Exception{
-        ss.sparkContext().setLogLevel("ERROR");
         System.setProperty("kylin.job.scheduler.poll-interval-second", "1");
         System.setProperty("kap.engine.persist-flattable-threshold", "0");
         System.setProperty("kylin.metadata.distributed-lock-impl", "io.kyligence.kap.engine.spark.utils.MockedDistributedLock$MockedFactory");
