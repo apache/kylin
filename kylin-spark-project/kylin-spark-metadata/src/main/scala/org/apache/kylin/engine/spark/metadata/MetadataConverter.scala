@@ -19,7 +19,8 @@
 package org.apache.kylin.engine.spark.metadata
 
 
-import org.apache.kylin.cube.{CubeInstance, CubeUpdate}
+import org.apache.kylin.common.util.DateFormat
+import org.apache.kylin.cube.{CubeInstance, CubeSegment, CubeUpdate}
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity
 import org.apache.kylin.engine.spark.metadata.cube.BitUtils
 import org.apache.spark.sql.util.SparkTypeUtil
@@ -174,5 +175,12 @@ object MetadataConverter {
       next = next + 1
     }
     ret
+  }
+  
+  def extractPartitionExp(cubeSegment: CubeSegment): String = {
+    val partitionDesc = cubeSegment.getModel.getPartitionDesc
+    partitionDesc.setPartitionDateFormat(DateFormat.COMPACT_DATE_PATTERN)
+    partitionDesc.getPartitionConditionBuilder
+        .buildDateRangeCondition(partitionDesc, null, cubeSegment.getSegRange, null)
   }
 }
