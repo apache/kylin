@@ -53,7 +53,7 @@ public class JobStepFactory {
         step.setTargetSubject(parent.getTargetSubject());
         parent.addTask(step);
         //after addTask, step's id is changed
-        step.setDistMetaUrl(config.getJobMetaHdfsStoreUrl(parent.getProject(), step.getId()));
+        step.setDistMetaUrl(config.getJobTmpMetaStoreUrl(parent.getProject(), step.getId()));
         return step;
     }
 }

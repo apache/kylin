@@ -29,12 +29,17 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 import org.apache.kylin.engine.spark.metadata.cube.ManagerHub;
 import org.apache.kylin.engine.spark.metadata.cube.PathManager;
@@ -66,7 +71,7 @@ public class CubeBuildJob extends SparkApplication {
     protected static final Logger logger = LoggerFactory.getLogger( CubeBuildJob.class);
     protected static String TEMP_DIR_SUFFIX = "_temp";
 
-//    private NDataflowManager dfMgr;
+    private CubeManager cubeManager;
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
 
     @Override
@@ -74,9 +79,8 @@ public class CubeBuildJob extends SparkApplication {
         long start = System.currentTimeMillis();
         logger.info("Start building cube job...");
         buildLayoutWithUpdate = new BuildLayoutWithUpdate();
-//        String dataflowId = getParam(NBatchConstants.P_DATAFLOW_ID);
         Set<String> segmentIds = Sets.newHashSet(StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS)));
-//        dfMgr = NDataflowManager.getInstance(config, project);
+        cubeManager = CubeManager.getInstance(config);
         List<String> persistedFlatTable = new ArrayList<>();
         List<String> persistedViewFactTable = new ArrayList<>();
         Path shareDir = config.getJobTmpShareDir(project, jobId);
@@ -105,8 +109,8 @@ public class CubeBuildJob extends SparkApplication {
                     build(buildFromLayouts.values(), seg, spanningTree);
                 }
                 infos.recordSpanningTree(segId, spanningTree);
-                updateSegmentSourceBytesSize(seg, ResourceDetectUtils.getSegmentSourceSize(shareDir));
             }
+            updateSegmentSourceBytesSize(getParam(MetadataConstants.P_CUBE_ID), ResourceDetectUtils.getSegmentSourceSize(shareDir));
         } finally {
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
             for (String viewPath : persistedViewFactTable) {
@@ -132,23 +136,19 @@ public class CubeBuildJob extends SparkApplication {
         }
     }
 
-    private void updateSegmentSourceBytesSize(SegmentInfo segmentInfo, Map<String, Object> toUpdateSegmentSourceSize)
-            throws Exception {
-//        //TODO[xyxy]: is this CopyOnWrite supposed to be preserved?
-////        NDataflow dataflow = dfMgr.getDataflow(dataflowId);
-////        NDataflow newDF = dataflow.copy();
-//        CubeUpdate2 update = new CubeUpdate2(cube.getUuid());
-//        List<DataSegment> DataSegments = Lists.newArrayList();
-//        for (Map.Entry<String, Object> entry : toUpdateSegmentSourceSize.entrySet()) {
-//            DataSegment segment = cube.getSegment(entry.getKey());
-//            segment.setSourceBytesSize((Long) entry.getValue());
-//            segment.setLastBuildTime(System.currentTimeMillis());
-//            DataSegments.add(segment);
-//        }
-//        update.setToUpdateSegs(DataSegments.toArray(new DataSegment[0]));
-//        //TODO[xyxy]: There exists a class CubeUpdate2 for opensource kylin
-////        dfMgr.updateDataflow(update);
-//        ManagerHub.updateSegment(config, segmentInfo);
+    private void updateSegmentSourceBytesSize(String cubeId, Map<String, Object> toUpdateSegmentSourceSize) throws Exception {
+        CubeInstance cubeInstance = cubeManager.getCubeByUuid(cubeId);
+        CubeInstance cubeCopy = cubeInstance.latestCopyForWrite();
+        CubeUpdate update = new CubeUpdate(cubeCopy);
+        List<CubeSegment> nCubeSegments = Lists.newArrayList();
+        for (Map.Entry<String, Object> entry : toUpdateSegmentSourceSize.entrySet()) {
+            CubeSegment segment = cubeCopy.getSegmentById(entry.getKey());
+            segment.setSizeKB((Long) entry.getValue());
+            segment.setLastBuildTime(System.currentTimeMillis());
+            nCubeSegments.add(segment);
+        }
+        update.setToUpdateSegs(nCubeSegments.toArray(new CubeSegment[0]));
+        cubeManager.updateCube(update);
     }
 
     private void build(Collection<NBuildSourceInfo> buildSourceInfos, SegmentInfo seg, SpanningTree st) {
@@ -293,7 +293,6 @@ public class CubeBuildJob extends SparkApplication {
     private void saveAndUpdateLayout(Dataset<Row> dataset, SegmentInfo seg, LayoutEntity layout)
             throws IOException {
         long layoutId = layout.getId();
-
 
         // for spark metrics
         String queryExecutionId = UUID.randomUUID().toString();

@@ -22,7 +22,6 @@ import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;

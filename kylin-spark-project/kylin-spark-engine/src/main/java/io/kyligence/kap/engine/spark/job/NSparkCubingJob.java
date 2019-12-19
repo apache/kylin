@@ -19,13 +19,13 @@
 package io.kyligence.kap.engine.spark.job;
 
 import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
+import io.kyligence.kap.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
@@ -39,9 +39,6 @@ import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.util.MailNotificationUtil;
 import org.apache.kylin.metadata.MetadataConstants;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.source.SourceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spark_project.guava.base.Preconditions;
@@ -98,23 +95,8 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
     @Override
     public Set<String> getMetadataDumpList(KylinConfig config) {
         String cubeId = getParam(MetadataConstants.P_CUBE_ID);
-        return collectCubeMetadata(cube);
-    }
-    public static Set<String> collectCubeMetadata(CubeInstance cube) {
-        // cube, model_desc, cube_desc, table
-        Set<String> dumpList = new LinkedHashSet<>();
-        dumpList.add(cube.getResourcePath());
-        dumpList.add(cube.getDescriptor().getModel().getResourcePath());
-        dumpList.add(cube.getDescriptor().getResourcePath());
-        dumpList.add(cube.getProjectInstance().getResourcePath());
-
-        for (TableRef tableRef : cube.getDescriptor().getModel().getAllTables()) {
-            TableDesc table = tableRef.getTableDesc();
-            dumpList.add(table.getResourcePath());
-            dumpList.addAll(SourceManager.getMRDependentResources(table));
-        }
-
-        return dumpList;
+        CubeInstance cubeInstance = CubeManager.getInstance(config).getCubeByUuid(cubeId);
+        return MetaDumpUtil.collectCubeMetadata(cubeInstance);
     }
 
     // KEYS of Output.extraInfo map, info passed across job steps
