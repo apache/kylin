@@ -45,6 +45,8 @@ public class StreamingSearchContext {
     private long hitCuboid;
     private long basicCuboid;
 
+    private long deadline = Long.MAX_VALUE;
+
     public StreamingSearchContext(CubeDesc cubeDesc, Set<TblColRef> dimensions, Set<TblColRef> groups,
                                   Set<FunctionDesc> metrics, TupleFilter filter, TupleFilter havingFilter) {
         this.cubeDesc = cubeDesc;
@@ -56,6 +58,7 @@ public class StreamingSearchContext {
         this.respResultSchema = new ResponseResultSchema(cubeDesc, dimensions, metrics);
         this.queryPlanner = new StreamingDataQueryPlanner(cubeDesc, filter);
         this.addedGroups = Sets.newHashSet();
+        this.deadline = deadline;
         calculateHitCuboid();
     }
 
@@ -157,5 +160,13 @@ public class StreamingSearchContext {
         Set<Long> sortedSet = Sets.newTreeSet(Cuboid.cuboidSelectComparator);
         sortedSet.addAll(cubeDesc.getMandatoryCuboids());
         return sortedSet;
+    }
+
+    public long getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(long deadline) {
+        this.deadline =  deadline;
     }
 }

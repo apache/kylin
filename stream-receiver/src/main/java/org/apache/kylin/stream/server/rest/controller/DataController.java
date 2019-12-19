@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.gridtable.StorageSideBehavior;
@@ -79,7 +80,7 @@ public class DataController extends BasicController {
         }
         StreamingQueryProfile.set(queryProfile);
         logger.info("receive query request queryId:{}", queryId);
-        try {
+        try (SetThreadName changeName = new SetThreadName("Query %s", queryId)) {
             final Stopwatch sw = new Stopwatch();
             sw.start();
             String cubeName = dataRequest.getCubeName();
@@ -105,6 +106,7 @@ public class DataController extends BasicController {
 
             StreamingSearchContext gtSearchRequest = new StreamingSearchContext(cubeDesc, dimensions, groups,
                     metrics, tupleFilter, havingFilter);
+            gtSearchRequest.setDeadline(dataRequest.getDeadline());
             searchResult = dataSearcher.doSearch(gtSearchRequest, minSegmentTime,
                     dataRequest.isAllowStorageAggregation());
 
