@@ -21,8 +21,7 @@ package io.kyligence.kap.engine.spark.storage
 import io.kyligence.kap.engine.spark.NSparkCubingEngine
 import org.apache.spark.sql._
 
-class ParquetStorage
-  extends NSparkCubingEngine.NSparkCubingStorage
+class ParquetStorage extends NSparkCubingEngine.NSparkCubingStorage
     with Serializable {
 
   override def saveTo(path: String, data: Dataset[Row], ss: SparkSession): Unit = {

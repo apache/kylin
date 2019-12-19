@@ -79,8 +79,7 @@ object BuildUtils extends Logging {
   }
 
   @throws[IOException]
-  def fillCuboidInfo(cuboid: LayoutEntity): Unit = {
-    val strPath = "NSparkCubingUtil.getStoragePath(cuboid)"
+  def fillCuboidInfo(cuboid: LayoutEntity, strPath: String): Unit = {
     val fs = HadoopUtil.getWorkingFileSystem
     if (fs.exists(new Path(strPath))) {
       val cs = HadoopUtil.getContentSummary(fs, new Path(strPath))
