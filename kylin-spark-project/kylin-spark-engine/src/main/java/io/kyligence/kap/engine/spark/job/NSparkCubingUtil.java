@@ -18,7 +18,6 @@
 
 package io.kyligence.kap.engine.spark.job;
 
-import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.spark.sql.Column;
 
 import java.util.LinkedHashSet;

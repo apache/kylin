@@ -149,7 +149,7 @@ public class CubeBuildJob extends SparkApplication {
 //        update.setToUpdateSegs(DataSegments.toArray(new DataSegment[0]));
 //        //TODO[xyxy]: There exists a class CubeUpdate2 for opensource kylin
 ////        dfMgr.updateDataflow(update);
-        ManagerHub.updateSegment(config, segmentInfo);
+//        ManagerHub.updateSegment(config, segmentInfo);
     }
 
     private void build(Collection<NBuildSourceInfo> buildSourceInfos, SegmentInfo seg, SpanningTree st) {
@@ -322,7 +322,7 @@ public class CubeBuildJob extends SparkApplication {
         layout.setShardNum(shardNum);
         ss.sparkContext().setLocalProperty(QueryExecutionCache.N_EXECUTION_ID_KEY(), null);
         QueryExecutionCache.removeQueryExecution(queryExecutionId);
-        BuildUtils.fillCuboidInfo(layout);
+        BuildUtils.fillCuboidInfo(layout, path);
     }
 
     @Override

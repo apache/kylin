@@ -18,23 +18,18 @@
 
 package org.apache.kylin.engine.spark.metadata.cube;
 
-import org.apache.commons.lang3.StringUtils;
+import java.io.File;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
 
 public class PathManager {
     private static final Logger logger = LoggerFactory.getLogger(PathManager.class);
 
     public static String getParquetStoragePath(KylinConfig config, String cubeId, String segId, String cuboidId) {
-        CubeInstance cube = CubeManager.getInstance(config).getCube(cubeId);
+        CubeInstance cube = CubeManager.getInstance(config).getCubeByUuid(cubeId);
         String hdfsWorkDir = config.getHdfsWorkingDirectory(cube.getProject());
         return hdfsWorkDir + "/parquet/" + cubeId + File.separator + segId + File.separator + cuboidId;
     }

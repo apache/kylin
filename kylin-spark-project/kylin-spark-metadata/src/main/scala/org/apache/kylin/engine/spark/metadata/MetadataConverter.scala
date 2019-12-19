@@ -19,6 +19,9 @@
 package org.apache.kylin.engine.spark.metadata
 
 
+import java.util.regex.Pattern
+
+import org.apache.commons.lang.StringUtils
 import org.apache.kylin.common.util.DateFormat
 import org.apache.kylin.cube.{CubeInstance, CubeSegment, CubeUpdate}
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity
@@ -27,7 +30,7 @@ import org.apache.spark.sql.util.SparkTypeUtil
 
 import scala.collection.JavaConverters._
 import org.apache.kylin.metadata.datatype.{DataType => KyDataType}
-import org.apache.kylin.metadata.model.{DataModelDesc, JoinTableDesc, TableRef, TblColRef}
+import org.apache.kylin.metadata.model.{JoinTableDesc, TableRef, TblColRef}
 
 import scala.collection.mutable
 
@@ -39,7 +42,7 @@ object MetadataConverter {
       extractLookupTable(cubeInstance), List.empty[TableDesc],
       extractJoinTable(cubeInstance), allColumnDesc.values.toList, ine, mutable.Set[LayoutEntity](ine: _*),
       Set.empty[ColumnDesc],
-      Set.empty[ColumnDesc], "", "")
+      Set.empty[ColumnDesc], extractPartitionExp(cubeInstance.getSegmentById(segmentId)), "")
   }
 
   def getCubeUpdate(segmentInfo: SegmentInfo): CubeUpdate = {
@@ -95,7 +98,7 @@ object MetadataConverter {
     val columnIndex = dimensionMapping ++ refs
     columnIndex
       .map { co =>
-        (co._2, toColumnDesc(co._2, co._1))
+        (co._2, toColumnDesc(co._1, co._2))
       }
   }
 
@@ -113,7 +116,7 @@ object MetadataConverter {
     val columnIndex = dimensionMapping ++ refs
     val allColumnDesc = columnIndex
       .map { co =>
-        (co._2, toColumnDesc(co._2, co._1))
+        (co._2, toColumnDesc(co._1, co._2))
       }
       .toMap
     val values = dimensionMapping.values.map(Integer.valueOf).toList
@@ -152,7 +155,7 @@ object MetadataConverter {
       }.toList
   }
 
-  private def toColumnDesc(index: Int = -1, ref: TblColRef) = {
+  private def toColumnDesc(ref: TblColRef, index: Int = -1) = {
     val dataType = SparkTypeUtil.toSparkType(KyDataType.getType(ref.getDatatype))
     val columnDesc = if (ref.getColumnDesc.isComputedColumn) {
       ComputedColumnDesc(ref.getName, dataType, ref.getTableRef.getTableName, ref.getTableRef.getAlias,
@@ -180,7 +183,27 @@ object MetadataConverter {
   def extractPartitionExp(cubeSegment: CubeSegment): String = {
     val partitionDesc = cubeSegment.getModel.getPartitionDesc
     partitionDesc.setPartitionDateFormat(DateFormat.COMPACT_DATE_PATTERN)
-    partitionDesc.getPartitionConditionBuilder
+    val (originPartitionColumn, convertedPartitionColumn) =  if (partitionDesc.getPartitionDateColumnRef != null) {
+      (partitionDesc.getPartitionDateColumnRef.getIdentity, convertFromDot(partitionDesc.getPartitionDateColumnRef.getIdentity))
+    } else {
+      (partitionDesc.getPartitionDateColumnRef.getIdentity, convertFromDot(partitionDesc.getPartitionTimeColumnRef.getIdentity))
+    }
+   val originString = partitionDesc.getPartitionConditionBuilder
         .buildDateRangeCondition(partitionDesc, null, cubeSegment.getSegRange, null)
+    StringUtils.replace(originString, originPartitionColumn, convertedPartitionColumn)
+  }
+
+  private val DOT_PATTERN = Pattern.compile("(\\S+)\\.(\\D+)")
+
+  val SEPARATOR = "_0_DOT_0_"
+
+  def convertFromDot(withDot: String): String = {
+    var m = DOT_PATTERN.matcher(withDot)
+    var withoutDot = withDot
+    while (m.find) {
+      withoutDot = m.replaceAll("$1" + SEPARATOR + "$2")
+      m = DOT_PATTERN.matcher(withoutDot)
+    }
+    withoutDot
   }
 }

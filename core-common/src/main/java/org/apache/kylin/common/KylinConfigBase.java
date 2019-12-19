@@ -1125,6 +1125,7 @@ public abstract class KylinConfigBase implements Serializable {
         r.put(1, "org.apache.kylin.storage.hybrid.HybridStorage");
         r.put(2, "org.apache.kylin.storage.hbase.HBaseStorage");
         r.put(3, "org.apache.kylin.storage.stream.StreamStorage");
+        r.put(4, "io.kyligence.kap.engine.spark.storage.ParquetDataStorage");
         r.putAll(convertKeyToInteger(getPropertiesByPrefix("kylin.storage.provider.")));
         return r;
     }
