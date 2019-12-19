@@ -51,7 +51,7 @@ WORKDIR /home/admin
 RUN yum -y install lsof.x86_64 wget.x86_64 tar.x86_64 git.x86_64 mysql-server.x86_64 mysql.x86_64 unzip.x86_64
 
 # install mvn
-RUN wget http://mirrors.ocf.berkeley.edu/apache/maven/maven-3/3.6.1/binaries/apache-maven-3.6.1-bin.tar.gz \
+RUN wget https://archive.apache.org/dist/maven/maven-3/3.6.1/binaries/apache-maven-3.6.1-bin.tar.gz \
     && tar -zxvf apache-maven-3.6.1-bin.tar.gz \
     && rm -f apache-maven-3.6.1-bin.tar.gz
 COPY conf/maven/settings.xml $MVN_HOME/conf/settings.xml
@@ -102,7 +102,7 @@ RUN wget https://archive.apache.org/dist/kafka/$KAFKA_VERSION/kafka_2.11-$KAFKA_
     && rm -f /home/admin/kafka_2.11-$KAFKA_VERSION.tgz
 
 # setup livy
-RUN wgethttps://www.apache.org/dist/incubator/livy/$LIVY_VERSION-incubating/apache-livy-$LIVY_VERSION-incubating-bin.zip \
+RUN wget https://www.apache.org/dist/incubator/livy/$LIVY_VERSION-incubating/apache-livy-$LIVY_VERSION-incubating-bin.zip \
     && unzip /home/admin/apache-livy-$LIVY_VERSION-incubating-bin.zip \
     && rm -f /home/admin/apache-livy-$LIVY_VERSION-incubating-bin.zip
 
