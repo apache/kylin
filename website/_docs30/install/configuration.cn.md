@@ -14,11 +14,12 @@ permalink: /cn/docs30/install/configuration.html
 		- [Cube 级别配置重写](#cube-config-override)
 		- [重写 MapReduce 参数](#mr-config-override)
 		- [重写 Hive 参数](#hive-config-override)
-                - [重写 Spark 参数](#spark-config-override)
+		- [重写 Spark 参数](#spark-config-override)
 - [部署配置](#kylin-deploy)
     - [部署 Kylin](#deploy-config)
 	- [分配更多内存给 Kylin 实例](#kylin-jvm-settings)
 	- [任务引擎高可用](#job-engine-ha)
+	- [任务引擎安全模式](#job-engine-safemode)
 	- [读写分离配置](#rw-deploy)
 	- [RESTful Webservice](#rest-config)
 - [Metastore 配置](#kylin_metastore)
@@ -184,6 +185,12 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 > 提示：更多信息请参考 [集群模式部署](/cn/docs/install/kylin_cluster.html) 中的**任务引擎高可用**部分。
 
 
+### 任务引擎安全模式   {#job-engine-safemode}
+
+安全模式仅在默认调度器中生效
+
+- `kylin.job.scheduler.safemode=TRUE`: 启用安全模式，新提交的任务不会被执行。
+- `kylin.job.scheduler.safemode.runable-projects=project1,project2`: 安全模式下仍然可以执行的项目列表，支持设置多个。
 
 ### 读写分离配置   {#rw-deploy}
 
@@ -341,6 +348,7 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 - `kylin.source.hive.database-for-flat-table`：指定存放 Hive 中间表的 Hive 数据库名字，默认值为 default，请确保启动 Kylin 实例的用户有操作该数据库的权限
 - `kylin.source.hive.flat-table-storage-format`：指定 Hive 中间表的存储格式，默认值为 SEQUENCEFILE
 - `kylin.source.hive.flat-table-field-delimiter`：指定 Hive 中间表的分隔符，默认值为  \u001F 
+- `kylin.source.hive.intermediate-table-prefix`：指定 Hive 中间表的表名前缀，默认值为  kylin\_intermediate\_ 
 - `kylin.source.hive.redistribute-flat-table`：是否重分配 Hive 平表，默认值为 TRUE
 - `kylin.source.hive.redistribute-column-count`：重分配列的数量，默认值为 3
 - `kylin.source.hive.table-dir-create-first`：默认值为 FALSE
@@ -375,6 +383,7 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 ### 超高基维度的处理 {#uhc-config}
 
 Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一列分配一个 Reducer，对于超高基维度，可以通过以下参数增加 Reducer 个数
+
 - `kylin.engine.mr.build-uhc-dict-in-additional-step`：默认值为 FALSE，设置为 TRUE
 - `kylin.engine.mr.uhc-reducer-count`：默认值为 1，可以设置为 5，即为每个超高基的列分配 5 个 Reducer。
 

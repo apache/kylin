@@ -105,7 +105,7 @@ Kylin 没有内置的调度程度。您可以通过 REST API 从外部调度程�
 ### 如何处理 "java.lang.NoClassDefFoundError" 报错？
 
 Kylin 并不自带这些 Hadoop 的 Jar 包，因为它们应该已经在 Hadoop 节点中存在。所以 Kylin 会尝试通过 `hbase classpath` 和 `hive -e set` 找到它们，并将它们的路径加入 `HBASE_CLASSPATH` 中（Kylin 启动时会运行 `hbase` 脚本，该脚本会读取 `HBASE_CLASSPATH`)。
-由于 Hadoop 的复杂性，可能会存在一些会找到 Jar 包的情况，在这种情况下，请查看并修改 `$KYLIN_HOME/bin/` 目录下的 `find-\*-dependecy.sh` 和 `kylin.sh` 脚本来适应您的环境；或者在某些 Hadoop 的发行版中 (如 AWS EMR 5.0)，`hbase` 脚本不会保留原始的 `HBASE_CLASSPATH` 值，可能会引起 "NoClassDefFoundError" 的报错。为了解决这个问题，请在 `$HBASE_HOME/bin/` 下找到 `hbase` 脚本，并在其中搜索 `HBASE_CLASSPATH`，查看它是否是如下形式：
+由于 Hadoop 的复杂性，可能会存在一些找不到 Jar 包的情况，在这种情况下，请查看并修改 `$KYLIN_HOME/bin/` 目录下的 `find-\*-dependecy.sh` 和 `kylin.sh` 脚本来适应您的环境；或者在某些 Hadoop 的发行版中 (如 AWS EMR 5.0)，`hbase` 脚本不会保留原始的 `HBASE_CLASSPATH` 值，可能会引起 "NoClassDefFoundError" 的报错。为了解决这个问题，请在 `$HBASE_HOME/bin/` 下找到 `hbase` 脚本，并在其中搜索 `HBASE_CLASSPATH`，查看它是否是如下形式：
 ```sh
 export HBASE_CLASSPATH=$HADOOP_CONF:$HADOOP_HOME/*:$HADOOP_HOME/lib/*:$ZOOKEEPER_HOME/*:$ZOOKEEPER_HOME/lib/*
 ```

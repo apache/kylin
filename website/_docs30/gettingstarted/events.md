@@ -7,7 +7,7 @@ permalink: /docs30/gettingstarted/events.html
 
 __Conferences__
 
-* [Accelerate big data analytics with Apache Kylin]() by Shaofeng Shi at Big Data conference Berlin Buzzwords 2019, Berlin June 16–18, 2019
+* [Accelerate big data analytics with Apache Kylin](https://berlinbuzzwords.de/19/session/accelerate-big-data-analytics-apache-kylin) by Shaofeng Shi at Big Data conference Berlin Buzzwords 2019, Berlin June 18, 2019
 * [Refactor your data warehouse with mobile analytics products](https://conferences.oreilly.com/strata/strata-ny/public/schedule/speaker/313314) by Zhi Zhu and Luke Han at Strata Data Conference New York, New York September 11–13, 2018
 * [Apache Kylin on HBase: Extreme OLAP engine for big data](https://www.slideshare.net/ShiShaoFeng1/apache-kylin-on-hbase-extreme-olap-engine-for-big-data) by Shaofeng Shi at [HBaseCon Asia 2018](https://hbase.apache.org/hbaseconasia-2018/)
 * [The Evolution of Apache Kylin: Realtime and Plugin Architecture in Kylin](https://www.youtube.com/watch?v=n74zvLmIgF0)([slides](http://www.slideshare.net/YangLi43/apache-kylin-15-updates)) by [Li Yang](https://github.com/liyang-gmt8), at [Hadoop Summit 2016 Dublin](http://hadoopsummit.org/dublin/agenda/), Ireland, 2016-04-14
@@ -23,8 +23,12 @@ __Conferences__
 
 __Meetup__
 
-- [Apache Kylin Meetup @Chengdu](https://www.huodongxing.com/event/4489409598500), China; 1:00 PM - 5:00 PM, Saturday, 2019-05-25
-* [Apache Kylin Meetup @Beijing](https://www.huodongxing.com/event/7484371439700) , China; 1:00 PM - 5:30 PM, Saturday, 2019-04-13
+* [Apache Kylin Meetup @Beijing](https://www.huodongxing.com/event/2516174942311), China; 13:00PM - 17:00PM, Saturday, 2019-11-16
+* [Apache Kylin Meetup @Berlin](https://www.meetup.com/Apache-Kylin-Meetup-Berlin/events/264945114) ([Slides](https://www.slideshare.net/ssuser931288/presentations)), Berlin, Germany; 7:00PM - 8:30PM, Thursday, 2019-10-24
+* [Apache Kylin Meetup @Shenzhen](https://www.huodongxing.com/event/3506680147611), China; 12:30PM - 17:00PM, Saturday, 2019-09-07
+* [Apache Kylin Meetup @California](https://www.meetup.com/Apache-Kylin/events/263433976), San Jose, US; 6:30 PM - 8:30 PM, Wednesday, 2019-08-07
+* [Apache Kylin Meetup @Chengdu](https://www.huodongxing.com/event/4489409598500), China; 1:00 PM - 5:00 PM, Saturday, 2019-05-25
+* [Apache Kylin Meetup @Beijing](https://www.huodongxing.com/event/7484371439700), China; 1:00 PM - 5:30 PM, Saturday, 2019-04-13
 * [Apache Kylin Meetup @Shanghai](http://www.huodongxing.com/event/4476570217900) ([Slides](https://kyligence.io/zh/resource/case-study-zh/)), China; 1:00 PM - 4:30 PM, Saturday, 2019-02-23 
 * [Apache Kylin for Extreme OLAP and Big Data @eBay South Campus](https://www.eventbrite.com/e/thursday-nov-29-meetup-apache-kylin-for-extreme-olap-and-big-data-tickets-52275347973?aff=estw), Sanjose, CA, US; 6:30 PM - 8:30 PM, Thursday, 2018-11-29 
 * [Apache Kylin Meetup @Hangzhou](http://www.huodongxing.com/event/7461326621900), China; 1:30PM - 17:00PM, Saturday, 2018-10-26
@@ -34,4 +38,6 @@ __Meetup__
 * [Apache Kylin Meetup @Shenzhen](http://cn.mikecrm.com/rjqPLom), China; 1:00PM - 17:00PM, Saturday, 2018-6-23
 * [Apache Kylin & Alluxio Meetup @Shanghai](http://huiyi.csdn.net/activity/product/goods_list?project_id=3746), in Shanghai, China, 1:00PM - 17:30PM, Sunday, 2018-1-21
 * [Apache Kylin Meetup @Bay Area](http://www.meetup.com/Cloud-at-ebayinc/events/218914395/), in San Jose, US, 6:00PM - 7:30PM, Thursday, 2014-12-04
+
+[__Propose a talk__](http://kyligence-apache-kylin.mikecrm.com/SJFewHC)
 

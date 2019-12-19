@@ -32,9 +32,10 @@
   - tutorial/create_cube
   - tutorial/cube_build_job
   - tutorial/sql_reference
-  - tutorial/project_table_level_acl
+  - tutorial/project_level_acl
   - tutorial/cube_spark
   - tutorial/cube_streaming
+  - tutorial/realtime_olap
   - tutorial/cube_build_performance
   - tutorial/kylin_client_tool
   - tutorial/setup_systemcube

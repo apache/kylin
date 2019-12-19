@@ -40,9 +40,10 @@
   - tutorial/create_cube
   - tutorial/cube_build_job
   - tutorial/sql_reference
-  - tutorial/project_table_level_acl
+  - tutorial/project_level_acl
   - tutorial/cube_spark
   - tutorial/cube_streaming
+  - tutorial/realtime_olap
   - tutorial/cube_build_performance
   - tutorial/kylin_client_tool
   - tutorial/setup_systemcube
@@ -82,3 +83,5 @@
   - howto/howto_update_coprocessor
   - howto/howto_install_ranger_kylin_plugin
   - howto/howto_enable_zookeeper_acl
+  - howto/howto_use_health_check_cli
+  - howto/howto_use_hive_mr_dict

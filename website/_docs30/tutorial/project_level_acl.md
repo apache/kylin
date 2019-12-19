@@ -1,16 +1,18 @@
 ---
 layout: docs30
-title: Project Level ACL
+title: Project And Table Level ACL
 categories: tutorial
 permalink: /docs30/tutorial/project_level_acl.html
 since: v2.1.0
 ---
 
+
+## Project Level ACL
 Whether a user can access a project and use some functionalities within the project is determined by project-level access control, there are four types of access permission role set at the project-level in Apache Kylin. They are *ADMIN*, *MANAGEMENT*, *OPERATION* and *QUERY*. Each role defines a list of functionality user may perform in Apache Kylin.
 
 - *QUERY*: designed to be used by analysts who only need access permission to query tables/cubes in the project.
 - *OPERATION*: designed to be used by operation team in a corporate/organization who need permission to maintain the Cube. OPERATION access permission includes QUERY.
-- *MANAGEMENT*: designed to be used by Modeler or Designer who is fully knowledgeable of business meaning of the data/model, Cube will be in charge of Model and Cube design. MANAGEMENT access permission includes OPERATION, and QUERY.
+- *MANAGEMENT*: designed to be used by Modeler who is fully knowledgeable of business meaning of the data/model, Modeler will be in charge of Model and Cube design. MANAGEMENT access permission includes OPERATION, and QUERY.
 - *ADMIN*: Designed to fully manage the project. ADMIN access permission includes MANAGEMENT, OPERATION and QUERY.
 
 Access permissions are independent between different projects.
@@ -59,5 +61,25 @@ Additionally, when Query Pushdown is enabled, QUERY access permission on a proje
 
    ![](/images/Project-level-acl/ACL-3.png)
 
-   Please note that in order to grant permission to default user (MODELER and ANLAYST), these users need to login as least once. 
+   Please note that in order to grant permission to default user (MODELER and ANALYST), these users need to login as least once. 
    ​
+
+## Table Level ACL
+Whether a user can access a table is determined by table-level access control, this function is on by default. Set `kylin.query.security.table-acl-enabled` to false to disable the table-level access control.
+Access permissions are independent between different projects.
+Once table-level access permission has been set for a user, you can see it on the page.
+
+
+### Manage Access Permission at Table-level
+
+1. Click the Data Source tab of Model page.
+2. Expand a database, choose the table and click Access tab.
+3. Click `Grant`to grant permission to user.
+
+	![](/images/Table-level-acl/ACL-1.png)
+
+4. Choose the type (user or role), choose User / Role name and then click `Submit` to grant permission.
+
+5. You can also delete permission on this page.
+
+   ![](/images/Table-level-acl/ACL-2.png)

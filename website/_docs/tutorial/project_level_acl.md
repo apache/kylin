@@ -2,7 +2,7 @@
 layout: docs
 title: Project And Table Level ACL
 categories: tutorial
-permalink: /docs/tutorial/project_table_level_acl.html
+permalink: /docs/tutorial/project_level_acl.html
 since: v2.1.0
 ---
 

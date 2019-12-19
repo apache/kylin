@@ -1,23 +1,26 @@
 ---
 layout: docs30-cn
-title: Project Level ACL
+title: 项目和表级别权限控制
 categories: tutorial
 permalink: /cn/docs30/tutorial/project_level_acl.html
 since: v2.1.0
 ---
 
-Whether a user can access a project and use some functionalities within the project is determined by project-level access control, there are four types of access permission role set at the project-level in Apache Kylin. They are *ADMIN*, *MANAGEMENT*, *OPERATION* and *QUERY*. Each role defines a list of functionality user may perform in Apache Kylin.
 
-- *QUERY*: designed to be used by analysts who only need access permission to query tables/cubes in the project.
-- *OPERATION*: designed to be used by operation team in a corporate/organization who need permission to maintain the Cube. OPERATION access permission includes QUERY.
-- *MANAGEMENT*: designed to be used by Modeler or Designer who is fully knowledgeable of business meaning of the data/model, Cube will be in charge of Model and Cube design. MANAGEMENT access permission includes OPERATION, and QUERY.
-- *ADMIN*: Designed to fully manage the project. ADMIN access permission includes MANAGEMENT, OPERATION and QUERY.
+## 项目级别权限控制
 
-Access permissions are independent between different projects.
+用户是否可以访问一个项目并使用项目中的功能取决于项目级别的权限控制，Kylin 中共有 4 种角色。分别是 *ADMIN*，*MANAGEMENT*，*OPERATION* 和 *QUERY*。每个角色对应不同的功能。
 
-### How Access Permission is Determined
+- *QUERY*：适用于只需在项目中有查询表/cube 权限的分析师。
+- *OPERATION*：该角色适用于需维护 Cube 的公司/组织中的运营团队。OPERATION 包含 QUERY 的所有权限。
+- *MANAGEMENT*：该角色适用于充分了解数据/模型商业含义的模型师，建模师会负责模型和 Cube 的设计。MANAGEMENT 包含 OPERATION 和 QUERY 的所有权限。
+- *ADMIN*：该角色全权管理项目。ADMIN 包含 MANAGEMENT，OPERATION 和 QUERY 的所有权限。
 
-Once project-level access permission has been set for a user, access permission on data source, model and Cube will be inherited based on the access permission role defined on project-level. For detailed functionalities, each access permission role can have access to, see table below.
+访问权限是项目隔离的。
+
+### 如何确定访问权限
+
+为用户设置项目级别的访问权限后，不同的角色对应于不同的对数据源，模型和 Cube 的访问权限。具体的功能，以及每个角色的访问权限，如下表所示。
 
 |                                          | System Admin | Project Admin | Management | Operation | Query |
 | ---------------------------------------- | ------------ | ------------- | ---------- | --------- | ----- |
@@ -40,24 +43,44 @@ Once project-level access permission has been set for a user, access permission 
 | Reload metadata, disable cache, set config, diagnosis | Yes          | No            | No         | No        | No    |
 
 
-Additionally, when Query Pushdown is enabled, QUERY access permission on a project allows users to issue push down queries on all tables in the project even though no cube could serve them. It's impossible if a user is not yet granted QUERY permission at project-level.
+另外，当查询下压开启时，该项目的查询权限允许用户查询项目中的所有表即使没有 cube 为他服务。每个用户都会被授予查询权限。
 
-### Manage Access Permission at Project-level
+### 管理项目级别的访问权限
 
-1. Click the small gear shape icon on the top-left corner of Model page. You will be redirected to project page
+1. 在 Model 页面，点击左上角的小齿轮形状图标。您将被重定向到项目页面。
 
    ![](/images/Project-level-acl/ACL-1.png)
 
-2. In project page, expand a project and choose Access.
-3. Click `Grant`to grant permission to user.
+2. 在项目页面，展开一个项目并选择 Access。
+3. 点击 `Grant` 为用户赋予权限。
 
 	![](/images/Project-level-acl/ACL-2.png)
 
-4. Fill in name of the user or role, choose permission and then click `Grant` to grant permission.
+4. 填写用户或角色的名称，选中权限然后点击 `Grant` 赋予权限。
 
-5. You can also revoke and update permission on this page.
+5. 您也可以在该页面移除或更新权限。
 
    ![](/images/Project-level-acl/ACL-3.png)
 
-   Please note that in order to grant permission to default user (MODELER and ANLAYST), these users need to login as least once. 
+   请注意，为了向默认用户（MODELER 和 ANALYST）授予权限，这些用户至少需要登录一次。
    ​
+
+## 表级别权限控制
+用户是否可以访问表取决于表级别的权限控制，该功能默认开启。可通过将 `kylin.query.security.table-acl-enabled` 的值设为 false 的方式关闭该功能。
+不同项目之间权限是互不影响的。
+一旦将表权限赋予用户，则该用户可在页面上看到该表。
+
+
+### 管理表级别权限
+
+1. 点击 Model 页面的 Data Source
+2. 展开某个数据库，选择一张表并点击 Access
+3. 点击 `Grant` 授权给用户
+
+	![](/images/Table-level-acl/ACL-1.png)
+
+4. 选择 type（有 user 和 role 两种），在下拉框中选择 User / Role name 并点击 `Submit` 进行授权
+
+5. 您也可以在该页面删除该权限。
+
+   ![](/images/Table-level-acl/ACL-2.png) 

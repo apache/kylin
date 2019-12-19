@@ -38,12 +38,16 @@ permalink: /cn/docs/install/configuration.html
 	- [字典相关](#dict-config)
 	- [超高基维度的处理](#uhc-config)
 	- [Spark 构建引擎](#spark-cubing)
+	- [通过 Livy 提交 Spark 任务](#livy-submit-spark-job)
 	- [Spark 资源动态分配](#dynamic-allocation)
 	- [任务相关](#job-config)
 	- [启用邮件通知](#email-notification)
 	- [启用 Cube Planner](#cube-planner)
     - [HBase 存储](#hbase-config)
     - [启用压缩](#compress-config)
+    - [实时 OLAP](#realtime-olap)
+- [清理存储配置](#storage-clean-up-configuration)
+    - [存储清理相关](#storage-clean-up-config)
 - [查询配置](#kylin-query)
     - [查询相关](#query-config)
     - [模糊查询](#fuzzy)
@@ -358,6 +362,7 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 - `kylin.engine.mr.max-cuboid-stats-calculator-number`：用于计算 Cube 统计数据的线程数量，默认值为 1
 - `kylin.engine.mr.build-dict-in-reducer`：是否在构建任务 **Extract Fact Table Distinct Columns** 的 Reduce 阶段构建字典，默认值为 TRUE
 - `kylin.engine.mr.yarn-check-interval-seconds`：构建引擎间隔多久检查 Hadoop 任务的状态，默认值为 10（s）    
+- `kylin.engine.mr.use-local-classpath`: 是否使用本地 mapreduce 应用的 classpath。默认值为 TRUE    
 
 
 
@@ -371,7 +376,7 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 - `kylin.dictionary.append-max-versions`：默认值为 3
 - `kylin.dictionary.append-version-ttl`：默认值为 259200000
 - `kylin.dictionary.resuable`：是否重用字典，默认值为 FALSE
-- `kylin.dictionary.shrunken-from-global-enabled`：是否缩小全局字典，默认值为 FALSE
+- `kylin.dictionary.shrunken-from-global-enabled`：是否缩小全局字典，默认值为 TRUE
 
 
 
@@ -410,6 +415,17 @@ Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一�
 
 
 
+### 通过 Livy 提交 Spark 任务 {#livy-submit-spark-job}
+
+- `kylin.engine.livy-conf.livy-enabled`：是否开启 Livy 进行 Spark 任务的提交。默认值为 *FALSE*
+- `kylin.engine.livy-conf.livy-url`：指定了 Livy 的 URL。例如 *http://127.0.0.1:8998*
+- `kylin.engine.livy-conf.livy-key.*`：指定了 Livy 的 name-key 配置。例如 *kylin.engine.livy-conf.livy-key.name=kylin-livy-1*
+- `kylin.engine.livy-conf.livy-arr.*`：指定了 Livy 数组类型的配置。以逗号分隔。例如 *kylin.engine.livy-conf.livy-arr.jars=hdfs://your_self_path/hbase-common-1.4.8.jar,hdfs://your_self_path/hbase-server-1.4.8.jar,hdfs://your_self_path/hbase-client-1.4.8.jar*
+- `kylin.engine.livy-conf.livy-map.*`：指定了 Spark 配置。例如 *kylin.engine.livy-conf.livy-map.spark.executor.instances=10*
+
+> 提示：更多信息请参考 [Apache Livy Rest API](http://livy.incubator.apache.org/docs/latest/rest-api.html)。
+
+
 ### Spark 资源动态分配 {#dynamic-allocation}
 
 - `kylin.engine.spark-conf.spark.shuffle.service.enabled`：是否开启 shuffle service
@@ -429,6 +445,7 @@ Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一�
 - `kylin.job.allow-empty-segment`：是否容忍数据源为空，默认值为 TRUE
 - `kylin.job.max-concurrent-jobs`：最大构建并发数，默认值为 10
 - `kylin.job.retry`：构建任务失败后的重试次数，默认值为 0
+- `kylin.job.retry-interval`: 每次重试的间隔毫秒数。默认值为 30000
 - `kylin.job.scheduler.priority-considered`：是否考虑任务优先级，默认值为 FALSE
 - `kylin.job.scheduler.priority-bar-fetch-from-queue`：指定从优先级队列中获取任务的时间间隔，默认值为 20(s)
 - `kylin.job.scheduler.poll-interval-second`：从队列中获取任务的时间间隔，默认值为 30(s)
@@ -549,6 +566,51 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 
 
 
+### 实时 OLAP    {#realtime-olap}
+- `kylin.stream.job.dfs.block.size`：指定了流式构建 Base Cuboid 任务所需 HDFS 块的大小。默认值为 *16M*。
+- `kylin.stream.index.path`：指定了本地 segment 缓存的位置。默认值为 *stream_index*。
+- `kylin.stream.cube-num-of-consumer-tasks`：指定了共享同一个 topic 分区的 replica set 数量，影响着不同 replica set 分配的分区数量。默认值为 *3*。
+- `kylin.stream.cube.window`：指定了每个 segment 的持续时长，以秒为单位。默认值为 *3600*。
+- `kylin.stream.cube.duration`：指定了 segment 从 active 状态变为 IMMUTABLE 状态的等待时间，以秒为单位。默认值为 *7200*。
+- `kylin.stream.cube.duration.max`：segment 的 active 状态的最长持续时间，以秒为单位。默认值为 *43200*。
+- `kylin.stream.checkpoint.file.max.num`：指定了每个 Cube 包含的 checkpoint 文件数的最大值。默认值为 *5*。
+- `kylin.stream.index.checkpoint.intervals`：指定了两个 checkpoint 设置的时间间隔。默认值为 *300*。
+- `kylin.stream.index.maxrows`：指定了缓存在堆/内存中的事件数的最大值。默认值为 *50000*。
+- `kylin.stream.immutable.segments.max.num`：指定了当前 receiver 里每个 Cube 中状态为 IMMUTABLE 的 segment 的最大数值，如果超过最大值，当前 topic 的消费将会被暂停。默认值为 *100*。
+- `kylin.stream.consume.offsets.latest`：是否从最近的偏移量开始消费。默认值为 *true*。
+- `kylin.stream.node`：指定了 coordinator/receiver 的节点。形如 host:port。默认值为 *null*。
+- `kylin.stream.metadata.store.type`：指定了元数据存储的位置。默认值为 *zk*。
+- `kylin.stream.segment.retention.policy`：指定了当 segment 变为 IMMUTABLE 状态时，本地 segment 缓存的处理策略。参数值可选 `purge` 和 `fullBuild`。`purge` 意味着当 segment 的状态变为 IMMUTABLE，本地缓存的 segment 数据将被删除。`fullBuild` 意味着当 segment 的状态变为 IMMUTABLE，本地缓存的 segment 数据将被上传到 HDFS。默认值为 *fullBuild*。
+- `kylin.stream.assigner`：指定了用于将 topic 分区分配给不同 replica set 的实现类。该类实现了 `org.apache.kylin.stream.coordinator.assign.Assigner` 类。默认值为 *DefaultAssigner*。
+- `kylin.stream.coordinator.client.timeout.millsecond`：指定了连接 coordinator 客户端的超时时间。默认值为 *5000*。
+- `kylin.stream.receiver.client.timeout.millsecond`：指定了连接 receiver 客户端的超时时间。默认值为 *5000*。
+- `kylin.stream.receiver.http.max.threads`：指定了连接 receiver 的最大线程数。默认值为 *200*。
+- `kylin.stream.receiver.http.min.threads`：指定了连接 receiver 的最小线程数。默认值为 *10*。
+- `kylin.stream.receiver.query-core-threads`：指定了当前 receiver 用于查询的线程数。默认值为 *50*。
+- `kylin.stream.receiver.query-max-threads`：指定了当前 receiver 用于查询的最大线程数。默认值为 *200*。
+- `kylin.stream.receiver.use-threads-per-query`：指定了每个查询使用的线程数。默认值为 *8*。
+- `kylin.stream.build.additional.cuboids`：是否构建除 Base Cuboid 外的 cuboids。除 Base Cuboid 外的 cuboids 指的是在 Cube 的 Advanced Setting 页面选择的强制维度的聚合。默认值为 *false*。默认只构建 Base Cuboid。
+- `kylin.stream.segment-max-fragments`：指定了每个 segment 保存的最大 fragment 数。默认值为 *50*。
+- `kylin.stream.segment-min-fragments`：指定了每个 segment 保存的最小 fragment 数。默认值为 *15*。
+- `kylin.stream.max-fragment-size-mb`：指定了每个 fragment 文件的最大尺寸。默认值为 *300*。
+- `kylin.stream.fragments-auto-merge-enable`：是否开启 fragment 文件自动合并的功能。默认值为 *true*。
+
+> 提示：更多信息请参考 [Real-time OLAP](http://kylin.apache.org/docs30/tutorial/real_time_olap.html)。
+
+
+
+### 存储清理配置  {#storage-clean-up-configuration}
+
+本小节介绍 Kylin 存储清理有关的配置。
+
+
+
+### 存储清理相关 {#storage-clean-up-config}
+
+- `kylin.storage.clean-after-delete-operation`: 是否清理 HBase 和 HDFS 中的 segment 数据。默认值为 FALSE。
+
+
+
 ### 查询配置    {#kylin-query}
 
 本小节介绍 Kylin 查询有关的配置。
@@ -632,6 +694,7 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 
 - `kylin.query.force-limit`：该参数通过为 select * 语句强制添加 LIMIT 分句，达到缩短数据返回时间的目的，该参数默认值为 -1，将该参数值设置为正整数，如 1000，该值会被应用到 LIMIT 分句，查询语句最终会被转化成 select * from fact_table limit 1000
 - `kylin.storage.limit-push-down-enabled`: 默认值为 *TRUE*，设置为 *FALSE* 意味着关闭存储层的 limit-pushdown 
+- `kylin.query.flat-filter-max-children`：指定打平 filter 时 filter 的最大值。默认值为 500000 
 
 
 

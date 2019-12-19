@@ -18,6 +18,7 @@ permalink: /docs30/install/configuration.html
     - [Deploy Kylin](#deploy-config)
 	- [Allocate More Memory for Kylin](#kylin-jvm-settings)
 	- [Job Engine HA](#job-engine-ha)
+	- [Job Engine Safemode](#job-engine-safemode)
 	- [Read/Write Separation](#rw-deploy)
 	- [RESTful Webservice](#rest-config)
 - [Metastore Configuration](#kylin_metastore)
@@ -185,6 +186,13 @@ Export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 > Note: For more information, please refer to the **Enable Job Engine HA** section in [Deploy in Cluster Mode](/docs/install/kylin_cluster.html) 
 
 
+### Job Engine Safemode {#job-engine-safemode}
+
+Safemode can be only used in default schedule.
+
+- `kylin.job.scheduler.safemode=TRUE`: to enable job scheduler safemode. In safemode, Newly submitted job will not be executed
+- `kylin.job.scheduler.safemode.runable-projects=project1,project2`: provide list of projects as exceptional case in safemode.
+
 
 ### Read/Write Separation   {#rw-deploy}
 
@@ -341,6 +349,7 @@ Both Kylin and HBase use compression when writing to disk, so Kylin will multipl
 - `kylin.source.hive.database-for-flat-table`: specifies the name of the Hive database that stores the Hive intermediate table. The default is *default*. Make sure that the user who started the Kylin instance has permission to operate the database.
 - `kylin.source.hive.flat-table-storage-format`: specifies the storage format of the Hive intermediate table. The default value is *SEQUENCEFILE*
 - `kylin.source.hive.flat-table-field-delimiter`: specifies the delimiter of the Hive intermediate table. The default value is *\u001F*
+- - `kylin.source.hive.intermediate-table-prefix`: specifies the table name prefix of the Hive intermediate table. The default value is *kylin\_intermediate\_*
 - `kylin.source.hive.redistribute-flat-table`: whether to redistribute the Hive flat table. The default value is *TRUE*
 - `kylin.source.hive.redistribute-column-count`: number of redistributed columns. The default value is *3*
 - `kylin.source.hive.table-dir-create-first`: the default value is *FALSE*

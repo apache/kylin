@@ -37,7 +37,7 @@ docker run -d \
 -p 8032:8032 \
 -p 8042:8042 \
 -p 60010:60010 \
-apachekylin/apache-kylin-standalone
+apachekylin/apache-kylin-standalone:3.0.0-alpha2
 {% endhighlight %}
 
 The following services are automatically started when the container starts: 
@@ -109,7 +109,7 @@ docker run -d \
 -p 8032:8032 \
 -p 8042:8042 \
 -p 60010:60010 \
-apache-kylin-standalone:3.0.0-alpha2
+apache-kylin-standalone
 {% endhighlight %}
 
 When the container starts, execute the docker exec command to enter the container. The source code is stored in the container dir `/home/admin/kylin_sourcecode`, execute the following command to package the source code: 
@@ -119,7 +119,7 @@ cd /home/admin/kylin_sourcecod
 build/script/package.sh
 {% endhighlight %}
 
-After the package is complete, an  binary package ending in `.tar.gz` will be generated in the `/home/admin/kylin_sourcecode/dist` directory, such as `apache-kylin-3.0.0-alpha2-bin-hbase1x.tar.gz`. We can use this  binary package to deploy and launch Kylin services such as:
+After the package is complete, an binary package ending in `.tar.gz` will be generated in the `/home/admin/kylin_sourcecode/dist` directory, such as `apache-kylin-3.0.0-alpha2-bin-hbase1x.tar.gz`. We can use this  binary package to deploy and launch Kylin services such as:
 
 {% highlight Groff markup %}
 cp /home/admin/kylin_sourcecode/dist/apache-kylin-3.0.0-alpha2-bin-hbase1x.tar.gz /home/admin

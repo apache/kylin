@@ -30,8 +30,8 @@ Kylin metastore use `resource root path + resource name + resource suffix` as ke
 | /table              | /DATABASE.TABLE--project name | .json |
 | /table_exd          | /DATABASE.TABLE--project name | .json |
 | /execute            | /job id               |  |
-| /execute_out        | /job id-step index    |  |
-| /kafaka             | /DATABASE.TABLE       | .json |
+| /execute_output     | /job id-step index    |  |
+| /kafka              | /DATABASE.TABLE       | .json |
 | /streaming          | /DATABASE.TABLE       | .json |
 | /user               | /user name            |  |
 
