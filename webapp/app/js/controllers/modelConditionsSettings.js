@@ -207,6 +207,7 @@ KylinApp.controller('ModelConditionsSettingsCtrl', function ($scope, $modal,Meta
     $scope.modelsManager.selectedModel.partition_desc.partition_date_column = null;
     if($scope.partitionColumn.hasSeparateDateColumns == false){
       $scope.partition_ymd_columns = { year_column: '', month_column: '', day_column: ''};
+      $scope.modelsManager.selectedModel.partition_desc.partition_condition_builder = null;
     } else {
       $scope.partition_date.type = 'yyyy-MM-dd';
       $scope.modelsManager.selectedModel.partition_desc.partition_condition_builder = 'org.apache.kylin.metadata.model.PartitionDesc$CustomYearMonthDayFieldPartitionConditionBuilder';
