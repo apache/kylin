@@ -34,6 +34,7 @@ import java.util.Map.Entry;
 
 import java.util.Set;
 
+import io.kyligence.kap.engine.spark.utils.MetaDumpUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -134,14 +135,14 @@ public class NSparkExecutable extends AbstractExecutable {
             jars = kylinJobJar;
         }
 
-//        deleteJobTmpDirectoryOnExists();
+        deleteJobTmpDirectoryOnExists();
         onExecuteStart(context);
 
-//        try {
-//            attachMetadataAndKylinProps(config);
-//        } catch (IOException e) {
-//            throw new ExecuteException("meta dump failed", e);
-//        }
+        try {
+            attachMetadataAndKylinProps(config);
+        } catch (IOException e) {
+            throw new ExecuteException("meta dump failed", e);
+        }
         String filePath = dumpArgs();
         if (config.isUTEnv()) {
             return runLocalMode(filePath);
@@ -151,6 +152,12 @@ public class NSparkExecutable extends AbstractExecutable {
             return runSparkSubmit(config, sparkHome, hadoopConf, jars, kylinJobJar,
                     "-className " + getSparkSubmitClassName() + " " + filePath);
         }
+    }
+
+    void attachMetadataAndKylinProps(KylinConfig config) throws IOException {
+        // The way of Updating metadata is CopyOnWrite. So it is safe to use Reference in the value.
+        Set<String> dumpList = getMetadataDumpList(config);
+        MetaDumpUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, KylinConfigExt.createInstance(config, new HashMap<>()), getDistMetaUrl());
     }
 
     String dumpArgs() throws ExecuteException {

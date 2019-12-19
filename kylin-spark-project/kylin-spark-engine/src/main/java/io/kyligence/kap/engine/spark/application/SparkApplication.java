@@ -25,11 +25,14 @@ import io.kyligence.kap.engine.spark.job.LogJobInfoUtils;
 import io.kyligence.kap.engine.spark.job.SparkJobConstants;
 import io.kyligence.kap.engine.spark.job.UdfManager;
 import io.kyligence.kap.engine.spark.utils.JobMetricsUtils;
+import io.kyligence.kap.engine.spark.utils.MetaDumpUtil;
 import io.kyligence.kap.engine.spark.utils.SparkConfHelper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -37,6 +40,8 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparkSession;
@@ -47,8 +52,6 @@ import org.apache.spark.utils.YarnInfoFetcherUtils;
 import org.apche.kylin.engine.spark.common.util.TimeZoneUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static io.kyligence.kap.engine.spark.utils.SparkConfHelper.COUNT_DISTICT;
 
 public abstract class SparkApplication {
     private static final Logger logger = LoggerFactory.getLogger(SparkApplication.class);
@@ -117,8 +120,9 @@ public abstract class SparkApplication {
         if (getParam(MetadataConstants.P_LAYOUT_IDS) != null) {
             layoutSize = StringUtils.split(getParam(MetadataConstants.P_LAYOUT_IDS), ",").length;
         }
-        config = KylinConfig.getInstanceFromEnv();
-        try  {
+        try (KylinConfig.SetAndUnsetThreadLocalConfig autoCloseConfig = KylinConfig
+                .setAndUnsetThreadLocalConfig(KylinConfig.loadKylinConfigFromHdfs(hdfsMetalUrl))) {
+            config = autoCloseConfig.get();
             // init KylinBuildEnv
             KylinBuildEnv buildEnv = KylinBuildEnv.getOrCreate(config);
             infos = KylinBuildEnv.get().buildJobInfos();
@@ -186,10 +190,8 @@ public abstract class SparkApplication {
             doExecute();
             // Output metadata to another folder
             //Todo: dump metadata
-            /*val resourceStore = ResourceStore.getKylinMetaStore(config);
-            val outputConfig = KylinConfig.createKylinConfig(config);
-            outputConfig.setMetadataUrl(getParam(MetadataConstants.P_OUTPUT_META_URL));
-            MetadataStore.createMetadataStore(outputConfig).dump(resourceStore);*/
+            attatchMetadataAndKylinProps(config);
+
         } finally {
             if (infos != null) {
                 infos.jobEnd();
@@ -199,6 +201,12 @@ public abstract class SparkApplication {
                 ss.stop();
             }
         }
+    }
+
+    private void attatchMetadataAndKylinProps(KylinConfig config) throws IOException{
+        CubeInstance cube = CubeManager.getInstance(config).getCubeByUuid(getParam(MetadataConstants.P_CUBE_ID));
+        Set<String> dumpList = MetaDumpUtil.collectCubeMetadata(cube);
+        MetaDumpUtil.dumpResources(config, getParam(MetadataConstants.P_OUTPUT_META_URL), dumpList);
     }
 
     public boolean isJobOnCluster(SparkConf conf) {
@@ -224,7 +232,7 @@ public abstract class SparkApplication {
         Map<String, String> configOverride = config.getSparkConfigOverride();
         helper.setConf(SparkConfHelper.DEFAULT_QUEUE, configOverride.get(SparkConfHelper.DEFAULT_QUEUE));
         helper.setOption(SparkConfHelper.REQUIRED_CORES, calculateRequiredCores());
-        helper.setConf(COUNT_DISTICT, hasCountDistinct().toString());
+        helper.setConf(SparkConfHelper.COUNT_DISTICT, hasCountDistinct().toString());
         helper.generateSparkConf();
         helper.applySparkConf(sparkConf);
     }

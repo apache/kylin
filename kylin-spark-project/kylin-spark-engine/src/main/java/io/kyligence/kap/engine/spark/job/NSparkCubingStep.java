@@ -18,13 +18,12 @@
 
 package io.kyligence.kap.engine.spark.job;
 
-import java.util.LinkedHashSet;
+import io.kyligence.kap.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.source.SourceManager;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,24 +50,11 @@ public class NSparkCubingStep extends NSparkExecutable {
 
     @Override
     protected Set<String> getMetadataDumpList(KylinConfig config) {
-        return collectCubeMetadata(cube);
+        String cubeId = getParam(MetadataConstants.P_CUBE_ID);
+        CubeInstance cubeInstance = CubeManager.getInstance(config).getCubeByUuid(cubeId);
+        return MetaDumpUtil.collectCubeMetadata(cubeInstance);
     }
-    public static Set<String> collectCubeMetadata(CubeInstance cube) {
-        // cube, model_desc, cube_desc, table
-        Set<String> dumpList = new LinkedHashSet<>();
-        dumpList.add(cube.getResourcePath());
-        dumpList.add(cube.getDescriptor().getModel().getResourcePath());
-        dumpList.add(cube.getDescriptor().getResourcePath());
-        dumpList.add(cube.getProjectInstance().getResourcePath());
 
-        for (TableRef tableRef : cube.getDescriptor().getModel().getAllTables()) {
-            TableDesc table = tableRef.getTableDesc();
-            dumpList.add(table.getResourcePath());
-            dumpList.addAll(SourceManager.getMRDependentResources(table));
-        }
-
-        return dumpList;
-    }
     public static class Mockup {
         public static void main(String[] args) {
             logger.info(Mockup.class + ".main() invoked, args: " + Arrays.toString(args));
