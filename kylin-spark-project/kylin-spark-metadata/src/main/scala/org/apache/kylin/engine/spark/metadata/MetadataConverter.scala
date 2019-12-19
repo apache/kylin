@@ -42,7 +42,9 @@ object MetadataConverter {
       extractLookupTable(cubeInstance), List.empty[TableDesc],
       extractJoinTable(cubeInstance), allColumnDesc.values.toList, ine, mutable.Set[LayoutEntity](ine: _*),
       Set.empty[ColumnDesc],
-      Set.empty[ColumnDesc], extractPartitionExp(cubeInstance.getSegmentById(segmentId)), "")
+      Set.empty[ColumnDesc],
+      extractPartitionExp(cubeInstance.getSegmentById(segmentId)),
+      extractFilterCondition(cubeInstance.getSegmentById(segmentId)))
   }
 
   def getCubeUpdate(segmentInfo: SegmentInfo): CubeUpdate = {
@@ -186,11 +188,20 @@ object MetadataConverter {
     val (originPartitionColumn, convertedPartitionColumn) =  if (partitionDesc.getPartitionDateColumnRef != null) {
       (partitionDesc.getPartitionDateColumnRef.getIdentity, convertFromDot(partitionDesc.getPartitionDateColumnRef.getIdentity))
     } else {
-      (partitionDesc.getPartitionDateColumnRef.getIdentity, convertFromDot(partitionDesc.getPartitionTimeColumnRef.getIdentity))
+      (partitionDesc.getPartitionTimeColumnRef.getIdentity, convertFromDot(partitionDesc.getPartitionTimeColumnRef.getIdentity))
     }
    val originString = partitionDesc.getPartitionConditionBuilder
         .buildDateRangeCondition(partitionDesc, null, cubeSegment.getSegRange, null)
     StringUtils.replace(originString, originPartitionColumn, convertedPartitionColumn)
+  }
+  
+  def extractFilterCondition(cubeSegment: CubeSegment): String = {
+      val filterCondition = cubeSegment.getModel.getFilterCondition
+      if (filterCondition == null) {
+          ""
+      } else {
+          convertFromDot(cubeSegment.getModel.getFilterCondition)
+      }
   }
 
   private val DOT_PATTERN = Pattern.compile("(\\S+)\\.(\\D+)")
