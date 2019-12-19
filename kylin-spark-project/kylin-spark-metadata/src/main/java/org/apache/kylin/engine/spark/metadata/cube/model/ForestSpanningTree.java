@@ -156,11 +156,11 @@ public class ForestSpanningTree extends SpanningTree {
         return node.parent == null // already has been decided
                 && node.parentCandidates != null //it is root node
                 && node.parentCandidates.stream().allMatch(c -> isBuilt(c, seg)) // its parents candidates is not all ready.
-                && node.parentCandidates.contains(parent); //its parents candidates did not contains this LayoutEntity.
+                && node.parentCandidates.stream().anyMatch(en -> en.getId() == parent.getId()); //its parents candidates did not contains this LayoutEntity.
     }
 
     public boolean isBuilt(LayoutEntity ie, SegmentInfo seg) {
-        return seg.toBuildLayouts().contains(ie);
+        return !seg.toBuildLayouts().contains(ie);
     }
 
 

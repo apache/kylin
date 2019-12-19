@@ -19,9 +19,9 @@
 package org.apache.kylin.engine.spark.metadata.cube.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Lists;
 import java.util.Map;
+import java.util.Objects;
 import org.apache.kylin.engine.spark.metadata.ColumnDesc;
 import org.apache.kylin.engine.spark.metadata.FunctionDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
