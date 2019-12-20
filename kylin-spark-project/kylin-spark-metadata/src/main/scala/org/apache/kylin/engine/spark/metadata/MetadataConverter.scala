@@ -105,7 +105,6 @@ object MetadataConverter {
       }
   }
 
-
   def extractEntityAndMeasures(cubeInstance: CubeInstance): (List[LayoutEntity], java.util.Map[Integer, FunctionDesc]) = {
     val dimensionMapping = cubeInstance.getDescriptor
       .getRowkey
@@ -157,6 +156,10 @@ object MetadataConverter {
         entity.setOrderedMeasures(measureId)
         entity
       }.toList, measureId)
+  }
+  
+  def extractEntityList2JavaList(cubeInstance: CubeInstance): java.util.List[LayoutEntity] = {
+    extractEntityAndMeasures(cubeInstance)._1.asJava
   }
 
   private def toColumnDesc(ref: TblColRef, index: Int = -1) = {
