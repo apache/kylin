@@ -42,8 +42,9 @@ object CuboidAggregator {
           dataSet: DataFrame,
           dimensions: util.Set[Integer],
           measures: util.Map[Integer, FunctionDesc],
-          spanningTree: SpanningTree): DataFrame = {
-    aggInternal(ss, dataSet, dimensions, measures, isSparkSql = false)
+          spanningTree: SpanningTree,
+          isSparkSql: Boolean): DataFrame = {
+    aggInternal(ss, dataSet, dimensions, measures, isSparkSql)
   }
 
   def aggInternal(ss: SparkSession,

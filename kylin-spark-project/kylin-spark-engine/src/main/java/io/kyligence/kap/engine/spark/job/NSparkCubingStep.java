@@ -37,13 +37,10 @@ public class NSparkCubingStep extends NSparkExecutable {
 
     private static final Logger logger = LoggerFactory.getLogger(NSparkCubingStep.class);
 
-    private CubeInstance cube;
-
     // called by reflection
     public NSparkCubingStep() {}
 
-    public NSparkCubingStep(CubeInstance cube, String sparkSubmitClassName) {
-        this.cube = cube;
+    public NSparkCubingStep(String sparkSubmitClassName) {
         this.setSparkSubmitClassName(sparkSubmitClassName);
         this.setName(ExecutableConstants.STEP_NAME_BUILD_SPARK_CUBE);
     }
