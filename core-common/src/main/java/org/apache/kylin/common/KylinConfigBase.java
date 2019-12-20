@@ -2505,4 +2505,9 @@ public abstract class KylinConfigBase implements Serializable {
     public int getSnapshotShardSizeMB() {
         return Integer.parseInt(getOptional("kylin.snapshot.shard-size-mb", "128"));
     }
+
+    public double getJoinMemoryFraction() {
+        // driver memory that can be used by join(mostly BHJ)
+        return Double.parseDouble(getOptional("kap.query.join-memory-fraction", "0.3"));
+    }
 }

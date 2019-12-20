@@ -44,7 +44,10 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.spark.SparkConf;
+import org.apache.spark.execution.KylinJoinSelection;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.SparkSessionExtensions;
+import org.apache.spark.sql.execution.SparkStrategy;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.apache.spark.util.Utils;
 import org.apache.spark.utils.ResourceUtils;
@@ -52,6 +55,8 @@ import org.apache.spark.utils.YarnInfoFetcherUtils;
 import org.apche.kylin.engine.spark.common.util.TimeZoneUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.runtime.AbstractFunction1;
+import scala.runtime.BoxedUnit;
 
 public abstract class SparkApplication {
     private static final Logger logger = LoggerFactory.getLogger(SparkApplication.class);
@@ -161,7 +166,7 @@ public abstract class SparkApplication {
                 }
             }
 
-            ss = SparkSession.builder()/*.withExtensions(new AbstractFunction1<SparkSessionExtensions, BoxedUnit>() {
+            ss = SparkSession.builder().withExtensions(new AbstractFunction1<SparkSessionExtensions, BoxedUnit>() {
                 @Override
                 public BoxedUnit apply(SparkSessionExtensions v1) {
                     v1.injectPlannerStrategy(new AbstractFunction1<SparkSession, SparkStrategy>() {
@@ -172,7 +177,7 @@ public abstract class SparkApplication {
                     });
                     return BoxedUnit.UNIT;
                 }
-            })*/.enableHiveSupport().config(sparkConf).config("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false")
+            }).enableHiveSupport().config(sparkConf).config("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false")
                     .getOrCreate();
 
             //JoinMemoryManager.releaseAllMemory();
