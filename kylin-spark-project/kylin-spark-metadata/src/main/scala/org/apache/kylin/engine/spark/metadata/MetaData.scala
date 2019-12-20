@@ -78,9 +78,14 @@ case class SegmentInfo(id: String,
   var toBuildDictColumns: Set[ColumnDesc],
   allDictColumns: Set[ColumnDesc],
   partitionExp: String,
-  filterCondition: String) {
+  filterCondition: String,
+  var snapshotInfo: Map[String, String] = Map.empty[String, String]) {
 
   def updateLayout(layoutEntity: LayoutEntity): Unit = {
     toBuildLayouts.remove(layoutEntity)
+  }
+
+  def updateSnapshot(tableInfo: Map[String, String]): Unit = {
+    snapshotInfo = tableInfo
   }
 }

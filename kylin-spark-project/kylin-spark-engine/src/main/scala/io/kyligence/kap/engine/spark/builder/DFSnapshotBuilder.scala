@@ -103,7 +103,7 @@ class DFSnapshotBuilder extends Logging {
         // only throw the first exception
         val result = ProxyThreadUtils.awaitResult(eventualTuples, kylinConf.snapshotParallelBuildTimeoutSeconds seconds)
         if (result.nonEmpty) {
-          newSnapMap.putAll(result.toMap.asJava)
+          seg.updateSnapshot(result.toMap)
         }
       } catch {
         case e: Exception =>

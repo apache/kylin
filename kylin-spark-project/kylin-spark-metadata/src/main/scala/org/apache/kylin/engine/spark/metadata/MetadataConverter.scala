@@ -41,7 +41,7 @@ object MetadataConverter {
     val dictColumn = measure.asScala.values.filter(_.returnType.dataType.equals("bitmap"))
       .map(_.pra.head).toSet
     SegmentInfo(segmentId, cubeInstance.getProject, cubeInstance.getConfig, extractFactTable(cubeInstance),
-      extractLookupTable(cubeInstance), List.empty[TableDesc],
+      extractLookupTable(cubeInstance),extractLookupTable(cubeInstance),
       extractJoinTable(cubeInstance), allColumnDesc.values.toList, layoutEntities, mutable.Set[LayoutEntity](layoutEntities: _*),
       dictColumn,
       dictColumn,
@@ -58,7 +58,10 @@ object MetadataConverter {
   }
 
   def extractLookupTable(cubeInstance: CubeInstance): List[TableDesc] = {
-    cubeInstance.getModel.getLookupTables.asScala.map(toTableDesc).toList
+    cubeInstance.getModel.getJoinTables
+        .filter(_.getKind.equals(org.apache.kylin.metadata.model.DataModelDesc.TableKind.LOOKUP))
+      .map(join => toTableDesc(join.getTableRef))
+      .toList
   }
 
   def extractJoinTable(cubeInstance: CubeInstance): Array[JoinDesc] = {
