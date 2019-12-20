@@ -19,6 +19,7 @@
 package org.apache.kylin.storage.hbase.cube.v2;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +56,7 @@ class ExpectedSizeIterator implements Iterator<byte[]> {
     @Override
     public byte[] next() {
         if (current >= expectedSize) {
-            throw new IllegalStateException("Won't have more data");
+            throw new NoSuchElementException("Won't have more data");
         }
         try {
             current++;
