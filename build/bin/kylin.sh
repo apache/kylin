@@ -265,7 +265,7 @@ elif [ "$1" == "streaming" ]
 then
     if [ $# -lt 2 ]
     then
-        echo "invalid input args $@"
+        echo "Invalid input args $@"
         exit -1
     fi
     if [ "$2" == "start" ]
@@ -275,7 +275,7 @@ then
             PID=`cat $KYLIN_HOME/streaming_receiver_pid`
             if ps -p $PID > /dev/null
             then
-              echo "Kylin is running, stop it first"
+              echo "Kylin streaming receiver is running, stop it first"
             exit 1
             fi
         fi
@@ -306,21 +306,20 @@ then
     then
         if [ ! -f "${KYLIN_HOME}/streaming_receiver_pid" ]
         then
-            echo "streaming is not running, please check"
+            echo "Streaming receiver is not running, please check"
             exit 1
         fi
         PID=`cat ${KYLIN_HOME}/streaming_receiver_pid`
         if [ "$PID" = "" ]
         then
-            echo "streaming is not running, please check"
+            echo "Streaming receiver is not running, please check"
             exit 1
         else
-            echo "stopping streaming:$PID"
+            echo "Stopping streaming receiver: $PID"
             WAIT_TIME=2
             LOOP_COUNTER=20
             if ps -p $PID > /dev/null
             then
-                echo "Stopping Kylin: $PID"
                 kill $PID
 
                 for ((i=0; i<$LOOP_COUNTER; i++))
@@ -349,10 +348,10 @@ then
 
                 # process is killed , remove pid file
                 rm -rf ${KYLIN_HOME}/streaming_receiver_pid
-                echo "Kylin with pid ${PID} has been stopped."
+                echo "Kylin streaming receiver with pid ${PID} has been stopped."
                 exit 0
             else
-               quit "Kylin with pid ${PID} is not running"
+               quit "Kylin streaming receiver with pid ${PID} is not running"
             fi
         fi
     elif [[ "$2" = org.apache.kylin.* ]]
