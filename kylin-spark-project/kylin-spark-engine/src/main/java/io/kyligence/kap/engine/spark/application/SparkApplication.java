@@ -194,8 +194,8 @@ public abstract class SparkApplication {
             infos.startJob();
             doExecute();
             // Output metadata to another folder
-            //Todo: dump metadata
-            attatchMetadataAndKylinProps(config);
+            //TODO: for merge and sampling job
+            //attatchMetadataAndKylinProps(config);
 
         } finally {
             if (infos != null) {

@@ -56,6 +56,7 @@ public interface MetadataConstants {
 
     //kylin on parquetv2
     String P_CUBE_ID = "cubeId";
+    String P_CUBE_NAME = "cubeName";
     String P_CUBOID_AGG_UDF = "newtenCuboidAggUDF";
     String P_SEGMENT_IDS = "segmentIds";
     String P_JOB_ID = "jobId";
@@ -72,5 +73,6 @@ public interface MetadataConstants {
     String P_TARGET_MODEL = "targetModel";
     String P_DATA_RANGE_START = "dataRangeStart";
     String P_DATA_RANGE_END = "dataRangeEnd";
+    String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
 
 }

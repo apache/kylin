@@ -73,6 +73,7 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
         }
         job.setId(jobId);
         job.setName(jobType.toString());
+        job.setProjectName(job.cube.getProject());
         job.setJobType(jobType);
         job.setTargetSubject(job.cube.getModel().getId());
         job.setTargetSegments(segments.stream().map(x -> String.valueOf(x.getUuid())).collect(Collectors.toList()));
@@ -81,6 +82,7 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
 
         job.setParam(MetadataConstants.P_JOB_ID, jobId);
         job.setParam(MetadataConstants.P_PROJECT_NAME, job.cube.getProject());
+        job.setParam(MetadataConstants.P_CUBE_NAME, job.cube.getName());
         job.setParam(MetadataConstants.P_TARGET_MODEL, job.getTargetSubject());
         job.setParam(MetadataConstants.P_CUBE_ID, job.cube.getId());
         job.setParam(MetadataConstants.P_SEGMENT_IDS, String.join(",", job.getTargetSegments()));

@@ -31,6 +31,6 @@ public class PathManager {
     public static String getParquetStoragePath(KylinConfig config, String cubeId, String segId, String cuboidId) {
         CubeInstance cube = CubeManager.getInstance(config).getCubeByUuid(cubeId);
         String hdfsWorkDir = config.getHdfsWorkingDirectory(cube.getProject());
-        return hdfsWorkDir + "/parquet/" + cubeId + File.separator + segId + File.separator + cuboidId;
+        return hdfsWorkDir + "parquet/" + cubeId + File.separator + segId + File.separator + cuboidId;
     }
 }
