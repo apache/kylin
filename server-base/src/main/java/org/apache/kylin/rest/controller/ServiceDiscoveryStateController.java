@@ -63,6 +63,8 @@ public class ServiceDiscoveryStateController extends BasicController {
         checkCuratorSchedulerEnabled();
         Set<String> allNodes = new HashSet<>();
         Set<String> queryNodes = new HashSet<>();
+        Set<String> jobNodes = new HashSet<>();
+        Set<String> leaders = new HashSet<>();
 
         // get all nodes and query nodes
         for (String serverWithMode : KylinConfig.getInstanceFromEnv().getRestServersWithMode()) {
@@ -75,19 +77,24 @@ public class ServiceDiscoveryStateController extends BasicController {
             if (mode.equals("query") || mode.equals("all")) {
                 queryNodes.add(server);
             }
+            if (mode.equals("job") || mode.equals("all")) {
+                jobNodes.add(server);
+            }
         }
 
         // Get all selection participants(only job nodes will participate in the election) and selected leaders
         Set<Participant> allParticipants = serviceDiscoveryStateService.getAllParticipants();
-        Set<String> jobNodes = allParticipants.stream() //
-                .map(Participant::getId) //
-                .collect(Collectors.toSet()); //
+        if (!allParticipants.isEmpty()) {
+            jobNodes = allParticipants.stream() //
+                    .map(Participant::getId) //
+                    .collect(Collectors.toSet()); //
 
-        // There should only one leader, if there are more than one leader, means something wrong happened
-        Set<String> leaders = allParticipants.stream() //
-                .filter(Participant::isLeader) //
-                .map(Participant::getId) //
-                .collect(Collectors.toSet()); //
+            // There should only one leader, if there are more than one leader, means something wrong happened
+            leaders = allParticipants.stream() //
+                    .filter(Participant::isLeader) //
+                    .map(Participant::getId) //
+                    .collect(Collectors.toSet()); //
+        }
 
         // Ask for other nodes for its job server state
         // current Kylin only has one active job node
@@ -103,8 +110,8 @@ public class ServiceDiscoveryStateController extends BasicController {
         // 100 means CuratorScheduler
         // This monitor only meaningful to CuratorScheduler
         if (KylinConfig.getInstanceFromEnv().getSchedulerType() != 100) {
-            throw new UnsupportedOperationException("Only meaningful when scheduler is CuratorScheduler, " +
-                    "try set kylin.job.scheduler.default to 100 to enable CuratorScheduler.");
+            throw new UnsupportedOperationException("Only meaningful when scheduler is CuratorScheduler, "
+                    + "try set kylin.job.scheduler.default to 100 to enable CuratorScheduler.");
         }
     }
 
