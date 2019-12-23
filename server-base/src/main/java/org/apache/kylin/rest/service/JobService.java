@@ -33,6 +33,7 @@ import java.util.TimeZone;
 
 import javax.annotation.Nullable;
 
+import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
@@ -475,11 +476,17 @@ public class JobService extends BasicService implements InitializingBean {
         if (job == null) {
             return null;
         }
-        if (!(job instanceof CubingJob)) {
+
+        DefaultChainedExecutable cubeJob;
+
+        if (job instanceof CubingJob) {
+            cubeJob = (CubingJob)job;
+        } else if (job instanceof NSparkCubingJob) {
+            cubeJob = (NSparkCubingJob)job;
+        } else {
             throw new BadRequestException(String.format(Locale.ROOT, msg.getILLEGAL_JOB_TYPE(), job.getId()));
         }
 
-        CubingJob cubeJob = (CubingJob) job;
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
         Output output = cubeJob.getOutput();

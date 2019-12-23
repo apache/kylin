@@ -31,12 +31,14 @@ import org.apache.kylin.job.exception.ExecuteException;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.kylin.metadata.MetadataConstants;
 
 /**
  */
 public class DefaultChainedExecutable extends AbstractExecutable implements ChainedExecutable {
 
     public static final Integer DEFAULT_PRIORITY = 10;
+
 
     private final List<AbstractExecutable> subTasks = Lists.newArrayList();
 
@@ -49,6 +51,22 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         for (AbstractExecutable sub : subTasks) {
             sub.initConfig(config);
         }
+    }
+
+    protected void setProjectName(String name) {
+        setParam(MetadataConstants.P_PROJECT_NAME, name);
+    }
+
+    public String getProjectName() {
+        return getParam(MetadataConstants.P_PROJECT_NAME);
+    }
+
+    public long getMapReduceWaitTime() {
+        return getExtraInfoAsLong(MetadataConstants.MAP_REDUCE_WAIT_TIME, 0L);
+    }
+
+    public void setMapReduceWaitTime(long t) {
+        addExtraInfo(MetadataConstants.MAP_REDUCE_WAIT_TIME, t + "");
     }
 
     public Set<String> getMetadataDumpList(KylinConfig config) {
