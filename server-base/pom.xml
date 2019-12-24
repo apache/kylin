@@ -112,11 +112,14 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-storage-stream</artifactId>
         </dependency>
+
+        <!-- kylin on parquet -->
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-spark-engine</artifactId>
             <version>${project.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.apache.hive.hcatalog</groupId>
             <artifactId>hive-hcatalog-core</artifactId>
@@ -180,6 +183,18 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
+        </dependency>
+
+        <!-- Spark dependency -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.11</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_2.11</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Spring Security -->

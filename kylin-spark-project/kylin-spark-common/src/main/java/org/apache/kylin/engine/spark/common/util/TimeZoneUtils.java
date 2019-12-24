@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apche.kylin.engine.spark.common.util;
+package org.apache.kylin.engine.spark.common.util;
 
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;

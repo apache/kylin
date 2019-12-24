@@ -18,7 +18,7 @@ class HiveSource extends ISource with Logging {
   override def adaptToBuildEngine[I](engineInterface: Class[I]): I = {
     new NSparkCubingSource() {
       override def getSourceData(table: TableDesc, ss: SparkSession, parameters: util.Map[String, String]): Dataset[Row] = {
-        val colString = table.columns.map((tb) => tb.identity).mkString(",")
+        val colString = table.columns.map((tb) => tb.columnName).mkString(",")
         val sql = String.format(Locale.ROOT, "select %s from %s", colString, table.identity)
         val df = ss.sql(sql)
         val sparkSchema = df.schema

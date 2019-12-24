@@ -327,6 +327,7 @@ public class CubeBuildJob extends SparkApplication {
         String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_ID), seg.id(), String.valueOf(layoutId));
         String tempPath = path + TEMP_DIR_SUFFIX;
         // save to temp path
+        logger.info("Cuboids are saved to temp path : " + tempPath);
         storage.saveTo(tempPath, dataset, ss);
 
         JobMetrics metrics = JobMetricsUtils.collectMetrics(queryExecutionId);

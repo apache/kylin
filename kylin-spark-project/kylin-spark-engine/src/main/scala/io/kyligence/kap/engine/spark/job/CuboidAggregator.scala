@@ -108,6 +108,8 @@ object CuboidAggregator {
           } else {
             callUDF(udfName, columns.head).as(id.toString)
           }
+        case _ =>
+          max(columns.head).as(id.toString)
       }
     }.toSeq
 

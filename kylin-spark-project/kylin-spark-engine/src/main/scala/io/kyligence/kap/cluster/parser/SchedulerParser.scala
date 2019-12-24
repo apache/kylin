@@ -16,15 +16,28 @@
  * limitations under the License.
 */
 
-package io.kyligence.kap.cluster
+package io.kyligence.kap.cluster.parser
 
-import org.apache.kylin.common.KylinConfig
-import org.apache.spark.util.KylinReflectUtils
+import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
+import io.kyligence.kap.cluster.AvailableResource
+import org.apache.spark.internal.Logging
 
+trait SchedulerParser extends Logging {
+  protected var root: JsonNode = _
+  protected lazy val mapper = new ObjectMapper
 
-object ClusterInfoFetcherFactory {
+  def availableResource(queueName: String): AvailableResource
 
-  def create(kylinConfig: KylinConfig): ClusterInfoFetcher = {
-    KylinReflectUtils.createObject(kylinConfig.getClusterInfoFetcherClassName)._1.asInstanceOf[ClusterInfoFetcher]
+  def parse(schedulerInfo: String): Unit = {
+    this.root = mapper.readTree(schedulerInfo)
+  }
+
+  // value in some scheduler info format to "value"
+  protected def parseValue(node: JsonNode): String = {
+    if (node.toString.startsWith("\"")) {
+      node.toString.replace("\"", "")
+    } else {
+      node.toString
+    }
   }
 }

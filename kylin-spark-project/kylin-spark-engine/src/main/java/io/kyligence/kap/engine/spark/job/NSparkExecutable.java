@@ -21,6 +21,8 @@ package io.kyligence.kap.engine.spark.job;
 import java.io.File;
 import java.io.IOException;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -32,6 +34,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import java.util.Objects;
 import java.util.Set;
 
 import io.kyligence.kap.engine.spark.utils.MetaDumpUtil;
@@ -41,6 +44,7 @@ import org.apache.commons.lang.StringUtils;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
@@ -107,6 +111,7 @@ public class NSparkExecutable extends AbstractExecutable {
             throw new RuntimeException("Missing spark home");
         }
 
+        //config.overrideMRJobJarPath("/Users/rupeng.wang/Kyligence/Developments/kylin/kylin-parquet/parquet-assembly/target/parquet-assembly-3.0.0-SNAPSHOT-job.jar");
         String kylinJobJar = config.getKylinJobJarPath();
         if (StringUtils.isEmpty(kylinJobJar) && !config.isUTEnv()) {
             throw new RuntimeException("Missing kylin job jar");
@@ -145,7 +150,6 @@ public class NSparkExecutable extends AbstractExecutable {
         if (config.isUTEnv()) {
             return runLocalMode(filePath);
         } else {
-            //Todo running spark on cluster
             killOrphanApplicationIfExists(config);
             return runSparkSubmit(config, sparkHome, hadoopConf, jars, kylinJobJar,
                     "-className " + getSparkSubmitClassName() + " " + filePath);
@@ -266,7 +270,7 @@ public class NSparkExecutable extends AbstractExecutable {
 
     protected Map<String, String> getSparkConfigOverride(KylinConfig config) {
         Map<String, String> sparkConfigOverride = config.getSparkConfigOverride();
-        /*if (!sparkConfigOverride.containsKey("spark.driver.memory")) {
+        if (!sparkConfigOverride.containsKey("spark.driver.memory")) {
             //sparkConfigOverride.put("spark.driver.memory", computeStepDriverMemory() + "m");
         }
         if (UserGroupInformation.isSecurityEnabled()) {
@@ -279,10 +283,8 @@ public class NSparkExecutable extends AbstractExecutable {
         } catch (UnknownHostException e) {
             logger.warn("use the InetAddress get local ip failed!", e);
         }
-        String serverPort = config.getServerPort();
         String hdfsWorkingDir = config.getHdfsWorkingDirectory();
 
-        String log4jConfiguration = "file:" + config.getLogSparkDriverPropertiesFile();
 
         String sparkDriverExtraJavaOptionsKey = "spark.driver.extraJavaOptions";
         StringBuilder sb = new StringBuilder();
@@ -298,27 +300,12 @@ public class NSparkExecutable extends AbstractExecutable {
             }
         }
 
-        KapConfig kapConfig = KapConfig.wrap(config);
-        sb.append(String.format(" -Dlog4j.configuration=%s ", log4jConfiguration));
-        sb.append(String.format(" -Dkap.kerberos.enabled=%s ", kapConfig.isKerberosEnabled()));
-        if (kapConfig.isKerberosEnabled()) {
-            sb.append(String.format(" -Dkap.kerberos.principal=%s ", kapConfig.getKerberosPrincipal()));
-            sb.append(String.format(" -Dkap.kerberos.keytab=%s", kapConfig.getKerberosKeytabPath()));
-            if (kapConfig.getKerberosPlatform().equalsIgnoreCase(KapConfig.FI_PLATFORM)
-                    || kapConfig.getPlatformZKEnable()) {
-                sb.append(String.format(" -Djava.security.auth.login.config=%s", kapConfig.getKerberosJaasConfPath()));
-                sb.append(String.format(" -Djava.security.krb5.conf=%s", kapConfig.getKerberosKrb5ConfPath()));
-            }
-        }
-        sb.append(String.format(" -Dkap.hdfs.working.dir=%s ", hdfsWorkingDir));
-        sb.append(String.format(" -Dspark.driver.log4j.appender.hdfs.File=%s ", sparkDriverHdfsLogPath));
-        sb.append(String.format(" -Dspark.driver.rest.server.ip=%s ", serverIp));
-        sb.append(String.format(" -Dspark.driver.rest.server.port=%s ", serverPort));
-        sb.append(String.format(" -Dspark.driver.param.taskId=%s ", getId()));
-        sb.append(String.format(" -Dspark.driver.local.logDir=%s ", KapConfig.getKylinLogDirAtBestEffort() + "/spark"));
+        sb.append(String.format(Locale.ROOT, " -Dkap.hdfs.working.dir=%s ", hdfsWorkingDir));
+        sb.append(String.format(Locale.ROOT, " -Dspark.driver.log4j.appender.hdfs.File=%s ", sparkDriverHdfsLogPath));
+        sb.append(String.format(Locale.ROOT, " -Dspark.driver.rest.server.ip=%s ", serverIp));
+        sb.append(String.format(Locale.ROOT, " -Dspark.driver.param.taskId=%s ", getId()));
 
         sparkConfigOverride.put(sparkDriverExtraJavaOptionsKey, sb.toString());
-*/
         return sparkConfigOverride;
     }
 

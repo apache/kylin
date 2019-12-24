@@ -25,13 +25,11 @@ import io.kyligence.kap.engine.spark.job.LogJobInfoUtils;
 import io.kyligence.kap.engine.spark.job.SparkJobConstants;
 import io.kyligence.kap.engine.spark.job.UdfManager;
 import io.kyligence.kap.engine.spark.utils.JobMetricsUtils;
-import io.kyligence.kap.engine.spark.utils.MetaDumpUtil;
 import io.kyligence.kap.engine.spark.utils.SparkConfHelper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
@@ -40,8 +38,6 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.spark.SparkConf;
 import org.apache.spark.execution.KylinJoinSelection;
@@ -52,7 +48,7 @@ import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.apache.spark.util.Utils;
 import org.apache.spark.utils.ResourceUtils;
 import org.apache.spark.utils.YarnInfoFetcherUtils;
-import org.apche.kylin.engine.spark.common.util.TimeZoneUtils;
+import org.apache.kylin.engine.spark.common.util.TimeZoneUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.runtime.AbstractFunction1;
@@ -147,6 +143,7 @@ public abstract class SparkApplication {
                 }
             }
 
+
             // for wrapping credential
 
             TimeZoneUtils.setDefaultTimeZone(config);
@@ -167,6 +164,8 @@ public abstract class SparkApplication {
                 }
             }
 
+            sparkConf.set("spark.io.compression.codec", "snappy");
+
             ss = SparkSession.builder().withExtensions(new AbstractFunction1<SparkSessionExtensions, BoxedUnit>() {
                 @Override
                 public BoxedUnit apply(SparkSessionExtensions v1) {
@@ -179,6 +178,7 @@ public abstract class SparkApplication {
                     return BoxedUnit.UNIT;
                 }
             }).enableHiveSupport().config(sparkConf).config("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false")
+                    //.master("local")
                     .getOrCreate();
 
             //JoinMemoryManager.releaseAllMemory();

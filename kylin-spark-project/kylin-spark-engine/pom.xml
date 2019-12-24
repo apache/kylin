@@ -34,13 +34,6 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-spark-common</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-spark-common</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
         </dependency>
@@ -106,6 +99,27 @@
             <artifactId>kylin-core-storage</artifactId>
         </dependency>
 
+        <!-- for test -->
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-storage-hbase</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-server</artifactId>
+            <version>1.1.1</version>
+            <type>test-jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20190722</version>
+        </dependency>
+
+
         <!--For update spark job info from cluster-->
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -114,11 +128,6 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-query</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.roaringbitmap</groupId>
-            <artifactId>RoaringBitmap</artifactId>
-            <version>0.7.36</version>
         </dependency>
     </dependencies>
 
