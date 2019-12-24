@@ -26,6 +26,7 @@ import io.kyligence.kap.engine.spark.job.NSparkCubingUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -45,6 +46,7 @@ import org.apache.kylin.job.lock.MockJobLock;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Dataset;
@@ -86,8 +88,10 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
         System.setProperty("kylin.job.scheduler.poll-interval-second", "1");
         System.setProperty("kap.engine.persist-flattable-threshold", "0");
         System.setProperty("kylin.metadata.distributed-lock-impl", "io.kyligence.kap.engine.spark.utils.MockedDistributedLock$MockedFactory");
+        //System.setProperty(KylinConfig.KYLIN_CONF, LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
         System.setProperty(KylinConfig.KYLIN_CONF, HBaseMetadataTestCase.SANDBOX_TEST_DATA);
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        kylinConfig.setProperty("kylin.source.provider.0", "io.kyligence.kap.engine.spark.source.HiveSource");
         cubeManager = CubeManager.getInstance(kylinConfig);
         jobService = ExecutableManager.getInstance(kylinConfig);
         scheduler = DefaultScheduler.createInstance();
@@ -137,6 +141,21 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
         //TODO: test merge job
         //merge
 
+        // Result cmp: Parquet vs Spark SQL
+        queryTest(segment);
+    }
+
+    @Test
+    public void testParquetQuery() {
+        String cubeName = "ci_inner_join_cube";
+        CubeInstance cubeInstance = cubeManager.getCube(cubeName);
+        Segments<CubeSegment> segments = cubeInstance.getSegments();
+        for (CubeSegment segment : segments) {
+            queryTest(segment);
+        }
+    }
+
+    private void queryTest(CubeSegment segment) {
         // Result cmp: Parquet vs Spark SQL
         for(LayoutEntity entity : MetadataConverter.extractEntityList2JavaList(segment.getCubeInstance())) {
             // Parquet result

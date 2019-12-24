@@ -148,4 +148,13 @@ public class JsonUtil {
             throw new IllegalStateException("Cannot copy " + typeReference.getType(), e);
         }
     }
+
+    public static boolean isJson(String content) {
+        try {
+            mapper.readTree(content);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
 }

@@ -58,6 +58,7 @@ public class NResourceDetectStep extends NSparkExecutable {
     @Override
     protected Map<String, String> getSparkConfigOverride(KylinConfig config) {
         Map<String, String> sparkConfigOverride = super.getSparkConfigOverride(config);
+        //run resource detect job on local not cluster
         sparkConfigOverride.put("spark.master", "local");
         sparkConfigOverride.put("spark.sql.autoBroadcastJoinThreshold", "-1");
         sparkConfigOverride.put("spark.sql.adaptive.enabled", "false");

@@ -19,11 +19,13 @@
 package org.apache.kylin.engine.spark;
 
 import com.google.common.collect.Maps;
+import io.kyligence.kap.engine.spark.job.UdfManager;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.spark.SparkConf;
+import org.apache.spark.sql.KylinSparkEnv;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.internal.StaticSQLConf;
 import org.junit.BeforeClass;
@@ -54,8 +56,9 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         // For sinai_poc/query03, enable implicit cross join conversion
         sparkConf.set("spark.sql.crossJoin.enabled", "true");
 
-        ss = SparkSession.builder().config(sparkConf).getOrCreate();
-        SparkEnv.setSparkSession(ss);
+        ss = SparkSession.builder().config(sparkConf).enableHiveSupport().getOrCreate();
+        KylinSparkEnv.setSparkSession(ss);
+        UdfManager.create(ss);
 
         System.out.println("Check spark sql config [spark.sql.catalogImplementation = "
                 + ss.conf().get("spark.sql.catalogImplementation") + "]");
