@@ -17,6 +17,7 @@ In this tutorial, we will use Hortonworks HDP-2.4.0.0.169 Sandbox VM + Kafka v1.
 
 The configuration can be found at [Real-time OLAP configuration](http://kylin.apache.org/docs30/install/configuration.html#realtime-olap).
 The detail can be found at [Deep Dive into Real-time OLAP](http://kylin.apache.org/blog/2019/07/01/deep-dive-real-time-olap/).
+If you want to configure timezone or learn how to use lambda cube, please check this (/docs/tutorial/lambda_mode_and_timezone_realtime.html)
 
 ----
 

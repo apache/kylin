@@ -52,6 +52,7 @@
   - tutorial/setup_jdbc_datasource
   - tutorial/hybrid
   - tutorial/mysql_metastore
+  - tutorial/lambda_mode_and_timezone_realtime_olap
 
 - title: Integration
   docs:

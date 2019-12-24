@@ -7,7 +7,7 @@ permalink: /download/index.html
 You can verify the download by following these [procedures](https://www.apache.org/info/verification.html) and using these [KEYS](https://www.apache.org/dist/kylin/KEYS).
 
 #### v3.0.0
-- This is a release of Kylin's next generation after 2.x, with the new real-time OLAP feature, Kylin can query streaming data with sub-second latency. To learn about real-time OLAP, please visit [the tech blog](/blog/2019/04/12/rt-streaming-design/) and [the tutorial](/docs30/tutorial/realtime_olap.html) for real-time OLAP.
+- This is a release of Kylin's next generation after 2.x, with the new real-time OLAP feature, Kylin can query streaming data with sub-second latency. To learn about real-time OLAP, please visit [the tech blog](/blog/2019/04/12/rt-streaming-design/) and [the tutorial](/docs/tutorial/realtime_olap.html) for real-time OLAP.
 - [Release notes](/docs30/release_notes.html), [installation guide](/docs30/install/index.html) and [upgrade guide](/docs30/howto/howto_upgrade.html)
 - Source download: [apache-kylin-3.0.0-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.0.0/apache-kylin-3.0.0-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.0.0/apache-kylin-3.0.0-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.0.0/apache-kylin-3.0.0-source-release.zip.sha256)\]
 - Binary for Hadoop 2 download:

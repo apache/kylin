@@ -565,20 +565,30 @@ This compression is configured via `kylin_job_conf.xml` and `kylin_job_conf_inme
 
 
 ### Real-time OLAP    {#realtime-olap}
+#### Global level config
+
 - `kylin.stream.job.dfs.block.size`: specifies the HDFS block size of the streaming Base Cuboid job using. The default value is *16M*.
-- `kylin.stream.index.path`: specifies the path to store local segment cache. The default value is *stream_index*.
+- `kylin.stream.index.path`: specifies the local path to store segment cache files(including fragment and checkpoint files). The default value is *stream_index*.
+- `kylin.stream.node`: specifies the node of coordinator/receiver. Value should be `hostname:port` or `port`. If set to `port`, Kylin will complete hostname automatically. When Kylin process started, it will register it into metadata. The default value is *null*.
+- `kylin.stream.metadata.store.type`: specifies the position of metadata store. The default value is *zk*. This entry is trivial because it has only one option.
+- `kylin.stream.receiver.use-threads-per-query`: specifies the threads number that each query use. The default value is *8*.
+
+#### Cube level config
+
+- `kylin.stream.index.maxrows`: specifies the maximum number of the aggregated event keep in JVM heap. The default value is *50000*. Try to advance it if you have enough heap size.
 - `kylin.stream.cube-num-of-consumer-tasks`: specifies the number of replica sets that share the whole topic partition. It affects how many partitions will be assigned to different replica sets. The default value is *3*.
-- `kylin.stream.cube.window`: specifies the length of duration of each segment, value in seconds. The default value is *3600*.
-- `kylin.stream.cube.duration`: specifies the wait time that a segment's status changes from active to IMMUTABLE, value in seconds. The default value is *7200*.
-- `kylin.stream.cube.duration.max`: specifies the maximum duration that segment can keep active, value in seconds. The default value is *43200*.
+- `kylin.stream.segment.retention.policy`: specifies the strategy to process local segment cache when segment become *IMMUTABLE*. Optional values include `purge` and `fullBuild`. `purge` means when the segment become *IMMUTABLE*, it will be deleted. `fullBuild` means when the segment become *IMMUTABLE*, it will be uploaded to HDFS. The default value is *fullBuild*.
+- `kylin.stream.build.additional.cuboids`: whether to build additional Cuboids. The additional Cuboids mean the aggregation of Mandatory Dimensions that chosen in *Cube Advanced Setting* page. The default value is *false*. Only build Base Cuboid by default. Try to enable it if you care the QPS and most query pattern can be foresaw.
+- `kylin.stream.cube.window`: specifies the length of duration of each segment, value in seconds. The default value is *3600*. Please check detail at[deep-dive-real-time-olap](http://kylin.apache.org/blog/2019/07/01/deep-dive-real-time-olap/).
+- `kylin.stream.cube.duration`: specifies the wait time that a segment's status changes from active to IMMUTABLE, value in seconds. The default value is *7200*. Please check detail at[deep-dive-real-time-olap](http://kylin.apache.org/blog/2019/07/01/deep-dive-real-time-olap/).
+- `kylin.stream.cube.duration.max`: specifies the maximum duration that segment can keep active, value in seconds. The default value is *43200*. Please check detail at[deep-dive-real-time-olap](http://kylin.apache.org/blog/2019/07/01/deep-dive-real-time-olap/).
 - `kylin.stream.checkpoint.file.max.num`: specifies the maximum number of checkpoint file for each cube. The default value is *5*.
 - `kylin.stream.index.checkpoint.intervals`: specifies the time interval between setting two checkpoints. The default value is *300*.
-- `kylin.stream.index.maxrows`: specifies the maximum number of the entered event be cached in heap/memory. The default value is *50000*.
 - `kylin.stream.immutable.segments.max.num`: specifies the maximum number of the IMMUTABLE segment in each Cube of the current streaming receiver, if exceed, consumption of current topic will be paused. The default value is *100*.
-- `kylin.stream.consume.offsets.latest`: whether to consume from the latest offset. The default value is *true*.
-- `kylin.stream.node`: specifies the node of coordinator/receiver. Such as host:port. The default value is *null*.
-- `kylin.stream.metadata.store.type`: specifies the position of metadata store. The default value is *zk*.
-- `kylin.stream.segment.retention.policy`: specifies the strategy to process local segment cache when segment become IMMUTABLE. Optional values include `purge` and `fullBuild`. `purge` means when the segment become IMMUTABLE, it will be dropped. `fullBuild` means when the segment become IMMUTABLE, it will be uploaded to HDFS. The default value is *fullBuild*.
+- `kylin.stream.consume.offsets.latest`: whether to consume from the latest offset or the earliest offset. The default value is *true*.
+
+#### Advanced config
+
 - `kylin.stream.assigner`: specifies the implementation class which used to assign the topic partition to different replica sets. The class should be the implementation class of `org.apache.kylin.stream.coordinator.assign.Assigner`. The default value is *DefaultAssigner*.
 - `kylin.stream.coordinator.client.timeout.millsecond`: specifies the connection timeout of the coordinator client. The default value is *5000*.
 - `kylin.stream.receiver.client.timeout.millsecond`: specifies the connection timeout of the receiver client. The default value is *5000*.
@@ -586,14 +596,15 @@ This compression is configured via `kylin_job_conf.xml` and `kylin_job_conf_inme
 - `kylin.stream.receiver.http.min.threads`: specifies the minimum connection threads of the receiver. The default value is *10*.
 - `kylin.stream.receiver.query-core-threads`: specifies the number of query threads be used for the current streaming receiver. The default value is *50*.
 - `kylin.stream.receiver.query-max-threads`: specifies the maximum number of query threads be used for the current streaming receiver. The default value is *200*.
-- `kylin.stream.receiver.use-threads-per-query`: specifies the threads number that each query use. The default value is *8*.
-- `kylin.stream.build.additional.cuboids`: whether to build additional Cuboids. The additional Cuboids mean the aggregation of Mandatory Dimensions that chosen in Cube Advanced Setting page. The default value is *false*. Only build Base Cuboid by default.
 - `kylin.stream.segment-max-fragments`: specifies the maximum number of fragments that each segment keep. The default value is *50*.
 - `kylin.stream.segment-min-fragments`: specifies the minimum number of fragments that each segment keep. The default value is *15*.
 - `kylin.stream.max-fragment-size-mb`: specifies the maximum size of each fragment. The default value is *300*.
-- `kylin.stream.fragments-auto-merge-enable`: whether to enable fragments auto merge. The default value is *true*.
+- `kylin.stream.fragments-auto-merge-enable`: whether to enable fragments auto merge in streaming receiver side. The default value is *true*.
+- `kylin.stream.metrics.option`: specifies how to report metrics in streaming receiver side, option value are csv/console/jmx.
+- `kylin.stream.event.timezone`: specifies which timezone should derived time column like `HOUR_START`/`DAY_START` used.
+- `kylin.stream.auto-resubmit-after-discard-enabled`: whether to resubmit new building job automatically when finding previous job be discarded by user.
 
-> Note: For more information, please refer to the [Real-time OLAP](http://kylin.apache.org/docs30/tutorial/real_time_olap.html).
+> Note: For step by step tutorial, please refer to the [Real-time OLAP](/docs/tutorial/realtime_olap.html).
 
 ### Storage Clean up Configuration    {#storage-clean-up-configuration}
 
