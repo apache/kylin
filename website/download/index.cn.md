@@ -6,7 +6,7 @@ title: 下载
 您可以按照这些[步骤](https://www.apache.org/info/verification.html) 并使用这些[KEYS](https://www.apache.org/dist/kylin/KEYS)来验证下载文件的有效性.
 
 #### v3.0.0
-- 这是 Kylin 在 2.x 版本后开发的包含实时 OLAP 等功能的新版本。使用该版本，Kylin 支持对流式数据的亚秒级查询。请访问 [实时 OLAP 使用教程](/docs30/tutorial/realtime_olap.html) 和 [实时 OLAP 博客](/blog/2019/04/12/rt-streaming-design/) 获取详情。
+- 这是 Kylin 在 2.x 版本后开发的包含实时 OLAP 等功能的新版本。使用该版本，Kylin 支持对流式数据的亚秒级查询。请访问 [实时 OLAP 使用教程](/docs/tutorial/realtime_olap.html) 和 [实时 OLAP 博客](/blog/2019/04/12/rt-streaming-design/) 获取详情。
 - [发布说明](/docs30/release_notes.html), [安装指南](/docs30/install/index.html) and [升级指南](/docs30/howto/howto_upgrade.html)
 - 源码下载: [apache-kylin-3.0.0-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.0.0/apache-kylin-3.0.0-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.0.0/apache-kylin-3.0.0-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.0.0/apache-kylin-3.0.0-source-release.zip.sha256)\]
 - Hadoop 2 二进制包:

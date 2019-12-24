@@ -567,35 +567,47 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 
 
 ### 实时 OLAP    {#realtime-olap}
-- `kylin.stream.job.dfs.block.size`：指定了流式构建 Base Cuboid 任务所需 HDFS 块的大小。默认值为 *16M*。
-- `kylin.stream.index.path`：指定了本地 segment 缓存的位置。默认值为 *stream_index*。
-- `kylin.stream.cube-num-of-consumer-tasks`：指定了共享同一个 topic 分区的 replica set 数量，影响着不同 replica set 分配的分区数量。默认值为 *3*。
-- `kylin.stream.cube.window`：指定了每个 segment 的持续时长，以秒为单位。默认值为 *3600*。
-- `kylin.stream.cube.duration`：指定了 segment 从 active 状态变为 IMMUTABLE 状态的等待时间，以秒为单位。默认值为 *7200*。
-- `kylin.stream.cube.duration.max`：segment 的 active 状态的最长持续时间，以秒为单位。默认值为 *43200*。
-- `kylin.stream.checkpoint.file.max.num`：指定了每个 Cube 包含的 checkpoint 文件数的最大值。默认值为 *5*。
-- `kylin.stream.index.checkpoint.intervals`：指定了两个 checkpoint 设置的时间间隔。默认值为 *300*。
-- `kylin.stream.index.maxrows`：指定了缓存在堆/内存中的事件数的最大值。默认值为 *50000*。
-- `kylin.stream.immutable.segments.max.num`：指定了当前 receiver 里每个 Cube 中状态为 IMMUTABLE 的 segment 的最大数值，如果超过最大值，当前 topic 的消费将会被暂停。默认值为 *100*。
-- `kylin.stream.consume.offsets.latest`：是否从最近的偏移量开始消费。默认值为 *true*。
-- `kylin.stream.node`：指定了 coordinator/receiver 的节点。形如 host:port。默认值为 *null*。
-- `kylin.stream.metadata.store.type`：指定了元数据存储的位置。默认值为 *zk*。
-- `kylin.stream.segment.retention.policy`：指定了当 segment 变为 IMMUTABLE 状态时，本地 segment 缓存的处理策略。参数值可选 `purge` 和 `fullBuild`。`purge` 意味着当 segment 的状态变为 IMMUTABLE，本地缓存的 segment 数据将被删除。`fullBuild` 意味着当 segment 的状态变为 IMMUTABLE，本地缓存的 segment 数据将被上传到 HDFS。默认值为 *fullBuild*。
-- `kylin.stream.assigner`：指定了用于将 topic 分区分配给不同 replica set 的实现类。该类实现了 `org.apache.kylin.stream.coordinator.assign.Assigner` 类。默认值为 *DefaultAssigner*。
-- `kylin.stream.coordinator.client.timeout.millsecond`：指定了连接 coordinator 客户端的超时时间。默认值为 *5000*。
-- `kylin.stream.receiver.client.timeout.millsecond`：指定了连接 receiver 客户端的超时时间。默认值为 *5000*。
-- `kylin.stream.receiver.http.max.threads`：指定了连接 receiver 的最大线程数。默认值为 *200*。
-- `kylin.stream.receiver.http.min.threads`：指定了连接 receiver 的最小线程数。默认值为 *10*。
-- `kylin.stream.receiver.query-core-threads`：指定了当前 receiver 用于查询的线程数。默认值为 *50*。
-- `kylin.stream.receiver.query-max-threads`：指定了当前 receiver 用于查询的最大线程数。默认值为 *200*。
-- `kylin.stream.receiver.use-threads-per-query`：指定了每个查询使用的线程数。默认值为 *8*。
-- `kylin.stream.build.additional.cuboids`：是否构建除 Base Cuboid 外的 cuboids。除 Base Cuboid 外的 cuboids 指的是在 Cube 的 Advanced Setting 页面选择的强制维度的聚合。默认值为 *false*。默认只构建 Base Cuboid。
-- `kylin.stream.segment-max-fragments`：指定了每个 segment 保存的最大 fragment 数。默认值为 *50*。
-- `kylin.stream.segment-min-fragments`：指定了每个 segment 保存的最小 fragment 数。默认值为 *15*。
-- `kylin.stream.max-fragment-size-mb`：指定了每个 fragment 文件的最大尺寸。默认值为 *300*。
-- `kylin.stream.fragments-auto-merge-enable`：是否开启 fragment 文件自动合并的功能。默认值为 *true*。
 
-> 提示：更多信息请参考 [Real-time OLAP](http://kylin.apache.org/docs30/tutorial/real_time_olap.html)。
+#### 全局设置
+
+- `kylin.stream.job.dfs.block.size`: 指定了流式构建 Cuboid 任务所需 HDFS 块的大小。默认值为 *16M*。
+- `kylin.stream.index.path`: 指定了存储segment cache file的本地路径(包括本地fragment file和checkpoint file)。支持相对路径和绝对路径，默认值是 *stream_index*，也就是写到`$KYLIN_HOME/stream_index`，如果数据量很大的话将会占用大量磁盘空间，您也可以根据您的需求写成绝对路径以将数据放到数据盘。
+- `kylin.stream.node`: 指定了 receiver/coordinator的地址。格式应该为`hostname:port`或者`port`。如果设置成`port`，Kylin将会自动补全hostname；如果不设置该属性，将会使用默认的端口(Coordinator:7070，Receiver:9090)。当进程启动时，会将自身注册到Metadata。
+- `kylin.stream.metadata.store.type`: 指定了Realtime集群信息的元数据存储。默认值是 *zk*。
+- `kylin.stream.receiver.use-threads-per-query`: 指定了每个查询使用的线程资源数量。默认值是*8*。
+
+#### Cube 级别设置
+
+- `kylin.stream.index.maxrows`: 指定了缓存在堆内的聚合后的事件最大行数。默认值是*50000*。这个参数会影响Fragment File的数量，可以根据需求适当调高。
+- `kylin.stream.cube-num-of-consumer-tasks`: 指定了一个topic的全部消息的摄入将由哪多少Replica Set来负责。如果您的消息速率较大，需要适当提升这个数值。默认值是*3*。
+- `kylin.stream.segment.retention.policy`: 当Segment状态变为*IMMUTABLE*，该配置指定了Receiver如何处理本地Segment Cache。可选值包含`purge`和`fullBuild`。设置为`purge`后，Receiver会等待一定时间后删除本地数据；设置为`fullBuild`后，数据会上传到HDFS并等待构建。默认值是*fullBuild*。
+- `kylin.stream.build.additional.cuboids`: 默认情况下Receiver只构建base cuboid来回答查询，可以在Receiver端是否构建额外的cuboid，如果你希望优化某些查询的响应时间。具体哪些额外的Cuboid需要被构建由高级配置页面的强制Cuboid指定。
+- `kylin.stream.cube.window`: 指定了Streaming Segment的长度。默认值是*3600*。详情参阅[deep-dive-real-time-olap](http://kylin.apache.org/blog/2019/07/01/deep-dive-real-time-olap/)。
+- `kylin.stream.cube.duration`: 指定了Streaming Segment会等待迟到的消息多久，默认值是 *7200*(秒)。 详情参阅[deep-dive-real-time-olap](http://kylin.apache.org/blog/2019/07/01/deep-dive-real-time-olap/)。
+- `kylin.stream.cube.duration.max`: 指定了Streaming Segment保持Active的最长时间。默认值是 *43200*。详情参阅[deep-dive-real-time-olap](http://kylin.apache.org/blog/2019/07/01/deep-dive-real-time-olap/)。
+- `kylin.stream.checkpoint.file.max.num`: 指定了Receiver为每一个Cube保留的checkpoint文件数量。默认值是 *5*。
+- `kylin.stream.index.checkpoint.intervals`: 指定了Receiver进行checkpoint的间隔。默认值是 *300*。
+- `kylin.stream.immutable.segments.max.num`: 指定了在Receiver端，一个Cube最多可以保持多少个*IMMUTABLE*segment，因为Receiver端的性能和Fragment File的数量呈负相关。默认值是 *100*。
+- `kylin.stream.consume.offsets.latest`:指定了Receiver从什么位置开始消费，设置成*true*则从最新的offset开始消费，false则从最老的位置消费。默认值是 *true*。
+
+#### 高级设置
+
+- `kylin.stream.assigner`: 值是一个类的名字，这个类应该是`org.apache.kylin.stream.coordinator.assign.Assigner`的实现类，用于指定如何将Kafka Topic 下的各个Partition分配给各个Replica Set。默认值是 *DefaultAssigner*，其策略会努力将工作负载分配给负责partition数量少的Replica Set，以使得各个Replica Set工作负载相对均衡。
+- `kylin.stream.coordinator.client.timeout.millsecond`: 指定和Coordinator HTTP连接的Timeout，默认值是 *5000*。
+- `kylin.stream.receiver.client.timeout.millsecond`:指定和Receiver HTTP连接的Timeout，默认值是 *5000*。
+- `kylin.stream.receiver.http.max.threads`: 指定了Receiver端的Http连接最大线程数。默认值为 *200*。
+- `kylin.stream.receiver.http.min.threads`: 指定了Receiver端的Http连接最小线程数。默认值为 *10*。
+- `kylin.stream.receiver.query-core-threads`: 指定了Receiver用于scan的线程数量，默认值是*50*。
+- `kylin.stream.receiver.query-max-threads`: 指定了Receiver用于scan的线程最大数量，默认值是*200*。
+- `kylin.stream.segment-max-fragments`: Receiver端每次MemoryStore大小达到阈值(`kylin.stream.index.maxrows`)，会落盘形成一个Fragment File，Receiver会尝试尽可能合并这些Fragment File来减少数据冗余。这个配置项会指定触发merge的阈值，默认值是*50*。
+- `kylin.stream.segment-min-fragments`: Receiver端的每次merge后不会使文件数量少于这个阈值，默认值是 *15*。
+- `kylin.stream.max-fragment-size-mb`: 合并后，每个Fragment File的大小不会超过该值，默认值是 *300*。
+- `kylin.stream.fragments-auto-merge-enable`: 是否开启后台自动合并Fragment File。默认值是 *true*。
+- `kylin.stream.metrics.option`: 指定是否开启Receiver端的metrics信息收集, 可选值是 csv/console/jmx。
+- `kylin.stream.event.timezone`: 指定从Event Time衍生出来的时间衍生列如`HOUR_START`/`DAY_START`使用哪种时区，默认是UTC时间。
+- `kylin.stream.auto-resubmit-after-discard-enabled`: 当用户 discard了某一个 Realtime的构建任务，是否自动重新提交新任务。
+
+> 提示：入门教程 请参考 [Real-time OLAP](/docs/tutorial/realtime_olap.html)。
 
 
 
