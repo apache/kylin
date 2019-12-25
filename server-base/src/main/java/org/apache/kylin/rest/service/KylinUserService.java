@@ -61,8 +61,6 @@ public class KylinUserService implements UserService {
 
     public static final Serializer<ManagedUser> SERIALIZER = new JsonSerializer<>(ManagedUser.class);
 
-    private static final String ACTIVE_PROFILES_NAME = "spring.profiles.active";
-
     private static final String ADMIN = "ADMIN";
     private static final String MODELER = "MODELER";
     private static final String ANALYST = "ANALYST";
@@ -76,7 +74,8 @@ public class KylinUserService implements UserService {
     public KylinUserService(List<User> users) throws IOException {
         pwdEncoder = new BCryptPasswordEncoder();
         synchronized (KylinUserService.class) {
-            if (!StringUtils.equals("testing", System.getProperty(ACTIVE_PROFILES_NAME))) {
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            if (!StringUtils.equals("testing", kylinConfig.getSecurityProfile())) {
                 return;
             }
             List<ManagedUser> all = listUsers();
@@ -127,6 +126,18 @@ public class KylinUserService implements UserService {
     @PostConstruct
     public void init() throws IOException {
         aclStore = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
+
+        // check members
+        if (pwdEncoder == null) {
+            pwdEncoder = new BCryptPasswordEncoder();
+        }
+        // add default admin user if there is none
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        if (kylinConfig.createAdminWhenAbsent() && listAdminUsers().isEmpty()) {
+            logger.info("default admin user created: username=ADMIN, password=*****");
+            createUser(new ManagedUser(ADMIN, pwdEncoder.encode(ADMIN_DEFAULT), true, Constant.ROLE_ADMIN,
+                    Constant.GROUP_ALL_USERS));
+        }
     }
 
     @Override

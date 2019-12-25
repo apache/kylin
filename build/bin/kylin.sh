@@ -76,6 +76,12 @@ function retrieveDependency() {
         export KYLIN_REST_ADDRESS
         verbose "KYLIN_REST_ADDRESS is ${KYLIN_REST_ADDRESS}"
     fi
+    # the number of Spring active profiles can be greater than 1. Additional profiles
+    # can be added by setting kylin.security.additional-profiles
+    additional_security_profiles=`bash ${dir}/get-properties.sh kylin.security.additional-profiles`
+    if [[ "x${additional_security_profiles}" != "x" ]]; then
+        spring_profile="${spring_profile},${additional_security_profiles}"
+    fi
 
     # compose hadoop_dependencies
     hadoop_dependencies=${hadoop_dependencies}:`hadoop classpath`

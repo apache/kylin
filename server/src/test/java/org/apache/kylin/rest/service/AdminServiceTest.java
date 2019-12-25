@@ -67,6 +67,7 @@ public class AdminServiceTest extends ServiceTestBase {
                     "kylin.web.link-hadoop=\n" +
                     "kylin.web.hide-measures=RAW\n" +
                     "kylin.htrace.show-gui-trace-toggle=false\n" +
+                    "kylin.security.additional-profiles=\n" +
                     "kylin.web.export-allow-admin=true\n" +
                     "kylin.env=QA\n" +
                     "kylin.web.hive-limit=20\n" +

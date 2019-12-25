@@ -2053,6 +2053,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.security.acl.admin-role", "");
     }
 
+    public boolean createAdminWhenAbsent() {
+        return Boolean.parseBoolean(getOptional("kylin.security.create-admin-when-absent", FALSE));
+    }
+
     // ============================================================================
     // WEB
     // ============================================================================
@@ -2088,7 +2092,7 @@ public abstract class KylinConfigBase implements Serializable {
                 + "kylin.web.contact-mail,kylin.web.help.length,kylin.web.help.0,kylin.web.help.1,kylin.web.help.2,"
                 + "kylin.web.help.3,"
                 + "kylin.web.help,kylin.web.hide-measures,kylin.web.link-streaming-guide,kylin.server.external-acl-provider,"
-                + "kylin.security.profile,"
+                + "kylin.security.profile,kylin.security.additional-profiles,"
                 + "kylin.htrace.show-gui-trace-toggle,kylin.web.export-allow-admin,kylin.web.export-allow-other,"
                 + "kylin.cube.cubeplanner.enabled,kylin.web.dashboard-enabled,kylin.tool.auto-migrate-cube.enabled,"
                 + "kylin.job.scheduler.default,kylin.web.default-time-filter");

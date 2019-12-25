@@ -87,7 +87,7 @@
     <!-- Cache Config -->
     <cache:annotation-driven/>
 
-    <beans profile="ldap,saml">
+    <beans profile="!testing">
         <bean id="ehcache"
               class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
               p:configLocation="classpath:ehcache.xml" p:shared="true"/>
