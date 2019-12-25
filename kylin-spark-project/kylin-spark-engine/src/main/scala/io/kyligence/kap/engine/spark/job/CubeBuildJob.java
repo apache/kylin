@@ -100,7 +100,7 @@ public class CubeBuildJob extends SparkApplication {
                 
                 // build cuboids from flat table
                 if (buildFromFlatTable != null) {
-                    collectPersistedTablePath(persistedFlatTable, persistedViewFactTable, sourceChooser, buildFromFlatTable);
+                    collectPersistedTablePath(persistedFlatTable, sourceChooser);
                     build(Collections.singletonList(buildFromFlatTable), seg, spanningTree);
                 }
 
@@ -109,6 +109,8 @@ public class CubeBuildJob extends SparkApplication {
                     build(buildFromLayouts.values(), seg, spanningTree);
                 }
                 infos.recordSpanningTree(segId, spanningTree);
+
+                updateSegmentInfo(getParam(MetadataConstants.P_CUBE_ID), seg);
             }
             updateSegmentSourceBytesSize(getParam(MetadataConstants.P_CUBE_ID), ResourceDetectUtils.getSegmentSourceSize(shareDir));
         } finally {
@@ -124,30 +126,50 @@ public class CubeBuildJob extends SparkApplication {
             logger.info("Building job takes {} ms", (System.currentTimeMillis() - start));
         }
     }
-    
-    private void collectPersistedTablePath //
-            (List<String> persistedFlatTable, //
-            List<String> persistedViewFactTable, // 
-            ParentSourceChooser sourceChooser, // 
-            NBuildSourceInfo buildFromFlatTable) { //
+
+    private void updateMetaAfterBuilding(String cubeId, CubeUpdate update) throws IOException{
+        KylinConfig config = KylinConfig.createKylinConfig(this.config);
+        config.setMetadataUrl(getParam(MetadataConstants.P_OUTPUT_META_URL));
+        CubeManager cubeManager = CubeManager.getInstance(config);
+        cubeManager.updateCube(update);
+    }
+
+    private void updateSegmentInfo(String cubeId, SegmentInfo segmentInfo) throws IOException {
+        CubeInstance cubeInstance = cubeManager.getCubeByUuid(cubeId);
+        CubeInstance cubeCopy = cubeInstance.latestCopyForWrite();
+        CubeUpdate update = new CubeUpdate(cubeCopy);
+
+        List<CubeSegment> cubeSegments = Lists.newArrayList();
+        CubeSegment segment = cubeCopy.getSegmentById(segmentInfo.id());
+        segment.setSizeKB(segmentInfo.getAllLayoutSize());
+        segment.setLastBuildTime(System.currentTimeMillis());
+        cubeSegments.add(segment);
+        update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
+        cubeManager.updateCube(update);
+
+        updateMetaAfterBuilding(cubeId, update);
+    }
+
+    private void collectPersistedTablePath(List<String> persistedFlatTable, ParentSourceChooser sourceChooser) {
         String flatTablePath = sourceChooser.persistFlatTableIfNecessary();
         if (!flatTablePath.isEmpty()) {
             persistedFlatTable.add(flatTablePath);
         }
     }
 
-    private void updateSegmentSourceBytesSize(String cubeId, Map<String, Object> toUpdateSegmentSourceSize) throws Exception {
+    private void updateSegmentSourceBytesSize(String cubeId, Map<String, Object> toUpdateSegmentSourceSize)
+            throws IOException {
         CubeInstance cubeInstance = cubeManager.getCubeByUuid(cubeId);
         CubeInstance cubeCopy = cubeInstance.latestCopyForWrite();
         CubeUpdate update = new CubeUpdate(cubeCopy);
-        List<CubeSegment> nCubeSegments = Lists.newArrayList();
+        List<CubeSegment> cubeSegments = Lists.newArrayList();
         for (Map.Entry<String, Object> entry : toUpdateSegmentSourceSize.entrySet()) {
             CubeSegment segment = cubeCopy.getSegmentById(entry.getKey());
-            segment.setSizeKB((Long) entry.getValue());
+            segment.setInputRecordsSize((Long) entry.getValue());
             segment.setLastBuildTime(System.currentTimeMillis());
-            nCubeSegments.add(segment);
+            cubeSegments.add(segment);
         }
-        update.setToUpdateSegs(nCubeSegments.toArray(new CubeSegment[0]));
+        update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
         cubeManager.updateCube(update);
     }
 
@@ -211,7 +233,8 @@ public class CubeBuildJob extends SparkApplication {
 
     // decided and construct the next layer.
     private List<NBuildSourceInfo> constructTheNextLayerBuildInfos(SpanningTree st,
-                                                                   SegmentInfo seg, Collection<LayoutEntity> allIndexesInCurrentLayer) { //
+                                                                   SegmentInfo seg,
+                                                                   Collection<LayoutEntity> allIndexesInCurrentLayer) {
 
         List<NBuildSourceInfo> childrenBuildSourceInfos = new ArrayList<>();
         for (LayoutEntity index : allIndexesInCurrentLayer) {
@@ -220,7 +243,8 @@ public class CubeBuildJob extends SparkApplication {
             if (!children.isEmpty()) {
                 NBuildSourceInfo theRootLevelBuildInfos = new NBuildSourceInfo();
                 theRootLevelBuildInfos.setSparkSession(ss);
-                String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_ID), seg.id(), String.valueOf(index.getId())) ;
+                String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_ID),
+                        seg.id(), String.valueOf(index.getId())) ;
                 theRootLevelBuildInfos.setLayoutId(index.getId());
                 theRootLevelBuildInfos.setParentStoragePath(path);
                 theRootLevelBuildInfos.setToBuildCuboids(children);

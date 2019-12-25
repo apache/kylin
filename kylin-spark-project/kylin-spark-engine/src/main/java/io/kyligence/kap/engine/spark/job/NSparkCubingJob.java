@@ -88,9 +88,11 @@ public class NSparkCubingJob extends DefaultChainedExecutable {
         job.setParam(MetadataConstants.P_SEGMENT_IDS, String.join(",", job.getTargetSegments()));
         job.setParam(MetadataConstants.P_DATA_RANGE_START, String.valueOf(startTime));
         job.setParam(MetadataConstants.P_DATA_RANGE_END, String.valueOf(endTime));
+        job.setParam(MetadataConstants.P_OUTPUT_META_URL, job.cube.getConfig().getMetadataUrl().toString());
 
         JobStepFactory.addStep(job, JobStepType.RESOURCE_DETECT, job.cube);
         JobStepFactory.addStep(job, JobStepType.CUBING, job.cube);
+
         return job;
     }
 

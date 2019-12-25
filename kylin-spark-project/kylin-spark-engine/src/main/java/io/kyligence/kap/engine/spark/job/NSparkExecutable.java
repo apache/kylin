@@ -88,11 +88,9 @@ public class NSparkExecutable extends AbstractExecutable {
     }
 
     protected void setDistMetaUrl(StorageURL storageURL) {
-        String fs = HadoopUtil.getWorkingFileSystem().getUri().toString();
         HashMap<String, String> stringStringHashMap = Maps.newHashMap(storageURL.getAllParameters());
         StorageURL copy = storageURL.copy(stringStringHashMap);
         this.setParam(MetadataConstants.P_DIST_META_URL, copy.toString());
-        this.setParam(MetadataConstants.P_OUTPUT_META_URL, copy + "_output");
     }
 
     public String getDistMetaUrl() {

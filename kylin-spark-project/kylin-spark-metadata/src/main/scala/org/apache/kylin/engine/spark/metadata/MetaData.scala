@@ -88,4 +88,8 @@ case class SegmentInfo(id: String,
   def updateSnapshot(tableInfo: Map[String, String]): Unit = {
     snapshotInfo = tableInfo
   }
+  
+  def getAllLayoutSize() : Long = {
+    layouts.map(_.getByteSize).sum
+  }
 }
