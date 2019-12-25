@@ -44,6 +44,9 @@ permalink: /cn/docs30/install/configuration.html
 	- [启用邮件通知](#email-notification)
 	- [启用 Cube Planner](#cube-planner)
     - [HBase 存储](#hbase-config)
+    - [备用 Hbase 存储](#secondary-hbase)
+    - [任务调度安全模式](#safe-mode)
+    - [任务输出](#job-output)
     - [启用压缩](#compress-config)
     - [实时 OLAP](#realtime-olap)
 - [清理存储配置](#storage-clean-up-configuration)
@@ -513,6 +516,33 @@ Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一�
 - `kylin.storage.hbase.hconnection-threads-alive-seconds`：指定线程存活时间，默认值为 60 
 - `kylin.storage.hbase.replication-scope`：指定集群复制范围，默认值为 0
 - `kylin.storage.hbase.scan-cache-rows`：指定扫描缓存行数，默认值为 1024
+
+
+
+### 备用 Hbase 存储   {#secondary-hbase}
+
+Kylin支持用户配置备用Hbase，这样在集群迁移时，Kylin仍然可以从旧集群中查询到构建好的Cube数据。
+
+- `kylin.secondary.storage.url`: 指定备用Hbase的集群地址以及metadata url. 例如 *kylin.secondary.storage.url=hostname:kylin_metadata@hbase*.
+- `hbase.zookeeper.quorum`: 指定备用Hbase所在集群的Zookeeper信息. 例如 *hbase.zookeeper.quorum=hostname:11000,zookeeper.znode.parent=/hbase/*, 如果还有其他的配置项，可以以<key> = <value>的形式添加在后面.
+
+
+
+### 任务调度安全模式   {#safe-mode}
+
+为了保证安全的对Hbase集群作出更改，用户可以为Kylin开启安全模式。在安全模式下，未创建Htable的任务将不会被调度，其他任务则会继续执行至结束。所有可以执行的任务完成后，用户可以更改配置到一个新的Hbase集群，然后再调度执行其他任务。
+
+- `kylin.job.scheduler.safemode`: 是否开启安全模式. 默认值为FALSE.
+- `kylin.job.scheduler.safemode.runnable-projects`: 不受安全模式影响的Project. 例如 *kylin.job.scheduler.safemode.runnable-projects=learn_kylin*.
+
+
+
+### 任务输出   {#job-output}
+
+为了避免job output的内容太多，用户可以设置output的最大长度。
+
+- `kylin.job.execute-output.max-size`: Job output的最大长度. 默认值为10484760.
+- `kylin.engine.spark.output.max-size`: Spark job output的最大长度. 默认值为10484760.
 
 
 
