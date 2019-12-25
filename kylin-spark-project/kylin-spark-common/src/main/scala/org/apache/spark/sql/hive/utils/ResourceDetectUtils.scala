@@ -92,9 +92,7 @@ object ResourceDetectUtils extends Logging {
     paths.map(path => {
       val fs = path.getFileSystem(HadoopUtil.getCurrentConfiguration)
       if (fs.exists(path)) {
-        // To do
-        //HadoopUtil.getContentSummary(fs, path).getLength
-        0L
+        HadoopUtil.getContentSummary(fs, path).getLength
       } else {
         0L
       }

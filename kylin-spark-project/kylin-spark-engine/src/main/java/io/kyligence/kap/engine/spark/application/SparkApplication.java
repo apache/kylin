@@ -195,7 +195,6 @@ public abstract class SparkApplication {
             doExecute();
             // Output metadata to another folder
             //TODO: for merge and sampling job
-            //attatchMetadataAndKylinProps(config);
 
         } finally {
             if (infos != null) {
@@ -206,12 +205,6 @@ public abstract class SparkApplication {
                 ss.stop();
             }
         }
-    }
-
-    private void attatchMetadataAndKylinProps(KylinConfig config) throws IOException{
-        CubeInstance cube = CubeManager.getInstance(config).getCubeByUuid(getParam(MetadataConstants.P_CUBE_ID));
-        Set<String> dumpList = MetaDumpUtil.collectCubeMetadata(cube);
-        MetaDumpUtil.dumpResources(config, getParam(MetadataConstants.P_OUTPUT_META_URL), dumpList);
     }
 
     public boolean isJobOnCluster(SparkConf conf) {
