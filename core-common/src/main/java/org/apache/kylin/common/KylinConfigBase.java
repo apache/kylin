@@ -913,7 +913,7 @@ public abstract class KylinConfigBase implements Serializable {
         r.put(0, "org.apache.kylin.source.hive.HiveSource");
         r.put(1, "org.apache.kylin.source.kafka.KafkaSource");
         r.put(8, "org.apache.kylin.source.jdbc.JdbcSource");
-        r.put(9, "io.kyligence.kap.engine.spark.mockup.CsvSource");
+        r.put(9, "io.kyligence.kap.engine.spark.source.CsvSource");
         r.put(16, "org.apache.kylin.source.jdbc.extensible.JdbcSource");
         r.put(20, "org.apache.kylin.stream.source.kafka.KafkaBatchSourceAdaptor");
         r.put(21, "org.apache.kylin.stream.source.kafka.KafkaBatchSourceAdaptor");

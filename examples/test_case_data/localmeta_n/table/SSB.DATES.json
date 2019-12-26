@@ -73,5 +73,6 @@
   } ],
   "database" : "SSB",
   "last_modified" : 1457444145262,
-  "source_type" : 0
+  "source_type" : 0,
+  "source_type": 9
 }

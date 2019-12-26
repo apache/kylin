@@ -82,5 +82,6 @@
   } ],
   "source_type" : 20,
   "table_type" : null,
-  "database" : "DEFAULT"
+  "database" : "DEFAULT",
+  "source_type": 9
 }
