@@ -128,6 +128,7 @@ public abstract class SparkApplication {
         try (KylinConfig.SetAndUnsetThreadLocalConfig autoCloseConfig = KylinConfig
                 .setAndUnsetThreadLocalConfig(KylinConfig.loadKylinConfigFromHdfs(hdfsMetalUrl))) {
             config = autoCloseConfig.get();
+            config.setProperty("kylin.source.provider.0", "io.kyligence.kap.engine.spark.source.HiveSource");
             // init KylinBuildEnv
             KylinBuildEnv buildEnv = KylinBuildEnv.getOrCreate(config);
             infos = KylinBuildEnv.get().buildJobInfos();
