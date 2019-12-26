@@ -101,6 +101,7 @@ public class CLIHiveClient implements IHiveClient {
         builder.setSdLocation(table.getSd().getLocation());
         builder.setFileSize(getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.TOTAL_SIZE));
         builder.setFileNum(getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.NUM_FILES));
+        builder.setRowNum(getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.ROW_COUNT));
         builder.setIsNative(!MetaStoreUtils.isNonNativeTable(table));
         builder.setTableName(tableName);
         builder.setSdInputFormat(table.getSd().getInputFormat());
