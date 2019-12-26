@@ -5,8 +5,10 @@ categories: tutorial
 permalink: /docs/tutorial/realtime_olap.html
 ---
 
-Kylin v3.0.0 will release the real-time OLAP function, by the power of new added streaming reciever cluster, Kylin can query streaming data with sub-second latency. You can check [this tech blog](/blog/2019/04/12/rt-streaming-design/) for the overall design and core concept. This doc is a step by step tutorial, illustrating how to create and build a sample streaming cube.
+Kylin v3.0.0 releases the brand new real-time OLAP feature, by the power of new added streaming receiver cluster, Kylin can query streaming data with *sub-second latency*. You can check [this tech blog](/blog/2019/04/12/rt-streaming-design/) for the overall design and core concept. 
+If you prefer to ingest kafka event in micro-batch way(with about 10-minutes level latency), you may consider using older [Near RT streaming](/docs/tutorial/cube_streaming.html). Since these two feature are all for kafka data source, don't mix them.
 
+This doc is a step by step tutorial, illustrating how to create and build a sample streaming cube.
 In this tutorial, we will use Hortonworks HDP-2.4.0.0.169 Sandbox VM + Kafka v1.0.2(Scala 2.11) as the environment.
 
 1. Basic concept
@@ -17,7 +19,7 @@ In this tutorial, we will use Hortonworks HDP-2.4.0.0.169 Sandbox VM + Kafka v1.
 
 The configuration can be found at [Real-time OLAP configuration](http://kylin.apache.org/docs/install/configuration.html#realtime-olap).
 The detail can be found at [Deep Dive into Real-time OLAP](http://kylin.apache.org/blog/2019/07/01/deep-dive-real-time-olap/).
-If you want to configure timezone or learn how to use lambda cube, please check this [Lambda Mode and Timezone](/docs/tutorial/lambda_mode_and_timezone_realtime_olap.html)
+If you want to configure timezone for derived time column or learn how to update streaming cube's segment, please check this [Lambda Mode and Timezone](/docs/tutorial/lambda_mode_and_timezone_realtime_olap.html).
 
 ----
 
@@ -36,8 +38,8 @@ If you want to configure timezone or learn how to use lambda cube, please check 
 ![image](/images/RealtimeOlap/realtime-olap-architecture.png)
 
 ### Streaming Coordinator
-Streaming coordinator works as the master node of streaming receiver cluster. It's main responsibility include assign/unassign specific topic partition to specific repilca set, pause or resume cosuming behavior, collect mertics such as cosume rate (message per second).
-When `kylin.server.mode` is set to `all` or `stream_coordinator`, that process is a streaming coordinator(candidate). Coordinator only manage metadata, won't process entered message. 
+Streaming coordinator works as the master node of streaming receiver cluster. It's main responsibility include assign/unassign specific topic partition to specific replica set, pause or resume consuming behavior, collect mertics such as consume rate (message per second).
+When `kylin.server.mode` is set to `all` or `stream_coordinator`, that process is a streaming coordinator candidate(as well as query server and job server if you use `all`). Coordinator only manage metadata, won't process entered message. 
 
 ### Coordinator Cluster
 For the purpose of eliminating single point of failure, we could start more than one coordinator process. When cluster has several coordinator processes, a leader will be selected by zookeeper. Only  the leader will answer coordinator client's request, others process will become standby/candidate, so single point of failure will be eliminated.
@@ -116,6 +118,8 @@ export KYLIN_HOME=`pwd`
 sh bin/kylin.sh start
 {% endhighlight %}
 
+If you want to change the port for Kylin(coordinator), please first use `$KYLIN_HOME/bin/kylin-port-replace-util.sh` to change port(for tomcat), and then make sure to update `kylin.stream.node` as well.
+
 ### Start Receiver Process
 The receiver process will work as worker of the receiver cluster. 9090 is the default port for receiver.
 {% highlight Groff markup %}
@@ -124,15 +128,17 @@ export KYLIN_HOME=`pwd`
 sh bin/kylin.sh streaming start
 {% endhighlight %}
 
+If you want to change the port for streaming receiver, you only need to change `kylin.stream.node` in kylin.properties.
+
 ----
 
 ## Create cube
 
 ### Create streaming table
 
-After start kylin prcess and receiver process successfully, login Kylin Web GUI at `http://sandbox:7070/kylin/`
+After start kylin process and receiver process successfully, login Kylin Web GUI at `http://sandbox:7070/kylin/`
 
-Create a new project and click "Model" -> "Data Source", then click the icon "Add Streaming TableV2".
+Create a new project and click "Model" -> "Data Source", then click the icon "Add Streaming TableV2". (Attention please, the option "Add Streaming Table" is for Near RT Streaming)
 
 ![image](/images/RealtimeOlap/create_streaming_table_1.png)
 
@@ -151,7 +157,7 @@ After create streaming table, you can check schema information and kafka cluster
 
 ### Design Model
 
-Currently, streaming cube doesn’t support join with lookup tables, when define the data model, only select fact table, no lookup table. 
+Currently, streaming cube does not support join with lookup tables, when define the data model, only select fact table, no lookup table. 
 ![image](/images/RealtimeOlap/design_model_1.png)
 
 Streaming cube must be partitioned, please choose the timestamp column as partition column.
@@ -160,7 +166,8 @@ Streaming cube must be partitioned, please choose the timestamp column as partit
 ### Design Cube
 The streaming Cube is almost the same as a normal cube.  But a couple of points and options need get your attention:
 
-- Some measure are not supported : topN is not supported, count_distinct(bitmap) is not supported except column type is integer
+- Please choose "MapReduce" as your Build Engine, Spark is NOT supported now
+- Some measures are not supported : topN is not supported, count_distinct(bitmap) is supported from Kylin 3.0 GA as a beta/preview feature(please see KYLIN-4141 for detail)
 - `kylin.stream.cube.window` will decide how event is divided into different segment, it is the length of duration of each segment, value in seconds, default value is 3600
 - `kylin.stream.cube.duration` decide how long a segment wait for late event
 - `kylin.stream.segment.retention.policy` decide whether to purge or upload local segment cache when sgement become immutable
@@ -221,10 +228,10 @@ After confirming receiver have ingest a few income events, let's query streaming
 If you click each receiver in streaming tab of cube designer page, you will find a pop-up dialogue as below to indicate receiver behavior about assigned consumption task which shows the cube level statistics information.
 
 - Last Event Time: the value of the latest event's timestamp column
-- Latest Event Ingest Time: the moment of lastest ingestion
+- Latest Event Ingest Time: the moment of latest ingestion
 - Segments: all segment which state maybe active/ immutable/ remote persisted.
 - Partitions: topic partition which assigned to current receiver
-- Cosume Lag: total consume lag of all assigned partition
+- Consume Lag: total consume lag of all assigned partition
 
 ![image](/images/RealtimeOlap/monitor_streaming_1.png)
 
@@ -236,7 +243,19 @@ When the mouse pointer moves over the segment icon, the partition level statisti
 
 ## Trouble shooting
 
-- Please make sure that the port 7070 and 9090 is not occupied. If you have to change port, please do this set `kylin.stream.node` in `kylin.properties` for receiver or coordinator separately.
+#### Metadata clean up
 - If you find you have messed up and want to clean up, please remove streaming metadata in Zookeeper. 
 This can be done by executing `rmr PATH_TO_DELETE` in `zookeeper-client` shell. By default, the root dir of streaming metadata is under `kylin.env.zookeeper-base-path` + `kylin.metadata.url` + `/stream`. 
 For example, if you set `kylin.env.zookeeper-base-path` to `/kylin`， set `kylin.metadata.url` to `kylin_metadata@hbase`, you should delete path `/kylin/kylin_metadata/stream`.
+
+#### Port related issue
+1. Please make sure that the port 7070 and 9090 is not occupied. If you need to change port, please do this set `kylin.stream.node` in `kylin.properties` for receiver or coordinator separately.
+
+2. If you find error message in kylin_streaming_receiver.log, like this: 
+```sh
+2019-12-26 13:46:40,153 ERROR [main] coordinator.ZookeeperStreamMetadataStore:275 : Error when get coordinator leader
+com.fasterxml.jackson.core.JsonParseException: Unexpected character ('.' (code 46)): Expected space separating root-level values
+```
+The root cause is that the Kylin(Coordinator) process failed to register itself to metadata(zookeeper), so receiver cannot start because it cannot find cluster's leader.
+
+3. If you have more suggestion and question, free free to ask us at user's mailing list.
