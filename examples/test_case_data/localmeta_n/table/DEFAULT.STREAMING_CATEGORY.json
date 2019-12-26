@@ -18,5 +18,6 @@
   } ],
   "source_type" : 0,
   "table_type" : "MANAGED_TABLE",
-  "database" : "DEFAULT"
+  "database" : "DEFAULT",
+  "source_type": 9
 }

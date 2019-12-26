@@ -1,6 +1,7 @@
 package io.kyligence.kap.engine.spark.source
 
 import java.util
+import java.util.Locale
 
 import io.kyligence.kap.engine.spark.NSparkCubingEngine.NSparkCubingSource
 import org.apache.kylin.engine.spark.metadata.cube.source.ISource
@@ -18,7 +19,7 @@ class HiveSource extends ISource with Logging {
     new NSparkCubingSource() {
       override def getSourceData(table: TableDesc, ss: SparkSession, parameters: util.Map[String, String]): Dataset[Row] = {
         val colString = table.columns.map((tb) => tb.identity).mkString(",")
-        val sql = String.format("select %s from %s", colString, table.identity)
+        val sql = String.format(Locale.ROOT, "select %s from %s", colString, table.identity)
         val df = ss.sql(sql)
         val sparkSchema = df.schema
         logInfo("Source data sql is: " + sql)

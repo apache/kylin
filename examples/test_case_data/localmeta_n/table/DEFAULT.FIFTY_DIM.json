@@ -216,5 +216,6 @@
     "datatype" : "integer"
   } ],
   "database" : "DEFAULT",
-  "last_modified" : 0
+  "last_modified" : 0,
+  "source_type": 9
 }

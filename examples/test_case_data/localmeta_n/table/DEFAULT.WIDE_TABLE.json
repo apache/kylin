@@ -317,5 +317,6 @@
     "datatype" : "bigint"
   } ],
   "source_type" : 0,
-  "database" : "DEFAULT"
+  "database" : "DEFAULT",
+  "source_type": 9
 }

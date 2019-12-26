@@ -127,7 +127,7 @@ public class CubeBuildJob extends SparkApplication {
         }
     }
 
-    private void updateMetaAfterBuilding(String cubeId, CubeUpdate update) throws IOException{
+    private void updateMetaAfterBuilding(CubeUpdate update) throws IOException{
         KylinConfig config = KylinConfig.createKylinConfig(this.config);
         config.setMetadataUrl(getParam(MetadataConstants.P_OUTPUT_META_URL));
         CubeManager cubeManager = CubeManager.getInstance(config);
@@ -141,13 +141,13 @@ public class CubeBuildJob extends SparkApplication {
 
         List<CubeSegment> cubeSegments = Lists.newArrayList();
         CubeSegment segment = cubeCopy.getSegmentById(segmentInfo.id());
-        segment.setSizeKB(segmentInfo.getAllLayoutSize());
+        segment.setSizeKB(segmentInfo.getAllLayoutSize() / 1024);
         segment.setLastBuildTime(System.currentTimeMillis());
         cubeSegments.add(segment);
         update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
         cubeManager.updateCube(update);
 
-        updateMetaAfterBuilding(cubeId, update);
+        updateMetaAfterBuilding(update);
     }
 
     private void collectPersistedTablePath(List<String> persistedFlatTable, ParentSourceChooser sourceChooser) {

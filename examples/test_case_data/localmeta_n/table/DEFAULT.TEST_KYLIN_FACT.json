@@ -69,5 +69,6 @@
     "data_gen" : "RAND,null=true,nullpct=0.2"
   } ],
   "database" : "DEFAULT",
-  "last_modified" : 0
+  "last_modified" : 0,
+  "source_type": 9
 }
