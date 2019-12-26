@@ -53,7 +53,7 @@ kylin.security.acl.admin-role=KYLIN-ADMIN-GROUP
 
 Set "kylin.security.profile=ldap" in conf/kylin.properties, then restart Kylin server.
 
-## Enable SSO authentication
+## Enable SSO authentication in conjunction with LDAP
 
 From v1.5, Kylin provides SSO with SAML. The implementation is based on Spring Security SAML Extension. You can read [this reference](http://docs.spring.io/autorepo/docs/spring-security-saml/1.0.x-SNAPSHOT/reference/htmlsingle/) to get an overall understand.
 
@@ -116,11 +116,13 @@ The IDP metadata and keystore file need be deployed in Kylin web app's classpath
 In conf/kylin.properties, add the following properties with your server information:
 
 ```
-saml.metadata.entityBaseURL=https://host-name/kylin
-saml.context.scheme=https
-saml.context.serverName=host-name
-saml.context.serverPort=443
-saml.context.contextPath=/kylin
+kylin.security.saml.keystore-file=classpath:samlKeystore.jks
+kylin.security.saml.metadata-file=classpath:sso_metadata.xml
+kylin.security.saml.metadata-entity-base-url=https://host-name/kylin
+kylin.security.saml.context-scheme=https
+kylin.security.saml.context-server-name=host-name
+kylin.security.saml.context-server-port=443
+kylin.security.saml.context-path=/kylin
 ```
 
 Please note, Kylin assume in the SAML message there is a "email" attribute representing the login user, and the name before @ will be used to search LDAP. 
@@ -128,3 +130,42 @@ Please note, Kylin assume in the SAML message there is a "email" attribute repre
 ### Enable SSO
 Set "kylin.security.profile=saml" in conf/kylin.properties, then restart Kylin server; After that, type a URL like "/kylin" or "/kylin/cubes" will redirect to SSO for login, and jump back after be authorized. While login with LDAP is still available, you can type "/kylin/login" to use original way. The Rest API (/kylin/api/*) still use LDAP + basic authentication, no impact.
 
+
+## Enable SSO authentication with built-in User/Group management
+
+Kylin can use SAML or CAS as an additional authentication method with built-in user/group management. The following properties are needed to enable these plugins.
+
+```
+kylin.security.profile=custom
+
+## additional profile to enable CAS or SAML
+kylin.security.additional-profiles=authn-cas
+#kylin.security.additional-profiles=authn-saml
+
+## for CAS
+# Kylin server URL is needed for redirection after successful authentication
+kylin.server.url=http://kylin.host/kylin
+
+kylin.security.cas.server.prefix=https://cas.host/
+kylin.security.cas.server.login-url=https://cas.host/login
+kylin.security.cas.server.logout-url=https://cas.host/logout
+
+# for CAS (optional)
+#kylin.security.cas.artifact-param=ticket
+#kylin.security.cas.service-param=service
+#kylin.security.cas.auth-all-artifact=false
+#kylin.security.cas.send-renew=false
+#kylin.security.cas.default-groups=ALL_USERS
+
+## for SAML, these settings share the same names with those in SAML (with LDAP) security profile
+#kylin.security.saml.keystore-file=classpath:samlKeystore.jks
+#kylin.security.saml.metadata-file=classpath:sso_metadata.xml
+#kylin.security.saml.metadata-entity-base-url=https://host-name/kylin
+#kylin.security.saml.context-scheme=https
+#kylin.security.saml.context-server-name=host-name
+#kylin.security.saml.context-server-port=443
+#kylin.security.saml.context-path=/kylin
+```
+
+After you restart the server with these settings, the "CAS Login" / "SAML Login" button will be shown just under the login form.
+When authenticated, a user whose name is based on your email address will be created in Kylin's meta storage.
