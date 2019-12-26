@@ -220,10 +220,10 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         sb.append(",");
     }
 
-    private void checkDeadline(long deadline) throws DoNotRetryIOException {
+    private void checkDeadline(long deadline, String cubeSegNameStr, String deadlineRegionName) throws DoNotRetryIOException {
         if (System.currentTimeMillis() > deadline) {
-            logger.info("Deadline has passed, abort now!");
-            throw new DoNotRetryIOException("Coprocessor passed deadline! Maybe server is overloaded");
+            logger.info("Deadline has passed, abort now! cubeSegNameStr is: " + cubeSegNameStr + " ,region name is: " + deadlineRegionName);
+            throw new DoNotRetryIOException("Coprocessor passed deadline! Maybe server is overloaded cubeSegNameStr is: " + cubeSegNameStr + " ,region name is: " + deadlineRegionName);
         }
     }
 
@@ -242,7 +242,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
         // if user change kylin.properties on kylin server, need to manually redeploy coprocessor jar to update KylinConfig of Env.
         KylinConfig kylinConfig = KylinConfig.createKylinConfig(request.getKylinProperties());
-        
+        String cubeSegNameStr = request.hasCubeSegNameStr() ? request.getCubeSegNameStr() : "UnknownCubeSegNameStr";
         String queryId = request.hasQueryId() ? request.getQueryId() : "UnknownId";
         logger.info("start query {} in thread {}", queryId, Thread.currentThread().getName());
         try (SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(kylinConfig);
@@ -252,13 +252,13 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
             region = (HRegion) env.getRegion();
             region.startRegionOperation();
-
+            String deadlineRegionName = region.getRegionInfo().getRegionNameAsString();
             debugGitTag = region.getTableDesc().getValue(IRealizationConstants.HTableGitTag);
 
             final GTScanRequest scanReq = GTScanRequest.serializer
                     .deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getGtScanRequest())));
             final long deadline = scanReq.getStartTime() + scanReq.getTimeout();
-            checkDeadline(deadline);
+            checkDeadline(deadline, cubeSegNameStr, deadlineRegionName);
 
             List<List<Integer>> hbaseColumnsToGT = Lists.newArrayList();
             for (IntList intList : request.getHbaseColumnsToGTList()) {
