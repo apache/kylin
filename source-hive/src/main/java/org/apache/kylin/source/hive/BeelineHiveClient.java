@@ -126,18 +126,7 @@ public class BeelineHiveClient implements IHiveClient {
 
     @Override
     public long getHiveTableRows(String database, String tableName) throws Exception {
-        ResultSet resultSet = null;
-        long count = 0;
-        try {
-            String query = "select count(*) from ";
-            resultSet = stmt.executeQuery(query.concat(database + "." + tableName));
-            if (resultSet.next()) {
-                count = resultSet.getLong(1);
-            }
-        } finally {
-            DBUtils.closeQuietly(resultSet);
-        }
-        return count;
+        return getHiveTableMeta(database, tableName).rowNum;
     }
 
     @Override
@@ -271,6 +260,9 @@ public class BeelineHiveClient implements IHiveClient {
             }
             if ("numFiles".equals(resultSet.getString(2).trim())) {
                 builder.setFileNum(Long.parseLong(resultSet.getString(3).trim()));
+            }
+            if ("numRows".equals(resultSet.getString(2).trim())) {
+                builder.setRowNum(Long.parseLong(resultSet.getString(3).trim()));
             }
             if ("skip.header.line.count".equals(resultSet.getString(2).trim())) {
                 builder.setSkipHeaderLineCount(resultSet.getString(3).trim());
