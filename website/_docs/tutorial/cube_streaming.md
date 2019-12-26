@@ -1,10 +1,11 @@
 ---
 layout: docs
-title:  Scalable Cubing from Kafka
+title:  Cubing from Kafka(Near RT Streaming)
 categories: tutorial
 permalink: /docs/tutorial/cube_streaming.html
 ---
 Kylin v1.6 releases the scalable streaming cubing function, it leverages Hadoop to consume the data from Kafka to build the cube, you can check [this blog](/blog/2016/10/18/new-nrt-streaming/) for the high level design. This doc is a step by step tutorial, illustrating how to create and build a sample cube;
+If you prefer to ingest kafka event immediately other than micro batch way and get query result in very low-latency(less than 1 seconds), you may consider using the new feature [Real-time OLAP](/docs/tutorial/realtime_olap.html) which introduced in Kylin v3.0.
 
 ## Preparation
 To finish this tutorial, you need a Hadoop environment which has kylin v1.6.0 or above installed; Since kylin v2.5.0, it needs a Kafka v1.0.0 or above.
@@ -54,7 +55,7 @@ bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic kylin_st
  {% endhighlight %}
 
 ## Define a table from streaming
-Start Kylin server with "$KYLIN_HOME/bin/kylin.sh start", login Kylin Web GUI at http://sandbox:7070/kylin/, select an existing project or create a new project; Click "Model" -> "Data Source", then click the icon "Add Streaming Table";
+Start Kylin server with "$KYLIN_HOME/bin/kylin.sh start", login Kylin Web GUI at http://sandbox:7070/kylin/, select an existing project or create a new project; Click "Model" -> "Data Source", then click the icon "Add Streaming Table"; (Attention: the option *Add Streaming Table V2* is for the Realtime OLAP feature which introduced in Kylin v3.0, don't mix them).
 
    ![](/images/tutorial/1.6/Kylin-Cube-Streaming-Tutorial/1_Add_streaming_table.png)
 

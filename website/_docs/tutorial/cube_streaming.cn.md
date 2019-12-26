@@ -1,10 +1,11 @@
 ---
 layout: docs-cn
-title:  "从 Kafka 流构建 Cube"
+title:  "从 Kafka 流构建 Cube(Near RT Streaming)"
 categories: tutorial
 permalink: /cn/docs/tutorial/cube_streaming.html
 ---
 Kylin v1.6 发布了可扩展的 streaming cubing 功能，它利用 Hadoop 消费 Kafka 数据的方式构建 cube，您可以查看 [这篇博客](/blog/2016/10/18/new-nrt-streaming/) 以进行高级别的设计。本文档是一步接一步的阐述如何创建和构建样例 cube 的教程;
+如果您更希望实时地摄入和查询到kafka的消息（数据延迟是秒级别），您可以考虑使用 Kylin3.0引入的[Real-time OLAP](/docs/tutorial/realtime_olap.html)。
 
 ## 前期准备
 您需要一个安装了 kylin v1.6.0 或以上版本和可运行的 Kafka; 自 kylin v2.5 开始，需要 Kafka v1.0.0 或以上版本。
@@ -54,7 +55,7 @@ bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic kylin_st
  {% endhighlight %}
 
 ## 用 streaming 定义一张表
-用 "$KYLIN_HOME/bin/kylin.sh start" 启动 Kylin 服务器，输入 http://sandbox:7070/kylin/ 登陆 Kylin Web GUI，选择一个已存在的 project 或创建一个新的 project；点击 "Model" -> "Data Source"，点击 "Add Streaming Table" 图标;
+用 "$KYLIN_HOME/bin/kylin.sh start" 启动 Kylin 服务器，输入 http://sandbox:7070/kylin/ 登陆 Kylin Web GUI，选择一个已存在的 project 或创建一个新的 project；点击 "Model" -> "Data Source"，点击 "Add Streaming Table" 图标；（注意：Kylin3.0 引入的 Realtime OLAP 选择的是"Add Streaming Table V2"）
 
    ![](/images/tutorial/1.6/Kylin-Cube-Streaming-Tutorial/1_Add_streaming_table.png)
 
