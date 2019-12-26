@@ -43,9 +43,6 @@ permalink: /docs30/install/configuration.html
 	- [Enable Email Notification](#email-notification)
 	- [Enable Cube Planner](#cube-planner)
     - [HBase Storage](#hbase-config)
-    - [Secondary Hbase Storage](#secondary-hbase)
-    - [Job Scheduler Safe Mode](#safe-mode)
-    - [Job Output](#job-output)
     - [Enable Compression](#compress-config)
     - [Real-time OLAP](#realtime-olap)
 - [Storage Clean up Configuration](#storage-clean-up-configuration)
@@ -514,32 +511,6 @@ Both Kylin and HBase use compression when writing to disk, so Kylin will multipl
 - `kylin.storage.hbase.hconnection-threads-alive-seconds`: specifies the thread lifetime. The default value is 60.
 - `kylin.storage.hbase.replication-scope`: specifies the cluster replication range. The default value is 0
 - `kylin.storage.hbase.scan-cache-rows`: specifies the number of scan cache lines. The default value is 1024.
-
-
-### Secondary Hbase Storage {#secondary-hbase}
-
-Kylin support secondary hbase storage and made the kylin cluster can query cube data from the old hbase cluster during the cluster migration.
-
-- `kylin.secondary.storage.url`: specifies the secondary hbase cluster and metadata path. Such as *kylin.secondary.storage.url=hostname:kylin_metadata@hbase*.
-- `hbase.zookeeper.quorum`: specifies the zookeeper information where secondary hbase cluster located. Such as *hbase.zookeeper.quorum=hostname:11000,zookeeper.znode.parent=/hbase/*, if there are other parameters,  they can be added in the form of <key> = <value>.
-
-
-
-### Job Scheduler Safe Mode {#safe-mode}
-
-In order to change HBase cluster safely, user can turn on the safe mode for kylin. In safe mode, the job have not create htable cannot be scheduled, and the other jobs can run continuous. After all running job finished,  user can change the cluster config to the new one,  and rest of job can be scheduled again.
-
-- `kylin.job.scheduler.safemode`: Whether to turn on safe mode. The default value is FALSE.
-- `kylin.job.scheduler.safemode.runnable-projects`: Projects not affected by safe mode. Such as *kylin.job.scheduler.safemode.runnable-projects=learn_kylin*.
-
-
-
-### Job Output {#job-output}
-
-In order to avoid job output content is too large, user could set the max length of output.
-
-- `kylin.job.execute-output.max-size`: The max length of job output. The default value is 10484760.
-- `kylin.engine.spark.output.max-size`: The max length of spark job output. The default value is 10484760.
 
 
 
