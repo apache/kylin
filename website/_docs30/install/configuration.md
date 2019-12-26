@@ -44,7 +44,6 @@ permalink: /docs30/install/configuration.html
 	- [Enable Cube Planner](#cube-planner)
     - [HBase Storage](#hbase-config)
     - [Secondary Hbase Storage](#secondary-hbase)
-    - [Job Scheduler Safe Mode](#safe-mode)
     - [Job Output](#job-output)
     - [Enable Compression](#compress-config)
     - [Real-time OLAP](#realtime-olap)
@@ -522,15 +521,6 @@ Kylin support secondary hbase storage and made the kylin cluster can query cube 
 
 - `kylin.secondary.storage.url`: specifies the secondary hbase cluster and metadata path. Such as *kylin.secondary.storage.url=hostname:kylin_metadata@hbase*.
 - `hbase.zookeeper.quorum`: specifies the zookeeper information where secondary hbase cluster located. Such as *hbase.zookeeper.quorum=hostname:11000,zookeeper.znode.parent=/hbase/*, if there are other parameters,  they can be added in the form of <key> = <value>.
-
-
-
-### Job Scheduler Safe Mode {#safe-mode}
-
-In order to change HBase cluster safely, user can turn on the safe mode for kylin. In safe mode, the job have not create htable cannot be scheduled, and the other jobs can run continuous. After all running job finished,  user can change the cluster config to the new one,  and rest of job can be scheduled again.
-
-- `kylin.job.scheduler.safemode`: Whether to turn on safe mode. The default value is FALSE.
-- `kylin.job.scheduler.safemode.runnable-projects`: Projects not affected by safe mode. Such as *kylin.job.scheduler.safemode.runnable-projects=learn_kylin*.
 
 
 

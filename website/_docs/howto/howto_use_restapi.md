@@ -23,6 +23,7 @@ This page lists the major RESTful APIs provided by Kylin.
    * [Disable cube](#disable-cube)
    * [Purge cube](#purge-cube)
    * [Delete segment](#delete-segment)
+   * [Auto-Merge segment](#auto-merge-segment)
 * MODEL
    * [Create model](#create-model)
    * [Get modelDescData](#get-modeldescdata)
@@ -841,6 +842,10 @@ curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/js
 
 ## Delete Segment
 `DELETE /kylin/api/cubes/{cubeName}/segs/{segmentName}`
+
+
+## Auto-merge Segment
+`PUT /kylin/api/cubes/{cubeName}/automerge`
 
 ***
 
