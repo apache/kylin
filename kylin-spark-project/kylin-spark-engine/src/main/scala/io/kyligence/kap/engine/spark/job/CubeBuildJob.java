@@ -76,6 +76,7 @@ public class CubeBuildJob extends SparkApplication {
 
     @Override
     protected void doExecute() throws Exception {
+
         long start = System.currentTimeMillis();
         logger.info("Start building cube job...");
         buildLayoutWithUpdate = new BuildLayoutWithUpdate();
@@ -85,7 +86,6 @@ public class CubeBuildJob extends SparkApplication {
         List<String> persistedViewFactTable = new ArrayList<>();
         Path shareDir = config.getJobTmpShareDir(project, jobId);
         try {
-//            IndexPlan indexPlan = dfMgr.getDataflow(dataflowId).getIndexPlan();
             //TODO: what if a segment is deleted during building?
             for (String segId : segmentIds) {
                 SegmentInfo seg = ManagerHub.getSegmentInfo(config, getParam(MetadataConstants.P_CUBE_ID), segId);

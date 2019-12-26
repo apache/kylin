@@ -18,12 +18,9 @@
 
 package org.apache.kylin.engine.spark.metadata.cube;
 
-import java.util.Arrays;
-import java.util.List;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.spark.metadata.MetadataConverter;
 import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 

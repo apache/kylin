@@ -85,7 +85,7 @@ object MetadataConverter {
   }
 
   def toTableDesc(tb: TableRef): TableDesc = {
-    TableDesc(tb.getTableName, tb.getTableDesc.getDatabase, tb.getColumns.asScala.map(ref => toColumnDesc(ref = ref)).toList, tb.getAlias, 9)
+    TableDesc(tb.getTableName, tb.getTableDesc.getDatabase, tb.getColumns.asScala.map(ref => toColumnDesc(ref = ref)).toList, tb.getAlias, tb.getTableDesc.getSourceType)
   }
 
   def extractAllColumnDesc(cubeInstance: CubeInstance): Map[Int, ColumnDesc] = {

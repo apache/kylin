@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package io.kyligence.kap.engine.spark.mockup;
+package io.kyligence.kap.engine.spark.source;
 
 import io.kyligence.kap.engine.spark.NSparkCubingEngine.NSparkCubingSource;
 import java.io.File;
@@ -33,8 +33,6 @@ public class CsvSource implements ISource {
     @SuppressWarnings("unchecked")
     @Override
     public <I> I adaptToBuildEngine(Class<I> engineInterface) {
-
-        if (engineInterface == NSparkCubingSource.class) {
             return (I) new NSparkCubingSource() {
 
                 @Override
@@ -47,8 +45,6 @@ public class CsvSource implements ISource {
                     return delimiter;
                 }
             };
-        }
-        throw new IllegalArgumentException("Unsupported engine interface: " + engineInterface);
     }
 
     private String getUtMetaDir() {
