@@ -378,7 +378,10 @@ public class ExecutableDao {
 
     public void deleteJob(String uuid) throws PersistentException {
         try {
-            store.deleteResource(pathOfJob(uuid));
+            String[] paths = new String[] {pathOfJob(uuid), pathOfJobOutput(uuid)};
+            for (String path : paths) {
+                store.deleteResource(path);
+            } 
             executableDigestMap.remove(uuid);
         } catch (IOException e) {
             logger.error("error delete job:" + uuid, e);
