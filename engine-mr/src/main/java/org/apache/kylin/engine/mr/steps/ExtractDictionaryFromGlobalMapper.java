@@ -63,7 +63,6 @@ public class ExtractDictionaryFromGlobalMapper<KEYIN, Object> extends KylinMappe
     private List<TblColRef> globalColumns;
     private int[] globalColumnIndex;
     private List<Set<String>> globalColumnValues;
-    private List<Dictionary<String>> globalDicts;
 
     private String splitKey;
     private KylinConfig config;
@@ -116,12 +115,7 @@ public class ExtractDictionaryFromGlobalMapper<KEYIN, Object> extends KylinMappe
         FileSystem fs = FileSystem.get(context.getConfiguration());
         Path outputDirBase = new Path(context.getConfiguration().get(FileOutputFormat.OUTDIR));
 
-        globalDicts = Lists.newArrayListWithExpectedSize(globalColumns.size());
-        Map<TblColRef, Dictionary<String>> dictionaryMap = cubeSeg.buildDictionaryMap();
-        for (int i = 0; i < globalColumns.size(); i++) {
-            TblColRef colRef = globalColumns.get(i);
-            globalDicts.add(dictionaryMap.get(colRef));
-        }
+        Map<TblColRef, Dictionary<String>> globalDictionaryMap = cubeSeg.buildGlobalDictionaryMap(globalColumns.size());
 
         ShrunkenDictionary.StringValueSerializer strValueSerializer = new ShrunkenDictionary.StringValueSerializer();
         for (int i = 0; i < globalColumns.size(); i++) {
@@ -132,7 +126,7 @@ public class ExtractDictionaryFromGlobalMapper<KEYIN, Object> extends KylinMappe
             // sort values to accelerate the encoding process by reducing the swapping of global dictionary slices
             Collections.sort(colDistinctValues);
 
-            ShrunkenDictionaryBuilder<String> dictBuilder = new ShrunkenDictionaryBuilder<>(globalDicts.get(i));
+            ShrunkenDictionaryBuilder<String> dictBuilder = new ShrunkenDictionaryBuilder<>(globalDictionaryMap.get(globalColumns.get(i)));
             for (String colValue : colDistinctValues) {
                 dictBuilder.addValue(colValue);
             }
