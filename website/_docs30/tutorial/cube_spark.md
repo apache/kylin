@@ -127,6 +127,28 @@ When Kylin executes this step, you can monitor the status in Yarn resource manag
 
 After all steps be successfully executed, the Cube becomes "Ready" and you can query it as normal.
 
+
+## Using Spark with Apache Livy
+
+You can use Livy by adding flowing configuration:
+
+{% highlight Groff markup %}
+kylin.engine.livy-conf.livy-enabled=true
+kylin.engine.livy-conf.livy-url=http://ip:8998
+kylin.engine.livy-conf.livy-key.file=hdfs:///path/kylin-job-3.0.0-SNAPSHOT.jar
+kylin.engine.livy-conf.livy-arr.jars=hdfs:///path/hbase-client-1.2.0-{$env.version}.jar,hdfs:///path/hbase-common-1.2.0-{$env.version}.jar,hdfs:///path/hbase-hadoop-compat-1.2.0-{$env.version}.jar,hdfs:///path/hbase-hadoop2-compat-1.2.0-{$env.version}.jar,hdfs:///path/hbase-server-1.2.0-{$env.version}.jar,hdfs:///path/htrace-core-3.2.0-incubating.jar,hdfs:///path/metrics-core-2.2.0.jar  
+{% endhighlight %}
+
+
+## Optional
+
+As we all know, the cubing job includes several steps and the steps 'extract fact table distinct value' and 'build dimension dictionary' can also be built by spark. The configurations are as follows.
+
+{% highlight Groff markup %}
+kylin.engine.spark-fact-distinct=true
+kylin.engine.spark-dimension-dictionary=true 
+{% endhighlight %}
+
 ## Troubleshooting
 
 When getting error, you should check "logs/kylin.log" firstly. There has the full Spark command that Kylin executes, e.g:
