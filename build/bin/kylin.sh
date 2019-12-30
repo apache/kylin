@@ -129,6 +129,11 @@ function retrieveStartCommand() {
     #debug if encounter NoClassDefError
     verbose "kylin classpath is: $(hbase classpath)"
 
+    security_ldap_truststore=`bash ${dir}/get-properties.sh kylin.security.ldap.connection-truststore`
+    if [ -f "${security_ldap_truststore}" ]; then
+        KYLIN_EXTRA_START_OPTS="$KYLIN_EXTRA_START_OPTS -Djavax.net.ssl.trustStore=$security_ldap_truststore"
+    fi
+
     # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
     start_command="hbase ${KYLIN_EXTRA_START_OPTS} \
     -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
