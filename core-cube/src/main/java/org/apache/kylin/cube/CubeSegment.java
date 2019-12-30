@@ -348,6 +348,14 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         return result;
     }
 
+    public Map<TblColRef, Dictionary<String>> buildGlobalDictionaryMap(int globalColumnsSize) {
+        Map<TblColRef, Dictionary<String>> result = Maps.newHashMapWithExpectedSize(globalColumnsSize);
+        for (TblColRef col : getCubeDesc().getAllGlobalDictColumns()) {
+            result.put(col, getDictionary(col));
+        }
+        return result;
+    }
+
     public Dictionary<String> getDictionary(TblColRef col) {
         TblColRef reuseCol = getCubeDesc().getDictionaryReuseColumn(col);
         CubeManager cubeMgr = CubeManager.getInstance(this.getCubeInstance().getConfig());
