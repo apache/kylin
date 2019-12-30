@@ -201,6 +201,11 @@ then
         source ${KYLIN_HOME}/conf/setenv.sh
     fi
 
+    security_ldap_truststore=`bash ${dir}/get-properties.sh kylin.security.ldap.connection-truststore`
+    if [ -f "${security_ldap_truststore}" ]; then
+        KYLIN_EXTRA_START_OPTS="$KYLIN_EXTRA_START_OPTS -Djavax.net.ssl.trustStore=$security_ldap_truststore"
+    fi
+
     verbose "java opts is ${KYLIN_EXTRA_START_OPTS} ${KYLIN_TOMCAT_OPTS}"
     verbose "java classpath is ${KYLIN_TOMCAT_CLASSPATH}"
     classpathDebug ${KYLIN_TOMCAT_CLASSPATH}
