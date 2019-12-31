@@ -53,7 +53,7 @@ public class PushDownExecutor {
             String sql, String defaultSchema, SQLException sqlException, boolean isSelect,
             boolean isPrepare) throws Exception {
         List<String> ids = kylinConfig.getPushDownRunnerIds();
-        if (ids.isEmpty()) {
+        if (ids.isEmpty() && kylinConfig.getPushDownRunnerClassName() != null) {
             IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(
                     kylinConfig.getPushDownRunnerClassName()
             );
