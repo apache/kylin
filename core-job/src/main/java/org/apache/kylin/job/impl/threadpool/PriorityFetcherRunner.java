@@ -22,8 +22,10 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.Executable;
@@ -97,16 +99,40 @@ public class PriorityFetcherRunner extends FetcherRunner {
                     continue;
                 }
 
-                final Output outputDigest = getExecutableManager().getOutputDigest(id);
+                final Output outputDigest;
+                try {
+                    outputDigest = getExecutableManager().getOutputDigest(id);
+                } catch (IllegalArgumentException e) {
+                    logger.warn("job " + id + " output digest is null, skip.", e);
+                    nOthers++;
+                    continue;
+                }
                 if ((outputDigest.getState() != ExecutableState.READY)) {
                     jobStateCount(id);
                     continue;
                 }
 
                 AbstractExecutable executable = getExecutableManager().getJob(id);
+                if (executable == null) {
+                    logger.info("job " + id + " get job is null, skip.");
+                    nOthers++;
+                    continue;
+                }
                 if (!executable.isReady()) {
                     nOthers++;
                     continue;
+                }
+
+                KylinConfig config = jobEngineConfig.getConfig();
+                if(config.isSchedulerSafeMode()) {
+                    String cubeName = executable.getCubeName();
+                    String projectName = CubeManager.getInstance(config).getCube(cubeName).getProject();
+                    if (!config.getSafeModeRunnableProjects().contains(projectName) &&
+                            executable.getStartTime() == 0) {
+                        logger.info("New job is pending for scheduler in safe mode. Project: {}, job: {}",
+                                projectName, executable.getName());
+                        continue;
+                    }
                 }
 
                 nReady++;

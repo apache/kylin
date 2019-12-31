@@ -55,6 +55,14 @@
                 <div class="space-4"></div>
               </form>
             </div>
+            <div class="box-footer" ng-if="authn">
+              <div>
+                <a class="btn btn-sm btn-default" ng-click="redirectLoginEntry(authn)" style="width: 100%;">
+                  <i class="ace-icon fa fa-sign-in"></i>
+                  <span class="bigger-110">{{authn.label}}</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>

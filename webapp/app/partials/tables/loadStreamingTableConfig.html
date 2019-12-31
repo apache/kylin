@@ -70,19 +70,19 @@
         <div class="form-group required">
           <label for="TSColumn" class="col-sm-3 control-label font-color-default">TSColumn</label>
           <div class="col-sm-6">
-            <select id="TSColumn" chosen ng-model="streaming.TSColumnSelected" ng-options="TSColumn as TSColumn for TSColumn in streaming.TSColumnArr" data-placeholder="select a column name" style="width: 120px !important;" class="chosen-select" ng-change="updateTSColumn(TSColumn)"></select>
+            <select id="TSColumn" chosen ng-model="streaming.TSColumnSelected" ng-options="TSColumn as TSColumn for TSColumn in streaming.TSColumnArr" data-placeholder="select a column name" style="width: 120px !important;" class="chosen-select" ng-change="updateTSColumnOption(streaming.TSColumnSelected)"></select>
           </div>
         </div>
         <div class="form-group">
           <label for="TSParser" class="col-sm-3 control-label font-color-default">TSParser</label>
           <div class="col-sm-9">
-            <input type="text" class="form-control" id="TSParser" ng-model="streaming.TSParser" name="TSParser" placeholder="Input TSParser eg org.apache.kylin.stream.source.kafka.TimedJsonStreamParser" required>
+            <select id="TSParser" chosen ng-model="streaming.TSParser" ng-options="TSParser as TSParser for TSParser in streaming.TSParserArr" data-placeholder="select a time parser" style="width: 360px !important;" class="chosen-select" ng-change="updateDateTimeParserOption(streaming.TSParser)"></select>
           </div>
         </div>
         <div class="form-group">
           <label for="TSPattern" class="col-sm-3 control-label font-color-default">TSPattern</label>
           <div class="col-sm-9">
-            <input type="text" class="form-control" id="TSPattern" ng-model="streaming.TSPattern" name="TSPattern" placeholder="Input TSPattern eg. yyyy-MM-dd HH:mm:ss">
+            <select id="TSPattern" chosen ng-model="streaming.TSPattern" ng-options="TSPattern as TSPattern for TSPattern in streaming.TSPatternArr" data-placeholder="select a time pattern" style="width: 360px !important;" class="chosen-select"></select>
           </div>
         </div>
 
@@ -99,7 +99,9 @@
               <td>
                 <i class="fa fa-minus" style="margin-top:10px;cursor:pointer;" ng-click="removeColumn($index)"></i>
               </td>
-              <td>{{column.name}}</td>
+              <td>
+                <input type="text" class="form-control" ng-readonly="isDerived(column)" ng-model="column.name" placeholder="Input Column Name" />
+              </td>
               <td>
                 <select chosen ng-model="column.datatype" ng-options="datatype as datatype for datatype in streaming.dataTypeArr" data-placeholder="select a column type" style="width: 120px !important;" class="chosen-select" ng-change="updateTSColumnOption(column)">
                 </select>

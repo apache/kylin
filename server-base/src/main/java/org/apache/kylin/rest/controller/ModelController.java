@@ -228,6 +228,7 @@ public class ModelController extends BasicController {
         try {
             logger.debug("Saving MODEL " + modelRequest.getModelDescData());
             desc = JsonUtil.readValue(modelRequest.getModelDescData(), DataModelDesc.class);
+            desc.setProjectName(modelRequest.getProject());
         } catch (JsonParseException e) {
             logger.error("The data model definition is not valid.", e);
             updateRequest(modelRequest, false, e.getMessage());

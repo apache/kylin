@@ -25,7 +25,8 @@ KylinApp.constant('cubeConfig', {
   cubePartitionTypes: ['APPEND'],
   engineType:[
     {name:'MapReduce',value: 2},
-    {name:'Spark',value: 4}
+    {name:'Spark',value: 4},
+    {name:'Flink',value: 5}
   ],
   joinTypes: [
     {name: 'Left', value: 'left'},

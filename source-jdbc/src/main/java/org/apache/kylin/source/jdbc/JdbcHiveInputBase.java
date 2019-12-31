@@ -38,6 +38,7 @@ import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.util.FlatTableSqlQuoteUtils;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
@@ -68,22 +69,24 @@ public class JdbcHiveInputBase extends HiveInputBase {
         private SourceDialect dialect;
         private final Map<String, String> metaMap = new TreeMap<>();
 
-        public JdbcBaseBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
+        public JdbcBaseBatchCubingInputSide(IJoinedFlatTableDesc flatDesc, boolean skipCacheMeta) {
             super(flatDesc);
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
-            String connectionUrl = config.getJdbcSourceConnectionUrl();
-            String driverClass = config.getJdbcSourceDriver();
-            String jdbcUser = config.getJdbcSourceUser();
-            String jdbcPass = config.getJdbcSourcePass();
-            dbconf = new DBConnConf(driverClass, connectionUrl, jdbcUser, jdbcPass);
-            dialect = SourceDialect.getDialect(config.getJdbcSourceDialect());
-            jdbcMetadataDialect = JdbcMetadataFactory.getJdbcMetadata(dialect, dbconf);
-            calCachedJdbcMeta(metaMap, dbconf, jdbcMetadataDialect);
-            if (logger.isTraceEnabled()) {
-                StringBuilder dumpInfo = new StringBuilder();
-                metaMap.forEach((k, v) -> dumpInfo.append("CachedMetadata: ").append(k).append(" => ").append(v)
-                        .append(System.lineSeparator()));
-                logger.trace(dumpInfo.toString());
+            if (!skipCacheMeta) {
+                KylinConfig config = KylinConfig.getInstanceFromEnv();
+                String connectionUrl = config.getJdbcSourceConnectionUrl();
+                String driverClass = config.getJdbcSourceDriver();
+                String jdbcUser = config.getJdbcSourceUser();
+                String jdbcPass = config.getJdbcSourcePass();
+                dbconf = new DBConnConf(driverClass, connectionUrl, jdbcUser, jdbcPass);
+                dialect = SourceDialect.getDialect(config.getJdbcSourceDialect());
+                jdbcMetadataDialect = JdbcMetadataFactory.getJdbcMetadata(dialect, dbconf);
+                calCachedJdbcMeta(metaMap, dbconf, jdbcMetadataDialect);
+                if (logger.isTraceEnabled()) {
+                    StringBuilder dumpInfo = new StringBuilder();
+                    metaMap.forEach((k, v) -> dumpInfo.append("CachedMetadata: ").append(k).append(" => ").append(v)
+                            .append(System.lineSeparator()));
+                    logger.trace(dumpInfo.toString());
+                }
             }
         }
 
@@ -223,13 +226,11 @@ public class JdbcHiveInputBase extends HiveInputBase {
 
             String splitTableAlias;
             String splitColumn;
-            String quoteFullNamedColumn; // `table.column`
             String splitDatabase;
             TblColRef splitColRef = determineSplitColumn();
             splitTableAlias = splitColRef.getTableAlias();
 
             splitColumn = getColumnIdentityQuoted(splitColRef, jdbcMetadataDialect, metaMap, true);
-            quoteFullNamedColumn = quoteIdentifier(partCol, jdbcMetadataDialect.getDialect());
             splitDatabase = splitColRef.getColumnDesc().getTable().getDatabase();
 
             String selectSql = generateSelectDataStatementRDBMS(flatDesc, true, new String[] { partCol },
@@ -247,8 +248,8 @@ public class JdbcHiveInputBase extends HiveInputBase {
             String filedDelimiter = config.getJdbcSourceFieldDelimiter();
             int mapperNum = config.getSqoopMapperNum();
 
-            String bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM %s.%s ", quoteFullNamedColumn,
-                    quoteFullNamedColumn, getSchemaQuoted(metaMap, splitDatabase, jdbcMetadataDialect, true),
+            String bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM %s.%s ", splitColumn,
+                    splitColumn, getSchemaQuoted(metaMap, splitDatabase, jdbcMetadataDialect, true),
                     getTableIdentityQuoted(splitColRef.getTableRef(), metaMap, jdbcMetadataDialect, true));
             if (partitionDesc.isPartitioned()) {
                 SegmentRange segRange = flatDesc.getSegRange();
@@ -273,7 +274,7 @@ public class JdbcHiveInputBase extends HiveInputBase {
                     + "--connect \"%s\" --driver %s --username %s --password \"%s\" --query \"%s AND \\$CONDITIONS\" "
                     + "--target-dir %s/%s --split-by %s --boundary-query \"%s\" --null-string '%s' "
                     + "--null-non-string '%s' --fields-terminated-by '%s' --num-mappers %d", sqoopHome, connectionUrl,
-                    driverClass, jdbcUser, jdbcPass, selectSql, jobWorkingDir, hiveTable, partCol, bquery,
+                    driverClass, jdbcUser, jdbcPass, selectSql, jobWorkingDir, hiveTable, splitColumn, bquery,
                     sqoopNullString, sqoopNullNonString, filedDelimiter, mapperNum);
             logger.debug("sqoop cmd : {}", cmd);
             CmdStep step = new CmdStep();
@@ -482,10 +483,6 @@ public class JdbcHiveInputBase extends HiveInputBase {
     }
 
     /**
-     * Quote the identifier acccording to sql dialect, as far as I know,
-     * MySQL use backtick(`), oracle 11g use double quotation("), sql server 2017
-     * use square brackets([ or ]) as quote character.
-     *
      * @param identifier something looks like tableA.columnB
      */
     static String quoteIdentifier(String identifier, SourceDialect dialect) {
@@ -493,18 +490,7 @@ public class JdbcHiveInputBase extends HiveInputBase {
             String[] identifierArray = identifier.split("\\.");
             String quoted = "";
             for (int i = 0; i < identifierArray.length; i++) {
-                switch (dialect) {
-                case SQL_SERVER:
-                    identifierArray[i] = "[" + identifierArray[i] + "]";
-                    break;
-                case MYSQL:
-                case HIVE:
-                    identifierArray[i] = "`" + identifierArray[i] + "`";
-                    break;
-                default:
-                    String quote = KylinConfig.getInstanceFromEnv().getQuoteCharacter();
-                    identifierArray[i] = quote + identifierArray[i] + quote;
-                }
+                identifierArray[i] = FlatTableSqlQuoteUtils.quoteIdentifier(dialect, identifierArray[i]);
             }
             quoted = String.join(".", identifierArray);
             return quoted;

@@ -32,6 +32,7 @@ import org.apache.kylin.engine.mr.streaming.MergeDictJob;
 import org.apache.kylin.engine.mr.streaming.SaveDictStep;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.stream.core.util.HDFSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,8 +59,8 @@ public class StreamingCubingJobBuilder extends JobBuilderSupport {
         final String cuboidRootPath = getCuboidRootPath(jobId);
 
         // Phase 1: Merge Dictionaries produced by each streaming receiver
-        result.addTask(createMergeDictStep(streamingStoragePath, jobId));
-        result.addTask(createSaveDictStep(jobId));
+        result.addTask(createMergeDictStep(streamingStoragePath, jobId, result));
+        result.addTask(createSaveDictStep(jobId, result));
 
         String tmpBaseCuboidPath = getBaseCuboidPathForStreaming(jobId);
         //Phase 2: Convert columnar records to row records produced by each streaming receiver, out put as base cuboid
@@ -102,12 +103,12 @@ public class StreamingCubingJobBuilder extends JobBuilderSupport {
         }
     }
 
-    private MapReduceExecutable createMergeDictStep(String streamingStoragePath, String jobId) {
+    private MapReduceExecutable createMergeDictStep(String streamingStoragePath, String jobId, DefaultChainedExecutable jobFlow) {
         MapReduceExecutable mergeDict = new MapReduceExecutable();
         mergeDict.setName(ExecutableConstants.STEP_NAME_STREAMING_CREATE_DICTIONARY);
         StringBuilder cmd = new StringBuilder();
 
-        appendMapReduceParameters(cmd, JobEngineConfig.IN_MEM_JOB_CONF_SUFFIX);
+        appendMapReduceParameters(cmd, JobEngineConfig.CUBE_MERGE_JOB_CONF_SUFFIX);
         appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME,
                 ExecutableConstants.STEP_NAME_STREAMING_CREATE_DICTIONARY);
         appendExecCmdParameters(cmd, BatchConstants.ARG_INPUT, streamingStoragePath);
@@ -116,8 +117,14 @@ public class StreamingCubingJobBuilder extends JobBuilderSupport {
         //Instead of using mr job output, trySaveNewDict api is used, so output path is useless here
         appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, getDictPath(jobId));
 
+        final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
         mergeDict.setMapReduceParams(cmd.toString());
         mergeDict.setMapReduceJobClass(MergeDictJob.class);
+        mergeDict.setLockPathName(cubeName);
+        mergeDict.setIsNeedLock(true);
+        mergeDict.setIsNeedReleaseLock(false);
+        mergeDict.setJobFlowJobId(jobFlow.getId());
+
         return mergeDict;
 
     }
@@ -196,13 +203,19 @@ public class StreamingCubingJobBuilder extends JobBuilderSupport {
         return baseCuboidStep;
     }
 
-    private SaveDictStep createSaveDictStep(String jobId) {
+    private SaveDictStep createSaveDictStep(String jobId, DefaultChainedExecutable jobFlow) {
         SaveDictStep result = new SaveDictStep();
+        final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
+
         result.setName(ExecutableConstants.STEP_NAME_STREAMING_SAVE_DICTS);
         CubingExecutableUtil.setCubeName(seg.getRealization().getName(), result.getParams());
         CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
         CubingExecutableUtil.setDictsPath(getDictPath(jobId), result.getParams());
         CubingExecutableUtil.setCubingJobId(jobId, result.getParams());
+
+        result.setIsNeedReleaseLock(true);
+        result.setJobFlowJobId(jobFlow.getId());
+        result.setLockPathName(cubeName);
         return result;
     }
 

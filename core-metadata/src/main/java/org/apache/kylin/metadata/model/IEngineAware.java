@@ -26,6 +26,7 @@ public interface IEngineAware {
     public static final int ID_MR_V2 = 2;
     public static final int ID_MR_II = 3;
     public static final int ID_SPARK = 4;
+    public static final int ID_FLINK = 5;
 
     int getEngineType();
 }

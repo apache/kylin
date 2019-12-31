@@ -523,5 +523,9 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     return cubeLookups;
   };
 
+  $scope.isAvailableEngine = function(engine_type) {
+    return !($scope.cubeMetaFrame.storage_type === 3 && engine_type.value === 4);
+  }
+
   $scope.cubeLookups = $scope.getCubeLookups();
 });

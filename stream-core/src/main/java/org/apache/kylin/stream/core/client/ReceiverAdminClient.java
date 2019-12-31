@@ -35,7 +35,6 @@ import org.apache.kylin.stream.core.model.stats.ReceiverStats;
 /**
  * StreamingCoordinator send admin request to speicifc receiver
  * (received by org.apache.kylin.stream.server.rest.controller.AdminController).
- *
  */
 public interface ReceiverAdminClient {
 
@@ -103,6 +102,10 @@ public interface ReceiverAdminClient {
 
     /**
      * Ask receiver to stop consumption and convert all segments to Immutable.
+     *
+     * If a replica set is removed from consumption task, coordinator will notify
+     *    its receivers and ask them to upload all data asap.
+     * Often happend in reassign action.
      */
     void makeCubeImmutable(Node receiver, String cubeName) throws IOException;
 

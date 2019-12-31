@@ -44,7 +44,8 @@ public class StreamingCubeRule implements IValidatorRule<CubeDesc> {
     public void validate(CubeDesc cube, ValidateContext context) {
         DataModelDesc model = cube.getModel();
         
-        if (model.getRootFactTable().getTableDesc().getSourceType() != ISourceAware.ID_STREAMING) {
+        if (model.getRootFactTable().getTableDesc().getSourceType() != ISourceAware.ID_STREAMING
+                && !model.getRootFactTable().getTableDesc().isStreamingTable()) {
             return;
         }
 

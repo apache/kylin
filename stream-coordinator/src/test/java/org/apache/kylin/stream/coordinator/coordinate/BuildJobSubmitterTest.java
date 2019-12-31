@@ -28,6 +28,7 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
+import org.apache.kylin.stream.coordinator.exception.StoreException;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -90,12 +91,12 @@ public class BuildJobSubmitterTest extends StreamingTestBase {
         assertEquals(1, buildJobSubmitter.getCubeCheckList().size());
     }
 
-    @Test
+    @Test(expected = StoreException.class)
     @SuppressWarnings("unchecked")
-    public void testTraceEarliestSegmentBuildJob2() throws IOException {
+    public void testTraceEarliestSegmentBuildJob2() {
         beforeTestTraceEarliestSegmentBuildJob();
         when(clusterManager.segmentBuildComplete(isA(CubingJob.class), isA(CubeInstance.class), isA(CubeSegment.class),
-                isA(SegmentJobBuildInfo.class))).thenThrow(IOException.class);
+                isA(SegmentJobBuildInfo.class))).thenThrow(StoreException.class);
         BuildJobSubmitter buildJobSubmitter = new BuildJobSubmitter(streamingCoordinator);
         buildJobSubmitter.restore();
         List<SegmentJobBuildInfo> jobList = buildJobSubmitter.traceEarliestSegmentBuildJob();
@@ -103,7 +104,7 @@ public class BuildJobSubmitterTest extends StreamingTestBase {
         assertEquals(0, buildJobSubmitter.getCubeCheckList().size());
     }
 
-    void prepareTestCheckSegmentBuidJobFromMetadata() {
+    void prepareTestCheckSegmentBuildJobFromMetadata() {
         CubeSegment cubeSegment = stubCubSegment(SegmentStatusEnum.NEW, 100L, 200L);
         CubeInstance cubeInstance = stubCubeInstance(cubeSegment);
         config = stubKylinConfig();
@@ -124,24 +125,24 @@ public class BuildJobSubmitterTest extends StreamingTestBase {
     }
 
     @Test
-    public void testCheckSegmentBuidJobFromMetadata() {
-        prepareTestCheckSegmentBuidJobFromMetadata();
+    public void testCheckSegmentBuildJobFromMetadata() {
+        prepareTestCheckSegmentBuildJobFromMetadata();
         BuildJobSubmitter buildJobSubmitter = new BuildJobSubmitter(streamingCoordinator);
         buildJobSubmitter.restore();
-        List<String> segmentReadyList = buildJobSubmitter.checkSegmentBuidJobFromMetadata(cubeName2);
+        List<String> segmentReadyList = buildJobSubmitter.checkSegmentBuildJobFromMetadata(cubeName2);
         assertEquals(1, segmentReadyList.size());
 
-        segmentReadyList = buildJobSubmitter.checkSegmentBuidJobFromMetadata(cubeName3);
+        segmentReadyList = buildJobSubmitter.checkSegmentBuildJobFromMetadata(cubeName3);
         assertEquals(1, segmentReadyList.size());
     }
 
     @Test
-    public void testCheckSegmentBuidJobFromMetadata1() {
-        prepareTestCheckSegmentBuidJobFromMetadata();
+    public void testCheckSegmentBuildJobFromMetadata1() {
+        prepareTestCheckSegmentBuildJobFromMetadata();
         BuildJobSubmitter buildJobSubmitter = new BuildJobSubmitter(streamingCoordinator);
         buildJobSubmitter.restore();
 
-        List<String> segmentReadyList = buildJobSubmitter.checkSegmentBuidJobFromMetadata(cubeName4);
+        List<String> segmentReadyList = buildJobSubmitter.checkSegmentBuildJobFromMetadata(cubeName4);
         verify(executableManager, times(1)).resumeJob(eq(mockBuildJob4));
         assertEquals(0, segmentReadyList.size());
     }

@@ -251,6 +251,23 @@ public class JobBuilderSupport {
         return true;
     }
 
+    public boolean isEnabledSparkDimensionDictionary() {
+        return config.getConfig().isSparkDimensionDictionaryEnabled();
+    }
+
+    public boolean isEnableUHCDictSparkStep() {
+        if (!config.getConfig().isSparkUHCDictionaryEnable()) {
+            return false;
+        }
+
+        List<TblColRef> uhcColumns = seg.getCubeDesc().getAllUHCColumns();
+        if (uhcColumns.size() == 0) {
+            return false;
+        }
+
+        return true;
+    }
+
     public LookupMaterializeContext addMaterializeLookupTableSteps(final CubingJob result) {
         LookupMaterializeContext lookupMaterializeContext = new LookupMaterializeContext(result);
         CubeDesc cubeDesc = seg.getCubeDesc();

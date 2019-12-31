@@ -42,7 +42,7 @@ public class JdbcHiveSparkInput extends JdbcHiveInputBase implements ISparkInput
     public static class JdbcSparkBatchCubingInputSide extends JdbcBaseBatchCubingInputSide implements ISparkBatchCubingInputSide {
 
         public JdbcSparkBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
-            super(flatDesc);
+            super(flatDesc, false);
         }
     }
 }

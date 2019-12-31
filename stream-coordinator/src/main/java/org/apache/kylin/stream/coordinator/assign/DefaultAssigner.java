@@ -33,12 +33,16 @@ import org.apache.kylin.stream.core.model.ReplicaSet;
 import org.apache.kylin.stream.core.source.Partition;
 
 import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default implementation for Assigner, assign according to the consumer task number for each cube
  *
  */
 public class DefaultAssigner implements Assigner {
+    private static final Logger logger = LoggerFactory.getLogger(DefaultAssigner.class);
+
     @Override
     public Map<Integer, Map<String, List<Partition>>> reBalancePlan(List<ReplicaSet> replicaSets,
             List<StreamingCubeInfo> cubes, List<CubeAssignment> existingAssignments) {
@@ -191,6 +195,11 @@ public class DefaultAssigner implements Assigner {
     private List<List<Partition>> splitCubeConsumeTasks(StreamingCubeInfo cube, int replicaSetNum) {
         List<Partition> partitionsOfCube = cube.getStreamingTableSourceInfo().getPartitions();
         int cubeConsumerTaskNum = getCubeConsumerTasks(cube, replicaSetNum);
+        int partitionsPerReceiver = partitionsOfCube.size()/cubeConsumerTaskNum ;
+        if (partitionsPerReceiver > 3 && replicaSetNum > cubeConsumerTaskNum) {
+            logger.info(
+                    "You may consider improve `kylin.stream.cube-num-of-consumer-tasks` because you still some quta left.");
+        }
         List<List<Partition>> result = Lists.newArrayListWithCapacity(cubeConsumerTaskNum);
         for (int i = 0; i < cubeConsumerTaskNum; i++) {
             result.add(Lists.<Partition>newArrayList());

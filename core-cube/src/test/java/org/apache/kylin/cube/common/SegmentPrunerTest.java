@@ -18,15 +18,21 @@
 
 package org.apache.kylin.cube.common;
 
+import static org.apache.kylin.metadata.filter.TupleFilter.and;
 import static org.apache.kylin.metadata.filter.TupleFilter.compare;
+import static org.apache.kylin.metadata.filter.TupleFilter.or;
 
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.SetAndUnsetSystemProp;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.DimensionRangeInfo;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
@@ -38,6 +44,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
+
+import java.util.Map;
 
 public class SegmentPrunerTest extends LocalFileMetadataTestCase {
     private CubeInstance cube;
@@ -189,6 +197,174 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
                 TupleFilter f = compare(col, FilterOperatorEnum.LT, start);
                 SegmentPruner segmentPruner = new SegmentPruner(f);
                 Assert.assertFalse(segmentPruner.check(seg));
+            }
+        }
+    }
+
+    @Test
+    public void testLegacyCubeSegWithOrFilter() {
+        // legacy cube segments does not have DimensionRangeInfo, but with TSRange can do some pruning
+        CubeInstance cube = CubeManager.getInstance(getTestConfig())
+                .getCube("test_kylin_cube_without_slr_left_join_ready_2_segments");
+
+        TblColRef col = cube.getModel().findColumn("TEST_KYLIN_FACT.CAL_DT");
+        TblColRef col2 = cube.getModel().findColumn("TEST_KYLIN_FACT.LSTG_SITE_ID");
+        CubeSegment seg = cube.getSegments(SegmentStatusEnum.READY).get(0);
+        Map<String, DimensionRangeInfo> dimensionRangeInfoMap = Maps.newHashMap();
+        dimensionRangeInfoMap.put("TEST_KYLIN_FACT.LSTG_SITE_ID", new DimensionRangeInfo("10", "20"));
+        seg.setDimensionRangeInfoMap(dimensionRangeInfoMap);
+        TSRange tsRange = seg.getTSRange();
+        String start = DateFormat.formatToTimeStr(tsRange.start.v, "yyyy-MM-dd");
+
+        CubeSegment seg2 = cube.getSegments(SegmentStatusEnum.READY).get(1);
+        Map<String, DimensionRangeInfo> dimensionRangeInfoMap2 = Maps.newHashMap();
+        dimensionRangeInfoMap2.put("TEST_KYLIN_FACT.LSTG_SITE_ID", new DimensionRangeInfo("20", "30"));
+        seg2.setDimensionRangeInfoMap(dimensionRangeInfoMap2);
+        TSRange tsRange2 = seg2.getTSRange();
+        String start2 = DateFormat.formatToTimeStr(tsRange2.start.v, "yyyy-MM-dd");
+
+        try (SetAndUnsetSystemProp sns = new SetAndUnsetSystemProp("kylin.query.skip-empty-segments", "false")) {
+            {
+                TupleFilter andFilter1 = compare(col, FilterOperatorEnum.EQ, start);
+                TupleFilter andFilter2 = compare(col2, FilterOperatorEnum.EQ, "15");
+                LogicalTupleFilter logicalAndFilter = and(andFilter1, andFilter2);
+
+                TupleFilter andFilter3 = compare(col, FilterOperatorEnum.EQ, start2);
+                TupleFilter andFilter4 = compare(col2, FilterOperatorEnum.EQ, "25");
+                LogicalTupleFilter logicalAndFilter2 = and(andFilter3, andFilter4);
+
+                LogicalTupleFilter finalFilter = or(logicalAndFilter, logicalAndFilter2);
+                SegmentPruner segmentPruner = new SegmentPruner(finalFilter);
+                Assert.assertTrue(segmentPruner.check(seg));
+                Assert.assertTrue(segmentPruner.check(seg2));
+            }
+
+            {
+                TupleFilter andFilter1 = compare(col, FilterOperatorEnum.EQ, start);
+                TupleFilter andFilter2 = compare(col2, FilterOperatorEnum.EQ, "15");
+                LogicalTupleFilter logicalAndFilter = and(andFilter1, andFilter2);
+
+                TupleFilter andFilter3 = compare(col, FilterOperatorEnum.EQ, start2);
+                TupleFilter andFilter4 = compare(col2, FilterOperatorEnum.EQ, "35");
+                LogicalTupleFilter logicalAndFilter2 = and(andFilter3, andFilter4);
+
+                LogicalTupleFilter finalFilter = or(logicalAndFilter, logicalAndFilter2);
+                SegmentPruner segmentPruner = new SegmentPruner(finalFilter);
+                Assert.assertTrue(segmentPruner.check(seg));
+                Assert.assertFalse(segmentPruner.check(seg2));
+            }
+
+            {
+                TupleFilter andFilter1 = compare(col, FilterOperatorEnum.EQ, start);
+                TupleFilter andFilter2 = compare(col2, FilterOperatorEnum.EQ, "15");
+                LogicalTupleFilter logicalAndFilter = and(andFilter1, andFilter2);
+
+                TupleFilter andFilter3 = compare(col, FilterOperatorEnum.EQ, start2);
+                TupleFilter andFilter4 = compare(col2, FilterOperatorEnum.EQ, "35");
+                LogicalTupleFilter logicalAndFilter2 = and(andFilter3, andFilter4);
+
+                LogicalTupleFilter finalFilter = and(logicalAndFilter, logicalAndFilter2);
+                SegmentPruner segmentPruner = new SegmentPruner(finalFilter);
+                Assert.assertFalse(segmentPruner.check(seg));
+                Assert.assertFalse(segmentPruner.check(seg2));
+            }
+
+            {
+                TupleFilter andFilter1 = compare(col, FilterOperatorEnum.EQ, start);
+                TupleFilter andFilter2 = compare(col2, FilterOperatorEnum.EQ, "15");
+                LogicalTupleFilter logicalAndFilter = and(andFilter1, andFilter2);
+
+                TupleFilter andFilter3 = compare(col, FilterOperatorEnum.LT, start2);
+                TupleFilter andFilter4 = compare(col2, FilterOperatorEnum.LT, "35");
+                LogicalTupleFilter logicalAndFilter2 = and(andFilter3, andFilter4);
+
+                LogicalTupleFilter finalFilter = and(logicalAndFilter, logicalAndFilter2);
+                SegmentPruner segmentPruner = new SegmentPruner(finalFilter);
+                Assert.assertTrue(segmentPruner.check(seg));
+                Assert.assertFalse(segmentPruner.check(seg2));
+            }
+
+            {
+                TupleFilter andFilter1 = compare(col, FilterOperatorEnum.EQ, start);
+                TupleFilter andFilter2 = compare(col2, FilterOperatorEnum.EQ, "35");
+                LogicalTupleFilter logicalAndFilter = or(andFilter1, andFilter2);
+
+                TupleFilter andFilter3 = compare(col, FilterOperatorEnum.EQ, start2);
+                TupleFilter andFilter4 = compare(col2, FilterOperatorEnum.LT, "35");
+                LogicalTupleFilter logicalAndFilter2 = or(andFilter3, andFilter4);
+
+                LogicalTupleFilter finalFilter = or(logicalAndFilter, logicalAndFilter2);
+                SegmentPruner segmentPruner = new SegmentPruner(finalFilter);
+                Assert.assertTrue(segmentPruner.check(seg));
+                Assert.assertTrue(segmentPruner.check(seg2));
+            }
+
+            {
+                TupleFilter andFilter1 = compare(col, FilterOperatorEnum.EQ, start);
+                TupleFilter andFilter2 = compare(col2, FilterOperatorEnum.IN, "15");
+                LogicalTupleFilter logicalAndFilter = and(andFilter1, andFilter2);
+
+                TupleFilter andFilter3 = compare(col, FilterOperatorEnum.EQ, start2);
+                TupleFilter andFilter4 = compare(col2, FilterOperatorEnum.LT, "35");
+                LogicalTupleFilter logicalAndFilter2 = or(andFilter3, andFilter4);
+
+                LogicalTupleFilter finalFilter = or(logicalAndFilter, logicalAndFilter2);
+                SegmentPruner segmentPruner = new SegmentPruner(finalFilter);
+                Assert.assertTrue(segmentPruner.check(seg));
+                Assert.assertTrue(segmentPruner.check(seg2));
+            }
+
+            {
+                TupleFilter andFilter1 = compare(col, FilterOperatorEnum.EQ, start);
+                TupleFilter andFilter2 = compare(col2, FilterOperatorEnum.EQ, "35");
+                LogicalTupleFilter logicalAndFilter = or(andFilter1, andFilter2);
+
+                TupleFilter andFilter3 = compare(col, FilterOperatorEnum.EQ, start2);
+                TupleFilter andFilter4 = compare(col2, FilterOperatorEnum.LT, "35");
+                LogicalTupleFilter logicalAndFilter2 = or(andFilter3, andFilter4);
+
+                LogicalTupleFilter finalFilter1 = or(logicalAndFilter, logicalAndFilter2);
+
+                TupleFilter andFilter5 = compare(col, FilterOperatorEnum.EQ, start);
+                TupleFilter andFilter6 = compare(col2, FilterOperatorEnum.IN, "15");
+                LogicalTupleFilter logicalAndFilter3 = and(andFilter5, andFilter6);
+
+                TupleFilter andFilter7 = compare(col, FilterOperatorEnum.EQ, start2);
+                TupleFilter andFilter8 = compare(col2, FilterOperatorEnum.LT, "35");
+                LogicalTupleFilter logicalAndFilter4 = or(andFilter7, andFilter8);
+
+                LogicalTupleFilter finalFilter2 = or(logicalAndFilter3, logicalAndFilter4);
+
+                LogicalTupleFilter finalFinalFilter = or(finalFilter1, finalFilter2);
+
+                SegmentPruner segmentPruner = new SegmentPruner(finalFinalFilter);
+                Assert.assertTrue(segmentPruner.check(seg));
+                Assert.assertTrue(segmentPruner.check(seg2));
+            }
+        }
+    }
+
+    @Test
+    public void testPruneSegWithFilterIN() {
+        // legacy cube segments does not have DimensionRangeInfo, but with TSRange can do some pruning
+        CubeInstance cube = CubeManager.getInstance(getTestConfig())
+                .getCube("test_kylin_cube_without_slr_left_join_ready_2_segments");
+        TblColRef col = cube.getModel().findColumn("TEST_KYLIN_FACT.CAL_DT");
+        CubeSegment seg = cube.getSegments(SegmentStatusEnum.READY).get(0);
+        TSRange tsRange = seg.getTSRange();
+        String start = DateFormat.formatToTimeStr(tsRange.start.v, "yyyy-MM-dd");
+        CubeSegment seg2 = cube.getSegments(SegmentStatusEnum.READY).get(1);
+        TSRange tsRange2 = seg2.getTSRange();
+        try (SetAndUnsetSystemProp sns = new SetAndUnsetSystemProp("kylin.query.skip-empty-segments", "false")) {
+
+            {
+                TupleFilter inFilter = new ConstantTupleFilter(Sets.newHashSet(start,
+                        DateFormat.formatToTimeStr(tsRange2.end.v + 1000 * 60 * 60 * 24L, "yyyy-MM-dd")));
+                TupleFilter filter = compare(col, FilterOperatorEnum.IN, inFilter);
+                SegmentPruner segmentPruner = new SegmentPruner(filter);
+                Assert.assertTrue(segmentPruner.check(seg));
+                Assert.assertFalse(segmentPruner.check(seg2));
+
             }
         }
     }

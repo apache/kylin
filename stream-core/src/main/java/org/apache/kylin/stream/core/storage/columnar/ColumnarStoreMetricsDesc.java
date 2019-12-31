@@ -68,7 +68,8 @@ public class ColumnarStoreMetricsDesc {
             return new LZ4CompressedColumnReader(dataBuffer, columnDataStartOffset, columnDataLength, rowCount);
         }
         if (fixLen != -1) {
-            return new NoCompressedColumnReader(dataBuffer, columnDataStartOffset, columnDataLength, rowCount);
+            return new NoCompressedColumnReader(dataBuffer, columnDataStartOffset, columnDataLength / rowCount,
+                    rowCount);
         }
         return new GeneralColumnDataReader(dataBuffer, columnDataStartOffset, columnDataLength);
     }
@@ -79,7 +80,8 @@ public class ColumnarStoreMetricsDesc {
             return new FSInputLZ4CompressedColumnReader(inputStream, columnDataStartOffset, columnDataLength, rowCount);
         }
         if (fixLen != -1) {
-            return new FSInputNoCompressedColumnReader(inputStream, columnDataStartOffset, columnDataLength, rowCount);
+            return new FSInputNoCompressedColumnReader(inputStream, columnDataStartOffset, columnDataLength / rowCount,
+                    rowCount);
         }
         return new FSInputGeneralColumnDataReader(inputStream, columnDataStartOffset, columnDataLength);
     }

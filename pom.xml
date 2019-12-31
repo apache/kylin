@@ -92,7 +92,7 @@
     <reflections.version>0.9.10</reflections.version>
 
     <!-- Calcite Version, the kylin fork is: https://github.com/Kyligence/calcite -->
-    <calcite.version>1.16.0-kylin-r2</calcite.version>
+    <calcite.version>1.16.0-kylin-r3</calcite.version>
     <avatica.version>1.12.0</avatica.version>
 
     <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
@@ -300,6 +300,11 @@
       <dependency>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-engine-spark</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-engine-flink</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -981,6 +986,10 @@
         <groupId>redis.clients</groupId>
         <artifactId>jedis</artifactId>
         <version>${jedis.version}</version>
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-cas</artifactId>
+        <version>${spring.framework.security.version}</version>
       </dependency>
 
       <dependency>
@@ -1108,7 +1117,7 @@
     <repository>
       <id>kyligence</id>
       <name>Kyligence Repository</name>
-      <url>http://repository.kyligence.io/repository/maven-public/
+      <url>http://repository.kyligence.io:8081/repository/maven-public/
       </url>
       <releases>
         <enabled>true</enabled>
@@ -1347,6 +1356,7 @@
     <module>stream-coordinator</module>
     <module>stream-core</module>
     <module>stream-source-kafka</module>
+    <module>engine-flink</module>
   </modules>
 
   <reporting>

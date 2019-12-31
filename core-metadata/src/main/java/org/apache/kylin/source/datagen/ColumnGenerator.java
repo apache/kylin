@@ -28,6 +28,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.TreeSet;
 
@@ -179,7 +180,7 @@ public class ColumnGenerator {
                 // double
                 return formatNumber(randomDouble());
             } else {
-                throw new IllegalStateException();
+                throw new NoSuchElementException();
             }
         }
 
@@ -224,6 +225,9 @@ public class ColumnGenerator {
 
         @Override
         public String next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
             return "" + (next++);
         }
     }

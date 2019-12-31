@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -77,8 +78,6 @@ public class UserController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     private static final SimpleGrantedAuthority ALL_USERS_AUTH = new SimpleGrantedAuthority(Constant.GROUP_ALL_USERS);
-
-    private static final String ACTIVE_PROFILES_NAME = "spring.profiles.active";
 
     @Autowired
     @Qualifier("userService")
@@ -134,8 +133,8 @@ public class UserController extends BasicController {
     }
 
     private void checkProfileEditAllowed() {
-        String activeProfiles = System.getProperty(ACTIVE_PROFILES_NAME);
-        if (!"testing".equals(activeProfiles) && !"custom".equals(activeProfiles)) {
+        String securityProfile = KylinConfig.getInstanceFromEnv().getSecurityProfile();
+        if (!"testing".equals(securityProfile) && !"custom".equals(securityProfile)) {
             throw new BadRequestException("Action not allowed!");
         }
     }

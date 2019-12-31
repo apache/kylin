@@ -18,10 +18,62 @@
 
 'use strict';
 
-KylinApp.controller('LoginCtrl', function ($scope, $rootScope, $location, $base64, AuthenticationService, UserService,ProjectService,ProjectModel) {
+KylinApp.controller('LoginCtrl', function ($scope, $rootScope, $location, $base64, $window, $log, AuthenticationService, UserService, ProjectService, ProjectModel, kylinConfig) {
   $scope.username = null;
   $scope.password = null;
   $scope.loading = false;
+
+  $scope.authn = null;
+
+  $scope.init = function () {
+    if (!kylinConfig.isInitialized()) {
+      kylinConfig.init().$promise.then(function (data) {
+        $scope.initCustomAuthnMethods();
+      });
+    } else {
+      $scope.initCustomAuthnMethods();
+    }
+  };
+
+  $scope.initCustomAuthnMethods = function () {
+    var profile = kylinConfig.getProperty('kylin.security.profile');
+    var additionalProfiles = kylinConfig.getProperty('kylin.security.additional-profiles');
+    if (profile !== 'custom' || !additionalProfiles) {
+      return;
+    }
+    var additions = additionalProfiles.split(',');
+    for (var i = 0; i < additions.length; i++) {
+      var prof = additions[i].trim();
+      if (!prof || !prof.startsWith('authn-'))
+        continue;
+      $scope.authn = $scope.createAuthnMethodInfo(prof.substr(6));
+      break;
+    }
+  };
+
+  $scope.createAuthnMethodInfo = function (method) {
+    if (method === 'cas') {
+      return $scope.createCASAuthnMethod();
+    }
+    if (method === 'saml') {
+      return $scope.createSAMLAuthnMethod();
+    }
+
+    $log.error('Not supported authentication method');
+    return null;
+  };
+
+  $scope.createCASAuthnMethod = function () {
+    return {label: 'CAS Login', loginEntry: 'cas/login', singleSignOut: true, logoutEntry: 'cas/logout'}
+  };
+
+  $scope.createSAMLAuthnMethod = function () {
+    return {label: 'SAML Login', loginEntry: 'saml/login', singleSignOut: true, logoutEntry: 'saml/logout'}
+  };
+
+  $scope.redirectLoginEntry = function (authn) {
+    $window.location.href = authn.loginEntry;
+  };
 
   $scope.login = function () {
     $rootScope.userAction.islogout = false;
@@ -41,4 +93,6 @@ KylinApp.controller('LoginCtrl', function ($scope, $rootScope, $location, $base6
         : "System error, please contact your administrator.";
     });
   };
+
+  $scope.init();
 });

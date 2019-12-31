@@ -306,21 +306,23 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         }
 
         // replace projects with dynamic fields
-        Map<TblColRef, RelDataType> dynFields = this.context.dynamicFields;
-        for (TblColRef dynFieldCol : dynFields.keySet()) {
-            String replaceFieldName = dynFieldCol.getName();
-            int rowIndex = this.columnRowType.getIndexByName(replaceFieldName);
-            if (rowIndex >= 0) {
-                int inputIndex = inputColumnRowType.getIndexByName(replaceFieldName);
-                if (inputIndex >= 0) {
-                    // field to be replaced
-                    RelDataType fieldType = dynFields.get(dynFieldCol);
-                    RelDataTypeField newField = new RelDataTypeFieldImpl(replaceFieldName, rowIndex, fieldType);
-                    // project to be replaced
-                    RelDataTypeField inputField = getInput().getRowType().getFieldList().get(inputIndex);
-                    RexInputRef newFieldRef = new RexInputRef(inputField.getIndex(), inputField.getType());
+        if (this.context.afterAggregate) {
+            Map<TblColRef, RelDataType> dynFields = this.context.dynamicFields;
+            for (TblColRef dynFieldCol : dynFields.keySet()) {
+                String replaceFieldName = dynFieldCol.getName();
+                int rowIndex = this.columnRowType.getIndexByName(replaceFieldName);
+                if (rowIndex >= 0) {
+                    int inputIndex = inputColumnRowType.getIndexByName(replaceFieldName);
+                    if (inputIndex >= 0) {
+                        // field to be replaced
+                        RelDataType fieldType = dynFields.get(dynFieldCol);
+                        RelDataTypeField newField = new RelDataTypeFieldImpl(replaceFieldName, rowIndex, fieldType);
+                        // project to be replaced
+                        RelDataTypeField inputField = getInput().getRowType().getFieldList().get(inputIndex);
+                        RexInputRef newFieldRef = new RexInputRef(inputField.getIndex(), inputField.getType());
 
-                    replaceFieldMap.put(rowIndex, new Pair<RelDataTypeField, RexNode>(newField, newFieldRef));
+                        replaceFieldMap.put(rowIndex, new Pair<RelDataTypeField, RexNode>(newField, newFieldRef));
+                    }
                 }
             }
         }

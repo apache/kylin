@@ -395,6 +395,11 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     @Override
     public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
+        // If sqlDiegest is already adjusted, then not to adjust it again.
+        if (sqlDigest.isBorrowedContext) {
+            return;
+        }
+
         if (sqlDigest.aggregations.size() > 1) {
             return;
         }

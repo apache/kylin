@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Strings;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,6 +34,8 @@ import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
@@ -43,6 +46,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryInfoSerializer;
 import org.apache.kylin.dict.DictionaryManager;
+import org.apache.kylin.engine.mr.common.CubeJobLockUtil;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -60,6 +64,7 @@ public class SaveDictStep extends AbstractExecutable {
 
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+        logger.info("job {} start to run SaveDictStep", getJobFlowJobId());
         final CubeManager mgr = CubeManager.getInstance(context.getConfig());
         final DictionaryManager dictManager = DictionaryManager.getInstance(context.getConfig());
 
@@ -141,6 +146,10 @@ public class SaveDictStep extends AbstractExecutable {
                 fs.delete(fileElem.getPath(), true);
             }
 
+            if (getIsNeedReleaseLock()) {
+                releaseLock();
+            }
+
             return new ExecuteResult();
         } catch (IOException e) {
             logger.error("fail to save cuboid dictionaries", e);
@@ -152,4 +161,76 @@ public class SaveDictStep extends AbstractExecutable {
     public void cleanup() throws ExecuteException {
         super.cleanup();
     }
+
+    public void setIsNeedReleaseLock(Boolean isNeedReleaseLock) {
+        setParam("isNeedReleaseLock", String.valueOf(isNeedReleaseLock));
+    }
+
+    public boolean getIsNeedReleaseLock() {
+        String isNeedReleaseLock = getParam("isNeedReleaseLock");
+        return Strings.isNullOrEmpty(isNeedReleaseLock) ? false : Boolean.parseBoolean(isNeedReleaseLock);
+    }
+
+    public void setLockPathName(String pathName) {
+        setParam("lockPathName", pathName);
+    }
+
+    public String getLockPathName() {
+        return getParam("lockPathName");
+    }
+
+    public void setJobFlowJobId(String jobId) {
+        setParam("jobFlowJobId", jobId);
+    }
+
+    public String getJobFlowJobId() {
+        return getParam("jobFlowJobId");
+    }
+
+    private void releaseLock() {
+        DistributedLock lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentThread();
+        String parentLockPath = getCubeJobLockParentPathName();
+        String ephemeralLockPath = getEphemeralLockPathName();
+
+        if (lock.isLocked(getCubeJobLockPathName())) {
+            lock.purgeLocks(parentLockPath);
+            logger.info("{} unlock full lock path :{} success", getId(), parentLockPath);
+        }
+
+        if (lock.isLocked(ephemeralLockPath)) {
+            lock.purgeLocks(ephemeralLockPath);
+            logger.info("{} unlock full lock path :{} success", getId(), ephemeralLockPath);
+        }
+    }
+
+    private String getEphemeralLockPathName() {
+        String pathName = getLockPathName();
+        if (Strings.isNullOrEmpty(pathName)) {
+            throw new IllegalArgumentException("cube job lock path name is null");
+        }
+
+        return CubeJobLockUtil.getEphemeralLockPath(pathName);
+    }
+
+    private String getCubeJobLockPathName() {
+        String pathName = getLockPathName();
+        if (Strings.isNullOrEmpty(pathName)) {
+            throw new IllegalArgumentException("cube job lock path name is null");
+        }
+
+        String flowJobId = getJobFlowJobId();
+        if (Strings.isNullOrEmpty(flowJobId)) {
+            throw new IllegalArgumentException("cube job lock path flowJobId is null");
+        }
+        return CubeJobLockUtil.getLockPath(pathName, flowJobId);
+    }
+
+    private String getCubeJobLockParentPathName() {
+        String pathName = getLockPathName();
+        if (Strings.isNullOrEmpty(pathName)) {
+            throw new IllegalArgumentException(" create mr hive dict lock path name is null");
+        }
+        return CubeJobLockUtil.getLockPath(pathName, null);
+    }
+
 }
