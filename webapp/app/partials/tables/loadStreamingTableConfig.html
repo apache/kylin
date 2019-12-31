@@ -82,8 +82,9 @@
         <div class="form-group">
           <label for="TSPattern" class="col-sm-3 control-label font-color-default">TSPattern</label>
           <div class="col-sm-9">
-            <select id="TSPattern" chosen ng-model="streaming.TSPattern" ng-options="TSPattern as TSPattern for TSPattern in streaming.TSPatternArr" data-placeholder="select a time pattern" style="width: 360px !important;" class="chosen-select"></select>
+            <select id="TSPattern" chosen ng-model="selectedTsPattern" ng-options="TSPattern as TSPattern for TSPattern in streaming.TSPatternArr" data-placeholder="select a time pattern" style="width: 360px !important;" class="chosen-select" ng-change="updateTsPatternOption(selectedTsPattern)"></select>
           </div>
+          <input ng-if="selfDefinedTsPattern" type="text" id="RealTSPattern" ng-model="streaming.TSPattern" name="realTSPattern" style="margin-top:10px;margin-left:200px;width:360px" placeholder="Input Your TSPattern" required autofocus>
         </div>
 
         <div>
