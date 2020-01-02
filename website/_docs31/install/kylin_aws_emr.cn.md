@@ -10,8 +10,8 @@ permalink: /cn/docs31/install/kylin_aws_emr.html
 
 
 ### 推荐版本
-* AWS EMR 5.7 (EMR 5.8 及以上，请查看 [KYLIN-3129](https://issues.apache.org/jira/browse/KYLIN-3129))
-* Apache Kylin v2.2.0 or above for HBase 1.x
+* AWS EMR 5.27
+* Apache Kylin v3.0.0 or above for HBase 1.x
 
 
 
@@ -23,23 +23,29 @@ permalink: /cn/docs31/install/kylin_aws_emr.html
 
 如果您使用 S3 作为 HBase 的存储，您需要自定义配置为 `hbase.rpc.timeout`，由于 S3 的大容量负载是一个复制操作，当数据规模比较大时，HBase Region 服务器比在 HDFS 上将花费更多的时间等待其完成。
 
+如果您希望EMR的Hive使用一个外部的元数据，您可以考虑使用RDS或者AWS Glue。那样您就可以在云上环境构建一个stateless的OLAP服务了。
+
+让我们通过AWS CLI创建一个EMR 集群，并且开启（当然以下几项是可选的）
+1. S3作为HBase数据存储
+2. AWS Glue作为Hive元数据
+3. 开启S3元数据一致性以防止数据文件丢失
+
 ```
-[  {
-    "Classification": "hbase-site",
-    "Properties": {
-      "hbase.rpc.timeout": "3600000",
-      "hbase.rootdir": "s3://yourbucket/EMRROOT"
-    }
-  },
-  {
-    "Classification": "hbase",
-    "Properties": {
-      "hbase.emr.storageMode": "s3"
-    }
-  }
-]
+aws emr create-cluster --applications Name=Hadoop Name=Hive Name=Pig Name=HBase Name=Spark Name=Sqoop Name=Tez  Name=ZooKeeper \
+	--release-label emr-5.28.0 \
+	--instance-groups '[{"InstanceCount":2,"EbsConfiguration":{"EbsBlockDeviceConfigs":[{"VolumeSpecification":{"SizeInGB":50,"VolumeType":"gp2"},"VolumesPerInstance":1}]},"InstanceGroupType":"CORE","InstanceType":"m5.xlarge","Name":"Worker Node"},{"InstanceCount":1,"EbsConfiguration":{"EbsBlockDeviceConfigs":[{"VolumeSpecification":{"SizeInGB":100,"VolumeType":"gp2"},"VolumesPerInstance":1}]},"InstanceGroupType":"MASTER","InstanceType":"m5.xlarge","Name":"Master Node"}]' \
+	--configurations '[{"Classification":"hbase","Properties":{"hbase.emr.storageMode":"s3"}},{"Classification":"hbase-site","Properties":{"hbase.rootdir":"s3://{S3_BUCKET}/hbase/data","hbase.rpc.timeout": "3600000"}},{"Classification":"hive-site","Properties":{"hive.metastore.client.factory.class":"com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"}}]' \
+	--name 'Kylin3.0Cluster_Original' \
+	--emrfs Consistent=true \
+	--region cn-northwest-1
 ```
 
+### 支持AWS Glue作为Hive元数据存储
+
+如果你需要开启Glue作为Hive元数据, 请参考`https://github.com/awslabs/aws-glue-data-catalog-client-for-apache-hive-metastore` 来进行打包。你需要获取以下jar：
+
+1. aws-glue-datacatalog-client-common-xxx.jar
+2. aws-glue-datacatalog-hive2-client-xxx.jar
 
 
 ### 安装 Kylin
@@ -50,8 +56,8 @@ permalink: /cn/docs31/install/kylin_aws_emr.html
 sudo mkdir /usr/local/kylin
 sudo chown hadoop /usr/local/kylin
 cd /usr/local/kylin
-wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz
-tar -zxvf apache-kylin-2.5.0-bin-hbase1x.tar.gz
+wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-3.0.0/apache-kylin-3.0.0-bin-hbase1x.tar.gz
+tar -zxvf apache-kylin-3.0.0-bin-hbase1x.tar.gz
 ```
 
 ### 配置 Kylin
@@ -138,12 +144,69 @@ hadoop fs -mkdir /kylin
 hadoop fs -mkdir s3://yourbucket/kylin
 ```
 
+### 解决包冲突
+
+- 将以下内容添加到 ~/.bashrc
+
+```sh
+export HIVE_HOME=/usr/lib/hive
+export HADOOP_HOME=/usr/lib/hadoop
+export HBASE_HOME=/usr/lib/hbase
+export SPARK_HOME=/usr/lib/spark
+
+export KYLIN_HOME=/home/ec2-user/apache-kylin-3.0.0-SNAPSHOT-bin
+export HCAT_HOME=/usr/lib/hive-hcatalog
+export KYLIN_CONF_HOME=$KYLIN_HOME/conf
+export tomcat_root=$KYLIN_HOME/tomcat
+export hive_dependency=$HIVE_HOME/conf:$HIVE_HOME/lib/:$HIVE_HOME/lib/hive-hcatalog-core.jar:$SPARK_HOME/jars/
+export PATH=$KYLIN_HOME/bin:$PATH
+
+export hive_dependency=$HIVE_HOME/conf:$HIVE_HOME/lib/*:$HIVE_HOME/lib/hive-hcatalog-core.jar:/usr/share/aws/hmclient/lib/*:$SPARK_HOME/jars/*:$HBASE_HOME/lib/*.jar:$HBASE_HOME/*.jar
+```
+
+- 暂时删除 joda.jar
+
+```sh
+mv $HIVE_HOME/lib/jackson-datatype-joda-2.4.6.jar $HIVE_HOME/lib/jackson-datatype-joda-2.4.6.jar.backup
+```
+
+- 修改 bin/kylin.sh
+
+将以下内容添加到 bin/kylin.sh的 开始
+
+```sh
+export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:$hive_dependency:$HBASE_CLASSPATH_PREFIX
+```
+
+### 开启支持Glue作为Hive数据源(可选的)
+- 把`aws-glue-datacatalog-client-common-xxx.jar`和`aws-glue-datacatalog-hive2-client-xxx.jar`放到 `$KYLIN_HOME/lib`目录下
+- 在`kylin.properties`中修改`kylin.source.hive.metadata-type=gluecatalog`
+
+### 配置 Spark
+
+- 对Spark进行打包
+
+```sh
+rm -rf $KYLIN_HOME/spark_jars
+mkdir $KYLIN_HOME/spark_jars
+cp /usr/lib/spark/jars/*.jar $KYLIN_HOME/spark_jars
+cp -f /usr/lib/hbase/lib/*.jar $KYLIN_HOME/spark_jars
+
+rm -f netty-3.9.9.Final.jar 
+rm -f netty-all-4.1.8.Final.jar
+
+ jar cv0f spark-libs.jar -C $KYLIN_HOME/spark_jars .
+aws s3 cp spark-libs.jar s3://{YOUR_BUCKET}/kylin/package/  # You choose s3 as your working-dir
+hadoop fs -put spark-libs.jar hdfs://kylin/package/  # You choose hdfs as your working-dir
+```
+
+- 在 `kylin.properties`设置`kylin.engine.spark-conf.spark.yarn.archive=PATH_TO_SPARK_LIB` 
+
 ### 启动 Kylin
 
 启动和在普通 Hadoop 上一样:
 
 ```sh
-export KYLIN_HOME=/usr/local/kylin/apache-kylin-2.2.0-bin
 $KYLIN_HOME/bin/sample.sh
 $KYLIN_HOME/bin/kylin.sh start
 ```
@@ -151,26 +214,6 @@ $KYLIN_HOME/bin/kylin.sh start
 别忘记在 EMR master - "ElasticMapReduce-master" 的安全组中启用 7070 端口访问，或使用 SSH 连接 master 节点，然后您可以使用 `http://<master-dns>:7070/kylin` 访问 Kylin Web GUI。
 
 Build 同一个 Cube，当 Cube 准备好后运行查询。您可以浏览 S3 查看数据是否安全的持久化了。
-
-
-
-### Spark 配置
-
-EMR 的 Spark 版本很可能与 Kylin 编译的版本不一致，因此您通常不能直接使用 EMR 打包的 Spark 用于 Kylin 的任务。 您需要在启动 Kylin 之前，将 "SPARK_HOME" 环境变量设置指向 Kylin 的 Spark 子目录 (KYLIN_HOME/spark) 。此外，为了从 Spark 中访问 S3 或 EMRFS 上的文件，您需要将 EMR 的扩展类从 EMR 的目录拷贝到 Kylin 的 Spark 下。
-
-```sh
-export SPARK_HOME=$KYLIN_HOME/spark
-
-cp /usr/lib/hadoop-lzo/lib/*.jar $KYLIN_HOME/spark/jars/
-cp /usr/share/aws/emr/emrfs/lib/emrfs-hadoop-assembly-*.jar $KYLIN_HOME/spark/jars/
-cp /usr/lib/hadoop/hadoop-common*-amzn-*.jar $KYLIN_HOME/spark/jars/
-
-$KYLIN_HOME/bin/kylin.sh start
-```
-
-您也可以参考 EMR Spark 的 spark-defaults 来设置 Kylin 的 Spark 配置，以获得更好的对集群资源的适配。
-
-
 
 ### 关闭 EMR 集群
 
@@ -185,7 +228,18 @@ bash /usr/lib/hbase/bin/disable_all_tables.sh
 为了用同样的 Hbase 数据重启一个集群，可在 AWS Management Console 中指定和之前集群相同的 Amazon S3 位置或使用 `hbase.rootdir` 配置属性。更多的 EMR HBase 信息，参考 [HBase on Amazon S3](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-hbase-s3.html)
 
 	
-## 在专用的 EC2 上部署 Kylin 
+### 在专用的 EC2 上部署 Kylin 
 
 推荐在专门的 client 节点上运行 Kylin (而不是 master，core 或 task)。启动一个和您 EMR 有同样 VPC 与子网的独立 EC2 实例，从 master 节点复制 Hadoop clients 到该实例，然后在其中安装 Kylin。这可提升 Kylin 自身与 master 节点中服务的稳定性。 
 	
+### 其他问题
+
+如果将S3配置为您的working-dir，并且发现了"Wrong FS"异常，请尝试修改 `$KYLIN_HOME/conf/kylin_hive_conf.xml`，`/etc/hive/conf/hive-site.xml`，`/etc/hadoop/conf/core-site.xml`。 
+
+```xml
+  <property>
+    <name>fs.defaultFS</name>
+    <value>s3://{YOUR_BUCKET}</value>
+    <!--<value>hdfs://ip-172-31-6-58.cn-northwest-1.compute.internal:8020</value>-->
+  </property>
+```
