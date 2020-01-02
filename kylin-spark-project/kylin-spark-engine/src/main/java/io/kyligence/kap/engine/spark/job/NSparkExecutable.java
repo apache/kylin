@@ -111,10 +111,9 @@ public class NSparkExecutable extends AbstractExecutable {
             throw new RuntimeException("Missing spark home");
         }
 
-        //config.overrideMRJobJarPath("/Users/rupeng.wang/Kyligence/Developments/kylin/kylin-parquet/parquet-assembly/target/parquet-assembly-3.0.0-SNAPSHOT-job.jar");
-        String kylinJobJar = config.getKylinJobJarPath();
+        String kylinJobJar = config.getKylinParquetJobJarPath();
         if (StringUtils.isEmpty(kylinJobJar) && !config.isUTEnv()) {
-            throw new RuntimeException("Missing kylin job jar");
+            throw new RuntimeException("Missing kylin parquet job jar");
         }
         String hadoopConf = System.getProperty("kylin.hadoop.conf.dir");
         logger.info("write hadoop conf is {} ", config.getBuildConf());

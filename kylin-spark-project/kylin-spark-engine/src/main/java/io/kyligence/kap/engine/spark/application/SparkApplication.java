@@ -143,7 +143,6 @@ public abstract class SparkApplication {
                 }
             }
 
-
             // for wrapping credential
 
             TimeZoneUtils.setDefaultTimeZone(config);
@@ -165,7 +164,6 @@ public abstract class SparkApplication {
             }
 
             sparkConf.set("spark.io.compression.codec", "snappy");
-
             ss = SparkSession.builder().withExtensions(new AbstractFunction1<SparkSessionExtensions, BoxedUnit>() {
                 @Override
                 public BoxedUnit apply(SparkSessionExtensions v1) {
@@ -178,7 +176,6 @@ public abstract class SparkApplication {
                     return BoxedUnit.UNIT;
                 }
             }).enableHiveSupport().config(sparkConf).config("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false")
-                    //.master("local")
                     .getOrCreate();
 
             //JoinMemoryManager.releaseAllMemory();

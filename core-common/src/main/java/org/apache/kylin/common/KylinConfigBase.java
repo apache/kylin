@@ -63,6 +63,7 @@ public abstract class KylinConfigBase implements Serializable {
     private static final String TRUE = "true";
     private static final String DEFAULT = "default";
     private static final String KYLIN_ENGINE_MR_JOB_JAR = "kylin.engine.mr.job-jar";
+    private static final String KYLIN_ENGINE_PARQUET_JOB_JAR = "kylin.engine.parquet.job-jar";
     private static final String KYLIN_STORAGE_HBASE_COPROCESSOR_LOCAL_JAR = "kylin.storage.hbase.coprocessor-local-jar";
     private static final String FILE_SCHEME = "file:";
     private static final String MAPRFS_SCHEME = "maprfs:";
@@ -1170,6 +1171,7 @@ public abstract class KylinConfigBase implements Serializable {
 
     private static final Pattern COPROCESSOR_JAR_NAME_PATTERN = Pattern.compile("kylin-coprocessor-(.+)\\.jar");
     private static final Pattern JOB_JAR_NAME_PATTERN = Pattern.compile("kylin-job-(.+)\\.jar");
+    private static final Pattern PARQUET_JOB_JAR_NAME_PATTERN = Pattern.compile("kylin-parquet-job-(.+)\\.jar");
 
     public String getCoprocessorLocalJar() {
         final String coprocessorJar = getOptional(KYLIN_STORAGE_HBASE_COPROCESSOR_LOCAL_JAR);
@@ -1333,6 +1335,23 @@ public abstract class KylinConfigBase implements Serializable {
 
     public int getDefaultCubeEngine() {
         return Integer.parseInt(getOptional("kylin.engine.default", "2"));
+    }
+
+    public String getKylinParquetJobJarPath() {
+        final String jobJar = getOptional(KYLIN_ENGINE_PARQUET_JOB_JAR);
+        if (StringUtils.isNotEmpty(jobJar)) {
+            return jobJar;
+        }
+        String kylinHome = getKylinHome();
+        if (StringUtils.isEmpty(kylinHome)) {
+            return "";
+        }
+        return getFileName(kylinHome + File.separator + "lib", PARQUET_JOB_JAR_NAME_PATTERN);
+    }
+
+    public void overrideKylinParquetJobJarPath(String path) {
+        logger.info("override {} to {}", KYLIN_ENGINE_PARQUET_JOB_JAR, path);
+        System.setProperty(KYLIN_ENGINE_PARQUET_JOB_JAR, path);
     }
 
     public String getKylinJobJarPath() {

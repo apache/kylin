@@ -89,6 +89,10 @@ public class DebugTomcat {
         if (devJobJar != null) {
             conf.overrideMRJobJarPath(devJobJar.getAbsolutePath());
         }
+        File parquetJobJar = findFile("../parquet-assembly/target", "parquet-assembly-.*-SNAPSHOT-job.jar");
+        if (parquetJobJar != null) {
+            conf.overrideKylinParquetJobJarPath(parquetJobJar.getAbsolutePath());
+        }
         File devCoprocessorJar = findFile("../storage-hbase/target", "kylin-storage-hbase-.*-SNAPSHOT-coprocessor.jar");
         if (devCoprocessorJar != null) {
             conf.overrideCoprocessorLocalJar(devCoprocessorJar.getAbsolutePath());
