@@ -152,6 +152,11 @@ public class QueryUtil {
                 msg = "ArithmeticException: " + cause.getMessage();
                 break;
             }
+
+            if (cause.getClass().getName().contains("NumberFormatException")) {
+                msg = "NumberFormatException: " + cause.getMessage();
+                break;
+            }
             cause = cause.getCause();
         }
 
