@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import com.google.common.base.Preconditions;
 
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
@@ -42,18 +41,12 @@ import org.apache.calcite.sql.SqlWith;
 import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlVisitor;
-import org.apache.calcite.sql.validate.SqlValidatorException;
 
 import org.apache.commons.lang.text.StrBuilder;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.exception.QueryOnCubeException;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
-import org.apache.kylin.metadata.realization.NoRealizationFoundException;
-import org.apache.kylin.metadata.realization.RoutingIndicatorException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,28 +69,6 @@ public class PushDownUtil {
             String sql, String defaultSchema, boolean isPrepare) throws Exception {
         PushDownExecutor executor = new PushDownExecutor();
         return executor.pushDownQuery(project, sql, defaultSchema, null, true, isPrepare);
-    }
-
-    private static boolean isExpectedCause(SQLException sqlException) {
-        Preconditions.checkArgument(sqlException != null);
-        Throwable rootCause = ExceptionUtils.getRootCause(sqlException);
-
-        //SqlValidatorException is not an excepted exception in the origin design.But in the multi pass scene,
-        //query pushdown may create tables, and the tables are not in the model, so will throw SqlValidatorException.
-        boolean isPushDownUpdateEnabled = KylinConfig.getInstanceFromEnv().isPushDownUpdateEnabled();
-
-        if (!isPushDownUpdateEnabled) {
-            return rootCause != null //
-                    && (rootCause instanceof NoRealizationFoundException //
-                            || rootCause instanceof RoutingIndicatorException
-                            || rootCause instanceof QueryOnCubeException);
-        } else {
-            return (rootCause != null //
-                    && (rootCause instanceof NoRealizationFoundException //
-                            || rootCause instanceof SqlValidatorException //
-                            || rootCause instanceof RoutingIndicatorException //
-                            || rootCause instanceof QueryOnCubeException)); //
-        }
     }
 
     static String schemaCompletion(String inputSql, String schema) throws SqlParseException {

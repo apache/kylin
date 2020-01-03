@@ -113,24 +113,18 @@ public class RowRecordReader extends ColumnarFilesReader {
         metricsDataTransformers = Lists.newArrayList();
         for (MetricMetaInfo metricMetaInfo : basicCuboidMetaInfo.getMetricsInfo()) {
             FSDataInputStream metricsInputStream = fs.open(dataFilePath);
-            try {
-                MeasureDesc measure = findMeasure(metricMetaInfo.getName());
-                DataType metricsDataType = measure.getFunction().getReturnDataType();
-                ColumnarMetricsEncoding metricsEncoding = ColumnarMetricsEncodingFactory.create(metricsDataType);
-                ColumnarStoreMetricsDesc metricsDesc = new ColumnarStoreMetricsDesc(metricsEncoding,
-                        metricMetaInfo.getCompressionType());
-                ColumnDataReader metricsDataReader = metricsDesc.getMetricsReaderFromFSInput(metricsInputStream,
-                        metricMetaInfo.getStartOffset(), metricMetaInfo.getMetricLength(),
-                        (int) basicCuboidMetaInfo.getNumberOfRows());
-                metricsColumnReaders.add(metricsDataReader);
-                metricsColumnReaderItrs.add(metricsDataReader.iterator());
-                metricsDataTransformers.add(new MetricsDataTransformer(metricsEncoding.asDataTypeSerializer(),
-                        DataTypeSerializer.create(metricsDataType)));
-            } finally {
-                if (null != metricsInputStream) {
-                    metricsInputStream.close();
-                }
-            }
+            MeasureDesc measure = findMeasure(metricMetaInfo.getName());
+            DataType metricsDataType = measure.getFunction().getReturnDataType();
+            ColumnarMetricsEncoding metricsEncoding = ColumnarMetricsEncodingFactory.create(metricsDataType);
+            ColumnarStoreMetricsDesc metricsDesc = new ColumnarStoreMetricsDesc(metricsEncoding,
+                    metricMetaInfo.getCompressionType());
+            ColumnDataReader metricsDataReader = metricsDesc.getMetricsReaderFromFSInput(metricsInputStream,
+                    metricMetaInfo.getStartOffset(), metricMetaInfo.getMetricLength(),
+                    (int) basicCuboidMetaInfo.getNumberOfRows());
+            metricsColumnReaders.add(metricsDataReader);
+            metricsColumnReaderItrs.add(metricsDataReader.iterator());
+            metricsDataTransformers.add(new MetricsDataTransformer(metricsEncoding.asDataTypeSerializer(),
+                    DataTypeSerializer.create(metricsDataType)));
         }
         rowMetricsValues = new byte[metricsColumnReaders.size()][];
     }
