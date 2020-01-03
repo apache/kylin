@@ -18,16 +18,22 @@
 
 package org.apache.kylin.query.util;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.sql.parser.SqlParseException;
 
+import org.apache.calcite.sql.validate.SqlValidatorException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.exception.QueryOnCubeException;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.apache.kylin.metadata.realization.NoRealizationFoundException;
+import org.apache.kylin.metadata.realization.RoutingIndicatorException;
 import org.apache.kylin.query.adhoc.PushDownRunnerJdbcImpl;
 import org.apache.kylin.source.adhocquery.IPushDownRunner;
 
@@ -53,7 +59,23 @@ public class PushDownExecutor {
             String sql, String defaultSchema, SQLException sqlException, boolean isSelect,
             boolean isPrepare) throws Exception {
         List<String> ids = kylinConfig.getPushDownRunnerIds();
-        if (ids.isEmpty() && kylinConfig.getPushDownRunnerClassName() != null) {
+
+        if (kylinConfig.isPushDownEnabled()) {
+            return null;
+        }
+
+        if (isSelect) {
+            logger.info("Query failed to utilize pre-calculation, routing to other engines", sqlException);
+            if (!isExpectedCause(sqlException)) {
+                logger.info("quit doPushDownQuery because prior exception thrown is unexpected");
+                return null;
+            }
+        } else {
+            Preconditions.checkState(sqlException == null);
+            logger.info("Kylin cannot support non-select queries, routing to other engines");
+        }
+
+        if (ids.isEmpty() && StringUtils.isNotEmpty(kylinConfig.getPushDownRunnerClassName())) {
             IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(
                     kylinConfig.getPushDownRunnerClassName()
             );
@@ -65,6 +87,29 @@ public class PushDownExecutor {
                     isSelect, isPrepare);
         }
     }
+
+    private static boolean isExpectedCause(SQLException sqlException) {
+        Preconditions.checkArgument(sqlException != null);
+        Throwable rootCause = ExceptionUtils.getRootCause(sqlException);
+
+        //SqlValidatorException is not an excepted exception in the origin design.But in the multi pass scene,
+        //query pushdown may create tables, and the tables are not in the model, so will throw SqlValidatorException.
+        boolean isPushDownUpdateEnabled = KylinConfig.getInstanceFromEnv().isPushDownUpdateEnabled();
+
+        if (!isPushDownUpdateEnabled) {
+            return rootCause != null //
+                    && (rootCause instanceof NoRealizationFoundException //
+                    || rootCause instanceof RoutingIndicatorException
+                    || rootCause instanceof QueryOnCubeException);
+        } else {
+            return (rootCause != null //
+                    && (rootCause instanceof NoRealizationFoundException //
+                    || rootCause instanceof SqlValidatorException //
+                    || rootCause instanceof RoutingIndicatorException //
+                    || rootCause instanceof QueryOnCubeException)); //
+        }
+    }
+
 
     private Pair<List<List<String>>, List<SelectedColumnMeta>> queryBySingleRunner(IPushDownRunner runner,
             String project, String sql, String defaultSchema, SQLException sqlException,
