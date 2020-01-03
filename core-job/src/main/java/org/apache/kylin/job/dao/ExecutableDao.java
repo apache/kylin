@@ -378,11 +378,28 @@ public class ExecutableDao {
 
     public void deleteJob(String uuid) throws PersistentException {
         try {
+            ExecutablePO executablePO = getJob(uuid);
             store.deleteResource(pathOfJob(uuid));
             executableDigestMap.remove(uuid);
+            removeJobOutput(executablePO);
         } catch (IOException e) {
             logger.error("error delete job:" + uuid, e);
             throw new PersistentException(e);
+        }
+    }
+
+    private void removeJobOutput(ExecutablePO executablePO) {
+        List<String> toDeletePaths = Lists.newArrayList();
+        try {
+            toDeletePaths.add(pathOfJobOutput(executablePO.getUuid()));
+            for (ExecutablePO task : executablePO.getTasks()) {
+                toDeletePaths.add(pathOfJobOutput(task.getUuid()));
+            }
+            for (String path : toDeletePaths) {
+                store.deleteResource(path);
+            }
+        } catch (Exception e) {
+            logger.warn("error delete job output:" + executablePO.getUuid(), e);
         }
     }
 
