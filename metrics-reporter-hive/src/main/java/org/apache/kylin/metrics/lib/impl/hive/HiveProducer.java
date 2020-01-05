@@ -14,25 +14,24 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metrics.lib.impl.hive;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hive.cli.CliSessionState;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
@@ -42,16 +41,17 @@ import org.apache.kylin.metrics.lib.ActiveReservoirReporter;
 import org.apache.kylin.metrics.lib.Record;
 import org.apache.kylin.metrics.lib.impl.TimePropertyEnum;
 import org.apache.kylin.metrics.lib.impl.hive.HiveProducerRecord.RecordKey;
+import org.apache.kylin.source.hive.HiveMetaStoreClientFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 
 public class HiveProducer {
 
@@ -93,7 +93,7 @@ public class HiveProducer {
                 .build(new CacheLoader<Pair<String, String>, Pair<String, List<FieldSchema>>>() {
                     @Override
                     public Pair<String, List<FieldSchema>> load(Pair<String, String> tableName) throws Exception {
-                        HiveMetaStoreClient metaStoreClient = new HiveMetaStoreClient(hiveConf);
+                        IMetaStoreClient metaStoreClient = HiveMetaStoreClientFactory.getHiveMetaStoreClient(hiveConf);
                         String tableLocation = metaStoreClient.getTable(tableName.getFirst(), tableName.getSecond())
                                 .getSd().getLocation();
                         List<FieldSchema> fields = metaStoreClient.getFields(tableName.getFirst(),
@@ -262,7 +262,7 @@ public class HiveProducer {
     }
 
     public HiveProducerRecord parseToHiveProducerRecord(String tableName, Map<String, String> partitionKVs,
-            Map<String, Object> rawValue) throws Exception {
+                                                        Map<String, Object> rawValue) throws Exception {
         Pair<String, String> tableNameSplits = ActiveReservoirReporter.getTableNameSplits(tableName);
         List<FieldSchema> fields = tableFieldSchemaCache.get(tableNameSplits).getSecond();
         List<Object> columnValues = Lists.newArrayListWithExpectedSize(fields.size());
