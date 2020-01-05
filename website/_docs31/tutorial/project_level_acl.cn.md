@@ -9,7 +9,7 @@ since: v2.1.0
 
 ## 项目级别权限控制
 
-用户是否可以访问一个项目并使用项目中的功能取决于项目级别的权限控制，Kylin 中共有 4 种角色。分别是 *ADMIN*，*MANAGEMENT*，*OPERATION* 和 *QUERY*。每个角色对应不同的功能。
+用户是否可以访问一个项目并使用项目中的功能取决于项目级别的权限控制，Kylin 中共有 4 种默认用户组。分别是 *ADMIN*，*MANAGEMENT*，*OPERATION* 和 *QUERY*。每个用户组对应不同的功能。
 
 - *QUERY*：适用于只需在项目中有查询表/cube 权限的分析师。
 - *OPERATION*：该角色适用于需维护 Cube 的公司/组织中的运营团队。OPERATION 包含 QUERY 的所有权限。
@@ -60,7 +60,7 @@ since: v2.1.0
 
 5. 您也可以在该页面移除或更新权限。
 
-   ![](/images/Project-level-acl/ACL-3.png)
+   ![](/images/Project-level-acl/ACL-3-1.png)
 
    请注意，为了向默认用户（MODELER 和 ANALYST）授予权限，这些用户至少需要登录一次。
    ​
@@ -79,8 +79,58 @@ since: v2.1.0
 
 	![](/images/Table-level-acl/ACL-1.png)
 
-4. 选择 type（有 user 和 role 两种），在下拉框中选择 User / Role name 并点击 `Submit` 进行授权
+4. 选择 type（有 user 和 group 两种），在下拉框中选择 User / Group name 并点击 `Submit` 进行授权
 
 5. 您也可以在该页面删除该权限。
 
    ![](/images/Table-level-acl/ACL-2.png) 
+   
+   
+## 用户和用户组
+从 v3.0 开始，Kylin支持用户和用户组的创建。 
+
+用户组是一组用户的集合，用户组中的用户通过用户组共享相同的访问权限。其中 ALL_USERS 组是一个默认的用户组，用户被创建后，即进入该组，也就是说，所有用户都包含在 ALL_USERS 用户组中。
+当用户组与用户组中的用户被同时赋予某一项目级／行级／表级／列级权限时，用户的权限取两者最大权限。
+
+![](/images/Project-level-acl/User_Group_Management.png) 
+
+#### 创建用户
+所有使用 Kylin 的用户都需要使用账号和对应密码登录。 
+在用户管理页面，系统管理员可以点击 "+User"，在弹出框输入账号名(TestAccount)和密码(至少一个字母、一个数字和一个符号，例如abc.1234)来创建新用户。
+
+![](/images/Project-level-acl/Create_User.png) 
+
+#### 创建用户组
+在用户组管理页面，系统管理员可以点击 "+Group"，在弹出框输入用户组名来创建新用户组。
+
+![](/images/Project-level-acl/Create_Group.png) 
+
+#### 管理用户   
+
+- 启用、禁用用户
+
+系统管理员可以启用或禁用用户，用户被禁用后将不可再登录系统。
+
+![](/images/Project-level-acl/Disable_User.png) 
+
+- 修改密码
+
+在弹出窗口中，系统管理员可以更改密码。
+
+![](/images/Project-level-acl/Change_Password.png) 
+
+- 删除用户
+
+系统管理员可以弹出窗口中确认删除用户，用户被删除后将不能恢复，删除用户将删除用户在所有项目上的访问权限。
+
+- 分配用户组
+
+将某个用户分配到特定组，可以更加方便地管理对一群用户进行权限管理。
+
+![](/images/Project-level-acl/Assign_User_Group.png) 
+![](/images/Project-level-acl/Assign_User_Group_2.png) 
+
+#### 管理用户组
+
+- 分配用户到用户组
+- 删除用户组
