@@ -18,20 +18,19 @@
 
 package org.apache.kylin.metrics.lib.impl.hive;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.cli.CliSessionState;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
@@ -41,16 +40,17 @@ import org.apache.kylin.metrics.lib.ActiveReservoirReporter;
 import org.apache.kylin.metrics.lib.Record;
 import org.apache.kylin.metrics.lib.impl.TimePropertyEnum;
 import org.apache.kylin.metrics.lib.impl.hive.HiveProducerRecord.RecordKey;
+import org.apache.kylin.source.hive.HiveMetaStoreClientFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 
 public class HiveProducer {
 
@@ -62,13 +62,12 @@ public class HiveProducer {
     private final FileSystem fileSystem;
     private final LoadingCache<Pair<String, String>, Pair<String, List<FieldSchema>>> tableFieldSchemaCache;
     private final String CONTENT_FILE_NAME;
-    private FSDataOutputStream fout;
-    private long partId = 0;
-
     /**
      * Some cloud file system, like AWS S3, didn't support append action to exist file.
      */
     private final boolean supportAppend;
+    private FSDataOutputStream fout;
+    private long partId = 0;
 
     public HiveProducer(Properties props) throws Exception {
         this(props, new HiveConf());
@@ -90,7 +89,7 @@ public class HiveProducer {
         }).maximumSize(CACHE_MAX_SIZE).build(new CacheLoader<Pair<String, String>, Pair<String, List<FieldSchema>>>() {
             @Override
             public Pair<String, List<FieldSchema>> load(Pair<String, String> tableName) throws Exception {
-                HiveMetaStoreClient metaStoreClient = new HiveMetaStoreClient(hiveConf);
+                IMetaStoreClient metaStoreClient = HiveMetaStoreClientFactory.getHiveMetaStoreClient(hiveConf);
                 String tableLocation = metaStoreClient.getTable(tableName.getFirst(), tableName.getSecond()).getSd().getLocation();
                 logger.debug("Find table location for {} at {}", tableName.getSecond(), tableLocation);
                 List<FieldSchema> fields = metaStoreClient.getFields(tableName.getFirst(), tableName.getSecond());
