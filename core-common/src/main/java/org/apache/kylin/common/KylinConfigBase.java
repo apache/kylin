@@ -18,6 +18,20 @@
 
 package org.apache.kylin.common;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.lock.DistributedLockFactory;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -32,21 +46,6 @@ import java.util.SortedSet;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.text.StrSubstitutor;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.kylin.common.lock.DistributedLockFactory;
-import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.common.util.CliCommandExecutor;
-import org.apache.kylin.common.util.HadoopUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 /**
  * An abstract class to encapsulate access to a set of 'properties'.
@@ -1100,6 +1099,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getHiveIntermediateTablePrefix() {
         return getOptional("kylin.source.hive.intermediate-table-prefix", "kylin_intermediate_");
+    }
+
+    public String getHiveMetaDataType() {
+        return getOptional("kylin.source.hive.metadata-type", "hcatalog");
     }
 
     // ============================================================================
