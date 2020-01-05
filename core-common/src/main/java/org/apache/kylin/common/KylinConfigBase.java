@@ -1163,6 +1163,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.source.hive.intermediate-table-prefix", "kylin_intermediate_");
     }
 
+    public String getHiveMetaDataType() {
+        return getOptional("kylin.source.hive.metadata-type", "hcatalog");
+    }
+
     // ============================================================================
     // SOURCE.KAFKA
     // ============================================================================

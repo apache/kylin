@@ -36,7 +36,10 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-metrics</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-source-hive</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.hive.hcatalog</groupId>
             <artifactId>hive-hcatalog-core</artifactId>
