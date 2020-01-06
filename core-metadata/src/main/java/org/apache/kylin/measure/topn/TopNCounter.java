@@ -238,18 +238,18 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
         }
     }
 
-    private static final Comparator ASC_COMPARATOR = new Comparator<Counter>() {
+    static final Comparator ASC_COMPARATOR = new Comparator<Counter>() {
         @Override
         public int compare(Counter o1, Counter o2) {
-            return o1.getCount() > o2.getCount() ? 1 : o1.getCount() == o2.getCount() ? 0 : -1;
+            return Double.compare(o1.getCount(), o2.getCount());
         }
 
     };
 
-    private static final Comparator DESC_COMPARATOR = new Comparator<Counter>() {
+    static final Comparator DESC_COMPARATOR = new Comparator<Counter>() {
         @Override
         public int compare(Counter o1, Counter o2) {
-            return o1.getCount() > o2.getCount() ? -1 : o1.getCount() == o2.getCount() ? 0 : 1;
+            return Double.compare(o2.getCount(), o1.getCount());
         }
 
     };
