@@ -24,7 +24,10 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Test;
+
+import com.google.common.collect.Lists;
 
 public class TopNCounterBasicTest {
 
@@ -129,5 +132,49 @@ public class TopNCounterBasicTest {
             assertTrue(Arrays.asList("A", "B", "X").contains(c.getItem()));
         }
 
+    }
+
+    @Test
+    public void testComparatorSymmetry() {
+        List<Counter> counters = Lists.newArrayList(new Counter<>("item", 0d), new Counter<>("item", 0d),
+                new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 0d),
+                new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 3d),
+                new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 0d),
+                new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 0d),
+                new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 0d),
+                new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 0d),
+                new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 0d),
+                new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 0d),
+                new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 0d),
+                new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 0d),
+                new Counter<>("item", 0d), new Counter<>("item", 1d), new Counter<>("item", 1d),
+                new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 1d),
+                new Counter<>("item", 0d), new Counter<>("item", 1d), new Counter<>("item", 0d),
+                new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 0d),
+                new Counter<>("item", 1d), new Counter<>("item", 0d), new Counter<>("item", 0d),
+                new Counter<>("item", 1d), new Counter<>("item", 0d), new Counter<>("item", 0d),
+                new Counter<>("item", 0d), new Counter<>("item", 2d), new Counter<>("item", 1d),
+                new Counter<>("item", 0d), new Counter<>("item", 0d), new Counter<>("item", 0d),
+                new Counter<>("item", 2d), new Counter<>("item", 4d), new Counter<>("item", 0d),
+                new Counter<>("item", 3d));
+        counters.sort(TopNCounter.ASC_COMPARATOR);
+        List<Double> expectedCounts = Lists.newArrayList(0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d,
+                0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d,
+                0d, 0d, 0d, 0d, 0d, 0d, 1d, 1d, 1d, 1d, 1d, 1d, 1d, 2d, 2d, 3d, 3d, 4d);
+        List<Double> originCounts = Lists.newArrayList();
+        counters.stream().forEach(counter -> {
+            originCounts.add(counter.getCount());
+        });
+        Assert.assertArrayEquals(expectedCounts.toArray(), originCounts.toArray());
+
+        counters.sort(TopNCounter.DESC_COMPARATOR);
+        List<Double> expectedDescCounts = Lists.newArrayList(4d, 3d, 3d, 2d, 2d, 1d, 1d, 1d, 1d, 1d, 1d, 1d, 0d, 0d, 0d,
+                0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d,
+                0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d);
+        List<Double> originDescCounts = Lists.newArrayList();
+        counters.stream().forEach(counter -> {
+            originDescCounts.add(counter.getCount());
+        });
+        Assert.assertArrayEquals(expectedDescCounts.toArray(), originDescCounts.toArray());
     }
 }
