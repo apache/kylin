@@ -58,9 +58,8 @@ public class PushDownExecutor {
     public Pair<List<List<String>>, List<SelectedColumnMeta>> pushDownQuery(String project,
             String sql, String defaultSchema, SQLException sqlException, boolean isSelect,
             boolean isPrepare) throws Exception {
-        List<String> ids = kylinConfig.getPushDownRunnerIds();
 
-        if (kylinConfig.isPushDownEnabled()) {
+        if (!kylinConfig.isPushDownEnabled()) {
             return null;
         }
 
@@ -74,6 +73,8 @@ public class PushDownExecutor {
             Preconditions.checkState(sqlException == null);
             logger.info("Kylin cannot support non-select queries, routing to other engines");
         }
+
+        List<String> ids = kylinConfig.getPushDownRunnerIds();
 
         if (ids.isEmpty() && StringUtils.isNotEmpty(kylinConfig.getPushDownRunnerClassName())) {
             IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(
