@@ -75,12 +75,12 @@ class ParentSourceChooser(
     flatTableSource.addCuboid(entity)
   }
 
-  private def decideParentLayoutSource(entity: LayoutEntity, layout: LayoutEntity): Unit = {
-    val id = layout.getId
+  private def decideParentLayoutSource(entity: LayoutEntity, parentLayout: LayoutEntity): Unit = {
+    val id = parentLayout.getId
     if (reuseSources.containsKey(id)) {
       reuseSources.get(id).addCuboid(entity)
     } else {
-      val source = getSourceFromLayout(layout)
+      val source = getSourceFromLayout(parentLayout)
       reuseSources.put(id, source)
     }
   }
@@ -162,6 +162,7 @@ class ParentSourceChooser(
     val flatTable = new CreateFlatTable(seg, toBuildTree, ss, sourceInfo)
     val afterJoin: Dataset[Row] = flatTable.generateDataset(needEncoding, true)
     sourceInfo.setFlattableDS(afterJoin)
+    sourceInfo.setCount(afterJoin.count())
 
     logInfo("No suitable ready layouts could be reused, generate dataset from flat table.")
     sourceInfo

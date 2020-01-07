@@ -47,6 +47,7 @@ import org.apache.kylin.engine.spark.metadata.cube.model.ForestSpanningTree;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -110,7 +111,7 @@ public class CubeBuildJob extends SparkApplication {
                 }
                 infos.recordSpanningTree(segId, spanningTree);
 
-                updateSegmentInfo(getParam(MetadataConstants.P_CUBE_ID), seg);
+                updateSegmentInfo(getParam(MetadataConstants.P_CUBE_ID), seg, buildFromFlatTable.getCount());
             }
             updateSegmentSourceBytesSize(getParam(MetadataConstants.P_CUBE_ID), ResourceDetectUtils.getSegmentSourceSize(shareDir));
         } finally {
@@ -134,7 +135,8 @@ public class CubeBuildJob extends SparkApplication {
         cubeManager.updateCube(update);
     }
 
-    private void updateSegmentInfo(String cubeId, SegmentInfo segmentInfo) throws IOException {
+    private void updateSegmentInfo(String cubeId, SegmentInfo segmentInfo, long sourceRowCount)
+            throws IOException {
         CubeInstance cubeInstance = cubeManager.getCubeByUuid(cubeId);
         CubeInstance cubeCopy = cubeInstance.latestCopyForWrite();
         CubeUpdate update = new CubeUpdate(cubeCopy);
@@ -143,6 +145,9 @@ public class CubeBuildJob extends SparkApplication {
         CubeSegment segment = cubeCopy.getSegmentById(segmentInfo.id());
         segment.setSizeKB(segmentInfo.getAllLayoutSize() / 1024);
         segment.setLastBuildTime(System.currentTimeMillis());
+        segment.setLastBuildJobID(getParam(MetadataConstants.P_JOB_ID));
+        segment.setInputRecords(sourceRowCount);
+        segment.setStatus(SegmentStatusEnum.READY);
         cubeSegments.add(segment);
         update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
         cubeManager.updateCube(update);
@@ -171,6 +176,8 @@ public class CubeBuildJob extends SparkApplication {
         }
         update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
         cubeManager.updateCube(update);
+
+        updateMetaAfterBuilding(update);
     }
 
     private void build(Collection<NBuildSourceInfo> buildSourceInfos, SegmentInfo seg, SpanningTree st) {
