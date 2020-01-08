@@ -98,7 +98,7 @@
 - name: Hua Huang (黄桦)
   apacheId: hhuang
   githubId: superhua
-  org: MiningLAMP
+  org: Alibaba
   role: PMC
 - name: Dong Li (李栋)
   apacheId: lidong
@@ -118,7 +118,7 @@
 - name: Luwei Chen (陈露薇)
   apacheId: chenluwei
   githubId: LouisaChen
-  org: 
+  org: Google
   role: committer
 - name: Yanghong Zhong (钟阳红)
   apacheId: nju_yaho
