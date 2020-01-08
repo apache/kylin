@@ -143,7 +143,7 @@
 - name: Roger Shi (施继承)
   apacheId: sjc
   githubId: rogercloud
-  org: Alibaba
+  org: Google
   role: committer
 - name: Zhixiong Chen (陈志雄)
   apacheId: chen
@@ -158,7 +158,7 @@
 - name: Guosheng Lu (陆国圣)
   apacheId: boblu
   githubId: luguosheng1314
-  org: Kyligence Inc.
+  org: Meituan
   role: committer
 - name: Jianhua Peng (彭建华)
   apacheId: pengjianhua
@@ -188,7 +188,7 @@
 - name: Jiatao Tao (陶加涛)
   apacheId: tao
   githubId: aaaaaaron
-  org: Kyligence Inc.
+  org: ByteDance
   role: committer
 - name: Chao Long (龙超)
   apacheId: chao
@@ -208,5 +208,5 @@
 - name: Xiaoxiang Yu (俞霄翔)
   apacheId: xxyu
   githubId: hit-lacus
-  org: Kyligence 
+  org: Kyligence Inc.
   role: committer
