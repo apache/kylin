@@ -47,7 +47,7 @@ public class FixedCachedRowSetImpl extends CachedRowSetImpl {
         super(env);
     }
 
-    private int getColIdxByName(String name) throws SQLException {
+    private int getColumnIdxByName(String name) throws SQLException {
         rowSetMD = (RowSetMetaDataImpl) this.getMetaData();
         int cols = rowSetMD.getColumnCount();
 
@@ -64,262 +64,262 @@ public class FixedCachedRowSetImpl extends CachedRowSetImpl {
 
     @Override
     public Collection<?> toCollection(String column) throws SQLException {
-        return toCollection(getColIdxByName(column));
+        return toCollection(getColumnIdxByName(column));
     }
 
     @Override
     public String getString(String columnName) throws SQLException {
-        return getString(getColIdxByName(columnName));
+        return getString(getColumnIdxByName(columnName));
     }
 
     @Override
     public boolean getBoolean(String columnName) throws SQLException {
-        return getBoolean(getColIdxByName(columnName));
+        return getBoolean(getColumnIdxByName(columnName));
     }
 
     @Override
     public byte getByte(String columnName) throws SQLException {
-        return getByte(getColIdxByName(columnName));
+        return getByte(getColumnIdxByName(columnName));
     }
 
     @Override
     public short getShort(String columnName) throws SQLException {
-        return getShort(getColIdxByName(columnName));
+        return getShort(getColumnIdxByName(columnName));
     }
 
     @Override
     public int getInt(String columnName) throws SQLException {
-        return getInt(getColIdxByName(columnName));
+        return getInt(getColumnIdxByName(columnName));
     }
 
     @Override
     public long getLong(String columnName) throws SQLException {
-        return getLong(getColIdxByName(columnName));
+        return getLong(getColumnIdxByName(columnName));
     }
 
     @Override
     public float getFloat(String columnName) throws SQLException {
-        return getFloat(getColIdxByName(columnName));
+        return getFloat(getColumnIdxByName(columnName));
     }
 
     @Override
     public double getDouble(String columnName) throws SQLException {
-        return getDouble(getColIdxByName(columnName));
+        return getDouble(getColumnIdxByName(columnName));
     }
 
     @Override
     public byte[] getBytes(String columnName) throws SQLException {
-        return getBytes(getColIdxByName(columnName));
+        return getBytes(getColumnIdxByName(columnName));
     }
 
     @Override
     public java.sql.Date getDate(String columnName) throws SQLException {
-        return getDate(getColIdxByName(columnName));
+        return getDate(getColumnIdxByName(columnName));
     }
 
     @Override
     public java.sql.Time getTime(String columnName) throws SQLException {
-        return getTime(getColIdxByName(columnName));
+        return getTime(getColumnIdxByName(columnName));
     }
 
     @Override
     public java.sql.Timestamp getTimestamp(String columnName) throws SQLException {
-        return getTimestamp(getColIdxByName(columnName));
+        return getTimestamp(getColumnIdxByName(columnName));
     }
 
     @Override
     public java.io.InputStream getAsciiStream(String columnName) throws SQLException {
-        return getAsciiStream(getColIdxByName(columnName));
+        return getAsciiStream(getColumnIdxByName(columnName));
 
     }
 
     @Override
     public java.io.InputStream getBinaryStream(String columnName) throws SQLException {
-        return getBinaryStream(getColIdxByName(columnName));
+        return getBinaryStream(getColumnIdxByName(columnName));
     }
 
     @Override
     public Object getObject(String columnName) throws SQLException {
-        return getObject(getColIdxByName(columnName));
+        return getObject(getColumnIdxByName(columnName));
     }
 
     @Override
     public int findColumn(String columnName) throws SQLException {
-        return getColIdxByName(columnName);
+        return getColumnIdxByName(columnName);
     }
 
     @Override
     public java.io.Reader getCharacterStream(String columnName) throws SQLException {
-        return getCharacterStream(getColIdxByName(columnName));
+        return getCharacterStream(getColumnIdxByName(columnName));
     }
 
     @Override
     public BigDecimal getBigDecimal(String columnName) throws SQLException {
-        return getBigDecimal(getColIdxByName(columnName));
+        return getBigDecimal(getColumnIdxByName(columnName));
     }
 
     @Override
     public boolean columnUpdated(String columnName) throws SQLException {
-        return columnUpdated(getColIdxByName(columnName));
+        return columnUpdated(getColumnIdxByName(columnName));
     }
 
     @Override
     public void updateNull(String columnName) throws SQLException {
-        updateNull(getColIdxByName(columnName));
+        updateNull(getColumnIdxByName(columnName));
     }
 
     @Override
     public void updateBoolean(String columnName, boolean x) throws SQLException {
-        updateBoolean(getColIdxByName(columnName), x);
+        updateBoolean(getColumnIdxByName(columnName), x);
     }
 
     @Override
     public void updateByte(String columnName, byte x) throws SQLException {
-        updateByte(getColIdxByName(columnName), x);
+        updateByte(getColumnIdxByName(columnName), x);
     }
 
     @Override
     public void updateShort(String columnName, short x) throws SQLException {
-        updateShort(getColIdxByName(columnName), x);
+        updateShort(getColumnIdxByName(columnName), x);
     }
 
     @Override
     public void updateInt(String columnName, int x) throws SQLException {
-        updateInt(getColIdxByName(columnName), x);
+        updateInt(getColumnIdxByName(columnName), x);
     }
 
     @Override
     public void updateLong(String columnName, long x) throws SQLException {
-        updateLong(getColIdxByName(columnName), x);
+        updateLong(getColumnIdxByName(columnName), x);
     }
 
     @Override
     public void updateFloat(String columnName, float x) throws SQLException {
-        updateFloat(getColIdxByName(columnName), x);
+        updateFloat(getColumnIdxByName(columnName), x);
     }
 
     @Override
     public void updateDouble(String columnName, double x) throws SQLException {
-        updateDouble(getColIdxByName(columnName), x);
+        updateDouble(getColumnIdxByName(columnName), x);
     }
 
     @Override
     public void updateBigDecimal(String columnName, BigDecimal x) throws SQLException {
-        updateBigDecimal(getColIdxByName(columnName), x);
+        updateBigDecimal(getColumnIdxByName(columnName), x);
     }
 
     @Override
     public void updateString(String columnName, String x) throws SQLException {
-        updateString(getColIdxByName(columnName), x);
+        updateString(getColumnIdxByName(columnName), x);
     }
 
     @Override
     public void updateBytes(String columnName, byte[] x) throws SQLException {
-        updateBytes(getColIdxByName(columnName), x);
+        updateBytes(getColumnIdxByName(columnName), x);
     }
 
     @Override
     public void updateDate(String columnName, java.sql.Date x) throws SQLException {
-        updateDate(getColIdxByName(columnName), x);
+        updateDate(getColumnIdxByName(columnName), x);
     }
 
     @Override
     public void updateTime(String columnName, java.sql.Time x) throws SQLException {
-        updateTime(getColIdxByName(columnName), x);
+        updateTime(getColumnIdxByName(columnName), x);
     }
 
     @Override
     public void updateTimestamp(String columnName, java.sql.Timestamp x) throws SQLException {
-        updateTimestamp(getColIdxByName(columnName), x);
+        updateTimestamp(getColumnIdxByName(columnName), x);
     }
 
     @Override
     public void updateAsciiStream(String columnName, java.io.InputStream x, int length) throws SQLException {
-        updateAsciiStream(getColIdxByName(columnName), x, length);
+        updateAsciiStream(getColumnIdxByName(columnName), x, length);
     }
 
     @Override
     public void updateBinaryStream(String columnName, java.io.InputStream x, int length) throws SQLException {
-        updateBinaryStream(getColIdxByName(columnName), x, length);
+        updateBinaryStream(getColumnIdxByName(columnName), x, length);
     }
 
     @Override
     public void updateCharacterStream(String columnName, java.io.Reader reader, int length) throws SQLException {
-        updateCharacterStream(getColIdxByName(columnName), reader, length);
+        updateCharacterStream(getColumnIdxByName(columnName), reader, length);
     }
 
     @Override
     public void updateObject(String columnName, Object x, int scale) throws SQLException {
-        updateObject(getColIdxByName(columnName), x, scale);
+        updateObject(getColumnIdxByName(columnName), x, scale);
     }
 
     @Override
     public void updateObject(String columnName, Object x) throws SQLException {
-        updateObject(getColIdxByName(columnName), x);
+        updateObject(getColumnIdxByName(columnName), x);
     }
 
     @Override
     public Object getObject(String columnName, java.util.Map<String, Class<?>> map) throws SQLException {
-        return getObject(getColIdxByName(columnName), map);
+        return getObject(getColumnIdxByName(columnName), map);
     }
 
     @Override
     public Ref getRef(String colName) throws SQLException {
-        return getRef(getColIdxByName(colName));
+        return getRef(getColumnIdxByName(colName));
     }
 
     @Override
     public Blob getBlob(String colName) throws SQLException {
-        return getBlob(getColIdxByName(colName));
+        return getBlob(getColumnIdxByName(colName));
     }
 
     @Override
     public Clob getClob(String colName) throws SQLException {
-        return getClob(getColIdxByName(colName));
+        return getClob(getColumnIdxByName(colName));
     }
 
     @Override
     public Array getArray(String colName) throws SQLException {
-        return getArray(getColIdxByName(colName));
+        return getArray(getColumnIdxByName(colName));
     }
 
     @Override
     public java.sql.Date getDate(String columnName, Calendar cal) throws SQLException {
-        return getDate(getColIdxByName(columnName), cal);
+        return getDate(getColumnIdxByName(columnName), cal);
     }
 
     @Override
     public java.sql.Time getTime(String columnName, Calendar cal) throws SQLException {
-        return getTime(getColIdxByName(columnName), cal);
+        return getTime(getColumnIdxByName(columnName), cal);
     }
 
     @Override
     public java.sql.Timestamp getTimestamp(String columnName, Calendar cal) throws SQLException {
-        return getTimestamp(getColIdxByName(columnName), cal);
+        return getTimestamp(getColumnIdxByName(columnName), cal);
     }
 
     @Override
     public void updateRef(String columnName, java.sql.Ref ref) throws SQLException {
-        updateRef(getColIdxByName(columnName), ref);
+        updateRef(getColumnIdxByName(columnName), ref);
     }
 
     @Override
     public void updateClob(String columnName, Clob c) throws SQLException {
-        updateClob(getColIdxByName(columnName), c);
+        updateClob(getColumnIdxByName(columnName), c);
     }
 
     @Override
     public void updateBlob(String columnName, Blob b) throws SQLException {
-        updateBlob(getColIdxByName(columnName), b);
+        updateBlob(getColumnIdxByName(columnName), b);
     }
 
     @Override
     public void updateArray(String columnName, Array a) throws SQLException {
-        updateArray(getColIdxByName(columnName), a);
+        updateArray(getColumnIdxByName(columnName), a);
     }
 
     @Override
     public java.net.URL getURL(String columnName) throws SQLException {
-        return getURL(getColIdxByName(columnName));
+        return getURL(getColumnIdxByName(columnName));
     }
 }
