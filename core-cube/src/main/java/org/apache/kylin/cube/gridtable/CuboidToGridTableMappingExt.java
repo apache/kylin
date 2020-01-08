@@ -51,10 +51,10 @@ public class CuboidToGridTableMappingExt extends CuboidToGridTableMapping {
         super(cuboid);
         this.dynDims = dynDims;
         this.dynFuncs = dynFuncs;
-        init();
+        initialize();
     }
 
-    private void init() {
+    private void initialize() {
         dynGtDataTypes = Lists.newArrayList();
         dynGtColBlocks = Lists.newArrayList();
         dynDim2gt = Maps.newHashMap();
