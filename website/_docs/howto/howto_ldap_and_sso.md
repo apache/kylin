@@ -18,12 +18,13 @@ cd $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/lib
 java -classpath kylin-server-base-\<versioin\>.jar:kylin-core-common-\<versioin\>.jar:spring-beans-4.3.10.RELEASE.jar:spring-core-4.3.10.RELEASE.jar:commons-codec-1.7.jar org.apache.kylin.rest.security.PasswordPlaceholderConfigurer AES <your_password>
 ```
 
-Config them in the conf/kylin.properties:
+Config them in the conf/kylin.properties. When you use the customized CA certificate library for user authentication based on LDAPs, you need to configure 'kylin.security.ldap.connection-truststore', the value of this configuration will be added to the JVM parameter javax.net.ssl.trustStore:
 
 ```
 kylin.security.ldap.connection-server=ldap://<your_ldap_host>:<port>
 kylin.security.ldap.connection-username=<your_user_name>
 kylin.security.ldap.connection-password=<your_password_encrypted>
+kylin.security.ldap.connection-truststore=<your_customized_CA_certificate_library>
 ```
 
 Secondly, provide the user search patterns, this is by LDAP design, here is just a sample:
