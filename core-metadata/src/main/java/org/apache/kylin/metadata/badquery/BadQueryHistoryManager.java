@@ -57,6 +57,7 @@ public class BadQueryHistoryManager {
     }
 
     public BadQueryHistory getBadQueriesForProject(String project) throws IOException {
+        project = project.replaceAll("[./]", "");
         BadQueryHistory badQueryHistory = getStore().getResource(getResourcePathForProject(project), BAD_QUERY_INSTANCE_SERIALIZER);
         if (badQueryHistory == null) {
             badQueryHistory = new BadQueryHistory(project);
