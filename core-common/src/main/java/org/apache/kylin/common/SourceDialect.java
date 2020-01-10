@@ -19,7 +19,7 @@
 package org.apache.kylin.common;
 
 /**
- * Decide sql pattern according to dialect from differenct data source
+ * Decide sql pattern according to dialect from different data source
  */
 public enum SourceDialect {
     HIVE("hive"),
@@ -30,11 +30,13 @@ public enum SourceDialect {
     MYSQL("mysql"),
 
     /**
-     * Support Microsoft Sql Server 2017
+     * Support Microsoft Sql Server 2017 or above
      */
-    SQL_SERVER("mssql"),
+    MSSQL("mssql"),
 
     VERTICA("vertica"),
+
+    POSTGRESQL("postgresql"),
 
     /**
      * Others

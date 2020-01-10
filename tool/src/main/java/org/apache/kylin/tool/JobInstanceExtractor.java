@@ -140,6 +140,7 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
             result.setDisplayCubeName(cubeName);
         }
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
+        result.setRelatedSegmentName(CubingExecutableUtil.getSegmentName(cubeJob.getParams()));
         result.setLastModified(output.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());

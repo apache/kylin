@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
@@ -63,6 +64,7 @@ import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -423,6 +425,16 @@ public class CubeService extends BasicService implements InitializingBean {
             cubeStatusUpdated = true;
             // for streaming cube.
             if (isStreamingCube) {
+                //drop not ready segments
+                CubeSegment[] buildingSegments = new CubeSegment[cubeInstance.getBuildingSegments().size()];
+                Segments segments = cubeInstance.getBuildingSegments();
+                if (!CollectionUtils.isEmpty(segments)) {
+                    for (int i = 0; i < segments.size(); i++) {
+                        buildingSegments[i] = (CubeSegment) segments.get(i);
+                    }
+                    getCubeManager().dropOptmizingSegments(cubeInstance, buildingSegments);
+                }
+                //unAssign cube
                 getStreamingCoordinator().unAssignCube(cubeName);
             }
             return cubeInstance;
@@ -574,6 +586,10 @@ public class CubeService extends BasicService implements InitializingBean {
     public CubeInstance deleteSegment(CubeInstance cube, String segmentName) throws IOException {
         aclEvaluate.checkProjectOperationPermission(cube);
         Message msg = MsgPicker.getMsg();
+
+        if (cube.getStatus() == RealizationStatusEnum.READY) {
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getDELETE_SEG_FROM_READY_CUBE(), segmentName, cube.getName()));
+        }
 
         CubeSegment toDelete = null;
         for (CubeSegment seg : cube.getSegments()) {

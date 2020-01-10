@@ -19,9 +19,7 @@
 package org.apache.kylin.cube.common;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -45,11 +43,11 @@ import org.slf4j.LoggerFactory;
 public class SegmentPruner {
     private static final Logger logger = LoggerFactory.getLogger(SegmentPruner.class);
 
-    final private Set<CompareTupleFilter> mustTrueCompares;
+    private TupleFilterNode node;
 
     public SegmentPruner(TupleFilter filter) {
-        this.mustTrueCompares = filter == null ? Collections.<CompareTupleFilter> emptySet()
-                : filter.findMustTrueCompareFilters();
+        this.node = new TupleFilterNode(filter);
+
     }
 
     public List<CubeSegment> listSegmentsForQuery(CubeInstance cube) {
@@ -62,7 +60,7 @@ public class SegmentPruner {
     }
     
     public boolean check(CubeSegment seg) {
-        
+
         if (seg.getInputRecords() == 0) {
             if (seg.getConfig().isSkippingEmptySegments()) {
                 logger.debug("Prune segment {} due to 0 input record", seg);
@@ -72,53 +70,35 @@ public class SegmentPruner {
             }
         }
 
-        Map<String, DimensionRangeInfo> segDimRangInfoMap = seg.getDimensionRangeInfoMap();
-        for (CompareTupleFilter comp : mustTrueCompares) {
-            TblColRef col = comp.getColumn();
-
-            if (!col.getType().needCompare()) {
-                continue;
-            }
-            
-            DimensionRangeInfo dimRangeInfo = segDimRangInfoMap.get(col.getIdentity());
-            if (dimRangeInfo == null)
-                dimRangeInfo = tryDeduceRangeFromPartitionCol(seg, col);
-            if (dimRangeInfo == null)
-                continue;
-            
-            String minVal = dimRangeInfo.getMin();
-            String maxVal = dimRangeInfo.getMax();
-            
-            if (!satisfy(comp, minVal, maxVal)) {
-                logger.debug("Prune segment {} due to given filter", seg);
-                return false;
-            }
+        if (!node.checkSeg(seg)) {
+            logger.debug("Prune segment {} due to given filter", seg);
+            return false;
         }
 
         logger.debug("Pruner passed on segment {}", seg);
         return true;
     }
 
-    private DimensionRangeInfo tryDeduceRangeFromPartitionCol(CubeSegment seg, TblColRef col) {
+    public static DimensionRangeInfo tryDeduceRangeFromPartitionCol(CubeSegment seg, TblColRef col) {
         DataModelDesc model = seg.getModel();
         PartitionDesc part = model.getPartitionDesc();
-        
+
         if (!part.isPartitioned())
             return null;
         if (!col.equals(part.getPartitionDateColumnRef()))
             return null;
-        
+
         // deduce the dim range from TSRange
         TSRange tsRange = seg.getTSRange();
         if (tsRange.start.isMin || tsRange.end.isMax)
             return null; // DimensionRangeInfo cannot express infinite
-        
+
         String min = tsRangeToStr(tsRange.start.v, part);
         String max = tsRangeToStr(tsRange.end.v - 1, part); // note the -1, end side is exclusive
         return new DimensionRangeInfo(min, max);
     }
 
-    private String tsRangeToStr(long ts, PartitionDesc part) {
+    private static String tsRangeToStr(long ts, PartitionDesc part) {
         String value;
         DataType partitionColType = part.getPartitionDateColumnRef().getType();
         if (partitionColType.isDate()) {
@@ -138,7 +118,7 @@ public class SegmentPruner {
         return value;
     }
 
-    private boolean satisfy(CompareTupleFilter comp, String minVal, String maxVal) {
+    public static boolean satisfy(CompareTupleFilter comp, String minVal, String maxVal) {
 
         // When both min and max are null, it means all cells of the column are null.
         // In such case, return true to let query engine scan the segment, since the
@@ -157,9 +137,11 @@ public class SegmentPruner {
         switch (comp.getOperator()) {
         case EQ:
         case IN:
-            String filterMin = order.min((Set<String>) comp.getValues());
-            String filterMax = order.max((Set<String>) comp.getValues());
-            return order.compare(filterMin, maxVal) <= 0 && order.compare(minVal, filterMax) <= 0;
+            for (String filterValue : (Set<String>) comp.getValues()) {
+                if (order.compare(filterValue, maxVal) <= 0 && order.compare(minVal, filterValue) <= 0)
+                    return true;
+            }
+            return false;
         case LT:
             return order.compare(minVal, filterVal) < 0;
         case LTE:
@@ -177,7 +159,7 @@ public class SegmentPruner {
         }
     }
 
-    private String toString(Object v) {
+    private static String toString(Object v) {
         return v == null ? null : v.toString();
     }
 }

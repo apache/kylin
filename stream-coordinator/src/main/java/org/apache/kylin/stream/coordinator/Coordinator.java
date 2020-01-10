@@ -56,6 +56,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.StreamingCubingEngine;
+import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -1133,12 +1134,20 @@ public class Coordinator implements CoordinatorClient {
     private List<String> findSegmentsCanBuild(String cubeName) {
         List<String> result = Lists.newArrayList();
         CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
+        // in optimization
+        if (isInOptimize(cubeInstance)) {
+            return result;
+        }
+        int allowMaxBuildingSegments = cubeInstance.getConfig().getMaxBuildingSegments();
         CubeSegment latestHistoryReadySegment = cubeInstance.getLatestReadySegment();
         long minSegmentStart = -1;
         if (latestHistoryReadySegment != null) {
             minSegmentStart = latestHistoryReadySegment.getTSRange().end.v;
+        } else {
+            // there is no ready segment, to make cube planner work, only 1 segment can build
+            logger.info("there is no ready segments for cube:{}, so only allow 1 segment build concurrently", cubeName);
+            allowMaxBuildingSegments = 1;
         }
-        int allowMaxBuildingSegments = cubeInstance.getConfig().getMaxBuildingSegments();
 
         CubeAssignment assignments = streamMetadataStore.getAssignmentsByCube(cubeName);
         Set<Integer> cubeAssignedReplicaSets = assignments.getReplicaSetIDs();
@@ -1193,6 +1202,8 @@ public class Coordinator implements CoordinatorClient {
                         state.setJobId(cubingJob.getId());
                         streamMetadataStore.updateSegmentBuildState(cubeName, segmentState.getSegmentName(), state);
                         segmentState.setState(state);
+                        logger.info("segment:{} is discard", segmentState.getSegmentName());
+                        continue;
                     } else {
                         logger.info("job:{} is in running, job state: {}", jobId, jobState);
                         continue;
@@ -1210,6 +1221,31 @@ public class Coordinator implements CoordinatorClient {
             leftQuota--;
         }
         return result;
+    }
+
+    private boolean isInOptimize(CubeInstance cube) {
+        Segments<CubeSegment> readyPendingSegments = cube.getSegments(SegmentStatusEnum.READY_PENDING);
+        if (readyPendingSegments.size() > 0) {
+            logger.info("The cube {} has READY_PENDING segments {}. It's not allowed for building",
+                cube.getName(), readyPendingSegments);
+            return true;
+        }
+        Segments<CubeSegment> newSegments = cube.getSegments(SegmentStatusEnum.NEW);
+        for (CubeSegment newSegment : newSegments) {
+            String jobId = newSegment.getLastBuildJobID();
+            if (jobId == null) {
+                continue;
+            }
+            AbstractExecutable job = getExecutableManager().getJob(jobId);
+            if (job != null && job instanceof CubingJob) {
+                CubingJob cubingJob = (CubingJob) job;
+                if (CubingJob.CubingJobTypeEnum.OPTIMIZE.toString().equals(cubingJob.getJobType())) {
+                    logger.info("The cube {} is in optimization. It's not allowed to build new segments during optimization.", cube.getName());
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

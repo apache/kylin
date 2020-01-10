@@ -70,8 +70,13 @@ public class BeelineHiveClient implements IHiveClient {
                 BufferedReader br = null;
                 try {
                     br = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
-                    password = br.readLine();
-                    br.close();
+                    try {
+                        password = br.readLine();
+                    } finally {
+                        if (null != br) {
+                            br.close();
+                        }
+                    }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

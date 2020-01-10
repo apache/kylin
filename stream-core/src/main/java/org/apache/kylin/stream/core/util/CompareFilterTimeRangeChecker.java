@@ -57,10 +57,17 @@ public class CompareFilterTimeRangeChecker {
         this.endClose = endClose;
     }
 
-    public CheckResult check(CompareTupleFilter compFilter, TimeDerivedColumnType timeDerivedColumnType) {
+    public CheckResult check(CompareTupleFilter compFilter, TimeDerivedColumnType timeDerivedColumnType, long timezoneOffset) {
         Object timestampValue = compFilter.getFirstValue();
         Set conditionValues = compFilter.getValues();
-        Pair<Long, Long> timeUnitRange = timeDerivedColumnType.getTimeUnitRange(timestampValue);
+        Pair<Long, Long> timeUnitRange;
+        if (timeDerivedColumnType != TimeDerivedColumnType.MINUTE_START
+                && timeDerivedColumnType != TimeDerivedColumnType.HOUR_START) {
+            timeUnitRange = timezoneOffset == 0 ? timeDerivedColumnType.getTimeUnitRange(timestampValue)
+                    : timeDerivedColumnType.getTimeUnitRangeTimezoneAware(timestampValue, timezoneOffset);
+        } else {
+            timeUnitRange = timeDerivedColumnType.getTimeUnitRange(timestampValue);
+        }
         switch (compFilter.getOperator()) {
         case EQ:
             return checkForEqValue(timeUnitRange);
@@ -105,7 +112,7 @@ public class CompareFilterTimeRangeChecker {
             }
             return CheckResult.OVERLAP;
         case IN:
-            return checkForInValues(timeDerivedColumnType, conditionValues);
+            return checkForInValues(timeDerivedColumnType, conditionValues, timezoneOffset);
         default:
             return CheckResult.OVERLAP;
         }
@@ -121,10 +128,10 @@ public class CompareFilterTimeRangeChecker {
         return CheckResult.OVERLAP;
     }
 
-    private CheckResult checkForInValues(TimeDerivedColumnType timeDerivedColumnType, Collection<Object> values) {
+    private CheckResult checkForInValues(TimeDerivedColumnType timeDerivedColumnType, Collection<Object> values, long timezoneOffset) {
         CheckResult result = null;
         for (Object timestampValue : values) {
-            Pair<Long, Long> timeUnitRange = timeDerivedColumnType.getTimeUnitRange(timestampValue);
+            Pair<Long, Long> timeUnitRange = timeDerivedColumnType.getTimeUnitRangeTimezoneAware(timestampValue, timezoneOffset);
             CheckResult checkResult = checkForEqValue(timeUnitRange);
             if (result == null) {
                 result = checkResult;

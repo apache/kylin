@@ -74,9 +74,17 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
 
         if (isEnableUHCDictStep()) {
             result.addTask(createBuildUHCDictStep(jobId));
+        } else if (isEnableUHCDictSparkStep()) {
+            result.addTask(createBuildUHCDictSparkStep(jobId));
         }
 
-        result.addTask(createBuildDictionaryStep(jobId));
+
+        if (isEnabledSparkDimensionDictionary()) {
+            result.addTask(createBuildDictionarySparkStep(jobId));
+        } else {
+            result.addTask(createBuildDictionaryStep(jobId));
+        }
+
         result.addTask(createSaveStatisticsStep(jobId));
 
         // add materialize lookup tables if needed
@@ -119,7 +127,48 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
         sparkExecutable.setCounterSaveAs(CubingJob.SOURCE_RECORD_COUNT + "," + CubingJob.SOURCE_SIZE_BYTES, getCounterOutputPath(jobId));
 
         StringBuilder jars = new StringBuilder();
+        StringUtil.appendWithSeparator(jars, seg.getConfig().getSparkAdditionalJars());
+        sparkExecutable.setJars(jars.toString());
+        return sparkExecutable;
+    }
 
+    public SparkExecutable createBuildUHCDictSparkStep(String jobId) {
+        final SparkExecutable sparkExecutable = SparkExecutableFactory.instance(seg.getConfig());
+
+        sparkExecutable.setClassName(SparkUHCDictionary.class.getName());
+        sparkExecutable.setParam(SparkUHCDictionary.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
+        sparkExecutable.setParam(SparkUHCDictionary.OPTION_META_URL.getOpt(), getSegmentMetadataUrl(seg.getConfig(), jobId));
+        sparkExecutable.setParam(SparkUHCDictionary.OPTION_INPUT_PATH.getOpt(), getFactDistinctColumnsPath(jobId));
+        sparkExecutable.setParam(SparkUHCDictionary.OPTION_OUTPUT_PATH.getOpt(), getDictRootPath(jobId));
+        sparkExecutable.setParam(SparkUHCDictionary.OPTION_CUBING_JOB_ID.getOpt(), jobId);
+        sparkExecutable.setParam(SparkUHCDictionary.OPTION_SEGMENT_ID.getOpt(), seg.getUuid());
+
+        sparkExecutable.setJobId(jobId);
+        sparkExecutable.setName(ExecutableConstants.STEP_NAME_BUILD_SPARK_UHC_DICTIONARY);
+        sparkExecutable.setCounterSaveAs(CubingJob.SOURCE_RECORD_COUNT + "," + CubingJob.SOURCE_SIZE_BYTES, getCounterOutputPath(jobId));
+
+        StringBuilder jars = new StringBuilder();
+        StringUtil.appendWithSeparator(jars, seg.getConfig().getSparkAdditionalJars());
+        sparkExecutable.setJars(jars.toString());
+        return sparkExecutable;
+    }
+
+    public SparkExecutable createBuildDictionarySparkStep(String jobId) {
+        final SparkExecutable sparkExecutable = SparkExecutableFactory.instance(seg.getConfig());
+
+        sparkExecutable.setClassName(SparkBuildDictionary.class.getName());
+        sparkExecutable.setParam(SparkBuildDictionary.OPTION_META_URL.getOpt(), getSegmentMetadataUrl(seg.getConfig(), jobId));
+        sparkExecutable.setParam(SparkBuildDictionary.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
+        sparkExecutable.setParam(SparkBuildDictionary.OPTION_INPUT_PATH.getOpt(), getFactDistinctColumnsPath(jobId));
+        sparkExecutable.setParam(SparkBuildDictionary.OPTION_DICT_PATH.getOpt(), getDictRootPath(jobId));
+        sparkExecutable.setParam(SparkBuildDictionary.OPTION_SEGMENT_ID.getOpt(), seg.getUuid());
+        sparkExecutable.setParam(SparkBuildDictionary.OPTION_CUBING_JOB_ID.getOpt(), jobId);
+
+        sparkExecutable.setJobId(jobId);
+        sparkExecutable.setName(ExecutableConstants.STEP_NAME_BUILD_SPARK_DICTIONARY);
+        sparkExecutable.setCounterSaveAs(CubingJob.SOURCE_SIZE_BYTES, getCounterOutputPath(jobId));
+
+        StringBuilder jars = new StringBuilder();
         StringUtil.appendWithSeparator(jars, seg.getConfig().getSparkAdditionalJars());
 
         sparkExecutable.setJars(jars.toString());

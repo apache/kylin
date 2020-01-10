@@ -48,19 +48,25 @@ public class QueryUtil {
         String transform(String sql, String project, String defaultSchema);
     }
 
-    static final String KEYWORD_SELECT = "select";
-    static final String KEYWORD_WITH = "with";
-    static final String KEYWORD_EXPLAIN = "explain";
+    private static final String KEYWORD_SELECT = "select";
+    private static final String KEYWORD_WITH = "with";
+    private static final String KEYWORD_EXPLAIN = "explain";
 
-    private static String appendLimitOffsetToSql(String sql, int limit, int offset) {
+    public static String appendLimitOffsetToSql(String sql, int limit, int offset) {
         String retSql = sql;
+        String prefixSql = "select * from (";
+        String suffixSql = ")";
+        if (sql.startsWith(KEYWORD_EXPLAIN)) {
+            prefixSql = "";
+            suffixSql = "";
+        }
         if (0 != limit && 0 != offset) {
-            retSql = "select * from (" + sql + ") limit " + String.valueOf(limit) +
-                    " offset " + String.valueOf(offset);
+            retSql = prefixSql + sql + suffixSql + " limit " + String.valueOf(limit) + " offset "
+                    + String.valueOf(offset);
         } else if (0 == limit && 0 != offset) {
-            retSql = "select * from (" + sql + ") offset " + String.valueOf(offset);
+            retSql = prefixSql + sql + suffixSql + " offset " + String.valueOf(offset);
         } else if (0 != limit && 0 == offset) {
-            retSql = "select * from (" + sql + ") limit " + String.valueOf(limit);
+            retSql = prefixSql + sql + suffixSql + " limit " + String.valueOf(limit);
         } else {
             // do nothing
         }
@@ -169,6 +175,11 @@ public class QueryUtil {
 
             if (cause.getClass().getName().contains("ArithmeticException")) {
                 msg = "ArithmeticException: " + cause.getMessage();
+                break;
+            }
+
+            if (cause.getClass().getName().contains("NumberFormatException")) {
+                msg = "NumberFormatException: " + cause.getMessage();
                 break;
             }
             cause = cause.getCause();

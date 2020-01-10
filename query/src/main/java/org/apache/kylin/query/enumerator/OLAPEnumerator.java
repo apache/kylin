@@ -106,7 +106,10 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         // bind dynamic variables
         olapContext.bindVariable(optiqContext);
 
-        olapContext.resetSQLDigest();
+        // If olapContext is cached, then inherit it.
+        if (!olapContext.isBorrowedContext) {
+            olapContext.resetSQLDigest();
+        }
         SQLDigest sqlDigest = olapContext.getSQLDigest();
 
         // query storage engine

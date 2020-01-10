@@ -22,6 +22,12 @@ package org.apache.kylin.tool;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -38,10 +44,12 @@ public class ClientEnvExtractor extends AbstractInfoExtractor {
     private static final Logger logger = LoggerFactory.getLogger(ClientEnvExtractor.class);
     private KylinConfig kylinConfig;
     private CliCommandExecutor cmdExecutor;
+    private ExecutorService executorService;
+    int maxWaitSeconds = 120;
 
     public ClientEnvExtractor() throws IOException {
         super();
-
+        executorService = Executors.newFixedThreadPool(1);
         packageType = "client";
         kylinConfig = KylinConfig.getInstanceFromEnv();
         cmdExecutor = kylinConfig.getCliCommandExecutor();
@@ -64,6 +72,7 @@ public class ClientEnvExtractor extends AbstractInfoExtractor {
         addShellOutput("hbase version", "hbase", "version");
         addShellOutput("hive --version", "hive", "version");
         addShellOutput("beeline --version", "hive", "beeline_version");
+        executorService.shutdownNow();
     }
 
     private void addLocalFile(String src, String destDir) {
@@ -83,20 +92,35 @@ public class ClientEnvExtractor extends AbstractInfoExtractor {
         }
     }
 
-    private void addShellOutput(String cmd, String destDir, String filename) {
-        try {
-            File destDirFile = null;
-            if (!StringUtils.isEmpty(destDir)) {
-                destDirFile = new File(exportDir, destDir);
-                FileUtils.forceMkdir(destDirFile);
-            } else {
-                destDirFile = exportDir;
+    void addShellOutput(String cmd, String destDir, String filename) {
+        Future f = executorService.submit(() -> {
+            try {
+                File destDirFile = null;
+                if (!StringUtils.isEmpty(destDir)) {
+                    destDirFile = new File(exportDir, destDir);
+                    FileUtils.forceMkdir(destDirFile);
+                } else {
+                    destDirFile = exportDir;
+                }
+                Pair<Integer, String> result = cmdExecutor.execute(cmd);
+                String output = result.getSecond();
+                FileUtils.writeStringToFile(new File(destDirFile, filename), output, Charset.defaultCharset());
+            } catch (IOException e) {
+                logger.warn("Failed to run command: " + cmd + ".", e);
             }
-            Pair<Integer, String> result = cmdExecutor.execute(cmd);
-            String output = result.getSecond();
-            FileUtils.writeStringToFile(new File(destDirFile, filename), output, Charset.defaultCharset());
-        } catch (Exception e) {
-            logger.warn("Failed to run command: " + cmd + ".", e);
+        });
+
+        try {
+            // assume most shell should return in two minutes
+            f.get(maxWaitSeconds, TimeUnit.SECONDS);
+        } catch (TimeoutException timeoutException) {
+            logger.error("Timeout for \"{}\" in {} seconds.", cmd, maxWaitSeconds);
+            executorService.shutdownNow();
+            executorService = Executors.newFixedThreadPool(1);
+        } catch (ExecutionException runtimeException) {
+            logger.error("Runtime error: {}", runtimeException.getLocalizedMessage());
+        } catch (InterruptedException otherException) {
+            // Ignore
         }
     }
 }

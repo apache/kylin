@@ -17,8 +17,8 @@
 # limitations under the License.
 #
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/util.sh
+source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
+source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/util.sh
 
 # get port from configuraton
 kylin_port=`grep "<Connector port=" ${KYLIN_HOME}/tomcat/conf/server.xml |grep protocol=\"HTTP/1.1\" | cut -d '=' -f 2 | cut -d \" -f 2`

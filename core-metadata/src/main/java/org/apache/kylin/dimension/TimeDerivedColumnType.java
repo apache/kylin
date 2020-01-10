@@ -28,6 +28,8 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.TimeUtil;
 
 import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public enum TimeDerivedColumnType {
     MINUTE_START("minute_start") {
@@ -157,6 +159,7 @@ public enum TimeDerivedColumnType {
     private static final String QUARTER_START_NAME = "quarter_start";
     private static final String YEAR_START_NAME = "year_start";
     private static Map<String, TimeDerivedColumnType> nameColumnsMap = Maps.newHashMap();
+    private static Logger logger = LoggerFactory.getLogger(TimeDerivedColumnType.class);
 
     static {
         nameColumnsMap.put(MINUTE_START_NAME, MINUTE_START);
@@ -176,6 +179,14 @@ public enum TimeDerivedColumnType {
 
     public static boolean isTimeDerivedColumn(String columnName) {
         return nameColumnsMap.containsKey(columnName.toLowerCase(Locale.ROOT));
+    }
+
+    public static boolean isTimeDerivedColumnAboveDayLevel(String columnName) {
+        if (!isTimeDerivedColumn(columnName))
+            return false;
+        else {
+            return !columnName.equalsIgnoreCase(MINUTE_START_NAME) && !columnName.equalsIgnoreCase(HOUR_START_NAME);
+        }
     }
 
     public static TimeDerivedColumnType getTimeDerivedColumnType(String columnName) {
@@ -209,6 +220,13 @@ public enum TimeDerivedColumnType {
     public Pair<Long, Long> getTimeUnitRange(Object timeValue) {
         long time = parseTimeValue(timeValue);
         return calculateTimeUnitRange(time);
+    }
+
+    public Pair<Long, Long> getTimeUnitRangeTimezoneAware(Object timeValue, long timezoneOffset){
+        long ts = parseTimeValue(timeValue);
+        Pair<Long, Long> res = calculateTimeUnitRange(ts);
+        res = new Pair<>(res.getFirst() - timezoneOffset, res.getSecond() - timezoneOffset);
+        return res;
     }
 
     abstract public Pair<Long, Long> calculateTimeUnitRange(long time);

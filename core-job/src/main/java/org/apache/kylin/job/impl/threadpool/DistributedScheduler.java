@@ -30,10 +30,12 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.ToolUtil;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -59,9 +61,24 @@ import com.google.common.collect.Maps;
  *  2. add all the job servers and query servers to the kylin.server.cluster-servers
  */
 public class DistributedScheduler implements Scheduler<AbstractExecutable> {
-    private static final Logger logger = LoggerFactory.getLogger(DistributedScheduler.class);
-
     public static final String ZOOKEEPER_LOCK_PATH = "/job_engine/lock"; // note ZookeeperDistributedLock will ensure zk path prefix: /${kylin.env.zookeeper-base-path}/metadata
+    private static final Logger logger = LoggerFactory.getLogger(DistributedScheduler.class);
+    //keep all running job
+    private final Set<String> jobWithLocks = new CopyOnWriteArraySet<>();
+    private ExecutableManager executableManager;
+
+    // ============================================================================
+    private FetcherRunner fetcher;
+    private ScheduledExecutorService fetcherPool;
+    private ExecutorService watchPool;
+    private ExecutorService jobPool;
+    private DefaultContext context;
+    private DistributedLock jobLock;
+    private Closeable lockWatch;
+    private volatile boolean initialized = false;
+    private volatile boolean hasStarted = false;
+    private JobEngineConfig jobEngineConfig;
+    private String serverName;
 
     public static DistributedScheduler getInstance(KylinConfig config) {
         return config.getManager(DistributedScheduler.class);
@@ -72,23 +89,119 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable> {
         return new DistributedScheduler();
     }
 
-    // ============================================================================
+    public static String getLockPath(String pathName) {
+        return dropDoubleSlash(ZOOKEEPER_LOCK_PATH + "/" + pathName);
+    }
 
-    private ExecutableManager executableManager;
-    private FetcherRunner fetcher;
-    private ScheduledExecutorService fetcherPool;
-    private ExecutorService watchPool;
-    private ExecutorService jobPool;
-    private DefaultContext context;
-    private DistributedLock jobLock;
-    private Closeable lockWatch;
+    private static String getWatchPath() {
+        return dropDoubleSlash(ZOOKEEPER_LOCK_PATH);
+    }
 
-    //keep all running job
-    private final Set<String> jobWithLocks = new CopyOnWriteArraySet<>();
-    private volatile boolean initialized = false;
-    private volatile boolean hasStarted = false;
-    private JobEngineConfig jobEngineConfig;
-    private String serverName;
+    public static String dropDoubleSlash(String path) {
+        for (int n = Integer.MAX_VALUE; n > path.length();) {
+            n = path.length();
+            path = path.replace("//", "/");
+        }
+        return path;
+    }
+
+    @Override
+    public synchronized void init(JobEngineConfig jobEngineConfig, JobLock jobLock) throws SchedulerException {
+        String serverMode = jobEngineConfig.getConfig().getServerMode();
+        if (!("job".equals(serverMode.toLowerCase(Locale.ROOT)) || "all".equals(serverMode.toLowerCase(Locale.ROOT)))) {
+            logger.info("server mode: " + serverMode + ", no need to run job scheduler");
+            return;
+        }
+        logger.info("Initializing Job Engine ....");
+
+        if (!initialized) {
+            initialized = true;
+        } else {
+            return;
+        }
+
+        this.jobEngineConfig = jobEngineConfig;
+        this.jobLock = (DistributedLock) jobLock;
+        this.serverName = this.jobLock.getClient(); // the lock's client string contains node name of this server
+
+        executableManager = ExecutableManager.getInstance(jobEngineConfig.getConfig());
+        //load all executable, set them to a consistent status
+        fetcherPool = Executors.newScheduledThreadPool(1);
+
+        //watch the zookeeper node change, so that when one job server is down, other job servers can take over.
+        watchPool = Executors.newFixedThreadPool(1);
+        WatcherProcessImpl watcherProcess = new WatcherProcessImpl(this.serverName);
+        lockWatch = this.jobLock.watchLocks(getWatchPath(), watchPool, watcherProcess);
+
+        int corePoolSize = jobEngineConfig.getMaxConcurrentJobLimit();
+        jobPool = new ThreadPoolExecutor(corePoolSize, corePoolSize, Long.MAX_VALUE, TimeUnit.DAYS,
+                new SynchronousQueue<Runnable>());
+        context = new DefaultContext(Maps.<String, Executable> newConcurrentMap(), jobEngineConfig.getConfig());
+
+        int pollSecond = jobEngineConfig.getPollIntervalSecond();
+        logger.info("Fetching jobs every {} seconds", pollSecond);
+        JobExecutor jobExecutor = new JobExecutor() {
+            @Override
+            public void execute(AbstractExecutable executable) {
+                jobPool.execute(new JobRunner(executable));
+            }
+        };
+        fetcher = jobEngineConfig.getJobPriorityConsidered()
+                ? new PriorityFetcherRunner(jobEngineConfig, context, jobExecutor)
+                : new DefaultFetcherRunner(jobEngineConfig, context, jobExecutor);
+        fetcherPool.scheduleAtFixedRate(fetcher, pollSecond / 10, pollSecond, TimeUnit.SECONDS);
+        hasStarted = true;
+
+        resumeAllRunningJobs();
+    }
+
+    private void resumeAllRunningJobs() {
+        for (final String id : executableManager.getAllJobIds()) {
+            final Output output = executableManager.getOutput(id);
+            AbstractExecutable executable = executableManager.getJob(id);
+            if (output.getState() == ExecutableState.RUNNING && executable instanceof DefaultChainedExecutable) {
+                try {
+                    if (!jobLock.isLocked(getLockPath(executable.getId()))) {
+                        executableManager.resumeRunningJobForce(executable.getId());
+                        fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
+                    }
+                } catch (Exception e) {
+                    logger.error("resume the job " + id + " fail in server: " + serverName, e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void shutdown() throws SchedulerException {
+        logger.info("Will shut down Job Engine ....");
+
+        try {
+            lockWatch.close();
+        } catch (IOException e) {
+            throw new SchedulerException(e);
+        }
+
+        releaseAllLocks();
+        logger.info("The all locks has released");
+
+        fetcherPool.shutdown();
+        logger.info("The fetcherPool has down");
+
+        jobPool.shutdown();
+        logger.info("The jobPoll has down");
+    }
+
+    private void releaseAllLocks() {
+        for (String jobId : jobWithLocks) {
+            jobLock.unlock(getLockPath(jobId));
+        }
+    }
+
+    @Override
+    public boolean hasStarted() {
+        return this.hasStarted;
+    }
 
     private class JobRunner implements Runnable {
 
@@ -102,7 +215,18 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable> {
         public void run() {
             try (SetThreadName ignored = new SetThreadName("Scheduler %s Job %s",
                     System.identityHashCode(DistributedScheduler.this), executable.getId())) {
-                if (jobLock.lock(getLockPath(executable.getId()))) {
+
+                boolean isAssigned = true;
+                if (!StringUtils.isEmpty(executable.getCubeName())) {
+                    KylinConfig config = executable.getCubeSpecificConfig();
+                    isAssigned = config.isOnAssignedServer(ToolUtil.getHostName(),
+                            ToolUtil.getFirstIPV4NonLoopBackAddress().getHostAddress());
+                    logger.debug("cube = " + executable.getCubeName() + "; jobId=" + executable.getId()
+                            + (isAssigned ? " is " : " is not ") + "assigned on this server : "
+                            + ToolUtil.getHostName());
+                }
+
+                if (isAssigned && jobLock.lock(getLockPath(executable.getId()))) {
                     logger.info(executable.toString() + " scheduled in server: " + serverName);
 
                     context.addRunningJob(executable);
@@ -179,119 +303,5 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable> {
         @Override
         public void onLock(String lockPath, String client) {
         }
-    }
-
-    @Override
-    public synchronized void init(JobEngineConfig jobEngineConfig, JobLock jobLock) throws SchedulerException {
-        String serverMode = jobEngineConfig.getConfig().getServerMode();
-        if (!("job".equals(serverMode.toLowerCase(Locale.ROOT)) || "all".equals(serverMode.toLowerCase(Locale.ROOT)))) {
-            logger.info("server mode: " + serverMode + ", no need to run job scheduler");
-            return;
-        }
-        logger.info("Initializing Job Engine ....");
-
-        if (!initialized) {
-            initialized = true;
-        } else {
-            return;
-        }
-
-        this.jobEngineConfig = jobEngineConfig;
-        this.jobLock = (DistributedLock) jobLock;
-        this.serverName = this.jobLock.getClient(); // the lock's client string contains node name of this server
-
-        executableManager = ExecutableManager.getInstance(jobEngineConfig.getConfig());
-        //load all executable, set them to a consistent status
-        fetcherPool = Executors.newScheduledThreadPool(1);
-
-        //watch the zookeeper node change, so that when one job server is down, other job servers can take over.
-        watchPool = Executors.newFixedThreadPool(1);
-        WatcherProcessImpl watcherProcess = new WatcherProcessImpl(this.serverName);
-        lockWatch = this.jobLock.watchLocks(getWatchPath(), watchPool, watcherProcess);
-
-        int corePoolSize = jobEngineConfig.getMaxConcurrentJobLimit();
-        jobPool = new ThreadPoolExecutor(corePoolSize, corePoolSize, Long.MAX_VALUE, TimeUnit.DAYS,
-                new SynchronousQueue<Runnable>());
-        context = new DefaultContext(Maps.<String, Executable> newConcurrentMap(), jobEngineConfig.getConfig());
-
-        int pollSecond = jobEngineConfig.getPollIntervalSecond();
-        logger.info("Fetching jobs every {} seconds", pollSecond);
-        JobExecutor jobExecutor = new JobExecutor() {
-            @Override
-            public void execute(AbstractExecutable executable) {
-                jobPool.execute(new JobRunner(executable));
-            }
-        };
-        fetcher = jobEngineConfig.getJobPriorityConsidered()
-                ? new PriorityFetcherRunner(jobEngineConfig, context, jobExecutor)
-                : new DefaultFetcherRunner(jobEngineConfig, context, jobExecutor);
-        fetcherPool.scheduleAtFixedRate(fetcher, pollSecond / 10, pollSecond, TimeUnit.SECONDS);
-        hasStarted = true;
-
-        resumeAllRunningJobs();
-    }
-
-    private void resumeAllRunningJobs() {
-        for (final String id : executableManager.getAllJobIds()) {
-            final Output output = executableManager.getOutput(id);
-            AbstractExecutable executable = executableManager.getJob(id);
-            if (output.getState() == ExecutableState.RUNNING && executable instanceof DefaultChainedExecutable) {
-                try {
-                    if (!jobLock.isLocked(getLockPath(executable.getId()))) {
-                        executableManager.resumeRunningJobForce(executable.getId());
-                        fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
-                    }
-                } catch (Exception e) {
-                    logger.error("resume the job " + id + " fail in server: " + serverName, e);
-                }
-            }
-        }
-    }
-
-    public static String getLockPath(String pathName) {
-        return dropDoubleSlash(ZOOKEEPER_LOCK_PATH + "/" + pathName);
-    }
-
-    private static String getWatchPath() {
-        return dropDoubleSlash(ZOOKEEPER_LOCK_PATH);
-    }
-
-    public static String dropDoubleSlash(String path) {
-        for (int n = Integer.MAX_VALUE; n > path.length();) {
-            n = path.length();
-            path = path.replace("//", "/");
-        }
-        return path;
-    }
-
-    @Override
-    public void shutdown() throws SchedulerException {
-        logger.info("Will shut down Job Engine ....");
-
-        try {
-            lockWatch.close();
-        } catch (IOException e) {
-            throw new SchedulerException(e);
-        }
-
-        releaseAllLocks();
-        logger.info("The all locks has released");
-
-        fetcherPool.shutdown();
-        logger.info("The fetcherPool has down");
-
-        jobPool.shutdown();
-        logger.info("The jobPoll has down");
-    }
-
-    private void releaseAllLocks() {
-        for (String jobId : jobWithLocks) {
-            jobLock.unlock(getLockPath(jobId));
-        }
-    }
-
-    @Override
-    public boolean hasStarted() {
-        return this.hasStarted;
     }
 }

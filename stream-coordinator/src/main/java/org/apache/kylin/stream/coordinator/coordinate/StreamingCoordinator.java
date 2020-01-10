@@ -113,7 +113,7 @@ public class StreamingCoordinator implements CoordinatorClient {
 
     private StreamingCoordinator() {
         this.streamMetadataStore = StreamMetadataStoreFactory.getStreamMetaDataStore();
-        clusterManager = new ReceiverClusterManager(this);
+        this.clusterManager = new ReceiverClusterManager(this);
         this.receiverAdminClient = new HttpReceiverAdminClient();
         this.assigner = getAssigner();
         this.zkClient = StreamingUtils.getZookeeperClient();
@@ -195,7 +195,7 @@ public class StreamingCoordinator implements CoordinatorClient {
                 for (Node receiver : rs.getNodes()) {
                     try {
                         unAssignToReceiver(receiver, request);
-                    } catch (Exception e) {
+                    } catch (IOException e) {
                         logger.error("Exception throws when unAssign receiver", e);
                         unAssignedFailReceivers.add(receiver);
                     }
@@ -297,6 +297,7 @@ public class StreamingCoordinator implements CoordinatorClient {
         }
     }
 
+    @NotAtomicIdempotent
     private void doAssignCube(String cubeName, CubeAssignment assignment) {
         Set<ReplicaSet> successRS = Sets.newHashSet();
         try {
@@ -306,11 +307,11 @@ public class StreamingCoordinator implements CoordinatorClient {
                         false);
                 successRS.add(rs);
             }
-            logger.debug("Committing assign {} transaction.", cubeName);
+            logger.debug("Committing assignment {} transaction.", cubeName);
             streamMetadataStore.saveNewCubeAssignment(assignment);
-            logger.debug("Committed assign {} transaction.", cubeName);
+            logger.debug("Committed assignment {} transaction.", cubeName);
         } catch (Exception e) {
-            // roll back the success group assignment
+            logger.debug("Starting roll back success receivers.");
             for (ReplicaSet rs : successRS) {
 
                 UnAssignRequest request = new UnAssignRequest();
@@ -350,6 +351,7 @@ public class StreamingCoordinator implements CoordinatorClient {
         int replicaSetID = streamMetadataStore.createReplicaSet(rs);
         try {
             for (Node receiver : rs.getNodes()) {
+                logger.trace("Notify {} that it has been added to {} .", receiver, replicaSetID);
                 addReceiverToReplicaSet(receiver, replicaSetID);
             }
         } catch (IOException e) {
@@ -379,7 +381,7 @@ public class StreamingCoordinator implements CoordinatorClient {
         for (ReplicaSet other : allReplicaSet) {
             if (other.getReplicaSetID() != replicaSetID) {
                 if (other.getNodes().contains(receiver)) {
-                    logger.error("error add Node {} to replicaSet {}, already exist in replicaSet {} ", nodeID,
+                    logger.error("Error add Node {} to replicaSet {}, already exist in replicaSet {} ", nodeID,
                             replicaSetID, other.getReplicaSetID());
                     throw new IllegalStateException("Node exists in ReplicaSet!");
                 }

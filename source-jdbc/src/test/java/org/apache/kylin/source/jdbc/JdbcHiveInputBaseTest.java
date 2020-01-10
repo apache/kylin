@@ -57,7 +57,7 @@ public class JdbcHiveInputBaseTest extends LocalFileMetadataTestCase {
     public void testQuoteIdentifier() {
         String guess = JdbcHiveInputBase.quoteIdentifier("Tbl1.Col1", SourceDialect.MYSQL);
         assertEquals("`Tbl1`.`Col1`", guess);
-        guess = JdbcHiveInputBase.quoteIdentifier("Tbl1.Col1", SourceDialect.SQL_SERVER);
+        guess = JdbcHiveInputBase.quoteIdentifier("Tbl1.Col1", SourceDialect.MSSQL);
         assertEquals("[Tbl1].[Col1]", guess);
     }
 

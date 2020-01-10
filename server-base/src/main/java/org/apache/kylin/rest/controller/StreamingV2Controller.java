@@ -34,6 +34,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.dimension.TimeDerivedColumnType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
@@ -80,6 +81,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.base.Preconditions;
 
 /**
  * StreamingController is defined as Restful API entrance for UI.
@@ -187,9 +189,11 @@ public class StreamingV2Controller extends BasicController {
         // validate the compatibility for input table schema and the underline hive table schema
         if (tableDesc.getSourceType() == ISourceAware.ID_KAFKA_HIVE) {
             List<FieldSchema> fields;
+            String db = tableDesc.getDatabase();
             try {
                 HiveMetaStoreClient metaStoreClient = new HiveMetaStoreClient(new HiveConf());
-                fields = metaStoreClient.getFields(tableDesc.getDatabase(), tableDesc.getName());
+                fields = metaStoreClient.getFields(db, tableDesc.getName());
+                logger.info("Checking the {} in {}", tableDesc.getName(), db);
             } catch (NoSuchObjectException noObjectException) {
                 logger.info("table not exist in hive meta store for table:" + tableDesc.getIdentity(),
                         noObjectException);
@@ -208,8 +212,14 @@ public class StreamingV2Controller extends BasicController {
             for (ColumnDesc columnDesc : tableDesc.getColumns()) {
                 FieldSchema fieldSchema = fieldSchemaMap.get(columnDesc.getName().toUpperCase(Locale.ROOT));
                 if (fieldSchema == null) {
-                    incompatibleMsgs.add("column not exist in hive table:" + columnDesc.getName());
-                    continue;
+                    // Partition column cannot be fetched via Hive Metadata API.
+                    if (!TimeDerivedColumnType.isTimeDerivedColumn(columnDesc.getName())) {
+                        incompatibleMsgs.add("Column not exist in hive table:" + columnDesc.getName());
+                        continue;
+                    } else {
+                        logger.info("Column not exist in hive table: {}.", columnDesc.getName());
+                        continue;
+                    }
                 }
                 if (!checkHiveTableFieldCompatible(fieldSchema, columnDesc)) {
                     String msg = String.format(Locale.ROOT,
@@ -481,6 +491,7 @@ public class StreamingV2Controller extends BasicController {
 
     private TableDesc deserializeTableDesc(StreamingRequestV2 streamingRequest) {
         TableDesc desc = null;
+        String db = KylinConfig.getInstanceFromEnv().getHiveDatabaseLambdaCube();
         try {
             logger.debug("Saving TableDesc " + streamingRequest.getTableData());
             desc = JsonUtil.readValue(streamingRequest.getTableData(), TableDesc.class);
@@ -495,9 +506,10 @@ public class StreamingV2Controller extends BasicController {
             throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
         }
 
+        Preconditions.checkNotNull(desc, "Failed to deserialize from TableDesc definition");
         String[] dbTable = HadoopUtil.parseHiveTableName(desc.getName());
         desc.setName(dbTable[1]);
-        desc.setDatabase(dbTable[0]);
+        desc.setDatabase(db);
         desc.getIdentity();
         return desc;
     }

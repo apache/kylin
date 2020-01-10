@@ -36,6 +36,7 @@ import org.apache.kylin.stream.coordinator.assign.AssignmentsCache;
 import org.apache.kylin.stream.coordinator.coordinate.annotations.NotAtomicIdempotent;
 import org.apache.kylin.stream.coordinator.coordinate.annotations.NotAtomicAndNotIdempotent;
 import org.apache.kylin.stream.coordinator.exception.ClusterStateException;
+import org.apache.kylin.stream.coordinator.exception.StoreException;
 import org.apache.kylin.stream.core.consumer.ConsumerStartProtocol;
 import org.apache.kylin.stream.core.model.AssignRequest;
 import org.apache.kylin.stream.core.model.ConsumerStatsResponse;
@@ -72,7 +73,7 @@ import java.util.stream.Collectors;
  *
  * In a multi-step transcation, following steps should be thought twice:
  *  1. should fail fast or continue when exception thrown.
- *  2. should API(remote call) be synchronous or asynchronous
+ *  2. should API(RPC) be synchronous or asynchronous
  *  3. when transcation failed, will roll back always succeed
  *  4. transcation should be idempotent so when it failed, it could be fixed by retry
  * </pre>
@@ -151,10 +152,10 @@ public class ReceiverClusterManager {
 
     /**
      * <pre>
-     * Reassign action is a process which move some consumption task from some replica set to new replica set.
+     * Reassign action is a process which move some consumption task from some replica set to some new replica sets.
      *
      * It is necessary in some case such as :
-     *  - new topic partition was added
+     *  - new topic partition was added, or receiver can not catch produce rate, so we need scale out
      *  - wordload not balance between different replica set
      *  - some nodes have to be offlined so the consumption task have be transfered
      * </pre>
@@ -470,15 +471,15 @@ public class ReceiverClusterManager {
      *
      * @param partitions specific topic partitions which replica set should consume
      * @param startConsumer should receiver start consumption at once
-     * @param mustAllSucceed if set to true, we should ensure all receivers has been correctly notified; false
+     * @param failFast if set to true, we should ensure all receivers has been correctly notified(fail-fast); false
      *                       for ensure at least one receivers has been correctly notified
      *
      * @throws IOException throwed when assign failed
      */
     @NotAtomicIdempotent
     void assignCubeToReplicaSet(ReplicaSet rs, String cubeName, List<Partition> partitions, boolean startConsumer,
-            boolean mustAllSucceed) throws IOException {
-        boolean hasNodeAssigned = false;
+            boolean failFast) throws IOException {
+        boolean atLeastOneAssigned = false;
         IOException exception = null;
         AssignRequest assignRequest = new AssignRequest();
         assignRequest.setCubeName(cubeName);
@@ -487,16 +488,16 @@ public class ReceiverClusterManager {
         for (final Node node : rs.getNodes()) {
             try {
                 getCoordinator().assignToReceiver(node, assignRequest);
-                hasNodeAssigned = true;
+                atLeastOneAssigned = true;
             } catch (IOException e) {
-                if (mustAllSucceed) {
+                if (failFast) {
                     throw e;
                 }
                 exception = e;
-                logger.error("cube:" + cubeName + " consumers start fail for node:" + node.toString(), e);
+                logger.error("Cube:" + cubeName + " consumers start fail for node:" + node.toString(), e);
             }
         }
-        if (!hasNodeAssigned) {
+        if (!atLeastOneAssigned) {
             if (exception != null) {
                 throw exception;
             }
@@ -506,11 +507,12 @@ public class ReceiverClusterManager {
     /**
      * When a segment build job succeed, we should do some following job to deliver it to historical part.
      *
+     * @throws org.apache.kylin.stream.coordinator.exception.StoreException thrown when write metadata failed
      * @return true if promote succeed, else false
      */
     @NotAtomicIdempotent
     protected boolean segmentBuildComplete(CubingJob cubingJob, CubeInstance cubeInstance, CubeSegment cubeSegment,
-            SegmentJobBuildInfo segmentBuildInfo) throws IOException {
+            SegmentJobBuildInfo segmentBuildInfo) {
         String cubeName = segmentBuildInfo.cubeName;
         String segmentName = segmentBuildInfo.segmentName;
 
@@ -521,8 +523,14 @@ public class ReceiverClusterManager {
         }
 
         if (!SegmentStatusEnum.READY.equals(cubeSegment.getStatus())) {
-            promoteNewSegment(cubingJob, cubeInstance, cubeSegment);
+            try {
+                promoteNewSegment(cubingJob, cubeInstance, cubeSegment);
+            } catch (IOException storeException) {
+                throw new StoreException("Promote failed because of metadata store.", storeException);
+            }
             logger.debug("Promote {} succeed.", segmentName);
+        } else {
+            logger.debug("Segment status is: {}", cubeSegment.getStatus());
         }
 
         // Step 2. delete local segment files in receiver side because these are useless now
@@ -533,8 +541,9 @@ public class ReceiverClusterManager {
             ReplicaSet rs = getCoordinator().getStreamMetadataStore().getReplicaSet(replicaSetID);
             for (Node node : rs.getNodes()) {
                 try {
-                    getCoordinator().notifyReceiverBuildSuccess(node, cubeName, segmentName);
+                    getCoordinator().notifyReceiverBuildSuccess(node, cubeName, segmentName); // Idempotent
                 } catch (IOException e) {
+                    // It is OK to just print log, unused segment cache in receiver will be deleted in next call
                     logger.error("error when remove cube segment for receiver:" + node, e);
                 }
             }

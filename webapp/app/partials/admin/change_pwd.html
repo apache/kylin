@@ -38,6 +38,16 @@
                     >&nbsp;The user name is invalid</span>
         </div>
       </div>
+      <div class="form-group" ng-if="currentPwdNeeded">
+        <label><b>User Current Password</b></label>
+        <div class="clearfix">
+          <input required name="curr_pwd_input" type="password" class="form-control" ng-model="changePwdUser.password"
+                 placeholder="Your current password"/>
+          <span class="text-warning"
+                ng-if="change_pwd_form.curr_pwd_input.$error.required && change_pwd_form.curr_pwd_input.$dirty"
+          >&nbsp;The password is required</span>
+        </div>
+      </div>
       <div class="form-group">
         <label><b>User New Password</b></label>
         <div class="clearfix">

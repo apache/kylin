@@ -52,7 +52,6 @@ import org.apache.kylin.engine.spark.SparkExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
@@ -301,7 +300,7 @@ public class TableService extends BasicService {
         Iterable<String> kylinApplicationTableNames = Iterables.filter(hiveTableNames, new Predicate<String>() {
             @Override
             public boolean apply(@Nullable String input) {
-                return input != null && !input.startsWith(MetadataConstants.KYLIN_INTERMEDIATE_PREFIX);
+                return input != null && !input.startsWith(getConfig().getHiveIntermediateTablePrefix());
             }
         });
         return Lists.newArrayList(kylinApplicationTableNames);

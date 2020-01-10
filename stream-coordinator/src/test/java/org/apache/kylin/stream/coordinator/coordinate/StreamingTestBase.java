@@ -262,7 +262,6 @@ public class StreamingTestBase extends LocalFileMetadataTestCase {
         ReceiverClusterManager clusterManager = mock(ReceiverClusterManager.class);
         when(clusterManager.getCoordinator()).thenReturn(coordinator);
         return clusterManager;
-        // return new ReceiverClusterManager(coordinator);
     }
 
     KylinConfig stubKylinConfig() {
@@ -315,14 +314,23 @@ public class StreamingTestBase extends LocalFileMetadataTestCase {
 
     CubeInstance stubCubeInstance(CubeSegment cubSegment) {
         CubeInstance cubeInstance = mock(CubeInstance.class);
+        CubeSegment readySegment = stubCubSegment(SegmentStatusEnum.READY, 0L, 1L);
         when(cubeInstance.latestCopyForWrite()).thenReturn(cubeInstance);
         @SuppressWarnings("unchecked")
         Segments<CubeSegment> segmentSegments = mock(Segments.class, RETURNS_DEEP_STUBS);
+
+        Segments<CubeSegment> optimizedSegments = mock(Segments.class, RETURNS_DEEP_STUBS);
 
         when(segmentSegments.size()).thenReturn(1);
         when(cubeInstance.getBuildingSegments()).thenReturn(segmentSegments);
         when(cubeInstance.getName()).thenReturn(cubeName1);
         when(cubeInstance.getSegment(anyString(), Matchers.any())).thenReturn(cubSegment);
+
+        when(optimizedSegments.size()).thenReturn(0);
+        when(cubeInstance.getLatestReadySegment()).thenReturn(readySegment);
+        when(cubeInstance.getSegments(SegmentStatusEnum.READY_PENDING)).thenReturn(optimizedSegments);
+        when(cubeInstance.getSegments(SegmentStatusEnum.NEW)).thenReturn(segmentSegments);
+
         return cubeInstance;
     }
 

@@ -22,7 +22,7 @@
 
 
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh $@
+source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh $@
 if [ "$verbose" = true ]; then
     shift
 fi
@@ -76,6 +76,14 @@ function retrieveStartCommand() {
         fi
     fi
 
+    lockfile=$KYLIN_HOME/LOCK
+    if [ ! -e $lockfile ]; then
+        trap "rm -f $lockfile; exit" INT TERM EXIT
+        touch $lockfile
+    else
+        quit "Kylin is starting, wait for it"
+    fi
+
     source ${dir}/check-env.sh
 
     tomcat_root=${dir}/../tomcat
@@ -98,6 +106,12 @@ function retrieveStartCommand() {
     else
         verbose "kylin.security.profile is set to $spring_profile"
     fi
+    # the number of Spring active profiles can be greater than 1. Additional profiles
+    # can be added by setting kylin.security.additional-profiles
+    additional_security_profiles=`bash ${dir}/get-properties.sh kylin.security.additional-profiles`
+    if [[ "x${additional_security_profiles}" != "x" ]]; then
+        spring_profile="${spring_profile},${additional_security_profiles}"
+    fi
 
     retrieveDependency
 
@@ -114,6 +128,11 @@ function retrieveStartCommand() {
     ${KYLIN_HOME}/bin/check-migration-acl.sh || { exit 1; }
     #debug if encounter NoClassDefError
     verbose "kylin classpath is: $(hbase classpath)"
+
+    security_ldap_truststore=`bash ${dir}/get-properties.sh kylin.security.ldap.connection-truststore`
+    if [ -f "${security_ldap_truststore}" ]; then
+        KYLIN_EXTRA_START_OPTS="$KYLIN_EXTRA_START_OPTS -Djavax.net.ssl.trustStore=$security_ldap_truststore"
+    fi
 
     # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
     start_command="hbase ${KYLIN_EXTRA_START_OPTS} \
@@ -146,6 +165,7 @@ if [ "$1" == "start" ]
 then
     retrieveStartCommand
     ${start_command} >> ${KYLIN_HOME}/logs/kylin.out 2>&1 & echo $! > ${KYLIN_HOME}/pid &
+    rm -f $lockfile
 
     echo ""
     echo "A new Kylin instance is started by $USER. To stop it, run 'kylin.sh stop'"
@@ -158,6 +178,7 @@ elif [ "$1" == "run" ]
 then
     retrieveStartCommand
     ${start_command}
+    rm -f $lockfile
 
 # stop command
 elif [ "$1" == "stop" ]
@@ -212,7 +233,7 @@ elif [ "$1" == "streaming" ]
 then
     if [ $# -lt 2 ]
     then
-        echo "invalid input args $@"
+        echo "Invalid input args $@"
         exit -1
     fi
     if [ "$2" == "start" ]
@@ -222,7 +243,7 @@ then
             PID=`cat $KYLIN_HOME/streaming_receiver_pid`
             if ps -p $PID > /dev/null
             then
-              echo "Kylin is running, stop it first"
+              echo "Kylin streaming receiver is running, stop it first"
             exit 1
             fi
         fi
@@ -249,21 +270,20 @@ then
     then
         if [ ! -f "${KYLIN_HOME}/streaming_receiver_pid" ]
         then
-            echo "streaming is not running, please check"
+            echo "Streaming receiver is not running, please check"
             exit 1
         fi
         PID=`cat ${KYLIN_HOME}/streaming_receiver_pid`
         if [ "$PID" = "" ]
         then
-            echo "streaming is not running, please check"
+            echo "Streaming receiver is not running, please check"
             exit 1
         else
-            echo "stopping streaming:$PID"
+            echo "Stopping streaming receiver: $PID"
             WAIT_TIME=2
             LOOP_COUNTER=20
             if ps -p $PID > /dev/null
             then
-                echo "Stopping Kylin: $PID"
                 kill $PID
 
                 for ((i=0; i<$LOOP_COUNTER; i++))
@@ -292,10 +312,10 @@ then
 
                 # process is killed , remove pid file
                 rm -rf ${KYLIN_HOME}/streaming_receiver_pid
-                echo "Kylin with pid ${PID} has been stopped."
+                echo "Kylin streaming receiver with pid ${PID} has been stopped."
                 exit 0
             else
-               quit "Kylin with pid ${PID} is not running"
+               quit "Kylin streaming receiver with pid ${PID} is not running"
             fi
         fi
     elif [[ "$2" = org.apache.kylin.* ]]

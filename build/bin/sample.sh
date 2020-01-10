@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
 
 ## ${dir} assigned to $KYLIN_HOME/bin in header.sh
 source ${dir}/find-hadoop-conf-dir.sh
@@ -104,8 +104,17 @@ sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/model
 sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/model_desc/kylin_streaming_model.json
 sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/project/learn_kylin.json
 sed -i "s/DEFAULT/$sample_database/g" ${KYLIN_HOME}/sample_cube/metadata/table/*.json
-cd ${KYLIN_HOME}/sample_cube/metadata/table
-ls -1 DEFAULT.KYLIN_*.json|sed "s/\(DEFAULT\)\(.*\)\.json/mv & $sample_database\2.json/"|sh -v
+sed -i "s/DEFAULT/$sample_database/g" ${KYLIN_HOME}/sample_cube/metadata/kafka/*.json
+sed -i "s/DEFAULT/$sample_database/g" ${KYLIN_HOME}/sample_cube/metadata/streaming/*.json
+strings=(
+    table
+    streaming
+    kafka
+)
+for i in "${strings[@]}"; do
+    cd "${KYLIN_HOME}/sample_cube/metadata/${i}"
+    ls -1 DEFAULT.KYLIN_*.json|sed "s/\(DEFAULT\)\(.*\)\.json/mv & $sample_database\2.json/"|sh -v
+done
 
 cd ${KYLIN_HOME}
 ${dir}/kylin.sh org.apache.kylin.common.persistence.ResourceTool upload ${KYLIN_HOME}/sample_cube/metadata  || { exit 1; }

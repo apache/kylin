@@ -109,6 +109,9 @@ public interface BatchConstants {
     String ARG_HBASE_CONF_PATH = "hbaseConfPath";
     String ARG_SHRUNKEN_DICT_PATH = "shrunkenDictPath";
     String ARG_COUNTER_OUTPUT = "counterOutput";
+    String ARG_BASE64_ENCODED_STEP_NAME = "base64StepName";
+    String ARG_SQL_COUNT = "sqlCount";
+    String ARG_BASE64_ENCODED_SQL = "base64EncodedSql";
 
     /**
      * logger and counter

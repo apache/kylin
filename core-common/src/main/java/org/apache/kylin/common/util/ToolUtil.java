@@ -17,7 +17,7 @@
  *
  */
 
-package org.apache.kylin.tool.util;
+package org.apache.kylin.common.util;
 
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
@@ -26,8 +26,13 @@ import org.apache.kylin.common.persistence.ResourceStore;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Enumeration;
 import java.util.Map;
 
 public class ToolUtil {
@@ -90,4 +95,35 @@ public class ToolUtil {
         }
         return hostname;
     }
+
+    public static InetAddress getFirstNonLoopbackAddress(boolean preferIpv4, boolean preferIPv6)
+            throws SocketException {
+        Enumeration en = NetworkInterface.getNetworkInterfaces();
+        while (en.hasMoreElements()) {
+            NetworkInterface element = (NetworkInterface) en.nextElement();
+            for (Enumeration en2 = element.getInetAddresses(); en2.hasMoreElements();) {
+                InetAddress addr = (InetAddress) en2.nextElement();
+                if (!addr.isLoopbackAddress()) {
+                    if (addr instanceof Inet4Address) {
+                        if (preferIPv6) {
+                            continue;
+                        }
+                        return addr;
+                    }
+                    if (addr instanceof Inet6Address) {
+                        if (preferIpv4) {
+                            continue;
+                        }
+                        return addr;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public static InetAddress getFirstIPV4NonLoopBackAddress() throws SocketException {
+        return getFirstNonLoopbackAddress(true, false);
+    }
+
 }

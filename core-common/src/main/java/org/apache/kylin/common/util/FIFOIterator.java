@@ -18,6 +18,7 @@
 package org.apache.kylin.common.util;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Queue;
 
 /**
@@ -40,6 +41,9 @@ public class FIFOIterator<T> implements Iterator<T> {
 
     @Override
     public T next() {
+        if (!hasNext()) {
+            throw new NoSuchElementException();
+        }
         return q.poll();
     }
 

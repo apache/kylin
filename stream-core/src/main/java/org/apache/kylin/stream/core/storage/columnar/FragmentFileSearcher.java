@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Dictionary;
@@ -79,6 +80,11 @@ public class FragmentFileSearcher implements IStreamingGTSearcher {
 
     @Override
     public void search(StreamingSearchContext searchContext, ResultCollector collector) throws IOException {
+        String timezone = searchContext.getCubeDesc().getConfig().getStreamingDerivedTimeTimezone();
+        long timezoneOffset = 0;
+        if (timezone != null && timezone.length() > 0) {
+            timezoneOffset = TimeZone.getTimeZone(timezone).getRawOffset();
+        }
         FragmentMetaInfo fragmentMetaInfo = fragmentData.getFragmentMetaInfo();
         CuboidMetaInfo cuboidMetaInfo;
         if (searchContext.hitBasicCuboid()) {
@@ -116,8 +122,8 @@ public class FragmentFileSearcher implements IStreamingGTSearcher {
         Set<TblColRef> unEvaluateDims = Sets.newHashSet();
         TupleFilter fragmentFilter = null;
         if (searchContext.getFilter() != null) {
-            fragmentFilter = convertFilter(fragmentMetaInfo, searchContext.getFilter(), recordCodec,
-                    dimensions, new CubeDimEncMap(cubeDesc, dictMap), unEvaluateDims);
+            fragmentFilter = convertFilter(fragmentMetaInfo, searchContext.getFilter(), recordCodec, dimensions,
+                    new CubeDimEncMap(cubeDesc, dictMap), unEvaluateDims, timezoneOffset);
         }
         if (ConstantTupleFilter.TRUE == fragmentFilter) {
             fragmentFilter = null;
@@ -134,8 +140,8 @@ public class FragmentFileSearcher implements IStreamingGTSearcher {
     }
 
     private TupleFilter convertFilter(FragmentMetaInfo fragmentMetaInfo, TupleFilter rootFilter,
-                                      ColumnarRecordCodec recordCodec, final TblColRef[] dimensions, final IDimensionEncodingMap dimEncodingMap, //
-                                      final Set<TblColRef> unEvaluableColumnCollector) {
+            ColumnarRecordCodec recordCodec, final TblColRef[] dimensions, final IDimensionEncodingMap dimEncodingMap, //
+            final Set<TblColRef> unEvaluableColumnCollector, long timezoneOffset) {
         Map<TblColRef, Integer> colMapping = Maps.newHashMap();
         for (int i = 0; i < dimensions.length; i++) {
             colMapping.put(dimensions[i], i);
@@ -147,6 +153,7 @@ public class FragmentFileSearcher implements IStreamingGTSearcher {
         filter = builtInFunctionTransformer.transform(filter);
         FragmentFilterConverter fragmentFilterConverter = new FragmentFilterConverter(fragmentMetaInfo, unEvaluableColumnCollector,
                 colMapping, recordCodec);
+        fragmentFilterConverter.setTimezoneOffset(timezoneOffset);
         filter = fragmentFilterConverter.transform(filter);
 
         filter = new FilterOptimizeTransformer().transform(filter);
@@ -159,6 +166,7 @@ public class FragmentFileSearcher implements IStreamingGTSearcher {
         private CompareFilterTimeRangeChecker filterTimeRangeChecker;
         private ColumnarRecordCodec recordCodec;
         transient ByteBuffer buf;
+        private long timezoneOffset = 0;
 
         public FragmentFilterConverter(FragmentMetaInfo fragmentMetaInfo, Set<TblColRef> unEvaluableColumnCollector,
                                        Map<TblColRef, Integer> colMapping, ColumnarRecordCodec recordCodec) {
@@ -225,7 +233,7 @@ public class FragmentFileSearcher implements IStreamingGTSearcher {
 
             if (TimeDerivedColumnType.isTimeDerivedColumn(externalCol.getName()) && filterTimeRangeChecker != null) {
                 CheckResult checkResult = filterTimeRangeChecker.check(oldCompareFilter,
-                        TimeDerivedColumnType.getTimeDerivedColumnType(externalCol.getName()));
+                        TimeDerivedColumnType.getTimeDerivedColumnType(externalCol.getName()), timezoneOffset);
                 if (checkResult == CheckResult.INCLUDED) {
                     return ConstantTupleFilter.TRUE;
                 } else if (checkResult == CheckResult.EXCLUDED) {
@@ -354,7 +362,8 @@ public class FragmentFileSearcher implements IStreamingGTSearcher {
             }
         }
 
-
+        public void setTimezoneOffset(long timezoneOffset) {
+            this.timezoneOffset = timezoneOffset;
+        }
     }
-
 }

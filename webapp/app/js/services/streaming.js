@@ -37,7 +37,7 @@ KylinApp.factory('StreamingServiceV2', ['$resource', function ($resource, config
 }]);
 
 KylinApp.factory('AdminStreamingService', ['$resource', function ($resource, config) {
-  return $resource(Config.service.url + 'streaming_v2/:propName/:replicaSetId/:cubeName/:nodeId/:action', {}, {
+  return $resource(Config.service.url + 'streaming_v2/:propName/:replicaSetId/:receiverID/:cubeName/:nodeId/:action', {}, {
     getReplicaSets: {
       method: 'GET',
       params: {
@@ -111,6 +111,13 @@ KylinApp.factory('AdminStreamingService', ['$resource', function ($resource, con
       method: 'DELETE',
       params: {
         propName: 'replicaSet'
+      },
+      isArray: false
+    },
+    removeReceiver: {
+      method: 'DELETE',
+      params: {
+        propName: 'receivers'
       },
       isArray: false
     },

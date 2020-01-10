@@ -68,7 +68,15 @@ public class PushDownRunnerJdbcImpl extends AbstractPushdownRunner {
     @Override
     public void init(KylinConfig config) {
         try {
-            manager = JdbcPushDownConnectionManager.getConnectionManager();
+            manager = JdbcPushDownConnectionManager.getConnectionManager(null);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    public void initById(KylinConfig config, String id) {
+        try {
+            manager = JdbcPushDownConnectionManager.getConnectionManager(id);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         }

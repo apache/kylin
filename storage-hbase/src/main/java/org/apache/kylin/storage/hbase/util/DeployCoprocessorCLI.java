@@ -195,7 +195,13 @@ public class DeployCoprocessorCLI {
             return tableNames;
         }
         logger.info("Commit Information: " + commitInfo);
+        int skipTableCnt = 0;
         for (String tableName : tableNames) {
+            if (!hbaseAdmin.isTableAvailable(TableName.valueOf(tableName))) {
+                logger.warn("Table: " + tableName + " is not available currently, skip it");
+                skipTableCnt ++;
+                continue;
+            }
             HTableDescriptor tableDesc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
             String gitTag = tableDesc.getValue(IRealizationConstants.HTableGitTag);
             if (commitInfo.equals(gitTag)) {
@@ -204,6 +210,7 @@ public class DeployCoprocessorCLI {
                 result.add(tableName);
             }
         }
+        logger.info("Skip {} tables for not founding in HBase Cluster", skipTableCnt);
         logger.info("Filtered tables don't need to deploy coprocessors: " + filteredList);
         return result;
     }

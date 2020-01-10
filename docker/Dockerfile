@@ -26,16 +26,21 @@ ENV HBASE_VERSION 1.1.2
 ENV SPARK_VERSION 2.3.1
 ENV ZK_VERSION 3.4.6
 ENV KAFKA_VERSION 1.1.1
+ENV LIVY_VERSION 0.6.0
+ENV KYLIN_VERSION 3.0.0-alpha2
 
 ENV JAVA_HOME /home/admin/jdk1.8.0_141
 ENV MVN_HOME /home/admin/apache-maven-3.6.1
 ENV HADOOP_HOME /home/admin/hadoop-$HADOOP_VERSION
 ENV HIVE_HOME /home/admin/apache-hive-$HIVE_VERSION-bin
 ENV HADOOP_CONF $HADOOP_HOME/etc/hadoop
+ENV HADOOP_CONF_DIR $HADOOP_HOME/etc/hadoop
 ENV HBASE_HOME /home/admin/hbase-$HBASE_VERSION
 ENV SPARK_HOME /home/admin/spark-$SPARK_VERSION-bin-hadoop2.6
+ENV SPARK_CONF_DIR /home/admin/spark-$SPARK_VERSION-bin-hadoop2.6/conf
 ENV ZK_HOME /home/admin/zookeeper-$ZK_VERSION
 ENV KAFKA_HOME /home/admin/kafka_2.11-$KAFKA_VERSION
+ENV LIVY_HOME /home/admin/apache-livy-$LIVY_VERSION-incubating-bin
 ENV PATH $PATH:$JAVA_HOME/bin:$HADOOP_HOME/bin:$HIVE_HOME/bin:$HBASE_HOME/bin:$MVN_HOME/bin:spark-$SPARK_VERSION-bin-hadoop2.6/bin:$KAFKA_HOME/bin
 
 USER root
@@ -43,10 +48,10 @@ USER root
 WORKDIR /home/admin
 
 # install tools
-RUN yum -y install lsof.x86_64 wget.x86_64 tar.x86_64 git.x86_64 mysql-server.x86_64 mysql.x86_64
+RUN yum -y install lsof.x86_64 wget.x86_64 tar.x86_64 git.x86_64 mysql-server.x86_64 mysql.x86_64 unzip.x86_64
 
 # install mvn
-RUN wget http://mirrors.ocf.berkeley.edu/apache/maven/maven-3/3.6.1/binaries/apache-maven-3.6.1-bin.tar.gz \
+RUN wget https://archive.apache.org/dist/maven/maven-3/3.6.1/binaries/apache-maven-3.6.1-bin.tar.gz \
     && tar -zxvf apache-maven-3.6.1-bin.tar.gz \
     && rm -f apache-maven-3.6.1-bin.tar.gz
 COPY conf/maven/settings.xml $MVN_HOME/conf/settings.xml
@@ -88,17 +93,32 @@ RUN wget https://archive.apache.org/dist/spark/spark-$SPARK_VERSION/spark-$SPARK
     && rm -f /home/admin/spark-$SPARK_VERSION-bin-hadoop2.6.tgz \
     && cp $HIVE_HOME/conf/hive-site.xml $SPARK_HOME/conf \
     && cp $SPARK_HOME/yarn/*.jar $HADOOP_HOME/share/hadoop/yarn/lib
+RUN cp $HIVE_HOME/lib/mysql-connector-java-5.1.24.jar $SPARK_HOME/jars
+RUN echo spark.sql.catalogImplementation=hive > $SPARK_HOME/conf/spark-defaults.conf
 
 # setup kafka
 RUN wget https://archive.apache.org/dist/kafka/$KAFKA_VERSION/kafka_2.11-$KAFKA_VERSION.tgz \
     && tar -zxvf /home/admin/kafka_2.11-$KAFKA_VERSION.tgz \
     && rm -f /home/admin/kafka_2.11-$KAFKA_VERSION.tgz
 
+# setup livy
+RUN wget https://www.apache.org/dist/incubator/livy/$LIVY_VERSION-incubating/apache-livy-$LIVY_VERSION-incubating-bin.zip \
+    && unzip /home/admin/apache-livy-$LIVY_VERSION-incubating-bin.zip \
+    && rm -f /home/admin/apache-livy-$LIVY_VERSION-incubating-bin.zip
+
 # copy kylin source code
 COPY ./kylin /home/admin/kylin_sourcecode
+
 RUN sed -i -e 's#<!--<version>3.4.1</version>-->#<version>3.4.1</version>#g' /home/admin/kylin_sourcecode/pom.xml \
     && echo "kylin.engine.spark-conf.spark.executor.memory=1G" >> /home/admin/kylin_sourcecode/build/conf/kylin.properties \
-    && echo "kylin.engine.spark-conf-mergedict.spark.executor.memory=1.5G" >> /home/admin/kylin_sourcecode/build/conf/kylin.properties
+    && echo "kylin.engine.spark-conf-mergedict.spark.executor.memory=1.5G" >> /home/admin/kylin_sourcecode/build/conf/kylin.properties \
+    && echo "kylin.engine.livy-conf.livy-url=http://127.0.0.1:8998" >> /home/admin/kylin_sourcecode/build/conf/kylin.properties \
+    && echo kylin.engine.livy-conf.livy-key.file=hdfs://localhost:9000/kylin/livy/kylin-job-$KYLIN_VERSION.jar >> /home/admin/kylin_sourcecode/build/conf/kylin.properties \
+    && echo kylin.engine.livy-conf.livy-arr.jars=hdfs://localhost:9000/kylin/livy/hbase-client-$HBASE_VERSION.jar,hdfs://localhost:9000/kylin/livy/hbase-common-$HBASE_VERSION.jar,hdfs://localhost:9000/kylin/livy/hbase-hadoop-compat-$HBASE_VERSION.jar,hdfs://localhost:9000/kylin/livy/hbase-hadoop2-compat-$HBASE_VERSION.jar,hdfs://localhost:9000/kylin/livy/hbase-server-$HBASE_VERSION.jar,hdfs://localhost:9000/kylin/livy/htrace-core-*-incubating.jar,hdfs://localhost:9000/kylin/livy/metrics-core-*.jar >> /home/admin/kylin_sourcecode/build/conf/kylin.properties \
+    && echo kylin.source.hive.quote-enabled=false >> /home/admin/kylin_sourcecode/build/conf/kylin.properties \
+    && echo kylin.engine.spark-conf.spark.eventLog.dir=hdfs://localhost:9000/kylin/spark-history >> /home/admin/kylin_sourcecode/build/conf/kylin.properties \
+    && echo kylin.engine.spark-conf.spark.history.fs.logDirectory=hdfs://localhost:9000/kylin/spark-history >> /home/admin/kylin_sourcecode/build/conf/kylin.properties \
+    && echo kylin.source.hive.redistribute-flat-table=false >> /home/admin/kylin_sourcecode/build/conf/kylin.properties
 
 COPY ./entrypoint.sh /home/admin/entrypoint.sh
 RUN chmod u+x /home/admin/entrypoint.sh

@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<DATASOURCE_DEF NAME="kylin" ID="postgresql">
+    <PROPERTY NAME="sql.default-converted-enabled" VALUE="true"/>
+    <PROPERTY NAME="sql.allow-no-offset" VALUE="true"/>
+    <PROPERTY NAME="sql.allow-fetch-no-rows" VALUE="true"/>
+    <PROPERTY NAME="sql.allow-no-orderby-with-fetch" VALUE="true"/>
+    <PROPERTY NAME="sql.keyword-default-escape" VALUE="true"/>
+    <PROPERTY NAME="sql.keyword-default-uppercase" VALUE="false"/>
+    <PROPERTY NAME="sql.case-sensitive" VALUE="true"/>
+    <PROPERTY NAME="metadata.enable-cache" VALUE="true"/>
+<!--    <PROPERTY NAME="sql.enable-quote-all-identifiers" VALUE="false"/>-->
+
+    <!--DayOfYear-->
+    <FUNCTION_DEF ID="9" EXPRESSION="EXTRACT(DOY FROM CAST($0 AS DATE))"/>
+    <!--LeftStr-->
+    <FUNCTION_DEF ID="24" EXPRESSION="SUBSTR($0, 1, $1)"/>
+    <!--Length-->
+    <FUNCTION_DEF ID="25" EXPRESSION="LENGTH($0)"/>
+    <!--SubStr-->
+    <FUNCTION_DEF ID="27" EXPRESSION="SUBSTR($0, $1, $2)"/>
+    <!--Log-->
+    <FUNCTION_DEF ID="48" EXPRESSION="LOG($1, $0)"/>
+    <!--Log10-->
+    <FUNCTION_DEF ID="49" EXPRESSION="LOG($0)"/>
+    <!--Daysbetween-->
+    <FUNCTION_DEF ID="64" EXPRESSION="(CAST($1 AS DATE) - CAST($0 AS DATE))"/>
+    <!--DateAdd-->
+    <FUNCTION_DEF ID="65" EXPRESSION="CAST((CAST($1 AS DATE) + INTERVAL '$0' DAY) AS DATE)"/>
+    <!--AddMonths-->
+    <FUNCTION_DEF ID="66" EXPRESSION="CAST((CAST($1 AS DATE) + INTERVAL '$0' MONTH) AS DATE)"/>
+    <!--DayofWeek-->
+    <FUNCTION_DEF ID="68" EXPRESSION="EXTRACT(DOW FROM CAST($0 AS DATE))"/>
+    <!--Monthsbetween-->
+    <FUNCTION_DEF ID="69" EXPRESSION="(12 * (EXTRACT(YEAR FROM CAST($1 AS DATE)) - EXTRACT(YEAR FROM CAST($0 AS DATE))) + EXTRACT(MONTH FROM CAST($1 AS DATE)) - EXTRACT(MONTH FROM CAST($0 AS DATE)) - (CASE WHEN EXTRACT(DAY FROM CAST($0 AS DATE)) > EXTRACT(DAY FROM CAST($1 AS DATE)) THEN 1 ELSE 0 END))"/>
+    <!--Week-->
+    <FUNCTION_DEF ID="70" EXPRESSION="EXTRACT(WEEK FROM CAST($0 AS DATE))"/>
+    <!--StrBeginsWith-->
+    <FUNCTION_DEF ID="72" EXPRESSION="CASE WHEN SUBSTRING($0 FROM 1 for LENGTH($1) ) =$1 THEN 1 ELSE 0 END"/>
+    <!--StrEndsWith-->
+    <FUNCTION_DEF ID="74" EXPRESSION="CASE WHEN SUBSTRING($0 FROM (LENGTH($0)-LENGTH($1)+1) for LENGTH($1) ) =$1 THEN 1 ELSE 0 END"/>
+    <!--LTrim-->
+    <FUNCTION_DEF ID="76" EXPRESSION="LTRIM($0)"/>
+    <!--RightStr-->
+    <FUNCTION_DEF ID="79" EXPRESSION="SUBSTRING($0 FROM (LENGTH($0) -$1 +1) FOR $1)"/>
+    <!--RTrim-->
+    <FUNCTION_DEF ID="80" EXPRESSION="RTRIM($0)"/>
+    <!--Random number-->
+    <FUNCTION_DEF ID="83" EXPRESSION="RANDOM()"/>
+
+    <TYPE_DEF ID="String" EXPRESSION="VARCHAR"/>
+    <TYPE_DEF ID="Binary" EXPRESSION="BYTEA"/>
+    <TYPE_DEF ID="Double" EXPRESSION="DOUBLE PRECISION"/>
+    <TYPE_DEF ID="Float" EXPRESSION="REAL"/>
+    <TYPE_DEF ID="Byte" EXPRESSION="BIT(8)"/>
+    <TYPE_DEF ID="Long" EXPRESSION="BIGINT"/>
+    <TYPE_DEF ID="Short" EXPRESSION="SMALLINT"/>
+    <TYPE_DEF ID="Int" EXPRESSION="INTEGER"/>
+    <TYPE_DEF ID="TinyInt" EXPRESSION="BIT(8)"/>
+    <TYPE_DEF ID="DateTime" EXPRESSION="TIMESTAMP"/>
+    <TYPE_DEF ID="TimeStamp" EXPRESSION="TIMESTAMPTZ"/>
+</DATASOURCE_DEF>
