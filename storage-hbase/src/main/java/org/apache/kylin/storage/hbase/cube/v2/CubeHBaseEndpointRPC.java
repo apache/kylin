@@ -176,6 +176,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         // for different cubes until redeployment of coprocessor jar.
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         final boolean compressionResult = kylinConfig.getCompressionResult();
+        final String compressionAlgorithm = kylinConfig.getCompressionAlgorithm();
 
         final boolean querySegmentCacheEnabled = isSegmentLevelCacheEnabled();
         final SegmentQueryResult.Builder segmentQueryResultBuilder = new SegmentQueryResult.Builder(shardNum,
@@ -202,7 +203,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                     }
                     for (byte[] regionResult : segmentResult.getRegionResults()) {
                         if (compressionResult) {
-                            epResultItr.append(CompressionUtils.decompress(regionResult));
+                            epResultItr.append(CompressionUtils.decompress(regionResult, compressionAlgorithm));
                         } else {
                             epResultItr.append(regionResult);
                         }

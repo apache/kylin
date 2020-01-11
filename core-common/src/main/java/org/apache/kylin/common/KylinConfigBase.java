@@ -1271,6 +1271,13 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.storage.hbase.run-local-coprocessor", FALSE));
     }
 
+    //KYLIN-4326 KYLIN support ZSTD codec
+    // supprot zstd/lz4/java zip;when "" use the java zip to support old version
+    public String getCompressionAlgorithm(){
+        return getOptional("kylin.storage.hbase.endpoint-compress-algorithm", "");
+    }
+
+
     public double getQueryCoprocessorMemGB() {
         return Double.parseDouble(this.getOptional("kylin.storage.hbase.coprocessor-mem-gb", "3.0"));
     }

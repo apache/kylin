@@ -18,39 +18,19 @@
 
 package org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.protobuf.HBaseZeroCopyByteString;
+import com.google.protobuf.RpcCallback;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.CoprocessorEnvironment;
-import org.apache.hadoop.hbase.HBaseTestingUtility;
-import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.HRegionInfo;
-import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
-import org.apache.hadoop.hbase.coprocessor.CoprocessorException;
-import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
-import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
-import org.apache.hadoop.hbase.coprocessor.RegionServerCoprocessorEnvironment;
-import org.apache.hadoop.hbase.coprocessor.TestRowProcessorEndpoint;
+import org.apache.hadoop.hbase.coprocessor.*;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.Dictionary;
-import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.*;
 import org.apache.kylin.cube.gridtable.CubeCodeSystem;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.dict.StringBytesConverter;
@@ -58,20 +38,10 @@ import org.apache.kylin.dict.TrieDictionaryBuilder;
 import org.apache.kylin.dimension.DateDimEnc;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
-import org.apache.kylin.gridtable.GTBuilder;
-import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.gridtable.GTScanRequest;
-import org.apache.kylin.gridtable.GTScanRequestBuilder;
-import org.apache.kylin.gridtable.GridTable;
-import org.apache.kylin.gridtable.IGTScanner;
+import org.apache.kylin.gridtable.*;
 import org.apache.kylin.gridtable.memstore.GTSimpleMemStore;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.expression.BinaryTupleExpression;
-import org.apache.kylin.metadata.expression.CaseTupleExpression;
-import org.apache.kylin.metadata.expression.ColumnTupleExpression;
-import org.apache.kylin.metadata.expression.NumberTupleExpression;
-import org.apache.kylin.metadata.expression.TupleExpression;
+import org.apache.kylin.metadata.expression.*;
 import org.apache.kylin.metadata.expression.TupleExpression.ExpressionOperatorEnum;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -88,10 +58,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.powermock.api.mockito.PowerMockito;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.protobuf.HBaseZeroCopyByteString;
-import com.google.protobuf.RpcCallback;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.text.ParseException;
+import java.util.*;
 
 public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
 
@@ -113,7 +83,8 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
 
     private static final Map<String, Double> expUserStddevRet = Maps.newHashMap();
     private static final Map<String, BigDecimal> expUserRet = Maps.newHashMap();
-    private static final BigDecimal userCnt = new BigDecimal(dateList.size());
+    private static BigDecimal userCnt = new BigDecimal(dateList.size());
+
 
     public static void prepareTestData() throws Exception {
         try {
@@ -156,6 +127,7 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
         staticCreateTestMetadata();
 
         prepareTestData();
+        KylinConfig.getInstanceFromEnv().setProperty("kylin.storage.hbase.endpoint-compress-algorithm", "zstd");
     }
 
     @AfterClass
@@ -193,7 +165,7 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
 
                 try {
                     byte[] rawData = CompressionUtils
-                            .decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows()));
+                            .decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows()), KylinConfig.getInstanceFromEnv().getCompressionAlgorithm());
                     PartitionResultIterator iterator = new PartitionResultIterator(rawData, gtInfo, setOf(0, 1, 2, 3));
                     int nReturn = 0;
                     while (iterator.hasNext()) {
@@ -227,7 +199,7 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
             public void run(CubeVisitProtos.CubeVisitResponse result) {
                 try {
                     byte[] rawData = CompressionUtils
-                            .decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows()));
+                            .decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows()), KylinConfig.getInstanceFromEnv().getCompressionAlgorithm());
                     PartitionResultIterator iterator = new PartitionResultIterator(rawData, gtInfo, setOf(1, 3));
                     Map<String, BigDecimal> actRet = Maps.newHashMap();
                     while (iterator.hasNext()) {
@@ -286,7 +258,7 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
             public void run(CubeVisitProtos.CubeVisitResponse result) {
                 try {
                     byte[] rawData = CompressionUtils
-                            .decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows()));
+                            .decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows()), KylinConfig.getInstanceFromEnv().getCompressionAlgorithm());
                     PartitionResultIterator iterator = new PartitionResultIterator(rawData, gtInfo, setOf(2, 3));
                     Map<BigDecimal, BigDecimal> actRet = Maps.newHashMap();
                     while (iterator.hasNext()) {
@@ -321,11 +293,11 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
     }
 
     public static CubeVisitProtos.CubeVisitRequest mockScanRequestWithRuntimeDimensions(GTInfo gtInfo,
-            List<RawScan> rawScans) throws IOException {
+                                                                                        List<RawScan> rawScans) throws IOException {
         ImmutableBitSet dimensions = setOf();
         ImmutableBitSet aggrGroupBy = setOf(3);
         ImmutableBitSet aggrMetrics = setOf(2);
-        String[] aggrMetricsFuncs = { "SUM" };
+        String[] aggrMetricsFuncs = {"SUM"};
         ImmutableBitSet dynColumns = setOf(3);
 
         TupleFilter whenFilter = getCompareTupleFilter(1, "Ken");
@@ -358,11 +330,11 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
     }
 
     public static CubeVisitProtos.CubeVisitRequest mockScanRequestWithRuntimeAggregates(GTInfo gtInfo,
-            List<RawScan> rawScans) throws IOException {
+                                                                                        List<RawScan> rawScans) throws IOException {
         ImmutableBitSet dimensions = setOf(1);
         ImmutableBitSet aggrGroupBy = setOf(1);
         ImmutableBitSet aggrMetrics = setOf(3);
-        String[] aggrMetricsFuncs = { "SUM" };
+        String[] aggrMetricsFuncs = {"SUM"};
         ImmutableBitSet dynColumns = setOf(3);
         ImmutableBitSet rtAggrMetrics = setOf(2);
 
@@ -427,7 +399,7 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
     }
 
     public static CubeVisitProtos.CubeVisitRequest mockScanRequest(List<RawScan> rawScans, GTScanRequest scanRequest,
-            List<CubeVisitProtos.CubeVisitRequest.IntList> intListList) throws IOException {
+                                                                   List<CubeVisitProtos.CubeVisitRequest.IntList> intListList) throws IOException {
         final CubeVisitProtos.CubeVisitRequest.Builder builder = CubeVisitProtos.CubeVisitRequest.newBuilder();
         builder.setGtScanRequest(CubeHBaseEndpointRPC.serializeGTScanReq(scanRequest))
                 .setHbaseRawScan(CubeHBaseEndpointRPC.serializeRawScans(rawScans));
@@ -487,7 +459,8 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
                 kylinConfig.getHBaseScanMaxResultSize());
     }
 
-    private static GridTable newTable(GTInfo info) throws IOException {
+
+    private static GridTable newTable(GTInfo info) throws IOException, ParseException {
         GTSimpleMemStore store = new GTSimpleMemStore(info);
         GridTable table = new GridTable(info, store);
         GTRecord record = new GTRecord(info);
@@ -545,7 +518,7 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
         //Measure
         ImmutableBitSet measureColumns = setOf(2, 3);
 
-        builder.enableColumnBlock(new ImmutableBitSet[] { dimensionColumns, measureColumns });
+        builder.enableColumnBlock(new ImmutableBitSet[]{dimensionColumns, measureColumns});
         GTInfo info = builder.build();
         return info;
     }

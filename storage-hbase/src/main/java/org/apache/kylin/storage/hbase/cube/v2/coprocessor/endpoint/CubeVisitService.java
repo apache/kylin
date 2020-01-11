@@ -230,7 +230,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
     @SuppressWarnings("checkstyle:methodlength")
     @Override
     public void visitCube(final RpcController controller, final CubeVisitProtos.CubeVisitRequest request,
-            RpcCallback<CubeVisitProtos.CubeVisitResponse> done) {
+                          RpcCallback<CubeVisitProtos.CubeVisitResponse> done) {
         List<RegionScanner> regionScanners = Lists.newArrayList();
         HRegion region = null;
 
@@ -242,12 +242,12 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
         // if user change kylin.properties on kylin server, need to manually redeploy coprocessor jar to update KylinConfig of Env.
         KylinConfig kylinConfig = KylinConfig.createKylinConfig(request.getKylinProperties());
-        
+        String algorithm = kylinConfig.getCompressionAlgorithm();
         String queryId = request.hasQueryId() ? request.getQueryId() : "UnknownId";
         logger.info("start query {} in thread {}", queryId, Thread.currentThread().getName());
         try (SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(kylinConfig);
-                SetThreadName ignored = new SetThreadName("Query %s", queryId)) {
-            
+             SetThreadName ignored = new SetThreadName("Query %s", queryId)) {
+
             final long serviceStartTime = System.currentTimeMillis();
 
             region = (HRegion) env.getRegion();
@@ -342,7 +342,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                     //if it's doing storage aggr, then should rely on GTAggregateScanner's limit check
                     if (!scanReq.isDoingStorageAggregation()
                             && (scanReq.getStorageLimitLevel() != StorageLimitLevel.NO_LIMIT
-                                    && finalRowCount >= storagePushDownLimit)) {
+                            && finalRowCount >= storagePushDownLimit)) {
                         //read one more record than limit
                         logger.info("The finalScanner aborted because storagePushDownLimit is satisfied");
                         break;
@@ -372,6 +372,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
             //outputStream.close() is not necessary
             byte[] compressedAllRows;
+            long cTimeCost = 0;
             if (errorInfo == null) {
                 allRows = outputStream.toByteArray();
             } else {
@@ -380,11 +381,14 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             if (!kylinConfig.getCompressionResult()) {
                 compressedAllRows = allRows;
             } else {
-                compressedAllRows = CompressionUtils.compress(allRows);
+                long c_begin = System.currentTimeMillis();
+                compressedAllRows = CompressionUtils.compress(allRows, algorithm);
+                cTimeCost = System.currentTimeMillis() - c_begin;
             }
 
             appendProfileInfo(sb, "compress done", serviceStartTime);
-            logger.info("Size of final result = {} ({} before compressing)", compressedAllRows.length, allRows.length);
+            logger.info("Size of final result = {} ({} before compressing  time cost {})",
+                    compressedAllRows.length, allRows.length, cTimeCost);
 
             OperatingSystemMXBean operatingSystemMXBean = (OperatingSystemMXBean) ManagementFactory
                     .getOperatingSystemMXBean();
@@ -402,15 +406,16 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             done.run(responseBuilder.//
                     setCompressedRows(HBaseZeroCopyByteString.wrap(compressedAllRows)).//too many array copies 
                     setStats(CubeVisitProtos.CubeVisitResponse.Stats.newBuilder()
-                            .setFilteredRowCount(cellListIterator.getTotalScannedRowCount() - rowCountBeforeAggr)
-                            .setAggregatedRowCount(rowCountBeforeAggr - finalRowCount)
-                            .setScannedRowCount(cellListIterator.getTotalScannedRowCount())
-                            .setScannedBytes(cellListIterator.getTotalScannedRowBytes())
-                            .setServiceStartTime(serviceStartTime).setServiceEndTime(System.currentTimeMillis())
-                            .setSystemCpuLoad(systemCpuLoad).setFreePhysicalMemorySize(freePhysicalMemorySize)
-                            .setFreeSwapSpaceSize(freeSwapSpaceSize)
-                            .setHostname(InetAddress.getLocalHost().getHostName()).setEtcMsg(sb.toString())
-                            .setNormalComplete(errorInfo == null ? 1 : 0).build())
+                    .setFilteredRowCount(cellListIterator.getTotalScannedRowCount() - rowCountBeforeAggr)
+                    .setAggregatedRowCount(rowCountBeforeAggr - finalRowCount)
+                    .setScannedRowCount(cellListIterator.getTotalScannedRowCount())
+                    .setScannedBytes(cellListIterator.getTotalScannedRowBytes())
+                    .setServiceStartTime(serviceStartTime).setServiceEndTime(System.currentTimeMillis())
+                    .setSystemCpuLoad(systemCpuLoad).setFreePhysicalMemorySize(freePhysicalMemorySize)
+                    .setFreeSwapSpaceSize(freeSwapSpaceSize)
+                    .setHostname(InetAddress.getLocalHost().getHostName()).setEtcMsg(sb.toString())
+                    .setCompressionTimeCost(cTimeCost)
+                    .setNormalComplete(errorInfo == null ? 1 : 0).build())
                     .build());
 
         } catch (DoNotRetryIOException e) {
