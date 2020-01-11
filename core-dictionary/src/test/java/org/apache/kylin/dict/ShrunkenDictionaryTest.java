@@ -18,12 +18,16 @@
 
 package org.apache.kylin.dict;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -33,9 +37,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class ShrunkenDictionaryTest {
+    private static List<String> testData;
+    private static Dictionary originDict;
+    private static Dictionary shrunkenDict;
+
     @BeforeClass
     public static void setUp() {
         LocalFileMetadataTestCase.staticCreateTestMetadata();
+        prepareTestData();
     }
 
     @AfterClass
@@ -45,28 +54,6 @@ public class ShrunkenDictionaryTest {
 
     @Test
     public void testStringDictionary() {
-        ArrayList<String> strList = new ArrayList<String>();
-        strList.add("");
-        strList.add("part");
-        strList.add("par");
-        strList.add("partition");
-        strList.add("party");
-        strList.add("parties");
-        strList.add("paint");
-
-        TrieDictionaryBuilder<String> dictBuilder = new TrieDictionaryBuilder<>(new StringBytesConverter());
-        for (String str : strList) {
-            dictBuilder.addValue(str);
-        }
-        Dictionary<String> dict = dictBuilder.build(0);
-
-        ShrunkenDictionary.StringValueSerializer valueSerializer = new ShrunkenDictionary.StringValueSerializer();
-        ShrunkenDictionaryBuilder<String> shrunkenDictBuilder = new ShrunkenDictionaryBuilder<>(dict);
-        for (int i = 0; i < strList.size(); i += 2) {
-            shrunkenDictBuilder.addValue(strList.get(i));
-        }
-        Dictionary<String> shrunkenDict = shrunkenDictBuilder.build(valueSerializer);
-
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(bos);
@@ -76,14 +63,82 @@ public class ShrunkenDictionaryTest {
             ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
             DataInputStream dis = new DataInputStream(bis);
 
+            ShrunkenDictionary.StringValueSerializer valueSerializer = new ShrunkenDictionary.StringValueSerializer();
             Dictionary<String> dShrunkenDict = new ShrunkenDictionary<>(valueSerializer);
             dShrunkenDict.readFields(dis);
 
-            for (int i = 0; i < strList.size(); i += 2) {
-                String value = strList.get(i);
-                Assert.assertEquals(dict.getIdFromValue(value), dShrunkenDict.getIdFromValue(value));
+            for (int i = 0; i < testData.size(); i += 2) {
+                String value = testData.get(i);
+                Assert.assertEquals(originDict.getIdFromValue(value), dShrunkenDict.getIdFromValue(value));
             }
         } catch (IOException e) {
         }
+    }
+
+    @Test
+    public void testGetMinId() {
+        assertEquals(0, shrunkenDict.getMinId());
+    }
+
+    @Test
+    public void testGetMaxId() {
+        assertEquals(6, shrunkenDict.getMaxId());
+    }
+
+    @Test
+    public void testGetSizeOfId() {
+        assertEquals(1, shrunkenDict.getSizeOfId());
+    }
+
+    @Test
+    public void testGetSizeOfValue() {
+        assertEquals(9, shrunkenDict.getSizeOfValue());
+    }
+
+    @Test
+    public void testContains() {
+        assertFalse(shrunkenDict.contains(originDict));
+    }
+
+    @Test
+    public void testGetValueFromIdImpl() {
+        for (int i = 0; i < testData.size(); i += 2) {
+            assertEquals(testData.get(i), shrunkenDict.getValueFromId(originDict.getIdFromValue(testData.get(i))));
+        }
+    }
+
+    private static void prepareTestData() {
+        testData = new ArrayList<>();
+        testData.add("");
+        testData.add("part");
+        testData.add("par");
+        testData.add("partition");
+        testData.add("party");
+        testData.add("parties");
+        testData.add("paint");
+
+        originDict = constructOriginDict();
+        ShrunkenDictionary.StringValueSerializer valueSerializer = new ShrunkenDictionary.StringValueSerializer();
+        shrunkenDict = constructShrunkenDict(originDict, valueSerializer);
+    }
+
+    private static Dictionary constructOriginDict() {
+        TrieDictionaryBuilder<String> dictBuilder = new TrieDictionaryBuilder<>(new StringBytesConverter());
+        for (String str : testData) {
+            dictBuilder.addValue(str);
+        }
+        Dictionary<String> dict = dictBuilder.build(0);
+        return dict;
+    }
+
+    private static Dictionary constructShrunkenDict(Dictionary dictionary,
+            ShrunkenDictionary.ValueSerializer valueSerializer) {
+        ShrunkenDictionaryBuilder<String> shrunkenDictBuilder = new ShrunkenDictionaryBuilder<>(dictionary);
+        for (int i = 0; i < testData.size(); i += 2) {
+            System.out.println(testData.get(i));
+            shrunkenDictBuilder.addValue(testData.get(i));
+        }
+        Dictionary<String> shrunkenDict = shrunkenDictBuilder.build(valueSerializer);
+        return shrunkenDict;
     }
 }
