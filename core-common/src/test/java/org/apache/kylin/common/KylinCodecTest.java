@@ -16,9 +16,6 @@ import java.util.zip.DataFormatException;
  * created by haihuang.hhl @2020/1/9
  */
 public class KylinCodecTest {
-    private static final Logger logger = LoggerFactory.getLogger(KylinCodecTest.class);
-
-
     public static byte[] mockData(int loop) {
         int base = 1000;
         int num = (int) (base * Math.pow(10, loop));
@@ -29,7 +26,6 @@ public class KylinCodecTest {
         }
         return data;
     }
-
     @Test
     public void test() throws Exception {
         for (int i = 0; i <= 6; i++) {
@@ -57,5 +53,6 @@ public class KylinCodecTest {
         }
 
     }
+
 
 }
