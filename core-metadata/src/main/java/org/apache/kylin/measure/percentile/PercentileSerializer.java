@@ -20,13 +20,12 @@ package org.apache.kylin.measure.percentile;
 
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 public class PercentileSerializer extends DataTypeSerializer<PercentileCounter> {
     // be thread-safe and avoid repeated obj creation
-    private transient InternalThreadLocal<PercentileCounter> current = null;
+    private transient ThreadLocal<PercentileCounter> current = null;
 
     private double compression;
 
@@ -56,7 +55,7 @@ public class PercentileSerializer extends DataTypeSerializer<PercentileCounter> 
 
     private PercentileCounter current() {
         if (current == null) {
-            current = new InternalThreadLocal<>();
+            current = new ThreadLocal<>();
         }
 
         PercentileCounter counter = current.get();
