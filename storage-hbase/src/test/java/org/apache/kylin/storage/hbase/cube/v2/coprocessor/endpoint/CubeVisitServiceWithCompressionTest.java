@@ -61,6 +61,16 @@ public class CubeVisitServiceWithCompressionTest extends LocalFileMetadataTestCa
         long compressTimeCost;
         long decompressTimeCost;
 
+        public String getCompressRatio() {
+            return compressRatio;
+        }
+
+        public void setCompressRatio(String compressRatio) {
+            this.compressRatio = compressRatio;
+        }
+
+        String compressRatio;
+
         public long getTestDataRows() {
             return testDataRows;
         }
@@ -135,6 +145,7 @@ public class CubeVisitServiceWithCompressionTest extends LocalFileMetadataTestCa
             this.decompressTimeCost = decompressTimeCost;
         }
 
+
         public String toString() {
             return ToStringBuilder.reflectionToString(this, SHORT_PREFIX_STYLE);
         }
@@ -192,7 +203,7 @@ public class CubeVisitServiceWithCompressionTest extends LocalFileMetadataTestCa
         // rows 1K,2k,3K,4K...
         dateList = generateBigTestData(rows / 10); //4w
         countryList = Lists.newArrayList("CHN", "JAP", "USA", "RUS", "ENG", "AU", "CA", "DE", "IN", "IT");
-        bitmapCounter = getBitmap();
+
         // step1: create test Hbase table and region
         try {
             util.getHBaseAdmin().disableTable(TABLE);
@@ -234,11 +245,13 @@ public class CubeVisitServiceWithCompressionTest extends LocalFileMetadataTestCa
         conf.setLong("hbase.hregion.row.processor.timeout", 1000L);
         util.startMiniCluster();
         staticCreateTestMetadata();
+        // make each case hava same bitmap
+        bitmapCounter = getBitmap();
     }
 
     @Test
     public void test() throws Exception {
-        int[] rows = new int[]{1000};
+        int[] rows = new int[]{1000, 2000, 3000};
         String[] algos = new String[]{"zstd", "lz4", ""};
         for (int row : rows) {
             for (String algo : algos) {
@@ -257,10 +270,11 @@ public class CubeVisitServiceWithCompressionTest extends LocalFileMetadataTestCa
         TestStatInfo statInfo = new TestStatInfo();
         statInfo.setTestDataRows(rows);
         if ("".equals(algorithm)) {
-            algorithm = "default";
+            algorithm = "java-zip";
         }
         statInfo.setAlgorithm(algorithm);
         testVisitCube(statInfo);
+        statInfo.setCompressRatio(String.format("%.2f", ((double) statInfo.getScanBytesSize() / statInfo.getCompressedSize())));
         testStatInfos.add(statInfo);
     }
 
@@ -318,6 +332,7 @@ public class CubeVisitServiceWithCompressionTest extends LocalFileMetadataTestCa
                 testStatInfo.setCompressedSize(result.getCompressedRows().size());
                 testStatInfo.setCompressTimeCost(stats.getCompressionTimeCost());
                 testStatInfo.setScannedRowCount(stats.getScannedRowCount());
+                testStatInfo.setScanBytesSize(stats.getScannedBytes());
                 try {
                     long dc_start = System.currentTimeMillis();
                     byte[] rawData = CompressionUtils
