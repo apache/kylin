@@ -114,7 +114,7 @@ class ZStdCompressionCodec implements CompressionCodec {
     public OutputStream compressedOutputStream(OutputStream outputStream) throws IOException {
         // Wrap the zstd output stream in a buffered output stream, so that we can
         // avoid overhead excessive of JNI call while trying to compress small amount of data.
-        return new BufferedOutputStream(new ZstdOutputStream(outputStream, 1), bufferSize);
+        return new BufferedOutputStream(new ZstdOutputStream(outputStream, level), bufferSize);
     }
 
     @Override

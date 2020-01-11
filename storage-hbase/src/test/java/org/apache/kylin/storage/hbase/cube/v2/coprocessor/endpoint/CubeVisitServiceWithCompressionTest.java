@@ -291,7 +291,8 @@ public class CubeVisitServiceWithCompressionTest extends LocalFileMetadataTestCa
         }
         statInfo.setAlgorithm(algorithm);
         testVisitCube(statInfo);
-        statInfo.setCompressRatio(String.format("%.2f", ((double) statInfo.getScanBytesSize() / statInfo.getCompressedSize())));
+        statInfo.setCompressRatio(String.format(Locale.ROOT, "%.2f",
+                ((double) statInfo.getScanBytesSize() / statInfo.getCompressedSize())));
         testStatInfos.add(statInfo);
     }
 

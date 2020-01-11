@@ -21,6 +21,7 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.junit.Test;
 
+import java.util.Locale;
 import java.util.Random;
 
 /**
@@ -59,7 +60,8 @@ public class KylinCodecTest {
                     compress_ratio = (double) data.length / compressed.length;
                 }
                 System.out.println("algo " + algo + " original size:" + data.length +
-                        " after:" + compressed.length + " compress ratio:" + String.format("%.2f", compress_ratio)
+                        " after:" + compressed.length + " compress ratio:"
+                        + String.format(Locale.ROOT, "%.2f", compress_ratio)
                         + " compress time cost:" +
                         (start_c - start) + " decompress time cost:" + (end_dc - start_c));
             }
