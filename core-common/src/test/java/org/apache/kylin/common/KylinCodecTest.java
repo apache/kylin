@@ -30,12 +30,11 @@ public class KylinCodecTest {
         return data;
     }
 
-
     @Test
     public void test() throws Exception {
         for (int i = 0; i <= 6; i++) {
             byte[] data = mockData(i);
-            String[] algorithms = new String[]{"lz4", "zstd"};
+            String[] algorithms = new String[]{"lz4", "zstd", ""};
             for (String algo : algorithms) {
                 long start = System.currentTimeMillis();
                 byte[] compressed = CompressionUtils.compress(data, algo);
@@ -43,8 +42,16 @@ public class KylinCodecTest {
                 byte[] decompressed = CompressionUtils.decompress(compressed, algo);
                 long end_dc = System.currentTimeMillis();
                 assert Bytes.compareTo(data, decompressed) == 0;
+                if ("".equals(algo)) {
+                    algo = "java-zip";
+                }
+                double compress_ratio = 0;
+                if (compressed.length > 0) {
+                    compress_ratio = (double) data.length / compressed.length;
+                }
                 System.out.println("algo " + algo + " original size:" + data.length +
-                        " after:" + compressed.length + " compress time cost:" +
+                        " after:" + compressed.length + " compress ratio:" + String.format("%.2f", compress_ratio)
+                        + " compress time cost:" +
                         (start_c - start) + " decompress time cost:" + (end_dc - start_c));
             }
         }

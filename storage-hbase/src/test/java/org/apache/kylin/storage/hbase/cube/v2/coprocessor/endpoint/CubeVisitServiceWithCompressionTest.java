@@ -39,7 +39,7 @@ import org.powermock.api.mockito.PowerMockito;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.*;
 
 import static org.apache.commons.lang.builder.ToStringStyle.SHORT_PREFIX_STYLE;
@@ -168,14 +168,11 @@ public class CubeVisitServiceWithCompressionTest extends LocalFileMetadataTestCa
 
     private static List<String> generateBigTestData(int nday) throws ParseException {
         String datestr = "2010-01-01";
-        Calendar cal = Calendar.getInstance();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        Date date = sdf.parse(datestr);
-        cal.setTime(date);
-        List<String> dateList = new ArrayList<String>();
+        LocalDate localDate = LocalDate.parse(datestr);
+        List<String> dateList = new ArrayList<>();
         for (int i = 0; i < nday; i++) {
-            dateList.add(sdf.format(cal.getTime()));
-            cal.add(Calendar.DATE, -1);
+            LocalDate current = localDate.plusDays(i);
+            dateList.add(current.toString());
         }
         return dateList;
     }
