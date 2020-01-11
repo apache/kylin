@@ -381,9 +381,9 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             if (!kylinConfig.getCompressionResult()) {
                 compressedAllRows = allRows;
             } else {
-                long c_begin = System.currentTimeMillis();
+                long compressBeginTime = System.currentTimeMillis();
                 compressedAllRows = CompressionUtils.compress(allRows, algorithm);
-                cTimeCost = System.currentTimeMillis() - c_begin;
+                cTimeCost = System.currentTimeMillis() - compressBeginTime;
             }
 
             appendProfileInfo(sb, "compress done", serviceStartTime);
