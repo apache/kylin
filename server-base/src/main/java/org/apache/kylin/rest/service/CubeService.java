@@ -32,6 +32,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -47,6 +48,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
+import org.apache.kylin.engine.mr.common.CubeJobLockUtil;
 import org.apache.kylin.engine.mr.common.CuboidRecommenderUtil;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.common.PatternedLogger;
@@ -438,6 +440,10 @@ public class CubeService extends BasicService implements InitializingBean {
                 }
                 //unAssign cube
                 getStreamingCoordinator().unAssignCube(cubeName);
+
+                //discard jobs
+                releaseAllJobs(cubeInstance);
+
             }
             return cubeInstance;
         } catch (Exception e) {
@@ -670,6 +676,22 @@ public class CubeService extends BasicService implements InitializingBean {
             final ExecutableState status = cubingJob.getStatus();
             if (status != ExecutableState.SUCCEED && status != ExecutableState.DISCARDED) {
                 getExecutableManager().discardJob(cubingJob.getId());
+
+                //release global dict lock if exists
+                DistributedLock lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory()
+                        .lockForCurrentThread();
+                if (lock.isLocked(CubeJobLockUtil.getLockPath(cube.getName(), cubingJob.getId()))) {//release cube job dict lock if exists
+                    lock.purgeLocks(CubeJobLockUtil.getLockPath(cube.getName(), null));
+                    logger.info("{} unlock cube job global lock path({}) success", cubingJob.getId(),
+                            CubeJobLockUtil.getLockPath(cube.getName(), null));
+
+                    if (lock.isLocked(CubeJobLockUtil.getEphemeralLockPath(cube.getName()))) {//release cube job Ephemeral lock if exists
+                        lock.purgeLocks(CubeJobLockUtil.getEphemeralLockPath(cube.getName()));
+                        logger.info("{} unlock cube job ephemeral lock path({}) success", cubingJob.getId(),
+                                CubeJobLockUtil.getEphemeralLockPath(cube.getName()));
+                    }
+                }
+
             }
         }
     }
