@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -86,7 +85,6 @@ public class CodahaleMetrics implements Metrics {
     private LoadingCache<String, Counter> counters;
     private LoadingCache<String, Meter> meters;
     private LoadingCache<String, Histogram> histograms;
-    private ConcurrentHashMap<String, Gauge> gauges;
     private KylinConfig conf;
 
     public CodahaleMetrics() {
@@ -124,13 +122,6 @@ public class CodahaleMetrics implements Metrics {
                 return histogram;
             }
         });
-        gauges = new ConcurrentHashMap<String, Gauge>();
-        //register JVM metrics
-        //        registerAll("gc", new GarbageCollectorMetricSet());
-        //        registerAll("buffers", new BufferPoolMetricSet(ManagementFactory.getPlatformMBeanServer()));
-        //        registerAll("memory", new MemoryUsageGaugeSet());
-        //        registerAll("threads", new ThreadStatesGaugeSet());
-        //        registerAll("classLoadingz", new ClassLoadingGaugeSet());
 
         //initialize reporters
         initReporting();
@@ -263,7 +254,6 @@ public class CodahaleMetrics implements Metrics {
     private void addGaugeInternal(String name, Gauge gauge) {
         try {
             gaugesLock.lock();
-            gauges.put(name, gauge);
             // Metrics throws an Exception if we don't do this when the key already exists
             if (metricRegistry.getGauges().containsKey(name)) {
                 LOGGER.warn("A Gauge with name [" + name + "] already exists. "
