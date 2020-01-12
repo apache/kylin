@@ -146,9 +146,9 @@ public class CubePartitionRoundRobinAssigner implements Assigner {
         Collections.sort(replicaSets, new Comparator<ReplicaSet>() {
             @Override
             public int compare(ReplicaSet o1, ReplicaSet o2) {
-                Integer partitionNum1Obj = replicaSetPartitionNumMap.get(o1);
+                Integer partitionNum1Obj = replicaSetPartitionNumMap.get(o1.getReplicaSetID());
                 int partitionNum1 = partitionNum1Obj == null ? 0 : partitionNum1Obj;
-                Integer partitionNum2Obj = replicaSetPartitionNumMap.get(o2);
+                Integer partitionNum2Obj = replicaSetPartitionNumMap.get(o2.getReplicaSetID());
                 int partitionNum2 = partitionNum2Obj == null ? 0 : partitionNum2Obj;
                 return partitionNum1 - partitionNum2;
             }
