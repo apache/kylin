@@ -129,7 +129,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             private List<TblColRef> literalCols = null;
             private int keyLength = 0;
 
-            private DimensionEncoding[] newDimensionEncodings = null;
+            private volatile DimensionEncoding[] newDimensionEncodings = null;
             private int newKeyLength = 0;
             private boolean needReEncode = true;
 
