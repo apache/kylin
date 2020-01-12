@@ -55,7 +55,7 @@ public class BeelineHiveClient implements IHiveClient {
         }
         String[] splits = StringUtils.split(beelineParams);
         String url = "", username = "", password = "";
-        for (int i = 0; i < splits.length; i++) {
+        for (int i = 0; i < splits.length - 1; i++) {
             if ("-u".equals(splits[i])) {
                 url = stripQuotes(splits[i + 1]);
             }
