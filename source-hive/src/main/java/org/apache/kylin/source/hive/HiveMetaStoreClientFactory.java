@@ -22,10 +22,10 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
-import org.apache.hive.hcatalog.common.HCatUtil;
 import org.apache.kylin.common.KylinConfig;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 
 public class HiveMetaStoreClientFactory {
 
@@ -42,12 +42,21 @@ public class HiveMetaStoreClientFactory {
      */
     public static IMetaStoreClient getHiveMetaStoreClient(HiveConf hiveConf) throws MetaException, IOException {
         IMetaStoreClient metaStoreClient = null;
-        if ("hcatalog".equals(KylinConfig.getInstanceFromEnv().getHiveMetaDataType())) {
+        String hiveMetadataOption = KylinConfig.getInstanceFromEnv().getHiveMetaDataType();
+        if ("hcatalog".equals(hiveMetadataOption)) {
             metaStoreClient = new HiveMetaStoreClient(hiveConf);
-        } else if ("gluecatalog".equals(KylinConfig.getInstanceFromEnv().getHiveMetaDataType())) {
-            metaStoreClient = HCatUtil.getHiveMetastoreClient(hiveConf);
+        } else if ("gluecatalog".equals(hiveMetadataOption)) {
+            // getHiveMetastoreClient is not available in CDH profile
+            try {
+                Class<?> clazz = Class.forName("org.apache.hive.hcatalog.common.HCatUtil");
+                Method getHiveMetastoreClientMethod = clazz.getDeclaredMethod("getHiveMetastoreClient");
+                metaStoreClient = (IMetaStoreClient) getHiveMetastoreClientMethod.invoke(null, hiveConf);
+            } catch (Exception exp) {
+                throw new IllegalStateException("Unable to create MetaStoreClient for " + hiveMetadataOption, exp);
+            }
+        } else {
+            throw new IllegalArgumentException(hiveMetadataOption + " is not a good option.");
         }
         return metaStoreClient;
     }
-
 }
