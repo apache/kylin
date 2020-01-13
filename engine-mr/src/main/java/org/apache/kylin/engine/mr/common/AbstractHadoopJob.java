@@ -69,6 +69,7 @@ import org.apache.kylin.common.util.StringSplitter;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.model.CubeDescTiretreeGlobalDomainDictUtil;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -586,6 +587,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         if (ifStatsIncluded) {
             dumpList.add(segment.getStatisticsResourcePath());
         }
+        //tiretree global domain dic
+        CubeDescTiretreeGlobalDomainDictUtil.cuboidJob(segment.getCubeDesc(), dumpList);
+
         dumpKylinPropsAndMetadata(segment.getProject(), dumpList, segment.getConfig(), conf);
     }
 
