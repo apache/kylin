@@ -412,7 +412,7 @@
                     </td>
                     <td>
                       <!--Reuse-->
-                      <span>{{dictionaries.reuse}}</span>
+                      <span>{{dictionaries.model}}.{{dictionaries.cube}}.{{dictionaries.reuse}}</span>
                     </td>
                     <td ng-if="state.mode=='edit'">
                       <!--Edit Button -->
@@ -444,7 +444,7 @@
            </div>
            <div class="box-body">
              <div class="row">
-               <div class="col-xs-8">
+               <div class="col-xs-12">
                  <!--Column-->
                  <div class="form-group middle-popover">
                    <div class="row">
@@ -462,15 +462,20 @@
                  <div class="form-group">
                    <div class="row" style="margin-left:5px;">
                      <label class="radio-inline ng-binding ng-scope">
-                       <input type="radio" name="reuse" ng-value=false ng-model="isReuse"  ng-change="change()"/><b>Builder Class</b>
+                       <input type="radio" name="reuse" ng-value=1 ng-model="isReuse"  ng-change="change('builder')"/><b>Builder Class</b>
                      </label>
                      <label class="radio-inline ng-binding ng-scope">
-                       <input type="radio" name="reuse"  ng-value=true ng-model="isReuse" ng-change="change()"/><b>Reuse</b>
+                       <input type="radio" name="reuse"  ng-value=2 ng-model="isReuse" ng-change="change('reuse')"/><b>Reuse Self</b>
                      </label>
+                     <!-- tiretree add-->
+                     <label class="radio-inline ng-binding ng-scope">
+                       <input type="radio" name="reuse"  ng-value=3 ng-model="isReuse" ng-change="change('domain')"/><b>Reuse Global Domain</b>
+                     </label>
+                     <!-- tiretree end-->
                    </div>
                  </div>
                  <!--Builder-->
-                 <div class="form-group" ng-if="!isReuse" >
+                 <div class="form-group" ng-if="isReuse==1" >
                    <div class="row">
                      <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Builder Class</b></label>
                      <div class="col-xs-12 col-sm-6">
@@ -484,7 +489,7 @@
                    </div>
                  </div>
                  <!--Reuse-->
-                 <div class="form-group middle-popover" ng-if="isReuse" >
+                 <div class="form-group middle-popover" ng-if="isReuse==2" >
                    <div class="row">
                      <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Reuse</b></label>
                      <div class="col-xs-12 col-sm-6">
@@ -497,6 +502,27 @@
                      </div>
                    </div>
                  </div>
+                 <!-- Tiretree global dic model cube table.colname start-->
+                 <div class="form-group middle-popover" ng-if="isReuse==3" >
+                   <div class="row">
+                     <label class="col-xs-6 col-sm-4 control-label no-padding-right" ng-class="{'has-error':newDictionaries.model==''}">
+                       <b ng-if="state.mode=='view'">{{dictionaries.model}}</b>
+                       <input ng-model="newDictionaries.model" placeholder="Reuse Model Name"  required class="form-control" ng-if="state.mode=='edit'"/>
+                       <small style="font-weight: normal !important;" class="help-block" ng-show="newDictionaries.model==''">Reuse Model Name is required.</small>
+                     </label>
+                     <div class="col-xs-6 col-sm-4" ng-class="{'has-error':newDictionaries.cube==''}">
+                       <input ng-model="newDictionaries.cube" placeholder="Reuse Cube Name" class="form-control" ng-if="state.mode=='edit'" required/>
+                       <small class="help-block" ng-show="newDictionaries.cube==''">Reuse Cube Name is required.</small>
+                       <span ng-if="state.mode=='view'">{{dictionaries.cube}}</span>
+                     </div>
+                     <div class="col-xs-12 col-sm-4" ng-class="{'has-error':newDictionaries.reuse==''}">
+                       <input ng-model="newDictionaries.reuse" placeholder="Reuse table.column" class="form-control" ng-if="state.mode=='edit'" required/>
+                       <small class="help-block" ng-show="newDictionaries.reuse==''">Reuse table.column is required.</small>
+                       <span ng-if="state.mode=='view'">{{dictionaries.reuse}}</span>
+                     </div>
+                   </div>
+                 </div>
+                 <!--end -->
                </div>
              </div>
            </div>
