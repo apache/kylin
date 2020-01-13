@@ -49,6 +49,7 @@ import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.request.SaveSqlRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.QueryService;
+import org.apache.kylin.rest.util.ValidateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,14 +78,13 @@ public class QueryController extends BasicController {
 
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(QueryController.class);
-
+    private static String BOM_CHARACTER;
     @Autowired
     @Qualifier("queryService")
     private QueryService queryService;
 
-    private static String BOM_CHARACTER;
     {
-        BOM_CHARACTER = new String(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF}, StandardCharsets.UTF_8);
+        BOM_CHARACTER = new String(new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF }, StandardCharsets.UTF_8);
     }
 
     @RequestMapping(value = "/query", method = RequestMethod.POST, produces = { "application/json" })
@@ -148,7 +148,9 @@ public class QueryController extends BasicController {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.ROOT);
         Date now = new Date();
         String nowStr = sdf.format(now);
-        response.setHeader("Content-Disposition", "attachment; filename=\"" + nowStr + ".result." + format + "\"");
+        response.setHeader("Content-Disposition",
+                "attachment; filename=\"" + ValidateUtil.convertStringToBeAlphanumericUnderscore(nowStr) + ".result."
+                        + ValidateUtil.convertStringToBeAlphanumericUnderscore(format) + "\"");
         ICsvListWriter csvWriter = null;
 
         try {
