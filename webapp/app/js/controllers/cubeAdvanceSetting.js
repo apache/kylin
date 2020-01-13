@@ -177,12 +177,14 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
 
   }
 
-  $scope.isReuse=false;
+  $scope.isReuse=1;
   $scope.addNew=false;
   $scope.newDictionaries = {
     "column":null,
     "builder": null,
-    "reuse": null
+    "reuse": null,
+    "model": null,
+    "cube": null
   }
 
   $scope.initUpdateDictionariesStatus = function(){
@@ -198,11 +200,13 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
       $scope.updateDictionariesStatus.isEdit = true;
       $scope.addNew=true;
       $scope.updateDictionariesStatus.editIndex = index;
-      if(dictionaries.builder==null){
-        $scope.isReuse=true;
+      if(dictionaries.builder==null && dictionaries.model==null){
+        $scope.isReuse=2;
+      }else if (dictionaries.model!=null){
+        $scope.isReuse=3;
       }
       else{
-        $scope.isReuse=false;
+        $scope.isReuse=1;
       }
     }
     else{
@@ -231,7 +235,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
       $scope.initUpdateDictionariesStatus();
       $scope.nextDictionariesInit();
       $scope.addNew = !$scope.addNew;
-      $scope.isReuse = false;
+      $scope.isReuse = 1;
       return true;
 
   };
@@ -240,7 +244,9 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     $scope.nextDic = {
       "coiumn":null,
       "builder":null,
-      "reuse":null
+      "reuse":null,
+      "model":null,
+      "cube":null
     }
   }
 
@@ -261,16 +267,25 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
 
   $scope.clearNewDictionaries = function (){
     $scope.newDictionaries = null;
-    $scope.isReuse=false;
+    $scope.isReuse=1;
     $scope.initUpdateDictionariesStatus();
     $scope.nextDictionariesInit();
     $scope.addNew=!$scope.addNew;
   }
 
-  $scope.change = function (){
+  $scope.change = function (type){
     $scope.newDictionaries.builder=null;
     $scope.newDictionaries.reuse=null;
-    $scope.isReuse=!$scope.isReuse;
+    $scope.newDictionaries.domain=null;
+    $scope.newDictionaries.model=null;
+    $scope.newDictionaries.cube=null;
+    if(type == 'domain'){
+      $scope.isReuse=3;
+    }else if (type == 'builder'){
+      $scope.isReuse=1;
+    }else if (type == 'reuse'){
+      $scope.isReuse=2;
+    }
   }
 
   $scope.removeElement =  function(arr,element){
