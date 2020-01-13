@@ -109,10 +109,10 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
                 }
 
                 int id;
-                if (needDictionaryColumn(measureDesc.getFunction())) {
-                    TblColRef literalCol = measureDesc.getFunction().getParameter().getColRefs().get(0);
-                    Dictionary<String> dictionary = dictionaryMap.get(literalCol);
-                    id = dictionary.getIdFromValue(values[0]);
+                TblColRef literalCol = measureDesc.getFunction().getParameter().getColRefs().get(0);
+                if (needDictionaryColumn(measureDesc.getFunction()) && dictionaryMap.containsKey(literalCol)) {
+                        Dictionary<String> dictionary = dictionaryMap.get(literalCol);
+                        id = dictionary.getIdFromValue(values[0]);
                 } else {
                     id = Integer.parseInt(values[0]);
                 }

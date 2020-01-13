@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,6 +46,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.CubeDescTiretreeGlobalDomainDictUtil;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.dict.DictionaryInfo;
@@ -1184,9 +1186,20 @@ public class CubeManager implements IRealizationProvider {
         @SuppressWarnings("unchecked")
         public Dictionary<String> getDictionary(CubeSegment cubeSeg, TblColRef col) {
             DictionaryInfo info = null;
+            String dictResPath = null;
             try {
                 DictionaryManager dictMgr = getDictionaryManager();
-                String dictResPath = cubeSeg.getDictResPath(col);
+
+                //tiretree global domain dic
+                List<CubeDescTiretreeGlobalDomainDictUtil.GlobalDict> globalDicts = cubeSeg.getCubeDesc().listDomainDict();
+                if (!globalDicts.isEmpty()) {
+                    dictResPath = CubeDescTiretreeGlobalDomainDictUtil.globalReuseDictPath(cubeSeg.getConfig(), col, cubeSeg.getCubeDesc());
+                }
+
+                if (Objects.isNull(dictResPath)){
+                    dictResPath = cubeSeg.getDictResPath(col);
+                }
+
                 if (dictResPath == null)
                     return null;
 

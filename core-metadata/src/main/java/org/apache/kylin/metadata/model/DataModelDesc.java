@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 
@@ -285,10 +286,16 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     public TblColRef findColumn(String table, String column) throws IllegalArgumentException {
+        TblColRef result = null;
         TableRef tableRef = findTable(table);
-        TblColRef result = tableRef.getColumn(column.toUpperCase(Locale.ROOT));
-        if (result == null)
-            throw new IllegalArgumentException("Column not found by " + table + "." + column);
+        if (Objects.nonNull(tableRef)) {
+            result = tableRef.getColumn(column.toUpperCase(Locale.ROOT));;
+        }
+
+        if (result == null) {//tiretree global domain dic
+            logger.warn("table {} column {} not found in its's model {} , maybe it's a tiretree global domain dict. ", table, column, getName() );
+        }
+
         return result;
     }
 
@@ -310,8 +317,9 @@ public class DataModelDesc extends RootPersistentEntity {
             }
         }
 
-        if (result == null)
-            throw new IllegalArgumentException("Column not found by " + input);
+        if (result == null) {
+            logger.warn("Column {} not found in its's model {} , maybe it's a tiretree global domain dict. ", column, getName() );
+        }
 
         return result;
     }
@@ -320,7 +328,7 @@ public class DataModelDesc extends RootPersistentEntity {
     public TableRef findTable(String table) throws IllegalArgumentException {
         TableRef result = tableNameMap.get(table.toUpperCase(Locale.ROOT));
         if (result == null) {
-            throw new IllegalArgumentException("Table not found by " + table);
+            logger.warn("table {} not found in its's model {} , maybe it's a tiretree global domain dict. ", table, getName() );
         }
         return result;
     }
