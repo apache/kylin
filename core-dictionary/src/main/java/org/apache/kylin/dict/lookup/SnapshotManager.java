@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.WriteConflictException;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.IReadableTable;
@@ -236,10 +237,23 @@ public class SnapshotManager {
 
     private SnapshotTable updateDictLastModifiedTime(String snapshotPath) throws IOException {
         ResourceStore store = getStore();
-        long now = System.currentTimeMillis();
-        store.updateTimestamp(snapshotPath, now);
-        logger.info("Update snapshotTable {} lastModifiedTime to {}", snapshotPath, now);
 
+        int retry = 7;
+        while (retry-- > 0) {
+            try {
+                long now = System.currentTimeMillis();
+                store.updateTimestamp(snapshotPath, now);
+                logger.info("Update snapshotTable {} lastModifiedTime to {}", snapshotPath, now);
+                return loadAndUpdateLocalCache(snapshotPath);
+            } catch (WriteConflictException e) {
+                if (retry <= 0) {
+                    logger.error("Retry is out, till got error, abandoning...", e);
+                    throw e;
+                }
+                logger.warn("Write conflict to update snapshotTable " +  snapshotPath + " retry remaining " + retry
+                        + ", will retry...");
+            }
+        }
         // update cache
         return loadAndUpdateLocalCache(snapshotPath);
     }
