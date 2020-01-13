@@ -32,6 +32,8 @@ import org.apache.kylin.cube.model.validation.ResultLevel;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.dict.GlobalDictionaryBuilder;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Validate Dictionary Settings:
@@ -43,6 +45,8 @@ import org.apache.kylin.metadata.model.TblColRef;
  * </ul>
  */
 public class DictionaryRule implements IValidatorRule<CubeDesc> {
+    private static final Logger logger = LoggerFactory.getLogger(DictionaryRule.class);
+
     static final String ERROR_DUPLICATE_DICTIONARY_COLUMN = "Duplicated dictionary specification for column: ";
     static final String ERROR_REUSE_BUILDER_BOTH_SET = "REUSE and BUILDER both set on dictionary for column: ";
     static final String ERROR_REUSE_BUILDER_BOTH_EMPTY = "REUSE and BUILDER both empty on dictionary for column: ";
@@ -80,8 +84,12 @@ public class DictionaryRule implements IValidatorRule<CubeDesc> {
             }
 
             if (reuseCol == null && StringUtils.isEmpty(builderClass)) {
-                context.addResult(ResultLevel.ERROR, ERROR_REUSE_BUILDER_BOTH_EMPTY + dictCol);
-                return;
+                if(dictDesc.isDomain()) {
+                    logger.info("() is tiretree global domain dic", dictCol);
+                }else{
+                    context.addResult(ResultLevel.ERROR, ERROR_REUSE_BUILDER_BOTH_EMPTY + dictCol);
+                    return;
+                }
             }
 
             if (StringUtils.isNotEmpty(builderClass) && builderClass.equalsIgnoreCase(GlobalDictionaryBuilder.class.getName()) && dimensionColumns.contains(dictCol) && rowKeyDesc.isUseDictionary(dictCol)) {

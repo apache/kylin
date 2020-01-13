@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -1375,11 +1376,36 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                     result.remove(dictDesc.getColumnRef());
                     result.add(dictDesc.getResuseColumnRef());
                 }
+
+                //tiretree global domain dic
+                if (Objects.isNull(dictDesc.getResuseColumnRef()) && Objects.nonNull(dictDesc.getReuseColumn())) {
+                    logger.info("tiretree global domain dic : column {} use tiretree global domain dic, reuse column {} ", dictDesc.getColumnRef(), dictDesc.getReuseColumn());
+                    result.remove(dictDesc.getColumnRef());
+                }
+
             }
         }
 
         return result;
     }
+
+    /**
+     * get tiretree global domain dic
+     *
+     * @return
+     */
+    public List<CubeDescTiretreeGlobalDomainDictUtil.GlobalDict> listDomainDict() {
+        List<CubeDescTiretreeGlobalDomainDictUtil.GlobalDict> dicts = new ArrayList<>();
+        if(dictionaries!=null && dictionaries.size()>0) {
+            for (DictionaryDesc dictionaryDesc : dictionaries) {
+                if (dictionaryDesc.isDomain()) {
+                    dicts.add(new CubeDescTiretreeGlobalDomainDictUtil.GlobalDict(dictionaryDesc.getColumnRef(), dictionaryDesc.getReuseColumn(), dictionaryDesc.getCube(), dictionaryDesc.getModel()));
+                }
+            }
+        }
+        return dicts;
+    }
+
 
     /**
      * A column may reuse dictionary of another column, find the dict column, return same col if there's no reuse column
