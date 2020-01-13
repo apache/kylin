@@ -19,6 +19,7 @@
 package org.apache.kylin.cube.model;
 
 import java.util.Locale;
+import java.util.Objects;
 
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -39,6 +40,15 @@ public class DictionaryDesc implements java.io.Serializable {
     @JsonProperty("builder")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String builderClass;
+
+    //for tiretree global domain dic
+    @JsonProperty("cube")
+    private String cube;
+
+    //for tiretree global domain dic
+    @JsonProperty("model")
+    private String model;
+
 
     // computed content
     private TblColRef colRef;
@@ -67,6 +77,38 @@ public class DictionaryDesc implements java.io.Serializable {
     public String getBuilderClass() {
         return builderClass;
     }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public String getCube() {
+        return cube;
+    }
+
+    public void setCube(String cube) {
+        this.cube = cube;
+    }
+
+    public String getReuseColumn() {
+        return reuseColumn;
+    }
+
+    /**
+     * check if the col is tiretree global domain dic
+     * @return
+     */
+    public boolean isDomain() {
+        if (Objects.isNull(reuseColRef) && Objects.nonNull(reuseColumn)) {
+            return true;
+        }
+        return false;
+    }
+
 
     // for test
     public static DictionaryDesc create(String column, String reuseColumn, String builderClass) {
