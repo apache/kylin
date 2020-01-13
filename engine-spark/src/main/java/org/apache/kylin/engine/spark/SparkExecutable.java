@@ -44,6 +44,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
+import org.apache.kylin.cube.model.CubeDescTiretreeGlobalDomainDictUtil;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
@@ -506,6 +507,9 @@ public class SparkExecutable extends AbstractExecutable {
             // cube statistics is not available for new segment
             dumpList.add(segment.getStatisticsResourcePath());
         }
+        //tiretree global domain dic
+        CubeDescTiretreeGlobalDomainDictUtil.cuboidJob(segment.getCubeDesc(), dumpList);
+
         JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segment.getConfig(),
                 this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
     }
@@ -520,6 +524,8 @@ public class SparkExecutable extends AbstractExecutable {
                 // cube statistics is not available for new segment
                 dumpList.add(segment.getStatisticsResourcePath());
             }
+            //tiretree global domain dic
+            CubeDescTiretreeGlobalDomainDictUtil.cuboidJob(segment.getCubeDesc(), dumpList);
         }
         JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segments.get(0).getConfig(),
                 this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
