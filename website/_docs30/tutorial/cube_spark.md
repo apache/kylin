@@ -138,6 +138,7 @@ kylin.engine.livy-conf.livy-url=http://ip:8998
 kylin.engine.livy-conf.livy-key.file=hdfs:///path/kylin-job-3.0.0-SNAPSHOT.jar
 kylin.engine.livy-conf.livy-arr.jars=hdfs:///path/hbase-client-1.2.0-{$env.version}.jar,hdfs:///path/hbase-common-1.2.0-{$env.version}.jar,hdfs:///path/hbase-hadoop-compat-1.2.0-{$env.version}.jar,hdfs:///path/hbase-hadoop2-compat-1.2.0-{$env.version}.jar,hdfs:///path/hbase-server-1.2.0-{$env.version}.jar,hdfs:///path/htrace-core-3.2.0-incubating.jar,hdfs:///path/metrics-core-2.2.0.jar  
 {% endhighlight %}
+It's worth noting that there shouldn't be spaces between the paths of two jars. 
 
 
 ## Optional
