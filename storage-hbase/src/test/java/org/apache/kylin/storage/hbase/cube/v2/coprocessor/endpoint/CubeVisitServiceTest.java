@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.zip.DataFormatException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
@@ -171,6 +172,20 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
         service.start(env);
     }
 
+    private byte[] getResult(CubeVisitProtos.CubeVisitResponse result) throws IOException, DataFormatException {
+         boolean compressionResult = KylinConfig.getInstanceFromEnv().getCompressionResult();
+        byte[] rawData = HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows());
+        byte[] resultData = null;
+        if (compressionResult) {
+            resultData = CompressionUtils.decompress(rawData);
+        } else {
+            resultData = rawData;
+        }
+
+        return resultData;
+    }
+
+
     @Test
     public void testVisitCube() throws Exception {
         RawScan rawScan = mockFullScan(gtInfo, getTestConfig());
@@ -192,8 +207,7 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
                 Assert.assertEquals(dateList.size() * userList.size(), stats.getScannedRowCount());
 
                 try {
-                    byte[] rawData = CompressionUtils
-                            .decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows()));
+                    byte[] rawData = getResult(result);
                     PartitionResultIterator iterator = new PartitionResultIterator(rawData, gtInfo, setOf(0, 1, 2, 3));
                     int nReturn = 0;
                     while (iterator.hasNext()) {
@@ -226,8 +240,7 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
             @Override
             public void run(CubeVisitProtos.CubeVisitResponse result) {
                 try {
-                    byte[] rawData = CompressionUtils
-                            .decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows()));
+                    byte[] rawData = getResult(result);
                     PartitionResultIterator iterator = new PartitionResultIterator(rawData, gtInfo, setOf(1, 3));
                     Map<String, BigDecimal> actRet = Maps.newHashMap();
                     while (iterator.hasNext()) {
@@ -285,8 +298,7 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
             @Override
             public void run(CubeVisitProtos.CubeVisitResponse result) {
                 try {
-                    byte[] rawData = CompressionUtils
-                            .decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows()));
+                    byte[] rawData = getResult(result);
                     PartitionResultIterator iterator = new PartitionResultIterator(rawData, gtInfo, setOf(2, 3));
                     Map<BigDecimal, BigDecimal> actRet = Maps.newHashMap();
                     while (iterator.hasNext()) {

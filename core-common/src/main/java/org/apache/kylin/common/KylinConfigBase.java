@@ -1339,7 +1339,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean getCompressionResult() {
-        return Boolean.parseBoolean(getOptional("kylin.storage.hbase.endpoint-compress-result", TRUE));
+        return Boolean.parseBoolean(getOptional("kylin.storage.hbase.endpoint-compress-result", FALSE));
     }
 
     public int getHBaseMaxConnectionThreads() {
