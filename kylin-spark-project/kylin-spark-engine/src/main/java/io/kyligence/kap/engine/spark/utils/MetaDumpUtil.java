@@ -27,7 +27,6 @@ import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.source.SourceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

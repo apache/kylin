@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,11 +36,11 @@ public class NResourceDetectStep extends NSparkExecutable {
     public NResourceDetectStep(DefaultChainedExecutable parent) {
         if (parent instanceof NSparkCubingJob) {
             this.setSparkSubmitClassName(ResourceDetectBeforeCubingJob.class.getName());
-        } /*else if (parent instanceof NSparkMergingJob) {
+        /*} else if (parent instanceof NSparkMergingJob) {
             this.setSparkSubmitClassName(ResourceDetectBeforeMergingJob.class.getName());
         } else if (parent instanceof NTableSamplingJob) {
             this.setSparkSubmitClassName(ResourceDetectBeforeSampling.class.getName());
-        } */else {
+        */} else {
             throw new IllegalArgumentException("Unsupported resource detect for " + parent.getName() + " job");
         }
         this.setName(ExecutableConstants.STEP_NAME_DETECT_RESOURCE);

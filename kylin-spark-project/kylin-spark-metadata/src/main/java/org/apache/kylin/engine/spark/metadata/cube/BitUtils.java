@@ -20,7 +20,7 @@ public final class BitUtils {
         for (int i = 0; i < size; i++) {
             int shift = size - i - 1;
             if ((cuboidId & (1L << shift)) != 0) {
-                ret[next++] = complete.get(i);
+                ret[next++] = shift;
             }
         }
 
