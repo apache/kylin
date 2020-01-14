@@ -42,7 +42,7 @@ public class KylinCodecTest {
 
     @Test
     public void test() throws Exception {
-        for (int i = 0; i <= 6; i++) {
+        for (int i = 0; i <= 4; i++) {
             byte[] data = mockData(i);
             String[] algorithms = new String[]{"lz4", "zstd", ""};
             for (String algo : algorithms) {
