@@ -21,6 +21,7 @@ package org.apache.kylin.dict.lookup;
 import java.io.IOException;
 import java.util.List;
 import java.util.NavigableSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -38,8 +39,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.Interner;
-import com.google.common.collect.Interners;
 import com.google.common.collect.Lists;
 
 /**
@@ -48,22 +47,12 @@ import com.google.common.collect.Lists;
 public class SnapshotManager {
 
     private static final Logger logger = LoggerFactory.getLogger(SnapshotManager.class);
-
-    public static SnapshotManager getInstance(KylinConfig config) {
-        return config.getManager(SnapshotManager.class);
-    }
-
-    // called by reflection
-    static SnapshotManager newInstance(KylinConfig config) throws IOException {
-        return new SnapshotManager(config);
-    }
-
-    // ============================================================================
-
+    private static final ConcurrentHashMap<String, Object> lockObjectMap = new ConcurrentHashMap<>();
     private KylinConfig config;
-
     // path ==> SnapshotTable
     private LoadingCache<String, SnapshotTable> snapshotCache; // resource
+
+    // ============================================================================
 
     private SnapshotManager(KylinConfig config) {
         this.config = config;
@@ -81,6 +70,28 @@ public class SnapshotManager {
                         return snapshotTable;
                     }
                 });
+    }
+
+    public static SnapshotManager getInstance(KylinConfig config) {
+        return config.getManager(SnapshotManager.class);
+    }
+
+    // called by reflection
+    static SnapshotManager newInstance(KylinConfig config) throws IOException {
+        return new SnapshotManager(config);
+    }
+
+    private Object getConcurrentObject(String resPath) {
+        if (!lockObjectMap.containsKey(resPath)) {
+            addObject(resPath);
+        }
+        return lockObjectMap.get(resPath);
+    }
+
+    private synchronized void addObject(String resPath) {
+        if (!lockObjectMap.containsKey(resPath)) {
+            lockObjectMap.put(resPath, new Object());
+        }
     }
 
     public void wipeoutCache() {
@@ -127,9 +138,8 @@ public class SnapshotManager {
             throws IOException {
         SnapshotTable snapshot = new SnapshotTable(table, tableDesc.getIdentity());
         snapshot.updateRandomUuid();
-        Interner<String> pool = Interners.newWeakInterner();
 
-        synchronized (pool.intern(tableDesc.getIdentity())) {
+        synchronized (getConcurrentObject(tableDesc.getIdentity())) {
             SnapshotTable reusableSnapshot = getReusableSnapShot(table, snapshot, tableDesc, cubeConfig);
             if (reusableSnapshot != null)
                 return updateDictLastModifiedTime(reusableSnapshot.getResourcePath());
