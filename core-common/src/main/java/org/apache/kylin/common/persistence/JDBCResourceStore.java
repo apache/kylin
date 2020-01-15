@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.kylin.common.KylinConfig;
@@ -44,28 +45,17 @@ import com.google.common.base.Preconditions;
 
 public class JDBCResourceStore extends PushdownResourceStore {
 
-    private static Logger logger = LoggerFactory.getLogger(JDBCResourceStore.class);
-
     public static final String JDBC_SCHEME = "jdbc";
-
+    private static final ConcurrentHashMap<String, Object> lockObjectMap = new ConcurrentHashMap<>();
     private static final String META_TABLE_KEY = "META_TABLE_KEY";
-
     private static final String META_TABLE_TS = "META_TABLE_TS";
-
     private static final String META_TABLE_CONTENT = "META_TABLE_CONTENT";
-
-    public static void checkScheme(StorageURL url) {
-        Preconditions.checkState(JDBC_SCHEME.equals(url.getScheme()));
-    }
-
-    // ============================================================================
-
+    private static Logger logger = LoggerFactory.getLogger(JDBCResourceStore.class);
     private JDBCConnectionManager connectionManager;
 
+    // ============================================================================
     private String[] tableNames = new String[2];
-
     private String metadataIdentifier = null;
-
     // For test
     private long queriedSqlNum = 0;
 
@@ -82,11 +72,21 @@ public class JDBCResourceStore extends PushdownResourceStore {
         }
     }
 
-    abstract static class SqlOperation {
-        PreparedStatement pstat = null;
-        ResultSet rs = null;
+    public static void checkScheme(StorageURL url) {
+        Preconditions.checkState(JDBC_SCHEME.equals(url.getScheme()));
+    }
 
-        abstract public void execute(final Connection connection) throws SQLException, IOException;
+    private Object getConcurrentObject(String resPath) {
+        if (!lockObjectMap.containsKey(resPath)) {
+            addObject(resPath);
+        }
+        return lockObjectMap.get(resPath);
+    }
+
+    private synchronized void addObject(String resPath) {
+        if (!lockObjectMap.containsKey(resPath)) {
+            lockObjectMap.put(resPath, new Object());
+        }
     }
 
     private void executeSql(SqlOperation operation) throws SQLException, IOException {
@@ -349,7 +349,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
             @Override
             public void execute(Connection connection) throws SQLException, IOException {
                 byte[] bytes = content.extractAllBytes();
-                synchronized (resPath.intern()) {
+                synchronized (getConcurrentObject(resPath)) {
                     JDBCResourceSQL sqls = getJDBCResourceSQL(getMetaTableName(resPath));
                     boolean existing = existsImpl(resPath);
                     if (existing) {
@@ -439,7 +439,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
         executeSql(new SqlOperation() {
             @Override
             public void execute(Connection connection) throws SQLException, IOException {
-                synchronized (resPath.intern()) {
+                synchronized (getConcurrentObject(resPath)) {
                     JDBCResourceSQL sqls = getJDBCResourceSQL(getMetaTableName(resPath));
                     if (!existsImpl(resPath)) {
                         if (oldTS != 0) {
@@ -638,6 +638,13 @@ public class JDBCResourceStore extends PushdownResourceStore {
 
     public boolean isRootPath(String path) {
         return "/".equals(path);
+    }
+
+    abstract static class SqlOperation {
+        PreparedStatement pstat = null;
+        ResultSet rs = null;
+
+        abstract public void execute(final Connection connection) throws SQLException, IOException;
     }
 
 }
