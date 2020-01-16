@@ -18,9 +18,11 @@
 
 package org.apache.kylin.rest.service;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -32,6 +34,7 @@ import org.apache.kylin.metrics.property.JobPropertyEnum;
 import org.apache.kylin.metrics.property.QueryPropertyEnum;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.storage.hybrid.HybridInstance;
@@ -52,80 +55,6 @@ public class DashboardService extends BasicService {
 
     @Autowired
     private CubeService cubeService;
-
-    private enum CategoryEnum {
-        QUERY, JOB
-    }
-
-    private enum QueryDimensionEnum {
-        PROJECT(QueryPropertyEnum.PROJECT.toString()), //
-        CUBE(QueryPropertyEnum.REALIZATION.toString()), //
-        DAY(TimePropertyEnum.DAY_DATE.toString()), //
-        WEEK(TimePropertyEnum.WEEK_BEGIN_DATE.toString()), // 
-        MONTH(TimePropertyEnum.MONTH.toString());
-
-        private final String sql;
-
-        QueryDimensionEnum(String sql) {
-            this.sql = sql;
-        }
-
-        public String toSQL() {
-            return this.sql;
-        }
-    };
-
-    private enum JobDimensionEnum {
-        PROJECT(JobPropertyEnum.PROJECT.toString()), //
-        CUBE(JobPropertyEnum.CUBE.toString()), //
-        DAY(TimePropertyEnum.DAY_DATE.toString()), //
-        WEEK(TimePropertyEnum.WEEK_BEGIN_DATE.toString()), //
-        MONTH(TimePropertyEnum.MONTH.toString());
-
-        private final String sql;
-
-        JobDimensionEnum(String sql) {
-            this.sql = sql;
-        }
-
-        public String toSQL() {
-            return this.sql;
-        }
-    };
-
-    private enum QueryMetricEnum {
-        QUERY_COUNT("count(*)"), //
-        AVG_QUERY_LATENCY("avg(" + QueryPropertyEnum.TIME_COST.toString() + ")"), //
-        MAX_QUERY_LATENCY("max(" + QueryPropertyEnum.TIME_COST.toString() + ")"), //
-        MIN_QUERY_LATENCY("min(" + QueryPropertyEnum.TIME_COST.toString() + ")");
-
-        private final String sql;
-
-        QueryMetricEnum(String sql) {
-            this.sql = sql;
-        }
-
-        public String toSQL() {
-            return this.sql;
-        }
-    }
-
-    private enum JobMetricEnum {
-        JOB_COUNT("count(*)"), //
-        AVG_JOB_BUILD_TIME("avg(" + JobPropertyEnum.PER_BYTES_TIME_COST.toString() + ")"), //
-        MAX_JOB_BUILD_TIME("max(" + JobPropertyEnum.PER_BYTES_TIME_COST.toString() + ")"), //
-        MIN_JOB_BUILD_TIME("min(" + JobPropertyEnum.PER_BYTES_TIME_COST.toString() + ")");
-
-        private final String sql;
-
-        JobMetricEnum(String sql) {
-            this.sql = sql;
-        }
-
-        public String toSQL() {
-            return this.sql;
-        }
-    }
 
     public MetricsResponse getCubeMetrics(String projectName, String cubeName) {
         MetricsResponse cubeMetrics = new MetricsResponse();
@@ -180,31 +109,31 @@ public class DashboardService extends BasicService {
             }
         }
         return cubeInstances;
-    }
+    };
 
-    public String getQueryMetricsSQL(String startTime, String endTime, String projectName, String cubeName) {
+    public PrepareSqlRequest getQueryMetricsSQLRequest(String startTime, String endTime, String projectName,
+            String cubeName) {
         String[] metrics = new String[] { QueryMetricEnum.QUERY_COUNT.toSQL(),
                 QueryMetricEnum.AVG_QUERY_LATENCY.toSQL(), QueryMetricEnum.MAX_QUERY_LATENCY.toSQL(),
                 QueryMetricEnum.MIN_QUERY_LATENCY.toSQL() };
-        List<String> filters = getBaseFilters(CategoryEnum.QUERY, projectName, startTime, endTime);
-        filters = addCubeFilter(filters, CategoryEnum.QUERY, cubeName);
-        return createSql(null, metrics,
-                getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQuery()),
-                filters.toArray(new String[filters.size()]));
-    }
+        Map<String, String> filterMap = getBaseFilterMap(CategoryEnum.QUERY, projectName, startTime, endTime);
+        filterMap.putAll(getCubeFilterMap(CategoryEnum.QUERY, cubeName));
+        return createPrepareSqlRequest(null, metrics,
+                getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQuery()), filterMap);
+    };
 
-    public String getJobMetricsSQL(String startTime, String endTime, String projectName, String cubeName) {
+    public PrepareSqlRequest getJobMetricsSQLRequest(String startTime, String endTime, String projectName,
+            String cubeName) {
         String[] metrics = new String[] { JobMetricEnum.JOB_COUNT.toSQL(), JobMetricEnum.AVG_JOB_BUILD_TIME.toSQL(),
                 JobMetricEnum.MAX_JOB_BUILD_TIME.toSQL(), JobMetricEnum.MIN_JOB_BUILD_TIME.toSQL() };
-        List<String> filters = getBaseFilters(CategoryEnum.JOB, projectName, startTime, endTime);
-        filters = addCubeFilter(filters, CategoryEnum.JOB, cubeName);
-        return createSql(null, metrics,
-                getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectJob()),
-                filters.toArray(new String[filters.size()]));
+        Map<String, String> filterMap = getBaseFilterMap(CategoryEnum.JOB, projectName, startTime, endTime);
+        filterMap.putAll(getCubeFilterMap(CategoryEnum.JOB, cubeName));
+        return createPrepareSqlRequest(null, metrics,
+                getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectJob()), filterMap);
     }
 
-    public String getChartSQL(String startTime, String endTime, String projectName, String cubeName, String dimension,
-            String metric, String category) {
+    public PrepareSqlRequest getChartSQLRequest(String startTime, String endTime, String projectName, String cubeName,
+            String dimension, String metric, String category) {
         try {
             CategoryEnum categoryEnum = CategoryEnum.valueOf(category);
             String table = "";
@@ -221,10 +150,10 @@ public class DashboardService extends BasicService {
                 table = getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectJob());
             }
 
-            List<String> filters = getBaseFilters(categoryEnum, projectName, startTime, endTime);
-            filters = addCubeFilter(filters, categoryEnum, cubeName);
+            Map<String, String> filterMap = getBaseFilterMap(categoryEnum, projectName, startTime, endTime);
+            filterMap.putAll(getCubeFilterMap(categoryEnum, cubeName));
 
-            return createSql(dimensionSQL, metricSQL, table, filters.toArray(new String[filters.size()]));
+            return createPrepareSqlRequest(dimensionSQL, metricSQL, table, filterMap);
         } catch (IllegalArgumentException e) {
             String message = "Generate dashboard chart sql failed. Please double check the input parameter: dimension, metric or category.";
             logger.error(message, e);
@@ -264,29 +193,34 @@ public class DashboardService extends BasicService {
     public void checkAuthorization() throws AccessDeniedException {
     }
 
-    private List<String> getBaseFilters(CategoryEnum category, String projectName, String startTime, String endTime) {
-        List<String> filters = new ArrayList<String>();
+    private Map<String, String> getBaseFilterMap(CategoryEnum category, String projectName, String startTime,
+            String endTime) {
+        HashMap<String, String> filterMap = new HashMap<>();
         String project = "";
         if (category == CategoryEnum.QUERY) {
             project = QueryDimensionEnum.PROJECT.toSQL();
         } else {
             project = JobDimensionEnum.PROJECT.toSQL();
         }
-        filters.add(TimePropertyEnum.DAY_DATE.toString() + " >= '" + startTime + "'");
-        filters.add(TimePropertyEnum.DAY_DATE.toString() + " <= '" + endTime + "'");
+        filterMap.put(TimePropertyEnum.DAY_DATE.toString() + " >= ?", startTime);
+        filterMap.put(TimePropertyEnum.DAY_DATE.toString() + " <= ?", endTime);
+
         if (!Strings.isNullOrEmpty(projectName)) {
-            filters.add(project + " ='" + projectName.toUpperCase(Locale.ROOT) + "'");
+            filterMap.put(project + " = ?", projectName.toUpperCase(Locale.ROOT));
         } else {
-            filters.add(project + " <> '" + MetricsManager.SYSTEM_PROJECT + "'");
+            filterMap.put(project + " <> ?", MetricsManager.SYSTEM_PROJECT);
         }
-        return filters;
+        return filterMap;
     }
 
-    private List<String> addCubeFilter(List<String> baseFilter, CategoryEnum category, String cubeName) {
+    private Map<String, String> getCubeFilterMap(CategoryEnum category, String cubeName) {
+        HashMap<String, String> filterMap = new HashMap<>();
+
         if (category == CategoryEnum.QUERY) {
-            baseFilter.add(QueryPropertyEnum.EXCEPTION.toString() + " = 'NULL'");
+            filterMap.put(QueryPropertyEnum.EXCEPTION.toString() + " = ?", "NULL");
+
             if (!Strings.isNullOrEmpty(cubeName)) {
-                baseFilter.add(QueryPropertyEnum.REALIZATION + " = '" + cubeName + "'");
+                filterMap.put(QueryPropertyEnum.REALIZATION + " = ?", cubeName);
             }
         } else if (category == CategoryEnum.JOB && !Strings.isNullOrEmpty(cubeName)) {
             HybridInstance hybridInstance = getHybridManager().getHybridInstance(cubeName);
@@ -295,15 +229,18 @@ public class DashboardService extends BasicService {
                 for (CubeInstance cube : getCubeByHybrid(hybridInstance)) {
                     cubeNames.append(",'" + cube.getName() + "'");
                 }
-                baseFilter.add(JobPropertyEnum.CUBE.toString() + " IN (" + cubeNames.substring(1) + ")");
+                filterMap.put(JobPropertyEnum.CUBE.toString() + " IN (?)", cubeNames.substring(1));
             } else {
-                baseFilter.add(JobPropertyEnum.CUBE.toString() + " ='" + cubeName + "'");
+                filterMap.put(JobPropertyEnum.CUBE.toString() + " = ?", cubeName);
             }
         }
-        return baseFilter;
+        return filterMap;
     }
 
-    private String createSql(String[] dimensions, String[] metrics, String category, String[] filters) {
+    private PrepareSqlRequest createPrepareSqlRequest(String[] dimensions, String[] metrics, String category,
+            Map<String, String> filterMap) {
+        PrepareSqlRequest sqlRequest = new PrepareSqlRequest();
+        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
         StringBuffer baseSQL = new StringBuffer("select ");
         StringBuffer groupBy = new StringBuffer("");
         if (dimensions != null && dimensions.length > 0) {
@@ -330,17 +267,104 @@ public class DashboardService extends BasicService {
         }
         baseSQL.append(" from ");
         baseSQL.append(category);
-        if (filters != null && filters.length > 0) {
+        if (filterMap != null && filterMap.size() > 0) {
+            PrepareSqlRequest.StateParam[] params = new PrepareSqlRequest.StateParam[filterMap.size()];
+            int i = 0;
             StringBuffer filterSQL = new StringBuffer(" where ");
-            filterSQL.append(filters[0]);
-            for (int i = 1; i < filters.length; i++) {
+            Iterator<String> it = filterMap.keySet().iterator();
+            String filter = it.next();
+            filterSQL.append(filter);
+            params[i] = new PrepareSqlRequest.StateParam();
+            params[i].setClassName("java.lang.String");
+            params[i++].setValue(filterMap.get(filter));
+
+            while (it.hasNext()) {
+                filter = it.next();
                 filterSQL.append(" and ");
-                filterSQL.append(filters[i]);
+                filterSQL.append(filter);
+                params[i] = new PrepareSqlRequest.StateParam();
+                params[i].setClassName("java.lang.String");
+                params[i++].setValue(filterMap.get(filter));
             }
             baseSQL.append(filterSQL.toString());
+            sqlRequest.setParams(params);
         }
         baseSQL.append(groupBy);
+        sqlRequest.setSql(baseSQL.toString());
+        return sqlRequest;
+    }
 
-        return baseSQL.toString();
+    private enum CategoryEnum {
+        QUERY, JOB
+    }
+
+    private enum QueryDimensionEnum {
+        PROJECT(QueryPropertyEnum.PROJECT.toString()), //
+        CUBE(QueryPropertyEnum.REALIZATION.toString()), //
+        DAY(TimePropertyEnum.DAY_DATE.toString()), //
+        WEEK(TimePropertyEnum.WEEK_BEGIN_DATE.toString()), //
+        MONTH(TimePropertyEnum.MONTH.toString());
+
+        private final String sql;
+
+        QueryDimensionEnum(String sql) {
+            this.sql = sql;
+        }
+
+        public String toSQL() {
+            return this.sql;
+        }
+    }
+
+    private enum JobDimensionEnum {
+        PROJECT(JobPropertyEnum.PROJECT.toString()), //
+        CUBE(JobPropertyEnum.CUBE.toString()), //
+        DAY(TimePropertyEnum.DAY_DATE.toString()), //
+        WEEK(TimePropertyEnum.WEEK_BEGIN_DATE.toString()), //
+        MONTH(TimePropertyEnum.MONTH.toString());
+
+        private final String sql;
+
+        JobDimensionEnum(String sql) {
+            this.sql = sql;
+        }
+
+        public String toSQL() {
+            return this.sql;
+        }
+    }
+
+    private enum QueryMetricEnum {
+        QUERY_COUNT("count(*)"), //
+        AVG_QUERY_LATENCY("avg(" + QueryPropertyEnum.TIME_COST.toString() + ")"), //
+        MAX_QUERY_LATENCY("max(" + QueryPropertyEnum.TIME_COST.toString() + ")"), //
+        MIN_QUERY_LATENCY("min(" + QueryPropertyEnum.TIME_COST.toString() + ")");
+
+        private final String sql;
+
+        QueryMetricEnum(String sql) {
+            this.sql = sql;
+        }
+
+        public String toSQL() {
+            return this.sql;
+        }
+    }
+
+    private enum JobMetricEnum {
+        JOB_COUNT("count(*)"), //
+        AVG_JOB_BUILD_TIME("avg(" + JobPropertyEnum.PER_BYTES_TIME_COST.toString() + ")"), //
+        MAX_JOB_BUILD_TIME("max(" + JobPropertyEnum.PER_BYTES_TIME_COST.toString() + ")"), //
+        MIN_JOB_BUILD_TIME("min(" + JobPropertyEnum.PER_BYTES_TIME_COST.toString() + ")");
+
+        private final String sql;
+
+        JobMetricEnum(String sql) {
+            this.sql = sql;
+        }
+
+        public String toSQL() {
+            return this.sql;
+        }
     }
 }
