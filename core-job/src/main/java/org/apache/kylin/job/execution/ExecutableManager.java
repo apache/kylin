@@ -150,6 +150,7 @@ public class ExecutableManager {
 
     public AbstractExecutable getJob(String uuid) {
         try {
+            uuid = uuid.replaceAll("[./]", "");
             return parseTo(executableDao.getJob(uuid));
         } catch (PersistentException e) {
             logger.error("fail to get job:" + uuid, e);
