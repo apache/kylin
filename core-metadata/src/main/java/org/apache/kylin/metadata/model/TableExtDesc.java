@@ -228,7 +228,12 @@ public class TableExtDesc extends RootPersistentEntity {
     public boolean equals(Object o) {
         if (this == o)
             return true;
-        return false;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        TableExtDesc tableExtDesc = (TableExtDesc) o;
+
+        return getResourcePath().equals(tableExtDesc.getResourcePath());
     }
 
     @Override
