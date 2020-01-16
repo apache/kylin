@@ -66,6 +66,11 @@ public class DefaultFetcherRunner extends FetcherRunner {
                     continue;
                 }
 
+                if(succeedJobs.contains(id)){
+                    nSUCCEED++;
+                    continue;
+                }
+
                 final Output outputDigest;
                 try {
                     outputDigest = getExecutableManager().getOutputDigest(id);

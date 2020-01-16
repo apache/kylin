@@ -19,7 +19,9 @@
 package org.apache.kylin.job.impl.threadpool;
 
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.Executable;
@@ -40,6 +42,7 @@ public abstract class FetcherRunner implements Runnable {
     protected JobExecutor jobExecutor;
     protected volatile boolean fetchFailed = false;
     protected static int nRunning, nReady, nStopped, nOthers, nError, nDiscarded, nSUCCEED;
+    protected Set<String> succeedJobs = Sets.newHashSet();
 
     public FetcherRunner(JobEngineConfig jobEngineConfig, DefaultContext context, JobExecutor jobExecutor) {
         this.jobEngineConfig = jobEngineConfig;
@@ -74,6 +77,8 @@ public abstract class FetcherRunner implements Runnable {
         final Output outputDigest = getExecutableManager().getOutputDigest(id);
         // logger.debug("Job id:" + id + " not runnable");
         if (outputDigest.getState() == ExecutableState.SUCCEED) {
+            //cache succeed job id;
+            succeedJobs.add(id);
             nSUCCEED++;
         } else if (outputDigest.getState() == ExecutableState.ERROR) {
             nError++;
