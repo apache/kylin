@@ -1106,7 +1106,7 @@
     <repository>
       <id>kyligence</id>
       <name>Kyligence Repository</name>
-      <url>http://repository.kyligence.io/repository/maven-public/
+      <url>https://repository.kyligence.io/repository/maven-public/
       </url>
       <releases>
         <enabled>true</enabled>
