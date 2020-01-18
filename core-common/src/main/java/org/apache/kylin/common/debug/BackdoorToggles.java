@@ -71,6 +71,10 @@ public class BackdoorToggles {
         return map.get(key);
     }
 
+    public static String getForceHitCube(){
+        return getString(DEBUG_TOGGLE_HIT_CUBE);
+    }
+
     public static String getCoprocessorBehavior() {
         return getString(DEBUG_TOGGLE_COPROCESSOR_BEHAVIOR);
     }
@@ -383,4 +387,12 @@ public class BackdoorToggles {
      }
      */
     public final static String DEBUG_TOGGLE_STREAMING_DETAIL_PROFILE = "DEBUG_TOGGLE_STREAMING_DETAIL_PROFILE";
+
+
+    /**
+     * The cube chosen by Kylin may not be enough correct, user should have
+     *  the right to choose which cube he want to query in some case, please
+     *  check https://issues.apache.org/jira/browse/KYLIN-4312 for information.
+     */
+    public final static String DEBUG_TOGGLE_HIT_CUBE = "DEBUG_TOGGLE_HIT_CUBE";
 }
