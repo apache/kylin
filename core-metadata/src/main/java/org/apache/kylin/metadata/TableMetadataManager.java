@@ -484,6 +484,7 @@ public class TableMetadataManager {
 
     public void removeExternalFilter(String name) throws IOException {
         try (AutoLock lock = extFilterMapLock.lockForWrite()) {
+            name = name.replaceAll("[./]", "");
             extFilterCrud.delete(name);
         }
     }
