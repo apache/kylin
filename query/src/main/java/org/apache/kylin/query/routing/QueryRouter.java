@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
@@ -53,6 +54,10 @@ public class QueryRouter {
         for (IRealization real : realizations) {
             if (real.isReady())
                 candidates.add(new Candidate(real, sqlDigest));
+            if (BackdoorToggles.getForceHitCube() != null && BackdoorToggles.getForceHitCube().equalsIgnoreCase(real.getName())) {
+                logger.info("Force choose {} as selected cube for specific purpose.", real.getName());
+                return real;
+            }
         }
 
         logger.info("Find candidates by table " + factTableName + " and project=" + projectName + " : "
