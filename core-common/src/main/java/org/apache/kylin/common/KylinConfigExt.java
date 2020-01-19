@@ -55,6 +55,7 @@ public class KylinConfigExt extends KylinConfig {
         this.overrides = BCC.check(overrides);
     }
 
+    @Override
     public String getOptional(String prop, String dft) {
         String value = overrides.get(prop);
         if (value != null)
@@ -63,6 +64,7 @@ public class KylinConfigExt extends KylinConfig {
             return super.getOptional(prop, dft);
     }
 
+    @Override
     protected Properties getAllProperties() {
         Properties result = new Properties();
         result.putAll(super.getRawAllProperties());
