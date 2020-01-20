@@ -57,7 +57,6 @@ public class BadQueryHistoryManager {
     }
 
     public BadQueryHistory getBadQueriesForProject(String project) throws IOException {
-        project = project.replaceAll("[./]", "");
         BadQueryHistory badQueryHistory = getStore().getResource(getResourcePathForProject(project), BAD_QUERY_INSTANCE_SERIALIZER);
         if (badQueryHistory == null) {
             badQueryHistory = new BadQueryHistory(project);
@@ -88,10 +87,12 @@ public class BadQueryHistoryManager {
     }
 
     public void removeBadQueryHistory(String project) throws IOException {
+        project = project.replaceAll("[./]", "");
         getStore().deleteResource(getResourcePathForProject(project));
     }
 
     public String getResourcePathForProject(String project) {
+        project = project.replaceAll("[./]", "");
         return ResourceStore.BAD_QUERY_RESOURCE_ROOT + "/" + project + MetadataConstants.FILE_SURFIX;
     }
 }
