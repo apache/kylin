@@ -19,7 +19,7 @@
 'use strict';
 
 KylinApp
-    .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, $modal, MessageService, $domUtilityService, $timeout, TableService, SweetAlert, VdmUtil) {
+    .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, CubeService, $modal, MessageService, $domUtilityService, $timeout, TableService, SweetAlert, VdmUtil) {
         $scope.mainPanel = 'query';
         if ($routeParams.queryPanel) {
             $scope.mainPanel = $routeParams.queryPanel;
@@ -57,6 +57,8 @@ KylinApp
         };
 
         $scope.locationChangeConfirmed = false;
+        $scope.selectDirective = null;
+        $scope.cubeItems = [];
 
         var Query = {
             createNew: function (sql, project) {
@@ -250,7 +252,11 @@ KylinApp
 
         $scope.query = function (query) {
             scrollToButton();
-            QueryService.query({}, {sql: query.sql, offset: 0, limit: $scope.rowsPerPage, acceptPartial: query.acceptPartial, project: query.project}, function (result) {
+            var backdoorToggles = null;
+            if ($scope.selectDirective.selected != null && $scope.selectDirective.selected !== "-- All cubes in current project --") {
+              backdoorToggles = {"DEBUG_TOGGLE_HIT_CUBE": $scope.selectDirective.selected};
+            }
+            QueryService.query({}, {sql: query.sql, offset: 0, limit: $scope.rowsPerPage, acceptPartial: query.acceptPartial, project: query.project, backdoorToggles: backdoorToggles}, function (result) {
                 scrollToButton();
                 $scope.parseQueryResult(query, result, (!result || result.isException) ? 'failed' : 'success');
                 $scope.curQuery.result.hasMore = (query.result.results && query.result.results.length == $scope.rowsPerPage);
@@ -397,6 +403,10 @@ KylinApp
             });
         }
 
+        $scope.getSelected = function (selected) {
+          $scope.selectDirective = selected;
+        }
+
         var saveQueryController = function ($scope, $modalInstance, curQuery, QueryService) {
             $scope.curQuery = curQuery;
 
@@ -415,6 +425,20 @@ KylinApp
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
           $scope.listCachedQueries();
           $scope.listSavedQueries();
+          $scope.cubeItems = [];
+          $scope.cubeItems.push("-- All cubes in current project --")
+          if ($scope.selectDirective != null) {
+            $scope.selectDirective.clearSelected();
+          }
+          CubeService.list({projectName:newValue}, function (_cubes) {
+            if (_cubes !== 0) {
+              angular.forEach(_cubes,function(cube){
+                if (cube.status==="READY"){
+                  $scope.cubeItems.push(cube.name);
+                }
+              })
+            }
+          })
         });
 
         $scope.$on('$locationChangeStart', function (event, next, current) {
