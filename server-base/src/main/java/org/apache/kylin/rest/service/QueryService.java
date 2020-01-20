@@ -180,6 +180,7 @@ public class QueryService extends BasicService {
         config.setMaxTotal(kylinConfig.getQueryMaxCacheStatementNum());
         config.setBlockWhenExhausted(false);
         config.setMinEvictableIdleTimeMillis(10 * 60 * 1000L); // cached statement will be evict if idle for 10 minutes
+        config.setTimeBetweenEvictionRunsMillis(60 * 1000L); 
         GenericKeyedObjectPool<PreparedContextKey, PreparedContext> pool = new GenericKeyedObjectPool<>(factory,
                 config);
         return pool;
