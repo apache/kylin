@@ -229,6 +229,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         if (queryId != null) {
             builder.setQueryId(queryId);
         }
+        final String cubeSegNameStr = cubeSeg.getCubeInstance().getName() + ";" + cubeSeg.getName();
+        builder.setCubeSegNameStr(cubeSegNameStr);
         builder.setSpillEnabled(cubeSeg.getConfig().getQueryCoprocessorSpillEnabled());
         builder.setMaxScanBytes(cubeSeg.getConfig().getPartitionMaxScanBytes());
         builder.setIsExactAggregate(storageContext.isExactAggregation());
