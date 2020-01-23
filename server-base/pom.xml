@@ -298,7 +298,7 @@
     <repositories>
         <repository>
             <id>spring-snapshots</id>
-            <url>http://repo.spring.io/libs-snapshot</url>
+            <url>https://repo.spring.io/libs-snapshot</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
@@ -307,7 +307,7 @@
     <pluginRepositories>
         <pluginRepository>
             <id>spring-snapshots</id>
-            <url>http://repo.spring.io/libs-snapshot</url>
+            <url>https://repo.spring.io/libs-snapshot</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
