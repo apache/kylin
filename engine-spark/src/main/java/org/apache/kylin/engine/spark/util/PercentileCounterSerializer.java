@@ -47,7 +47,16 @@ public class PercentileCounterSerializer extends Serializer<PercentileCounter> {
         double quantileRatio = input.readDouble();
         int length = input.readInt();
         byte[] buffer = new byte[length];
-        input.read(buffer);
+
+        int offset = 0;
+        int bytesRead;
+        while ((bytesRead = input.read(buffer, offset, buffer.length - offset)) != -1) {
+            offset += bytesRead;
+            if (offset >= buffer.length) {
+                break;
+            }
+        }
+
         PercentileCounter counter = new PercentileCounter(compression, quantileRatio);
         counter.readRegisters(ByteBuffer.wrap(buffer));
         return counter;

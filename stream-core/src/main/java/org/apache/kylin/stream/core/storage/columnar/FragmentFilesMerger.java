@@ -93,8 +93,8 @@ public class FragmentFilesMerger {
         }
 
         Collections.sort(fragmentList);
-        FragmentId mergedFragmentId = new FragmentId(fragmentList.get(0).getFragmentId().getStartId(), fragmentList
-                .get(fragmentList.size() - 1).getFragmentId().getEndId());
+        FragmentId mergedFragmentId = new FragmentId(fragmentList.get(0).getFragmentId().getStartId(),
+                fragmentList.get(fragmentList.size() - 1).getFragmentId().getEndId());
         List<FragmentData> fragmentDataList = Lists.newArrayList();
         Map<TblColRef, List<Dictionary<String>>> dimDictListMap = Maps.newHashMap();
         Map<FragmentId, Map<TblColRef, Dictionary<String>>> fragmentDictionaryMaps = Maps.newHashMap();
@@ -146,8 +146,8 @@ public class FragmentFilesMerger {
         File mergedFragmentMetaFile = new File(mergeWorkingDirectory, mergedFragmentId + Constants.META_FILE_SUFFIX);
         try {
             FragmentMetaInfo mergedFragmentMeta = new FragmentMetaInfo();
-            CountingOutputStream fragmentDataOutput = new CountingOutputStream(new BufferedOutputStream(
-                    FileUtils.openOutputStream(mergedFragmentDataFile)));
+            CountingOutputStream fragmentDataOutput = new CountingOutputStream(
+                    new BufferedOutputStream(FileUtils.openOutputStream(mergedFragmentDataFile)));
             // merge dictionaries
             Map<TblColRef, Dictionary<String>> mergedDictMap = mergeAndPersistDictionaries(mergedFragmentMeta,
                     dimDictListMap, fragmentDataOutput);
@@ -202,8 +202,8 @@ public class FragmentFilesMerger {
         List<DimDictionaryMetaInfo> dimDictionaryMetaInfos = Lists.newArrayList();
         for (TblColRef dimension : parsedCubeInfo.dimensionsUseDictEncoding) {
             List<Dictionary<String>> dicts = dimDictListMap.get(dimension);
-            MultipleDictionaryValueEnumerator multipleDictionaryValueEnumerator = new MultipleDictionaryValueEnumerator(dimension.getType(),
-                    dicts);
+            MultipleDictionaryValueEnumerator multipleDictionaryValueEnumerator = new MultipleDictionaryValueEnumerator(
+                    dimension.getType(), dicts);
             Dictionary<String> mergedDict = DictionaryGenerator.buildDictionary(dimension.getType(),
                     multipleDictionaryValueEnumerator);
             mergedDictMap.put(dimension, mergedDict);
@@ -240,10 +240,10 @@ public class FragmentFilesMerger {
             } else {
                 cuboidMetaInfo = fragmentMetaInfo.getCuboidMetaInfo(cuboidId);
             }
-            Map<TblColRef, Dictionary<String>> dictMap = fragmentDictionaryMaps.get(FragmentId.parse(fragmentMetaInfo
-                    .getFragmentId()));
-            DimensionEncoding[] dimensionEncodings = ParsedStreamingCubeInfo.getDimensionEncodings(
-                    parsedCubeInfo.cubeDesc, dimensions, dictMap);
+            Map<TblColRef, Dictionary<String>> dictMap = fragmentDictionaryMaps
+                    .get(FragmentId.parse(fragmentMetaInfo.getFragmentId()));
+            DimensionEncoding[] dimensionEncodings = ParsedStreamingCubeInfo
+                    .getDimensionEncodings(parsedCubeInfo.cubeDesc, dimensions, dictMap);
             FragmentCuboidReader fragmentCuboidReader = new FragmentCuboidReader(parsedCubeInfo.cubeDesc, fragmentData,
                     cuboidMetaInfo, cuboidInfo.getDimensions(), parsedCubeInfo.measureDescs, dimensionEncodings);
             fragmentCuboidReaders.add(fragmentCuboidReader);
@@ -264,7 +264,8 @@ public class FragmentFilesMerger {
                 if (dict instanceof TrieDictionary) {
                     invertIndexColDescs[i] = new SeqIIColumnDescriptor(dim.getName(), dict.getMinId(), dict.getMaxId());
                 } else {
-                    invertIndexColDescs[i] = new FixLenIIColumnDescriptor(dim.getName(), encoding.getLengthOfEncoding());
+                    invertIndexColDescs[i] = new FixLenIIColumnDescriptor(dim.getName(),
+                            encoding.getLengthOfEncoding());
                 }
             } else {
                 invertIndexColDescs[i] = new FixLenIIColumnDescriptor(dim.getName(), encoding.getLengthOfEncoding());
@@ -282,8 +283,8 @@ public class FragmentFilesMerger {
         for (int i = 0; i < metricDataWriters.length; i++) {
             metricDataWriters[i] = new CuboidMetricDataWriter(cuboidId, parsedCubeInfo.measureDescs[i].getName(),
                     parsedCubeInfo.getMeasureTypeSerializer(i).maxLength());
-            metricsEncodings[i] = ColumnarMetricsEncodingFactory.create(parsedCubeInfo.measureDescs[i].getFunction()
-                    .getReturnDataType());
+            metricsEncodings[i] = ColumnarMetricsEncodingFactory
+                    .create(parsedCubeInfo.measureDescs[i].getFunction().getReturnDataType());
         }
 
         FragmentCuboidDataMerger fragmentCuboidDataMerger = new FragmentCuboidDataMerger(cuboidInfo,
@@ -324,19 +325,29 @@ public class FragmentFilesMerger {
         for (int i = 0; i < dimDataWriters.length; i++) {
             DimensionEncoding encoding = mergedDimEncodings[i];
             int dimFixLen = encoding.getLengthOfEncoding();
-            InputStream dimInput = new BufferedInputStream(FileUtils.openInputStream(dimDataWriters[i].getOutputFile()));
+            InputStream dimInput = new BufferedInputStream(
+                    FileUtils.openInputStream(dimDataWriters[i].getOutputFile()));
             try {
                 DimensionMetaInfo dimensionMeta = new DimensionMetaInfo();
                 dimensionMeta.setName(dimensions[i].getName());
                 int startOffset = (int) fragmentDataOutput.getCount();
                 dimensionMeta.setStartOffset(startOffset);
 
-                ColumnarStoreDimDesc cStoreDimDesc = ColumnarStoreDimDesc.getDefaultCStoreDimDesc(parsedCubeInfo.cubeDesc,
-                        dimensions[i].getName(), encoding);
+                ColumnarStoreDimDesc cStoreDimDesc = ColumnarStoreDimDesc
+                        .getDefaultCStoreDimDesc(parsedCubeInfo.cubeDesc, dimensions[i].getName(), encoding);
                 ColumnDataWriter columnDataWriter = cStoreDimDesc.getDimWriter(fragmentDataOutput, rowCnt);
                 for (int j = 0; j < rowCnt; j++) {
                     byte[] dimValue = new byte[dimFixLen];
-                    dimInput.read(dimValue);
+
+                    int offset = 0;
+                    int bytesRead;
+                    while ((bytesRead = dimInput.read(dimValue, offset, dimValue.length - offset)) != -1) {
+                        offset += bytesRead;
+                        if (offset >= dimValue.length) {
+                            break;
+                        }
+                    }
+
                     if (DimensionEncoding.isNull(dimValue, 0, dimValue.length)) {
                         dimensionMeta.setHasNull(true);
                     }
@@ -358,8 +369,8 @@ public class FragmentFilesMerger {
         }
 
         for (int i = 0; i < metricDataWriters.length; i++) {
-            DataInputStream metricInput = new DataInputStream(new BufferedInputStream(
-                    FileUtils.openInputStream(metricDataWriters[i].getOutputFile())));
+            DataInputStream metricInput = new DataInputStream(
+                    new BufferedInputStream(FileUtils.openInputStream(metricDataWriters[i].getOutputFile())));
             try {
                 ColumnarMetricsEncoding metricsEncoding = ColumnarMetricsEncodingFactory
                         .create(parsedCubeInfo.measureDescs[i].getFunction().getReturnDataType());
@@ -373,7 +384,16 @@ public class FragmentFilesMerger {
                 for (int j = 0; j < rowCnt; j++) {
                     int metricLen = metricInput.readInt();
                     byte[] metricValue = new byte[metricLen];
-                    metricInput.read(metricValue);
+
+                    int offset = 0;
+                    int bytesRead;
+                    while ((bytesRead = metricInput.read(metricValue, offset, metricValue.length - offset)) != -1) {
+                        offset += bytesRead;
+                        if (offset >= metricValue.length) {
+                            break;
+                        }
+                    }
+
                     columnDataWriter.write(metricValue);
                 }
                 columnDataWriter.flush();
@@ -404,7 +424,8 @@ public class FragmentFilesMerger {
             this.colName = colName;
 
             this.tmpColDataFile = new File(mergeWorkingDirectory, cuboidId + "-" + colName + ".data");
-            this.output = new CountingOutputStream(new BufferedOutputStream(FileUtils.openOutputStream(tmpColDataFile)));
+            this.output = new CountingOutputStream(
+                    new BufferedOutputStream(FileUtils.openOutputStream(tmpColDataFile)));
         }
 
         public void write(byte[] value) throws IOException {
@@ -437,8 +458,8 @@ public class FragmentFilesMerger {
             this.metricName = metricName;
             this.maxValLen = maxValLen;
             this.tmpMetricDataFile = new File(mergeWorkingDirectory, cuboidId + "-" + metricName + ".data");
-            this.countingOutput = new CountingOutputStream(new BufferedOutputStream(
-                    FileUtils.openOutputStream(tmpMetricDataFile)));
+            this.countingOutput = new CountingOutputStream(
+                    new BufferedOutputStream(FileUtils.openOutputStream(tmpMetricDataFile)));
             this.output = new DataOutputStream(countingOutput);
         }
 
@@ -534,9 +555,8 @@ public class FragmentFilesMerger {
             enqueueFromFragment(currRecordEntry.getSecond());
             boolean needAggregate = false;
             boolean first = true;
-            while ((!minHeap.isEmpty())
-                    && StringArrayComparator.INSTANCE.compare(currRecord.dimensions,
-                            minHeap.peek().getFirst().dimensions) == 0) {
+            while ((!minHeap.isEmpty()) && StringArrayComparator.INSTANCE.compare(currRecord.dimensions,
+                    minHeap.peek().getFirst().dimensions) == 0) {
                 if (first) {
                     doAggregate(currRecord);
                     first = false;
