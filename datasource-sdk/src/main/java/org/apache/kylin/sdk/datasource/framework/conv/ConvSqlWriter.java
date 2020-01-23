@@ -217,11 +217,11 @@ public class ConvSqlWriter extends SqlPrettyWriter {
     public void writeWithItem(SqlCall call, SqlWithItem.SqlWithItemOperator sqlWithItemOperator, int leftPrec,
                               int rightPrec) {
         final SqlWithItem withItem = (SqlWithItem) call;
-        leftPrec = sqlWithItemOperator.getLeftPrec();
-        rightPrec = sqlWithItemOperator.getRightPrec();
-        withItem.name.unparse(this, leftPrec, rightPrec);
+        int leftP = sqlWithItemOperator.getLeftPrec();
+        int rightP = sqlWithItemOperator.getRightPrec();
+        withItem.name.unparse(this, leftP, rightP);
         if (withItem.columnList != null) {
-            withItem.columnList.unparse(this, leftPrec, rightPrec);
+            withItem.columnList.unparse(this, leftP, rightP);
         }
         this.keyword("AS");
         Frame frame = this.startList(FrameTypeEnum.WITH_ITEM, "(", ")");
