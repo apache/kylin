@@ -59,7 +59,6 @@ import com.google.common.collect.Sets;
 public abstract class KylinConfigBase implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(KylinConfigBase.class);
-    private static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
 
     private static final String FALSE = "false";
     private static final String TRUE = "true";
@@ -2403,13 +2402,11 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public int getStreamingReceiverQueryCoreThreads() {
-        int def = getStreamingReceiverQueryMaxThreads() - 1;
-        return Integer.parseInt(getOptional("kylin.stream.receiver.query-core-threads", def + ""));
+        return Integer.parseInt(getOptional("kylin.stream.receiver.query-core-threads", "50"));
     }
 
     public int getStreamingReceiverQueryMaxThreads() {
-        int def = Math.max(2, AVAILABLE_PROCESSORS - 1);
-        return Integer.parseInt(getOptional("kylin.stream.receiver.query-max-threads", def + ""));
+        return Integer.parseInt(getOptional("kylin.stream.receiver.query-max-threads", "200"));
     }
 
     public int getStreamingReceiverUseThreadsPerQuery() {
