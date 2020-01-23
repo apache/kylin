@@ -202,7 +202,6 @@ public class CubingJob extends DefaultChainedExecutable {
         CubeInstance cubeInstance = CubeManager.getInstance(context.getConfig())
                 .getCube(CubingExecutableUtil.getCubeName(this.getParams()));
         final Output output = getManager().getOutput(getId());
-        state = output.getState();
         if (state != ExecutableState.ERROR
                 && !cubeInstance.getDescriptor().getStatusNeedNotify().contains(state.toString())) {
             logger.info("state:" + state + " no need to notify users");
