@@ -14,19 +14,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
 
 package org.apache.kylin.stream.core.query;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Future;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.kylin.common.KylinConfig;
@@ -39,39 +38,28 @@ import com.google.common.collect.Lists;
 
 public class MultiThreadsResultCollector extends ResultCollector {
     private static Logger logger = LoggerFactory.getLogger(MultiThreadsResultCollector.class);
-    private static ThreadPoolExecutor scannerThreadPool;
-    private static int MAX_RUNNING_THREAD_COUNT;
-
+    private static ExecutorService executor;
     static {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        MAX_RUNNING_THREAD_COUNT = config.getStreamingReceiverQueryMaxThreads();
-        scannerThreadPool = new ThreadPoolExecutor(config.getStreamingReceiverQueryCoreThreads(),
-                MAX_RUNNING_THREAD_COUNT, 60L, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(), new NamedThreadFactory("query-worker"));
+        executor = new ThreadPoolExecutor(config.getStreamingReceiverQueryCoreThreads(),
+                config.getStreamingReceiverQueryMaxThreads(), 60L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("query-worker"));
     }
 
-    private long deadline;
-    private String queryId;
-    /**
-     * if current query beyond the deadline
-     */
-    private AtomicBoolean cancelFlag = new AtomicBoolean(false);
+    private int timeout;
     private Semaphore workersSemaphore;
+    final BlockingQueue<Record> queue = new LinkedBlockingQueue<>(10000);
     private AtomicInteger notCompletedWorkers;
 
-    final BlockingQueue<Record> recordCachePool = new LinkedBlockingQueue<>(10000);
-
-    public MultiThreadsResultCollector(int numOfWorkers, long deadline) {
+    public MultiThreadsResultCollector(int numOfWorkers, int timeout) {
         this.workersSemaphore = new Semaphore(numOfWorkers);
-        this.deadline = deadline;
-        this.queryId = StreamingQueryProfile.get().getQueryId();
+        this.timeout = timeout;
     }
 
     @Override
     public Iterator<Record> iterator() {
         notCompletedWorkers = new AtomicInteger(searchResults.size());
-        Thread masterThread = new Thread(new WorkSubmitter(), "MultiThreadsResultCollector_" + queryId);
-        masterThread.start();
+        executor.submit(new WorkSubmitter());
 
         final int batchSize = 100;
         final long startTime = System.currentTimeMillis();
@@ -81,41 +69,38 @@ public class MultiThreadsResultCollector extends ResultCollector {
 
             @Override
             public boolean hasNext() {
-                boolean exits = (internalIT.hasNext() || !recordCachePool.isEmpty());
+                boolean exits = (internalIT.hasNext() || queue.size() > 0);
                 if (!exits) {
                     while (notCompletedWorkers.get() > 0) {
                         Thread.yield();
-                        if (System.currentTimeMillis() > deadline) {
-                            masterThread.interrupt(); // notify main thread
-                            cancelFlag.set(true);
-                            logger.warn("Beyond the deadline for {}.", queryId);
+                        long takeTime = System.currentTimeMillis() - startTime;
+                        if (takeTime > timeout) {
                             throw new RuntimeException("Timeout when iterate search result");
                         }
-                        if (internalIT.hasNext() || !recordCachePool.isEmpty()) {
+                        if (internalIT.hasNext() || queue.size() > 0) {
                             return true;
                         }
                     }
                 }
+
                 return exits;
             }
 
             @Override
             public Record next() {
                 try {
-                    if (System.currentTimeMillis() > deadline) {
+                    long takeTime = System.currentTimeMillis() - startTime;
+                    if (takeTime > timeout) {
                         throw new RuntimeException("Timeout when iterate search result");
                     }
                     if (!internalIT.hasNext()) {
                         recordList.clear();
-                        Record one = recordCachePool.poll(deadline - startTime, TimeUnit.MILLISECONDS);
+                        Record one = queue.poll(timeout - takeTime, TimeUnit.MILLISECONDS);
                         if (one == null) {
-                            masterThread.interrupt(); // notify main thread
-                            cancelFlag.set(true);
-                            logger.warn("Beyond the deadline for {}.", queryId);
                             throw new RuntimeException("Timeout when iterate search result");
                         }
                         recordList.add(one);
-                        recordCachePool.drainTo(recordList, batchSize - 1);
+                        queue.drainTo(recordList, batchSize - 1);
                         internalIT = recordList.iterator();
                     }
                     return internalIT.next();
@@ -143,13 +128,15 @@ public class MultiThreadsResultCollector extends ResultCollector {
             try {
                 result.startRead();
                 for (Record record : result) {
-                    recordCachePool.put(record.copy());
+                    try {
+                        queue.put(record.copy());
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException("Timeout when visiting streaming segmenent", e);
+                    }
                 }
                 result.endRead();
-            } catch (InterruptedException inter) {
-                logger.warn("Cancelled scan streaming segment", inter);
             } catch (Exception e) {
-                logger.error("Error when iterate search result", e);
+                logger.error("error when iterate search result", e);
             } finally {
                 notCompletedWorkers.decrementAndGet();
                 workersSemaphore.release();
@@ -160,44 +147,15 @@ public class MultiThreadsResultCollector extends ResultCollector {
     private class WorkSubmitter implements Runnable {
         @Override
         public void run() {
-            List<Future> futureList = Lists.newArrayListWithExpectedSize(searchResults.size());
-            int cancelTimes = 0;
-            try {
-                for (final IStreamingSearchResult result : searchResults) {
-                    Future f = scannerThreadPool.submit(new ResultIterateWorker(result));
-                    futureList.add(f);
-                    workersSemaphore.acquire(); // Throw InterruptedException when interrupted
-                }
-                while (notCompletedWorkers.get() > 0) {
-                    Thread.sleep(100);
-                    if (cancelFlag.get() || Thread.currentThread().isInterrupted()) {
-                        break;
-                    }
-                }
-            } catch (InterruptedException inter) {
-                logger.warn("Interrupted", inter);
-            } finally {
-                for (Future f : futureList) {
-                    if (!f.isCancelled() || !f.isDone()) {
-                        if (f.cancel(true)) {
-                            cancelTimes++;
-                        }
-                    }
+            for (final IStreamingSearchResult result : searchResults) {
+                executor.submit(new ResultIterateWorker(result));
+                try {
+                    workersSemaphore.acquire();
+                } catch (InterruptedException e) {
+                    logger.error("interrupted", e);
                 }
             }
-            logger.debug("Finish MultiThreadsResultCollector for queryId {}, cancel {}. Current thread pool: {}.",
-                    queryId, cancelTimes, scannerThreadPool);
         }
     }
 
-    /**
-     * block query if return true
-     */
-    public static boolean isOccupied() {
-        boolean occupied = scannerThreadPool.getActiveCount() >= MAX_RUNNING_THREAD_COUNT;
-        if (occupied) {
-            logger.debug("ThreadPool {}", scannerThreadPool);
-        }
-        return occupied;
-    }
 }
