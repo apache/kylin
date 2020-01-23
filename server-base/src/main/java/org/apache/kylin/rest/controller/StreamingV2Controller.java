@@ -52,8 +52,8 @@ import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.StreamingV2Service;
 import org.apache.kylin.rest.service.TableService;
 import org.apache.kylin.stream.core.model.CubeAssignment;
-import org.apache.kylin.stream.core.model.ReplicaSet;
 import org.apache.kylin.stream.core.model.Node;
+import org.apache.kylin.stream.core.model.ReplicaSet;
 import org.apache.kylin.stream.core.model.stats.ClusterState;
 import org.apache.kylin.stream.core.model.stats.CubeRealTimeState;
 import org.apache.kylin.stream.core.model.stats.ReceiverStats;
@@ -78,10 +78,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.base.Preconditions;
 
 /**
  * StreamingController is defined as Restful API entrance for UI.
@@ -136,6 +136,8 @@ public class StreamingV2Controller extends BasicController {
         boolean saveStreamingSuccess = false, saveTableSuccess = false;
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         ProjectInstance projectInstance = ProjectManager.getInstance(kylinConfig).getProject(project);
+
+        InternalErrorException shouldThrow = null;
         try {
             try {
                 tableDesc.setUuid(UUID.randomUUID().toString());
@@ -160,22 +162,27 @@ public class StreamingV2Controller extends BasicController {
                     try {
                         tableService.unloadHiveTable(tableDesc.getIdentity(), project);
                     } catch (IOException e) {
-                        throw new InternalErrorException("Action failed and failed to rollback the create table "
-                                + e.getLocalizedMessage(), e);
+                        shouldThrow = new InternalErrorException(
+                                "Action failed and failed to rollback the create table " + e.getLocalizedMessage(), e);
                     }
                 }
                 if (saveStreamingSuccess) {
                     try {
                         streamingService.dropStreamingConfig(streamingSourceConfig);
                     } catch (IOException e) {
-                        throw new InternalErrorException(
+                        shouldThrow = new InternalErrorException(
                                 "Action failed and failed to rollback the created streaming config: "
-                                        + e.getLocalizedMessage(), e);
+                                        + e.getLocalizedMessage(),
+                                e);
                     }
                 }
             }
-
         }
+
+        if (null != shouldThrow) {
+            throw shouldThrow;
+        }
+
         streamingRequest.setSuccessful(true);
         return streamingRequest;
     }
@@ -197,8 +204,9 @@ public class StreamingV2Controller extends BasicController {
             } catch (NoSuchObjectException noObjectException) {
                 logger.info("table not exist in hive meta store for table:" + tableDesc.getIdentity(),
                         noObjectException);
-                throw new BadRequestException("table doesn't exist in hive meta store for table:"
-                        + tableDesc.getIdentity(), ResponseCode.CODE_UNDEFINED, noObjectException);
+                throw new BadRequestException(
+                        "table doesn't exist in hive meta store for table:" + tableDesc.getIdentity(),
+                        ResponseCode.CODE_UNDEFINED, noObjectException);
             } catch (Exception e) {
                 logger.error("error when get metadata from hive meta store for table:" + tableDesc.getIdentity(), e);
                 throw new BadRequestException("error when connect hive meta store", ResponseCode.CODE_UNDEFINED, e);
@@ -230,7 +238,8 @@ public class StreamingV2Controller extends BasicController {
             }
             if (!incompatibleMsgs.isEmpty()) {
                 logger.info("incompatible for hive and input table schema:{}", incompatibleMsgs);
-                throw new BadRequestException("incompatible for hive schema and input table schema:" + incompatibleMsgs);
+                throw new BadRequestException(
+                        "incompatible for hive schema and input table schema:" + incompatibleMsgs);
             }
         }
     }
@@ -299,8 +308,8 @@ public class StreamingV2Controller extends BasicController {
             streamingService.dropStreamingConfig(config);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to delete StreamingSourceConfig. " + " Caused by: "
-                    + e.getMessage(), e);
+            throw new InternalErrorException(
+                    "Failed to delete StreamingSourceConfig. " + " Caused by: " + e.getMessage(), e);
         }
     }
 
