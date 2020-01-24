@@ -119,7 +119,7 @@ public class Tuple implements ITuple {
             if (fieldValue instanceof BigDecimal) {
                 fieldValue = normalizeDecimal((BigDecimal) fieldValue);
             } else if (fieldValue instanceof Number) {
-                fieldValue = new BigDecimal(((Number) fieldValue).doubleValue());
+                fieldValue = BigDecimal.valueOf(((Number) fieldValue).doubleValue());
             }
         } else if ("float".equals(dataType) && fieldValue instanceof BigDecimal) {
             fieldValue = ((BigDecimal) fieldValue).floatValue();
