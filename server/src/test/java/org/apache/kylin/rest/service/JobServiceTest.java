@@ -30,7 +30,6 @@ import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.QueryConnection;
-import org.apache.kylin.rest.exception.BadRequestException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,12 +59,8 @@ public class JobServiceTest extends ServiceTestBase {
         Assert.assertNotNull(jobService.getConfig());
         Assert.assertNotNull(jobService.getDataModelManager());
         Assert.assertNotNull(QueryConnection.getConnection(ProjectInstance.DEFAULT_PROJECT_NAME));
+        Assert.assertNull(jobService.getJobInstance("job_not_exist"));
         Assert.assertNotNull(jobService.searchJobs(null, null, null, 0, 0, JobTimeFilterEnum.ALL, JobService.JobSearchMode.ALL));
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void testJobNotExist() {
-        jobService.getJobInstance("job_not_exist");
     }
 
     @Test

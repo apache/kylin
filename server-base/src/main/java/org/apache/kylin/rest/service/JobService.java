@@ -462,19 +462,12 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     public JobInstance getJobInstance(String uuid) {
-        JobInstance jobInstance = null;
         AbstractExecutable job = getExecutableManager().getJob(uuid);
         if (job instanceof CheckpointExecutable) {
-            jobInstance = getCheckpointJobInstance(job);
+            return getCheckpointJobInstance(job);
         } else {
-            jobInstance = getSingleJobInstance(job);
+            return getSingleJobInstance(job);
         }
-
-        if (jobInstance == null) {
-            throw new BadRequestException("Cannot find job: " + uuid);
-        }
-
-        return jobInstance;
     }
 
     public Output getOutput(String id) {
