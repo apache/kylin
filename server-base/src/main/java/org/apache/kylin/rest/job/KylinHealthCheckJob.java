@@ -188,7 +188,7 @@ public class KylinHealthCheckJob extends AbstractApplication {
                                 "Project: {} cube: {} segment: {} cube id data: {} don't exist and need to rebuild it",
                                 cube.getProject(), cube.getName(), segment, path);
                         reporter.log(
-                                "The rebuild url: -d '{\"startTime\":'{}', \"endTime\":'{}', \"buildType\":\"REFRESH\"}' /kylin/api/cubes/{}/build",
+                                "The rebuild url: -d '{\"startTime\":{}, \"endTime\":{}, \"buildType\":\"REFRESH\"}' /kylin/api/cubes/{}/build",
                                 segment.getTSRange().start, segment.getTSRange().end, cube.getName());
                     }
                 }
@@ -208,7 +208,7 @@ public class KylinHealthCheckJob extends AbstractApplication {
                             reporter.log("HBase table: {} not exist for segment: {}, project: {}", tableName, segment,
                                     cube.getProject());
                             reporter.log(
-                                    "The rebuild url: -d '{\"startTime\":'{}', \"endTime\":'{}', \"buildType\":\"REFRESH\"}' /kylin/api/cubes/{}/build",
+                                    "The rebuild url: -d '{\"startTime\":{}, \"endTime\":{}, \"buildType\":\"REFRESH\"}' /kylin/api/cubes/{}/build",
                                     segment.getTSRange().start, segment.getTSRange().end, cube.getName());
                         }
                     }

@@ -96,7 +96,7 @@ import com.google.common.collect.Sets;
 public class StreamingCoordinator implements CoordinatorClient {
     private static final Logger logger = LoggerFactory.getLogger(StreamingCoordinator.class);
     private static final int DEFAULT_PORT = 7070;
-    private static StreamingCoordinator instance = null;
+    private static volatile StreamingCoordinator instance = null;
 
     private StreamMetadataStore streamMetadataStore;
     private Assigner assigner;

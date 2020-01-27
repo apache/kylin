@@ -123,6 +123,7 @@ public class ExecutableManager {
 
     public void updateCheckpointJob(String jobId, List<AbstractExecutable> subTasksForCheck) {
         try {
+            jobId = jobId.replaceAll("[./]", "");
             final ExecutablePO job = executableDao.getJob(jobId);
             Preconditions.checkArgument(job != null, "there is no related job for job id:" + jobId);
 
@@ -141,6 +142,7 @@ public class ExecutableManager {
     //for ut
     public void deleteJob(String jobId) {
         try {
+            jobId = jobId.replaceAll("[./]", "");
             executableDao.deleteJob(jobId);
         } catch (PersistentException e) {
             logger.error("fail to delete job:" + jobId, e);
@@ -150,6 +152,7 @@ public class ExecutableManager {
 
     public AbstractExecutable getJob(String uuid) {
         try {
+            uuid = uuid.replaceAll("[./]", "");
             return parseTo(executableDao.getJob(uuid));
         } catch (PersistentException e) {
             logger.error("fail to get job:" + uuid, e);
@@ -167,6 +170,7 @@ public class ExecutableManager {
 
     public Output getOutput(String uuid) {
         try {
+            uuid = uuid.replaceAll("[./]", "");
             final ExecutableOutputPO jobOutput = executableDao.getJobOutput(uuid);
             Preconditions.checkArgument(jobOutput != null, "there is no related output for job id:" + uuid);
             return parseOutput(jobOutput);

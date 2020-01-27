@@ -887,7 +887,8 @@ public class CubeController extends BasicController {
         }
 
         response.setContentType("text/json;charset=utf-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"" + cubeName + ".json\"");
+        response.setHeader("Content-Disposition",
+                "attachment; filename=\"" + ValidateUtil.convertStringToBeAlphanumericUnderscore(cubeName) + ".json\"");
         try (PrintWriter writer = response.getWriter()) {
             writer.write(JsonUtil.writeValueAsString(dimensionSetList));
         } catch (IOException e) {

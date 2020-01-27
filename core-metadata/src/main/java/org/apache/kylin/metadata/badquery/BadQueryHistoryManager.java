@@ -87,10 +87,12 @@ public class BadQueryHistoryManager {
     }
 
     public void removeBadQueryHistory(String project) throws IOException {
+        project = project.replaceAll("[./]", "");
         getStore().deleteResource(getResourcePathForProject(project));
     }
 
     public String getResourcePathForProject(String project) {
+        project = project.replaceAll("[./]", "");
         return ResourceStore.BAD_QUERY_RESOURCE_ROOT + "/" + project + MetadataConstants.FILE_SURFIX;
     }
 }

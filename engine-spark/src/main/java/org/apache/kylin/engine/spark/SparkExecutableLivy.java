@@ -17,6 +17,11 @@
  */
 package org.apache.kylin.engine.spark;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
@@ -40,11 +45,6 @@ import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.parquet.Strings;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -107,7 +107,8 @@ public class SparkExecutableLivy extends SparkExecutable {
         }
     }
 
-    private ExecuteResult onResumed(String appId, ExecutableManager mgr) throws ExecuteException {
+    @Override
+    protected ExecuteResult onResumed(String appId, ExecutableManager mgr) throws ExecuteException {
         Map<String, String> info = new HashMap<>();
         try {
             logger.info("livy spark_job_id:" + appId + " resumed");
@@ -176,7 +177,8 @@ public class SparkExecutableLivy extends SparkExecutable {
             }
 
             for (Map.Entry<String, String> entry : sparkConfs.entrySet()) {
-                if (entry.getKey().equals("spark.submit.deployMode") || entry.getKey().equals("spark.master") || entry.getKey().equals("spark.yarn.archive")) {
+                if (entry.getKey().equals("spark.submit.deployMode") || entry.getKey().equals("spark.master")
+                        || entry.getKey().equals("spark.yarn.archive")) {
                     continue;
                 } else {
                     livyRestBuilder.addConf(entry.getKey(), entry.getValue());
@@ -187,8 +189,7 @@ public class SparkExecutableLivy extends SparkExecutable {
             final LivyRestExecutor executor = new LivyRestExecutor();
             final PatternedLogger patternedLogger = new PatternedLogger(logger, (infoKey, info) -> {
                 // only care three properties here
-                if (ExecutableConstants.SPARK_JOB_ID.equals(infoKey)
-                        || ExecutableConstants.YARN_APP_ID.equals(infoKey)
+                if (ExecutableConstants.SPARK_JOB_ID.equals(infoKey) || ExecutableConstants.YARN_APP_ID.equals(infoKey)
                         || ExecutableConstants.YARN_APP_URL.equals(infoKey)) {
                     getManager().addJobInfo(getId(), info);
                 }
@@ -230,17 +231,20 @@ public class SparkExecutableLivy extends SparkExecutable {
         }
     }
 
-    private String getAppState(String appId) throws IOException {
+    @Override
+    protected String getAppState(String appId) throws IOException {
         LivyRestExecutor executor = new LivyRestExecutor();
         return executor.state(appId);
     }
 
-    private void killApp(String appId) throws IOException, InterruptedException {
+    @Override
+    protected void killApp(String appId) throws IOException, InterruptedException {
         LivyRestExecutor executor = new LivyRestExecutor();
         executor.kill(appId);
     }
 
-    private int killAppRetry(String appId) throws IOException, InterruptedException {
+    @Override
+    protected int killAppRetry(String appId) throws IOException, InterruptedException {
         String status = getAppState(appId);
         if (Strings.isNullOrEmpty(status) || LivyStateEnum.dead.name().equalsIgnoreCase(status)
                 || LivyStateEnum.error.name().equalsIgnoreCase(status)

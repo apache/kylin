@@ -23,6 +23,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -286,7 +287,7 @@ public class HFileOutputFormat3 extends FileOutputFormat<ImmutableBytesWritable,
         TreeSet<ImmutableBytesWritable> sorted = new TreeSet<ImmutableBytesWritable>(startKeys);
 
         ImmutableBytesWritable first = sorted.first();
-        if (!first.equals(HConstants.EMPTY_BYTE_ARRAY)) {
+        if (!Arrays.equals(first.get(), HConstants.EMPTY_BYTE_ARRAY)) {
             throw new IllegalArgumentException("First region of table should have empty start key. Instead has: "
                     + Bytes.toStringBinary(first.get()));
         }

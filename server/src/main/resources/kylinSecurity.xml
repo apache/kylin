@@ -241,6 +241,7 @@
             <scr:intercept-url pattern="/api/query*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/**/metrics" access="permitAll"/>
+            <scr:intercept-url pattern="/api/**/jmetrics/**" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/cache*/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/streaming_coordinator/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/service_discovery/state/is_active_job_node" access="permitAll"/>
@@ -291,6 +292,7 @@
             <scr:intercept-url pattern="/api/query*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/**/metrics" access="permitAll"/>
+            <scr:intercept-url pattern="/api/**/jmetrics/**" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/cache*/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/streaming_coordinator/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST')"/>

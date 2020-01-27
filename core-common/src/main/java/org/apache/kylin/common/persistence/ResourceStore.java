@@ -40,7 +40,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
-import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.slf4j.Logger;
@@ -596,7 +595,7 @@ abstract public class ResourceStore {
 
     // ============================================================================
 
-    InternalThreadLocal<Checkpoint> checkpointing = new InternalThreadLocal<>();
+    ThreadLocal<Checkpoint> checkpointing = new ThreadLocal<>();
 
     public Checkpoint checkpoint() {
         Checkpoint cp = checkpointing.get();
