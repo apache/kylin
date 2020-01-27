@@ -144,7 +144,11 @@ public class ValidateUtil {
         List<TableDesc> tableDescs = tableService.getTableDescByProject(project, false);
         Set<String> tables = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         for (TableDesc tableDesc : tableDescs) {
-            tables.add(tableDesc.getDatabase() + "." + tableDesc.getName());
+            if (tableDesc.getName().contains(".")) {
+                tables.add(tableDesc.getName());
+            } else {
+                tables.add(tableDesc.getDatabase() + "." + tableDesc.getName());
+            }
         }
 
         if (!tables.contains(table)) {
@@ -173,7 +177,12 @@ public class ValidateUtil {
         Set<String> cols = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
         for (TableDesc tableDesc : tableDescByProject) {
-            String tbl = tableDesc.getDatabase() + "." + tableDesc.getName();
+            String tbl;
+            if (tableDesc.getName().contains(".")) {
+                tbl = tableDesc.getName();
+            } else {
+                tbl = tableDesc.getDatabase() + "." + tableDesc.getName();
+            }
             if (tbl.equalsIgnoreCase(table)) {
                 for (ColumnDesc column : tableDesc.getColumns()) {
                     cols.add(column.getName());

@@ -116,7 +116,7 @@ KylinApp
         backdrop : 'static',
         resolve: {
           tableNames: function () {
-            return $scope.tableModel.selectedSrcTable.database + '.'+ $scope.tableModel.selectedSrcTable.name;
+            return $scope.tableModel.selectedSrcTable.database + '.'+ $scope.tableModel.selectedSrcTable.name.split('.')[1];
           },
           projectName: function () {
             return $scope.projectModel.selectedProject;
@@ -194,7 +194,7 @@ KylinApp
     }
 
 
-    $scope.unloadTable = function (tableName) {
+    $scope.unloadTable = function (databaseName, tableName) {
       SweetAlert.swal({
             title: "",
             text: "Are you sure to unload this table?",
@@ -210,7 +210,8 @@ KylinApp
             return;
           }
           loadingRequest.show();
-          TableService.unLoadHiveTable({tableName: tableName, action: $scope.projectModel.selectedProject}, {}, function (result) {
+          var tableFullName = databaseName+'.'+tableName.split('.')[1];
+          TableService.unLoadHiveTable({tableName: tableFullName, action: $scope.projectModel.selectedProject}, {}, function (result) {
             var removedTableInfo = "";
             angular.forEach(result['result.unload.success'], function (table) {
               removedTableInfo += "\n" + table;
@@ -1460,7 +1461,7 @@ KylinApp
 KylinApp
   .controller('TableSnapshotCtrl', function ($scope, TableService, CubeService, uiGridConstants) {
     $scope.initSnapshots = function() {
-      var tableFullName = $scope.tableModel.selectedSrcTable.database + '.' + $scope.tableModel.selectedSrcTable.name
+      var tableFullName = $scope.tableModel.selectedSrcTable.database + '.' + $scope.tableModel.selectedSrcTable.name.split('.')[1];
       TableService.getSnapshots({tableName: tableFullName, pro: $scope.projectModel.selectedProject}, {}, function (data) {
         var orgData = JSON.parse(angular.toJson(data));
         angular.forEach(orgData, function(snapshot) {

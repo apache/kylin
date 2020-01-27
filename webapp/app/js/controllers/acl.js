@@ -46,7 +46,7 @@ KylinApp.controller('AclCtrl', function ($scope, AclService, TableModel,loadingR
   }
 
   $scope.$watch('tableModel.selectedSrcTable.name',function(){
-    $scope.selectTableName = TableModel.selectedSrcTable.database +'.'+ TableModel.selectedSrcTable.name
+    $scope.selectTableName = TableModel.selectedSrcTable.database +'.'+ TableModel.selectedSrcTable.name.split('.')[1]
     if(!TableModel.selectedSrcTable.name || !$scope.projectModel) {
       return;
     }
@@ -104,7 +104,7 @@ KylinApp.controller('AclCtrl', function ($scope, AclService, TableModel,loadingR
       type: 'user',
       name: ''
     }
-    $scope.selectTableName = TableModel.selectedSrcTable.database +'.'+ TableModel.selectedSrcTable.name
+    $scope.selectTableName = TableModel.selectedSrcTable.database +'.'+ TableModel.selectedSrcTable.name.split('.')[1]
     $scope.projectModel = ProjectModel;
     $scope.tableUserAclBlackList = []
     $scope.tableGroupAclBlackList = []
