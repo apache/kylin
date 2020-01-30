@@ -21,13 +21,16 @@ package org.apache.kylin.rest.controller;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
+import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.request.ExternalFilterRequest;
 import org.apache.kylin.rest.service.ExtFilterService;
+import org.apache.kylin.rest.util.ValidateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,7 +83,8 @@ public class ExternalFilterController extends BasicController {
 
     @RequestMapping(value = "/{filter}/{project}", method = { RequestMethod.DELETE }, produces = { "application/json" })
     @ResponseBody
-    public Map<String, String> removeFilter(@PathVariable String filter, @PathVariable String project) throws IOException {
+    public Map<String, String> removeFilter(@PathVariable String filter, @PathVariable String project)
+            throws IOException {
         Map<String, String> result = new HashMap<String, String>();
         extFilterService.removeExtFilterFromProject(filter, project);
         extFilterService.removeExternalFilter(filter);
@@ -90,7 +94,11 @@ public class ExternalFilterController extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public List<ExternalFilterDesc> getExternalFilters(@RequestParam(value = "project", required = true) String project) throws IOException {
+    public List<ExternalFilterDesc> getExternalFilters(@RequestParam(value = "project", required = true) String project)
+            throws IOException {
+        if (!ValidateUtil.isAlphanumericUnderscore(project)) {
+            throw new BadRequestException(String.format(Locale.ROOT, "Invalid Project name %s.", project));
+        }
         List<ExternalFilterDesc> filterDescs = Lists.newArrayList();
         filterDescs.addAll(extFilterService.getProjectManager().listExternalFilterDescs(project).values());
         return filterDescs;
