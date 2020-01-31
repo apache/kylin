@@ -98,6 +98,10 @@ public class PriorityFetcherRunner extends FetcherRunner {
                     nRunning++;
                     continue;
                 }
+                if(succeedJobs.contains(id)){
+                    nSUCCEED++;
+                    continue;
+                }
 
                 final Output outputDigest;
                 try {
