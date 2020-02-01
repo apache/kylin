@@ -51,6 +51,32 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     private static final String TABLE_TYPE_VIRTUAL_VIEW = "VIRTUAL_VIEW";
 
+    public static class TableProject {
+       private String table;
+       private String project;
+
+        TableProject(String table, String project) {
+            this.table = table;
+            this.project = project;
+        }
+
+        public String getTable() {
+            return table;
+        }
+
+        public void setTable(String table) {
+            this.table = table;
+        }
+
+        public String getProject() {
+            return project;
+        }
+
+        public void setProject(String project) {
+            this.project = project;
+        }
+    }
+
     public static String concatRawResourcePath(String nameOnPath) {
         return ResourceStore.TABLE_RESOURCE_ROOT + "/" + nameOnPath + ".json";
     }
@@ -65,8 +91,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         return concatRawResourcePath(makeResourceName(tableIdentity, prj));
     }
 
-    // returns <table, project>
-    public static Pair<String, String> parseResourcePath(String path) {
+    public static TableProject parseResourcePath(String path) {
         if (path.endsWith(".json"))
             path = path.substring(0, path.length() - ".json".length());
 
@@ -84,7 +109,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
             table = path;
             prj = null;
         }
-        return Pair.newPair(table, prj);
+        return new TableProject(table, prj);
     }
 
     // ============================================================================
