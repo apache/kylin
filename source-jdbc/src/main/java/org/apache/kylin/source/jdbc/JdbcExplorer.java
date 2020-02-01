@@ -301,6 +301,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
 
             String kylinType = SqlUtil.jdbcTypeToKylinDataType(type);
             int precision = (SqlUtil.isPrecisionApplicable(kylinType) && csize > 0) ? csize : -1;
+            precision = Math.min(precision, KylinConfig.getInstanceFromEnv().getDefaultVarcharPrecision());
             int scale = (SqlUtil.isScaleApplicable(kylinType) && digits > 0) ? digits : -1;
 
             cdesc.setDatatype(new DataType(kylinType, precision, scale).toString());
