@@ -19,6 +19,7 @@ package org.apache.kylin.source.jdbc.extensible;
 
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -107,6 +108,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
                     kylinType = dataSource.toKylinTypeName(kylinTypeId);
                 }
                 int precision = (SqlUtil.isPrecisionApplicable(kylinType) && csize > 0) ? csize : -1;
+                precision = Math.min(precision, KylinConfig.getInstanceFromEnv().getDefaultVarcharPrecision());
                 int scale = (SqlUtil.isScaleApplicable(kylinType) && digits > 0) ? digits : -1;
 
                 cdesc.setDatatype(new DataType(kylinType, precision, scale).toString());
