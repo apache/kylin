@@ -72,6 +72,8 @@ public interface BatchConstants {
     String CFG_MR_SPARK_JOB = "mr.spark.job";
     String CFG_SPARK_META_URL = "spark.meta.url";
     String CFG_GLOBAL_DICT_BASE_DIR = "global.dict.base.dir";
+    String CFG_GLOBAL_DICT_STATS_PARTITION_VALUE="KYLIN_MAX_DISTINCT_COUNT";
+
 
     String CFG_HLL_REDUCER_NUM = "cuboidHLLCounterReducerNum";
 
