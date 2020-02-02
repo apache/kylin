@@ -1090,6 +1090,10 @@ public abstract class KylinConfigBase implements Serializable {
         return this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT);
     }
 
+    public String getHiveDatabaseDir() {
+        return this.getOptional("kylin.source.hive.databasedir", "");
+    }
+
     public String getFlatTableStorageFormat() {
         return this.getOptional("kylin.source.hive.flat-table-storage-format", "SEQUENCEFILE");
     }
