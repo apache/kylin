@@ -37,10 +37,12 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TimeZone;
@@ -63,6 +65,7 @@ public abstract class KylinConfigBase implements Serializable {
     private static final String KYLIN_STORAGE_HBASE_COPROCESSOR_LOCAL_JAR = "kylin.storage.hbase.coprocessor-local-jar";
     private static final String FILE_SCHEME = "file:";
     private static final String MAPRFS_SCHEME = "maprfs:";
+    private static final Integer DEFAULT_MR_HIVE_GLOBAL_DICT_REDUCE_NUM_PER_COLUMN = 2;
 
     /*
      * DON'T DEFINE CONSTANTS FOR PROPERTY KEYS!
@@ -580,17 +583,92 @@ public abstract class KylinConfigBase implements Serializable {
     // ============================================================================
     // mr-hive dict
     // ============================================================================
-
-    /**
-     * @return  if mr-hive dict not enabled, return empty array;
-     *          else return array contains "{TABLE_NAME}_{COLUMN_NAME}"
-     */
     public String[] getMrHiveDictColumns() {
-        String columnStr = getOptional("kylin.dictionary.mr-hive.columns", "");
+        String columnStr = getMrHiveDictColumnsStr();
         if (!columnStr.equals("")) {
             return columnStr.split(",");
         }
         return new String[0];
+    }
+
+    public String[] getMrHiveDictColumnsExcludeRefColumns() {
+        String[] excludeRefCols = null;
+        String[] hiveDictColumns = getMrHiveDictColumns();
+        Map<String, String> refCols = getMrHiveDictRefColumns();
+        if(Objects.nonNull(hiveDictColumns) && hiveDictColumns.length>0) {
+            excludeRefCols = Arrays.stream(hiveDictColumns).filter(x -> !refCols.containsKey(x)).toArray(String[]::new);
+        }
+        return excludeRefCols;
+    }
+
+    /**
+     * set kylin.dictionary.mr-hive.columns in Cube level config , value are the columns which want to use MR/Hive to build global dict ,
+     * Format, tableAliasName_ColumnName, multiple columns separated by commas,eg KYLIN_SALES_BUYER_ID,KYLIN_SALES_SELLER_ID
+     * @return  if mr-hive dict not enabled, return "";
+     *          else return {TABLE_NAME}_{COLUMN_NAME1},{TABLE_NAME}_{COLUMN_NAME2}"
+     */
+    private String getMrHiveDictColumnsStr() {
+        return getOptional("kylin.dictionary.mr-hive.columns", "");
+    }
+
+    /**
+     * @return  The global dic reduce num per column. Default 2  per column.
+     */
+    public Integer[] getMrHiveDictColumnsReduceNumExcludeRefCols() {
+        String[] excludeRefCols = getMrHiveDictColumnsExcludeRefColumns();
+
+        if(Objects.nonNull(excludeRefCols) && excludeRefCols.length>0) {
+            String[] arr = null;
+            Map<String, Integer> colNum = new HashMap<>();
+            Integer[] reduceNumArr = new Integer[excludeRefCols.length];
+            String[] columnReduceNum = getMrHiveDictColumnsReduceNumStr().split(",");
+
+            //change set columnReduceNum to map struct
+            try {
+                for(int i=0;i<columnReduceNum.length;i++){
+                    if(!StringUtils.isBlank(columnReduceNum[i])) {
+                        arr = columnReduceNum[i].split(":");
+                        colNum.put(arr[0], Integer.parseInt(arr[1]));
+                    }
+                }
+            }catch (Exception e){
+                logger.error("set kylin.dictionary.mr-hive.columns.reduce.num error {} , the value should like colAilasName:reduceNum,colAilasName:reduceNum", getMrHiveDictColumnsReduceNumStr());
+            }
+
+            for (int i = 0; i < excludeRefCols.length; i++) {
+                reduceNumArr[i] = colNum.containsKey(excludeRefCols[i])?colNum.get(excludeRefCols[i]): DEFAULT_MR_HIVE_GLOBAL_DICT_REDUCE_NUM_PER_COLUMN;
+            }
+
+            Arrays.asList(reduceNumArr).stream().forEach(x -> {
+                if (x < 1) {
+                    throw new RuntimeException("kylin.dictionary.mr-hive.columns.reduce.num set error ,every column's reduce num should greater than 0");
+                }
+            });
+
+            return reduceNumArr;
+        }else {
+            return null;
+        }
+    }
+
+    /**
+     * Set kylin.dictionary.mr-hive.columns.reduce.num in Cube level config , value are the reduce number for global dict columns which are set in kylin.dictionary.mr-hive.columns.
+     * Format, tableAliasName_ColumnName:number, multiple columns separated by commas,eg KYLIN_SALES_BUYER_ID:5,KYLIN_SALES_SELLER_ID:3
+     * @return
+     */
+    private String getMrHiveDictColumnsReduceNumStr() {
+        return getOptional("kylin.dictionary.mr-hive.columns.reduce.num", "");
+    }
+
+    /**
+     * MR/Hive global domain dic (reuse dict from other global dic column)
+     * @return
+     */
+    public Map<String, String> getMrHiveDictRefColumns() {
+        Map<String, String> result = new HashMap<>();
+
+        //toDo Implementation of Mr/Hive global domain dict config
+        return result;
     }
 
     public String getMrHiveDictDB() {
@@ -599,6 +677,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getMrHiveDictTableSuffix() {
         return getOptional("kylin.dictionary.mr-hive.table.suffix", "_global_dict");
+    }
+
+    public String getMrHiveDictIntermediateTTableSuffix() {
+        return getOptional("kylin.dictionary.mr-hive.intermediate.table.suffix", "__group_by");
     }
 
     // ============================================================================
