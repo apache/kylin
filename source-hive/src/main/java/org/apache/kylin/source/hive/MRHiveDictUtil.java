@@ -60,14 +60,22 @@ public class MRHiveDictUtil {
 
     public static String generateDropTableStatement(IJoinedFlatTableDesc flatDesc) {
         StringBuilder ddl = new StringBuilder();
-        String table = getHiveTableName(flatDesc, DictHiveType.GroupBy);
+        String table = flatDesc.getTableName()
+                + flatDesc.getSegment().getConfig().getMrHiveDictIntermediateTTableSuffix();
         ddl.append("DROP TABLE IF EXISTS " + table + ";").append(" \n");
+        return ddl.toString();
+    }
+
+    public static String generateDropTableStatement(String tableName) {
+        StringBuilder ddl = new StringBuilder();
+        ddl.append("DROP TABLE IF EXISTS " + tableName + ";").append(" \n");
         return ddl.toString();
     }
 
     public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc) {
         StringBuilder ddl = new StringBuilder();
-        String table = getHiveTableName(flatDesc, DictHiveType.GroupBy);
+        String table = flatDesc.getTableName()
+                + flatDesc.getSegment().getConfig().getMrHiveDictIntermediateTTableSuffix();
 
         ddl.append("CREATE TABLE IF NOT EXISTS " + table + " \n");
         ddl.append("( \n ");
@@ -75,16 +83,32 @@ public class MRHiveDictUtil {
         ddl.append(") \n");
         ddl.append("COMMENT '' \n");
         ddl.append("PARTITIONED BY (dict_column string) \n");
-        ddl.append("STORED AS SEQUENCEFILE \n");
+        ddl.append("STORED AS TEXTFILE \n");
         ddl.append(";").append("\n");
         return ddl.toString();
     }
 
-    public static String generateInsertDataStatement(IJoinedFlatTableDesc flatDesc, String dictColumn) {
-        String table = getHiveTableName(flatDesc, DictHiveType.GroupBy);
+    public static String generateCreateGlobalDicIntermediateTableStatement(String globalTableName) {
+        StringBuilder ddl = new StringBuilder();
+
+        ddl.append("CREATE TABLE IF NOT EXISTS " + globalTableName + " \n");
+        ddl.append("( \n ");
+        ddl.append("dict_key" + " " + "STRING" + " COMMENT '' , \n");
+        ddl.append("dict_val" + " " + "STRING" + " COMMENT '' \n");
+        ddl.append(") \n");
+        ddl.append("COMMENT '' \n");
+        ddl.append("PARTITIONED BY (dict_column string) \n");
+        ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' \n");
+        ddl.append("STORED AS TEXTFILE \n");
+        ddl.append(";").append("\n");
+        return ddl.toString();
+    }
+
+    public static String generateInsertDataStatement(IJoinedFlatTableDesc flatDesc, String dictColumn, String globalDictDatabase, String globalDictTable) {
+        String table = getMRHiveFlatTableGroupBytableName(flatDesc);
 
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT" + "\n");
+        sql.append("SELECT a.DICT_KEY FROM (" + "\n");
 
         int index = 0;
         for (TblColRef tblColRef : flatDesc.getAllColumns()) {
@@ -95,30 +119,32 @@ public class MRHiveDictUtil {
         }
 
         if (index == flatDesc.getAllColumns().size()) {
-            String msg = "Can not find correct column for " + dictColumn + ", please check 'kylin.dictionary.mr-hive.columns'";
+            String msg = "Can not find correct column for " + dictColumn
+                    + ", please check 'kylin.dictionary.mr-hive.columns'";
             logger.error(msg);
             throw new IllegalArgumentException(msg);
         }
-
+        sql.append(" SELECT " + "\n");
         TblColRef col = flatDesc.getAllColumns().get(index);
-        sql.append(JoinedFlatTable.colName(col) + " \n");
+        sql.append(JoinedFlatTable.colName(col) + "  as DICT_KEY \n");
 
         MRHiveDictUtil.appendJoinStatement(flatDesc, sql);
 
         //group by
         sql.append("GROUP BY ");
-        sql.append(JoinedFlatTable.colName(col) + " \n");
+        sql.append(JoinedFlatTable.colName(col) + ") a \n");
 
-        return "INSERT OVERWRITE TABLE " + table + " \n"
-                + "PARTITION (dict_column = '" + dictColumn + "')" + " \n"
+        //join
+        sql.append(" LEFT JOIN \n");
+        sql.append("(SELECT  DICT_KEY FROM ");
+        sql.append(globalDictDatabase).append(".").append(globalDictTable);
+        sql.append(" WHERE DICT_COLUMN = '" + dictColumn + "'");
+        sql.append(") b \n");
+        sql.append("ON a.DICT_KEY = b.DICT_KEY \n");
+        sql.append("WHERE   b.DICT_KEY IS NULL \n");
+
+        return "INSERT OVERWRITE TABLE " + table + " \n" + "PARTITION (dict_column = '" + dictColumn + "')" + " \n"
                 + sql + ";\n";
-    }
-
-    public static String getHiveTableName(IJoinedFlatTableDesc flatDesc, DictHiveType dictHiveType) {
-        StringBuffer table = new StringBuffer(flatDesc.getTableName());
-        table.append("__");
-        table.append(dictHiveType.getName());
-        return table.toString();
     }
 
     public static void appendJoinStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql) {
@@ -153,6 +179,14 @@ public class MRHiveDictUtil {
             logger.info("HDFS_Bytes_Writen: {}", size);
         }
         executableManager.addJobInfo(jobId, info);
+    }
+
+    public static String getMRHiveFlatTableGroupBytableName(IJoinedFlatTableDesc flatDesc) {
+        return flatDesc.getTableName() + flatDesc.getSegment().getConfig().getMrHiveDictIntermediateTTableSuffix();
+    }
+
+    public static String getMRHiveFlatTableGlobalDictTableName(IJoinedFlatTableDesc flatDesc) {
+        return flatDesc.getTableName() + flatDesc.getSegment().getConfig().getMrHiveDictTableSuffix();
     }
 
     private static long getFileSize(String hdfsUrl) throws IOException {
