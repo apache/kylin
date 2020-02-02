@@ -106,6 +106,10 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             .isRequired(true).withDescription("Output path").create(BatchConstants.ARG_OUTPUT);
     protected static final Option OPTION_DICT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_DICT_PATH).hasArg()
             .isRequired(false).withDescription("Dict path").create(BatchConstants.ARG_DICT_PATH);
+    protected static final Option OPTION_GLOBAL_DIC_MAX_DISTINCT_COUNT = OptionBuilder.withArgName(BatchConstants.ARG_GLOBAL_DIC_MAX_DISTINCT_COUNT).hasArg()
+            .isRequired(false).withDescription("GLOBAL dic max distinct count path").create(BatchConstants.ARG_GLOBAL_DIC_MAX_DISTINCT_COUNT);
+    protected static final Option OPTION_GLOBAL_DIC_PART_REDUCE_STATS = OptionBuilder.withArgName(BatchConstants.ARG_GLOBAL_DIC_PART_REDUCE_STATS).hasArg()
+            .isRequired(false).withDescription("Global dic part reduce stats").create(BatchConstants.ARG_GLOBAL_DIC_PART_REDUCE_STATS);
     protected static final Option OPTION_NCUBOID_LEVEL = OptionBuilder.withArgName(BatchConstants.ARG_LEVEL).hasArg()
             .isRequired(true).withDescription("N-Cuboid build level, e.g. 1, 2, 3...").create(BatchConstants.ARG_LEVEL);
     protected static final Option OPTION_PARTITION_FILE_PATH = OptionBuilder.withArgName(BatchConstants.ARG_PARTITION)

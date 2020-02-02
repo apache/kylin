@@ -69,7 +69,8 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
             //parallel part build
             result.addTask(createBuildGlobalHiveDictPartBuildJob(jobId));
 
-            //toDo parallel total build
+            //parallel total build
+            result.addTask(createBuildGlobalHiveDicTotalBuildJob(jobId));
         }
 
         //toDo merge global dic and replace flat table

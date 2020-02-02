@@ -30,9 +30,11 @@ import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidModeEnum;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
+import org.apache.kylin.engine.mr.steps.BuildGlobalHiveDicTotalBuildJob;
 import org.apache.kylin.engine.mr.steps.BuildGlobalHiveDictPartBuildJob;
 import org.apache.kylin.engine.mr.steps.CalculateStatsFromBaseCuboidJob;
 import org.apache.kylin.engine.mr.steps.CreateDictionaryJob;
@@ -48,6 +50,7 @@ import org.apache.kylin.engine.mr.steps.UpdateCubeInfoAfterMergeStep;
 import org.apache.kylin.engine.mr.steps.UpdateDictionaryStep;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Preconditions;
@@ -217,6 +220,24 @@ public class JobBuilderSupport {
         return result;
     }
 
+    public MapReduceExecutable createBuildGlobalHiveDicTotalBuildJob(String jobId) {
+        MapReduceExecutable result = new MapReduceExecutable();
+        result.setName(ExecutableConstants.STEP_NAME_GLOBAL_DICT_TOTAL_BUILD_DICTVAL);
+        result.setMapReduceJobClass(BuildGlobalHiveDicTotalBuildJob.class);
+        StringBuilder cmd = new StringBuilder();
+        appendMapReduceParameters(cmd);
+        appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getRealization().getName());
+        appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
+        appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME,
+                ExecutableConstants.STEP_NAME_GLOBAL_DICT_TOTAL_BUILD_DICTVAL + seg.getRealization().getName() + "_Step");
+        appendExecCmdParameters(cmd, BatchConstants.ARG_INPUT, getBuildGlobalHiveDicTotalBuildJobInputPath(jobId));
+        appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, getBuildGlobalDictionaryTotalOutput(seg.getConfig()));
+        appendExecCmdParameters(cmd, BatchConstants.ARG_GLOBAL_DIC_PART_REDUCE_STATS, getBuildGlobalDictionaryPartReduceStatsPathV2(jobId));
+        appendExecCmdParameters(cmd, BatchConstants.ARG_GLOBAL_DIC_MAX_DISTINCT_COUNT, getBuildGlobalDictionaryMaxDistinctCountPath(jobId));
+        result.setMapReduceParams(cmd.toString());
+        return result;
+    }
+
     public UpdateCubeInfoAfterBuildStep createUpdateCubeInfoAfterBuildStep(String jobId, LookupMaterializeContext lookupMaterializeContext) {
         final UpdateCubeInfoAfterBuildStep result = new UpdateCubeInfoAfterBuildStep();
         result.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
@@ -356,6 +377,30 @@ public class JobBuilderSupport {
 
     public String getBuildGlobalDictionaryBasePath(String jobId) {
         return getRealizationRootPath(jobId) + "/global_dic";
+    }
+
+    public String getBuildGlobalHiveDicTotalBuildJobInputPath(String jobId) {
+        return getBuildGlobalDictionaryBasePath(jobId)+"/part_sort";
+    }
+
+    public String getBuildGlobalDictionaryMaxDistinctCountPath(String jobId) {
+        KylinConfig conf = seg.getConfig();
+        String dbDir = conf.getHiveDatabaseDir();
+        IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(seg);
+        String tableName = flatDesc.getTableName()+conf.getMrHiveDictIntermediateTTableSuffix();
+        String outPut = dbDir+"/"+tableName+"/dict_column="+BatchConstants.CFG_GLOBAL_DICT_STATS_PARTITION_VALUE;
+        return outPut;
+    }
+
+    public String getBuildGlobalDictionaryPartReduceStatsPathV2(String jobId) {
+        return getBuildGlobalDictionaryBasePath(jobId)+ "/reduce_stats";
+    }
+
+    public String getBuildGlobalDictionaryTotalOutput(KylinConfig config){
+        String dbDir = config.getHiveDatabaseDir();
+        String tableName = EngineFactory.getJoinedFlatTableDesc(seg).getTableName()+config.getMrHiveDictTableSuffix();
+        String path = dbDir+"/"+tableName;
+        return path;
     }
 
     public String getDictRootPath(String jobId) {

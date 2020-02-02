@@ -87,6 +87,7 @@ public final class ExecutableConstants {
     // MR - Hive Dict
     public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_EXTRACT_DICTVAL = "Build Global Dict - extract distinct value from data";
     public static final String STEP_NAME_GLOBAL_DICT_PART_BUILD_DICTVAL = "Build Global Dict - parallel part build";
+    public static final String STEP_NAME_GLOBAL_DICT_TOTAL_BUILD_DICTVAL = "Build Global Dict - parallel total build";
     public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_BUILD_DICTVAL = "Build Global Dict - merge to dict table";
     public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_REPLACE_DICTVAL = "Build Global Dict - replace intermediate table";
 
