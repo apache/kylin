@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -37,26 +38,20 @@ import com.google.common.collect.Lists;
 public class QueryUtil {
 
     protected static final Logger logger = LoggerFactory.getLogger(QueryUtil.class);
-
-    private QueryUtil() {
-        throw new IllegalStateException("Class QueryUtil is an utility class !");
-    }
-
-    private static List<IQueryTransformer> queryTransformers;
-
-    public interface IQueryTransformer {
-        String transform(String sql, String project, String defaultSchema);
-    }
-
     private static final String KEYWORD_SELECT = "select";
     private static final String KEYWORD_WITH = "with";
     private static final String KEYWORD_EXPLAIN = "explain";
+    private static List<IQueryTransformer> queryTransformers;
+    private QueryUtil() {
+        throw new IllegalStateException("Class QueryUtil is an utility class !");
+    }
 
     public static String appendLimitOffsetToSql(String sql, int limit, int offset) {
         String retSql = sql;
         String prefixSql = "select * from (";
         String suffixSql = ")";
-        if (sql.startsWith(KEYWORD_EXPLAIN)) {
+        if (StringUtils.startsWithIgnoreCase(sql, KEYWORD_EXPLAIN)
+                || StringUtils.startsWithIgnoreCase(sql, KEYWORD_WITH)) {
             prefixSql = "";
             suffixSql = "";
         }
@@ -126,7 +121,8 @@ public class QueryUtil {
     /**
      * add remove catalog step at final
      */
-    public static String massageSql(String sql, String project, int limit, int offset, String defaultSchema, String catalog) {
+    public static String massageSql(String sql, String project, int limit, int offset, String defaultSchema,
+            String catalog) {
         String correctedSql = massageSql(sql, project, limit, offset, defaultSchema);
         correctedSql = removeCatalog(correctedSql, catalog);
         return correctedSql;
@@ -219,7 +215,7 @@ public class QueryUtil {
 
     public static String removeCommentInSql(String sql1) {
         // match two patterns, one is "-- comment", the other is "/* comment */"
-        final String[] commentPatterns = new String[]{"--(?!.*\\*/).*?[\r\n]", "/\\*(.|\r|\n)*?\\*/"};
+        final String[] commentPatterns = new String[] { "--(?!.*\\*/).*?[\r\n]", "/\\*(.|\r|\n)*?\\*/" };
 
         for (int i = 0; i < commentPatterns.length; i++) {
             sql1 = sql1.replaceAll(commentPatterns[i], "");
@@ -228,5 +224,9 @@ public class QueryUtil {
         sql1 = sql1.trim();
 
         return sql1;
+    }
+
+    public interface IQueryTransformer {
+        String transform(String sql, String project, String defaultSchema);
     }
 }
