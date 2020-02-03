@@ -208,6 +208,7 @@ public class HiveInputBase {
             step.setIsLock(true);
             step.setIsUnLock(false);
             step.setLockPathName(cubeName);
+            step.setJobFlowJobId(jobId);
             return step;
         }
 
@@ -305,7 +306,7 @@ public class HiveInputBase {
             step.setCreateTableStatementMap(dictHqlMap);
             step.setIsUnLock(true);
             step.setLockPathName(cubeName);
-            //toDo Fix distributed concurrency lock bug
+            step.setJobFlowJobId(jobId);
             CubingExecutableUtil.setCubeName(cubeName, step.getParams());
             step.setName(ExecutableConstants.STEP_NAME_GLOBAL_DICT_MRHIVE_REPLACE_DICTVAL);
             return step;

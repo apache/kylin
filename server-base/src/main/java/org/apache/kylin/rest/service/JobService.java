@@ -80,6 +80,7 @@ import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.SourcePartition;
 import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
+import org.apache.kylin.source.hive.MRHiveDictUtil;
 import org.apache.kylin.stream.coordinator.Coordinator;
 import org.apache.kylin.stream.core.model.SegmentBuildState;
 import org.slf4j.Logger;
@@ -644,15 +645,26 @@ public class JobService extends BasicService implements InitializingBean {
                 if (executable.getStatus().isFinalState()) {
                     try {
                         DistributedLock lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentThread();
-                        if(lock.isLocked(CubeJobLockUtil.getLockPath(executable.getCubeName(), job.getId()))){//release cube job dict lock if exists
-                            lock.purgeLocks(CubeJobLockUtil.getLockPath(executable.getCubeName(), null));
-                            logger.info("{} unlock cube job dict lock path({}) success", job.getId(), CubeJobLockUtil.getLockPath(executable.getCubeName(), null));
-
-                            if (lock.isLocked(CubeJobLockUtil.getEphemeralLockPath(executable.getCubeName()))) {//release cube job Ephemeral lock if exists
-                                lock.purgeLocks(CubeJobLockUtil.getEphemeralLockPath(executable.getCubeName()));
-                                logger.info("{} unlock cube job ephemeral lock path({}) success", job.getId(), CubeJobLockUtil.getEphemeralLockPath(executable.getCubeName()));
+                        if (lock.isLocked(MRHiveDictUtil.getLockPath(executable.getCubeName(), job.getId()))) {//release mr/hive global dict lock if exists
+                            lock.purgeLocks(MRHiveDictUtil.getLockPath(executable.getCubeName(), null));
+                            logger.info("{} unlock global MR/Hive dict lock path({}) success", job.getId(),
+                                    MRHiveDictUtil.getLockPath(executable.getCubeName(), null));
+                            if (lock.isLocked(MRHiveDictUtil.getEphemeralLockPath(executable.getCubeName()))) {//release mr/hive global dict Ephemeral lock if exists
+                                lock.purgeLocks(MRHiveDictUtil.getEphemeralLockPath(executable.getCubeName()));
+                                logger.info("{} unlock global MR/Hive dict ephemeral lock path({}) success", job.getId(),
+                                        MRHiveDictUtil.getEphemeralLockPath(executable.getCubeName()));
                             }
                         }
+
+                        if(lock.isLocked(CubeJobLockUtil.getLockPath(executable.getCubeName(), job.getId()))){//release cube job dict lock if exists
+                                lock.purgeLocks(CubeJobLockUtil.getLockPath(executable.getCubeName(), null));
+                                logger.info("{} unlock cube job dict lock path({}) success", job.getId(), CubeJobLockUtil.getLockPath(executable.getCubeName(), null));
+
+                                if (lock.isLocked(CubeJobLockUtil.getEphemeralLockPath(executable.getCubeName()))) {//release cube job Ephemeral lock if exists
+                                    lock.purgeLocks(CubeJobLockUtil.getEphemeralLockPath(executable.getCubeName()));
+                                    logger.info("{} unlock cube job ephemeral lock path({}) success", job.getId(), CubeJobLockUtil.getEphemeralLockPath(executable.getCubeName()));
+                                }
+                            }
                     }catch (Exception e){
                         logger.error("get some error when release cube {} job {} job id {} " , executable.getCubeName(), job.getName(), job.getId());
                     }
@@ -726,7 +738,7 @@ public class JobService extends BasicService implements InitializingBean {
             + SecurityContextHolder.getContext().getAuthentication().getName());
         if (job.getStatus().isComplete()) {
           throw new IllegalStateException(
-              "The job " + job.getId() + " has already been finished and cannot be stopped.");
+                  "The job " + job.getId() + " has already been finished and cannot be stopped.");
         }
         getExecutableManager().pauseJob(job.getId());
     }

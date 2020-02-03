@@ -46,7 +46,8 @@ public class MRHiveDictUtil {
     protected static final Pattern HDFS_LOCATION = Pattern.compile("LOCATION \'(.*)\';");
 
     public enum DictHiveType {
-        GroupBy("group_by"), MrDictLockPath("/mr_dict_lock/");
+        GroupBy("group_by"), MrDictLockPath("/mr_dict_lock/"), MrEphemeralDictLockPath(
+                "/mr_dict_ephemeral_lock/");
         private String name;
 
         DictHiveType(String name) {
@@ -179,6 +180,18 @@ public class MRHiveDictUtil {
             logger.info("HDFS_Bytes_Writen: {}", size);
         }
         executableManager.addJobInfo(jobId, info);
+    }
+
+    public static String getLockPath(String cubeName, String jobId) {
+        if (jobId == null) {
+            return DictHiveType.MrDictLockPath.getName() + cubeName;
+        } else {
+            return DictHiveType.MrDictLockPath.getName() + cubeName + "/" + jobId;
+        }
+    }
+
+    public static String getEphemeralLockPath(String cubeName) {
+        return DictHiveType.MrEphemeralDictLockPath.getName() + cubeName;
     }
 
     public static String getMRHiveFlatTableGroupBytableName(IJoinedFlatTableDesc flatDesc) {
