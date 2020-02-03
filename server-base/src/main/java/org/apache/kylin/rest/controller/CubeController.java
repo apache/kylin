@@ -261,6 +261,30 @@ public class CubeController extends BasicController {
         }
     }
 
+    /**
+     * Update cube callback url
+     *
+     * @param cubeName
+     * @param callbackUrl
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/callback_url", method = { RequestMethod.PUT }, produces = { "application/json" })
+    @ResponseBody
+    public void updateCallbackUrl(@PathVariable String cubeName, @RequestBody String callbackUrl) {
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+
+        if (cube == null) {
+            throw new InternalErrorException("Cannot find cube " + cubeName);
+        }
+
+        try {
+            cubeService.updateCallbackUrl(cube, callbackUrl);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage());
+        }
+    }
+
     @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public CubeInstance updateCubeCost(@PathVariable String cubeName, @RequestParam(value = "cost") int cost) {
