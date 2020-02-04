@@ -30,7 +30,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.kylin.common.KapConfig;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.CubeUpdate;
+import org.apache.kylin.engine.spark.metadata.SegmentInfo;
+import org.apache.kylin.engine.spark.metadata.cube.ManagerHub;
+import org.apache.kylin.engine.spark.metadata.cube.PathManager;
+import org.apache.kylin.engine.spark.metadata.cube.model.ForestSpanningTree;
+import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
@@ -50,77 +60,79 @@ import io.kyligence.kap.engine.spark.utils.JobMetrics;
 import io.kyligence.kap.engine.spark.utils.JobMetricsUtils;
 import io.kyligence.kap.engine.spark.utils.Metrics;
 import io.kyligence.kap.engine.spark.utils.QueryExecutionCache;
-import io.kyligence.kap.metadata.cube.model.IndexEntity;
-import io.kyligence.kap.metadata.cube.model.LayoutEntity;
-import io.kyligence.kap.metadata.cube.model.NBatchConstants;
-import io.kyligence.kap.metadata.cube.model.NDataLayout;
-import io.kyligence.kap.metadata.cube.model.NDataSegment;
-import io.kyligence.kap.metadata.cube.model.NDataflow;
-import io.kyligence.kap.metadata.cube.model.NDataflowManager;
-import io.kyligence.kap.metadata.cube.model.NDataflowUpdate;
+import scala.collection.JavaConversions;
 
 public class DFMergeJob extends SparkApplication {
     protected static final Logger logger = LoggerFactory.getLogger(DFMergeJob.class);
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
+    private List<CubeSegment> mergingSegments = Lists.newArrayList();
+    private List<SegmentInfo> mergingSegInfos = Lists.newArrayList();
 
     @Override
     protected void doExecute() throws Exception {
         buildLayoutWithUpdate = new BuildLayoutWithUpdate();
-        String dataflowId = getParam(NBatchConstants.P_DATAFLOW_ID);
-        String newSegmentId = getParam(NBatchConstants.P_SEGMENT_IDS);
-        Set<Long> layoutIds = NSparkCubingUtil.str2Longs(getParam(NBatchConstants.P_LAYOUT_IDS));
-        mergeSnapshot(dataflowId, newSegmentId);
+        String cubeId = getParam(MetadataConstants.P_CUBE_ID);
+        String newSegmentId = getParam(MetadataConstants.P_SEGMENT_IDS);
+        final CubeManager cubeManager = CubeManager.getInstance(config);
+        final CubeInstance cube = cubeManager.getCubeByUuid(cubeId);
+        final CubeSegment mergedSeg = cube.getSegmentById(newSegmentId);
+        mergingSegments = cube.getMergingSegments(mergedSeg);
+        for (CubeSegment segment : mergingSegments) {
+            SegmentInfo segInfo = ManagerHub.getSegmentInfo(config, getParam(MetadataConstants.P_CUBE_ID), segment.getUuid());
+            mergingSegInfos.add(segInfo);
+        }
+
+        mergeSnapshot(cubeId, newSegmentId);
 
         //merge and save segments
-        mergeSegments(dataflowId, newSegmentId, layoutIds);
+        mergeSegments(cubeId, newSegmentId);
     }
 
-    private void mergeSnapshot(String dataflowId, String segmentId) {
-        final NDataflowManager mgr = NDataflowManager.getInstance(config, project);
-        final NDataflow dataflow = mgr.getDataflow(dataflowId);
-        final NDataSegment mergedSeg = dataflow.getSegment(segmentId);
-        final List<NDataSegment> mergingSegments = dataflow.getMergingSegments(mergedSeg);
+    private void mergeSnapshot(String cubeId, String segmentId) throws IOException {
+        final CubeManager cubeManager = CubeManager.getInstance(config);
+        final CubeInstance cube = cubeManager.getCubeByUuid(cubeId);
 
         Collections.sort(mergingSegments);
         infos.clearMergingSegments();
-        infos.recordMergingSegments(mergingSegments);
+        infos.recordMergingSegments(mergingSegInfos);
 
-        NDataflow flowCopy = dataflow.copy();
-        NDataSegment segCopy = flowCopy.getSegment(segmentId);
+        CubeInstance cubeCopy = cube.latestCopyForWrite();
+        CubeSegment segCopy = cubeCopy.getSegmentById(segmentId);
+        makeSnapshotForNewSegment(segCopy, mergingSegments);
 
         makeSnapshotForNewSegment(segCopy, mergingSegments);
 
-        NDataflowUpdate update = new NDataflowUpdate(dataflowId);
-        update.setToUpdateSegs(segCopy);
-        mgr.updateDataflow(update);
-
+        CubeUpdate cubeUpdate = new CubeUpdate(cubeCopy);
+        cubeUpdate.setToUpdateSegs(segCopy);
+        cubeManager.updateCube(cubeUpdate);
     }
 
-    private void makeSnapshotForNewSegment(NDataSegment newSeg, List<NDataSegment> mergingSegments) {
-        NDataSegment lastSeg = mergingSegments.get(mergingSegments.size() - 1);
+    private void makeSnapshotForNewSegment(CubeSegment newSeg, List<CubeSegment> mergingSegments) {
+        CubeSegment lastSeg = mergingSegments.get(mergingSegments.size() - 1);
         for (Map.Entry<String, String> entry : lastSeg.getSnapshots().entrySet()) {
             newSeg.putSnapshotResPath(entry.getKey(), entry.getValue());
         }
     }
 
-    private void mergeSegments(String dataflowId, String segmentId, Set<Long> specifiedCuboids) throws IOException {
-        final NDataflowManager mgr = NDataflowManager.getInstance(config, project);
-        final NDataflow dataflow = mgr.getDataflow(dataflowId);
-        final NDataSegment mergedSeg = dataflow.getSegment(segmentId);
-        final List<NDataSegment> mergingSegments = dataflow.getMergingSegments(mergedSeg);
+    private void mergeSegments(String cubeId, String segmentId) throws IOException {
+        CubeManager mgr = CubeManager.getInstance(config);
+        CubeInstance cube = mgr.getCubeByUuid(cubeId);
+        CubeSegment mergedSeg = cube.getSegmentById(segmentId);
+        SegmentInfo mergedSegInfo = ManagerHub.getSegmentInfo(config, getParam(MetadataConstants.P_CUBE_ID), mergedSeg.getUuid());
 
-        Map<Long, DFLayoutMergeAssist> mergeCuboidsAssist = generateMergeAssist(mergingSegments, ss, mergedSeg);
+        Map<Long, DFLayoutMergeAssist> mergeCuboidsAssist = generateMergeAssist(mergingSegInfos, ss);
         for (DFLayoutMergeAssist assist : mergeCuboidsAssist.values()) {
-
-            Dataset<Row> afterMerge = assist.merge();
+            SpanningTree spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(mergedSegInfo.toBuildLayouts()));
+            Dataset<Row> afterMerge = assist.merge(config, cubeId);
             LayoutEntity layout = assist.getLayout();
+
             Dataset<Row> afterSort;
-            if (layout.getIndex().getId() > IndexEntity.TABLE_INDEX_START_ID) {
+            if (layout.getId() > 20_000_000_000L) {
                 afterSort = afterMerge.sortWithinPartitions(NSparkCubingUtil.getColumns(layout.getOrderedDimensions().keySet()));
             } else {
                 Column[] dimsCols = NSparkCubingUtil.getColumns(layout.getOrderedDimensions().keySet());
                 Dataset<Row> afterAgg = CuboidAggregator.agg(ss, afterMerge, layout.getOrderedDimensions().keySet(),
-                        layout.getOrderedMeasures(), mergedSeg, null);
+                        layout.getOrderedMeasures(), spanningTree, false);
                 afterSort = afterAgg.sortWithinPartitions(dimsCols);
             }
             buildLayoutWithUpdate.submit(new BuildLayoutWithUpdate.JobEntity() {
@@ -130,49 +142,50 @@ public class DFMergeJob extends SparkApplication {
                 }
 
                 @Override
-                public List<NDataLayout> build() throws IOException {
-                    return Lists.newArrayList(saveAndUpdateCuboid(afterSort, mergedSeg, layout, assist));
+                public LayoutEntity build() throws IOException {
+                    return saveAndUpdateCuboid(afterSort, mergedSegInfo, layout, assist);
                 }
             }, config);
 
-            buildLayoutWithUpdate.updateLayout(mergedSeg, config, project);
+            buildLayoutWithUpdate.updateLayout(mergedSegInfo, config);
         }
     }
 
-    public static Map<Long, DFLayoutMergeAssist> generateMergeAssist(List<NDataSegment> mergingSegments,
-            SparkSession ss, NDataSegment mergedSeg) {
+    public static Map<Long, DFLayoutMergeAssist> generateMergeAssist(List<SegmentInfo> mergingSegments,
+            SparkSession ss) {
         // collect layouts need to merge
         Map<Long, DFLayoutMergeAssist> mergeCuboidsAssist = Maps.newConcurrentMap();
-        for (NDataSegment seg : mergingSegments) {
-            for (NDataLayout cuboid : seg.getSegDetails().getLayouts()) {
-                long layoutId = cuboid.getLayoutId();
+        for (SegmentInfo seg : mergingSegments) {
+            scala.collection.immutable.List<LayoutEntity> cuboids = seg.layouts();
+            for (int i = 0; i < cuboids.size(); i++) {
+                LayoutEntity cuboid = cuboids.apply(i);
+                long layoutId = cuboid.getId();
 
                 DFLayoutMergeAssist assist = mergeCuboidsAssist.get(layoutId);
                 if (assist == null) {
                     assist = new DFLayoutMergeAssist();
                     assist.addCuboid(cuboid);
                     assist.setSs(ss);
-                    assist.setNewSegment(mergedSeg);
-                    assist.setLayout(cuboid.getLayout());
+                    assist.setLayout(cuboid);
+                    assist.setNewSegment(seg);
                     assist.setToMergeSegments(mergingSegments);
                     mergeCuboidsAssist.put(layoutId, assist);
-                } else
+                } else {
                     assist.addCuboid(cuboid);
+                }
             }
         }
         return mergeCuboidsAssist;
     }
 
-    private NDataLayout saveAndUpdateCuboid(Dataset<Row> dataset, NDataSegment seg, LayoutEntity layout,
+    private LayoutEntity saveAndUpdateCuboid(Dataset<Row> dataset, SegmentInfo seg, LayoutEntity layout,
             DFLayoutMergeAssist assist) throws IOException {
         long layoutId = layout.getId();
         long sourceCount = 0L;
 
-        for (NDataLayout cuboid : assist.getCuboids()) {
+        for (LayoutEntity cuboid : assist.getCuboids()) {
             sourceCount += cuboid.getSourceRows();
         }
-
-        NDataLayout dataCuboid = NDataLayout.newDataLayout(seg.getDataflow(), seg.getId(), layoutId);
 
         // for spark metrics
         String queryExecutionId = UUID.randomUUID().toString();
@@ -180,32 +193,32 @@ public class DFMergeJob extends SparkApplication {
         ss.sparkContext().setJobDescription("merge layout " + layoutId);
         NSparkCubingEngine.NSparkCubingStorage storage = StorageFactory.createEngineAdapter(layout,
                 NSparkCubingEngine.NSparkCubingStorage.class);
-        String path = NSparkCubingUtil.getStoragePath(dataCuboid);
-        String tempPath = path + DFBuildJob.TEMP_DIR_SUFFIX;
+        String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_ID), seg.id(), String.valueOf(layoutId));
+        String tempPath = path + CubeBuildJob.TEMP_DIR_SUFFIX;
         // save to temp path
         storage.saveTo(tempPath, dataset, ss);
 
         JobMetrics metrics = JobMetricsUtils.collectMetrics(queryExecutionId);
         long rowCount = metrics.getMetrics(Metrics.CUBOID_ROWS_CNT());
         if (rowCount == -1) {
-            infos.recordAbnormalLayouts(dataCuboid.getLayoutId(),
+            infos.recordAbnormalLayouts(layout.getId(),
                     "'Job metrics seems null, use count() to collect cuboid rows.'");
             logger.warn("Can not get cuboid row cnt.");
         }
-        dataCuboid.setRows(rowCount);
-        dataCuboid.setSourceRows(sourceCount);
-        dataCuboid.setBuildJobId(jobId);
+        LayoutEntity dataCuboid = LayoutEntity.newLayoutEntity(layoutId);
 
-        int partitionNum = BuildUtils.repartitionIfNeed(layout, dataCuboid, storage, path, tempPath,
-                KapConfig.wrap(config), ss);
-        dataCuboid.setPartitionNum(partitionNum);
+        layout.setRows(rowCount);
+        layout.setSourceRows(sourceCount);
+
+        int partitionNum = BuildUtils.repartitionIfNeed(layout, storage, path, tempPath, config, ss);
+        layout.setShardNum(partitionNum);
         ss.sparkContext().setLocalProperty(QueryExecutionCache.N_EXECUTION_ID_KEY(), null);
         ss.sparkContext().setJobDescription(null);
         QueryExecutionCache.removeQueryExecution(queryExecutionId);
 
-        BuildUtils.fillCuboidInfo(dataCuboid);
+        BuildUtils.fillCuboidInfo(layout, path);
 
-        return dataCuboid;
+        return layout;
     }
 
     @Override

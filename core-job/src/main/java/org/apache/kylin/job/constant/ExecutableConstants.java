@@ -59,6 +59,8 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_MERGE_STATISTICS_WITH_OLD = "Merge Cuboid Statistics with Old for Optimization";
     public static final String STEP_NAME_SAVE_STATISTICS = "Save Cuboid Statistics";
     public static final String STEP_NAME_MERGE_CUBOID = "Merge Cuboid Data";
+    public static final String STEP_NAME_MERGE_CLEANUP = "Clean Up Old Segment for merging job";
+    public static final String STEP_NAME_MERGER_SPARK_SEGMENT = "Merge Segment Data";
     public static final String STEP_NAME_UPDATE_CUBE_INFO = "Update Cube Info";
     public static final String STEP_NAME_HIVE_CLEANUP = "Hive Cleanup";
     public static final String STEP_NAME_KAFKA_CLEANUP = "Kafka Intermediate File Cleanup";

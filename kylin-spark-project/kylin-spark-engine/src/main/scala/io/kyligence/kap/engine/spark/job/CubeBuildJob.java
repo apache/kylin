@@ -298,12 +298,12 @@ public class CubeBuildJob extends SparkApplication {
         if (cuboid.isTableIndex()) {
             Dataset<Row> afterPrj = parent.select(NSparkCubingUtil.getColumns(dimIndexes));
             // TODO: shard number should respect the shard column defined in cuboid
-                logger.info("Build layout:{}, in index:{}", layoutEntity.getId(), cuboid.getId());
-                ss.sparkContext().setJobDescription("build " + layoutEntity.getId() + " from parent " + parentName);
-                Set<Integer> orderedDims = layoutEntity.getOrderedDimensions().keySet();
-                Dataset<Row> afterSort = afterPrj.select(NSparkCubingUtil.getColumns(orderedDims))
-                        .sortWithinPartitions(NSparkCubingUtil.getColumns(orderedDims));
-                saveAndUpdateLayout(afterSort, seg, layoutEntity);
+            logger.info("Build layout:{}, in index:{}", layoutEntity.getId(), cuboid.getId());
+            ss.sparkContext().setJobDescription("build " + layoutEntity.getId() + " from parent " + parentName);
+            Set<Integer> orderedDims = layoutEntity.getOrderedDimensions().keySet();
+            Dataset<Row> afterSort = afterPrj.select(NSparkCubingUtil.getColumns(orderedDims))
+                    .sortWithinPartitions(NSparkCubingUtil.getColumns(orderedDims));
+            saveAndUpdateLayout(afterSort, seg, layoutEntity);
         } else {
             Dataset<Row> afterAgg = CuboidAggregator.agg(ss, parent, dimIndexes, cuboid.getOrderedMeasures(), spanningTree, false);
                 logger.info("Build layout:{}, in index:{}", layoutEntity.getId(), cuboid.getId());

@@ -29,6 +29,13 @@ import org.apache.kylin.metadata.model.IStorageAware;
 import java.util.List;
 
 public class LayoutEntity implements IStorageAware {
+
+    public static LayoutEntity newLayoutEntity(long layoutId) {
+        LayoutEntity layoutEntity = new LayoutEntity();
+        layoutEntity.setId(layoutId);
+        return layoutEntity;
+    }
+
     @JsonProperty("id")
     private long id;
 

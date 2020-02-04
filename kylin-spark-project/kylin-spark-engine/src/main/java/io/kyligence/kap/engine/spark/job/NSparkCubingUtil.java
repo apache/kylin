@@ -18,6 +18,7 @@
 
 package io.kyligence.kap.engine.spark.job;
 
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.spark.sql.Column;
 
 import java.util.LinkedHashSet;
@@ -80,5 +81,15 @@ public class NSparkCubingUtil {
             m = DOT_PATTERN.matcher(withoutDot);
         }
         return withoutDot;
+    }
+
+    public static String getStoragePath(CubeSegment nDataSegment, Long layoutId) {
+        String hdfsWorkingDir = nDataSegment.getConfig().getReadHdfsWorkingDirectory();
+        return   hdfsWorkingDir +
+                getStoragePathWithoutPrefix(nDataSegment.getProject(), nDataSegment.getCubeInstance().getId(), nDataSegment.getUuid(), layoutId);
+    }
+
+    public static String getStoragePathWithoutPrefix(String project, String cubeId, String segmentId, long layoutId) {
+        return  project + "/parquet/" + cubeId + "/" + segmentId + "/" + layoutId;
     }
 }

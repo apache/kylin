@@ -24,11 +24,11 @@
 
 package io.kyligence.kap.engine.spark.builder;
 
-import io.kyligence.kap.metadata.cube.model.LayoutEntity;
-import io.kyligence.kap.metadata.cube.model.NDataLayout;
-import io.kyligence.kap.metadata.cube.model.NDataSegment;
 import io.kyligence.kap.engine.spark.NSparkCubingEngine;
-import io.kyligence.kap.engine.spark.job.NSparkCubingUtil;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.engine.spark.metadata.SegmentInfo;
+import org.apache.kylin.engine.spark.metadata.cube.PathManager;
+import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -44,10 +44,10 @@ public class DFLayoutMergeAssist implements Serializable {
     protected static final Logger logger = LoggerFactory.getLogger(DFLayoutMergeAssist.class);
     private static final int DEFAULT_BUFFER_SIZE = 256;
     private LayoutEntity layout;
-    private NDataSegment newSegment;
-    private List<NDataSegment> toMergeSegments;
+    private SegmentInfo newSegment;
+    private List<SegmentInfo> toMergeSegments;
     private SparkSession ss;
-    final private List<NDataLayout> toMergeCuboids = new ArrayList<>();
+    final private List<LayoutEntity> toMergeCuboids = new ArrayList<>();
 
     public void setSs(SparkSession ss) {
         this.ss = ss;
@@ -61,28 +61,33 @@ public class DFLayoutMergeAssist implements Serializable {
         return this.layout;
     }
 
-    public List<NDataLayout> getCuboids() {
+    public List<LayoutEntity> getCuboids() {
         return this.toMergeCuboids;
     }
 
-    public void addCuboid(NDataLayout cuboid) {
+    public void addCuboid(LayoutEntity cuboid) {
         toMergeCuboids.add(cuboid);
     }
 
-    public void setToMergeSegments(List<NDataSegment> segments) {
+    public void setToMergeSegments(List<SegmentInfo> segments) {
         this.toMergeSegments = segments;
     }
 
-    public void setNewSegment(NDataSegment segment) {
+    public void setNewSegment(SegmentInfo segment) {
         this.newSegment = segment;
     }
 
-    public Dataset<Row> merge() {
+    public SegmentInfo getSegment() {
+        return newSegment;
+    }
+
+    public Dataset<Row> merge(KylinConfig config, String cubeId) {
         Dataset<Row> mergeDataset = null;
-        for (int i = 0; i < toMergeCuboids.size(); i++) {
+        for (int i = 0; i < toMergeSegments.size(); i++) {
             Dataset<Row> layoutDataset = StorageFactory
                     .createEngineAdapter(layout, NSparkCubingEngine.NSparkCubingStorage.class)
-                    .getFrom(NSparkCubingUtil.getStoragePath(toMergeCuboids.get(i)), ss);
+                    .getFrom(PathManager.getParquetStoragePath(config, cubeId,
+                            toMergeSegments.get(i).id(), String.valueOf(layout.getId())), ss);
 
             if (mergeDataset == null) {
                 mergeDataset = layoutDataset;

@@ -2496,6 +2496,10 @@ public abstract class KylinConfigBase implements Serializable {
                 "io.kyligence.kap.cluster.YarnInfoFetcher");
     }
 
+    public String getSparkMergeClassName() {
+        return getOptional("kylin.engine.spark.merge-class-name", "io.kyligence.kap.engine.spark.job.DFMergeJob");
+    }
+
     public int getSparkEngineMaxRetryTime() {
         return Integer.parseInt(getOptional("kylin.engine.max-retry-time", "3"));
     }
