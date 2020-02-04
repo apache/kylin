@@ -38,9 +38,9 @@ public class JobStepFactory {
         case CUBING:
             step = new NSparkCubingStep(config.getSparkBuildClassName());
             break;
-        /*case MERGING:
+        case MERGING:
             step = new NSparkMergingStep(config.getSparkMergeClassName());
-            break;*/
+            break;
         /*case CLEAN_UP_AFTER_MERGE:
             step = new NSparkCleanupAfterMergeStep();
             break;*/

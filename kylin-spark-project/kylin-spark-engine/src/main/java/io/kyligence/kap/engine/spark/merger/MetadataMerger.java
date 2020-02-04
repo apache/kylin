@@ -31,19 +31,19 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 
-import io.kyligence.kap.metadata.cube.model.NDataLayout;
-import lombok.Getter;
-
 public abstract class MetadataMerger {
-    @Getter
     private final KylinConfig config;
+
+    public KylinConfig getConfig() {
+        return config;
+    }
 
     protected MetadataMerger(KylinConfig config) {
         this.config = config;
     }
 
-    public abstract NDataLayout[] merge(String dataflowId, Set<String> segmentIds, Set<Long> layoutIds,
-            ResourceStore remoteResourceStore, JobTypeEnum jobType);
+    public abstract void merge(String dataflowId, Set<String> segmentIds,
+            ResourceStore remoteResourceStore, String jobType);
 
     public abstract void merge(AbstractExecutable abstractExecutable);
 

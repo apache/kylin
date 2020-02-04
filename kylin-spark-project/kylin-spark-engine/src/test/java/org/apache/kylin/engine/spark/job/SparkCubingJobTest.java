@@ -23,9 +23,11 @@ import io.kyligence.kap.engine.spark.builder.CreateFlatTable;
 import io.kyligence.kap.engine.spark.job.CuboidAggregator;
 import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
 import io.kyligence.kap.engine.spark.job.NSparkCubingUtil;
+import io.kyligence.kap.engine.spark.job.NSparkMergingJob;
+import io.kyligence.kap.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceTool;
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -44,6 +46,7 @@ import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.lock.MockJobLock;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.spark.api.java.function.MapFunction;
@@ -71,6 +74,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.UUID;
 
 public class SparkCubingJobTest extends LocalWithSparkSessionTest {
 
@@ -82,12 +86,11 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
     private ExecutableManager jobService;
 
     @Before
-    public void setup() throws Exception{
+    public void setup() throws Exception {
         System.setProperty("kylin.job.scheduler.poll-interval-second", "1");
         System.setProperty("kap.engine.persist-flattable-threshold", "0");
         System.setProperty("kylin.metadata.distributed-lock-impl", "io.kyligence.kap.engine.spark.utils.MockedDistributedLock$MockedFactory");
-        //System.setProperty(KylinConfig.KYLIN_CONF, LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
-        System.setProperty(KylinConfig.KYLIN_CONF, HBaseMetadataTestCase.SANDBOX_TEST_DATA);
+        System.setProperty(KylinConfig.KYLIN_CONF, LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         kylinConfig.setProperty("kylin.source.provider.0", "io.kyligence.kap.engine.spark.source.HiveSource");
         cubeManager = CubeManager.getInstance(kylinConfig);
@@ -103,16 +106,14 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
                 jobService.deleteJob(jobId);
             }
         }
-
-        //initEnv();
     }
 
     @Test
-    public void testBuildJob() throws Exception{
-
+    public void testBuildJob() throws Exception {
         String cubeName = "ci_inner_join_cube";
+
+        clearSegment(cubeName);
         CubeInstance cubeInstance = cubeManager.getCube(cubeName);
-        clearSegment(cubeInstance);
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -125,7 +126,6 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
         jobService.addJob(job);
         // wait job done
         ExecutableState state = waitForJob(job.getId());
-        state = wait(job);
         Assert.assertEquals(ExecutableState.SUCCEED, state);
 
         CubeSegment segment2 = cubeManager.appendSegment(cubeInstance, new SegmentRange.TSRange(date2, date3));
@@ -133,14 +133,66 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
         jobService.addJob(job2);
         // wait job done
         ExecutableState state2 = waitForJob(job2.getId());
-        state = wait(job2);
         Assert.assertEquals(ExecutableState.SUCCEED, state2);
-
-        //TODO: test merge job
-        //merge
 
         // Result cmp: Parquet vs Spark SQL
         queryTest(segment);
+    }
+
+    @Test
+    public void testBuildTwoSegmentsAndMerge() throws Exception {
+        String cubeName = "ci_inner_join_cube";
+        clearSegment(cubeName);
+        CubeInstance cubeInstance = cubeManager.getCube(cubeName);
+
+        /**
+         * Round1. Build 2 segment
+         */
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
+        f.setTimeZone(TimeZone.getTimeZone("GMT"));
+        long date1 = f.parse("2010-01-01").getTime();
+        long date2 = f.parse("2013-01-01").getTime();
+        long date3 = f.parse("2014-01-01").getTime();
+
+        CubeSegment segment = cubeManager.appendSegment(cubeInstance, new SegmentRange.TSRange(date1, date2));
+        NSparkCubingJob job = NSparkCubingJob.create(Sets.newHashSet(segment), "ADMIN");
+        jobService.addJob(job);
+        // wait job done
+        ExecutableState state = waitForJob(job.getId());
+        Assert.assertEquals(ExecutableState.SUCCEED, state);
+
+        CubeSegment segment2 = cubeManager.appendSegment(cubeInstance, new SegmentRange.TSRange(date2, date3));
+        NSparkCubingJob job2 = NSparkCubingJob.create(Sets.newHashSet(segment2), "ADMIN");
+        jobService.addJob(job2);
+        // wait job done
+        ExecutableState state2 = waitForJob(job2.getId());
+        Assert.assertEquals(ExecutableState.SUCCEED, state2);
+
+        cubeInstance = cubeManager.reloadCube(cubeName);
+
+        /**
+         * Round2. Merge two segments
+         */
+        CubeSegment firstMergeSeg = cubeManager.mergeSegments(cubeInstance,
+                new SegmentRange.TSRange(date1, date3), null, false);
+        NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, "ADMIN",
+                UUID.randomUUID().toString());
+        jobService.addJob(firstMergeJob);
+        // wait job done
+        Assert.assertEquals(ExecutableState.SUCCEED, wait(firstMergeJob));
+
+        AfterMergeOrRefreshResourceMerger merger = new AfterMergeOrRefreshResourceMerger(config());
+        merger.merge(firstMergeJob.getSparkMergingStep());
+    }
+
+    @Test
+    public void testMergeResult() {
+        String cubeName = "ci_inner_join_cube";
+
+        CubeInstance cubeInstance = cubeManager.getCube(cubeName);
+        for (CubeSegment segment : cubeInstance.getSegments()) {
+            queryTest(segment);
+        }
     }
 
     @Test
@@ -155,7 +207,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
 
     private void queryTest(CubeSegment segment) {
         // Result cmp: Parquet vs Spark SQL
-        for(LayoutEntity entity : MetadataConverter.extractEntityList2JavaList(segment.getCubeInstance())) {
+        for (LayoutEntity entity : MetadataConverter.extractEntityList2JavaList(segment.getCubeInstance())) {
             // Parquet result
             Dataset<Row> layoutDataset = StorageFactory
                     .createEngineAdapter(new IStorageAware() { // Hardcode
@@ -171,7 +223,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
 
             Set<Integer> measures = new HashSet<Integer>();
             Set<Integer> rowKeys = entity.getOrderedDimensions().keySet();
-            for(Map.Entry<Integer, FunctionDesc> entry: entity.getOrderedMeasures().entrySet()) {
+            for (Map.Entry<Integer, FunctionDesc> entry : entity.getOrderedMeasures().entrySet()) {
                 String type = entry.getValue().returnType().dataType();
                 if (type.equals("hllc") || type.equals("topn") || type.equals("percentile")) {
                     continue;
@@ -193,7 +245,9 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
                     .sort(NSparkCubingUtil.getColumns(rowKeys));
             System.out.println("Spark sql ------------ ");
             exceptDs.show(10);
-            Assert.assertEquals(layoutDataset.count(), exceptDs.count());
+            long layoutCount = layoutDataset.count();
+            long expectCount = exceptDs.count();
+            Assert.assertEquals(layoutCount, expectCount);
 
             String msg = SparkQueryTest.checkAnswer(layoutDataset, exceptDs, false);
             Assert.assertNull(msg);
@@ -211,7 +265,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
 
                 if ("bitmap".equals(functionName)) {
                     final int finalIndex = convertOutSchema(layoutDs, entry.getKey().toString(), DataTypes.LongType);
-                   PreciseCountDistinct preciseCountDistinct = new PreciseCountDistinct(null);
+                    PreciseCountDistinct preciseCountDistinct = new PreciseCountDistinct(null);
                     layoutDs = layoutDs.map((MapFunction<Row, Row>) value -> {
                         Object[] ret = new Object[value.size()];
                         for (int i = 0; i < columns.length; i++) {
@@ -260,19 +314,14 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
                 MetadataConverter.getSegmentInfo(segment.getCubeInstance(),
                         segment.getUuid()),
                 null,
-                        ss,
+                ss,
                 null);
         Dataset<Row> ds = flatTable.generateDataset(false, true);
-
-//        StructType schema = ds.schema();
-//        DataModelDesc model = segment.getModel();
-//        for (StructField field : schema.fields()) {
-//            Assert.assertNotNull(model.findColumn(model.getColumnNameByColumnId(Integer.valueOf(field.name()))));
-//        }
         return ds;
     }
 
-    private void clearSegment(CubeInstance cube) throws Exception {
+    private void clearSegment(String cubeName) throws Exception {
+        CubeInstance cube = cubeManager.getCube(cubeName);
         cubeManager.updateCubeDropSegments(cube, cube.getSegments());
     }
 
@@ -305,4 +354,5 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
     private static KylinConfig config() {
         return KylinConfig.getInstanceFromEnv();
     }
+
 }

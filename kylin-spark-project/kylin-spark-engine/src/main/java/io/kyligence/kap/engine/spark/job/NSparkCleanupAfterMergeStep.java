@@ -30,33 +30,33 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.ExecutableContext;
 
-import io.kyligence.kap.metadata.cube.model.NBatchConstants;
-import io.kyligence.kap.metadata.cube.model.NDataflow;
-import io.kyligence.kap.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.metadata.MetadataConstants;
 
 public class NSparkCleanupAfterMergeStep extends NSparkExecutable {
     public NSparkCleanupAfterMergeStep() {
-        this.setName(ExecutableConstants.STEP_NAME_CLEANUP);
+        this.setName(ExecutableConstants.STEP_NAME_MERGE_CLEANUP);
     }
 
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-        String name = getParam(NBatchConstants.P_DATAFLOW_ID);
-        String[] segmentIds = StringUtils.split(getParam(NBatchConstants.P_SEGMENT_IDS));
+        String cubeId = getParam(MetadataConstants.P_CUBE_ID);
+        String[] segmentIds = StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS));
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        NDataflow dataflow = NDataflowManager.getInstance(config, getProject()).getDataflow(name);
+        CubeInstance cube = CubeManager.getInstance(config).getCubeByUuid(cubeId);
 
         for (String segmentId : segmentIds) {
-            String path = dataflow.getSegmentHdfsPath(segmentId);
+            String path = config.getHdfsWorkingDirectory() + cube.getProject() + "/parquet/" + cube.getUuid() + "/" + segmentId;
             try {
                 HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), new Path(path));
             } catch (IOException e) {
-                throw new ExecuteException("Can not delete segment: " + segmentId + ", in dataflow: " + name);
+                throw new ExecuteException("Can not delete segment: " + segmentId + ", in cube: " + cube.getName());
             }
         }
 

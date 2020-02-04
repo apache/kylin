@@ -29,7 +29,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.clearspring.analytics.util.Lists;
 import org.apache.hadoop.fs.Path;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.spark.metadata.MetadataConverter;
+import org.apache.kylin.engine.spark.metadata.SegmentInfo;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
@@ -40,10 +47,6 @@ import com.google.common.collect.Maps;
 
 import io.kyligence.kap.engine.spark.application.SparkApplication;
 import io.kyligence.kap.engine.spark.builder.DFLayoutMergeAssist;
-import io.kyligence.kap.metadata.cube.model.NBatchConstants;
-import io.kyligence.kap.metadata.cube.model.NDataSegment;
-import io.kyligence.kap.metadata.cube.model.NDataflow;
-import io.kyligence.kap.metadata.cube.model.NDataflowManager;
 import scala.collection.JavaConversions;
 
 public class ResourceDetectBeforeMergingJob extends SparkApplication {
@@ -52,22 +55,26 @@ public class ResourceDetectBeforeMergingJob extends SparkApplication {
     @Override
     protected void doExecute() throws Exception {
         logger.info("Start detect resource before merge.");
-        String dataflowId = getParam(NBatchConstants.P_DATAFLOW_ID);
+        String cubeId = getParam(MetadataConstants.P_CUBE_ID);
 
-        final NDataflowManager mgr = NDataflowManager.getInstance(config, project);
-        final NDataflow dataflow = mgr.getDataflow(dataflowId);
-        final NDataSegment mergedSeg = dataflow.getSegment(getParam(NBatchConstants.P_SEGMENT_IDS));
-        final List<NDataSegment> mergingSegments = dataflow.getMergingSegments(mergedSeg);
-        infos.clearMergingSegments();
+        final CubeManager cubeManager = CubeManager.getInstance(config);
+        final CubeInstance cube = cubeManager.getCubeByUuid(cubeId);
+        final CubeSegment mergedSeg = cube.getSegmentById(getParam(MetadataConstants.P_SEGMENT_IDS));
+        final SegmentInfo mergedSegInfo = MetadataConverter.getSegmentInfo(cube, mergedSeg.getUuid());
+        final List<CubeSegment> mergingSegments = cube.getMergingSegments(mergedSeg);
+        final List<SegmentInfo> segmentInfos = Lists.newArrayList();
         Collections.sort(mergingSegments);
-        infos.recordMergingSegments(mergingSegments);
-        Map<Long, DFLayoutMergeAssist> mergeCuboidsAssist = DFMergeJob.generateMergeAssist(mergingSegments, ss,
-                mergedSeg);
-        ResourceDetectUtils.write(new Path(config.getJobTmpShareDir(project, jobId), ResourceDetectUtils.countDistinctSuffix()), ResourceDetectUtils.findCountDistinctMeasure(mergedSeg.getIndexPlan().getAllLayouts()));
+        for (CubeSegment cubeSegment : mergingSegments) {
+            segmentInfos.add(MetadataConverter.getSegmentInfo(cube, cubeSegment.getUuid()));
+        }
+        infos.clearMergingSegments();
+        infos.recordMergingSegments(segmentInfos);
+        Map<Long, DFLayoutMergeAssist> mergeCuboidsAssist = DFMergeJob.generateMergeAssist(segmentInfos, ss);
+        ResourceDetectUtils.write(new Path(config.getJobTmpShareDir(project, jobId), ResourceDetectUtils.countDistinctSuffix()), ResourceDetectUtils.findCountDistinctMeasure(JavaConversions.asJavaCollection(mergedSegInfo.toBuildLayouts())));
         Map<String, List<String>> resourcePaths = Maps.newHashMap();
         infos.clearSparkPlans();
         for (Map.Entry<Long, DFLayoutMergeAssist> entry : mergeCuboidsAssist.entrySet()) {
-            Dataset<Row> afterMerge = entry.getValue().merge();
+            Dataset<Row> afterMerge = entry.getValue().merge(config, cubeId);
             infos.recordSparkPlan(afterMerge.queryExecution().sparkPlan());
             List<Path> paths = JavaConversions
                     .seqAsJavaList(ResourceDetectUtils.getPaths(afterMerge.queryExecution().sparkPlan()));
@@ -75,7 +82,7 @@ public class ResourceDetectBeforeMergingJob extends SparkApplication {
             resourcePaths.put(String.valueOf(entry.getKey()), pathStrs);
         }
         ResourceDetectUtils.write(new Path(config.getJobTmpShareDir(project, jobId),
-                mergedSeg.getId() + "_" + ResourceDetectUtils.fileName()), resourcePaths);
+                mergedSeg.getUuid() + "_" + ResourceDetectUtils.fileName()), resourcePaths);
     }
 
     @Override

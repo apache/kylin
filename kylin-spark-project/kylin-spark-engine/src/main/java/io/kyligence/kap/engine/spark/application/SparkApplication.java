@@ -163,7 +163,6 @@ public abstract class SparkApplication {
                 }
             }
 
-            sparkConf.set("spark.io.compression.codec", "snappy");
             ss = SparkSession.builder().withExtensions(new AbstractFunction1<SparkSessionExtensions, BoxedUnit>() {
                 @Override
                 public BoxedUnit apply(SparkSessionExtensions v1) {
@@ -178,12 +177,9 @@ public abstract class SparkApplication {
             }).enableHiveSupport().config(sparkConf).config("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false")
                     .getOrCreate();
 
-            //JoinMemoryManager.releaseAllMemory();
             // for spark metrics
             JobMetricsUtils.registerListener(ss);
 
-            //#8341
-//            SparderEnv.setSparkSession(ss);
             UdfManager.create(ss);
 
             if (!config.isUTEnv()) {
