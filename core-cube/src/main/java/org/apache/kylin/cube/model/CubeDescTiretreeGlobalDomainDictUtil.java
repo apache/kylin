@@ -89,16 +89,15 @@ public class CubeDescTiretreeGlobalDomainDictUtil {
 
 
     /**
-     * add resuce global tiretree global dic for baseid job
+     * add resuce global tiretree global dic metadata
      * @param cubeDesc
      * @param dumpList
      */
-    public static void cuboidJob(CubeDesc cubeDesc, Set<String> dumpList) {
+    public static void addReuseGlobalDomainTireTreeDicMetadata(CubeDesc cubeDesc, Set<String> dumpList) {
         logger.info("cube {} start to add global domain dic", cubeDesc.getName());
         CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelManager metadataManager =DataModelManager.getInstance(KylinConfig.getInstanceFromEnv());
 
-        cubeManager.getCube(cubeDesc.getName());
         List<GlobalDict> globalDicts = cubeDesc.listDomainDict();
 
         for (GlobalDict dict : globalDicts) {

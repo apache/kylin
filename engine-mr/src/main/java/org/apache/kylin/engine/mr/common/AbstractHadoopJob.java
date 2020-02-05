@@ -588,7 +588,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             dumpList.add(segment.getStatisticsResourcePath());
         }
         //tiretree global domain dic
-        CubeDescTiretreeGlobalDomainDictUtil.cuboidJob(segment.getCubeDesc(), dumpList);
+        CubeDescTiretreeGlobalDomainDictUtil.addReuseGlobalDomainTireTreeDicMetadata(segment.getCubeDesc(), dumpList);
 
         dumpKylinPropsAndMetadata(segment.getProject(), dumpList, segment.getConfig(), conf);
     }
