@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
+import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.JobListRequest;
 import org.apache.kylin.rest.service.JobService;
@@ -181,6 +182,9 @@ public class JobController extends BasicController {
     public JobInstance resume(@PathVariable String jobId) {
         try {
             final JobInstance jobInstance = jobService.getJobInstance(jobId);
+            if (jobInstance == null) {
+                throw new BadRequestException("Cannot find job: " + jobId);
+            }
             jobService.resumeJob(jobInstance);
             return jobService.getJobInstance(jobId);
         } catch (Exception e) {
@@ -200,6 +204,9 @@ public class JobController extends BasicController {
     public void resubmitJob(@PathVariable String jobId) throws IOException {
         try {
             final JobInstance jobInstance = jobService.getJobInstance(jobId);
+            if (jobInstance == null) {
+                throw new BadRequestException("Cannot find job: " + jobId);
+            }
             jobService.resubmitJob(jobInstance);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
@@ -219,6 +226,9 @@ public class JobController extends BasicController {
 
         try {
             final JobInstance jobInstance = jobService.getJobInstance(jobId);
+            if (jobInstance == null) {
+                throw new BadRequestException("Cannot find job: " + jobId);
+            }
             jobService.cancelJob(jobInstance);
             return jobService.getJobInstance(jobId);
         } catch (Exception e) {
@@ -239,6 +249,9 @@ public class JobController extends BasicController {
 
         try {
             final JobInstance jobInstance = jobService.getJobInstance(jobId);
+            if (jobInstance == null) {
+                throw new BadRequestException("Cannot find job: " + jobId);
+            }
             jobService.pauseJob(jobInstance);
             return jobService.getJobInstance(jobId);
         } catch (Exception e) {
@@ -260,6 +273,9 @@ public class JobController extends BasicController {
     public JobInstance rollback(@PathVariable String jobId, @PathVariable String stepId) {
         try {
             final JobInstance jobInstance = jobService.getJobInstance(jobId);
+            if (jobInstance == null) {
+                throw new BadRequestException("Cannot find job: " + jobId);
+            }
             jobService.rollbackJob(jobInstance, stepId);
             return jobService.getJobInstance(jobId);
         } catch (Exception e) {
@@ -280,6 +296,9 @@ public class JobController extends BasicController {
         JobInstance jobInstance = null;
         try {
             jobInstance = jobService.getJobInstance(jobId);
+            if (jobInstance == null) {
+                throw new BadRequestException("Cannot find job: " + jobId);
+            }
             jobService.dropJob(jobInstance);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
