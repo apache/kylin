@@ -159,8 +159,12 @@ public class BuildGlobalHiveDictTotalBuildMapper<KEYIN, Object> extends KylinMap
         } catch (IOException e) {
             e.printStackTrace();
         }finally {
-            buffer.close();
-            in.close();
+            if(buffer!=null) {
+                buffer.close();
+            }
+            if(in!=null) {
+                in.close();
+            }
         }
         return stat.toString();
     }
@@ -168,7 +172,7 @@ public class BuildGlobalHiveDictTotalBuildMapper<KEYIN, Object> extends KylinMap
     /**
      *
      * @param conf
-     * @param lastMaxDicValuePath, eg: /user/kylin/warehouse/db/kylin_intermediate_kylin_sales_cube_mr_6222c210_ce2d_e8ce_dd0f_f12c38fa9115__group_by/dict_column=KYLIN_MAX_DISTINCT_COUNT/part-00000-450ee120-39ff-4806-afaf-ed482ceffc68-c000
+     * @param lastMaxDicValuePath eg: /user/kylin/warehouse/db/kylin_intermediate_kylin_sales_cube_mr_6222c210_ce2d_e8ce_dd0f_f12c38fa9115__group_by/dict_column=KYLIN_MAX_DISTINCT_COUNT/part-00000-450ee120-39ff-4806-afaf-ed482ceffc68-c000
      *        remotePath content is dict colum stats info of per column: dic column name,extract distinct value count,last max dic value
      * @return this colIndex's last max dic value
      * @throws IOException
@@ -186,7 +190,11 @@ public class BuildGlobalHiveDictTotalBuildMapper<KEYIN, Object> extends KylinMap
 
             }
         }
-        return  map.get(colIndex)==null?0L:map.get(colIndex);
+        if(map == null){
+            return 0L;
+        }else{
+            return  map.get(colIndex)==null?0L:map.get(colIndex);
+        }
     }
 
     /**
@@ -222,8 +230,12 @@ public class BuildGlobalHiveDictTotalBuildMapper<KEYIN, Object> extends KylinMap
         } catch (IOException e) {
             e.printStackTrace();
         }finally {
-            buffer.close();
-            in.close();
+            if(buffer!=null) {
+                buffer.close();
+            }
+            if(in!=null) {
+                in.close();
+            }
         }
         logger.info("BuildMaxCountMap map="+map);
         return map;
