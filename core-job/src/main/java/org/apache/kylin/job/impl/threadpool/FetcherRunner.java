@@ -19,7 +19,9 @@
 package org.apache.kylin.job.impl.threadpool;
 
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.Executable;
@@ -39,6 +41,7 @@ public abstract class FetcherRunner implements Runnable {
     protected DefaultContext context;
     protected JobExecutor jobExecutor;
     protected volatile boolean fetchFailed = false;
+    protected Set<String> succeedJobs = Sets.newHashSet();//cache succeed jobid
     protected static int nRunning, nReady, nStopped, nOthers, nError, nDiscarded, nSUCCEED;
 
     public FetcherRunner(JobEngineConfig jobEngineConfig, DefaultContext context, JobExecutor jobExecutor) {
