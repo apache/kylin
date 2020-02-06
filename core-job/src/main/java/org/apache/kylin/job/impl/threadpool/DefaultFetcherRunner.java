@@ -65,6 +65,10 @@ public class DefaultFetcherRunner extends FetcherRunner {
                     nRunning++;
                     continue;
                 }
+                if (succeedJobs.contains(id)) {
+                    nSUCCEED++;
+                    continue;
+                }
 
                 final Output outputDigest;
                 try {
@@ -92,7 +96,7 @@ public class DefaultFetcherRunner extends FetcherRunner {
                 }
 
                 KylinConfig config = jobEngineConfig.getConfig();
-                if(config.isSchedulerSafeMode()) {
+                if (config.isSchedulerSafeMode()) {
                     String cubeName = executable.getCubeName();
                     String projectName = CubeManager.getInstance(config).getCube(cubeName).getProject();
                     if (!config.getSafeModeRunnableProjects().contains(projectName) &&
