@@ -6,23 +6,20 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.query.util;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -30,33 +27,31 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
+ *
  */
 public class QueryUtil {
 
     protected static final Logger logger = LoggerFactory.getLogger(QueryUtil.class);
-
-    private QueryUtil() {
-        throw new IllegalStateException("Class QueryUtil is an utility class !");
-    }
-
-    private static List<IQueryTransformer> queryTransformers;
-
-    public interface IQueryTransformer {
-        String transform(String sql, String project, String defaultSchema);
-    }
-
     static final String KEYWORD_SELECT = "select";
     static final String KEYWORD_WITH = "with";
     static final String KEYWORD_EXPLAIN = "explain";
+    private static List<IQueryTransformer> queryTransformers;
+    private QueryUtil() {
+        throw new IllegalStateException("Class QueryUtil is an utility class !");
+    }
 
     public static String appendLimitOffsetToSql(String sql, int limit, int offset) {
         String retSql = sql;
         String prefixSql = "select * from (";
         String suffixSql = ")";
-        if (sql.startsWith(KEYWORD_EXPLAIN)) {
+        if (StringUtils.startsWithIgnoreCase(sql, KEYWORD_EXPLAIN)
+                || StringUtils.startsWithIgnoreCase(sql, KEYWORD_WITH)) {
             prefixSql = "";
             suffixSql = "";
         }
@@ -223,5 +218,9 @@ public class QueryUtil {
         sql1 = sql1.trim();
 
         return sql1;
+    }
+
+    public interface IQueryTransformer {
+        String transform(String sql, String project, String defaultSchema);
     }
 }
