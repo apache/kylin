@@ -1069,7 +1069,7 @@
     <repository>
       <id>central</id>
       <name>Central Repository</name>
-      <url>http://repo.maven.apache.org/maven2</url>
+      <url>https://repo.maven.apache.org/maven2</url>
       <layout>default</layout>
       <snapshots>
         <enabled>false</enabled>
@@ -1078,7 +1078,7 @@
 
     <repository>
       <id>conjars</id>
-      <url>http://conjars.org/repo/</url>
+      <url>https://conjars.org/repo/</url>
     </repository>
 
     <repository>
@@ -1094,7 +1094,7 @@
     <repository>
       <id>kyligence</id>
       <name>Kyligence Repository</name>
-      <url>http://repository.kyligence.io:8081/repository/maven-public/
+      <url>https://repository.kyligence.io/repository/maven-public/
       </url>
       <releases>
         <enabled>true</enabled>
