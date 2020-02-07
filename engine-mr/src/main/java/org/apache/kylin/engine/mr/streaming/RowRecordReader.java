@@ -82,72 +82,51 @@ public class RowRecordReader extends ColumnarFilesReader {
     }
 
     public void initReaders() throws IOException {
-        FSDataInputStream in = null;
-        try {
-            in = fs.open(metaFilePath);
-            FragmentMetaInfo fragmentMetaInfo = JsonUtil.readValue(in, FragmentMetaInfo.class);
-            CuboidMetaInfo basicCuboidMetaInfo = fragmentMetaInfo.getBasicCuboidMetaInfo();
-            FSDataInputStream dictInputStream = fs.open(dataFilePath);
+        FSDataInputStream in = fs.open(metaFilePath);
+        FragmentMetaInfo fragmentMetaInfo = JsonUtil.readValue(in, FragmentMetaInfo.class);
+        CuboidMetaInfo basicCuboidMetaInfo = fragmentMetaInfo.getBasicCuboidMetaInfo();
+        FSDataInputStream dictInputStream = fs.open(dataFilePath);
 
-            List<DimensionMetaInfo> allDimensions = basicCuboidMetaInfo.getDimensionsInfo();
-            Map<String, DimensionEncoding> dimensionEncodingMap = getDimensionEncodings(fragmentMetaInfo, allDimensions,
-                    dictInputStream);
-            dimensionColumnReaders = Lists.newArrayList();
-            dimensionColumnReaderItrs = Lists.newArrayList();
-            dimensionEncodings = Lists.newArrayList();
-            for (DimensionMetaInfo dimensionMetaInfo : allDimensions) {
-                FSDataInputStream dimInputStream = null;
-                try {
-                    dimInputStream = fs.open(dataFilePath);
-                    String dimName = dimensionMetaInfo.getName();
-                    DimensionEncoding dimEncoding = dimensionEncodingMap.get(dimName);
-                    ColumnarStoreDimDesc dimDesc = new ColumnarStoreDimDesc(dimEncoding.getLengthOfEncoding(),
-                            dimensionMetaInfo.getCompressionType());
-                    ColumnDataReader dimDataReader = dimDesc.getDimReaderFromFSInput(dimInputStream,
-                            dimensionMetaInfo.getStartOffset(), dimensionMetaInfo.getDataLength(),
-                            (int) basicCuboidMetaInfo.getNumberOfRows());
-                    dimensionColumnReaders.add(dimDataReader);
-                    dimensionColumnReaderItrs.add(dimDataReader.iterator());
-                    dimensionEncodings.add(dimEncoding);
-                } finally {
-                    if (null != dimInputStream) {
-                        dimInputStream.close();
-                    }
-                }
-            }
-            rowDimensionValues = new String[dimensionColumnReaders.size()];
-
-            metricsColumnReaders = Lists.newArrayList();
-            metricsColumnReaderItrs = Lists.newArrayList();
-            metricsDataTransformers = Lists.newArrayList();
-            for (MetricMetaInfo metricMetaInfo : basicCuboidMetaInfo.getMetricsInfo()) {
-                FSDataInputStream metricsInputStream = null;
-                try {
-                    metricsInputStream = fs.open(dataFilePath);
-                    MeasureDesc measure = findMeasure(metricMetaInfo.getName());
-                    DataType metricsDataType = measure.getFunction().getReturnDataType();
-                    ColumnarMetricsEncoding metricsEncoding = ColumnarMetricsEncodingFactory.create(metricsDataType);
-                    ColumnarStoreMetricsDesc metricsDesc = new ColumnarStoreMetricsDesc(metricsEncoding,
-                            metricMetaInfo.getCompressionType());
-                    ColumnDataReader metricsDataReader = metricsDesc.getMetricsReaderFromFSInput(metricsInputStream,
-                            metricMetaInfo.getStartOffset(), metricMetaInfo.getMetricLength(),
-                            (int) basicCuboidMetaInfo.getNumberOfRows());
-                    metricsColumnReaders.add(metricsDataReader);
-                    metricsColumnReaderItrs.add(metricsDataReader.iterator());
-                    metricsDataTransformers.add(new MetricsDataTransformer(metricsEncoding.asDataTypeSerializer(),
-                            DataTypeSerializer.create(metricsDataType)));
-                } finally {
-                    if (null != metricsInputStream) {
-                        metricsInputStream.close();
-                    }
-                }
-            }
-            rowMetricsValues = new byte[metricsColumnReaders.size()][];
-        } finally {
-            if (null != in) {
-                in.close();
-            }
+        List<DimensionMetaInfo> allDimensions = basicCuboidMetaInfo.getDimensionsInfo();
+        Map<String, DimensionEncoding> dimensionEncodingMap = getDimensionEncodings(fragmentMetaInfo, allDimensions,
+                dictInputStream);
+        dimensionColumnReaders = Lists.newArrayList();
+        dimensionColumnReaderItrs = Lists.newArrayList();
+        dimensionEncodings = Lists.newArrayList();
+        for (DimensionMetaInfo dimensionMetaInfo : allDimensions) {
+            FSDataInputStream dimInputStream = fs.open(dataFilePath);
+            String dimName = dimensionMetaInfo.getName();
+            DimensionEncoding dimEncoding = dimensionEncodingMap.get(dimName);
+            ColumnarStoreDimDesc dimDesc = new ColumnarStoreDimDesc(dimEncoding.getLengthOfEncoding(),
+                    dimensionMetaInfo.getCompressionType());
+            ColumnDataReader dimDataReader = dimDesc.getDimReaderFromFSInput(dimInputStream,
+                    dimensionMetaInfo.getStartOffset(), dimensionMetaInfo.getDataLength(),
+                    (int) basicCuboidMetaInfo.getNumberOfRows());
+            dimensionColumnReaders.add(dimDataReader);
+            dimensionColumnReaderItrs.add(dimDataReader.iterator());
+            dimensionEncodings.add(dimEncoding);
         }
+        rowDimensionValues = new String[dimensionColumnReaders.size()];
+
+        metricsColumnReaders = Lists.newArrayList();
+        metricsColumnReaderItrs = Lists.newArrayList();
+        metricsDataTransformers = Lists.newArrayList();
+        for (MetricMetaInfo metricMetaInfo : basicCuboidMetaInfo.getMetricsInfo()) {
+            FSDataInputStream metricsInputStream = fs.open(dataFilePath);
+            MeasureDesc measure = findMeasure(metricMetaInfo.getName());
+            DataType metricsDataType = measure.getFunction().getReturnDataType();
+            ColumnarMetricsEncoding metricsEncoding = ColumnarMetricsEncodingFactory.create(metricsDataType);
+            ColumnarStoreMetricsDesc metricsDesc = new ColumnarStoreMetricsDesc(metricsEncoding,
+                    metricMetaInfo.getCompressionType());
+            ColumnDataReader metricsDataReader = metricsDesc.getMetricsReaderFromFSInput(metricsInputStream,
+                    metricMetaInfo.getStartOffset(), metricMetaInfo.getMetricLength(),
+                    (int) basicCuboidMetaInfo.getNumberOfRows());
+            metricsColumnReaders.add(metricsDataReader);
+            metricsColumnReaderItrs.add(metricsDataReader.iterator());
+            metricsDataTransformers.add(new MetricsDataTransformer(metricsEncoding.asDataTypeSerializer(),
+                    DataTypeSerializer.create(metricsDataType)));
+        }
+        rowMetricsValues = new byte[metricsColumnReaders.size()][];
     }
 
     private MeasureDesc findMeasure(String name) {
