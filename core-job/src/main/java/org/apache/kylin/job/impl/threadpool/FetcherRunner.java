@@ -77,6 +77,7 @@ public abstract class FetcherRunner implements Runnable {
         final Output outputDigest = getExecutableManager().getOutputDigest(id);
         // logger.debug("Job id:" + id + " not runnable");
         if (outputDigest.getState() == ExecutableState.SUCCEED) {
+            succeedJobs.add(id);
             nSUCCEED++;
         } else if (outputDigest.getState() == ExecutableState.ERROR) {
             nError++;
