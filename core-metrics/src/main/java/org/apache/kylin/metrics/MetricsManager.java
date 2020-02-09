@@ -131,7 +131,7 @@ public class MetricsManager {
                                 .start();
                     } catch (Exception e) {
                         logger.warn("Cannot initialize ActiveReservoirReporter: Builder class - " + subEntry.getFirst()
-                                + ", Properties - " + subEntry.getSecond());
+                                + ", Properties - " + subEntry.getSecond(), e);
                     }
                 }
                 Metrics.register(registerName, activeReservoir);
@@ -144,7 +144,9 @@ public class MetricsManager {
     }
 
     public void update(Record record) {
+        logger.debug("Metrics System received a record : {}.", record);
         for (String registerName : activeReservoirPointers) {
+            logger.debug("Calling Reservoir {}", registerName);
             Metrics.activeReservoir(registerName).update(record);
         }
     }

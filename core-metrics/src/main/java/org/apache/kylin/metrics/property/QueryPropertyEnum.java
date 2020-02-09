@@ -28,6 +28,7 @@ import com.google.common.base.Strings;
 public enum QueryPropertyEnum {
 
     ID_CODE("QUERY_HASH_CODE"),
+    SQL("QUERY_SQL"),
     TYPE("QUERY_TYPE"),
     USER("KUSER"),
     PROJECT("PROJECT"),
