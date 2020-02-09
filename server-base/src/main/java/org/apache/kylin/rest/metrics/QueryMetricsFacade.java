@@ -63,7 +63,7 @@ public class QueryMetricsFacade {
         if (!enabled)
             return;
 
-        DefaultMetricsSystem.initialize("Kylin"); // TODO what is it?
+        DefaultMetricsSystem.initialize("Kylin");
     }
 
     private static long getSqlHashCode(String sql) {
@@ -112,7 +112,6 @@ public class QueryMetricsFacade {
             //For update rpc level related metrics
             MetricsManager.getInstance().update(rpcMetricsEvent);
         }
-        long sqlHashCode = getSqlHashCode(sqlRequest.getSql());
         for (QueryContext.CubeSegmentStatisticsResult contextEntry : sqlResponse.getCubeSegmentStatisticsList()) {
             RecordEvent queryMetricsEvent = new TimedRecordEvent(
                     KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectQuery());

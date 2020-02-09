@@ -58,7 +58,7 @@ public class KafkaReservoirReporter extends ActiveReservoirReporter {
         return new Builder(activeReservoir);
     }
 
-    private static String decorateTopic(String topic) {
+    public static String decorateTopic(String topic) {
         return ActiveReservoirReporter.KYLIN_PREFIX + "_" + KAFKA_REPORTER_SUFFIX + "_" + topic;
     }
 
