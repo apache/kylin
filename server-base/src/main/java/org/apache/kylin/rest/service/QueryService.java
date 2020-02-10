@@ -410,7 +410,7 @@ public class QueryService extends BasicService {
             SQLResponse sqlResponse = null;
             String sql = sqlRequest.getSql();
             String project = sqlRequest.getProject();
-            boolean isQueryCacheEnabled = isQueryCacheEnabled(kylinConfig);
+            boolean isQueryCacheEnabled = isQueryCacheEnabled(kylinConfig) && !sqlRequest.isNoCache();
             logger.info("Using project: " + project);
             logger.info("The original query:  " + sql);
 

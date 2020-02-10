@@ -37,6 +37,7 @@ public class SQLRequest implements Serializable {
     private Integer offset = 0;
     private Integer limit = 0;
     private boolean acceptPartial = false;
+    private boolean noCache = false;
 
     private Map<String, String> backdoorToggles;
 
@@ -99,6 +100,14 @@ public class SQLRequest implements Serializable {
 
     public void setAcceptPartial(boolean acceptPartial) {
         this.acceptPartial = acceptPartial;
+    }
+
+    public boolean isNoCache() {
+        return noCache;
+    }
+
+    public void setNoCache(boolean noCache) {
+        this.noCache = noCache;
     }
 
     public Object getCacheKey() {
