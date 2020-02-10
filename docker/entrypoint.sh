@@ -40,11 +40,11 @@ $HADOOP_HOME/sbin/yarn-daemon.sh start nodemanager
 $HADOOP_HOME/sbin/mr-jobhistory-daemon.sh start historyserver
 
 # start hbase
+rm -rf /data/zookeeper/*
 $HBASE_HOME/bin/start-hbase.sh
 
 # start kafka
 rm -rf /tmp/kafka-logs
-rm -rf /data/zookeeper/*
 nohup $KAFKA_HOME/bin/kafka-server-start.sh $KAFKA_HOME/config/server.properties &
 
 # start livy
