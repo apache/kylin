@@ -51,3 +51,52 @@ kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock
 * 一个 HBase 集群用作 **SQL 查询**，通常这个集群是专门为 Kylin 配置的，节点数不用像 Hadoop 集群那么多，HBase 的配置可以针对 Kylin Cube 只读的特性而进行优化。
 
 这种部署策略是适合生产环境的最佳部署方案，关于如何进行读写分离部署，请参考 [Deploy Apache Kylin with Standalone HBase Cluster](/blog/2016/06/10/standalone-hbase-cluster/)。
+
+#### 例子
+
+我们知道 AWS EMR 是一个流行的Hadoop云上解决方案，让我们来把它作为实例讲解如何部署读写分离。
+
+1. 创建EMR集群
+
+你首先应该创建两个EMR集群，一个是主集群，另一个是HBase集群。
+
+主集群至少包含以下组件 `Hadoop`, `Hive`, `Pig`, `Spark`, `Sqoop`, `Tez` 。并且主集群是你部署Kylin的地方。
+HBase集群至少包含 `HBase` 组件。
+
+2. 准备客户端配置
+
+让我们选择在主集群的master节点部署Kylin。在这个节点，你需要检查以下几点。
+
+
+- HDFS的连通性
+
+你可以执行 `hadoop fs -fs $HOSTNAME_MASTER_NODE_OF_HBASE_CLUSTER:8020 -ls /` 来确认你可以从主集群访问HBase集群的HDFS数据。
+
+这里，你应该使用HBase集群的master节点的hostname来代替 `$HOSTNAME_MASTER_NODE_OF_HBASE_CLUSTER` 。
+
+
+- HBase的连通性
+
+
+开始，当你执行 `hbase shell` 并且输入一些命令例如 `list_namespace`， 你会收到一些报错因为主集群并没有安装 HBase。
+
+然后你应该将 hbase 集群的主节点的 `/etc/hbase/conf` 下的全部配置文件拷贝到主集群主节点的相同位置。
+
+在此之后，你就可以从这台机器访问HBase了。
+
+
+3. 更新 kylin.properties
+
+至少添加以下配置
+
+```
+kylin.storage.hbase.cluster-fs=$HOSTNAME_MASTER_NODE_OF_HBASE_CLUSTER:8020
+```
+
+4. 启动Kylin
+
+参照 http://kylin.apache.org/docs/install/kylin_aws_emr.html 进行准备工作，然后启动Kylin。 
+
+```sh
+sh bin/kylin.sh start
+```
