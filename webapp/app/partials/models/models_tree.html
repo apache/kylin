@@ -85,7 +85,7 @@
               <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
                 Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
               </button>
-              <ul class="dropdown-menu" role="menu" style="right:0;left:auto;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('model',model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
+              <ul class="dropdown-menu" role="menu" style="right:0;left:auto;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('model', hybridInstance, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
                 <li><a ng-click="editHybridInstance(hybridInstance)" title="Edit Hybrid" style="cursor:pointer;margin-right: 8px;" >Edit</a></li>
                 <li><a ng-click="dropHybridInstance(hybridInstance)" title="Drop Hybrid"  style="cursor:pointer;margin-right: 8px;">Drop</a></li>
               </ul>
