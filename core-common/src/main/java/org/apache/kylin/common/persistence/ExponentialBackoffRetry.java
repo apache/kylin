@@ -101,7 +101,7 @@ public class ExponentialBackoffRetry {
         if (retryCount == 0)
             firstSleepTime = System.currentTimeMillis();
 
-        long ms = baseSleepTimeMs * (1 << retryCount);
+        long ms = baseSleepTimeMs * (1L << retryCount);
 
         if (ms > maxSleepTimeMs)
             ms = maxSleepTimeMs;

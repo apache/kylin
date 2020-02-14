@@ -30,7 +30,7 @@ public class FSInputGeneralColumnDataReader implements ColumnDataReader {
     public FSInputGeneralColumnDataReader(FSDataInputStream fsInputStream, int dataStartOffset, int dataLength)
             throws IOException {
         this.fsInputStream = fsInputStream;
-        fsInputStream.seek(dataStartOffset + dataLength - 4);
+        fsInputStream.seek(dataStartOffset + dataLength - 4L);
         this.numOfVals = fsInputStream.readInt();
         fsInputStream.seek(dataStartOffset);
     }

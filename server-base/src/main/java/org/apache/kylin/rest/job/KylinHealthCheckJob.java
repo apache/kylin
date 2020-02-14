@@ -18,7 +18,12 @@
 
 package org.apache.kylin.rest.job;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -47,11 +52,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import com.google.common.collect.Lists;
 
 public class KylinHealthCheckJob extends AbstractApplication {
     private static final Logger logger = LoggerFactory.getLogger(KylinHealthCheckJob.class);
@@ -288,7 +289,7 @@ public class KylinHealthCheckJob extends AbstractApplication {
             long sizeRecordSize = cube.getInputRecordSizeBytes();
             if (sizeRecordSize > 0) {
                 long cubeDataSize = cube.getSizeKB() * 1024;
-                double expansionRate = cubeDataSize / sizeRecordSize;
+                double expansionRate = (double) cubeDataSize / sizeRecordSize;
                 if (sizeRecordSize > 1L * expansionCheckMinCubeSizeInGb * 1024 * 1024 * 1024) {
                     if (expansionRate > warningExpansionRate) {
                         logger.info("Cube: {} in project: {} with too large expansion rate: {}, cube data size: {}G",

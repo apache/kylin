@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.Random;
+
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.source.hive.DBConnConf;
 import org.slf4j.Logger;
@@ -84,7 +85,7 @@ public class SqlUtil {
                 logger.warn("while use:" + dbconf, e);
                 try {
                     int rt = r.nextInt(10);
-                    Thread.sleep(rt * 1000);
+                    Thread.sleep(rt * 1000L);
                 } catch (InterruptedException e1) {
                     Thread.interrupted();
                 }

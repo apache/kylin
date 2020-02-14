@@ -247,7 +247,7 @@ public class ColumnarSegmentStore implements IStreamingSegmentStore {
         List<DataSegmentFragment> result = Lists.newArrayList();
         int originFragmentsNum = allFragments.size();
         int minFragments = config.getStreamingMinFragmentsInSegment();
-        long maxFragmentSize = config.getStreamingMaxFragmentSizeInMb() * 1024 * 1024;
+        long maxFragmentSize = config.getStreamingMaxFragmentSizeInMb() * 1024 * 1024L;
         long toMergeDataSize = 0;
         for (int i = 0; i < originFragmentsNum; i++) {
             DataSegmentFragment fragment = allFragments.get(i);

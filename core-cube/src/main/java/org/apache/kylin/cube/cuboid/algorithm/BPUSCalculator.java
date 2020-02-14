@@ -120,7 +120,7 @@ public class BPUSCalculator implements BenefitPolicy {
     protected double getCostSaving(long descendant, long cuboid) {
         long cuboidCost = getCuboidCost(cuboid);
         long descendantAggCost = getCuboidAggregationCost(descendant);
-        return descendantAggCost - cuboidCost;
+        return (double) descendantAggCost - cuboidCost;
     }
 
     protected Long getCuboidCost(long cuboid) {

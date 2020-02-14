@@ -161,9 +161,10 @@ public class BlockingReservoir extends AbstractActiveReservoir {
                     startTime = System.currentTimeMillis();
                     continue;
                 } else if (size() < minReportSize && (System.currentTimeMillis() - startTime < maxReportTime)) {
-                    logger.info("The number of records in the blocking queue is less than {} and " +
-                            "the duration from last reporting is less than {} ms. " +
-                            "Will delay to report!", minReportSize, maxReportTime);
+                    logger.info(
+                            "The number of records in the blocking queue is less than {} and "
+                                    + "the duration from last reporting is less than {} ms. " + "Will delay to report!",
+                            minReportSize, maxReportTime);
                     sleep();
                     continue;
                 }
@@ -177,7 +178,7 @@ public class BlockingReservoir extends AbstractActiveReservoir {
 
         private void sleep() {
             try {
-                Thread.sleep(60 * 1000);
+                Thread.sleep(60 * 1000L);
             } catch (InterruptedException e) {
                 logger.warn("Interrupted during running");
             }
