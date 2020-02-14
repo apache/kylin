@@ -20,6 +20,7 @@ package org.apache.kylin.stream.core.storage.columnar;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.apache.hadoop.fs.FSDataInputStream;
 
@@ -59,7 +60,7 @@ public class FSInputGeneralColumnDataReader implements ColumnDataReader {
                     readRowCount++;
                     return result;
                 } catch (IOException e) {
-                    throw new RuntimeException("error when read data", e);
+                    throw new NoSuchElementException("error when read data");
                 }
             }
 
