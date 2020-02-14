@@ -136,7 +136,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
         boolean hasRexOver = RexOver.containsOver(getProjects(), null);
         RelOptCost relOptCost = super.computeSelfCost(planner, mq).multiplyBy(.05)
-                .multiplyBy(getProjects().size() * (hasRexOver ? 50 : 1))
+                .multiplyBy(getProjects().size() * (double) (hasRexOver ? 50 : 1))
                 .plus(planner.getCostFactory().makeCost(0.1 * caseCount, 0, 0));
         return planner.getCostFactory().makeCost(relOptCost.getRows(), 0, 0);
     }
