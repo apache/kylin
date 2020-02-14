@@ -35,6 +35,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -704,7 +705,7 @@ public class GTAggregateScanner implements IGTScanner, IGTBypassChecker {
                                 dis.readFully(value);
                                 return new Pair<>(key, value);
                             } catch (Exception e) {
-                                throw new RuntimeException(
+                                throw new NoSuchElementException(
                                         "Cannot read AggregationCache from dumped file: " + e.getMessage());
                             }
                         }
