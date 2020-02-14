@@ -200,13 +200,14 @@ public class RocksDBLookupTableCache implements IExtLookupTableCache {
     private void initExecutors() {
         this.cacheBuildExecutor = new ThreadPoolExecutor(0, 50, 60L, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("lookup-cache-build-thread"));
-        this.cacheStateCheckExecutor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory(
-                "lookup-cache-state-checker"));
-        cacheStateCheckExecutor.scheduleAtFixedRate(cacheStateChecker, 10, 10 * 60, TimeUnit.SECONDS); // check every 10 minutes
+        this.cacheStateCheckExecutor = Executors
+                .newSingleThreadScheduledExecutor(new NamedThreadFactory("lookup-cache-state-checker"));
+        cacheStateCheckExecutor.scheduleAtFixedRate(cacheStateChecker, 10, 10 * 60L, TimeUnit.SECONDS); // check every 10 minutes
     }
 
     @Override
-    public ILookupTable getCachedLookupTable(TableDesc tableDesc, ExtTableSnapshotInfo extTableSnapshotInfo, boolean buildIfNotExist) {
+    public ILookupTable getCachedLookupTable(TableDesc tableDesc, ExtTableSnapshotInfo extTableSnapshotInfo,
+            boolean buildIfNotExist) {
         String resourcePath = extTableSnapshotInfo.getResourcePath();
         if (inBuildingTables.containsKey(resourcePath)) {
             logger.info("cache is in building for snapshot:" + resourcePath);
@@ -215,7 +216,8 @@ public class RocksDBLookupTableCache implements IExtLookupTableCache {
         CachedTableInfo cachedTableInfo = tablesCache.getIfPresent(resourcePath);
         if (cachedTableInfo == null) {
             if (buildIfNotExist) {
-                buildSnapshotCache(tableDesc, extTableSnapshotInfo, getSourceLookupTable(tableDesc, extTableSnapshotInfo));
+                buildSnapshotCache(tableDesc, extTableSnapshotInfo,
+                        getSourceLookupTable(tableDesc, extTableSnapshotInfo));
             }
             logger.info("no available cache ready for the table snapshot:" + extTableSnapshotInfo.getResourcePath());
             return null;
@@ -231,14 +233,16 @@ public class RocksDBLookupTableCache implements IExtLookupTableCache {
     }
 
     @Override
-    public void buildSnapshotCache(final TableDesc tableDesc, final ExtTableSnapshotInfo extTableSnapshotInfo, final ILookupTable sourceTable) {
+    public void buildSnapshotCache(final TableDesc tableDesc, final ExtTableSnapshotInfo extTableSnapshotInfo,
+            final ILookupTable sourceTable) {
         if (extTableSnapshotInfo.getSignature().getSize() / 1024 > maxCacheSizeInKB * 2 / 3) {
             logger.warn("the size is to large to build to cache for snapshot:{}, size:{}, skip cache building",
                     extTableSnapshotInfo.getResourcePath(), extTableSnapshotInfo.getSignature().getSize());
             return;
         }
         final String[] keyColumns = extTableSnapshotInfo.getKeyColumns();
-        final String cachePath = getSnapshotCachePath(extTableSnapshotInfo.getTableName(), extTableSnapshotInfo.getId());
+        final String cachePath = getSnapshotCachePath(extTableSnapshotInfo.getTableName(),
+                extTableSnapshotInfo.getId());
         final String dbPath = getSnapshotStorePath(extTableSnapshotInfo.getTableName(), extTableSnapshotInfo.getId());
         final String snapshotResPath = extTableSnapshotInfo.getResourcePath();
 
@@ -278,8 +282,8 @@ public class RocksDBLookupTableCache implements IExtLookupTableCache {
         if (inBuildingTables.containsKey(resourcePath)) {
             return CacheState.IN_BUILDING;
         }
-        File stateFile = getCacheStateFile(getSnapshotCachePath(extTableSnapshotInfo.getTableName(),
-                extTableSnapshotInfo.getId()));
+        File stateFile = getCacheStateFile(
+                getSnapshotCachePath(extTableSnapshotInfo.getTableName(), extTableSnapshotInfo.getId()));
         if (!stateFile.exists()) {
             return CacheState.NONE;
         }
@@ -301,14 +305,14 @@ public class RocksDBLookupTableCache implements IExtLookupTableCache {
     }
 
     private void saveSnapshotCacheState(ExtTableSnapshotInfo extTableSnapshotInfo, String cachePath) {
-        File stateFile = getCacheStateFile(getSnapshotCachePath(extTableSnapshotInfo.getTableName(),
-                extTableSnapshotInfo.getId()));
+        File stateFile = getCacheStateFile(
+                getSnapshotCachePath(extTableSnapshotInfo.getTableName(), extTableSnapshotInfo.getId()));
         try {
             Files.write(CacheState.AVAILABLE.name(), stateFile, Charsets.UTF_8);
             tablesCache.put(extTableSnapshotInfo.getResourcePath(), new CachedTableInfo(cachePath));
         } catch (IOException e) {
-            throw new RuntimeException("error when write cache state for snapshot:"
-                    + extTableSnapshotInfo.getResourcePath());
+            throw new RuntimeException(
+                    "error when write cache state for snapshot:" + extTableSnapshotInfo.getResourcePath());
         }
     }
 
@@ -347,17 +351,19 @@ public class RocksDBLookupTableCache implements IExtLookupTableCache {
                     }
                 }
 
-                final Set<String> activeSnapshotSet = ExtTableSnapshotInfoManager.getInstance(config).getAllExtSnapshotResPaths();
+                final Set<String> activeSnapshotSet = ExtTableSnapshotInfoManager.getInstance(config)
+                        .getAllExtSnapshotResPaths();
 
-                List<Pair<String, File>> toRemovedCachedSnapshots = Lists.newArrayList(FluentIterable.from(
-                        allCachedSnapshots).filter(new Predicate<Pair<String, File>>() {
-                    @Override
+                List<Pair<String, File>> toRemovedCachedSnapshots = Lists.newArrayList(
+                        FluentIterable.from(allCachedSnapshots).filter(new Predicate<Pair<String, File>>() {
+                            @Override
                             public boolean apply(@Nullable Pair<String, File> input) {
                                 long lastModified = input.getSecond().lastModified();
                                 return !activeSnapshotSet.contains(input.getFirst()) && lastModified > 0
-                                        && lastModified < (System.currentTimeMillis() - config.getExtTableSnapshotLocalCacheCheckVolatileRange());
-                    }
-                }));
+                                        && lastModified < (System.currentTimeMillis()
+                                                - config.getExtTableSnapshotLocalCacheCheckVolatileRange());
+                            }
+                        }));
                 for (Pair<String, File> toRemovedCachedSnapshot : toRemovedCachedSnapshots) {
                     File snapshotCacheFolder = toRemovedCachedSnapshot.getSecond();
                     logger.info("removed cache file:{}, it is not referred by any cube",

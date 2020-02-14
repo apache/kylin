@@ -146,7 +146,6 @@ public class StreamingCoordinator implements CoordinatorClient {
         clusterStateCheckExecutor.scheduleAtFixedRate(clusterDoctor, 5, 10, TimeUnit.MINUTES);
     }
 
-
     /**
      * Assign the streaming cube to replica sets. Replica sets is calculated by Assigner.
      *
@@ -630,7 +629,7 @@ public class StreamingCoordinator implements CoordinatorClient {
             buildJobSubmitter.restore();
             while (true) {
                 try {
-                    Thread.sleep(5 * 60 * 1000);
+                    Thread.sleep(5 * 60 * 1000L);
                 } catch (InterruptedException exception) {
                     Thread.interrupted();
                     break;

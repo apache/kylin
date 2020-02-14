@@ -201,7 +201,7 @@ public class CubeMigrationCLI extends AbstractApplication {
             showOpts();
         }
     }
-    
+
     public void checkMigrationSuccess(KylinConfig kylinConfig, String cubeName, Boolean ifFix) throws IOException {
         CubeMigrationCheckCLI checkCLI = new CubeMigrationCheckCLI(kylinConfig, ifFix);
         checkCLI.execute(cubeName);
@@ -632,7 +632,7 @@ public class CubeMigrationCLI extends AbstractApplication {
         }
         }
     }
-    
+
     private String renameTableWithinProject(String srcItem) {
         if (dstProject != null && srcItem.contains(ResourceStore.TABLE_RESOURCE_ROOT)) {
             String tableIdentity = TableDesc.parseResourcePath(srcItem).getTable();
@@ -670,7 +670,7 @@ public class CubeMigrationCLI extends AbstractApplication {
             if (nRetry > 3) {
                 throw new InterruptedException("Cannot rename folder " + srcPath + " to folder " + dstPath);
             } else {
-                Thread.sleep(sleepTime * nRetry * nRetry);
+                Thread.sleep((long) sleepTime * nRetry * nRetry);
             }
         }
     }
