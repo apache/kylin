@@ -255,8 +255,8 @@ public class ColumnGenerator {
         @Override
         public String next() {
             if (values.isEmpty())
-                return null;
-            
+                throw new NoSuchElementException();
+
             return values.get(rand.nextInt(values.size()));
         }
     }
@@ -318,7 +318,7 @@ public class ColumnGenerator {
             if (input.hasNext()) {
                 r = input.next();
             }
-            
+
             if (rand.nextDouble() < nullPct) {
                 r = nullStr;
             }
