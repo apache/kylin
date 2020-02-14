@@ -26,6 +26,7 @@ import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -124,7 +125,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         public List<Cell> next() {
 
             if (nextOne.size() < 1) {
-                throw new IllegalStateException();
+                throw new NoSuchElementException();
             }
             ret.clear();
             ret.addAll(nextOne);

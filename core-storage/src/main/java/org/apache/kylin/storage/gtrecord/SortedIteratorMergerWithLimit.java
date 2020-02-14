@@ -21,6 +21,7 @@ package org.apache.kylin.storage.gtrecord;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 
 import com.google.common.base.Preconditions;
@@ -123,7 +124,7 @@ public class SortedIteratorMergerWithLimit<E extends Cloneable> extends SortedIt
         @Override
         public E next() {
             if (!nextFetched) {
-                throw new IllegalStateException("Should hasNext() before next()");
+                throw new NoSuchElementException("Should hasNext() before next()");
             }
 
             //TODO: remove this check when validated

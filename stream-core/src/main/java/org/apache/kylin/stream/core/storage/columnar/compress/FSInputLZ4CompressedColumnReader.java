@@ -21,12 +21,13 @@ package org.apache.kylin.stream.core.storage.columnar.compress;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
-
-import net.jpountz.lz4.LZ4Factory;
-import net.jpountz.lz4.LZ4SafeDecompressor;
+import java.util.NoSuchElementException;
 
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.kylin.stream.core.storage.columnar.ColumnDataReader;
+
+import net.jpountz.lz4.LZ4Factory;
+import net.jpountz.lz4.LZ4SafeDecompressor;
 
 public class FSInputLZ4CompressedColumnReader implements ColumnDataReader {
     private int rowCount;
@@ -89,7 +90,7 @@ public class FSInputLZ4CompressedColumnReader implements ColumnDataReader {
                 try {
                     loadNextBuffer();
                 } catch (IOException e) {
-                    throw new RuntimeException("error when read data", e);
+                    throw new NoSuchElementException("error when read data");
                 }
             }
             byte[] readBuffer = new byte[valLen];
