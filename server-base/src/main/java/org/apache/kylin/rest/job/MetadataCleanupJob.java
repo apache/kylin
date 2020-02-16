@@ -44,8 +44,8 @@ import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.PersistentException;
+import org.apache.kylin.job.execution.CardinalityExecutable;
 import org.apache.kylin.job.execution.CheckpointExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,7 +206,7 @@ public class MetadataCleanupJob {
                         || StringUtils.equals(status, ExecutableState.DISCARDED.toString())) {
                     isComplete = true;
                 }
-            } else if (jobType.equals(DefaultChainedExecutable.class.getName())) {
+            } else if (jobType.equals(CardinalityExecutable.class.getName())) {
                 // Ignore state of DefaultChainedExecutable
                 isComplete = true;
             }
