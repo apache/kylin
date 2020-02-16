@@ -49,7 +49,7 @@ import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.spark.SparkColumnCardinality;
 import org.apache.kylin.engine.spark.SparkExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.CardinalityExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.TableMetadataManager;
@@ -490,7 +490,7 @@ public class TableService extends BasicService {
             throw e;
         }
 
-        DefaultChainedExecutable job = new DefaultChainedExecutable();
+        CardinalityExecutable job = new CardinalityExecutable();
         //make sure the job could be scheduled when the DistributedScheduler is enable.
         job.setParam("segmentId", tableName);
         job.setName("Hive Column Cardinality calculation for table '" + tableName + "'");
