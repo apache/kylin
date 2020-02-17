@@ -489,18 +489,24 @@ public class MapReduceExecutable extends AbstractExecutable {
             conf.addResource(new Path(confFile));
         }
 
-        if (StringUtils.isNotBlank(cubeName)) {
-            for (Map.Entry<String, String> entry : CubeManager.getInstance(config).getCube(cubeName).getConfig()
-                    .getMRConfigOverride().entrySet()) {
+        KylinConfig configOverride;
+        if (cubeName != null) {
+            configOverride = CubeManager.getInstance(config).getCube(cubeName).getConfig();
+        } else {
+            configOverride = config;
+        }
+
+        for (Map.Entry<String, String> entry : configOverride.getMRConfigOverride().entrySet()) {
+            conf.set(entry.getKey(), entry.getValue());
+        }
+        if (conf.get("mapreduce.job.is-mem-hungry") != null
+                && Boolean.parseBoolean(conf.get("mapreduce.job.is-mem-hungry"))) {
+            for (Map.Entry<String, String> entry : configOverride.getMemHungryConfigOverride().entrySet()) {
                 conf.set(entry.getKey(), entry.getValue());
             }
-            if (conf.get("mapreduce.job.is-mem-hungry") != null
-                    && Boolean.parseBoolean(conf.get("mapreduce.job.is-mem-hungry"))) {
-                for (Map.Entry<String, String> entry : CubeManager.getInstance(config).getCube(cubeName).getConfig()
-                        .getMemHungryConfigOverride().entrySet()) {
-                    conf.set(entry.getKey(), entry.getValue());
-                }
-            }
+        }
+
+        if (StringUtils.isNotBlank(cubeName)) {
             remainingArgs.add("-" + BatchConstants.ARG_CUBE_NAME);
             remainingArgs.add(cubeName);
         }
