@@ -17,11 +17,14 @@
 # limitations under the License.
 #
 
-source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
 echo Retrieving hbase dependency...
 
 hbase_classpath=`hbase classpath`
+
+hadoop version | head -1 | grep cdh6
+is_cdh6=$?
 
 # special handling for Amazon EMR, to prevent re-init of hbase-setenv
 is_aws=`uname -r | grep amzn`
@@ -42,11 +45,16 @@ done
 
 if [ -z "$hbase_common_path" ]
 then
-    quit "hbase-common lib not found"
+    if [[ $is_cdh6 -ne 0 ]]; then
+    	quit "hbase-common lib not found"
+    fi
 fi
 
-hbase_dependency=${hbase_common_path}
+if [[ $is_cdh6 -eq 0 ]]; then
+    hbase_dependency=${hbase_classpath}
+else
+    hbase_dependency=${hbase_common_path}
+fi
+
 verbose "hbase dependency: $hbase_dependency"
 export hbase_dependency
-echo "export HBASE_ENV_INIT=$HBASE_ENV_INIT
-export hbase_dependency=$hbase_dependency" > ${dir}/cached-hbase-dependency.sh
