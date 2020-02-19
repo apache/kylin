@@ -51,7 +51,7 @@ public class CubeDescTiretreeGlobalDomainDictUtil {
         String globalResumeDictPath = null;
         List<GlobalDict> globalDicts = cubeDesc.listDomainDict();
         DataModelManager metadataManager = DataModelManager.getInstance(config);
-        CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+        CubeManager cubeManager = CubeManager.getInstance(config);
         for (GlobalDict dict : globalDicts) {
             if (dict.getSrc().getIdentity().equalsIgnoreCase(tblColRef.getIdentity())) {
                 String model = dict.getModel();
