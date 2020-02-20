@@ -497,10 +497,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         if (!name.equals(cubeDesc.name))
             return false;
 
-        if (!modelName.equals(cubeDesc.modelName))
-            return false;
+        return modelName.equals(cubeDesc.modelName);
 
-        return true;
     }
 
     @Override
@@ -1034,7 +1032,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 whatsLeft.add(derCol);
         }
         if (whatsLeft.size() > 0) {
-            infoList.add(new DeriveInfo(type, join, (TblColRef[]) whatsLeft.toArray(new TblColRef[whatsLeft.size()]),
+            infoList.add(new DeriveInfo(type, join, whatsLeft.toArray(new TblColRef[whatsLeft.size()]),
                     false));
         }
     }
@@ -1379,7 +1377,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
                 //tiretree global domain dic
                 if (Objects.isNull(dictDesc.getResuseColumnRef()) && Objects.nonNull(dictDesc.getReuseColumn())) {
-                    logger.info("tiretree global domain dic : column {} use tiretree global domain dic, reuse column {} ", dictDesc.getColumnRef(), dictDesc.getReuseColumn());
+                    logger.info(
+                            "tiretree global domain dic : column {} use tiretree global domain dic, reuse column {} ",
+                            dictDesc.getColumnRef(), dictDesc.getReuseColumn());
                     result.remove(dictDesc.getColumnRef());
                 }
 
@@ -1396,16 +1396,16 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
      */
     public List<CubeDescTiretreeGlobalDomainDictUtil.GlobalDict> listDomainDict() {
         List<CubeDescTiretreeGlobalDomainDictUtil.GlobalDict> dicts = new ArrayList<>();
-        if(dictionaries!=null && dictionaries.size()>0) {
+        if (dictionaries != null && dictionaries.size() > 0) {
             for (DictionaryDesc dictionaryDesc : dictionaries) {
                 if (dictionaryDesc.isDomain()) {
-                    dicts.add(new CubeDescTiretreeGlobalDomainDictUtil.GlobalDict(dictionaryDesc.getColumnRef(), dictionaryDesc.getReuseColumn(), dictionaryDesc.getCube(), dictionaryDesc.getModel()));
+                    dicts.add(new CubeDescTiretreeGlobalDomainDictUtil.GlobalDict(dictionaryDesc.getColumnRef(),
+                            dictionaryDesc.getReuseColumn(), dictionaryDesc.getCube(), dictionaryDesc.getModel()));
                 }
             }
         }
         return dicts;
     }
-
 
     /**
      * A column may reuse dictionary of another column, find the dict column, return same col if there's no reuse column

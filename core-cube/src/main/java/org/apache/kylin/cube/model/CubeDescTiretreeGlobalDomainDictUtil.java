@@ -18,7 +18,11 @@
 
 package org.apache.kylin.cube.model;
 
-import com.google.common.collect.ImmutableList;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
@@ -33,10 +37,7 @@ import org.apache.kylin.source.SourceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import com.google.common.collect.ImmutableList;
 
 public class CubeDescTiretreeGlobalDomainDictUtil {
     private static final Logger logger = LoggerFactory.getLogger(CubeDescTiretreeGlobalDomainDictUtil.class);
@@ -56,11 +57,13 @@ public class CubeDescTiretreeGlobalDomainDictUtil {
             if (dict.getSrc().getIdentity().equalsIgnoreCase(tblColRef.getIdentity())) {
                 String model = dict.getModel();
                 String cube = dict.getCube();
-                logger.info("cube:{} column:{} tiretree global domain dic reuse model:{} cube{} column:{} ", cubeDesc.getName() , tblColRef.getName(), model, cube, dict.getDesc());
+                logger.info("cube:{} column:{} tiretree global domain dic reuse model:{} cube{} column:{} ",
+                        cubeDesc.getName(), tblColRef.getName(), model, cube, dict.getDesc());
 
                 DataModelDesc dataModel = metadataManager.getDataModelDesc(model);
                 if (Objects.isNull(dataModel)) {
-                    logger.error("get cube:{} column:{} tiretree global domain dic reuse DataModelDesc error", cubeDesc.getName(), tblColRef.getName());
+                    logger.error("get cube:{} column:{} tiretree global domain dic reuse DataModelDesc error",
+                            cubeDesc.getName(), tblColRef.getName());
                     return null;
                 }
 
@@ -68,7 +71,7 @@ public class CubeDescTiretreeGlobalDomainDictUtil {
                 CubeSegment cubeSegment = cubeInstance.getLatestReadySegment();
 
                 TblColRef colRef = dataModel.findColumn(dict.getDesc());
-                if(Objects.isNull(colRef)){
+                if (Objects.isNull(colRef)) {
                     logger.error("get cube:{} column:{} tiretree global domain dic TblColRef error");
                     return null;
                 }
@@ -78,15 +81,13 @@ public class CubeDescTiretreeGlobalDomainDictUtil {
                 if (StringUtils.isBlank(globalResumeDictPath)) {
                     logger.error("get cube:{} column:{} tiretree global domain dic resume dict path error");
                 }
-                logger.error("get cube:{} column:{} tiretree global domain dic resume dict path is {}", globalResumeDictPath);
+                logger.error("get cube:{} column:{} tiretree global domain dic resume dict path is {}",
+                        globalResumeDictPath);
                 break;
             }
         }
         return globalResumeDictPath;
     }
-
-
-
 
     /**
      * add resuce global tiretree global dic for baseid job
@@ -96,7 +97,7 @@ public class CubeDescTiretreeGlobalDomainDictUtil {
     public static void cuboidJob(CubeDesc cubeDesc, Set<String> dumpList) {
         logger.info("cube {} start to add global domain dic", cubeDesc.getName());
         CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-        DataModelManager metadataManager =DataModelManager.getInstance(KylinConfig.getInstanceFromEnv());
+        DataModelManager metadataManager = DataModelManager.getInstance(KylinConfig.getInstanceFromEnv());
 
         cubeManager.getCube(cubeDesc.getName());
         List<GlobalDict> globalDicts = cubeDesc.listDomainDict();
@@ -104,9 +105,11 @@ public class CubeDescTiretreeGlobalDomainDictUtil {
         for (GlobalDict dict : globalDicts) {
             String cube = dict.getCube();
             String model = dict.getModel();
-            logger.debug("cube {} column {} start to add global domain dic ,reuse {}.{}.{}", cubeDesc.getName(), dict.getSrc(), model, cube, dict.getDesc());
+            logger.debug("cube {} column {} start to add global domain dic ,reuse {}.{}.{}", cubeDesc.getName(),
+                    dict.getSrc(), model, cube, dict.getDesc());
             CubeInstance instance = cubeManager.getCube(cube);
-            logger.debug("cube {} column {} start to add global domain dic ,reuse cube{} dict", cubeDesc.getName(), dict.getSrc(), instance.getName());
+            logger.debug("cube {} column {} start to add global domain dic ,reuse cube{} dict", cubeDesc.getName(),
+                    dict.getSrc(), instance.getName());
 
             // cube, model_desc, cube_desc, table
             dumpList.add(instance.getResourcePath());
@@ -121,16 +124,19 @@ public class CubeDescTiretreeGlobalDomainDictUtil {
             }
 
             DataModelDesc dataModelDesc = metadataManager.getDataModelDesc(model);
-            logger.debug("cube {} column {} start to add global domain dic ,reuse model{} dict", cubeDesc.getName(), dict.getSrc(), dataModelDesc.getName());
+            logger.debug("cube {} column {} start to add global domain dic ,reuse model{} dict", cubeDesc.getName(),
+                    dict.getSrc(), dataModelDesc.getName());
             TblColRef tblColRef = dataModelDesc.findColumn(dict.getDesc());
-            CubeSegment segment =  instance.getLatestReadySegment();
-            logger.debug("cube {} column {} start to add global domain dic ,reuse mode:{} cube:{} segment:{} dict,tblColRef:{}", cubeDesc.getName(), dict.getSrc(), dataModelDesc.getName(), cube, segment.getName(), tblColRef.getIdentity());
-            if(segment.getDictResPath(tblColRef)!=null) {
+            CubeSegment segment = instance.getLatestReadySegment();
+            logger.debug(
+                    "cube {} column {} start to add global domain dic ,reuse mode:{} cube:{} segment:{} dict,tblColRef:{}",
+                    cubeDesc.getName(), dict.getSrc(), dataModelDesc.getName(), cube, segment.getName(),
+                    tblColRef.getIdentity());
+            if (segment.getDictResPath(tblColRef) != null) {
                 dumpList.addAll(ImmutableList.of(segment.getDictResPath(tblColRef)));
             }
         }
     }
-
 
     public static class GlobalDict implements Serializable {
         private TblColRef src;
