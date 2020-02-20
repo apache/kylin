@@ -52,6 +52,7 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.hive.HiveUtils;
 
 public class SparkUtil {
 
@@ -167,7 +168,8 @@ public class SparkUtil {
     }
 
     private static JavaRDD<String[]> getOtherFormatHiveInput(JavaSparkContext sc, String hiveTable) {
-        SparkSession sparkSession = SparkSession.builder().config(sc.getConf()).enableHiveSupport().getOrCreate();
+        SparkSession sparkSession = SparkSession.builder().sparkContext(HiveUtils.withHiveExternalCatalog(sc.sc()))
+                .config(sc.getConf()).enableHiveSupport().getOrCreate();
         final Dataset intermediateTable = sparkSession.table(hiveTable);
         return intermediateTable.javaRDD().map(new Function<Row, String[]>() {
             @Override
