@@ -15,6 +15,40 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v3.0.1 - 2020-02-20
+_Tag:_ [kylin-3.0.1](https://github.com/apache/kylin/tree/kylin-3.0.1)
+This is a bugfix release after 3.0.1, with 10 enhancements and 14 bug fixes.
+
+__Improvement__
+
+* [KYLIN-3956] - Segments of not only streaming cube but also batch cube need to show their status
+* [KYLIN-4197] - DiagnosisInfoCLI block forever at "beeline --version"
+* [KYLIN-4225] - unclosed hive session cause too many temp file
+* [KYLIN-4237] - Return error when execute 'explain plan for SQL' to get the execution plan of SQL
+* [KYLIN-4280] - SegmentPruner add the checks for "OR" filtering
+* [KYLIN-4287] - SegmentPruner cannot prune segment with "IN" or "OR" CompareTupleFilter
+* [KYLIN-4292] - Use HFileOutputFormat3 in all places to replace HFileOutputFormat2
+* [KYLIN-4327] - TOPN Comparator may violate its general contract
+* [KYLIN-4333] - Build Server OOM
+* [KYLIN-4374] - Fix security issues reported by code analysis platform LGTM
+
+__Bug Fix__
+
+* [KYLIN-4080] - Project schema update event causes error reload NEW DataModelDesc
+* [KYLIN-4161] - exception in update metrics when the response is null
+* [KYLIN-4166] - kylin parse sql error
+* [KYLIN-4235] - Failed to load table metadata from JDBC data source
+* [KYLIN-4238] - kylin_streaming_model broke when changing kylin.source.hive.database-for-flat-table to non-default value
+* [KYLIN-4243] - read function in NoCompressedColumnReader is wrong.
+* [KYLIN-4250] - FechRunnner should skip the job to process other jobs instead of throwing exception when the job section metadata is not found
+* [KYLIN-4252] - Fix the error "Cannot read property 'index' of null" in visualization page
+* [KYLIN-4260] - When using server side PreparedStatement cache, the query result are not match on TopN scenario
+* [KYLIN-4295] - Instances displayed on Query Node are inconsistent with Job Node
+* [KYLIN-4297] - Build cube throw NPE error when partition column is not set in JDBC Data Source
+* [KYLIN-4300] - Create a Real-time streaming cube but not define a partition column should throw a exception
+* [KYLIN-4304] - Project list cannot be correctly sorted by "Create Time"
+* [KYLIN-4359] - Param Value should be required when creating a cube and adding a new measure
+
 ## v3.0.0 - 2019-12-20
 _Tag:_ [kylin-3.0.0](https://github.com/apache/kylin/tree/kylin-3.0.0)
 This is the GA release of Kylin's next generation after 2.x, with the new real-time OLAP feature.
@@ -268,6 +302,48 @@ __Bug Fix__
 * [KYLIN-3916] - Fix cube build action issue after streaming migrate
 * [KYLIN-3922] - Fail to update coprocessor when run DeployCoprocessorCLI
 * [KYLIN-3923] - UT GeneralColumnDataTest fail
+
+## v2.6.5 - 2020-02-20
+_Tag:_ [kylin-2.6.5](https://github.com/apache/kylin/tree/kylin-2.6.5)
+This is a bugfix release after 2.6.4, with 12 enhancements and 20 bug fixes.
+
+__Improvement__
+
+* [KYLIN-2230] - Can not catch kylin.sh path in linux resouce PATH setting
+* [KYLIN-2431] - StorageCleanupJob will remove intermediate tables created by other kylin instances
+* [KYLIN-4180] - Prevent abnormal CPU usage by limiting flat filters length
+* [KYLIN-4198] - “bin/system-cube.sh cron” will overwrite user's crontab
+* [KYLIN-4225] - Unclosed hive session cause too many temp file
+* [KYLIN-4226] - Skip current unavailable tables when updating hbase coprocessor
+* [KYLIN-4280] - SegmentPruner add the checks for "OR" filtering
+* [KYLIN-4283] - FileNotFound error in "Garbage Collection" step should not break cube building.
+* [KYLIN-4290] - Add file lock to kylin startup script to avoid starting multiple instances on one node
+* [KYLIN-4292] - Use HFileOutputFormat3 in all places to replace HFileOutputFormat2
+* [KYLIN-4293] - Backport HBASE-22887 to Kylin HFileOutputFormat3
+* [KYLIN-4374] - Fix security issues reported by code analysis platform LGTM
+
+__Bug Fix__
+
+* [KYLIN-1716] - Leave executing query page action stop bug
+* [KYLIN-3409] - Write metric error when run a query.
+* [KYLIN-3741] - when the sql result is empty and limit is 0 , should not have "load more" bar
+* [KYLIN-4080] - Project schema update event causes error reload NEW DataModelDesc
+* [KYLIN-4161] - exception in update metrics when the response is null
+* [KYLIN-4166] - kylin parse sql error
+* [KYLIN-4169] - Too many logs while DataModelManager init, cause the first RESTful API hang for a long time
+* [KYLIN-4183] - Clicking 'Submit' button is unresponsive, when the segment is not selected.
+* [KYLIN-4195] - The cube size is "NaN KB" after purging one cube.
+* [KYLIN-4238] - kylin_streaming_model broke when changing kylin.source.hive.database-for-flat-table to non-default value
+* [KYLIN-4244] - ClassNotFoundException while use org.apache.kylin.engine.mr.common.CubeStatsReader in bash
+* [KYLIN-4250] - FechRunnner should skip the job to process other jobs instead of throwing exception when the job section metadata is not found
+* [KYLIN-4252] - Fix the error "Cannot read property 'index' of null" in visualization page
+* [KYLIN-4254] - The result exporting from Insight with CSV format is empty, when sql contains Chinese
+* [KYLIN-4262] - pid in GC filename inconsistent with real pid
+* [KYLIN-4263] - Inappropriate exception handling causes job stuck on running status
+* [KYLIN-4291] - Parallel segment building may causes WriteConflictException
+* [KYLIN-4304] - Project list cannot be correctly sorted by "Create Time"
+* [KYLIN-4309] - One user's mailbox is not suffixed and other messages cannot be sent
+* [KYLIN-4359] - Param Value should be required when creating a cube and adding a new measure
 
 ## v2.6.4 - 2019-10-12
 _Tag:_ [kylin-2.6.4](https://github.com/apache/kylin/tree/kylin-2.6.4)
