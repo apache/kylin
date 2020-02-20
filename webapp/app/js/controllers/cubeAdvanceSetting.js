@@ -177,6 +177,12 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
 
   }
 
+  var ReuseEnum = {
+    BUILD: 1,
+    SELF: 2,
+    DOMAIN: 3
+  };
+
   $scope.isReuse=1;
   $scope.addNew=false;
   $scope.newDictionaries = {
@@ -201,12 +207,12 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
       $scope.addNew=true;
       $scope.updateDictionariesStatus.editIndex = index;
       if(dictionaries.builder==null && dictionaries.model==null){
-        $scope.isReuse=2;
-      }else if (dictionaries.model!=null){
-        $scope.isReuse=3;
+        $scope.isReuse = ReuseEnum.SELF;
+      } else if (dictionaries.model!=null){
+        $scope.isReuse = ReuseEnum.DOMAIN;
       }
       else{
-        $scope.isReuse=1;
+        $scope.isReuse = ReuseEnum.BUILD;
       }
     }
     else{
@@ -235,7 +241,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
       $scope.initUpdateDictionariesStatus();
       $scope.nextDictionariesInit();
       $scope.addNew = !$scope.addNew;
-      $scope.isReuse = 1;
+      $scope.isReuse = ReuseEnum.BUILD;
       return true;
 
   };
@@ -267,7 +273,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
 
   $scope.clearNewDictionaries = function (){
     $scope.newDictionaries = null;
-    $scope.isReuse=1;
+    $scope.isReuse = ReuseEnum.BUILD;
     $scope.initUpdateDictionariesStatus();
     $scope.nextDictionariesInit();
     $scope.addNew=!$scope.addNew;
@@ -280,11 +286,11 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     $scope.newDictionaries.model=null;
     $scope.newDictionaries.cube=null;
     if(type == 'domain'){
-      $scope.isReuse=3;
+      $scope.isReuse = ReuseEnum.DOMAIN;
     }else if (type == 'builder'){
-      $scope.isReuse=1;
+      $scope.isReuse = ReuseEnum.BUILD;
     }else if (type == 'reuse'){
-      $scope.isReuse=2;
+      $scope.isReuse = ReuseEnum.SELF;
     }
   }
 
