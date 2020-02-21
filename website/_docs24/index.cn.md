@@ -13,7 +13,6 @@ Apache Kylin™是一个开源的分布式分析引擎，提供Hadoop之上的SQ
 
 查看旧版本文档: 
 * [v2.3.x document](/cn/docs23/)
-* [v2.1.x and v2.2.x document](/cn/docs21/)
 * [归档](/archive/)
 
 安装 
