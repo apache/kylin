@@ -49,7 +49,7 @@ public class HiveMetaStoreClientFactory {
             // getHiveMetastoreClient is not available in CDH profile
             try {
                 Class<?> clazz = Class.forName("org.apache.hive.hcatalog.common.HCatUtil");
-                Method getHiveMetastoreClientMethod = clazz.getDeclaredMethod("getHiveMetastoreClient");
+                Method getHiveMetastoreClientMethod = clazz.getDeclaredMethod("getHiveMetastoreClient", HiveConf.class);
                 metaStoreClient = (IMetaStoreClient) getHiveMetastoreClientMethod.invoke(null, hiveConf);
             } catch (Exception exp) {
                 throw new IllegalStateException("Unable to create MetaStoreClient for " + hiveMetadataOption, exp);
