@@ -17,7 +17,7 @@ or send to Apache Kylin mailing list:
 
 ## v3.0.1 - 2020-02-20
 _Tag:_ [kylin-3.0.1](https://github.com/apache/kylin/tree/kylin-3.0.1)
-This is a bugfix release after 3.0.1, with 10 enhancements and 14 bug fixes.
+This is a bugfix release after 3.0.0, with 10 enhancements and 14 bug fixes.
 
 __Improvement__
 
