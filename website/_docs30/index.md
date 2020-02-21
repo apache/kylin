@@ -12,11 +12,8 @@ Welcome to Apache Kylin™: Extreme OLAP Engine for Big Data
 Apache Kylin™ is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets.
 
 This is the document for v3.0 with the new feature Real-time OLAP. Document of prior versions: 
-* [v2.5 and v2.6 document](/docs)
 * [v2.4 document](/docs24)
 * [v2.3 document](/docs23)
-* [v2.1 and v2.2 document](/docs21/)
-* [v2.0 document](/docs20/)
 * [Archived](/archive/)
 
 Installation & Setup
