@@ -265,8 +265,12 @@ public class HiveInputBase {
                     jobFlow.addTask(createFlatHiveTableByLivyStep(hiveInitStatements,
                             jobWorkingDir, cubeName, flatDesc));
                 } else {
-                    jobFlow.addTask(createFlatHiveTableBySparkSql(hiveInitStatements,
-                            jobWorkingDir, cubeName, flatDesc));
+                    if (kylinConfig.isSparCreateHiveTableViaSparkEnable()) {
+                        jobFlow.addTask(createFlatHiveTableBySparkSql(hiveInitStatements,
+                                jobWorkingDir, cubeName, flatDesc));
+                    } else {
+                        jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName, flatDesc));
+                    }
                 }
             } else {
                 jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName, flatDesc));
