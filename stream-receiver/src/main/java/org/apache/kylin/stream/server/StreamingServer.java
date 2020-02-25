@@ -159,10 +159,19 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
             @Override
             public void run() {
                 Collection<StreamingSegmentManager> segmentManagers = getAllCubeSegmentManagers();
+                long curr = System.currentTimeMillis();
                 for (StreamingSegmentManager segmentManager : segmentManagers) {
                     CubeInstance cubeInstance = segmentManager.getCubeInstance();
                     String cubeName = cubeInstance.getName();
                     try {
+                        Collection<StreamingCubeSegment> activeSegments = segmentManager.getActiveSegments();
+                        for (StreamingCubeSegment segment : activeSegments) {
+                            long delta = curr - segment.getLastUpdateTime();
+                            if (curr > segment.getDateRangeEnd() && delta > segmentManager.cubeDuration) {
+                                logger.debug("Make {} immutable because it lastUpdate[{}] exceed wait duration.", segment.getSegmentName(), segment.getLastUpdateTime());
+                                segmentManager.makeSegmentImmutable(segment.getSegmentName());
+                            }
+                        }
                         RetentionPolicyInfo retentionPolicyInfo = new RetentionPolicyInfo();
                         String policyName = cubeInstance.getConfig().getStreamingSegmentRetentionPolicy();
                         Map<String, String> policyProps = cubeInstance.getConfig()
