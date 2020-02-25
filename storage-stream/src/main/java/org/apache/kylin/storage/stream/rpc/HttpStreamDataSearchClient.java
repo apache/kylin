@@ -72,11 +72,12 @@ import com.google.common.collect.Sets;
  */
 public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
     public static final Logger logger = LoggerFactory.getLogger(HttpStreamDataSearchClient.class);
+    public static final long WAIT_DURATION = 2 * 60000 ;
 
     private static ExecutorService executorService;
     static {
-        executorService = new ThreadPoolExecutor(20, 100, 60L, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("stream-rpc-pool-t"));
+        executorService = new ThreadPoolExecutor(20, 100, 60L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(), new NamedThreadFactory("stream-rpc-pool-t"));
     }
     private AssignmentsCache assignmentsCache;
     private RestService restService;
@@ -95,7 +96,7 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
             final TupleFilter tupleFilter, final Set<TblColRef> dimensions, final Set<TblColRef> groups,
             final Set<FunctionDesc> metrics, final int storagePushDownLimit, final boolean allowStorageAggregation) {
         List<ReplicaSet> replicaSetsOfCube = assignmentsCache.getReplicaSetsByCube(cube.getName());
-        int timeout = 120 * 1000; // timeout should be configurable
+        int timeout = cube.getConfig().getStreamingRPCHttpReadTimeout() * 2;
         final QueuedStreamingTupleIterator result = new QueuedStreamingTupleIterator(replicaSetsOfCube.size(), timeout);
         final QueryContext query = QueryContextFacade.current();
 
@@ -105,7 +106,6 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
         final RecordsSerializer recordsSerializer = new RecordsSerializer(schema);
         final DataRequest dataRequest = createDataRequest(query.getQueryId(), cube.getName(), minSegmentTime, tupleInfo,
                 tupleFilter, dimensions, groups, metrics, storagePushDownLimit, allowStorageAggregation);
-
         logger.info("Query-{}:send request to stream receivers", query.getQueryId());
         for (final ReplicaSet rs : replicaSetsOfCube) {
             executorService.submit(new Runnable() {
@@ -165,7 +165,7 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
             return foundReceiver;
         }
 
-        if (System.currentTimeMillis() - lastFailTime > 2 * 60 * 1000) { // retry every 2 minutes
+        if (System.currentTimeMillis() - lastFailTime > WAIT_DURATION) { // retry every 2 minutes
             return foundReceiver;
         }
 
@@ -175,18 +175,18 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
     public Iterator<ITuple> doSearch(DataRequest dataRequest, CubeInstance cube, StreamingTupleConverter tupleConverter,
             RecordsSerializer recordsSerializer, Node receiver, TupleInfo tupleInfo) throws Exception {
         String queryId = dataRequest.getQueryId();
-        logger.info("send query to receiver " + receiver + " with query id:" + queryId);
         String url = "http://" + receiver.getHost() + ":" + receiver.getPort() + "/kylin/api/data/query";
 
         try {
+            int connTimeout = cube.getConfig().getStreamingRPCHttpConnTimeout();
+            int readTimeout = cube.getConfig().getStreamingRPCHttpReadTimeout();
+            dataRequest.setDeadline(System.currentTimeMillis() + (int)(readTimeout * 1.5));
             String content = JsonUtil.writeValueAsString(dataRequest);
             Stopwatch sw = new Stopwatch();
             sw.start();
-            int connTimeout = cube.getConfig().getStreamingRPCHttpConnTimeout();
-            int readTimeout = cube.getConfig().getStreamingRPCHttpReadTimeout();
             String msg = restService.postRequest(url, content, connTimeout, readTimeout);
 
-            logger.info("query-{}: receive response from {} take time:{}", queryId, receiver, sw.elapsedMillis());
+            logger.info("query-{}: receive response from {} take time:{}", queryId, receiver, sw.elapsed(TimeUnit.MILLISECONDS));
             if (failedReceivers.containsKey(receiver)) {
                 failedReceivers.remove(receiver);
             }
