@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.HashMap;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -231,7 +232,7 @@ public class CoordinatorTest extends LocalFileMetadataTestCase {
 
         Map<Integer, List<Partition>> preAssignMap = metadataStore.getAssignmentsByCube(cubeName).getAssignments();
 
-        Map<Integer, List<Partition>> newAssignMap = new HashMap<>();
+        Map<Integer, List<Partition>> newAssignMap = new LinkedHashMap<>();
         newAssignMap.put(1, Lists.newArrayList(p1, p2, p3));
         newAssignMap.put(2, Lists.newArrayList(p4, p5));
         newAssignMap.put(3, Lists.newArrayList(p6));
@@ -257,7 +258,7 @@ public class CoordinatorTest extends LocalFileMetadataTestCase {
 
         Map<Integer, List<Partition>> preAssignMap = metadataStore.getAssignmentsByCube(cubeName).getAssignments();
 
-        Map<Integer, List<Partition>> newAssignMap = new HashMap<>();
+        Map<Integer, List<Partition>> newAssignMap = new LinkedHashMap<>();
         newAssignMap.put(1, Lists.newArrayList(p1, p2, p3));
         newAssignMap.put(2, Lists.newArrayList(p4, p5));
         newAssignMap.put(3, Lists.newArrayList(p6));
