@@ -27,8 +27,8 @@ if [[ `uname -a` =~ "Darwin" ]]; then
     alias md5cmd="md5 -q"
 fi
 
-tomcat_pkg_version="7.0.91"
-tomcat_pkg_md5="8bfbb358b51f90374067879f8db1e91c"
+tomcat_pkg_version="7.0.100"
+tomcat_pkg_md5="79be4ba5a6e770730a4be3d5cb3c7862"
 
 if [ ! -f "build/apache-tomcat-${tomcat_pkg_version}.tar.gz" ]
 then
