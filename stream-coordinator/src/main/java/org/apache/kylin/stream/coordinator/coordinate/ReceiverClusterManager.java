@@ -71,11 +71,11 @@ import java.util.stream.Collectors;
  * <pre>
  * This class manage operation related to multi streaming receivers. They are often not atomic and maybe idempotent.
  *
- * In a multi-step transcation, following steps should be thought twice:
+ * In a multi-step transaction, following steps should be thought twice:
  *  1. should fail fast or continue when exception thrown.
  *  2. should API(RPC) be synchronous or asynchronous
- *  3. when transcation failed, will roll back always succeed
- *  4. transcation should be idempotent so when it failed, it could be fixed by retry
+ *  3. when transaction failed, will roll back always succeed
+ *  4. transaction should be idempotent so when it failed, it could be fixed by retry
  * </pre>
  */
 public class ReceiverClusterManager {

@@ -85,7 +85,7 @@ public class StreamingSegmentManager implements Closeable {
      * Any further long latency events that can't find a corresponding segment to serve the index,
      * the events will be put to a specific segment for long latency events only.
      * */
-    private final long cubeDuration;
+    public final long cubeDuration;
 
     private final long maxCubeDuration;
 
