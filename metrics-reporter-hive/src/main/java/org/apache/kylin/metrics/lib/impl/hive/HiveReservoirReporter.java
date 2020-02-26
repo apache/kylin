@@ -132,10 +132,10 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
             try {
                 Map<String, List<Record>> queues = new HashMap<>();
                 for (Record record : records) {
-                    List<Record> recordQueues = queues.get(record.getType());
+                    List<Record> recordQueues = queues.get(record.getSubject());
                     if (recordQueues == null) {
                         recordQueues = new ArrayList<>();
-                        queues.put(record.getType(), recordQueues);
+                        queues.put(record.getSubject(), recordQueues);
                     }
                     recordQueues.add(record);
                 }
@@ -153,7 +153,7 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
 
         public boolean onRecordUpdate(final Record record) {
             try {
-                HiveProducer producer = getProducer(record.getType());
+                HiveProducer producer = getProducer(record.getSubject());
                 producer.send(record);
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);

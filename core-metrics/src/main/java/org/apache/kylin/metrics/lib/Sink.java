@@ -19,7 +19,7 @@
 package org.apache.kylin.metrics.lib;
 
 /**
- * Sink is where mertics data will write to
+ * Sink is where metrics event will write to
  */
 public interface Sink {
     String getTableFromSubject(String subject);

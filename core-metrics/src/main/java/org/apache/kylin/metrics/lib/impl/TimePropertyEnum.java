@@ -23,9 +23,14 @@ import java.util.Locale;
 import com.google.common.base.Strings;
 
 public enum TimePropertyEnum {
-    YEAR("KYEAR_BEGIN_DATE"), MONTH("KMONTH_BEGIN_DATE"), WEEK_BEGIN_DATE("KWEEK_BEGIN_DATE"), DAY_DATE(
-            "KDAY_DATE"), DAY_TIME(
-                    "KDAY_TIME"), TIME_HOUR("KTIME_HOUR"), TIME_MINUTE("KTIME_MINUTE"), TIME_SECOND("KTIME_SECOND");
+    YEAR("KYEAR_BEGIN_DATE"),
+    MONTH("KMONTH_BEGIN_DATE"),
+    WEEK_BEGIN_DATE("KWEEK_BEGIN_DATE"),
+    DAY_DATE("KDAY_DATE"),
+    DAY_TIME("KDAY_TIME"),
+    TIME_HOUR("KTIME_HOUR"),
+    TIME_MINUTE("KTIME_MINUTE"),
+    TIME_SECOND("KTIME_SECOND");
 
     private final String propertyName;
 

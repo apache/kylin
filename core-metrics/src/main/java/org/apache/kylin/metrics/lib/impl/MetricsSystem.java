@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metrics.lib.ActiveReservoir;
-import org.apache.kylin.metrics.lib.ActiveReservoirFilter;
+import org.apache.kylin.metrics.lib.ActiveReservoirRecordFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +98,7 @@ public class MetricsSystem extends MetricRegistry {
      *
      * @param filter a filter
      */
-    public void removeActiveReservoirMatching(ActiveReservoirFilter filter) {
+    public void removeActiveReservoirMatching(ActiveReservoirRecordFilter filter) {
         for (Map.Entry<String, ActiveReservoir> entry : activeReservoirs.entrySet()) {
             if (filter.matches(entry.getKey(), entry.getValue())) {
                 removeActiveReservoir(entry.getKey());
@@ -123,7 +123,7 @@ public class MetricsSystem extends MetricRegistry {
      * @return all the active reservoirs in the metrics system
      */
     public SortedMap<String, ActiveReservoir> getActiveReservoirs() {
-        return getActiveReservoirs(ActiveReservoirFilter.ALL);
+        return getActiveReservoirs(ActiveReservoirRecordFilter.ALL);
     }
 
     /**
@@ -132,7 +132,7 @@ public class MetricsSystem extends MetricRegistry {
      * @param filter    the active reservoir filter to match
      * @return all the active reservoirs in the metrics system
      */
-    public SortedMap<String, ActiveReservoir> getActiveReservoirs(ActiveReservoirFilter filter) {
+    public SortedMap<String, ActiveReservoir> getActiveReservoirs(ActiveReservoirRecordFilter filter) {
         final TreeMap<String, ActiveReservoir> reservoirs = new TreeMap<>();
         for (Map.Entry<String, ActiveReservoir> entry : activeReservoirs.entrySet()) {
             if (filter.matches(entry.getKey(), entry.getValue())) {
