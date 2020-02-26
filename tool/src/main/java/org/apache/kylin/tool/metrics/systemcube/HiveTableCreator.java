@@ -39,7 +39,6 @@ import com.google.common.collect.Lists;
 public class HiveTableCreator {
 
     public static void main(String[] args) {
-        //        KylinConfig.setSandboxEnvIfPossible();
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
         System.out.println(generateAllSQL(config));
@@ -272,6 +271,7 @@ public class HiveTableCreator {
             return null;
         }
 
+        @Override
         public String toString() {
             return typeName;
         }

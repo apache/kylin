@@ -14,19 +14,19 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metrics.lib;
 
 /**
  * A filter used to determine whether or not an active reservoir should be reported, among other things.
  */
-public interface ActiveReservoirFilter {
+public interface ActiveReservoirRecordFilter {
 
     /**
      * Matches all active reservoirs, regardless of type or name.
      */
-    ActiveReservoirFilter ALL = new ActiveReservoirFilter() {
+    ActiveReservoirRecordFilter ALL = new ActiveReservoirRecordFilter() {
         @Override
         public boolean matches(String name, ActiveReservoir activeReservoir) {
             return true;
@@ -36,9 +36,18 @@ public interface ActiveReservoirFilter {
     /**
      * Returns {@code true} if the active reservoir matches the filter; {@code false} otherwise.
      *
-     * @param name      the active reservoir's name
-     * @param activeReservoir    the active reservoir
+     * @param name            the active reservoir's name
+     * @param activeReservoir the active reservoir
      * @return {@code true} if the active reservoir matches the filter
      */
-    boolean matches(String name, ActiveReservoir activeReservoir);
+    default boolean matches(String name, ActiveReservoir activeReservoir) {
+        return true;
+    }
+
+    /**
+     * This method is used to check and whether to filter a Record on listener side
+     */
+    default boolean checkRecord(Record record) {
+        return true;
+    }
 }

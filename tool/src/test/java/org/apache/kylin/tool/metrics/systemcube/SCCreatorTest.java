@@ -14,38 +14,32 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.tool.metrics.systemcube;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.metrics.lib.SinkTool;
-import org.apache.kylin.tool.metrics.systemcube.util.HiveSinkTool;
+import org.apache.kylin.tool.metrics.systemcube.def.MetricsSinkDesc;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public class SCCreatorTest extends LocalFileMetadataTestCase {
 
@@ -84,7 +78,7 @@ public class SCCreatorTest extends LocalFileMetadataTestCase {
         CubeManager cubeManager = CubeManager.getInstance(local);
         List<CubeInstance> cubeList = cubeManager.listAllCubes();
         System.out.println("System cubes: " + cubeList);
-        assertEquals(cubeList.size(), 5);
+        assertEquals(cubeList.size(), 10);
 
         for (CubeInstance cube : cubeList) {
             Assert.assertTrue(cube.getStatus() != RealizationStatusEnum.DESCBROKEN);
@@ -96,18 +90,15 @@ public class SCCreatorTest extends LocalFileMetadataTestCase {
         Map<String, String> cubeDescOverrideProperties = Maps.newHashMap();
         cubeDescOverrideProperties.put("kylin.cube.algorithm", "INMEM");
 
-        HiveSinkTool hiveSinkTool = new HiveSinkTool();
-        hiveSinkTool.setCubeDescOverrideProperties(cubeDescOverrideProperties);
+        MetricsSinkDesc metricsSinkDesc = new MetricsSinkDesc();
+        metricsSinkDesc.setCubeDescOverrideProperties(cubeDescOverrideProperties);
+        List<MetricsSinkDesc> metricsSinkDescList = Lists.newArrayList();
 
         String outputPath = "src/test/resources/SCSinkTools.json";
-        try (BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(outputPath))) {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.enableDefaultTyping();
-            mapper.writeValue(os, Sets.newHashSet(hiveSinkTool));
-        }
+        JsonUtil.writeValue(new FileOutputStream(outputPath), metricsSinkDescList);
 
-        Set<SinkTool> sinkToolSet = readSinkToolsJson(outputPath);
-        for (SinkTool entry : sinkToolSet) {
+        List<MetricsSinkDesc> sinkToolSet = readSinkToolsJson(outputPath);
+        for (MetricsSinkDesc entry : sinkToolSet) {
             Map<String, String> props = entry.getCubeDescOverrideProperties();
             for (String key : cubeDescOverrideProperties.keySet()) {
                 assertEquals(props.get(key), cubeDescOverrideProperties.get(key));
@@ -117,18 +108,17 @@ public class SCCreatorTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testReadSinkToolsJson() throws Exception {
-        Set<SinkTool> sinkToolSet = readSinkToolsJson("src/main/resources/SCSinkTools.json");
-        for (SinkTool entry : sinkToolSet) {
+        List<MetricsSinkDesc> sinkToolSet = readSinkToolsJson("src/main/resources/SCSinkTools.json");
+        for (MetricsSinkDesc entry : sinkToolSet) {
             Map<String, String> props = entry.getCubeDescOverrideProperties();
             assertEquals(props.get("kylin.cube.algorithm"), "INMEM");
         }
     }
 
-    private Set<SinkTool> readSinkToolsJson(String jsonPath) throws Exception {
-        try (BufferedInputStream is = new BufferedInputStream(new FileInputStream(jsonPath))) {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.enableDefaultTyping();
-            return mapper.readValue(is, HashSet.class);
-        }
+    private List<MetricsSinkDesc> readSinkToolsJson(String jsonPath) throws Exception {
+        TypeReference<List<MetricsSinkDesc>> typeRef = new TypeReference<List<MetricsSinkDesc>>() {
+        };
+        List<MetricsSinkDesc> sourceToolSet = JsonUtil.readValue(FileUtils.readFileToString(new File(jsonPath)), typeRef);
+        return sourceToolSet;
     }
 }

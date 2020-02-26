@@ -14,28 +14,26 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.tool.metrics.systemcube;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
@@ -50,14 +48,19 @@ import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metrics.lib.SinkTool;
-import org.apache.kylin.tool.metrics.systemcube.util.HiveSinkTool;
+import org.apache.kylin.stream.core.source.StreamingSourceConfig;
+import org.apache.kylin.tool.metrics.systemcube.def.MetricsSinkDesc;
+import org.apache.kylin.tool.metrics.systemcube.streamingv2.KafkaTopicCreator;
+import org.apache.kylin.tool.metrics.systemcube.streamingv2.StreamingMetadataCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+/**
+ * System Cube Metadata Creator CLI
+ */
 public class SCCreator extends AbstractApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(SCCreator.class);
@@ -74,8 +77,10 @@ public class SCCreator extends AbstractApplication {
     private static final String D_PROJECT = "project/";
     private static final String D_TABLE = "table/";
     private static final String D_MODEL_DESC = "model_desc/";
+    private static final String D_STREAMING_V2 = "streaming_v2/";
 
     private static final String F_HIVE_SQL = "create_hive_tables_for_system_cubes";
+    private static final String F_KAFKA_TOPIC = "create_kafka_topic_for_system_cubes";
 
     protected final Options options;
 
@@ -104,7 +109,7 @@ public class SCCreator extends AbstractApplication {
         String output = optionsHelper.getOptionValue(OPTION_OUTPUT);
         String inputConfig = optionsHelper.getOptionValue(OPTION_INPUT_CONFIG);
         if (Strings.isNullOrEmpty(inputConfig)) {
-            throw new RuntimeException("Input configuration file should be specified!!!");
+            throw new FileNotFoundException("Input configuration file should be specified!!!");
         }
 
         execute(owner, output, inputConfig);
@@ -118,37 +123,51 @@ public class SCCreator extends AbstractApplication {
             output += "/";
         }
 
-        Set<SinkTool> sourceToolSet = JsonUtil.readValueWithTyping(
-                new BufferedInputStream(new FileInputStream(new File(inputConfig))), HashSet.class);
-        run(owner, output, sourceToolSet);
+        TypeReference<List<MetricsSinkDesc>> typeRef = new TypeReference<List<MetricsSinkDesc>>() {
+        };
+        List<MetricsSinkDesc> metricsSinkDescList = JsonUtil.readValue(FileUtils.readFileToString(new File(inputConfig)), typeRef);
+        run(owner, output, metricsSinkDescList);
     }
 
-    private void run(String owner, String output, Collection<SinkTool> sinkToolSet) throws IOException {
+    private void run(String owner, String output, List<MetricsSinkDesc> sinkToolSet) throws IOException {
         List<TableDesc> kylinTables = Lists.newArrayList();
         List<DataModelDesc> kylinModels = Lists.newArrayList();
-        List<CubeDesc> kylinCubeDescs = Lists.newArrayList();
+        List<CubeDesc> cubeDescList = Lists.newArrayList();
         List<CubeInstance> kylinCubeInstances = Lists.newArrayList();
+        List<StreamingSourceConfig> streamingSourceConfigs = Lists.newArrayList();
 
-        boolean ifHive = false;
-        for (SinkTool sourceTool : sinkToolSet) {
-            if (sourceTool instanceof HiveSinkTool) {
-                ifHive = true;
-            } else {
-                logger.warn("current version only support hive sink!!!");
-                continue;
+
+        boolean hasHive = false;
+        boolean hasKafka = false;
+        for (MetricsSinkDesc sinkDesc : sinkToolSet) {
+            if (sinkDesc.useHive()) {
+                hasHive = true;
+            } else if (sinkDesc.useKafka()) {
+                hasKafka = true;
             }
-            kylinTables.addAll(generateKylinTableForSystemCube(sourceTool));
-            kylinModels.addAll(generateKylinModelForSystemCube(owner, sourceTool));
-            kylinCubeDescs.addAll(generateKylinCubeDescForSystemCube(sourceTool));
-            kylinCubeInstances.addAll(generateKylinCubeInstanceForSystemCube(owner, sourceTool));
+            kylinTables.addAll(generateKylinTableForSystemCube(sinkDesc));
+            kylinModels.addAll(generateKylinModelForSystemCube(owner, sinkDesc));
+            cubeDescList.addAll(generateKylinCubeDescForSystemCube(sinkDesc));
+            kylinCubeInstances.addAll(generateKylinCubeInstanceForSystemCube(owner, sinkDesc));
+
+            if (sinkDesc.useKafka()) {
+                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsJob(config, sinkDesc));
+                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsJobException(config, sinkDesc));
+                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsQuery(config, sinkDesc));
+                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsQueryRpcCall(config, sinkDesc));
+                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsQueryCube(config, sinkDesc));
+            }
         }
 
-        if (ifHive) {
+        if (hasHive) {
             generateHiveTableSQLFileForSystemCube(output);
+        }
+        if (hasKafka) {
+            generateKafkaTopicFileForSystemCube(output);
         }
 
         ProjectInstance projectInstance = ProjectCreator.generateKylinProjectInstance(owner, kylinTables, kylinModels,
-                kylinCubeDescs);
+                cubeDescList);
         generateKylinProjectFileForSystemCube(output, projectInstance);
         for (TableDesc tableDesc : kylinTables) {
             generateKylinTableFileForSystemCube(output, tableDesc);
@@ -156,54 +175,58 @@ public class SCCreator extends AbstractApplication {
         for (DataModelDesc dataModelDesc : kylinModels) {
             generateKylinModelFileForSystemCube(output, dataModelDesc);
         }
-        for (CubeDesc cubeDesc : kylinCubeDescs) {
+        for (CubeDesc cubeDesc : cubeDescList) {
             generateKylinCubeDescFileForSystemCube(output, cubeDesc);
         }
         for (CubeInstance cubeInstance : kylinCubeInstances) {
             generateKylinCubeInstanceFileForSystemCube(output, cubeInstance);
         }
+
+        for (StreamingSourceConfig sourceConfig : streamingSourceConfigs) {
+            generateKylinStreamingConfigForSystemCube(output, sourceConfig);
+        }
     }
 
-    private List<TableDesc> generateKylinTableForSystemCube(SinkTool sinkTool) {
+    private List<TableDesc> generateKylinTableForSystemCube(MetricsSinkDesc sinkDesc) {
         List<TableDesc> result = Lists.newLinkedList();
-        result.add(KylinTableCreator.generateKylinTableForMetricsQuery(config, sinkTool));
-        result.add(KylinTableCreator.generateKylinTableForMetricsQueryCube(config, sinkTool));
-        result.add(KylinTableCreator.generateKylinTableForMetricsQueryRPC(config, sinkTool));
-        result.add(KylinTableCreator.generateKylinTableForMetricsJob(config, sinkTool));
-        result.add(KylinTableCreator.generateKylinTableForMetricsJobException(config, sinkTool));
+        result.add(KylinTableCreator.generateKylinTableForMetricsQuery(config, sinkDesc));
+        result.add(KylinTableCreator.generateKylinTableForMetricsQueryCube(config, sinkDesc));
+        result.add(KylinTableCreator.generateKylinTableForMetricsQueryRPC(config, sinkDesc));
+        result.add(KylinTableCreator.generateKylinTableForMetricsJob(config, sinkDesc));
+        result.add(KylinTableCreator.generateKylinTableForMetricsJobException(config, sinkDesc));
 
         return result;
     }
 
-    private List<DataModelDesc> generateKylinModelForSystemCube(String owner, SinkTool sinkTool) {
+    private List<DataModelDesc> generateKylinModelForSystemCube(String owner, MetricsSinkDesc sinkDesc) {
         List<DataModelDesc> result = Lists.newLinkedList();
-        result.add(ModelCreator.generateKylinModelForMetricsQuery(owner, config, sinkTool));
-        result.add(ModelCreator.generateKylinModelForMetricsQueryCube(owner, config, sinkTool));
-        result.add(ModelCreator.generateKylinModelForMetricsQueryRPC(owner, config, sinkTool));
-        result.add(ModelCreator.generateKylinModelForMetricsJob(owner, config, sinkTool));
-        result.add(ModelCreator.generateKylinModelForMetricsJobException(owner, config, sinkTool));
+        result.add(ModelCreator.generateKylinModelForMetricsQuery(owner, config, sinkDesc));
+        result.add(ModelCreator.generateKylinModelForMetricsQueryCube(owner, config, sinkDesc));
+        result.add(ModelCreator.generateKylinModelForMetricsQueryRPC(owner, config, sinkDesc));
+        result.add(ModelCreator.generateKylinModelForMetricsJob(owner, config, sinkDesc));
+        result.add(ModelCreator.generateKylinModelForMetricsJobException(owner, config, sinkDesc));
 
         return result;
     }
 
-    private List<CubeDesc> generateKylinCubeDescForSystemCube(SinkTool sinkTool) {
+    private List<CubeDesc> generateKylinCubeDescForSystemCube(MetricsSinkDesc sinkDesc) {
         List<CubeDesc> result = Lists.newLinkedList();
-        result.add(CubeDescCreator.generateKylinCubeDescForMetricsQuery(config, sinkTool));
-        result.add(CubeDescCreator.generateKylinCubeDescForMetricsQueryCube(config, sinkTool));
-        result.add(CubeDescCreator.generateKylinCubeDescForMetricsQueryRPC(config, sinkTool));
-        result.add(CubeDescCreator.generateKylinCubeDescForMetricsJob(config, sinkTool));
-        result.add(CubeDescCreator.generateKylinCubeDescForMetricsJobException(config, sinkTool));
+        result.add(CubeDescCreator.generateKylinCubeDescForMetricsQuery(config, sinkDesc));
+        result.add(CubeDescCreator.generateKylinCubeDescForMetricsQueryCube(config, sinkDesc));
+        result.add(CubeDescCreator.generateKylinCubeDescForMetricsQueryRPC(config, sinkDesc));
+        result.add(CubeDescCreator.generateKylinCubeDescForMetricsJob(config, sinkDesc));
+        result.add(CubeDescCreator.generateKylinCubeDescForMetricsJobException(config, sinkDesc));
 
         return result;
     }
 
-    private List<CubeInstance> generateKylinCubeInstanceForSystemCube(String owner, SinkTool sinkTool) {
+    private List<CubeInstance> generateKylinCubeInstanceForSystemCube(String owner, MetricsSinkDesc sinkDesc) {
         List<CubeInstance> result = Lists.newLinkedList();
-        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsQuery(owner, config, sinkTool));
-        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsQueryCube(owner, config, sinkTool));
-        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsQueryRPC(owner, config, sinkTool));
-        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsJob(owner, config, sinkTool));
-        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsJobException(owner, config, sinkTool));
+        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsQuery(owner, config, sinkDesc));
+        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsQueryCube(owner, config, sinkDesc));
+        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsQueryRPC(owner, config, sinkDesc));
+        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsJob(owner, config, sinkDesc));
+        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsJobException(owner, config, sinkDesc));
 
         return result;
     }
@@ -211,6 +234,11 @@ public class SCCreator extends AbstractApplication {
     private void generateHiveTableSQLFileForSystemCube(String output) throws IOException {
         String contents = HiveTableCreator.generateAllSQL(config);
         saveToFile(output + F_HIVE_SQL + ".sql", contents);
+    }
+
+    private void generateKafkaTopicFileForSystemCube(String output) throws IOException {
+        String contents = KafkaTopicCreator.generateCreateCommand(config);
+        saveToFile(output + F_KAFKA_TOPIC + ".sh", contents);
     }
 
     private void generateKylinTableFileForSystemCube(String output, TableDesc kylinTable) throws IOException {
@@ -221,6 +249,11 @@ public class SCCreator extends AbstractApplication {
     private void generateKylinModelFileForSystemCube(String output, DataModelDesc modelDesc) throws IOException {
         saveSystemCubeMetadataToFile(output + D_MODEL_DESC + modelDesc.getName() + ".json", modelDesc,
                 ModelCreator.MODELDESC_SERIALIZER);
+    }
+
+    private void generateKylinStreamingConfigForSystemCube(String output, StreamingSourceConfig streamingConfig) throws IOException {
+        saveSystemCubeMetadataToFile(output + D_STREAMING_V2 + streamingConfig.getName() + ".json", streamingConfig,
+                StreamingMetadataCreator.STREAMING_SOURCE_CONFIG_SERIALIZER);
     }
 
     private void generateKylinCubeInstanceFileForSystemCube(String output, CubeInstance cubeInstance)
@@ -241,7 +274,7 @@ public class SCCreator extends AbstractApplication {
     }
 
     private <T extends RootPersistentEntity> void saveSystemCubeMetadataToFile(String fileName, T metadata,
-            Serializer serializer) throws IOException {
+                                                                               Serializer serializer) throws IOException {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         DataOutputStream dout = new DataOutputStream(buf);
         serializer.serialize(metadata, dout);
