@@ -1,15 +1,24 @@
 [
-  [
-    "org.apache.kylin.tool.metrics.systemcube.util.HiveSinkTool",
-    {
-      "storage_type": 2,
-      "cube_desc_override_properties": [
-        "java.util.HashMap",
-        {
-          "kylin.cube.algorithm": "INMEM",
-          "kylin.cube.max-building-segments": "1"
-        }
-      ]
+  {
+    "sink": "hive",
+    "storage_type": 2,
+    "cube_desc_override_properties": {
+      "kylin.cube.algorithm": "INMEM",
+      "kylin.cube.max-building-segments": "1"
     }
-  ]
+  },
+  {
+    "sink": "kafka",
+    "storage_type": 3,
+    "cube_desc_override_properties": {
+      "kylin.cube.algorithm": "INMEM",
+      "kylin.stream.cube.window": 28800,
+      "kylin.stream.cube.duration": 3600,
+      "kylin.stream.segment.retention.policy": "purge",
+      "kylin.cube.max-building-segments": "20"
+    },
+    "table_properties": {
+      "bootstrap.servers": "localhost:9092"
+    }
+  }
 ]

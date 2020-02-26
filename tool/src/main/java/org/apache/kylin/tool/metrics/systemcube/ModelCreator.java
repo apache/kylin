@@ -29,14 +29,13 @@ import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
-import org.apache.kylin.metrics.lib.SinkTool;
 import org.apache.kylin.metrics.lib.impl.RecordEvent;
 import org.apache.kylin.metrics.lib.impl.TimePropertyEnum;
 import org.apache.kylin.metrics.property.JobPropertyEnum;
 import org.apache.kylin.metrics.property.QueryCubePropertyEnum;
 import org.apache.kylin.metrics.property.QueryPropertyEnum;
 import org.apache.kylin.metrics.property.QueryRPCPropertyEnum;
-import org.apache.kylin.tool.metrics.systemcube.util.HiveSinkTool;
+import org.apache.kylin.tool.metrics.systemcube.def.MetricsSinkDesc;
 
 import com.google.common.collect.Lists;
 
@@ -45,10 +44,9 @@ public class ModelCreator {
     public static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<>(DataModelDesc.class);
 
     public static void main(String[] args) throws Exception {
-        //        KylinConfig.setSandboxEnvIfPossible();
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-        DataModelDesc kylinModel = generateKylinModelForMetricsQuery("ADMIN", config, new HiveSinkTool());
+        DataModelDesc kylinModel = generateKylinModelForMetricsQuery("ADMIN", config, new MetricsSinkDesc());
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         DataOutputStream dout = new DataOutputStream(buf);
         MODELDESC_SERIALIZER.serialize(kylinModel, dout);
@@ -66,36 +64,36 @@ public class ModelCreator {
     }
 
     public static DataModelDesc generateKylinModelForMetricsQuery(String owner, KylinConfig kylinConfig,
-            SinkTool sinkTool) {
-        String tableName = sinkTool.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectQuery());
+            MetricsSinkDesc sinkDesc) {
+        String tableName = sinkDesc.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectQuery());
         return generateKylinModel(owner, tableName, getDimensionsForMetricsQuery(), getMeasuresForMetricsQuery(),
                 getPartitionDesc(tableName));
     }
 
     public static DataModelDesc generateKylinModelForMetricsQueryCube(String owner, KylinConfig kylinConfig,
-            SinkTool sinkTool) {
-        String tableName = sinkTool.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectQueryCube());
+            MetricsSinkDesc sinkDesc) {
+        String tableName = sinkDesc.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectQueryCube());
         return generateKylinModel(owner, tableName, getDimensionsForMetricsQueryCube(),
                 getMeasuresForMetricsQueryCube(), getPartitionDesc(tableName));
     }
 
     public static DataModelDesc generateKylinModelForMetricsQueryRPC(String owner, KylinConfig kylinConfig,
-            SinkTool sinkTool) {
-        String tableName = sinkTool.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectQueryRpcCall());
+            MetricsSinkDesc sinkDesc) {
+        String tableName = sinkDesc.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectQueryRpcCall());
         return generateKylinModel(owner, tableName, getDimensionsForMetricsQueryRPC(), getMeasuresForMetricsQueryRPC(),
                 getPartitionDesc(tableName));
     }
 
     public static DataModelDesc generateKylinModelForMetricsJob(String owner, KylinConfig kylinConfig,
-            SinkTool sinkTool) {
-        String tableName = sinkTool.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectJob());
+            MetricsSinkDesc sinkDesc) {
+        String tableName = sinkDesc.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectJob());
         return generateKylinModel(owner, tableName, getDimensionsForMetricsJob(), getMeasuresForMetricsJob(),
                 getPartitionDesc(tableName));
     }
 
     public static DataModelDesc generateKylinModelForMetricsJobException(String owner, KylinConfig kylinConfig,
-            SinkTool sinkTool) {
-        String tableName = sinkTool.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectJobException());
+            MetricsSinkDesc sinkDesc) {
+        String tableName = sinkDesc.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectJobException());
         return generateKylinModel(owner, tableName, getDimensionsForMetricsJobException(),
                 getMeasuresForMetricsJobException(), getPartitionDesc(tableName));
     }

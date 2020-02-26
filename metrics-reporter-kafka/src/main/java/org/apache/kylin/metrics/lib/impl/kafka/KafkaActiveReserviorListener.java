@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metrics.lib.ActiveReservoirListener;
 import org.apache.kylin.metrics.lib.Record;
 import org.slf4j.Logger;
@@ -33,19 +34,18 @@ public abstract class KafkaActiveReserviorListener implements ActiveReservoirLis
     public static final long TOPIC_AVAILABLE_TAG = 0L;
     protected static final Logger logger = LoggerFactory.getLogger(KafkaActiveReserviorListener.class);
     protected Long maxBlockMs = 1800000L;
-    protected int maxRecordForLogNum = 10000;
+    protected int maxRecordForLogNum = KylinConfig.getInstanceFromEnv().printSampleEventRatio();
     protected int maxRecordSkipForLogNum = 10000;
     protected ConcurrentHashMap<String, Long> topicsIfAvailable = new ConcurrentHashMap<>();
-    private int nRecord = 0;
-    private int nRecordSkip = 0;
-    private Callback produceCallback = new Callback() {
-        @Override
-        public void onCompletion(RecordMetadata metadata, Exception exception) {
-            if (exception != null) {
-                exception.printStackTrace();
-                return;
-            }
-            logger.info("topic:" + metadata.topic() + "; partition: " + metadata.partition() + "; offset: " + metadata.offset());
+    private long nRecord = 0;
+    private long nRecordSkip = 0;
+    private int threshold = Integer.min((int)(maxRecordForLogNum * 0.002), 25);
+
+    private Callback produceCallback = (RecordMetadata metadata, Exception exception) -> {
+        if(exception != null){
+            logger.warn("Unexpected exception.",  exception);
+        } else {
+            logger.debug("Topic:{} ; partition:{} ; offset:{} .", metadata.topic(), metadata.partition(), metadata.offset());
         }
     };
 
@@ -67,17 +67,19 @@ public abstract class KafkaActiveReserviorListener implements ActiveReservoirLis
     public boolean onRecordUpdate(final List<Record> records) {
         try {
             for (Record record : records) {
-                String topic = decorateTopic(record.getType());
+                String topic = decorateTopic(record.getSubject());
+                if (nRecord <= threshold) {
+                    logger.debug("Send record {} to topic : {}", record, topic);
+                }
                 if (!checkAvailable(topic)) {
                     if (nRecordSkip % maxRecordSkipForLogNum == 0) {
                         nRecordSkip = 0;
-                        logger.warn("Skip to send record to topic " + topic);
+                        logger.warn("Skip to send record to topic {}", topic);
                     }
                     nRecordSkip++;
                     continue;
                 }
                 if (nRecord % maxRecordForLogNum == 0) {
-                    nRecord = 0;
                     sendWrapper(topic, record, produceCallback);
                 } else {
                     sendWrapper(topic, record, null);
@@ -101,7 +103,7 @@ public abstract class KafkaActiveReserviorListener implements ActiveReservoirLis
                 topicsIfAvailable.put(topic, TOPIC_AVAILABLE_TAG);
                 return true;
             } catch (org.apache.kafka.common.errors.TimeoutException e) {
-                logger.warn("Fail to fetch metadata for topic " + topic);
+                logger.warn("Fail to fetch metadata for topic " + topic, e);
                 setUnAvailable(topic);
                 return false;
             }
@@ -110,6 +112,7 @@ public abstract class KafkaActiveReserviorListener implements ActiveReservoirLis
     }
 
     protected void setUnAvailable(String topic) {
+        logger.debug("Cannot find topic {}", topic);
         topicsIfAvailable.put(topic, System.currentTimeMillis());
     }
 }

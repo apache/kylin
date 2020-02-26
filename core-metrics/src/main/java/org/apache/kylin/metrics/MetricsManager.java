@@ -131,7 +131,7 @@ public class MetricsManager {
                                 .start();
                     } catch (Exception e) {
                         logger.warn("Cannot initialize ActiveReservoirReporter: Builder class - " + subEntry.getFirst()
-                                + ", Properties - " + subEntry.getSecond());
+                                + ", Properties - " + subEntry.getSecond(), e);
                     }
                 }
                 Metrics.register(registerName, activeReservoir);

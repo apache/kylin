@@ -27,16 +27,14 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.metrics.lib.SinkTool;
-import org.apache.kylin.tool.metrics.systemcube.util.HiveSinkTool;
+import org.apache.kylin.tool.metrics.systemcube.def.MetricsSinkDesc;
 
 public class CubeInstanceCreator {
 
     public static void main(String[] args) throws Exception {
-        //        KylinConfig.setSandboxEnvIfPossible();
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-        CubeInstance cubeInstance = generateKylinCubeInstanceForMetricsQuery("ADMIN", config, new HiveSinkTool());
+        CubeInstance cubeInstance = generateKylinCubeInstanceForMetricsQuery("ADMIN", config, new MetricsSinkDesc());
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         DataOutputStream dout = new DataOutputStream(buf);
         CubeManager.CUBE_SERIALIZER.serialize(cubeInstance, dout);
@@ -46,31 +44,31 @@ public class CubeInstanceCreator {
     }
 
     public static CubeInstance generateKylinCubeInstanceForMetricsQuery(String owner, KylinConfig config,
-            SinkTool sinkTool) {
-        return generateKylinCubeInstance(owner, sinkTool.getTableNameForMetrics(config.getKylinMetricsSubjectQuery()));
+            MetricsSinkDesc sinkDesc) {
+        return generateKylinCubeInstance(owner, sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQuery()));
     }
 
     public static CubeInstance generateKylinCubeInstanceForMetricsQueryCube(String owner, KylinConfig config,
-            SinkTool sinkTool) {
+            MetricsSinkDesc sinkDesc) {
         return generateKylinCubeInstance(owner,
-                sinkTool.getTableNameForMetrics(config.getKylinMetricsSubjectQueryCube()));
+                sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQueryCube()));
     }
 
     public static CubeInstance generateKylinCubeInstanceForMetricsQueryRPC(String owner, KylinConfig config,
-            SinkTool sinkTool) {
+            MetricsSinkDesc sinkDesc) {
         return generateKylinCubeInstance(owner,
-                sinkTool.getTableNameForMetrics(config.getKylinMetricsSubjectQueryRpcCall()));
+                sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQueryRpcCall()));
     }
 
     public static CubeInstance generateKylinCubeInstanceForMetricsJob(String owner, KylinConfig config,
-            SinkTool sinkTool) {
-        return generateKylinCubeInstance(owner, sinkTool.getTableNameForMetrics(config.getKylinMetricsSubjectJob()));
+            MetricsSinkDesc sinkDesc) {
+        return generateKylinCubeInstance(owner, sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectJob()));
     }
 
     public static CubeInstance generateKylinCubeInstanceForMetricsJobException(String owner, KylinConfig config,
-            SinkTool sinkTool) {
+            MetricsSinkDesc sinkDesc) {
         return generateKylinCubeInstance(owner,
-                sinkTool.getTableNameForMetrics(config.getKylinMetricsSubjectJobException()));
+                sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectJobException()));
     }
 
     public static CubeInstance generateKylinCubeInstance(String owner, String tableName) {

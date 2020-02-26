@@ -2264,6 +2264,11 @@ public abstract class KylinConfigBase implements Serializable {
         return getPropertiesByPrefix("kylin.metrics.");
     }
 
+    public int printSampleEventRatio(){
+        String val = getOptional("kylin.metrics.kafka-sample-ratio", "10000");
+        return Integer.parseInt(val);
+    }
+
     // ============================================================================
     // tool
     // ============================================================================

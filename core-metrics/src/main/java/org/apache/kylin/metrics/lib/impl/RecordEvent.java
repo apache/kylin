@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metrics.lib.impl;
 
@@ -28,24 +28,32 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metrics.lib.Record;
 
 import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RecordEvent implements Record, Map<String, Object>, Serializable {
 
-    private static final InternalThreadLocal<ByteArrayOutputStream> _localBaos = new InternalThreadLocal<ByteArrayOutputStream>();
+    private static final Logger logger = LoggerFactory.getLogger(RecordEvent.class);
 
-    static String localHostname;
+    private static final ThreadLocal<ByteArrayOutputStream> _localBaos = new ThreadLocal<>();
+
+    public static final String LOCAL_HOSTNAME;
+
     static {
+        String localHostname1;
         try {
             InetAddress addr = InetAddress.getLocalHost();
-            localHostname = addr.getHostName() + ":" + addr.getHostAddress();
+            localHostname1 = addr.getHostName() + ":" + addr.getHostAddress();
+            logger.info("RecordEvent using hostname : {}.", localHostname1);
         } catch (UnknownHostException e) {
-            localHostname = "Unknown";
+            logger.info("Unexpected ", e);
+            localHostname1 = "Unknown";
         }
+        LOCAL_HOSTNAME = localHostname1;
     }
 
     private final Map<String, Object> backingMap;
@@ -55,11 +63,7 @@ public class RecordEvent implements Record, Map<String, Object>, Serializable {
     }
 
     public RecordEvent(String eventType) {
-        this(eventType, localHostname);
-    }
-
-    public RecordEvent(String eventType, long time) {
-        this(eventType, localHostname, time);
+        this(eventType, LOCAL_HOSTNAME);
     }
 
     public RecordEvent(String eventType, String host) {
@@ -71,28 +75,27 @@ public class RecordEvent implements Record, Map<String, Object>, Serializable {
     }
 
     /**
-     *
      * @param map
-     * @param eventType     mandatory   with null check
-     * @param host          mandatory   without null check
-     * @param time          mandatory   with null check
+     * @param eventType mandatory   with null check
+     * @param host      mandatory   without null check
+     * @param time      mandatory   with null check
      */
     public RecordEvent(Map<String, Object> map, String eventType, String host, long time) {
-        backingMap = map != null ? map : Maps.<String, Object> newHashMap();
+        backingMap = map != null ? map : Maps.<String, Object>newHashMap();
         setEventType(eventType);
         setHost(host);
         setTime(time);
     }
 
     public String getEventType() {
-        return (String) get(RecordReserveKeyEnum.TYPE.toString());
+        return (String) get(RecordReserveKeyEnum.EVENT_SUBJECT.toString());
     }
 
     private void setEventType(String eventType) {
         if (eventType == null) {
             throw new IllegalArgumentException("EventType cannot be null.");
         }
-        put(RecordReserveKeyEnum.TYPE.toString(), eventType);
+        put(RecordReserveKeyEnum.EVENT_SUBJECT.toString(), eventType);
     }
 
     public String getHost() {
@@ -202,7 +205,7 @@ public class RecordEvent implements Record, Map<String, Object>, Serializable {
     }
 
     @Override
-    public String getType() {
+    public String getSubject() {
         return getEventType();
     }
 
@@ -211,20 +214,20 @@ public class RecordEvent implements Record, Map<String, Object>, Serializable {
         return (getHost() + "-" + getTime() + "-" + getID()).getBytes(StandardCharsets.UTF_8);
     }
 
-    @Override
     /**
      * Event type and time does not belong to value part
      */
+    @Override
     public Map<String, Object> getValueRaw() {
         Map<String, Object> cloneMap = Maps.newHashMap(backingMap);
-        cloneMap.remove(RecordReserveKeyEnum.TYPE.toString());
+        cloneMap.remove(RecordReserveKeyEnum.EVENT_SUBJECT.toString());
         return cloneMap;
     }
 
-    @Override
     /**
      * Event type does not belong to value part, it's for classification
      */
+    @Override
     public byte[] getValue() {
         try {
             ByteArrayOutputStream baos = _localBaos.get();
@@ -248,11 +251,15 @@ public class RecordEvent implements Record, Map<String, Object>, Serializable {
     }
 
     public enum RecordReserveKeyEnum {
-        TYPE("EVENT_TYPE"), ID("EVENT_ID"), HOST("HOST"), TIME("KTIMESTAMP");
+
+        EVENT_SUBJECT("EVENT_TYPE")
+        , ID("EVENT_ID") // Not used currently
+        , HOST("HOST")
+        , TIME("KTIMESTAMP");
 
         private final String reserveKey;
 
-        private RecordReserveKeyEnum(String key) {
+        RecordReserveKeyEnum(String key) {
             this.reserveKey = key;
         }
 
@@ -263,7 +270,7 @@ public class RecordEvent implements Record, Map<String, Object>, Serializable {
 
         public RecordReserveKeyEnum getByKey(String key) {
             for (RecordReserveKeyEnum reserveKey : RecordReserveKeyEnum.values()) {
-                if (reserveKey.reserveKey.equals(key)) {
+                if (reserveKey.reserveKey.equalsIgnoreCase(key)) {
                     return reserveKey;
                 }
             }

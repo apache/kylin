@@ -56,7 +56,7 @@ public class QueryMetricsFacade {
     private static final HashFunction hashFunc = Hashing.murmur3_128();
 
     private static boolean enabled = false;
-    private static ConcurrentHashMap<String, QueryMetrics> metricsMap = new ConcurrentHashMap<String, QueryMetrics>();
+    private static ConcurrentHashMap<String, QueryMetrics> metricsMap = new ConcurrentHashMap<>();
 
     public static void init() {
         enabled = KylinConfig.getInstanceFromEnv().getQueryMetricsEnabled();
@@ -66,7 +66,7 @@ public class QueryMetricsFacade {
         DefaultMetricsSystem.initialize("Kylin");
     }
 
-    public static long getSqlHashCode(String sql) {
+    private static long getSqlHashCode(String sql) {
         return hashFunc.hashString(sql, Charset.forName("UTF-8")).asLong();
     }
 
@@ -112,12 +112,11 @@ public class QueryMetricsFacade {
             //For update rpc level related metrics
             MetricsManager.getInstance().update(rpcMetricsEvent);
         }
-        long sqlHashCode = getSqlHashCode(sqlRequest.getSql());
         for (QueryContext.CubeSegmentStatisticsResult contextEntry : sqlResponse.getCubeSegmentStatisticsList()) {
             RecordEvent queryMetricsEvent = new TimedRecordEvent(
                     KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectQuery());
             setQueryWrapper(queryMetricsEvent, //
-                    user, sqlHashCode, sqlResponse.isStorageCacheUsed() ? "CACHE" : contextEntry.getQueryType(),
+                    user, sqlRequest.getSql(), sqlResponse.isStorageCacheUsed() ? "CACHE" : contextEntry.getQueryType(),
                     norm(sqlRequest.getProject()), contextEntry.getRealization(), contextEntry.getRealizationType(),
                     sqlResponse.getThrowable());
 
@@ -206,10 +205,11 @@ public class QueryMetricsFacade {
         metricsEvent.put(QueryCubePropertyEnum.WEIGHT_PER_HIT.toString(), weightPerHit);
     }
 
-    private static void setQueryWrapper(RecordEvent metricsEvent, String user, long queryHashCode, String queryType,
+    private static void setQueryWrapper(RecordEvent metricsEvent, String user, String sql, String queryType,
             String projectName, String realizationName, int realizationType, Throwable throwable) {
         metricsEvent.put(QueryPropertyEnum.USER.toString(), user);
-        metricsEvent.put(QueryPropertyEnum.ID_CODE.toString(), queryHashCode);
+        metricsEvent.put(QueryPropertyEnum.ID_CODE.toString(), getSqlHashCode(sql));
+        metricsEvent.put(QueryPropertyEnum.SQL.toString(), sql);
         metricsEvent.put(QueryPropertyEnum.TYPE.toString(), queryType);
         metricsEvent.put(QueryPropertyEnum.PROJECT.toString(), projectName);
         metricsEvent.put(QueryPropertyEnum.REALIZATION.toString(), realizationName);
