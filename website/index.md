@@ -12,7 +12,7 @@ title: OLAP engine for big data
           <h4 class="index-title"><span>Bring OLAP Back to Big Data!</span></h4>
           <div class="row" style="margin-top:-20px;">
             <div class="col-sm-12 col-md-12">              
-              <p class="title_text">Apache Kylin™ is an open source distributed analytical engine designed to provide OLAP (Online Analytical Processing) capability in the big data era. By renovating the multi-dimensional cube and precalculation technology on Hadoop and Spark, Kylin is able to achieve near constant query speed regardless of the ever-growing data volume. Reducing query latency from minutes to sub-second, Kylin brings online analytics back to big data.</p>
+              <p class="title_text">Apache Kylin™ is an open source, distributed Analytical Data Warehouse for Big Data; it was designed to provide OLAP (Online Analytical Processing) capability in the big data era. By renovating the multi-dimensional cube and precalculation technology on Hadoop and Spark, Kylin is able to achieve near constant query speed regardless of the ever-growing data volume. Reducing query latency from minutes to sub-second, Kylin brings online analytics back to big data.</p>
               <p class="title_text">Apache Kylin™ lets you query billions of rows at sub-second latency in 3 steps.</p>
               <div align="left">
                 <ol class="none-icon">

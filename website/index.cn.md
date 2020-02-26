@@ -12,8 +12,8 @@ title: 大数据上的OLAP引擎
           <h4 class="index-title"><span>Apache Kylin™ 概览</span></h4>
           <div class="row" style="margin-top:-20px;">
             <div class="col-sm-12 col-md-12">              
-              <p class="title_text"> Apache Kylin™是一个开源的分布式分析引擎，提供Hadoop/Spark之上的SQL查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由eBay Inc. 开发并贡献至开源社区。它能在亚秒内查询巨大的Hive表。</p>
-              <p class="title_text"> Apache Kylin™令使用者仅需三步，即可实现超大数据集上的亚秒级查询。</p>
+              <p class="title_text"> Apache Kylin™是一个开源的、分布式的分析型数据仓库，提供Hadoop/Spark 之上的 SQL 查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由 eBay 开发并贡献至开源社区。它能在亚秒内查询巨大的表。</p>
+              <p class="title_text"> Apache Kylin™ 令使用者仅需三步，即可实现超大数据集上的亚秒级查询。</p>
               <div align="left">
                 <ol class="none-icon">
                   <li>
@@ -26,11 +26,11 @@ title: 大数据上的OLAP引擎
                   </li>
                   <li>
                     <span class="li-circle">3</span>
-                    使用标准SQL通过ODBC、JDBC或RESTFUL API进行查询，仅需亚秒级响应时间即可获得查询结果
+                    使用标准 SQL 通过 ODBC、JDBC 或 RESTFUL API 进行查询，仅需亚秒级响应时间即可获得查询结果
                   </li>
                   </ol>
               </div>  
-              <p class="title_text">Kylin提供与多种数据可视化工具的整合能力，如Tableau，PowerBI等，令用户可以使用BI工具对Hadoop数据进行分析。</p>
+              <p class="title_text">Kylin 提供与多种数据可视化工具的整合能力，如 Tableau，PowerBI 等，令用户可以使用 BI 工具对 Hadoop 数据进行分析。</p>
               <img id="diagram" src="{{ "/assets/images/kylin_diagram.png"| prepend: site.baseurl }}"> </div>
           </div>
         </div>
@@ -43,7 +43,7 @@ title: 大数据上的OLAP引擎
   <section id="second" class="main">
     <header style="background-color:#efefef;">
       <div class="container"  >
-        <h4 class="index-title"><span> Kylin是什么? </span></h4>
+        <h4 class="index-title"><span> Kylin 是什么? </span></h4>
         <img id="intro_logo" src="{{"/assets/images/kylin_logo.png" | prepend: site.baseurl }}">
         <!-- second-->
         <div class="row">
@@ -53,8 +53,8 @@ title: 大数据上的OLAP引擎
                 <div class="home-pic">
                   <img width="30" src="{{"/assets/images/icon_index_olap.png" | prepend: site.baseurl }}">
                 </div>
-                <b>可扩展超快的基于大数据的OLAP引擎: </b><br/>
-                <div class="indent" style="margin-top: 25px">Kylin是为减少在Hadoop/Spark上百亿规模数据查询延迟而设计</div>
+                <b>可扩展超快的基于大数据的 OLAP 引擎: </b><br/>
+                <div class="indent" style="margin-top: 25px">Kylin 是为减少在 Hadoop/Spark 上百亿规模数据查询延迟而设计</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">
@@ -63,7 +63,7 @@ title: 大数据上的OLAP引擎
                   <img width="30" src="{{"/assets/images/icon_index_hadoop.png" | prepend: site.baseurl }}">
                 </div>
                 <b>Hadoop ANSI SQL 接口: </b><br/>
-                <div class="indent" style="margin-top: 25px">作为一个OLAP引擎，Kylin为Hadoop提供标准SQL支持大部分查询功能</div>
+                <div class="indent" style="margin-top: 25px">作为一个 OLAP 引擎，Kylin 为 Hadoop 提供标准 SQL 支持大部分查询功能</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">
@@ -72,7 +72,7 @@ title: 大数据上的OLAP引擎
                   <img width="30" src="{{"/assets/images/icon_index_query.png" | prepend: site.baseurl }}">
                 </div>
                 <b>交互式查询能力: </b><br/>
-                <div class="indent" style="margin-top: 25px">通过Kylin，用户可以与Hadoop数据进行亚秒级交互，在同样的数据集上提供比Hive更好的性能</div>
+                <div class="indent" style="margin-top: 25px">通过 Kylin，用户可以与 Hadoop 数据进行亚秒级交互，在同样的数据集上提供比 Hive 更好的性能</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6"> 
@@ -81,7 +81,7 @@ title: 大数据上的OLAP引擎
                   <img width="30" src="{{"/assets/images/icon_index_cube.png" | prepend: site.baseurl }}"> 
                 </div>
                 <b>多维立方体（MOLAP Cube）: </b><br/>
-                <div class="indent" style="margin-top: 25px">用户能够在Kylin里为百亿以上数据集定义数据模型并构建立方体</div>
+                <div class="indent" style="margin-top: 25px">用户能够在 Kylin 里为百亿以上数据集定义数据模型并构建立方体</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">
@@ -90,7 +90,7 @@ title: 大数据上的OLAP引擎
                   <img width="30" src="{{"/assets/images/icon_index_streaming.png" | prepend: site.baseurl }}"> 
                 </div>
                 <b>实时 OLAP：</b><br/>
-                <div class="indent">Kylin可以在数据产生时进行实时处理，用户可以在秒级延迟下进行实时数据的多维分析。 </div>
+                <div class="indent">Kylin 可以在数据产生时进行实时处理，用户可以在秒级延迟下进行实时数据的多维分析。 </div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">
@@ -99,7 +99,7 @@ title: 大数据上的OLAP引擎
                   <img width="30" src="{{"/assets/images/icon_index_shape.png" | prepend: site.baseurl }}">
                 </div>
                 <b>与BI工具无缝整合:</b><br/>
-                <div class="indent" style="margin-top: 47px">Kylin提供与BI工具的整合能力，如Tableau，PowerBI/Excel，MSTR，QlikSense，Hue和SuperSet</div>
+                <div class="indent" style="margin-top: 47px">Kylin 提供与 BI 工具的整合能力，如Tableau，PowerBI/Excel，MSTR，QlikSense，Hue 和 SuperSet</div>
               </div>
             </div>
           </div>
