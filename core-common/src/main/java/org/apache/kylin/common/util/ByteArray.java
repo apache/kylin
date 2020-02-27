@@ -165,7 +165,7 @@ public class ByteArray implements Comparable<ByteArray>, Serializable {
     @Override
     public String toString() {
         if (data == null)
-            return null;
+            return "";
         else
             return Bytes.toStringBinary(data, offset, length);
     }

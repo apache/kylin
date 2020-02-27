@@ -29,9 +29,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
- * @deprecated abandon code which seems to be replaced by ActiveReservoirReporter, should be removed later
+ * Extension Point for use-defined, fix-rated Metrics Reporter
  */
-@Deprecated
 public abstract class BaseScheduledReporter implements Closeable {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseScheduledReporter.class);

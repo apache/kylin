@@ -125,7 +125,7 @@ public class CuboidStatsUtil {
                     nEffective++;
                 }
             }
-            
+
             if (nEffective != 0)
                 srcCuboidsStats.put(cuboid, totalEstRowCount / nEffective);
             else
@@ -349,7 +349,7 @@ public class CuboidStatsUtil {
     }
 
     private static double calculateRollupRatio(Pair<Long, Long> rollupStats) {
-        double rollupInputCount = rollupStats.getFirst() + rollupStats.getSecond();
+        double rollupInputCount = (double) rollupStats.getFirst() + rollupStats.getSecond();
         return rollupInputCount == 0 ? 0 : 1.0 * rollupStats.getFirst() / rollupInputCount;
     }
 }

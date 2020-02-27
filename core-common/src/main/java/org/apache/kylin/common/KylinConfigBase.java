@@ -613,6 +613,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.cube.segment-advisor", "org.apache.kylin.cube.CubeSegmentAdvisor");
     }
 
+    public boolean enableJobCuboidSizeOptimize() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.size-estimate-enable-optimize", "false"));
+    }
+
     public double getJobCuboidSizeRatio() {
         return Double.parseDouble(getOptional("kylin.cube.size-estimate-ratio", "0.25"));
     }
@@ -1579,6 +1583,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.engine.flink.sanity-check-enabled", FALSE));
     }
 
+    public boolean isSparCreateHiveTableViaSparkEnable() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark-create-table-enabled", "false"));
+    }
+
     // ============================================================================
     // ENGINE.LIVY
     // ============================================================================
@@ -2200,6 +2208,11 @@ public abstract class KylinConfigBase implements Serializable {
         return getPropertiesByPrefix("kylin.metrics.");
     }
 
+    public int printSampleEventRatio(){
+        String val = getOptional("kylin.metrics.kafka-sample-ratio", "10000");
+        return Integer.parseInt(val);
+    }
+
     // ============================================================================
     // tool
     // ============================================================================
@@ -2459,4 +2472,7 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.tool.health-check.stale-job-threshold-days", "30"));
     }
 
+    public String getIntersectFilterOrSeparator() {
+        return getOptional("kylin.query.intersect.separator", "|");
+    }
 }

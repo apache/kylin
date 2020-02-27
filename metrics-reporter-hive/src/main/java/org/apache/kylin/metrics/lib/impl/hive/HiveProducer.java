@@ -257,7 +257,7 @@ public class HiveProducer {
         partitionKVs.put(TimePropertyEnum.DAY_DATE.toString(),
                 rawValue.get(TimePropertyEnum.DAY_DATE.toString()).toString());
 
-        return parseToHiveProducerRecord(HiveReservoirReporter.getTableFromSubject(record.getType()), partitionKVs,
+        return parseToHiveProducerRecord(HiveReservoirReporter.getTableFromSubject(record.getSubject()), partitionKVs,
                 rawValue);
     }
 

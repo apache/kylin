@@ -73,7 +73,7 @@ public class ReplicaSetLeaderSelector extends LeaderSelectorListenerAdapter impl
         }
         while (true) {
             try {
-                Thread.sleep(5 * 60 * 1000);
+                Thread.sleep(5 * 60 * 1000L);
             } catch (InterruptedException exception) {
                 Thread.interrupted();
                 break;

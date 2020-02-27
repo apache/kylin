@@ -78,13 +78,6 @@ public class DataModelManagerTest extends LocalFileMetadataTestCase {
 
     private void assertSnowflakeQuality(DataModelDesc model) {
         Assert.assertNotNull(model);
-        try {
-            model.findTable("TEST_COUNTRY");
-            Assert.fail();
-        } catch (IllegalArgumentException ex) {
-            // excepted
-        }
-
         Assert.assertNotNull(model.findTable("BUYER_COUNTRY"));
         Assert.assertNotNull(model.findTable("SELLER_COUNTRY"));
         Assert.assertNotNull(model.findColumn("BUYER_COUNTRY.NAME"));

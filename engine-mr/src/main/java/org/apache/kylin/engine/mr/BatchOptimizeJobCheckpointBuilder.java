@@ -36,7 +36,7 @@ import com.google.common.base.Preconditions;
 
 public class BatchOptimizeJobCheckpointBuilder {
 
-    protected static SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss", Locale.ROOT);
+    protected SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss", Locale.ROOT);
 
     final protected CubeInstance cube;
     final protected String submitter;

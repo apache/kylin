@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metrics.lib;
 
@@ -27,7 +27,7 @@ import org.apache.kylin.common.util.Pair;
 import com.google.common.base.Strings;
 
 /**
- * ActiveReservoirReporter report metrics message from ActiveReservoir
+ * ActiveReservoirReporter report metrics event via listener from ActiveReservoir
  */
 public abstract class ActiveReservoirReporter implements Closeable {
 
