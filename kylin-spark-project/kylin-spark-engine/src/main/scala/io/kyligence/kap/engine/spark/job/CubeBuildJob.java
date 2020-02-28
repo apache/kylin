@@ -111,6 +111,7 @@ public class CubeBuildJob extends SparkApplication {
                 }
                 infos.recordSpanningTree(segId, spanningTree);
 
+                logger.info("Updating segment info");
                 updateSegmentInfo(getParam(MetadataConstants.P_CUBE_ID), seg, buildFromFlatTable.getCount());
             }
             updateSegmentSourceBytesSize(getParam(MetadataConstants.P_CUBE_ID), ResourceDetectUtils.getSegmentSourceSize(shareDir));
