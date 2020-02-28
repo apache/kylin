@@ -76,11 +76,29 @@ cp tomcat-ext/target/kylin-tomcat-ext-${version}.jar build/tomcat/lib/kylin-tomc
 chmod 644 build/tomcat/lib/kylin-tomcat-ext-${version}.jar
 
 # add ROOT application
-mkdir -p build/tomcat/webapps/ROOT
+mkdir -p build/tomcat/webapps/ROOT/WEB-INF/
 cat > build/tomcat/webapps/ROOT/index.html <<EOL
 <html>
   <head>
     <meta http-equiv="refresh" content="1;url=kylin">
   </head>
 </html>
+EOL
+
+cat > build/tomcat/webapps/ROOT/WEB-INF/web.xml <<EOL
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+		  http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+           version="2.5">
+
+    <display-name>ROOT</display-name>
+    <absolute-ordering />
+    <welcome-file-list>
+        <welcome-file>/index.html</welcome-file>
+    </welcome-file-list>
+
+    <distributable />
+</web-app>
 EOL
