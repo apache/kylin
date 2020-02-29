@@ -34,7 +34,6 @@ import java.util.TimeZone;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.Pair;
@@ -902,7 +901,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtils.isEmpty(jobName)) {
                                     return true;
                                 }
 
@@ -1002,7 +1001,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtils.isEmpty(jobName)) {
                                     return true;
                                 }
 
@@ -1226,7 +1225,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtils.isEmpty(jobName)) {
                                     return true;
                                 }
 
@@ -1301,7 +1300,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtils.isEmpty(jobName)) {
                                     return true;
                                 }
 
