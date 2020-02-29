@@ -90,7 +90,7 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
         extractor.execute(args);
     }
 
-    private String getHBaseMasterUrl() throws IOException, KeeperException {
+    private String getHBaseMasterUrl() {
         String host = conf.get("hbase.master.info.bindAddress");
         if (host.equals("0.0.0.0")) {
             try {
