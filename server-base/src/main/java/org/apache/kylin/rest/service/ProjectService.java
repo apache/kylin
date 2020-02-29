@@ -29,7 +29,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Sets;
-import org.apache.directory.api.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.rest.constant.Constant;
@@ -186,7 +186,7 @@ public class ProjectService extends BasicService {
         }
 
         // listAll method may not need a single param.But almost all listAll method pass
-        if (!Strings.isEmpty(projectName)) {
+        if (!StringUtils.isEmpty(projectName)) {
             readableProjects = Lists
                     .newArrayList(Iterators.filter(readableProjects.iterator(), new Predicate<ProjectInstance>() {
                         @Override
