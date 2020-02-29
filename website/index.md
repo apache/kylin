@@ -1,6 +1,6 @@
 ---
 layout: default
-title: OLAP engine for big data
+title: Analytical Data Warehouse for Big Data
 ---
 
 
@@ -74,7 +74,7 @@ title: OLAP engine for big data
                   <img width="30" src="assets/images/icon_index_hadoop.png">
                 </div>
                 <h6><b>ANSI SQL Interface for Big Data on Hadoop</b></h6>
-                <div class="indent" style="margin-top: 25px">As an OLAP engine, Kylin offers ANSI SQL on Hadoop/Spark and supports most ANSI SQL query functions.</div>
+                <div class="indent" style="margin-top: 25px">As an Analytical Data Warehouse, Kylin offers ANSI SQL on Hadoop/Spark and supports most ANSI SQL query functions.</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">

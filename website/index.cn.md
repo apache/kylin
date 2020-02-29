@@ -1,6 +1,6 @@
 ---
 layout: default-cn
-title: 大数据上的OLAP引擎
+title: 大数据分析型数据仓库
 ---
 
 
@@ -53,7 +53,7 @@ title: 大数据上的OLAP引擎
                 <div class="home-pic">
                   <img width="30" src="{{"/assets/images/icon_index_olap.png" | prepend: site.baseurl }}">
                 </div>
-                <b>可扩展超快的基于大数据的 OLAP 引擎: </b><br/>
+                <b>可扩展超快的基于大数据的分析型数据仓库: </b><br/>
                 <div class="indent" style="margin-top: 25px">Kylin 是为减少在 Hadoop/Spark 上百亿规模数据查询延迟而设计</div>
               </div>
             </div>
@@ -63,7 +63,7 @@ title: 大数据上的OLAP引擎
                   <img width="30" src="{{"/assets/images/icon_index_hadoop.png" | prepend: site.baseurl }}">
                 </div>
                 <b>Hadoop ANSI SQL 接口: </b><br/>
-                <div class="indent" style="margin-top: 25px">作为一个 OLAP 引擎，Kylin 为 Hadoop 提供标准 SQL 支持大部分查询功能</div>
+                <div class="indent" style="margin-top: 25px">作为一个分析型数据仓库(也是 OLAP 引擎)，Kylin 为 Hadoop 提供标准 SQL 支持大部分查询功能</div>
               </div>
             </div>
             <div class="col-sm-6 col-md-6">
@@ -348,7 +348,7 @@ title: 大数据上的OLAP引擎
             <h6>
               <span class="circle-spot">Kylin 核心:</span>
             </h6> 
-            <p>Kylin OLAP引擎基础框架，包括元数据（Metadata）引擎，查询引擎，Job引擎及存储引擎等，同时包括REST服务器以响应客户端请求</p>
+            <p>Kylin 基础框架，包括元数据（Metadata）引擎，查询引擎，Job引擎及存储引擎等，同时包括REST服务器以响应客户端请求</p>
             <h6>
               <span class="circle-spot">扩展:</span>
             </h6> 
