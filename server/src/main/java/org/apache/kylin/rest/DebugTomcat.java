@@ -21,7 +21,7 @@ package org.apache.kylin.rest;
 import org.apache.catalina.Context;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.catalina.core.StandardServer;
-import org.apache.catalina.deploy.ErrorPage;
+import org.apache.tomcat.util.descriptor.web.ErrorPage;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
