@@ -34,7 +34,7 @@ source ${dir}/set-java-home.sh
 
 function retrieveDependency() {
     #retrive $hive_dependency and $hbase_dependency
-    if [[ -z $reload_dependency && `ls -1 ${dir}/cached-* 2>/dev/null | wc -l` -eq 5 ]]
+    if [[ -z $reload_dependency && `ls -1 ${dir}/cached-* 2>/dev/null | wc -l` -eq 6 ]]
     then
         echo "Using cached dependency..."
         source ${dir}/cached-hive-dependency.sh
@@ -42,12 +42,14 @@ function retrieveDependency() {
         source ${dir}/cached-hadoop-conf-dir.sh
         source ${dir}/cached-kafka-dependency.sh
         source ${dir}/cached-spark-dependency.sh
+        source ${dir}/cached-flink-dependency.sh
     else
         source ${dir}/find-hive-dependency.sh
         source ${dir}/find-hbase-dependency.sh
         source ${dir}/find-hadoop-conf-dir.sh
         source ${dir}/find-kafka-dependency.sh
         source ${dir}/find-spark-dependency.sh
+        source ${dir}/find-flink-dependency.sh
     fi
 
     #retrive $KYLIN_EXTRA_START_OPTS
@@ -61,7 +63,7 @@ function retrieveDependency() {
     fi
 
     export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/conf:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH_PREFIX}
-    export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${hive_dependency}:${kafka_dependency}:${spark_dependency}
+    export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${hive_dependency}:${kafka_dependency}:${spark_dependency}:${flink_dependency}
 
     verbose "HBASE_CLASSPATH: ${HBASE_CLASSPATH}"
 }
@@ -149,6 +151,7 @@ function retrieveStartCommand() {
     -Dkylin.hbase.dependency=${hbase_dependency} \
     -Dkylin.kafka.dependency=${kafka_dependency} \
     -Dkylin.spark.dependency=${spark_dependency} \
+    -Dkylin.flink.dependency=${flink_dependency} \
     -Dkylin.hadoop.conf.dir=${kylin_hadoop_conf_dir} \
     -Dkylin.server.host-address=${kylin_rest_address} \
     -Dspring.profiles.active=${spring_profile} \
