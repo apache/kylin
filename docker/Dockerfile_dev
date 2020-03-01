@@ -18,13 +18,13 @@
 # Docker image for apache kylin, based on the Hadoop image
 FROM hadoop2.7-all-in-one
 
-ENV KYLIN_VERSION 3.0.1
-ENV KYLIN_HOME /home/admin/apache-kylin-$KYLIN_VERSION-bin-hbase1x
-
-# Download released Kylin
-RUN wget https://archive.apache.org/dist/kylin/apache-kylin-$KYLIN_VERSION/apache-kylin-$KYLIN_VERSION-bin-hbase1x.tar.gz \
-    && tar -zxvf /home/admin/apache-kylin-$KYLIN_VERSION-bin-hbase1x.tar.gz \
-    && rm -f /home/admin/apache-kylin-$KYLIN_VERSION-bin-hbase1x.tar.gz
+## for dev
+ENV KYLIN_VERSION 3.1.0-SNAPSHOT
+ENV KYLIN_HOME /home/admin/apache-kylin-$KYLIN_VERSION-bin
+# Copy compiled Kylin from local
+COPY apache-kylin-$KYLIN_VERSION-bin.tar.gz /home/admin/
+RUN tar -zxvf /home/admin/apache-kylin-$KYLIN_VERSION-bin.tar.gz \
+    && rm -f /home/admin/apache-kylin-$KYLIN_VERSION-bin.tar.gz
 
 RUN echo "kylin.engine.spark-conf.spark.executor.memory=1G" >> $KYLIN_HOME/conf/kylin.properties \
     && echo "kylin.engine.spark-conf-mergedict.spark.executor.memory=1.5G" >>  $KYLIN_HOME/conf/kylin.properties \
