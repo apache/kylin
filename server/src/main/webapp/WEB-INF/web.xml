@@ -20,6 +20,7 @@
            version="2.5">
 
     <display-name>Kylin REST Service</display-name>
+    <absolute-ordering />
 
     <welcome-file-list>
         <welcome-file>/index.html</welcome-file>
