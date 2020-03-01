@@ -79,6 +79,7 @@ webapp/CHANGELOG.md
 # package file
 build/tomcat
 build/lib
+build/spark
 *.tgz
 *.tar.gz
 webapp/app/components/*
@@ -93,5 +94,5 @@ dependency-reduced-pom.xml
 webapp/package-lock.json
 
 #kylin
-src/examples/test_metadata/*
+examples/test_case_data/*
 src/spark-project/examples/test_metadata/*
