@@ -20,7 +20,6 @@ package org.apache.kylin.common;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
@@ -2460,23 +2459,6 @@ public abstract class KylinConfigBase implements Serializable {
 
     public int getParquetDfsReplication() {
         return Integer.valueOf(getOptional("kylin.storage.columnar.dfs-replication", "3"));
-    }
-
-    public static KylinConfig loadKylinConfigFromHdfs(String uri) {
-        if (uri == null)
-            throw new IllegalArgumentException("StorageUrl should not be null");
-        if (!uri.contains("@hdfs"))
-            throw new IllegalArgumentException("StorageUrl should like @hdfs schema");
-        logger.info("Ready to load KylinConfig from uri: {}", uri);
-        StorageURL url = StorageURL.valueOf(uri);
-        String metaDir = url.getParameter("path") + "/" + KylinConfig.KYLIN_CONF_PROPERTIES_FILE;
-        Path path = new Path(metaDir);
-        try(InputStream is = path.getFileSystem(HadoopUtil.getCurrentConfiguration()).open(new Path(metaDir))) {
-            Properties prop = KylinConfig.streamToProps(is);
-            return KylinConfig.createKylinConfig(prop);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public boolean isAutoSetSparkConf() {
