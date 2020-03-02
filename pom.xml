@@ -83,6 +83,9 @@
     <spark.version>2.3.2</spark.version>
     <kryo.version>4.0.0</kryo.version>
 
+    <!-- Flink versions -->
+    <flink.version>1.9.0</flink.version>
+
     <!-- mysql versions -->
     <mysql-connector.version>5.1.8</mysql-connector.version>
 
@@ -747,6 +750,24 @@
         <artifactId>kryo-shaded</artifactId>
         <version>${kryo.version}</version>
         <scope>provided</scope>
+      </dependency>
+      <!-- Flink dependency -->
+      <dependency>
+        <groupId>org.apache.flink</groupId>
+        <artifactId>flink-java</artifactId>
+        <version>${flink.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.flink</groupId>
+        <artifactId>flink-scala_2.11</artifactId>
+        <version>${flink.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.flink</groupId>
+        <artifactId>flink-hadoop-compatibility_2.11</artifactId>
+        <version>${flink.version}</version>
       </dependency>
       <!-- Kafka dependency -->
       <dependency>
