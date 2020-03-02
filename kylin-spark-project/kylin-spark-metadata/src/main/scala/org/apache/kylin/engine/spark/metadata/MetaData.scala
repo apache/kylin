@@ -21,14 +21,15 @@ package org.apache.kylin.engine.spark.metadata
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity
 import org.apache.spark.sql.types.{DataType, StructField, StructType}
+import scala.collection.JavaConverters.mapAsJavaMapConverter
 
 import scala.collection.mutable
 
 class ColumnDesc(val columnName: String, val dataType: DataType, val tableName: String, val tableAliasName: String, val id: Int) extends Serializable {
   def identity: String = s"$tableAliasName.$columnName"
-
   def isColumnType: Boolean = true
 }
+
 object ColumnDesc{
   def apply(columnName: String, dataType: DataType, tableName: String, tableAliasName: String, id: Int):
   ColumnDesc = new ColumnDesc(columnName, dataType, tableName, tableAliasName, id)
@@ -39,7 +40,6 @@ case class LiteralColumnDesc(
   override val tableName: String, override val tableAliasName: String, override val id: Int, val value: Any)
   extends ColumnDesc(columnName, dataType, tableName, tableAliasName, id) {
   override def isColumnType: Boolean = false
-
 }
 
 case class ComputedColumnDesc(
@@ -89,7 +89,11 @@ case class SegmentInfo(id: String,
     snapshotInfo = tableInfo
   }
   
-  def getAllLayoutSize() : Long = {
+  def getAllLayoutSize(): Long = {
     layouts.map(_.getByteSize).sum
+  }
+  
+  def getSnapShot2JavaMap(): java.util.Map[String, String] = {
+    snapshotInfo.asJava
   }
 }

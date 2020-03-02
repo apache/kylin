@@ -136,6 +136,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
 
         // Result cmp: Parquet vs Spark SQL
         queryTest(segment);
+        snapshotTest(segment);
     }
 
     @Test
@@ -194,14 +195,11 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
         }
     }
 
-    @Test
-    public void testParquetQuery() {
-        String cubeName = "ci_inner_join_cube";
-        CubeInstance cubeInstance = cubeManager.getCube(cubeName);
-        Segments<CubeSegment> segments = cubeInstance.getSegments();
-        for (CubeSegment segment : segments) {
-            queryTest(segment);
-        }
+    public void snapshotTest(CubeSegment segment) {
+        String cubeName = segment.getCubeInstance().getName();
+        CubeInstance cubeInstance = cubeManager.reloadCube(cubeName);
+        segment = cubeInstance.getSegmentById(segment.getUuid());
+        Assert.assertEquals(5, segment.getSnapshots().size());
     }
 
     private void queryTest(CubeSegment segment) {

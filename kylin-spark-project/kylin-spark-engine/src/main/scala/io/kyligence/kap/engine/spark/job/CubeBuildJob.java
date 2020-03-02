@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -149,6 +150,7 @@ public class CubeBuildJob extends SparkApplication {
         segment.setLastBuildJobID(getParam(MetadataConstants.P_JOB_ID));
         segment.setInputRecords(sourceRowCount);
         segment.setStatus(SegmentStatusEnum.READY);
+        segment.setSnapshots(new ConcurrentHashMap<>(segmentInfo.getSnapShot2JavaMap()));
         cubeSegments.add(segment);
         update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
         cubeManager.updateCube(update);

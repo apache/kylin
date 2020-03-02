@@ -18,7 +18,7 @@
 
 package io.kyligence.kap.engine.spark.builder
 
-import io.kyligence.kap.engine.spark.job.NSparkCubingUtil._
+import io.kyligence.kap.engine.spark.job.NSparkCubingUtil.convertFromDot
 import org.apache.kylin.engine.spark.metadata.{ColumnDesc, ComputedColumnDesc}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.functions.expr
