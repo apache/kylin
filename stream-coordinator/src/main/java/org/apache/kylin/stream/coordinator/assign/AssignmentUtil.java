@@ -44,7 +44,7 @@ public class AssignmentUtil {
                 List<Partition> partitions = cubeAssignment.getPartitionsByReplicaSetID(replicaSetID);
                 Map<String, List<Partition>> nodeAssignment = nodeAssignmentsMap.get(replicaSetID);
                 if (nodeAssignment == null) {
-                    nodeAssignment = Maps.newHashMap();
+                    nodeAssignment = Maps.newLinkedHashMap();
                     nodeAssignmentsMap.put(replicaSetID, nodeAssignment);
                 }
                 nodeAssignment.put(cubeName, partitions);
