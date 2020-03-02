@@ -18,12 +18,15 @@
 
 package io.kyligence.kap.engine.spark.utils;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.AutoDeleteDirectory;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
@@ -33,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedHashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -93,5 +97,22 @@ public class MetaDumpUtil {
         }
 
         logger.debug("Dump resources to {} took {} ms", metaOutDir, System.currentTimeMillis() - startTime);
+    }
+
+    public static KylinConfig loadKylinConfigFromHdfs(String uri) {
+        if (uri == null)
+            throw new IllegalArgumentException("StorageUrl should not be null");
+        if (!uri.contains("@hdfs"))
+            throw new IllegalArgumentException("StorageUrl should like @hdfs schema");
+        logger.info("Ready to load KylinConfig from uri: {}", uri);
+        StorageURL url = StorageURL.valueOf(uri);
+        String metaDir = url.getParameter("path") + "/" + KylinConfig.KYLIN_CONF_PROPERTIES_FILE;
+        Path path = new Path(metaDir);
+        try(InputStream is = path.getFileSystem(HadoopUtil.getCurrentConfiguration()).open(new Path(metaDir))) {
+            Properties prop = KylinConfig.streamToProps(is);
+            return KylinConfig.createKylinConfig(prop);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

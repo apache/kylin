@@ -25,6 +25,7 @@ import io.kyligence.kap.engine.spark.job.LogJobInfoUtils;
 import io.kyligence.kap.engine.spark.job.SparkJobConstants;
 import io.kyligence.kap.engine.spark.job.UdfManager;
 import io.kyligence.kap.engine.spark.utils.JobMetricsUtils;
+import io.kyligence.kap.engine.spark.utils.MetaDumpUtil;
 import io.kyligence.kap.engine.spark.utils.SparkConfHelper;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -122,7 +123,7 @@ public abstract class SparkApplication {
             layoutSize = StringUtils.split(getParam(MetadataConstants.P_LAYOUT_IDS), ",").length;
         }
         try (KylinConfig.SetAndUnsetThreadLocalConfig autoCloseConfig = KylinConfig
-                .setAndUnsetThreadLocalConfig(KylinConfig.loadKylinConfigFromHdfs(hdfsMetalUrl))) {
+                .setAndUnsetThreadLocalConfig(MetaDumpUtil.loadKylinConfigFromHdfs(hdfsMetalUrl))) {
             config = autoCloseConfig.get();
             config.setProperty("kylin.source.provider.0", "io.kyligence.kap.engine.spark.source.HiveSource");
             // init KylinBuildEnv
