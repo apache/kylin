@@ -34,7 +34,7 @@ source ${dir}/set-java-home.sh
 
 function retrieveDependency() {
     #retrive $hive_dependency and $hbase_dependency
-    if [[ -z $reload_dependency && `ls -1 ${dir}/cached-* 2>/dev/null | wc -l` -eq 5 ]]
+    if [[ -z $reload_dependency && `ls -1 ${dir}/cached-* 2>/dev/null | wc -l` -eq 6 ]]
     then
         echo "Using cached dependency..."
         source ${dir}/cached-hive-dependency.sh
@@ -47,6 +47,7 @@ function retrieveDependency() {
         source ${dir}/cached-hadoop-conf-dir.sh
         source ${dir}/cached-kafka-dependency.sh
         source ${dir}/cached-spark-dependency.sh
+        source ${dir}/cached-flink-dependency.sh
     else
         source ${dir}/find-hive-dependency.sh
         #retrive $hbase_dependency
@@ -58,6 +59,7 @@ function retrieveDependency() {
         source ${dir}/find-hadoop-conf-dir.sh
         source ${dir}/find-kafka-dependency.sh
         source ${dir}/find-spark-dependency.sh
+        source ${dir}/find-flink-dependency.sh
     fi
 
     # get hdp_version
@@ -100,7 +102,7 @@ function retrieveDependency() {
 
     # compose KYLIN_TOMCAT_CLASSPATH
     tomcat_classpath=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*
-    export KYLIN_TOMCAT_CLASSPATH=${tomcat_classpath}:${KYLIN_HOME}/conf:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${hadoop_dependencies}
+    export KYLIN_TOMCAT_CLASSPATH=${tomcat_classpath}:${KYLIN_HOME}/conf:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${hadoop_dependencies}:${flink_dependency}
 
     # compose KYLIN_TOOL_CLASSPATH
     export KYLIN_TOOL_CLASSPATH=${KYLIN_HOME}/conf:${KYLIN_HOME}/tool/*:${KYLIN_HOME}/ext/*:${hadoop_dependencies}
