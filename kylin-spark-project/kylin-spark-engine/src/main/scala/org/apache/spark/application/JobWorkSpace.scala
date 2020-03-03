@@ -21,9 +21,9 @@ package org.apache.spark.application
 import java.util
 import java.util.concurrent.CountDownLatch
 
-import io.kyligence.kap.engine.spark.application.SparkApplication
-import io.kyligence.kap.engine.spark.job.KylinBuildEnv
-import io.kyligence.kap.engine.spark.scheduler._
+import org.apache.kylin.engine.spark.application.SparkApplication
+import org.apache.kylin.engine.spark.job.KylinBuildEnv
+import org.apache.kylin.engine.spark.scheduler._
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.KylinJobEventLoop
 

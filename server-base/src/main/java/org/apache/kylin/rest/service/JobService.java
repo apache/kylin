@@ -33,7 +33,7 @@ import java.util.TimeZone;
 
 import javax.annotation.Nullable;
 
-import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;

@@ -19,7 +19,7 @@
 package org.apache.kylin.engine.spark;
 
 import com.google.common.collect.Maps;
-import io.kyligence.kap.engine.spark.job.UdfManager;
+import org.apache.kylin.engine.spark.job.UdfManager;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.job.execution.AbstractExecutable;

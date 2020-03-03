@@ -1402,6 +1402,10 @@
         <!-- uncomment this on release -->
         <!--<version>3.4.1</version>-->
       </plugin>
+      <plugin>
+        <groupId>org.scalastyle</groupId>
+        <artifactId>scalastyle-maven-plugin</artifactId>
+      </plugin>
     </plugins>
   </build>
 

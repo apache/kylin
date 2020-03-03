@@ -19,7 +19,7 @@
 package org.apache.spark.conf.rule
 
 
-import io.kyligence.kap.engine.spark.utils.{SparkConfHelper, SparkConfRuleConstants}
+import org.apache.kylin.engine.spark.utils.{SparkConfHelper, SparkConfRuleConstants}
 import org.apache.kylin.common.KylinConfig
 import org.apache.spark.internal.Logging
 import org.apache.spark.util.Utils
