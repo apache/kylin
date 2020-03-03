@@ -21,7 +21,7 @@ addons:
   sonarcloud:
     organization: "kylin"
     token:
-      secure: "c918989d018ae3af899798716c35f4fe125296a4"
+      secure: "2ca24e5a04ad1fca4ca956953810421aa8bd1470"
 
 cache:
   directories:
