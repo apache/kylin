@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark;
 
-import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.IBatchCubingEngine;

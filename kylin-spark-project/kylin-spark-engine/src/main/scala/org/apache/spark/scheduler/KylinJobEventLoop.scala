@@ -21,7 +21,7 @@ package org.apache.spark.scheduler
 import java.util
 import java.util.{List => JList}
 
-import io.kyligence.kap.engine.spark.scheduler.{KylinJobEvent, KylinJobListener}
+import org.apache.kylin.engine.spark.scheduler.{KylinJobEvent, KylinJobListener}
 import org.apache.spark.util.EventLoop
 
 import scala.collection.JavaConverters._

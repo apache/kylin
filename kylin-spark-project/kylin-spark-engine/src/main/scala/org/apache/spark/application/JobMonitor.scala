@@ -18,8 +18,8 @@
 
 package org.apache.spark.application
 
-import io.kyligence.kap.engine.spark.job.KylinBuildEnv
-import io.kyligence.kap.engine.spark.scheduler._
+import org.apache.kylin.engine.spark.job.KylinBuildEnv
+import org.apache.kylin.engine.spark.scheduler._
 import io.netty.util.internal.ThrowableUtil
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.KylinJobEventLoop

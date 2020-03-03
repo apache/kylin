@@ -18,7 +18,7 @@
 
 package org.apache.spark.utils;
 
-import io.kyligence.kap.engine.spark.utils.BuildUtils;
+import org.apache.kylin.engine.spark.utils.BuildUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.client.api.YarnClient;

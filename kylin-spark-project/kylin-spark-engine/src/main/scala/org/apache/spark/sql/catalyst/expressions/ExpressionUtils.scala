@@ -19,9 +19,7 @@
 package org.apache.spark.sql.catalyst.expressions
 
 import org.apache.spark.sql.AnalysisException
-import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.ExpressionUtils.expression
 
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}

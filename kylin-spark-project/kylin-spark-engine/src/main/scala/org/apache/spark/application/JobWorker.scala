@@ -20,8 +20,8 @@ package org.apache.spark.application
 
 import java.util.concurrent.Executors
 
-import io.kyligence.kap.engine.spark.application.SparkApplication
-import io.kyligence.kap.engine.spark.scheduler._
+import org.apache.kylin.engine.spark.application.SparkApplication
+import org.apache.kylin.engine.spark.scheduler._
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.KylinJobEventLoop
 

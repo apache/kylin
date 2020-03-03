@@ -18,13 +18,9 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import io.kyligence.kap.engine.spark.NSparkCubingEngine;
-import io.kyligence.kap.engine.spark.builder.CreateFlatTable;
-import io.kyligence.kap.engine.spark.job.CuboidAggregator;
-import io.kyligence.kap.engine.spark.job.NSparkCubingJob;
-import io.kyligence.kap.engine.spark.job.NSparkCubingUtil;
-import io.kyligence.kap.engine.spark.job.NSparkMergingJob;
-import io.kyligence.kap.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
+import org.apache.kylin.engine.spark.NSparkCubingEngine;
+import org.apache.kylin.engine.spark.builder.CreateFlatTable;
+import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -46,7 +42,6 @@ import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.lock.MockJobLock;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Dataset;
@@ -88,10 +83,10 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
     public void setup() throws Exception {
         System.setProperty("kylin.job.scheduler.poll-interval-second", "1");
         System.setProperty("kap.engine.persist-flattable-threshold", "0");
-        System.setProperty("kylin.metadata.distributed-lock-impl", "io.kyligence.kap.engine.spark.utils.MockedDistributedLock$MockedFactory");
+        System.setProperty("kylin.metadata.distributed-lock-impl", "org.apache.kylin.engine.spark.utils.MockedDistributedLock$MockedFactory");
         System.setProperty(KylinConfig.KYLIN_CONF, LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        kylinConfig.setProperty("kylin.source.provider.0", "io.kyligence.kap.engine.spark.source.HiveSource");
+        kylinConfig.setProperty("kylin.source.provider.0", "org.apache.kylin.engine.spark.source.HiveSource");
         cubeManager = CubeManager.getInstance(kylinConfig);
         jobService = ExecutableManager.getInstance(kylinConfig);
         scheduler = DefaultScheduler.createInstance();

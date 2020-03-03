@@ -33,11 +33,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.kyligence.kap.engine.spark.NLocalWithSparkSessionTest;
-import io.kyligence.kap.engine.spark.job.KylinBuildEnv;
-import io.kyligence.kap.metadata.cube.cuboid.NForestSpanningTree;
-import io.kyligence.kap.metadata.cube.model.NDataflow;
-import io.kyligence.kap.metadata.cube.model.NDataflowManager;
+import org.apache.kylin.engine.spark.NLocalWithSparkSessionTest;
+import org.apache.kylin.engine.spark.job.KylinBuildEnv;
+import org.apache.kylin.metadata.cube.cuboid.NForestSpanningTree;
+import org.apache.kylin.metadata.cube.model.NDataflow;
+import org.apache.kylin.metadata.cube.model.NDataflowManager;
 
 import static org.apache.kylin.common.util.AbstractKylinTestCase.getTestConfig;
 

@@ -21,9 +21,9 @@ package org.apache.spark.autoheal
 import java.util
 
 import com.google.common.collect.Maps
-import io.kyligence.kap.engine.spark.job.KylinBuildEnv
-import io.kyligence.kap.engine.spark.scheduler.{JobFailed, ResourceLack, RunJob}
-import io.kyligence.kap.engine.spark.utils.SparkConfHelper._
+import org.apache.kylin.engine.spark.job.KylinBuildEnv
+import org.apache.kylin.engine.spark.scheduler.{JobFailed, ResourceLack, RunJob}
+import org.apache.kylin.engine.spark.utils.SparkConfHelper._
 import org.apache.spark.SparkConf
 import org.apache.spark.application.RetryInfo
 import org.apache.spark.internal.Logging

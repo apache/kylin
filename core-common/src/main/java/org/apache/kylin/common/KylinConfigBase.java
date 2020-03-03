@@ -913,7 +913,7 @@ public abstract class KylinConfigBase implements Serializable {
         r.put(0, "org.apache.kylin.source.hive.HiveSource");
         r.put(1, "org.apache.kylin.source.kafka.KafkaSource");
         r.put(8, "org.apache.kylin.source.jdbc.JdbcSource");
-        r.put(9, "io.kyligence.kap.engine.spark.source.CsvSource");
+        r.put(9, "org.apache.kylin.engine.spark.source.CsvSource");
         r.put(16, "org.apache.kylin.source.jdbc.extensible.JdbcSource");
         r.put(20, "org.apache.kylin.stream.source.kafka.KafkaBatchSourceAdaptor");
         r.put(21, "org.apache.kylin.stream.source.kafka.KafkaBatchSourceAdaptor");
@@ -1125,7 +1125,7 @@ public abstract class KylinConfigBase implements Serializable {
         r.put(1, "org.apache.kylin.storage.hybrid.HybridStorage");
         r.put(2, "org.apache.kylin.storage.hbase.HBaseStorage");
         r.put(3, "org.apache.kylin.storage.stream.StreamStorage");
-        r.put(4, "io.kyligence.kap.engine.spark.storage.ParquetDataStorage");
+        r.put(4, "org.apache.kylin.engine.spark.storage.ParquetDataStorage");
         r.putAll(convertKeyToInteger(getPropertiesByPrefix("kylin.storage.provider.")));
         return r;
     }
@@ -2339,7 +2339,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getSparkBuildClassName() {
-        return getOptional("kylin.engine.spark.build-class-name", "io.kyligence.kap.engine.spark.job.CubeBuildJob");
+        return getOptional("kylin.engine.spark.build-class-name", "org.apache.kylin.engine.spark.job.CubeBuildJob");
     }
 
     public String getSparkTableSamplingClassName() {
@@ -2475,11 +2475,11 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getClusterInfoFetcherClassName() {
         return getOptional("kylin.engine.spark.cluster-info-fetcher-class-name",
-                "io.kyligence.kap.cluster.YarnInfoFetcher");
+                "org.apache.kylin.cluster.YarnInfoFetcher");
     }
 
     public String getSparkMergeClassName() {
-        return getOptional("kylin.engine.spark.merge-class-name", "io.kyligence.kap.engine.spark.job.DFMergeJob");
+        return getOptional("kylin.engine.spark.merge-class-name", "org.apache.kylin.engine.spark.job.DFMergeJob");
     }
 
     public int getSparkEngineMaxRetryTime() {
