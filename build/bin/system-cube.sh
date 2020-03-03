@@ -88,16 +88,42 @@ then
 	  ]
 	]
 	EOF
-    $KYLIN_HOME/bin/kylin.sh org.apache.kylin.tool.metrics.systemcube.SCCreator \
-    -inputConfig ${SINK_TOOLS_FILE} \
-    -output ${OUTPUT_FORDER}
+  $KYLIN_HOME/bin/kylin.sh org.apache.kylin.tool.metrics.systemcube.SCCreator \
+  -inputConfig ${SINK_TOOLS_FILE} \
+  -output ${OUTPUT_FORDER}
 
-    hive -f ${OUTPUT_FORDER}/create_hive_tables_for_system_cubes.sql
+  hive_client_mode=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.client`
 
-    $KYLIN_HOME/bin/metastore.sh restore ${OUTPUT_FORDER}
+  # Get Database
+  system_database=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.database-for-flat-table | tr [a-z] [A-Z]`
 
-    #refresh signature
-    $KYLIN_HOME/bin/kylin.sh org.apache.kylin.cube.cli.CubeSignatureRefresher ${SC_NAME_1},${SC_NAME_2},${SC_NAME_3},${SC_NAME_4},${SC_NAME_5}
+  # 'create database' failed will not exit when donot have permission to create database;
+  sed -i -e 's/CREATE DATABASE /#CREATE DATABASE /g' ${OUTPUT_FORDER}/create_hive_tables_for_system_cubes.sql
+
+  if [ "${hive_client_mode}" == "beeline" ]
+  then
+      beeline_params=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.beeline-params`
+      beeline ${beeline_params} -e "CREATE DATABASE IF NOT EXISTS "$system_database
+
+      hive2_url=`expr match "${beeline_params}" '.*\(hive2:.*:[0-9]\{4,6\}\/\)'`
+      if [ -z ${hive2_url} ]; then
+          hive2_url=`expr match "${beeline_params}" '.*\(hive2:.*:[0-9]\{4,6\}\)'`
+          beeline_params=${beeline_params/${hive2_url}/${hive2_url}/${sample_database}}
+      else
+          beeline_params=${beeline_params/${hive2_url}/${hive2_url}${sample_database}}
+      fi
+
+      beeline ${beeline_params} -f ${OUTPUT_FORDER}/create_hive_tables_for_system_cubes.sql  || { exit 1; }
+  else
+      hive -e "CREATE DATABASE IF NOT EXISTS "$system_database
+      hive --database $sample_database -f ${OUTPUT_FORDER}/create_hive_tables_for_system_cubes.sql  || { exit 1; }
+  fi
+
+  $KYLIN_HOME/bin/metastore.sh restore ${OUTPUT_FORDER}
+
+  #refresh signature
+  $KYLIN_HOME/bin/kylin.sh org.apache.kylin.cube.cli.CubeSignatureRefresher ${SC_NAME_1},${SC_NAME_2},${SC_NAME_3},${SC_NAME_4},${SC_NAME_5}
+
 elif [ "$1" == "cron" ]
 then
     #add a crontab job
