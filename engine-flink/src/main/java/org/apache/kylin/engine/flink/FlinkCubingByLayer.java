@@ -31,6 +31,7 @@ import org.apache.flink.api.java.hadoop.mapreduce.HadoopOutputFormat;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Collector;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -129,7 +130,7 @@ public class FlinkCubingByLayer extends AbstractApplication implements Serializa
         }
 
         Job job = Job.getInstance();
-
+        FileSystem fs = HadoopUtil.getWorkingFileSystem();
         HadoopUtil.deletePath(job.getConfiguration(), new Path(outputPath));
 
         final SerializableConfiguration sConf = new SerializableConfiguration(job.getConfiguration());
@@ -141,8 +142,6 @@ public class FlinkCubingByLayer extends AbstractApplication implements Serializa
 
         logger.info("DataSet input path : {}", inputPath);
         logger.info("DataSet output path : {}", outputPath);
-
-        FlinkUtil.setHadoopConfForCuboid(job, cubeSegment, metaUrl);
 
         int countMeasureIndex = 0;
         for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
@@ -210,6 +209,7 @@ public class FlinkCubingByLayer extends AbstractApplication implements Serializa
 
         env.execute("Cubing for : " + cubeName + " segment " + segmentId);
         logger.info("Finished on calculating all level cuboids.");
+        logger.info("HDFS: Number of bytes written=" + FlinkBatchCubingJobBuilder2.getFileSize(outputPath, fs));
     }
 
     private void sinkToHDFS(
@@ -223,6 +223,7 @@ public class FlinkCubingByLayer extends AbstractApplication implements Serializa
             final KylinConfig kylinConfig) throws Exception {
         final String cuboidOutputPath = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(hdfsBaseLocation, level);
         final SerializableConfiguration sConf = new SerializableConfiguration(job.getConfiguration());
+        FlinkUtil.modifyFlinkHadoopConfiguration(job); // set dfs.replication=2 and enable compress
         FlinkUtil.setHadoopConfForCuboid(job, cubeSeg, metaUrl);
 
         HadoopOutputFormat<Text, Text> hadoopOF =

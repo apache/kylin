@@ -230,6 +230,7 @@ public class FlinkCubingMerge extends AbstractApplication implements Serializabl
 
         env.execute("Merge segments for cube:" + cubeName + ", segment " + segmentId);
         // output the data size to console, job engine will parse and save the metric
+        logger.info("HDFS: Number of bytes written=" + FlinkBatchCubingJobBuilder2.getFileSize(outputPath, fs));
     }
 
     private CubeSegment findSourceSegment(String filePath, CubeInstance cube) {
