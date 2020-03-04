@@ -31,6 +31,12 @@ jdk:
   - openjdk8
 
 before_script:
+  - echo "Downloading Maven 3.5.3"
+      && wget https://archive.apache.org/dist/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.zip
+      && unzip -qq apache-maven-3.5.3-bin.zip
+      && export M2_HOME=$PWD/apache-maven-3.5.3
+      && export PATH=$M2_HOME/bin:$PATH
+      && mvn -version
   - echo "MAVEN_OPTS='-Xms1024m -Xmx3072m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=384m'" > ~/.mavenrc
   - sed -i 's/log4j.logger.org.apache.kylin=DEBUG/log4j.logger.org.apache.kylin=WARN/g' build/conf/kylin-server-log4j.properties
   - sed -i 's/log4j.logger.org.apache.kylin=DEBUG/log4j.logger.org.apache.kylin=WARN/g' build/conf/kylin-tools-log4j.properties
