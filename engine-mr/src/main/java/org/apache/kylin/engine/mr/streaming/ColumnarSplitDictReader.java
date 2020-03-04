@@ -68,7 +68,7 @@ public class ColumnarSplitDictReader extends ColumnarSplitReader {
         itr = set.iterator();
         readCount = new AtomicInteger(0);
 
-        logger.debug("Reader for dictinary reader initialized. ");
+        logger.info("Reader for dictionary reader initialized. ");
     }
 
     @Override

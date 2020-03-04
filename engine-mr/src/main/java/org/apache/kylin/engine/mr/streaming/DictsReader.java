@@ -51,10 +51,12 @@ public class DictsReader extends ColumnarFilesReader {
         dataInputStream = fs.open(dataFilePath);
         Dictionary dict;
         String colName;
+        logger.info("Reading dictionary from {}", dataFilePath.getName());
         for (DimDictionaryMetaInfo dimDictMetaInfo : dimDictMetaInfos) {
             dataInputStream.seek(dimDictMetaInfo.getStartOffset());
             dict = DictionarySerializer.deserialize(dataInputStream);
             colName = dimDictMetaInfo.getDimName();
+            logger.info("Add dict for {}", colName);
             builder.put(colName, dict);
         }
         return builder.build();
