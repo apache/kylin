@@ -37,15 +37,16 @@ fi
 
 if [ ! -d "$flink_home/lib" ]
   then
-    quit "flink not found, set FLINK_HOME, or run bin/download-flink.sh"
+    echo "Optional dependency flink not found, if you need this; set FLINK_HOME, or run bin/download-flink.sh"
+    echo "echo 'skip flink_dependency'" > ${dir}/cached-flink-dependency.sh
+  else
+    flink_dependency=`find -L $flink_home/lib -name '*.jar' ! -name '*shaded-hadoop*' ! -name 'kafka*' ! -name '*log4j*' ! -name '*slf4j*' ! -name '*calcite*' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
+    if [ -z "$flink_dependency" ]
+    then
+        quit "flink jars not found"
+    else
+        verbose "flink dependency: $flink_dependency"
+        export flink_dependency
+    fi
+    echo "export flink_dependency=$flink_dependency" > ${dir}/cached-flink-dependency.sh
 fi
-
-flink_dependency=`find -L $flink_home/lib -name '*.jar' ! -name '*shaded-hadoop*' ! -name 'kafka*' ! -name '*log4j*' ! -name '*slf4j*' ! -name '*calcite*' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
-if [ -z "$flink_dependency" ]
-then
-    quit "flink jars not found"
-else
-    verbose "flink dependency: $flink_dependency"
-    export flink_dependency
-fi
-echo "export flink_dependency=$flink_dependency" > ${dir}/cached-flink-dependency.sh
