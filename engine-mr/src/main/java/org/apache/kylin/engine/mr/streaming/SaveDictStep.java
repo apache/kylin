@@ -108,32 +108,32 @@ public class SaveDictStep extends AbstractExecutable {
                 }
             });
 
-            SequenceFile.Reader reader;
             for (FileStatus file : files) {
-                reader = new SequenceFile.Reader(fs, file.getPath(), conf);
-                Text colName = new Text();
-                Text dictInfo = new Text();
-                while (reader.next(colName, dictInfo)) {
-                    TblColRef colRef = colRefMap.get(colName.toString());
-                    if (colRef == null) {
-                        throw new IllegalArgumentException("Invalid column name " + colName
-                                + " or it need not build dictionary!");
-                    }
-                    DictionaryInfo dictionaryInfo = serializer.deserialize(new DataInputStream(
-                            new ByteArrayInputStream(dictInfo.getBytes())));
-
-                    Dictionary dict = dictionaryInfo.getDictionaryObject();
-                    if (dict != null) {
-                        dictionaryInfo = dictManager.trySaveNewDict(dict, dictionaryInfo);
-                        cubeSeg.putDictResPath(colRef, dictionaryInfo.getResourcePath());
-                        if (cubeSeg.getRowkeyStats() != null) {
-                            cubeSeg.getRowkeyStats().add(
-                                    new Object[] { colRef.getName(), dict.getSize(), dict.getSizeOfId() });
-                        } else {
-                            logger.error("rowkey_stats field not found!");
+                try (SequenceFile.Reader reader = new SequenceFile.Reader(fs, file.getPath(), conf)) {
+                    Text colName = new Text();
+                    Text dictInfo = new Text();
+                    while (reader.next(colName, dictInfo)) {
+                        TblColRef colRef = colRefMap.get(colName.toString());
+                        if (colRef == null) {
+                            throw new IllegalArgumentException("Invalid column name " + colName
+                                    + " or it need not build dictionary!");
                         }
-                    } else {
-                        logger.error("dictionary of column {} not found! ", colRef.getName());
+                        DictionaryInfo dictionaryInfo = serializer.deserialize(new DataInputStream(
+                                new ByteArrayInputStream(dictInfo.getBytes())));
+
+                        Dictionary dict = dictionaryInfo.getDictionaryObject();
+                        if (dict != null) {
+                            dictionaryInfo = dictManager.trySaveNewDict(dict, dictionaryInfo);
+                            cubeSeg.putDictResPath(colRef, dictionaryInfo.getResourcePath());
+                            if (cubeSeg.getRowkeyStats() != null) {
+                                cubeSeg.getRowkeyStats().add(
+                                        new Object[]{colRef.getName(), dict.getSize(), dict.getSizeOfId()});
+                            } else {
+                                logger.error("rowkey_stats field not found!");
+                            }
+                        } else {
+                            logger.error("dictionary of column {} not found! ", colRef.getName());
+                        }
                     }
                 }
             }
