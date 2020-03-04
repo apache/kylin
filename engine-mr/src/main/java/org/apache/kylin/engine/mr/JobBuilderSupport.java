@@ -25,6 +25,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.cube.CubeSegment;
@@ -50,6 +53,7 @@ import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  * Hold reusable steps for builders.
@@ -418,5 +422,30 @@ public class JobBuilderSupport {
         Map<String, String> param = new HashMap<>();
         param.put("path", getDumpMetadataPath(jobId));
         return new StorageURL(kylinConfig.getMetadataUrl().getIdentifier(), "hdfs", param).toString();
+    }
+
+    public static void scanFiles(String input, FileSystem fs, List<FileStatus> outputs) throws IOException {
+        Path path = new Path(input);
+        if (!fs.exists(path)) {
+            return;
+        }
+        FileStatus[] fileStatuses = fs.listStatus(path, p -> !p.getName().startsWith("_"));
+        for (FileStatus stat : fileStatuses) {
+            if (stat.isDirectory()) {
+                scanFiles(stat.getPath().toString(), fs, outputs);
+            } else {
+                outputs.add(stat);
+            }
+        }
+    }
+
+    public static long getFileSize(String input, FileSystem fs) throws IOException {
+        List<FileStatus> outputs = Lists.newArrayList();
+        scanFiles(input, fs, outputs);
+        long size = 0L;
+        for (FileStatus stat: outputs) {
+            size += stat.getLen();
+        }
+        return size;
     }
 }
