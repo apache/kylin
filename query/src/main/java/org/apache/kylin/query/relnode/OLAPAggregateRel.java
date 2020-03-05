@@ -72,6 +72,8 @@ import org.apache.kylin.metadata.expression.ExpressionCountDistributor;
 import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -128,6 +130,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     private List<TblColRef> groups;
     private List<FunctionDesc> aggregations;
     private boolean rewriting;
+
     public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, boolean indicator,
             ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls)
             throws InvalidRelException {
@@ -365,30 +368,41 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                         this.aggregations.add(sumDynFunc);
                         continue;
                     }
-                } else if (aggCall.getAggregation() instanceof SqlCountAggFunction && !aggCall.isDistinct()) {
-                    // count column
-                    if (tupleExpr instanceof ColumnTupleExpression) {
-                        TblColRef srcCol = ((ColumnTupleExpression) tupleExpr).getColumn();
-                        if (this.context.belongToFactTableDims(srcCol)) {
-                            tupleExpr = getCountColumnExpression(srcCol);
-
-                            TblColRef column = TblColRef.newInnerColumn(tupleExpr.getDigest(),
-                                    TblColRef.InnerDataTypeEnum.LITERAL);
-
-                            SumExpressionDynamicFunctionDesc sumDynFunc = new SumExpressionDynamicFunctionDesc(
-                                    ParameterDesc.newInstance(column), tupleExpr);
-
-                            inputColumnRowType.replaceColumnByIndex(iRowIdx, column, tupleExpr);
-
-                            AggregateCall newAggCall = AggregateCall.create(SqlStdOperatorTable.SUM, false,
-                                    aggCall.getArgList(), -1, aggCall.getType(), aggCall.getName());
-                            this.hackAggCalls.put(i, newAggCall);
-
-                            this.context.dynamicFields.put(column, aggCall.getType());
-
-                            this.aggregations.add(sumDynFunc);
+                } else if (aggCall.getAggregation() instanceof SqlCountAggFunction) {
+                    if (!aggCall.isDistinct()) {
+                        // count column, count(case when)
+                        boolean ifGood = true;
+                        Set<TblColRef> cols = ExpressionColCollector.collectColumns(tupleExpr);
+                        for (TblColRef col : cols) {
+                            if (!this.context.belongToFactTableDims(col)) {
+                                ifGood = false;
+                                break;
+                            }
+                        }
+                        if (!ifGood) {
                             continue;
                         }
+                        tupleExpr = getCountSumExpression(tupleExpr);
+                        if (tupleExpr == null) {
+                            continue;
+                        }
+
+                        TblColRef column = TblColRef.newInnerColumn(tupleExpr.getDigest(),
+                                TblColRef.InnerDataTypeEnum.LITERAL);
+
+                        SumExpressionDynamicFunctionDesc sumDynFunc = new SumExpressionDynamicFunctionDesc(
+                                ParameterDesc.newInstance(column), tupleExpr);
+
+                        inputColumnRowType.replaceColumnByIndex(iRowIdx, column, tupleExpr);
+
+                        AggregateCall newAggCall = AggregateCall.create(SqlStdOperatorTable.SUM0, false,
+                                aggCall.getArgList(), -1, aggCall.getType(), aggCall.getName());
+                        this.hackAggCalls.put(i, newAggCall);
+
+                        this.context.dynamicFields.put(column, aggCall.getType());
+
+                        this.aggregations.add(sumDynFunc);
+                        continue;
                     }
                 }
             }
@@ -675,15 +689,51 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 context == null ? "" : String.valueOf(context.id) + "@" + context.realization);
     }
 
-    private TupleExpression getCountColumnExpression(TblColRef colRef) {
-        List<Pair<TupleFilter, TupleExpression>> whenList = Lists.newArrayListWithExpectedSize(1);
-        TupleFilter whenFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.ISNULL);
-        whenFilter.addChild(new ColumnTupleFilter(colRef));
-        whenList.add(new Pair<TupleFilter, TupleExpression>(whenFilter, ConstantTupleExpression.ZERO));
+    private TupleExpression getCountSumExpression(TupleExpression tupleExpr) {
+        TupleExpression zeroExpr = ConstantTupleExpression.ZERO;
+        TupleExpression cntExpr = ColumnTupleExpression.getCntColumnTupleExpression();
 
-        TupleExpression elseExpr = ColumnTupleExpression.getCntColumnTupleExpression();
-        TupleExpression ret = new CaseTupleExpression(whenList, elseExpr);
-        ret.setDigest("_KY_COUNT(" + colRef.getName() + ")");
+        List<Pair<TupleFilter, TupleExpression>> whenList = Lists.newArrayListWithExpectedSize(1);
+        if (tupleExpr instanceof ColumnTupleExpression) {
+            TupleFilter whenFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.ISNOTNULL);
+            whenFilter.addChild(new ColumnTupleFilter(((ColumnTupleExpression) tupleExpr).getColumn()));
+            whenList.add(new Pair<>(whenFilter, cntExpr));
+        } else if (tupleExpr instanceof CaseTupleExpression) {
+            CaseTupleExpression caseTupleExpr = (CaseTupleExpression) tupleExpr;
+            for (Pair<TupleFilter, TupleExpression> entry : caseTupleExpr.getWhenList()) {
+                TupleFilter whenFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
+                TupleFilter filter = getIsNotNullFilterFromExpression(entry.getSecond());
+                if (filter == null) {
+                    return null;
+                }
+                whenFilter.addChild(filter);
+                whenFilter.addChild(entry.getFirst());
+                whenList.add(new Pair<>(whenFilter, cntExpr));
+            }
+            if (caseTupleExpr.getElseExpr() != null) {
+                TupleFilter filter = getIsNotNullFilterFromExpression(caseTupleExpr.getElseExpr());
+                if (filter == null) {
+                    return null;
+                }
+                whenList.add(new Pair<>(filter, cntExpr));
+            }
+        }
+
+        TupleExpression ret = new CaseTupleExpression(whenList, zeroExpr);
+        ret.setDigest("_KY_COUNT(" + tupleExpr.getDigest() + ")");
         return ret;
+    }
+
+    private TupleFilter getIsNotNullFilterFromExpression(TupleExpression tupleExpr) {
+        TupleFilter filter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.ISNOTNULL);
+        if (tupleExpr instanceof ColumnTupleExpression) {
+            filter.addChild(new ColumnTupleFilter(((ColumnTupleExpression) tupleExpr).getColumn()));
+        } else if (tupleExpr instanceof ConstantTupleExpression) {
+            filter.addChild(new ConstantTupleFilter(((ConstantTupleExpression) tupleExpr).getValue()));
+        } else {
+            logger.warn("Cannot get IsNullFilter from Expression {}", tupleExpr);
+            filter = null;
+        }
+        return filter;
     }
 }
