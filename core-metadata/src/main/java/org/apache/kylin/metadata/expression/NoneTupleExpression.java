@@ -27,7 +27,7 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 public class NoneTupleExpression extends TupleExpression {
 
     public NoneTupleExpression() {
-        super(ExpressionOperatorEnum.NONE, Collections.<TupleExpression> emptyList());
+        super(null, ExpressionOperatorEnum.NONE, Collections.<TupleExpression> emptyList());
     }
 
     @Override

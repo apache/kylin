@@ -116,7 +116,7 @@ public class CubeTupleConverter implements ITupleConverter {
         }
 
         for (FunctionDesc metric : selectedMetrics) {
-            if (metric.needRewrite()) {
+            if (metric.needRewriteField()) {
                 String rewriteFieldName = metric.getRewriteFieldName();
                 tupleIdx[i] = tupleInfo.hasField(rewriteFieldName) ? tupleInfo.getFieldIndex(rewriteFieldName) : -1;
             } else {

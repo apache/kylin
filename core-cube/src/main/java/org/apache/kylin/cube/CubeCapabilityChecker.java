@@ -198,14 +198,14 @@ public class CubeCapabilityChecker {
                 Collection<TblColRef> definedCols = dynFunc.ifFriendlyForDerivedFilter()
                         ? cubeDesc.listDimensionColumnsIncludingDerived()
                         : cubeDesc.listDimensionColumnsExcludingDerived(true);
-                Set<TblColRef> filterCols = Sets.newHashSet(dynFunc.getFilterColumnSet());
+                Set<TblColRef> filterCols = Sets.newHashSet(dynFunc.getRuntimeDimensions());
                 filterCols.removeAll(definedCols);
                 if (!filterCols.isEmpty()) {
                     continue;
                 }
 
                 // All inner funcs should be defined
-                Set<FunctionDesc> innerFuncSet = Sets.newHashSet(dynFunc.getRuntimeFuncs());
+                Set<FunctionDesc> innerFuncSet = Sets.newHashSet(dynFunc.getRuntimeFuncMap().values());
                 innerFuncSet.removeAll(definedFuncs);
                 if (!innerFuncSet.isEmpty()) {
                     continue;

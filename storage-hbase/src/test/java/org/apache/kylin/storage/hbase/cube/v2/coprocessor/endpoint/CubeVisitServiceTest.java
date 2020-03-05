@@ -70,7 +70,7 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.expression.BinaryTupleExpression;
 import org.apache.kylin.metadata.expression.CaseTupleExpression;
 import org.apache.kylin.metadata.expression.ColumnTupleExpression;
-import org.apache.kylin.metadata.expression.NumberTupleExpression;
+import org.apache.kylin.metadata.expression.ConstantTupleExpression;
 import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.expression.TupleExpression.ExpressionOperatorEnum;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
@@ -329,12 +329,12 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
         ImmutableBitSet dynColumns = setOf(3);
 
         TupleFilter whenFilter = getCompareTupleFilter(1, "Ken");
-        TupleExpression thenExpr = new NumberTupleExpression(1);
+        TupleExpression thenExpr = new ConstantTupleExpression(1);
 
         List<Pair<TupleFilter, TupleExpression>> whenList = Lists.newArrayList();
         whenList.add(new Pair<>(whenFilter, thenExpr));
 
-        TupleExpression elseExpr = new NumberTupleExpression(2);
+        TupleExpression elseExpr = new ConstantTupleExpression(2);
 
         /**
          * case
@@ -342,7 +342,7 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
          *  else 2
          * end
          */
-        TupleExpression caseExpression = new CaseTupleExpression(whenList, elseExpr);
+        TupleExpression caseExpression = new CaseTupleExpression(DataType.getType("decimal"), whenList, elseExpr);
 
         Map<Integer, TupleExpression> tupleExpressionMap = Maps.newHashMap();
         tupleExpressionMap.put(3, caseExpression);
@@ -368,17 +368,17 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
 
         TupleFilter whenFilter = getCompareTupleFilter(1, "Ken");
         TupleExpression colExpression = new ColumnTupleExpression(gtInfo.colRef(2));
-        TupleExpression constExpression1 = new NumberTupleExpression(1);
-        TupleExpression constExpression2 = new NumberTupleExpression(2);
-        TupleExpression biExpression = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE,
-                Lists.newArrayList(colExpression, constExpression2));
-        TupleExpression thenExpression = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS,
-                Lists.newArrayList(biExpression, constExpression1));
+        TupleExpression constExpression1 = new ConstantTupleExpression(1);
+        TupleExpression constExpression2 = new ConstantTupleExpression(2);
+        TupleExpression biExpression = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, colExpression,
+                constExpression2);
+        TupleExpression thenExpression = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, biExpression,
+                constExpression1);
 
         List<Pair<TupleFilter, TupleExpression>> whenList = Lists.newArrayList();
         whenList.add(new Pair<>(whenFilter, thenExpression));
 
-        TupleExpression elseExpression = new NumberTupleExpression(1);
+        TupleExpression elseExpression = new ConstantTupleExpression(1);
 
         /**
          * case
@@ -386,7 +386,7 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
          *  else 1
          * end
          */
-        TupleExpression caseExpression = new CaseTupleExpression(whenList, elseExpression);
+        TupleExpression caseExpression = new CaseTupleExpression(DataType.getType("decimal"), whenList, elseExpression);
 
         Map<Integer, TupleExpression> tupleExpressionMap = Maps.newHashMap();
         tupleExpressionMap.put(3, caseExpression);
