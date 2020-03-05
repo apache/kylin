@@ -296,12 +296,25 @@ public class FunctionDesc implements Serializable {
     }
 
     public void setReturnType(String returnType) {
-        this.returnType = returnType;
-        this.returnDataType = DataType.getType(returnType);
+        setReturnDataType(DataType.getType(returnType));
     }
 
     public DataType getReturnDataType() {
         return returnDataType;
+    }
+
+    public void setReturnDataType(DataType returnDataType) {
+        if (returnDataType == null) {
+            this.returnDataType = null;
+            this.returnType = null;
+            this.measureType = null;
+            return;
+        }
+        this.returnDataType = returnDataType;
+        this.returnType = returnDataType.toString();
+        if (measureType != null) {
+            reInitMeasureType();
+        }
     }
 
     public Map<String, String> getConfiguration() {

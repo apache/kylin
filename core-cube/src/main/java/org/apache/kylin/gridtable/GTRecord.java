@@ -61,10 +61,6 @@ public class GTRecord implements Comparable<GTRecord> {
         return cols[i];
     }
 
-    public Object getValue(int i) {
-        return info.codeSystem.decodeColumnValue(i, cols[i].asBuffer());
-    }
-
     public ByteArray[] getInternal() {
         return cols;
     }

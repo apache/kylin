@@ -38,24 +38,18 @@ public class ExpressionCountDistributor implements ExpressionVisitor {
     }
 
     @Override
-    public TupleExpression visitNumber(NumberTupleExpression numExpr) {
-        NumberTupleExpression copyExpr = new NumberTupleExpression(numExpr.getValue());
-        if (ifToCnt) {
-            List<TupleExpression> children = Lists.newArrayList(cntExpr, copyExpr);
+    public TupleExpression visitConstant(ConstantTupleExpression constExpr) {
+        TupleExpression copyExpr = new ConstantTupleExpression(constExpr.getDataType(), constExpr.getValue());
+        if (copyExpr.getDataType().isNumberFamily() && ifToCnt) {
+            copyExpr = new BinaryTupleExpression(TupleExpression.ExpressionOperatorEnum.MULTIPLE, cntExpr, copyExpr);
             ifCntSet = true;
-            return new BinaryTupleExpression(TupleExpression.ExpressionOperatorEnum.MULTIPLE, children);
         }
         return copyExpr;
     }
 
     @Override
-    public TupleExpression visitString(StringTupleExpression strExpr) {
-        return new StringTupleExpression(strExpr.getValue());
-    }
-
-    @Override
     public TupleExpression visitColumn(ColumnTupleExpression colExpr) {
-        return new ColumnTupleExpression(colExpr.getColumn());
+        return new ColumnTupleExpression(colExpr.getDataType(), colExpr.getColumn());
     }
 
     @Override
@@ -92,7 +86,8 @@ public class ExpressionCountDistributor implements ExpressionVisitor {
         default:
             throw new IllegalArgumentException("Unsupported operator " + binaryExpr.getOperator());
         }
-        return new BinaryTupleExpression(binaryExpr.getOperator(), Lists.newArrayList(leftCopy, rightCopy));
+        return new BinaryTupleExpression(binaryExpr.getDataType(), binaryExpr.getOperator(),
+                Lists.newArrayList(leftCopy, rightCopy));
     }
 
     @Override
@@ -112,7 +107,7 @@ public class ExpressionCountDistributor implements ExpressionVisitor {
         if (ifToCnt) {
             ifToCnt = ExpressionColCollector.collectMeasureColumns(caseExpr).isEmpty();
         }
-        return new CaseTupleExpression(whenList, elseExpr);
+        return new CaseTupleExpression(caseExpr.getDataType(), whenList, elseExpr);
     }
 
     @Override

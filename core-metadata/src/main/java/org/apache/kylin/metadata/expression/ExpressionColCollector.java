@@ -65,13 +65,8 @@ public class ExpressionColCollector implements ExpressionVisitor {
     }
 
     @Override
-    public TupleExpression visitNumber(NumberTupleExpression numExpr) {
-        return numExpr;
-    }
-
-    @Override
-    public TupleExpression visitString(StringTupleExpression strExpr) {
-        return strExpr;
+    public TupleExpression visitConstant(ConstantTupleExpression constExpr) {
+        return constExpr;
     }
 
     @Override

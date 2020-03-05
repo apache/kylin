@@ -66,9 +66,9 @@ import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.measure.ParamAsMeasureCount;
 import org.apache.kylin.metadata.expression.CaseTupleExpression;
 import org.apache.kylin.metadata.expression.ColumnTupleExpression;
+import org.apache.kylin.metadata.expression.ConstantTupleExpression;
 import org.apache.kylin.metadata.expression.ExpressionColCollector;
 import org.apache.kylin.metadata.expression.ExpressionCountDistributor;
-import org.apache.kylin.metadata.expression.NumberTupleExpression;
 import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -77,7 +77,7 @@ import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
-import org.apache.kylin.metadata.model.SumDynamicFunctionDesc;
+import org.apache.kylin.metadata.model.SumExpressionDynamicFunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest.SQLCall;
 import org.apache.kylin.query.schema.OLAPTable;
@@ -357,11 +357,12 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 if (aggCall.getAggregation() instanceof SqlSumAggFunction
                         || aggCall.getAggregation() instanceof SqlSumEmptyIsZeroAggFunction) {
                     // sum (expression)
-                    if (!(tupleExpr instanceof NumberTupleExpression || tupleExpr instanceof ColumnTupleExpression)) {
-                        ColumnTupleExpression cntExpr = new ColumnTupleExpression(SumDynamicFunctionDesc.mockCntCol);
+                    if (!(tupleExpr instanceof ConstantTupleExpression || tupleExpr instanceof ColumnTupleExpression)) {
+                        ColumnTupleExpression cntExpr = ColumnTupleExpression.getCntColumnTupleExpression();
                         ExpressionCountDistributor cntDistributor = new ExpressionCountDistributor(cntExpr);
                         tupleExpr = tupleExpr.accept(cntDistributor);
-                        SumDynamicFunctionDesc sumDynFunc = new SumDynamicFunctionDesc(parameter, tupleExpr);
+                        SumExpressionDynamicFunctionDesc sumDynFunc = new SumExpressionDynamicFunctionDesc(parameter,
+                                tupleExpr);
                         this.aggregations.add(sumDynFunc);
                         continue;
                     }
@@ -375,7 +376,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                             TblColRef column = TblColRef.newInnerColumn(tupleExpr.getDigest(),
                                     TblColRef.InnerDataTypeEnum.LITERAL);
 
-                            SumDynamicFunctionDesc sumDynFunc = new SumDynamicFunctionDesc(
+                            SumExpressionDynamicFunctionDesc sumDynFunc = new SumExpressionDynamicFunctionDesc(
                                     ParameterDesc.newInstance(column), tupleExpr);
 
                             inputColumnRowType.replaceColumnByIndex(iRowIdx, column, tupleExpr);
@@ -477,14 +478,14 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             List<FunctionDesc> newAggrs = Lists.newArrayList();
             for (FunctionDesc aggFunc : this.aggregations) {
                 if (aggFunc instanceof DynamicFunctionDesc) {
-                    DynamicFunctionDesc rtAggFunc = (DynamicFunctionDesc) aggFunc;
-                    Map<TblColRef, FunctionDesc> innerOldAggrs = rtAggFunc.getRuntimeFuncMap();
+                    DynamicFunctionDesc dynAggFunc = (DynamicFunctionDesc) aggFunc;
+                    Map<TblColRef, FunctionDesc> innerOldAggrs = dynAggFunc.getRuntimeFuncMap();
                     Map<TblColRef, FunctionDesc> innerNewAggrs = Maps.newHashMapWithExpectedSize(innerOldAggrs.size());
                     for (TblColRef key : innerOldAggrs.keySet()) {
                         innerNewAggrs.put(key, findInMeasures(innerOldAggrs.get(key), measures));
                     }
-                    rtAggFunc.setRuntimeFuncMap(innerNewAggrs);
-                    newAggrs.add(rtAggFunc);
+                    dynAggFunc.setRuntimeFuncMap(innerNewAggrs);
+                    newAggrs.add(dynAggFunc);
                 } else {
                     newAggrs.add(findInMeasures(aggFunc, measures));
                 }
@@ -680,9 +681,9 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         List<Pair<TupleFilter, TupleExpression>> whenList = Lists.newArrayListWithExpectedSize(1);
         TupleFilter whenFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.ISNULL);
         whenFilter.addChild(new ColumnTupleFilter(colRef));
-        whenList.add(new Pair<TupleFilter, TupleExpression>(whenFilter, new NumberTupleExpression(0)));
+        whenList.add(new Pair<TupleFilter, TupleExpression>(whenFilter, ConstantTupleExpression.ZERO));
 
-        TupleExpression elseExpr = new ColumnTupleExpression(SumDynamicFunctionDesc.mockCntCol);
+        TupleExpression elseExpr = ColumnTupleExpression.getCntColumnTupleExpression();
         TupleExpression ret = new CaseTupleExpression(whenList, elseExpr);
         ret.setDigest("_KY_COUNT(" + colRef.getName() + ")");
         return ret;
