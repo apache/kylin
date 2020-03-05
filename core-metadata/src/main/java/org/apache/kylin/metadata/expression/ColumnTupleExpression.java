@@ -23,10 +23,12 @@ import java.util.Collections;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DataModelManager;
+import org.apache.kylin.metadata.model.SumExpressionDynamicFunctionDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -38,8 +40,16 @@ public class ColumnTupleExpression extends TupleExpression {
 
     private TblColRef columnRef;
 
+    public static ColumnTupleExpression getCntColumnTupleExpression() {
+        return new ColumnTupleExpression(DataType.getType("bigint"), SumExpressionDynamicFunctionDesc.mockCntCol);
+    }
+
     public ColumnTupleExpression(TblColRef column) {
-        super(ExpressionOperatorEnum.COLUMN, Collections.<TupleExpression> emptyList());
+        this(column.getType(), column);
+    }
+
+    public ColumnTupleExpression(DataType dataType, TblColRef column) {
+        super(dataType, ExpressionOperatorEnum.COLUMN, Collections.<TupleExpression> emptyList());
         this.columnRef = column;
     }
 

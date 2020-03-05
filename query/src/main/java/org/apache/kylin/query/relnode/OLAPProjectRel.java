@@ -60,11 +60,10 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.expression.ColumnTupleExpression;
+import org.apache.kylin.metadata.expression.ConstantTupleExpression;
 import org.apache.kylin.metadata.expression.ExpressionColCollector;
 import org.apache.kylin.metadata.expression.NoneTupleExpression;
-import org.apache.kylin.metadata.expression.NumberTupleExpression;
 import org.apache.kylin.metadata.expression.RexCallTupleExpression;
-import org.apache.kylin.metadata.expression.StringTupleExpression;
 import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -203,10 +202,6 @@ public class OLAPProjectRel extends Project implements OLAPRel {
                 if (this.context.isDynamicColumnEnabled() && tupleExpr.ifForDynamicColumn()) {
                     SqlTypeName fSqlType = columnField.getType().getSqlTypeName();
                     String dataType = OLAPTable.DATATYPE_MAPPING.get(fSqlType);
-                    // upgrade data type for number columns
-                    if (DataType.isNumberFamily(dataType)) {
-                        dataType = "decimal";
-                    }
                     column.getColumnDesc().setDatatype(dataType);
                     this.context.dynamicFields.put(column, columnField.getType());
                 }
@@ -224,11 +219,8 @@ public class OLAPProjectRel extends Project implements OLAPRel {
             String fieldName) {
         if (tupleExpr instanceof ColumnTupleExpression) {
             return ((ColumnTupleExpression) tupleExpr).getColumn();
-        } else if (tupleExpr instanceof NumberTupleExpression) {
-            Object value = ((NumberTupleExpression) tupleExpr).getValue();
-            return TblColRef.newInnerColumn(value == null ? "null" : value.toString(), InnerDataTypeEnum.LITERAL);
-        } else if (tupleExpr instanceof StringTupleExpression) {
-            Object value = ((StringTupleExpression) tupleExpr).getValue();
+        } else if (tupleExpr instanceof ConstantTupleExpression) {
+            Object value = ((ConstantTupleExpression) tupleExpr).getValue();
             return TblColRef.newInnerColumn(value == null ? "null" : value.toString(), InnerDataTypeEnum.LITERAL);
         } else if (tupleExpr instanceof RexCallTupleExpression && rexNode instanceof RexInputRef) {
             RexInputRef inputRef = (RexInputRef) rexNode;

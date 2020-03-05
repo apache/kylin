@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
@@ -38,7 +39,12 @@ public class CaseTupleExpression extends TupleExpression {
     private TupleExpression elseExpr;
 
     public CaseTupleExpression(List<Pair<TupleFilter, TupleExpression>> whenList, TupleExpression elseExpr) {
-        super(ExpressionOperatorEnum.CASE, Collections.<TupleExpression> emptyList());
+        this(referDataType(whenList, elseExpr), whenList, elseExpr);
+    }
+
+    public CaseTupleExpression(DataType dataType, List<Pair<TupleFilter, TupleExpression>> whenList,
+            TupleExpression elseExpr) {
+        super(dataType, ExpressionOperatorEnum.CASE, Collections.<TupleExpression> emptyList());
         this.whenList = whenList;
         this.elseExpr = elseExpr;
     }
@@ -77,11 +83,11 @@ public class CaseTupleExpression extends TupleExpression {
     public Object calculate(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs) {
         for (Pair<TupleFilter, TupleExpression> entry : whenList) {
             if (entry.getFirst().evaluate(tuple, cs)) {
-                return entry.getSecond().calculate(tuple, cs);
+                return referValue(entry.getSecond().calculate(tuple, cs));
             }
         }
         if (elseExpr != null) {
-            return elseExpr.calculate(tuple, cs);
+            return referValue(elseExpr.calculate(tuple, cs));
         }
         return null;
     }
@@ -177,5 +183,16 @@ public class CaseTupleExpression extends TupleExpression {
         int result = whenList != null ? whenList.hashCode() : 0;
         result = 31 * result + (elseExpr != null ? elseExpr.hashCode() : 0);
         return result;
+    }
+
+    public static DataType referDataType(List<Pair<TupleFilter, TupleExpression>> whenList, TupleExpression elseExpr) {
+        DataType dataType = null;
+        for (Pair<TupleFilter, TupleExpression> entry : whenList) {
+            dataType = TupleExpression.referDataType(dataType, entry.getSecond().getDataType());
+        }
+        if (elseExpr != null) {
+            dataType = TupleExpression.referDataType(dataType, elseExpr.getDataType());
+        }
+        return dataType;
     }
 }

@@ -14,37 +14,47 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metadata.expression;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.exception.QueryOnCubeException;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class TupleExpressionTest extends LocalFileMetadataTestCase {
 
-    @BeforeClass
-    public static void setUp() throws Exception {
-        staticCreateTestMetadata();
-    }
-
-    @AfterClass
-    public static void after() throws Exception {
-        staticCleanupTestMetadata();
-    }
-
     private TableDesc t = TableDesc.mockup("T");
+
+    @Before
+    public void setUp() throws Exception {
+        this.createTestMetadata();
+    }
+
+    @Test
+    public void testReferDataType() {
+        assertEquals(TupleExpression.referDataType(null, DataType.getType("int")), DataType.getType("bigint"));
+        assertEquals(TupleExpression.referDataType(DataType.getType("int"), null), DataType.getType("bigint"));
+        assertEquals(TupleExpression.referDataType(DataType.getType("int"), DataType.getType("bigint")),
+                DataType.getType("bigint"));
+        assertEquals(TupleExpression.referDataType(DataType.getType("int"), DataType.getType("double")),
+                DataType.getType("double"));
+        assertEquals(TupleExpression.referDataType(DataType.getType("decimal"), DataType.getType("bigint")),
+                DataType.getType("decimal"));
+        assertEquals(TupleExpression.referDataType(DataType.getType("decimal"), DataType.getType("double")),
+                DataType.getType("decimal"));
+    }
 
     @Test
     public void testBinary() {
@@ -53,28 +63,29 @@ public class TupleExpressionTest extends LocalFileMetadataTestCase {
         TblColRef col1 = TblColRef.mockup(t, 1, "C1", "decimal");
         TblColRef col2 = TblColRef.mockup(t, 2, "C2", "decimal");
 
-        NumberTupleExpression constTuple1 = new NumberTupleExpression(value1);
-        NumberTupleExpression constTuple2 = new NumberTupleExpression(value2);
+        ConstantTupleExpression constTuple1 = new ConstantTupleExpression(DataType.getType("decimal"), value1);
+        ConstantTupleExpression constTuple2 = new ConstantTupleExpression(DataType.getType("decimal"), value2);
         ColumnTupleExpression colTuple1 = new ColumnTupleExpression(col1);
         ColumnTupleExpression colTuple2 = new ColumnTupleExpression(col2);
 
-        BinaryTupleExpression biTuple1 = new BinaryTupleExpression(TupleExpression.ExpressionOperatorEnum.MULTIPLE,
-                Lists.newArrayList(constTuple1, colTuple1));
+        BinaryTupleExpression biTuple1 = new BinaryTupleExpression(DataType.getType("decimal"),
+                TupleExpression.ExpressionOperatorEnum.MULTIPLE, Lists.newArrayList(constTuple1, colTuple1));
         biTuple1.verify();
 
-        BinaryTupleExpression biTuple2 = new BinaryTupleExpression(TupleExpression.ExpressionOperatorEnum.DIVIDE,
-                Lists.newArrayList(constTuple2, colTuple2));
+        BinaryTupleExpression biTuple2 = new BinaryTupleExpression(DataType.getType("decimal"),
+                TupleExpression.ExpressionOperatorEnum.DIVIDE, Lists.newArrayList(constTuple2, colTuple2));
         try {
             biTuple2.verify();
             fail("QueryOnCubeException should be thrown，That the right side of the BinaryTupleExpression owns columns is not supported for /");
         } catch (QueryOnCubeException e) {
         }
 
-        biTuple2 = new BinaryTupleExpression(TupleExpression.ExpressionOperatorEnum.DIVIDE,
+        biTuple2 = new BinaryTupleExpression(DataType.getType("decimal"), TupleExpression.ExpressionOperatorEnum.DIVIDE,
                 Lists.newArrayList(colTuple2, constTuple2));
         biTuple2.verify();
 
-        BinaryTupleExpression biTuple = new BinaryTupleExpression(TupleExpression.ExpressionOperatorEnum.MULTIPLE,
+        BinaryTupleExpression biTuple = new BinaryTupleExpression(DataType.getType("decimal"),
+                TupleExpression.ExpressionOperatorEnum.MULTIPLE,
                 Lists.<TupleExpression> newArrayList(biTuple1, biTuple2));
         try {
             biTuple.verify();
