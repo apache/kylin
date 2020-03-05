@@ -51,6 +51,7 @@ import org.apache.kylin.gridtable.IGTComparator;
 import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.DynamicFunctionDesc;
+import org.apache.kylin.metadata.model.ExpressionDynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.StorageContext;
@@ -127,11 +128,17 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
         // for dynamic measures
         Set<FunctionDesc> tmpRtAggrMetrics = Sets.newHashSet();
         for (DynamicFunctionDesc dynFunc : dynFuncs) {
-            tmpRtAggrMetrics.addAll(dynFunc.getRuntimeFuncs());
             int c = mapping.getIndexOf(dynFunc);
             tmpGtDynCols.set(c);
-            this.tupleExpressionMap.put(c, GTUtil.convertFilterColumnsAndConstants(dynFunc.getTupleExpression(), gtInfo,
-                    mapping, dynFunc.getRuntimeFuncMap(), groupByPushDown));
+            tmpRtAggrMetrics.addAll(dynFunc.getRuntimeFuncMap().values());
+            if (dynFunc instanceof ExpressionDynamicFunctionDesc) {
+                TupleExpression tupleExpr = ((ExpressionDynamicFunctionDesc) dynFunc).getTupleExpression();
+                this.tupleExpressionMap.put(c, GTUtil.convertFilterColumnsAndConstants(tupleExpr, gtInfo, mapping,
+                        dynFunc.getRuntimeFuncMap(), groupByPushDown));
+                tupleExpr = GTUtil.convertFilterColumnsAndConstants(tupleExpr, gtInfo, mapping,
+                        dynFunc.getRuntimeFuncMap(), groupByPushDown);
+                this.tupleExpressionMap.put(c, tupleExpr);
+            }
         }
         this.gtDynColumns = new ImmutableBitSet(tmpGtDynCols);
         this.gtRtAggrMetrics = mapping.makeGridTableColumns(tmpRtAggrMetrics);

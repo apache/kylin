@@ -297,7 +297,8 @@ public class CubeDescManager {
                 }
 
                 DataType returnType = DataType.getType(measureDesc.getFunction().getReturnType());
-                DataType newReturnType = new DataType(returnType.getName(), returnType.getPrecision(), keyLength);
+                int precision = returnType.getPrecision() < 1 ? 100 : returnType.getPrecision();
+                DataType newReturnType = new DataType(returnType.getName(), precision, keyLength);
                 measureDesc.getFunction().setReturnType(newReturnType.toString());
             }
         }

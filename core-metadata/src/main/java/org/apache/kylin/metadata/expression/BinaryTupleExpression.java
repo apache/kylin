@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metadata.expression;
 
@@ -22,8 +22,8 @@ import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import org.apache.kylin.common.util.DecimalUtil;
 import org.apache.kylin.exception.QueryOnCubeException;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
@@ -31,17 +31,24 @@ import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class BinaryTupleExpression extends TupleExpression {
 
-    public BinaryTupleExpression(ExpressionOperatorEnum op) {
-        this(op, Lists.<TupleExpression> newArrayListWithExpectedSize(2));
+    public BinaryTupleExpression(DataType dataType, ExpressionOperatorEnum op) {
+        this(dataType, op, Lists.<TupleExpression> newArrayListWithExpectedSize(2));
     }
 
-    public BinaryTupleExpression(ExpressionOperatorEnum op, List<TupleExpression> exprs) {
-        super(op, exprs);
+    public BinaryTupleExpression(ExpressionOperatorEnum op, TupleExpression left, TupleExpression right) {
+        this(referDataType(op, left, right), op, Lists.newArrayList(left, right));
+    }
 
-        boolean opGood = (op == ExpressionOperatorEnum.PLUS || op == ExpressionOperatorEnum.MINUS
-                || op == ExpressionOperatorEnum.MULTIPLE || op == ExpressionOperatorEnum.DIVIDE);
-        if (opGood == false)
-            throw new IllegalArgumentException("Unsupported operator " + op);
+    public BinaryTupleExpression(DataType dataType, ExpressionOperatorEnum op, List<TupleExpression> exprs) {
+        super(dataType, op, exprs);
+
+        checkBinaryOp(op, exprs);
+    }
+
+    @Override
+    public void addChild(TupleExpression child) {
+        assert child.getDataType().isNumberFamily();
+        super.addChild(child);
     }
 
     @Override
@@ -80,25 +87,59 @@ public class BinaryTupleExpression extends TupleExpression {
     }
 
     @Override
-    public BigDecimal calculate(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs) {
-        assert children.size() == 2;
-        BigDecimal left = DecimalUtil.toBigDecimal(getLeft().calculate(tuple, cs));
+    public Object calculate(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs) {
+        Object left = referValue(getLeft().calculate(tuple, cs));
         if (left == null)
             return null;
-        BigDecimal right = DecimalUtil.toBigDecimal(getRight().calculate(tuple, cs));
+        Object right = referValue(getRight().calculate(tuple, cs));
         if (right == null)
             return null;
-        switch (operator) {
-        case PLUS:
-            return left.add(right);
-        case MINUS:
-            return left.subtract(right);
-        case MULTIPLE:
-            return left.multiply(right);
-        case DIVIDE:
-            return left.divide(right);
-        default:
-            throw new UnsupportedOperationException();
+
+        if (dataType.isDecimal()) {
+            BigDecimal leftV = (BigDecimal) left;
+            BigDecimal rightV = (BigDecimal) right;
+            switch (operator) {
+            case PLUS:
+                return leftV.add(rightV);
+            case MINUS:
+                return leftV.subtract(rightV);
+            case MULTIPLE:
+                return leftV.multiply(rightV);
+            case DIVIDE:
+                return leftV.divide(rightV);
+            default:
+                throw new UnsupportedOperationException();
+            }
+        } else if (dataType.isIntegerFamily()) {
+            long leftV = (long) left;
+            long rightV = (long) right;
+            switch (operator) {
+            case PLUS:
+                return leftV + rightV;
+            case MINUS:
+                return leftV - rightV;
+            case MULTIPLE:
+                return leftV * rightV;
+            case DIVIDE:
+                return leftV / rightV;
+            default:
+                throw new UnsupportedOperationException();
+            }
+        } else {
+            double leftV = (double) left;
+            double rightV = (double) right;
+            switch (operator) {
+            case PLUS:
+                return leftV + rightV;
+            case MINUS:
+                return leftV - rightV;
+            case MULTIPLE:
+                return leftV * rightV;
+            case DIVIDE:
+                return leftV / rightV;
+            default:
+                throw new UnsupportedOperationException();
+            }
         }
     }
 
@@ -146,5 +187,22 @@ public class BinaryTupleExpression extends TupleExpression {
         int result = operator != null ? operator.hashCode() : 0;
         result = 31 * result + (children != null ? children.hashCode() : 0);
         return result;
+    }
+
+    private static void checkBinaryOp(ExpressionOperatorEnum op, List<TupleExpression> exprs) {
+        boolean opGood = (op == ExpressionOperatorEnum.PLUS || op == ExpressionOperatorEnum.MINUS
+                || op == ExpressionOperatorEnum.MULTIPLE || op == ExpressionOperatorEnum.DIVIDE);
+        if (!opGood)
+            throw new IllegalArgumentException("Unsupported operator " + op);
+    }
+
+    public static DataType referDataType(ExpressionOperatorEnum op, TupleExpression left, TupleExpression right) {
+        checkBinaryOp(op, Lists.newArrayList(left, right));
+
+        DataType dataType = TupleExpression.referDataType(left.getDataType(), right.getDataType());
+        if (op == ExpressionOperatorEnum.DIVIDE && dataType.isIntegerFamily()) {
+            dataType = DataType.getType("double");
+        }
+        return dataType;
     }
 }

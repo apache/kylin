@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metadata.expression;
 
@@ -26,14 +26,14 @@ import java.util.List;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.expression.TupleExpression.ExpressionOperatorEnum;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.powermock.api.mockito.PowerMockito;
 
@@ -41,14 +41,88 @@ import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class ExpressionCountDistributorTest extends LocalFileMetadataTestCase {
 
-    @BeforeClass
-    public static void setUp() throws Exception {
-        staticCreateTestMetadata();
+    @Before
+    public void setUp() throws Exception {
+        this.createTestMetadata();
     }
 
-    @AfterClass
-    public static void after() throws Exception {
-        staticCleanupTestMetadata();
+    @Test
+    public void testDataType() {
+        TblColRef c = PowerMockito.mock(TblColRef.class);
+        PowerMockito.when(c.getType()).thenReturn(DataType.getType("int"));
+        IEvaluatableTuple evaluatableTuple = PowerMockito.mock(IEvaluatableTuple.class);
+        IFilterCodeSystem filterCodeSystem = PowerMockito.mock(IFilterCodeSystem.class);
+        TupleExpression t0 = new ColumnTupleExpression(c);
+        t0 = PowerMockito.spy(t0);
+        PowerMockito.when(t0.calculate(evaluatableTuple, filterCodeSystem)).thenReturn(1);
+
+        TupleFilter f0 = PowerMockito.mock(CompareTupleFilter.class);
+
+        List<Pair<TupleFilter, TupleExpression>> whenList = Lists.newArrayList();
+        whenList.add(new Pair<>(f0, t0));
+
+        { // bigint
+            TupleExpression t1 = new ConstantTupleExpression(1);
+
+            TupleExpression ret = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, t0, t1);
+            assertEquals((long) 2, ret.calculate(evaluatableTuple, filterCodeSystem));
+            ret = new BinaryTupleExpression(ExpressionOperatorEnum.MINUS, t0, t1);
+            assertEquals((long) 0, ret.calculate(evaluatableTuple, filterCodeSystem));
+            ret = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, t0, t1);
+            assertEquals((long) 1, ret.calculate(evaluatableTuple, filterCodeSystem));
+            ret = new BinaryTupleExpression(ExpressionOperatorEnum.DIVIDE, t0, t1);
+            assertEquals(1.0, ret.calculate(evaluatableTuple, filterCodeSystem));
+
+            t1 = new ConstantTupleExpression(2);
+            ret = new CaseTupleExpression(whenList, t1);
+
+            PowerMockito.when(f0.evaluate(evaluatableTuple, filterCodeSystem)).thenReturn(true);
+            assertEquals((long) 1, ret.calculate(evaluatableTuple, filterCodeSystem));
+            PowerMockito.when(f0.evaluate(evaluatableTuple, filterCodeSystem)).thenReturn(false);
+            assertEquals((long) 2, ret.calculate(evaluatableTuple, filterCodeSystem));
+        }
+
+        { // double
+            TupleExpression t1 = new ConstantTupleExpression(1.0);
+
+            TupleExpression ret = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, t0, t1);
+            assertEquals(2.0, ret.calculate(evaluatableTuple, filterCodeSystem));
+            ret = new BinaryTupleExpression(ExpressionOperatorEnum.MINUS, t0, t1);
+            assertEquals(0.0, ret.calculate(evaluatableTuple, filterCodeSystem));
+            ret = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, t0, t1);
+            assertEquals(1.0, ret.calculate(evaluatableTuple, filterCodeSystem));
+            ret = new BinaryTupleExpression(ExpressionOperatorEnum.DIVIDE, t0, t1);
+            assertEquals(1.0, ret.calculate(evaluatableTuple, filterCodeSystem));
+
+            t1 = new ConstantTupleExpression(2.0);
+            ret = new CaseTupleExpression(whenList, t1);
+
+            PowerMockito.when(f0.evaluate(evaluatableTuple, filterCodeSystem)).thenReturn(true);
+            assertEquals(1.0, ret.calculate(evaluatableTuple, filterCodeSystem));
+            PowerMockito.when(f0.evaluate(evaluatableTuple, filterCodeSystem)).thenReturn(false);
+            assertEquals(2.0, ret.calculate(evaluatableTuple, filterCodeSystem));
+        }
+
+        { // decimal
+            TupleExpression t1 = new ConstantTupleExpression(new BigDecimal(1));
+
+            TupleExpression ret = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, t0, t1);
+            assertEquals(new BigDecimal(2.0), ret.calculate(evaluatableTuple, filterCodeSystem));
+            ret = new BinaryTupleExpression(ExpressionOperatorEnum.MINUS, t0, t1);
+            assertEquals(new BigDecimal(0.0), ret.calculate(evaluatableTuple, filterCodeSystem));
+            ret = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, t0, t1);
+            assertEquals(new BigDecimal(1.0), ret.calculate(evaluatableTuple, filterCodeSystem));
+            ret = new BinaryTupleExpression(ExpressionOperatorEnum.DIVIDE, t0, t1);
+            assertEquals(new BigDecimal(1.0), ret.calculate(evaluatableTuple, filterCodeSystem));
+
+            t1 = new ConstantTupleExpression(new BigDecimal(2.0));
+            ret = new CaseTupleExpression(whenList, t1);
+
+            PowerMockito.when(f0.evaluate(evaluatableTuple, filterCodeSystem)).thenReturn(true);
+            assertEquals(new BigDecimal(1.0), ret.calculate(evaluatableTuple, filterCodeSystem));
+            PowerMockito.when(f0.evaluate(evaluatableTuple, filterCodeSystem)).thenReturn(false);
+            assertEquals(new BigDecimal(2.0), ret.calculate(evaluatableTuple, filterCodeSystem));
+        }
     }
 
     /**
@@ -74,52 +148,53 @@ public class ExpressionCountDistributorTest extends LocalFileMetadataTestCase {
      */
     @Test
     public void testDistribute1() {
-        NumberTupleExpression n = new NumberTupleExpression(10);
+        ConstantTupleExpression n = new ConstantTupleExpression(10);
         ExpressionCountDistributor cntDistributor = new ExpressionCountDistributor(n);
 
-        TupleExpression t0 = new NumberTupleExpression(1);
-        TupleExpression t1 = new NumberTupleExpression(1);
-        TupleExpression t2 = new NumberTupleExpression(2);
+        TupleExpression t0 = new ConstantTupleExpression(1);
+        TupleExpression t1 = new ConstantTupleExpression(1);
+        TupleExpression t2 = new ConstantTupleExpression(2);
 
         TblColRef c = PowerMockito.mock(TblColRef.class);
+        PowerMockito.when(c.getType()).thenReturn(DataType.getType("decimal"));
         TupleExpression t3 = new ColumnTupleExpression(c);
         IEvaluatableTuple evaluatableTuple = PowerMockito.mock(IEvaluatableTuple.class);
         IFilterCodeSystem filterCodeSystem = PowerMockito.mock(IFilterCodeSystem.class);
         t3 = PowerMockito.spy(t3);
         PowerMockito.when(t3.calculate(evaluatableTuple, filterCodeSystem)).thenReturn(new BigDecimal(3));
 
-        TupleExpression t4 = new NumberTupleExpression(1);
-        TupleExpression t5 = new NumberTupleExpression(3);
-        TupleExpression t6 = new NumberTupleExpression(4);
-        TupleExpression t7 = new NumberTupleExpression(1);
-        TupleExpression t8 = new NumberTupleExpression(2);
-        TupleExpression t9 = new NumberTupleExpression(3);
-        TupleExpression t10 = new NumberTupleExpression(1);
-        TupleExpression t11 = new NumberTupleExpression(4);
-        TupleExpression t12 = new NumberTupleExpression(5);
-        TupleExpression t13 = new NumberTupleExpression(4);
-        TupleExpression t14 = new NumberTupleExpression(5);
+        TupleExpression t4 = new ConstantTupleExpression(1);
+        TupleExpression t5 = new ConstantTupleExpression(3);
+        TupleExpression t6 = new ConstantTupleExpression(4);
+        TupleExpression t7 = new ConstantTupleExpression(1);
+        TupleExpression t8 = new ConstantTupleExpression(2);
+        TupleExpression t9 = new ConstantTupleExpression(3);
+        TupleExpression t10 = new ConstantTupleExpression(1);
+        TupleExpression t11 = new ConstantTupleExpression(4);
+        TupleExpression t12 = new ConstantTupleExpression(5);
+        TupleExpression t13 = new ConstantTupleExpression(4);
+        TupleExpression t14 = new ConstantTupleExpression(5);
 
-        TupleExpression b0 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(t1, t2));
+        TupleExpression b0 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, t1, t2);
 
-        TupleExpression b1 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, Lists.newArrayList(t0, b0));
-        TupleExpression b2 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(t3, t4));
-        TupleExpression b3 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(t7, t8));
-        TupleExpression b4 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(t9, t10));
+        TupleExpression b1 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, t0, b0);
+        TupleExpression b2 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, t3, t4);
+        TupleExpression b3 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, t7, t8);
+        TupleExpression b4 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, t9, t10);
 
-        TupleExpression b11 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, Lists.newArrayList(b1, b2));
-        TupleExpression b12 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(t5, t6));
-        TupleExpression b13 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, Lists.newArrayList(b3, b4));
-        TupleExpression b14 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(t11, t12));
+        TupleExpression b11 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, b1, b2);
+        TupleExpression b12 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, t5, t6);
+        TupleExpression b13 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, b3, b4);
+        TupleExpression b14 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, t11, t12);
 
-        TupleExpression b21 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, Lists.newArrayList(b11, b12));
-        TupleExpression b22 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, Lists.newArrayList(b13, b14));
+        TupleExpression b21 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, b11, b12);
+        TupleExpression b22 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, b13, b14);
 
-        TupleExpression b31 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(b21, b22));
+        TupleExpression b31 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, b21, b22);
 
-        TupleExpression b41 = new BinaryTupleExpression(ExpressionOperatorEnum.MINUS, Lists.newArrayList(b31, t13));
+        TupleExpression b41 = new BinaryTupleExpression(ExpressionOperatorEnum.MINUS, b31, t13);
 
-        TupleExpression b51 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(b41, t14));
+        TupleExpression b51 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, b41, t14);
 
         TupleExpression ret = b51.accept(cntDistributor);
         assertTrue(cntDistributor.ifCntSet());
@@ -137,47 +212,48 @@ public class ExpressionCountDistributorTest extends LocalFileMetadataTestCase {
      */
     @Test
     public void testDistribute2() {
-        NumberTupleExpression n = new NumberTupleExpression(10);
+        ConstantTupleExpression n = new ConstantTupleExpression(10);
         ExpressionCountDistributor cntDistributor = new ExpressionCountDistributor(n);
 
-        TupleExpression t1 = new NumberTupleExpression(1);
-        TupleExpression t2 = new NumberTupleExpression(2);
+        TupleExpression t1 = new ConstantTupleExpression(1);
+        TupleExpression t2 = new ConstantTupleExpression(2);
 
-        TupleExpression t3 = new NumberTupleExpression(1);
-        TupleExpression t4 = new NumberTupleExpression(2);
+        TupleExpression t3 = new ConstantTupleExpression(1);
+        TupleExpression t4 = new ConstantTupleExpression(2);
 
         TblColRef c = PowerMockito.mock(TblColRef.class);
+        PowerMockito.when(c.getType()).thenReturn(DataType.getType("decimal"));
         TupleExpression t5 = new ColumnTupleExpression(c);
         IEvaluatableTuple evaluatableTuple = PowerMockito.mock(IEvaluatableTuple.class);
         IFilterCodeSystem filterCodeSystem = PowerMockito.mock(IFilterCodeSystem.class);
         t5 = PowerMockito.spy(t5);
         PowerMockito.when(t5.calculate(evaluatableTuple, filterCodeSystem)).thenReturn(new BigDecimal(3));
 
-        TupleExpression t6 = new NumberTupleExpression(1);
-        TupleExpression t7 = new NumberTupleExpression(3);
+        TupleExpression t6 = new ConstantTupleExpression(1);
+        TupleExpression t7 = new ConstantTupleExpression(3);
 
-        TupleExpression t8 = new NumberTupleExpression(2);
-        TupleExpression t9 = new NumberTupleExpression(2);
-        TupleExpression t10 = new NumberTupleExpression(3);
-        TupleExpression t11 = new NumberTupleExpression(4);
+        TupleExpression t8 = new ConstantTupleExpression(2);
+        TupleExpression t9 = new ConstantTupleExpression(2);
+        TupleExpression t10 = new ConstantTupleExpression(3);
+        TupleExpression t11 = new ConstantTupleExpression(4);
 
-        TupleExpression t12 = new NumberTupleExpression(6);
+        TupleExpression t12 = new ConstantTupleExpression(6);
 
-        TupleExpression t13 = new NumberTupleExpression(2);
-        TupleExpression t14 = new NumberTupleExpression(1);
+        TupleExpression t13 = new ConstantTupleExpression(2);
+        TupleExpression t14 = new ConstantTupleExpression(1);
 
-        TupleExpression b1 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(t1, t2));
-        TupleExpression b2 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(t3, t4));
-        TupleExpression b3 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(t5, t6));
-        TupleExpression b4 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(t8, t5));
-        TupleExpression b5 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(t9, t10));
-        TupleExpression b6 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, Lists.newArrayList(t5, t13));
+        TupleExpression b1 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, t1, t2);
+        TupleExpression b2 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, t3, t4);
+        TupleExpression b3 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, t5, t6);
+        TupleExpression b4 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, t8, t5);
+        TupleExpression b5 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, t9, t10);
+        TupleExpression b6 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, t5, t13);
 
-        TupleExpression b11 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, Lists.newArrayList(b2, b3));
-        TupleExpression b12 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, Lists.newArrayList(b4, b5));
+        TupleExpression b11 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, b2, b3);
+        TupleExpression b12 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, b4, b5);
 
-        TupleExpression b21 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(b11, t7));
-        TupleExpression b22 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(b12, t11));
+        TupleExpression b21 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, b11, t7);
+        TupleExpression b22 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, b12, t11);
 
         TupleFilter f1 = PowerMockito.mock(CompareTupleFilter.class);
         TupleFilter f2 = PowerMockito.mock(CompareTupleFilter.class);
@@ -187,11 +263,11 @@ public class ExpressionCountDistributorTest extends LocalFileMetadataTestCase {
         whenList.add(new Pair<>(f2, b22));
         TupleExpression b31 = new CaseTupleExpression(whenList, t12);
 
-        TupleExpression b41 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, Lists.newArrayList(b1, b31));
+        TupleExpression b41 = new BinaryTupleExpression(ExpressionOperatorEnum.MULTIPLE, b1, b31);
 
-        TupleExpression b51 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(b41, b6));
+        TupleExpression b51 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, b41, b6);
 
-        TupleExpression b61 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, Lists.newArrayList(b51, t14));
+        TupleExpression b61 = new BinaryTupleExpression(ExpressionOperatorEnum.PLUS, b51, t14);
 
         TupleExpression ret = b61.accept(cntDistributor);
         assertTrue(cntDistributor.ifCntSet());

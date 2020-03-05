@@ -18,37 +18,19 @@
 
 package org.apache.kylin.metadata.model;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.expression.ExpressionColCollector;
-import org.apache.kylin.metadata.expression.TupleExpression;
-
-import org.apache.kylin.shaded.com.google.common.collect.Maps;
-
 public abstract class DynamicFunctionDesc extends FunctionDesc {
 
-    protected final TupleExpression tupleExpression;
-    protected final Set<TblColRef> filterColSet;
-    protected Map<TblColRef, FunctionDesc> runtimeFuncMap;
-
-    public DynamicFunctionDesc(ParameterDesc parameter, TupleExpression tupleExpression) {
+    public DynamicFunctionDesc(ParameterDesc parameter, String expression, String returnType) {
         this.setParameter(parameter);
-        this.tupleExpression = tupleExpression;
-
-        Pair<Set<TblColRef>, Set<TblColRef>> colsPair = ExpressionColCollector.collectColumnsPair(tupleExpression);
-        filterColSet = colsPair.getFirst();
-        Set<TblColRef> measureColumns = colsPair.getSecond();
-        this.runtimeFuncMap = Maps.newHashMapWithExpectedSize(measureColumns.size());
-        for (TblColRef column : measureColumns) {
-            runtimeFuncMap.put(column, constructRuntimeFunction(column));
-        }
+        this.setExpression(expression);
+        this.setReturnType(returnType);
     }
 
     @Override
-    public boolean needRewrite() {
+    public boolean needRewriteField() {
         return false;
     }
 
@@ -57,29 +39,11 @@ public abstract class DynamicFunctionDesc extends FunctionDesc {
         return false;
     }
 
-    public TupleExpression getTupleExpression() {
-        return tupleExpression;
-    }
+    public abstract Set<TblColRef> getRuntimeDimensions();
 
-    public Set<TblColRef> getFilterColumnSet() {
-        return filterColSet;
-    }
+    public abstract Map<TblColRef, FunctionDesc> getRuntimeFuncMap();
 
-    public Set<TblColRef> getMeasureColumnSet() {
-        return runtimeFuncMap.keySet();
-    }
-
-    public Collection<FunctionDesc> getRuntimeFuncs() {
-        return runtimeFuncMap.values();
-    }
-
-    public Map<TblColRef, FunctionDesc> getRuntimeFuncMap() {
-        return runtimeFuncMap;
-    }
-
-    public void setRuntimeFuncMap(Map<TblColRef, FunctionDesc> funcMap) {
-        this.runtimeFuncMap = funcMap;
-    }
+    public abstract void setRuntimeFuncMap(Map<TblColRef, FunctionDesc> funcMap);
 
     protected abstract FunctionDesc constructRuntimeFunction(TblColRef column);
 }

@@ -17,10 +17,10 @@
 --
 
 select LSTG_FORMAT_NAME,
-    sum(price),
+    sum(item_count),
     sum(case
-    when LSTG_FORMAT_NAME = 'ABIN' then 2*price + ITEM_COUNT
-    when LSTG_FORMAT_NAME = 'Auction' then (1+2)*price*(2+3)+(2+3)*(3+2)*(4+5)-4+5
+    when LSTG_FORMAT_NAME = 'ABIN' then 2*item_count
+    when LSTG_FORMAT_NAME = 'Auction' then (1+2)*item_count*(2+3)+(2+3)*(3+2)*(4+5)-4+5
     else 3
     end)
 FROM test_kylin_fact
@@ -30,5 +30,5 @@ FROM test_kylin_fact
     ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id
 WHERE SLR_SEGMENT_CD < 16
 group by LSTG_FORMAT_NAME
-having sum((1+2)*price*(2+3)+(2+3)*(3+2)*(4+5)-4+5) > 1800000
+having sum((1+2)*item_count*(2+3)+(2+3)*(3+2)*(4+5)-4+5) > 1800000
 order by LSTG_FORMAT_NAME
