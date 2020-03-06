@@ -29,8 +29,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.basic.BasicMeasureType;
+import org.apache.kylin.metadata.expression.ExpressionColCollector;
 import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
 import org.apache.kylin.metadata.model.DynamicFunctionDesc;
+import org.apache.kylin.metadata.model.ExpressionDynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -236,7 +238,11 @@ public class CubeCapabilityChecker {
             if (parameterDesc == null) {
                 continue;
             }
-            List<TblColRef> neededCols = parameterDesc.getColRefs();
+
+            List<TblColRef> neededCols = functionDesc instanceof ExpressionDynamicFunctionDesc
+                    ? Lists.newArrayList(ExpressionColCollector
+                            .collectColumns(((ExpressionDynamicFunctionDesc) functionDesc).getTupleExpression()))
+                    : parameterDesc.getColRefs();
             if (neededCols.size() > 0 && dimCols.containsAll(neededCols)
                     && FunctionDesc.BUILT_IN_AGGREGATIONS.contains(functionDesc.getExpression())) {
                 result.influences.add(new CapabilityResult.DimensionAsMeasure(functionDesc));
