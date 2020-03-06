@@ -78,6 +78,9 @@ public class GTScanRequest {
     private ImmutableBitSet aggrMetrics;
     private String[] aggrMetricsFuncs;//
 
+    // optional transformation
+    private GTTwoLayerAggregateParam twoLayerAggParam;
+
     // hint to storage behavior
     private String storageBehavior;
     private long startTime;
@@ -95,6 +98,7 @@ public class GTScanRequest {
     GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
             ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, ImmutableBitSet rtAggrMetrics, //
             ImmutableBitSet dynamicCols, Map<Integer, TupleExpression> tupleExpressionMap, //
+            GTTwoLayerAggregateParam twoLayerAggParam, //
             TupleFilter filterPushDown, TupleFilter havingFilterPushDown, //
             boolean allowStorageAggregation, double aggCacheMemThreshold, int storageScanRowNumThreshold, //
             int storagePushDownLimit, StorageLimitLevel storageLimitLevel, String storageBehavior, long startTime,
@@ -117,6 +121,8 @@ public class GTScanRequest {
 
         this.dynamicCols = dynamicCols;
         this.tupleExpressionMap = tupleExpressionMap;
+
+        this.twoLayerAggParam = twoLayerAggParam;
 
         this.storageBehavior = storageBehavior;
         this.startTime = startTime;
@@ -146,7 +152,7 @@ public class GTScanRequest {
 
         if (columns == null)
             columns = info.colAll;
-        
+
         if (hasFilterPushDown()) {
             validateFilterPushDown(info);
         }
@@ -229,7 +235,12 @@ public class GTScanRequest {
                 return new EmptyGTScanner();
             }
 
-            if (!this.isAllowStorageAggregation() && havingFilterPushDown == null) {
+            if (twoLayerAggParam.ifEnabled()) {
+                logger.info("GTTwoLayerAggregateScanner will be used with target funcs "
+                        + Sets.newHashSet(twoLayerAggParam.outsideLayerMetricsFuncs));
+                this.doingStorageAggregation = true;
+                result = new GTTwoLayerAggregateScanner(result, this, spillEnabled);
+            } else if (!this.isAllowStorageAggregation() && havingFilterPushDown == null) {
                 logger.info("pre aggregation is not beneficial, skip it");
             } else if (this.hasAggregation()) {
                 logger.info("pre aggregating results before returning");
@@ -350,6 +361,10 @@ public class GTScanRequest {
         return tupleExpressionMap;
     }
 
+    public GTTwoLayerAggregateParam getAggregateTransformParam() {
+        return twoLayerAggParam;
+    }
+
     public boolean isAllowStorageAggregation() {
         return allowStorageAggregation;
     }
@@ -457,6 +472,8 @@ public class GTScanRequest {
                         GTUtil.wrap(value.info.codeSystem.getComparator())), out);
             }
             ImmutableBitSet.serializer.serialize(value.rtAggrMetrics, out);
+
+            GTTwoLayerAggregateParam.serializer.serialize(value.twoLayerAggParam, out);
         }
 
         @Override
@@ -512,12 +529,14 @@ public class GTScanRequest {
             }
             ImmutableBitSet aRuntimeAggrMetrics = ImmutableBitSet.serializer.deserialize(in);
 
+            GTTwoLayerAggregateParam aTwoLayerAggParam = GTTwoLayerAggregateParam.serializer.deserialize(in);
+
             return new GTScanRequestBuilder().setInfo(sInfo).setRanges(sRanges).setDimensions(sColumns)
-                    .setAggrGroupBy(sAggGroupBy).setAggrMetrics(sAggrMetrics).setAggrMetricsFuncs(sAggrMetricFuncs)
+                    .setAggrGroupBy(sAggGroupBy).setAggrMetrics(sAggrMetrics).setAggrMetricsFuncs(sAggrMetricFuncs)//
                     .setRtAggrMetrics(aRuntimeAggrMetrics).setDynamicColumns(aDynCols)
-                    .setExprsPushDown(sTupleExpressionMap)
+                    .setExprsPushDown(sTupleExpressionMap).setTwoLayerAggregateParam(aTwoLayerAggParam)//
                     .setFilterPushDown(sGTFilter).setHavingFilterPushDown(sGTHavingFilter)
-                    .setAllowStorageAggregation(sAllowPreAggr).setAggCacheMemThreshold(sAggrCacheGB)
+                    .setAllowStorageAggregation(sAllowPreAggr).setAggCacheMemThreshold(sAggrCacheGB)//
                     .setStorageScanRowNumThreshold(storageScanRowNumThreshold)
                     .setStoragePushDownLimit(storagePushDownLimit).setStorageLimitLevel(storageLimitLevel)
                     .setStartTime(startTime).setTimeout(timeout).setStorageBehavior(storageBehavior)

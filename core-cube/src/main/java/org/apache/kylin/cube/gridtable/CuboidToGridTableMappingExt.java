@@ -19,7 +19,6 @@
 package org.apache.kylin.cube.gridtable;
 
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -120,15 +119,5 @@ public class CuboidToGridTableMappingExt extends CuboidToGridTableMapping {
             r = dynMetrics2gt.get(metric);
         }
         return r == null ? -1 : r;
-    }
-
-    @Override
-    public int[] getMetricsIndexes(Collection<FunctionDesc> metrics) {
-        int[] result = new int[metrics.size()];
-        int i = 0;
-        for (FunctionDesc metric : metrics) {
-            result[i++] = getIndexOf(metric);
-        }
-        return result;
     }
 }
