@@ -99,7 +99,7 @@ public class CubeBuildJob extends SparkApplication {
                 Map<Long, NBuildSourceInfo> buildFromLayouts = sourceChooser.reuseSources();
 
                 infos.clearCuboidsNumPerLayer(segId);
-                
+
                 // build cuboids from flat table
                 if (buildFromFlatTable != null) {
                     collectPersistedTablePath(persistedFlatTable, sourceChooser);
@@ -130,13 +130,6 @@ public class CubeBuildJob extends SparkApplication {
         }
     }
 
-    private void updateMetaAfterBuilding(CubeUpdate update) throws IOException{
-        KylinConfig config = KylinConfig.createKylinConfig(this.config);
-        config.setMetadataUrl(getParam(MetadataConstants.P_OUTPUT_META_URL));
-        CubeManager cubeManager = CubeManager.getInstance(config);
-        cubeManager.updateCube(update);
-    }
-
     private void updateSegmentInfo(String cubeId, SegmentInfo segmentInfo, long sourceRowCount)
             throws IOException {
         CubeInstance cubeInstance = cubeManager.getCubeByUuid(cubeId);
@@ -154,8 +147,6 @@ public class CubeBuildJob extends SparkApplication {
         cubeSegments.add(segment);
         update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
         cubeManager.updateCube(update);
-
-        updateMetaAfterBuilding(update);
     }
 
     private void collectPersistedTablePath(List<String> persistedFlatTable, ParentSourceChooser sourceChooser) {
@@ -179,8 +170,6 @@ public class CubeBuildJob extends SparkApplication {
         }
         update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
         cubeManager.updateCube(update);
-
-        updateMetaAfterBuilding(update);
     }
 
     private void build(Collection<NBuildSourceInfo> buildSourceInfos, SegmentInfo seg, SpanningTree st) {

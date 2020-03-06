@@ -37,6 +37,9 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -65,6 +68,7 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,7 +154,7 @@ public class NSparkExecutable extends AbstractExecutable {
             return runLocalMode(filePath);
         } else {
             killOrphanApplicationIfExists(config);
-            return runSparkSubmit(config, sparkHome, hadoopConf, jars, kylinJobJar,
+            return runSparkSubmit(config, hadoopConf, jars, kylinJobJar,
                     "-className " + getSparkSubmitClassName() + " " + filePath);
         }
     }
@@ -243,7 +247,7 @@ public class NSparkExecutable extends AbstractExecutable {
         }
     }
 
-    private ExecuteResult runSparkSubmit(KylinConfig config, String sparkHome, String hadoopConf, String jars,
+    private ExecuteResult runSparkSubmit(KylinConfig config, String hadoopConf, String jars,
             String kylinJobJar, String appArgs) {
         PatternedLogger patternedLogger;
         if (config.isJobLogPrintEnabled()) {
@@ -261,9 +265,24 @@ public class NSparkExecutable extends AbstractExecutable {
             Map<String, String> extraInfo = makeExtraInfo(patternedLogger.getInfo());
             ExecuteResult ret = ExecuteResult.createSucceed(result.getSecond());
             ret.getExtraInfo().putAll(extraInfo);
+            updateMetaAfterBuilding(config);
             return ret;
         } catch (Exception e) {
             return ExecuteResult.createError(e);
+        }
+    }
+
+    private void updateMetaAfterBuilding(KylinConfig config) throws IOException {
+        if (this instanceof NSparkCubingStep) {
+            CubeManager cubeManager = CubeManager.getInstance(config);
+            CubeInstance currentInstance = cubeManager.getCube(getCubeName());
+            CubeUpdate update = new CubeUpdate(currentInstance.latestCopyForWrite());
+            KylinConfig kylinDistConfig = MetaDumpUtil.loadKylinConfigFromHdfs(getDistMetaUrl());
+            CubeInstance distCube = CubeManager.getInstance(kylinDistConfig).getCube(getCubeName());
+            Set<String> segmentIds = Sets.newHashSet(org.apache.hadoop.util.StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS)));
+            update.setToUpdateSegs(distCube.getSegmentById(segmentIds.iterator().next()));
+            update.setStatus(RealizationStatusEnum.READY);
+            cubeManager.updateCube(update);
         }
     }
 
