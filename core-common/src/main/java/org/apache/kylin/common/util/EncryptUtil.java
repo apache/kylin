@@ -33,6 +33,7 @@ public class EncryptUtil {
 
     public static String encrypt(String strToEncrypt) {
         try {
+            /** "AES/ECB/PKCS5Padding" is not secure */
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
