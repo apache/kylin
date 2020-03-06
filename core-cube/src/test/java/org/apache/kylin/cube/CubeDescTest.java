@@ -18,6 +18,8 @@
 
 package org.apache.kylin.cube;
 
+import static org.apache.kylin.measure.bitmap.BitmapMeasureType.DATATYPE_BITMAP;
+import static org.apache.kylin.measure.map.bitmap.BitmapMapMeasureType.DATATYPE_BITMAP_MAP;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -135,6 +137,10 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
             MeasureDesc im = icMeasures.get(i);
             assertEquals(lm.getName(), im.getName());
             assertEquals(lm.getFunction().getFullExpression(), im.getFunction().getFullExpression());
+            if (DATATYPE_BITMAP_MAP.equals(im.getFunction().getReturnType())
+                    && DATATYPE_BITMAP.equals(lm.getFunction().getReturnType())) {
+                continue;
+            }
             assertEquals(lm.getFunction().getReturnType(), im.getFunction().getReturnType());
         }
 

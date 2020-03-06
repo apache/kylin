@@ -51,6 +51,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
@@ -88,6 +89,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         segment.setEstimateRatio(cuboidEstimateRatio);
 
         try {
+            deleteDictionaryIfNeeded(segment);
             saveExtSnapshotIfNeeded(cubeManager, cube, segment);
             updateSegment(segment);
 
@@ -97,6 +99,19 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             logger.error("fail to update cube after build", e);
             return ExecuteResult.createError(e);
         }
+    }
+
+    // Don't delete the dicts in metadata store, let it done regularly by the metadata cleanup tool
+    private Set<String> deleteDictionaryIfNeeded(CubeSegment segment) {
+        Set<TblColRef> dictColToDelete = segment.getCubeDesc().getAllColumnsNeedDictionaryForBuildingOnly();
+        Set<String> dictResPathToDelete = Sets.newHashSetWithExpectedSize(dictColToDelete.size());
+        for (TblColRef dictCol : dictColToDelete) {
+            String pathToDelete = segment.removeDictResPath(dictCol);
+            if (!Strings.isNullOrEmpty(pathToDelete)) {
+                dictResPathToDelete.add(pathToDelete);
+            }
+        }
+        return dictResPathToDelete;
     }
 
     private void saveExtSnapshotIfNeeded(CubeManager cubeManager, CubeInstance cube, CubeSegment segment)

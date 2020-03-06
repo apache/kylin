@@ -1298,6 +1298,43 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     /**
+     * Get columns which need dictionaries during cube building, while don't need to store them
+     */
+    public Set<TblColRef> getAllColumnsNeedDictionaryForBuildingOnly() {
+        Set<TblColRef> result = Sets.newHashSet();
+        Set<TblColRef> colsNeedDictStored = Sets.newHashSet();
+
+        // dictionaries in measures
+        for (MeasureDesc measure : measures) {
+            FunctionDesc func = measure.getFunction();
+            MeasureType<?> aggrType = func.getMeasureType();
+
+            // cols need dict stored in a measure
+            Set<TblColRef> colSet = Sets.newHashSet();
+            colSet.addAll(aggrType.getColumnsNeedDictionary(func));
+            colSet.removeAll(aggrType.getColumnsNeedDictionaryForBuildingOnly(func));
+            colsNeedDictStored.addAll(colSet);
+
+            result.addAll(aggrType.getColumnsNeedDictionaryForBuildingOnly(func));
+        }
+
+        // dictionaries in dimensions
+        colsNeedDictStored.addAll(getAllDimsHaveDictionary());
+
+        // any additional dictionaries
+        if (dictionaries != null) {
+            for (DictionaryDesc dictDesc : dictionaries) {
+                TblColRef col = dictDesc.getColumnRef();
+                colsNeedDictStored.add(col);
+            }
+        }
+
+        result.removeAll(colsNeedDictStored);
+
+        return result;
+    }
+    
+    /**
      * Get dimensions that have dictionary
      */
     public Set<TblColRef> getAllDimsHaveDictionary() {
