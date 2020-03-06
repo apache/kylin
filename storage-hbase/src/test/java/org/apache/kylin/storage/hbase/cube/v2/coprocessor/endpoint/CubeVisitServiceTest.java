@@ -66,10 +66,14 @@ import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTScanRequestBuilder;
+import org.apache.kylin.gridtable.GTTwoLayerAggregateParam;
 import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.memstore.GTSimpleMemStore;
 import org.apache.kylin.measure.hllc.HLLCounter;
+import org.apache.kylin.measure.stddev.StandardDeviationAggFunc;
+import org.apache.kylin.measure.stddev.StdDevCounter;
+import org.apache.kylin.measure.stddev.StdDevSumMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.expression.BinaryTupleExpression;
 import org.apache.kylin.metadata.expression.CaseTupleExpression;
@@ -402,6 +406,79 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
         service.visitCube(null, request, done);
     }
 
+    @Test
+    public void testVisitCubeForStdDevSum() throws Exception {
+        GTInfo.Builder builder = GTInfo.builder();
+        builder.setColumns(//
+                DataType.getType("date"), //
+                DataType.getType("string"), //
+                DataType.getType("decimal"), //
+                DataType.getType(StdDevSumMeasureType.DATATYPE_STDDEV) // for runtime aggregation
+        );
+
+        List<Pair<byte[], byte[]>> selectedColumns = Lists.newArrayList();
+        selectedColumns.add(new Pair<>(FAM[0], COL_M));
+
+        final GTInfo gtInfo = newInfo(builder, setOf(2, 3));
+        RawScan rawScan = mockFullScan(gtInfo, getTestConfig(), selectedColumns);
+
+        CoprocessorEnvironment env = PowerMockito.mock(RegionCoprocessorEnvironment.class);
+        PowerMockito.when(env, "getRegion").thenReturn(region);
+
+        final CubeVisitService service = new CubeVisitService();
+        service.start(env);
+
+        CubeVisitProtos.CubeVisitRequest request = mockScanRequestForStdDevSum(gtInfo, Lists.newArrayList(rawScan));
+
+        RpcCallback<CubeVisitProtos.CubeVisitResponse> done = new RpcCallback<CubeVisitProtos.CubeVisitResponse>() {
+            @Override
+            public void run(CubeVisitProtos.CubeVisitResponse result) {
+                try {
+                    byte[] rawData = CompressionUtils
+                            .decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows()));
+                    PartitionResultIterator iterator = new PartitionResultIterator(rawData, gtInfo, setOf(0, 1, 3));
+                    Map<String, Double> actRet = Maps.newHashMap();
+                    while (iterator.hasNext()) {
+                        GTRecord record = iterator.next();
+                        String key = (String) record.decodeValue(1);
+                        double value = StandardDeviationAggFunc.result((StdDevCounter) record.decodeValue(3));
+                        actRet.put(key, value);
+                    }
+
+                    Assert.assertEquals(expUserStddevRet, actRet);
+                } catch (Exception e) {
+                    Assert.fail("Fail due to " + e);
+                }
+            }
+        };
+        service.visitCube(null, request, done);
+    }
+
+    public static CubeVisitProtos.CubeVisitRequest mockScanRequestForStdDevSum(GTInfo gtInfo, List<RawScan> rawScans)
+            throws IOException {
+        ImmutableBitSet dimensions = setOf(0, 1);
+        ImmutableBitSet aggrGroupBy = setOf(1);
+        ImmutableBitSet aggrMetrics = setOf(3);
+        String[] aggrMetricsFuncs = { StdDevSumMeasureType.FUNC_STDDEV_SUM };
+        ImmutableBitSet dynColumns = setOf(3);
+
+        ImmutableBitSet vanishDimMask = setOf(0);
+        int[] insideLayerMetrics = new int[] { 2 };
+        String[] insideLayerMetricsFuncs = new String[] { FUNC_SUM };
+        GTTwoLayerAggregateParam twoLayerAggParam = new GTTwoLayerAggregateParam(vanishDimMask, aggrMetrics,
+                aggrMetricsFuncs, insideLayerMetrics, insideLayerMetricsFuncs);
+
+        GTScanRequest scanRequest = new GTScanRequestBuilder().setInfo(gtInfo).setRanges(null)//
+                .setDimensions(dimensions).setAggrGroupBy(aggrGroupBy)//
+                .setAggrMetrics(aggrMetrics).setAggrMetricsFuncs(aggrMetricsFuncs)//
+                .setDynamicColumns(dynColumns)//
+                .setTwoLayerAggregateParam(twoLayerAggParam)//
+                .setStartTime(System.currentTimeMillis()).createGTScanRequest();
+
+        final List<CubeVisitProtos.CubeVisitRequest.IntList> intListList = mockIntList(setOf(2));
+        return mockScanRequest(rawScans, scanRequest, intListList);
+    }
+
     public static CubeVisitProtos.CubeVisitRequest mockScanRequestWithRuntimeDimensions(GTInfo gtInfo,
             List<RawScan> rawScans) throws IOException {
         ImmutableBitSet dimensions = setOf();
@@ -640,14 +717,17 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
         }
         for (String user : contents.keySet()) {
             BigDecimal sum = new BigDecimal(0);
+            StdDevCounter sd = new StdDevCounter();
             for (BigDecimal innerValue : contents.get(user)) {
                 sum = sum.add(innerValue);
+                sd.add(innerValue.doubleValue());
             }
             HLLCounter hc = new HLLCounter();
             hc.add(user);
 
             expUserRet.put(user, sum);
             expUserDistCntRet.put(user, hc.getCountEstimate());
+            expUserStddevRet.put(user, StandardDeviationAggFunc.result(sd));
         }
         builder.close();
 

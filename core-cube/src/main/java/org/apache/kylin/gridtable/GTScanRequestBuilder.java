@@ -41,6 +41,7 @@ public class GTScanRequestBuilder {
     private ImmutableBitSet dynamicColumns;
     private ImmutableBitSet rtAggrMetrics;
     private Map<Integer, TupleExpression> exprsPushDown;
+    private GTTwoLayerAggregateParam twoLayerAggParam;
     private boolean allowStorageAggregation = true;
     private double aggCacheMemThreshold = 0;
     private int storageScanRowNumThreshold = Integer.MAX_VALUE;// storage should terminate itself when $storageScanRowNumThreshold cuboid rows are scanned, and throw exception.   
@@ -102,6 +103,11 @@ public class GTScanRequestBuilder {
 
     public GTScanRequestBuilder setAggrMetricsFuncs(String[] aggrMetricsFuncs) {
         this.aggrMetricsFuncs = aggrMetricsFuncs;
+        return this;
+    }
+
+    public GTScanRequestBuilder setTwoLayerAggregateParam(GTTwoLayerAggregateParam twoLayerAggParam) {
+        this.twoLayerAggParam = twoLayerAggParam;
         return this;
     }
 
@@ -170,6 +176,10 @@ public class GTScanRequestBuilder {
             exprsPushDown = Maps.newHashMap();
         }
 
+        if (twoLayerAggParam == null) {
+            twoLayerAggParam = new GTTwoLayerAggregateParam();
+        }
+
         if (storageBehavior == null) {
             storageBehavior = BackdoorToggles.getCoprocessorBehavior() == null
                     ? StorageSideBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString()
@@ -179,9 +189,10 @@ public class GTScanRequestBuilder {
         this.startTime = startTime == -1 ? System.currentTimeMillis() : startTime;
         this.timeout = timeout == -1 ? 300000 : timeout;
 
-        return new GTScanRequest(info, ranges, dimensions, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, rtAggrMetrics,
-                dynamicColumns, exprsPushDown, filterPushDown, havingFilterPushDown, allowStorageAggregation,
-                aggCacheMemThreshold, storageScanRowNumThreshold, storagePushDownLimit, storageLimitLevel,
-                storageBehavior, startTime, timeout);
+        return new GTScanRequest(info, ranges, dimensions, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, //
+                rtAggrMetrics, dynamicColumns, exprsPushDown, twoLayerAggParam, //
+                filterPushDown, havingFilterPushDown, allowStorageAggregation, aggCacheMemThreshold,
+                storageScanRowNumThreshold, storagePushDownLimit, storageLimitLevel, storageBehavior, startTime,
+                timeout);
     }
 }

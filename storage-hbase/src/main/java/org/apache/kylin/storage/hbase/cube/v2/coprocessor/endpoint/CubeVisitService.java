@@ -54,6 +54,7 @@ import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.gridtable.GTAggregateScanner;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTTwoLayerAggregateScanner;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.gridtable.StorageLimitLevel;
@@ -365,9 +366,21 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 finalScanner.close();
             }
 
-            long rowCountBeforeAggr = finalScanner instanceof GTAggregateScanner
-                    ? ((GTAggregateScanner) finalScanner).getInputRowCount()
-                    : finalRowCount;
+            long filterRowCount;
+            long aggRowCount;
+            if (finalScanner instanceof GTAggregateScanner) {
+                GTAggregateScanner aggScanner = (GTAggregateScanner) finalScanner;
+                filterRowCount = cellListIterator.getTotalScannedRowCount() - aggScanner.getInputRowCount();
+                aggRowCount = aggScanner.getInputRowCount() - finalRowCount;
+            } else if (finalScanner instanceof GTTwoLayerAggregateScanner) {
+                GTTwoLayerAggregateScanner twoLayerAggScanner = (GTTwoLayerAggregateScanner) finalScanner;
+                filterRowCount = cellListIterator.getTotalScannedRowCount()
+                        - twoLayerAggScanner.getFirstLayerInputRowCount();
+                aggRowCount = twoLayerAggScanner.getFirstLayerInputRowCount() - finalRowCount;
+            } else {
+                filterRowCount = cellListIterator.getTotalScannedRowCount() - finalRowCount;
+                aggRowCount = 0L;
+            }
 
             appendProfileInfo(sb, "agg done", serviceStartTime);
             logger.info("Total scanned {} rows and {} bytes", cellListIterator.getTotalScannedRowCount(),
@@ -405,8 +418,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             done.run(responseBuilder.//
                     setCompressedRows(HBaseZeroCopyByteString.wrap(compressedAllRows)).//too many array copies 
                     setStats(CubeVisitProtos.CubeVisitResponse.Stats.newBuilder()
-                            .setFilteredRowCount(cellListIterator.getTotalScannedRowCount() - rowCountBeforeAggr)
-                            .setAggregatedRowCount(rowCountBeforeAggr - finalRowCount)
+                            .setAggregatedRowCount(aggRowCount).setFilteredRowCount(filterRowCount)
                             .setScannedRowCount(cellListIterator.getTotalScannedRowCount())
                             .setScannedBytes(cellListIterator.getTotalScannedRowBytes())
                             .setServiceStartTime(serviceStartTime).setServiceEndTime(System.currentTimeMillis())

@@ -155,7 +155,7 @@ public class CuboidToGridTableMapping {
         return r == null ? -1 : r;
     }
 
-    public int[] getMetricsIndexes(Collection<FunctionDesc> metrics) {
+    public int[] getMetricsIndexes(Collection<? extends FunctionDesc> metrics) {
         int[] result = new int[metrics.size()];
         int i = 0;
         for (FunctionDesc metric : metrics) {
@@ -220,7 +220,7 @@ public class CuboidToGridTableMapping {
         return new ImmutableBitSet(result);
     }
 
-    public String[] makeAggrFuncs(Collection<FunctionDesc> metrics) {
+    public String[] makeAggrFuncs(Collection<? extends FunctionDesc> metrics) {
 
         //metrics are represented in ImmutableBitSet, which loses order information
         //sort the aggrFuns to align with metrics natural order 
