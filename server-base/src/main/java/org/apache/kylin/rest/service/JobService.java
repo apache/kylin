@@ -33,7 +33,6 @@ import java.util.TimeZone;
 
 import javax.annotation.Nullable;
 
-import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
@@ -481,8 +480,6 @@ public class JobService extends BasicService implements InitializingBean {
 
         if (job instanceof CubingJob) {
             cubeJob = (CubingJob)job;
-        } else if (job instanceof NSparkCubingJob) {
-            cubeJob = (NSparkCubingJob)job;
         } else {
             throw new BadRequestException(String.format(Locale.ROOT, msg.getILLEGAL_JOB_TYPE(), job.getId()));
         }
