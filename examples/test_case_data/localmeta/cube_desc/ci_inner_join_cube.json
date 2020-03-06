@@ -249,7 +249,7 @@
           "type": "column",
           "value": "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
         },
-        "returntype": "bitmap"
+        "returntype": "bitmap_map"
       }
     },
     {

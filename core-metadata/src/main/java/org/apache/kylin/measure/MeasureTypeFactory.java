@@ -29,6 +29,7 @@ import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.measure.dim.DimCountDistinctMeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.measure.hllc.HLLCMeasureType;
+import org.apache.kylin.measure.map.bitmap.BitmapMapMeasureType;
 import org.apache.kylin.measure.percentile.PercentileMeasureType;
 import org.apache.kylin.measure.raw.RawMeasureType;
 import org.apache.kylin.measure.stddev.StdDevSumMeasureType;
@@ -115,6 +116,7 @@ abstract public class MeasureTypeFactory<T> {
         factoryInsts.add(new PercentileMeasureType.Factory());
         factoryInsts.add(new DimCountDistinctMeasureType.Factory());
         factoryInsts.add(new StdDevSumMeasureType.Factory());
+        factoryInsts.add(new BitmapMapMeasureType.Factory());
 
         logger.info("Checking custom measure types from kylin config");
 
