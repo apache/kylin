@@ -77,6 +77,7 @@ import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.CountDistinctExpressionDynamicFunctionDesc;
 import org.apache.kylin.metadata.model.DynamicFunctionDesc;
+import org.apache.kylin.metadata.model.ExpressionDynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
@@ -507,22 +508,29 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             List<FunctionDesc> newAggrs = Lists.newArrayList();
             for (FunctionDesc aggFunc : this.aggregations) {
                 if (aggFunc instanceof DynamicFunctionDesc) {
-                    DynamicFunctionDesc dynAggFunc = (DynamicFunctionDesc) aggFunc;
-                    Map<TblColRef, FunctionDesc> innerOldAggrs = dynAggFunc.getRuntimeFuncMap();
-                    Map<TblColRef, FunctionDesc> innerNewAggrs = Maps.newHashMapWithExpectedSize(innerOldAggrs.size());
-                    for (TblColRef key : innerOldAggrs.keySet()) {
-                        innerNewAggrs.put(key, findInMeasures(innerOldAggrs.get(key), measures));
-                    }
-                    dynAggFunc.setRuntimeFuncMap(innerNewAggrs);
-                    if (dynAggFunc instanceof CountDistinctExpressionDynamicFunctionDesc) {
-                        dynAggFunc.setReturnType(innerNewAggrs.values().iterator().next().getReturnType());
+                    if (!aggFunc.isDimensionAsMetric()) {
+                        DynamicFunctionDesc dynAggFunc = (DynamicFunctionDesc) aggFunc;
+                        Map<TblColRef, FunctionDesc> innerOldAggrs = dynAggFunc.getRuntimeFuncMap();
+                        Map<TblColRef, FunctionDesc> innerNewAggrs = Maps
+                                .newHashMapWithExpectedSize(innerOldAggrs.size());
+                        for (TblColRef key : innerOldAggrs.keySet()) {
+                            innerNewAggrs.put(key, findInMeasures(innerOldAggrs.get(key), measures));
+                        }
+                        dynAggFunc.setRuntimeFuncMap(innerNewAggrs);
+                        // update the type of the dynamic fields, since the original one is different
+                        if (dynAggFunc instanceof CountDistinctExpressionDynamicFunctionDesc) {
+                            dynAggFunc.setReturnType(innerNewAggrs.values().iterator().next().getReturnType());
+                            TblColRef paramCol = aggFunc.getParameter().getColRefs().get(0);
+                            RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
+                            RelDataType fieldType = OLAPTable.createSqlType(typeFactory,
+                                    dynAggFunc.getRewriteFieldType(), true);
+                            this.context.dynamicFields.put(paramCol, fieldType);
+                        }
+                    } else {
                         TblColRef paramCol = aggFunc.getParameter().getColRefs().get(0);
-                        RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
-                        RelDataType fieldType = OLAPTable.createSqlType(typeFactory, dynAggFunc.getRewriteFieldType(),
-                                true);
-                        this.context.dynamicFields.put(paramCol, fieldType);
+                        this.context.dynamicFields.remove(paramCol);
                     }
-                    newAggrs.add(dynAggFunc);
+                    newAggrs.add(aggFunc);
                 } else {
                     newAggrs.add(findInMeasures(aggFunc, measures));
                 }
@@ -569,7 +577,11 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             FunctionDesc aggFunc = this.aggregations.get(i);
 
             if (aggFunc.isDimensionAsMetric()) {
-                addToContextGroupBy(aggFunc.getParameter().getColRefs());
+                List<TblColRef> neededCols = aggFunc instanceof ExpressionDynamicFunctionDesc
+                        ? Lists.newArrayList(ExpressionColCollector
+                                .collectColumns(((ExpressionDynamicFunctionDesc) aggFunc).getTupleExpression()))
+                        : aggFunc.getParameter().getColRefs();
+                addToContextGroupBy(neededCols);
                 continue; // skip rewrite, let calcite handle
             }
 

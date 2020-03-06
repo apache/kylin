@@ -20,7 +20,9 @@ select LSTG_FORMAT_NAME,
        count(distinct case when TEST_KYLIN_FACT.LEAF_CATEG_ID<>165888 then SELLER_ID else null end),
        count(distinct case when TEST_KYLIN_FACT.LEAF_CATEG_ID=165888 then SELLER_ID else null end),
        count(distinct case when TEST_KYLIN_FACT.LEAF_CATEG_ID<>165888 then TEST_COUNT_DISTINCT_BITMAP else null end),
-       count(distinct case when TEST_KYLIN_FACT.LEAF_CATEG_ID=165888 then TEST_COUNT_DISTINCT_BITMAP else null end)
+       count(distinct case when TEST_KYLIN_FACT.LEAF_CATEG_ID=165888 then TEST_COUNT_DISTINCT_BITMAP else null end),
+       count(distinct case when TEST_KYLIN_FACT.LEAF_CATEG_ID<>165888  then LSTG_FORMAT_NAME else null end),
+       count(distinct case when TEST_KYLIN_FACT.LEAF_CATEG_ID=165888  then LSTG_FORMAT_NAME else null end)
 from TEST_KYLIN_FACT
     inner JOIN edw.test_cal_dt as test_cal_dt
     ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt

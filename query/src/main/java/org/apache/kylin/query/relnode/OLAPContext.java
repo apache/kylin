@@ -189,7 +189,7 @@ public class OLAPContext {
             Set<TblColRef> rtMetricColumns = new HashSet<>();
             List<DynamicFunctionDesc> dynFuncs = Lists.newLinkedList();
             for (FunctionDesc functionDesc : aggregations) {
-                if (functionDesc instanceof DynamicFunctionDesc) {
+                if (functionDesc instanceof DynamicFunctionDesc && !functionDesc.isDimensionAsMetric()) {
                     DynamicFunctionDesc dynFunc = (DynamicFunctionDesc) functionDesc;
                     rtMetricColumns.addAll(dynFunc.getRuntimeFuncMap().keySet());
                     rtDimColumns.addAll(dynFunc.getRuntimeDimensions());
