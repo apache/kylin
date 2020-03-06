@@ -45,10 +45,9 @@ script:
   - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent test coveralls:report -e
   - if [[ -n "${TRAVIS_PULL_REQUEST_SLUG}" && "${TRAVIS_PULL_REQUEST_SLUG}" != "${TRAVIS_REPO_SLUG}" ]]; then
         echo "The pull request from ${TRAVIS_PULL_REQUEST_SLUG} is an EXTERNAL pull request. Skip sonar analysis.";
-        mvn sonar:sonar -e;
     else
         git fetch --unshallow --quiet;
-        mvn sonar:sonar -e;
+        mvn sonar:sonar -e -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=2ca24e5a04ad1fca4ca956953810421aa8bd1470 -Dsonar.organization=kylin;
     fi
 
 notification:
