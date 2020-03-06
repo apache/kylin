@@ -75,6 +75,7 @@ import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.CountDistinctExpressionDynamicFunctionDesc;
 import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -403,6 +404,21 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
                         this.aggregations.add(sumDynFunc);
                         continue;
+                    } else {
+                        // count (distinct expression)
+                        if (tupleExpr instanceof CaseTupleExpression) {
+                            CaseTupleExpression caseTupleExpr = (CaseTupleExpression) tupleExpr;
+                            if (caseTupleExpr.getWhenList().size() > 1 || caseTupleExpr.getElseExpr() != null) {
+                                continue;
+                            }
+                            CountDistinctExpressionDynamicFunctionDesc cntDistDynFunc = new CountDistinctExpressionDynamicFunctionDesc(
+                                    parameter, caseTupleExpr);
+                            this.aggregations.add(cntDistDynFunc);
+
+                            TblColRef colRef = cntDistDynFunc.getParameter().getColRef();
+                            colRef.getColumnDesc().setDatatype(cntDistDynFunc.getRewriteFieldType().getName());
+                            continue;
+                        }
                     }
                 }
             }
@@ -498,6 +514,14 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                         innerNewAggrs.put(key, findInMeasures(innerOldAggrs.get(key), measures));
                     }
                     dynAggFunc.setRuntimeFuncMap(innerNewAggrs);
+                    if (dynAggFunc instanceof CountDistinctExpressionDynamicFunctionDesc) {
+                        dynAggFunc.setReturnType(innerNewAggrs.values().iterator().next().getReturnType());
+                        TblColRef paramCol = aggFunc.getParameter().getColRefs().get(0);
+                        RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
+                        RelDataType fieldType = OLAPTable.createSqlType(typeFactory, dynAggFunc.getRewriteFieldType(),
+                                true);
+                        this.context.dynamicFields.put(paramCol, fieldType);
+                    }
                     newAggrs.add(dynAggFunc);
                 } else {
                     newAggrs.add(findInMeasures(aggFunc, measures));
@@ -549,14 +573,20 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 continue; // skip rewrite, let calcite handle
             }
 
-            if (aggFunc.needRewriteField()) {
-                String rewriteFieldName = aggFunc.getRewriteFieldName();
-                RelDataType rewriteFieldType = OLAPTable.createSqlType(typeFactory, aggFunc.getRewriteFieldType(),
-                        true);
-                this.context.rewriteFields.put(rewriteFieldName, rewriteFieldType);
+            List<FunctionDesc> aggFuncList = Lists.newArrayList(aggFunc);
+            if (aggFunc instanceof DynamicFunctionDesc) {
+                aggFuncList.addAll(((DynamicFunctionDesc) aggFunc).getRuntimeFuncMap().values());
+            }
 
-                TblColRef column = buildRewriteColumn(aggFunc);
-                this.context.metricsColumns.add(column);
+            for (FunctionDesc entry : aggFuncList) {
+                if (entry.needRewriteField()) {
+                    String rewriteFieldName = entry.getRewriteFieldName();
+                    RelDataType rewriteFieldType = OLAPTable.createSqlType(typeFactory, entry.getRewriteFieldType(),
+                            true);
+                    this.context.rewriteFields.put(rewriteFieldName, rewriteFieldType);
+                    TblColRef column = buildRewriteColumn(entry);
+                    this.context.metricsColumns.add(column);
+                }
             }
 
             AggregateCall aggCall = this.rewriteAggCalls.get(i);

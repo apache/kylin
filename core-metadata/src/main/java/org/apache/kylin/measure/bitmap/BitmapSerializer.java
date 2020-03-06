@@ -38,6 +38,9 @@ public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
 
     @Override
     public void serialize(BitmapCounter value, ByteBuffer out) {
+        if (value == null) {
+            value = factory.newBitmap();
+        }
         try {
             value.write(out);
         } catch (IOException e) {
