@@ -18,6 +18,9 @@
 
 package org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint;
 
+import static org.apache.kylin.metadata.model.FunctionDesc.FUNC_COUNT_DISTINCT;
+import static org.apache.kylin.metadata.model.FunctionDesc.FUNC_SUM;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.BitSet;
@@ -66,6 +69,7 @@ import org.apache.kylin.gridtable.GTScanRequestBuilder;
 import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.memstore.GTSimpleMemStore;
+import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.expression.BinaryTupleExpression;
 import org.apache.kylin.metadata.expression.CaseTupleExpression;
@@ -103,7 +107,7 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
     private volatile static GTInfo gtInfo = null;
     private static final long baseCuboid = 3L;
 
-    private final static byte[] FAM = Bytes.toBytes("f1");
+    private final static byte[][] FAM = { Bytes.toBytes("f1"), Bytes.toBytes("f2") };
     private final static byte[] COL_M = Bytes.toBytes("m");
 
     private static final List<String> dateList = Lists.newArrayList("2018-01-14", "2018-01-15", "2018-01-16");
@@ -113,6 +117,7 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
 
     private static final Map<String, Double> expUserStddevRet = Maps.newHashMap();
     private static final Map<String, BigDecimal> expUserRet = Maps.newHashMap();
+    private static final Map<String, Long> expUserDistCntRet = Maps.newHashMap();
     private static final BigDecimal userCnt = new BigDecimal(dateList.size());
 
     public static void prepareTestData() throws Exception {
@@ -137,7 +142,8 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
                     RowConstants.ROWKEY_CUBOIDID_LEN);
             System.arraycopy(value, 0, key, RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN, value.length);
             Put put = new Put(key);
-            put.addColumn(FAM, COL_M, record.exportColumns(gtInfo.getColumnBlock(1)).toBytes());
+            put.addColumn(FAM[0], COL_M, record.exportColumns(gtInfo.getColumnBlock(1)).toBytes());
+            put.addColumn(FAM[1], COL_M, record.exportColumns(gtInfo.getColumnBlock(2)).toBytes());
             region.put(put);
         }
     }
@@ -173,7 +179,10 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testVisitCube() throws Exception {
-        RawScan rawScan = mockFullScan(gtInfo, getTestConfig());
+        List<Pair<byte[], byte[]>> selectedColumns = Lists.newArrayList();
+        selectedColumns.add(new Pair<>(FAM[0], COL_M));
+        selectedColumns.add(new Pair<>(FAM[1], COL_M));
+        RawScan rawScan = mockFullScan(gtInfo, getTestConfig(), selectedColumns);
 
         CoprocessorEnvironment env = PowerMockito.mock(RegionCoprocessorEnvironment.class);
         PowerMockito.when(env, "getRegion").thenReturn(region);
@@ -194,7 +203,8 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
                 try {
                     byte[] rawData = CompressionUtils
                             .decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows()));
-                    PartitionResultIterator iterator = new PartitionResultIterator(rawData, gtInfo, setOf(0, 1, 2, 3));
+                    PartitionResultIterator iterator = new PartitionResultIterator(rawData, gtInfo,
+                            setOf(0, 1, 2, 3, 4, 5));
                     int nReturn = 0;
                     while (iterator.hasNext()) {
                         iterator.next();
@@ -210,8 +220,19 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testVisitCubeWithRuntimeAggregates() throws Exception {
-        RawScan rawScan = mockFullScan(gtInfo, getTestConfig());
+    public void testVisitCubeWithCountDistinctRuntimeAggregates() throws Exception {
+        GTInfo.Builder builder = GTInfo.builder();
+        builder.setColumns(//
+                DataType.getType("date"), //
+                DataType.getType("string"), //
+                DataType.getType("hllc(10)"), //
+                DataType.getType("hllc(10)")); // for runtime aggregation
+
+        List<Pair<byte[], byte[]>> selectedColumns = Lists.newArrayList();
+        selectedColumns.add(new Pair<>(FAM[1], COL_M));
+
+        final GTInfo gtInfo = newInfo(builder, setOf(2, 3));
+        RawScan rawScan = mockFullScan(gtInfo, getTestConfig(), selectedColumns);
 
         CoprocessorEnvironment env = PowerMockito.mock(RegionCoprocessorEnvironment.class);
         PowerMockito.when(env, "getRegion").thenReturn(region);
@@ -219,7 +240,65 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
         final CubeVisitService service = new CubeVisitService();
         service.start(env);
 
-        final CubeVisitProtos.CubeVisitRequest request = mockScanRequestWithRuntimeAggregates(gtInfo,
+        final CubeVisitProtos.CubeVisitRequest request = mockScanRequestWithCountDistinctRuntimeAggregates(gtInfo,
+                Lists.newArrayList(rawScan));
+
+        RpcCallback<CubeVisitProtos.CubeVisitResponse> done = new RpcCallback<CubeVisitProtos.CubeVisitResponse>() {
+            @Override
+            public void run(CubeVisitProtos.CubeVisitResponse result) {
+                try {
+                    byte[] rawData = CompressionUtils
+                            .decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows()));
+                    PartitionResultIterator iterator = new PartitionResultIterator(rawData, gtInfo, setOf(1, 3));
+                    Map<String, Long> actRet = Maps.newHashMap();
+                    while (iterator.hasNext()) {
+                        GTRecord record = iterator.next();
+                        String key = (String) record.decodeValue(1);
+                        HLLCounter value = (HLLCounter) record.decodeValue(3);
+                        actRet.put(key, value.getCountEstimate());
+                    }
+
+                    Map<String, Long> innerExpUserRet = Maps.newHashMap();
+                    for (String key : expUserDistCntRet.keySet()) {
+                        Long value = 0L;
+                        if (key.equals("Ken")) {
+                            HLLCounter hllc = new HLLCounter();
+                            hllc.add(key);
+                            value = hllc.getCountEstimate();
+                        }
+                        innerExpUserRet.put(key, value);
+                    }
+                    Assert.assertEquals(innerExpUserRet, actRet);
+                } catch (Exception e) {
+                    Assert.fail("Fail due to " + e);
+                }
+            }
+        };
+        service.visitCube(null, request, done);
+    }
+
+    @Test
+    public void testVisitCubeWithSumRuntimeAggregates() throws Exception {
+        GTInfo.Builder builder = GTInfo.builder();
+        builder.setColumns(//
+                DataType.getType("date"), //
+                DataType.getType("string"), //
+                DataType.getType("decimal"), //
+                DataType.getType("decimal")); // for runtime aggregation
+
+        List<Pair<byte[], byte[]>> selectedColumns = Lists.newArrayList();
+        selectedColumns.add(new Pair<>(FAM[0], COL_M));
+
+        final GTInfo gtInfo = newInfo(builder, setOf(2, 3));
+        RawScan rawScan = mockFullScan(gtInfo, getTestConfig(), selectedColumns);
+
+        CoprocessorEnvironment env = PowerMockito.mock(RegionCoprocessorEnvironment.class);
+        PowerMockito.when(env, "getRegion").thenReturn(region);
+
+        final CubeVisitService service = new CubeVisitService();
+        service.start(env);
+
+        final CubeVisitProtos.CubeVisitRequest request = mockScanRequestWithSumRuntimeAggregates(gtInfo,
                 Lists.newArrayList(rawScan));
 
         RpcCallback<CubeVisitProtos.CubeVisitResponse> done = new RpcCallback<CubeVisitProtos.CubeVisitResponse>() {
@@ -269,8 +348,11 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
         );
         builder.enableDynamicDims(setOf(3));
 
-        final GTInfo gtInfo = newInfo(builder);
-        RawScan rawScan = mockFullScan(gtInfo, getTestConfig());
+        List<Pair<byte[], byte[]>> selectedColumns = Lists.newArrayList();
+        selectedColumns.add(new Pair<>(FAM[0], COL_M));
+
+        final GTInfo gtInfo = newInfo(builder, setOf(2, 3));
+        RawScan rawScan = mockFullScan(gtInfo, getTestConfig(), selectedColumns);
 
         CoprocessorEnvironment env = PowerMockito.mock(RegionCoprocessorEnvironment.class);
         PowerMockito.when(env, "getRegion").thenReturn(region);
@@ -325,7 +407,7 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
         ImmutableBitSet dimensions = setOf();
         ImmutableBitSet aggrGroupBy = setOf(3);
         ImmutableBitSet aggrMetrics = setOf(2);
-        String[] aggrMetricsFuncs = { "SUM" };
+        String[] aggrMetricsFuncs = { FUNC_SUM };
         ImmutableBitSet dynColumns = setOf(3);
 
         TupleFilter whenFilter = getCompareTupleFilter(1, "Ken");
@@ -357,12 +439,12 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
         return mockScanRequest(rawScans, scanRequest, intListList);
     }
 
-    public static CubeVisitProtos.CubeVisitRequest mockScanRequestWithRuntimeAggregates(GTInfo gtInfo,
+    public static CubeVisitProtos.CubeVisitRequest mockScanRequestWithSumRuntimeAggregates(GTInfo gtInfo,
             List<RawScan> rawScans) throws IOException {
         ImmutableBitSet dimensions = setOf(1);
         ImmutableBitSet aggrGroupBy = setOf(1);
         ImmutableBitSet aggrMetrics = setOf(3);
-        String[] aggrMetricsFuncs = { "SUM" };
+        String[] aggrMetricsFuncs = { FUNC_SUM };
         ImmutableBitSet dynColumns = setOf(3);
         ImmutableBitSet rtAggrMetrics = setOf(2);
 
@@ -402,6 +484,43 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
         return mockScanRequest(rawScans, scanRequest, intListList);
     }
 
+    public static CubeVisitProtos.CubeVisitRequest mockScanRequestWithCountDistinctRuntimeAggregates(GTInfo gtInfo,
+            List<RawScan> rawScans) throws IOException {
+        ImmutableBitSet dimensions = setOf(1);
+        ImmutableBitSet aggrGroupBy = setOf(1);
+        ImmutableBitSet aggrMetrics = setOf(3);
+        String[] aggrMetricsFuncs = { FUNC_COUNT_DISTINCT };
+        ImmutableBitSet dynColumns = setOf(3);
+        ImmutableBitSet rtAggrMetrics = setOf(2);
+
+        TupleFilter whenFilter = getCompareTupleFilter(1, "Ken");
+        TupleExpression thenExpression = new ColumnTupleExpression(gtInfo.colRef(2));
+
+        List<Pair<TupleFilter, TupleExpression>> whenList = Lists.newArrayList();
+        whenList.add(new Pair<>(whenFilter, thenExpression));
+
+        /**
+         * case
+         *  when user = 'Ken' then user
+         *  else null
+         * end
+         */
+        TupleExpression caseExpression = new CaseTupleExpression(DataType.getType("hllc(10)"), whenList, null);
+
+        Map<Integer, TupleExpression> tupleExpressionMap = Maps.newHashMap();
+        tupleExpressionMap.put(3, caseExpression);
+
+        GTScanRequest scanRequest = new GTScanRequestBuilder().setInfo(gtInfo).setRanges(null)//
+                .setDimensions(dimensions).setAggrGroupBy(aggrGroupBy)//
+                .setAggrMetrics(aggrMetrics).setAggrMetricsFuncs(aggrMetricsFuncs)//
+                .setRtAggrMetrics(rtAggrMetrics)//
+                .setDynamicColumns(dynColumns).setExprsPushDown(tupleExpressionMap)//
+                .setStartTime(System.currentTimeMillis()).createGTScanRequest();
+
+        final List<CubeVisitProtos.CubeVisitRequest.IntList> intListList = mockIntList(setOf(2));
+        return mockScanRequest(rawScans, scanRequest, intListList);
+    }
+
     public static CompareTupleFilter getCompareTupleFilter(int col, Object value) {
         TblColRef colRef = gtInfo.colRef(col);
         ColumnTupleFilter colFilter = new ColumnTupleFilter(colRef);
@@ -422,7 +541,8 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
         GTScanRequest scanRequest = new GTScanRequestBuilder().setInfo(gtInfo).setRanges(null).setDimensions(null)
                 .setStartTime(System.currentTimeMillis()).createGTScanRequest();
 
-        final List<CubeVisitProtos.CubeVisitRequest.IntList> intListList = mockIntList(setOf(2, 3));
+        final List<CubeVisitProtos.CubeVisitRequest.IntList> intListList = mockIntList(
+                Lists.newArrayList(setOf(2, 4), setOf(3, 5)));
         return mockScanRequest(rawScans, scanRequest, intListList);
     }
 
@@ -444,8 +564,14 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
     }
 
     private static List<CubeVisitProtos.CubeVisitRequest.IntList> mockIntList(ImmutableBitSet selectedCols) {
+        return mockIntList(Lists.<ImmutableBitSet> newArrayList(selectedCols));
+    }
+
+    private static List<CubeVisitProtos.CubeVisitRequest.IntList> mockIntList(List<ImmutableBitSet> selectedColsList) {
         List<List<Integer>> hbaseColumnsToGT = Lists.newArrayList();
-        hbaseColumnsToGT.add(Lists.newArrayList(selectedCols.iterator()));
+        for (ImmutableBitSet selectedCols : selectedColsList) {
+            hbaseColumnsToGT.add(Lists.newArrayList(selectedCols.iterator()));
+        }
 
         List<CubeVisitProtos.CubeVisitRequest.IntList> hbaseColumnsToGTIntList = Lists.newArrayList();
         for (List<Integer> list : hbaseColumnsToGT) {
@@ -455,9 +581,8 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
         return hbaseColumnsToGTIntList;
     }
 
-    private static RawScan mockFullScan(GTInfo gtInfo, KylinConfig kylinConfig) {
-        final List<Pair<byte[], byte[]>> selectedColumns = Lists.newArrayList();
-        selectedColumns.add(new Pair<>(FAM, COL_M));
+    private static RawScan mockFullScan(GTInfo gtInfo, KylinConfig kylinConfig,
+            List<Pair<byte[], byte[]>> selectedColumns) {
 
         int headerLength = RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN;
         int bodyLength = 0;
@@ -507,7 +632,10 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
                 BigDecimal value = priceList.get(rand.nextInt(priceList.size()));
                 innerList.add(value);
 
-                builder.write(record.setValues(date, user, value, new BigDecimal(0)));
+                HLLCounter hc = new HLLCounter();
+                hc.add(user);
+
+                builder.write(record.setValues(date, user, value, hc, new BigDecimal(0), new HLLCounter()));
             }
         }
         for (String user : contents.keySet()) {
@@ -515,7 +643,11 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
             for (BigDecimal innerValue : contents.get(user)) {
                 sum = sum.add(innerValue);
             }
+            HLLCounter hc = new HLLCounter();
+            hc.add(user);
+
             expUserRet.put(user, sum);
+            expUserDistCntRet.put(user, hc.getCountEstimate());
         }
         builder.close();
 
@@ -528,12 +660,13 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
                 DataType.getType("date"), //
                 DataType.getType("string"), //
                 DataType.getType("decimal"), //
-                DataType.getType("decimal") // for runtime aggregation
-        );
-        return newInfo(builder);
+                DataType.getType("hllc(10)"), //
+                DataType.getType("decimal"), // for runtime aggregation
+                DataType.getType("hllc(10)"));
+        return newInfo(builder, setOf(2, 4), setOf(3, 5));
     }
 
-    private static GTInfo newInfo(GTInfo.Builder builder) {
+    private static GTInfo newInfo(GTInfo.Builder builder, ImmutableBitSet... measureBlocks) {
         //Dimension
         ImmutableBitSet dimensionColumns = setOf(0, 1);
         DimensionEncoding[] dimEncs = new DimensionEncoding[2];
@@ -542,10 +675,10 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
         builder.setCodeSystem(new CubeCodeSystem(dimEncs));
         builder.setPrimaryKey(dimensionColumns);
 
-        //Measure
-        ImmutableBitSet measureColumns = setOf(2, 3);
+        List<ImmutableBitSet> colBlocks = Lists.newArrayList(measureBlocks);
+        colBlocks.add(0, dimensionColumns);
 
-        builder.enableColumnBlock(new ImmutableBitSet[] { dimensionColumns, measureColumns });
+        builder.enableColumnBlock(colBlocks.toArray(new ImmutableBitSet[colBlocks.size()]));
         GTInfo info = builder.build();
         return info;
     }
