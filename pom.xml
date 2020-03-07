@@ -80,7 +80,7 @@
     <kafka.version>1.0.0</kafka.version>
 
     <!-- Spark versions -->
-    <spark.version>2.4.1-kylin-r17</spark.version>
+    <spark.version>2.4.1-os-kylin-r1</spark.version>
     <janino.version>3.0.9</janino.version>
 
     <kryo.version>4.0.0</kryo.version>
@@ -142,7 +142,7 @@
     <memcached.verion>2.12.3</memcached.verion>
     <apache-httpclient.version>4.2.5</apache-httpclient.version>
     <!--<roaring.version>0.6.18</roaring.version>-->
-    <roaring.version>0.7.36-kylin-r2</roaring.version>
+    <roaring.version>0.7.36-os-kylin-r1</roaring.version>
     <cglib.version>3.2.4</cglib.version>
     <supercsv.version>2.4.0</supercsv.version>
     <cors.version>2.5</cors.version>
