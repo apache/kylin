@@ -22,14 +22,14 @@ cd ${dir}/../..
 
 rm -rf build/spark
 
-spark_pkg_name="spark-newten-2.4.1-r17"
+spark_pkg_name="spark-2.4.1-os-kylin-r1"
 spark_pkg_file_name="${spark_pkg_name}.tgz"
 spark_pkg_md5="8fb09dbb61f26f5679be49c2c8713da3"
 
 if [[ ! -f "build/${spark_pkg_file_name}" ]]
 then
     echo "no binary file found"
-    wget --directory-prefix=build/ https://s3.cn-north-1.amazonaws.com.cn/download-resource/kyspark/${spark_pkg_file_name} || echo "Download spark failed"
+    wget --directory-prefix=build/ https://download-resource.s3.cn-north-1.amazonaws.com.cn/osspark/${spark_pkg_file_name} || echo "Download spark failed"
 else
     if [ `calMd5 build/${spark_pkg_file_name} | awk '{print $1}'` != "${spark_pkg_md5}" ]
     then
