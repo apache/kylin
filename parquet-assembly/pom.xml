@@ -79,6 +79,7 @@
                                     <exclude>javax.activation:activation:*</exclude>
                                     <exclude>org.apache.parquet:*</exclude>
                                     <exclude>org.slf4j:*</exclude>
+                                    <exclude>net.jpountz.lz4:*</exclude>
                                 </excludes>
                             </artifactSet>
                             <relocations>

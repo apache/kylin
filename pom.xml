@@ -150,7 +150,7 @@
     <t-digest.version>3.1</t-digest.version>
     <freemarker.version>2.3.23</freemarker.version>
     <rocksdb.version>5.9.2</rocksdb.version>
-    <lz4.version>1.3.0</lz4.version>
+    <lz4.version>1.4.0</lz4.version>
     <mssql-jdbc.version>6.2.2.jre8</mssql-jdbc.version>
     <!--metric-->
     <dropwizard.version>3.1.2</dropwizard.version>
@@ -454,6 +454,13 @@
         <version>${project.version}</version>
         <type>test-jar</type>
       </dependency>
+
+      <dependency>
+        <groupId>org.lz4</groupId>
+        <artifactId>lz4-java</artifactId>
+        <version>1.4.0</version>
+      </dependency>
+
 
       <!-- Hadoop2 dependencies -->
       <dependency>
