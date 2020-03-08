@@ -28,6 +28,11 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
     $rootScope.isShowDashboard = kylinConfig.getProperty('kylin.web.dashboard-enabled') === 'true';
     JobList.jobFilter.timeFilterId = kylinConfig.getJobTimeFilterId();
   });
+
+  kylinConfig.getVersion().then(function(data) {
+    $scope.version = data;
+  });
+
   $rootScope.userAction = {
     'islogout': false
   }

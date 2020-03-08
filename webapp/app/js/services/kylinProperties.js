@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-KylinApp.service('kylinConfig', function (AdminService, $log) {
+KylinApp.service('kylinConfig', function (AdminService, $log, $q) {
   var _config;
   var timezone;
   var deployEnv;
@@ -28,6 +28,16 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
     }, function (e) {
       $log.error("failed to load kylin.properties" + e);
     });
+  };
+
+  this.getVersion = function() {
+    var defer = $q.defer();
+    AdminService.version({}, function(version) {
+      defer.resolve(version.version)
+    }, function(e) {
+      $log.error("failed to load kylin version" + e);
+    });
+    return defer.promise;
   };
 
   this.getProperty = function (name) {
@@ -44,7 +54,7 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
        keyIndex = _config.indexOf(nameAugmented);
        if(keyIndex === -1){
           return '';
-       }     
+       }
     }
     var partialResult = _config.substr(keyIndex + nameAugmented.length);
     var sufValueIndex = partialResult.indexOf("\n");

@@ -106,6 +106,15 @@ public class AdminController extends BasicController {
         return configRes;
     }
 
+    @RequestMapping(value = "/version", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public GeneralResponse getVersion() {
+        String version = adminService.getVersionAsString();
+        GeneralResponse versionRes = new GeneralResponse();
+        versionRes.put("version", version);
+        return versionRes;
+    }
+
     @RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public MetricsResponse cubeMetrics(MetricsRequest request) {

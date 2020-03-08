@@ -31,6 +31,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.util.OrderedProperties;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.rest.constant.Constant;
@@ -88,6 +89,14 @@ public class AdminService extends BasicService {
         logger.debug("Update Kylin Runtime Config, key=" + key + ", value=" + value);
 
         KylinConfig.getInstanceFromEnv().setProperty(key, value);
+    }
+
+    /**
+     * Get kylin current version as String
+     */
+    public String getVersionAsString() {
+        KylinVersion kylinVersion = KylinVersion.getCurrentVersion();
+        return kylinVersion.toString();
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
