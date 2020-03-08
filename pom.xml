@@ -1107,7 +1107,7 @@
         <repository>
             <id>central</id>
             <name>Central Repository</name>
-            <url>http://repo.maven.apache.org/maven2</url>
+            <url>https://repo.maven.apache.org/maven2</url>
             <layout>default</layout>
             <snapshots>
                 <enabled>false</enabled>
@@ -1116,7 +1116,7 @@
 
         <repository>
             <id>conjars</id>
-            <url>http://conjars.org/repo/</url>
+            <url>https://conjars.org/repo/</url>
         </repository>
 
         <repository>
@@ -1132,7 +1132,7 @@
         <repository>
             <id>nexus</id>
             <name>Kyligence Repository</name>
-            <url>http://repository.kyligence.io:8081/repository/maven-public/
+            <url>https://repository.kyligence.io/repository/maven-public/
             </url>
             <releases>
                 <enabled>true</enabled>
@@ -1365,7 +1365,7 @@
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
                 <!-- uncomment this on release -->
-                <!--<version>3.4.1</version>-->
+                <version>3.4.1</version>
             </plugin>
         </plugins>
     </build>
