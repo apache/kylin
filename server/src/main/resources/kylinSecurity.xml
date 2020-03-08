@@ -364,6 +364,7 @@
         <bean id="successRedirectHandler"
               class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler">
             <property name="defaultTargetUrl" value="/models"/>
+            <property name="alwaysUseDefaultTargetUrl" value="true"/>
         </bean>
 
         <!-- Handler deciding where to redirect user after failed login -->
