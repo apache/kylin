@@ -32,7 +32,7 @@
  * limitations under the License.
  */
 
-package org.apache.spark.execution
+package org.apache.spark.sql.execution
 
 import javax.annotation.concurrent.GuardedBy
 import org.apache.kylin.common.KylinConfig
