@@ -20,12 +20,18 @@ package org.apache.spark.sql
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, DictEncode, Expression, ExpressionInfo, ImplicitCastInputTypes, In, Like, Literal, RoundBase, SplitPart, TimestampAdd, TimestampDiff, Truncate, UnaryExpression}
 import org.apache.spark.sql.catalyst.util.KapDateTimeUtils
 import org.apache.spark.sql.types.{AbstractDataType, DataType, DateType, IntegerType}
-import org.apache.spark.sql.catalyst.expressions.ExpressionUtils
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, DictEncode, Expression, ExpressionInfo, ExpressionUtils, ImplicitCastInputTypes, In, Like, Literal, RoundBase, SplitPart, Sum0, TimestampAdd, TimestampDiff, Truncate, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.aggregate.AggregateFunction
+import org.apache.spark.sql.udaf.{ApproxCountDistinct, IntersectCount, PreciseCountDistinct}
 
 object KapFunctions {
+  private def withAggregateFunction(
+    func: AggregateFunction,
+    isDistinct: Boolean = false): Column = {
+    Column(func.toAggregateExpression(isDistinct))
+  }
 
   def dict_encode(column: Column, dictParams: Column, bucketSize: Column): Column = {
     Column(DictEncode(column.expr, dictParams.expr, bucketSize.expr))
@@ -52,6 +58,23 @@ object KapFunctions {
     Column(KapSubtractMonths(date0.expr, date1.expr))
   }
 
+  def precise_count_distinct(column: Column): Column =
+    Column(PreciseCountDistinct(column.expr).toAggregateExpression())
+
+  def approx_count_distinct(column: Column, precision: Int): Column =
+    Column(ApproxCountDistinct(column.expr, precision).toAggregateExpression())
+
+  def intersect_count(columns: Column*): Column = {
+    require(columns.size == 3, s"Input columns size ${columns.size} don't equal to 3.")
+    val expressions = columns.map(_.expr)
+    Column(IntersectCount(expressions.apply(0), expressions.apply(1), expressions.apply(2))
+      .toAggregateExpression())
+  }
+
+  def sum0(e: Column): Column = withAggregateFunction {
+    Sum0(e.expr)
+  }
+
   val builtin: Seq[FunctionEntity] = Seq(
     FunctionEntity(ExpressionUtils.expression[TimestampAdd]("TIMESTAMPADD")),
     FunctionEntity(ExpressionUtils.expression[TimestampDiff]("TIMESTAMPDIFF")),
@@ -60,20 +83,21 @@ object KapFunctions {
     FunctionEntity(ExpressionUtils.expression[SplitPart]("split_part")))
 }
 
-case class FunctionEntity(name: FunctionIdentifier,
-                          info: ExpressionInfo,
-                          builder: FunctionBuilder)
+case class FunctionEntity(
+  name: FunctionIdentifier,
+  info: ExpressionInfo,
+  builder: FunctionBuilder)
 
 case class TRUNCATE(child: Expression, scale: Expression)
-        extends RoundBase(child, scale, BigDecimal.RoundingMode.DOWN, "DOWN")
-                with Serializable with ImplicitCastInputTypes {
+  extends RoundBase(child, scale, BigDecimal.RoundingMode.DOWN, "DOWN")
+    with Serializable with ImplicitCastInputTypes {
   def this(child: Expression) = this(child, Literal(0))
 }
 
 // scalastyle:on line.size.limit
 case class KapSubtractMonths(a: Expression, b: Expression)
-        extends BinaryExpression
-                with ImplicitCastInputTypes {
+  extends BinaryExpression
+    with ImplicitCastInputTypes {
 
   override def left: Expression = a
 
@@ -99,15 +123,16 @@ case class KapSubtractMonths(a: Expression, b: Expression)
 }
 
 case class KapDayOfWeek(a: Expression)
-        extends UnaryExpression
-                with ImplicitCastInputTypes {
+  extends UnaryExpression
+    with ImplicitCastInputTypes {
 
   override def child: Expression = a
 
   override def inputTypes: Seq[AbstractDataType] = Seq(DateType)
 
-  override protected def doGenCode(ctx: CodegenContext,
-                                   ev: ExprCode): ExprCode = {
+  override protected def doGenCode(
+    ctx: CodegenContext,
+    ev: ExprCode): ExprCode = {
     val dtu = KapDateTimeUtils.getClass.getName.stripSuffix("$")
     defineCodeGen(ctx, ev, (d) => {
       s"""$dtu.dayOfWeek($d)"""
