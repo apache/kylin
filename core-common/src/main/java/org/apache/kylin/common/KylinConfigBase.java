@@ -2513,21 +2513,26 @@ public abstract class KylinConfigBase implements Serializable {
 
     public double getJoinMemoryFraction() {
         // driver memory that can be used by join(mostly BHJ)
-        return Double.parseDouble(getOptional("kap.query.join-memory-fraction", "0.3"));
+        return Double.parseDouble(getOptional("kylin.query.spark-engine.join-memory-fraction", "0.3"));
     }
 
     //  spark parquet
+    public boolean isSparkEngineEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.spark-engine.enabled", "true"));
+    }
+
     public int getQueryPartitionSplitSizeMB() {
-        return Integer.parseInt(getOptional("kap.storage.columnar.partition-split-size-mb", "64"));
+        return Integer.parseInt(getOptional("kylin.query.spark-engine.partition-split-size-mb", "64"));
     }
 
     public boolean isShardingJoinOptEnabled() {
-        return Boolean.parseBoolean(getOptional("kap.storage.columnar.expose-sharding-trait", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.query.spark-engine.expose-sharding-trait", "true"));
     }
 
     public int getSparkSqlShufflePartitions() {
-        return Integer.valueOf(getOptional("kap.query.engine.spark-sql-shuffle-partitions", "-1"));
+        return Integer.valueOf(getOptional("kylin.query.spark-engine.spark-sql-shuffle-partitions", "-1"));
     }
+
 
     public Map<String, String> getSparkConf() {
         return getPropertiesByPrefix("kylin.query.spark-conf.");
