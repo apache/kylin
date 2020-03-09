@@ -24,7 +24,7 @@ import org.apache.kylin.engine.spark.job.NSparkCubingUtil._
 import org.apache.kylin.engine.spark.metadata.{SegmentInfo, ColumnDesc}
 import org.apache.spark.dict.NGlobalDictionaryV2
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.KapFunctions._
+import org.apache.spark.sql.KylinFunctions._
 import org.apache.spark.sql.functions.{col, _}
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{Dataset, Row}

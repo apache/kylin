@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicReference
 import com.google.common.cache.{Cache, CacheBuilder, RemovalListener, RemovalNotification}
 import org.apache.kylin.metadata.datatype.DataType
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.{FunctionEntity, KapFunctions, SparkSession}
+import org.apache.spark.sql.{FunctionEntity, KylinFunctions, SparkSession}
 import org.apache.spark.sql.types.StructType
 
 class UdfManager(sparkSession: SparkSession) extends Logging {
@@ -33,7 +33,7 @@ class UdfManager(sparkSession: SparkSession) extends Logging {
   registerBuiltInFunc
 
   private def registerBuiltInFunc(): Unit = {
-    KapFunctions.builtin.foreach { case FunctionEntity(name, info, builder) =>
+    KylinFunctions.builtin.foreach { case FunctionEntity(name, info, builder) =>
       sparkSession.sessionState.functionRegistry.registerFunction(name, info, builder)
     }
   }

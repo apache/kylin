@@ -1,21 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
 package org.apache.spark.sql.catalyst.util
 
 import org.apache.calcite.avatica.util.TimeUnitRange
@@ -40,7 +22,7 @@ object KapDateTimeUtils {
   }
 
   /** Finds the number of months between two dates, each represented as the
-    * number of days since the epoch. */
+   * number of days since the epoch. */
   def dateSubtractMonths(date0: Int, date1: Int): Int = {
     if (date0 < date1) return -dateSubtractMonths(date1, date0)
     // Start with an estimate.
@@ -78,9 +60,9 @@ object KapDateTimeUtils {
 
 
   /**
-    * Add date and year-month interval.
-    * Returns a date value, expressed in days since 1.1.1970.
-    */
+   * Add date and year-month interval.
+   * Returns a date value, expressed in days since 1.1.1970.
+   */
   def dateAddMonths(date: Int, m: Int): Int = {
     var y0 = org.apache.calcite.avatica.util.DateTimeUtils
       .unixDateExtract(TimeUnitRange.YEAR, date)

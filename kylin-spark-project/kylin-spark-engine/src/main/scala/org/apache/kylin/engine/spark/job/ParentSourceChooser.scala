@@ -27,7 +27,7 @@ import org.apache.kylin.engine.spark.metadata.SegmentInfo
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{Dataset, Row, SaveMode, SparkSession}
-import org.apache.spark.sql.util.CuboidLayoutChooser
+import org.apache.spark.sql.utils.CuboidLayoutChooser
 
 import scala.collection.JavaConverters._
 

@@ -8,7 +8,7 @@ import org.apache.kylin.engine.spark.metadata.cube.source.ISource
 import org.apache.kylin.engine.spark.metadata.TableDesc
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
-import org.apache.spark.sql.util.SparkTypeUtil
+import org.apache.spark.sql.utils.SparkTypeUtil
 
 class HiveSource extends ISource with Logging {
   /**

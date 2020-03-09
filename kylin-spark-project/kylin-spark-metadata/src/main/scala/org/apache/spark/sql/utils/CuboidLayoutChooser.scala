@@ -1,4 +1,4 @@
-package org.apache.spark.sql.util
+package org.apache.spark.sql.utils
 
 import org.apache.kylin.engine.spark.metadata.SegmentInfo
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity
@@ -15,4 +15,3 @@ object CuboidLayoutChooser {
     }
   }
 }
-

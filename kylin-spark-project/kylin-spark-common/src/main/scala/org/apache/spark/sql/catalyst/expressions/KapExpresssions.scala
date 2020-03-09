@@ -23,11 +23,11 @@
  */
 package org.apache.spark.sql.catalyst.expressions
 
-import org.apache.kylin.engine.spark.common.util.KapDateTimeUtils
 import org.apache.spark.dict.{NBucketDictionary, NGlobalDictionaryV2}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.DeclarativeAggregate
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode}
+import org.apache.spark.sql.catalyst.util.KapDateTimeUtils
 import org.apache.spark.sql.types._
 
 // Returns the date that is num_months after start_date.

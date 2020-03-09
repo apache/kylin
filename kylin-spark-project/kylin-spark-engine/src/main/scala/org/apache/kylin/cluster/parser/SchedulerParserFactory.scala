@@ -21,7 +21,7 @@ package org.apache.kylin.cluster.parser
 import org.apache.kylin.common.util.JsonUtil
 import org.apache.spark.internal.Logging
 
-object SchedulerParserFactory extends Logging{
+object SchedulerParserFactory extends Logging {
   def create(info: String): SchedulerParser = {
     try {
       val schedulerType = JsonUtil.readValueAsTree(info).findValue("type").toString

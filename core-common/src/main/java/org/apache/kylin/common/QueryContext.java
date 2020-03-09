@@ -57,7 +57,11 @@ public class QueryContext {
     private AtomicLong scannedRows = new AtomicLong();
     private AtomicLong returnedRows = new AtomicLong();
     private AtomicLong scannedBytes = new AtomicLong();
+    private AtomicLong sourceScanBytes = new AtomicLong();
+    private AtomicLong sourceScanRows = new AtomicLong();
     private Object calcitePlan;
+    private boolean isHighPriorityQuery = false;
+    private boolean isTableIndex = false;
 
     private AtomicBoolean isRunning = new AtomicBoolean(true);
     private AtomicReference<Throwable> throwable = new AtomicReference<>();
@@ -142,8 +146,40 @@ public class QueryContext {
         return scannedBytes.addAndGet(deltaBytes);
     }
 
+    public long getSourceScanBytes() {
+        return sourceScanBytes.get();
+    }
+
+    public long addAndGetSourceScanBytes(long bytes) {
+        return sourceScanBytes.addAndGet(bytes);
+    }
+
+    public long getSourceScanRows() {
+        return sourceScanRows.get();
+    }
+
+    public long addAndGetSourceScanRows(long rows) {
+        return sourceScanRows.addAndGet(rows);
+    }
+
     public void addQueryStopListener(QueryStopListener listener) {
         this.stopListeners.add(listener);
+    }
+
+    public void setHighPriorityQuery(boolean highPriorityQuery) {
+        isHighPriorityQuery = highPriorityQuery;
+    }
+
+    public boolean isHighPriorityQuery() {
+        return isHighPriorityQuery;
+    }
+
+    public boolean isTableIndex() {
+        return isTableIndex;
+    }
+
+    public void setTableIndex(boolean tableIndex) {
+        isTableIndex = tableIndex;
     }
 
     public boolean isStopped() {

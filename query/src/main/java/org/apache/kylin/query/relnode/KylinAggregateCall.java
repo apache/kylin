@@ -30,6 +30,10 @@ public class KylinAggregateCall extends AggregateCall {
         this.func = func;
     }
 
+    public boolean isSum0() {
+        return "$SUM0".equals(getAggregation().getName());
+    }
+
     public FunctionDesc getFunc() {
         return func;
     }

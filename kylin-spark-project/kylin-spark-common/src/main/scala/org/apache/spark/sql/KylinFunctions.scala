@@ -26,7 +26,7 @@ import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, DictEncode, 
 import org.apache.spark.sql.catalyst.expressions.aggregate.AggregateFunction
 import org.apache.spark.sql.udaf.{ApproxCountDistinct, IntersectCount, PreciseCountDistinct}
 
-object KapFunctions {
+object KylinFunctions {
   private def withAggregateFunction(
     func: AggregateFunction,
     isDistinct: Boolean = false): Column = {
