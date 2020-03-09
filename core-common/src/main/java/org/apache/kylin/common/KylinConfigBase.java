@@ -41,6 +41,7 @@ import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.common.persistence.HDFSResourceStore;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.FileUtils;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -2513,5 +2514,108 @@ public abstract class KylinConfigBase implements Serializable {
     public double getJoinMemoryFraction() {
         // driver memory that can be used by join(mostly BHJ)
         return Double.parseDouble(getOptional("kap.query.join-memory-fraction", "0.3"));
+    }
+
+    //  spark parquet
+    public int getQueryPartitionSplitSizeMB() {
+        return Integer.parseInt(getOptional("kap.storage.columnar.partition-split-size-mb", "64"));
+    }
+
+    public boolean isShardingJoinOptEnabled() {
+        return Boolean.parseBoolean(getOptional("kap.storage.columnar.expose-sharding-trait", "true"));
+    }
+
+    public int getSparkSqlShufflePartitions() {
+        return Integer.valueOf(getOptional("kap.query.engine.spark-sql-shuffle-partitions", "-1"));
+    }
+
+    public Map<String, String> getSparkConf() {
+        return getPropertiesByPrefix("kylin.query.spark-conf.");
+    }
+
+    public String sparderFiles() {
+        try {
+            File storageFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/conf",
+                    "spark-executor-log4j.properties");
+            String path1 = "";
+            if (storageFile != null) {
+                path1 = storageFile.getCanonicalPath();
+            }
+
+            return getOptional("kap.query.engine.sparder-additional-files", path1);
+        } catch (IOException e) {
+            return "";
+        }
+    }
+
+    public String sparderJars() {
+        try {
+            File storageFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/lib", "newten-job.jar");
+            String path1 = "";
+            if (storageFile != null) {
+                path1 = storageFile.getCanonicalPath();
+            }
+
+            return getOptional("kap.query.engine.sparder-additional-jars", path1);
+        } catch (IOException e) {
+            return "";
+        }
+    }
+
+
+    /**
+     * Kerberos
+     */
+
+    public Boolean isKerberosEnabled() {
+        return Boolean.valueOf(getOptional("kap.kerberos.enabled", FALSE));
+    }
+
+    public String getKerberosKeytab() {
+        return getOptional("kap.kerberos.keytab", "");
+    }
+
+    public String getKerberosKeytabPath() {
+        return KylinConfig.getKylinConfDir() + File.separator + getKerberosKeytab();
+    }
+
+    public String getKerberosZKPrincipal() {
+        return getOptional("kap.kerberos.zookeeper.server.principal", "zookeeper/hadoop");
+    }
+
+    public Long getKerberosTicketRefreshInterval() {
+        return Long.valueOf(getOptional("kap.kerberos.ticket.refresh.interval.minutes", "720"));
+    }
+
+    public Long getKerberosMonitorInterval() {
+        return Long.valueOf(getOptional("kap.kerberos.monitor.interval.minutes", "10"));
+    }
+
+    public String getKerberosPlatform() {
+        return getOptional("kap.kerberos.platform", "");
+    }
+
+    public Boolean getPlatformZKEnable() {
+        return Boolean.valueOf(getOptional("kap.platform.zk.kerberos.enable", FALSE));
+    }
+
+    public String getKerberosKrb5Conf() {
+        return getOptional("kap.kerberos.krb5.conf", "krb5.conf");
+    }
+
+    public String getKerberosKrb5ConfPath() {
+        return KylinConfig.getKylinConfDir() + File.separator + getKerberosKrb5Conf();
+    }
+
+    public String getKerberosJaasConf() {
+        return getOptional("kap.kerberos.jaas.conf", "jaas.conf");
+    }
+
+    public String getKerberosJaasConfPath() {
+        return KylinConfig.getKylinConfDir() + File.separator + getKerberosJaasConf();
+    }
+
+    public String getKerberosPrincipal() {
+        return getOptional("kap.kerberos.principal");
     }
 }
