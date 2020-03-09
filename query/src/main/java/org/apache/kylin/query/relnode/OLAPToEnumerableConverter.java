@@ -40,6 +40,7 @@ import org.apache.calcite.rel.convert.ConverterImpl;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.query.exec.SparderMethod;
@@ -127,19 +128,23 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         }
         final PhysType physType = PhysTypeImpl.of(enumImplementor.getTypeFactory(), getRowType(),
                 pref.preferCustom());
-
-        final BlockBuilder list = new BlockBuilder();
-        if (physType.getFormat() == JavaRowFormat.SCALAR) {
-            Expression enumerable = list.append(SPARDER_CALL_METHOD_NAME,
-                    Expressions.call(SparderMethod.COLLECT_SCALAR.method, enumImplementor.getRootExpression()));
-            list.add(Expressions.return_(null, enumerable));
+        if (KylinConfig.getInstanceFromEnv().isSparkEngineEnabled()) {
+            QueryContextFacade.current().setOlapRel(this);
+            QueryContextFacade.current().setResultType(getRowType());
+            final BlockBuilder list = new BlockBuilder();
+            if (physType.getFormat() == JavaRowFormat.SCALAR) {
+                Expression enumerable = list.append(SPARDER_CALL_METHOD_NAME,
+                        Expressions.call(SparderMethod.COLLECT_SCALAR.method, enumImplementor.getRootExpression()));
+                list.add(Expressions.return_(null, enumerable));
+            } else {
+                Expression enumerable = list.append(SPARDER_CALL_METHOD_NAME,
+                        Expressions.call(SparderMethod.COLLECT.method, enumImplementor.getRootExpression()));
+                list.add(Expressions.return_(null, enumerable));
+            }
+            return enumImplementor.result(physType, list.toBlock());
         } else {
-            Expression enumerable = list.append(SPARDER_CALL_METHOD_NAME,
-                    Expressions.call(SparderMethod.COLLECT.method, enumImplementor.getRootExpression()));
-            list.add(Expressions.return_(null, enumerable));
+            return impl.visitChild(this, 0, inputAsEnum, pref);
         }
-        return enumImplementor.result(physType, list.toBlock());
-
     }
 
      protected List<OLAPContext> listContextsHavingScan() {

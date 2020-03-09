@@ -28,7 +28,10 @@ import org.apache.calcite.DataContext;
 import org.apache.calcite.linq4j.Enumerable;
 import org.apache.calcite.linq4j.Linq4j;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.query.relnode.OLAPRel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,10 +44,10 @@ public class SparkExec {
             return Linq4j.emptyEnumerable();
         }
 
-        KapRel kapRel = KapContext.getKapRel();
-        RelDataType rowType = KapContext.getRowType();
+        OLAPRel olapRel = (OLAPRel) QueryContextFacade.current().getOlapRel();
+        RelDataType rowType = (RelDataType) QueryContextFacade.current().getResultType();
         try {
-            Enumerable<Object[]> computer = QueryEngineFactory.compute(dataContext, kapRel, rowType);
+            Enumerable<Object[]> computer = QueryEngineFactory.compute(dataContext, olapRel, rowType);
             return computer;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -56,10 +59,10 @@ public class SparkExec {
             return Linq4j.emptyEnumerable();
         }
 
-        KapRel kapRel = KapContext.getKapRel();
-        RelDataType rowType = KapContext.getRowType();
+        OLAPRel olapRel = (OLAPRel) QueryContextFacade.current().getOlapRel();
+        RelDataType rowType = (RelDataType) QueryContextFacade.current().getResultType();
         try {
-            Enumerable<Object> objects = QueryEngineFactory.computeSCALA(dataContext, kapRel, rowType);
+            Enumerable<Object> objects = QueryEngineFactory.computeSCALA(dataContext, olapRel, rowType);
             return objects;
 
         } catch (Exception e) {
@@ -71,9 +74,9 @@ public class SparkExec {
         if (BackdoorToggles.getPrepareOnly()) {
             return Linq4j.emptyEnumerable();
         }
-        KapRel kapRel = KapContext.getKapRel();
-        RelDataType rowType = KapContext.getRowType();
-        return QueryEngineFactory.computeAsync(dataContext, kapRel, rowType);
+        OLAPRel olapRel = (OLAPRel) QueryContextFacade.current().getOlapRel();
+        RelDataType rowType = (RelDataType) QueryContextFacade.current().getResultType();
+        return QueryEngineFactory.computeAsync(dataContext, olapRel, rowType);
     }
 
 }

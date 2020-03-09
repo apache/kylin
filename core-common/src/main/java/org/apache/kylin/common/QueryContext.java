@@ -71,6 +71,9 @@ public class QueryContext {
     private List<RPCStatistics> rpcStatisticsList = Lists.newCopyOnWriteArrayList();
     private Map<Integer, CubeSegmentStatisticsResult> cubeSegmentStatisticsResultMap = Maps.newConcurrentMap();
 
+    private Object olapRel;
+    private Object resultType;
+
     QueryContext() {
         this(System.currentTimeMillis());
     }
@@ -172,6 +175,22 @@ public class QueryContext {
 
     public boolean isHighPriorityQuery() {
         return isHighPriorityQuery;
+    }
+
+    public Object getOlapRel() {
+        return olapRel;
+    }
+
+    public void setOlapRel(Object olapRel) {
+        this.olapRel = olapRel;
+    }
+
+    public Object getResultType() {
+        return resultType;
+    }
+
+    public void setResultType(Object resultType) {
+        this.resultType = resultType;
     }
 
     public boolean isTableIndex() {
