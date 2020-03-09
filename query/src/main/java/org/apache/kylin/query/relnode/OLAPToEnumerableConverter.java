@@ -23,6 +23,12 @@ import java.util.stream.Collectors;
 
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
 import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
+import org.apache.calcite.adapter.enumerable.JavaRowFormat;
+import org.apache.calcite.adapter.enumerable.PhysType;
+import org.apache.calcite.adapter.enumerable.PhysTypeImpl;
+import org.apache.calcite.linq4j.tree.BlockBuilder;
+import org.apache.calcite.linq4j.tree.Expression;
+import org.apache.calcite.linq4j.tree.Expressions;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
@@ -36,6 +42,7 @@ import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.query.exec.SparderMethod;
 import org.apache.kylin.query.routing.RealizationChooser;
 import org.apache.kylin.query.security.QueryInterceptor;
 import org.apache.kylin.query.security.QueryInterceptorUtil;
@@ -48,6 +55,7 @@ import org.apache.kylin.query.util.QueryInfoCollector;
  * see org.apache.calcite.plan.OLAPRelMdRowCount#shouldIntercept(org.apache.calcite.rel.RelNode)
  */
 public class OLAPToEnumerableConverter extends ConverterImpl implements EnumerableRel {
+    private static final String SPARDER_CALL_METHOD_NAME = "enumerable";
 
     public OLAPToEnumerableConverter(RelOptCluster cluster, RelTraitSet traits, RelNode input) {
         super(cluster, ConventionTraitDef.INSTANCE, traits, input);
@@ -117,8 +125,21 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             System.out.println(dumpPlan);
             QueryContextFacade.current().setCalcitePlan(this.copy(getTraitSet(), getInputs()));
         }
+        final PhysType physType = PhysTypeImpl.of(enumImplementor.getTypeFactory(), getRowType(),
+                pref.preferCustom());
 
-        return impl.visitChild(this, 0, inputAsEnum, pref);
+        final BlockBuilder list = new BlockBuilder();
+        if (physType.getFormat() == JavaRowFormat.SCALAR) {
+            Expression enumerable = list.append(SPARDER_CALL_METHOD_NAME,
+                    Expressions.call(SparderMethod.COLLECT_SCALAR.method, enumImplementor.getRootExpression()));
+            list.add(Expressions.return_(null, enumerable));
+        } else {
+            Expression enumerable = list.append(SPARDER_CALL_METHOD_NAME,
+                    Expressions.call(SparderMethod.COLLECT.method, enumImplementor.getRootExpression()));
+            list.add(Expressions.return_(null, enumerable));
+        }
+        return enumImplementor.result(physType, list.toBlock());
+
     }
 
      protected List<OLAPContext> listContextsHavingScan() {

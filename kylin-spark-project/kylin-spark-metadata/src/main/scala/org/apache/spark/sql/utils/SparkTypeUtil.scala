@@ -1,33 +1,51 @@
-package org.apache.spark.sql.util
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+package org.apache.spark.sql.utils
 
+import org.apache.calcite.sql.`type`.SqlTypeName
+import org.apache.spark.unsafe.types.UTF8String
+import org.apache.kylin.common.util.DateFormat
+import org.apache.spark.sql.Column
+import org.apache.spark.internal.Logging
+import org.apache.spark.sql.catalyst.expressions.Cast
 import java.math.BigDecimal
 
-import org.apache.kylin.common.util.DateFormat
-import org.apache.spark.unsafe.types.UTF8String
 import org.apache.calcite.util.NlsString
 import org.apache.calcite.rel.`type`.RelDataType
-import org.apache.calcite.sql.`type`.SqlTypeName
-import org.apache.spark.sql.catalyst.expressions.Cast
-import org.apache.calcite.rex.RexLiteral
-import org.apache.kylin.metadata.datatype.DataType
-import org.apache.spark.internal.Logging
-import java.util.regex.Pattern
-
-import org.apache.spark.sql.catalyst.util.DateTimeUtils
-import org.apache.calcite.avatica.util.TimeUnitRange
-import java.util.{GregorianCalendar, Locale, TimeZone}
-
-import org.apache.spark.sql.Column
 import java.sql.{Date, Timestamp}
 
-import org.apache.spark.sql.types.{BinaryType, BooleanType, ByteType, DateType, DecimalType, DoubleType, FloatType, IntegerType, LongType, ShortType, StringType, StructType, TimestampType}
 import org.apache.spark.sql.functions.col
+import org.apache.calcite.avatica.util.TimeUnitRange
+import org.apache.calcite.rex.RexLiteral
+import java.util.{GregorianCalendar, TimeZone}
+
+import org.apache.spark.sql.catalyst.util.DateTimeUtils
+import org.apache.kylin.metadata.datatype.DataType
+import org.apache.spark.sql.types.{
+  BinaryType, BooleanType, ByteType,
+  DateType, DecimalType, DoubleType, FloatType, IntegerType, LongType, ShortType, StringType, StructType, TimestampType
+}
 
 object SparkTypeUtil extends Logging {
   val DATETIME_FAMILY = List("time", "date", "timestamp", "datetime")
 
   def isDateTimeFamilyType(dataType: String): Boolean = {
-    DATETIME_FAMILY.contains(dataType.toLowerCase(Locale.ROOT))
+    DATETIME_FAMILY.contains(dataType.toLowerCase())
   }
 
   def isDateType(dataType: String): Boolean = {
@@ -115,6 +133,7 @@ object SparkTypeUtil extends Logging {
       case SqlTypeName.DATE => DateType
       case SqlTypeName.TIMESTAMP => TimestampType
       case SqlTypeName.BOOLEAN => BooleanType
+      case SqlTypeName.ANY => StringType
       case _ =>
         throw new IllegalArgumentException(s"unsupported SqlTypeName $dt")
     }
@@ -177,7 +196,7 @@ object SparkTypeUtil extends Logging {
         b
       case b: java.lang.Double =>
         b
-      case b: Integer =>
+      case b: java.lang.Integer =>
         b
       case b: java.lang.Byte =>
         b
@@ -251,7 +270,7 @@ object SparkTypeUtil extends Logging {
               if (toCalcite) {
                 (toCalciteTimestamp(DateFormat.stringToMillis(string)) / (3600 * 24 * 1000)).toInt
               } else {
-                DateFormat.stringToMillis(string)
+                DateFormat.stringToMillis(string) / 1000
               }
             }
           }
@@ -398,14 +417,5 @@ object SparkTypeUtil extends Logging {
     }.toArray
     logInfo(s"Align data type is ${columns.mkString(",")}")
     columns
-  }
-
-  private def getDecimalPrecisionAndScale(javaType: String): (Int, Int) = {
-    val DECIMAL_PATTERN = Pattern.compile("DECIMAL\\(([0-9]+),([0-9]+)\\)", Pattern.CASE_INSENSITIVE)
-    val decimalMatcher = DECIMAL_PATTERN.matcher(javaType)
-    if (decimalMatcher.find) {
-      (Integer.valueOf(decimalMatcher.group(1)), Integer.valueOf(decimalMatcher.group(2)))
-    }
-    else null
   }
 }

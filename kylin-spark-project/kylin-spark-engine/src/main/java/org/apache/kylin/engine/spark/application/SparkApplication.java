@@ -41,7 +41,7 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.spark.SparkConf;
-import org.apache.spark.execution.KylinJoinSelection;
+import org.apache.spark.sql.execution.KylinJoinSelection;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.SparkSessionExtensions;
 import org.apache.spark.sql.execution.SparkStrategy;

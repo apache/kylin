@@ -651,6 +651,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         return columnRowType;
     }
 
+
     @Override
     public boolean hasSubQuery() {
         OLAPRel olapChild = (OLAPRel) getInput();

@@ -26,7 +26,7 @@ import org.apache.kylin.common.util.DateFormat
 import org.apache.kylin.cube.{CubeInstance, CubeSegment, CubeUpdate}
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity
 import org.apache.kylin.engine.spark.metadata.cube.BitUtils
-import org.apache.spark.sql.util.SparkTypeUtil
+import org.apache.spark.sql.utils.SparkTypeUtil
 
 import scala.collection.JavaConverters._
 import org.apache.kylin.metadata.datatype.{DataType => KyDataType}

@@ -18,9 +18,9 @@
 
 package org.apache.kylin.cluster
 
-import org.apache.kylin.engine.spark.utils.BuildUtils
 import org.apache.hadoop.yarn.client.api.YarnClient
 import org.apache.kylin.cluster.parser.SchedulerParserFactory
+import org.apache.kylin.engine.spark.utils.BuildUtils
 import org.apache.spark.internal.Logging
 
 class YarnInfoFetcher extends ClusterInfoFetcher with Logging {

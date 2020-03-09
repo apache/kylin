@@ -26,11 +26,11 @@ import org.apache.calcite.sql.SqlKind._
 import org.apache.calcite.sql.`type`.SqlTypeName
 import org.apache.kylin.query.util.UnsupportedSparkFunctionException
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.KapFunctions._
+import org.apache.spark.sql.KylinFunctions._
 import org.apache.spark.sql.catalyst.expressions.{If, IfNull, StringLocate}
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.util.SparkTypeUtil
+import org.apache.spark.sql.utils.SparkTypeUtil
 
 import scala.collection.mutable
 

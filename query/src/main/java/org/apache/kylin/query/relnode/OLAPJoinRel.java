@@ -386,6 +386,13 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         }
     }
 
+    public boolean isRuntimeJoin() {
+        if (context != null) {
+            context.setReturnTupleInfo(rowType, columnRowType);
+        }
+        return this.context == null || ((OLAPRel) left).getContext() != ((OLAPRel) right).getContext();
+    }
+
     @Override
     public OLAPContext getContext() {
         return context;

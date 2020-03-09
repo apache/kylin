@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.engine.spark.job.KylinBuildEnv;
 import org.apache.spark.SparkConf;
 import org.apache.spark.conf.rule.ExecutorCoreRule;
 import org.apache.spark.conf.rule.ExecutorInstancesRule;
@@ -36,7 +37,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
 import org.apache.kylin.cluster.ClusterInfoFetcher;
-import org.apache.kylin.engine.spark.job.KylinBuildEnv;
 
 public class SparkConfHelper {
     protected static final Logger logger = LoggerFactory.getLogger(SparkConfHelper.class);
