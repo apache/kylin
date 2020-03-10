@@ -1263,6 +1263,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.storage.hbase.htable-available-retry", "3"));
     }
 
+    public int getHBaseRegionCompactionThreshold() {
+        return Integer.parseInt(getOptional("kylin.storage.hbase.region-compaction-threshold", "3"));
+    }
+
     public int getHBaseRegionCountMin() {
         return Integer.parseInt(getOptional("kylin.storage.hbase.min-region-count", "1"));
     }
