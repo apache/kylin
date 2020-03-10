@@ -285,7 +285,11 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
         tmpbuf.put(Bytes.toBytes(reducerIndex)[3]);
         tmpbuf.put(valueBytes);
         outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
-        sortableKey.init(outputKey, type);
+        if (cubeDesc.getDictionaryBuilderClass(allCols.get(colIndex)) == null) {
+            sortableKey.init(outputKey, type);
+        } else {
+            sortableKey.init(outputKey, (byte) 0);
+        }
         context.write(sortableKey, EMPTY_TEXT);
         // log a few rows for troubleshooting
         if (rowCount < 10) {
