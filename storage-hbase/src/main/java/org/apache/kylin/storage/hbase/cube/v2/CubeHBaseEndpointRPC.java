@@ -259,7 +259,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         try {
             final Connection conn =  HBaseUnionUtil.getConnection(cubeSeg.getConfig(), cubeSeg.getStorageLocationIdentifier());
             final Table table = conn.getTable(TableName.valueOf(cubeSeg.getStorageLocationIdentifier()),
-                    HBaseConnection.getCoprocessorPool());
+                    queryContext.getConnectionPool(HBaseConnection.getCoprocessorPool()));
 
             table.coprocessorService(CubeVisitService.class, startKey, endKey, //
                     new Batch.Call<CubeVisitService, CubeVisitResponse>() {
