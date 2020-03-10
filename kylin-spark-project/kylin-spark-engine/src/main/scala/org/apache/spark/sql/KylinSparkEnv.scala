@@ -19,10 +19,16 @@
 package org.apache.spark.sql
 
 import org.apache.spark.internal.Logging
+import java.lang.{Boolean => JBoolean}
 
 object KylinSparkEnv extends Logging {
 	@volatile
 	private var spark: SparkSession = _
+
+	val _cuboid = new ThreadLocal[Dataset[Row]]
+	val _needCompute = new ThreadLocal[JBoolean] {
+		override protected def initialValue = false
+	}
 
 	@volatile
 	private var initializingThread: Thread = null
@@ -101,5 +107,15 @@ object KylinSparkEnv extends Logging {
 				initializingThread.join()
 			}
 		}
+	}
+
+	def getCuboid: Dataset[Row] = _cuboid.get
+
+	def setCuboid(cuboid: Dataset[Row]): Unit = {
+		_cuboid.set(cuboid)
+	}
+
+	def skipCompute(): Unit = {
+		_needCompute.set(true)
 	}
 }
