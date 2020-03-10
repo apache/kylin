@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -68,13 +69,31 @@ public class QueryContext {
     private List<RPCStatistics> rpcStatisticsList = Lists.newCopyOnWriteArrayList();
     private Map<Integer, CubeSegmentStatisticsResult> cubeSegmentStatisticsResultMap = Maps.newConcurrentMap();
 
-    QueryContext() {
-        this(System.currentTimeMillis());
+    final int maxConnThreads;
+
+    private ExecutorService connPool;
+
+    QueryContext(int maxConnThreads) {
+        this(maxConnThreads, System.currentTimeMillis());
     }
 
-    QueryContext(long startMills) {
+    QueryContext(int maxConnThreads, long startMills) {
         queryId = RandomUtil.randomUUID().toString();
         queryStartMillis = startMills;
+        this.maxConnThreads = maxConnThreads;
+    }
+
+    public ExecutorService getConnectionPool(ExecutorService sharedConnPool) {
+        if (connPool != null) {
+            return connPool;
+        }
+
+        synchronized (this) {
+            if (connPool == null) {
+                connPool = new SubThreadPoolExecutor(sharedConnPool, "QUERY", maxConnThreads);
+            }
+            return connPool;
+        }
     }
 
     public long getQueryStartMillis() {
