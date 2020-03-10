@@ -24,7 +24,7 @@
     <artifactId>kylin-spark-project</artifactId>
     <packaging>pom</packaging>
     <name>Apache Kylin - Spark Project</name>
-    <description>KAP Hive Source</description>
+    <description>Kylin Spark Project</description>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
