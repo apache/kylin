@@ -57,6 +57,7 @@ public class QueryContext {
     private AtomicLong scannedRows = new AtomicLong();
     private AtomicLong returnedRows = new AtomicLong();
     private AtomicLong scannedBytes = new AtomicLong();
+    private AtomicLong returnedBytes = new AtomicLong();
     private Object calcitePlan;
 
     private AtomicBoolean isRunning = new AtomicBoolean(true);
@@ -142,6 +143,14 @@ public class QueryContext {
         return scannedBytes.addAndGet(deltaBytes);
     }
 
+    public long getReturnedBytes() {
+        return returnedBytes.get();
+    }
+
+    public long addAndGetReturnedBytes(long deltaBytes) {
+        return returnedBytes.addAndGet(deltaBytes);
+    }
+
     public void addQueryStopListener(QueryStopListener listener) {
         this.stopListeners.add(listener);
     }
@@ -222,14 +231,12 @@ public class QueryContext {
         }
         ConcurrentMap<String, CubeSegmentStatistics> segmentStatisticsMap = cubeSegmentStatisticsMap.get(cubeName);
         if (segmentStatisticsMap == null) {
-            logger.warn(
-                    "cubeSegmentStatistic should be initialized for cube {}", cubeName);
+            logger.warn("cubeSegmentStatistic should be initialized for cube {}", cubeName);
             return null;
         }
         CubeSegmentStatistics segmentStatistics = segmentStatisticsMap.get(segmentName);
         if (segmentStatistics == null) {
-            logger.warn(
-                    "segmentStatistics should be initialized for cube {} with segment{}", cubeName, segmentName);
+            logger.warn("segmentStatistics should be initialized for cube {} with segment{}", cubeName, segmentName);
             return null;
         }
         return segmentStatistics;
@@ -280,16 +287,15 @@ public class QueryContext {
         if (old == null) {
             segmentStatistics.setWrapper(cubeName, segmentName, sourceCuboidId, targetCuboidId, filterMask);
         } else if (segmentStatistics.sourceCuboidId != sourceCuboidId
-                || segmentStatistics.targetCuboidId != targetCuboidId
-                || segmentStatistics.filterMask != filterMask) {
+                || segmentStatistics.targetCuboidId != targetCuboidId || segmentStatistics.filterMask != filterMask) {
             StringBuilder inconsistency = new StringBuilder();
             if (segmentStatistics.sourceCuboidId != sourceCuboidId) {
-                inconsistency.append(
-                        "sourceCuboidId exist " + segmentStatistics.sourceCuboidId + INPUT + sourceCuboidId);
+                inconsistency
+                        .append("sourceCuboidId exist " + segmentStatistics.sourceCuboidId + INPUT + sourceCuboidId);
             }
             if (segmentStatistics.targetCuboidId != targetCuboidId) {
-                inconsistency.append(
-                        "targetCuboidId exist " + segmentStatistics.targetCuboidId + INPUT + targetCuboidId);
+                inconsistency
+                        .append("targetCuboidId exist " + segmentStatistics.targetCuboidId + INPUT + targetCuboidId);
             }
             if (segmentStatistics.filterMask != filterMask) {
                 inconsistency.append("filterMask exist " + segmentStatistics.filterMask + INPUT + filterMask);
