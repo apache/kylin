@@ -362,14 +362,26 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                             - stats.getFilteredRowCount(),
                                     stats.getAggregatedRowCount(), stats.getScannedBytes());
 
+                            byte[] rawData = HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows());
+                            byte[] queueData = rawData;
                             if (queryContext.getScannedBytes() > cubeSeg.getConfig().getQueryMaxScanBytes()) {
                                 rpcException = new ResourceLimitExceededException(
                                         "Query scanned " + queryContext.getScannedBytes() + " bytes exceeds threshold "
                                                 + cubeSeg.getConfig().getQueryMaxScanBytes());
-                            } else if (queryContext.getReturnedRows() > cubeSeg.getConfig().getQueryMaxReturnRows()) {
-                                rpcException = new ResourceLimitExceededException(
-                                        "Query returned " + queryContext.getReturnedRows() + " rows exceeds threshold "
-                                                + cubeSeg.getConfig().getQueryMaxReturnRows());
+                            } else {
+                                try {
+                                    if (compressionResult) {
+                                        queueData = CompressionUtils.decompress(rawData);
+                                    }
+                                } catch (IOException | DataFormatException e) {
+                                    throw new RuntimeException(logHeader + "Error when decompressing", e);
+                                }
+                                if (queryContext.addAndGetReturnedBytes(queueData.length) > cubeSeg.getConfig()
+                                        .getQueryMaxReturnBytes()) {
+                                    rpcException = new ResourceLimitExceededException("Query returned "
+                                            + queryContext.getReturnedBytes() + " bytes exceeds threshold "
+                                            + cubeSeg.getConfig().getQueryMaxReturnBytes());
+                                }
                             }
 
                             if (rpcException != null) {
@@ -377,42 +389,31 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                 return;
                             }
 
-                            try {
-                                byte[] rawData = HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows());
-                                if (compressionResult) {
-                                    epResultItr.append(CompressionUtils.decompress(rawData));
-                                } else {
-                                    epResultItr.append(rawData);
-                                }
-                                // put segment query result to cache if cache is enabled
-                                if (querySegmentCacheEnabled) {
-                                    try {
-                                        segmentQueryResultBuilder.putRegionResult(rawData);
-                                        if (segmentQueryResultBuilder.isComplete()) {
-                                            CubeSegmentStatistics cubeSegmentStatistics = queryContext
-                                                    .getCubeSegmentStatistics(storageContext.ctxId,
-                                                            cubeSeg.getCubeInstance().getName(), cubeSeg.getName());
-                                            if (cubeSegmentStatistics != null) {
-                                                segmentQueryResultBuilder
-                                                        .setCubeSegmentStatistics(cubeSegmentStatistics);
-                                                logger.info(
-                                                        "Query-{}: try to put segment query result to cache for segment:{}",
-                                                        queryContext.getQueryId(), cubeSeg);
-                                                SegmentQueryResult segmentQueryResult = segmentQueryResultBuilder
-                                                        .build();
-                                                SegmentQueryCache.getInstance().put(segmentQueryCacheKey,
-                                                        segmentQueryResult);
-                                                logger.info(
-                                                        "Query-{}: successfully put segment query result to cache for segment:{}",
-                                                        queryContext.getQueryId(), cubeSeg);
-                                            }
+                            epResultItr.append(queueData);
+                            // put segment query result to cache if cache is enabled
+                            if (querySegmentCacheEnabled) {
+                                try {
+                                    segmentQueryResultBuilder.putRegionResult(rawData);
+                                    if (segmentQueryResultBuilder.isComplete()) {
+                                        CubeSegmentStatistics cubeSegmentStatistics = queryContext
+                                                .getCubeSegmentStatistics(storageContext.ctxId,
+                                                        cubeSeg.getCubeInstance().getName(), cubeSeg.getName());
+                                        if (cubeSegmentStatistics != null) {
+                                            segmentQueryResultBuilder.setCubeSegmentStatistics(cubeSegmentStatistics);
+                                            logger.info(
+                                                    "Query-{}: try to put segment query result to cache for segment:{}",
+                                                    queryContext.getQueryId(), cubeSeg);
+                                            SegmentQueryResult segmentQueryResult = segmentQueryResultBuilder.build();
+                                            SegmentQueryCache.getInstance().put(segmentQueryCacheKey,
+                                                    segmentQueryResult);
+                                            logger.info(
+                                                    "Query-{}: successfully put segment query result to cache for segment:{}",
+                                                    queryContext.getQueryId(), cubeSeg);
                                         }
-                                    } catch (Throwable t) {
-                                        logger.error("Fail to put query segment result to cache", t);
                                     }
+                                } catch (Throwable t) {
+                                    logger.error("Fail to put query segment result to cache", t);
                                 }
-                            } catch (IOException | DataFormatException e) {
-                                throw new RuntimeException(logHeader + "Error when decompressing", e);
                             }
                         }
                     });
