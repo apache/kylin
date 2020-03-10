@@ -88,7 +88,8 @@ public class HBaseLookupRowEncoder extends AbstractLookupRowEncoder<HBaseRow> {
         }
         byte[] result = new byte[RowConstants.ROWKEY_SHARDID_LEN + keyByteBuffer.position()];
         System.arraycopy(keyByteBuffer.array(), 0, result, RowConstants.ROWKEY_SHARDID_LEN, keyByteBuffer.position());
-        short shard = ShardingHash.getShard(result, RowConstants.ROWKEY_SHARDID_LEN, result.length, shardNum);
+        short shard = ShardingHash.getShard(result, RowConstants.ROWKEY_SHARDID_LEN,
+                result.length - RowConstants.ROWKEY_SHARDID_LEN, shardNum);
         BytesUtil.writeShort(shard, result, 0, RowConstants.ROWKEY_SHARDID_LEN);
         return result;
     }
