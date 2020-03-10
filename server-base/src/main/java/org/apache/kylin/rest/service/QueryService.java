@@ -450,22 +450,22 @@ public class QueryService extends BasicService {
             sql = result.getSecond();
             sqlRequest.setSql(sql);
 
-            // try some cheap executions
-            if (sqlResponse == null && isQueryInspect) {
-                sqlResponse = new SQLResponse(null, null, 0, false, sqlRequest.getSql());
-            }
+            try (QueryRequestLimits limit = new QueryRequestLimits(sqlRequest.getProject())) {
+                // try some cheap executions
+                if (sqlResponse == null && isQueryInspect) {
+                    sqlResponse = new SQLResponse(null, null, 0, false, sqlRequest.getSql());
+                }
 
-            if (sqlResponse == null && isCreateTempStatement) {
-                sqlResponse = new SQLResponse(null, null, 0, false, null);
-            }
+                if (sqlResponse == null && isCreateTempStatement) {
+                    sqlResponse = new SQLResponse(null, null, 0, false, null);
+                }
 
-            if (sqlResponse == null && isQueryCacheEnabled) {
-                sqlResponse = searchQueryInCache(sqlRequest);
-            }
+                if (sqlResponse == null && isQueryCacheEnabled) {
+                    sqlResponse = searchQueryInCache(sqlRequest);
+                }
 
-            // real execution if required
-            if (sqlResponse == null) {
-                try (QueryRequestLimits limit = new QueryRequestLimits(sqlRequest.getProject())) {
+                // real execution if required
+                if (sqlResponse == null) {
                     sqlResponse = queryAndUpdateCache(sqlRequest, isQueryCacheEnabled);
                 }
             }
