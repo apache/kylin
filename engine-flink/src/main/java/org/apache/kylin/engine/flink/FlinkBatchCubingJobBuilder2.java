@@ -61,7 +61,12 @@ public class FlinkBatchCubingJobBuilder2 extends JobBuilderSupport {
         inputSide.addStepPhase1_CreateFlatTable(result);
 
         // Phase 2: Build Dictionary
-        result.addTask(createFactDistinctColumnsStep(jobId));
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        if (config.isFlinkFactDistinctEnable()) {
+            result.addTask(createFactDistinctColumnsFlinkStep(jobId));
+        } else {
+            result.addTask(createFactDistinctColumnsStep(jobId));
+        }
 
         if (isEnableUHCDictStep()) {
             result.addTask(createBuildUHCDictStep(jobId));
@@ -85,6 +90,33 @@ public class FlinkBatchCubingJobBuilder2 extends JobBuilderSupport {
         outputSide.addStepPhase4_Cleanup(result);
 
         return result;
+    }
+
+    public FlinkExecutable createFactDistinctColumnsFlinkStep(String jobId) {
+        final FlinkExecutable flinkExecutable = new FlinkExecutable();
+        final IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(seg);
+        final String tablePath = JoinedFlatTable.getTableDir(flatTableDesc, getJobWorkingDir(jobId));
+
+        flinkExecutable.setClassName(FlinkFactDistinctColumns.class.getName());
+        flinkExecutable.setParam(FlinkFactDistinctColumns.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
+        flinkExecutable.setParam(FlinkFactDistinctColumns.OPTION_SEGMENT_ID.getOpt(), seg.getUuid());
+        flinkExecutable.setParam(FlinkFactDistinctColumns.OPTION_META_URL.getOpt(), getSegmentMetadataUrl(seg.getConfig(), jobId));
+        flinkExecutable.setParam(FlinkFactDistinctColumns.OPTION_INPUT_TABLE.getOpt(), seg.getConfig().getHiveDatabaseForIntermediateTable() + "." + flatTableDesc.getTableName());
+        flinkExecutable.setParam(FlinkFactDistinctColumns.OPTION_INPUT_PATH.getOpt(), tablePath);
+        flinkExecutable.setParam(FlinkFactDistinctColumns.OPTION_OUTPUT_PATH.getOpt(), getFactDistinctColumnsPath(jobId));
+        flinkExecutable.setParam(FlinkFactDistinctColumns.OPTION_STATS_SAMPLING_PERCENT.getOpt(), String.valueOf(config.getConfig().getCubingInMemSamplingPercent()));
+
+        flinkExecutable.setJobId(jobId);
+        flinkExecutable.setName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
+        flinkExecutable.setCounterSaveAs(CubingJob.SOURCE_RECORD_COUNT + "," + CubingJob.SOURCE_SIZE_BYTES, getCounterOutputPath(jobId));
+
+        StringBuilder jars = new StringBuilder();
+
+        StringUtil.appendWithSeparator(jars, seg.getConfig().getFlinkAdditionalJars());
+
+        flinkExecutable.setJars(jars.toString());
+
+        return flinkExecutable;
     }
 
     protected void addLayerCubingSteps(final CubingJob result, final String jobId, final String cuboidRootPath) {
