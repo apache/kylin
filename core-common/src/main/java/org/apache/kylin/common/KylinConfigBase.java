@@ -1560,15 +1560,15 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean isSparkFactDistinctEnable() {
-        return Boolean.parseBoolean(getOptional("kylin.engine.spark-fact-distinct", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark-fact-distinct", FALSE));
     }
 
     public boolean isSparkUHCDictionaryEnable() {
-        return Boolean.parseBoolean(getOptional("kylin.engine.spark-udc-dictionary", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark-udc-dictionary", FALSE));
     }
 
     public boolean isSparkCardinalityEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.engine.spark-cardinality", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark-cardinality", FALSE));
     }
 
     public int getSparkOutputMaxSize() {
@@ -1576,15 +1576,19 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean isSparkDimensionDictionaryEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.engine.spark-dimension-dictionary", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark-dimension-dictionary", FALSE));
+    }
+
+    public boolean isSparCreateHiveTableViaSparkEnable() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark-create-table-enabled", FALSE));
     }
 
     public boolean isFlinkSanityCheckEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.flink.sanity-check-enabled", FALSE));
     }
 
-    public boolean isSparCreateHiveTableViaSparkEnable() {
-        return Boolean.parseBoolean(getOptional("kylin.engine.spark-create-table-enabled", "false"));
+    public boolean isFlinkFactDistinctEnable() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.flink-fact-distinct", FALSE));
     }
 
     // ============================================================================
