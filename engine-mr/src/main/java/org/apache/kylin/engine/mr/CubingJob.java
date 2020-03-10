@@ -258,7 +258,11 @@ public class CubingJob extends DefaultChainedExecutable {
         }
 
         String content = MailNotificationUtil.getMailContent(state, dataMap);
-        String title = MailNotificationUtil.getMailTitle("JOB", state.toString(), getDeployEnvName(), getProjectName(),
+        String title = MailNotificationUtil.getMailTitle("JOB",
+                state.toString(),
+                context.getConfig().getClusterName(),
+                getDeployEnvName(),
+                getProjectName(),
                 cubeInstance.getName());
         return Pair.newPair(title, content);
     }
