@@ -1370,6 +1370,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.storage.hbase.max-hconnection-threads-per-query", "400"));
     }
 
+    public int getHBaseMaxConnectionThreadsPerProject() {
+        return Integer.parseInt(getOptional("kylin.storage.hbase.max-hconnection-threads-per-project", "800"));
+    }
+
     // ============================================================================
     // ENGINE.MR
     // ============================================================================

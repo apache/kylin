@@ -404,7 +404,11 @@ public class QueryService extends BasicService {
         if (sqlRequest.getBackdoorToggles() != null)
             BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
 
+        // set initial info when starting a query
         final QueryContext queryContext = QueryContextFacade.current();
+        queryContext.setUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+        queryContext.setGroups(AclPermissionUtil.getCurrentUserGroups());
+        queryContext.setProject(sqlRequest.getProject());
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
             SQLResponse sqlResponse = null;
@@ -629,10 +633,7 @@ public class QueryService extends BasicService {
 
         try {
             conn = QueryConnection.getConnection(sqlRequest.getProject());
-            String userInfo = SecurityContextHolder.getContext().getAuthentication().getName();
-            QueryContext context = QueryContextFacade.current();
-            context.setUsername(userInfo);
-            context.setGroups(AclPermissionUtil.getCurrentUserGroups());
+            String userInfo = QueryContextFacade.current().getUsername();
             final Collection<? extends GrantedAuthority> grantedAuthorities = SecurityContextHolder.getContext()
                     .getAuthentication().getAuthorities();
             for (GrantedAuthority grantedAuthority : grantedAuthorities) {

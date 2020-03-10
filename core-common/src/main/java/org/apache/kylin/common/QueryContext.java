@@ -54,6 +54,7 @@ public class QueryContext {
 
     private final String queryId;
     private String username;
+    private String project;
     private Set<String> groups;
     private AtomicLong scannedRows = new AtomicLong();
     private AtomicLong returnedRows = new AtomicLong();
@@ -120,6 +121,14 @@ public class QueryContext {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
     }
 
     public Set<String> getGroups() {
