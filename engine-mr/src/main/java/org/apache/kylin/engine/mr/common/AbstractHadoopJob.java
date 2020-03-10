@@ -157,6 +157,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected OptionsHelper optionsHelper = new OptionsHelper();
 
     protected Job job;
+    private File jobTempDir;
 
     public AbstractHadoopJob() {
         super(HadoopUtil.getCurrentConfiguration());
@@ -595,10 +596,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     protected void dumpKylinPropsAndMetadata(String prj, Set<String> dumpList, KylinConfig kylinConfig,
             Configuration conf) throws IOException {
-        File tmp = File.createTempFile("kylin_job_meta", "");
-        FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
-
-        File metaDir = new File(tmp, "meta");
+        File metaDir = new File(getJobTempDir(), "meta");
         metaDir.mkdirs();
 
         // write kylin.properties
@@ -628,31 +626,27 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     }
 
     protected void cleanupTempConfFile(Configuration conf) {
-        String[] tempfiles = StringUtils.split(conf.get("tmpfiles"), ",");
-        if (tempfiles == null) {
-            return;
-        }
-        for (String tempMetaFileString : tempfiles) {
-            logger.trace("tempMetaFileString is : " + tempMetaFileString);
-            if (tempMetaFileString != null) {
-                if (tempMetaFileString.startsWith("file://")) {
-                    tempMetaFileString = tempMetaFileString.substring("file://".length());
-                    File tempMetaFile = new File(tempMetaFileString);
-                    if (tempMetaFile.exists()) {
-                        try {
-                            FileUtils.forceDelete(tempMetaFile.getParentFile());
-
-                        } catch (IOException e) {
-                            logger.warn("error when deleting " + tempMetaFile, e);
-                        }
-                    } else {
-                        logger.info("" + tempMetaFileString + " does not exist");
-                    }
-                } else {
-                    logger.info("tempMetaFileString is not starting with file:// :" + tempMetaFileString);
-                }
+        String tmpFilesString = conf.get("tmpfiles");
+        logger.info("tmpFilesString is : " + tmpFilesString);
+        if (jobTempDir != null) {
+            try {
+                FileUtils.forceDelete(jobTempDir);
+            } catch (IOException e) {
+                logger.warn("error when deleting " + jobTempDir, e);
             }
         }
+    }
+
+    // It's not thread safe
+    protected File getJobTempDir() throws IOException {
+        if (jobTempDir != null && jobTempDir.isDirectory()) {
+            return jobTempDir;
+        }
+        jobTempDir = File.createTempFile("kylin_job_meta", "");
+        FileUtils.forceDelete(jobTempDir); // we need a directory, so delete the file first
+
+        jobTempDir.mkdirs();
+        return jobTempDir;
     }
 
     protected void deletePath(Configuration conf, Path path) throws IOException {
