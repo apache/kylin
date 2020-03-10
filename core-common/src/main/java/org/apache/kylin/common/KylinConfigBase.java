@@ -2475,4 +2475,21 @@ public abstract class KylinConfigBase implements Serializable {
     public String getIntersectFilterOrSeparator() {
         return getOptional("kylin.query.intersect.separator", "|");
     }
+
+    public String getCanarySinkClass() {
+        return getOptional("kylin.canary.sink.class", "org.apache.kylin.tool.KylinCanary$StdOutSink");
+    }
+
+    public boolean isCanaryDaemon() {
+        return Boolean.parseBoolean(getOptional("kylin.canary.daemon", FALSE));
+    }
+
+    public long getCanaryInterval() {
+        return Long.parseLong(getOptional("kylin.canary.interval", "6000"));
+    }
+
+    public String getCanaryToken() {
+        return getOptional("kylin.canary.token", "");
+    }
+
 }
