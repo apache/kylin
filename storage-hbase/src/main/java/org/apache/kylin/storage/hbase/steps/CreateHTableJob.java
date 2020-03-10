@@ -117,7 +117,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         splitKeys = getRegionSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment,
                 partitionFilePath.getParent());
 
-        CubeHTableUtil.createHTable(cubeSegment, splitKeys);
+        CubeHTableUtil.createHTable(cubeSegment, splitKeys, true);
 
         // export configuration in advance to avoid connecting to hbase from spark
         if (cubeDesc.getEngineType()== IEngineAware.ID_SPARK){
