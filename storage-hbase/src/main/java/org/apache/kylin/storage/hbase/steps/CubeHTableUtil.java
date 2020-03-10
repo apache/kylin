@@ -66,6 +66,7 @@ public class CubeHTableUtil {
         KylinConfig kylinConfig = cubeDesc.getConfig();
 
         HTableDescriptor tableDesc = new HTableDescriptor(tableName);
+        tableDesc.setCompactionEnabled(false);
         tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());
         tableDesc.setValue(IRealizationConstants.HTableTag, kylinConfig.getMetadataUrlPrefix());
         tableDesc.setValue(IRealizationConstants.HTableCreationTime, String.valueOf(System.currentTimeMillis()));
