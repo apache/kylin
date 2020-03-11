@@ -24,7 +24,7 @@ import java.util.Properties;
 import org.apache.kylin.common.BackwardCompatibilityConfig;
 import org.apache.kylin.common.KylinConfig;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class KylinConfigCLI {
     public static void main(String[] args) {

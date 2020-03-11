@@ -56,7 +56,7 @@ import org.apache.kylin.source.jdbc.metadata.JdbcMetadataFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class JdbcHiveInputBase extends HiveInputBase {
     private static final Logger logger = LoggerFactory.getLogger(JdbcHiveInputBase.class);

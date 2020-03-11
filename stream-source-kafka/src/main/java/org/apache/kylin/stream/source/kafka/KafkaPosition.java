@@ -26,8 +26,8 @@ import javax.annotation.Nullable;
 
 import org.apache.kylin.stream.core.source.ISourcePosition;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Maps.EntryTransformer;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps.EntryTransformer;
 
 public class KafkaPosition implements ISourcePosition {
     private Map<Integer, Long> partitionOffsetMap = Maps.newHashMap();

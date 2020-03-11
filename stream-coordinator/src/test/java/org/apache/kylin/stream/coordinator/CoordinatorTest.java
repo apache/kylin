@@ -18,7 +18,7 @@
 
 package org.apache.kylin.stream.coordinator;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.curator.test.TestingServer;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.ZKUtil;

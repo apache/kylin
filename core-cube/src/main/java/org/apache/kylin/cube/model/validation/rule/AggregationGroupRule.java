@@ -31,8 +31,8 @@ import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ResultLevel;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Iterables;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  *  find forbid overlaps in each AggregationGroup

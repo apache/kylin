@@ -27,10 +27,10 @@ import org.apache.kylin.measure.hllc.HLLCounter;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.hash.HashFunction;
+import org.apache.kylin.shaded.com.google.common.hash.Hasher;
+import org.apache.kylin.shaded.com.google.common.hash.Hashing;
 
 /**
  */
@@ -105,7 +105,7 @@ public class CubeSamplingTest {
         int x = 0;
         for (String field : row) {
             Hasher hc = hf.newHasher();
-            row_index[x++] = hc.putString(field).hash().asBytes();
+            row_index[x++] = hc.putUnencodedChars(field).hash().asBytes();
         }
 
         for (int i = 0, n = allCuboidsBitSet.length; i < n; i++) {

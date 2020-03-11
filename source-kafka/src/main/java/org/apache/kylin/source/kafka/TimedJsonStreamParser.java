@@ -42,8 +42,8 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.SimpleType;
-import com.google.common.collect.Lists;
-import com.google.common.base.Charsets;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Charsets;
 
 /**
  * An utility class which parses a JSON streaming message to a list of strings (represent a row in table).

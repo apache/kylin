@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.security;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.acl.TableACL;

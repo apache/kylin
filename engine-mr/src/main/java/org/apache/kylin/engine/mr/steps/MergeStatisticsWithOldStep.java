@@ -45,8 +45,8 @@ import org.apache.kylin.measure.hllc.HLLCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class MergeStatisticsWithOldStep extends AbstractExecutable {
 

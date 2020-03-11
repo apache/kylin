@@ -47,7 +47,7 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * @author xjiang

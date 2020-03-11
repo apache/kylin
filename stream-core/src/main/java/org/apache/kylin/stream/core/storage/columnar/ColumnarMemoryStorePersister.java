@@ -63,13 +63,15 @@ import org.apache.kylin.stream.core.storage.columnar.invertindex.SeqIIColumnDesc
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.common.io.CountingOutputStream;
+import org.apache.kylin.shaded.com.google.common.base.Function;
+import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
+import org.apache.kylin.shaded.com.google.common.collect.Collections2;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.io.CountingOutputStream;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class ColumnarMemoryStorePersister {
     private static Logger logger = LoggerFactory.getLogger(ColumnarMemoryStorePersister.class);
@@ -99,14 +101,14 @@ public class ColumnarMemoryStorePersister {
      *
      */
     public void persist(SegmentMemoryStore memoryStore, DataSegmentFragment fragment) {
-        Stopwatch stopwatch = new Stopwatch();
+        Stopwatch stopwatch = Stopwatch.createUnstarted();
         stopwatch.start();
         logger.info("Start persist memory store for cube:{}, segment:{}, rowCnt:{}", cubeInstance.getName(), segmentName, memoryStore.getRowCount());
         try {
             persistDataFragment(memoryStore, fragment);
             stopwatch.stop();
             logger.info("Finish persist memory store for cube:{} segment:{}, take: {}ms", cubeInstance.getName(),
-                    segmentName, stopwatch.elapsedMillis());
+                    segmentName, stopwatch.elapsed(MILLISECONDS));
         } catch (Exception e) {
             logger.error("Error persist DataSegment.", e);
         }
@@ -170,7 +172,7 @@ public class ColumnarMemoryStorePersister {
      */
     private List<List<Object>> transformToColumnar(long cuboidId, int dimCnt,
             ConcurrentSkipListMap<String[], MeasureAggregator[]> aggBufMap) {
-        Stopwatch stopwatch = new Stopwatch();
+        Stopwatch stopwatch = Stopwatch.createUnstarted();
         stopwatch.start();
         int columnsNum = dimCnt + measures.length;
         List<List<Object>> columnarValues = Lists.newArrayListWithExpectedSize(columnsNum);
@@ -197,7 +199,7 @@ public class ColumnarMemoryStorePersister {
         }
         stopwatch.stop();
         if (logger.isDebugEnabled()) {
-            logger.debug("cuboid-{} transform to columnar, take {} ms", cuboidId, stopwatch.elapsedMillis());
+            logger.debug("cuboid-{} transform to columnar, take {} ms", cuboidId, stopwatch.elapsed(MILLISECONDS));
         }
         return columnarValues;
     }
@@ -270,7 +272,7 @@ public class ColumnarMemoryStorePersister {
     private void persistDimension(long cuboidId, List<Object> dimValueList, List<DimensionMetaInfo> dimensionMetaList,
             CountingOutputStream indexOut, TblColRef dimension, Map<TblColRef, Dictionary<String>> dictMaps)
             throws IOException {
-        Stopwatch stopwatch = new Stopwatch();
+        Stopwatch stopwatch = Stopwatch.createUnstarted();
         stopwatch.start();
 
         DimensionMetaInfo dimensionMeta = new DimensionMetaInfo();
@@ -322,7 +324,7 @@ public class ColumnarMemoryStorePersister {
         stopwatch.stop();
         if (logger.isDebugEnabled()) {
             logger.debug("cuboid-{} saved dimension:{}, took: {}ms", cuboidId, dimension.getName(),
-                    stopwatch.elapsedMillis());
+                    stopwatch.elapsed(MILLISECONDS));
         }
     }
 
@@ -341,7 +343,7 @@ public class ColumnarMemoryStorePersister {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void persistMetric(long cuboidId, List<Object> metricValueList, List<MetricMetaInfo> metricMetaInfoList,
             int metricIdx, CountingOutputStream indexOut) throws IOException {
-        Stopwatch stopwatch = new Stopwatch();
+        Stopwatch stopwatch = Stopwatch.createUnstarted();
         stopwatch.start();
 
         MetricMetaInfo metricMeta = new MetricMetaInfo();
@@ -374,7 +376,7 @@ public class ColumnarMemoryStorePersister {
         metricMeta.setCompression(cStoreMetricsDesc.getCompression().name());
         stopwatch.stop();
         if (logger.isDebugEnabled()) {
-            logger.debug("cuboid-{} saved measure:{}, took: {}ms", cuboidId, measureName, stopwatch.elapsedMillis());
+            logger.debug("cuboid-{} saved measure:{}, took: {}ms", cuboidId, measureName, stopwatch.elapsed(MILLISECONDS));
         }
     }
 
@@ -383,7 +385,7 @@ public class ColumnarMemoryStorePersister {
     }
 
     private Dictionary<String> buildDictionary(TblColRef dim, List<Object> inputValues) throws IOException {
-        Stopwatch stopwatch = new Stopwatch();
+        Stopwatch stopwatch = Stopwatch.createUnstarted();
         stopwatch.start();
         final Collection<String> values = Collections2.transform(Sets.newHashSet(inputValues),
                 new Function<Object, String>() {
@@ -398,7 +400,7 @@ public class ColumnarMemoryStorePersister {
                 new IterableDictionaryValueEnumerator(values));
         stopwatch.stop();
         if (logger.isDebugEnabled()) {
-            logger.debug("BuildDictionary for column : " + dim.getName() + " took : " + stopwatch.elapsedMillis()
+            logger.debug("BuildDictionary for column : " + dim.getName() + " took : " + stopwatch.elapsed(MILLISECONDS)
                     + " ms ");
         }
         return dict;

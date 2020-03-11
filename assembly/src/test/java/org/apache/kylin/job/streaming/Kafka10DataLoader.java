@@ -34,8 +34,8 @@ import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
+import org.apache.kylin.shaded.com.google.common.base.Function;
+import org.apache.kylin.shaded.com.google.common.collect.Collections2;
 
 /**
  * Load prepared data into kafka(for test use)

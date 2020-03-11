@@ -27,7 +27,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
 import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 
 public enum BuiltInMethod {

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.metadata.datatype;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.junit.Assert;
 import org.junit.Test;
 

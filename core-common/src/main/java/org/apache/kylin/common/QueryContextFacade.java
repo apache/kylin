@@ -27,8 +27,8 @@ import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class QueryContextFacade {
 

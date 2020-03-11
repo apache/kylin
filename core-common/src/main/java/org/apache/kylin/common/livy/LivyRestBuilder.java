@@ -18,7 +18,7 @@
 
 package org.apache.kylin.common.livy;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.SourceConfigurationUtil;
 import org.codehaus.jettison.json.JSONException;

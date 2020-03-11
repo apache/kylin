@@ -18,7 +18,7 @@
 
 package org.apache.kylin.cube;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.kylin.cube.cuboid.CuboidModeEnum.CURRENT;
 import static org.apache.kylin.cube.cuboid.CuboidModeEnum.RECOMMEND;
 
@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -66,8 +66,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Objects;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)

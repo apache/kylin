@@ -31,7 +31,7 @@ import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.dict.lookup.AbstractLookupRowEncoder;
 import org.apache.kylin.metadata.model.TableDesc;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.storage.hbase.lookup.HBaseLookupRowEncoder.HBaseRow;
 
 /**

@@ -37,7 +37,7 @@ import org.apache.kylin.sdk.datasource.framework.def.DataSourceDefProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class JdbcConnector implements Closeable {
     private static final Logger logger = LoggerFactory.getLogger(JdbcConnector.class);

@@ -21,7 +21,7 @@ package org.apache.kylin.job.impl.threadpool;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.Executable;
@@ -31,7 +31,7 @@ import org.apache.kylin.job.execution.Output;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
 
 public abstract class FetcherRunner implements Runnable {
 

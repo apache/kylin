@@ -32,7 +32,7 @@ import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 public class BatchOptimizeJobCheckpointBuilder {
 

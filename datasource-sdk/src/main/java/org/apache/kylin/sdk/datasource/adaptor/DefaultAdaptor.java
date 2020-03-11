@@ -28,7 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import javax.sql.rowset.CachedRowSet;
 
-import com.google.common.base.Joiner;
+import org.apache.kylin.shaded.com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 
 /**

@@ -26,7 +26,7 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.datatype.DoubleSerializer;
 import org.apache.kylin.metadata.datatype.Long8Serializer;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class ColumnarMetricsEncodingFactory {
     private static Set<String> longEncodingTypes = Sets.newHashSet();

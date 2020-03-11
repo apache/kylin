@@ -25,14 +25,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.kylin.stream.coordinator.StreamingCubeInfo;
 import org.apache.kylin.stream.core.model.CubeAssignment;
 import org.apache.kylin.stream.core.model.ReplicaSet;
 import org.apache.kylin.stream.core.source.Partition;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

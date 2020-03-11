@@ -20,7 +20,7 @@ package org.apache.kylin.rest.response;
 
 import org.apache.kylin.rest.exception.BadRequestException;
 
-import com.google.common.base.Throwables;
+import org.apache.kylin.shaded.com.google.common.base.Throwables;
 
 /**
  * response to client when the return HTTP code is not 200

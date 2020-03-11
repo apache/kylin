@@ -20,7 +20,6 @@ package org.apache.kylin.provision;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Properties;
 import java.util.Random;
 
@@ -77,8 +76,6 @@ public class MockKafka {
     private MockKafka(ZkConnection zkServerConnection, String logDir, String server, String brokerId) {
         this(createProperties(zkServerConnection, logDir, server, brokerId));
         this.zkConnection = zkServerConnection;
-        System.out.println(String.format(Locale.ROOT, "Kafka %s:%s dir:%s", kafkaServer.serverConfig().brokerId(),
-                kafkaServer.serverConfig().port(), kafkaServer.serverConfig().logDirs()));
     }
 
     public void createTopic(String topic, int partition, int replication) {

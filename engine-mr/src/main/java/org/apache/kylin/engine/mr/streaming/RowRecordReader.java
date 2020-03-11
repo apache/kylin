@@ -53,9 +53,9 @@ import org.apache.kylin.stream.core.storage.columnar.protocol.MetricMetaInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class RowRecordReader extends ColumnarFilesReader {
     private static final Logger logger = LoggerFactory.getLogger(RowRecordReader.class);

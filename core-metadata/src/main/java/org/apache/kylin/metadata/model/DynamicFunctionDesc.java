@@ -26,7 +26,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.expression.ExpressionColCollector;
 import org.apache.kylin.metadata.expression.TupleExpression;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public abstract class DynamicFunctionDesc extends FunctionDesc {
 

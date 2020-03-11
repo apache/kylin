@@ -47,7 +47,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.kylin.engine.spark.ISparkInput.ISparkBatchCubingInputSide;
 import org.apache.kylin.engine.spark.ISparkInput.ISparkBatchMergeInputSide;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;

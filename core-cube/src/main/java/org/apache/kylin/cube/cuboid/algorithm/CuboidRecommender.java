@@ -33,9 +33,9 @@ import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.cache.Cache;
+import org.apache.kylin.shaded.com.google.common.cache.CacheBuilder;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class CuboidRecommender {
     private static final Logger logger = LoggerFactory.getLogger(CuboidRecommender.class);

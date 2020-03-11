@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 
-import com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 
 /**
  * ActiveReservoirReporter report metrics event via listener from ActiveReservoir

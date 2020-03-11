@@ -17,7 +17,7 @@
 */
 package org.apache.kylin.source.adhocquery;
 
-import com.google.common.collect.ImmutableSet;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableSet;
 
 /**
  * convert the query to satisfy the parser of push down query engine

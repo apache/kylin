@@ -27,7 +27,7 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.TupleFilter;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class GTScanRequestBuilder {
     private GTInfo info;

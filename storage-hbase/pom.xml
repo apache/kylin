@@ -153,6 +153,7 @@
                             </transformers>
                             <artifactSet>
                                 <includes>
+                                    <include>org.apache.kylin:kylin-shaded-guava</include>
                                     <include>org.apache.kylin:kylin-core-common</include>
                                     <include>org.apache.kylin:kylin-core-metadata</include>
                                     <include>org.apache.kylin:kylin-core-dictionary</include>

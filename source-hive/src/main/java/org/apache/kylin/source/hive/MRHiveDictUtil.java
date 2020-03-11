@@ -18,7 +18,7 @@
 
 package org.apache.kylin.source.hive;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileSystem;

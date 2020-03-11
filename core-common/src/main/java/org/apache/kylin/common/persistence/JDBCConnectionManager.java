@@ -18,7 +18,7 @@
 
 package org.apache.kylin.common.persistence;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.commons.dbcp.BasicDataSourceFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;

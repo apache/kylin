@@ -18,7 +18,7 @@
 
 package org.apache.kylin.common.util;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 
