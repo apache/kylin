@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.measure.MeasureAggregator;
@@ -42,7 +43,7 @@ import org.apache.kylin.measure.hllc.HLLCounter;
 import org.github.jamm.MemoryMeter;
 import org.junit.Test;
 
-import com.google.common.base.Stopwatch;
+import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
 
 public class AggregationCacheMemSizeTest {
     private static final MemoryMeter meter = new MemoryMeter();
@@ -186,7 +187,7 @@ public class AggregationCacheMemSizeTest {
         });
 
         final int reportInterval = inputCount / 10;
-        final Stopwatch stopwatch = new Stopwatch();
+        final Stopwatch stopwatch = Stopwatch.createUnstarted();
         long estimateMillis = 0;
         long actualMillis = 0;
 
@@ -203,12 +204,12 @@ public class AggregationCacheMemSizeTest {
             if ((i + 1) % reportInterval == 0) {
                 stopwatch.start();
                 long estimateBytes = GTAggregateScanner.estimateSizeOfAggrCache(key, values, map.size());
-                estimateMillis += stopwatch.elapsedMillis();
+                estimateMillis += stopwatch.elapsed(MILLISECONDS);
                 stopwatch.reset();
 
                 stopwatch.start();
                 long actualBytes = meter.measureDeep(map);
-                actualMillis += stopwatch.elapsedMillis();
+                actualMillis += stopwatch.elapsed(MILLISECONDS);
                 stopwatch.reset();
 
                 System.out.printf(Locale.ROOT, "%,15d %,15d %,15d %,15d %,15d\n", map.size(), estimateBytes,

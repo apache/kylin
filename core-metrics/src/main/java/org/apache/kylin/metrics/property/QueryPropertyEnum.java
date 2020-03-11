@@ -20,7 +20,7 @@ package org.apache.kylin.metrics.property;
 
 import java.util.Locale;
 
-import com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 
 /**
  * Definition of Metrics dimension and measure for Query Basic

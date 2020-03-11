@@ -22,7 +22,7 @@ import static org.apache.kylin.metadata.filter.TupleFilter.and;
 import static org.apache.kylin.metadata.filter.TupleFilter.compare;
 import static org.apache.kylin.metadata.filter.TupleFilter.or;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -45,7 +45,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 import java.util.Map;
 

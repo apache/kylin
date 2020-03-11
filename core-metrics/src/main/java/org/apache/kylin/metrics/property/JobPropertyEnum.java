@@ -18,7 +18,7 @@
 
 package org.apache.kylin.metrics.property;
 
-import com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 
 /**
  * Definition of Metrics dimension and measure for Cube building job

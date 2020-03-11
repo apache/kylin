@@ -30,11 +30,14 @@
         <groupId>org.apache.kylin</groupId>
         <version>3.1.0-SNAPSHOT</version>
     </parent>
-
     <dependencies>
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-shaded-guava</artifactId>
         </dependency>
 
         <dependency>
@@ -42,9 +45,5 @@
             <artifactId>metrics-core</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
     </dependencies>
 </project>

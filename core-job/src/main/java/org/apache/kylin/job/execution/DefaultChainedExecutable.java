@@ -28,8 +28,8 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.job.exception.ExecuteException;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  */

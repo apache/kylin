@@ -39,7 +39,7 @@ import org.apache.kylin.stream.core.util.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.io.Files;
+import org.apache.kylin.shaded.com.google.common.io.Files;
 
 /**
  * Host information collection

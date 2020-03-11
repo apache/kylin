@@ -27,7 +27,7 @@ import java.util.List;
 
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class LogicalTupleFilter extends TupleFilter implements IOptimizeableTupleFilter {
 

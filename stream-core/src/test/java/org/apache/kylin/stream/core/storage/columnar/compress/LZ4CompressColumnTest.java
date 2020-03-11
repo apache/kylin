@@ -35,8 +35,8 @@ import org.apache.kylin.common.util.Bytes;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.io.CountingOutputStream;
-import com.google.common.io.Files;
+import org.apache.kylin.shaded.com.google.common.io.CountingOutputStream;
+import org.apache.kylin.shaded.com.google.common.io.Files;
 
 public class LZ4CompressColumnTest {
     private File tmpColFile;

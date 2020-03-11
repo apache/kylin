@@ -31,12 +31,12 @@ import org.apache.kylin.stream.core.model.CubeAssignment;
 import org.apache.kylin.stream.core.model.ReplicaSet;
 import org.apache.kylin.stream.core.source.Partition;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Function;
+import org.apache.kylin.shaded.com.google.common.collect.FluentIterable;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableSet;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class CubePartitionRoundRobinAssigner implements Assigner {
 
@@ -53,7 +53,7 @@ public class CubePartitionRoundRobinAssigner implements Assigner {
             public Integer apply(ReplicaSet rs) {
                 return rs.getReplicaSetID();
             }
-        }).toImmutableSet();
+        }).toSet();
 
         Map<Integer, Map<String, List<Partition>>> existingRSAssignmentsMap = AssignmentUtil
                 .convertCubeAssign2ReplicaSetAssign(existingAssignments);

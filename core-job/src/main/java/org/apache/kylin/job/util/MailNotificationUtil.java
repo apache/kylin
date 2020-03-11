@@ -25,7 +25,7 @@ import java.util.Map;
 import org.apache.kylin.common.util.MailTemplateProvider;
 import org.apache.kylin.job.execution.ExecutableState;
 
-import com.google.common.base.Joiner;
+import org.apache.kylin.shaded.com.google.common.base.Joiner;
 
 public class MailNotificationUtil {
     public static final String JOB_ERROR = "JOB_ERROR";

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkArgument;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,7 +38,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.realization.SQLDigest.SQLCall;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
 
 /**
  * Created by sunyerui on 15/12/10.

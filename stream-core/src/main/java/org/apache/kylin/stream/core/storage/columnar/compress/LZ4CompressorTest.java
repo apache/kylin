@@ -25,7 +25,7 @@ import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FastDecompressor;
 import net.jpountz.lz4.LZ4SafeDecompressor;
 
-import com.google.common.io.Files;
+import org.apache.kylin.shaded.com.google.common.io.Files;
 
 public class LZ4CompressorTest {
     public static void main(String[] args) throws Exception {

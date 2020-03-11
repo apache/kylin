@@ -26,7 +26,7 @@ import org.apache.kylin.metrics.lib.impl.hive.HiveReservoirReporter;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.metrics.lib.impl.kafka.KafkaReservoirReporter;
 
 @SuppressWarnings("serial")

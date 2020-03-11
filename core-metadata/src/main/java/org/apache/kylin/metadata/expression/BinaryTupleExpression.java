@@ -27,7 +27,7 @@ import org.apache.kylin.exception.QueryOnCubeException;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class BinaryTupleExpression extends TupleExpression {
 

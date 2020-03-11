@@ -20,8 +20,8 @@ package org.apache.kylin.common.util;
 
 import java.util.Iterator;
 
-import com.google.common.base.Function;
-import com.google.common.collect.TreeMultimap;
+import org.apache.kylin.shaded.com.google.common.base.Function;
+import org.apache.kylin.shaded.com.google.common.collect.TreeMultimap;
 
 /**
  */

@@ -32,7 +32,7 @@ import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class TupleFilterTest {
     @Test

@@ -55,8 +55,8 @@ import org.apache.kylin.tool.metrics.systemcube.streamingv2.StreamingMetadataCre
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * System Cube Metadata Creator CLI

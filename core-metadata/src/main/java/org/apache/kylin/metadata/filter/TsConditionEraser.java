@@ -22,7 +22,7 @@ import java.util.IdentityHashMap;
 
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  */

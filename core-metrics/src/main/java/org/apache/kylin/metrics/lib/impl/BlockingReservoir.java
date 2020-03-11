@@ -27,8 +27,8 @@ import org.apache.kylin.metrics.lib.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * A Reservoir which staged metrics message in memory, and emit them in fixed rate.

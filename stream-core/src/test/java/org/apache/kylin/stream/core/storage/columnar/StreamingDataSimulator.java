@@ -27,8 +27,8 @@ import java.util.Random;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.stream.core.model.StreamingMessage;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.stream.core.source.ISourcePosition.IPartitionPosition;
 
 public class StreamingDataSimulator {

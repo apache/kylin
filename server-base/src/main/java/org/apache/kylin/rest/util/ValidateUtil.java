@@ -46,7 +46,7 @@ import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 @Component("validateUtil")
 public class ValidateUtil {

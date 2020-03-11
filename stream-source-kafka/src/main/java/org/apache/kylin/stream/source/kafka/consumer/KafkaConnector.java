@@ -32,7 +32,7 @@ import org.apache.kylin.stream.core.source.IStreamingSource;
 import org.apache.kylin.stream.core.source.Partition;
 import org.apache.kylin.stream.source.kafka.KafkaSource;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class KafkaConnector implements IStreamingConnector {
     private final KafkaConsumer<byte[], byte[]> kafkaConsumer;

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.cube.cuboid.algorithm.generic;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.commons.math3.genetics.Chromosome;
 import org.apache.commons.math3.genetics.ChromosomePair;
 import org.apache.commons.math3.genetics.GeneticAlgorithm;

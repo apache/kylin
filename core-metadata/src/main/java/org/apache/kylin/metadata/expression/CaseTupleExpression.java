@@ -29,8 +29,8 @@ import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class CaseTupleExpression extends TupleExpression {
 

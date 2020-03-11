@@ -27,7 +27,7 @@ import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.kylin.cube.common.RowKeySplitter;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 public class ConvergeCuboidDataPartitioner extends Partitioner<Text, Text> implements Configurable {
 
