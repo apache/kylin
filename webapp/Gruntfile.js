@@ -245,6 +245,60 @@ module.exports = function (grunt) {
       e2e: {
         configFile: 'karma.e2e.conf.js'
       }
+    },
+    watch: {
+      appchange: {
+        options: {
+          livereload: true,
+        },
+        files: [
+          "app/css/*.*",
+          "app/fonts/*.*",
+          "app/image/*.*",
+          "app/js/*.*",
+          "app/less/*.*",
+          "app/partials/**/*.*",
+          "app/*.*"
+        ],
+        tasks: ['dev']
+      }
+    },
+    connect: {
+      options: {
+        port: 7071,      // custom port
+        base: './dist',  // current directory for 'index.html' is root
+        livereload: true,
+      },
+      rules: [           // rewrite rules for static resources
+        {from: '^/kylin/routes.json$', to: '/routes.json'},
+        {from: '^/kylin/((css|fonts|image|js)/.*)$', to: '/$1'},
+        {from: '^/kylin/(?!api/).*$', to: '/'},
+      ],
+      devserver: {
+        options: {
+          middleware: function (connect, options) {
+            var rewriteRulesSnippet = require('grunt-connect-rewrite/lib/utils').rewriteRequest;
+            var proxySnippet = require('grunt-connect-proxy/lib/utils').proxyRequest;
+            var middlewares = [rewriteRulesSnippet, proxySnippet];
+            if (!Array.isArray(options.base)) {
+              options.base = [options.base];
+            }
+            var directory = options.directory || options.base[options.base.length - 1];
+            options.base.forEach(function (base) {
+              middlewares.push(connect.static(base));
+            });
+            middlewares.push(connect.directory(directory));
+            return middlewares;
+          }
+        },
+        proxies: [
+          {
+            context: '/kylin/api',
+            host: '127.0.0.1',
+            port: '7070'
+          }
+        ]
+      }
     }
   });
 
@@ -300,4 +354,18 @@ module.exports = function (grunt) {
     'manifest',
     'changelog'
   ]);
+
+  grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-connect-proxy');
+  grunt.loadNpmTasks('grunt-connect-rewrite');
+
+  grunt.registerTask('devserver', function (target) {
+    grunt.task.run([
+      'dev',
+      'configureRewriteRules',
+      'configureProxies:devserver',
+      'connect:devserver',
+      'watch:appchange',
+    ]);
+  });
 };
