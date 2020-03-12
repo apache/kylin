@@ -34,7 +34,7 @@ import org.apache.calcite.sql.SqlKind._
 import org.apache.calcite.sql.`type`.{BasicSqlType, IntervalSqlType, SqlTypeFamily, SqlTypeName}
 import org.apache.calcite.sql.fun.SqlDatetimeSubtractionOperator
 import org.apache.kylin.common.util.DateFormat
-import org.apache.spark.sql.catalyst.KylinFunctions._
+import org.apache.spark.sql.KylinFunctions._
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{DateType, LongType, TimestampType}

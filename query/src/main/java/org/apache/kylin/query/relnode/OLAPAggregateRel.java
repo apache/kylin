@@ -128,6 +128,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     private List<TblColRef> groups;
     private List<FunctionDesc> aggregations;
     private boolean rewriting;
+
     public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, boolean indicator,
             ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls)
             throws InvalidRelException {

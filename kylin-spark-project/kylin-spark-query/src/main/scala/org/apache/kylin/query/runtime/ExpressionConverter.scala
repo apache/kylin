@@ -33,7 +33,7 @@ import org.apache.spark.sql.Column
 import org.apache.spark.sql.catalyst.expressions.{If, IfNull, StringLocate}
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.catalyst.KylinFunctions._
+import org.apache.spark.sql.KylinFunctions._
 import org.apache.spark.sql.utils.SparkTypeUtil
 
 import scala.collection.mutable

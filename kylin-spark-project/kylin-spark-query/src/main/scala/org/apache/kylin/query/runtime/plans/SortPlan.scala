@@ -27,7 +27,7 @@ import org.apache.kylin.query.runtime.SparderRexVisitor
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.utils.LogEx
 import scala.collection.JavaConverters._
-import org.apache.spark.sql.catalyst.KylinFunctions._
+import org.apache.spark.sql.KylinFunctions._
 
 object SortPlan extends LogEx {
   def sort(

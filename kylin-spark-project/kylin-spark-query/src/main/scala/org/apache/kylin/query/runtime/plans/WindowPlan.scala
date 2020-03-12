@@ -33,7 +33,7 @@ import org.apache.calcite.rex.RexInputRef
 import org.apache.calcite.util.NlsString
 import org.apache.kylin.query.relnode.{OLAPProjectRel, OLAPWindowRel}
 import org.apache.kylin.query.runtime.SparderRexVisitor
-import org.apache.spark.sql.catalyst.KylinFunctions._
+import org.apache.spark.sql.KylinFunctions._
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.expressions.Literal
 import org.apache.spark.sql.expressions.{Window, WindowSpec}

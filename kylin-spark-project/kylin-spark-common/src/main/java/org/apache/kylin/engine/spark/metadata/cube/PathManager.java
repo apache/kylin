@@ -25,12 +25,17 @@ import org.apache.kylin.cube.CubeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PathManager {
+public final class PathManager {
     private static final Logger logger = LoggerFactory.getLogger(PathManager.class);
 
     public static String getParquetStoragePath(KylinConfig config, String cubeId, String segId, String cuboidId) {
         CubeInstance cube = CubeManager.getInstance(config).getCubeByUuid(cubeId);
         String hdfsWorkDir = config.getHdfsWorkingDirectory(cube.getProject());
-        return hdfsWorkDir + "parquet"+ File.separator + cubeId + File.separator + segId + File.separator + cuboidId;
+        return hdfsWorkDir + "parquet" + File.separator + cubeId + File.separator + segId + File.separator + cuboidId;
+    }
+
+    public static String getParquetStoragePath(CubeInstance cube, String segId, Long cuboidId) {
+        String hdfsWorkDir = cube.getConfig().getHdfsWorkingDirectory(cube.getProject());
+        return hdfsWorkDir + "parquet" + File.separator + cube.getId() + File.separator + segId + File.separator + cuboidId;
     }
 }

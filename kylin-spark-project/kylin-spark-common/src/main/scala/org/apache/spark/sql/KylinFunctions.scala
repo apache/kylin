@@ -22,7 +22,7 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.catalyst.util.KapDateTimeUtils
 import org.apache.spark.sql.types.{AbstractDataType, DataType, DateType, IntegerType}
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, DictEncode, Expression, ExpressionInfo, ExpressionUtils, ImplicitCastInputTypes, In, Like, Literal, RoundBase, SplitPart, Sum0, TimestampAdd, TimestampDiff, Truncate, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, DictEncode, Expression, ExpressionInfo, ExpressionUtils, ImplicitCastInputTypes, In, KapAddMonths, Like, Literal, RoundBase, SplitPart, Sum0, TimestampAdd, TimestampDiff, Truncate, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.aggregate.AggregateFunction
 import org.apache.spark.sql.udaf.{ApproxCountDistinct, IntersectCount, PreciseCountDistinct}
 
@@ -31,6 +31,10 @@ object KylinFunctions {
     func: AggregateFunction,
     isDistinct: Boolean = false): Column = {
     Column(func.toAggregateExpression(isDistinct))
+  }
+
+  def kap_add_months(startDate: Column, numMonths: Column): Column = {
+    Column(KapAddMonths(startDate.expr, numMonths.expr))
   }
 
   def dict_encode(column: Column, dictParams: Column, bucketSize: Column): Column = {

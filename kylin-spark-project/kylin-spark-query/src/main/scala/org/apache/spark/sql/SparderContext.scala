@@ -1,6 +1,7 @@
 package org.apache.spark.sql
 
 import java.lang.{Boolean => JBoolean, String => JString}
+
 import org.apache.kylin.query.runtime.plans.QueryToExecutionIDCache
 import org.apache.spark.memory.MonitorEnv
 import org.apache.spark.util.Utils
@@ -13,6 +14,7 @@ import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import java.util.concurrent.atomic.AtomicReference
 
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
+import org.apache.spark.sql.execution.datasource.KylinSourceStrategy
 
 // scalastyle:off
 object SparderContext extends Logging {
