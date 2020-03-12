@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.tool;
+package org.apache.kylin.tool.extractor;
 
 import java.io.File;
 import java.util.List;
@@ -84,7 +84,7 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
         String cube = optionsHelper.hasOption(OPTION_CUBE) ? optionsHelper.getOptionValue(OPTION_CUBE) : null;
         String project = optionsHelper.hasOption(OPTION_PROJECT) ? optionsHelper.getOptionValue(OPTION_PROJECT) : null;
         int period = optionsHelper.hasOption(OPTION_PERIOD) ? Integer.parseInt(optionsHelper.getOptionValue(OPTION_PERIOD)) : DEFAULT_PERIOD;
-
+        // maybe use start time and end time to instead of period is better
         long endTime = System.currentTimeMillis();
         long startTime = endTime - period * 24 * 3600 * 1000; // time in Millis
         List<JobInstance> jobInstances = listJobInstances(project, cube, startTime, endTime);

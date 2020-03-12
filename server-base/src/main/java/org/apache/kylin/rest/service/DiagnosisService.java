@@ -98,9 +98,8 @@ public class DiagnosisService extends BasicService {
         Message msg = MsgPicker.getMsg();
 
         File cwd = new File("");
-        logger.debug("Current path: " + cwd.getAbsolutePath());
-
-        logger.debug("DiagnosisInfoCLI args: " + Arrays.toString(args));
+        logger.debug("Current path: {}", cwd.getAbsolutePath());
+        logger.debug("DiagnosisInfoCLI args: {}", Arrays.toString(args));
         File script = new File(KylinConfig.getKylinHome() + File.separator + "bin", "diag.sh");
         if (!script.exists()) {
             throw new BadRequestException(

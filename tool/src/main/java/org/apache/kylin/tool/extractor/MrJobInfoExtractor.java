@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.tool;
+package org.apache.kylin.tool.extractor;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +35,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OptionsHelper;
-import org.apache.kylin.tool.common.HadoopConfExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +44,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+/**
+ * http://hadoop.apache.org/docs/r2.7.3/hadoop-mapreduce-client/hadoop-mapreduce-client-hs/HistoryServerRest.html
+ */
 public class MrJobInfoExtractor extends AbstractInfoExtractor {
     private static final Logger logger = LoggerFactory.getLogger(MrJobInfoExtractor.class);
 
@@ -83,9 +85,9 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
     private String getHttpResponse(String url) {
         DefaultHttpClient client = new DefaultHttpClient();
         String msg = null;
-        int retry_times = 0;
-        while (msg == null && retry_times < HTTP_RETRY) {
-            retry_times++;
+        int retryTimes = 0;
+        while (msg == null && retryTimes < HTTP_RETRY) {
+            retryTimes++;
 
             HttpGet request = new HttpGet(url);
             try {
@@ -93,7 +95,7 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
                 HttpResponse response = client.execute(request);
                 msg = EntityUtils.toString(response.getEntity());
             } catch (Exception e) {
-                logger.warn("Failed to fetch http response. Retry={}", retry_times, e);
+                logger.warn("Failed to fetch http response. Retry={}", retryTimes, e);
             } finally {
                 request.releaseConnection();
             }

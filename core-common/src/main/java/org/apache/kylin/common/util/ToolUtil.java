@@ -19,7 +19,6 @@
 
 package org.apache.kylin.common.util;
 
-import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -33,7 +32,6 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
-import java.util.Map;
 
 public class ToolUtil {
 
@@ -60,17 +58,6 @@ public class ToolUtil {
         return store.getMetaStoreUUID();
     }
 
-    public static String decideKylinMajorVersionFromCommitFile() {
-        Map<String, String> majorVersionCommitMap = Maps.newHashMap();
-        majorVersionCommitMap.put("1.3", "commit.sha1");
-        majorVersionCommitMap.put("1.5", "commit_SHA1");
-        for (Map.Entry<String, String> majorVersionEntry : majorVersionCommitMap.entrySet()) {
-            if (new File(KylinConfig.getKylinHome(), majorVersionEntry.getValue()).exists()) {
-                return majorVersionEntry.getKey();
-            }
-        }
-        return null;
-    }
 
     public static String getHostName() {
         String hostname = System.getenv("COMPUTERNAME");
