@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.tool;
+package org.apache.kylin.tool.extractor;
 
 import java.io.File;
 import java.io.IOException;
