@@ -63,6 +63,11 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <scope>compile</scope>
@@ -98,6 +103,7 @@
                                     <include>log4j:log4j</include>
                                     <include>commons-io:commons-io</include>
                                     <include>commons-lang:commons-lang</include>
+                                    <include>org.apache.commons:commons-compress</include>
                                     <include>org.apache.commons:commons-lang3</include>
                                     <include>org.apache.commons:commons-email</include>
                                     <include>com.google.guava:guava</include>
@@ -117,6 +123,10 @@
                                 <relocation>
                                     <pattern>org.apache.commons.io</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.commons.io</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons.compress</pattern>
+                                    <shadedPattern>${shadeBase}.org.apache.commons.compress</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.apache.commons.lang</pattern>

@@ -16,11 +16,13 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.tool;
+package org.apache.kylin.tool.extractor;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.cli.Option;
@@ -58,6 +60,8 @@ import org.apache.kylin.metadata.streaming.StreamingManager;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
+import org.apache.kylin.stream.core.source.StreamingSourceConfig;
+import org.apache.kylin.stream.core.source.StreamingSourceConfigManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +89,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             .withDescription("Specify which hybrid to extract").create("hybrid");
     @SuppressWarnings("static-access")
     private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false)
-            .withDescription("Specify realizations in which project to extract").create("project");
+            .withDescription("Specify realizations in which project to extract, project names can be connected by comma.").create("project");
     @SuppressWarnings("static-access")
     private static final Option OPTION_All_PROJECT = OptionBuilder.withArgName("allProjects").hasArg(false)
             .isRequired(false).withDescription("Specify realizations in all projects to extract").create("allProjects");
@@ -112,14 +116,14 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_ONLY_JOB_OUTPUT = OptionBuilder.withArgName("onlyOutput").hasArg()
-            .isRequired(false).withDescription("when include jobs, onlt extract output of job. Default true")
+            .isRequired(false).withDescription("when include jobs, only extract output of job. Default true")
             .create("onlyOutput");
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_SEGMENT_DETAILS = OptionBuilder.withArgName("includeSegmentDetails")
             .hasArg().isRequired(false)
             .withDescription(
-                    "set this to true if want to extract segment details too, such as dict, tablesnapshot. Default false")
+                    "set this to true if want to extract segment details too, such as dict, table snapshot. Default false")
             .create("includeSegmentDetails");
 
     private KylinConfig kylinConfig;
@@ -128,6 +132,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private HybridManager hybridManager;
     private CubeManager cubeManager;
     private StreamingManager streamingManager;
+    private StreamingSourceConfigManager streamingSourceConfigManager;
     private CubeDescManager cubeDescManager;
     private ExecutableDao executableDao;
     private RealizationRegistry realizationRegistry;
@@ -193,6 +198,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         executableDao = ExecutableDao.getInstance(kylinConfig);
         realizationRegistry = RealizationRegistry.getInstance(kylinConfig);
         badQueryHistoryManager = BadQueryHistoryManager.getInstance(kylinConfig);
+        streamingSourceConfigManager = StreamingSourceConfigManager.getInstance(kylinConfig);
 
         addRequired(ResourceStore.METASTORE_UUID_TAG);
 
@@ -254,10 +260,10 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private void executeExtraction(String dest) {
         logger.info("The resource paths going to be extracted:");
         for (String s : requiredResources) {
-            logger.info(s + "(required)");
+            logger.info("{} is required resources.", s);
         }
         for (String s : optionalResources) {
-            logger.info(s + "(optional)");
+            logger.info("{} is optional resources.", s);
         }
         for (CubeInstance cube : cubesToTrimAndSave) {
             logger.info("Cube {} will be trimmed and extracted", cube);
@@ -294,7 +300,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
 
     private void engineOverwrite(File dest) throws IOException {
         if (engineType != null || storageType != null) {
-            for (File f : dest.listFiles()) {
+            for (File f : Objects.requireNonNull(dest.listFiles())) {
                 if (f.isDirectory()) {
                     engineOverwrite(f);
                 } else {
@@ -330,17 +336,6 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         return realizationRegistry.getRealization(realizationEntry.getType(), realizationEntry.getRealization());
     }
 
-    private void addStreamingConfig(CubeInstance cube) {
-        streamingManager = StreamingManager.getInstance(kylinConfig);
-        for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
-            if (streamingConfig.getName() != null
-                    && streamingConfig.getName().equalsIgnoreCase(cube.getRootFactTable())) {
-                addRequired(StreamingConfig.concatResourcePath(streamingConfig.getName()));
-                addRequired(KafkaConfig.concatResourcePath(streamingConfig.getName()));
-            }
-        }
-    }
-
     private void retrieveResourcePath(IRealization realization) throws IOException {
         if (realization == null) {
             return;
@@ -354,6 +349,8 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             addTables(modelDesc);
             // add streaming stuff
             addStreamingConfig(cube);
+            // add streamingV2
+            addStreamingV2Config(cube);
             // add cube
             addRequired(CubeDesc.concatResourcePath(cubeDesc.getName()));
             // add project
@@ -376,14 +373,14 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         }
     }
 
-    private void addTables(DataModelDesc modelDesc) throws IOException {
+    private void addTables(DataModelDesc modelDesc) {
         if (modelDesc != null) {
             //fixme should get all tbls in prj not only in cubes when back up by prj.
             for (TableRef tableRef : modelDesc.getAllTables()) {
                 addRequired(tableRef.getTableDesc().getResourcePath());
-                addOptional(TableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv()) //
-                        .getTableExt(tableRef.getTableDesc()) //
-                        .getResourcePath()); //
+                addOptional(TableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv())
+                        .getTableExt(tableRef.getTableDesc())
+                        .getResourcePath());
             }
             addRequired(DataModelDesc.concatResourcePath(modelDesc.getName()));
         }
@@ -410,7 +407,6 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
                     } else {
                         try {
                             if (onlyJobOutput) {
-                                ExecutablePO executablePO = executableDao.getJob(lastJobId);
                                 addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + lastJobId);
                             } else {
                                 ExecutablePO executablePO = executableDao.getJob(lastJobId);
@@ -433,6 +429,33 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             }
             cube.setStatus(RealizationStatusEnum.DISABLED);
             cubesToTrimAndSave.add(cube);
+        }
+    }
+
+    private void addStreamingConfig(CubeInstance cube) {
+        streamingManager = StreamingManager.getInstance(kylinConfig);
+        for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
+            if (streamingConfig.getName() != null
+                    && streamingConfig.getName().equalsIgnoreCase(cube.getRootFactTable())) {
+                addRequired(StreamingConfig.concatResourcePath(streamingConfig.getName()));
+                addRequired(KafkaConfig.concatResourcePath(streamingConfig.getName()));
+            }
+        }
+    }
+
+    private void addStreamingV2Config(CubeInstance cube) {
+        Collection<StreamingSourceConfig> streamingConfigs;
+        try {
+            streamingConfigs = streamingSourceConfigManager.listAllStreaming();
+        } catch (IOException ioe) {
+            logger.error("", ioe);
+            return;
+        }
+        for (StreamingSourceConfig streamingConfig : streamingConfigs) {
+            if (streamingConfig.getName() != null
+                    && streamingConfig.getName().equalsIgnoreCase(cube.getRootFactTable())) {
+                addRequired(StreamingSourceConfig.concatResourcePath(streamingConfig.getName()));
+            }
         }
     }
 

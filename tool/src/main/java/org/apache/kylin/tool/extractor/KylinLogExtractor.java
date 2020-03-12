@@ -17,7 +17,7 @@
  *
  */
 
-package org.apache.kylin.tool;
+package org.apache.kylin.tool.extractor;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -32,7 +32,6 @@ import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.project.ProjectManager;
-import org.apache.kylin.tool.util.ToolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,11 +82,8 @@ public class KylinLogExtractor extends AbstractInfoExtractor {
         logger.info("Start to extract kylin logs in {} days", logPeriod);
 
         List<File> logDirs = Lists.newArrayList();
-        logDirs.add(new File(KylinConfig.getKylinHome(), "logs"));
-        String kylinVersion = ToolUtil.decideKylinMajorVersionFromCommitFile();
-        if (kylinVersion != null && kylinVersion.equals("1.3")) {
-            logDirs.add(new File(KylinConfig.getKylinHome(), "tomcat/logs"));
-        }
+        logDirs.add(new File(getKylinHome(), "logs"));
+        logDirs.add(new File(getKylinHome(), "tomcat/logs"));
 
         final ArrayList<File> requiredLogFiles = Lists.newArrayList();
         final long logThresholdTime = System.currentTimeMillis() - logPeriod * 24 * 3600 * 1000;

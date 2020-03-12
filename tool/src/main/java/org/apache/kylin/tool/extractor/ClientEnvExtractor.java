@@ -17,7 +17,7 @@
  *
  */
 
-package org.apache.kylin.tool;
+package org.apache.kylin.tool.extractor;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,21 +35,25 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.stream.core.util.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 
+/**
+ * Host information collection
+ */
 public class ClientEnvExtractor extends AbstractInfoExtractor {
     private static final Logger logger = LoggerFactory.getLogger(ClientEnvExtractor.class);
     private KylinConfig kylinConfig;
     private CliCommandExecutor cmdExecutor;
     private ExecutorService executorService;
-    int maxWaitSeconds = 120;
+    public int maxWaitSeconds = 150;
 
-    public ClientEnvExtractor() throws IOException {
+    public ClientEnvExtractor() {
         super();
-        executorService = Executors.newFixedThreadPool(1);
+        executorService = Executors.newFixedThreadPool(3, new NamedThreadFactory("ClientEnv"));
         packageType = "client";
         kylinConfig = KylinConfig.getInstanceFromEnv();
         cmdExecutor = kylinConfig.getCliCommandExecutor();
@@ -57,6 +61,7 @@ public class ClientEnvExtractor extends AbstractInfoExtractor {
 
     @Override
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
+
         // dump os info
         addLocalFile("/sys/kernel/mm/transparent_hugepage/defrag", "linux/transparent_hugepage");
         addLocalFile("/proc/sys/vm/swappiness", "linux/swappiness");
@@ -71,8 +76,11 @@ public class ClientEnvExtractor extends AbstractInfoExtractor {
         addShellOutput("hadoop version", "hadoop", "version");
         addShellOutput("hbase version", "hbase", "version");
         addShellOutput("hive --version", "hive", "version");
+        addShellOutput("klist", "kerberos", "klist");
         addShellOutput("beeline --version", "hive", "beeline_version");
-        executorService.shutdownNow();
+
+        logger.info("ClientEnvExtractor is shutting downing. ");
+        executorService.awaitTermination(maxWaitSeconds, TimeUnit.SECONDS);
     }
 
     private void addLocalFile(String src, String destDir) {
@@ -92,7 +100,7 @@ public class ClientEnvExtractor extends AbstractInfoExtractor {
         }
     }
 
-    void addShellOutput(String cmd, String destDir, String filename) {
+    public void addShellOutput(String cmd, String destDir, String filename) {
         Future f = executorService.submit(() -> {
             try {
                 File destDirFile = null;
@@ -102,8 +110,10 @@ public class ClientEnvExtractor extends AbstractInfoExtractor {
                 } else {
                     destDirFile = exportDir;
                 }
+                logger.debug("Will execute {}", cmd);
                 Pair<Integer, String> result = cmdExecutor.execute(cmd);
                 String output = result.getSecond();
+                logger.debug("Execute command {} return {}", cmd, result.getFirst());
                 FileUtils.writeStringToFile(new File(destDirFile, filename), output, Charset.defaultCharset());
             } catch (IOException e) {
                 logger.warn("Failed to run command: " + cmd + ".", e);
@@ -113,14 +123,18 @@ public class ClientEnvExtractor extends AbstractInfoExtractor {
         try {
             // assume most shell should return in two minutes
             f.get(maxWaitSeconds, TimeUnit.SECONDS);
-        } catch (TimeoutException timeoutException) {
+        } catch (TimeoutException | InterruptedException timeoutException) {
             logger.error("Timeout for \"{}\" in {} seconds.", cmd, maxWaitSeconds);
+            f.cancel(true);
             executorService.shutdownNow();
-            executorService = Executors.newFixedThreadPool(1);
         } catch (ExecutionException runtimeException) {
             logger.error("Runtime error: {}", runtimeException.getLocalizedMessage());
-        } catch (InterruptedException otherException) {
-            // Ignore
+            executorService.shutdownNow();
         }
+    }
+
+    public static void main(String[] args) {
+        ClientEnvExtractor extractor = new ClientEnvExtractor();
+        extractor.execute(args);
     }
 }

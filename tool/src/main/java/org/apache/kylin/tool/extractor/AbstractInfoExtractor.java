@@ -17,7 +17,7 @@
  *
  */
 
-package org.apache.kylin.tool;
+package org.apache.kylin.tool.extractor;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +34,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.util.AbstractApplication;
+import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.ZipFileUtils;
 import org.apache.kylin.tool.util.ToolUtil;
@@ -60,7 +61,8 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
             .withDescription("specify the package type").create("packagetype");
 
     private static final String DEFAULT_PACKAGE_TYPE = "base";
-    private static final String[] COMMIT_SHA1_FILES = { "commit_SHA1", "commit.sha1" };
+    private static final String[] COMMIT_SHA1_FILES = {"commit_SHA1", "commit.sha1"};
+    protected CliCommandExecutor cmdExecutor;
 
     protected final Options options;
 
@@ -74,6 +76,8 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         options.addOption(OPTION_SUBMODULE);
         options.addOption(OPTION_PACKAGETYPE);
         packageType = DEFAULT_PACKAGE_TYPE;
+
+        cmdExecutor = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
     }
 
     @Override
@@ -178,5 +182,48 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
 
     public String getExportDest() {
         return exportDir.getAbsolutePath();
+    }
+
+    public static String getKylinPid() {
+        File pidFile = new File(getKylinHome(), "pid");
+        if (pidFile.exists()) {
+            try {
+                return FileUtils.readFileToString(pidFile);
+            } catch (IOException e) {
+                throw new RuntimeException("Error reading KYLIN PID file.", e);
+            }
+        } else {
+            throw new RuntimeException("Cannot find KYLIN PID file.");
+        }
+    }
+
+    public static String getKylinHome() {
+        String path = System.getProperty(KylinConfig.KYLIN_CONF);
+        if (StringUtils.isNotEmpty(path)) {
+            return path;
+        }
+        path = KylinConfig.getKylinHome();
+        if (StringUtils.isNotEmpty(path)) {
+            return path;
+        }
+        throw new RuntimeException("Cannot find KYLIN_HOME.");
+    }
+
+    public void addFile(File srcFile, File destDir) {
+        logger.info("copy file " + srcFile.getName());
+        try {
+            FileUtils.forceMkdir(destDir);
+        } catch (IOException e) {
+            logger.error("Can not create" + destDir, e);
+        }
+
+        File destFile = new File(destDir, srcFile.getName());
+        String copyCmd = String.format(Locale.ROOT, "cp -rL %s %s", srcFile.getAbsolutePath(), destFile.getAbsolutePath());
+        logger.info("The command is: " + copyCmd);
+        try {
+            cmdExecutor.execute(copyCmd);
+        } catch (Exception e) {
+            logger.debug("Failed to execute copyCmd", e);
+        }
     }
 }

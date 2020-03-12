@@ -16,13 +16,14 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.tool;
+package org.apache.kylin.tool.extractor;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -58,6 +59,10 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
     @SuppressWarnings("static-access")
     private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify realizations in which project to extract").create("project");
 
+    public static final String HDFS_CHECK_COMMAND = "hadoop fs -ls -R %s/data/%s/%s*";
+    private final String hbaseRootDir;
+    private final String cachedHMasterUrl;
+
     private List<String> htables = Lists.newArrayList();
     private Configuration conf;
     private CubeManager cubeManager;
@@ -76,6 +81,8 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
 
         options.addOptionGroup(realizationOrProject);
         conf = HBaseConfiguration.create();
+        hbaseRootDir = conf.get("hbase.rootdir");
+        cachedHMasterUrl = getHBaseMasterUrl();
     }
 
     public static void main(String[] args) {
@@ -83,18 +90,24 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
         extractor.execute(args);
     }
 
-    private String getHBaseMasterUrl() throws IOException, KeeperException {
+    private String getHBaseMasterUrl() {
         String host = conf.get("hbase.master.info.bindAddress");
         if (host.equals("0.0.0.0")) {
-            host = MasterAddressTracker.getMasterAddress(new ZooKeeperWatcher(conf, null, null)).getHostname();
+            try {
+                host = MasterAddressTracker.getMasterAddress(new ZooKeeperWatcher(conf, null, null)).getHostname();
+            } catch (IOException | KeeperException io) {
+                return null;
+            }
         }
-
         String port = conf.get("hbase.master.info.port");
         return "http://" + host + ":" + port + "/";
     }
 
     @Override
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
+        if (cachedHMasterUrl == null) {
+            return;
+        }
         kylinConfig = KylinConfig.getInstanceFromEnv();
         cubeManager = CubeManager.getInstance(kylinConfig);
         realizationRegistry = RealizationRegistry.getInstance(kylinConfig);
@@ -124,14 +137,14 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
             }
         }
 
-        extractCommonInfo(exportDir);
+        extractCommonInfo(exportDir, kylinConfig);
         extractHTables(exportDir);
     }
 
     private void extractHTables(File dest) throws IOException {
         logger.info("These htables are going to be extracted:");
         for (String htable : htables) {
-            logger.info(htable + "(required)");
+            logger.info("{} is required", htable);
         }
 
         File tableDir = new File(dest, "table");
@@ -139,7 +152,7 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
 
         for (String htable : htables) {
             try {
-                URL srcUrl = new URL(getHBaseMasterUrl() + "table.jsp?name=" + htable);
+                URL srcUrl = new URL(cachedHMasterUrl + "table.jsp?name=" + htable);
                 File destFile = new File(tableDir, htable + ".html");
                 FileUtils.copyURLToFile(srcUrl, destFile);
             } catch (Exception e) {
@@ -148,14 +161,16 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
         }
     }
 
-    private void extractCommonInfo(File dest) throws IOException {
+    private void extractCommonInfo(File dest, KylinConfig config) throws IOException {
         logger.info("The hbase master info/conf are going to be extracted...");
+        String hbaseNamespace = config.getHBaseStorageNameSpace();
+        String tableNamePrefix = config.getHBaseTableNamePrefix();
 
         // hbase master page
         try {
             File masterDir = new File(dest, "master");
             FileUtils.forceMkdir(masterDir);
-            URL srcMasterUrl = new URL(getHBaseMasterUrl() + "master-status");
+            URL srcMasterUrl = new URL(cachedHMasterUrl + "master-status");
             File masterDestFile = new File(masterDir, "master-status.html");
             FileUtils.copyURLToFile(srcMasterUrl, masterDestFile);
         } catch (Exception e) {
@@ -166,7 +181,7 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
         try {
             File confDir = new File(dest, "conf");
             FileUtils.forceMkdir(confDir);
-            URL srcConfUrl = new URL(getHBaseMasterUrl() + "conf");
+            URL srcConfUrl = new URL(cachedHMasterUrl + "conf");
             File destConfFile = new File(confDir, "hbase-conf.xml");
             FileUtils.copyURLToFile(srcConfUrl, destConfFile);
         } catch (Exception e) {
@@ -177,11 +192,22 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
         try {
             File jmxDir = new File(dest, "jmx");
             FileUtils.forceMkdir(jmxDir);
-            URL srcJmxUrl = new URL(getHBaseMasterUrl() + "jmx");
+            URL srcJmxUrl = new URL(cachedHMasterUrl + "jmx");
             File jmxDestFile = new File(jmxDir, "jmx.html");
             FileUtils.copyURLToFile(srcJmxUrl, jmxDestFile);
         } catch (Exception e) {
             logger.warn("HBase JMX fetch failed: ", e);
+        }
+
+        // dump page
+        try {
+            File dumpDir = new File(dest, "dump");
+            FileUtils.forceMkdir(dumpDir);
+            URL srcDumpUrl = new URL(cachedHMasterUrl + "dump");
+            File dumpDestFile = new File(dumpDir, "dump");
+            FileUtils.copyURLToFile(srcDumpUrl, dumpDestFile);
+        } catch (Exception e) {
+            logger.warn("HBase Dump fetch failed: ", e);
         }
 
         // hbase hdfs status
@@ -189,10 +215,10 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
             File hdfsDir = new File(dest, "hdfs");
             FileUtils.forceMkdir(hdfsDir);
             CliCommandExecutor cliCommandExecutor = kylinConfig.getCliCommandExecutor();
-            String output = cliCommandExecutor.execute("hadoop fs -ls -R " + conf.get("hbase.rootdir") + "/data/default/KYLIN_*").getSecond();
+            String command = String.format(Locale.ROOT, HDFS_CHECK_COMMAND, hbaseRootDir, hbaseNamespace, tableNamePrefix);
+            logger.info("Execute command {}", command);
+            String output = cliCommandExecutor.execute(command).getSecond();
             FileUtils.writeStringToFile(new File(hdfsDir, "hdfs-files.list"), output, Charset.defaultCharset());
-            output = cliCommandExecutor.execute("hadoop fs -ls -R " + conf.get("hbase.rootdir") + "/data/default/kylin_*").getSecond();
-            FileUtils.writeStringToFile(new File(hdfsDir, "hdfs-files.list"), output, Charset.defaultCharset(), true);
         } catch (Exception e) {
             logger.warn("HBase hdfs status fetch failed: ", e);
         }
@@ -212,7 +238,7 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
                 addHTable(segment.getStorageLocationIdentifier());
             }
         } else {
-            logger.warn("Unknown realization type: " + realization.getType());
+            logger.warn("Unknown realization type: {}", realization.getType());
         }
     }
 
