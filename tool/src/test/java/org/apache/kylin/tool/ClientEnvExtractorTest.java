@@ -19,6 +19,7 @@
 package org.apache.kylin.tool;
 
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.tool.extractor.ClientEnvExtractor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,7 +57,6 @@ public class ClientEnvExtractorTest extends HBaseMetadataTestCase {
         ClientEnvExtractor executor = new ClientEnvExtractor();
         executor.maxWaitSeconds = 2;
         executor.addShellOutput("sleep 1000", f.getAbsolutePath(), "testTimeout");
-        executor.addShellOutput("pwd", f.getAbsolutePath(), "pwd");
     }
 
     @Test

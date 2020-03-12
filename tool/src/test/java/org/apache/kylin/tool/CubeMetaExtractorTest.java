@@ -28,6 +28,7 @@ import java.util.Set;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.tool.extractor.CubeMetaExtractor;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

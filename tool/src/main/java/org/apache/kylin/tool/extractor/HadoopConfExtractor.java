@@ -17,7 +17,7 @@
  *
  */
 
-package org.apache.kylin.tool.common;
+package org.apache.kylin.tool.extractor;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,19 +35,21 @@ import com.google.common.base.Preconditions;
 
 public class HadoopConfExtractor {
     private static final Logger logger = LoggerFactory.getLogger(HadoopConfExtractor.class);
+    public static final String MR_JOB_HISTORY_URL_CONF_KEY = "mapreduce.jobhistory.webapp.address";
 
     public static String extractYarnMasterUrl(Configuration conf) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         final String yarnStatusCheckUrl = config.getYarnStatusCheckUrl();
-        Pattern pattern = Pattern.compile("(http(s)?://)([^:]*):([^/])*.*");
+        Pattern pattern = Pattern.compile("(http[s]*://)([^:]*):([^/])*.*");
         if (yarnStatusCheckUrl != null) {
+            logger.info("Choose user-defined configuration for RM url {}. ", yarnStatusCheckUrl);
             Matcher m = pattern.matcher(yarnStatusCheckUrl);
             if (m.matches()) {
                 return m.group(1) + m.group(2) + ":" + m.group(3);
             }
+        } else {
+            logger.info("kylin.engine.mr.yarn-check-status-url" + " is not set, read from hadoop configuration");
         }
-
-        logger.info("kylin.engine.mr.yarn-check-status-url" + " is not set, read from hadoop configuration");
 
         String webappConfKey, defaultAddr;
         if (YarnConfiguration.useHttps(conf)) {
@@ -76,15 +78,15 @@ public class HadoopConfExtractor {
         }
         Matcher m = pattern.matcher(rmWebHost);
         Preconditions.checkArgument(m.matches(), "Yarn master URL not found.");
-        logger.info("yarn master url: " + rmWebHost);
+        logger.info("yarn master url: {}", rmWebHost);
         return rmWebHost;
     }
 
     public static String extractJobHistoryUrl(String yarnWebapp, Configuration conf) {
-        Pattern pattern = Pattern.compile("(http(s)?://)([^:]*):([^/])*.*");
+        Pattern pattern = Pattern.compile("(http[s]*://)([^:]*):([^/])*.*");
         Matcher m = pattern.matcher(yarnWebapp);
         Preconditions.checkArgument(m.matches(), "Yarn master URL" + yarnWebapp + " not right.");
-        return m.group(1)
-                + HAUtil.getConfValueForRMInstance("mapreduce.jobhistory.webapp.address", m.group(2) + ":19888", conf);
+        String defaultHistoryUrl = m.group(2) + ":19888";
+        return m.group(1) + HAUtil.getConfValueForRMInstance(MR_JOB_HISTORY_URL_CONF_KEY, defaultHistoryUrl, conf);
     }
 }

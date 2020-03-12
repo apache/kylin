@@ -1604,7 +1604,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public int getFlinkMaxPartition() {
-        return Integer.parseInt(getOptional("kylin.engine.spark.max-partition", "5000"));
+        return Integer.parseInt(getOptional("kylin.engine.flink.max-partition", "5000"));
     }
 
     public String getSparkStorageLevel() {
