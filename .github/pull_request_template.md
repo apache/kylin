@@ -20,7 +20,7 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 - [ ] Commit messages in my PR start with the related jira ID, like "KYLIN-0000 Make Kylin project open-source"
 - [ ] Compiling and unit tests pass locally with my changes
 - [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] I have added necessary documentation (if appropriate)
+- [ ] If this change need a document change, I will prepare another pr against the `document` branch
 - [ ] Any dependent changes have been merged
 
 ## Further comments
