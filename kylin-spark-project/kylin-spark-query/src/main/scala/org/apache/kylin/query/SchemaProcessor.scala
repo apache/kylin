@@ -23,59 +23,51 @@
  */
 package org.apache.kylin.query
 
-import java.util
-
-import io.kyligence.kap.metadata.cube.gridtable.NCuboidToGridTableMapping
-import io.kyligence.kap.metadata.cube.model.{LayoutEntity, NDataflow, NDataflowManager, NDataSegment}
-import io.kyligence.kap.query.runtime.plan.TableScanPlan
-import org.apache.kylin.common.util.ImmutableBitSet
-import org.apache.kylin.common.{KapConfig, KylinConfig}
 import org.apache.kylin.metadata.model.{ColumnDesc, FunctionDesc}
-import org.apache.spark.sql.{LayoutEntityConverter, SparkSession}
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.util.{SparderConstants, SparderTypeUtil}
 import org.apache.spark.sql.utils.SparkTypeUtil
 
 import scala.collection.JavaConverters._
 
 // scalastyle:off
 object SchemaProcessor {
+  val COLUMN_NAME_SEPARATOR = "__"
 
-  def buildGTSchema(
-    cuboid: LayoutEntity,
-    mapping: NCuboidToGridTableMapping,
-    tableName: String): Seq[String] = {
-
-    genColumnNames(tableName, cuboid, mapping)
-  }
-
-  private def genColumnNames(tableName: String, cuboid: LayoutEntity, mapping: NCuboidToGridTableMapping) = {
-    val coolumnMapping = initColumnNameMapping(cuboid).map(_._1)
-    val colAll = new ImmutableBitSet(0, mapping.getDataTypes.length)
-    val measures = colAll.andNot(mapping.getPrimaryKey).asScala
-    mapping.getPrimaryKey.asScala.map { i =>
-      FactTableCulumnInfo(tableName, i, coolumnMapping.apply(i)).toString
-    }.toSeq ++
-      measures
-        .map { i =>
-          FactTableCulumnInfo(tableName, i, coolumnMapping.apply(i)).toString
-        }
-        .toSeq
-  }
-
-
-  def initColumnNameMapping(cuboid: LayoutEntity): Array[(String, String)] = {
-    val cols = cuboid.getColumns.asScala.map(col =>
-      (col.getIdentity.replace(".", "_"), col.getType.getName)
-    ).toArray
-
-    // "getOrderedMeasures" returns a map, need toList
-    val measures = cuboid.getOrderedMeasures.asScala.toList.map(measure =>
-      (measure._2.getName.replace(".", "_"), measure._2.getFunction.getReturnType)
-    ).toArray
-
-    cols ++ measures
-  }
+  //  def buildGTSchema(
+  //    cuboid: LayoutEntity,
+  //    mapping: NCuboidToGridTableMapping,
+  //    tableName: String): Seq[String] = {
+  //
+  //    genColumnNames(tableName, cuboid, mapping)
+  //  }
+  //
+  //  private def genColumnNames(tableName: String, cuboid: LayoutEntity, mapping: NCuboidToGridTableMapping) = {
+  //    val coolumnMapping = initColumnNameMapping(cuboid).map(_._1)
+  //    val colAll = new ImmutableBitSet(0, mapping.getDataTypes.length)
+  //    val measures = colAll.andNot(mapping.getPrimaryKey).asScala
+  //    mapping.getPrimaryKey.asScala.map { i =>
+  //      FactTableCulumnInfo(tableName, i, coolumnMapping.apply(i)).toString
+  //    }.toSeq ++
+  //      measures
+  //        .map { i =>
+  //          FactTableCulumnInfo(tableName, i, coolumnMapping.apply(i)).toString
+  //        }
+  //        .toSeq
+  //  }
+  //
+  //
+  //  def initColumnNameMapping(cuboid: LayoutEntity): Array[(String, String)] = {
+  //    val cols = cuboid.getColumns.asScala.map(col =>
+  //      (col.getIdentity.replace(".", "_"), col.getType.getName)
+  //    ).toArray
+  //
+  //    // "getOrderedMeasures" returns a map, need toList
+  //    val measures = cuboid.getOrderedMeasures.asScala.toList.map(measure =>
+  //      (measure._2.getName.replace(".", "_"), measure._2.getFunction.getReturnType)
+  //    ).toArray
+  //
+  //    cols ++ measures
+  //  }
 
   def generateFunctionReturnDataType(function: FunctionDesc): DataType = {
     function.getExpression.toUpperCase match {
@@ -109,31 +101,14 @@ object SchemaProcessor {
     }
   }
 
-  def checkSchema(sparkSession: SparkSession, dfName: String, project: String): Unit = {
-    val config: KylinConfig = KylinConfig.getInstanceFromEnv
-    val dsMgr: NDataflowManager = NDataflowManager.getInstance(config, project)
-    val df: NDataflow = dsMgr.getDataflow(dfName)
-    val latestReadySegment: NDataSegment = df.getQueryableSegments.getFirstSegment
-    val allCuboidLayouts: util.List[LayoutEntity] = df.getIndexPlan.getAllLayouts
-    val base: String = KapConfig.getInstanceFromEnv.getReadParquetStoragePath(df.getProject)
-    import scala.collection.JavaConversions._
-    for (nCuboidLayout <- allCuboidLayouts) {
-      val path: String = TableScanPlan.toCuboidPath(df, nCuboidLayout.getId, base, latestReadySegment)
-      val schema: StructType = sparkSession.read.parquet(path).schema
-      val schemaFromNCuboidLayout: StructType = LayoutEntityConverter.genCuboidSchemaFromNCuboidLayout(nCuboidLayout)
-      if (!(schema == schemaFromNCuboidLayout)) {
-        throw new RuntimeException(s"Check schema failed : dfName: $dfName, layoutId: ${nCuboidLayout.getId}, actual: ${schemaFromNCuboidLayout.treeString}, expect: ${schema.treeString}")
-      }
-    }
-  }
 
   def factTableSchemaNameToColumnId(schemaName: String): Int = {
-    val data = schemaName.split(SparderConstants.COLUMN_NAME_SEPARATOR)
+    val data = schemaName.split(COLUMN_NAME_SEPARATOR)
     data.apply(data.length - 1).toInt
   }
 
   def parseDeriveTableSchemaName(schemaName: String): DeriveTableColumnInfo = {
-    val data = schemaName.split(SparderConstants.COLUMN_NAME_SEPARATOR)
+    val data = schemaName.split(COLUMN_NAME_SEPARATOR)
     try {
       DeriveTableColumnInfo(data.apply(2), data.apply(3).toInt, data.apply(1))
     } catch {
@@ -195,7 +170,7 @@ sealed abstract class ColumnInfo(
   val prefix: String
 
   override def toString: String =
-    s"$prefix${SparderConstants.COLUMN_NAME_SEPARATOR}$columnName${SparderConstants.COLUMN_NAME_SEPARATOR}$tableName${SparderConstants.COLUMN_NAME_SEPARATOR}$columnId"
+    s"$prefix${SchemaProcessor.COLUMN_NAME_SEPARATOR}$columnName${SchemaProcessor.COLUMN_NAME_SEPARATOR}$tableName${SchemaProcessor.COLUMN_NAME_SEPARATOR}$columnId"
 }
 
 case class FactTableCulumnInfo(

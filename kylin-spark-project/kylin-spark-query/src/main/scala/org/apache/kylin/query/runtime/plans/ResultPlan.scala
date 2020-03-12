@@ -26,12 +26,13 @@ import com.google.common.collect.Lists
 import org.apache.calcite.linq4j.{Enumerable, Linq4j}
 import org.apache.calcite.rel.`type`.RelDataType
 import org.apache.kylin.common.exceptions.KylinTimeoutException
-import org.apache.kylin.common.{KapConfig, KylinConfig, QueryContext, QueryContextFacade}
+import org.apache.kylin.common.{KylinConfig, QueryContext, QueryContextFacade}
 import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.query.runtime.plans.ResultType.ResultType
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.hive.QueryMetricUtils
 import org.apache.spark.sql.{DataFrame, SparderContext}
 import org.apache.spark.sql.hive.utils.QueryMetricUtils
+import org.apache.spark.sql.utils.SparkTypeUtil
 
 import scala.collection.JavaConverters._
 
@@ -70,6 +71,9 @@ object ResultPlan extends Logging {
     val partitionsNum =
       if (kapConfig.getSparkSqlShufflePartitions != -1) {
         kapConfig.getSparkSqlShufflePartitions
+      } else {
+        Math.min(QueryContextFacade.current().getSourceScanBytes / PARTITION_SPLIT_BYTES + 1,
+          SparderContext.getTotalCore).toInt
       }
     if (QueryContextFacade.current().isHighPriorityQuery) {
       pool = "vip_tasks"
@@ -86,19 +90,20 @@ object ResultPlan extends Logging {
     df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", partitionsNum.toString)
 
     sparkContext.setJobGroup(jobGroup,
-      QueryContextFacade.current().getSql,
+      //      QueryContextFacade.current().getSql,
+      "sparder",
       interruptOnCancel = true)
     try {
       val rows = df.collect()
       val (scanRows, scanBytes) = QueryMetricUtils.collectScanMetrics(df.queryExecution.executedPlan)
-      QueryContextFacade.current().setScanRows(scanRows)
-      QueryContextFacade.current().setScanBytes(scanBytes)
+      //      QueryContextFacade.current().setScanRows(scanRows)
+      //      QueryContextFacade.current().setScanBytes(scanBytes)
       val dt = rows.map { row =>
         var rowIndex = 0
         row.toSeq.map { cell => {
           var vale = cell
           val rType = resultTypes.apply(rowIndex).getType
-          val value = SparderTypeUtil.convertStringToValue(vale,
+          val value = SparkTypeUtil.convertStringToValue(vale,
             rType,
             toCalcite = true)
           rowIndex = rowIndex + 1
@@ -109,7 +114,7 @@ object ResultPlan extends Logging {
       dt
     } catch {
       case e: InterruptedException =>
-        QueryContextFacade.current().setTimeout(true)
+        //        QueryContextFacade.current().setTimeout(true)
         sparkContext.cancelJobGroup(jobGroup)
         logInfo(
           s"Query timeouts after: ${KylinConfig.getInstanceFromEnv.getQueryTimeoutSeconds}s",
@@ -117,7 +122,7 @@ object ResultPlan extends Logging {
         throw new KylinTimeoutException(
           s"Query timeout after: ${KylinConfig.getInstanceFromEnv.getQueryTimeoutSeconds}s");
     } finally {
-      QueryContextFacade.current().setExecutionID(QueryToExecutionIDCache.getQueryExecutionID(queryId))
+      //      QueryContextFacade.current().setExecutionID(QueryToExecutionIDCache.getQueryExecutionID(queryId))
     }
   }
 

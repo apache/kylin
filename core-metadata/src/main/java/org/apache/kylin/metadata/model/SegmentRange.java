@@ -138,6 +138,14 @@ public class SegmentRange<T extends Comparable> implements Comparable<SegmentRan
         public long duration() {
             return end.v - start.v;
         }
+
+        public long startValue() {
+            return start.v;
+        }
+
+        public long endValue() {
+            return end.v;
+        }
     }
 
     // ============================================================================

@@ -20,10 +20,9 @@ package org.apache.spark.utils
 
 import java.util.{Map => JMap}
 
-import io.kyligence.kap.cluster.{AvailableResource, ResourceInfo}
-import io.kyligence.kap.engine.spark.job.SparkJobConstants
-import io.kyligence.kap.engine.spark.utils.SparkConfHelper._
+import org.apache.kylin.engine.spark.utils.SparkConfHelper._
 import org.apache.kylin.cluster.{AvailableResource, ClusterInfoFetcher, ResourceInfo}
+import org.apache.kylin.engine.spark.job.SparkJobConstants
 import org.apache.spark.SparkConf
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.hive.utils.DetectItem

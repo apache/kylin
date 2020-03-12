@@ -27,7 +27,7 @@ import org.apache.kylin.query.relnode.OLAPProjectRel
 import org.apache.kylin.query.runtime.SparderRexVisitor
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{Column, DataFrame}
-import org.apache.spark.sql.catalyst.KylinFunctions._
+import org.apache.spark.sql.KylinFunctions._
 import scala.collection.JavaConverters._
 
 object ProjectPlan extends Logging {

@@ -26,13 +26,17 @@ import java.util.concurrent.ConcurrentHashMap
 
 import com.google.common.collect.{Lists, Sets}
 import org.apache.calcite.DataContext
-import org.apache.kylin.common.QueryContext
+import org.apache.kylin.common.{QueryContext, QueryContextFacade}
 import org.apache.kylin.cube.CubeInstance
 import org.apache.kylin.metadata.model._
+import org.apache.kylin.metadata.realization.IRealization
 import org.apache.kylin.metadata.tuple.TupleInfo
 import org.apache.kylin.query.relnode.{OLAPRel, OLAPTableScan}
 import org.apache.kylin.query.SchemaProcessor
+import org.apache.kylin.query.exception.UnsupportedQueryException
 import org.apache.kylin.query.runtime.SparkOperation
+import org.apache.kylin.storage.hybrid.HybridInstance
+import org.apache.kylin.storage.spark.HadoopFileStorageQuery
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{ArrayType, DoubleType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, SparderContext, _}
@@ -52,12 +56,31 @@ object TableScanPlan extends LogEx {
   }
 
   def createOLAPTable(rel: OLAPRel, dataContext: DataContext): DataFrame = logTime("table scan", info = true) {
-
+    val olapContext = rel.getContext
+    val realization = olapContext.realization
     val session: SparkSession = SparderContext.getSparkSession
+    QueryContextFacade.current()
+      .setContextRealization(olapContext.id, realization.getName, realization.getStorageType)
+    val cubeInstance: CubeInstance = realization match {
+      case instance: CubeInstance => instance
+      case instance =>
+        throw new UnsupportedQueryException("unsupported instance: " + instance)
+    }
 
+    olapContext.resetSQLDigest()
+    val query = new HadoopFileStorageQuery(cubeInstance)
+    val returnTupleInfo = olapContext.returnTupleInfo
+    val request = query.getStorageQueryRequest(
+      olapContext.storageContext,
+      olapContext.getSQLDigest,
+      returnTupleInfo)
+    val cuboid = request.getCuboid
+    import org.apache.kylin.query.implicits.implicits._
+    SparderContext.getSparkSession.kylin
+      .format("parquet")
+      .cuboidTable(cubeInstance, cuboid)
 
     /////////////////////////////////////////////
-    SparkOperation.createEmptyDataFrame(StructType(Seq()))
   }
 
 

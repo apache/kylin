@@ -26,7 +26,7 @@ import org.apache.calcite.rel.core.AggregateCall
 import org.apache.calcite.sql.SqlKind
 import org.apache.kylin.metadata.model.FunctionDesc
 import org.apache.kylin.query.relnode.{KylinAggregateCall, OLAPAggregateRel}
-import org.apache.kylin.query.runtime.{AggArgc, SparkOperation}
+import org.apache.kylin.query.runtime.{AggArgc, RuntimeHelper, SparkOperation}
 import org.apache.kylin.query.SchemaProcessor
 import org.apache.spark.sql.KylinFunctions._
 import org.apache.spark.sql._
