@@ -23,9 +23,12 @@ import java.io.IOException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
+import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecuteResult;
@@ -33,8 +36,8 @@ import org.apache.kylin.job.execution.ExecutableContext;
 
 import org.apache.kylin.metadata.MetadataConstants;
 
-public class NSparkCleanupAfterMergeStep extends NSparkExecutable {
-    public NSparkCleanupAfterMergeStep() {
+public class NSparkUpdateMetaAndCleanupAfterMergeStep extends NSparkExecutable {
+    public NSparkUpdateMetaAndCleanupAfterMergeStep() {
         this.setName(ExecutableConstants.STEP_NAME_MERGE_CLEANUP);
     }
 
@@ -44,6 +47,8 @@ public class NSparkCleanupAfterMergeStep extends NSparkExecutable {
         String[] segmentIds = StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS));
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         CubeInstance cube = CubeManager.getInstance(config).getCubeByUuid(cubeId);
+
+        updateMetadataAterMerge(cubeId);
 
         for (String segmentId : segmentIds) {
             String path = config.getHdfsWorkingDirectory() + cube.getProject() + "/parquet/" + cube.getUuid() + "/" + segmentId;
@@ -55,6 +60,18 @@ public class NSparkCleanupAfterMergeStep extends NSparkExecutable {
         }
 
         return ExecuteResult.createSucceed();
+    }
+
+
+    private void updateMetadataAterMerge(String cubeId) {
+        String buildStepUrl = getParam(MetadataConstants.P_OUTPUT_META_URL);
+        KylinConfig buildConfig = KylinConfig.createKylinConfig(this.getConfig());
+        buildConfig.setMetadataUrl(buildStepUrl);
+        ResourceStore resourceStore = ResourceStore.getStore(buildConfig);
+        String mergedSegmentId = getParam(CubingExecutableUtil.SEGMENT_ID);
+        AfterMergeOrRefreshResourceMerger merger = new AfterMergeOrRefreshResourceMerger(buildConfig);
+        merger.merge(cubeId, mergedSegmentId, resourceStore, getParam(MetadataConstants.P_JOB_TYPE));
+
     }
 
 }

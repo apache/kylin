@@ -19,7 +19,9 @@
 package org.apache.kylin.engine.spark.job;
 
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.spark.sql.Column;
+import org.spark_project.guava.collect.Sets;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -87,6 +89,12 @@ public class NSparkCubingUtil {
         String hdfsWorkingDir = nDataSegment.getConfig().getReadHdfsWorkingDirectory();
         return   hdfsWorkingDir +
                 getStoragePathWithoutPrefix(nDataSegment.getProject(), nDataSegment.getCubeInstance().getId(), nDataSegment.getUuid(), layoutId);
+    }
+
+    static Set<String> toSegmentIds(Segments<CubeSegment> segments) {
+        Set<String> s = Sets.newLinkedHashSet();
+        s.addAll(segments.stream().map(CubeSegment::getUuid).collect(Collectors.toList()));
+        return s;
     }
 
     public static String getStoragePathWithoutPrefix(String project, String cubeId, String segmentId, long layoutId) {

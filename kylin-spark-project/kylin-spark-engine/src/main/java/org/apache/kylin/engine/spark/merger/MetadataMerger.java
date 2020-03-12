@@ -35,7 +35,7 @@ public abstract class MetadataMerger {
         this.config = config;
     }
 
-    public abstract void merge(String dataflowId, Set<String> segmentIds,
+    public abstract void merge(String dataflowId, String segmentIds,
             ResourceStore remoteResourceStore, String jobType);
 
     public abstract void merge(AbstractExecutable abstractExecutable);

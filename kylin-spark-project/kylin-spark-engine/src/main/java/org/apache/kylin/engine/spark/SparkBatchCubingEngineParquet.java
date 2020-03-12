@@ -22,6 +22,7 @@ import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.IBatchCubingEngine;
+import org.apache.kylin.engine.spark.job.NSparkMergingJob;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.spark_project.guava.collect.Sets;
@@ -44,7 +45,7 @@ public class SparkBatchCubingEngineParquet implements IBatchCubingEngine {
 
     @Override
     public DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter) {
-        return null;
+        return NSparkMergingJob.merge(mergeSegment, submitter);
     }
 
     @Override

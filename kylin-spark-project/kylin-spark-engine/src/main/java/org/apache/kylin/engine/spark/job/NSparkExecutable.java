@@ -151,7 +151,7 @@ public class NSparkExecutable extends AbstractExecutable {
         }
         String filePath = dumpArgs();
         if (config.isUTEnv()) {
-            return runLocalMode(filePath);
+            return runLocalMode(filePath, config);
         } else {
             killOrphanApplicationIfExists(config);
             return runSparkSubmit(config, hadoopConf, jars, kylinJobJar,
@@ -357,10 +357,11 @@ public class NSparkExecutable extends AbstractExecutable {
         sb.append(" --conf '").append(key).append("=").append(value).append("' ");
     }
 
-    private ExecuteResult runLocalMode(String appArgs) {
+    private ExecuteResult runLocalMode(String appArgs, KylinConfig config) {
         try {
             Class<? extends Object> appClz = ClassUtil.forName(getSparkSubmitClassName(), Object.class);
             appClz.getMethod("main", String[].class).invoke(null, (Object) new String[] { appArgs });
+            updateMetaAfterBuilding(config);
             return ExecuteResult.createSucceed();
         } catch (Exception e) {
             return ExecuteResult.createError(e);
