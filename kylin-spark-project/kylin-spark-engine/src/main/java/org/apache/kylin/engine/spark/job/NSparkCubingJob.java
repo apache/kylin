@@ -120,39 +120,6 @@ public class NSparkCubingJob extends CubingJob {
         return MetaDumpUtil.collectCubeMetadata(cubeInstance);
     }
 
-    @Override
-    protected Pair<String, String> formatNotifications(ExecutableContext context, ExecutableState state) {
-        CubeInstance cubeInstance = CubeManager.getInstance(context.getConfig())
-                .getCube(this.getParams().get(CUBE_NAME));
-        final Output output = getManager().getOutput(getId());
-        state = output.getState();
-        if (state != ExecutableState.ERROR
-                && !cubeInstance.getDescriptor().getStatusNeedNotify().contains(state.toString())) {
-            logger.info("state:" + state + " no need to notify users");
-            return null;
-        }
-
-        if (!MailNotificationUtil.hasMailNotification(state)) {
-            logger.info("Cannot find email template for job state: " + state);
-            return null;
-        }
-
-        Map<String, Object> dataMap = Maps.newHashMap();
-        dataMap.put("job_name", getName());
-        dataMap.put("env_name", getDeployEnvName());
-        dataMap.put("submitter", StringUtil.noBlank(getSubmitter(), "missing submitter"));
-        dataMap.put("job_engine", MailNotificationUtil.getLocalHostName());
-        dataMap.put("project_name", cubeInstance.getProject());
-        dataMap.put("cube_name", cubeInstance.getName());
-        dataMap.put("source_records_count", String.valueOf(findSourceRecordCount()));
-        dataMap.put("start_time", new Date(getStartTime()).toString());
-        dataMap.put("duration", getDuration() / 60000 + "mins");
-        dataMap.put("mr_waiting", getMapReduceWaitTime() / 60000 + "mins");
-        dataMap.put("last_update_time", new Date(getLastModified()).toString());
-
-        return super.formatNotifications(context, state);
-    }
-
     public String getDeployEnvName() {
         return getParam(DEPLOY_ENV_NAME);
     }
@@ -180,24 +147,4 @@ public class NSparkCubingJob extends CubingJob {
     public void setCube(CubeInstance cube) {
         this.cube = cube;
     }
-
-    /*@Override
-    public void cancelJob() {
-        NDataflowManager nDataflowManager = NDataflowManager.getInstance(getConfig(), getProject());
-        Cube dataflow = nDataflowManager.getDataflow(getSparkCubingStep().getDataflowId());
-        List<NDataSegment> segments = new ArrayList<>();
-        for (String id : getSparkCubingStep().getSegmentIds()) {
-            NDataSegment segment = dataflow.getSegment(id);
-            if (segment != null && !segment.getStatus().equals(SegmentStatusEnum.READY)) {
-                segments.add(segment);
-            }
-        }
-        NDataSegment[] segmentsArray = new NDataSegment[segments.size()];
-        NDataSegment[] nDataSegments = segments.toArray(segmentsArray);
-        NDataflowUpdate nDataflowUpdate = new NDataflowUpdate(dataflow.getUuid());
-        nDataflowUpdate.setToRemoveSegs(nDataSegments);
-        nDataflowManager.updateDataflow(nDataflowUpdate);
-        NDefaultScheduler.stopThread(getId());
-    }*/
-
 }

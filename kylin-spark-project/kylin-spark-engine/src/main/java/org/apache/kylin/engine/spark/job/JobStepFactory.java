@@ -20,7 +20,11 @@ package org.apache.kylin.engine.spark.job;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.Segments;
 
 public class JobStepFactory {
 
@@ -41,9 +45,9 @@ public class JobStepFactory {
         case MERGING:
             step = new NSparkMergingStep(config.getSparkMergeClassName());
             break;
-        /*case CLEAN_UP_AFTER_MERGE:
-            step = new NSparkCleanupAfterMergeStep();
-            break;*/
+        case CLEAN_UP_AFTER_MERGE:
+            step = new NSparkUpdateMetaAndCleanupAfterMergeStep();
+            break;
         default:
             throw new IllegalArgumentException();
         }
@@ -51,6 +55,15 @@ public class JobStepFactory {
         step.setParams(parent.getParams());
         step.setProject(parent.getProject());
         step.setTargetSubject(parent.getTargetSubject());
+        if (step instanceof NSparkUpdateMetaAndCleanupAfterMergeStep) {
+            CubeSegment mergeSegment = cube.getSegmentById(parent.getTargetSegments().iterator().next());
+            final Segments<CubeSegment> mergingSegments = cube.getMergingSegments(mergeSegment);
+            step.setParam(MetadataConstants.P_SEGMENT_IDS,
+                    String.join(",", NSparkCubingUtil.toSegmentIds(mergingSegments)));
+            step.setParam(CubingExecutableUtil.SEGMENT_ID, parent.getParam(CubingExecutableUtil.SEGMENT_ID));
+            step.setParam(MetadataConstants.P_JOB_TYPE, parent.getParam(MetadataConstants.P_JOB_TYPE));
+            step.setParam(MetadataConstants.P_OUTPUT_META_URL, parent.getParam(MetadataConstants.P_OUTPUT_META_URL));
+        }
         parent.addTask(step);
         //after addTask, step's id is changed
         step.setDistMetaUrl(config.getJobTmpMetaStoreUrl(parent.getProject(), step.getId()));

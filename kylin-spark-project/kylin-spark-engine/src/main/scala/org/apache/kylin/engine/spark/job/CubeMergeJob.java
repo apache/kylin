@@ -56,8 +56,8 @@ import org.apache.kylin.engine.spark.utils.Metrics;
 import org.apache.kylin.engine.spark.utils.QueryExecutionCache;
 import scala.collection.JavaConversions;
 
-public class DFMergeJob extends SparkApplication {
-    protected static final Logger logger = LoggerFactory.getLogger(DFMergeJob.class);
+public class CubeMergeJob extends SparkApplication {
+    protected static final Logger logger = LoggerFactory.getLogger(CubeMergeJob.class);
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
     private List<CubeSegment> mergingSegments = Lists.newArrayList();
     private List<SegmentInfo> mergingSegInfos = Lists.newArrayList();
@@ -76,7 +76,7 @@ public class DFMergeJob extends SparkApplication {
             mergingSegInfos.add(segInfo);
         }
 
-        mergeSnapshot(cubeId, newSegmentId);
+        //mergeSnapshot(cubeId, newSegmentId);
 
         //merge and save segments
         mergeSegments(cubeId, newSegmentId);
@@ -93,9 +93,6 @@ public class DFMergeJob extends SparkApplication {
         CubeInstance cubeCopy = cube.latestCopyForWrite();
         CubeSegment segCopy = cubeCopy.getSegmentById(segmentId);
         makeSnapshotForNewSegment(segCopy, mergingSegments);
-
-        makeSnapshotForNewSegment(segCopy, mergingSegments);
-
         CubeUpdate cubeUpdate = new CubeUpdate(cubeCopy);
         cubeUpdate.setToUpdateSegs(segCopy);
         cubeManager.updateCube(cubeUpdate);
@@ -199,7 +196,6 @@ public class DFMergeJob extends SparkApplication {
                     "'Job metrics seems null, use count() to collect cuboid rows.'");
             logger.warn("Can not get cuboid row cnt.");
         }
-        LayoutEntity dataCuboid = LayoutEntity.newLayoutEntity(layoutId);
 
         layout.setRows(rowCount);
         layout.setSourceRows(sourceCount);
@@ -221,7 +217,7 @@ public class DFMergeJob extends SparkApplication {
     }
 
     public static void main(String[] args) {
-        DFMergeJob nDataflowBuildJob = new DFMergeJob();
+        CubeMergeJob nDataflowBuildJob = new CubeMergeJob();
         nDataflowBuildJob.execute(args);
     }
 

@@ -32,6 +32,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
+import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -47,7 +48,7 @@ public class AfterMergeOrRefreshResourceMerger extends MetadataMerger {
     }
 
     @Override
-    public void merge(String cubeId, Set<String> segmentIds, ResourceStore remoteResourceStore, String jobType) {
+    public void merge(String cubeId, String segmentId, ResourceStore remoteResourceStore, String jobType) {
 
         CubeManager cubeManager = CubeManager.getInstance(getConfig());
         CubeInstance cubeInstance = cubeManager.getCubeByUuid(cubeId);
@@ -58,14 +59,9 @@ public class AfterMergeOrRefreshResourceMerger extends MetadataMerger {
 
         List<CubeSegment> toUpdateSegments = Lists.newArrayList();
 
-        CubeSegment mergedSegment = distCube.getSegmentById(segmentIds.iterator().next());
+        CubeSegment mergedSegment = distCube.getSegmentById(segmentId);
         mergedSegment.setStatus(SegmentStatusEnum.READY);
-
         toUpdateSegments.add(mergedSegment);
-        if (String.valueOf(JobTypeEnum.INDEX_REFRESH).equals(jobType)) {
-            //TODO: update snapshot
-            //updateSnapshotTableIfNeed(mergedSegment);
-        }
 
         List<CubeSegment> toRemoveSegments = getToRemoveSegs(distCube, mergedSegment);
         if (String.valueOf(JobTypeEnum.INDEX_MERGE).equals(jobType)) {
@@ -117,12 +113,8 @@ public class AfterMergeOrRefreshResourceMerger extends MetadataMerger {
         buildConfig.setMetadataUrl(buildStepUrl);
         ResourceStore resourceStore = ResourceStore.getStore(buildConfig);
         String cubeId = abstractExecutable.getParam(MetadataConstants.P_CUBE_ID);
-        Set<String> segmentIds = Stream.of(StringUtils.split(abstractExecutable.getParam(MetadataConstants.P_SEGMENT_IDS), ","))
-                .collect(Collectors.toSet());
-        merge(cubeId, segmentIds, resourceStore, abstractExecutable.getParam(MetadataConstants.P_JOB_TYPE));
-        //recordDownJobStats(abstractExecutable, nDataLayouts);
-        //abstractExecutable.notifyUserIfNecessary(nDataLayouts);
-
+        String segmentId = abstractExecutable.getParam(CubingExecutableUtil.SEGMENT_ID);
+        merge(cubeId, segmentId, resourceStore, abstractExecutable.getParam(MetadataConstants.P_JOB_TYPE));
     }
 
 }

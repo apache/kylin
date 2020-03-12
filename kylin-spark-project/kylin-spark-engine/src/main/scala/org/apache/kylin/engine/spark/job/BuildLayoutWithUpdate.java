@@ -33,8 +33,6 @@ import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.engine.spark.utils.BuildUtils;
-
 public class BuildLayoutWithUpdate {
     protected static final Logger logger = LoggerFactory.getLogger(BuildLayoutWithUpdate.class);
     private ExecutorService pool = Executors.newCachedThreadPool();

@@ -162,14 +162,10 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
          */
         CubeSegment firstMergeSeg = cubeManager.mergeSegments(cubeInstance,
                 new SegmentRange.TSRange(date1, date3), null, false);
-        NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, "ADMIN",
-                UUID.randomUUID().toString());
+        NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, "ADMIN");
         jobService.addJob(firstMergeJob);
         // wait job done
         Assert.assertEquals(ExecutableState.SUCCEED, wait(firstMergeJob));
-
-        AfterMergeOrRefreshResourceMerger merger = new AfterMergeOrRefreshResourceMerger(config());
-        merger.merge(firstMergeJob.getSparkMergingStep());
     }
 
     @Test

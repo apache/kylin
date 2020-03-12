@@ -18,29 +18,33 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.UUID;
 
+import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spark_project.guava.base.Preconditions;
 
 import com.google.common.collect.Lists;
 
-public class NSparkMergingJob extends DefaultChainedExecutable {
+public class NSparkMergingJob extends CubingJob {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(NSparkMergingJob.class);
 
     public static NSparkMergingJob merge(CubeSegment mergedSegment, String submitter) {
-        return NSparkMergingJob.merge(mergedSegment, submitter, UUID.randomUUID().toString());
+        return NSparkMergingJob.merge(mergedSegment, submitter, JobTypeEnum.INDEX_MERGE, UUID.randomUUID().toString());
     }
 
     /**
@@ -48,25 +52,34 @@ public class NSparkMergingJob extends DefaultChainedExecutable {
      *
      * @param mergedSegment, new segment that expect to merge, which should contains a couple of ready segments.
      */
-    public static NSparkMergingJob merge(CubeSegment mergedSegment, String submitter, String jobId) {
-        Preconditions.checkArgument(mergedSegment != null);
-        Preconditions.checkArgument(submitter != null);
-
+    public static NSparkMergingJob merge(CubeSegment mergedSegment, String submitter, JobTypeEnum jobType, String jobId) {
         CubeInstance cube = mergedSegment.getCubeInstance();
 
         NSparkMergingJob job = new NSparkMergingJob();
-        job.setName(JobTypeEnum.INDEX_MERGE.toString());
+        SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss", Locale.ROOT);
+        format.setTimeZone(TimeZone.getTimeZone(cube.getConfig().getTimeZone()));
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(jobType).append(" CUBE - ");
+        builder.append(mergedSegment.getCubeInstance().getDisplayName()).append(" - ").append(mergedSegment.getName())
+                .append(" - ");
+
+        builder.append(format.format(new Date(System.currentTimeMillis())));
+        job.setName(builder.toString());
         job.setId(jobId);
         job.setTargetSubject(mergedSegment.getModel().getUuid());
         job.setTargetSegments(Lists.newArrayList(String.valueOf(mergedSegment.getUuid())));
         job.setProject(mergedSegment.getProject());
+        job.setJobType(jobType);
         job.setSubmitter(submitter);
 
         job.setParam(MetadataConstants.P_JOB_ID, jobId);
         job.setParam(MetadataConstants.P_PROJECT_NAME, cube.getProject());
         job.setParam(MetadataConstants.P_TARGET_MODEL, job.getTargetSubject());
         job.setParam(MetadataConstants.P_CUBE_ID, cube.getId());
+        job.setParam(MetadataConstants.P_CUBE_NAME, cube.getName());
         job.setParam(MetadataConstants.P_SEGMENT_IDS, String.join(",", job.getTargetSegments()));
+        job.setParam(CubingExecutableUtil.SEGMENT_ID, mergedSegment.getUuid());
         job.setParam(MetadataConstants.P_DATA_RANGE_START, mergedSegment.getSegRange().start.toString());
         job.setParam(MetadataConstants.P_DATA_RANGE_END, mergedSegment.getSegRange().end.toString());
         job.setParam(MetadataConstants.P_OUTPUT_META_URL, cube.getConfig().getMetadataUrl().toString());
@@ -74,10 +87,12 @@ public class NSparkMergingJob extends DefaultChainedExecutable {
 
         JobStepFactory.addStep(job, JobStepType.RESOURCE_DETECT, cube);
         JobStepFactory.addStep(job, JobStepType.MERGING, cube);
-        //JobStepFactory.addStep(job, JobStepType.CLEAN_UP_AFTER_MERGE, cube);
+        JobStepFactory.addStep(job, JobStepType.CLEAN_UP_AFTER_MERGE, cube);
 
         return job;
     }
+
+
 
     @Override
     public Set<String> getMetadataDumpList(KylinConfig config) {
@@ -94,8 +109,8 @@ public class NSparkMergingJob extends DefaultChainedExecutable {
         return getTask(NResourceDetectStep.class);
     }
 
-    public NSparkCleanupAfterMergeStep getCleanUpAfterMergeStep() {
-        return getTask(NSparkCleanupAfterMergeStep.class);
+    public NSparkUpdateMetaAndCleanupAfterMergeStep getCleanUpAfterMergeStep() {
+        return getTask(NSparkUpdateMetaAndCleanupAfterMergeStep.class);
     }
 
 }
