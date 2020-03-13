@@ -23,6 +23,8 @@
  */
 package org.apache.kylin.query
 
+import java.util.Locale
+
 import org.apache.kylin.metadata.model.{ColumnDesc, FunctionDesc}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.utils.SparkTypeUtil
@@ -70,7 +72,7 @@ object SchemaProcessor {
   //  }
 
   def generateFunctionReturnDataType(function: FunctionDesc): DataType = {
-    function.getExpression.toUpperCase match {
+    function.getExpression.toUpperCase(Locale.ROOT) match {
       case "SUM" =>
         val parameter = function.getParameter
         if (parameter.isColumnType) {

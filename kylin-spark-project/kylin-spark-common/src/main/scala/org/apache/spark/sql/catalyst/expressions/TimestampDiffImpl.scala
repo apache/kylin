@@ -24,6 +24,8 @@
 
 package org.apache.spark.sql.catalyst.expressions
 
+import java.util.Locale
+
 import org.apache.kylin.engine.spark.common.util.KapDateTimeUtils._
 import org.apache.kylin.engine.spark.common.util.KapDateTimeUtils
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
@@ -59,7 +61,7 @@ object TimestampDiffImpl {
   }
 
   private def convertDuration(unit: String, bMillis: Long, aMillis: Long): Long = {
-    unit.toUpperCase match {
+    unit.toUpperCase(Locale.ROOT) match {
       case "FRAC_SECOND" | "SQL_TSI_FRAC_SECOND" =>
         aMillis - bMillis
       case "SECOND" | "SQL_TSI_SECOND" =>

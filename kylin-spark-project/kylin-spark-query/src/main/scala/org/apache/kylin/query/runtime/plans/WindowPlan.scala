@@ -24,7 +24,7 @@
 package org.apache.kylin.query.runtime.plans
 
 import java.sql.Date
-import java.util.Calendar
+import java.util.{Calendar, Locale}
 
 import org.apache.calcite.DataContext
 import org.apache.calcite.rel.RelCollationImpl
@@ -125,7 +125,7 @@ object WindowPlan extends Logging {
           .toSeq
         group.aggCalls.asScala.map { agg =>
           var windowDesc: WindowSpec = null
-          val opName = agg.op.getName.toUpperCase
+          val opName = agg.op.getName.toUpperCase(Locale.ROOT)
           val numberConstants = constantMap
             .filter(_._2.isInstanceOf[Number])
             .map { entry =>

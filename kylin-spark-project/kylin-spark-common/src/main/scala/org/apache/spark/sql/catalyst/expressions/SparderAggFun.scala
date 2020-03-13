@@ -26,6 +26,7 @@ package org.apache.spark.sql.catalyst.expressions
 
 import java.nio.ByteBuffer
 import java.util
+import java.util.Locale
 
 import com.google.common.collect.Maps
 import org.apache.kylin.measure.MeasureAggregator
@@ -47,7 +48,7 @@ class SparderAggFun(funcName: String, dataTp: KyDataType)
 
   protected val _inputDataType = {
     var schema = StructType(Seq(StructField("inputBinary", BinaryType)))
-    if (funcName.toLowerCase.startsWith("percentile")) {
+    if (funcName.toLowerCase(Locale.ROOT).startsWith("percentile")) {
       schema.add("argc", DoubleType)
     } else {
       schema
@@ -56,7 +57,7 @@ class SparderAggFun(funcName: String, dataTp: KyDataType)
 
   protected val _bufferSchema: StructType = {
     var schema = StructType(Seq(StructField("bufferBinary", BinaryType)))
-    if (funcName.toLowerCase.startsWith("percentile")) {
+    if (funcName.toLowerCase(Locale.ROOT).startsWith("percentile")) {
       schema.add("argc", DoubleType)
     } else {
       schema

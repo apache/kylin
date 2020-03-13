@@ -115,7 +115,7 @@ public class BuildAndQueryEmptySegmentsTest extends LocalWithSparkSessionTest {
     private void mergeSegments(long start, long end, boolean force) throws Exception {
         CubeInstance cube = cubeMgr.getCube(CUBE_NAME1);
         CubeSegment emptyMergeSeg = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(start, end), null, force);
-        NSparkMergingJob emptyMergeJob = NSparkMergingJob.merge(emptyMergeSeg,  "ADMIN", UUID.randomUUID().toString());
+        NSparkMergingJob emptyMergeJob = NSparkMergingJob.merge(emptyMergeSeg,  "ADMIN");
         execMgr.addJob(emptyMergeJob);
         Assert.assertEquals(ExecutableState.SUCCEED, wait(emptyMergeJob));
         AfterMergeOrRefreshResourceMerger merger = new AfterMergeOrRefreshResourceMerger(config);

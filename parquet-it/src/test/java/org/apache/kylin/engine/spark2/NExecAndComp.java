@@ -31,7 +31,7 @@ import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.KylinSparkEnv;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.common.SparderQueryTest;
+import org.apache.spark.sql.common.SparkQueryTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +46,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -76,7 +77,7 @@ public class NExecAndComp {
             String sql = KylinTestBase.changeJoinType(query.getSecond(), joinType);
 
             Pair<String, String> sqlAndAddedLimitSql = Pair.newPair(sql, sql);
-            if (!sql.toLowerCase().contains("limit ")) {
+            if (!sql.toLowerCase(Locale.ROOT).contains("limit ")) {
                 sqlAndAddedLimitSql.setSecond(sql + " limit 5");
                 appendLimitQueries++;
             }
@@ -85,7 +86,7 @@ public class NExecAndComp {
                     : queryWithKap(prj, joinType, sqlAndAddedLimitSql, recAndQueryResult);
             addQueryPath(recAndQueryResult, query, sql);
             Dataset<Row> sparkResult = queryWithSpark(prj, sql, query.getFirst());
-            List<Row> kapRows = SparderQueryTest.castDataType(kapResult, sparkResult).toJavaRDD().collect();
+            List<Row> kapRows = SparkQueryTest.castDataType(kapResult, sparkResult).toJavaRDD().collect();
             List<Row> sparkRows = sparkResult.toJavaRDD().collect();
             if (!compareResults(normRows(sparkRows), normRows(kapRows), CompareLevel.SUBSET)) {
                 throw new IllegalArgumentException("Result not match");
@@ -116,7 +117,7 @@ public class NExecAndComp {
 
                 Dataset<Row> sparkResult = queryWithSpark(prj, path2Sql.getSecond(), path2Sql.getFirst());
                 List<Row> sparkRows = sparkResult.toJavaRDD().collect();
-                List<Row> kapRows = SparderQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
+                List<Row> kapRows = SparkQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
                 if (!compareResults(normRows(sparkRows), normRows(kapRows), testScenario.getCompareLevel())) {
                     logger.error("Failed on compare query ({}) :{}", joinType, sql);
                     throw new IllegalArgumentException("query (" + joinType + ") :" + sql + " result not match");
@@ -156,7 +157,7 @@ public class NExecAndComp {
             if (compareLevel != CompareLevel.NONE) {
                 Dataset<Row> sparkResult = queryWithSpark(prj, sql, query.getFirst());
                 List<Row> sparkRows = sparkResult.toJavaRDD().collect();
-                List<Row> kapRows = SparderQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
+                List<Row> kapRows = SparkQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
                 if (!compareResults(normRows(sparkRows), normRows(kapRows), compareLevel)) {
                     logger.error("Failed on compare query ({}) :{}", joinType, query);
                     throw new IllegalArgumentException("query (" + joinType + ") :" + query + " result not match");
@@ -182,7 +183,7 @@ public class NExecAndComp {
 
         String sqlForKap = KylinTestBase.changeJoinType(queryForKap.getSecond(), joinType);
         Dataset<Row> cubeResult = queryWithKap(prj, joinType, Pair.newPair(sqlForKap, sqlForKap));
-        List<Row> kapRows = SparderQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
+        List<Row> kapRows = SparkQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
 
         return sparkRows.equals(kapRows);
     }
@@ -190,7 +191,7 @@ public class NExecAndComp {
     private static List<Row> normRows(List<Row> rows) {
         List<Row> rowList = Lists.newArrayList();
         rows.forEach(row -> {
-            rowList.add(SparderQueryTest.prepareRow(row));
+            rowList.add(SparkQueryTest.prepareRow(row));
         });
         return rowList;
     }
