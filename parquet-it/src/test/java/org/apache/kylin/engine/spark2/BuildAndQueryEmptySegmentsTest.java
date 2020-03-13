@@ -17,6 +17,11 @@
  */
 package org.apache.kylin.engine.spark2;
 
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+import java.util.TimeZone;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -34,32 +39,22 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Locale;
-import java.util.TimeZone;
-import java.util.UUID;
-
 public class BuildAndQueryEmptySegmentsTest extends LocalWithSparkSessionTest {
 
     private static final String CUBE_NAME1 = "ci_inner_join_cube";
 
-    private static final String SQL = "select\n" +
-            " count(1) as TRANS_CNT \n" +
-            " from test_kylin_fact \n" +
-            " group by trans_id";
+    private static final String SQL = "select\n" + " count(1) as TRANS_CNT \n" + " from test_kylin_fact \n"
+            + " group by trans_id";
 
-    private static final String SQL_DERIVED = "SELECT \n" +
-            "test_cal_dt.season_beg_dt\n" +
-            "FROM test_kylin_fact LEFT JOIN edw.test_cal_dt as test_cal_dt \n" +
-            "ON test_kylin_fact.cal_dt=test_cal_dt.cal_dt \n" +
-            "WHERE test_kylin_fact.cal_dt>'2009-06-01' and test_kylin_fact.cal_dt<'2013-01-01' \n" +
-            "GROUP BY test_cal_dt.season_beg_dt";
+    private static final String SQL_DERIVED = "SELECT \n" + "test_cal_dt.season_beg_dt\n"
+            + "FROM test_kylin_fact LEFT JOIN edw.test_cal_dt as test_cal_dt \n"
+            + "ON test_kylin_fact.cal_dt=test_cal_dt.cal_dt \n"
+            + "WHERE test_kylin_fact.cal_dt>'2009-06-01' and test_kylin_fact.cal_dt<'2013-01-01' \n"
+            + "GROUP BY test_cal_dt.season_beg_dt";
 
     private KylinConfig config;
     private CubeManager cubeMgr;
     private ExecutableManager execMgr;
-
 
     @Before
     public void init() throws Exception {
@@ -81,7 +76,6 @@ public class BuildAndQueryEmptySegmentsTest extends LocalWithSparkSessionTest {
         cleanupSegments(CUBE_NAME1);
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
-
 
         buildCube(CUBE_NAME1, f.parse("2009-01-01").getTime(), f.parse("2009-06-01").getTime());
         Assert.assertEquals(0, cubeMgr.getCube(CUBE_NAME1).getSegments().get(0).getInputRecords());
@@ -115,7 +109,7 @@ public class BuildAndQueryEmptySegmentsTest extends LocalWithSparkSessionTest {
     private void mergeSegments(long start, long end, boolean force) throws Exception {
         CubeInstance cube = cubeMgr.getCube(CUBE_NAME1);
         CubeSegment emptyMergeSeg = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(start, end), null, force);
-        NSparkMergingJob emptyMergeJob = NSparkMergingJob.merge(emptyMergeSeg,  "ADMIN");
+        NSparkMergingJob emptyMergeJob = NSparkMergingJob.merge(emptyMergeSeg, "ADMIN");
         execMgr.addJob(emptyMergeJob);
         Assert.assertEquals(ExecutableState.SUCCEED, wait(emptyMergeJob));
         AfterMergeOrRefreshResourceMerger merger = new AfterMergeOrRefreshResourceMerger(config);

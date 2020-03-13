@@ -21,33 +21,23 @@ package org.apache.kylin.engine.spark.job;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
-import org.apache.kylin.job.execution.ExecutableContext;
-import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.job.execution.JobTypeEnum;
-import org.apache.kylin.job.execution.Output;
-import org.apache.kylin.job.util.MailNotificationUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spark_project.guava.base.Preconditions;
-
-import com.google.common.collect.Maps;
-
-import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 
 /**
  *
