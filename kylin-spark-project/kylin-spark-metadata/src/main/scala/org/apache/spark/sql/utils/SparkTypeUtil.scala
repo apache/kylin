@@ -32,20 +32,17 @@ import java.sql.{Date, Timestamp}
 import org.apache.spark.sql.functions.col
 import org.apache.calcite.avatica.util.TimeUnitRange
 import org.apache.calcite.rex.RexLiteral
-import java.util.{GregorianCalendar, TimeZone}
+import java.util.{GregorianCalendar, Locale, TimeZone}
 
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.kylin.metadata.datatype.DataType
-import org.apache.spark.sql.types.{
-  BinaryType, BooleanType, ByteType,
-  DateType, DecimalType, DoubleType, FloatType, IntegerType, LongType, ShortType, StringType, StructType, TimestampType
-}
+import org.apache.spark.sql.types.{BinaryType, BooleanType, ByteType, DateType, DecimalType, DoubleType, FloatType, IntegerType, LongType, ShortType, StringType, StructType, TimestampType}
 
 object SparkTypeUtil extends Logging {
   val DATETIME_FAMILY = List("time", "date", "timestamp", "datetime")
 
   def isDateTimeFamilyType(dataType: String): Boolean = {
-    DATETIME_FAMILY.contains(dataType.toLowerCase())
+    DATETIME_FAMILY.contains(dataType.toLowerCase(Locale.ROOT))
   }
 
   def isDateType(dataType: String): Boolean = {

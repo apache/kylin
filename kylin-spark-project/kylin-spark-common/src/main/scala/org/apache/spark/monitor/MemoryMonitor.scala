@@ -26,6 +26,7 @@ package org.apache.spark.memory
 
 import java.lang.management._
 import java.text.SimpleDateFormat
+import java.util.Locale
 
 import com.google.common.collect.Lists
 import org.apache.spark.internal.Logging
@@ -118,7 +119,7 @@ class MemoryMonitor() extends Logging {
 
 object MemoryMonitor extends Logging {
 
-  val dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
+  val dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.ROOT)
 
   private var monitor: MemoryMonitor = _
 

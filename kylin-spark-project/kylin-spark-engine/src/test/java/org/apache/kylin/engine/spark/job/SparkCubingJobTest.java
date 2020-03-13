@@ -33,10 +33,13 @@ import org.apache.kylin.engine.spark.metadata.FunctionDesc;
 import org.apache.kylin.engine.spark.metadata.MetadataConverter;
 import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
+import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
+import org.apache.kylin.job.lock.MockJobLock;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.storage.StorageFactory;
@@ -73,6 +76,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
     private static StructType OUT_SCHEMA = null;
 
     private CubeManager cubeManager;
+    private DefaultScheduler scheduler;
     private ExecutableManager jobService;
 
     @Before
@@ -85,7 +89,11 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
         kylinConfig.setProperty("kylin.source.provider.0", "org.apache.kylin.engine.spark.source.HiveSource");
         cubeManager = CubeManager.getInstance(kylinConfig);
         jobService = ExecutableManager.getInstance(kylinConfig);
-        super.init();
+        scheduler = DefaultScheduler.createInstance();
+        scheduler.init(new JobEngineConfig(kylinConfig), new MockJobLock());
+        if (!scheduler.hasStarted()) {
+            throw new RuntimeException("scheduler has not been started");
+        }
         for (String jobId : jobService.getAllJobIds()) {
             AbstractExecutable executable = jobService.getJob(jobId);
             if (executable instanceof CheckpointExecutable) {

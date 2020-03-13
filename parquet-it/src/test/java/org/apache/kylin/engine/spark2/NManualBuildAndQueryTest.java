@@ -292,7 +292,7 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
         cube = cubeMgr.getCube(cubeName);
         CubeSegment firstMergeSeg = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(
                 f.parse("2010-01-01").getTime(), f.parse("2015-01-01").getTime()), null, false);
-        NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, "ADMIN", UUID.randomUUID().toString());
+        NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, "ADMIN");
         execMgr.addJob(firstMergeJob);
         // wait job done
         Assert.assertEquals(ExecutableState.SUCCEED, wait(firstMergeJob));
@@ -377,8 +377,7 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
         cube = cubeMgr.getCube(cubeName);
         CubeSegment firstMergeSeg = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(
                 f.parse("2010-01-01").getTime(), f.parse("2013-01-01").getTime()), null, false);
-        NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, "ADMIN",
-                UUID.randomUUID().toString());
+        NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, "ADMIN");
         execMgr.addJob(firstMergeJob);
         // wait job done
         Assert.assertEquals(ExecutableState.SUCCEED, wait(firstMergeJob));
@@ -389,8 +388,7 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
 
         CubeSegment secondMergeSeg = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(
                 f.parse("2013-01-01").getTime(), f.parse("2015-06-01").getTime()), null, false);
-        NSparkMergingJob secondMergeJob = NSparkMergingJob.merge(secondMergeSeg,
-                "ADMIN", UUID.randomUUID().toString());
+        NSparkMergingJob secondMergeJob = NSparkMergingJob.merge(secondMergeSeg,"ADMIN");
         execMgr.addJob(secondMergeJob);
         // wait job done
         Assert.assertEquals(ExecutableState.SUCCEED, wait(secondMergeJob));

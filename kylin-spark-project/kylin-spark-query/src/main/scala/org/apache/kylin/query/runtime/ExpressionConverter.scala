@@ -24,6 +24,8 @@
 
 package org.apache.kylin.query.runtime
 
+import java.util.Locale
+
 import org.apache.calcite.rel.`type`.RelDataType
 import org.apache.calcite.sql.SqlKind
 import org.apache.calcite.sql.SqlKind._
@@ -144,7 +146,7 @@ object ExpressionConverter {
         }
 
       case OTHER =>
-        val funcName = opName.toLowerCase
+        val funcName = opName.toLowerCase(Locale.ROOT)
         funcName match {
           case "||" => concat(k_lit(children.head), k_lit(children.apply(1)))
           case _ =>
@@ -152,7 +154,7 @@ object ExpressionConverter {
               s"Unsupported function $funcName")
         }
       case OTHER_FUNCTION =>
-        val funcName = opName.toLowerCase
+        val funcName = opName.toLowerCase(Locale.ROOT)
         funcName match {
           //math_funcs
           case "abs" =>
@@ -255,7 +257,7 @@ object ExpressionConverter {
                 s"to_date must provide one or two parameters under sparder")
             }
           case "to_char" | "date_format" =>
-            var part = k_lit(children.apply(1)).toString().toUpperCase match {
+            var part = k_lit(children.apply(1)).toString().toUpperCase(Locale.ROOT) match {
               case "YEAR" =>
                 "y"
               case "MONTH" =>
@@ -317,7 +319,7 @@ object ExpressionConverter {
             callUDF(func, children.map(k_lit(_)): _*)
           }
           case "date_part" | "date_trunc" =>
-            var part = k_lit(children.head).toString().toUpperCase match {
+            var part = k_lit(children.head).toString().toUpperCase(Locale.ROOT) match {
               case "YEAR" =>
                 "y"
               case "MONTH" =>

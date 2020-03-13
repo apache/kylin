@@ -24,13 +24,13 @@
 package org.apache.spark.sql.catalyst.expressions
 
 import org.apache.kylin.engine.spark.common.util.KapDateTimeUtils._
-import java.util.Calendar
+import java.util.{Calendar, Locale, TimeZone}
 
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
 
 object TimestampAddImpl {
   private val localCalendar = new ThreadLocal[Calendar] {
-    override def initialValue(): Calendar = Calendar.getInstance()
+    override def initialValue(): Calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.ROOT)
   }
 
   private def calendar: Calendar = localCalendar.get()
@@ -65,7 +65,7 @@ object TimestampAddImpl {
 
 
   private def addTime(unit: String, increment: Int, cal: Calendar): Unit = {
-    unit.toUpperCase match {
+    unit.toUpperCase(Locale.ROOT) match {
       case "FRAC_SECOND" | "SQL_TSI_FRAC_SECOND" =>
         cal.add(Calendar.MILLISECOND, increment)
       case "SECOND" | "SQL_TSI_SECOND" =>

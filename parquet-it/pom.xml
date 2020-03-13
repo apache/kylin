@@ -36,6 +36,11 @@
             <artifactId>kylin-spark-engine</artifactId>
             <version>3.0.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-spark-query</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+        </dependency>
 
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -76,6 +81,13 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-it</artifactId>
             <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-spark-query</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
