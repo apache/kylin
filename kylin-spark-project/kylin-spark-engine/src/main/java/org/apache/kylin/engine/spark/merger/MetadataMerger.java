@@ -18,8 +18,6 @@
 
 package org.apache.kylin.engine.spark.merger;
 
-import java.util.Set;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -27,16 +25,15 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 public abstract class MetadataMerger {
     private final KylinConfig config;
 
-    public KylinConfig getConfig() {
-        return config;
-    }
-
     protected MetadataMerger(KylinConfig config) {
         this.config = config;
     }
 
-    public abstract void merge(String dataflowId, String segmentIds,
-            ResourceStore remoteResourceStore, String jobType);
+    public KylinConfig getConfig() {
+        return config;
+    }
+
+    public abstract void merge(String dataflowId, String segmentIds, ResourceStore remoteResourceStore, String jobType);
 
     public abstract void merge(AbstractExecutable abstractExecutable);
 

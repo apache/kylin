@@ -21,11 +21,7 @@ package org.apache.kylin.engine.spark.merger;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.CubeInstance;
@@ -37,9 +33,9 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.Segments;
 
 import com.clearspring.analytics.util.Lists;
-import org.apache.kylin.metadata.model.Segments;
 
 public class AfterMergeOrRefreshResourceMerger extends MetadataMerger {
 
@@ -65,9 +61,7 @@ public class AfterMergeOrRefreshResourceMerger extends MetadataMerger {
 
         List<CubeSegment> toRemoveSegments = getToRemoveSegs(distCube, mergedSegment);
         if (String.valueOf(JobTypeEnum.INDEX_MERGE).equals(jobType)) {
-            Optional<Long> reduce = toRemoveSegments.stream()
-                    .map(CubeSegment::getSizeKB)
-                    .filter(size -> size != -1)
+            Optional<Long> reduce = toRemoveSegments.stream().map(CubeSegment::getSizeKB).filter(size -> size != -1)
                     .reduce(Long::sum);
             if (reduce.isPresent()) {
                 long totalSourceSize = reduce.get();

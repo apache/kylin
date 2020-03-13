@@ -17,6 +17,19 @@
  */
 package org.apache.kylin.engine.spark2;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
@@ -26,12 +39,12 @@ import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
 import org.apache.kylin.engine.spark.job.NSparkMergingJob;
 import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
+import org.apache.kylin.engine.spark2.NExecAndComp.CompareLevel;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.spark.sql.KylinSparkEnv;
-import org.apache.kylin.engine.spark2.NExecAndComp.CompareLevel;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,20 +53,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spark_project.guava.collect.Lists;
-
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
-import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 @Ignore("see io.kyligence.kap.ut.TestQueryAndBuild")
 @SuppressWarnings("serial")
@@ -212,45 +211,6 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
         }
     }
 
-    class QueryCallable implements Callable<Pair<String, Throwable>> {
-
-        private NExecAndComp.CompareLevel compareLevel;
-        private String joinType;
-        private String sqlFolder;
-
-        QueryCallable(NExecAndComp.CompareLevel compareLevel, String joinType, String sqlFolder) {
-            this.compareLevel = compareLevel;
-            this.joinType = joinType;
-            this.sqlFolder = sqlFolder;
-        }
-
-        @Override
-        public Pair<String, Throwable> call() {
-            String identity = "sqlFolder:" + sqlFolder + ", joinType:" + joinType + ", compareLevel:" + compareLevel;
-            try {
-                if (NExecAndComp.CompareLevel.SUBSET.equals(compareLevel)) {
-                    List<Pair<String, String>> queries = NExecAndComp
-                            .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + "sql");
-                    NExecAndComp.execLimitAndValidate(queries, getProject(), joinType);
-                } else if (NExecAndComp.CompareLevel.SAME_SQL_COMPARE.equals(compareLevel)) {
-                    List<Pair<String, String>> queries = NExecAndComp
-                            .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);
-                    NExecAndComp.execCompareQueryAndCompare(queries, getProject(), joinType);
-
-                } else {
-                    List<Pair<String, String>> queries = NExecAndComp
-                            .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);
-                    NExecAndComp.execAndCompare(queries, getProject(), compareLevel, joinType);
-                }
-            } catch (Throwable th) {
-                logger.error("Query fail on:", identity);
-                return Pair.newPair(identity, th);
-            }
-            logger.info("Query succeed on:", identity);
-            return Pair.newPair(identity, null);
-        }
-    }
-
     private void buildAndMergeCube(String cubeName) throws Exception {
         if (cubeName.equals("ci_inner_join_cube")) {
             buildFourSegementAndMerge(cubeName);
@@ -275,7 +235,7 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
-        
+
         /**
          * Round1. Build 2 segment
          */
@@ -290,8 +250,9 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
          * Round2. Merge two segments
          */
         cube = cubeMgr.getCube(cubeName);
-        CubeSegment firstMergeSeg = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(
-                f.parse("2010-01-01").getTime(), f.parse("2015-01-01").getTime()), null, false);
+        CubeSegment firstMergeSeg = cubeMgr.mergeSegments(cube,
+                new SegmentRange.TSRange(f.parse("2010-01-01").getTime(), f.parse("2015-01-01").getTime()), null,
+                false);
         NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, "ADMIN");
         execMgr.addJob(firstMergeJob);
         // wait job done
@@ -331,8 +292,8 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
             verifyCuboidMetrics(cuboidsMap1, compareTuples1);
         }*/
 
-        Assert.assertEquals(new SegmentRange.TSRange(f.parse("2010-01-01").getTime(), 
-                f.parse("2015-01-01").getTime()), firstSegment.getSegRange());
+        Assert.assertEquals(new SegmentRange.TSRange(f.parse("2010-01-01").getTime(), f.parse("2015-01-01").getTime()),
+                firstSegment.getSegRange());
         //Assert.assertEquals(27, firstSegment.getDictionaries().size());
         Assert.assertEquals(7, firstSegment.getSnapshots().size());
     }
@@ -375,8 +336,9 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
          * Round2. Merge two segments
          */
         cube = cubeMgr.getCube(cubeName);
-        CubeSegment firstMergeSeg = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(
-                f.parse("2010-01-01").getTime(), f.parse("2013-01-01").getTime()), null, false);
+        CubeSegment firstMergeSeg = cubeMgr.mergeSegments(cube,
+                new SegmentRange.TSRange(f.parse("2010-01-01").getTime(), f.parse("2013-01-01").getTime()), null,
+                false);
         NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, "ADMIN");
         execMgr.addJob(firstMergeJob);
         // wait job done
@@ -386,9 +348,10 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
 
         cube = cubeMgr.getCube(cubeName);
 
-        CubeSegment secondMergeSeg = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(
-                f.parse("2013-01-01").getTime(), f.parse("2015-06-01").getTime()), null, false);
-        NSparkMergingJob secondMergeJob = NSparkMergingJob.merge(secondMergeSeg,"ADMIN");
+        CubeSegment secondMergeSeg = cubeMgr.mergeSegments(cube,
+                new SegmentRange.TSRange(f.parse("2013-01-01").getTime(), f.parse("2015-06-01").getTime()), null,
+                false);
+        NSparkMergingJob secondMergeJob = NSparkMergingJob.merge(secondMergeSeg, "ADMIN");
         execMgr.addJob(secondMergeJob);
         // wait job done
         Assert.assertEquals(ExecutableState.SUCCEED, wait(secondMergeJob));
@@ -428,13 +391,52 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
             verifyCuboidMetrics(cuboidsMap2, compareTuples2);
         }*/
 
-        Assert.assertEquals(new SegmentRange.TSRange(f.parse("2010-01-01").getTime(),
-                f.parse("2013-01-01").getTime()), firstSegment.getSegRange());
-        Assert.assertEquals(new SegmentRange.TSRange(f.parse("2013-01-01").getTime(),
-                f.parse("2015-01-01").getTime()), secondSegment.getSegRange());
+        Assert.assertEquals(new SegmentRange.TSRange(f.parse("2010-01-01").getTime(), f.parse("2013-01-01").getTime()),
+                firstSegment.getSegRange());
+        Assert.assertEquals(new SegmentRange.TSRange(f.parse("2013-01-01").getTime(), f.parse("2015-01-01").getTime()),
+                secondSegment.getSegRange());
         //Assert.assertEquals(31, firstSegment.getDictionaries().size());
         //Assert.assertEquals(31, secondSegment.getDictionaries().size());
         Assert.assertEquals(7, firstSegment.getSnapshots().size());
         Assert.assertEquals(7, secondSegment.getSnapshots().size());
+    }
+
+    class QueryCallable implements Callable<Pair<String, Throwable>> {
+
+        private NExecAndComp.CompareLevel compareLevel;
+        private String joinType;
+        private String sqlFolder;
+
+        QueryCallable(NExecAndComp.CompareLevel compareLevel, String joinType, String sqlFolder) {
+            this.compareLevel = compareLevel;
+            this.joinType = joinType;
+            this.sqlFolder = sqlFolder;
+        }
+
+        @Override
+        public Pair<String, Throwable> call() {
+            String identity = "sqlFolder:" + sqlFolder + ", joinType:" + joinType + ", compareLevel:" + compareLevel;
+            try {
+                if (NExecAndComp.CompareLevel.SUBSET.equals(compareLevel)) {
+                    List<Pair<String, String>> queries = NExecAndComp
+                            .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + "sql");
+                    NExecAndComp.execLimitAndValidate(queries, getProject(), joinType);
+                } else if (NExecAndComp.CompareLevel.SAME_SQL_COMPARE.equals(compareLevel)) {
+                    List<Pair<String, String>> queries = NExecAndComp
+                            .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);
+                    NExecAndComp.execCompareQueryAndCompare(queries, getProject(), joinType);
+
+                } else {
+                    List<Pair<String, String>> queries = NExecAndComp
+                            .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);
+                    NExecAndComp.execAndCompare(queries, getProject(), compareLevel, joinType);
+                }
+            } catch (Throwable th) {
+                logger.error("Query fail on:", identity);
+                return Pair.newPair(identity, th);
+            }
+            logger.info("Query succeed on:", identity);
+            return Pair.newPair(identity, null);
+        }
     }
 }

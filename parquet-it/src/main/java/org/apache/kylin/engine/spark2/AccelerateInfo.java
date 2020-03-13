@@ -107,12 +107,12 @@ public class AccelerateInfo {
             if (!(o instanceof QueryLayoutRelation)) return false;
             final QueryLayoutRelation other = (QueryLayoutRelation) o;
             if (!other.canEqual((Object) this)) return false;
-            final Object this$sql = this.getSql();
-            final Object other$sql = other.getSql();
-            if (this$sql == null ? other$sql != null : !this$sql.equals(other$sql)) return false;
-            final Object this$modelId = this.getModelId();
-            final Object other$modelId = other.getModelId();
-            if (this$modelId == null ? other$modelId != null : !this$modelId.equals(other$modelId)) return false;
+            final Object thissql = this.getSql();
+            final Object othersql = other.getSql();
+            if (thissql == null ? othersql != null : !thissql.equals(othersql)) return false;
+            final Object thismodelId = this.getModelId();
+            final Object othermodelId = other.getModelId();
+            if (thismodelId == null ? othermodelId != null : !thismodelId.equals(othermodelId)) return false;
             if (this.getLayoutId() != other.getLayoutId()) return false;
             if (this.getSemanticVersion() != other.getSemanticVersion()) return false;
             return true;
@@ -125,12 +125,12 @@ public class AccelerateInfo {
         public int hashCode() {
             final int PRIME = 59;
             int result = 1;
-            final Object $sql = this.getSql();
-            result = result * PRIME + ($sql == null ? 43 : $sql.hashCode());
-            final Object $modelId = this.getModelId();
-            result = result * PRIME + ($modelId == null ? 43 : $modelId.hashCode());
-            final long $layoutId = this.getLayoutId();
-            result = result * PRIME + (int) ($layoutId >>> 32 ^ $layoutId);
+            final Object sql = this.getSql();
+            result = result * PRIME + (sql == null ? 43 : sql.hashCode());
+            final Object modelId = this.getModelId();
+            result = result * PRIME + (modelId == null ? 43 : modelId.hashCode());
+            final long layoutId = this.getLayoutId();
+            result = result * PRIME + (int) (layoutId >>> 32 ^ layoutId);
             result = result * PRIME + this.getSemanticVersion();
             return result;
         }

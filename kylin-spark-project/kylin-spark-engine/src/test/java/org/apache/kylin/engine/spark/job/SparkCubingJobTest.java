@@ -18,9 +18,14 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import org.apache.kylin.engine.spark.NSparkCubingEngine;
-import org.apache.kylin.engine.spark.builder.CreateFlatTable;
-import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -29,6 +34,8 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
+import org.apache.kylin.engine.spark.NSparkCubingEngine;
+import org.apache.kylin.engine.spark.builder.CreateFlatTable;
 import org.apache.kylin.engine.spark.metadata.FunctionDesc;
 import org.apache.kylin.engine.spark.metadata.MetadataConverter;
 import org.apache.kylin.engine.spark.metadata.cube.PathManager;
@@ -61,15 +68,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spark_project.guava.collect.Sets;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.UUID;
-
 public class SparkCubingJobTest extends LocalWithSparkSessionTest {
 
     private static final Logger logger = LoggerFactory.getLogger(SparkCubingJobTest.class);
@@ -79,11 +77,27 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
     private DefaultScheduler scheduler;
     private ExecutableManager jobService;
 
+    public static void deployMetadata(String localMetaData) throws IOException {
+        // install metadata to hbase
+        new ResourceTool().reset(config());
+        new ResourceTool().copy(KylinConfig.createInstanceFromUri(localMetaData), config());
+
+        // update cube desc signature.
+        for (CubeInstance cube : CubeManager.getInstance(config()).listAllCubes()) {
+            CubeDescManager.getInstance(config()).updateCubeDesc(cube.getDescriptor());//enforce signature updating
+        }
+    }
+
+    private static KylinConfig config() {
+        return KylinConfig.getInstanceFromEnv();
+    }
+
     @Before
     public void setup() throws Exception {
         System.setProperty("kylin.job.scheduler.poll-interval-second", "1");
         System.setProperty("kap.engine.persist-flattable-threshold", "0");
-        System.setProperty("kylin.metadata.distributed-lock-impl", "org.apache.kylin.engine.spark.utils.MockedDistributedLock$MockedFactory");
+        System.setProperty("kylin.metadata.distributed-lock-impl",
+                "org.apache.kylin.engine.spark.utils.MockedDistributedLock$MockedFactory");
         System.setProperty(KylinConfig.KYLIN_CONF, LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         kylinConfig.setProperty("kylin.source.provider.0", "org.apache.kylin.engine.spark.source.HiveSource");
@@ -168,8 +182,8 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
         /**
          * Round2. Merge two segments
          */
-        CubeSegment firstMergeSeg = cubeManager.mergeSegments(cubeInstance,
-                new SegmentRange.TSRange(date1, date3), null, false);
+        CubeSegment firstMergeSeg = cubeManager.mergeSegments(cubeInstance, new SegmentRange.TSRange(date1, date3),
+                null, false);
         NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, "ADMIN");
         jobService.addJob(firstMergeJob);
         // wait job done
@@ -197,17 +211,14 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
         // Result cmp: Parquet vs Spark SQL
         for (LayoutEntity entity : MetadataConverter.extractEntityList2JavaList(segment.getCubeInstance())) {
             // Parquet result
-            Dataset<Row> layoutDataset = StorageFactory
-                    .createEngineAdapter(new IStorageAware() { // Hardcode
-                        @Override
-                        public int getStorageType() {
-                            return 4;
-                        }
-                    }, NSparkCubingEngine.NSparkCubingStorage.class)
-                    .getFrom(PathManager.getParquetStoragePath(segment.getConfig(),
-                            segment.getCubeInstance().getId(),
-                            segment.getUuid(), String.valueOf(entity.getId())),
-                            ss);
+            Dataset<Row> layoutDataset = StorageFactory.createEngineAdapter(new IStorageAware() { // Hardcode
+                @Override
+                public int getStorageType() {
+                    return 4;
+                }
+            }, NSparkCubingEngine.NSparkCubingStorage.class)
+                    .getFrom(PathManager.getParquetStoragePath(segment.getConfig(), segment.getCubeInstance().getId(),
+                            segment.getUuid(), String.valueOf(entity.getId())), ss);
 
             Set<Integer> measures = new HashSet<Integer>();
             Set<Integer> rowKeys = entity.getOrderedDimensions().keySet();
@@ -227,7 +238,8 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
             // Spark sql
             Dataset<Row> ds = initFlatTable(segment);
             if (!entity.isTableIndex()) {
-                ds = CuboidAggregator.agg(ss, ds, entity.getOrderedDimensions().keySet(), entity.getOrderedMeasures(), null, true);
+                ds = CuboidAggregator.agg(ss, ds, entity.getOrderedDimensions().keySet(), entity.getOrderedMeasures(),
+                        null, true);
             }
             Dataset<Row> exceptDs = ds.select(NSparkCubingUtil.getColumns(rowKeys, measures))
                     .sort(NSparkCubingUtil.getColumns(rowKeys));
@@ -274,7 +286,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
     }
 
     private Integer convertOutSchema(Dataset<Row> layoutDs, String fieldName,
-                                     org.apache.spark.sql.types.DataType dataType) {
+            org.apache.spark.sql.types.DataType dataType) {
         StructField[] structFieldList = layoutDs.schema().fields();
         String[] columns = layoutDs.columns();
 
@@ -299,11 +311,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
         System.out.println(getTestConfig().getMetadataUrl());
 
         CreateFlatTable flatTable = new CreateFlatTable(
-                MetadataConverter.getSegmentInfo(segment.getCubeInstance(),
-                        segment.getUuid()),
-                null,
-                ss,
-                null);
+                MetadataConverter.getSegmentInfo(segment.getCubeInstance(), segment.getUuid()), null, ss, null);
         Dataset<Row> ds = flatTable.generateDataset(false, true);
         return ds;
     }
@@ -326,21 +334,6 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
                 }
             }
         }
-    }
-
-    public static void deployMetadata(String localMetaData) throws IOException {
-        // install metadata to hbase
-        new ResourceTool().reset(config());
-        new ResourceTool().copy(KylinConfig.createInstanceFromUri(localMetaData), config());
-
-        // update cube desc signature.
-        for (CubeInstance cube : CubeManager.getInstance(config()).listAllCubes()) {
-            CubeDescManager.getInstance(config()).updateCubeDesc(cube.getDescriptor());//enforce signature updating
-        }
-    }
-
-    private static KylinConfig config() {
-        return KylinConfig.getInstanceFromEnv();
     }
 
 }
