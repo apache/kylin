@@ -22,7 +22,7 @@ cd ${dir}/../..
 
 rm -rf build/spark
 
-spark_pkg_name="spark-2.4.1-os-kylin-r1"
+spark_pkg_name="spark-2.4.1-os-kylin-r3"
 spark_pkg_file_name="${spark_pkg_name}.tgz"
 spark_pkg_md5="8fb09dbb61f26f5679be49c2c8713da3"
 
