@@ -128,7 +128,7 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         final PhysType physType = PhysTypeImpl.of(enumImplementor.getTypeFactory(), getRowType(),
                 pref.preferCustom());
         if (KylinConfig.getInstanceFromEnv().isSparkEngineEnabled()) {
-            QueryContextFacade.current().setOlapRel(this);
+            QueryContextFacade.current().setOlapRel(getInput());
             QueryContextFacade.current().setResultType(getRowType());
             final BlockBuilder list = new BlockBuilder();
             if (physType.getFormat() == JavaRowFormat.SCALAR) {
