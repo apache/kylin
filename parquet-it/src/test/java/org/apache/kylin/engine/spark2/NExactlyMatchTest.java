@@ -25,6 +25,7 @@ import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.lock.MockJobLock;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.KylinSparkEnv;
@@ -40,8 +41,11 @@ import org.junit.Test;
 import scala.Option;
 import scala.runtime.AbstractFunction1;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class NExactlyMatchTest extends LocalWithSparkSessionTest {
 
@@ -70,7 +74,11 @@ public class NExactlyMatchTest extends LocalWithSparkSessionTest {
 
     @Test
     public void testInClause() throws Exception {
-        fullBuildCube("ci_inner_join_cube");
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
+        f.setTimeZone(TimeZone.getTimeZone("GMT"));
+        long start = f.parse("2012-01-01").getTime();
+        long end = f.parse("2015-01-01").getTime();
+        buildCuboid("ci_inner_join_cube", new SegmentRange.TSRange(start, end));
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         populateSSWithCSVData(config, getProject(), KylinSparkEnv.getSparkSession());

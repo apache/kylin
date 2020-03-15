@@ -17,6 +17,29 @@
  */
 package org.apache.kylin.engine.spark2;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
+import org.apache.kylin.engine.spark.job.NSparkMergingJob;
+import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
+import org.apache.kylin.job.execution.ExecutableManager;
+import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.spark.sql.KylinSparkEnv;
+import org.apache.kylin.engine.spark2.NExecAndComp.CompareLevel;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spark_project.guava.collect.Lists;
+
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -29,30 +52,6 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.CubeUpdate;
-import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
-import org.apache.kylin.engine.spark.job.NSparkMergingJob;
-import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
-import org.apache.kylin.engine.spark2.NExecAndComp.CompareLevel;
-import org.apache.kylin.job.execution.ExecutableManager;
-import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.spark.sql.KylinSparkEnv;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.spark_project.guava.collect.Lists;
 
 @Ignore("see io.kyligence.kap.ut.TestQueryAndBuild")
 @SuppressWarnings("serial")
@@ -224,14 +223,10 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         CubeManager cubeMgr = CubeManager.getInstance(config);
         ExecutableManager execMgr = ExecutableManager.getInstance(config);
-
-        CubeInstance cube = cubeMgr.getCube(cubeName);
         Assert.assertTrue(config.getHdfsWorkingDirectory().startsWith("file:"));
 
         // cleanup all segments first
-        CubeUpdate update = new CubeUpdate(cube);
-        update.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[0]));
-        cubeMgr.updateCube(update);
+        cleanupSegments(cubeName);
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -249,7 +244,8 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
         /**
          * Round2. Merge two segments
          */
-        cube = cubeMgr.getCube(cubeName);
+
+        CubeInstance cube = cubeMgr.reloadCube(cubeName);
         CubeSegment firstMergeSeg = cubeMgr.mergeSegments(cube,
                 new SegmentRange.TSRange(f.parse("2010-01-01").getTime(), f.parse("2015-01-01").getTime()), null,
                 false);
@@ -299,17 +295,10 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
     }
 
     private void buildFourSegementAndMerge(String cubeName) throws Exception {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        CubeManager cubeMgr = CubeManager.getInstance(config);
-        ExecutableManager execMgr = ExecutableManager.getInstance(config);
-
-        CubeInstance cube = cubeMgr.getCube(cubeName);
         Assert.assertTrue(config.getHdfsWorkingDirectory().startsWith("file:"));
 
         // cleanup all segments first
-        CubeUpdate update = new CubeUpdate(cube);
-        update.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[0]));
-        cubeMgr.updateCube(update);
+        cleanupSegments(cubeName);
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -335,7 +324,7 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
         /**
          * Round2. Merge two segments
          */
-        cube = cubeMgr.getCube(cubeName);
+        CubeInstance cube = cubeMgr.reloadCube(cubeName);
         CubeSegment firstMergeSeg = cubeMgr.mergeSegments(cube,
                 new SegmentRange.TSRange(f.parse("2010-01-01").getTime(), f.parse("2013-01-01").getTime()), null,
                 false);
@@ -343,25 +332,21 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
         execMgr.addJob(firstMergeJob);
         // wait job done
         Assert.assertEquals(ExecutableState.SUCCEED, wait(firstMergeJob));
-        AfterMergeOrRefreshResourceMerger merger = new AfterMergeOrRefreshResourceMerger(config);
-        merger.merge(firstMergeJob.getSparkMergingStep());
 
-        cube = cubeMgr.getCube(cubeName);
+        cube = cubeMgr.reloadCube(cubeName);
 
-        CubeSegment secondMergeSeg = cubeMgr.mergeSegments(cube,
-                new SegmentRange.TSRange(f.parse("2013-01-01").getTime(), f.parse("2015-06-01").getTime()), null,
-                false);
+        CubeSegment secondMergeSeg = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(
+                f.parse("2013-01-01").getTime(), f.parse("2015-01-01").getTime()), null, false);
         NSparkMergingJob secondMergeJob = NSparkMergingJob.merge(secondMergeSeg, "ADMIN");
         execMgr.addJob(secondMergeJob);
         // wait job done
         Assert.assertEquals(ExecutableState.SUCCEED, wait(secondMergeJob));
-        merger.merge(secondMergeJob.getSparkMergingStep());
 
         /**
          * validate cube segment info
          */
-        CubeSegment firstSegment = cubeMgr.getCube(cubeName).getSegments().get(0);
-        CubeSegment secondSegment = cubeMgr.getCube(cubeName).getSegments().get(1);
+        CubeSegment firstSegment = cubeMgr.reloadCube(cubeName).getSegments().get(0);
+        CubeSegment secondSegment = cubeMgr.reloadCube(cubeName).getSegments().get(1);
 
         /*if (getProject().equals("default") && cubeName.equals("ci_inner_join_cube")) {
             Map<Long, NDataLayout> cuboidsMap1 = firstSegment.getLayoutsMap();
@@ -397,8 +382,6 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
                 secondSegment.getSegRange());
         //Assert.assertEquals(31, firstSegment.getDictionaries().size());
         //Assert.assertEquals(31, secondSegment.getDictionaries().size());
-        Assert.assertEquals(7, firstSegment.getSnapshots().size());
-        Assert.assertEquals(7, secondSegment.getSnapshots().size());
     }
 
     class QueryCallable implements Callable<Pair<String, Throwable>> {
