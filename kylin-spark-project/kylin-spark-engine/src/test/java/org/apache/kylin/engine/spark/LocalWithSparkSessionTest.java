@@ -25,9 +25,9 @@ import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.engine.spark.job.NSparkCubingStep;
+import org.apache.kylin.engine.spark.job.NSparkMergingJob;
 import org.apache.kylin.engine.spark.job.UdfManager;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -59,6 +59,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spark_project.guava.collect.Sets;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -77,16 +78,23 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
     private Map<String, String> systemProp = Maps.newHashMap();
     protected static SparkConf sparkConf;
     protected static SparkSession ss;
+    protected KylinConfig config;
+    protected CubeManager cubeMgr;
+    protected ExecutableManager execMgr;
 
     protected void init() throws Exception {
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
         overwriteSystemProp("calcite.keep-in-clause", "true");
-        this.createTestMetadata();
+        overwriteSystemProp(KylinConfig.KYLIN_CONF, LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
+        overwriteSystemProp("kylin.metadata.distributed-lock-impl", "org.apache.kylin.engine.spark.utils.MockedDistributedLock$MockedFactory");
         DefaultScheduler scheduler = DefaultScheduler.getInstance();
         scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()), new MockJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
         }
+        config = KylinConfig.getInstanceFromEnv();
+        cubeMgr = CubeManager.getInstance(config);
+        execMgr = ExecutableManager.getInstance(config);
     }
 
     protected void overwriteSystemProp(String key, String value) {
@@ -128,13 +136,15 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         }
     }
 
+    protected void cleanupSegments(String cubeName) throws IOException {
+        CubeInstance cube = cubeMgr.getCube(cubeName);
+        cubeMgr.updateCubeDropSegments(cube, cube.getSegments());
+    }
+
     protected void buildCuboid(String cubeName, SegmentRange.TSRange tsRange) throws Exception {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        CubeManager cubeMgr = CubeManager.getInstance(config);
-        ExecutableManager execMgr = ExecutableManager.getInstance(config);
         CubeInstance cube = cubeMgr.getCube(cubeName);
 
-        // ready dataflow, segment, cuboid layout
+        // ready cube, segment, cuboid layout
         CubeSegment oneSeg = cubeMgr.appendSegment(cube, tsRange);
         NSparkCubingJob job = NSparkCubingJob.create(Sets.newHashSet(oneSeg), "ADMIN");
         NSparkCubingStep sparkStep = job.getSparkCubingStep();
@@ -150,17 +160,18 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         }
     }
 
-    protected void fullBuildCube(String cubeName) throws Exception {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        CubeManager cubeMgr = CubeManager.getInstance(config);
-        Assert.assertTrue(config.getHdfsWorkingDirectory().startsWith("file:"));
-        // ready dataflow, segment, cuboid layout
+    protected void mergeSegments(String cubeName, long start, long end, boolean force) throws Exception {
         CubeInstance cube = cubeMgr.getCube(cubeName);
+        CubeSegment mergeSegment = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(start, end), null, force);
+        NSparkMergingJob emptyMergeJob = NSparkMergingJob.merge(mergeSegment,  "ADMIN");
+        execMgr.addJob(emptyMergeJob);
+        Assert.assertEquals(ExecutableState.SUCCEED, wait(emptyMergeJob));
+    }
+
+    protected void fullBuildCube(String cubeName) throws Exception {
+        Assert.assertTrue(config.getHdfsWorkingDirectory().startsWith("file:"));
         // cleanup all segments first
-        CubeUpdate update = new CubeUpdate(cube);
-        update.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[0]));
-        cubeMgr.updateCube(update);
-        cube = cubeMgr.getCube(cubeName);
+        cleanupSegments(cubeName);
         buildCuboid(cubeName, new SegmentRange.TSRange(0L, Long.MAX_VALUE));
     }
 

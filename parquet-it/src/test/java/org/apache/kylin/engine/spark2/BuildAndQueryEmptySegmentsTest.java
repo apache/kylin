@@ -17,20 +17,11 @@
  */
 package org.apache.kylin.engine.spark2;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
-import org.apache.kylin.engine.spark.job.NSparkMergingJob;
-import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
-import org.apache.kylin.job.execution.ExecutableManager;
-import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.spark.sql.Dataset;
@@ -52,16 +43,9 @@ public class BuildAndQueryEmptySegmentsTest extends LocalWithSparkSessionTest {
             + "WHERE test_kylin_fact.cal_dt>'2009-06-01' and test_kylin_fact.cal_dt<'2013-01-01' \n"
             + "GROUP BY test_cal_dt.season_beg_dt";
 
-    private KylinConfig config;
-    private CubeManager cubeMgr;
-    private ExecutableManager execMgr;
-
     @Before
     public void init() throws Exception {
         super.init();
-        config = KylinConfig.getInstanceFromEnv();
-        cubeMgr = CubeManager.getInstance(config);
-        execMgr = ExecutableManager.getInstance(config);
     }
 
     @After
@@ -85,35 +69,20 @@ public class BuildAndQueryEmptySegmentsTest extends LocalWithSparkSessionTest {
 
         buildCube(CUBE_NAME1, f.parse("2009-06-01").getTime(), f.parse("2010-01-01").getTime());
         Assert.assertEquals(0, cubeMgr.getCube(CUBE_NAME1).getSegments().get(1).getInputRecords());
-        buildCube(CUBE_NAME1, f.parse("2010-01-01").getTime(), f.parse("2012-01-01").getTime());
+        buildCube(CUBE_NAME1, f.parse("2010-01-01").getTime(), f.parse("2011-01-01").getTime());
         Assert.assertEquals(0, cubeMgr.getCube(CUBE_NAME1).getSegments().get(2).getInputRecords());
-        buildCube(CUBE_NAME1, f.parse("2012-01-01").getTime(), f.parse("2015-01-01").getTime());
+        buildCube(CUBE_NAME1, f.parse("2011-01-01").getTime(), f.parse("2015-01-01").getTime());
         Assert.assertNotEquals(0, cubeMgr.getCube(CUBE_NAME1).getSegments().get(3).getInputRecords());
 
-        mergeSegments(f.parse("2009-01-01").getTime(), f.parse("2010-01-01").getTime(), true);
-        mergeSegments(f.parse("2010-01-01").getTime(), f.parse("2015-01-01").getTime(), true);
+        mergeSegments(CUBE_NAME1, f.parse("2009-01-01").getTime(), f.parse("2010-01-01").getTime(), true);
+        mergeSegments(CUBE_NAME1, f.parse("2010-01-01").getTime(), f.parse("2015-01-01").getTime(), true);
 
         testQuery(SQL);
         testQuery(SQL_DERIVED);
     }
 
-    private void cleanupSegments(String cubeName) throws IOException {
-        CubeInstance cube = cubeMgr.getCube(cubeName);
-        cubeMgr.updateCubeDropSegments(cube, cube.getSegments());
-    }
-
     private void buildCube(String cubeName, long start, long end) throws Exception {
         buildCuboid(cubeName, new SegmentRange.TSRange(start, end));
-    }
-
-    private void mergeSegments(long start, long end, boolean force) throws Exception {
-        CubeInstance cube = cubeMgr.getCube(CUBE_NAME1);
-        CubeSegment emptyMergeSeg = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(start, end), null, force);
-        NSparkMergingJob emptyMergeJob = NSparkMergingJob.merge(emptyMergeSeg, "ADMIN");
-        execMgr.addJob(emptyMergeJob);
-        Assert.assertEquals(ExecutableState.SUCCEED, wait(emptyMergeJob));
-        AfterMergeOrRefreshResourceMerger merger = new AfterMergeOrRefreshResourceMerger(config);
-        merger.merge(emptyMergeJob.getSparkMergingStep());
     }
 
     private void testQuery(String sqlStr) {
