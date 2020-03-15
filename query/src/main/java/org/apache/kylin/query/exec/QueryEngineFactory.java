@@ -31,7 +31,7 @@ public class QueryEngineFactory {
     public static Enumerable<Object> computeSCALA(DataContext dataContext, RelNode relNode, RelDataType resultType)
             throws IllegalAccessException, ClassNotFoundException, InstantiationException {
         try {
-            String property = System.getProperty("kylin-query-engine", "io.kyligence.kap.query.runtime.SparkEngine");
+            String property = System.getProperty("kylin-query-engine", "org.apache.kylin.query.runtime.SparkEngine");
             QueryEngine o = (QueryEngine) Class.forName(property).newInstance();
             return o.computeSCALA(dataContext, relNode, resultType);
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
@@ -42,7 +42,7 @@ public class QueryEngineFactory {
     public static Enumerable<Object[]> compute(DataContext dataContext, RelNode relNode, RelDataType resultType)
             throws IllegalAccessException, ClassNotFoundException, InstantiationException {
         try {
-            String property = System.getProperty("kylin-query-engine", "io.kyligence.kap.query.runtime.SparkEngine");
+            String property = System.getProperty("kylin-query-engine", "org.apache.kylin.query.runtime.SparkEngine");
             QueryEngine o = (QueryEngine) Class.forName(property).newInstance();
             return o.compute(dataContext, relNode, resultType);
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
