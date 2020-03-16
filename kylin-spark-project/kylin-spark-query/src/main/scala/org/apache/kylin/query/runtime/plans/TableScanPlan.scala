@@ -63,6 +63,8 @@ object TableScanPlan extends LogEx {
       .setContextRealization(olapContext.id, realization.getName, realization.getStorageType)
     val cubeInstance: CubeInstance = realization match {
       case instance: CubeInstance => instance
+      case instance: HybridInstance =>
+        instance.getRealizations.toList.head.asInstanceOf[CubeInstance]
       case instance =>
         throw new UnsupportedQueryException("unsupported instance: " + instance)
     }

@@ -83,9 +83,6 @@ class FilePruner(
   val dataSchema: StructType)
   extends FileIndex with ResetShufflePartition with Logging {
 
-
-  val isFastBitmapEnabled: Boolean = options.apply("isFastBitmapEnabled").toBoolean
-
   private lazy val segmentDirs: Seq[SegmentDirectory] = {
     cubeInstance.getSegments.asScala
       .filter(_.getStatus.equals(SegmentStatusEnum.READY))

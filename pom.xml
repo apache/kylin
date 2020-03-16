@@ -1448,7 +1448,6 @@
     <module>stream-source-kafka</module>
     <module>kylin-spark-project</module>
     <module>parquet-assembly</module>
-    <module>parquet-it</module>
   </modules>
 
   <reporting>

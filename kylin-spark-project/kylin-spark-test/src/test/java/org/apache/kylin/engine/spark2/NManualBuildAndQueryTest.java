@@ -205,7 +205,7 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
             System.out.println("Direct query");
         } else if (Boolean.valueOf(System.getProperty("isDeveloperMode", "false"))) {
             fullBuildCube("ci_inner_join_cube");
-            fullBuildCube("ci_left_join_cube");
+//            fullBuildCube("ci_left_join_cube");
         } else {
             buildAndMergeCube("ci_inner_join_cube");
             buildAndMergeCube("ci_left_join_cube");
@@ -409,8 +409,7 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
                 } else if (NExecAndComp.CompareLevel.SAME_SQL_COMPARE.equals(compareLevel)) {
                     List<Pair<String, String>> queries = NExecAndComp
                             .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);
-                    NExecAndComp.execCompareQueryAndCompare(queries, getProject(), joinType);
-
+                    NExecAndComp.execAndCompare(queries, getProject(), NExecAndComp.CompareLevel.SAME_SQL_COMPARE, joinType);
                 } else {
                     List<Pair<String, String>> queries = NExecAndComp
                             .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);

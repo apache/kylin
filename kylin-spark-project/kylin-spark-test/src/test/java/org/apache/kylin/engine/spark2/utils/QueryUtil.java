@@ -24,6 +24,7 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.source.adhocquery.IPushDownConverter;
+import org.apache.kylin.query.util.QueryUtil.IQueryTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,9 +40,6 @@ public class QueryUtil {
     static List<IQueryTransformer> queryTransformers = Collections.emptyList();
     static List<IPushDownConverter> pushDownConverters = Collections.emptyList();
 
-    public interface IQueryTransformer {
-        String transform(String sql, String project, String defaultSchema);
-    }
 
     public static String massageSql(String sql, String project, int limit, int offset, String defaultSchema, boolean isCCNeeded) {
         ProjectManager projectManager = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -61,7 +59,7 @@ public class QueryUtil {
     private static String transformSql(KylinConfig kylinConfig, String sql, String project, String defaultSchema, boolean isCCNeeded) {
         // customizable SQL transformation
         initQueryTransformersIfNeeded(kylinConfig, isCCNeeded);
-        for (QueryUtil.IQueryTransformer t : queryTransformers) {
+        for (IQueryTransformer t : queryTransformers) {
             sql = t.transform(sql, project, defaultSchema);
             logger.debug("SQL transformed by {}, result: {}", t.getClass(), sql);
         }
@@ -84,7 +82,7 @@ public class QueryUtil {
                 continue;
 
             try {
-                QueryUtil.IQueryTransformer t = (QueryUtil.IQueryTransformer) ClassUtil.newInstance(clz);
+                IQueryTransformer t = (IQueryTransformer) ClassUtil.newInstance(clz);
 
                 transformers.add(t);
             } catch (Exception e) {
