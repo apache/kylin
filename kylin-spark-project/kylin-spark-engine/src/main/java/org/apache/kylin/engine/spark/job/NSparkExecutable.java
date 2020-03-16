@@ -116,7 +116,7 @@ public class NSparkExecutable extends AbstractExecutable {
         }
 
         String kylinJobJar = config.getKylinParquetJobJarPath();
-        if (StringUtils.isEmpty(kylinJobJar) && !config.isUTEnv()) {
+        if (!config.isUTEnv() && StringUtils.isEmpty(kylinJobJar) && !config.isUTEnv()) {
             throw new RuntimeException("Missing kylin parquet job jar");
         }
         String hadoopConf = System.getProperty("kylin.hadoop.conf.dir");

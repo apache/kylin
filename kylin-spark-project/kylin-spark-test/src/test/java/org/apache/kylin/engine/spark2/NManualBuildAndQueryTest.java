@@ -64,6 +64,9 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
     @Before
     public void setup() throws Exception {
         super.init();
+        System.setProperty("kylin.env", "UT");
+        System.setProperty("kylin.metadata.distributed-lock-impl", "org.apache.kylin.engine.spark.utils.MockedDistributedLock$MockedFactory");
+        System.setProperty("isDeveloperMode", "true");
     }
 
     @After
@@ -89,7 +92,6 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
     }
 
     @Test
-    @Ignore
     public void testBasics() throws Exception {
         final KylinConfig config = KylinConfig.getInstanceFromEnv();
 

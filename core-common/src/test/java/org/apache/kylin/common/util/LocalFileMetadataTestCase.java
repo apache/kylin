@@ -43,9 +43,19 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
         try {
             KylinConfig.destroyInstance();
 
-            FileUtils.deleteDirectory(new File(LOCALMETA_TEMP_DATA));
+            File destDir;
+            File srcDir;
+            if (new File(LOCALMETA_TEST_DATA).exists()) {
+                srcDir = new File(LOCALMETA_TEST_DATA);
+                destDir = new File(LOCALMETA_TEMP_DATA);
+            } else {
+                srcDir = new File("../" + LOCALMETA_TEST_DATA);
+                destDir = new File("../" + LOCALMETA_TEMP_DATA);
+            }
+
+            FileUtils.deleteDirectory(destDir);
             if (useTestMeta) {
-                FileUtils.copyDirectory(new File(LOCALMETA_TEST_DATA), new File(LOCALMETA_TEMP_DATA));
+                FileUtils.copyDirectory(srcDir, destDir);
             }
 
             if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null) {

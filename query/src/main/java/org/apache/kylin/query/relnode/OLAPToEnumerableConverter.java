@@ -114,11 +114,6 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         OLAPRel.RewriteImplementor rewriteImplementor = new OLAPRel.RewriteImplementor();
         rewriteImplementor.visitChild(this, getInput());
 
-        // implement as EnumerableRel
-        OLAPRel.JavaImplementor impl = new OLAPRel.JavaImplementor(enumImplementor);
-        EnumerableRel inputAsEnum = impl.createEnumerable((OLAPRel) getInput());
-        this.replaceInput(0, inputAsEnum);
-
         if (System.getProperty("calcite.debug") != null) {
             String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
             System.out.println("EXECUTION PLAN AFTER REWRITE");
@@ -142,6 +137,10 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             }
             return enumImplementor.result(physType, list.toBlock());
         } else {
+            // implement as EnumerableRel
+            OLAPRel.JavaImplementor impl = new OLAPRel.JavaImplementor(enumImplementor);
+            EnumerableRel inputAsEnum = impl.createEnumerable((OLAPRel) getInput());
+            this.replaceInput(0, inputAsEnum);
             return impl.visitChild(this, 0, inputAsEnum, pref);
         }
     }

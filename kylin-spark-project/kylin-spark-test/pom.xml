@@ -3,13 +3,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-spark-project</artifactId>
         <version>3.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>parquet-it</artifactId>
+    <artifactId>kylin-spark-test</artifactId>
     <name>Apache Kylin - Parquet IT</name>
 
     <properties>
@@ -174,7 +175,7 @@
                                     <argument>-P</argument>
                                     <argument>${profile.id}</argument>
                                 </arguments>
-                                <workingDirectory>${project.basedir}</workingDirectory>
+                                <workingDirectory></workingDirectory>
                             </configuration>
                         </execution>
                     </executions>
