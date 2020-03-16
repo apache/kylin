@@ -74,7 +74,7 @@ public class NExecAndComp {
         int appendLimitQueries = 0;
         for (Pair<String, String> query : queries) {
             logger.info("execLimitAndValidate on query: " + query.getFirst());
-            String sql = KylinTestBase.changeJoinType(query.getSecond(), joinType);
+            String sql = changeJoinType(query.getSecond(), joinType);
 
             Pair<String, String> sqlAndAddedLimitSql = Pair.newPair(sql, sql);
             if (!sql.toLowerCase(Locale.ROOT).contains("limit ")) {
@@ -106,7 +106,7 @@ public class NExecAndComp {
         for (Pair<String, String> path2Sql : testScenario.getQueries()) {
             try {
                 logger.info("Exec and compare query ({}) :{}", joinType, path2Sql.getFirst());
-                String sql = KylinTestBase.changeJoinType(path2Sql.getSecond(), joinType);
+                String sql = changeJoinType(path2Sql.getSecond(), joinType);
                 long startTime = System.currentTimeMillis();
                 List<String> params = KylinTestBase.getParameterFromFile(new File(path2Sql.getFirst().trim()));
 
@@ -147,7 +147,7 @@ public class NExecAndComp {
         for (Pair<String, String> query : queries) {
             logger.info("Exec and compare query ({}) :{}", joinType, query.getFirst());
 
-            String sql = KylinTestBase.changeJoinType(query.getSecond(), joinType);
+            String sql = changeJoinType(query.getSecond(), joinType);
 
             // Query from Cube
             long startTime = System.currentTimeMillis();
@@ -176,12 +176,12 @@ public class NExecAndComp {
     public static boolean execAndCompareQueryResult(Pair<String, String> queryForKap,
                                                     Pair<String, String> queryForSpark, String joinType, String prj,
                                                     Map<String, CompareEntity> recAndQueryResult) {
-        String sqlForSpark = KylinTestBase.changeJoinType(queryForSpark.getSecond(), joinType);
+        String sqlForSpark = changeJoinType(queryForSpark.getSecond(), joinType);
         addQueryPath(recAndQueryResult, queryForSpark, sqlForSpark);
         Dataset<Row> sparkResult = queryWithSpark(prj, queryForSpark.getSecond(), queryForSpark.getFirst());
         List<Row> sparkRows = sparkResult.toJavaRDD().collect();
 
-        String sqlForKap = KylinTestBase.changeJoinType(queryForKap.getSecond(), joinType);
+        String sqlForKap = changeJoinType(queryForKap.getSecond(), joinType);
         Dataset<Row> cubeResult = queryWithKap(prj, joinType, Pair.newPair(sqlForKap, sqlForKap));
         List<Row> kapRows = SparkQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
 
@@ -218,14 +218,14 @@ public class NExecAndComp {
         compareEntityMap.putIfAbsent(pair.getFirst(), new CompareEntity());
         final CompareEntity entity = compareEntityMap.get(pair.getFirst());
         entity.setSql(pair.getFirst());
-        Dataset<Row> rowDataset = queryFromCube(prj, KylinTestBase.changeJoinType(pair.getSecond(), joinType));
+        Dataset<Row> rowDataset = queryFromCube(prj, changeJoinType(pair.getSecond(), joinType));
         entity.setOlapContexts(OLAPContext.getThreadLocalContexts());
         OLAPContext.clearThreadLocalContexts();
         return rowDataset;
     }
 
     private static Dataset<Row> queryWithKap(String prj, String joinType, Pair<String, String> sql) {
-        return queryFromCube(prj, KylinTestBase.changeJoinType(sql.getSecond(), joinType));
+        return queryFromCube(prj, changeJoinType(sql.getSecond(), joinType));
     }
 
     private static Dataset<Row> queryWithSpark(String prj, String originSql, String sqlPath) {
@@ -535,5 +535,29 @@ public class NExecAndComp {
             DBUtils.closeQuietly(conn);
         }
         return results;
+    }
+
+    public static String changeJoinType(String sql, String targetType) {
+
+        if (targetType.equalsIgnoreCase("default")) {
+            return sql;
+        }
+
+        String specialStr = "changeJoinType_DELIMITERS";
+        sql = sql.replaceAll(System.getProperty("line.separator"), " " + specialStr + " ");
+
+        String[] tokens = StringUtils.split(sql, null);// split white spaces
+        for (int i = 0; i < tokens.length - 1; ++i) {
+            if ((tokens[i].equalsIgnoreCase("inner") || tokens[i].equalsIgnoreCase("left"))
+                    && tokens[i + 1].equalsIgnoreCase("join")) {
+                tokens[i] = targetType.toLowerCase(Locale.ROOT);
+            }
+        }
+
+        String ret = StringUtils.join(tokens, " ");
+        ret = ret.replaceAll(specialStr, System.getProperty("line.separator"));
+        logger.info("The actual sql executed is: " + ret);
+
+        return ret;
     }
 }

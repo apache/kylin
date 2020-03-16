@@ -74,7 +74,7 @@ import java.util.UUID;
 public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(LocalWithSparkSessionTest.class);
     private static final String CSV_TABLE_DIR = "../../examples/test_metadata/data/%s.csv";
-    protected static final String KYLIN_SQL_BASE_DIR = "../../kylin-it/test/resources/query";
+    protected static final String KYLIN_SQL_BASE_DIR = "../../kylin-it/src/test/resources/query";
 
     private Map<String, String> systemProp = Maps.newHashMap();
     protected static SparkConf sparkConf;
