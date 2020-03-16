@@ -190,16 +190,20 @@ object MetadataConverter {
   }
 
   def extractPartitionExp(cubeSegment: CubeSegment): String = {
-    val partitionDesc = cubeSegment.getModel.getPartitionDesc
-    partitionDesc.setPartitionDateFormat(DateFormat.COMPACT_DATE_PATTERN)
-    val (originPartitionColumn, convertedPartitionColumn) = if (partitionDesc.getPartitionDateColumnRef != null) {
-      (partitionDesc.getPartitionDateColumnRef.getIdentity, convertFromDot(partitionDesc.getPartitionDateColumnRef.getIdentity))
+    if (cubeSegment.getTSRange.startValue == 0 && cubeSegment.getTSRange.endValue == Long.MaxValue) {
+      ""
     } else {
-      (partitionDesc.getPartitionTimeColumnRef.getIdentity, convertFromDot(partitionDesc.getPartitionTimeColumnRef.getIdentity))
+      val partitionDesc = cubeSegment.getModel.getPartitionDesc
+      partitionDesc.setPartitionDateFormat(DateFormat.COMPACT_DATE_PATTERN)
+      val (originPartitionColumn, convertedPartitionColumn) = if (partitionDesc.getPartitionDateColumnRef != null) {
+        (partitionDesc.getPartitionDateColumnRef.getIdentity, convertFromDot(partitionDesc.getPartitionDateColumnRef.getIdentity))
+      } else {
+        (partitionDesc.getPartitionTimeColumnRef.getIdentity, convertFromDot(partitionDesc.getPartitionTimeColumnRef.getIdentity))
+      }
+      val originString = partitionDesc.getPartitionConditionBuilder
+        .buildDateRangeCondition(partitionDesc, null, cubeSegment.getSegRange, null)
+      StringUtils.replace(originString, originPartitionColumn, convertedPartitionColumn)
     }
-    val originString = partitionDesc.getPartitionConditionBuilder
-      .buildDateRangeCondition(partitionDesc, null, cubeSegment.getSegRange, null)
-    StringUtils.replace(originString, originPartitionColumn, convertedPartitionColumn)
   }
 
   def extractFilterCondition(cubeSegment: CubeSegment): String = {

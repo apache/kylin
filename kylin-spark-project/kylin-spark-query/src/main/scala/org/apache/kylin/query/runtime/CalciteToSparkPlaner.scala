@@ -47,7 +47,9 @@ class CalciteToSparkPlaner(dataContext: DataContext) extends RelVisitor with Log
     // skip non runtime joins children
     // cases to skip children visit
     // 1. current node is a OLAPJoinRel and is not a runtime join
-    if (!node.isInstanceOf[OLAPJoinRel] && node.asInstanceOf[OLAPJoinRel].isRuntimeJoin) {
+    if (!node.isInstanceOf[OLAPJoinRel]) {
+      node.childrenAccept(this)
+    } else if (node.asInstanceOf[OLAPJoinRel].isRuntimeJoin) {
       node.childrenAccept(this)
     }
     stack.push(node match {

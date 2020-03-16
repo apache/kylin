@@ -37,7 +37,7 @@ public class CsvSource implements ISource {
 
                 @Override
                 public Dataset<Row> getSourceData(TableDesc table, SparkSession ss, Map<String, String> parameters) {
-                    String path = new File(getUtMetaDir(), "../localmeta_n/data/" + table.identity() + ".csv").getAbsolutePath();
+                    String path = new File(getUtMetaDir(), "../../../examples/test_case_data/localmeta_n//data/" + table.identity() + ".csv").getAbsolutePath();
                     Dataset<Row> delimiter = ss.read()
                             .option("delimiter", ",")
 //                            .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS")

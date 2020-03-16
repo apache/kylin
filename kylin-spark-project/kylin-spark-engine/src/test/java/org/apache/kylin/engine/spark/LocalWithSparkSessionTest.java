@@ -20,6 +20,7 @@ package org.apache.kylin.engine.spark;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import java.io.File;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.cube.CubeInstance;
@@ -72,8 +73,8 @@ import java.util.UUID;
 
 public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(LocalWithSparkSessionTest.class);
-    private static final String CSV_TABLE_DIR = "../examples/test_metadata/data/%s.csv";
-    protected static final String KYLIN_SQL_BASE_DIR = "../kylin-it/test/resources/query";
+    private static final String CSV_TABLE_DIR = "../../examples/test_metadata/data/%s.csv";
+    protected static final String KYLIN_SQL_BASE_DIR = "../../kylin-it/test/resources/query";
 
     private Map<String, String> systemProp = Maps.newHashMap();
     protected static SparkConf sparkConf;
@@ -85,8 +86,8 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
     protected void init() throws Exception {
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
         overwriteSystemProp("calcite.keep-in-clause", "true");
-        overwriteSystemProp(KylinConfig.KYLIN_CONF, LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
         overwriteSystemProp("kylin.metadata.distributed-lock-impl", "org.apache.kylin.engine.spark.utils.MockedDistributedLock$MockedFactory");
+        this.createTestMetadata();
         DefaultScheduler scheduler = DefaultScheduler.getInstance();
         scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()), new MockJobLock());
         if (!scheduler.hasStarted()) {
@@ -197,7 +198,9 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
             if ("DEFAULT.STREAMING_TABLE".equals(table)) {
                 continue;
             }
-
+            if (!new File(String.format(Locale.ROOT, CSV_TABLE_DIR, table)).exists()) {
+                continue;
+            }
             TableDesc tableDesc = TableMetadataManager.getInstance(kylinConfig).getTableDesc(table, project);
             ColumnDesc[] columns = tableDesc.getColumns();
             StructType schema = new StructType();
