@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 import java.io.File;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -125,6 +126,12 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
 
         System.out.println("Check spark sql config [spark.sql.catalogImplementation = "
                 + ss.conf().get("spark.sql.catalogImplementation") + "]");
+    }
+
+    public void createTestMetadata() {
+        String tempMetadataDir = TempMetadataBuilder.prepareNLocalTempMetadata();
+        KylinConfig.setKylinConfigForLocalTest(tempMetadataDir);
+        getTestConfig().setProperty("kylin.query.security.acl-tcr-enabled", "false");
     }
 
     protected ExecutableState wait(AbstractExecutable job) throws InterruptedException {

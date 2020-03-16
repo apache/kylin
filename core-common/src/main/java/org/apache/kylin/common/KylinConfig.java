@@ -575,6 +575,33 @@ public class KylinConfig extends KylinConfigBase {
         return super.hashCode();
     }
 
+    // Only used in test cases!!!
+    public static void setKylinConfigForLocalTest(String localMetaDir) {
+        synchronized (KylinConfig.class) {
+            if (new File(localMetaDir, "kylin.properties").exists() == false)
+                throw new IllegalArgumentException(localMetaDir + " is not a valid local meta dir");
+
+            destroyInstance();
+            logger.info("Setting KylinConfig to " + localMetaDir);
+
+            System.setProperty(KylinConfig.KYLIN_CONF, localMetaDir);
+
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
+            config.setMetadataUrl(localMetaDir);
+
+            // make sure a local working directory
+            File workingDir = new File(localMetaDir, "working-dir");
+            workingDir.mkdirs();
+            String path = workingDir.getAbsolutePath();
+            if (!path.startsWith("/"))
+                path = "/" + path;
+            if (!path.endsWith("/"))
+                path = path + "/";
+            path = path.replace("\\", "/");
+            config.setProperty("kylin.env.hdfs-working-dir", "file:" + path);
+        }
+    }
+
     @Override
     public int hashCode() {
         return base().superHashCode();

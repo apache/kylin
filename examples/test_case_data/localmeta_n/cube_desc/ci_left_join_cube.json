@@ -253,17 +253,6 @@
       }
     },
     {
-      "name": "GVM_PERCENTILE",
-      "function": {
-        "expression": "PERCENTILE_APPROX",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.PRICE"
-        },
-        "returntype": "percentile(100)"
-      }
-    },
-    {
       "name": "TEST_COUNT_COLUMN_CNT",
       "function": {
         "expression": "COUNT",
@@ -401,23 +390,6 @@
               "SELLER_FORMAT_HLL",
               "TOP_SELLER",
               "TEST_COUNT_DISTINCT_BITMAP"
-            ]
-          }
-        ]
-      },
-      {
-        "name": "f3",
-        "columns": [
-          {
-            "qualifier": "m",
-            "measure_refs": [
-              "TEST_EXTENDED_COLUMN",
-              "BUYER_CONTACT",
-              "SELLER_CONTACT",
-              "TRANS_ID_RAW",
-              "PRICE_RAW",
-              "CAL_DT_RAW",
-              "GVM_PERCENTILE"
             ]
           }
         ]
