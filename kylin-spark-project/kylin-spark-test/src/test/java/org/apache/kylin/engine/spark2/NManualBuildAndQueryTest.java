@@ -255,13 +255,11 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
         execMgr.addJob(firstMergeJob);
         // wait job done
         Assert.assertEquals(ExecutableState.SUCCEED, wait(firstMergeJob));
-        AfterMergeOrRefreshResourceMerger merger = new AfterMergeOrRefreshResourceMerger(config);
-        merger.merge(firstMergeJob.getSparkMergingStep());
 
         /**
          * validate cube segment info
          */
-        CubeSegment firstSegment = cubeMgr.getCube(cubeName).getSegments().get(0);
+        CubeSegment firstSegment = cubeMgr.reloadCube(cubeName).getSegments().get(0);
 
         /*if (getProject().equals("default") && cubeName.equals("ci_left_join_cube")) {
             Map<Long, NDataLayout> cuboidsMap1 = firstSegment.();

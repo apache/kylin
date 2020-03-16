@@ -2334,18 +2334,8 @@ public abstract class KylinConfigBase implements Serializable {
     // ============================================================================
     // Kylin on parquetv2 related
     // ============================================================================
-    public String getCuboidSpanningTree() {
-        return getOptional("kylin.cube.cuboid-spanning-tree",
-                "kylin.engine.spark.metadata.cube.model.ForestSpanningTree");
-    }
-
     public String getSparkBuildClassName() {
         return getOptional("kylin.engine.spark.build-class-name", "org.apache.kylin.engine.spark.job.CubeBuildJob");
-    }
-
-    public String getSparkTableSamplingClassName() {
-        return getOptional("kylin.engine.spark.sampling-class-name",
-                "org.apache.kylin.engine.spark.stats.analyzer.TableAnalyzerJob");
     }
 
     public Boolean getSparkEngineTaskImpactInstanceEnabled() {
@@ -2354,12 +2344,6 @@ public abstract class KylinConfigBase implements Serializable {
 
     public int getSparkEngineTaskCoreFactor() {
         return Integer.parseInt(getOptional("kylin.engine.spark.task-core-factor", "3"));
-    }
-
-    public StorageURL getJobMetaHdfsStoreUrl(String project, String jobId) {
-        Map<String, String> param = new HashMap<>();
-        param.put("path", getHdfsWorkingDirectory(project) + getNestedPath(jobId) + "metadata");
-        return new StorageURL(getMetadataUrlPrefix(), "hdfs", param);
     }
 
     public StorageURL getJobTmpMetaStoreUrl(String project, String jobId) {
@@ -2391,17 +2375,8 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.engine.persist-flattable-threshold", "1"));
     }
 
-    public boolean isFlatTableJoinWithoutLookup() {
-        return Boolean.parseBoolean(getOptional("kylin.job.flat-table-join-without-lookup", "false"));
-    }
-
     public Path getJobTmpFlatTableDir(String project, String jobId) {
         String path = getJobTmpDir(project) + jobId + "/flat_table/";
-        return new Path(path);
-    }
-
-    public Path getJobTmpViewFactTableDir(String project, String jobId) {
-        String path = getJobTmpDir(project) + jobId + "/view_fact_table/";
         return new Path(path);
     }
 

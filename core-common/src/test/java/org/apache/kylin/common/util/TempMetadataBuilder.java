@@ -31,7 +31,7 @@ import java.util.List;
 public class TempMetadataBuilder {
 
     public static final String N_KAP_META_TEST_DATA = "../examples/test_case_data/localmeta_n";
-    public static final String N_SPARK_PROJECT_KAP_META_TEST_DATA = "/Users/rupeng.wang/Kyligence/Developments/kylin/kylin-parquet/examples/test_case_data/localmeta_n";
+    public static final String N_SPARK_PROJECT_KYLIN_META_TEST_DATA = "/Users/rupeng.wang/Kyligence/Developments/kylin/kylin-parquet/examples/test_case_data/localmeta_n";
     public static final String TEMP_TEST_METADATA = "../examples/test_metadata";
 
     private static final Logger logger = LoggerFactory.getLogger(TempMetadataBuilder.class);
@@ -43,7 +43,7 @@ public class TempMetadataBuilder {
     public static String prepareNLocalTempMetadata(boolean debug) {
         // for spark-project
         if (!new File(N_KAP_META_TEST_DATA).exists()) {
-            return new TempMetadataBuilder(debug, N_SPARK_PROJECT_KAP_META_TEST_DATA).build();
+            return new TempMetadataBuilder(debug, N_SPARK_PROJECT_KYLIN_META_TEST_DATA).build();
         }
         return new TempMetadataBuilder(debug, N_KAP_META_TEST_DATA).build();
     }
