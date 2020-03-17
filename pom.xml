@@ -153,11 +153,14 @@
     <rocksdb.version>5.9.2</rocksdb.version>
     <lz4.version>1.3.0</lz4.version>
     <mssql-jdbc.version>6.2.2.jre8</mssql-jdbc.version>
+    <jedis.version>2.9.3</jedis.version>
     <!--metric-->
     <dropwizard.version>3.1.2</dropwizard.version>
     <!-- REST Service, ref https://github.com/spring-projects/spring-boot/blob/v1.3.8.RELEASE/spring-boot-dependencies/pom.xml -->
     <spring.boot.version>1.3.8.RELEASE</spring.boot.version>
     <spring.framework.version>4.3.10.RELEASE</spring.framework.version>
+    <spring.framework.session.version>1.3.5.RELEASE</spring.framework.session.version>
+    <spring.framework.data.redis.version>1.8.6.RELEASE</spring.framework.data.redis.version>
     <spring.framework.security.version>4.2.3.RELEASE</spring.framework.security.version>
     <spring.framework.security.extensions.version>1.0.2.RELEASE</spring.framework.security.extensions.version>
     <opensaml.version>2.6.6</opensaml.version>
@@ -964,6 +967,22 @@
         <groupId>org.springframework</groupId>
         <artifactId>spring-test</artifactId>
         <version>${spring.framework.version}</version>
+      </dependency>
+      <!-- Spring Session -->
+      <dependency>
+        <groupId>org.springframework.session</groupId>
+        <artifactId>spring-session</artifactId>
+        <version>${spring.framework.session.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.data</groupId>
+        <artifactId>spring-data-redis</artifactId>
+        <version>${spring.framework.data.redis.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>redis.clients</groupId>
+        <artifactId>jedis</artifactId>
+        <version>${jedis.version}</version>
       </dependency>
       <!-- Spring Security -->
       <dependency>
