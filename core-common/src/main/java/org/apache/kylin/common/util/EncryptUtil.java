@@ -32,6 +32,9 @@ public class EncryptUtil {
             0x65, 0x79 };
 
     public static String encrypt(String strToEncrypt) {
+        if (strToEncrypt == null) {
+            return null;
+        }
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
@@ -45,6 +48,9 @@ public class EncryptUtil {
     }
 
     public static String decrypt(String strToDecrypt) {
+        if (strToDecrypt == null) {
+            return null;
+        }
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
             final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
