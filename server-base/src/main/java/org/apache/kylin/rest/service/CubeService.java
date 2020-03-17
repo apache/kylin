@@ -540,6 +540,7 @@ public class CubeService extends BasicService implements InitializingBean {
                 hr = (HBaseResponse) Class.forName("org.apache.kylin.rest.service.HBaseInfoUtil")//
                         .getMethod("getHBaseInfo", new Class[] { String.class, KylinConfig.class })//
                         .invoke(null, tableName, this.getConfig());
+                hr.setStorageType("hbase");
             } catch (Throwable e) {
                 throw new IOException(e);
             }

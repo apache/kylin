@@ -30,7 +30,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -41,13 +40,22 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
+import org.apache.kylin.engine.spark.NSparkCubingEngine;
+import org.apache.kylin.engine.spark.application.SparkApplication;
+import org.apache.kylin.engine.spark.builder.NBuildSourceInfo;
 import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 import org.apache.kylin.engine.spark.metadata.cube.ManagerHub;
 import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 import org.apache.kylin.engine.spark.metadata.cube.model.ForestSpanningTree;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree;
+import org.apache.kylin.engine.spark.utils.BuildUtils;
+import org.apache.kylin.engine.spark.utils.JobMetrics;
+import org.apache.kylin.engine.spark.utils.JobMetricsUtils;
+import org.apache.kylin.engine.spark.utils.Metrics;
+import org.apache.kylin.engine.spark.utils.QueryExecutionCache;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.spark.sql.Dataset;
@@ -57,24 +65,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import org.apache.kylin.engine.spark.NSparkCubingEngine;
-import org.apache.kylin.engine.spark.application.SparkApplication;
-import org.apache.kylin.engine.spark.builder.NBuildSourceInfo;
-import org.apache.kylin.engine.spark.utils.BuildUtils;
-import org.apache.kylin.engine.spark.utils.JobMetrics;
-import org.apache.kylin.engine.spark.utils.JobMetricsUtils;
-import org.apache.kylin.engine.spark.utils.Metrics;
-import org.apache.kylin.engine.spark.utils.QueryExecutionCache;
 import scala.collection.JavaConversions;
 
 public class CubeBuildJob extends SparkApplication {
-    protected static final Logger logger = LoggerFactory.getLogger( CubeBuildJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(CubeBuildJob.class);
     protected static String TEMP_DIR_SUFFIX = "_temp";
 
     private CubeManager cubeManager;
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
+
+    public static void main(String[] args) {
+        CubeBuildJob nDataflowBuildJob = new CubeBuildJob();
+        nDataflowBuildJob.execute(args);
+    }
 
     @Override
     protected void doExecute() throws Exception {
@@ -91,7 +97,8 @@ public class CubeBuildJob extends SparkApplication {
             //TODO: what if a segment is deleted during building?
             for (String segId : segmentIds) {
                 SegmentInfo seg = ManagerHub.getSegmentInfo(config, getParam(MetadataConstants.P_CUBE_ID), segId);
-                SpanningTree spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(seg.toBuildLayouts()));
+                SpanningTree spanningTree = new ForestSpanningTree(
+                        JavaConversions.asJavaCollection(seg.toBuildLayouts()));
                 // choose source
                 ParentSourceChooser sourceChooser = new ParentSourceChooser(spanningTree, seg, jobId, ss, config, true);
                 sourceChooser.decideSources();
@@ -115,7 +122,8 @@ public class CubeBuildJob extends SparkApplication {
                 logger.info("Updating segment info");
                 updateSegmentInfo(getParam(MetadataConstants.P_CUBE_ID), seg, buildFromFlatTable.getCount());
             }
-            updateSegmentSourceBytesSize(getParam(MetadataConstants.P_CUBE_ID), ResourceDetectUtils.getSegmentSourceSize(shareDir));
+            updateSegmentSourceBytesSize(getParam(MetadataConstants.P_CUBE_ID),
+                    ResourceDetectUtils.getSegmentSourceSize(shareDir));
         } finally {
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
             for (String viewPath : persistedViewFactTable) {
@@ -130,8 +138,7 @@ public class CubeBuildJob extends SparkApplication {
         }
     }
 
-    private void updateSegmentInfo(String cubeId, SegmentInfo segmentInfo, long sourceRowCount)
-            throws IOException {
+    private void updateSegmentInfo(String cubeId, SegmentInfo segmentInfo, long sourceRowCount) throws IOException {
         CubeInstance cubeInstance = cubeManager.getCubeByUuid(cubeId);
         CubeInstance cubeCopy = cubeInstance.latestCopyForWrite();
         CubeUpdate update = new CubeUpdate(cubeCopy);
@@ -144,6 +151,9 @@ public class CubeBuildJob extends SparkApplication {
         segment.setInputRecords(sourceRowCount);
         segment.setStatus(SegmentStatusEnum.READY);
         segment.setSnapshots(new ConcurrentHashMap<>(segmentInfo.getSnapShot2JavaMap()));
+        Map<String, String> additionalInfo = segment.getAdditionalInfo();
+        additionalInfo.put("storageType", "" + IStorageAware.ID_PARQUET);
+        segment.setAdditionalInfo(additionalInfo);
         cubeSegments.add(segment);
         update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
         cubeManager.updateCube(update);
@@ -192,7 +202,8 @@ public class CubeBuildJob extends SparkApplication {
     }
 
     // build current layer and return the next layer to be built.
-    private List<NBuildSourceInfo> buildLayer(Collection<NBuildSourceInfo> buildSourceInfos, SegmentInfo seg, SpanningTree st) {
+    private List<NBuildSourceInfo> buildLayer(Collection<NBuildSourceInfo> buildSourceInfos, SegmentInfo seg,
+            SpanningTree st) {
         int cuboidsNumInLayer = 0;
 
         // build current layer
@@ -231,9 +242,8 @@ public class CubeBuildJob extends SparkApplication {
     }
 
     // decided and construct the next layer.
-    private List<NBuildSourceInfo> constructTheNextLayerBuildInfos(SpanningTree st,
-                                                                   SegmentInfo seg,
-                                                                   Collection<LayoutEntity> allIndexesInCurrentLayer) {
+    private List<NBuildSourceInfo> constructTheNextLayerBuildInfos(SpanningTree st, SegmentInfo seg,
+            Collection<LayoutEntity> allIndexesInCurrentLayer) {
 
         List<NBuildSourceInfo> childrenBuildSourceInfos = new ArrayList<>();
         for (LayoutEntity index : allIndexesInCurrentLayer) {
@@ -242,8 +252,8 @@ public class CubeBuildJob extends SparkApplication {
             if (!children.isEmpty()) {
                 NBuildSourceInfo theRootLevelBuildInfos = new NBuildSourceInfo();
                 theRootLevelBuildInfos.setSparkSession(ss);
-                String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_ID),
-                        seg.id(), String.valueOf(index.getId())) ;
+                String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_ID), seg.id(),
+                        String.valueOf(index.getId()));
                 theRootLevelBuildInfos.setLayoutId(index.getId());
                 theRootLevelBuildInfos.setParentStoragePath(path);
                 theRootLevelBuildInfos.setToBuildCuboids(children);
@@ -277,9 +287,8 @@ public class CubeBuildJob extends SparkApplication {
         return ResourceDetectUtils.selectMaxValueInFiles(fileStatuses);
     }
 
-
     private LayoutEntity buildIndex(SegmentInfo seg, LayoutEntity cuboid, Dataset<Row> parent,
-                                        SpanningTree spanningTree, long parentId) throws IOException {
+            SpanningTree spanningTree, long parentId) throws IOException {
         String parentName = String.valueOf(parentId);
         if (parentId == ParentSourceChooser.FLAT_TABLE_FLAG()) {
             parentName = "flat table";
@@ -297,24 +306,24 @@ public class CubeBuildJob extends SparkApplication {
                     .sortWithinPartitions(NSparkCubingUtil.getColumns(orderedDims));
             saveAndUpdateLayout(afterSort, seg, layoutEntity);
         } else {
-            Dataset<Row> afterAgg = CuboidAggregator.agg(ss, parent, dimIndexes, cuboid.getOrderedMeasures(), spanningTree, false);
-                logger.info("Build layout:{}, in index:{}", layoutEntity.getId(), cuboid.getId());
-                ss.sparkContext().setJobDescription("build " + layoutEntity.getId() + " from parent " + parentName);
-                Set<Integer> rowKeys = layoutEntity.getOrderedDimensions().keySet();
+            Dataset<Row> afterAgg = CuboidAggregator.agg(ss, parent, dimIndexes, cuboid.getOrderedMeasures(),
+                    spanningTree, false);
+            logger.info("Build layout:{}, in index:{}", layoutEntity.getId(), cuboid.getId());
+            ss.sparkContext().setJobDescription("build " + layoutEntity.getId() + " from parent " + parentName);
+            Set<Integer> rowKeys = layoutEntity.getOrderedDimensions().keySet();
 
-                Dataset<Row> afterSort = afterAgg
-                        .select(NSparkCubingUtil.getColumns(rowKeys, layoutEntity.getOrderedMeasures().keySet()))
-                        .sortWithinPartitions(NSparkCubingUtil.getColumns(rowKeys));
+            Dataset<Row> afterSort = afterAgg
+                    .select(NSparkCubingUtil.getColumns(rowKeys, layoutEntity.getOrderedMeasures().keySet()))
+                    .sortWithinPartitions(NSparkCubingUtil.getColumns(rowKeys));
 
-                 saveAndUpdateLayout(afterSort, seg, layoutEntity);
+            saveAndUpdateLayout(afterSort, seg, layoutEntity);
         }
         ss.sparkContext().setJobDescription(null);
         logger.info("Finished Build index :{}, in segment:{}", cuboid.getId(), seg.id());
         return layoutEntity;
     }
 
-    private void saveAndUpdateLayout(Dataset<Row> dataset, SegmentInfo seg, LayoutEntity layout)
-            throws IOException {
+    private void saveAndUpdateLayout(Dataset<Row> dataset, SegmentInfo seg, LayoutEntity layout) throws IOException {
         long layoutId = layout.getId();
 
         // for spark metrics
@@ -323,7 +332,8 @@ public class CubeBuildJob extends SparkApplication {
 
         NSparkCubingEngine.NSparkCubingStorage storage = StorageFactory.createEngineAdapter(layout,
                 NSparkCubingEngine.NSparkCubingStorage.class);
-        String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_ID), seg.id(), String.valueOf(layoutId));
+        String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_ID), seg.id(),
+                String.valueOf(layoutId));
         String tempPath = path + TEMP_DIR_SUFFIX;
         // save to temp path
         logger.info("Cuboids are saved to temp path : " + tempPath);
@@ -332,14 +342,12 @@ public class CubeBuildJob extends SparkApplication {
         JobMetrics metrics = JobMetricsUtils.collectMetrics(queryExecutionId);
         long rowCount = metrics.getMetrics(Metrics.CUBOID_ROWS_CNT());
         if (rowCount == -1) {
-            infos.recordAbnormalLayouts(layoutId,
-                    "'Job metrics seems null, use count() to collect cuboid rows.'");
+            infos.recordAbnormalLayouts(layoutId, "'Job metrics seems null, use count() to collect cuboid rows.'");
             logger.warn("Can not get cuboid row cnt.");
         }
         layout.setRows(rowCount);
         layout.setSourceRows(metrics.getMetrics(Metrics.SOURCE_ROWS_CNT()));
-        int shardNum = BuildUtils.repartitionIfNeed(layout, storage, path, tempPath,
-                config, ss);
+        int shardNum = BuildUtils.repartitionIfNeed(layout, storage, path, tempPath, config, ss);
         layout.setShardNum(shardNum);
         ss.sparkContext().setLocalProperty(QueryExecutionCache.N_EXECUTION_ID_KEY(), null);
         QueryExecutionCache.removeQueryExecution(queryExecutionId);
@@ -349,10 +357,5 @@ public class CubeBuildJob extends SparkApplication {
     @Override
     protected String generateInfo() {
         return LogJobInfoUtils.dfBuildJobInfo();
-    }
-
-    public static void main(String[] args) {
-        CubeBuildJob nDataflowBuildJob = new CubeBuildJob();
-        nDataflowBuildJob.execute(args);
     }
 }

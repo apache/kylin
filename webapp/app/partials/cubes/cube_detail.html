@@ -106,15 +106,16 @@
               <div class="hr hr8 hr-double hr-dotted"></div>
               <h5><b>Segment Number:</b> <span class="blue">{{cube.hbase.length}}</span> <b>Total Size:</b> <span class="blue">{{cube.totalSize | bytes}}</span></h5>
             </div>
-            <div ng-repeat="table in cube.hbase" class="cube-segment-list" ng-class="{'cube-broken-segment': table.regionCount === 0}">
+            <div ng-repeat="table in cube.hbase" class="cube-segment-list" ng-class="{'cube-broken-segment': (table.storageType === 'hbase' && table.regionCount === 0)}">
                 <h5><b>Segment:</b> {{table.segmentName}}</h5>
                 <ul>
                     <li ng-if="cube.streaming">Status: <span>{{table.segmentStatus}}</span></li>
                     <li ng-if="cube.model.partition_desc.partition_date_column">Start Time: <span>{{table.dateRangeStart | reverseToGMT0}}</span></li>
                     <li ng-if="cube.model.partition_desc.partition_date_column">End Time: <span>{{table.dateRangeEnd | reverseToGMT0}}</span></li>
                     <li>Source Count: <span>{{table.sourceCount}}</span></li>
-                    <li>HBase Table: <span>{{table.tableName}}</span></li>
-                    <li>Region Count: <span ng-class="{'red': table.regionCount == 0}">{{table.regionCount}}</span></li>
+                    <li ng-if="table.storageType === 'parquet'">Parquet Storage : <span>{{table.tableName}}</span></li>
+                    <li ng-if="table.storageType === 'hbase'">HBase Table: <span>{{table.tableName}}</span></li>
+                    <li ng-if="table.storageType === 'hbase'">Region Count: <span ng-class="{'red': table.regionCount == 0}">{{table.regionCount}}</span></li>
                     <li>Size: <span>{{table.tableSize | bytes}}</span></li>
                 </ul>
             </div>

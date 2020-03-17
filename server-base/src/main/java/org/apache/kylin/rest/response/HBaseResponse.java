@@ -22,6 +22,7 @@ import java.io.Serializable;
 
 public class HBaseResponse implements Serializable {
     private static final long serialVersionUID = 7263557115683263492L;
+    private String storageType;
     private String segmentName;
     private String segmentUUID;
     private String segmentStatus;
@@ -35,6 +36,14 @@ public class HBaseResponse implements Serializable {
     private long sourceCount;
 
     public HBaseResponse() {
+    }
+
+    public String getStorageType() {
+        return storageType;
+    }
+
+    public void setStorageType(String storageType) {
+        this.storageType = storageType;
     }
 
     /**
