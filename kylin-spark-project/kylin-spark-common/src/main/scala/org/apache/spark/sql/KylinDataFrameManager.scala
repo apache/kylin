@@ -74,7 +74,7 @@ class KylinDataFrameManager(sparkSession: SparkSession) {
     option("project", cubeInstance.getProject)
     option("dataflowId", cubeInstance.getUuid)
     option("cuboidId", layout.getId)
-    val indexCatalog = new FilePruner(cubeInstance, layout, sparkSession, options = extraOptions.toMap, StructType(Seq()))
+    val indexCatalog = new FilePruner(cubeInstance, layout, sparkSession, options = extraOptions.toMap)
     sparkSession.baseRelationToDataFrame(
       HadoopFsRelation(
         indexCatalog,

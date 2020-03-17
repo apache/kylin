@@ -38,8 +38,9 @@ import org.apache.spark.sql.catalyst.expressions.{Attribute, AttributeSet, Empty
 import org.apache.spark.sql.catalyst.{expressions, InternalRow}
 import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.sources._
-import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.sql.{AnalysisException, SparkSession}
+import org.apache.spark.sql.utils.SparkTypeUtil
 import org.apache.spark.util.collection.BitSet
 
 import scala.collection.JavaConverters._
@@ -79,8 +80,7 @@ class FilePruner(
   cubeInstance: CubeInstance,
   cuboid: Cuboid,
   val session: SparkSession,
-  val options: Map[String, String],
-  val dataSchema: StructType)
+  val options: Map[String, String])
   extends FileIndex with ResetShufflePartition with Logging {
 
   private lazy val segmentDirs: Seq[SegmentDirectory] = {
@@ -88,8 +88,16 @@ class FilePruner(
       .filter(_.getStatus.equals(SegmentStatusEnum.READY))
       .map(seg => SegmentDirectory(seg.getUuid, null))
   }
-
   val layoutEntity = MetadataConverter.toLayoutEntity(cubeInstance, cuboid)
+
+  val dataSchema: StructType = {
+    StructType(layoutEntity.getOrderedDimensions.values().asScala
+      .map { column => StructField(column.id.toString, column.dataType) }
+      .toSeq ++
+      layoutEntity.getOrderedMeasures.asScala
+        .map { entry => StructField(entry._1.toString, SparkTypeUtil.generateFunctionReturnDataType(entry._2)) }
+        .toSeq)
+  }
 
   override def rootPaths: Seq[Path] = {
     segmentDirs.map(seg => new Path(toPath(seg.segmentID)))

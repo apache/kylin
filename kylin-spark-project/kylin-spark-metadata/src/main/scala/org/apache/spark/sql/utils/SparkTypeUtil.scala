@@ -34,9 +34,10 @@ import org.apache.calcite.avatica.util.TimeUnitRange
 import org.apache.calcite.rex.RexLiteral
 import java.util.{GregorianCalendar, Locale, TimeZone}
 
+import org.apache.kylin.engine.spark.metadata.FunctionDesc
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.kylin.metadata.datatype.DataType
-import org.apache.spark.sql.types.{BinaryType, BooleanType, ByteType, DateType, DecimalType, DoubleType, FloatType, IntegerType, LongType, ShortType, StringType, StructType, TimestampType}
+import org.apache.spark.sql.types._
 
 object SparkTypeUtil extends Logging {
   val DATETIME_FAMILY = List("time", "date", "timestamp", "datetime")
@@ -275,7 +276,7 @@ object SparkTypeUtil extends Logging {
             var ts = s.asInstanceOf[Timestamp].toString
             if (toCalcite) {
               // current ts is local timezone ,org.apache.calcite.avatica.util.AbstractCursor.TimeFromNumberAccessor need to utc
-              DateTimeUtils.stringToTimestamp(UTF8String.fromString(ts),TimeZone.getTimeZone("UTC")).get / 1000
+              DateTimeUtils.stringToTimestamp(UTF8String.fromString(ts), TimeZone.getTimeZone("UTC")).get / 1000
             } else {
               // ms to s
               s.asInstanceOf[Timestamp].getTime / 1000
@@ -414,5 +415,23 @@ object SparkTypeUtil extends Logging {
     }.toArray
     logInfo(s"Align data type is ${columns.mkString(",")}")
     columns
+  }
+
+  def generateFunctionReturnDataType(function: FunctionDesc): org.apache.spark.sql.types.DataType = {
+    function.expression.toUpperCase match {
+      case "SUM" =>
+        toSparkType(function.returnType.toKylinDataType)
+      case "COUNT" => LongType
+      case x if x.startsWith("TOP_N") =>
+        val fields = function.pra.drop(1).map(p =>
+          StructField(s"DIMENSION_${p.columnName}", p.dataType))
+        DataTypes.createArrayType(StructType(Seq(
+          StructField("measure", DoubleType),
+          StructField("dim", StructType(fields))
+        )))
+      case "MAX" | "MIN" =>
+        function.pra.head.dataType
+      case _ => toSparkType(function.returnType.toKylinDataType)
+    }
   }
 }
