@@ -30,5 +30,11 @@ public class EncryptUtilTest {
         Assert.assertEquals("4stv/RRleOtvie/8SLHmXA==", result);
     }
 
+    @Test
+    public void testNullInput() {
+        Assert.assertNull(EncryptUtil.encrypt(null));
+        Assert.assertNull(EncryptUtil.decrypt(null));
+    }
+
 }
 
