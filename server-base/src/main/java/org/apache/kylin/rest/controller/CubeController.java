@@ -53,6 +53,7 @@ import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
@@ -756,19 +757,24 @@ public class CubeController extends BasicController {
         List<CubeSegment> segments = cube.getSegments();
 
         for (CubeSegment segment : segments) {
+            Map<String, String> addInfo = segment.getAdditionalInfo();
             String tableName = segment.getStorageLocationIdentifier();
             HBaseResponse hr = null;
-
-            // Get info of given table.
-            try {
-                hr = cubeService.getHTableInfo(cubeName, tableName);
-            } catch (IOException e) {
-                logger.error("Failed to calcuate size of HTable \"" + tableName + "\".", e);
-            }
-
-            if (null == hr) {
-                logger.info("Failed to calcuate size of HTable \"" + tableName + "\".");
+            if (("" + IStorageAware.ID_PARQUET).equals(addInfo.get("storageType"))) {
                 hr = new HBaseResponse();
+                hr.setStorageType("parquet");
+            } else {
+                // Get info of given table.
+                try {
+                    hr = cubeService.getHTableInfo(cubeName, tableName);
+                } catch (IOException e) {
+                    logger.error("Failed to calcuate size of HTable \"" + tableName + "\".", e);
+                }
+
+                if (null == hr) {
+                    logger.info("Failed to calcuate size of HTable \"" + tableName + "\".");
+                    hr = new HBaseResponse();
+                }
             }
 
             hr.setTableName(tableName);

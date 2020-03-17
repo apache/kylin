@@ -20,6 +20,7 @@ package org.apache.kylin.engine.spark.merger;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.kylin.common.KylinConfig;
@@ -32,6 +33,7 @@ import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 
@@ -57,6 +59,9 @@ public class AfterMergeOrRefreshResourceMerger extends MetadataMerger {
 
         CubeSegment mergedSegment = distCube.getSegmentById(segmentId);
         mergedSegment.setStatus(SegmentStatusEnum.READY);
+        Map<String, String> additionalInfo = mergedSegment.getAdditionalInfo();
+        additionalInfo.put("storageType", "" + IStorageAware.ID_PARQUET);
+        mergedSegment.setAdditionalInfo(additionalInfo);
         toUpdateSegments.add(mergedSegment);
 
         List<CubeSegment> toRemoveSegments = getToRemoveSegs(distCube, mergedSegment);

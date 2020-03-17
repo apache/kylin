@@ -142,6 +142,8 @@ public abstract class SparkApplication {
                         sparkConf.set(entry.getKey(), entry.getValue());
                     }
                 }
+            } else if (!isJobOnCluster(sparkConf)) {
+                sparkConf.set("spark.master", "local");
             }
 
             // for wrapping credential
