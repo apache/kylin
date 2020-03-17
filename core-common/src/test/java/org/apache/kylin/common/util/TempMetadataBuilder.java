@@ -31,7 +31,7 @@ import java.util.List;
 public class TempMetadataBuilder {
 
     public static final String N_KAP_META_TEST_DATA = "../examples/test_case_data/localmeta_n";
-    public static final String N_SPARK_PROJECT_KYLIN_META_TEST_DATA = "/Users/rupeng.wang/Kyligence/Developments/kylin/kylin-parquet/examples/test_case_data/localmeta_n";
+    public static final String N_SPARK_PROJECT_KYLIN_META_TEST_DATA = "../../examples/test_case_data/localmeta_n";
     public static final String TEMP_TEST_METADATA = "../examples/test_metadata";
 
     private static final Logger logger = LoggerFactory.getLogger(TempMetadataBuilder.class);
@@ -42,10 +42,10 @@ public class TempMetadataBuilder {
 
     public static String prepareNLocalTempMetadata(boolean debug) {
         // for spark-project
-        if (!new File(N_KAP_META_TEST_DATA).exists()) {
-            return new TempMetadataBuilder(debug, N_SPARK_PROJECT_KYLIN_META_TEST_DATA).build();
+        if (new File(N_SPARK_PROJECT_KYLIN_META_TEST_DATA).exists()) {
+            return new TempMetadataBuilder(debug, "../" + TEMP_TEST_METADATA, N_SPARK_PROJECT_KYLIN_META_TEST_DATA).build();
         }
-        return new TempMetadataBuilder(debug, N_KAP_META_TEST_DATA).build();
+        return new TempMetadataBuilder(debug, TEMP_TEST_METADATA, N_KAP_META_TEST_DATA).build();
     }
 
     public static String prepareNLocalTempMetadata(boolean debug, String... overlay) {
@@ -56,23 +56,24 @@ public class TempMetadataBuilder {
         if (!new File(nOverlay[0]).exists()) {
             nOverlay[0] = "../" + nOverlay[0];
         }
-        return new TempMetadataBuilder(debug, nOverlay).build();
+        return new TempMetadataBuilder(debug, TEMP_TEST_METADATA, nOverlay).build();
     }
 
     // ============================================================================
 
     private String[] metaSrcs = null;
     private boolean debug = false;
+    private String dst;
 
-    private TempMetadataBuilder(boolean debug, String... metaSrcs) {
+    private TempMetadataBuilder(boolean debug, String dst, String... metaSrcs) {
         this.metaSrcs = metaSrcs;
         this.debug = debug;
+        this.dst = dst;
     }
 
     public String build() {
-
         if ("true".equals(System.getProperty("skipMetaPrep"))) {
-            return TEMP_TEST_METADATA;
+            return dst;
         }
 
         try {
@@ -84,24 +85,24 @@ public class TempMetadataBuilder {
                 logger.info("TEMP_TEST_METADATA={}", new File(TEMP_TEST_METADATA).getCanonicalPath());
             }
 
-            FileUtils.deleteQuietly(new File(TEMP_TEST_METADATA));
+            FileUtils.deleteQuietly(new File(dst));
 
             // KAP files will overwrite Kylin files
             for (String metaSrc : metaSrcs) {
-                FileUtils.copyDirectory(new File(metaSrc), new File(TEMP_TEST_METADATA));
+                FileUtils.copyDirectory(new File(metaSrc), new File(dst));
             }
 
-            appendKylinProperties(TEMP_TEST_METADATA);
+            appendKylinProperties(dst);
             //overrideEngineTypeAndStorageType(TEMP_TEST_METADATA, grabDefaultEngineTypes(TEMP_TEST_METADATA), null);
 
             if (debug) {
-                File copy = new File(TEMP_TEST_METADATA + ".debug");
+                File copy = new File(dst + ".debug");
                 FileUtils.deleteDirectory(copy);
-                FileUtils.copyDirectory(new File(TEMP_TEST_METADATA), copy);
+                FileUtils.copyDirectory(new File(dst), copy);
                 logger.info("Make copy for debug: {}", copy.getCanonicalPath());
             }
 
-            return TEMP_TEST_METADATA;
+            return dst;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -77,6 +77,7 @@ object TableScanPlan extends LogEx {
       olapContext.getSQLDigest,
       returnTupleInfo)
     val cuboid = request.getCuboid
+    cubeInstance.getDescriptor.getHostToDerivedInfo(cuboid.getColumns, null)
     import org.apache.kylin.query.implicits.implicits._
     SparderContext.getSparkSession.kylin
       .format("parquet")

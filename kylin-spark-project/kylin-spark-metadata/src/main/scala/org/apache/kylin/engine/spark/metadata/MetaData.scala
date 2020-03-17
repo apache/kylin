@@ -59,7 +59,11 @@ case class FunctionDesc(functionName: String, returnType: DTType, pra: List[Colu
 
 case class DTType(dataType: String, precision: Int) {
   def toKylinDataType: org.apache.kylin.metadata.datatype.DataType = {
-    org.apache.kylin.metadata.datatype.DataType.getType(s"$dataType($precision)")
+    if (precision != -1) {
+      org.apache.kylin.metadata.datatype.DataType.getType(s"$dataType($precision)")
+    } else {
+      org.apache.kylin.metadata.datatype.DataType.getType(s"$dataType")
+    }
   }
 }
 

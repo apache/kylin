@@ -170,6 +170,12 @@ object AggregatePlan extends LogEx {
           // Issue 4337: Supported select (select '2012-01-02') as data, xxx from table group by xxx
           case SqlKind.SINGLE_VALUE.sql =>
             first(argNames.head).alias(aggName)
+          case FunctionDesc.FUNC_GROUPING =>
+            if (rel.getGroupSet.get(call.getArgList.get(0))) {
+              lit(0).alias(aggName)
+            } else {
+              lit(1).alias(aggName)
+            }
           case _ =>
             throw new IllegalArgumentException(
               s"""Unsupported function name $funcName""")
