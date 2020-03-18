@@ -25,6 +25,9 @@ package org.apache.kylin.query
 
 import java.util.Locale
 
+import org.apache.kylin.common.util.ImmutableBitSet
+import org.apache.kylin.cube.cuboid.Cuboid
+import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping
 import org.apache.kylin.metadata.model.{ColumnDesc, FunctionDesc}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.utils.SparkTypeUtil
@@ -35,41 +38,41 @@ import scala.collection.JavaConverters._
 object SchemaProcessor {
   val COLUMN_NAME_SEPARATOR = "__"
 
-  //  def buildGTSchema(
-  //    cuboid: LayoutEntity,
-  //    mapping: NCuboidToGridTableMapping,
-  //    tableName: String): Seq[String] = {
-  //
-  //    genColumnNames(tableName, cuboid, mapping)
-  //  }
-  //
-  //  private def genColumnNames(tableName: String, cuboid: LayoutEntity, mapping: NCuboidToGridTableMapping) = {
-  //    val coolumnMapping = initColumnNameMapping(cuboid).map(_._1)
-  //    val colAll = new ImmutableBitSet(0, mapping.getDataTypes.length)
-  //    val measures = colAll.andNot(mapping.getPrimaryKey).asScala
-  //    mapping.getPrimaryKey.asScala.map { i =>
-  //      FactTableCulumnInfo(tableName, i, coolumnMapping.apply(i)).toString
-  //    }.toSeq ++
-  //      measures
-  //        .map { i =>
-  //          FactTableCulumnInfo(tableName, i, coolumnMapping.apply(i)).toString
-  //        }
-  //        .toSeq
-  //  }
-  //
-  //
-  //  def initColumnNameMapping(cuboid: LayoutEntity): Array[(String, String)] = {
-  //    val cols = cuboid.getColumns.asScala.map(col =>
-  //      (col.getIdentity.replace(".", "_"), col.getType.getName)
-  //    ).toArray
-  //
-  //    // "getOrderedMeasures" returns a map, need toList
-  //    val measures = cuboid.getOrderedMeasures.asScala.toList.map(measure =>
-  //      (measure._2.getName.replace(".", "_"), measure._2.getFunction.getReturnType)
-  //    ).toArray
-  //
-  //    cols ++ measures
-  //  }
+  def buildGTSchema(
+    cuboid: Cuboid,
+    tableName: String): Seq[String] = {
+
+    genColumnNames(tableName, cuboid, cuboid.getCuboidToGridTableMapping)
+  }
+
+  private def genColumnNames(tableName: String, cuboid: Cuboid, mapping: CuboidToGridTableMapping) = {
+    val coolumnMapping = initColumnNameMapping(cuboid).map(_._1)
+    val colAll = new ImmutableBitSet(0, mapping.getDataTypes.length)
+    val measures = colAll.andNot(mapping.getPrimaryKey).asScala
+    mapping.getPrimaryKey.asScala.map { i =>
+      FactTableCulumnInfo(tableName, i, coolumnMapping.apply(i)).toString
+    }.toSeq ++
+      measures
+        .map { i =>
+          FactTableCulumnInfo(tableName, i, coolumnMapping.apply(i)).toString
+        }
+        .toSeq
+  }
+
+
+  def initColumnNameMapping(cuboid: Cuboid): Array[(String, String)] = {
+    val cols = cuboid.getColumns.asScala.map(col =>
+      (col.getIdentity.replace(".", "_"), col.getType.getName)
+    ).toArray
+
+
+    // "getOrderedMeasures" returns a map, need toList
+    val measures = cuboid.getCubeDesc.getMeasures.asScala.toList.map(measure =>
+      (measure.getName.replace(".", "_"), measure.getFunction.getReturnType)
+    ).toArray
+
+    cols ++ measures
+  }
 
   def generateFunctionReturnDataType(function: FunctionDesc): DataType = {
     function.getExpression.toUpperCase(Locale.ROOT) match {

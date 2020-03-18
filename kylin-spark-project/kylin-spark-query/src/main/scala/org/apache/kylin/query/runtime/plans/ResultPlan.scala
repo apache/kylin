@@ -88,6 +88,7 @@ object ResultPlan extends Logging {
     val queryId = QueryContextFacade.current().getQueryId
     sparkContext.setLocalProperty(QueryToExecutionIDCache.KYLIN_QUERY_ID_KEY, queryId)
     df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", partitionsNum.toString)
+    QueryContextFacade.current().setDataset(df)
 
     sparkContext.setJobGroup(jobGroup,
       //      QueryContextFacade.current().getSql,
