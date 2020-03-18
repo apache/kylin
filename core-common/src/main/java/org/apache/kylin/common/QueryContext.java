@@ -73,6 +73,7 @@ public class QueryContext {
 
     private Object olapRel;
     private Object resultType;
+    private Object dataset;
 
     QueryContext() {
         this(System.currentTimeMillis());
@@ -191,6 +192,14 @@ public class QueryContext {
 
     public void setResultType(Object resultType) {
         this.resultType = resultType;
+    }
+
+    public Object getDataset() {
+        return dataset;
+    }
+
+    public void setDataset(Object dataset) {
+        this.dataset = dataset;
     }
 
     public boolean isTableIndex() {

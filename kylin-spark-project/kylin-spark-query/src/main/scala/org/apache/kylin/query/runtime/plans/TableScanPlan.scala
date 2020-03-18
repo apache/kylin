@@ -34,7 +34,7 @@ import org.apache.kylin.metadata.tuple.TupleInfo
 import org.apache.kylin.query.relnode.{OLAPRel, OLAPTableScan}
 import org.apache.kylin.query.SchemaProcessor
 import org.apache.kylin.query.exception.UnsupportedQueryException
-import org.apache.kylin.query.runtime.SparkOperation
+import org.apache.kylin.query.runtime.{DerivedProcess, RuntimeHelper, SparkOperation}
 import org.apache.kylin.storage.hybrid.HybridInstance
 import org.apache.kylin.storage.spark.HadoopFileStorageQuery
 import org.apache.spark.sql.functions.col
@@ -76,16 +76,32 @@ object TableScanPlan extends LogEx {
       olapContext.storageContext,
       olapContext.getSQLDigest,
       returnTupleInfo)
+    request.getGroups
     val cuboid = request.getCuboid
-    cubeInstance.getDescriptor.getHostToDerivedInfo(cuboid.getColumns, null)
+    val gridTableMapping = cuboid.getCuboidToGridTableMapping
+
+    val columnIndex = gridTableMapping.getDimIndexes(request.getDimensions) ++
+      gridTableMapping.getMetricsIndexes(request.getMetrics)
+    val factTableAlias = olapContext.firstTableScan.getBackupAlias
+    val schemaNames = SchemaProcessor.buildGTSchema(cuboid, factTableAlias)
     import org.apache.kylin.query.implicits.implicits._
-    SparderContext.getSparkSession.kylin
+    val df = SparderContext.getSparkSession.kylin
       .format("parquet")
       .cuboidTable(cubeInstance, cuboid)
-
-    /////////////////////////////////////////////
+      .toDF(schemaNames: _*)
+    val tuple = DerivedProcess.process(olapContext, cuboid, cubeInstance, df, request)
+    var topNMapping: Map[Int, Column] = Map.empty
+    val tupleIdx = getTupleIdx(request.getDimensions, request.getMetrics, olapContext.returnTupleInfo)
+    val columns = RuntimeHelper.gtSchemaToCalciteSchema(cuboid.getCuboidToGridTableMapping.getPrimaryKey,
+      tuple._2,
+      factTableAlias,
+      rel.getColumnRowType.getAllColumns.asScala.toList,
+      df.schema,
+      columnIndex,
+      tupleIdx,
+      topNMapping)
+    tuple._1.select(columns: _*)
   }
-
 
   private def processTopN(topNMetric: FunctionDesc, df: DataFrame, topNFieldIndex: Int, tupleInfo: TupleInfo, tableName: String): (DataFrame, Map[Int, Column]) = {
     // support TopN measure

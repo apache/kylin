@@ -55,7 +55,11 @@ case class TableDesc(tableName: String, databaseName: String, columns: List[Colu
   }
 }
 
-case class FunctionDesc(functionName: String, returnType: DTType, pra: List[ColumnDesc], expression: String)
+case class FunctionDesc(functionName: String, returnType: DTType, pra: List[ColumnDesc], expression: String) {
+  override def toString: String = {
+    s"${functionName} par=${pra.map(_.columnName).mkString(",")} dt=${returnType}"
+  }
+}
 
 case class DTType(dataType: String, precision: Int) {
   def toKylinDataType: org.apache.kylin.metadata.datatype.DataType = {
