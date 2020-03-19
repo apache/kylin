@@ -30,6 +30,9 @@
         <bean id="redisSessionRepository"
               class="org.springframework.session.data.redis.RedisOperationsSessionRepository">
             <constructor-arg index="0" ref="redisConnectionFactory"/>
+            <property name="redisKeyNamespace" value="${kylin.session.redis.namespace:kylin}"/>
+            <property name="defaultMaxInactiveInterval" value="${kylin.session.redis.max-inactive-interval:1800}"/>
+            <property name="redisFlushMode" value="${kylin.session.redis.flush-mode:ON_SAVE}"/>
         </bean>
     </beans>
 </beans>
