@@ -27,7 +27,8 @@ import java.math.BigDecimal
 
 import org.apache.calcite.util.NlsString
 import org.apache.calcite.rel.`type`.RelDataType
-import java.sql.{Date, Timestamp}
+import java.sql.{Date, Timestamp, Types}
+import java.util.regex.Pattern
 
 import org.apache.spark.sql.functions.col
 import org.apache.calcite.avatica.util.TimeUnitRange
@@ -434,4 +435,50 @@ object SparkTypeUtil extends Logging {
       case _ => toSparkType(function.returnType.toKylinDataType)
     }
   }
+
+  def convertSparkFieldToJavaField(field: StructField): org.apache.kylin.engine.spark.metadata.cube.StructField = {
+    val builder = new org.apache.kylin.engine.spark.metadata.cube.StructField.StructFieldBuilder
+    builder.setName(field.name)
+    val typeName = if (field.dataType.sql.startsWith("DECIMAL")) {
+      "DECIMAL"
+    } else {
+      field.dataType.sql
+    }
+    val javaType = typeName match {
+      case "BINARY" => Types.BINARY
+      case "BOOLEAN" => Types.BOOLEAN
+      case "DATE" => Types.DATE
+      case "DOUBLE" => Types.DOUBLE
+      case "FLOAT" => Types.FLOAT
+      case "INT" => Types.INTEGER
+      case "BIGINT" => Types.BIGINT
+      case "NUMERIC" => Types.NUMERIC
+      case "SMALLINT" => Types.SMALLINT
+      case "TIMESTAMP" => Types.TIMESTAMP
+      case "STRING" => Types.VARCHAR
+      case "DECIMAL" =>
+        val precisionAndScalePair = getDecimalPrecisionAndScale(typeName)
+        if (precisionAndScalePair != null) {
+          builder.setPrecision(precisionAndScalePair._1)
+          builder.setScale(precisionAndScalePair._2)
+        }
+        Types.DECIMAL
+      case _ => Types.OTHER
+    }
+
+    builder.setDataType(javaType)
+    builder.setDataTypeName(typeName)
+    builder.setNullable(field.nullable)
+    builder.createStructField()
+  }
+
+  private def getDecimalPrecisionAndScale(javaType: String): (Int, Int) = {
+    val DECIMAL_PATTERN = Pattern.compile("DECIMAL\\(([0-9]+),([0-9]+)\\)", Pattern.CASE_INSENSITIVE)
+    val decimalMatcher = DECIMAL_PATTERN.matcher(javaType)
+    if (decimalMatcher.find) {
+      (Integer.valueOf(decimalMatcher.group(1)), Integer.valueOf(decimalMatcher.group(2)))
+    }
+    else null
+  }
+
 }
