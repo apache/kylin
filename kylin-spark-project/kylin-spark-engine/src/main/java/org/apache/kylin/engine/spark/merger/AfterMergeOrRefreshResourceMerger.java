@@ -68,9 +68,12 @@ public class AfterMergeOrRefreshResourceMerger extends MetadataMerger {
         if (String.valueOf(JobTypeEnum.INDEX_MERGE).equals(jobType)) {
             Optional<Long> reduce = toRemoveSegments.stream().map(CubeSegment::getSizeKB).filter(size -> size != -1)
                     .reduce(Long::sum);
+            Optional<Long> inputRecords = toRemoveSegments.stream().map(CubeSegment::getInputRecords).filter(records -> records != -1)
+                    .reduce(Long::sum);
             if (reduce.isPresent()) {
                 long totalSourceSize = reduce.get();
                 mergedSegment.setSizeKB(totalSourceSize);
+                mergedSegment.setInputRecords(inputRecords.get());
                 mergedSegment.setLastBuildTime(System.currentTimeMillis());
             }
         }
