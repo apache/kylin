@@ -2542,6 +2542,15 @@ public abstract class KylinConfigBase implements Serializable {
         }
     }
 
+    public boolean isAutoSetPushDownPartitions() {
+        return Boolean
+                .parseBoolean(this.getOptional("kylin.query.pushdown.auto-set-shuffle-partitions-enabled", "true"));
+    }
+
+    public int getBaseShufflePartitionSize() {
+        return Integer.parseInt(this.getOptional("kylin.query.pushdown.base-shuffle-partition-size", "48"));
+    }
+
 
     /**
      * Kerberos
