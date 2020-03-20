@@ -421,7 +421,7 @@ object SparkTypeUtil extends Logging {
   def generateFunctionReturnDataType(function: FunctionDesc): org.apache.spark.sql.types.DataType = {
     function.expression.toUpperCase match {
       case "SUM" =>
-        toSparkType(function.returnType.toKylinDataType)
+        toSparkType(function.returnType.toKylinDataType, true)
       case "COUNT" => LongType
       case x if x.startsWith("TOP_N") =>
         val fields = function.pra.drop(1).map(p =>

@@ -29,7 +29,7 @@ object SparkQueryTest {
     def checkAnswer(sparkDF: DataFrame,
                     kylinAnswer: DataFrame,
                     checkOrder: Boolean = false): String = {
-        checkAnswerBySeq(castDataType(sparkDF, kylinAnswer), kylinAnswer.collect(), checkOrder) match {
+        checkAnswerBySeq(castDataType(sparkDF, kylinAnswer), kylinAnswer.collect(), kylinAnswer, checkOrder) match {
             case Some(errorMessage) => errorMessage
             case None => null
         }
@@ -45,10 +45,12 @@ object SparkQueryTest {
      * @param kylinAnswer the expected result in a [[Seq]] of [[org.apache.spark.sql.Row]]s.
      * @param checkToRDD  whether to verify deserialization to an RDD. This runs the query twice.
      */
-    def checkAnswerBySeq(sparkDF: DataFrame,
-                         kylinAnswer: Seq[Row],
-                         checkOrder: Boolean = false,
-                         checkToRDD: Boolean = true): Option[String] = {
+    def checkAnswerBySeq(
+      sparkDF: DataFrame,
+      kylinAnswer: Seq[Row],
+      kylinDF: DataFrame,
+      checkOrder: Boolean = false,
+      checkToRDD: Boolean = true): Option[String] = {
         if (checkToRDD) {
             sparkDF.rdd.count() // Also attempt to deserialize as an RDD [SPARK-15791]
         }
@@ -58,7 +60,7 @@ object SparkQueryTest {
                 val errorMessage =
                     s"""
                        |Exception thrown while executing query:
-                       |${sparkDF.queryExecution}
+                       |${kylinDF.queryExecution}
                        |== Exception ==
                        |$e
                        |${org.apache.spark.sql.catalyst.util.stackTraceToString(e)}
@@ -72,7 +74,7 @@ object SparkQueryTest {
                |Timezone: ${TimeZone.getDefault}
                |Timezone Env: ${sys.env.getOrElse("TZ", "")}
                |
-               |${sparkDF.queryExecution}
+               |${kylinDF.queryExecution}
                |== Results ==
                |$results
        """.stripMargin

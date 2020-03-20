@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.spark2.auto.TestScenario;
@@ -154,7 +155,15 @@ public class NExecAndComp {
             Dataset<Row> cubeResult = (recAndQueryResult == null) ? queryWithKap(prj, joinType, Pair.newPair(sql, sql))
                     : queryWithKap(prj, joinType, Pair.newPair(sql, sql), recAndQueryResult);
             addQueryPath(recAndQueryResult, query, sql);
-            if (compareLevel != CompareLevel.NONE) {
+            if (compareLevel == CompareLevel.SAME) {
+                Dataset<Row> sparkResult = queryWithSpark(prj, sql, query.getFirst());
+                String result = SparkQueryTest.checkAnswer(SparkQueryTest.castDataType(cubeResult, sparkResult), sparkResult, false);
+                if (result != null) {
+                    logger.error("Failed on compare query ({}) :{}", joinType, query);
+                    logger.error(result);
+                    throw new IllegalArgumentException("query (" + joinType + ") :" + query + " result not match");
+                }
+            } else if (compareLevel == CompareLevel.NONE) {
                 Dataset<Row> sparkResult = queryWithSpark(prj, sql, query.getFirst());
                 List<Row> sparkRows = sparkResult.toJavaRDD().collect();
                 List<Row> kapRows = SparkQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
@@ -491,7 +500,7 @@ public class NExecAndComp {
             DBUtils.closeQuietly(conn);
             //KylinSparkEnv.cleanCompute();
         }
-        return KylinSparkEnv.getCuboid();
+        return (Dataset<Row>) QueryContextFacade.current().getDataset();
     }
 
     private static String getCompareSql(String originSqlPath) {
