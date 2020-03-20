@@ -31,10 +31,11 @@ import org.apache.kylin.cube.CubeInstance
 import org.apache.kylin.metadata.model._
 import org.apache.kylin.metadata.realization.IRealization
 import org.apache.kylin.metadata.tuple.TupleInfo
+import org.apache.kylin.metadata.TableMetadataManager
 import org.apache.kylin.query.relnode.{OLAPRel, OLAPTableScan}
 import org.apache.kylin.query.SchemaProcessor
 import org.apache.kylin.query.exception.UnsupportedQueryException
-import org.apache.kylin.query.runtime.{DerivedProcess, RuntimeHelper, SparkOperation}
+import org.apache.kylin.query.runtime.{DerivedProcess, RuntimeHelper, SparderLookupManager, SparkOperation}
 import org.apache.kylin.storage.hybrid.HybridInstance
 import org.apache.kylin.storage.spark.HadoopFileStorageQuery
 import org.apache.spark.sql.functions.col
@@ -85,13 +86,24 @@ object TableScanPlan extends LogEx {
     val factTableAlias = olapContext.firstTableScan.getBackupAlias
     val schemaNames = SchemaProcessor.buildGTSchema(cuboid, factTableAlias)
     import org.apache.kylin.query.implicits.implicits._
-    val df = SparderContext.getSparkSession.kylin
+    var df = SparderContext.getSparkSession.kylin
       .format("parquet")
       .cuboidTable(cubeInstance, cuboid)
       .toDF(schemaNames: _*)
     val tuple = DerivedProcess.process(olapContext, cuboid, cubeInstance, df, request)
+    df = tuple._1
     var topNMapping: Map[Int, Column] = Map.empty
     val tupleIdx = getTupleIdx(request.getDimensions, request.getMetrics, olapContext.returnTupleInfo)
+    // query will only has one Top N measure.
+    val topNMetric = request.getMetrics.asScala.collectFirst {
+      case x: FunctionDesc if x.getReturnType.startsWith("topn") => x
+    }
+    if (topNMetric.isDefined) {
+      val topNFieldIndex = cuboid.getCuboidToGridTableMapping.getMetricsIndexes(List(topNMetric.get).asJava).head
+      val tp = processTopN(topNMetric.get, df, topNFieldIndex, olapContext.returnTupleInfo, factTableAlias)
+      df = tp._1
+      topNMapping = tp._2
+    }
     val columns = RuntimeHelper.gtSchemaToCalciteSchema(cuboid.getCuboidToGridTableMapping.getPrimaryKey,
       tuple._2,
       factTableAlias,
@@ -100,7 +112,7 @@ object TableScanPlan extends LogEx {
       columnIndex,
       tupleIdx,
       topNMapping)
-    tuple._1.select(columns: _*)
+    df.select(columns: _*)
   }
 
   private def processTopN(topNMetric: FunctionDesc, df: DataFrame, topNFieldIndex: Int, tupleInfo: TupleInfo, tableName: String): (DataFrame, Map[Int, Column]) = {
@@ -220,8 +232,59 @@ object TableScanPlan extends LogEx {
   }
 
   def createLookupTable(rel: OLAPTableScan, dataContext: DataContext): DataFrame = {
-    SparkOperation.createEmptyDataFrame(StructType(Seq()))
 
+
+    val start = System.currentTimeMillis()
+    val session = SparderContext.getSparkSession
+    val olapContext = rel.getContext
+    var cube: CubeInstance = null
+    olapContext.realization match {
+      case cube1: CubeInstance => cube = cube1
+      case hybridInstance: HybridInstance =>
+        val latestRealization = hybridInstance.getLatestRealization
+        // scalastyle:off
+        latestRealization match {
+          case cube1: CubeInstance => cube = cube1
+          case _ => throw new IllegalStateException
+        }
+      case _ =>
+    }
+    val lookupTableName = olapContext.firstTableScan.getTableName
+    val snapshotResPath = cube.getLatestReadySegment.getSnapshotResPath(lookupTableName)
+    val config = cube.getConfig
+    val dataFrameTableName = cube.getProject + "@" + lookupTableName
+    val lookupDf = SparderLookupManager.getOrCreate(dataFrameTableName,
+      snapshotResPath,
+      config)
+
+    val olapTable = olapContext.firstTableScan.getOlapTable
+    val alisTableName = olapContext.firstTableScan.getBackupAlias
+    val newNames = lookupDf.schema.fieldNames.map { name =>
+      val gTInfoSchema = SchemaProcessor.parseDeriveTableSchemaName(name)
+      SchemaProcessor.generateDeriveTableSchemaName(alisTableName,
+        gTInfoSchema.columnId,
+        gTInfoSchema.columnName)
+    }.array
+    val newNameLookupDf = lookupDf.toDF(newNames: _*)
+    val colIndex = olapTable.getSourceColumns.asScala
+      .map(
+        column =>
+          if (column.isComputedColumn || column.getZeroBasedIndex < 0) {
+            RuntimeHelper.literalOne.as(column.toString)
+          } else {
+            col(
+              SchemaProcessor
+                .generateDeriveTableSchemaName(
+                  alisTableName,
+                  column.getZeroBasedIndex,
+                  column.getName
+                )
+                .toString
+            )
+          })
+    val df = newNameLookupDf.select(colIndex: _*)
+    logInfo(s"Gen lookup table scan cost Time :${System.currentTimeMillis() - start} ")
+    df
   }
 
   def createSingleRow(rel: OLAPRel, dataContext: DataContext): DataFrame = {

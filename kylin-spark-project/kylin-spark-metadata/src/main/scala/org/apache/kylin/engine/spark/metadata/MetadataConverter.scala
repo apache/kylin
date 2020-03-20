@@ -177,7 +177,7 @@ object MetadataConverter {
             List(LiteralColumnDesc(null, SparkTypeUtil.toSparkType(dataType), null, null, -1, parameter.getValue))
         }
 
-        val desc = FunctionDesc(measure.getName, DTType(dataType.getName, dataType.getPrecision),
+        val desc = FunctionDesc(measure.getName, DTType(dataType.getName, dataType.getPrecision, dataType.getScale),
           parametrs, measure.getFunction.getExpression)
         measureIndex.put(Integer.valueOf(index), desc)
       }
