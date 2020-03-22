@@ -38,6 +38,7 @@
         <simpleBuildMode/>
         <buildCubeUsingProvidedData />
         <engineType />
+        <skipTests />
     </properties>
 
     <!-- Dependencies. -->
@@ -487,7 +488,7 @@
                                         </argument>
                                         <argument>-classpath</argument>
                                         <classpath />
-                                        <argument>org.apache.kylin.provision.BuildCubeWithEngine
+                                        <argument>org.apache.kylin.it.provision.BuildCubeWithEngine
                                         </argument>
                                     </arguments>
                                     <workingDirectory>${project.basedir}</workingDirectory>
@@ -517,7 +518,7 @@
                                         </argument>
                                         <argument>-classpath</argument>
                                         <classpath />
-                                        <argument>org.apache.kylin.provision.BuildCubeWithStream
+                                        <argument>org.apache.kylin.it.provision.BuildCubeWithStream
                                         </argument>
                                     </arguments>
                                     <workingDirectory>${project.basedir}</workingDirectory>
@@ -549,7 +550,7 @@
                                         </argument>
                                         <argument>-classpath</argument>
                                         <classpath />
-                                        <argument>org.apache.kylin.realtime.BuildCubeWithStreamV2
+                                        <argument>org.apache.kylin.it.provision.BuildCubeWithStreamV2
                                         </argument>
                                     </arguments>
                                     <workingDirectory>${project.basedir}</workingDirectory>

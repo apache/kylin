@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+<Configuration status="warn">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{ISO8601} %-5p [%t] %c{3}:%L : %m%n"/>
+        </Console>
+
+        <File name="TempFile" fileName="kylin-integration-test.log" append="false">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %class{36} %L %M - %msg%xEx%n"/>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+            <appender-ref ref="TempFile"/>
+        </Root>
+
+        <logger name="org.apache.kylin.it" level="TRACE" additivity="false">
+            <appender-ref ref="Console"/>
+            <appender-ref ref="TempFile"/>
+        </logger>
+
+
+        <logger name="org.apache.kylin" level="INFO" additivity="false">
+            <appender-ref ref="Console"/>
+            <appender-ref ref="TempFile"/>
+        </logger>
+
+        <!--
+        Following logger annoying me, so I shut down them at the moment.
+        1. Broadcaster is not work well in IT.
+        2. Zookeeper may print some env setting but I don't want to see them.
+        3. SpringFramework may print some verbose message.
+        -->
+
+        <logger name="org.apache.kylin.metadata.cachesync" level="ERROR" additivity="false">
+            <appender-ref ref="TempFile"/>
+        </logger>
+
+        <logger name="org.apache.kylin.common.persistence" level="WARN" additivity="false">
+            <appender-ref ref="TempFile"/>
+        </logger>
+
+        <logger name="org.apache.kylin.common.KylinConfig" level="WARN" additivity="false">
+            <appender-ref ref="TempFile"/>
+        </logger>
+
+        <logger name="org.apache.kylin.common.KylinConfigBase" level="WARN" additivity="false">
+            <appender-ref ref="TempFile"/>
+        </logger>
+
+        <logger name="org.apache.zookeeper" level="WARN" additivity="false">
+            <appender-ref ref="TempFile"/>
+        </logger>
+
+
+        <logger name="org.apache.hadoop.hive.conf" level="WARN" additivity="false">
+            <appender-ref ref="TempFile"/>
+        </logger>
+
+        <logger name="org.springframework" level="WARN" additivity="false">
+            <appender-ref ref="Console"/>
+            <appender-ref ref="TempFile"/>
+        </logger>
+    </Loggers>
+</Configuration>
