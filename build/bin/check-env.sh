@@ -35,9 +35,13 @@ else
     echo "KYLIN_HOME is set to ${KYLIN_HOME}"
 fi
 
-if [ -z "$(command -v hbase version)" ]
+metadataUrl=`${dir}/get-properties.sh kylin.metadata.url`
+if [[ "${metadataUrl##*@}" == "hbase" ]]
 then
-    quit "Please make sure the user has the privilege to run hbase shell"
+    if [ -z "$(command -v hbase version)" ]
+    then
+        quit "Please make sure the user has the privilege to run hbase shell"
+    fi
 fi
 
 if [ -z "$(command -v hive --version)" ]

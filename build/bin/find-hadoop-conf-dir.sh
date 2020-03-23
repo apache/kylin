@@ -30,9 +30,9 @@ function find_hadoop_conf_dir() {
         return
     fi
     
-    hbase_classpath=`hbase classpath`
+    hadoop_classpath=`hadoop classpath`
     
-    arr=(`echo $hbase_classpath | cut -d ":" -f 1- | sed 's/:/ /g'`)
+    arr=(`echo $hadoop_classpath | cut -d ":" -f 1- | sed 's/:/ /g'`)
     kylin_hadoop_conf_dir=
     
     for data in ${arr[@]}

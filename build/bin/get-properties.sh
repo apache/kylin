@@ -26,5 +26,5 @@ then
 fi
 
 tool_jar=$(ls $KYLIN_HOME/tool/kylin-tool-*.jar)
-result=`java -cp $tool_jar -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties org.apache.kylin.tool.KylinConfigCLI $1 2>/dev/null`
+result=`$JAVA -cp $tool_jar -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties org.apache.kylin.tool.KylinConfigCLI $1 2>/dev/null`
 echo "$result"
