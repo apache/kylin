@@ -56,4 +56,21 @@ then
 	function setColor() {
         echo -e "\033[$1m$2\033[0m"
     }
+
+    # set JAVA
+    if [[ "${JAVA}" == "" ]]; then
+        if [[ -z "$JAVA_HOME" ]]; then
+            JAVA_VERSION=`java -version 2>&1 | awk -F\" '/version/ {print $2}'`
+            if [[ $JAVA_VERSION ]] && [[ "$JAVA_VERSION" > "1.8" ]]; then
+                JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+            else
+                quit "Java 1.8 or above is required."
+            fi
+            [[ -z "$JAVA_HOME" ]] && quit "Please set JAVA_HOME"
+            export JAVA_HOME
+        fi
+        export JAVA=$JAVA_HOME/bin/java
+        [[ -e "${JAVA}" ]] || quit "${JAVA} does not exist. Please set JAVA_HOME correctly."
+        verbose "java is ${JAVA}"
+    fi
 fi

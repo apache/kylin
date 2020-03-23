@@ -29,23 +29,7 @@ if [ -n "$is_aws" ] && [ -d "/usr/lib/oozie/lib" ]; then
     export HBASE_ENV_INIT="true"
 fi
 
-arr=(`echo $hbase_classpath | cut -d ":" -f 1- | sed 's/:/ /g'`)
-hbase_common_path=
-for data in ${arr[@]}
-do
-    result=`echo $data | grep -e 'hbase-common[a-z0-9A-Z\.-]*jar' | grep -v tests`
-    if [ $result ]
-    then
-        hbase_common_path=$data
-    fi
-done
-
-if [ -z "$hbase_common_path" ]
-then
-    quit "hbase-common lib not found"
-fi
-
-hbase_dependency=${hbase_common_path}
+hbase_dependency=${hbase_classpath}
 verbose "hbase dependency: $hbase_dependency"
 export hbase_dependency
 echo "export HBASE_ENV_INIT=$HBASE_ENV_INIT

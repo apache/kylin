@@ -22,6 +22,13 @@ source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 echo "Start to check whether we need to migrate acl tables"
 
 metadataUrl=`${dir}/get-properties.sh kylin.metadata.url`
+
+if [[ "${metadataUrl##*@}" != "hbase" ]]
+then
+    echo "Not HBase metadata ${metadataUrl}. Skip check."
+    exit 0
+fi
+
 metadataUrl=${metadataUrl%%@*}
 
 ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI CHECK
