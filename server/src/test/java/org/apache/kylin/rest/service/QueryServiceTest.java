@@ -47,7 +47,7 @@ public class QueryServiceTest extends ServiceTestBase {
     QueryService queryService;
 
     @Autowired
-    protected CacheManager cacheManager;
+    CacheManager cacheManager;
 
     @Test
     public void testBasics() throws JobException, IOException, SQLException {
