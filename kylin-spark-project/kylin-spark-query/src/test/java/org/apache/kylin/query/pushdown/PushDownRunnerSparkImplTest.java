@@ -19,7 +19,9 @@
 package org.apache.kylin.query.pushdown;
 
 import com.google.common.collect.Lists;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.spark.sql.SparderContext;
 import org.apache.spark.sql.SparkSession;
@@ -54,7 +56,7 @@ public class PushDownRunnerSparkImplTest extends LocalFileMetadataTestCase {
         schema = schema.add("PRICE", DataTypes.createDecimalType(19, 4), false);
         schema = schema.add("ITEM_COUNT", DataTypes.DoubleType, false);
         schema = schema.add("TEST_COUNT_DISTINCT_BITMAP", DataTypes.StringType, false);
-        ss.read().schema(schema).csv("../examples/test_case_data/localmeta_n/data/DEFAULT.TEST_KYLIN_FACT.csv")
+        ss.read().schema(schema).csv("../../examples/test_case_data/localmeta_n/data/DEFAULT.TEST_KYLIN_FACT.csv")
                 .createOrReplaceTempView("TEST_KYLIN_FACT");
     }
 
@@ -146,5 +148,11 @@ public class PushDownRunnerSparkImplTest extends LocalFileMetadataTestCase {
         Assert.assertEquals(1, returnRows.size());
         Assert.assertEquals(2, returnColumnMeta.size());
         Assert.assertEquals("HIVE", pushDownRunnerSpark.getName());
+    }
+
+    public void createTestMetadata() {
+        String tempMetadataDir = TempMetadataBuilder.prepareNLocalTempMetadata();
+        KylinConfig.setKylinConfigForLocalTest(tempMetadataDir);
+        getTestConfig().setProperty("kylin.query.security.acl-tcr-enabled", "false");
     }
 }
