@@ -465,11 +465,11 @@ public class QueryService extends BasicService {
         Message msg = MsgPicker.getMsg();
         final QueryContext queryContext = QueryContextFacade.current();
 
-        boolean isDummpyResponseEnabled = queryCacheEnabled && kylinConfig.isLazyQueryEnabled();
+        boolean isDummyResponseEnabled = queryCacheEnabled && kylinConfig.isLazyQueryEnabled();
         SQLResponse sqlResponse = null;
         try {
             // Add dummy response which will be updated or evicted when query finishes
-            if (isDummpyResponseEnabled) {
+            if (isDummyResponseEnabled) {
                 SQLResponse dummyResponse = new SQLResponse();
                 dummyResponse.setLazyQueryStartTime(System.currentTimeMillis());
                 cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), dummyResponse);
@@ -532,7 +532,7 @@ public class QueryService extends BasicService {
                 if (!realtimeQuery) {
                     cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), sqlResponse);
                 }
-            } else if (isDummpyResponseEnabled) {
+            } else if (isDummyResponseEnabled) {
                 cacheManager.getCache(QUERY_CACHE).evict(sqlRequest.getCacheKey());
             }
 
@@ -549,6 +549,10 @@ public class QueryService extends BasicService {
                     && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
                 Cache exceptionCache = cacheManager.getCache(QUERY_CACHE);
                 exceptionCache.put(sqlRequest.getCacheKey(), sqlResponse);
+            } else if (isDummyResponseEnabled) {
+                // evict dummy response to avoid caching too many bad queries
+                Cache exceptionCache = cacheManager.getCache(QUERY_CACHE);
+                exceptionCache.evict(sqlRequest.getCacheKey());
             }
         }
         return sqlResponse;
