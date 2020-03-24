@@ -48,6 +48,7 @@ import org.apache.kylin.engine.mr.LookupSnapshotBuildJob;
 import org.apache.kylin.engine.mr.LookupSnapshotJobBuilder;
 import org.apache.kylin.engine.mr.common.JobInfoConverter;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
+import org.apache.kylin.engine.spark.metadata.cube.source.SourceFactory;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JobSearchResult;
 import org.apache.kylin.job.Scheduler;
@@ -63,6 +64,8 @@ import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
+import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -76,7 +79,6 @@ import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.SourcePartition;
-import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -239,10 +241,18 @@ public class JobService extends BasicService implements InitializingBean {
         CubeSegment newSeg = null;
         try {
             if (buildType == CubeBuildTypeEnum.BUILD) {
-                ISource source = SourceManager.getSource(cube);
-                SourcePartition src = new SourcePartition(tsRange, segRange, sourcePartitionOffsetStart,
-                        sourcePartitionOffsetEnd);
-                src = source.enrichSourcePartitionBeforeBuild(cube, src);
+                //TODO: Clean the code for org.apache.kylin.source.ISource and org.apache.kylin.engine.spark.metadata.cube.source.ISource
+                SourcePartition src;
+                if (cube.getSourceType() == ISourceAware.ID_SPARK) {
+                    org.apache.kylin.engine.spark.metadata.cube.source.ISource source = SourceFactory.getSparkSource();
+                    src = new SourcePartition(tsRange, segRange, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
+                    src = source.enrichSourcePartitionBeforeBuild(cube, src);
+                } else {
+                    ISource source = SourceManager.getSource(cube);
+                    src = new SourcePartition(tsRange, segRange, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
+                    src = source.enrichSourcePartitionBeforeBuild(cube, src);
+                }
+
                 newSeg = getCubeManager().appendSegment(cube, src);
                 job = EngineFactory.createBatchCubingJob(newSeg, submitter, priorityOffset);
             } else if (buildType == CubeBuildTypeEnum.MERGE) {
@@ -479,7 +489,7 @@ public class JobService extends BasicService implements InitializingBean {
         DefaultChainedExecutable cubeJob;
 
         if (job instanceof CubingJob) {
-            cubeJob = (CubingJob)job;
+            cubeJob = (CubingJob) job;
         } else {
             throw new BadRequestException(String.format(Locale.ROOT, msg.getILLEGAL_JOB_TYPE(), job.getId()));
         }
@@ -672,10 +682,10 @@ public class JobService extends BasicService implements InitializingBean {
     public void pauseJob(JobInstance job) {
         aclEvaluate.checkProjectOperationPermission(job);
         logger.info("Pause job [" + job.getId() + "] trigger by "
-            + SecurityContextHolder.getContext().getAuthentication().getName());
+                + SecurityContextHolder.getContext().getAuthentication().getName());
         if (job.getStatus().isComplete()) {
-          throw new IllegalStateException(
-              "The job " + job.getId() + " has already been finished and cannot be stopped.");
+            throw new IllegalStateException(
+                    "The job " + job.getId() + " has already been finished and cannot be stopped.");
         }
         getExecutableManager().pauseJob(job.getId());
     }
@@ -1000,18 +1010,17 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     public Map<JobStatusEnum, Integer> searchJobsOverview(final String cubeNameSubstring, final String projectName,
-                                          final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter,
-                                          JobSearchMode jobSearchMode) {
+            final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter, JobSearchMode jobSearchMode) {
         // TODO: can be optimized here
         List<JobSearchResult> jobSearchResultList = searchJobsByCubeNameV2(cubeNameSubstring, projectName, statusList,
                 timeFilter, jobSearchMode);
         Map<JobStatusEnum, Integer> jobOverview = new HashMap<>();
         if (statusList == null || statusList.isEmpty()) {
-            for (JobStatusEnum  status: JobStatusEnum.values()) {
+            for (JobStatusEnum status : JobStatusEnum.values()) {
                 jobOverview.put(status, 0);
             }
         } else {
-            for (JobStatusEnum  status: statusList) {
+            for (JobStatusEnum status : statusList) {
                 jobOverview.put(status, 0);
             }
         }

@@ -18,12 +18,16 @@
 
 package org.apache.kylin.engine.spark.source;
 
-import org.apache.kylin.engine.spark.NSparkCubingEngine.NSparkCubingSource;
 import java.io.File;
 import java.util.Map;
+
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.engine.spark.NSparkCubingEngine.NSparkCubingSource;
+import org.apache.kylin.engine.spark.job.KylinBuildEnv;
 import org.apache.kylin.engine.spark.metadata.TableDesc;
 import org.apache.kylin.engine.spark.metadata.cube.source.ISource;
+import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.source.SourcePartition;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -33,18 +37,34 @@ public class CsvSource implements ISource {
     @SuppressWarnings("unchecked")
     @Override
     public <I> I adaptToBuildEngine(Class<I> engineInterface) {
-            return (I) new NSparkCubingSource() {
+        return (I) new NSparkCubingSource() {
 
-                @Override
-                public Dataset<Row> getSourceData(TableDesc table, SparkSession ss, Map<String, String> parameters) {
-                    String path = new File(getUtMetaDir(), "../../examples/test_case_data/localmeta_n/data/" + table.identity() + ".csv").getAbsolutePath();
-                    Dataset<Row> delimiter = ss.read()
-                            .option("delimiter", ",")
-//                            .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS")
-                            .schema(table.toSchema()).csv("file:///" + path);
-                    return delimiter;
+            @Override
+            public Dataset<Row> getSourceData(TableDesc table, SparkSession ss, Map<String, String> parameters) {
+                String path = null;
+                KylinConfig kylinConfig = KylinBuildEnv.get().kylinConfig();
+                if (kylinConfig.getDeployEnv().equals("FT")) {
+                    path = "file:///" + new File(getUtMetaDir(),
+                            "../../examples/test_case_data/localmeta_n/data/" + table.identity() + ".csv")
+                                    .getAbsolutePath();
+                } else {
+                    String project = parameters.get("project") == null ? "" : parameters.get("project") + "/";
+                    path = KylinBuildEnv.get().kylinConfig().getHdfsWorkingDirectory() + project + "csv/"
+                            + table.identity() + ".csv";
                 }
-            };
+                Dataset<Row> delimiter = ss.read().option("delimiter", ",")
+                        //                            .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS")
+                        .schema(table.toSchema()).csv(path);
+                return delimiter;
+            }
+        };
+    }
+
+    @Override
+    public SourcePartition enrichSourcePartitionBeforeBuild(IBuildable buildable, SourcePartition srcPartition) {
+        SourcePartition result = SourcePartition.getCopyOf(srcPartition);
+        result.setSegRange(null);
+        return result;
     }
 
     private String getUtMetaDir() {

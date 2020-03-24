@@ -136,7 +136,7 @@ class DFSnapshotBuilder extends Logging {
   }
 
   def buildSingleSnapshot(tableInfo: TableDesc, baseDir: String, fs: FileSystem): (String, String) = {
-    val sourceData = ss.table(tableInfo)
+    val sourceData = ss.table(tableInfo, null)
     val tablePath = FileNames.snapshotFile(tableInfo, seg.project)
     var snapshotTablePath = tablePath + "/" + UUID.randomUUID
     val resourcePath = baseDir + "/" + snapshotTablePath
@@ -184,7 +184,7 @@ class DFSnapshotBuilder extends Logging {
   import org.apache.kylin.engine.spark.utils.SparkDataSource._
 
   def buildSnapshotWithoutMd5(tableInfo: TableDesc, baseDir: String): (String, String) = {
-    val sourceData = ss.table(tableInfo)
+    val sourceData = ss.table(tableInfo, null)
     val tablePath = FileNames.snapshotFile(tableInfo, seg.project)
     val snapshotTablePath = tablePath + "/" + UUID.randomUUID
     val resourcePath = baseDir + "/" + snapshotTablePath

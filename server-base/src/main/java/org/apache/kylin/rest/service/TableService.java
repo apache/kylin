@@ -18,7 +18,10 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,9 +34,14 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.CubeInstance;
@@ -55,6 +63,7 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.CsvColumnDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
@@ -77,6 +86,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -350,7 +360,7 @@ public class TableService extends BasicService {
     public void calculateCardinalityIfNotPresent(String[] tables, String submitter, String prj) throws Exception {
         // calculate cardinality for Hive source
         ProjectInstance projectInstance = getProjectManager().getProject(prj);
-        if (projectInstance == null || projectInstance.getSourceType() != ISourceAware.ID_HIVE){
+        if (projectInstance == null || projectInstance.getSourceType() != ISourceAware.ID_HIVE) {
             return;
         }
         TableMetadataManager metaMgr = getTableManager();
@@ -531,5 +541,111 @@ public class TableService extends BasicService {
     public String normalizeHiveTableName(String tableName) {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
         return (dbTableName[0] + "." + dbTableName[1]).toUpperCase(Locale.ROOT);
+    }
+
+    public List<CsvColumnDesc> parseCsvFile(MultipartFile file, boolean withHeader, String separator)
+            throws IOException {
+        InputStreamReader isr = null;
+        BufferedReader br = null;
+        List<CsvColumnDesc> result = new ArrayList<>();
+
+        try {
+            isr = new InputStreamReader(file.getInputStream(), Charset.defaultCharset());
+            br = new BufferedReader(isr);
+            String headLine = null;
+            String[] headers = null;
+            String contentLine = null;
+            switch (separator) {
+            case "space":
+                separator = " ";
+                break;
+            case "tab":
+                separator = "\t";
+                break;
+            default:
+                separator = ",";
+            }
+
+            if (withHeader) {
+                headLine = br.readLine();
+                headers = headLine.split(separator);
+            }
+            contentLine = br.readLine();
+            String[] firstLine = contentLine.split(separator);
+
+            if (headers != null && headers.length != firstLine.length) {
+                throw new IllegalArgumentException("Csv file's header not match with content.");
+            }
+
+            int index = 0;
+            for (String content : firstLine) {
+                CsvColumnDesc desc = new CsvColumnDesc();
+                if (withHeader) {
+                    desc.setName(headers[index]);
+                } else {
+                    desc.setName("");
+                }
+                desc.setSample(content);
+                result.add(desc);
+                index++;
+            }
+        } finally {
+            try {
+                if (br != null) {
+                    br.close();
+                }
+                if (isr != null) {
+                    isr.close();
+                }
+            } catch (IOException ex) {
+                logger.warn("Failed to close reader");
+            }
+        }
+
+        return result;
+    }
+
+    public TableDesc generateCsvTableDesc(String tableName, List<String> columnDescList) throws IOException {
+        String[] strs = tableName.split("\\.");
+        if (strs.length != 2) {
+            throw new IllegalArgumentException("Invalid table name + '" + tableName + "'");
+        }
+        TableDesc tableDesc = new TableDesc();
+
+        tableDesc.setDatabase(strs[0]);
+        tableDesc.setName(strs[1]);
+        tableDesc.setUuid(RandomUtil.randomUUID().toString());
+        tableDesc.setLastModified(0);
+        tableDesc.setSourceType(ISourceAware.ID_SPARK);
+        List<ColumnDesc> columnDescs = new ArrayList<>();
+        int index = 0;
+
+        for (String csvColumnDescStr : columnDescList) {
+            ColumnDesc columnDesc = new ColumnDesc();
+            CsvColumnDesc csvColumnDesc = JsonUtil.readValue(csvColumnDescStr, CsvColumnDesc.class);
+            columnDesc.setId("0" + index);
+            columnDesc.setName((csvColumnDesc).getName());
+            columnDesc.setDatatype((csvColumnDesc).getType());
+            columnDescs.add(columnDesc);
+            index++;
+        }
+
+        tableDesc.setColumns(columnDescs.toArray(new ColumnDesc[columnDescs.size()]));
+
+        return tableDesc;
+    }
+
+    public void saveCsvFile(MultipartFile file, String tableName, String project) throws IOException {
+        String workDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory(project) + "csv/";
+        FileSystem fs = HadoopUtil.getFileSystem(workDir);
+        FSDataOutputStream out = null;
+
+        try {
+            out = fs.create(new Path(workDir + tableName.toUpperCase(Locale.ROOT) + ".csv"), true);
+            out.write(file.getBytes());
+
+        } finally {
+            IOUtils.closeQuietly(out);
+        }
     }
 }

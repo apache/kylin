@@ -6,6 +6,8 @@ import java.util.Locale
 import org.apache.kylin.engine.spark.NSparkCubingEngine.NSparkCubingSource
 import org.apache.kylin.engine.spark.metadata.cube.source.ISource
 import org.apache.kylin.engine.spark.metadata.TableDesc
+import org.apache.kylin.metadata.model.IBuildable
+import org.apache.kylin.source.SourcePartition
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.sql.utils.SparkTypeUtil
@@ -28,4 +30,6 @@ class HiveSource extends ISource with Logging {
       }
     }.asInstanceOf[I]
   }
+
+  override def enrichSourcePartitionBeforeBuild(buildable: IBuildable, srcPartition: SourcePartition): SourcePartition = ???
 }

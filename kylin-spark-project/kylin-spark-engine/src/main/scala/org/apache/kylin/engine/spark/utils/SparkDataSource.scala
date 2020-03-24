@@ -26,11 +26,13 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object SparkDataSource {
   implicit class SparkSource(sparkSession: SparkSession) {
-    def table(tableInfo: TableDesc) : DataFrame = {
+    def table(tableInfo: TableDesc, project: String) : DataFrame = {
+      val parameters = Maps.newHashMap[String, String]()
+      parameters.put("project", project)
       SourceFactory
         .getSource(tableInfo.sourceType).adaptToBuildEngine(
           classOf[NSparkCubingEngine.NSparkCubingSource])
-        .getSourceData(tableInfo, sparkSession, Maps.newHashMap())
+        .getSourceData(tableInfo, sparkSession, parameters)
     }
   }
 }

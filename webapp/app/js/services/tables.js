@@ -28,3 +28,56 @@ KylinApp.factory('TableService', ['$resource', function ($resource, config) {
     getSnapshots: {method: 'GET', params: {action: 'snapshots'}, isArray: true}
   });
 }]);
+
+KylinApp.service('CsvUploadService', function($http, $q) {
+  this.upload = function(file, has_header, separator) {
+    var deferred = $q.defer();
+    var formData = new FormData();
+    formData.append('file', file);
+    formData.append('withHeader', has_header);
+    formData.append('separator', separator);
+
+    $http.post(Config.service.url + 'tables/fetchCsvData', formData, {
+      transformRequest: angular.identity,
+      transformResponse: angular.identity,
+      headers: {
+        'Content-Type': undefined
+      }
+    })
+      .then(
+        function (response) {
+          deferred.resolve(response.data);
+        },
+        function (errResponse) {
+          deferred.reject(errResponse);
+        }
+      );
+    return deferred.promise;
+  };
+
+  this.save = function(file, table_name, project, columns) {
+    var deferred = $q.defer();
+    var formData = new FormData();
+    formData.append('file', file);
+    formData.append('tableName', table_name);
+    formData.append('project', project);
+    formData.append('columns', columns);
+
+    $http.post(Config.service.url + 'tables/saveCsvTable', formData, {
+      transformRequest: angular.identity,
+      transformResponse: angular.identity,
+      headers: {
+        'Content-Type': undefined
+      }
+    })
+      .then(
+        function (response) {
+          deferred.resolve(response.data);
+        },
+        function (errResponse) {
+          deferred.reject(errResponse);
+        }
+      );
+    return deferred.promise;
+  }
+});
