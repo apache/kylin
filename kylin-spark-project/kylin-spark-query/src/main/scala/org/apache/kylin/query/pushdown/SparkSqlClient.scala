@@ -20,7 +20,6 @@ package org.apache.kylin.query.pushdown
 
 import java.util.{UUID, List => JList}
 
-import org.apache.htrace.Trace
 import org.apache.kylin.common.exceptions.KylinTimeoutException
 import org.apache.kylin.common.util.{HadoopUtil, Pair}
 import org.apache.kylin.common.{KylinConfig, QueryContextFacade}
@@ -46,7 +45,6 @@ object SparkSqlClient {
 		val queryId = QueryContextFacade.current().getQueryId
 		ss.sparkContext.setLocalProperty(QueryToExecutionIDCache.KYLIN_QUERY_ID_KEY, queryId)
 		logger.info(s)
-		Trace.addTimelineAnnotation(s)
 
 		val df = ss.sql(sql)
 
@@ -55,7 +53,6 @@ object SparkSqlClient {
 		val msg = "SparkSQL returned result DataFrame"
 		logger.info(msg)
 
-		Trace.addTimelineAnnotation(msg)
 		DFToList(ss, sql, uuid, df)
 	}
 
