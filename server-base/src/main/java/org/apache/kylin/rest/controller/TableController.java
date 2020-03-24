@@ -26,7 +26,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.metadata.model.CsvColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
@@ -47,6 +49,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.Sets;
 
@@ -242,6 +245,34 @@ public class TableController extends BasicController {
     public List<TableSnapshotResponse> getTableSnapshots(@PathVariable final String project,
             @PathVariable final String tableName) throws IOException {
         return tableService.getLookupTableSnapshots(project, tableName);
+    }
+
+    @RequestMapping(value = "/fetchCsvData", method = { RequestMethod.POST })
+    @ResponseBody
+    public List<CsvColumnDesc> fetchCsvData(@RequestParam(value = "file") MultipartFile file,
+            @RequestParam(value = "withHeader", required = false) boolean withHeader,
+            @RequestParam(value = "separator", required = false) String separator) throws IOException {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Please select a file");
+        }
+
+        return tableService.parseCsvFile(file, withHeader, separator);
+    }
+
+    @RequestMapping(value = "/saveCsvTable", method = { RequestMethod.POST })
+    @ResponseBody
+    public TableDesc salveCsvTable(@RequestParam(value = "file") MultipartFile file,
+            @RequestParam(value = "tableName", required = true) String tableName,
+            @RequestParam(value = "project", required = true) String project,
+            @RequestParam(value = "columns", required = true) String columnDescList) throws IOException {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Please select a file");
+        }
+
+        TableDesc desc = tableService.generateCsvTableDesc(tableName, JsonUtil.readValue(columnDescList, List.class));
+        tableService.loadTableToProject(desc, null, project);
+        tableService.saveCsvFile(file, tableName, project);
+        return desc;
     }
 
     public void setTableService(TableService tableService) {

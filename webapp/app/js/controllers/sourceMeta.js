@@ -1422,6 +1422,71 @@ KylinApp
       };
 
     };
+
+    $scope.loadCsvFile = function() {
+      $modal.open({
+        templateUrl: 'addCsvSource.html',
+        controller: CsvSourceCtrl,
+        backdrop : 'static',
+        resolve: {
+          projectName: function () {
+            return $scope.projectModel.selectedProject;
+          },
+          scope: function () {
+            return $scope;
+          }
+        }
+      });
+    };
+
+    var CsvSourceCtrl = function($scope, $modalInstance, SweetAlert, CsvUploadService, tableConfig, projectName, scope) {
+      $scope.file = '';
+      $scope.separator_list = ['comma', 'space', 'tab'];
+      $scope.tableConfig = tableConfig;
+      $scope.tableData = {
+        name: '',
+        has_header: false,
+        separator: 'comma',
+        loaded: false
+      };
+
+      $scope.cancel = function () {
+        $modalInstance.dismiss('cancel');
+      };
+
+      $scope.loadTable = function () {
+        var file = $scope.file;
+        CsvUploadService.upload(file, $scope.tableData.has_header, $scope.tableData.separator)
+          .then(
+            function (response) {
+              $scope.tableData.loaded = true;
+              $scope.columnList = JSON.parse(response);
+            },
+            function (errResponse) {
+              SweetAlert.error("Failed to load csv file.")
+            }
+          );
+      }
+
+      $scope.saveTable = function () {
+        var file = $scope.file;
+        var columns = [];
+        for(var i=0;i<$scope.columnList.length;i++){
+          columns.push(JSON.stringify($scope.columnList[i]));
+        }
+        CsvUploadService.save(file, $scope.tableData.name, projectName, JSON.stringify(columns))
+          .then(
+            function (response) {
+              SweetAlert.swal('', 'Created table from csv file successfully.', 'success');
+              $scope.cancel();
+              scope.aceSrcTbLoaded(true);
+            },
+            function (errResponse) {
+              SweetAlert.error("Failed to load csv file.")
+            }
+          );
+      }
+    };
   });
 
 /*snapshot controller*/

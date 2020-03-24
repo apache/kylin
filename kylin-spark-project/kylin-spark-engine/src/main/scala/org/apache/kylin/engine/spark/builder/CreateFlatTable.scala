@@ -44,7 +44,7 @@ class CreateFlatTable(
   def generateDataset(needEncode: Boolean = false, needJoin: Boolean = true): Dataset[Row] = {
 
     val ccCols = seg.allColumns.filter(_.isInstanceOf[ComputedColumnDesc]).toSet
-    var rootFactDataset = generateTableDataset(seg.factTable, ccCols.toSeq, ss)
+    var rootFactDataset = generateTableDataset(seg.factTable, ccCols.toSeq, ss, seg.project)
     rootFactDataset = applyFilterCondition(seg, rootFactDataset)
 
     logInfo(s"Create flattable need join lookup tables ${needJoin}, need encode cols ${needEncode}")
@@ -116,12 +116,13 @@ object CreateFlatTable extends Logging {
     tableInfo: TableDesc,
     cols: Seq[ColumnDesc],
     ss: SparkSession,
+    project: String = null,
     sourceInfo: NBuildSourceInfo = null) = {
     var dataset: Dataset[Row] =
       if (sourceInfo != null && !StringUtils.isBlank(sourceInfo.getViewFactTablePath)) {
         ss.read.parquet(sourceInfo.getViewFactTablePath).alias(tableInfo.alias)
       } else {
-        ss.table(tableInfo).alias(tableInfo.alias)
+        ss.table(tableInfo, project).alias(tableInfo.alias)
       }
 
     val suitableCols = chooseSuitableCols(dataset, cols)

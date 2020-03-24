@@ -37,6 +37,9 @@
 
 package org.apache.kylin.engine.spark.metadata.cube.source;
 
+import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.source.SourcePartition;
+
 /**
  * Represents a kind of source to Kylin, like Hive.
  */
@@ -47,4 +50,6 @@ public interface ISource {
      * The IMRInput in particular, is required by the MR build engine.
      */
     <I> I adaptToBuildEngine(Class<I> engineInterface);
+
+    SourcePartition enrichSourcePartitionBeforeBuild(IBuildable buildable, SourcePartition srcPartition);
 }
