@@ -81,9 +81,24 @@ class FilePruner(
 
   private lazy val segmentDirs: Seq[SegmentDirectory] = {
     cubeInstance.getSegments.asScala
-      .filter(_.getStatus.equals(SegmentStatusEnum.READY))
-      .map(seg => SegmentDirectory(seg.getUuid, null))
+            .filter(_.getStatus.equals(SegmentStatusEnum.READY))
+            .map(seg => SegmentDirectory(seg.getUuid, null))
+    cubeInstance.getSegments.asScala
+            .filter(_.getStatus.equals(SegmentStatusEnum.READY)).map(seg => {
+      val segId = seg.getUuid
+      val path = PathManager.getParquetStoragePath(cubeInstance, segId, layoutEntity.getId)
+      val files = new InMemoryFileIndex(session,
+        Seq(new Path(path)),
+        options,
+        Some(dataSchema),
+        FileStatusCache.getOrCreate(session))
+              .listFiles(Nil, Nil)
+              .flatMap(_.files)
+              .filter(_.isFile)
+      SegmentDirectory(segId, files)
+    }).filter(_.files.nonEmpty)
   }
+
   val layoutEntity = MetadataConverter.toLayoutEntity(cubeInstance, cuboid)
 
   val dataSchema: StructType = {
@@ -120,10 +135,10 @@ class FilePruner(
         // we can only get col ID in layout cuz data schema is all ids.
         val id = layoutEntity.getOrderedDimensions.asScala.values.find(column => column.columnName.equals(ref.getName))
         if (id.isDefined && (ref.getType.isDateTimeFamily || ref.getType.isStringFamily)) {
-          if (ref.getType.isStringFamily) {
+          if (ref.getType.isDateTimeFamily) {
             pattern = desc.getPartitionDateFormat
           }
-          dataSchema.filter(_.name == id.toString)
+          dataSchema.filter(_.name == String.valueOf(id.get.id))
 
         } else {
           Seq.empty
