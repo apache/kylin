@@ -33,7 +33,6 @@ import org.apache.kylin.engine.spark.job.NSparkMergingJob;
 import org.apache.kylin.engine.spark.job.UdfManager;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
@@ -64,8 +63,6 @@ import org.spark_project.guava.collect.Sets;
 import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -242,25 +239,23 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         throw new IllegalArgumentException("KAP data type: " + type + " can not be converted to spark's type.");
     }
 
-    public void buildMultiSegs(String dfName) throws Exception {
-        CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
-        CubeInstance cube = cubeMgr.getCube(dfName);
-        List<LayoutEntity> layouts = new ArrayList<>();
+    public void buildMultiSegs(String cubeName) throws Exception {
+        cleanupSegments(cubeName);
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
 
         long start = f.parse("2009-01-01 00:00:00").getTime();
         long end = f.parse("2011-01-01 00:00:00").getTime();
-        buildCuboid(dfName, new SegmentRange.TSRange(start, end));
+        buildCuboid(cubeName, new SegmentRange.TSRange(start, end));
 
         start = f.parse("2011-01-01 00:00:00").getTime();
         end = f.parse("2013-01-01 00:00:00").getTime();
-        buildCuboid(dfName, new SegmentRange.TSRange(start, end));
+        buildCuboid(cubeName, new SegmentRange.TSRange(start, end));
 
         start = f.parse("2013-01-01 00:00:00").getTime();
         end = f.parse("2015-01-01 00:00:00").getTime();
-        buildCuboid(dfName, new SegmentRange.TSRange(start, end));
+        buildCuboid(cubeName, new SegmentRange.TSRange(start, end));
     }
 
     public String getProject() {
