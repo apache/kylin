@@ -18,15 +18,19 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import com.google.common.collect.Sets;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -63,37 +67,16 @@ public class NSparkCubingStep extends NSparkExecutable {
         return true;
     }
 
-    /*@Override
-    public Set<String> getDependencies(KylinConfig config) {
-        String dataflowId = getDataflowId();
-        Set<String> segmentIds = getSegmentIds();
-
-        val dfMgr = NDataflowManager.getInstance(config, getProject());
-        val dataflow = dfMgr.getDataflow(dataflowId);
-        val indexPlan = dataflow.getIndexPlan();
-
-        Set<String> result = Sets.newHashSet();
-        for (String segId : segmentIds) {
-            val seg = dfMgr.getDataflow(dataflowId).getSegment(segId);
-            for (LayoutEntity layout : indexPlan.getAllLayouts()) {
-                NDataLayout dataCuboid = NDataLayout.newDataLayout(seg.getDataflow(), seg.getId(), layout.getId());
-                String path = "/" + NSparkCubingUtil.getStoragePathWithoutPrefix(dataCuboid.getSegDetails(),
-                        dataCuboid.getLayoutId());
-                result.add(path);
-                result.add(path + DFBuildJob.TEMP_DIR_SUFFIX);
-            }
-        }
-
-        val model = indexPlan.getModel();
-        model.getJoinTables().forEach(lookupDesc -> {
-            val tableDesc = lookupDesc.getTableRef().getTableDesc();
-            val isLookupTable = model.isLookupTable(lookupDesc.getTableRef());
-            if (isLookupTable) {
-                val tablePath = "/" + tableDesc.getProject() + HadoopUtil.SNAPSHOT_STORAGE_ROOT + "/"
-                        + tableDesc.getName();
-                result.add(tablePath);
-            }
-        });
-        return result;
-    }*/
+    @Override
+    protected void updateMetaAfterBuilding(KylinConfig config) throws IOException {
+        CubeManager cubeManager = CubeManager.getInstance(config);
+        CubeInstance currentInstance = cubeManager.getCube(getCubeName());
+        CubeUpdate update = new CubeUpdate(currentInstance.latestCopyForWrite());
+        KylinConfig kylinDistConfig = MetaDumpUtil.loadKylinConfigFromHdfs(getDistMetaUrl());
+        CubeInstance distCube = CubeManager.getInstance(kylinDistConfig).reloadCube(getCubeName());
+        Set<String> segmentIds = Sets.newHashSet(org.apache.hadoop.util.StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS)));
+        update.setToUpdateSegs(distCube.getSegmentById(segmentIds.iterator().next()));
+        update.setStatus(RealizationStatusEnum.READY);
+        cubeManager.updateCube(update);
+    }
 }
