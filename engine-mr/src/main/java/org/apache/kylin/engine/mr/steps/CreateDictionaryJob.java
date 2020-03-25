@@ -82,9 +82,9 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
                 CubeManager cubeManager = CubeManager.getInstance(config);
                 CubeInstance cube = cubeManager.getCube(cubeName);
                 List<TblColRef> uhcColumns = cube.getDescriptor().getAllUHCColumns();
-
+                KylinConfig cubeConfig = cube.getConfig();
                 Path colDir;
-                if (config.isBuildUHCDictWithMREnabled() && uhcColumns.contains(col)) {
+                if (cubeConfig.isBuildUHCDictWithMREnabled() && uhcColumns.contains(col)) {
                     colDir = new Path(dictPath, col.getIdentity());
                 } else {
                     colDir = new Path(factColumnsInputPath, col.getIdentity());
