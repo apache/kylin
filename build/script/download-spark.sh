@@ -17,34 +17,59 @@
 # limitations under the License.
 #
 
-dir=$(dirname ${0})
-cd ${dir}/../..
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
-rm -rf build/spark
-
-spark_pkg_name="spark-2.4.1-os-kylin-r3"
-spark_pkg_file_name="${spark_pkg_name}.tgz"
-spark_pkg_md5="8fb09dbb61f26f5679be49c2c8713da3"
-
-if [[ ! -f "build/${spark_pkg_file_name}" ]]
+if [ -d "${KYLIN_HOME}/spark" ]
 then
-    echo "no binary file found"
-    wget --directory-prefix=build/ https://download-resource.s3.cn-north-1.amazonaws.com.cn/osspark/${spark_pkg_file_name} || echo "Download spark failed"
+    echo "Spark binary exists"
+    exit 0;
 else
-    if [ `calMd5 build/${spark_pkg_file_name} | awk '{print $1}'` != "${spark_pkg_md5}" ]
-    then
-        echo "md5 check failed"
-        rm build/${spark_pkg_file_name}
-        wget --directory-prefix=build/ https://s3.cn-north-1.amazonaws.com.cn/download-resource/kyspark/${spark_pkg_file_name}  || echo "Download spark failed"
-
-    fi
+    echo "Downloading spark package..."
 fi
 
-tar -zxvf build/${spark_pkg_file_name} -C build/   || { exit 1; }
-mv build/${spark_pkg_name} build/spark
+spark_package_dir=/tmp/spark_package
+
+mkdir -p -- "${spark_package_dir}" && cd -P -- "${spark_package_dir}"
+
+alias md5cmd="md5sum"
+if [[ `uname -a` =~ "Darwin" ]]; then
+    alias md5cmd="md5 -q"
+fi
+
+spark_version="2.4.1"
+spark_pkg_name="spark-2.4.1-os-kylin-r3"
+spark_pkg_md5="8fb09dbb61f26f5679be49c2c8713da3"
+spark_pkg_file_name="${spark_pkg_name}.tgz"
+
+if [ ! -f "spark-${spark_version}-bin-hadoop2.7.tgz" ]
+then
+    echo "No binary file found, start to download package to ${spark_package_dir}"
+    wget https://download-resource.s3.cn-north-1.amazonaws.com.cn/osspark/${spark_pkg_file_name}|| echo "Download spark failed"
+else
+    if [ `md5cmd spark-${spark_version}-bin-hadoop2.7.tgz | awk '{print $1}'` != "${spark_pkg_md5}" ]
+    then
+        echo "md5 check failed"
+        rm ${spark_pkg_file_name}
+        wget https://download-resource.s3.cn-north-1.amazonaws.com.cn/osspark/${spark_pkg_file_name}|| echo "Download spark failed"
+    else
+        echo "Spark package found in ${spark_package_dir}"
+    fi
+fi
+unalias md5cmd
+
+echo "Start to decompress package"
+tar -zxvf spark-${spark_version}-bin-hadoop2.7.tgz  || { exit 1; }
+mv spark-${spark_version}-bin-hadoop2.7 spark
 
 # Remove unused components in Spark
-rm -rf build/spark/lib/spark-examples-*
-rm -rf build/spark/examples
-rm -rf build/spark/data
-rm -rf build/spark/R
+rm -rf spark/lib/spark-examples-*
+rm -rf spark/examples
+rm -rf spark/data
+rm -rf spark/R
+
+# mv spark binary to KYLIN_HOME
+mv spark ${KYLIN_HOME}
+
+echo "Download spark binary done"
+
+rm -rf ${spark_package_dir}
