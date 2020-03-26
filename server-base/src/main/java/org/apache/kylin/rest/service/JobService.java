@@ -261,7 +261,7 @@ public class JobService extends BasicService implements InitializingBean {
 
             getExecutableManager().addJob(job);
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             if (newSeg != null) {
                 logger.error("Job submission might failed for NEW segment {}, will clean the NEW segment from cube",
                         newSeg.getName());
