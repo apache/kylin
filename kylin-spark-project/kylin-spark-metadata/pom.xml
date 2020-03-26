@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kylin-spark-metadata</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin Spark metadata</name>
+    <name>Apche Kylin on parquet - Metadata</name>
 
     <parent>
         <artifactId>kylin-spark-project</artifactId>

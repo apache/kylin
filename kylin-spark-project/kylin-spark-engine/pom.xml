@@ -24,7 +24,7 @@
 
     <artifactId>kylin-spark-engine</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin Spark Engine</name>
+    <name>Apche Kylin on parquet - Spark Engine</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>

@@ -20,8 +20,9 @@ package org.apache.spark.sql.udf
 
 import java.util.Locale
 
-import org.apache.spark.sql.catalyst.util.KapDateTimeUtils._
-import org.apache.spark.sql.catalyst.util.{DateTimeUtils, KapDateTimeUtils}
+import org.apache.kylin.engine.spark.common.util.KapDateTimeUtils
+import org.apache.kylin.engine.spark.common.util.KapDateTimeUtils._
+import org.apache.spark.sql.catalyst.util.DateTimeUtils
 
 object TimestampDiffImpl {
 
