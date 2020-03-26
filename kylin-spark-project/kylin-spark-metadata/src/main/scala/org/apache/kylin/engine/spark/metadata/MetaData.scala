@@ -76,6 +76,7 @@ case class DTType(dataType: String, precision: Int, scale: Int) {
 case class JoinDesc(lookupTable: TableDesc, PKS: Array[ColumnDesc], FKS: Array[ColumnDesc], joinType: String)
 
 case class SegmentInfo(id: String,
+  name: String,
   project: String,
   kylinconf: KylinConfig,
   factTable: TableDesc,

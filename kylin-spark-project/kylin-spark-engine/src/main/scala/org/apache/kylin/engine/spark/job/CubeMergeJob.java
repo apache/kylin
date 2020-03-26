@@ -114,11 +114,11 @@ public class CubeMergeJob extends SparkApplication {
         Map<Long, DFLayoutMergeAssist> mergeCuboidsAssist = generateMergeAssist(mergingSegInfos, ss);
         for (DFLayoutMergeAssist assist : mergeCuboidsAssist.values()) {
             SpanningTree spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(mergedSegInfo.toBuildLayouts()));
-            Dataset<Row> afterMerge = assist.merge(config, cubeId);
+            Dataset<Row> afterMerge = assist.merge(config, cube.getName());
             LayoutEntity layout = assist.getLayout();
 
             Dataset<Row> afterSort;
-            if (layout.getId() > 20_000_000_000L) {
+            if (layout.isTableIndex()) {
                 afterSort = afterMerge.sortWithinPartitions(NSparkCubingUtil.getColumns(layout.getOrderedDimensions().keySet()));
             } else {
                 Column[] dimsCols = NSparkCubingUtil.getColumns(layout.getOrderedDimensions().keySet());
@@ -184,7 +184,7 @@ public class CubeMergeJob extends SparkApplication {
         ss.sparkContext().setJobDescription("merge layout " + layoutId);
         NSparkCubingEngine.NSparkCubingStorage storage = StorageFactory.createEngineAdapter(layout,
                 NSparkCubingEngine.NSparkCubingStorage.class);
-        String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_ID), seg.id(), String.valueOf(layoutId));
+        String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_NAME), seg.name(), String.valueOf(layoutId));
         String tempPath = path + CubeBuildJob.TEMP_DIR_SUFFIX;
         // save to temp path
         storage.saveTo(tempPath, dataset, ss);

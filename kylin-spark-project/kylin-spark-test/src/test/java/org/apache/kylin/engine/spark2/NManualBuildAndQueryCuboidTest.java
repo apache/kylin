@@ -115,7 +115,7 @@ public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
                         }, NSparkCubingEngine.NSparkCubingStorage.class)
                         .getFrom(PathManager.getParquetStoragePath(segment.getConfig(),
                                 segment.getCubeInstance().getId(),
-                                segment.getUuid(), String.valueOf(cuboid.getId())),
+                                segment.getName(), String.valueOf(cuboid.getId())),
                                 ss);
                 layoutDataset = layoutDataset.select(NSparkCubingUtil.getColumns(rowKeys, chooseMeas(cuboid)))
                         .sort(NSparkCubingUtil.getColumns(rowKeys));
@@ -212,7 +212,7 @@ public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
 
         CreateFlatTable flatTable = new CreateFlatTable(
                 MetadataConverter.getSegmentInfo(segment.getCubeInstance(),
-                        segment.getUuid()),
+                        segment.getUuid(), segment.getName()),
                 null,
                 ss,
                 null);

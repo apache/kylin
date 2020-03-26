@@ -37,12 +37,12 @@ import org.apache.kylin.metadata.model.{JoinTableDesc, TableRef, TblColRef}
 import scala.collection.mutable
 
 object MetadataConverter {
-  def getSegmentInfo(cubeInstance: CubeInstance, segmentId: String): SegmentInfo = {
+  def getSegmentInfo(cubeInstance: CubeInstance, segmentId: String, segmentName: String): SegmentInfo = {
     val allColumnDesc = extractAllColumnDesc(cubeInstance)
     val (layoutEntities, measure) = extractEntityAndMeasures(cubeInstance)
     val dictColumn = measure.values.filter(_.returnType.dataType.equals("bitmap"))
       .map(_.pra.head).toSet
-    SegmentInfo(segmentId, cubeInstance.getProject, cubeInstance.getConfig, extractFactTable(cubeInstance),
+    SegmentInfo(segmentId, segmentName, cubeInstance.getProject, cubeInstance.getConfig, extractFactTable(cubeInstance),
       extractLookupTable(cubeInstance), extractLookupTable(cubeInstance),
       extractJoinTable(cubeInstance), allColumnDesc.asScala.values.toList, layoutEntities, mutable.Set[LayoutEntity](layoutEntities: _*),
       dictColumn,

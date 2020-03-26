@@ -54,12 +54,12 @@ public class ResourceDetectBeforeMergingJob extends SparkApplication {
         final CubeManager cubeManager = CubeManager.getInstance(config);
         final CubeInstance cube = cubeManager.getCubeByUuid(cubeId);
         final CubeSegment mergedSeg = cube.getSegmentById(getParam(MetadataConstants.P_SEGMENT_IDS));
-        final SegmentInfo mergedSegInfo = MetadataConverter.getSegmentInfo(cube, mergedSeg.getUuid());
+        final SegmentInfo mergedSegInfo = MetadataConverter.getSegmentInfo(cube, mergedSeg.getUuid(), mergedSeg.getName());
         final List<CubeSegment> mergingSegments = cube.getMergingSegments(mergedSeg);
         final List<SegmentInfo> segmentInfos = Lists.newArrayList();
         Collections.sort(mergingSegments);
         for (CubeSegment cubeSegment : mergingSegments) {
-            segmentInfos.add(MetadataConverter.getSegmentInfo(cube, cubeSegment.getUuid()));
+            segmentInfos.add(MetadataConverter.getSegmentInfo(cube, cubeSegment.getUuid(), cubeSegment.getName()));
         }
         infos.clearMergingSegments();
         infos.recordMergingSegments(segmentInfos);
@@ -68,7 +68,7 @@ public class ResourceDetectBeforeMergingJob extends SparkApplication {
         Map<String, List<String>> resourcePaths = Maps.newHashMap();
         infos.clearSparkPlans();
         for (Map.Entry<Long, DFLayoutMergeAssist> entry : mergeCuboidsAssist.entrySet()) {
-            Dataset<Row> afterMerge = entry.getValue().merge(config, cubeId);
+            Dataset<Row> afterMerge = entry.getValue().merge(config, getParam(MetadataConstants.P_CUBE_NAME));
             infos.recordSparkPlan(afterMerge.queryExecution().sparkPlan());
             List<Path> paths = JavaConversions
                     .seqAsJavaList(ResourceDetectUtils.getPaths(afterMerge.queryExecution().sparkPlan()));

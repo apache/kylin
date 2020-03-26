@@ -91,9 +91,9 @@ public class NSparkCubingUtil {
                 getStoragePathWithoutPrefix(nDataSegment.getProject(), nDataSegment.getCubeInstance().getId(), nDataSegment.getUuid(), layoutId);
     }
 
-    static Set<String> toSegmentIds(Segments<CubeSegment> segments) {
+    static Set<String> toSegmentNames(Segments<CubeSegment> segments) {
         Set<String> s = Sets.newLinkedHashSet();
-        s.addAll(segments.stream().map(CubeSegment::getUuid).collect(Collectors.toList()));
+        s.addAll(segments.stream().map(CubeSegment::getName).collect(Collectors.toList()));
         return s;
     }
 

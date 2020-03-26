@@ -81,7 +81,7 @@ public class DFLayoutMergeAssist implements Serializable {
             Dataset<Row> layoutDataset = StorageFactory
                     .createEngineAdapter(layout, NSparkCubingEngine.NSparkCubingStorage.class)
                     .getFrom(PathManager.getParquetStoragePath(config, cubeId,
-                            toMergeSegments.get(i).id(), String.valueOf(layout.getId())), ss);
+                            toMergeSegments.get(i).name(), String.valueOf(layout.getId())), ss);
 
             if (mergeDataset == null) {
                 mergeDataset = layoutDataset;

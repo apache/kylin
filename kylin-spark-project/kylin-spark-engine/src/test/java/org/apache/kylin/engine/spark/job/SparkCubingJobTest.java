@@ -182,8 +182,8 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
                     return 4;
                 }
             }, NSparkCubingEngine.NSparkCubingStorage.class)
-                    .getFrom(PathManager.getParquetStoragePath(segment.getConfig(), segment.getCubeInstance().getId(),
-                            segment.getUuid(), String.valueOf(entity.getId())), ss);
+                    .getFrom(PathManager.getParquetStoragePath(segment.getConfig(), segment.getCubeInstance().getName(),
+                            segment.getName(), String.valueOf(entity.getId())), ss);
 
             Set<Integer> measures = new HashSet<Integer>();
             Set<Integer> rowKeys = entity.getOrderedDimensions().keySet();
@@ -276,7 +276,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
         System.out.println(getTestConfig().getMetadataUrl());
 
         CreateFlatTable flatTable = new CreateFlatTable(
-                MetadataConverter.getSegmentInfo(segment.getCubeInstance(), segment.getUuid()), null, ss, null);
+                MetadataConverter.getSegmentInfo(segment.getCubeInstance(), segment.getUuid(), segment.getName()), null, ss, null);
         Dataset<Row> ds = flatTable.generateDataset(false, true);
         return ds;
     }
