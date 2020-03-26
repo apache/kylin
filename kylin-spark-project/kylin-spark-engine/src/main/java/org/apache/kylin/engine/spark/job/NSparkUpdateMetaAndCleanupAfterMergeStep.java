@@ -44,24 +44,23 @@ public class NSparkUpdateMetaAndCleanupAfterMergeStep extends NSparkExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         String cubeId = getParam(MetadataConstants.P_CUBE_ID);
-        String[] segmentIds = StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS));
+        String[] segments = StringUtils.split(getParam(MetadataConstants.P_SEGMENT_NAMES), ",");
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         CubeInstance cube = CubeManager.getInstance(config).getCubeByUuid(cubeId);
 
         updateMetadataAterMerge(cubeId);
 
-        for (String segmentId : segmentIds) {
-            String path = config.getHdfsWorkingDirectory() + cube.getProject() + "/parquet/" + cube.getUuid() + "/" + segmentId;
+        for (String segmentName : segments) {
+            String path = config.getHdfsWorkingDirectory() + cube.getProject() + "/parquet/" + cube.getName() + "/" + segmentName;
             try {
                 HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), new Path(path));
             } catch (IOException e) {
-                throw new ExecuteException("Can not delete segment: " + segmentId + ", in cube: " + cube.getName());
+                throw new ExecuteException("Can not delete segment: " + segmentName + ", in cube: " + cube.getName());
             }
         }
 
         return ExecuteResult.createSucceed();
     }
-
 
     private void updateMetadataAterMerge(String cubeId) {
         String buildStepUrl = getParam(MetadataConstants.P_OUTPUT_META_URL);
@@ -71,7 +70,5 @@ public class NSparkUpdateMetaAndCleanupAfterMergeStep extends NSparkExecutable {
         String mergedSegmentId = getParam(CubingExecutableUtil.SEGMENT_ID);
         AfterMergeOrRefreshResourceMerger merger = new AfterMergeOrRefreshResourceMerger(buildConfig);
         merger.merge(cubeId, mergedSegmentId, resourceStore, getParam(MetadataConstants.P_JOB_TYPE));
-
     }
-
 }

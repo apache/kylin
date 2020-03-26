@@ -58,8 +58,8 @@ public class JobStepFactory {
         if (step instanceof NSparkUpdateMetaAndCleanupAfterMergeStep) {
             CubeSegment mergeSegment = cube.getSegmentById(parent.getTargetSegments().iterator().next());
             final Segments<CubeSegment> mergingSegments = cube.getMergingSegments(mergeSegment);
-            step.setParam(MetadataConstants.P_SEGMENT_IDS,
-                    String.join(",", NSparkCubingUtil.toSegmentIds(mergingSegments)));
+            step.setParam(MetadataConstants.P_SEGMENT_NAMES,
+                    String.join(",", NSparkCubingUtil.toSegmentNames(mergingSegments)));
             step.setParam(CubingExecutableUtil.SEGMENT_ID, parent.getParam(CubingExecutableUtil.SEGMENT_ID));
             step.setParam(MetadataConstants.P_JOB_TYPE, parent.getParam(MetadataConstants.P_JOB_TYPE));
             step.setParam(MetadataConstants.P_OUTPUT_META_URL, parent.getParam(MetadataConstants.P_OUTPUT_META_URL));

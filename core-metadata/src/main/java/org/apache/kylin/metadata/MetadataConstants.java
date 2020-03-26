@@ -40,6 +40,7 @@ public interface MetadataConstants {
     String P_CUBE_ID = "cubeId";
     String P_CUBE_NAME = "cubeName";
     String P_SEGMENT_IDS = "segmentIds";
+    String P_SEGMENT_NAMES = "segmentNames";
     String P_JOB_ID = "jobId";
     String P_JOB_TYPE = "jobType";
     String P_LAYOUT_IDS = "layoutIds";

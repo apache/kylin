@@ -21,6 +21,7 @@ package org.apache.kylin.engine.spark.metadata.cube;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.spark.metadata.MetadataConverter;
 import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 
@@ -31,8 +32,10 @@ public class ManagerHub {
     private ManagerHub() {}
 
     public static SegmentInfo getSegmentInfo(KylinConfig kylinConfig, String cubeName, String segmentId) {
+        CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCubeByUuid(cubeName);
+        CubeSegment segment = cubeInstance.getSegmentById(segmentId);
         return MetadataConverter.getSegmentInfo(
-                CubeManager.getInstance(kylinConfig).getCubeByUuid(cubeName), segmentId);
+                CubeManager.getInstance(kylinConfig).getCubeByUuid(cubeName), segment.getUuid(), segment.getName());
     }
 
     public static CubeInstance updateSegment(KylinConfig kylinConfig, SegmentInfo segmentInfo)

@@ -28,14 +28,14 @@ import org.slf4j.LoggerFactory;
 public final class PathManager {
     private static final Logger logger = LoggerFactory.getLogger(PathManager.class);
 
-    public static String getParquetStoragePath(KylinConfig config, String cubeId, String segId, String cuboidId) {
-        CubeInstance cube = CubeManager.getInstance(config).getCubeByUuid(cubeId);
+    public static String getParquetStoragePath(KylinConfig config, String cubeName, String segName, String cuboidId) {
+        CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         String hdfsWorkDir = config.getHdfsWorkingDirectory(cube.getProject());
-        return hdfsWorkDir + "parquet" + File.separator + cubeId + File.separator + segId + File.separator + cuboidId;
+        return hdfsWorkDir + "parquet" + File.separator + cubeName + File.separator + segName + File.separator + cuboidId;
     }
 
-    public static String getParquetStoragePath(CubeInstance cube, String segId, Long cuboidId) {
+    public static String getParquetStoragePath(CubeInstance cube, String segName, Long cuboidId) {
         String hdfsWorkDir = cube.getConfig().getHdfsWorkingDirectory(cube.getProject());
-        return hdfsWorkDir + "parquet" + File.separator + cube.getId() + File.separator + segId + File.separator + cuboidId;
+        return hdfsWorkDir + "parquet" + File.separator + cube.getName() + File.separator + segName + File.separator + cuboidId;
     }
 }
