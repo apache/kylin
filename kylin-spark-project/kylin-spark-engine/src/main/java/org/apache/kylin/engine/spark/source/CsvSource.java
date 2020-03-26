@@ -43,7 +43,7 @@ public class CsvSource implements ISource {
             public Dataset<Row> getSourceData(TableDesc table, SparkSession ss, Map<String, String> parameters) {
                 String path = null;
                 KylinConfig kylinConfig = KylinBuildEnv.get().kylinConfig();
-                if (kylinConfig.getDeployEnv().equals("FT")) {
+                if (kylinConfig.getDeployEnv().equals("UT")) {
                     path = "file:///" + new File(getUtMetaDir(),
                             "../../examples/test_case_data/localmeta_n/data/" + table.identity() + ".csv")
                                     .getAbsolutePath();
