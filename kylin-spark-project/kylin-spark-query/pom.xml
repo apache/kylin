@@ -24,7 +24,7 @@
 
     <artifactId>kylin-spark-query</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin Spark Engine</name>
+    <name>Apche Kylin on parquet - Query</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>

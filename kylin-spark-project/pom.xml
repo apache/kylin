@@ -23,8 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kylin-spark-project</artifactId>
     <packaging>pom</packaging>
-    <name>Apache Kylin - Spark Project</name>
-    <description>Kylin Spark Project</description>
+    <name>Apche Kylin on parquet</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
