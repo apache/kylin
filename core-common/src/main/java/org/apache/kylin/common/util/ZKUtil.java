@@ -32,6 +32,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.curator.test.TestingServer;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.kylin.common.KylinConfig;
@@ -55,22 +56,7 @@ public class ZKUtil {
     private static final KylinConfig defaultKylinConfig = KylinConfig.getInstanceFromEnv();
     private static final String zkChRoot = fixPath(defaultKylinConfig.getZookeeperBasePath(),
             defaultKylinConfig.getClusterName());
-
-    private static String fixPath(String parent, String child) {
-        String path = ZKPaths.makePath(parent, child);
-
-        try {
-            if (Shell.WINDOWS) {
-                return new File(path).toURI().getPath();
-            } else {
-                return new File(path).getCanonicalPath();
-            }
-        } catch (IOException e) {
-            logger.error("get canonical path failed, use original path", e);
-            return path;
-        }
-    }
-
+    private static TestingServer server = null;
     private static Cache<String, CuratorFramework> CACHE = CacheBuilder.newBuilder()
             .removalListener(new RemovalListener<String, CuratorFramework>() {
                 @Override
@@ -96,6 +82,21 @@ public class ZKUtil {
         }));
     }
 
+    private static String fixPath(String parent, String child) {
+        String path = ZKPaths.makePath(parent, child);
+
+        try {
+            if (Shell.WINDOWS) {
+                return new File(path).toURI().getPath();
+            } else {
+                return new File(path).getCanonicalPath();
+            }
+        } catch (IOException e) {
+            logger.error("get canonical path failed, use original path", e);
+            return path;
+        }
+    }
+
     /**
      * Get zookeeper connection string from kylin.properties
      */
@@ -117,7 +118,22 @@ public class ZKUtil {
 
     public static CuratorFramework getZookeeperClient(KylinConfig config) {
         RetryPolicy retryPolicy = getRetryPolicy(config);
+        if (config.isZKLocal()) {
+            startTestingServer();
+        }
         return getZookeeperClient(getZKConnectString(config), retryPolicy);
+    }
+
+    private static void startTestingServer() {
+        if (server == null) {
+            try {
+                server = new TestingServer(12181, true);
+                server.start();
+                logger.error("Started zk testing server.");
+            } catch (Exception e) {
+                logger.error("Failed to start zk testing server.", e);
+            }
+        }
     }
 
     private static CuratorFramework getZookeeperClient(final String zkString, final RetryPolicy retryPolicy) {
