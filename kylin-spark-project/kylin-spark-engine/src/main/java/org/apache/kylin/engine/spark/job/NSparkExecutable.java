@@ -146,7 +146,7 @@ public class NSparkExecutable extends AbstractExecutable {
             throw new ExecuteException("meta dump failed", e);
         }
         String filePath = dumpArgs();
-        if (config.isUTEnv()) {
+        if (config.isUTEnv() || config.isZKLocal()) {
             return runLocalMode(filePath, config);
         } else {
             killOrphanApplicationIfExists(config);
