@@ -19,7 +19,7 @@
 FROM hadoop2.7-all-in-one
 
 ## for dev
-ENV KYLIN_VERSION 3.1.0-SNAPSHOT
+ENV KYLIN_VERSION 4.0.0-SNAPSHOT
 ENV KYLIN_HOME /home/admin/apache-kylin-$KYLIN_VERSION-bin
 # Copy compiled Kylin from local
 COPY apache-kylin-$KYLIN_VERSION-bin.tar.gz /home/admin/
