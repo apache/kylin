@@ -114,7 +114,7 @@ For example, if you made some code change in Kylin, you can make a new binary pa
 The new package is generated in "dist/" folder; Copy it to the "docker" folder:
 
 ```
-cp ./dist/apache-kylin-3.1.0-SNAPSHOT-bin.tar.gz ./docker
+cp ./dist/apache-kylin-4.0.0-SNAPSHOT-bin.tar.gz ./docker
 ```
 
 Use the "Dockerfile_dev" file to build:
