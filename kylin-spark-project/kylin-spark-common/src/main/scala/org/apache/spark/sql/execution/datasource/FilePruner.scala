@@ -269,7 +269,7 @@ class FilePruner(
       val reducedFilter = filters.flatMap(DataSourceStrategy.translateFilter).reduceLeft(And)
       segDirs.filter {
         e => {
-          val tsRange = cubeInstance.getSegmentById(e.segmentName).getTSRange
+          val tsRange = cubeInstance.getSegment(e.segmentName, SegmentStatusEnum.READY).getTSRange
           SegFilters(tsRange.startValue, tsRange.endValue, pattern).foldFilter(reducedFilter) match {
             case Trivial(true) => true
             case Trivial(false) => false
