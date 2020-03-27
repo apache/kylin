@@ -16,6 +16,10 @@ Apache Kylin is an open source Distributed Analytics Engine, contributed by eBay
 
 For more details, see the website [http://kylin.apache.org](http://kylin.apache.org).
 
+Develop
+=============
+Please refer to [https://github.com/Kyligence/kylin-on-parquet-v2/wiki/Development-document](https://github.com/Kyligence/kylin-on-parquet-v2/wiki/Development-document).
+
 Documentation
 =============
 Please refer to [http://kylin.apache.org/docs/](http://kylin.apache.org/docs/).
