@@ -107,6 +107,11 @@ public class MockedDistributedLock implements DistributedLock, JobLock {
     }
 
     @Override
+    public boolean globalPermanentLock(String lockPath) {
+        return false;
+    }
+
+    @Override
     public boolean lock(String lockPath, long timeout) {
         mockLock.lockForWrite();
         return false;
