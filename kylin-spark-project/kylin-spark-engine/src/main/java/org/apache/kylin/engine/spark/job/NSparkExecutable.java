@@ -121,13 +121,13 @@ public class NSparkExecutable extends AbstractExecutable {
                logger.info("write hadoop conf is {} ", config.getBuildConf());
                hadoopConf = config.getBuildConf();
         }
-        if (StringUtils.isEmpty(hadoopConf) && !config.isUTEnv()) {
+        if (StringUtils.isEmpty(hadoopConf) && !config.isUTEnv() && !config.isZKLocal()) {
             throw new RuntimeException(
                     "kylin_hadoop_conf_dir is empty, check if there's error in the output of 'kylin.sh start'");
         }
 
         File hiveConfFile = new File(hadoopConf, "hive-site.xml");
-        if (!hiveConfFile.exists() && !config.isUTEnv()) {
+        if (!hiveConfFile.exists() && !config.isUTEnv() && !config.isZKLocal()) {
             throw new RuntimeException("Cannot find hive-site.xml in kylin_hadoop_conf_dir: " + hadoopConf + //
                     ". In order to enable spark cubing, you must set kylin.env.hadoop-conf-dir to a dir which contains at least core-site.xml, hdfs-site.xml, hive-site.xml, mapred-site.xml, yarn-site.xml");
         }
