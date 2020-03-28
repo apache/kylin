@@ -129,7 +129,7 @@ class FilePruner(
   lazy val timePartitionSchema: StructType = {
     val desc: PartitionDesc = cubeInstance.getModel.getPartitionDesc
     StructType(
-      if (desc != null) {
+      if (desc != null  && desc.getPartitionDateColumnRef != null) {
         val ref = desc.getPartitionDateColumnRef
         // only consider partition date column
         // we can only get col ID in layout cuz data schema is all ids.
