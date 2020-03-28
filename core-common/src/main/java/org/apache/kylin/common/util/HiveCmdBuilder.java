@@ -52,7 +52,7 @@ public class HiveCmdBuilder {
         hiveConfProps = SourceConfigurationUtil.loadHiveConfiguration();
         hiveConfProps.putAll(kylinConfig.getHiveConfigOverride());
         if (StringUtils.isNotEmpty(jobName)) {
-            addStatement("set mapred.job.name='" + jobName + "';");
+            addStatement("set mapreduce.job.name=" + jobName + ";");
         }
     }
 

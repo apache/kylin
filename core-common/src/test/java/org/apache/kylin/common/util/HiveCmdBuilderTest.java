@@ -66,7 +66,7 @@ public class HiveCmdBuilderTest {
         hiveCmdBuilder.setHiveConfProps(hiveProps);
         hiveCmdBuilder.overwriteHiveProps(hivePropsOverwrite);
         assertEquals(
-                "hive -e \"set mapred.job.name='test HiveCLI';\nUSE default;\nDROP TABLE \\`test\\`;\nSHOW\n TABLES;\n\" --hiveconf hive.execution.engine=tez",
+                "hive -e \"set mapreduce.job.name=test HiveCLI;\nUSE default;\nDROP TABLE \\`test\\`;\nSHOW\n TABLES;\n\" --hiveconf hive.execution.engine=tez",
                 hiveCmdBuilder.build());
     }
 
