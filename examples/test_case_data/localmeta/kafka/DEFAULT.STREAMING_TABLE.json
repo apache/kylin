@@ -13,8 +13,8 @@
       "brokers": [
         {
           "id": 0,
-          "host": "sandbox",
-          "port": 6667
+          "host": "sandbox-hdp.hortonworks.com",
+          "port": 9093
         }
       ]
     }

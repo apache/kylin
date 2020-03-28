@@ -405,8 +405,9 @@ public class HiveInputBase {
     protected static String materializeViewHql(String viewName, String tableName, String jobWorkingDir) {
         StringBuilder createIntermediateTableHql = new StringBuilder();
         createIntermediateTableHql.append("DROP TABLE IF EXISTS `" + viewName + "`;\n");
-        createIntermediateTableHql.append("CREATE TABLE IF NOT EXISTS `" + viewName + "` LIKE " + tableName
-                + " LOCATION '" + jobWorkingDir + "/" + viewName + "';\n");
+        // Use external other than managed table to prevent error with Orc format SerDes
+        createIntermediateTableHql.append("CREATE EXTERNAL TABLE IF NOT EXISTS `" + viewName + "` LIKE " + tableName
+                + " LOCATION '" + jobWorkingDir + "/" + viewName + "' TBLPROPERTIES('transactional'='false');\n");
         createIntermediateTableHql.append("ALTER TABLE `" + viewName + "` SET TBLPROPERTIES('auto.purge'='true');\n");
         createIntermediateTableHql
                 .append("INSERT OVERWRITE TABLE `" + viewName + "` SELECT * FROM " + tableName + ";\n");

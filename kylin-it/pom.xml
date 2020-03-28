@@ -39,6 +39,9 @@
         <buildCubeUsingProvidedData />
         <engineType />
         <skipTests />
+        <skipBuild />
+        <skipNRT />
+        <skipRealtime />
     </properties>
 
     <!-- Dependencies. -->
@@ -448,7 +451,7 @@
                                 <property>
                                     <name>log4j.configuration</name>
                                     <value>
-                                        file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                        file:${project.basedir}/..//kylin-it/src/test/resources/log4j2.xml
                                     </value>
                                 </property>
                             </systemProperties>
@@ -469,7 +472,7 @@
                                 </goals>
                                 <phase>pre-integration-test</phase>
                                 <configuration>
-                                    <skip>${skipTests}</skip>
+<!--                                    <skip>${skipTests}</skip>-->
                                     <classpathScope>test</classpathScope>
                                     <executable>java</executable>
                                     <arguments>
@@ -480,8 +483,9 @@
                                               -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
                                         </argument>
                                         <argument>-DengineType=${engineType}</argument>
+                                        <argument>-DskipBuild=${skipBuild}</argument>
                                         <argument>
-                                              -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                            -Dlog4j.configuration=file:${project.basedir}/..//kylin-it/src/test/resources/log4j2.xml
                                         </argument>
                                         <argument>
                                             -javaagent:${project.basedir}/..//dev-support/org.jacoco.agent-${jacoco.version}-runtime.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-engine.exec
@@ -501,7 +505,7 @@
                                 </goals>
                                 <phase>pre-integration-test</phase>
                                 <configuration>
-                                    <skip>${skipTests}</skip>
+<!--                                    <skip>${skipTests}</skip>-->
                                     <classpathScope>test</classpathScope>
                                     <executable>java</executable>
                                     <arguments>
@@ -511,11 +515,13 @@
                                             -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
                                         </argument>
                                         <argument>
-                                            -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                            -Dlog4j.configuration=file:${project.basedir}/..//kylin-it/src/test/resources/log4j2.xml
                                         </argument>
                                         <argument>
                                             -javaagent:${project.basedir}/..//dev-support/org.jacoco.agent-${jacoco.version}-runtime.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-stream.exec
                                         </argument>
+                                        <argument>-DskipBuild=${skipBuild}</argument>
+                                        <argument>-DskipNRT=${skipNRT}</argument>
                                         <argument>-classpath</argument>
                                         <classpath />
                                         <argument>org.apache.kylin.it.provision.BuildCubeWithStream
@@ -540,7 +546,7 @@
                                             -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
                                         </argument>
                                         <argument>
-                                            -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                            -Dlog4j.configuration=file:${project.basedir}/../kylin-it/src/test/resources/log4j2.xml
                                         </argument>
                                         <argument>
                                             -Djava.library.path=/usr/hdp/current/hadoop-client/lib/native
@@ -548,6 +554,8 @@
                                         <argument>
                                             -javaagent:${project.basedir}/..//dev-support/org.jacoco.agent-${jacoco.version}-runtime.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-streamv2.exec
                                         </argument>
+                                        <argument>-DskipBuild=${skipBuild}</argument>
+                                        <argument>-DskipRealtime=${skipRealtime}</argument>
                                         <argument>-classpath</argument>
                                         <classpath />
                                         <argument>org.apache.kylin.it.provision.BuildCubeWithStreamV2

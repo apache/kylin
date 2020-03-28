@@ -16,23 +16,23 @@
   limitations under the License.
 -->
 <configuration>
-    <property>
-        <name>dfs.replication</name>
-        <value>2</value>
-        <description>Block replication</description>
-    </property>
+<!--    <property>-->
+<!--        <name>dfs.replication</name>-->
+<!--        <value>1</value>-->
+<!--        <description>Block replication</description>-->
+<!--    </property>-->
 
-    <property>
-        <name>hive.exec.compress.output</name>
-        <value>true</value>
-        <description>enable compress</description>
-    </property>
+<!--    <property>-->
+<!--        <name>hive.exec.compress.output</name>-->
+<!--        <value>true</value>-->
+<!--        <description>enable compress</description>-->
+<!--    </property>-->
 
-    <property>
-        <name>mapreduce.map.output.compress.codec</name>
-        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
-        <description></description>
-    </property>
+<!--    <property>-->
+<!--        <name>mapreduce.map.output.compress.codec</name>-->
+<!--        <value>org.apache.hadoop.io.compress.SnappyCodec</value>-->
+<!--        <description></description>-->
+<!--    </property>-->
 
     <!--
     <property>

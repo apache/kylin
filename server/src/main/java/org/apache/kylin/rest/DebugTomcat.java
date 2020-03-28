@@ -39,10 +39,9 @@ public class DebugTomcat {
     public static void setupDebugEnv() {
         try {
             System.setProperty("HADOOP_USER_NAME", "root");
-            System.setProperty("log4j.configuration", "file:../build/conf/kylin-tools-log4j.properties");
-
-            // test_case_data/sandbox/ contains HDP 2.2 site xmls which is dev sandbox
             KylinConfig.setSandboxEnvIfPossible();
+            System.setProperty("kylin.hadoop.conf.dir", "../examples/test_case_data/sandbox");
+
             // Must set SandboxEnv before checking the Kerberos status
             if (UserGroupInformation.isSecurityEnabled()) {
                 authKrb5();
@@ -56,7 +55,7 @@ public class DebugTomcat {
                 System.setProperty("catalina.home", ".");
 
             if (StringUtils.isEmpty(System.getProperty("hdp.version"))) {
-                System.setProperty("hdp.version", "2.4.0.0-169");
+                System.setProperty("hdp.version", "3.0.1.0-187");
             }
 
             // workaround for job submission from win to linux -- https://issues.apache.org/jira/browse/MAPREDUCE-4052

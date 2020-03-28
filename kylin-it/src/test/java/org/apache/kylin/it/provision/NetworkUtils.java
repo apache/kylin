@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.kylin.provision;
+package org.apache.kylin.it.provision;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;

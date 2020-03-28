@@ -6,15 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job;
 
@@ -39,6 +39,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
+import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
@@ -66,8 +67,18 @@ public class DeployUtil {
     private static final Logger logger = LoggerFactory.getLogger(DeployUtil.class);
 
     public static void initCliWorkDir() throws IOException {
-        execCliCommand("rm -rf " + getHadoopCliWorkingDir());
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        // copy data to remote node, prepare for load data from local file
+        String workingDir = getHadoopCliWorkingDir();
+        String dataDir = workingDir + "/data";
+        execCliCommand("rm -rf " + workingDir);
+        execCliCommand("mkdir -p " + dataDir);
         execCliCommand("mkdir -p " + config().getKylinJobLogDir());
+
+        CliCommandExecutor cliCommandExecutor = new CliCommandExecutor();
+        cliCommandExecutor.execute("scp ../examples/test_case_data/localmeta/data/*.csv "
+                + kylinConfig.getRemoteHadoopCliUsername() + "@"
+                + kylinConfig.getRemoteHadoopCliHostname() + ":" + dataDir);
     }
 
     public static void deployMetadata(String localMetaData) throws IOException {
@@ -88,7 +99,7 @@ public class DeployUtil {
     public static void overrideJobJarLocations() {
         File jobJar = getJobJarFile();
         File coprocessorJar = getCoprocessorJarFile();
-
+        logger.info("Update jars for MR and HBase Coprocessor. {}  {} ", jobJar, coprocessorJar);
         config().overrideMRJobJarPath(jobJar.getAbsolutePath());
         config().overrideCoprocessorLocalJar(coprocessorJar.getAbsolutePath());
     }
@@ -128,6 +139,7 @@ public class DeployUtil {
 
     public static void prepareTestDataForNormalCubes(String modelName) throws Exception {
 
+        // Why we need buildCubeUsingProvidedData ?
         boolean buildCubeUsingProvidedData = Boolean.parseBoolean(System.getProperty("buildCubeUsingProvidedData"));
         if (!buildCubeUsingProvidedData) {
             System.out.println("build cube with random dataset");
@@ -148,7 +160,7 @@ public class DeployUtil {
     }
 
     public static void prepareTestDataForStreamingCube(long startTime, long endTime, int numberOfRecords,
-            String cubeName, StreamDataLoader streamDataLoader) throws IOException {
+                                                       String cubeName, StreamDataLoader streamDataLoader) throws IOException {
         CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
         List<String> data = StreamingTableDataGenerator.generate(numberOfRecords, startTime, endTime,
                 cubeInstance.getRootFactTable(), cubeInstance.getProject());
@@ -216,14 +228,14 @@ public class DeployUtil {
     }
 
     public static void deployTablesInModelWithExclusiveTables(String modelName, String[] exclusiveTables) throws Exception {
-        deployTablesInModel(modelName, null,  null, exclusiveTables);
+        deployTablesInModel(modelName, null, null, exclusiveTables);
     }
 
     public static void deployTablesInModel(String modelName) throws Exception {
         deployTablesInModel(modelName, null, null, null);
     }
 
-    public static void deployTablesInModel(String modelName, String extraDatabase, Map<String, String>  extraTableViews, String[] exclusiveTables) throws Exception {
+    public static void deployTablesInModel(String modelName, String extraDatabase, Map<String, String> extraTableViews, String[] exclusiveTables) throws Exception {
         TableMetadataManager metaMgr = TableMetadataManager.getInstance(config());
         DataModelManager modelMgr = DataModelManager.getInstance(config());
         DataModelDesc model = modelMgr.getDataModelDesc(modelName);
@@ -248,6 +260,7 @@ public class DeployUtil {
             TABLE_NAMES.addAll(extraTableViews.keySet()); // the wrapper view need this table
         }
 
+        // What is the meaning of following comment?
         // scp data files, use the data from hbase, instead of local files
         File tempDir = Files.createTempDir();
         String tempDirAbsPath = tempDir.getAbsolutePath();
@@ -287,7 +300,7 @@ public class DeployUtil {
         // LOAD DATA LOCAL INPATH 'filepath' [OVERWRITE] INTO TABLE tablename
         for (String tablename : TABLE_NAMES) {
             logger.info(String.format(Locale.ROOT, "load data into %s", tablename));
-            sampleDataDeployer.loadSampleData(tablename, tempDirAbsPath);
+            sampleDataDeployer.loadSampleData(tablename, "/tmp/kylin/data");
         }
 
         // create the view automatically here

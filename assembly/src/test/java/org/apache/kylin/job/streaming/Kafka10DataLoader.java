@@ -21,12 +21,15 @@ package org.apache.kylin.job.streaming;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kylin.source.kafka.config.BrokerConfig;
 import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
@@ -64,7 +67,17 @@ public class Kafka10DataLoader extends StreamDataLoader {
 
         for (int i = 0; i < messages.size(); i++) {
             ProducerRecord<String, String> keyedMessage = new ProducerRecord<String, String>(clusterConfig.getTopic(), String.valueOf(i), messages.get(i));
-            producer.send(keyedMessage);
+            Future<RecordMetadata> f = producer.send(keyedMessage);
+            if (i == messages.size() - 1) {
+                try {
+                    RecordMetadata metadata = f.get();
+                    logger.info(" Partition : {}, offset : {}", metadata.partition(), metadata.offset());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         logger.info("sent " + messages.size() + " messages to " + this.toString());
         producer.close();
@@ -88,6 +101,7 @@ public class Kafka10DataLoader extends StreamDataLoader {
         props.put("batch.size", 16384);
         props.put("linger.ms", 50);
         props.put("request.timeout.ms", "30000");
+        props.put("zookeeper.connect", "sandbox-hdp.hortonworks.com:2181/kylin_it");
         if (properties != null) {
             for (Map.Entry entry : properties.entrySet()) {
                 props.put(entry.getKey(), entry.getValue());

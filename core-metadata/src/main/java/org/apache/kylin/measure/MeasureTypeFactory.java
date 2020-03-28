@@ -143,7 +143,7 @@ abstract public class MeasureTypeFactory<T> {
                         "Aggregation data type name '" + dataTypeName + "' must be in lower case");
             Class<? extends DataTypeSerializer<?>> serializer = factory.getAggrDataTypeSerializer();
 
-            logger.info("registering " + funcName + "(" + dataTypeName + "), " + factory.getClass());
+            logger.debug("registering " + funcName + "(" + dataTypeName + "), " + factory.getClass());
             DataType.register(dataTypeName);
             DataTypeSerializer.register(dataTypeName, serializer);
             registerUDAF(factory);

@@ -607,13 +607,5 @@
     "kylin.cube.algorithm": "INMEM",
     "kylin.dictionary.shrunken-from-global-enabled": "true"
   },
-  "snapshot_table_desc_list": [
-    {
-      "table_name": "DEFAULT.TEST_CATEGORY_GROUPINGS",
-      "storage_type": "hbase",
-      "local_cache_enable": true,
-      "global": true
-    }
-  ],
   "partition_date_start": 0
 }

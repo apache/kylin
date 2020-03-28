@@ -91,7 +91,7 @@ public class HBaseResourceStore extends PushdownResourceStore {
                 .parseInt(getConnection().getConfiguration().get("hbase.client.keyvalue.maxsize", "10485760"));
     }
 
-    Connection getConnection() throws IOException {
+    public Connection getConnection() throws IOException {
         return HBaseConnection.get(metadataUrl);
     }
 
@@ -489,7 +489,7 @@ public class HBaseResourceStore extends PushdownResourceStore {
     }
 
     // visible for test
-    Path bigCellHDFSPath(String resPath) {
+    public Path bigCellHDFSPath(String resPath) {
         return super.pushdownPath(resPath);
     }
 

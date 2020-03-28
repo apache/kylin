@@ -1,0 +1,273 @@
+  <configuration  xmlns:xi="http://www.w3.org/2001/XInclude">
+    
+    <property>
+      <name>tez.am.am-rm.heartbeat.interval-ms.max</name>
+      <value>250</value>
+    </property>
+    
+    <property>
+      <name>tez.am.container.idle.release-timeout-max.millis</name>
+      <value>20000</value>
+    </property>
+    
+    <property>
+      <name>tez.am.container.idle.release-timeout-min.millis</name>
+      <value>10000</value>
+    </property>
+    
+    <property>
+      <name>tez.am.container.reuse.enabled</name>
+      <value>true</value>
+    </property>
+    
+    <property>
+      <name>tez.am.container.reuse.locality.delay-allocation-millis</name>
+      <value>250</value>
+    </property>
+    
+    <property>
+      <name>tez.am.container.reuse.non-local-fallback.enabled</name>
+      <value>false</value>
+    </property>
+    
+    <property>
+      <name>tez.am.container.reuse.rack-fallback.enabled</name>
+      <value>true</value>
+    </property>
+    
+    <property>
+      <name>tez.am.java.opts</name>
+      <value>-server -Xmx9011m -Djava.net.preferIPv4Stack=true</value>
+    </property>
+    
+    <property>
+      <name>tez.am.launch.cluster-default.cmd-opts</name>
+      <value>-server -Djava.net.preferIPv4Stack=true -Dhdp.version=${hdp.version}</value>
+    </property>
+    
+    <property>
+      <name>tez.am.launch.cmd-opts</name>
+      <value>-XX:+PrintGCDetails -verbose:gc -XX:+PrintGCTimeStamps -XX:+UseNUMA -XX:+UseG1GC -XX:+ResizeTLAB</value>
+    </property>
+    
+    <property>
+      <name>tez.am.launch.env</name>
+      <value>LD_LIBRARY_PATH=/usr/hdp/${hdp.version}/hadoop/lib/native:/usr/hdp/${hdp.version}/hadoop/lib/native/Linux-amd64-64</value>
+    </property>
+    
+    <property>
+      <name>tez.am.log.level</name>
+      <value>INFO</value>
+    </property>
+    
+    <property>
+      <name>tez.am.max.app.attempts</name>
+      <value>2</value>
+    </property>
+    
+    <property>
+      <name>tez.am.maxtaskfailures.per.node</name>
+      <value>10</value>
+    </property>
+    
+    <property>
+      <name>tez.am.resource.memory.mb</name>
+      <value>1536</value>
+    </property>
+    
+    <property>
+      <name>tez.am.tez-ui.history-url.template</name>
+      <value>__HISTORY_URL_BASE__?viewPath=%2F%23%2Ftez-app%2F__APPLICATION_ID__</value>
+    </property>
+    
+    <property>
+      <name>tez.am.view-acls</name>
+      <value>*</value>
+    </property>
+    
+    <property>
+      <name>tez.cluster.additional.classpath.prefix</name>
+      <value>/usr/hdp/${hdp.version}/hadoop/lib/hadoop-lzo-0.6.0.${hdp.version}.jar:/etc/hadoop/conf/secure</value>
+    </property>
+    
+    <property>
+      <name>tez.counters.max</name>
+      <value>10000</value>
+    </property>
+    
+    <property>
+      <name>tez.counters.max.groups</name>
+      <value>3000</value>
+    </property>
+    
+    <property>
+      <name>tez.generate.debug.artifacts</name>
+      <value>false</value>
+    </property>
+    
+    <property>
+      <name>tez.grouping.max-size</name>
+      <value>1073741824</value>
+    </property>
+    
+    <property>
+      <name>tez.grouping.min-size</name>
+      <value>16777216</value>
+    </property>
+    
+    <property>
+      <name>tez.grouping.split-waves</name>
+      <value>1.7</value>
+    </property>
+    
+    <property>
+      <name>tez.history.logging.proto-base-dir</name>
+      <value>{hive_metastore_warehouse_dir}/sys.db</value>
+    </property>
+    
+    <property>
+      <name>tez.history.logging.service.class</name>
+      <value>org.apache.tez.dag.history.logging.proto.ProtoHistoryLoggingService</value>
+    </property>
+    
+    <property>
+      <name>tez.history.logging.timeline-cache-plugin.old-num-dags-per-group</name>
+      <value>5</value>
+    </property>
+    
+    <property>
+      <name>tez.lib.uris</name>
+      <value>/hdp/apps/${hdp.version}/tez/tez.tar.gz</value>
+    </property>
+    
+    <property>
+      <name>tez.queue.name</name>
+      <value>default</value>
+    </property>
+    
+    <property>
+      <name>tez.runtime.compress</name>
+      <value>true</value>
+    </property>
+    
+    <property>
+      <name>tez.runtime.compress.codec</name>
+      <value>org.apache.hadoop.io.compress.SnappyCodec</value>
+    </property>
+    
+    <property>
+      <name>tez.runtime.convert.user-payload.to.history-text</name>
+      <value>false</value>
+    </property>
+    
+    <property>
+      <name>tez.runtime.io.sort.mb</name>
+      <value>819</value>
+    </property>
+    
+    <property>
+      <name>tez.runtime.optimize.local.fetch</name>
+      <value>true</value>
+    </property>
+    
+    <property>
+      <name>tez.runtime.pipelined.sorter.sort.threads</name>
+      <value>2</value>
+    </property>
+    
+    <property>
+      <name>tez.runtime.shuffle.fetch.buffer.percent</name>
+      <value>0.6</value>
+    </property>
+    
+    <property>
+      <name>tez.runtime.shuffle.memory.limit.percent</name>
+      <value>0.25</value>
+    </property>
+    
+    <property>
+      <name>tez.runtime.sorter.class</name>
+      <value>PIPELINED</value>
+    </property>
+    
+    <property>
+      <name>tez.runtime.unordered.output.buffer.size-mb</name>
+      <value>153</value>
+    </property>
+    
+    <property>
+      <name>tez.session.am.dag.submit.timeout.secs</name>
+      <value>600</value>
+    </property>
+    
+    <property>
+      <name>tez.session.client.timeout.secs</name>
+      <value>-1</value>
+    </property>
+    
+    <property>
+      <name>tez.shuffle-vertex-manager.max-src-fraction</name>
+      <value>0.4</value>
+    </property>
+    
+    <property>
+      <name>tez.shuffle-vertex-manager.min-src-fraction</name>
+      <value>0.2</value>
+    </property>
+    
+    <property>
+      <name>tez.staging-dir</name>
+      <value>/tmp/${user.name}/staging</value>
+    </property>
+    
+    <property>
+      <name>tez.task.am.heartbeat.counter.interval-ms.max</name>
+      <value>4000</value>
+    </property>
+    
+    <property>
+      <name>tez.task.generate.counters.per.io</name>
+      <value>true</value>
+    </property>
+    
+    <property>
+      <name>tez.task.get-task.sleep.interval-ms.max</name>
+      <value>200</value>
+    </property>
+    
+    <property>
+      <name>tez.task.launch.cluster-default.cmd-opts</name>
+      <value>-server -Djava.net.preferIPv4Stack=true -Dhdp.version=${hdp.version}</value>
+    </property>
+    
+    <property>
+      <name>tez.task.launch.cmd-opts</name>
+      <value>-XX:+PrintGCDetails -verbose:gc -XX:+PrintGCTimeStamps -XX:+UseNUMA -XX:+UseG1GC -XX:+ResizeTLAB</value>
+    </property>
+    
+    <property>
+      <name>tez.task.launch.env</name>
+      <value>LD_LIBRARY_PATH=/usr/hdp/${hdp.version}/hadoop/lib/native:/usr/hdp/${hdp.version}/hadoop/lib/native/Linux-amd64-64</value>
+    </property>
+    
+    <property>
+      <name>tez.task.max-events-per-heartbeat</name>
+      <value>500</value>
+    </property>
+    
+    <property>
+      <name>tez.task.resource.memory.mb</name>
+      <value>2048</value>
+    </property>
+    
+    <property>
+      <name>tez.use.cluster.hadoop-libs</name>
+      <value>false</value>
+    </property>
+    
+    <property>
+      <name>yarn.timeline-service.enabled</name>
+      <value>false</value>
+    </property>
+    
+  </configuration>

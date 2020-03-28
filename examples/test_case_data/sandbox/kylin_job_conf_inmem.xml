@@ -75,19 +75,19 @@
 
     <property>
         <name>dfs.replication</name>
-        <value>2</value>
+        <value>1</value>
         <description>Block replication</description>
     </property>
 
     <!-- memory configuration for sandbox -->
     <property>
         <name>mapreduce.map.memory.mb</name>
-        <value>768</value>
+        <value>4000</value>
     </property>
 
     <property>
         <name>mapreduce.map.java.opts</name>
-        <value>-Xmx700m</value>
+        <value>-Xmx3524m</value>
     </property>
 
     <property>
@@ -97,12 +97,12 @@
 
     <property>
         <name>mapreduce.reduce.memory.mb</name>
-        <value>512</value>
+        <value>1500</value>
     </property>
 
     <property>
         <name>mapreduce.reduce.java.opts</name>
-        <value>-Xmx400m</value>
+        <value>-Xmx1424m</value>
     </property>
 
 </configuration>

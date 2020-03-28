@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.provision;
+package org.apache.kylin.it.provision;
 
 import org.apache.kylin.job.DeployUtil;
 

@@ -15,13 +15,14 @@
 <Configuration status="warn">
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{ISO8601} %-5p [%t] %c{2}:%L : %m%n"/>
+            <PatternLayout pattern="%d{ISO8601} %-5p [%t] %c:%L : %m%n"/>
         </Console>
 
-        <File name="TempFile" fileName="kylin-integration-test.log" append="false">
-            <PatternLayout pattern="%d{ISO8601} %-5p [%t] %c{2}:%L : %m%n"/>
+        <File name="TempFile" fileName="kylin-debug-tomcat.log" append="false">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %class{36} %L %M - %msg%xEx%n"/>
         </File>
     </Appenders>
+
     <Loggers>
         <Root level="INFO">
             <AppenderRef ref="Console"/>
@@ -33,49 +34,12 @@
             <appender-ref ref="TempFile"/>
         </logger>
 
-
         <logger name="org.apache.kylin" level="INFO" additivity="false">
             <appender-ref ref="Console"/>
             <appender-ref ref="TempFile"/>
         </logger>
 
-        <!--
-        Following logger annoying me, so I shut down them at the moment.
-        1. Broadcaster is not work well in IT.
-        2. Zookeeper may print some env setting but I don't want to see them.
-        3. SpringFramework may print some verbose message.
-        4. KafkaProducer and KafkaConsumer may print verbose log
-        -->
-
-        <logger name="org.apache.kylin.metadata.cachesync" level="ERROR" additivity="false">
-            <appender-ref ref="TempFile"/>
-        </logger>
-
-        <logger name="org.apache.kylin.common.persistence" level="WARN" additivity="false">
-            <appender-ref ref="TempFile"/>
-        </logger>
-
-        <logger name="org.apache.kylin.common.KylinConfig" level="WARN" additivity="false">
-            <appender-ref ref="TempFile"/>
-        </logger>
-
-        <logger name="org.apache.kylin.common.KylinConfigBase" level="WARN" additivity="false">
-            <appender-ref ref="TempFile"/>
-        </logger>
-
         <logger name="org.apache.zookeeper" level="WARN" additivity="false">
-            <appender-ref ref="TempFile"/>
-        </logger>
-
-        <logger name="kafka" level="WARN" additivity="false">
-            <appender-ref ref="TempFile"/>
-        </logger>
-
-        <logger name="org.apache.kafka" level="WARN" additivity="false">
-            <appender-ref ref="TempFile"/>
-        </logger>
-
-        <logger name="org.apache.hadoop.hive.conf" level="WARN" additivity="false">
             <appender-ref ref="TempFile"/>
         </logger>
 

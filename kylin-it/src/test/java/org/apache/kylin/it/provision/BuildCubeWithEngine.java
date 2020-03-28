@@ -14,11 +14,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
-package org.apache.kylin.provision;
+package org.apache.kylin.it.provision;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.ParseException;
@@ -32,7 +31,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,7 +41,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -71,7 +68,6 @@ import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.rest.job.StorageCleanupJob;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
 import org.slf4j.Logger;
@@ -81,20 +77,53 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import static org.apache.kylin.it.provision.BuildEngineUtil.LINE;
+import static org.apache.kylin.it.provision.BuildEngineUtil.isBuildSkip;
+import static org.apache.kylin.it.provision.BuildEngineUtil.isFastBuildMode;
+import static org.apache.kylin.it.provision.BuildEngineUtil.isSimpleBuildMode;
+import static org.apache.kylin.it.provision.BuildEngineUtil.printEnv;
+import static org.apache.kylin.it.provision.BuildEngineUtil.waitForJob;
+
+/**
+ * Build the cube (Hive Source) before Integration Test
+ * <p>
+ * <p>
+ * Here is some options:
+ * <p>
+ * engineType(Check IEngineAware)
+ * - 2 for Hive
+ * - 4 for Spark
+ * - not set one Spark and one MR
+ * <p>
+ * BuildMode
+ * - fastBuildMode
+ * Build some small segments but do not merge them
+ * - simpleBuildMode
+ * Build single larger segment (no need to merge)
+ * - normal(default)
+ * Build some small segments and merge them
+ * <p>
+ * HadoopEnv
+ * - hdp.version
+ * Please use HDP which version is 3.0.1.0-187.
+ */
 public class BuildCubeWithEngine {
+    private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithEngine.class);
 
     private CubeManager cubeManager;
     private CubeDescManager cubeDescManager;
     private DefaultScheduler scheduler;
     private ExecutableManager jobService;
-    private static boolean fastBuildMode = false;
-    private static boolean simpleBuildMode = false;
-    private static int engineType;
 
-    private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithEngine.class);
+    private static boolean fastBuildMode = false;
+
+    private static boolean simpleBuildMode = false;
+
+    private static int engineType;
 
     public static void main(String[] args) throws Exception {
         long start = System.currentTimeMillis();
+        System.setProperty("HADOOP_USER_NAME", "root"); // Looks Spark Build Engine Need This
         int exitCode = 0;
         try {
             beforeClass();
@@ -117,37 +146,73 @@ public class BuildCubeWithEngine {
         System.exit(exitCode);
     }
 
+    // =====================================================================================
+    // Main Process
+    // =====================================================================================
+
     public static void beforeClass() throws Exception {
         beforeClass(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
     }
 
-    public static void beforeClass(String confDir) throws Exception {
-        logger.info("Adding to classpath: " + new File(confDir).getAbsolutePath());
-        ClassUtil.addClasspath(new File(confDir).getAbsolutePath());
+    public void before() throws Exception {
+        deployEnv();
+        logger.info("Prepare dev env succeed.");
 
+        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        jobService = ExecutableManager.getInstance(kylinConfig);
+        scheduler = DefaultScheduler.createInstance();
+        scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
+        if (!scheduler.hasStarted()) {
+            throw new RuntimeException("scheduler has not been started");
+        }
+        cubeManager = CubeManager.getInstance(kylinConfig);
+        for (String jobId : jobService.getAllJobIds()) {
+            AbstractExecutable executable = jobService.getJob(jobId);
+            if (executable instanceof CubingJob || executable instanceof CheckpointExecutable) {
+                jobService.deleteJob(jobId);
+            }
+        }
+        cubeDescManager = CubeDescManager.getInstance(kylinConfig);
+
+        // update engineType
+        updateCubeEngineType(Lists.newArrayList("ci_inner_join_cube", "ci_left_join_cube"));
+    }
+
+    public void build() throws Exception {
+        DeployUtil.prepareTestDataForNormalCubes("ci_left_join_model"); // prepare hive table
+        System.setProperty("kylin.storage.hbase.hfile-size-gb", "1.0f");
+        buildingStep("testInnerJoinCube");
+        buildingStep("testLeftJoinCube");
+        System.setProperty("kylin.storage.hbase.hfile-size-gb", "0.0f");
+    }
+
+    public void after() {
+        DefaultScheduler.destroyInstance();
+    }
+
+    public static void afterClass() {
+        HBaseMetadataTestCase.staticCleanupTestMetadata();
+    }
+
+    public static void beforeClass(String confDir) throws Exception {
+        isBuildSkip();
+        printEnv();
         fastBuildMode = isFastBuildMode();
         simpleBuildMode = isSimpleBuildMode();
-        if (fastBuildMode) {
-            logger.info("Will use fast build mode");
-        }
-        if (simpleBuildMode) {
-            logger.info("Will use simple build mode");
-        }
 
         String specifiedEngineType = System.getProperty("engineType");
         if (StringUtils.isNotEmpty(specifiedEngineType)) {
             engineType = Integer.parseInt(specifiedEngineType);
         }
 
-        System.setProperty(KylinConfig.KYLIN_CONF, confDir);
-        System.setProperty("SPARK_HOME", "/usr/local/spark"); // need manually create and put spark to this folder on Jenkins
-        System.setProperty("kylin.hadoop.conf.dir", confDir);
+        System.setProperty(KylinConfig.KYLIN_CONF, confDir); // NGTM
+        System.setProperty("kylin.hadoop.conf.dir", confDir); // NGTM
         if (StringUtils.isEmpty(System.getProperty("hdp.version"))) {
             throw new RuntimeException(
                     "No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.4.0.0-169");
         }
 
-        HBaseMetadataTestCase.staticCreateTestMetadata(confDir);
+        HBaseMetadataTestCase.staticCreateTestMetadata(confDir); // NGTM
 
         try {
             //check hdfs permission
@@ -166,152 +231,24 @@ public class BuildCubeWithEngine {
         }
     }
 
-    private static boolean isFastBuildMode() {
-        String fastModeStr = System.getProperty("fastBuildMode");
-        if (fastModeStr == null)
-            fastModeStr = System.getenv("KYLIN_CI_FASTBUILD");
-
-        return "true".equalsIgnoreCase(fastModeStr);
-    }
-
-    private static boolean isSimpleBuildMode() {
-        String simpleModeStr = System.getProperty("simpleBuildMode");
-        if (simpleModeStr == null)
-            simpleModeStr = System.getenv("KYLIN_CI_SIMPLEBUILD");
-
-        return "true".equalsIgnoreCase(simpleModeStr);
-    }
-
     protected void deployEnv() throws IOException {
         DeployUtil.initCliWorkDir();
         DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
     }
 
-    public void before() throws Exception {
-        deployEnv();
-
-        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        jobService = ExecutableManager.getInstance(kylinConfig);
-        scheduler = DefaultScheduler.createInstance();
-        scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
-        if (!scheduler.hasStarted()) {
-            throw new RuntimeException("scheduler has not been started");
-        }
-        cubeManager = CubeManager.getInstance(kylinConfig);
-        for (String jobId : jobService.getAllJobIds()) {
-            AbstractExecutable executable = jobService.getJob(jobId);
-            if (executable instanceof CubingJob || executable instanceof CheckpointExecutable) {
-                jobService.deleteJob(jobId);
-            }
-        }
-
-        cubeDescManager = CubeDescManager.getInstance(kylinConfig);
-
-        // update enginType
-        updateCubeEngineType(Lists.newArrayList("ci_inner_join_cube", "ci_left_join_cube"));
-    }
-
-    public void after() {
-        DefaultScheduler.destroyInstance();
-    }
-
-    public static void afterClass() {
-        HBaseMetadataTestCase.staticCleanupTestMetadata();
-    }
-
-    public void build() throws Exception {
-        DeployUtil.prepareTestDataForNormalCubes("ci_left_join_model");
-        System.setProperty("kylin.storage.hbase.hfile-size-gb", "1.0f");
-        testCase("testInnerJoinCube");
-        testCase("testLeftJoinCube");
-        testCase("testTableExt");
-        testCase("testModel");
-        System.setProperty("kylin.storage.hbase.hfile-size-gb", "0.0f");
-    }
-
-    protected ExecutableState waitForJob(String jobId) {
-        while (true) {
-            AbstractExecutable job = jobService.getJob(jobId);
-            if (job.getStatus() == ExecutableState.SUCCEED || job.getStatus() == ExecutableState.ERROR) {
-                return job.getStatus();
-            } else {
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    private void testCase(String... testCase) throws Exception {
-        runTestAndAssertSucceed(testCase);
-    }
-
-    private void runTestAndAssertSucceed(String[] testCase) throws Exception {
-        ExecutorService executorService = Executors.newFixedThreadPool(testCase.length);
-        final CountDownLatch countDownLatch = new CountDownLatch(testCase.length);
-        List<Future<Boolean>> tasks = Lists.newArrayListWithExpectedSize(testCase.length);
-        for (int i = 0; i < testCase.length; i++) {
-            tasks.add(executorService.submit(new TestCallable(testCase[i], countDownLatch)));
-        }
-        countDownLatch.await();
-        try {
-            for (int i = 0; i < tasks.size(); ++i) {
-                Future<Boolean> task = tasks.get(i);
-                final Boolean result = task.get();
-                if (!result) {
-                    throw new RuntimeException("The test '" + testCase[i] + "' is failed.");
-                }
-            }
-        } catch (Exception ex) {
-            logger.error("error", ex);
-            throw ex;
-        }
-    }
-
-    private class TestCallable implements Callable<Boolean> {
-
-        private final String methodName;
-        private final CountDownLatch countDownLatch;
-
-        public TestCallable(String methodName, CountDownLatch countDownLatch) {
-            this.methodName = methodName;
-            this.countDownLatch = countDownLatch;
-        }
-
-        @Override
-        public Boolean call() throws Exception {
-            try {
-                final Method method = BuildCubeWithEngine.class.getDeclaredMethod(methodName);
-                method.setAccessible(true);
-                return (Boolean) method.invoke(BuildCubeWithEngine.this);
-            } catch (Exception e) {
-                logger.error(e.getMessage());
-                throw e;
-            } finally {
-                countDownLatch.countDown();
-            }
-        }
-    }
-
-    protected boolean testTableExt() throws Exception {
-        return true;
-    }
-
-    protected boolean testModel() throws Exception {
-        return true;
-    }
-
     @SuppressWarnings("unused")
-    // called by reflection
     private boolean testLeftJoinCube() throws Exception {
         String cubeName = "ci_left_join_cube";
         clearSegment(cubeName);
-
         // NOTE: ci_left_join_cube has percentile which isn't supported by Spark engine now
+        return doBuildAndMergeOnCube(cubeName);
+    }
 
+    @SuppressWarnings("unused")
+    private boolean testInnerJoinCube() throws Exception {
+        String cubeName = "ci_inner_join_cube";
+        clearSegment(cubeName);
         return doBuildAndMergeOnCube(cubeName);
     }
 
@@ -370,18 +307,8 @@ public class BuildCubeWithEngine {
         }
         if (!simpleBuildMode && !optimizeCube(cubeName))
             return false;
-        logger.info("all of jobs complete!");
+        logger.info("All of jobs to {} complete!", cubeName);
         return true;
-    }
-
-    @SuppressWarnings("unused")
-    // called by reflection
-    private boolean testInnerJoinCube() throws Exception {
-
-        String cubeName = "ci_inner_join_cube";
-        clearSegment(cubeName);
-
-        return doBuildAndMergeOnCube(cubeName);
     }
 
     private void updateCubeEngineType(List<String> cubeNames) throws IOException {
@@ -418,7 +345,7 @@ public class BuildCubeWithEngine {
         if (fastBuildMode) {
             return true;
         }
-        ExecutableState state = waitForJob(checkpointJob.getId());
+        ExecutableState state = waitForJob(jobService, checkpointJob.getId());
         return Boolean.valueOf(ExecutableState.SUCCEED == state);
     }
 
@@ -430,7 +357,7 @@ public class BuildCubeWithEngine {
                 null, true);
         DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(segment, "TEST");
         jobService.addJob(job);
-        ExecutableState state = waitForJob(job.getId());
+        ExecutableState state = waitForJob(jobService, job.getId());
         return Boolean.valueOf(ExecutableState.SUCCEED == state);
     }
 
@@ -444,7 +371,7 @@ public class BuildCubeWithEngine {
             jobCheckActionMap.put(job.getId(), isEmpty ? "checkEmptySegRangeInfo" : "checkNormalSegRangeInfo");
             return true;
         }
-        ExecutableState state = waitForJob(job.getId());
+        ExecutableState state = waitForJob(jobService, job.getId());
         return Boolean.valueOf(ExecutableState.SUCCEED == state);
     }
 
@@ -517,15 +444,6 @@ public class BuildCubeWithEngine {
         } while (cuboidsRecommend.equals(cuboidsCurrent));
 
         return cuboidsRecommend;
-    }
-
-    @SuppressWarnings("unused")
-    private int cleanupOldStorage() throws Exception {
-        String[] args = { "--delete", "true" };
-
-        StorageCleanupJob cli = new StorageCleanupJob();
-        cli.execute(args);
-        return 0;
     }
 
     @SuppressWarnings("unused")
@@ -613,5 +531,52 @@ public class BuildCubeWithEngine {
             });
         }
         return null;
+    }
+
+    // =====================================================================================
+    // TestCase is executed in separated thread
+    // =====================================================================================
+
+    protected void buildingStep(String... testCase) throws Exception {
+        logger.warn("\n{}====>> Start  Step {} <<===={}", LINE, testCase[0], LINE);
+        runTestAndAssertSucceed(testCase);
+        logger.warn("\n{}====>>  End   Step {} <<===={}", LINE, testCase[0], LINE);
+    }
+
+    protected void runTestAndAssertSucceed(String[] testCase) throws Exception {
+        ExecutorService executorService = Executors.newFixedThreadPool(testCase.length);
+        final CountDownLatch countDownLatch = new CountDownLatch(testCase.length);
+        List<Future<Boolean>> tasks = Lists.newArrayListWithExpectedSize(testCase.length);
+        for (int i = 0; i < testCase.length; i++) {
+            int finalI = i;
+            tasks.add(executorService.submit(
+                    () -> {
+                        try {
+                            final Method method = BuildCubeWithEngine.class.getDeclaredMethod(testCase[finalI]);
+                            method.setAccessible(true);
+                            return (Boolean) method.invoke(BuildCubeWithEngine.this);
+                        } catch (Exception e) {
+                            logger.error(e.getMessage());
+                            throw e;
+                        } finally {
+                            countDownLatch.countDown();
+                        }
+                    }
+
+            ));
+        }
+        countDownLatch.await();
+        try {
+            for (int i = 0; i < tasks.size(); ++i) {
+                Future<Boolean> task = tasks.get(i);
+                final Boolean result = task.get();
+                if (!result) {
+                    throw new RuntimeException("The test '" + testCase[i] + "' is failed.");
+                }
+            }
+        } catch (Exception ex) {
+            logger.error("error", ex);
+            throw ex;
+        }
     }
 }

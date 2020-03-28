@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.realtime;
+package org.apache.kylin.it.provision;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -26,14 +26,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
 
-import org.I0Itec.zkclient.ZkConnection;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.requests.MetadataResponse;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
@@ -48,8 +46,7 @@ import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.streaming.Kafka10DataLoader;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.provision.MockKafka;
-import org.apache.kylin.query.KylinTestBase;
+import org.apache.kylin.it.query.KylinTestBase;
 import org.apache.kylin.rest.job.StorageCleanupJob;
 import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.apache.kylin.stream.coordinator.Coordinator;
@@ -73,9 +70,12 @@ import org.apache.kylin.stream.core.source.StreamingSourceConfig;
 import org.apache.kylin.stream.core.source.StreamingSourceConfigManager;
 import org.apache.kylin.stream.server.StreamingServer;
 import org.apache.kylin.stream.source.kafka.KafkaSource;
-import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.kylin.it.provision.BuildEngineUtil.isBuildSkip;
+import static org.apache.kylin.it.provision.BuildEngineUtil.isRealtimeSkip;
+import static org.apache.kylin.it.provision.BuildEngineUtil.printEnv;
 
 public class BuildCubeWithStreamV2 extends KylinTestBase {
     private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithStreamV2.class);
@@ -88,9 +88,7 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
     private Coordinator coordinator;
     private StreamingServer streamingServer;
     private DefaultScheduler scheduler;
-    private MockKafka kafkaServer;
     private KafkaProducer<byte[], byte[]> producer;
-    private int replicaSetID;
     private volatile boolean generateDataDone = false;
 
     public BuildCubeWithStreamV2() {
@@ -107,6 +105,9 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
     }
 
     public static void beforeClass(String confDir) throws Exception {
+        isRealtimeSkip();
+        isBuildSkip();
+        printEnv();
         logger.info("Adding to classpath: " + new File(confDir).getAbsolutePath());
         ClassUtil.addClasspath(new File(confDir).getAbsolutePath());
 
@@ -169,7 +170,7 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
         int brokerId = 0;
 
         // start kafka broker and create topic
-        startEmbeddedKafka(topicName, server, brokerId);
+        // startEmbeddedKafka(topicName, server, brokerId);
 
         // start streamingServer
         streamingServer.start();
@@ -178,7 +179,7 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
         ReplicaSet replicaSet = new ReplicaSet();
         replicaSet.addNode(new Node());
         coordinator.createReplicaSet(replicaSet);
-        replicaSetID = replicaSet.getReplicaSetID();
+        int replicaSetID = replicaSet.getReplicaSetID();
 
         // becomeLeader
         streamingServer.becomeLeader();
@@ -206,7 +207,7 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
                     messageReader = Files.newBufferedReader(Paths.get(messageFile));
                     String message;
                     int index = 0;
-                    while((message = messageReader.readLine()) != null && index < size) {
+                    while ((message = messageReader.readLine()) != null && index < size) {
                         //logger.info("----message{}-----{}", index, message);
                         ProducerRecord<byte[], byte[]> record = new ProducerRecord<byte[], byte[]>(topicName, String.valueOf(index).getBytes(StandardCharsets.UTF_8), message.getBytes(StandardCharsets.UTF_8));
                         producer.send(record);
@@ -233,7 +234,7 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
         // is generate data done, total wait 2 min
         while (generateDataDone == false && waittime < 2) {
             Thread.sleep(60 * 1000);
-                waittime++;
+            waittime++;
         }
 
         if (generateDataDone == false) {
@@ -267,9 +268,9 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
 
     public void query() throws Exception {
         boolean success = execAndCompSuccess("src/test/resources/query/sql_streaming_v2/compare_result", null, true)
-                    && execSuccess("src/test/resources/query/sql_streaming_v2/not_compare_result");
+                && execSuccess("src/test/resources/query/sql_streaming_v2/not_compare_result");
 
-        if (success == false) {
+        if (!success) {
             throw new IllegalStateException("Build failed/timeout, no ready segment"); // ensure all query have been passed
         }
     }
@@ -277,10 +278,6 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
     public void after() throws Exception {
         coordinator.unAssignCube(CUBE_NAME);
         streamingServer.removeFromReplicaSet();
-        if (kafkaServer != null) {
-            kafkaServer.stop();
-
-        }
         ZKUtil.cleanZkPath(kafkaZkPath);
         DefaultScheduler.destroyInstance();
     }
@@ -291,13 +288,13 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
     }
 
     private boolean execAndCompSuccess(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
-       try {
-           execAndCompQuery(queryFolder, exclusiveQuerys, needSort);
-           return true;
-       } catch (Exception e) {
-           logger.error("Exec query and compare result failed", e);
-           return false;
-       }
+        try {
+            execAndCompQuery(queryFolder, exclusiveQuerys, needSort);
+            return true;
+        } catch (Exception e) {
+            logger.error("Exec query and compare result failed", e);
+            return false;
+        }
     }
 
     private boolean execSuccess(String queryFolder) throws Exception {
@@ -320,24 +317,9 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
     }
 
     public void cleanupOldStorage() throws Exception {
-        String[] args = { "--delete", "true" };
+        String[] args = {"--delete", "true"};
         StorageCleanupJob cli = new StorageCleanupJob();
         cli.execute(args);
-    }
-
-    private void startEmbeddedKafka(String topicName, String server, int brokerId) {
-        ZkConnection zkConnection = new ZkConnection(ZKUtil.getZKConnectString(KylinConfig.getInstanceFromEnv()) + kafkaZkPath);
-
-        // start kafka server
-        kafkaServer = new MockKafka(zkConnection, server, brokerId);
-        kafkaServer.start();
-
-        // create topic
-        kafkaServer.createTopic(topicName, 3, 1);
-        kafkaServer.waitTopicUntilReady(topicName);
-
-        MetadataResponse.TopicMetadata topicMetadata = kafkaServer.fetchTopicMeta(topicName);
-        Assert.assertEquals(topicName, topicMetadata.topic());
     }
 
     private void deployEnv() throws Exception {

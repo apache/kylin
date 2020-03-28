@@ -97,7 +97,7 @@ public class JoinedFlatTable {
             ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '" + fieldDelimiter + "'\n");
         }
         ddl.append("STORED AS " + storageFormat + "\n");
-        ddl.append("LOCATION '" + getTableDir(flatDesc, storageDfsDir) + "';").append("\n");
+        ddl.append("LOCATION '" + getTableDir(flatDesc, storageDfsDir) + "' TBLPROPERTIES('transactional'='false');").append("\n");
         ddl.append("ALTER TABLE " + flatDesc.getTableName() + " SET TBLPROPERTIES('auto.purge'='true');\n");
         return ddl.toString();
     }

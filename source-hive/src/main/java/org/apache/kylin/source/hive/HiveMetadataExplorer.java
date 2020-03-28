@@ -138,7 +138,8 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
         String dropsql2 = "DROP VIEW IF EXISTS " + tableDesc.getIdentity();
 
         StringBuilder ddl = new StringBuilder();
-        ddl.append("CREATE TABLE " + tableDesc.getIdentity() + "\n");
+        // Use external table instead of managed table
+        ddl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + tableDesc.getIdentity() + "\n");
         ddl.append("(" + "\n");
 
         for (int i = 0; i < tableDesc.getColumns().length; i++) {
@@ -151,8 +152,8 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
 
         ddl.append(")" + "\n");
         ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY ','" + "\n");
-        ddl.append("STORED AS TEXTFILE");
-
+        // Turn off ACID feature in Hive3 manually
+        ddl.append("STORED AS TEXTFILE TBLPROPERTIES ('transactional'='false')");
         return new String[] { dropsql, dropsql2, ddl.toString() };
     }
 

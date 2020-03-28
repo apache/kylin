@@ -312,7 +312,7 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testStreamingTableQuery() throws Exception {
-        if ("inner".equalsIgnoreCase(joinType)) {
+        if ("inner".equalsIgnoreCase(joinType) && !"true".equalsIgnoreCase(System.getProperty("skipNRT"))) {
             execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_streaming", null, true);
         }
     }

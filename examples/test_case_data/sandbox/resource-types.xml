@@ -1,0 +1,13 @@
+  <configuration  xmlns:xi="http://www.w3.org/2001/XInclude">
+    
+    <property>
+      <name>yarn.resource-types</name>
+      <value></value>
+    </property>
+    
+    <property>
+      <name>yarn.resource-types.yarn.io_gpu.maximum-allocation</name>
+      <value>8</value>
+    </property>
+    
+  </configuration>
