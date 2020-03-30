@@ -301,7 +301,13 @@ public abstract class KylinConfigBase implements Serializable {
         }
 
         // append metadata-url prefix
-        root = new Path(path, StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-')).toString();
+        String metaId = getMetadataUrlPrefix().replace(':', '-');
+        //transform relative path for local metadata
+        if (metaId.startsWith("../")) {
+            metaId = metaId.replace('/', '-');
+        }
+
+        root = new Path(path, metaId).toString();
 
         if (!root.endsWith("/"))
             root += "/";

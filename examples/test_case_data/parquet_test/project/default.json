@@ -1,0 +1,27 @@
+{
+  "uuid" : "1eaca32a-a33e-4b69-83dd-0bb8b1f8c91b",
+  "last_modified" : 1585736623334,
+  "version" : "3.0.0.20500",
+  "name" : "default",
+  "tables" : [ "DEFAULT.TEST_COUNTRY", "EDW.TEST_SITES", "SSB.SUPPLIER", "SSB.CUSTOMER", "SSB.PART", "DEFAULT.TEST_KYLIN_FACT", "DEFAULT.TEST_CATEGORY_GROUPINGS", "DEFAULT.TEST_ORDER", "SSB.DATES", "EDW.TEST_SELLER_TYPE_DIM", "SSB.V_LINEORDER", "EDW.TEST_CAL_DT", "DEFAULT.TEST_ACCOUNT" ],
+  "owner" : null,
+  "status" : null,
+  "create_time_utc" : 0,
+  "last_update_time" : null,
+  "description" : null,
+  "realizations" : [ {
+    "type" : "CUBE",
+    "realization" : "ci_left_join_cube"
+  }, {
+    "type" : "CUBE",
+    "realization" : "ci_inner_join_cube"
+  }, {
+    "type" : "CUBE",
+    "realization" : "ssb"
+  } ],
+  "models" : [ "ssb", "ci_inner_join_model", "ci_left_join_model" ],
+  "ext_filters" : [ ],
+  "override_kylin_properties" : {
+    "kylin.storage.hbase.owner-tag" : "kylin@kylin.apache.org"
+  }
+}

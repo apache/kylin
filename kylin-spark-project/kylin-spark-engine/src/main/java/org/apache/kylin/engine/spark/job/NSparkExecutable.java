@@ -236,9 +236,7 @@ public class NSparkExecutable extends AbstractExecutable {
                     config.getCliCommandExecutor().execute(killApplicationCmd, patternedLogger);
                 }
             }
-        /*} catch (ShellException ex1) {
-            logger.error("kill orphan yarn application {} failed.", orphanApplicationId);
-        */} catch (YarnException | IOException ex2) {
+        } catch (YarnException | IOException ex2) {
             logger.error("get yarn application failed");
         }
     }

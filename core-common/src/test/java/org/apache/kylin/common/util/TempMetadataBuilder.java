@@ -30,8 +30,8 @@ import java.util.List;
 
 public class TempMetadataBuilder {
 
-    public static final String N_KAP_META_TEST_DATA = "../examples/test_case_data/localmeta_n";
-    public static final String N_SPARK_PROJECT_KYLIN_META_TEST_DATA = "../../examples/test_case_data/localmeta_n";
+    public static final String N_KAP_META_TEST_DATA = "../examples/test_case_data/parquet_test";
+    public static final String N_SPARK_PROJECT_KYLIN_META_TEST_DATA = "../../examples/test_case_data/parquet_test";
     public static final String TEMP_TEST_METADATA = "../examples/test_metadata";
 
     private static final Logger logger = LoggerFactory.getLogger(TempMetadataBuilder.class);
