@@ -177,7 +177,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         Assert.assertTrue(config.getHdfsWorkingDirectory().startsWith("file:"));
         // cleanup all segments first
         cleanupSegments(cubeName);
-        buildCuboid(cubeName, new SegmentRange.TSRange(0L, Long.MAX_VALUE));
+        buildCuboid(cubeName, null);
     }
 
     protected void restoreAllSystemProp() {

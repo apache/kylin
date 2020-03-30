@@ -1,0 +1,17 @@
+{
+  "uuid" : "56e1a32a-a33e-4b69-83dd-0bb8b1f80354",
+  "last_modified" : 1585736800517,
+  "version" : "3.9.9.1",
+  "name" : "ci_left_join_cube",
+  "owner" : null,
+  "descriptor" : "ci_left_join_cube",
+  "display_name" : "ci_left_join_cube",
+  "cost" : 50,
+  "status" : "DISABLED",
+  "segments" : [ ],
+  "create_time_utc" : 0,
+  "cuboid_bytes" : null,
+  "cuboid_bytes_recommend" : null,
+  "cuboid_last_optimized" : 0,
+  "snapshots" : { }
+}

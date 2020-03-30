@@ -1,6 +1,0 @@
-{
-  "name": "vip_customers",
-  "filter_table_type": "HDFS",
-  "filter_resource_identifier": "/tmp/vip_customers.txt",
-  "source_type": 7
-}
