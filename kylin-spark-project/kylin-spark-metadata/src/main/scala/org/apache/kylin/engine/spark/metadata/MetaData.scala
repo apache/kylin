@@ -18,36 +18,39 @@
 
 package org.apache.kylin.engine.spark.metadata
 
+import java.util
+
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity
 import org.apache.spark.sql.types.{DataType, StructField, StructType}
-import scala.collection.JavaConverters.mapAsJavaMapConverter
 
+import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.mutable
 
 class ColumnDesc(val columnName: String, val dataType: DataType, val tableName: String, val tableAliasName: String, val id: Int) extends Serializable {
   def identity: String = s"$tableAliasName.$columnName"
+
   def isColumnType: Boolean = true
 }
 
-object ColumnDesc{
+object ColumnDesc {
   def apply(columnName: String, dataType: DataType, tableName: String, tableAliasName: String, id: Int):
   ColumnDesc = new ColumnDesc(columnName, dataType, tableName, tableAliasName, id)
 }
 
 case class LiteralColumnDesc(
-  override val columnName: String, override val dataType: DataType,
-  override val tableName: String, override val tableAliasName: String, override val id: Int, val value: Any)
+                              override val columnName: String, override val dataType: DataType,
+                              override val tableName: String, override val tableAliasName: String, override val id: Int, val value: Any)
   extends ColumnDesc(columnName, dataType, tableName, tableAliasName, id) {
   override def isColumnType: Boolean = false
 }
 
 case class ComputedColumnDesc(
-  override val columnName: String, override val dataType: DataType,
-  override val tableName: String, override val tableAliasName: String, override val id: Int, val expression: String = "")
+                               override val columnName: String, override val dataType: DataType,
+                               override val tableName: String, override val tableAliasName: String, override val id: Int, val expression: String = "")
   extends ColumnDesc(columnName, dataType, tableName, tableAliasName, id)
 
-case class TableDesc(tableName: String, databaseName: String, columns: List[ColumnDesc], alias: String, sourceType: Int) {
+case class TableDesc(tableName: String, databaseName: String, columns: List[ColumnDesc], alias: String, sourceType: Int, addInfo: util.Map[String, String]) {
   def identity: String = s"$databaseName.$tableName"
 
   def toSchema: StructType = {
@@ -76,21 +79,21 @@ case class DTType(dataType: String, precision: Int, scale: Int) {
 case class JoinDesc(lookupTable: TableDesc, PKS: Array[ColumnDesc], FKS: Array[ColumnDesc], joinType: String)
 
 case class SegmentInfo(id: String,
-  name: String,
-  project: String,
-  kylinconf: KylinConfig,
-  factTable: TableDesc,
-  lookupTables: List[TableDesc],
-  snapshotTables: List[TableDesc],
-  joindescs: Array[JoinDesc],
-  allColumns: List[ColumnDesc],
-  layouts: List[LayoutEntity],
-  var toBuildLayouts: mutable.Set[LayoutEntity],
-  var toBuildDictColumns: Set[ColumnDesc],
-  allDictColumns: Set[ColumnDesc],
-  partitionExp: String,
-  filterCondition: String,
-  var snapshotInfo: Map[String, String] = Map.empty[String, String]) {
+                       name: String,
+                       project: String,
+                       kylinconf: KylinConfig,
+                       factTable: TableDesc,
+                       lookupTables: List[TableDesc],
+                       snapshotTables: List[TableDesc],
+                       joindescs: Array[JoinDesc],
+                       allColumns: List[ColumnDesc],
+                       layouts: List[LayoutEntity],
+                       var toBuildLayouts: mutable.Set[LayoutEntity],
+                       var toBuildDictColumns: Set[ColumnDesc],
+                       allDictColumns: Set[ColumnDesc],
+                       partitionExp: String,
+                       filterCondition: String,
+                       var snapshotInfo: Map[String, String] = Map.empty[String, String]) {
 
   def updateLayout(layoutEntity: LayoutEntity): Unit = {
     toBuildLayouts.remove(layoutEntity)
@@ -99,11 +102,11 @@ case class SegmentInfo(id: String,
   def updateSnapshot(tableInfo: Map[String, String]): Unit = {
     snapshotInfo = tableInfo
   }
-  
+
   def getAllLayoutSize(): Long = {
     layouts.map(_.getByteSize).sum
   }
-  
+
   def getSnapShot2JavaMap(): java.util.Map[String, String] = {
     snapshotInfo.asJava
   }

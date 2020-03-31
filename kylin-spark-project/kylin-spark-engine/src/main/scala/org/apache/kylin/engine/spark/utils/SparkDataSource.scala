@@ -18,21 +18,20 @@
 
 package org.apache.kylin.engine.spark.utils
 
-import com.google.common.collect.Maps
 import org.apache.kylin.engine.spark.NSparkCubingEngine
-import org.apache.kylin.engine.spark.metadata.cube.source.SourceFactory
 import org.apache.kylin.engine.spark.metadata.TableDesc
+import org.apache.kylin.engine.spark.metadata.cube.source.SourceFactory
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object SparkDataSource {
+
   implicit class SparkSource(sparkSession: SparkSession) {
-    def table(tableInfo: TableDesc, project: String) : DataFrame = {
-      val parameters = Maps.newHashMap[String, String]()
-      parameters.put("project", project)
+    def table(tableInfo: TableDesc): DataFrame = {
       SourceFactory
         .getSource(tableInfo.sourceType).adaptToBuildEngine(
-          classOf[NSparkCubingEngine.NSparkCubingSource])
-        .getSourceData(tableInfo, sparkSession, parameters)
+        classOf[NSparkCubingEngine.NSparkCubingSource])
+        .getSourceData(tableInfo, sparkSession, tableInfo.addInfo)
     }
   }
+
 }

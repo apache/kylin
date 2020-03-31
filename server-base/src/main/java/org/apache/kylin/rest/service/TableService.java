@@ -634,6 +634,16 @@ public class TableService extends BasicService {
         return tableDesc;
     }
 
+    public TableExtDesc generateTableExtDesc(TableDesc tableDesc, String separator) {
+        TableExtDesc tableExtDesc = new TableExtDesc();
+        tableExtDesc.setIdentity(tableDesc.getIdentity());
+        tableExtDesc.setUuid(RandomUtil.randomUUID().toString());
+        tableExtDesc.setLastModified(0);
+        tableExtDesc.init(tableDesc.getProject());
+        tableExtDesc.addDataSourceProp("separator", separator);
+        return tableExtDesc;
+    }
+
     public void saveCsvFile(MultipartFile file, String tableName, String project) throws IOException {
         String workDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory(project) + "csv/";
         FileSystem fs = HadoopUtil.getFileSystem(workDir);

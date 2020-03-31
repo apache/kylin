@@ -18,9 +18,10 @@
 
 package org.apache.kylin.engine.spark.builder
 
+import java.util
 import java.util.Locale
 
-import com.google.common.collect.Sets
+import com.google.common.collect.{Maps, Sets}
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper.{ENCODE_SUFFIX, _}
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil._
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
@@ -122,7 +123,7 @@ object CreateFlatTable extends Logging {
       if (sourceInfo != null && !StringUtils.isBlank(sourceInfo.getViewFactTablePath)) {
         ss.read.parquet(sourceInfo.getViewFactTablePath).alias(tableInfo.alias)
       } else {
-        ss.table(tableInfo, project).alias(tableInfo.alias)
+        ss.table(tableInfo).alias(tableInfo.alias)
       }
 
     val suitableCols = chooseSuitableCols(dataset, cols)

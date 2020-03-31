@@ -26,11 +26,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.CsvColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CardinalityRequest;
@@ -269,6 +270,7 @@ public class TableController extends BasicController {
     @RequestMapping(value = "/saveCsvTable", method = { RequestMethod.POST })
     @ResponseBody
     public TableDesc salveCsvTable(@RequestParam(value = "file") MultipartFile file,
+            @RequestParam(value = "separator", required = true) String separator,
             @RequestParam(value = "tableName", required = true) String tableName,
             @RequestParam(value = "project", required = true) String project,
             @RequestParam(value = "columns", required = true) String columnDescList) throws IOException {
@@ -277,7 +279,8 @@ public class TableController extends BasicController {
         }
 
         TableDesc desc = tableService.generateCsvTableDesc(tableName, JsonUtil.readValue(columnDescList, List.class));
-        tableService.loadTableToProject(desc, null, project);
+        TableExtDesc extDesc = tableService.generateTableExtDesc(desc, separator);
+        tableService.loadTableToProject(desc, extDesc, project);
         tableService.saveCsvFile(file, tableName, project);
         return desc;
     }

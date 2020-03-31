@@ -18,6 +18,15 @@
 
 package org.apache.kylin.engine.spark.utils;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.LinkedHashSet;
+import java.util.Properties;
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
@@ -28,24 +37,18 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.LinkedHashSet;
-import java.util.Properties;
-import java.util.Set;
 
 public class MetaDumpUtil {
     private static final Logger logger = LoggerFactory.getLogger(MetaDumpUtil.class);
 
     public static Set<String> collectCubeMetadata(CubeInstance cube) {
         // cube, model_desc, cube_desc, table
+        TableMetadataManager tableMgr = TableMetadataManager.getInstance(cube.getConfig());
         Set<String> dumpList = new LinkedHashSet<>();
         dumpList.add(cube.getResourcePath());
         dumpList.add(cube.getDescriptor().getModel().getResourcePath());
@@ -55,16 +58,17 @@ public class MetaDumpUtil {
         for (TableRef tableRef : cube.getDescriptor().getModel().getAllTables()) {
             TableDesc table = tableRef.getTableDesc();
             dumpList.add(table.getResourcePath());
+            dumpList.add(tableMgr.getTableExt(table).getResourcePath());
         }
 
         return dumpList;
     }
 
-    public static void dumpAndUploadKylinPropsAndMetadata(Set<String> dumpList, KylinConfigExt kylinConfig, String metadataUrl)
-            throws IOException {
+    public static void dumpAndUploadKylinPropsAndMetadata(Set<String> dumpList, KylinConfigExt kylinConfig,
+            String metadataUrl) throws IOException {
 
         try (AutoDeleteDirectory tmpDir = new AutoDeleteDirectory("kylin_job_meta", "");
-             AutoDeleteDirectory metaDir = tmpDir.child("meta")) {
+                AutoDeleteDirectory metaDir = tmpDir.child("meta")) {
             // dump metadata
             dumpResources(kylinConfig, metaDir.getFile().getAbsolutePath(), dumpList);
 
@@ -82,16 +86,24 @@ public class MetaDumpUtil {
         }
     }
 
-    public static void dumpResources(KylinConfig kylinConfig, String metaOutDir, Set<String> dumpList) throws IOException {
+    public static void dumpResources(KylinConfig kylinConfig, String metaOutDir, Set<String> dumpList)
+            throws IOException {
         long startTime = System.currentTimeMillis();
 
         ResourceStore from = ResourceStore.getStore(kylinConfig);
         KylinConfig localConfig = KylinConfig.createInstanceFromUri(metaOutDir);
         ResourceStore to = ResourceStore.getStore(localConfig);
+        final String[] tolerantResources = { "/table_exd" };
+
         for (String path : dumpList) {
             RawResource res = from.getResource(path);
-            if (res == null)
-                throw new IllegalStateException("No resource found at -- " + path);
+            if (res == null) {
+                if (StringUtils.startsWithAny(path, tolerantResources)) {
+                    continue;
+                } else {
+                    throw new IllegalStateException("No resource found at -- " + path);
+                }
+            }
             to.putResource(path, res.content(), res.lastModified());
             res.content().close();
         }
@@ -108,7 +120,7 @@ public class MetaDumpUtil {
         StorageURL url = StorageURL.valueOf(uri);
         String metaDir = url.getParameter("path") + "/" + KylinConfig.KYLIN_CONF_PROPERTIES_FILE;
         Path path = new Path(metaDir);
-        try(InputStream is = path.getFileSystem(HadoopUtil.getCurrentConfiguration()).open(new Path(metaDir))) {
+        try (InputStream is = path.getFileSystem(HadoopUtil.getCurrentConfiguration()).open(new Path(metaDir))) {
             Properties prop = KylinConfig.streamToProps(is);
             return KylinConfig.createKylinConfig(prop);
         } catch (IOException e) {
