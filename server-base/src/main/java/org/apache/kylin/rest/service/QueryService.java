@@ -467,14 +467,13 @@ public class QueryService extends BasicService {
 
         boolean isDummyResponseEnabled = queryCacheEnabled && kylinConfig.isLazyQueryEnabled();
         SQLResponse sqlResponse = null;
+        // Add dummy response which will be updated or evicted when query finishes
+        if (isDummyResponseEnabled) {
+            SQLResponse dummyResponse = new SQLResponse();
+            dummyResponse.setLazyQueryStartTime(System.currentTimeMillis());
+            cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), dummyResponse);
+        }
         try {
-            // Add dummy response which will be updated or evicted when query finishes
-            if (isDummyResponseEnabled) {
-                SQLResponse dummyResponse = new SQLResponse();
-                dummyResponse.setLazyQueryStartTime(System.currentTimeMillis());
-                cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), dummyResponse);
-            }
-
             final boolean isSelect = QueryUtil.isSelectStatement(sqlRequest.getSql());
             if (isSelect) {
                 sqlResponse = query(sqlRequest, queryContext.getQueryId());
@@ -549,10 +548,14 @@ public class QueryService extends BasicService {
                     && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
                 Cache exceptionCache = cacheManager.getCache(QUERY_CACHE);
                 exceptionCache.put(sqlRequest.getCacheKey(), sqlResponse);
-            } else if (isDummyResponseEnabled) {
-                // evict dummy response to avoid caching too many bad queries
-                Cache exceptionCache = cacheManager.getCache(QUERY_CACHE);
-                exceptionCache.evict(sqlRequest.getCacheKey());
+            }
+        } finally {
+            if (isDummyResponseEnabled) {
+                Cache queryCache = cacheManager.getCache(QUERY_CACHE);
+                Cache.ValueWrapper v = queryCache.get(sqlRequest.getCacheKey());
+                if (v != null && v.get() instanceof SQLResponse && ((SQLResponse) v.get()).isRunning()) {
+                    queryCache.evict(sqlRequest.getCacheKey());
+                }
             }
         }
         return sqlResponse;
