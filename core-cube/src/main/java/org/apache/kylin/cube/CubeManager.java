@@ -135,7 +135,7 @@ public class CubeManager implements IRealizationProvider {
     private CubeManager(KylinConfig cfg) throws IOException {
         logger.info("Initializing CubeManager with config {}", cfg);
         this.config = cfg;
-        this.cubeMap = new CaseInsensitiveStringCache<CubeInstance>(config, "cube");
+        this.cubeMap = new CaseInsensitiveStringCache<>(config, "cube");
         this.crud = new CachedCrudAssist<CubeInstance>(getStore(), ResourceStore.CUBE_RESOURCE_ROOT, CubeInstance.class,
                 cubeMap) {
             @Override
@@ -191,7 +191,7 @@ public class CubeManager implements IRealizationProvider {
      */
     public List<CubeInstance> listAllCubes() {
         try (AutoLock lock = cubeMapLock.lockForRead()) {
-            return new ArrayList<CubeInstance>(cubeMap.values());
+            return new ArrayList<>(cubeMap.values());
         }
     }
 
@@ -237,7 +237,7 @@ public class CubeManager implements IRealizationProvider {
     public List<CubeInstance> getCubesByDesc(String descName) {
         try (AutoLock lock = cubeMapLock.lockForRead()) {
             List<CubeInstance> list = listAllCubes();
-            List<CubeInstance> result = new ArrayList<CubeInstance>();
+            List<CubeInstance> result = new ArrayList<>();
             Iterator<CubeInstance> it = list.iterator();
             while (it.hasNext()) {
                 CubeInstance ci = it.next();
@@ -301,8 +301,7 @@ public class CubeManager implements IRealizationProvider {
     // try minimize the use of this method, use udpateCubeXXX() instead
     public CubeInstance updateCube(CubeUpdate update) throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
-            CubeInstance cube = updateCubeWithRetry(update, 0);
-            return cube;
+            return updateCubeWithRetry(update, 0);
         }
     }
 
@@ -318,7 +317,7 @@ public class CubeManager implements IRealizationProvider {
 
     public CubeInstance updateCubeDropSegments(CubeInstance cube, Collection<CubeSegment> segsToDrop)
             throws IOException {
-        CubeSegment[] arr = (CubeSegment[]) segsToDrop.toArray(new CubeSegment[segsToDrop.size()]);
+        CubeSegment[] arr = segsToDrop.toArray(new CubeSegment[segsToDrop.size()]);
         return updateCubeDropSegments(cube, arr);
     }
 
@@ -593,7 +592,7 @@ public class CubeManager implements IRealizationProvider {
         String namespace = config.getHBaseStorageNameSpace();
         String tableName = "";
         do {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             if ((namespace.equals("default") || namespace.equals("")) == false) {
                 sb.append(namespace).append(":");
             }
@@ -897,7 +896,7 @@ public class CubeManager implements IRealizationProvider {
                 }
             }
 
-            if (emptySegment.size() > 0) {
+            if (!emptySegment.isEmpty()) {
                 throw new IllegalArgumentException(
                         "Empty cube segment found, couldn't merge unless 'forceMergeEmptySegment' set to true: "
                                 + emptySegment);
@@ -1078,7 +1077,7 @@ public class CubeManager implements IRealizationProvider {
             Preconditions.checkNotNull(cube);
             final List<CubeSegment> segments = cube.getSegments();
             logger.info("totally {} cubeSegments", segments.size());
-            if (segments.size() == 0) {
+            if (segments.isEmpty()) {
                 return holes;
             }
 
@@ -1213,7 +1212,7 @@ public class CubeManager implements IRealizationProvider {
                 throw new IllegalStateException("Failed to get dictionary for cube segment" + cubeSeg + ", col" + col,
                         e);
             }
-            return (Dictionary<String>) info.getDictionaryObject();
+            return info.getDictionaryObject();
         }
 
         public SnapshotTable buildSnapshotTable(CubeSegment cubeSeg, String lookupTable, String uuid)
