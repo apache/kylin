@@ -19,21 +19,21 @@
 package org.apache.kylin.engine.spark.metadata
 
 
-import java.{lang, util}
 import java.util.regex.Pattern
+import java.{lang, util}
 
 import org.apache.commons.lang.StringUtils
 import org.apache.kylin.common.util.DateFormat
-import org.apache.kylin.cube.{CubeInstance, CubeSegment, CubeUpdate}
 import org.apache.kylin.cube.cuboid.Cuboid
-import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity
+import org.apache.kylin.cube.{CubeInstance, CubeSegment, CubeUpdate}
 import org.apache.kylin.engine.spark.metadata.cube.BitUtils
+import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity
+import org.apache.kylin.metadata.TableMetadataManager
+import org.apache.kylin.metadata.datatype.{DataType => KyDataType}
+import org.apache.kylin.metadata.model.{JoinTableDesc, TableRef, TblColRef}
 import org.apache.spark.sql.utils.SparkTypeUtil
 
 import scala.collection.JavaConverters._
-import org.apache.kylin.metadata.datatype.{DataType => KyDataType}
-import org.apache.kylin.metadata.model.{JoinTableDesc, TableRef, TblColRef}
-
 import scala.collection.mutable
 
 object MetadataConverter {
@@ -87,8 +87,12 @@ object MetadataConverter {
   }
 
   def toTableDesc(tb: TableRef): TableDesc = {
+    val tableMgr = TableMetadataManager.getInstance(tb.getModel.getConfig)
+    val tableExt = tableMgr.getTableExt(tb.getTableIdentity, tb.getModel.getProject)
+    val addInfo = tableExt.getDataSourceProp
+    addInfo.put("project", tb.getModel.getProject)
     TableDesc(tb.getTableName, tb.getTableDesc.getDatabase,
-      tb.getColumns.asScala.map(ref => toColumnDesc(ref = ref)).toList, tb.getAlias, tb.getTableDesc.getSourceType)
+      tb.getColumns.asScala.map(ref => toColumnDesc(ref = ref)).toList, tb.getAlias, tb.getTableDesc.getSourceType, addInfo)
   }
 
   def extractAllColumnDesc(cubeInstance: CubeInstance): java.util.LinkedHashMap[Integer, ColumnDesc] = {
@@ -128,8 +132,8 @@ object MetadataConverter {
   }
 
   private def genLayoutEntity(
-    columnIndexes: List[Integer], idToColumnMap: java.util.Map[Integer, ColumnDesc],
-    measureId: java.util.Map[Integer, FunctionDesc], long: lang.Long) = {
+                               columnIndexes: List[Integer], idToColumnMap: java.util.Map[Integer, ColumnDesc],
+                               measureId: java.util.Map[Integer, FunctionDesc], long: lang.Long) = {
     val dimension = BitUtils.tailor(columnIndexes.asJava, long)
     val integerToDesc = new util.LinkedHashMap[Integer, ColumnDesc]()
     dimension.asScala.foreach(index => integerToDesc.put(index, idToColumnMap.get(index)))

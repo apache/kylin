@@ -43,16 +43,31 @@ public class CsvSource implements ISource {
             public Dataset<Row> getSourceData(TableDesc table, SparkSession ss, Map<String, String> parameters) {
                 String path = null;
                 KylinConfig kylinConfig = KylinBuildEnv.get().kylinConfig();
-                if (kylinConfig.getDeployEnv().equals("UT")) {
+                String separator;
+                if (kylinConfig.getDeployEnv().equals("UT")
+                        && (parameters != null && parameters.get("separator") == null)) {
                     path = "file:///" + new File(getUtMetaDir(),
                             "../../examples/test_case_data/localmeta_n/data/" + table.identity() + ".csv")
                                     .getAbsolutePath();
+                    separator = "";
                 } else {
                     String project = parameters.get("project") == null ? "" : parameters.get("project") + "/";
                     path = KylinBuildEnv.get().kylinConfig().getHdfsWorkingDirectory() + project + "csv/"
                             + table.identity() + ".csv";
+                    separator = parameters.get("separator");
                 }
-                Dataset<Row> delimiter = ss.read().option("delimiter", ",")
+                switch (separator) {
+                case "space":
+                    separator = " ";
+                    break;
+                case "tab":
+                    separator = "\t";
+                    break;
+                default:
+                    separator = ",";
+                }
+
+                Dataset<Row> delimiter = ss.read().option("delimiter", separator)
                         //                            .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS")
                         .schema(table.toSchema()).csv(path);
                 return delimiter;
