@@ -89,17 +89,19 @@ public class MetricsManager {
             }
         }
         scSink = systemCubeSink;
-        System.gc();
     }
 
     private static void setSourceReporterBindProps(
             Map<ActiveReservoir, List<Pair<String, Properties>>> sourceReporterBindProperties) {
         sourceReporterBindProps = Maps.newHashMapWithExpectedSize(sourceReporterBindProperties.size());
-        for (ActiveReservoir activeReservoir : sourceReporterBindProperties.keySet()) {
+        for (Map.Entry<ActiveReservoir, List<Pair<String, Properties>>> entry1 : sourceReporterBindProperties
+                .entrySet()) {
+
+            ActiveReservoir activeReservoir = entry1.getKey();
             List<Pair<Class<? extends ActiveReservoirReporter>, Properties>> values = Lists
-                    .newArrayListWithExpectedSize(sourceReporterBindProperties.get(activeReservoir).size());
+                    .newArrayListWithExpectedSize(entry1.getValue().size());
             sourceReporterBindProps.put(activeReservoir, values);
-            for (Pair<String, Properties> entry : sourceReporterBindProperties.get(activeReservoir)) {
+            for (Pair<String, Properties> entry : entry1.getValue()) {
                 try {
                     Class clz = Class.forName(entry.getFirst());
                     if (ActiveReservoirReporter.class.isAssignableFrom(clz)) {
@@ -118,12 +120,14 @@ public class MetricsManager {
         if (KylinConfig.getInstanceFromEnv().isKylinMetricsMonitorEnabled()) {
             logger.info("Kylin metrics monitor is enabled.");
             int nameIdx = 0;
-            for (ActiveReservoir activeReservoir : sourceReporterBindProps.keySet()) {
+            for (Map.Entry<ActiveReservoir, List<Pair<Class<? extends ActiveReservoirReporter>, Properties>>> entry1 : sourceReporterBindProps
+                    .entrySet()) {
+                ActiveReservoir activeReservoir = entry1.getKey();
+
                 String registerName = MetricsSystem.name(MetricsManager.class,
                         "-" + nameIdx + "-" + activeReservoir.toString());
                 activeReservoirPointers.add(registerName);
-                List<Pair<Class<? extends ActiveReservoirReporter>, Properties>> reportProps = sourceReporterBindProps
-                        .get(activeReservoir);
+                List<Pair<Class<? extends ActiveReservoirReporter>, Properties>> reportProps = entry1.getValue();
                 for (Pair<Class<? extends ActiveReservoirReporter>, Properties> subEntry : reportProps) {
                     try {
                         Method method = subEntry.getFirst().getMethod(METHOD_FOR_REGISTRY, ActiveReservoir.class);
