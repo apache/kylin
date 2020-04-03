@@ -128,7 +128,7 @@ public abstract class SparkApplication {
             config.setProperty("kylin.source.provider.0", "org.apache.kylin.engine.spark.source.HiveSource");
             // init KylinBuildEnv
             KylinBuildEnv buildEnv = KylinBuildEnv.getOrCreate(config);
-            infos = KylinBuildEnv.get().buildJobInfos();
+            infos = buildEnv.buildJobInfos();
             SparkConf sparkConf = buildEnv.sparkConf();
             if (config.isAutoSetSparkConf() && isJobOnCluster(sparkConf)) {
                 try {
@@ -190,9 +190,6 @@ public abstract class SparkApplication {
             }
             infos.startJob();
             doExecute();
-            // Output metadata to another folder
-            //TODO: for merge and sampling job
-
         } finally {
             if (infos != null) {
                 infos.jobEnd();

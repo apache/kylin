@@ -23,7 +23,7 @@ import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
-import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
+import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.QueryConnection;
@@ -34,9 +34,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparderContext;
 import org.apache.spark.sql.execution.FileSourceScanExec;
 import org.apache.spark.sql.execution.SparkPlan;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import scala.runtime.AbstractFunction1;
@@ -52,10 +50,11 @@ import java.util.Map;
 public class NFilePruningTest extends LocalWithSparkSessionTest {
 
     private String base = "SELECT COUNT(*)  FROM TEST_KYLIN_FACT LEFT JOIN TEST_ORDER ON TEST_KYLIN_FACT.ORDER_ID = TEST_ORDER.ORDER_ID ";
+    private final static String CUBE_NAME = "ci_left_join_cube";
 
-    @Before
-    public void setup() throws Exception {
-        super.init();
+    @Override
+    public void setup() throws SchedulerException {
+        super.setup();
         System.setProperty("kylin.env", "UT");
         System.setProperty("kylin.query.enable-dynamic-column", "false");
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
@@ -64,18 +63,18 @@ public class NFilePruningTest extends LocalWithSparkSessionTest {
         Candidate.setPriorities(priorities);
     }
 
-    @After
+    @Override
     public void after() {
-        DefaultScheduler.destroyInstance();
-        cleanupTestMetadata();
-        System.clearProperty("kylin.job.scheduler.poll-interval-second");
+        System.clearProperty("kylin.env");
+        System.clearProperty("kylin.query.enable-dynamic-column");
+        super.after();
     }
 
     @Test
     public void testNonExistTimeRange() throws Exception {
         Long start = DateFormat.stringToMillis("2023-01-01 00:00:00");
         Long end = DateFormat.stringToMillis("2025-01-01 00:00:00");
-        String cubeName = "ci_left_join_cube";
+        String cubeName = CUBE_NAME;
         cleanupSegments(cubeName);
         buildCuboid(cubeName, new SegmentRange.TSRange(start, end));
 
@@ -84,35 +83,31 @@ public class NFilePruningTest extends LocalWithSparkSessionTest {
     }
 
     @Test
-    public void testSegPruningWithStringDate() throws Exception {
+    public void testSegPruning() throws Exception {
         // build three segs
         // [2009-01-01 00:00:00, 2011-01-01 00:00:00)
         // [2011-01-01 00:00:00, 2013-01-01 00:00:00)
         // [2013-01-01 00:00:00, 2015-01-01 00:00:00)
-        buildMultiSegs("ci_left_join_cube");
+        buildMultiSegs(CUBE_NAME);
         populateSSWithCSVData(getTestConfig(), getProject(), SparderContext.getSparkSession());
+        testSegPruningWithStringDate();
+        testSegPruningWithStringTimeStamp();
+    }
+
+    private void testSegPruningWithStringDate() throws Exception {
         String no_pruning1 = "select count(*) from TEST_KYLIN_FACT";
         String no_pruning2 = "select count(*) from TEST_KYLIN_FACT where CAL_DT > '2010-01-01' and CAL_DT < '2015-01-01'";
 
         String seg_pruning1 = "select count(*) from TEST_KYLIN_FACT where CAL_DT < '2013-01-01'";
         String seg_pruning2 = "select count(*) from TEST_KYLIN_FACT where CAL_DT > '2013-01-01'";
+
         assertResultsAndScanFiles(no_pruning1, 3);
         assertResultsAndScanFiles(no_pruning2, 3);
         assertResultsAndScanFiles(seg_pruning1, 2);
         assertResultsAndScanFiles(seg_pruning2, 1);
     }
 
-    @Test
-    @Ignore("Ignore with the introduce of Parquet storage")
     public void testSegPruningWithStringTimeStamp() throws Exception {
-        // build three segs
-        // [2009-01-01 00:00:00, 2011-01-01 00:00:00)
-        // [2011-01-01 00:00:00, 2013-01-01 00:00:00)
-        // [2013-01-01 00:00:00, 2015-01-01 00:00:00)
-        buildMultiSegs("ci_left_join_cube");
-        populateSSWithCSVData(getTestConfig(), getProject(), SparderContext.getSparkSession());
-        String base = "select count(*)  FROM TEST_KYLIN_FACT LEFT JOIN TEST_ORDER ON TEST_KYLIN_FACT.ORDER_ID = TEST_ORDER.ORDER_ID ";
-
         String and_pruning0 = base
                 + "where CAL_DT > '2011-01-01 00:00:00' and CAL_DT < '2013-01-01 00:00:00'";
         String and_pruning1 = base
@@ -159,7 +154,7 @@ public class NFilePruningTest extends LocalWithSparkSessionTest {
     public void testShardPruning() throws Exception {
         System.setProperty("kap.storage.columnar.shard-rowcount", "100");
         try {
-            buildMultiSegs("ci_left_join_cube");
+            buildMultiSegs(CUBE_NAME);
 
             populateSSWithCSVData(getTestConfig(), getProject(), KylinSparkEnv.getSparkSession());
 
@@ -177,7 +172,7 @@ public class NFilePruningTest extends LocalWithSparkSessionTest {
     public void testPruningWithChineseCharacter() throws Exception {
         System.setProperty("kap.storage.columnar.shard-rowcount", "1");
         try {
-            fullBuildCube("ci_left_join_cube");
+            fullBuildCube(CUBE_NAME);
             populateSSWithCSVData(getTestConfig(), getProject(), KylinSparkEnv.getSparkSession());
 
             String chinese0 = "select count(*) from TEST_MEASURE where name1 = '中国'";

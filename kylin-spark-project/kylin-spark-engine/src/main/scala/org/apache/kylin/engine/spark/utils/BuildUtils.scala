@@ -21,14 +21,14 @@ package org.apache.kylin.engine.spark.utils
 import java.io.IOException
 import java.util.Locale
 
-import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.yarn.conf.YarnConfiguration
-import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.engine.spark.NSparkCubingEngine.NSparkCubingStorage
+import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity
-import org.apache.kylin.engine.spark.metadata.FunctionDesc
+import org.apache.kylin.engine.spark.metadata.{FunctionDesc, SegmentInfo}
 import org.apache.kylin.measure.bitmap.BitmapMeasureType
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
@@ -100,5 +100,9 @@ object BuildUtils extends Logging {
       .map(entry => (entry.getKey.asInstanceOf[String].substring("spark.hadoop.".length), entry.getValue.asInstanceOf[String]))
       .foreach(tp => conf.set(tp._1, tp._2))
     conf
+  }
+
+  def getColumnIndexMap(segInfo: SegmentInfo): Map[String, String] = {
+    segInfo.allColumns.map(column => (column.id.toString, column.columnName)).toMap
   }
 }
