@@ -271,9 +271,6 @@ public class NSparkExecutable extends AbstractExecutable {
 
     protected Map<String, String> getSparkConfigOverride(KylinConfig config) {
         Map<String, String> sparkConfigOverride = config.getSparkConfigOverride();
-        if (!sparkConfigOverride.containsKey("spark.driver.memory")) {
-            //sparkConfigOverride.put("spark.driver.memory", computeStepDriverMemory() + "m");
-        }
         if (UserGroupInformation.isSecurityEnabled()) {
             sparkConfigOverride.put("spark.hadoop.hive.metastore.sasl.enabled", "true");
         }
@@ -301,7 +298,6 @@ public class NSparkExecutable extends AbstractExecutable {
             }
         }
 
-        sb.append(String.format(Locale.ROOT, " -Dkap.hdfs.working.dir=%s ", hdfsWorkingDir));
         sb.append(String.format(Locale.ROOT, " -Dspark.driver.log4j.appender.hdfs.File=%s ", sparkDriverHdfsLogPath));
         sb.append(String.format(Locale.ROOT, " -Dspark.driver.rest.server.ip=%s ", serverIp));
         sb.append(String.format(Locale.ROOT, " -Dspark.driver.param.taskId=%s ", getId()));

@@ -20,20 +20,23 @@ package org.apache.kylin.engine.spark;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-import java.io.File;
+import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.spark.builder.CreateFlatTable;
 import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.engine.spark.job.NSparkCubingStep;
 import org.apache.kylin.engine.spark.job.NSparkMergingJob;
 import org.apache.kylin.engine.spark.job.UdfManager;
-import org.apache.hadoop.util.Shell;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.engine.spark.metadata.MetadataConverter;
 import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -54,19 +57,19 @@ import org.apache.spark.sql.internal.StaticSQLConf;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spark_project.guava.collect.Sets;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
-import java.util.TimeZone;
 import java.util.UUID;
 
 public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase implements Serializable {
@@ -81,7 +84,8 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
     protected CubeManager cubeMgr;
     protected ExecutableManager execMgr;
 
-    protected void init() throws Exception {
+    @Before
+    public void setup() throws SchedulerException {
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
         overwriteSystemProp("calcite.keep-in-clause", "true");
         overwriteSystemProp("kylin.metadata.distributed-lock-impl", "org.apache.kylin.engine.spark.utils.MockedDistributedLock$MockedFactory");
@@ -94,6 +98,13 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         config = KylinConfig.getInstanceFromEnv();
         cubeMgr = CubeManager.getInstance(config);
         execMgr = ExecutableManager.getInstance(config);
+    }
+
+    @After
+    public void after() {
+        DefaultScheduler.destroyInstance();
+        this.cleanupTestMetadata();
+        restoreAllSystemProp();
     }
 
     protected void overwriteSystemProp(String key, String value) {
@@ -146,7 +157,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         cubeMgr.updateCubeDropSegments(cube, cube.getSegments());
     }
 
-    protected void buildCuboid(String cubeName, SegmentRange.TSRange tsRange) throws Exception {
+    public ExecutableState buildCuboid(String cubeName, SegmentRange.TSRange tsRange) throws Exception {
         CubeInstance cube = cubeMgr.getCube(cubeName);
 
         // ready cube, segment, cuboid layout
@@ -160,24 +171,23 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         // launch the job
         execMgr.addJob(job);
 
-        if (!Objects.equals(wait(job), ExecutableState.SUCCEED)) {
-            throw new IllegalStateException();
-        }
+        return wait(job);
     }
 
-    protected void mergeSegments(String cubeName, long start, long end, boolean force) throws Exception {
-        CubeInstance cube = cubeMgr.getCube(cubeName);
+    protected ExecutableState mergeSegments(String cubeName, long start, long end, boolean force) throws Exception {
+        CubeInstance cube = cubeMgr.reloadCube(cubeName);
         CubeSegment mergeSegment = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(start, end), null, force);
-        NSparkMergingJob emptyMergeJob = NSparkMergingJob.merge(mergeSegment,  "ADMIN");
-        execMgr.addJob(emptyMergeJob);
-        Assert.assertEquals(ExecutableState.SUCCEED, wait(emptyMergeJob));
+        NSparkMergingJob mergeJob = NSparkMergingJob.merge(mergeSegment,  "ADMIN");
+        execMgr.addJob(mergeJob);
+        return wait(mergeJob);
     }
 
     protected void fullBuildCube(String cubeName) throws Exception {
         Assert.assertTrue(config.getHdfsWorkingDirectory().startsWith("file:"));
         // cleanup all segments first
         cleanupSegments(cubeName);
-        buildCuboid(cubeName, null);
+        ExecutableState state = buildCuboid(cubeName, null);
+        Assert.assertEquals(ExecutableState.SUCCEED, state);
     }
 
     protected void restoreAllSystemProp() {
@@ -242,20 +252,31 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
     public void buildMultiSegs(String cubeName) throws Exception {
         cleanupSegments(cubeName);
 
-        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
-        f.setTimeZone(TimeZone.getTimeZone("GMT"));
-
-        long start = f.parse("2009-01-01 00:00:00").getTime();
-        long end = f.parse("2011-01-01 00:00:00").getTime();
+        long start = dateToLong("2009-01-01 00:00:00");
+        long end = dateToLong("2011-01-01 00:00:00");
         buildCuboid(cubeName, new SegmentRange.TSRange(start, end));
 
-        start = f.parse("2011-01-01 00:00:00").getTime();
-        end = f.parse("2013-01-01 00:00:00").getTime();
+        start = dateToLong("2011-01-01 00:00:00");
+        end = dateToLong("2013-01-01 00:00:00");
         buildCuboid(cubeName, new SegmentRange.TSRange(start, end));
 
-        start = f.parse("2013-01-01 00:00:00").getTime();
-        end = f.parse("2015-01-01 00:00:00").getTime();
+        start = dateToLong("2013-01-01 00:00:00");
+        end = dateToLong("2015-01-01 00:00:00");
         buildCuboid(cubeName, new SegmentRange.TSRange(start, end));
+    }
+
+    protected Dataset<Row> initFlatTable(CubeSegment segment) {
+        System.out.println(getTestConfig().getMetadataUrl());
+
+        CreateFlatTable flatTable = new CreateFlatTable(
+                MetadataConverter.getSegmentInfo(segment.getCubeInstance(), segment.getUuid(),
+                        segment.getName()), null, ss, null);
+        Dataset<Row> ds = flatTable.generateDataset(false, true);
+        return ds;
+    }
+
+    protected long dateToLong(String date) {
+        return DateFormat.stringToMillis(date);
     }
 
     public String getProject() {

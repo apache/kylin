@@ -23,15 +23,13 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
-import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
+import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.spark.sql.KylinSparkEnv;
 import org.apache.spark.sql.catalyst.analysis.NoSuchTableException;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -45,9 +43,9 @@ public class NBadQueryAndPushDownTest extends LocalWithSparkSessionTest {
     private static final String PUSHDOWN_RUNNER_KEY = "kylin.query.pushdown.runner-class-name";
     private final static String DEFAULT_PROJECT_NAME = "default";
 
-    @Before
-    public void setup() throws Exception {
-        super.init();
+    @Override
+    public void setup() throws SchedulerException {
+        super.setup();
     }
 
     @Override
@@ -55,15 +53,13 @@ public class NBadQueryAndPushDownTest extends LocalWithSparkSessionTest {
         return DEFAULT_PROJECT_NAME;
     }
 
-    @After
-    public void teardown() {
-        DefaultScheduler.destroyInstance();
-        super.cleanupTestMetadata();
-        System.clearProperty("kylin.job.scheduler.poll-interval-second");
+    @Override
+    public void after() {
+        super.after();
     }
 
     @Test
-    public void testTableNotFoundInDatabase() throws Exception {
+    public void testTableNotFoundInDatabase() {
         //from tpch database
         final String sql = "select * from lineitem where l_orderkey = o.o_orderkey and l_commitdate < l_receiptdate";
         KylinConfig.getInstanceFromEnv().setProperty(PUSHDOWN_RUNNER_KEY,
@@ -77,7 +73,7 @@ public class NBadQueryAndPushDownTest extends LocalWithSparkSessionTest {
     }
 
     @Test
-    public void testPushDownToNonExistentDB() throws Exception {
+    public void testPushDownToNonExistentDB() {
         //from tpch database
         try {
             final String sql = "select * from lineitem where l_orderkey = o.o_orderkey and l_commitdate < l_receiptdate";

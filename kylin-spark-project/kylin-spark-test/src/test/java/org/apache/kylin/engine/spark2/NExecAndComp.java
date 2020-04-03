@@ -25,8 +25,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.engine.spark2.auto.TestScenario;
-import org.apache.kylin.query.KylinTestBase;
+import org.apache.kylin.engine.spark2.utils.QueryUtil;
+import org.apache.kylin.engine.spark2.utils.RecAndQueryCompareUtil.CompareEntity;
 import org.apache.kylin.query.QueryConnection;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.spark.sql.Dataset;
@@ -52,8 +52,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.apache.kylin.engine.spark2.utils.RecAndQueryCompareUtil.CompareEntity;
-import org.apache.kylin.engine.spark2.utils.QueryUtil;
 
 public class NExecAndComp {
     private static final Logger logger = LoggerFactory.getLogger(NExecAndComp.class);
@@ -101,43 +99,8 @@ public class NExecAndComp {
         execAndCompareNew(queries, prj, compareLevel, joinType, null);
     }
 
-    public static void execAndCompareDynamic(TestScenario testScenario, String prj, String joinType,
-                                             Map<String, CompareEntity> recAndQueryResult) {
-
-        for (Pair<String, String> path2Sql : testScenario.getQueries()) {
-            try {
-                logger.info("Exec and compare query ({}) :{}", joinType, path2Sql.getFirst());
-                String sql = changeJoinType(path2Sql.getSecond(), joinType);
-                long startTime = System.currentTimeMillis();
-                List<String> params = KylinTestBase.getParameterFromFile(new File(path2Sql.getFirst().trim()));
-
-                recAndQueryResult.putIfAbsent(path2Sql.getSecond(), new CompareEntity());
-                final CompareEntity entity = recAndQueryResult.get(path2Sql.getSecond());
-                entity.setSql(path2Sql.getSecond());
-                Dataset<Row> cubeResult = queryFromCube(prj, sql, params);
-
-                Dataset<Row> sparkResult = queryWithSpark(prj, path2Sql.getSecond(), path2Sql.getFirst());
-                List<Row> sparkRows = sparkResult.toJavaRDD().collect();
-                List<Row> kapRows = SparkQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
-                if (!compareResults(normRows(sparkRows), normRows(kapRows), testScenario.getCompareLevel())) {
-                    logger.error("Failed on compare query ({}) :{}", joinType, sql);
-                    throw new IllegalArgumentException("query (" + joinType + ") :" + sql + " result not match");
-                }
-
-                entity.setOlapContexts(OLAPContext.getThreadLocalContexts());
-                OLAPContext.clearThreadLocalContexts();
-                addQueryPath(recAndQueryResult, path2Sql, sql);
-                logger.info("The query ({}) : {} cost {} (ms)", joinType, sql, System.currentTimeMillis() - startTime);
-
-            } catch (IOException e) {
-                throw new IllegalArgumentException(
-                        "meet ERROR when running query (" + joinType + ") :\n" + path2Sql.getSecond(), e);
-            }
-        }
-    }
-
     public static void execAndCompareQueryList(List<String> queries, String prj, CompareLevel compareLevel,
-            String joinType) {
+                                               String joinType) {
         List<Pair<String, String>> transformed = queries.stream().map(q -> Pair.newPair("", q))
                 .collect(Collectors.toList());
         execAndCompareNew(transformed, prj, compareLevel, joinType, null);
@@ -206,7 +169,7 @@ public class NExecAndComp {
     }
 
     private static void addQueryPath(Map<String, CompareEntity> recAndQueryResult, Pair<String, String> query,
-            String modifiedSql) {
+                                     String modifiedSql) {
         if (recAndQueryResult == null) {
             return;
         }
@@ -218,7 +181,7 @@ public class NExecAndComp {
     @Deprecated
     static void execCompareQueryAndCompare(List<Pair<String, String>> queries, String prj, String joinType) {
         throw new IllegalStateException(
-                "The method has deprecated, please call io.kyligence.kap.newten.NExecAndComp.execAndCompareNew");
+                "The method has deprecated, please call org.apache.kylin.engine.spark2.NExecAndComp.execAndCompareNew");
     }
 
     private static Dataset<Row> queryWithKap(String prj, String joinType, Pair<String, String> pair,
@@ -425,11 +388,6 @@ public class NExecAndComp {
             final String[] splits = pair.getFirst().split(File.separator);
             return !excludes.contains(splits[splits.length - 1]);
         }).collect(Collectors.toList());
-    }
-
-    public static Dataset<Row> queryFromCube(String prj, String sqlText, List<String> parameters) {
-        sqlText = QueryUtil.massageSql(sqlText, prj, 0, 0, "DEFAULT", true);
-        return sql(prj, sqlText, parameters);
     }
 
     public static Dataset<Row> queryFromCube(String prj, String sqlText) {

@@ -22,19 +22,17 @@ import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
-import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
+import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.apache.spark.sql.KylinSparkEnv;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.catalyst.expressions.In;
 import org.apache.spark.sql.catalyst.plans.logical.Aggregate;
 import org.apache.spark.sql.catalyst.plans.logical.Filter;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import scala.Option;
@@ -49,16 +47,14 @@ import java.util.TimeZone;
 @Ignore("Ignore with the introduce of Parquet storage")
 public class NExactlyMatchTest extends LocalWithSparkSessionTest {
 
-    @Before
-    public void setup() throws Exception {
-        super.init();
+    @Override
+    public void setup() throws SchedulerException {
+        super.setup();
     }
 
-    @After
-    public void after() throws Exception {
-        DefaultScheduler.destroyInstance();
-        cleanupTestMetadata();
-        System.clearProperty("kylin.job.scheduler.poll-interval-second");
+    @Override
+    public void after() {
+        super.after();
     }
 
     @Override

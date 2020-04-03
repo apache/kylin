@@ -18,16 +18,15 @@
 
 package org.apache.kylin.engine.spark.builder
 
-import java.util
 import java.util.Locale
 
-import com.google.common.collect.{Maps, Sets}
+import com.google.common.collect.Sets
+import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper.{ENCODE_SUFFIX, _}
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil._
-import org.apache.kylin.engine.spark.utils.SparkDataSource._
-import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree
-import org.apache.kylin.engine.spark.metadata.{ColumnDesc, ComputedColumnDesc, JoinDesc, SegmentInfo, TableDesc}
+import org.apache.kylin.engine.spark.metadata._
+import org.apache.kylin.engine.spark.utils.SparkDataSource._
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}

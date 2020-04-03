@@ -22,14 +22,13 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.spark.NSparkCubingEngine;
-import org.apache.kylin.engine.spark.builder.CreateFlatTable;
 import org.apache.kylin.engine.spark.job.CuboidAggregator;
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil;
 import org.apache.kylin.engine.spark.metadata.FunctionDesc;
 import org.apache.kylin.engine.spark.metadata.MetadataConverter;
 import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
-import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
+import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.spark.api.java.function.MapFunction;
@@ -44,8 +43,6 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.udaf.PreciseCountDistinct;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.roaringbitmap.longlong.Roaring64NavigableMap;
 import org.slf4j.Logger;
@@ -59,14 +56,12 @@ import java.util.Set;
 public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
 
     private static final Logger logger = LoggerFactory.getLogger(NManualBuildAndQueryTest.class);
-
     private static final String DEFAULT_PROJECT = "default";
-
     private static StructType OUT_SCHEMA = null;
 
-    @Before
-    public void setup() throws Exception {
-        super.init();
+    @Override
+    public void setup() throws SchedulerException {
+        super.setup();
         System.setProperty("spark.local", "true");
         System.setProperty("noBuild", "false");
         System.setProperty("isDeveloperMode", "false");
@@ -74,12 +69,10 @@ public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
 
     @After
     public void after() {
-        DefaultScheduler.destroyInstance();
-        super.cleanupTestMetadata();
-
         System.clearProperty("noBuild");
         System.clearProperty("isDeveloperMode");
         System.clearProperty("spark.local");
+        super.after();
     }
 
     @Override
@@ -88,20 +81,18 @@ public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
     }
 
     @Test
-    @Ignore("Ignore with the introduce of Parquet storage")
     public void testBasics() throws Exception {
         buildCubes();
-        //compareCuboidParquetWithSparkSql("89af4ee2-2cdb-4b07-b39e-4c29856309aa");
-        //compareCuboidParquetWithSparkSql("741ca86a-1f13-46da-a59f-95fb68615e3a");
+        compareCuboidParquetWithSparkSql("ci_left_join_cube");
     }
 
-    private void compareCuboidParquetWithSparkSql(String dfName) {
+    private void compareCuboidParquetWithSparkSql(String cubeName) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
         CubeManager cubeMgr = CubeManager.getInstance(config);
         Assert.assertTrue(config.getHdfsWorkingDirectory().startsWith("file:"));
 
-        CubeInstance cube = cubeMgr.getCube(dfName);
+        CubeInstance cube = cubeMgr.getCube(cubeName);
         for (CubeSegment segment : cube.getSegments()) {
             List<LayoutEntity> dataLayouts = MetadataConverter.extractEntityList2JavaList(segment.getCubeInstance());
 
@@ -116,7 +107,7 @@ public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
                             }
                         }, NSparkCubingEngine.NSparkCubingStorage.class)
                         .getFrom(PathManager.getParquetStoragePath(segment.getConfig(),
-                                segment.getCubeInstance().getId(),
+                                segment.getCubeInstance().getName(),
                                 segment.getName(), String.valueOf(cuboid.getId())),
                                 ss);
                 layoutDataset = layoutDataset.select(NSparkCubingUtil.getColumns(rowKeys, chooseMeas(cuboid)))
@@ -207,18 +198,5 @@ public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
         OUT_SCHEMA = new StructType(outStructFieldList);
 
         return index;
-    }
-
-    private Dataset<Row> initFlatTable(CubeSegment segment) {
-        System.out.println(getTestConfig().getMetadataUrl());
-
-        CreateFlatTable flatTable = new CreateFlatTable(
-                MetadataConverter.getSegmentInfo(segment.getCubeInstance(),
-                        segment.getUuid(), segment.getName()),
-                null,
-                ss,
-                null);
-        Dataset<Row> ds = flatTable.generateDataset(false, true);
-        return ds;
     }
 }
