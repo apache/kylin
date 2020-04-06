@@ -42,6 +42,7 @@
         <module>kylin-spark-engine</module>
         <module>kylin-spark-query</module>
         <module>kylin-spark-test</module>
+        <module>kylin-spark-classloader</module>
     </modules>
 
     <dependencies>
