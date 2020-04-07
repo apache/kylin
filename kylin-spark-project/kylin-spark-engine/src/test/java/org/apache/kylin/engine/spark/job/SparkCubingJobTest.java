@@ -39,6 +39,7 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.storage.StorageFactory;
@@ -53,6 +54,7 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.udaf.PreciseCountDistinct;
 import org.junit.Assert;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.roaringbitmap.longlong.Roaring64NavigableMap;
@@ -80,6 +82,13 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
             }
         }
     }
+
+    @After
+    public void after() {
+        DefaultScheduler.destroyInstance();
+        super.cleanupTestMetadata();
+    }
+
 
     @Test
     public void testBuildJob() throws Exception {

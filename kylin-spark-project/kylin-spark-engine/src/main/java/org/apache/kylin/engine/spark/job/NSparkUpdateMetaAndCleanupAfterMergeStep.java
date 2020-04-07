@@ -48,7 +48,7 @@ public class NSparkUpdateMetaAndCleanupAfterMergeStep extends NSparkExecutable {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         CubeInstance cube = CubeManager.getInstance(config).getCubeByUuid(cubeId);
 
-        updateMetadataAterMerge(cubeId);
+        updateMetadataAfterMerge(cubeId);
 
         for (String segmentName : segments) {
             String path = config.getHdfsWorkingDirectory() + cube.getProject() + "/parquet/" + cube.getName() + "/" + segmentName;
@@ -62,7 +62,7 @@ public class NSparkUpdateMetaAndCleanupAfterMergeStep extends NSparkExecutable {
         return ExecuteResult.createSucceed();
     }
 
-    private void updateMetadataAterMerge(String cubeId) {
+    private void updateMetadataAfterMerge(String cubeId) {
         String buildStepUrl = getParam(MetadataConstants.P_OUTPUT_META_URL);
         KylinConfig buildConfig = KylinConfig.createKylinConfig(this.getConfig());
         buildConfig.setMetadataUrl(buildStepUrl);

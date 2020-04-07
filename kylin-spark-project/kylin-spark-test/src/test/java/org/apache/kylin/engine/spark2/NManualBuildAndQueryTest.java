@@ -57,7 +57,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-@Ignore("see io.kyligence.kap.ut.TestQueryAndBuild")
 @SuppressWarnings("serial")
 public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
 

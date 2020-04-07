@@ -33,7 +33,6 @@ import org.apache.kylin.job.BaseTestExecutable;
 import org.apache.kylin.job.ErrorTestExecutable;
 import org.apache.kylin.job.FailedTestExecutable;
 import org.apache.kylin.job.FiveSecondSucceedTestExecutable;
-import org.apache.kylin.job.NoErrorStatusExecutable;
 import org.apache.kylin.job.RunningTestExecutable;
 import org.apache.kylin.job.SelfStopExecutable;
 import org.apache.kylin.job.SucceedTestExecutable;
@@ -175,19 +174,6 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         }, 0, 1, TimeUnit.SECONDS);
         assertFalse("countDownLatch2 should NOT reach zero in 15 secs", countDownLatch2.await(7, TimeUnit.SECONDS));
         assertFalse("future2 should has been stopped", future2.cancel(true));
-    }
-
-    @Test
-    public void testMetaStoreRecover() throws Exception {
-        logger.info("testMetaStoreRecover");
-        NoErrorStatusExecutable job = new NoErrorStatusExecutable();
-        ErrorTestExecutable task = new ErrorTestExecutable();
-        job.addTask(task);
-        execMgr.addJob(job);
-        Thread.sleep(2500);
-        runningJobToError(job.getId());
-        waitForJobFinish(job.getId(), MAX_WAIT_TIME);
-        Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(job.getId()).getState());
     }
 
     @Test

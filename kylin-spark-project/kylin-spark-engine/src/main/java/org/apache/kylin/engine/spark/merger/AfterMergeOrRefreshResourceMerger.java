@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.spark.merger;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -65,6 +66,9 @@ public class AfterMergeOrRefreshResourceMerger extends MetadataMerger {
         toUpdateSegments.add(mergedSegment);
 
         List<CubeSegment> toRemoveSegments = getToRemoveSegs(distCube, mergedSegment);
+        Collections.sort(toRemoveSegments);
+        makeSnapshotForNewSegment(mergedSegment, toRemoveSegments);
+
         if (String.valueOf(JobTypeEnum.INDEX_MERGE).equals(jobType)) {
             Optional<Long> reduce = toRemoveSegments.stream().map(CubeSegment::getSizeKB).filter(size -> size != -1)
                     .reduce(Long::sum);
@@ -106,6 +110,13 @@ public class AfterMergeOrRefreshResourceMerger extends MetadataMerger {
         }
 
         return toRemoveSegs;
+    }
+
+    private void makeSnapshotForNewSegment(CubeSegment newSeg, List<CubeSegment> mergingSegments) {
+        CubeSegment lastSeg = mergingSegments.get(mergingSegments.size() - 1);
+        for (Map.Entry<String, String> entry : lastSeg.getSnapshots().entrySet()) {
+            newSeg.putSnapshotResPath(entry.getKey(), entry.getValue());
+        }
     }
 
     @Override

@@ -22,9 +22,7 @@ import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
-import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
-import org.apache.kylin.job.lock.MockJobLock;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -37,6 +35,7 @@ import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.Option;
 import scala.runtime.AbstractFunction1;
@@ -47,17 +46,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
+@Ignore("Ignore with the introduce of Parquet storage")
 public class NExactlyMatchTest extends LocalWithSparkSessionTest {
 
     @Before
     public void setup() throws Exception {
-        System.setProperty("kylin.job.scheduler.poll-interval-second", "1");
-        this.createTestMetadata("src/test/resources/ut_meta/agg_exact_match");
-        DefaultScheduler scheduler = DefaultScheduler.getInstance();
-        scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()), new MockJobLock());
-        if (!scheduler.hasStarted()) {
-            throw new RuntimeException("scheduler has not been started");
-        }
+        super.init();
     }
 
     @After
@@ -69,7 +63,7 @@ public class NExactlyMatchTest extends LocalWithSparkSessionTest {
 
     @Override
     public String getProject() {
-        return "agg_match";
+        return "default";
     }
 
     @Test

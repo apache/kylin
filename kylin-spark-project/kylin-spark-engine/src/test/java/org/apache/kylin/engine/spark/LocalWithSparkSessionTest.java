@@ -117,7 +117,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         // For sinai_poc/query03, enable implicit cross join conversion
         sparkConf.set("spark.sql.crossJoin.enabled", "true");
 
-        ss = SparkSession.builder().config(sparkConf).enableHiveSupport().getOrCreate();
+        ss = SparkSession.builder().config(sparkConf).getOrCreate();
         KylinSparkEnv.setSparkSession(ss);
         UdfManager.create(ss);
 
