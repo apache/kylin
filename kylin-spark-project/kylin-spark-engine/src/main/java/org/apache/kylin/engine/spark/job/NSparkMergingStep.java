@@ -54,11 +54,6 @@ public class NSparkMergingStep extends NSparkExecutable {
         }
     }
 
-    /*@Override
-    public void mergerMetadata(MetadataMerger merger) {
-        merger.merge(this);
-    }*/
-
     @Override
     public boolean needMergeMetadata() {
         return true;

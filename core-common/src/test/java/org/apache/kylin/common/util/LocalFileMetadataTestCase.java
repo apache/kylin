@@ -26,8 +26,8 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 
 public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
-
-    public static final String LOCALMETA_TEST_DATA = "../examples/test_case_data/parquet_test";
+    public static final String LOCALMETA_TEST_DATA = "../examples/test_case_data/localmeta";
+    public static final String LOCALMETA_TEST_DATA_FOR_PARQUET = "../examples/test_case_data/parquet_test";
     public static final String LOCALMETA_TEMP_DATA = "../examples/test_metadata/";
 
     @Override

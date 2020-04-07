@@ -21,31 +21,51 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
+import org.apache.kylin.engine.spark.metadata.MetadataConverter;
+import org.apache.kylin.engine.spark.metadata.TableDesc;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.KylinSparkEnv;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
+import scala.collection.JavaConversions;
 
 public class BuildAndQueryEmptySegmentsTest extends LocalWithSparkSessionTest {
 
     private static final String CUBE_NAME1 = "ci_inner_join_cube";
 
     private static final String SQL = "select\n" + " count(1) as TRANS_CNT \n" + " from test_kylin_fact \n"
-            + " group by trans_id";
+            + " group by ORDER_ID";
 
-    private static final String SQL_DERIVED = "SELECT \n" + "test_cal_dt.season_beg_dt\n"
-            + "FROM test_kylin_fact LEFT JOIN edw.test_cal_dt as test_cal_dt \n"
+    private static final String SQL_DERIVED = "SELECT \n" + "test_cal_dt.WEEK_BEG_DT\n"
+            + "FROM test_kylin_fact inner JOIN edw.test_cal_dt as test_cal_dt \n"
             + "ON test_kylin_fact.cal_dt=test_cal_dt.cal_dt \n"
             + "WHERE test_kylin_fact.cal_dt>'2009-06-01' and test_kylin_fact.cal_dt<'2013-01-01' \n"
-            + "GROUP BY test_cal_dt.season_beg_dt";
+            + "GROUP BY test_cal_dt.WEEK_BEG_DT";
 
     @Before
     public void init() throws Exception {
         super.init();
+        CubeInstance cube = cubeMgr.getCube(CUBE_NAME1);
+        TableDesc factTable = MetadataConverter.extractFactTable(cube);
+        TableDesc lookupTable = null;
+
+        for (TableDesc tableDesc: JavaConversions.asJavaCollection(MetadataConverter.extractLookupTable(cube))) {
+            if (tableDesc.tableName().equalsIgnoreCase("test_cal_dt")) {
+                lookupTable = tableDesc;
+                break;
+            }
+        }
+        KylinSparkEnv.getSparkSession().read().schema(factTable.toSchema()).csv("../../examples/test_case_data/parquet_test/data/DEFAULT.TEST_KYLIN_FACT.csv")
+                .createOrReplaceTempView("TEST_KYLIN_FACT");
+        KylinSparkEnv.getSparkSession().read().schema(lookupTable.toSchema()).csv("../../examples/test_case_data/parquet_test/data/EDW.TEST_CAL_DT.csv")
+                .createOrReplaceTempView("TEST_CAL_DT");
     }
 
     @After
@@ -56,6 +76,7 @@ public class BuildAndQueryEmptySegmentsTest extends LocalWithSparkSessionTest {
     }
 
     @Test
+    @Ignore("Ignore with the introduce of Parquet storage")
     public void testEmptySegments() throws Exception {
         cleanupSegments(CUBE_NAME1);
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);

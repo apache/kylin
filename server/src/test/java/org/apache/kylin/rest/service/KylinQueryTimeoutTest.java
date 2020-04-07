@@ -40,8 +40,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.rules.ExpectedException;
 
+@Ignore("Ignore with the introduce of Parquet storage")
 public class KylinQueryTimeoutTest extends LocalFileMetadataTestCase {
 
     @Rule

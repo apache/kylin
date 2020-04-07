@@ -21,14 +21,14 @@ package org.apache.kylin.query.pushdown;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.metadata.cube.StructField;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
-import org.apache.kylin.source.adhocquery.IPushDownRunner;
+import org.apache.kylin.source.adhocquery.AbstractPushdownRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Locale;
 
-public class PushDownRunnerSparkImpl implements IPushDownRunner {
+public class PushDownRunnerSparkImpl extends AbstractPushdownRunner {
     public static final Logger logger = LoggerFactory.getLogger(PushDownRunnerSparkImpl.class);
 
     @Override
@@ -66,11 +66,6 @@ public class PushDownRunnerSparkImpl implements IPushDownRunner {
     }
 
     public String getName() {
-        return "HIVE";
-    }
-
-    @Override
-    public String convertSql(KylinConfig kylinConfig, String sql, String project, String defaultSchema, boolean isPrepare) {
-        return null;
+        return "SPARK-SQL";
     }
 }

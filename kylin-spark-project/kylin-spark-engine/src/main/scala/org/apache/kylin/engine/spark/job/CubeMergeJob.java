@@ -75,28 +75,11 @@ public class CubeMergeJob extends SparkApplication {
             SegmentInfo segInfo = ManagerHub.getSegmentInfo(config, getParam(MetadataConstants.P_CUBE_ID), segment.getUuid());
             mergingSegInfos.add(segInfo);
         }
-
-        //mergeSnapshot(cubeId, newSegmentId);
-
         //merge and save segments
         mergeSegments(cubeId, newSegmentId);
     }
 
-    private void mergeSnapshot(String cubeId, String segmentId) throws IOException {
-        final CubeManager cubeManager = CubeManager.getInstance(config);
-        final CubeInstance cube = cubeManager.getCubeByUuid(cubeId);
 
-        Collections.sort(mergingSegments);
-        infos.clearMergingSegments();
-        infos.recordMergingSegments(mergingSegInfos);
-
-        CubeInstance cubeCopy = cube.latestCopyForWrite();
-        CubeSegment segCopy = cubeCopy.getSegmentById(segmentId);
-        makeSnapshotForNewSegment(segCopy, mergingSegments);
-        CubeUpdate cubeUpdate = new CubeUpdate(cubeCopy);
-        cubeUpdate.setToUpdateSegs(segCopy);
-        cubeManager.updateCube(cubeUpdate);
-    }
 
     private void makeSnapshotForNewSegment(CubeSegment newSeg, List<CubeSegment> mergingSegments) {
         CubeSegment lastSeg = mergingSegments.get(mergingSegments.size() - 1);

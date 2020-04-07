@@ -56,7 +56,7 @@ public class PushDownRunnerSparkImplTest extends LocalFileMetadataTestCase {
         schema = schema.add("PRICE", DataTypes.createDecimalType(19, 4), false);
         schema = schema.add("ITEM_COUNT", DataTypes.DoubleType, false);
         schema = schema.add("TEST_COUNT_DISTINCT_BITMAP", DataTypes.StringType, false);
-        ss.read().schema(schema).csv("../../examples/test_case_data/localmeta_n/data/DEFAULT.TEST_KYLIN_FACT.csv")
+        ss.read().schema(schema).csv("../../examples/test_case_data/parquet_test/data/DEFAULT.TEST_KYLIN_FACT.csv")
                 .createOrReplaceTempView("TEST_KYLIN_FACT");
     }
 
@@ -115,7 +115,7 @@ public class PushDownRunnerSparkImplTest extends LocalFileMetadataTestCase {
 
         Assert.assertEquals(10000, returnRows.size());
         Assert.assertEquals(11, returnColumnMeta.size());
-        Assert.assertEquals("HIVE", pushDownRunnerSpark.getName());
+        Assert.assertEquals("SPARK-SQL", pushDownRunnerSpark.getName());
     }
 
     @Test
@@ -131,7 +131,7 @@ public class PushDownRunnerSparkImplTest extends LocalFileMetadataTestCase {
 
         Assert.assertEquals(10000, returnRows.size());
         Assert.assertEquals(1, returnColumnMeta.size());
-        Assert.assertEquals("HIVE", pushDownRunnerSpark.getName());
+        Assert.assertEquals("SPARK-SQL", pushDownRunnerSpark.getName());
     }
 
     @Test
@@ -147,7 +147,7 @@ public class PushDownRunnerSparkImplTest extends LocalFileMetadataTestCase {
 
         Assert.assertEquals(1, returnRows.size());
         Assert.assertEquals(2, returnColumnMeta.size());
-        Assert.assertEquals("HIVE", pushDownRunnerSpark.getName());
+        Assert.assertEquals("SPARK-SQL", pushDownRunnerSpark.getName());
     }
 
     public void createTestMetadata() {
