@@ -1865,8 +1865,9 @@
                 <exclude>examples/sample_cube/template/**</exclude>
                 <exclude>examples/test_case_data/localmeta/**</exclude>
                 <exclude>examples/test_case_data/parquet_test/**</exclude>
-                <exclude>examples/test_metadata/**</exclude>
-
+                <exclude>examples/test_case_data/localmeta_n/**</exclude>
+                <exclude>stream-core/testCube/.cp/**</exclude>
+                <exclude>stream-core/stream_index/test_streaming_v2_cube/**</exclude>
                 <!-- generated files -->
                 <exclude>**/target/**</exclude>
                 <exclude>lib/**</exclude>
