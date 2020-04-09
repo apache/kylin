@@ -39,6 +39,7 @@ import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.msg.Message;
@@ -147,8 +148,24 @@ public class ModelService extends BasicService {
     public DataModelDesc updateModelAndDesc(String project, DataModelDesc desc) throws IOException {
         aclEvaluate.checkProjectWritePermission(project);
         validateModel(project, desc);
+        checkModelCompatible(project, desc);
         getDataModelManager().updateDataModelDesc(desc);
         return desc;
+    }
+
+    public void checkModelCompatible(String project, DataModelDesc dataModalDesc) {
+        ProjectInstance prjInstance = getProjectManager().getProject(project);
+        if (prjInstance == null) {
+            throw new BadRequestException("Project " + project + " does not exist");
+        }
+        if (!prjInstance.getConfig().isModelSchemaUpdaterCheckerEnabled()) {
+            logger.info("Skip the check for model schema update");
+            return;
+        }
+        ModelSchemaUpdateChecker checker = new ModelSchemaUpdateChecker(getTableManager(), getCubeManager(),
+                getDataModelManager());
+        ModelSchemaUpdateChecker.CheckResult result = checker.allowEdit(dataModalDesc, project);
+        result.raiseExceptionWhenInvalid();
     }
 
     public void validateModel(String project, DataModelDesc desc) throws IllegalArgumentException {
