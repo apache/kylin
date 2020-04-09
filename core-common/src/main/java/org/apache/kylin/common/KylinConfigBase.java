@@ -553,6 +553,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.metadata.hbase-client-retries-number", "1");
     }
 
+    public boolean isModelSchemaUpdaterCheckerEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.metadata.model-schema-updater-checker-enabled", "false"));
+    }
+
     // ============================================================================
     // DICTIONARY & SNAPSHOT
     // ============================================================================
