@@ -31,6 +31,7 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 
+import com.google.common.base.Strings;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -81,6 +82,9 @@ public class DataModelDesc extends RootPersistentEntity {
 
     @JsonProperty("fact_table")
     private String rootFactTable;
+
+    @JsonProperty("fact_table_alias")
+    private String rootFactTableAlias;
 
     @JsonProperty("lookups")
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -403,7 +407,10 @@ public class DataModelDesc extends RootPersistentEntity {
             throw new IllegalStateException("Root fact table does not exist:" + rootFactTable);
 
         TableDesc rootDesc = tables.get(rootFactTable);
-        rootFactTableRef = new TableRef(this, rootDesc.getName(), rootDesc, false);
+        if (Strings.isNullOrEmpty(rootFactTableAlias)) {
+            rootFactTableAlias = rootDesc.getName();
+        }
+        rootFactTableRef = new TableRef(this, rootFactTableAlias, rootDesc, false);
 
         addAlias(rootFactTableRef);
         factTableRefs.add(rootFactTableRef);
@@ -601,8 +608,7 @@ public class DataModelDesc extends RootPersistentEntity {
         int orderedIndex = 0;
 
         Queue<JoinTableDesc> joinTableBuff = new ArrayDeque<JoinTableDesc>();
-        TableDesc rootDesc = tables.get(rootFactTable);
-        joinTableBuff.addAll(fkMap.get(rootDesc.getName()));
+        joinTableBuff.addAll(fkMap.get(rootFactTableAlias));
         while (!joinTableBuff.isEmpty()) {
             JoinTableDesc head = joinTableBuff.poll();
             orderedJoinTables[orderedIndex++] = head;
@@ -795,6 +801,7 @@ public class DataModelDesc extends RootPersistentEntity {
         copy.owner = orig.owner;
         copy.description = orig.description;
         copy.rootFactTable = orig.rootFactTable;
+        copy.rootFactTableAlias = orig.rootFactTableAlias;
         copy.joinTables = orig.joinTables;
         copy.dimensions = orig.dimensions;
         copy.metrics = orig.metrics;
