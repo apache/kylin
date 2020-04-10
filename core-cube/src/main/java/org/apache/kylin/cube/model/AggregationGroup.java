@@ -540,4 +540,6 @@ public class AggregationGroup implements Serializable {
     public int getDimCap() {
         return this.selectRule.dimCap == null ? 0 : this.selectRule.dimCap;
     }
+
+
 }

@@ -19,9 +19,12 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 
 import java.util.Locale;
+import java.util.Objects;
+
 import org.apache.kylin.common.util.StringUtil;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -94,4 +97,19 @@ public class ModelDimensionDesc implements Serializable {
         return count;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ModelDimensionDesc that = (ModelDimensionDesc) o;
+        return Objects.equals(table, that.table) &&
+                Arrays.equals(columns, that.columns);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(table);
+        result = 31 * result + Arrays.hashCode(columns);
+        return result;
+    }
 }

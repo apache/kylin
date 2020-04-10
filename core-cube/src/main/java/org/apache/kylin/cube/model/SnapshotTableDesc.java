@@ -18,13 +18,17 @@
 
 package org.apache.kylin.cube.model;
 
+import org.apache.kylin.dict.lookup.SnapshotTable;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.dict.lookup.SnapshotTable;
+
+import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class SnapshotTableDesc implements java.io.Serializable{
+public class
+SnapshotTableDesc implements java.io.Serializable{
     @JsonProperty("table_name")
     private String tableName;
 
@@ -71,5 +75,30 @@ public class SnapshotTableDesc implements java.io.Serializable{
 
     public void setEnableLocalCache(boolean enableLocalCache) {
         this.enableLocalCache = enableLocalCache;
+    }
+
+    public static SnapshotTableDesc getCopyOf(SnapshotTableDesc other) {
+        SnapshotTableDesc copy = new SnapshotTableDesc();
+        copy.tableName = other.tableName;
+        copy.storageType = other.storageType;
+        copy.enableLocalCache = other.enableLocalCache;
+        copy.global = other.global;
+        return copy;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SnapshotTableDesc that = (SnapshotTableDesc) o;
+        return enableLocalCache == that.enableLocalCache &&
+                global == that.global &&
+                Objects.equals(tableName, that.tableName) &&
+                Objects.equals(storageType, that.storageType);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(tableName, storageType, enableLocalCache, global);
     }
 }

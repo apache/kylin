@@ -19,6 +19,9 @@
 package org.apache.kylin.cube.model;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.IntStream;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -35,4 +38,41 @@ public class SelectRule implements Serializable {
     @JsonProperty("dim_cap")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public Integer dimCap;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        SelectRule that = (SelectRule) o;
+        if (hierarchyDims != that.hierarchyDims) {
+            if (hierarchyDims == null || that.hierarchyDims == null) {
+                return false;
+            } else if (!IntStream.range(0, hierarchyDims.length)
+                    .allMatch(i -> Arrays.equals(hierarchyDims[i], that.hierarchyDims[i]))) {
+                return false;
+            }
+        }
+
+        if (jointDims != that.jointDims) {
+            if (jointDims == null || that.jointDims == null) {
+                return false;
+            } else if (!IntStream.range(0, jointDims.length)
+                    .allMatch(i -> Arrays.equals(jointDims[i], that.jointDims[i]))) {
+                return false;
+            }
+        }
+        return Arrays.equals(mandatoryDims, that.mandatoryDims) && Objects.equals(dimCap, that.dimCap);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(dimCap);
+        result = 31 * result + Arrays.hashCode(hierarchyDims);
+        result = 31 * result + Arrays.hashCode(mandatoryDims);
+        result = 31 * result + Arrays.hashCode(jointDims);
+        return result;
+    }
 }
