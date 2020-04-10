@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -266,19 +267,19 @@ public class ParameterDesc implements Serializable {
 
             PlainParameter that = (PlainParameter) o;
 
-            if (type != null ? !type.equals(that.type) : that.type != null)
+            if (!Objects.equals(type, that.type))
                 return false;
 
             if (this.isColumnType()) {
                 if (!that.isColumnType())
                     return false;
-                if (!this.colRef.equals(that.colRef)) {
+                if (!Objects.equals(colRef, that.colRef)) {
                     return false;
                 }
             } else {
                 if (that.isColumnType())
                     return false;
-                if (!this.value.equals(that.value))
+                if (!Objects.equals(value, that.value))
                     return false;
             }
 
