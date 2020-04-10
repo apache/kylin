@@ -16,6 +16,7 @@
   docs:
   - index
   - gettingstarted/faq
+  - gettingstarted/kylin-quickstart
 
 - title: 安装
   docs:
