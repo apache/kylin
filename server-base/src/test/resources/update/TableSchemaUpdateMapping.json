@@ -1,0 +1,19 @@
+{
+  "DEFAULT.TEST_KYLIN_FACT": {
+    "database": "TEST",
+    "tableName": "KYLIN_FACT"
+  },
+  "DEFAULT.TEST_ACCOUNT": {
+    "database": "TEST"
+  },
+  "DEFAULT.TEST_COUNTRY": {
+    "database": "TEST",
+    "tableName": "COUNTRY"
+  },
+  "EDW.TEST_CAL_DT": {
+    "tableName": "CAL_DT"
+  },
+  "DEFAULT.TEST_CATEGORY_GROUPINGS": {
+    "database": "TEST"
+  }
+}

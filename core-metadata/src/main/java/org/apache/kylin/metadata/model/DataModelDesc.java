@@ -720,6 +720,52 @@ public class DataModelDesc extends RootPersistentEntity {
         return this.errors;
     }
 
+    private Map<String, JoinTableDesc> getJoinTableMap(JoinTableDesc[] joinTables) {
+        if (joinTables == null) {
+            return Maps.newHashMap();
+        }
+        Map<String, JoinTableDesc> ret = Maps.newHashMapWithExpectedSize(joinTables.length);
+        for (JoinTableDesc joinTable : joinTables) {
+            ret.put(joinTable.getAlias(), joinTable);
+        }
+        return ret;
+    }
+
+    public boolean equalsRaw(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        DataModelDesc that = (DataModelDesc) o;
+
+        if (isDraft != that.isDraft)
+            return false;
+        if (name != null ? !name.equals(that.name) : that.name != null)
+            return false;
+        if (owner != null ? !owner.equals(that.owner) : that.owner != null)
+            return false;
+        if (description != null ? !description.equals(that.description) : that.description != null)
+            return false;
+        if (rootFactTable != null ? !rootFactTable.equals(that.rootFactTable) : that.rootFactTable != null)
+            return false;
+        if (rootFactTableAlias != null ? !rootFactTableAlias.equals(that.rootFactTableAlias)
+                : that.rootFactTableAlias != null)
+            return false;
+        if (!getJoinTableMap(joinTables).equals(getJoinTableMap(that.joinTables)))
+            return false;
+        if (dimensions != null ? !dimensions.equals(that.dimensions) : that.dimensions != null)
+            return false;
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        if (!Arrays.equals(metrics, that.metrics))
+            return false;
+        if (filterCondition != null ? !filterCondition.equals(that.filterCondition) : that.filterCondition != null)
+            return false;
+        if (partitionDesc != null ? !partitionDesc.equalsRaw(that.partitionDesc) : that.partitionDesc != null)
+            return false;
+        return capacity == that.capacity;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
