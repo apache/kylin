@@ -318,7 +318,7 @@ then
     echo "Check the log at ${KYLIN_HOME}/logs/kylin.log"
     echo "Web UI is at http://${KYLIN_REST_ADDRESS}/kylin"
     exit 0
-    
+
 # run command
 elif [ "$1" == "run" ]
 then
@@ -328,6 +328,7 @@ then
 # stop command
 elif [ "$1" == "stop" ]
 then
+function retrieveStopCommand() {
     if [ -f "${KYLIN_HOME}/pid" ]
     then
         PID=`cat $KYLIN_HOME/pid`
@@ -340,7 +341,7 @@ then
 
             for ((i=0; i<$LOOP_COUNTER; i++))
             do
-                # wait to process stopped 
+                # wait to process stopped
                 sleep $WAIT_TIME
                 if ps -p $PID > /dev/null ; then
                     echo "Stopping in progress. Will check after $WAIT_TIME secs again..."
@@ -362,16 +363,75 @@ then
                 fi
             fi
 
-            # process is killed , remove pid file		
+            # process is killed , remove pid file
             rm -rf ${KYLIN_HOME}/pid
             echo "Kylin with pid ${PID} has been stopped."
-            exit 0
+            return 0
         else
-           quit "Kylin with pid ${PID} is not running"
+           echo "Kylin with pid ${PID} is not running"
+           return 1
         fi
+    else
+        return 1
+    fi
+}
+
+if [ "$2" == "--reload-dependency" ]
+then
+    reload_dependency=1
+fi
+
+# start command
+if [ "$1" == "start" ]
+then
+    retrieveStartCommand
+    ${start_command} >> ${KYLIN_HOME}/logs/kylin.out 2>&1 & echo $! > ${KYLIN_HOME}/pid &
+    rm -f $lockfile
+
+    echo ""
+    echo "A new Kylin instance is started by $USER. To stop it, run 'kylin.sh stop'"
+    echo "Check the log at ${KYLIN_HOME}/logs/kylin.log"
+    echo "Web UI is at http://${kylin_rest_address_arr}/kylin"
+    exit 0
+
+# run command
+elif [ "$1" == "run" ]
+then
+    retrieveStartCommand
+    ${start_command}
+    rm -f $lockfile
+
+# stop command
+elif [ "$1" == "stop" ]
+then
+    retrieveStopCommand
+    if [[ $? == 0 ]]
+    then
+        exit 0
     else
         quit "Kylin is not running"
     fi
+
+# restart command
+elif [ "$1" == "restart" ]
+then
+    echo "Restarting kylin..."
+    echo "--> Stopping kylin first if it's running..."
+    retrieveStopCommand
+    if [[ $? != 0 ]]
+    then
+        echo "Kylin is not running, now start it"
+    fi
+    echo "--> Start kylin..."
+    retrieveStartCommand
+    ${start_command} >> ${KYLIN_HOME}/logs/kylin.out 2>&1 & echo $! > ${KYLIN_HOME}/pid &
+    rm -f $lockfile
+
+    echo ""
+    echo "A new Kylin instance is started by $USER. To stop it, run 'kylin.sh stop'"
+    echo "Check the log at ${KYLIN_HOME}/logs/kylin.log"
+    echo "Web UI is at http://${kylin_rest_address_arr}/kylin"
+    exit 0
 
 # streaming command
 elif [ "$1" == "streaming" ]
@@ -498,5 +558,5 @@ elif [[ "$1" = org.apache.kylin.* ]]
 then
     runTool "$@"
 else
-    quit "Usage: 'kylin.sh [-v] start' or 'kylin.sh [-v] stop'"
+    quit "Usage: 'kylin.sh [-v] start' or 'kylin.sh [-v] stop' or 'kylin.sh [-v] restart'"
 fi
