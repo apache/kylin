@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  */
@@ -67,4 +68,19 @@ public class HBaseColumnFamilyDesc implements java.io.Serializable {
         return false;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        HBaseColumnFamilyDesc that = (HBaseColumnFamilyDesc) o;
+        return Objects.equals(name, that.name) &&
+                Arrays.equals(columns, that.columns);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(name);
+        result = 31 * result + Arrays.hashCode(columns);
+        return result;
+    }
 }
