@@ -158,6 +158,54 @@ function retrieveStartCommand() {
     org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start"
 }
 
+function retrieveStopCommand() {
+    if [ -f "${KYLIN_HOME}/pid" ]
+    then
+        PID=`cat $KYLIN_HOME/pid`
+        WAIT_TIME=2
+        LOOP_COUNTER=10
+        if ps -p $PID > /dev/null
+        then
+            echo "Stopping Kylin: $PID"
+            kill $PID
+
+            for ((i=0; i<$LOOP_COUNTER; i++))
+            do
+                # wait to process stopped
+                sleep $WAIT_TIME
+                if ps -p $PID > /dev/null ; then
+                    echo "Stopping in progress. Will check after $WAIT_TIME secs again..."
+                    continue;
+                else
+                    break;
+                fi
+            done
+
+            # if process is still around, use kill -9
+            if ps -p $PID > /dev/null
+            then
+                echo "Initial kill failed, getting serious now..."
+                kill -9 $PID
+                sleep 1 #give kill -9  sometime to "kill"
+                if ps -p $PID > /dev/null
+                then
+                   quit "Warning, even kill -9 failed, giving up! Sorry..."
+                fi
+            fi
+
+            # process is killed , remove pid file
+            rm -rf ${KYLIN_HOME}/pid
+            echo "Kylin with pid ${PID} has been stopped."
+            return 0
+        else
+           echo "Kylin with pid ${PID} is not running"
+           return 1
+        fi
+    else
+        return 1
+    fi
+}
+
 if [ "$2" == "--reload-dependency" ]
 then
     reload_dependency=1
@@ -186,50 +234,34 @@ then
 # stop command
 elif [ "$1" == "stop" ]
 then
-    if [ -f "${KYLIN_HOME}/pid" ]
+    retrieveStopCommand
+    if [[ $? == 0 ]]
     then
-        PID=`cat $KYLIN_HOME/pid`
-        WAIT_TIME=2
-        LOOP_COUNTER=10
-        if ps -p $PID > /dev/null
-        then
-            echo "Stopping Kylin: $PID"
-            kill $PID
-
-            for ((i=0; i<$LOOP_COUNTER; i++))
-            do
-                # wait to process stopped 
-                sleep $WAIT_TIME
-                if ps -p $PID > /dev/null ; then
-                    echo "Stopping in progress. Will check after $WAIT_TIME secs again..."
-                    continue;
-                else
-                    break;
-                fi
-            done
-
-            # if process is still around, use kill -9
-            if ps -p $PID > /dev/null
-            then
-                echo "Initial kill failed, getting serious now..."
-                kill -9 $PID
-                sleep 1 #give kill -9  sometime to "kill"
-                if ps -p $PID > /dev/null
-                then
-                   quit "Warning, even kill -9 failed, giving up! Sorry..."
-                fi
-            fi
-
-            # process is killed , remove pid file		
-            rm -rf ${KYLIN_HOME}/pid
-            echo "Kylin with pid ${PID} has been stopped."
-            exit 0
-        else
-           quit "Kylin with pid ${PID} is not running"
-        fi
+        exit 0
     else
         quit "Kylin is not running"
     fi
+
+# restart command
+elif [ "$1" == "restart" ]
+then
+    echo "Restarting kylin..."
+    echo "--> Stopping kylin first if it's running..."
+    retrieveStopCommand
+    if [[ $? != 0 ]]
+    then
+        echo "Kylin is not running, now start it"
+    fi
+    echo "--> Start kylin..."
+    retrieveStartCommand
+    ${start_command} >> ${KYLIN_HOME}/logs/kylin.out 2>&1 & echo $! > ${KYLIN_HOME}/pid &
+    rm -f $lockfile
+
+    echo ""
+    echo "A new Kylin instance is started by $USER. To stop it, run 'kylin.sh stop'"
+    echo "Check the log at ${KYLIN_HOME}/logs/kylin.log"
+    echo "Web UI is at http://${kylin_rest_address_arr}/kylin"
+    exit 0
 
 # streaming command
 elif [ "$1" == "streaming" ]
@@ -369,5 +401,5 @@ then
     exec hbase ${KYLIN_EXTRA_START_OPTS} -Dkylin.hive.dependency=${hive_dependency} -Dkylin.hbase.dependency=${hbase_dependency} -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties "$@"
     export HBASE_CLASSPATH_PREFIX=${hbase_pre_original}
 else
-    quit "Usage: 'kylin.sh [-v] start' or 'kylin.sh [-v] stop'"
+    quit "Usage: 'kylin.sh [-v] start' or 'kylin.sh [-v] stop' or 'kylin.sh [-v] restart'"
 fi
