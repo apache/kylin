@@ -164,6 +164,7 @@ public class CliCommandExecutor {
     }
 
     public static final String COMMAND_INJECT_REX = "[ &`>|{}()$;\\-#~!+*”\\\\]+";
+    public static final String COMMAND_WHITE_LIST = "[^\\w%,@/:=?.\"\\[\\]]";
 
     /**
      * <pre>
@@ -187,9 +188,17 @@ public class CliCommandExecutor {
      * </pre>
      */
     public static String checkParameter(String commandParameter) {
-        String repaired = commandParameter.replaceAll(COMMAND_INJECT_REX, "");
+        return checkParameter(commandParameter, COMMAND_INJECT_REX);
+    }
+
+    public static String checkParameterWhiteList(String commandParameter) {
+        return checkParameter(commandParameter, COMMAND_WHITE_LIST);
+    }
+
+    private static String checkParameter(String commandParameter, String rex) {
+        String repaired = commandParameter.replaceAll(rex, "");
         if (repaired.length() != commandParameter.length()) {
-            logger.info("Detected illegal character in command {}, replace it to {}.", commandParameter, repaired);
+            logger.info("Detected illegal character in command {} by {} , replace it to {}.", commandParameter, rex, repaired);
         }
         return repaired;
     }

@@ -23,20 +23,29 @@ import static org.junit.Assert.assertEquals;
 
 public class CliCommandExecutorTest {
 
+    private String[][] commands = {
+            {"nslookup unknown.com &", "nslookupunknown.com"},
+            {"cat `whoami`", "catwhoami"},
+            {"echo \"kylin@headnode:/home/kylin/lib/job.jar?key=Value123\",", "echo\"kylin@headnode:/home/kylin/lib/job.jar?key=Value123\","},
+            {"whoami > /var/www/static/whoami.txt", "whoami/var/www/static/whoami.txt"},
+            {"mysql_test@jdbc,url=jdbc:mysql://localhost:3306/kylin,username=kylin_test,password=bUmSqT/opyqz89Geu0yQ3g==,maxActive=10,maxIdle=10,passwordEncrypted=true", "mysql_test@jdbc,url=jdbc:mysql://localhost:3306/kylin,username=kylin_test,password=bUmSqT/opyqz89Geu0yQ3g==,maxActive=10,maxIdle=10,passwordEncrypted=true"},
+            {"c1 || c2# || c3 || *c4\\", "c1c2c3c4"},
+            {"c1 &&", "c1"},
+            {"c1 + > c2 [p1]%", "c1c2[p1]%"},
+            {"c1 | ${c2}", "c1c2"},
+    };
+
     @Test
     public void testCmd() {
-        String[][] commands = {
-                {"nslookup unknown.com &", "nslookupunknown.com"},
-                {"cat `whoami`", "catwhoami"},
-                {"whoami > /var/www/static/whoami.txt", "whoami/var/www/static/whoami.txt"},
-                {"c1 || c2# || c3 || *c4\\", "c1c2c3c4"},
-                {"c1 &&", "c1"},
-                {"c1 + > c2 [p1]%", "c1c2[p1]%"},
-                {"c1 | ${c2}", "c1c2"},
-        };
-
         for (String[] pair : commands) {
             assertEquals(pair[1], CliCommandExecutor.checkParameter(pair[0]));
+        }
+    }
+
+    @Test
+    public void testCmd2() {
+        for (String[] pair : commands) {
+            assertEquals(pair[1], CliCommandExecutor.checkParameterWhiteList(pair[0]));
         }
     }
 }

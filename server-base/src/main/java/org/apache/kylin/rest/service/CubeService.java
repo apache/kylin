@@ -1054,8 +1054,15 @@ public class CubeService extends BasicService implements InitializingBean {
                 "Destination configuration should not be empty.");
 
         String stringBuilder = ("%s/bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI %s %s %s %s %s %s true true");
-        String cmd = String.format(Locale.ROOT, stringBuilder, KylinConfig.getKylinHome(), srcCfgUri, dstCfgUri,
-                cube.getName(), projectName, config.isAutoMigrateCubeCopyAcl(), config.isAutoMigrateCubePurge());
+        String cmd = String.format(Locale.ROOT,
+                stringBuilder,
+                KylinConfig.getKylinHome(),
+                CliCommandExecutor.checkParameterWhiteList(srcCfgUri),
+                CliCommandExecutor.checkParameterWhiteList(dstCfgUri),
+                cube.getName(),
+                CliCommandExecutor.checkParameterWhiteList(projectName),
+                config.isAutoMigrateCubeCopyAcl(),
+                config.isAutoMigrateCubePurge());
 
         logger.info("One click migration cmd: " + cmd);
 
