@@ -18,12 +18,15 @@
 
 package org.apache.spark.sql
 
+import java.io.File
 import java.lang.{Boolean => JBoolean, String => JString}
+import java.nio.file.Paths
 
 import org.apache.kylin.query.runtime.plans.QueryToExecutionIDCache
 import org.apache.spark.memory.MonitorEnv
 import org.apache.spark.util.Utils
 import org.apache.spark.scheduler.{SparkListener, SparkListenerEvent}
+import org.apache.spark.sql.KylinSession._
 import org.apache.kylin.query.UdfManager
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.execution.ui.PostQueryExecutionForKylin
@@ -31,8 +34,13 @@ import org.apache.spark.sql.catalyst.parser.ParseException
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import java.util.concurrent.atomic.AtomicReference
 
+import org.apache.hadoop.security.UserGroupInformation
+import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.spark.classloader.ClassLoaderUtils
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
 import org.apache.spark.sql.execution.datasource.KylinSourceStrategy
+
+import scala.collection.JavaConverters._
 
 // scalastyle:off
 object SparderContext extends Logging {
@@ -90,7 +98,7 @@ object SparderContext extends Logging {
   }
 
   def getTotalCore: Int = {
-    val sparkConf = getSparkSession.sparkContext.getConf
+    val sparkConf = initSparkConf(getSparkSession.sparkContext.getConf)
     if (sparkConf.get("spark.master").startsWith("local")) {
       return 1
     }
@@ -130,8 +138,6 @@ object SparderContext extends Logging {
                   SparkSession.builder
                     .appName("sparder-sql-context")
                     .master("yarn-client")
-                    //if user defined other master in kylin.properties,
-                    // it will get overwrite later in org.apache.spark.sql.KylinSession.KylinBuilder.initSparkConf
                     .withExtensions { ext =>
                       ext.injectPlannerStrategy(_ => KylinSourceStrategy)
                     }
@@ -169,6 +175,18 @@ object SparderContext extends Logging {
       }
     }
   }
+
+  private lazy val conf: KylinConfig = KylinConfig.getInstanceFromEnv
+
+  def initSparkConf(sparkConf: SparkConf): SparkConf = {
+    //add spark configuration from kylin.properties
+    conf.getSparkConf.asScala.foreach {
+      case (k, v) =>
+        sparkConf.set(k, v)
+    }
+    sparkConf
+  }
+
 
   def registerListener(sc: SparkContext): Unit = {
     val sparkListener = new SparkListener {
@@ -212,7 +230,7 @@ object SparderContext extends Logging {
   def withClassLoad[T](body: => T): T = {
     //    val originClassLoad = Thread.currentThread().getContextClassLoader
     // fixme aron
-    //        Thread.currentThread().setContextClassLoader(ClassLoaderUtils.getSparkClassLoader)
+            Thread.currentThread().setContextClassLoader(ClassLoaderUtils.getSparkClassLoader)
     val t = body
     //    Thread.currentThread().setContextClassLoader(originClassLoad)
     t

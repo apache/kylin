@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,23 +18,20 @@
 
 package org.apache.kylin.spark.classloader;
 
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashSet;
 import java.util.Set;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static org.apache.kylin.spark.classloader.ClassLoaderUtils.findFile;
 
 public class SparkClassLoader extends URLClassLoader {
     //preempt these classes from parent
@@ -61,25 +58,25 @@ public class SparkClassLoader extends URLClassLoader {
     private static Logger logger = LoggerFactory.getLogger(SparkClassLoader.class);
 
     static {
-        String sparkclassloader_spark_cl_preempt_classes = System.getenv("SPARKCLASSLOADER_SPARK_CL_PREEMPT_CLASSES");
-        if (!StringUtils.isEmpty(sparkclassloader_spark_cl_preempt_classes)) {
-            SPARK_CL_PREEMPT_CLASSES = StringUtils.split(sparkclassloader_spark_cl_preempt_classes, ",");
+        String sparkClassLoaderSparkClPreemptClasses = System.getenv("SPARKCLASSLOADER_SPARK_CL_PREEMPT_CLASSES");
+        if (!StringUtils.isEmpty(sparkClassLoaderSparkClPreemptClasses)) {
+            SPARK_CL_PREEMPT_CLASSES = StringUtils.split(sparkClassLoaderSparkClPreemptClasses, ",");
         }
 
-        String sparkclassloader_spark_cl_preempt_files = System.getenv("SPARKCLASSLOADER_SPARK_CL_PREEMPT_FILES");
-        if (!StringUtils.isEmpty(sparkclassloader_spark_cl_preempt_files)) {
-            SPARK_CL_PREEMPT_FILES = StringUtils.split(sparkclassloader_spark_cl_preempt_files, ",");
+        String sparkClassLoaderSparkClPreemptFiles = System.getenv("SPARKCLASSLOADER_SPARK_CL_PREEMPT_FILES");
+        if (!StringUtils.isEmpty(sparkClassLoaderSparkClPreemptFiles)) {
+            SPARK_CL_PREEMPT_FILES = StringUtils.split(sparkClassLoaderSparkClPreemptFiles, ",");
         }
 
-        String sparkclassloader_this_cl_precedent_classes = System.getenv("SPARKCLASSLOADER_THIS_CL_PRECEDENT_CLASSES");
-        if (!StringUtils.isEmpty(sparkclassloader_this_cl_precedent_classes)) {
-            THIS_CL_PRECEDENT_CLASSES = StringUtils.split(sparkclassloader_this_cl_precedent_classes, ",");
+        String sparkClassLoaderThisClPrecedentClasses = System.getenv("SPARKCLASSLOADER_THIS_CL_PRECEDENT_CLASSES");
+        if (!StringUtils.isEmpty(sparkClassLoaderThisClPrecedentClasses)) {
+            THIS_CL_PRECEDENT_CLASSES = StringUtils.split(sparkClassLoaderThisClPrecedentClasses, ",");
         }
 
-        String sparkclassloader_parent_cl_precedent_classes = System
+        String sparkClassLoaderParentClPrecedentClasses = System
                 .getenv("SPARKCLASSLOADER_PARENT_CL_PRECEDENT_CLASSES");
-        if (!StringUtils.isEmpty(sparkclassloader_parent_cl_precedent_classes)) {
-            PARENT_CL_PRECEDENT_CLASSES = StringUtils.split(sparkclassloader_parent_cl_precedent_classes, ",");
+        if (!StringUtils.isEmpty(sparkClassLoaderParentClPrecedentClasses)) {
+            PARENT_CL_PRECEDENT_CLASSES = StringUtils.split(sparkClassLoaderParentClPrecedentClasses, ",");
         }
 
         try {
@@ -111,20 +108,20 @@ public class SparkClassLoader extends URLClassLoader {
     }
 
     public void init() throws MalformedURLException {
-        String spark_home = System.getenv("SPARK_HOME");
-        if (spark_home == null) {
-            spark_home = System.getProperty("SPARK_HOME");
-            if (spark_home == null) {
+        String sparkHome = System.getenv("SPARK_HOME");
+        if (sparkHome == null) {
+            sparkHome = System.getProperty("SPARK_HOME");
+            if (sparkHome == null) {
                 throw new RuntimeException(
                         "Spark home not found; set it explicitly or use the SPARK_HOME environment variable.");
             }
         }
-        File file = new File(spark_home + "/jars");
+        File file = new File(sparkHome + "/jars");
         File[] jars = file.listFiles();
         for (File jar : jars) {
             addURL(jar.toURI().toURL());
         }
-        if (System.getenv("KYLIN_HOME") != null) {
+        /*if (System.getenv("KYLIN_HOME") != null) {
             // for prod
             String kylin_home = System.getenv("KYLIN_HOME");
             File sparkJar = findFile(kylin_home + "/lib", "kylin-udf-.*-SNAPSHOT.jar");
@@ -139,7 +136,7 @@ public class SparkClassLoader extends URLClassLoader {
             //  for debugtomcat
             logger.info("Add kylin UDF classes to spark classloader");
             addURL(new File("../udf/target/classes").toURI().toURL());
-        }
+        }*/
 
     }
 
