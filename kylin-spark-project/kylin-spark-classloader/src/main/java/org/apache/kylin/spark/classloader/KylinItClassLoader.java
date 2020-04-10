@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.kylin.spark.classloader;
 
 import java.io.File;
@@ -34,7 +35,7 @@ public class KylinItClassLoader extends URLClassLoader {
             "com.sun.", "launcher.", "javax.", "org.ietf", "java", "org.omg", "org.w3c", "org.xml", "sunw.",
             // logging
             "org.slf4j", "org.apache.commons.logging", "org.apache.log4j", "sun", "org.apache.catalina",
-            "org.apache.tomcat",};
+            "org.apache.tomcat", };
     private static final String[] THIS_CL_PRECEDENT_CLASS = new String[] {"io.kyligence", "org.apache.kylin",
             "org.apache.calcite"};
     private static final String[] CODE_GEN_CLASS = new String[] {"org.apache.spark.sql.catalyst.expressions.Object"};
@@ -78,9 +79,9 @@ public class KylinItClassLoader extends URLClassLoader {
                 e.printStackTrace();
             }
         }
-        String spark_home = System.getenv("SPARK_HOME");
+        String sparkHome = System.getenv("SPARK_HOME");
         try {
-            File sparkJar = findFile(spark_home + "/jars", "spark-yarn_.*.jar");
+            File sparkJar = findFile(sparkHome + "/jars", "spark-yarn_.*.jar");
             addURL(sparkJar.toURI().toURL());
             addURL(new File("../examples/test_case_data/sandbox").toURI().toURL());
         } catch (MalformedURLException e) {
@@ -94,7 +95,7 @@ public class KylinItClassLoader extends URLClassLoader {
         if (isCodeGen(name)) {
             throw new ClassNotFoundException();
         }
-        if (name.startsWith("io.kyligence.kap.ext")) {
+        if (name.startsWith("org.apache.kylin.spark.classloader")) {
             return parent.loadClass(name);
         }
         if (isThisCLPrecedent(name)) {
@@ -124,7 +125,6 @@ public class KylinItClassLoader extends URLClassLoader {
                 return clasz;
             }
         }
-        //交换位置 为了让codehua 被父类加载
         if (isParentCLPrecedent(name)) {
             logger.debug("Skipping exempt class " + name + " - delegating directly to parent");
             return parent.loadClass(name);

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,21 +47,21 @@ public class TomcatClassLoader extends ParallelWebappClassLoader {
     private static final Set<String> wontFindClasses = new HashSet<>();
 
     static {
-        String tomcatclassloader_parent_cl_precedent_classes = System
+        String tomcatClassLoaderParentClPrecedentClasses = System
                 .getenv("TOMCATCLASSLOADER_PARENT_CL_PRECEDENT_CLASSES");
-        if (!StringUtils.isEmpty(tomcatclassloader_parent_cl_precedent_classes)) {
-            PARENT_CL_PRECEDENT_CLASSES = StringUtils.split(tomcatclassloader_parent_cl_precedent_classes, ",");
+        if (!StringUtils.isEmpty(tomcatClassLoaderParentClPrecedentClasses)) {
+            PARENT_CL_PRECEDENT_CLASSES = StringUtils.split(tomcatClassLoaderParentClPrecedentClasses, ",");
         }
 
-        String tomcatclassloader_this_cl_precedent_classes = System
+        String tomcatClassLoaderThisClPrecedentClasses = System
                 .getenv("TOMCATCLASSLOADER_THIS_CL_PRECEDENT_CLASSES");
-        if (!StringUtils.isEmpty(tomcatclassloader_this_cl_precedent_classes)) {
-            THIS_CL_PRECEDENT_CLASSES = StringUtils.split(tomcatclassloader_this_cl_precedent_classes, ",");
+        if (!StringUtils.isEmpty(tomcatClassLoaderThisClPrecedentClasses)) {
+            THIS_CL_PRECEDENT_CLASSES = StringUtils.split(tomcatClassLoaderThisClPrecedentClasses, ",");
         }
 
-        String tomcatclassloader_codegen_classes = System.getenv("TOMCATCLASSLOADER_CODEGEN_CLASSES");
-        if (!StringUtils.isEmpty(tomcatclassloader_codegen_classes)) {
-            CODEGEN_CLASSES = StringUtils.split(tomcatclassloader_codegen_classes, ",");
+        String tomcatClassLoaderCodegenClasses = System.getenv("TOMCATCLASSLOADER_CODEGEN_CLASSES");
+        if (!StringUtils.isEmpty(tomcatClassLoaderCodegenClasses)) {
+            CODEGEN_CLASSES = StringUtils.split(tomcatClassLoaderCodegenClasses, ",");
         }
 
         wontFindClasses.add("Class");
@@ -98,19 +98,19 @@ public class TomcatClassLoader extends ParallelWebappClassLoader {
     }
 
     public void init() {
-        String spark_home = System.getenv("SPARK_HOME");
-        if (spark_home == null || spark_home.isEmpty()) {
+        String sparkHome = System.getenv("SPARK_HOME");
+        if (sparkHome == null || sparkHome.isEmpty()) {
             throw new RuntimeException("Error found spark home.");
         }
         try {
             //  SparkContext use spi to match deploy mode
             //  otherwise SparkContext init fail ,can not find yarn deploy mode
-            File yarnJar = findFile(spark_home + "/jars", "spark-yarn.*.jar");
+            File yarnJar = findFile(sparkHome + "/jars", "spark-yarn.*.jar");
             addURL(yarnJar.toURI().toURL());
             //  jersey in spark will attempt find @Path class file in current classloader.
             // Not possible to delegate to spark loader
             // otherwise spark web ui executors tab can not render
-            File coreJar = findFile(spark_home + "/jars", "spark-core.*.jar");
+            File coreJar = findFile(sparkHome + "/jars", "spark-core.*.jar");
             addURL(coreJar.toURI().toURL());
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -130,7 +130,7 @@ public class TomcatClassLoader extends ParallelWebappClassLoader {
             throw new ClassNotFoundException();
         }
         // class loaders should conform to global's
-        if (name.startsWith("io.kyligence.kap.ext")) {
+        if (name.startsWith("org.apache.kylin.spark.classloader")) {
             return parent.loadClass(name);
         }
         // if spark CL needs preempt
