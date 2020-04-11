@@ -80,7 +80,6 @@ public class CubeMergeJob extends SparkApplication {
     }
 
 
-
     private void makeSnapshotForNewSegment(CubeSegment newSeg, List<CubeSegment> mergingSegments) {
         CubeSegment lastSeg = mergingSegments.get(mergingSegments.size() - 1);
         for (Map.Entry<String, String> entry : lastSeg.getSnapshots().entrySet()) {
@@ -126,7 +125,7 @@ public class CubeMergeJob extends SparkApplication {
     }
 
     public static Map<Long, DFLayoutMergeAssist> generateMergeAssist(List<SegmentInfo> mergingSegments,
-            SparkSession ss) {
+                                                                     SparkSession ss) {
         // collect layouts need to merge
         Map<Long, DFLayoutMergeAssist> mergeCuboidsAssist = Maps.newConcurrentMap();
         for (SegmentInfo seg : mergingSegments) {
@@ -153,7 +152,7 @@ public class CubeMergeJob extends SparkApplication {
     }
 
     private LayoutEntity saveAndUpdateCuboid(Dataset<Row> dataset, SegmentInfo seg, LayoutEntity layout,
-            DFLayoutMergeAssist assist) throws IOException {
+                                             DFLayoutMergeAssist assist) throws IOException {
         long layoutId = layout.getId();
         long sourceCount = 0L;
 
@@ -167,7 +166,7 @@ public class CubeMergeJob extends SparkApplication {
         ss.sparkContext().setJobDescription("merge layout " + layoutId);
         NSparkCubingEngine.NSparkCubingStorage storage = StorageFactory.createEngineAdapter(layout,
                 NSparkCubingEngine.NSparkCubingStorage.class);
-        String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_NAME), seg.name(), String.valueOf(layoutId));
+        String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_NAME), seg.name(), seg.timestamp(), String.valueOf(layoutId));
         String tempPath = path + CubeBuildJob.TEMP_DIR_SUFFIX;
         // save to temp path
         storage.saveTo(tempPath, dataset, ss);

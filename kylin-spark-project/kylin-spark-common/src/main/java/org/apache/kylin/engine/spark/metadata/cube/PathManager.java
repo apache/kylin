@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.spark.metadata.cube;
 
 import java.io.File;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -28,14 +29,14 @@ import org.slf4j.LoggerFactory;
 public final class PathManager {
     private static final Logger logger = LoggerFactory.getLogger(PathManager.class);
 
-    public static String getParquetStoragePath(KylinConfig config, String cubeName, String segName, String cuboidId) {
+    public static String getParquetStoragePath(KylinConfig config, String cubeName, String segName, long timestamp, String cuboidId) {
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         String hdfsWorkDir = config.getHdfsWorkingDirectory(cube.getProject());
-        return hdfsWorkDir + "parquet" + File.separator + cubeName + File.separator + segName + File.separator + cuboidId;
+        return hdfsWorkDir + "parquet" + File.separator + cubeName + File.separator + segName + "_" + timestamp + File.separator + cuboidId;
     }
 
-    public static String getParquetStoragePath(CubeInstance cube, String segName, Long cuboidId) {
+    public static String getParquetStoragePath(CubeInstance cube, String segName, long timestamp, Long cuboidId) {
         String hdfsWorkDir = cube.getConfig().getHdfsWorkingDirectory(cube.getProject());
-        return hdfsWorkDir + "parquet" + File.separator + cube.getName() + File.separator + segName + File.separator + cuboidId;
+        return hdfsWorkDir + "parquet" + File.separator + cube.getName() + File.separator + segName + "_" + timestamp + File.separator + cuboidId;
     }
 }

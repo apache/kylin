@@ -37,12 +37,12 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 object MetadataConverter {
-  def getSegmentInfo(cubeInstance: CubeInstance, segmentId: String, segmentName: String): SegmentInfo = {
+  def getSegmentInfo(cubeInstance: CubeInstance, segmentId: String, segmentName: String, timestamp: Long): SegmentInfo = {
     val allColumnDesc = extractAllColumnDesc(cubeInstance)
     val (layoutEntities, measure) = extractEntityAndMeasures(cubeInstance)
     val dictColumn = measure.values.filter(_.returnType.dataType.equals("bitmap"))
       .map(_.pra.head).toSet
-    SegmentInfo(segmentId, segmentName, cubeInstance.getProject, cubeInstance.getConfig, extractFactTable(cubeInstance),
+    SegmentInfo(segmentId, segmentName, timestamp, cubeInstance.getProject, cubeInstance.getConfig, extractFactTable(cubeInstance),
       extractLookupTable(cubeInstance), extractLookupTable(cubeInstance),
       extractJoinTable(cubeInstance), allColumnDesc.asScala.values.toList, layoutEntities, mutable.Set[LayoutEntity](layoutEntities: _*),
       dictColumn,

@@ -63,7 +63,7 @@ class TestGlobalDictBuild extends SparderBaseFunSuite with SharedSparkSession wi
       val range = new TSRange(0L, DateFormat.stringToMillis("2015-01-01"))
       seg = cubeMgr.appendSegment(cube, range)
     }
-    val segInfo = MetadataConverter.getSegmentInfo(seg.getCubeInstance, seg.getUuid, seg.getName)
+    val segInfo = MetadataConverter.getSegmentInfo(seg.getCubeInstance, seg.getUuid, seg.getName, seg.getCreateTimeUTC)
     val dictColSet = setAsJavaSetConverter(segInfo.toBuildDictColumns).asJava
     seg.getConfig.setProperty("kylin.dictionary.globalV2-threshold-bucket-size", "100")
 

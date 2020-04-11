@@ -44,6 +44,7 @@ class TestSnapshotBuilder extends SparderBaseFunSuite with SharedSparkSession wi
     "ci_left_join_cube")
 
   override val master = "local[1]"
+
   def getTestConfig: KylinConfig = {
     val config = KylinConfig.getInstanceFromEnv
     config
@@ -167,7 +168,7 @@ class TestSnapshotBuilder extends SparderBaseFunSuite with SharedSparkSession wi
       segCopy.setSnapshots(new ConcurrentHashMap())
 
       var snapshotBuilder = new DFSnapshotBuilder(
-        MetadataConverter.getSegmentInfo(segCopy.getCubeInstance, segCopy.getUuid, segCopy.getName), spark)
+        MetadataConverter.getSegmentInfo(segCopy.getCubeInstance, segCopy.getUuid, segCopy.getName, segCopy.getCreateTimeUTC), spark)
       val snapshot = snapshotBuilder.buildSnapshot
       cube.getSegments.asScala.foreach(_.getConfig.setProperty("kylin.snapshot.parallel-build-enabled", "true"))
       snapshot
@@ -181,7 +182,7 @@ class TestSnapshotBuilder extends SparderBaseFunSuite with SharedSparkSession wi
       val cubeCopy = segment.getCubeInstance.latestCopyForWrite()
       val segCopy = cubeCopy.getSegmentById(segment.getUuid)
       segCopy.setSnapshots(new ConcurrentHashMap())
-      val segInfo = MetadataConverter.getSegmentInfo(segCopy.getCubeInstance, segCopy.getUuid, segCopy.getName)
+      val segInfo = MetadataConverter.getSegmentInfo(segCopy.getCubeInstance, segCopy.getUuid, segCopy.getName, segCopy.getCreateTimeUTC)
       var snapshotBuilder = new DFSnapshotBuilder(segInfo, spark)
       snapshotBuilder.buildSnapshot
     }
@@ -201,7 +202,7 @@ class TestSnapshotBuilder extends SparderBaseFunSuite with SharedSparkSession wi
       val segCopy = cubeCopy.getSegmentById(segment.getUuid)
       segCopy.setSnapshots(new ConcurrentHashMap())
       var snapshotBuilder = new DFSnapshotBuilder(
-        MetadataConverter.getSegmentInfo(segCopy.getCubeInstance, segCopy.getUuid, segCopy.getName), spark)
+        MetadataConverter.getSegmentInfo(segCopy.getCubeInstance, segCopy.getUuid, segCopy.getName, segCopy.getCreateTimeUTC), spark)
       snapshotBuilder.buildSnapshot
     }
     val statuses = fs.listStatus(new Path(snapPath))

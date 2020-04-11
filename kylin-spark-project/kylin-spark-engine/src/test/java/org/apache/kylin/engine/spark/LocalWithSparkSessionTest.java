@@ -270,7 +270,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
 
         CreateFlatTable flatTable = new CreateFlatTable(
                 MetadataConverter.getSegmentInfo(segment.getCubeInstance(), segment.getUuid(),
-                        segment.getName()), null, ss, null);
+                        segment.getName(), segment.getCreateTimeUTC()), null, ss, null);
         Dataset<Row> ds = flatTable.generateDataset(false, true);
         return ds;
     }

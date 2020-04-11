@@ -114,7 +114,7 @@ public class CsvSourceTest extends LocalWithSparkSessionTest {
         StructType schema = ds.schema();
 
         SegmentInfo segmentInfo = MetadataConverter.getSegmentInfo(segment.getCubeInstance(), segment.getUuid(),
-                segment.getName());
+                segment.getName(), segment.getCreateTimeUTC());
         scala.collection.immutable.Map<String, String> map = BuildUtils.getColumnIndexMap(segmentInfo);
         for (StructField field : schema.fields()) {
             Assert.assertNotNull(model.findColumn(map.apply(field.name())));
