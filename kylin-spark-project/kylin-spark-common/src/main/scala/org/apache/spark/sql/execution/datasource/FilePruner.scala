@@ -40,7 +40,8 @@ import org.apache.spark.sql.utils.SparkTypeUtil
 import org.apache.spark.util.collection.BitSet
 
 import scala.collection.JavaConverters._
-case class SegmentDirectory(segmentName: String, files: Seq[FileStatus])
+
+case class SegmentDirectory(segmentName: String, timestamp: Long, files: Seq[FileStatus])
 
 /**
  * A container for shard information.
@@ -52,9 +53,9 @@ case class SegmentDirectory(segmentName: String, files: Seq[FileStatus])
  * @param sortColumnNames  the names of the columns that used to sort data in each shard.
  */
 case class ShardSpec(
-  numShards: Int,
-  shardColumnNames: Seq[String],
-  sortColumnNames: Seq[String]) {
+                      numShards: Int,
+                      shardColumnNames: Seq[String],
+                      sortColumnNames: Seq[String]) {
 
   if (numShards <= 0) {
     throw new AnalysisException(
@@ -73,29 +74,29 @@ case class ShardSpec(
 }
 
 class FilePruner(
-  cubeInstance: CubeInstance,
-  cuboid: Cuboid,
-  val session: SparkSession,
-  val options: Map[String, String])
+                  cubeInstance: CubeInstance,
+                  cuboid: Cuboid,
+                  val session: SparkSession,
+                  val options: Map[String, String])
   extends FileIndex with ResetShufflePartition with Logging {
 
   private lazy val segmentDirs: Seq[SegmentDirectory] = {
     cubeInstance.getSegments.asScala
-            .filter(_.getStatus.equals(SegmentStatusEnum.READY))
-            .map(seg => SegmentDirectory(seg.getName, null))
+      .filter(_.getStatus.equals(SegmentStatusEnum.READY))
+      .map(seg => SegmentDirectory(seg.getName, seg.getCreateTimeUTC, null))
     cubeInstance.getSegments.asScala
-            .filter(_.getStatus.equals(SegmentStatusEnum.READY)).map(seg => {
+      .filter(_.getStatus.equals(SegmentStatusEnum.READY)).map(seg => {
       val segName = seg.getName
-      val path = PathManager.getParquetStoragePath(cubeInstance, segName, layoutEntity.getId)
+      val path = PathManager.getParquetStoragePath(cubeInstance, segName, seg.getCreateTimeUTC, layoutEntity.getId)
       val files = new InMemoryFileIndex(session,
         Seq(new Path(path)),
         options,
         Some(dataSchema),
         FileStatusCache.getOrCreate(session))
-              .listFiles(Nil, Nil)
-              .flatMap(_.files)
-              .filter(_.isFile)
-      SegmentDirectory(segName, files)
+        .listFiles(Nil, Nil)
+        .flatMap(_.files)
+        .filter(_.isFile)
+      SegmentDirectory(segName, seg.getCreateTimeUTC, files)
     }).filter(_.files.nonEmpty)
   }
 
@@ -111,11 +112,11 @@ class FilePruner(
   }
 
   override def rootPaths: Seq[Path] = {
-    segmentDirs.map(seg => new Path(toPath(seg.segmentName)))
+    segmentDirs.map(seg => new Path(toPath(seg.segmentName, seg.timestamp)))
   }
 
-  def toPath(segmentName: String): String = {
-    PathManager.getParquetStoragePath(cubeInstance, segmentName, cuboid.getId)
+  def toPath(segmentName: String, timestamp: Long): String = {
+    PathManager.getParquetStoragePath(cubeInstance, segmentName, timestamp, cuboid.getId)
   }
 
 
@@ -129,7 +130,7 @@ class FilePruner(
   lazy val timePartitionSchema: StructType = {
     val desc: PartitionDesc = cubeInstance.getModel.getPartitionDesc
     StructType(
-      if (desc != null  && desc.getPartitionDateColumnRef != null) {
+      if (desc != null && desc.getPartitionDateColumnRef != null) {
         val ref = desc.getPartitionDateColumnRef
         // only consider partition date column
         // we can only get col ID in layout cuz data schema is all ids.
@@ -185,6 +186,7 @@ class FilePruner(
 
   var cached = new java.util.HashMap[(Seq[Expression], Seq[Expression]), Seq[PartitionDirectory]]()
   var totalSize = 0L
+
   override def listFiles(partitionFilters: Seq[Expression], dataFilters: Seq[Expression]): Seq[PartitionDirectory] = {
     if (cached.containsKey((partitionFilters, dataFilters))) {
       return cached.get((partitionFilters, dataFilters))
@@ -202,14 +204,14 @@ class FilePruner(
     }
     //    QueryContextFacade.current().record("seg_pruning")
     selected = selected.par.map { e =>
-      val path = new Path(toPath(e.segmentName))
+      val path = new Path(toPath(e.segmentName, e.timestamp))
       val maybeStatuses = fsc.getLeafFiles(path)
       if (maybeStatuses.isDefined) {
-        SegmentDirectory(e.segmentName, maybeStatuses.get)
+        SegmentDirectory(e.segmentName, e.timestamp, maybeStatuses.get)
       } else {
         val statuses = path.getFileSystem(session.sparkContext.hadoopConfiguration).listStatus(path)
         fsc.putLeafFiles(path, statuses)
-        SegmentDirectory(e.segmentName, statuses)
+        SegmentDirectory(e.segmentName, e.timestamp, statuses)
       }
     }.toIterator.toSeq
     //    QueryContextFacade.current().record("fetch_file_status")
@@ -237,7 +239,7 @@ class FilePruner(
   }
 
   private def afterPruning(pruningType: String, specFilters: Seq[Expression], inputs: Seq[SegmentDirectory])
-    (pruningFunc: (Seq[Expression], Seq[SegmentDirectory]) => Seq[SegmentDirectory]): Seq[SegmentDirectory] = {
+                          (pruningFunc: (Seq[Expression], Seq[SegmentDirectory]) => Seq[SegmentDirectory]): Seq[SegmentDirectory] = {
     if (specFilters.isEmpty) {
       inputs
     } else {
@@ -260,8 +262,8 @@ class FilePruner(
   }
 
   private def pruneSegments(
-    filters: Seq[Expression],
-    segDirs: Seq[SegmentDirectory]): Seq[SegmentDirectory] = {
+                             filters: Seq[Expression],
+                             segDirs: Seq[SegmentDirectory]): Seq[SegmentDirectory] = {
 
     val filteredStatuses = if (filters.isEmpty) {
       segDirs
@@ -311,17 +313,17 @@ class FilePruner(
 
   override lazy val sizeInBytes: Long = {
     cubeInstance.getSegments.asScala
-            .filter(_.getStatus.equals(SegmentStatusEnum.READY))
-            .map(_.getSizeKB * 1024)
-            .sum
+      .filter(_.getStatus.equals(SegmentStatusEnum.READY))
+      .map(_.getSizeKB * 1024)
+      .sum
   }
 
   override def refresh(): Unit = {}
 
   private def getExpressionShards(
-    expr: Expression,
-    shardColumnName: String,
-    numShards: Int): BitSet = {
+                                   expr: Expression,
+                                   shardColumnName: String,
+                                   numShards: Int): BitSet = {
 
     def getShardNumber(attr: Attribute, v: Any): Int = {
       BucketingUtils.getBucketIdFromValue(attr, numShards, v)
@@ -377,7 +379,7 @@ object FilePruner {
 case class SegFilters(start: Long, end: Long, pattern: String) extends Logging {
 
   private def insurance(value: Any)
-    (func: Long => Filter): Filter = {
+                       (func: Long => Filter): Filter = {
     value match {
       case v: Date =>
         // see SPARK-27546

@@ -29,19 +29,17 @@ import java.io.IOException;
 
 public class ManagerHub {
 
-    private ManagerHub() {}
+    private ManagerHub() {
+    }
 
     public static SegmentInfo getSegmentInfo(KylinConfig kylinConfig, String cubeName, String segmentId) {
         CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCubeByUuid(cubeName);
         CubeSegment segment = cubeInstance.getSegmentById(segmentId);
-        return MetadataConverter.getSegmentInfo(
-                CubeManager.getInstance(kylinConfig).getCubeByUuid(cubeName), segment.getUuid(), segment.getName());
+        return MetadataConverter.getSegmentInfo(CubeManager.getInstance(kylinConfig).getCubeByUuid(cubeName),
+                segment.getUuid(), segment.getName(), segment.getCreateTimeUTC());
     }
 
-    public static CubeInstance updateSegment(KylinConfig kylinConfig, SegmentInfo segmentInfo)
-            throws IOException {
-        return CubeManager.getInstance(kylinConfig)
-                .updateCube(MetadataConverter.getCubeUpdate(segmentInfo));
+    public static CubeInstance updateSegment(KylinConfig kylinConfig, SegmentInfo segmentInfo) throws IOException {
+        return CubeManager.getInstance(kylinConfig).updateCube(MetadataConverter.getCubeUpdate(segmentInfo));
     }
 }
-

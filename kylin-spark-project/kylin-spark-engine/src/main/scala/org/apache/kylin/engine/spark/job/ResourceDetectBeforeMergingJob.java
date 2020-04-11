@@ -60,12 +60,13 @@ public class ResourceDetectBeforeMergingJob extends SparkApplication {
         final CubeInstance cube = cubeManager.getCubeByUuid(cubeId);
         final CubeSegment mergedSeg = cube.getSegmentById(getParam(MetadataConstants.P_SEGMENT_IDS));
         final SegmentInfo mergedSegInfo = MetadataConverter.getSegmentInfo(cube, mergedSeg.getUuid(),
-                mergedSeg.getName());
+                mergedSeg.getName(), mergedSeg.getCreateTimeUTC());
         final List<CubeSegment> mergingSegments = cube.getMergingSegments(mergedSeg);
         final List<SegmentInfo> segmentInfos = Lists.newArrayList();
         Collections.sort(mergingSegments);
         for (CubeSegment cubeSegment : mergingSegments) {
-            segmentInfos.add(MetadataConverter.getSegmentInfo(cube, cubeSegment.getUuid(), cubeSegment.getName()));
+            segmentInfos.add(MetadataConverter.getSegmentInfo(cube, cubeSegment.getUuid(), cubeSegment.getName(),
+                    cubeSegment.getCreateTimeUTC()));
         }
         infos.clearMergingSegments();
         infos.recordMergingSegments(segmentInfos);

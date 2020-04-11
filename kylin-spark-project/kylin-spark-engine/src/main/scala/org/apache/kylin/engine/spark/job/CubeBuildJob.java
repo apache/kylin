@@ -203,7 +203,7 @@ public class CubeBuildJob extends SparkApplication {
 
     // build current layer and return the next layer to be built.
     private List<NBuildSourceInfo> buildLayer(Collection<NBuildSourceInfo> buildSourceInfos, SegmentInfo seg,
-            SpanningTree st) {
+                                              SpanningTree st) {
         int cuboidsNumInLayer = 0;
 
         // build current layer
@@ -243,7 +243,7 @@ public class CubeBuildJob extends SparkApplication {
 
     // decided and construct the next layer.
     private List<NBuildSourceInfo> constructTheNextLayerBuildInfos(SpanningTree st, SegmentInfo seg,
-            Collection<LayoutEntity> allIndexesInCurrentLayer) {
+                                                                   Collection<LayoutEntity> allIndexesInCurrentLayer) {
 
         List<NBuildSourceInfo> childrenBuildSourceInfos = new ArrayList<>();
         for (LayoutEntity index : allIndexesInCurrentLayer) {
@@ -252,7 +252,7 @@ public class CubeBuildJob extends SparkApplication {
             if (!children.isEmpty()) {
                 NBuildSourceInfo theRootLevelBuildInfos = new NBuildSourceInfo();
                 theRootLevelBuildInfos.setSparkSession(ss);
-                String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_NAME), seg.name(),
+                String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_NAME), seg.name(), seg.timestamp(),
                         String.valueOf(index.getId()));
                 theRootLevelBuildInfos.setLayoutId(index.getId());
                 theRootLevelBuildInfos.setParentStoragePath(path);
@@ -288,7 +288,7 @@ public class CubeBuildJob extends SparkApplication {
     }
 
     private LayoutEntity buildIndex(SegmentInfo seg, LayoutEntity cuboid, Dataset<Row> parent,
-            SpanningTree spanningTree, long parentId) throws IOException {
+                                    SpanningTree spanningTree, long parentId) throws IOException {
         String parentName = String.valueOf(parentId);
         if (parentId == ParentSourceChooser.FLAT_TABLE_FLAG()) {
             parentName = "flat table";
@@ -332,7 +332,7 @@ public class CubeBuildJob extends SparkApplication {
 
         NSparkCubingEngine.NSparkCubingStorage storage = StorageFactory.createEngineAdapter(layout,
                 NSparkCubingEngine.NSparkCubingStorage.class);
-        String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_NAME), seg.name(),
+        String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_NAME), seg.name(), seg.timestamp(),
                 String.valueOf(layoutId));
         String tempPath = path + TEMP_DIR_SUFFIX;
         // save to temp path
