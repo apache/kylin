@@ -281,8 +281,6 @@ public class NSparkExecutable extends AbstractExecutable {
         } catch (UnknownHostException e) {
             logger.warn("use the InetAddress get local ip failed!", e);
         }
-        String hdfsWorkingDir = config.getHdfsWorkingDirectory();
-
 
         String sparkDriverExtraJavaOptionsKey = "spark.driver.extraJavaOptions";
         StringBuilder sb = new StringBuilder();

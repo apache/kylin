@@ -1486,7 +1486,6 @@
     <module>tool</module>
     <module>tool-assembly</module>
     <module>kylin-it</module>
-    <module>tomcat-ext</module>
     <module>core-metrics</module>
     <module>metrics-reporter-hive</module>
     <module>metrics-reporter-kafka</module>
