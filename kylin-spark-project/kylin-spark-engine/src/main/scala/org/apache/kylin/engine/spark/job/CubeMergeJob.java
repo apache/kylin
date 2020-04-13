@@ -79,14 +79,6 @@ public class CubeMergeJob extends SparkApplication {
         mergeSegments(cubeId, newSegmentId);
     }
 
-
-    private void makeSnapshotForNewSegment(CubeSegment newSeg, List<CubeSegment> mergingSegments) {
-        CubeSegment lastSeg = mergingSegments.get(mergingSegments.size() - 1);
-        for (Map.Entry<String, String> entry : lastSeg.getSnapshots().entrySet()) {
-            newSeg.putSnapshotResPath(entry.getKey(), entry.getValue());
-        }
-    }
-
     private void mergeSegments(String cubeId, String segmentId) throws IOException {
         CubeManager mgr = CubeManager.getInstance(config);
         CubeInstance cube = mgr.getCubeByUuid(cubeId);

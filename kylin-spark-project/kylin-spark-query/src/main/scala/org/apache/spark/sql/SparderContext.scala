@@ -18,15 +18,12 @@
 
 package org.apache.spark.sql
 
-import java.io.File
 import java.lang.{Boolean => JBoolean, String => JString}
-import java.nio.file.Paths
 
 import org.apache.kylin.query.runtime.plans.QueryToExecutionIDCache
 import org.apache.spark.memory.MonitorEnv
 import org.apache.spark.util.Utils
 import org.apache.spark.scheduler.{SparkListener, SparkListenerEvent}
-import org.apache.spark.sql.KylinSession._
 import org.apache.kylin.query.UdfManager
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.execution.ui.PostQueryExecutionForKylin
@@ -34,7 +31,6 @@ import org.apache.spark.sql.catalyst.parser.ParseException
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import java.util.concurrent.atomic.AtomicReference
 
-import org.apache.hadoop.security.UserGroupInformation
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.spark.classloader.ClassLoaderUtils
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
@@ -124,6 +120,12 @@ object SparderContext extends Logging {
         initializingThread = new Thread(new Runnable {
           override def run(): Unit = {
             try {
+              val kylinConf: KylinConfig = KylinConfig.getInstanceFromEnv
+              val sparkConf = new SparkConf()
+              kylinConf.getSparkConf.asScala.foreach {
+                case (k, v) =>
+                  sparkConf.set(k, v)
+              }
               val sparkSession = System.getProperty("spark.local") match {
                 case "true" =>
                   SparkSession.builder
@@ -133,6 +135,7 @@ object SparderContext extends Logging {
                       ext.injectPlannerStrategy(_ => KylinSourceStrategy)
                     }
                     .enableHiveSupport()
+                    .config(sparkConf)
                     .getOrCreate()
                 case _ =>
                   SparkSession.builder
@@ -142,6 +145,7 @@ object SparderContext extends Logging {
                       ext.injectPlannerStrategy(_ => KylinSourceStrategy)
                     }
                     .enableHiveSupport()
+                    .config(sparkConf)
                     .getOrCreate()
               }
               spark = sparkSession
