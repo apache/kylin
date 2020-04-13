@@ -103,6 +103,10 @@ public class Tuple implements ITuple {
         values[idx] = objectValue;
     }
 
+    public void setDimensionValueDirectly(int idx, Object objectValue) {
+        values[idx] = objectValue;
+    }
+
     public void setMeasureValue(String fieldName, Object fieldValue) {
         setMeasureValue(info.getFieldIndex(fieldName), fieldValue);
     }
@@ -182,8 +186,12 @@ public class Tuple implements ITuple {
         }
     }
 
-    private static long epicDaysToMillis(int days) {
+    public static long epicDaysToMillis(int days) {
         return 1L * days * (1000 * 3600 * 24);
+    }
+
+    public static int millisToEpicDays(long millis) {
+        return (int) (millis / (1000 * 3600 * 24));
     }
 
     public static Object convertOptiqCellValue(String strValue, String dataTypeName) {
@@ -197,10 +205,10 @@ public class Tuple implements ITuple {
         switch (dataTypeName) {
         case "date":
             // convert epoch time
-            return Integer.valueOf(dateToEpicDays(strValue));// Optiq expects Integer instead of Long. by honma
+            return millisToEpicDays(DateFormat.stringToMillis(strValue));// Optiq expects Integer instead of Long. by honma
         case "datetime":
         case "timestamp":
-            return Long.valueOf(DateFormat.stringToMillis(strValue));
+            return DateFormat.stringToMillis(strValue);
         case "tinyint":
             return Byte.valueOf(strValue);
         case "smallint":
@@ -220,11 +228,6 @@ public class Tuple implements ITuple {
         default:
             return strValue;
         }
-    }
-
-    private static int dateToEpicDays(String strValue) {
-        long millis = DateFormat.stringToMillis(strValue);
-        return (int) (millis / (1000 * 3600 * 24));
     }
 
 }
