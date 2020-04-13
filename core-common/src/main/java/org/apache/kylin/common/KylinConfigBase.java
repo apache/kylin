@@ -504,6 +504,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.metadata.model-schema-updater-checker-enabled", "false"));
     }
 
+    public boolean isAbleChangeStringToDateTime() {
+        return Boolean.parseBoolean(getOptional("kylin.metadata.able-change-string-to-datetime", "false"));
+    }
+
     // ============================================================================
     // DICTIONARY & SNAPSHOT
     // ============================================================================
@@ -613,6 +617,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.cube.cuboid-scheduler", "org.apache.kylin.cube.cuboid.DefaultCuboidScheduler");
     }
 
+    public boolean isRowKeyEncodingAutoConvert() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.kylin.cube.rowkey-encoding-auto-convert", "true"));
+    }
+    
     public String getSegmentAdvisor() {
         return getOptional("kylin.cube.segment-advisor", "org.apache.kylin.cube.CubeSegmentAdvisor");
     }

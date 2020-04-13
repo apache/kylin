@@ -128,6 +128,10 @@ public class TableSchemaUpdateChecker {
         } else if (column.getType().isNumberFamily()) {
             // Both are float/double should be fine.
             return newCol.getType().isNumberFamily();
+        } else if ((column.getType().isStringFamily() && newCol.getType().isDateTimeFamily())
+                && metadataManager.getConfig().isAbleChangeStringToDateTime()) {
+            // String can be converted to Date or Time
+            return true;
         } else {
             // only compare base type name, changing precision or scale should be fine
             return column.getTypeName().equals(newCol.getTypeName());
