@@ -18,12 +18,13 @@
 
 package org.apache.kylin.rest.service.update;
 
+import java.io.Serializable;
 import java.util.Locale;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-public class TableSchemaUpdateMapping {
+public class TableSchemaUpdateMapping implements Serializable {
 
     private String database;
 

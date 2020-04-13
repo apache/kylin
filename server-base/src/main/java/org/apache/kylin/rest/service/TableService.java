@@ -27,10 +27,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -39,6 +42,8 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.CubeUpdate;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.lookup.ExtTableSnapshotInfo;
 import org.apache.kylin.dict.lookup.ExtTableSnapshotInfoManager;
 import org.apache.kylin.dict.lookup.IExtLookupTableCache.CacheState;
@@ -54,6 +59,7 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
@@ -63,6 +69,8 @@ import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.TableDescResponse;
 import org.apache.kylin.rest.response.TableSnapshotResponse;
+import org.apache.kylin.rest.service.update.TableSchemaUpdateMapping;
+import org.apache.kylin.rest.service.update.TableSchemaUpdater;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.IReadableTable.TableSignature;
@@ -84,11 +92,16 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 
 @Component("tableService")
 public class TableService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(TableService.class);
+
+    @Autowired
+    @Qualifier("cubeMgmtService")
+    private CubeService cubeService;
 
     @Autowired
     @Qualifier("modelMgmtService")
@@ -530,5 +543,108 @@ public class TableService extends BasicService {
     public String normalizeHiveTableName(String tableName) {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
         return (dbTableName[0] + "." + dbTableName[1]).toUpperCase(Locale.ROOT);
+    }
+
+    /**
+     * 1. Check whether it's able to do the change
+     *      - related cube instance should be disabled
+     * 2. Get all influenced metadata
+     *      - table
+     *      - project
+     *      - model
+     *      - cube desc
+     *      - cube instance
+     * 3. Update the metadata
+     * 4. Save the updated metadata
+     *      - table
+     *      - project
+     *      - model
+     *      - cube desc
+     *      - cube instance
+     * 5. Delete dirty table metadata
+     */
+    public void updateHiveTable(String projectName, Map<String, TableSchemaUpdateMapping> mapping, boolean isUseExisting) throws IOException {
+        final ProjectInstance prjInstance = getProjectManager().getProject(projectName);
+        if (prjInstance == null) {
+            throw new BadRequestException("Project " + projectName + " does not exist");
+        }
+        // To deal with case sensitive issue for table resource path
+        final String project = prjInstance.getName();
+        aclEvaluate.checkProjectWritePermission(project);
+
+        // Check whether it's able to do the change
+        Set<CubeInstance> infCubes = cubeService.listAllCubes(project).stream()
+                .filter(cube -> isTablesUsed(cube.getModel(), mapping.keySet())).collect(Collectors.toSet());
+        Set<CubeInstance> readyCubeSet = infCubes.stream().filter(cube -> cube.isReady()).collect(Collectors.toSet());
+        if (!readyCubeSet.isEmpty()) {
+            throw new BadRequestException("Influenced cubes " + readyCubeSet + " should be disabled");
+        }
+
+        // Get influenced metadata and update the metadata
+        Map<String, TableDesc> newTables = mapping.keySet().stream()
+                .map(t -> getTableManager().getTableDesc(t, project)).collect(Collectors.toMap(t -> t.getIdentity(),
+                        t -> TableSchemaUpdater.dealWithMappingForTable(t, mapping)));
+        Map<String, String> existingTables = newTables.entrySet().stream()
+                .filter(t -> getTableManager().getTableDesc(t.getValue().getIdentity(), project, false) != null)
+                .collect(Collectors.toMap(t -> t.getKey(), t -> t.getValue().getIdentity()));
+        if (!existingTables.isEmpty()) {
+            if (isUseExisting) {
+                logger.info("Will use existing tables {}", existingTables.values());
+            } else {
+                throw new BadRequestException("Tables " + existingTables.values() + " already exist");
+            }
+        }
+        Map<String, DataModelDesc> newModels = prjInstance.getModels().stream()
+                .map(m -> getDataModelManager().getDataModelDesc(m)).filter(m -> isTablesUsed(m, mapping.keySet()))
+                .map(m -> TableSchemaUpdater.dealWithMappingForModel(m, mapping))
+                .collect(Collectors.toMap(m -> m.getName(), m -> m));
+
+        Map<String, CubeDesc> newCubeDescs = infCubes.stream()
+                .map(cube -> TableSchemaUpdater.dealWithMappingForCubeDesc(cube.getDescriptor(), mapping))
+                .collect(Collectors.toMap(cube -> cube.getName(), cube -> cube));
+        Map<String, CubeInstance> newCubes = infCubes.stream()
+                .map(cube -> TableSchemaUpdater.dealWithMappingForCube(cube, mapping))
+                .collect(Collectors.toMap(cube -> cube.getName(), cube -> cube));
+
+        // Save the updated metadata
+        // -- 1. table & table_ext
+        for (Map.Entry<String, TableDesc> entry : newTables.entrySet()) {
+            if (existingTables.containsKey(entry.getKey())) {
+                continue;
+            }
+            getTableManager().saveNewTableExtFromOld(entry.getKey(), project, entry.getValue().getIdentity());
+            getTableManager().saveSourceTable(entry.getValue(), project);
+        }
+        // -- 2. project
+        Set<String> newTableNames = newTables.values().stream().map(t -> t.getIdentity()).collect(Collectors.toSet());
+        getProjectManager().addTableDescToProject(newTableNames.toArray(new String[0]), project);
+        // -- 3. model
+        for (Map.Entry<String, DataModelDesc> entry : newModels.entrySet()) {
+            getDataModelManager().updateDataModelDesc(entry.getValue());
+        }
+        // -- 4. cube_desc & cube instance
+        for (Map.Entry<String, CubeDesc> entry : newCubeDescs.entrySet()) {
+            getCubeDescManager().updateCubeDesc(entry.getValue());
+        }
+        for (Map.Entry<String, CubeInstance> entry : newCubes.entrySet()) {
+            CubeUpdate update = new CubeUpdate(entry.getValue());
+            getCubeManager().updateCube(update);
+        }
+
+        // Delete dirty table metadata
+        Set<String> oldTables = Sets.newHashSet(newTables.keySet());
+        oldTables.removeAll(existingTables.values());
+        getProjectManager().removeTableDescFromProject(oldTables.toArray(new String[0]), project);
+        for (String entry : newTables.keySet()) {
+            getTableManager().removeTableExt(entry, project);
+            getTableManager().removeSourceTable(entry, project);
+        }
+    }
+
+    private static boolean isTablesUsed(DataModelDesc model, Set<String> tables) {
+        Set<String> usingTables = model.getAllTables().stream().map(t -> t.getTableIdentity())
+                .collect(Collectors.toSet());
+        usingTables.retainAll(tables);
+        return !usingTables.isEmpty();
     }
 }
