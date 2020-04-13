@@ -333,6 +333,22 @@ public class ProjectManager {
         }
     }
 
+    public void removeTableDescFromProject(String[] tableIdentities, String projectName) throws IOException {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
+            TableMetadataManager metaMgr = getTableManager();
+            ProjectInstance projectInstance = getProject(projectName);
+            for (String tableId : tableIdentities) {
+                TableDesc table = metaMgr.getTableDesc(tableId, projectName);
+                if (table == null) {
+                    throw new IllegalStateException("Cannot find table '" + tableId + "' in metadata manager");
+                }
+                projectInstance.removeTable(table.getIdentity());
+            }
+
+            save(projectInstance);
+        }
+    }
+
     public ProjectInstance addExtFilterToProject(String[] filters, String projectName) throws IOException {
         try (AutoLock lock = prjMapLock.lockForWrite()) {
             TableMetadataManager metaMgr = getTableManager();
