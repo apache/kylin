@@ -67,6 +67,10 @@ public class RowKeyDesc implements java.io.Serializable {
         return desc;
     }
 
+    public RowKeyColDesc getColDescUncheck(TblColRef col) {
+        return columnMap.get(col);
+    }
+
     public boolean isUseDictionary(TblColRef col) {
         return getColDesc(col).isUsingDictionary();
     }
