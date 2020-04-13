@@ -52,6 +52,10 @@ public class TupleInfo {
         return columns.get(idx);
     }
 
+    public TblColRef getColumn(int idx) {
+        return columns.get(idx);
+    }
+
     public int getColumnIndex(TblColRef col) {
         return columnMap.get(col);
     }
