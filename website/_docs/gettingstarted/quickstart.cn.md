@@ -62,7 +62,7 @@ apachekylin/apache-kylin-standalone:3.0.1
 
 并自动运行 $KYLIN_HOME/bin/sample.sh及在 Kafka 中创建 kylin_streaming_topic topic 并持续向该 topic 中发送数据。这是为了让用户启动容器后，就能体验以批和流的方式的方式构建 Cube 并进行查询。
 用户可以通过docker exec命令进入容器，容器内相关环境变量如下：
-```$xslt
+```
 JAVA_HOME=/home/admin/jdk1.8.0_141
 HADOOP_HOME=/home/admin/hadoop-2.7.0
 KAFKA_HOME=/home/admin/kafka_2.11-1.1.1
@@ -99,7 +99,7 @@ CentOS 6.5+ 或Ubuntu 16.0.4+
 
 #### step1、下载kylin压缩包
 
-从https://kylin.apache.org/download/下载一个适用于你的Hadoop版本的二进制文件。目前最新Release版本是kylin 3.0.1和kylin 2.6.5，其中3.0版本支持实时摄入数据进行预计算的功能。以CDH 5.的hadoop环境为例，可以使用如下命令行下载kylin 3.0.0：
+从[Apache Kylin Download Site](https://kylin.apache.org/download/)下载一个适用于你的Hadoop版本的二进制文件。目前最新Release版本是kylin 3.0.1和kylin 2.6.5，其中3.0版本支持实时摄入数据进行预计算的功能。以CDH 5.的hadoop环境为例，可以使用如下命令行下载kylin 3.0.0：
 ```
 cd /usr/local/
 wget http://apache.website-solution.net/kylin/apache-kylin-3.0.0/apache-kylin-3.0.0-bin-cdh57.tar.gz
@@ -107,7 +107,7 @@ wget http://apache.website-solution.net/kylin/apache-kylin-3.0.0/apache-kylin-3.
 #### step2、解压kylin
 
 解压下载得到的kylin压缩包，并配置环境变量KYLIN_HOME指向解压目录：
-```$xslt
+```
 tar -zxvf  apache-kylin-3.0.0-bin-cdh57.tar.gz
 cd apache-kylin-3.0.0-bin-cdh57
 export KYLIN_HOME=`pwd`
@@ -116,11 +116,11 @@ export KYLIN_HOME=`pwd`
 #### step3、下载SPARK
 
 由于kylin启动时会对SPARK环境进行检查，所以你需要设置SPARK_HOME指向自己的spark安装路径：
-```$xslt
+```
 export SPARK_HOME=/path/to/spark
 ```
 如果您没有已经下载好的Spark环境，也可以使用kylin自带脚本下载spark:
-```$xslt
+```
 $KYLIN_HOME/bin/download-spark.sh
 ```
 脚本会将解压好的spark放在$KYLIN_HOME目录下，如果系统中没有设置SPARK_HOME，启动kylin时会自动找到$KYLIN_HOME目录下的spark。
@@ -128,7 +128,7 @@ $KYLIN_HOME/bin/download-spark.sh
 #### step4、环境检查
 
 Kylin 运行在 Hadoop 集群上，对各个组件的版本、访问权限及 CLASSPATH 等都有一定的要求，为了避免遇到各种环境问题，您可以执行
-```$xslt
+```
 $KYLIN_HOME/bin/check-env.sh
 ```
 来进行环境检测，如果您的环境存在任何的问题，脚本将打印出详细报错信息。如果没有报错信息，代表您的环境适合 Kylin 运行。
@@ -136,11 +136,11 @@ $KYLIN_HOME/bin/check-env.sh
 #### step5、启动kylin
 
 运行如下命令来启动kylin：
-```$xslt
+```
 $KYLIN_HOME/bin/kylin.sh start 
 ```
 如果启动成功，命令行的末尾会输出如下内容：
-```$xslt
+```
 A new Kylin instance is started by root. To stop it, run 'kylin.sh stop'
 Check the log at /usr/local/apache-kylin-3.0.0-bin-cdh57/logs/kylin.log
 Web UI is at http://<hostname>:7070/kylin
@@ -157,22 +157,22 @@ Kylin 启动后您可以通过浏览器 http://<hostname>:port/kylin 进行访�
 
 Kylin提供了一个创建样例Cube的脚本，以供用户快速体验Kylin。
 在命令行运行：
-```$xslt
+```
 $KYLIN_HOME/bin/sample.sh
 ```
 完成后登陆kylin，点击System->Configuration->Reload Metadata来重载元数据
 元数据重载完成后你可以在左上角的Project中看到一个名为learn_kylin的项目，它包含kylin_sales_cube和kylin_streaming_cube, 它们分别为batch cube和streaming cube，你可以直接对kylin_sales_cube进行构建，构建完成后就可以查询。
 对于kylin_streaming_cube，需要设置KAFKA_HOME指向你的kafka安装目录:
-```$xslt
+```
 export KAFKA_HOME=/path/to/kafka
 ```
 然后执行
-```$xslt
+```
 ${KYLIN_HOME}/bin/sample-streaming.sh
 ```
 该脚本会在 localhost:9092 broker 中创建名为 kylin_streaming_topic 的 Kafka Topic，它也会每秒随机发送 100 条 messages 到 kylin_streaming_topic，然后你可以对kylin_streaming_cube进行构建。
 
-关于sample cube，可以参考http://kylin.apache.org/cn/docs/tutorial/kylin_sample.html。
+关于sample cube，可以参考[Sample Cube](/cn/docs/tutorial/kylin_sample.html)。
 
 当然，你也可以根据下面的教程来尝试创建自己的Cube。
 
@@ -233,13 +233,13 @@ Kylin会读取到Hive数据源中的表并以树状方式显示出来，你可�
 
 点击Next跳转到下一页高级设置。在这里可以设置聚合组、RowKeys、Mandatory Cuboids、Cube Engine等。
 
-关于高级设置的详细信息，可以参考http://kylin.apache.org/cn/docs/tutorial/create_cube.html 页面中的步骤5，其中对聚合组等设置进行了详细介绍。
+关于高级设置的详细信息，可以参考[create_cube](/cn/docs/tutorial/create_cube.html) 页面中的步骤5，其中对聚合组等设置进行了详细介绍。
 
-关于更多维度优化，可以阅读http://kylin.apache.org/blog/2016/02/18/new-aggregation-group/。 
+关于更多维度优化，可以阅读[aggregation-group](/blog/2016/02/18/new-aggregation-group/)。 
 
 ![](/images/docs/quickstart/advance_setting.png)
 
-对于高级设置不是很熟悉时可以先保持默认设置，点击Next跳转到Kylin Properties页面，你可以在这里重写cube级别的kylin配置项，定义覆盖的属性，配置项请参考：http://kylin.apache.org/cn/docs/install/configuration.html。
+对于高级设置不是很熟悉时可以先保持默认设置，点击Next跳转到Kylin Properties页面，你可以在这里重写cube级别的kylin配置项，定义覆盖的属性，配置项请参考[配置项](/cn/docs/install/configuration.html)。
 
 ![](/images/docs/quickstart/properties.png)
 
