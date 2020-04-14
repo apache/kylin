@@ -108,7 +108,7 @@ public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
                         }, NSparkCubingEngine.NSparkCubingStorage.class)
                         .getFrom(PathManager.getParquetStoragePath(segment.getConfig(),
                                 segment.getCubeInstance().getName(),
-                                segment.getName(), segment.getCreateTimeUTC(), String.valueOf(cuboid.getId())),
+                                segment.getName(), segment.getStorageLocationIdentifier(), String.valueOf(cuboid.getId())),
                                 ss);
                 layoutDataset = layoutDataset.select(NSparkCubingUtil.getColumns(rowKeys, chooseMeas(cuboid)))
                         .sort(NSparkCubingUtil.getColumns(rowKeys));

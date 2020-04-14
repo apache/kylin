@@ -172,7 +172,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
                 }
             }, NSparkCubingEngine.NSparkCubingStorage.class)
                     .getFrom(PathManager.getParquetStoragePath(segment.getConfig(), segment.getCubeInstance().getName(),
-                            segment.getName(), segment.getCreateTimeUTC(), String.valueOf(entity.getId())), ss);
+                            segment.getName(), segment.getStorageLocationIdentifier(), String.valueOf(entity.getId())), ss);
 
             Set<Integer> measures = new HashSet<Integer>();
             Set<Integer> rowKeys = entity.getOrderedDimensions().keySet();

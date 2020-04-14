@@ -63,6 +63,7 @@ import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
@@ -99,6 +100,8 @@ public class CubeManager implements IRealizationProvider {
     private static String ALPHA_NUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     private static int HBASE_TABLE_LENGTH = 10;
+    private static int PARQUET_IDENTIFIER_LENGTH = 3;
+
     public static final Serializer<CubeInstance> CUBE_SERIALIZER = new JsonSerializer<>(CubeInstance.class);
 
     private static final Logger logger = LoggerFactory.getLogger(CubeManager.class);
@@ -589,17 +592,22 @@ public class CubeManager implements IRealizationProvider {
     }
 
     @VisibleForTesting
-    /*private*/ String generateStorageLocation() {
+    /*private*/ String generateStorageLocation(int engineType) {
         String namePrefix = config.getHBaseTableNamePrefix();
         String namespace = config.getHBaseStorageNameSpace();
         String tableName = "";
         do {
             StringBuffer sb = new StringBuffer();
-            if ((namespace.equals("default") || namespace.equals("")) == false) {
-                sb.append(namespace).append(":");
+            int identifierLength = HBASE_TABLE_LENGTH;
+            if (engineType != IEngineAware.ID_SPARK_II) {
+                if ((namespace.equals("default") || namespace.equals("")) == false) {
+                    sb.append(namespace).append(":");
+                }
+                sb.append(namePrefix);
+            } else {
+                identifierLength = PARQUET_IDENTIFIER_LENGTH;
             }
-            sb.append(namePrefix);
-            for (int i = 0; i < HBASE_TABLE_LENGTH; i++) {
+            for (int i = 0; i < identifierLength; i++) {
                 sb.append(ALPHA_NUM.charAt(ran.nextInt(ALPHA_NUM.length())));
             }
             tableName = sb.toString();
@@ -947,8 +955,10 @@ public class CubeManager implements IRealizationProvider {
             segment.setTSRange(tsRange);
             segment.setSegRange(segRange);
             segment.setStatus(SegmentStatusEnum.NEW);
-            segment.setStorageLocationIdentifier(generateStorageLocation());
-
+            segment.setStorageLocationIdentifier(generateStorageLocation(cube.getEngineType()));
+            Map<String, String> additionalInfo = segment.getAdditionalInfo();
+            additionalInfo.put("storageType", "" + cube.getStorageType());
+            segment.setAdditionalInfo(additionalInfo);
             segment.setCubeInstance(cube);
 
             segment.validate();

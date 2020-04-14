@@ -289,7 +289,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
               //business rule check
               switch($scope.curStep.form){
                   case 'cube_info_form':
-                    return await $scope.check_cube_info(); 
+                    return await $scope.check_cube_info();
                   case 'cube_dimension_form':
                       return $scope.check_cube_dimension();
                   case 'cube_measure_form':
@@ -445,6 +445,9 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             }
         });
 
+        if ($scope.cubeMetaFrame.engine_type === 6) {
+          $scope.cubeMetaFrame.storage_type = 4;
+        }
 
         var errorInfo = "";
         angular.forEach(errors,function(item){

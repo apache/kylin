@@ -252,7 +252,7 @@ public class CubeBuildJob extends SparkApplication {
             if (!children.isEmpty()) {
                 NBuildSourceInfo theRootLevelBuildInfos = new NBuildSourceInfo();
                 theRootLevelBuildInfos.setSparkSession(ss);
-                String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_NAME), seg.name(), seg.timestamp(),
+                String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_NAME), seg.name(), seg.identifier(),
                         String.valueOf(index.getId()));
                 theRootLevelBuildInfos.setLayoutId(index.getId());
                 theRootLevelBuildInfos.setParentStoragePath(path);
@@ -332,7 +332,7 @@ public class CubeBuildJob extends SparkApplication {
 
         NSparkCubingEngine.NSparkCubingStorage storage = StorageFactory.createEngineAdapter(layout,
                 NSparkCubingEngine.NSparkCubingStorage.class);
-        String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_NAME), seg.name(), seg.timestamp(),
+        String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_NAME), seg.name(), seg.identifier(),
                 String.valueOf(layoutId));
         String tempPath = path + TEMP_DIR_SUFFIX;
         // save to temp path

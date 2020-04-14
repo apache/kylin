@@ -112,7 +112,7 @@ class TestCreateFlatTable extends SparderBaseFunSuite with SharedSparkSession wi
   }
 
   private def checkEncodeCols(ds: Dataset[Row], segment: CubeSegment, needEncode: Boolean) = {
-    val seg = MetadataConverter.getSegmentInfo(segment.getCubeInstance, segment.getUuid, segment.getName, segment.getCreateTimeUTC)
+    val seg = MetadataConverter.getSegmentInfo(segment.getCubeInstance, segment.getUuid, segment.getName, segment.getStorageLocationIdentifier)
     val globalDictSet = seg.toBuildDictColumns
     val actualEncodeDictSize = ds.schema.count(_.name.endsWith(DFBuilderHelper.ENCODE_SUFFIX))
     if (needEncode) {
@@ -123,7 +123,7 @@ class TestCreateFlatTable extends SparderBaseFunSuite with SharedSparkSession wi
   }
 
   private def generateFlatTable(segment: CubeSegment, cube: CubeInstance, needEncode: Boolean): Dataset[Row] = {
-    val seg = MetadataConverter.getSegmentInfo(segment.getCubeInstance, segment.getUuid, segment.getName, segment.getCreateTimeUTC)
+    val seg = MetadataConverter.getSegmentInfo(segment.getCubeInstance, segment.getUuid, segment.getName, segment.getStorageLocationIdentifier)
     val spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(seg.toBuildLayouts))
     val flatTable = new CreateFlatTable(seg, spanningTree, spark, null)
     val afterJoin = flatTable.generateDataset(needEncode)

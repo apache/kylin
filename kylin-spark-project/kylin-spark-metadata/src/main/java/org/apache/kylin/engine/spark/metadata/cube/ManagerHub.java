@@ -36,7 +36,7 @@ public class ManagerHub {
         CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCubeByUuid(cubeName);
         CubeSegment segment = cubeInstance.getSegmentById(segmentId);
         return MetadataConverter.getSegmentInfo(CubeManager.getInstance(kylinConfig).getCubeByUuid(cubeName),
-                segment.getUuid(), segment.getName(), segment.getCreateTimeUTC());
+                segment.getUuid(), segment.getName(), segment.getStorageLocationIdentifier());
     }
 
     public static CubeInstance updateSegment(KylinConfig kylinConfig, SegmentInfo segmentInfo) throws IOException {
