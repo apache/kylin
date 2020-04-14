@@ -41,7 +41,7 @@ import org.apache.spark.util.collection.BitSet
 
 import scala.collection.JavaConverters._
 
-case class SegmentDirectory(segmentName: String, timestamp: Long, files: Seq[FileStatus])
+case class SegmentDirectory(segmentName: String, identifier: String, files: Seq[FileStatus])
 
 /**
  * A container for shard information.
@@ -83,11 +83,11 @@ class FilePruner(
   private lazy val segmentDirs: Seq[SegmentDirectory] = {
     cubeInstance.getSegments.asScala
       .filter(_.getStatus.equals(SegmentStatusEnum.READY))
-      .map(seg => SegmentDirectory(seg.getName, seg.getCreateTimeUTC, null))
+      .map(seg => SegmentDirectory(seg.getName, seg.getStorageLocationIdentifier, null))
     cubeInstance.getSegments.asScala
       .filter(_.getStatus.equals(SegmentStatusEnum.READY)).map(seg => {
       val segName = seg.getName
-      val path = PathManager.getParquetStoragePath(cubeInstance, segName, seg.getCreateTimeUTC, layoutEntity.getId)
+      val path = PathManager.getParquetStoragePath(cubeInstance, segName, seg.getStorageLocationIdentifier, layoutEntity.getId)
       val files = new InMemoryFileIndex(session,
         Seq(new Path(path)),
         options,
@@ -96,7 +96,7 @@ class FilePruner(
         .listFiles(Nil, Nil)
         .flatMap(_.files)
         .filter(_.isFile)
-      SegmentDirectory(segName, seg.getCreateTimeUTC, files)
+      SegmentDirectory(segName, seg.getStorageLocationIdentifier, files)
     }).filter(_.files.nonEmpty)
   }
 
@@ -112,11 +112,11 @@ class FilePruner(
   }
 
   override def rootPaths: Seq[Path] = {
-    segmentDirs.map(seg => new Path(toPath(seg.segmentName, seg.timestamp)))
+    segmentDirs.map(seg => new Path(toPath(seg.segmentName, seg.identifier)))
   }
 
-  def toPath(segmentName: String, timestamp: Long): String = {
-    PathManager.getParquetStoragePath(cubeInstance, segmentName, timestamp, cuboid.getId)
+  def toPath(segmentName: String, identifier: String): String = {
+    PathManager.getParquetStoragePath(cubeInstance, segmentName, identifier, cuboid.getId)
   }
 
 
@@ -204,14 +204,14 @@ class FilePruner(
     }
     //    QueryContextFacade.current().record("seg_pruning")
     selected = selected.par.map { e =>
-      val path = new Path(toPath(e.segmentName, e.timestamp))
+      val path = new Path(toPath(e.segmentName, e.identifier))
       val maybeStatuses = fsc.getLeafFiles(path)
       if (maybeStatuses.isDefined) {
-        SegmentDirectory(e.segmentName, e.timestamp, maybeStatuses.get)
+        SegmentDirectory(e.segmentName, e.identifier, maybeStatuses.get)
       } else {
         val statuses = path.getFileSystem(session.sparkContext.hadoopConfiguration).listStatus(path)
         fsc.putLeafFiles(path, statuses)
-        SegmentDirectory(e.segmentName, e.timestamp, statuses)
+        SegmentDirectory(e.segmentName, e.identifier, statuses)
       }
     }.toIterator.toSeq
     //    QueryContextFacade.current().record("fetch_file_status")

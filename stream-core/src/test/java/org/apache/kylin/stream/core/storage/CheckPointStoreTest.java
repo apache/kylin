@@ -22,8 +22,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.stream.core.model.stats.LongLatencyInfo;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +45,15 @@ public class CheckPointStoreTest {
             Assert.assertTrue(checkPointFolder.isDirectory());
         }
         cpStore = new CheckPointStore(cubeName, checkPointFolder);
+    }
+
+    @After
+    public void cleanup() throws IOException {
+        String cubeName = "testCube";
+        File checkPointFolder = new File(cubeName);
+        if (checkPointFolder.exists()) {
+            FileUtils.deleteDirectory(checkPointFolder);
+        }
     }
 
     @Test

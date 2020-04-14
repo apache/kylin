@@ -80,7 +80,7 @@ case class JoinDesc(lookupTable: TableDesc, PKS: Array[ColumnDesc], FKS: Array[C
 
 case class SegmentInfo(id: String,
                        name: String,
-                       timestamp: Long,
+                       identifier: String,
                        project: String,
                        kylinconf: KylinConfig,
                        factTable: TableDesc,
