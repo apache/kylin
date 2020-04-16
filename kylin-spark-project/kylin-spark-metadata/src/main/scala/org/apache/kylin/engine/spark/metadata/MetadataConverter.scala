@@ -208,7 +208,6 @@ object MetadataConverter {
       ""
     } else {
       val partitionDesc = cubeSegment.getModel.getPartitionDesc
-      partitionDesc.setPartitionDateFormat(DateFormat.DEFAULT_DATE_PATTERN)
       val (originPartitionColumn, convertedPartitionColumn) = if (partitionDesc.getPartitionDateColumnRef != null) {
         (partitionDesc.getPartitionDateColumnRef.getIdentity, convertFromDot(partitionDesc.getPartitionDateColumnRef.getIdentity))
       } else {
