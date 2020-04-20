@@ -18,7 +18,9 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.common.KylinConfig;
@@ -26,12 +28,15 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -70,13 +75,35 @@ public class NSparkCubingStep extends NSparkExecutable {
     @Override
     protected void updateMetaAfterBuilding(KylinConfig config) throws IOException {
         CubeManager cubeManager = CubeManager.getInstance(config);
-        CubeInstance currentInstance = cubeManager.getCube(getCubeName());
-        CubeUpdate update = new CubeUpdate(currentInstance.latestCopyForWrite());
+        CubeInstance currentInstanceCopy = cubeManager.getCube(getCubeName()).latestCopyForWrite();
         KylinConfig kylinDistConfig = MetaDumpUtil.loadKylinConfigFromHdfs(getDistMetaUrl());
         CubeInstance distCube = CubeManager.getInstance(kylinDistConfig).reloadCube(getCubeName());
+        CubeUpdate update = new CubeUpdate(currentInstanceCopy);
         Set<String> segmentIds = Sets.newHashSet(org.apache.hadoop.util.StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS)));
-        update.setToUpdateSegs(distCube.getSegmentById(segmentIds.iterator().next()));
-        update.setStatus(RealizationStatusEnum.READY);
+        CubeSegment toUpdateSegs = distCube.getSegmentById(segmentIds.iterator().next());
+
+        List<CubeSegment> tobe = currentInstanceCopy.calculateToBeSegments(toUpdateSegs);//所有New状态的segment
+
+        if (tobe.contains(toUpdateSegs) == false)
+            throw new IllegalStateException(
+                    String.format(Locale.ROOT, "For cube %s, segment %s is expected but not in the tobe %s",
+                            currentInstanceCopy.toString(), toUpdateSegs.toString(), tobe.toString()));
+
+        toUpdateSegs.setStatus(SegmentStatusEnum.READY);
+
+        List<CubeSegment> toRemoveSegs = Lists.newArrayList();
+        for (CubeSegment segment : currentInstanceCopy.getSegments()) {
+            if (!tobe.contains(segment))
+                toRemoveSegs.add(segment);
+        }
+
+        logger.info("Promoting cube {}, new segment {}, to remove segments {}", currentInstanceCopy, toUpdateSegs, toRemoveSegs);
+
+        update.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()]))
+                .setToUpdateSegs(toUpdateSegs);
+        if (currentInstanceCopy.getConfig().isJobAutoReadyCubeEnabled()) {
+            update.setStatus(RealizationStatusEnum.READY);
+        }
         cubeManager.updateCube(update);
     }
 }
