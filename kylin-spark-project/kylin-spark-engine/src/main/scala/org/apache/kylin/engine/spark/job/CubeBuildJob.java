@@ -149,7 +149,6 @@ public class CubeBuildJob extends SparkApplication {
         segment.setLastBuildTime(System.currentTimeMillis());
         segment.setLastBuildJobID(getParam(MetadataConstants.P_JOB_ID));
         segment.setInputRecords(sourceRowCount);
-        segment.setStatus(SegmentStatusEnum.READY);
         segment.setSnapshots(new ConcurrentHashMap<>(segmentInfo.getSnapShot2JavaMap()));
         Map<String, String> additionalInfo = segment.getAdditionalInfo();
         additionalInfo.put("storageType", "" + IStorageAware.ID_PARQUET);
