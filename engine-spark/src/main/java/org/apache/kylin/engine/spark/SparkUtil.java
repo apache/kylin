@@ -138,7 +138,6 @@ public class SparkUtil {
     }
 
     public static void modifySparkHadoopConfiguration(SparkContext sc) throws Exception {
-        sc.hadoopConfiguration().set("dfs.replication", "2"); // cuboid intermediate files, replication=2
         sc.hadoopConfiguration().set("mapreduce.output.fileoutputformat.compress", "true");
         sc.hadoopConfiguration().set("mapreduce.output.fileoutputformat.compress.type", "BLOCK");
         sc.hadoopConfiguration().set("mapreduce.output.fileoutputformat.compress.codec", "org.apache.hadoop.io.compress.DefaultCodec"); // or org.apache.hadoop.io.compress.SnappyCodec
