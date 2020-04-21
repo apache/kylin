@@ -168,9 +168,12 @@ public class ForestSpanningTree extends SpanningTree {
         // Sort in descending order of dimension and measure number to make sure children is in front
         // of parent.
         private SortedSet<LayoutEntity> sortedCuboids = Sets.newTreeSet((o1, o2) -> {
-            int c = Integer.compare(o1.getOrderedDimensions().keySet().size(), o2.getOrderedMeasures().keySet().size());
-            if (c != 0) {
-                return c;
+            int c1 = Integer.compare(o1.getOrderedDimensions().size(), o2.getOrderedDimensions().size());
+            int c2 = Integer.compare(o1.getOrderedMeasures().size(), o2.getOrderedMeasures().size());
+            if (c1 != 0) {
+                return c1;
+            } else if (c2 != 0) {
+                return c2;
             } else {
                 return Long.compare(o1.getId(), o2.getId());
             }
