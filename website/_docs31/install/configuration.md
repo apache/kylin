@@ -218,7 +218,7 @@ This section introduces Kylin Metastore related configuration.
 - `kylin.metadata.hbase-rpc-timeout`: specifies the timeout for HBase to perform RPC operations. The default value is 5000 (ms).
 - `kylin.metadata.hbase-client-retries-number`: specifies the number of HBase retries. The default value is 1 (times).
 - `kylin.metadata.resource-store-provider.jdbc`: specifies the class used by JDBC. The default value is *org.apache.kylin.common.persistence.JDBCResourceStore*
-
+- `kylin.metadata.hbasemapping-adapter`: If you want to use a custom method of mapping from cube settings to HBase column family, you can implement the methods in the interface of *org.apache.kylin.cube.model.IHBaseMappingAdapter* and configure the implementation class here. 
 
 
 ### MySQL Metastore Configuration (Beta) {#mysql-metastore}
