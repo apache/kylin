@@ -216,7 +216,7 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 - `kylin.metadata.hbase-rpc-timeout`：指定 HBase 执行 RPC 操作的超时时间，默认值为 5000(ms)
 - `kylin.metadata.hbase-client-retries-number`：指定 HBase 重试次数，默认值为 1（次）
 - `kylin.metadata.resource-store-provider.jdbc`：指定 JDBC 使用的类，默认值为 `org.apache.kylin.common.persistence.JDBCResourceStore`
-
+- `kylin.metadata.hbasemapping-adapter`: 如果你想要使用自定义的从cube设置映射到hbase列族的方法, 你可以实现接口`org.apache.kylin.cube.model.IHBaseMappingAdapter`中的方法并将实现类配置在这里 
 
 
 ### 基于 MySQL 的 Metastore (测试) {#mysql-metastore}
