@@ -47,7 +47,12 @@ This page lists the major RESTful APIs provided by Kylin.
    * [Build stream cube](#build-stream-cube)
    * [Check segment holes](#check-segment-holes)
    * [Fill segment holes](#fill-segment-holes)
-
+* ACL
+   * [Get users can query the table](#get-users-can-query-the-table)
+   * [Get users cannot query the table](#get-users-cannot-query-the-table)
+   * [Put user to table blacklist](#put-user-to-table-blacklist)
+   * [Delete user from table blacklist](#delete-user-from-table-blacklist)
+   
 ## Authentication
 `POST /kylin/api/user/authentication`
 
@@ -1641,6 +1646,41 @@ This API is specific for stream cube's building;
 #### Path variable
 * cubeName - `required` `string` Cube name
 
+***
+
+## Get users can query the table
+`GET /kylin/api/acl/table/{project}/{type}/{table}`
+
+#### Path variable
+* project - `required` `string` projectName to which table belongs
+* type - `required` `string` user or group
+* table - `required` `string` table name
+
+## Get users cannot query the table
+`GET /kylin/api/acl/table/{project}/{type}/black/{table}`
+
+#### Path variable
+* project - `required` `string` projectName to which table belongs
+* type - `required` `string` user or group
+* table - `required` `string` table name
+
+## Put user to table blacklist
+`DELETE /kylin/api/table/{project}/{type}/{table}/{name}`
+
+#### Path variable
+* project - `required` `string` projectName to which table belongs
+* type - `required` `string` user or group
+* table - `required` `string` table name
+* name - `required` `string` user name or group name you want to put to table blacklist
+
+## Delete user from table blacklist
+`POST /kylin/api/table/{project}/{type}/{table}/{name}`
+
+#### Path variable
+* project - `required` `string` projectName to which table belongs
+* type - `required` `string` user or group
+* table - `required` `string` table name
+* name - `required` `string` user name or group name you want to delete from table blacklist
 
 
 ## Use RESTful API in Javascript
