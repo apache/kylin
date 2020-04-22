@@ -314,7 +314,6 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 - `kylin.cube.size-estimate-memhungry-ratio`：已废弃，默认值为 0.05
 - `kylin.cube.size-estimate-countdistinct-ratio`：包含精确去重度量的 Cube 大小估计，默认值为 0.5
 - `kylin.cube.size-estimate-topn-ratio`：包含 TopN 度量的 Cube 大小估计，默认值为 0.5 
-- `kylin.cube.size-estimate-enable-optimize`: 使用历史结果调整新的预估，默认值为 false 
 
 
 

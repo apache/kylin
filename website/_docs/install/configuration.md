@@ -315,8 +315,6 @@ Both Kylin and HBase use compression when writing to disk, so Kylin will multipl
 - `kylin.cube.size-estimate-memhungry-ratio`: Deprecated, default is 0.05
 - `kylin.cube.size-estimate-countdistinct-ratio`: Cube Size Estimation with count distinct h= metric, default value is 0.5
 - `kylin.cube.size-estimate-topn-ratio`: Cube Size Estimation with TopN metric, default value is 0.5
-- `kylin.cube.size-estimate-enable-optimize`: Use historical estimation result to optimize the new one, default value is false 
-
 
 
 ### Cube Algorithm {#cube-algorithm}
