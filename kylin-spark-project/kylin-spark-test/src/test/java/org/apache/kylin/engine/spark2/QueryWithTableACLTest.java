@@ -16,13 +16,14 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.rest.security;
+package org.apache.kylin.engine.spark2;
 
 import java.io.IOException;
 import java.sql.SQLException;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
+import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.acl.TableACLManager;
 import org.apache.kylin.query.security.AccessDeniedException;
@@ -32,59 +33,56 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.Ignore;
 import org.junit.rules.ExpectedException;
-import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-@Ignore("Ignore with the introduce of Parquet storage")
-public class QueryWithTableACLTest extends LocalFileMetadataTestCase {
+public class QueryWithTableACLTest extends LocalWithSparkSessionTest {
     private static final String PROJECT = "DEFAULT";
     private static final String ADMIN = "ADMIN";
     private static final String MODELER = "MODELER";
-    private static final String STREAMING_TABLE = "DEFAULT.STREAMING_TABLE";
+    private static final String QUERY_TABLE = "DEFAULT.TEST_KYLIN_FACT";
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Before
-    public void setUp() {
-        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(false, null));
-        this.createTestMetadata();
+    public void setUp() throws SchedulerException {
+        super.setup();
+        System.setProperty("spark.local", "true");
     }
 
     @Test
     public void testNormalQuery() throws SQLException {
         QueryACLTestUtil.setUser(ADMIN);
-        QueryACLTestUtil.mockQuery(PROJECT, "select * from STREAMING_TABLE");
+        QueryACLTestUtil.mockQuery(PROJECT, "select * from TEST_KYLIN_FACT");
     }
 
     @Test
     public void testFailQuery() throws SQLException, IOException {
         QueryACLTestUtil.setUser(MODELER);
-        QueryACLTestUtil.mockQuery(PROJECT, "select * from STREAMING_TABLE");
+        QueryACLTestUtil.mockQuery(PROJECT, "select * from TEST_KYLIN_FACT");
 
         QueryACLTestUtil.setUser(ADMIN);
-        TableACLManager.getInstance(KylinConfig.getInstanceFromEnv()).addTableACL(PROJECT, "ADMIN", STREAMING_TABLE, MetadataConstants.TYPE_USER);
+        TableACLManager.getInstance(KylinConfig.getInstanceFromEnv()).addTableACL(PROJECT, "ADMIN", QUERY_TABLE, MetadataConstants.TYPE_USER);
         thrown.expectCause(CoreMatchers.isA(AccessDeniedException.class));
-        thrown.expectMessage(CoreMatchers.containsString("Query failed.Access table:DEFAULT.STREAMING_TABLE denied"));
-        QueryACLTestUtil.mockQuery(PROJECT, "select * from STREAMING_TABLE");
+        thrown.expectMessage(CoreMatchers.containsString("Query failed.Access table:DEFAULT.TEST_KYLIN_FACT denied"));
+        QueryACLTestUtil.mockQuery(PROJECT, "select * from TEST_KYLIN_FACT");
     }
 
     @Test
     public void testFailQueryWithCountStar() throws SQLException, IOException {
         QueryACLTestUtil.setUser(MODELER);
-        QueryACLTestUtil.mockQuery(PROJECT, "select count(*) from STREAMING_TABLE");
+        QueryACLTestUtil.mockQuery(PROJECT, "select count(*) from TEST_KYLIN_FACT");
 
         QueryACLTestUtil.setUser(ADMIN);
-        TableACLManager.getInstance(KylinConfig.getInstanceFromEnv()).addTableACL(PROJECT, "ADMIN", STREAMING_TABLE, MetadataConstants.TYPE_USER);
+        TableACLManager.getInstance(KylinConfig.getInstanceFromEnv()).addTableACL(PROJECT, "ADMIN", QUERY_TABLE, MetadataConstants.TYPE_USER);
         thrown.expectCause(CoreMatchers.isA(AccessDeniedException.class));
-        thrown.expectMessage(CoreMatchers.containsString("Query failed.Access table:DEFAULT.STREAMING_TABLE denied"));
-        QueryACLTestUtil.mockQuery(PROJECT, "select count(*) from STREAMING_TABLE");
+        thrown.expectMessage(CoreMatchers.containsString("Query failed.Access table:DEFAULT.TEST_KYLIN_FACT denied"));
+        QueryACLTestUtil.mockQuery(PROJECT, "select count(*) from TEST_KYLIN_FACT");
     }
 
     @After
-    public void after() throws Exception {
+    public void after() {
         SecurityContextHolder.getContext().setAuthentication(null);
         this.cleanupTestMetadata();
     }

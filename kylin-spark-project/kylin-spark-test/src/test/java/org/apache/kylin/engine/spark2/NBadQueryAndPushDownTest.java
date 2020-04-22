@@ -30,7 +30,6 @@ import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.spark.sql.KylinSparkEnv;
 import org.apache.spark.sql.catalyst.analysis.NoSuchTableException;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -119,7 +118,6 @@ public class NBadQueryAndPushDownTest extends LocalWithSparkSessionTest {
     }
 
     @Test
-    @Ignore("Ignore with the introduce of Parquet storage")
     public void testPushDownNonEquiSql() throws Exception {
         File sqlFile = new File("src/test/resources/query/sql_pushdown/query11.sql");
         String sql = new String(Files.readAllBytes(sqlFile.toPath()), StandardCharsets.UTF_8);

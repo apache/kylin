@@ -16,67 +16,71 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.rest.service;
+package org.apache.kylin.engine.spark2;
 
 import java.sql.SQLException;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
+import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.query.security.QueryACLTestUtil;
 import org.apache.kylin.rest.request.SQLRequest;
+import org.apache.kylin.rest.service.BadQueryDetector;
 import org.apache.kylin.storage.IStorage;
 import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageFactory;
+import org.apache.spark.sql.SparderContext;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.Ignore;
 import org.junit.rules.ExpectedException;
 
-@Ignore("Ignore with the introduce of Parquet storage")
-public class KylinQueryTimeoutTest extends LocalFileMetadataTestCase {
+public class KylinQueryTimeoutTest extends LocalWithSparkSessionTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Before
-    public void setUp() {
-        this.createTestMetadata();
+    public void setUp() throws SchedulerException {
+        super.setup();
+        System.setProperty("spark.local", "true");
+        SparderContext.getSparkSession();
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config.setProperty("kylin.storage.provider.2", MockQueryTimeoutStorage.class.getName());
         config.setProperty("kylin.storage.default", "2");
+        config.setProperty("kylin.query.timeout-seconds", "3");
     }
 
     @After
-    public void after() throws Exception {
+    public void after() {
         this.cleanupTestMetadata();
         StorageFactory.clearCache();
     }
 
     @Test
     public void testQueryTimeout() throws SQLException {
-        thrown.expectCause(CoreMatchers.isA(KylinTimeoutException.class));
-        thrown.expectMessage(CoreMatchers.containsString("Kylin query timeout"));
+        thrown.expectCause(CoreMatchers.isA(RuntimeException.class));
+        thrown.expectMessage(CoreMatchers.containsString("Query timeout"));
         StorageFactory.clearCache();
         BadQueryDetector detector = new BadQueryDetector(100, BadQueryDetector.getSystemAvailMB() * 2, 100, 1);
         detector.start();
         SQLRequest request = new SQLRequest();
         request.setProject("default");
-        request.setSql("select count(*) from STREAMING_TABLE");
+        request.setSql("select count(*) from TEST_KYLIN_FACT");
         detector.queryStart(Thread.currentThread(), request, "ADMIN", RandomUtil.randomUUID().toString());
         try {
-            QueryACLTestUtil.mockQuery("default", "select * from STREAMING_TABLE");
-        } finally{
+            QueryACLTestUtil.mockQuery("default", "select * from TEST_KYLIN_FACT");
+        } finally {
             detector.queryEnd(Thread.currentThread(), "timeout");
             detector.interrupt();
         }

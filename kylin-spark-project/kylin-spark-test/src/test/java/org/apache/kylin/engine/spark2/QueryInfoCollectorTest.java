@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.rest.service;
+package org.apache.kylin.engine.spark2;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -33,31 +33,31 @@ import java.util.concurrent.TimeUnit;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.query.QueryConnection;
 import org.apache.kylin.query.util.QueryInfoCollector;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-public class QueryInfoCollectorTest extends LocalFileMetadataTestCase {
+public class QueryInfoCollectorTest extends LocalWithSparkSessionTest {
     private Connection connection = null;
     private Statement statement = null;
     private ResultSet resultSet = null;
 
     @Before
     public void setUp() throws Exception {
-        this.createTestMetadata();
+        super.setup();
+        System.setProperty("spark.local", "true");
     }
 
     @After
-    public void after() throws Exception {
-        this.cleanupTestMetadata();
+    public void after() {
+        super.after();
     }
 
     @Test
@@ -86,7 +86,6 @@ public class QueryInfoCollectorTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    @Ignore("Ignore with the introduce of Parquet storage")
     public void testQueryInfoCollectorReset() throws Exception {
         prepareContexts();
         enableCube("ci_left_join_cube");
