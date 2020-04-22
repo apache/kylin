@@ -317,7 +317,6 @@ Both Kylin and HBase use compression when writing to disk, so Kylin will multipl
 - `kylin.cube.size-estimate-topn-ratio`: Cube Size Estimation with TopN metric, default value is 0.5
 
 
-
 ### Cube Algorithm {#cube-algorithm}
 
 - `kylin.cube.algorithm`: specifies the algorithm of the Build Cube. Optional values include `auto`, `layer` and `inmem`. The default value is `auto`, that is, Kylin will dynamically select an algorithm by collecting data ( Layer or inmem), if user knows Kylin, user data and cluster condition well, user can directly set the algorithm.
