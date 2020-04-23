@@ -77,7 +77,7 @@ public class QueryInfoCollectorTest extends LocalWithSparkSessionTest {
 
             List<String> cubes = QueryInfoCollector.current().getCubeNames();
 
-            Assert.assertTrue(cubes.contains("HYBRID[name=ci_inner_join_hybrid]"));
+            Assert.assertTrue(cubes.contains("CUBE[name=ci_inner_join_cube]"));
             Assert.assertTrue(cubes.contains("CUBE[name=ci_left_join_cube]"));
         } finally {
             cleanContexts();

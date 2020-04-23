@@ -27,6 +27,7 @@ import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.calcite.rel.core.JoinInfo;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.logical.LogicalJoin;
+import org.apache.kylin.metadata.realization.RoutingIndicatorException;
 import org.apache.kylin.query.relnode.OLAPFilterRel;
 import org.apache.kylin.query.relnode.OLAPJoinRel;
 import org.apache.kylin.query.relnode.OLAPRel;
@@ -52,17 +53,12 @@ public class OLAPJoinRule extends ConverterRule {
         right = convert(right, right.getTraitSet().replace(OLAPRel.CONVENTION));
 
         final JoinInfo info = JoinInfo.of(left, right, join.getCondition());
-        if (!info.isEqui() && join.getJoinType() != JoinRelType.INNER) {
-            // EnumerableJoinRel only supports equi-join. We can put a filter on top
-            // if it is an inner join.
-            return null;
-        }
 
         RelOptCluster cluster = join.getCluster();
         RelNode newRel;
         try {
             if (!info.isEqui() && join.getJoinType() != JoinRelType.INNER) {
-                throw new RuntimeException("Currently, Non-equi SQL is not supported by Kylin");
+                throw new RoutingIndicatorException("Currently, Non-equi SQL is not supported by Kylin");
             } else {
                 newRel = new OLAPJoinRel(cluster, traitSet, left, right, //
                         info.getEquiCondition(left, right, cluster.getRexBuilder()), //
@@ -79,7 +75,8 @@ public class OLAPJoinRule extends ConverterRule {
             // return null;
         }
         if (!info.isEqui()) {
-            newRel = new OLAPFilterRel(cluster, newRel.getTraitSet(), newRel, info.getRemaining(cluster.getRexBuilder()));
+            newRel = new OLAPFilterRel(cluster, newRel.getTraitSet(), newRel,
+                    info.getRemaining(cluster.getRexBuilder()));
         }
         return newRel;
     }

@@ -62,6 +62,7 @@ public class QueryContext {
     private Object calcitePlan;
     private boolean isHighPriorityQuery = false;
     private boolean isTableIndex = false;
+    private boolean withoutSyntaxError;
 
     private AtomicBoolean isRunning = new AtomicBoolean(true);
     private AtomicReference<Throwable> throwable = new AtomicReference<>();
@@ -208,6 +209,14 @@ public class QueryContext {
 
     public void setTableIndex(boolean tableIndex) {
         isTableIndex = tableIndex;
+    }
+
+    public boolean isWithoutSyntaxError() {
+        return withoutSyntaxError;
+    }
+
+    public void setWithoutSyntaxError(boolean withoutSyntaxError) {
+        this.withoutSyntaxError = withoutSyntaxError;
     }
 
     public boolean isStopped() {
