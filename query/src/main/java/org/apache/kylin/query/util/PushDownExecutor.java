@@ -28,36 +28,37 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContextFacade;
+import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.exception.QueryOnCubeException;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.metadata.realization.RoutingIndicatorException;
 import org.apache.kylin.query.adhoc.PushDownRunnerJdbcImpl;
+import org.apache.kylin.query.security.AccessDeniedException;
 import org.apache.kylin.source.adhocquery.IPushDownRunner;
 
+import org.codehaus.commons.compiler.CompileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.List;
 
-
 /**
  * Execute a pushdown query using a single or multiple runners depending on the configuration.
  */
 public class PushDownExecutor {
-    private final Logger logger = LoggerFactory.getLogger(PushDownExecutor.class);
+    private static final Logger logger = LoggerFactory.getLogger(PushDownExecutor.class);
     private KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
     public PushDownExecutor() {
 
     }
 
-    public Pair<List<List<String>>, List<SelectedColumnMeta>> pushDownQuery(String project,
-            String sql, String defaultSchema, SQLException sqlException, boolean isSelect,
-            boolean isPrepare) throws Exception {
+    public Pair<List<List<String>>, List<SelectedColumnMeta>> pushDownQuery(String project, String sql,
+            String defaultSchema, SQLException sqlException, boolean isSelect, boolean isPrepare) throws Exception {
 
         if (!kylinConfig.isPushDownEnabled()) {
             return null;
@@ -77,15 +78,11 @@ public class PushDownExecutor {
         List<String> ids = kylinConfig.getPushDownRunnerIds();
 
         if (ids.isEmpty() && StringUtils.isNotEmpty(kylinConfig.getPushDownRunnerClassName())) {
-            IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(
-                    kylinConfig.getPushDownRunnerClassName()
-            );
+            IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(kylinConfig.getPushDownRunnerClassName());
             runner.init(kylinConfig);
-            return queryBySingleRunner(runner, project, sql, defaultSchema, sqlException,
-                    isSelect, isPrepare);
+            return queryBySingleRunner(runner, project, sql, defaultSchema, sqlException, isSelect, isPrepare);
         } else {
-            return queryByMultiJdbcRunners(ids, project, sql, defaultSchema, sqlException,
-                    isSelect, isPrepare);
+            return queryByMultiJdbcRunners(ids, project, sql, defaultSchema, sqlException, isSelect, isPrepare);
         }
     }
 
@@ -97,24 +94,35 @@ public class PushDownExecutor {
         //query pushdown may create tables, and the tables are not in the model, so will throw SqlValidatorException.
         boolean isPushDownUpdateEnabled = KylinConfig.getInstanceFromEnv().isPushDownUpdateEnabled();
 
-        if (!isPushDownUpdateEnabled) {
-            return rootCause != null //
-                    && (rootCause instanceof NoRealizationFoundException //
-                    || rootCause instanceof RoutingIndicatorException
-                    || rootCause instanceof QueryOnCubeException);
+        if (isPushDownUpdateEnabled) {
+            return (rootCause instanceof NoRealizationFoundException //
+                    || rootCause instanceof RoutingIndicatorException || rootCause instanceof SqlValidatorException); //
         } else {
-            return (rootCause != null //
-                    && (rootCause instanceof NoRealizationFoundException //
-                    || rootCause instanceof SqlValidatorException //
-                    || rootCause instanceof RoutingIndicatorException //
-                    || rootCause instanceof QueryOnCubeException)); //
+            if (rootCause instanceof KylinTimeoutException)
+                return false;
+            if (rootCause instanceof AccessDeniedException) {
+                return false;
+            }
+            if (rootCause instanceof RoutingIndicatorException) {
+                return true;
+            }
+
+            if (rootCause instanceof CompileException) {
+                return true;
+            }
+
+            if (QueryContextFacade.current().isWithoutSyntaxError()) {
+                logger.warn("route to push down for met error when running current query", sqlException);
+                return true;
+            }
         }
+
+        return false;
     }
 
-
     private Pair<List<List<String>>, List<SelectedColumnMeta>> queryBySingleRunner(IPushDownRunner runner,
-            String project, String sql, String defaultSchema, SQLException sqlException,
-            boolean isSelect, boolean isPrepare) throws Exception {
+            String project, String sql, String defaultSchema, SQLException sqlException, boolean isSelect,
+            boolean isPrepare) throws Exception {
 
         logger.debug("Query Pushdown runner {}", runner);
 
@@ -126,8 +134,7 @@ public class PushDownExecutor {
                 completed = PushDownUtil.schemaCompletion(sql, defaultSchema);
             } catch (SqlParseException e) {
                 // fail to parse the pushdown sql, ignore
-                logger.debug("fail to do schema completion on the pushdown sql, ignore it.",
-                        e.getMessage());
+                logger.debug("fail to do schema completion on the pushdown sql, ignore it.", e.getMessage());
             }
             if (!sql.equals(completed)) {
                 logger.info("the query is converted to {} after schema completion", completed);
@@ -149,9 +156,9 @@ public class PushDownExecutor {
         return Pair.newPair(returnRows, returnColumnMeta);
     }
 
-    private Pair<List<List<String>>, List<SelectedColumnMeta>> queryByMultiJdbcRunners(
-            List<String> ids, String project, String sql, String defaultSchema,
-            SQLException sqlException, boolean isSelect, boolean isPrepare) throws Exception {
+    private Pair<List<List<String>>, List<SelectedColumnMeta>> queryByMultiJdbcRunners(List<String> ids, String project,
+            String sql, String defaultSchema, SQLException sqlException, boolean isSelect, boolean isPrepare)
+            throws Exception {
         for (int i = 0; i < ids.size(); i++) {
             String id = ids.get(i);
             PushDownRunnerJdbcImpl runner = new PushDownRunnerJdbcImpl();
@@ -164,8 +171,8 @@ public class PushDownExecutor {
                     return ret;
                 }
             } catch (Exception e) {
-                logger.error("Execute pushdown query/update by jdbc runner " + id + " failed: " +
-                        ExceptionUtils.getStackTrace(e));
+                logger.error("Execute pushdown query/update by jdbc runner " + id + " failed: "
+                        + ExceptionUtils.getStackTrace(e));
             }
         }
 

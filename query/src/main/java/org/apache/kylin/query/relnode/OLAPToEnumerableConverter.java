@@ -80,6 +80,7 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             System.out.println(dumpPlan);
         }
 
+        QueryContextFacade.current().setWithoutSyntaxError(true);
         // post-order travel children
         OLAPRel.OLAPImplementor olapImplementor = new OLAPRel.OLAPImplementor();
         olapImplementor.visitChild(getInput(), this);
