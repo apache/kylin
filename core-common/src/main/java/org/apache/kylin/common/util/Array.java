@@ -36,7 +36,7 @@ public class Array<T> implements Comparable<Array<T>>, java.io.Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (o != null && o instanceof Array) {
+        if (o instanceof Array) {
             return Arrays.equals(this.data, ((Array<?>) o).data);
         }
         return false;
