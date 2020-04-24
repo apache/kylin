@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -652,12 +651,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         if (hbaseMappingAdapterName != null) {
             try {
-                Class<?> hbaseMappingAdapterClass = Class.forName(hbaseMappingAdapterName);
-                Method initMethod = hbaseMappingAdapterClass.getMethod("initHBaseMapping", CubeDesc.class);
-                initMethod.invoke(null, this);
-                Method initMeasureReferenceToColumnFamilyMethod = hbaseMappingAdapterClass
-                        .getMethod("initMeasureReferenceToColumnFamilyWithChecking", CubeDesc.class);
-                initMeasureReferenceToColumnFamilyMethod.invoke(null, this);
+                IHBaseMappingAdapter hbaseMappingAdapter = (IHBaseMappingAdapter) Class.forName(hbaseMappingAdapterName).newInstance();
+                hbaseMappingAdapter.initHBaseMapping(this);
+                hbaseMappingAdapter.initMeasureReferenceToColumnFamilyWithChecking(this);
             } catch (Exception e) {
                 throw new RuntimeException("Error during adapting hbase mapping", e);
             }
