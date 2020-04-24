@@ -157,6 +157,7 @@ object SparderContext extends Logging {
                   .getContextClassLoader
                   .toString)
               registerListener(sparkSession.sparkContext)
+              UdfManager.create(spark)
               initMonitorEnv()
               APP_MASTER_TRACK_URL = null
             } catch {
