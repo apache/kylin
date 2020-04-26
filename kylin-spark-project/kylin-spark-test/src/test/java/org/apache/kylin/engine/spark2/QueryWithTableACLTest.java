@@ -34,7 +34,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 public class QueryWithTableACLTest extends LocalWithSparkSessionTest {
     private static final String PROJECT = "DEFAULT";
@@ -83,7 +82,6 @@ public class QueryWithTableACLTest extends LocalWithSparkSessionTest {
 
     @After
     public void after() {
-        SecurityContextHolder.getContext().setAuthentication(null);
-        this.cleanupTestMetadata();
+        super.after();
     }
 }

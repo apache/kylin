@@ -1534,7 +1534,7 @@ KylinApp
         for (var i = 0; i < $scope.columnList.length; i++) {
           columns.push(JSON.stringify($scope.columnList[i]));
         }
-        CsvUploadService.save(file, $scope.tableData.name, projectName, JSON.stringify(columns), $scope.tableData.separator)
+        CsvUploadService.save(file, $scope.tableData.name, projectName, JSON.stringify(columns), $scope.tableData.has_header, $scope.tableData.separator)
           .then(
             function (response) {
               SweetAlert.swal('', 'Created table from csv file successfully.', 'success');

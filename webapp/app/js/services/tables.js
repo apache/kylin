@@ -56,13 +56,14 @@ KylinApp.service('CsvUploadService', function($http, $q) {
     return deferred.promise;
   };
 
-  this.save = function(file, table_name, project, columns, separator) {
+  this.save = function(file, table_name, project, columns, has_header, separator) {
     var deferred = $q.defer();
     var formData = new FormData();
     formData.append('file', file);
     formData.append('tableName', table_name);
     formData.append('project', project);
     formData.append('columns', columns);
+    formData.append('withHeader', has_header);
     formData.append('separator', separator);
 
     $http.post(Config.service.url + 'tables/saveCsvTable', formData, {
