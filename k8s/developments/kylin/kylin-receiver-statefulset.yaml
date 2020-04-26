@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kylin-receiver
+  namespace: kylin
+spec:
+  serviceName: receiver-svc
+  replicas: 10
+  selector:
+    matchExpressions:
+    - key: app
+      operator: In
+      values:
+        - kylin-receiver
+  template:
+    metadata:
+      labels:
+        app: kylin-receiver
+    spec:
+      securityContext:
+        fsGroup: 996
+      containers:
+      - name: kylin
+        image: apachekylin/kylin:{version}
+        command:
+        - sh
+        - -c
+        args:
+        - $TOOL_HOME/bootstrap.sh streaming -d
+        ports:
+        - containerPort: 9090
+        livenessProbe:
+          httpGet:
+            path: /kylin/api/stats/healthCheck
+            port: 9090
+          initialDelaySeconds: 120
+          periodSeconds: 60
+        volumeMounts:
+        - name: kylin-config
+          mountPath: /home/b_kylin/kylin2/conf
+        - name: receiver-volume
+          mountPath: /home/b_kylin/kylin2/stream_index
+        resources:
+          requests:
+            memory: 86Gi
+            cpu: 16
+          limits:
+            memory: 86Gi
+            cpu: 16
+      volumes:
+      - name: kylin-config
+        secret:
+          secretName: kylin-config
+          items:
+          - key: kylin-receiver.properties
+            path: kylin.properties
+          - key: kylin-tools-log4j.properties
+            path: kylin-tools-log4j.properties
+          - key: kylin_hive_conf.xml
+            path: kylin_hive_conf.xml
+          - key: kylin_job_conf_inmem.xml
+            path: kylin_job_conf_inmem.xml
+          - key: kylin-server-log4j.properties
+            path: kylin-server-log4j.properties
+          - key: kylin_job_conf.xml
+            path: kylin_job_conf.xml
+          - key: kylin-receiver-setenv.sh
+            path: setenv.sh
+          - key: mystore.jks
+            path: mystore.jks
+          - key: truststore.jks
+            path: truststore.jks
+  volumeClaimTemplates:
+  - metadata:
+      name: receiver-volume
+    spec:
+      accessModes: 
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 400Gi
+      storageClassName: local-dynamic

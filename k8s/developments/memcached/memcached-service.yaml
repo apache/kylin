@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cache-svc
+  namespace: kylin
+spec:
+  clusterIP: None
+  selector: 
+    app: kylin-memcached
+  ports:
+  - port: 11211
+    targetPort: 11211

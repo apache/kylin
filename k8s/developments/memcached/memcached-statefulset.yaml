@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kylin-memcached
+  namespace: kylin
+spec:
+  serviceName: cache-svc
+  replicas: 3
+  selector:
+    matchExpressions:
+    - key: app
+      operator: In
+      values:
+      - kylin-memcached
+  template:
+    metadata:
+      labels:
+        app: kylin-memcached
+    spec:
+      containers:
+      - image: memcached:1.4.39
+        name: memcached
+        ports:
+        - containerPort: 11211
+        args:
+        - "-m 20480"
+        resources:
+          limits:
+            cpu: 4
+            memory: 24Gi
+          requests:
+            cpu: 4
+            memory: 24Gi
+        livenessProbe:
+          tcpSocket:
+            port: 11211
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        readinessProbe:
+          tcpSocket:
+            port: 11211
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
