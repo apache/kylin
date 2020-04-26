@@ -86,7 +86,6 @@ webapp/app/components/*
 ebay*
 build/commit_SHA1
 dist/
-tomcat/
 webapp/app/kylin-servlet.xml
 webapp/app/web.xml
 dependency-reduced-pom.xml
@@ -94,5 +93,3 @@ webapp/package-lock.json
 
 # stream_index
 stream-receiver/stream_index
-# configuration files
-kubernetes/conf/*

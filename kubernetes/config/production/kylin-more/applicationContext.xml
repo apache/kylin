@@ -106,6 +106,7 @@
         -->
 
 
+        <!-- comment following code to discard external query cache feature -->
         <bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
               p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
 

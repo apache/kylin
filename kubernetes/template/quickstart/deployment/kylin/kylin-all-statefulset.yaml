@@ -1,48 +1,47 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: kylin-all
   namespace: kylin-quickstart
+  labels:
+    app: kylin
+    role: all
+    environment: test
+    version: {YOUR_VERSION}
+    hadoop.version: {YOUR_VERSION}
 spec:
   serviceName: kylin-svc
   replicas: 1
   selector:
-    matchExpressions:
-      - key: app
-        operator: In
-        values:
-          - kylin
-      - key: query
-        operator: In
-        values:
-          - "true"
-      - key: job
-        operator: In
-        values:
-          - "true"
+    matchLabels:
+      app: kylin
+      role: all
   template:
     metadata:
       labels:
         app: kylin
-        query: "true"
-        job: "true"
+        role: job
     spec:
-      hostAliases:
-        - ip: "10.1.3.90"
-          hostnames:
-            - "cdh-master"
-        - ip: "10.1.3.92"
-          hostnames:
-            - "cdh-worker-1"
-        - ip: "10.1.3.93"
-          hostnames:
-            - "cdh-worker-2"
-        - ip: "10.1.3.91"
-          hostnames:
-            - "cdh-client"
       containers:
         - name: kylin
-          image: kylin-client:3.0.1-cdh57
+          image: kylin-client:{YOUR_VERSION}
           imagePullPolicy: IfNotPresent
           command:
             - sh

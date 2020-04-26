@@ -1,4 +1,24 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 FROM hadoop-client:cdh57
+
+MAINTAINER Apache Kylin
+
 ARG USER=apache_kylin
 ARG USER_HOME=/home/${USER}
 ARG KYLIN_VERSION=apache-kylin-3.0.1-bin-cdh57
@@ -10,8 +30,6 @@ ARG SPARK_CONF_HOME=$KYLIN_HOME/hadoop-conf
 
 ENV SPARK_HOME /opt/spark-2.3.2-bin-hadoop2.7
 ENV KYLIN_HOME=$USER_HOME/kylin
-
-MAINTAINER Apache Kylin
 
 WORKDIR /tmp
 
@@ -38,7 +56,7 @@ COPY --chown=$USER:$USER $KYLIN_VERSION $KYLIN_HOME
 
 RUN set -x \
     && unzip -qq $KYLIN_HOME/tomcat/webapps/kylin.war -d $KYLIN_HOME/tomcat/webapps/kylin \
-#    && chown -R $USER:$USER $KYLIN_HOME/tomcat/webapps/kylin \
+    && chown -R $USER:$USER $KYLIN_HOME/tomcat/webapps/kylin \
     && rm $KYLIN_HOME/tomcat/webapps/kylin.war \
     && mkdir $SPARK_CONF_HOME \
     && ln -s $HADOOP_CONF_HOME/core-site.xml $SPARK_CONF_HOME/core-site.xml \
@@ -60,5 +78,5 @@ RUN /usr/bin/crontab -u $USER /tmp/crontab.txt \
     && chmod 755 $TOOL_HOME/*
 EXPOSE 7070
 
-USER root
+USER $USER
 CMD ["sh", "-c", "$TOOL_HOME/bootstrap.sh server -d"]
