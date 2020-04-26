@@ -1,8 +1,0 @@
-## Background
-What is kylin-client docker images?
-And why we need this?
-
-## Build Step
-1. Place Kylin binary(*spark-2.3.2-bin-hadoop2.7.tgz*) and uncompress it into current dir.
-2. Modify `Dockerfile` , change the value of `KYLIN_VERSION` and name of base image(hadoop-client).
-3. Run `build-image.sh` to build image.

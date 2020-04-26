@@ -1,12 +1,26 @@
-echo """
-Hello, welcome to deploy Kylin on Kubernetes.
-BTW, this is a quick start template for demo usage.
-"""
+#!/bin/bash
+
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 ## create namespace
 kubectl create namespace kylin-prod
 
-## Create configmap
+## Create configmap(please consider using secret in production env)
 kubectl create configmap -n kylin-prod hadoop-config \
     --from-file=../../config/production/hadoop/core-site.xml \
     --from-file=../../config/production/hadoop/hdfs-site.xml \
@@ -84,25 +98,9 @@ kubectl create configmap -n kylin-prod tomcat-config  \
     --dry-run -o yaml | kubectl apply -f -
 
 ### Prepare memcached service
-
-kubectl create -f deployment/memcached/memcached-service.yaml
-kubectl create -f deployment/memcached/memcached-statefulset.yaml
-
+kubectl apply -f deployment/memcached/
 
 ### Prepare kylin service
-
-
-## Create headless serivce
-kubectl create -f deployment/kylin/kylin-service.yaml
-
-## Create statefulset
-kubectl create -f deployment/kylin/kylin-all-statefulset.yaml
-kubectl create -f deployment/kylin/kylin-job-statefulset.yaml
-
-#kubectl create -f deployment/kylin/kylin-query-statefulset.yaml
-#kubectl create -f deployment/kylin/kylin-receiver-statefulset.yaml
-
-kubectl delete -f deployment/kylin/kylin-all-statefulset.yaml
-kubectl delete -f deployment/kylin/kylin-job-statefulset.yaml
+kubectl apply -f deployment/kylin/
 
 

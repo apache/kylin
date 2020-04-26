@@ -1,3 +1,20 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 FROM centos:7.3.1611
 
 MAINTAINER Apache Kylin
@@ -29,40 +46,35 @@ ENV JAVA_HOME /etc/alternatives/jre
 
 # install hadoop
 ENV HADOOP_HOME=$APACHE_HOME/hadoop
-ADD hdp-clients/hadoop-${HADOOP_VERSION}.tar.gz $APACHE_HOME
+ADD hadoop-binary/hadoop-${HADOOP_VERSION}.tar.gz $APACHE_HOME
 RUN set -x \
     && ln -s $APACHE_HOME/hadoop-${HADOOP_VERSION} $HADOOP_HOME
 
 #install hive
 ENV HIVE_HOME=$APACHE_HOME/hive 
-ADD hdp-clients/apache-hive-${HIVE_VERSION}.tar.gz $APACHE_HOME
+ADD hadoop-binary/apache-hive-${HIVE_VERSION}.tar.gz $APACHE_HOME
 RUN set -x \
     && ln -s $APACHE_HOME/apache-hive-${HIVE_VERSION} $HIVE_HOME
 
 #install hbase
 ENV HBASE_HOME=$APACHE_HOME/hbase
-ADD hdp-clients/hbase-${HBASE_VERSION}.tar.gz $APACHE_HOME
+ADD hadoop-binary/hbase-${HBASE_VERSION}.tar.gz $APACHE_HOME
 RUN set -x \
     && ln -s $APACHE_HOME/hbase-${HBASE_VERSION} $HBASE_HOME
 
 #install spark
 ENV SPARK_HOME=$APACHE_HOME/spark
-ADD hdp-clients/spark-${SPARK_VERSION}.tar.gz $APACHE_HOME
+ADD hadoop-binary/spark-${SPARK_VERSION}.tar.gz $APACHE_HOME
 RUN set -x \
     && ln -s $APACHE_HOME/spark-${SPARK_VERSION} $SPARK_HOME
 
 #install zk
 ENV ZK_HOME=$APACHE_HOME/zookeeper
-ADD hdp-clients/zookeeper-${ZK_VERSION}.tar.gz $APACHE_HOME
+ADD hadoop-binary/zookeeper-${ZK_VERSION}.tar.gz $APACHE_HOME
 RUN set -x \
     && ln -s $APACHE_HOME/zookeeper-${ZK_VERSION} $ZK_HOME
 
 ENV PATH=$PATH:$JAVA_HOME/bin:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$HIVE_HOME/bin:$HBASE_HOME/bin:$ZK_HOME/bin
-
-COPY conf/hadoop $HADOOP_HOME/etc/hadoop
-COPY conf/hbase $HBASE_HOME/conf
-COPY conf/hive $HIVE_HOME/conf
-COPY conf/krb5.conf /etc/krb5.conf
 
 # Cleanup
 RUN rm -rf /tmp/*
