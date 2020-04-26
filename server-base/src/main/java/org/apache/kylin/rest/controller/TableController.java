@@ -270,6 +270,7 @@ public class TableController extends BasicController {
     @RequestMapping(value = "/saveCsvTable", method = { RequestMethod.POST })
     @ResponseBody
     public TableDesc salveCsvTable(@RequestParam(value = "file") MultipartFile file,
+            @RequestParam(value = "withHeader", required = false) boolean withHeader,
             @RequestParam(value = "separator", required = true) String separator,
             @RequestParam(value = "tableName", required = true) String tableName,
             @RequestParam(value = "project", required = true) String project,
@@ -279,7 +280,7 @@ public class TableController extends BasicController {
         }
 
         TableDesc desc = tableService.generateCsvTableDesc(tableName, JsonUtil.readValue(columnDescList, List.class));
-        TableExtDesc extDesc = tableService.generateTableExtDesc(desc, separator);
+        TableExtDesc extDesc = tableService.generateTableExtDesc(desc, withHeader, separator);
         tableService.loadTableToProject(desc, extDesc, project);
         tableService.saveCsvFile(file, tableName, project);
         return desc;

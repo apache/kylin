@@ -620,13 +620,13 @@ public class TableService extends BasicService {
         int index = 0;
 
         for (String csvColumnDescStr : columnDescList) {
+            index++;
             ColumnDesc columnDesc = new ColumnDesc();
             CsvColumnDesc csvColumnDesc = JsonUtil.readValue(csvColumnDescStr, CsvColumnDesc.class);
-            columnDesc.setId("0" + index);
+            columnDesc.setId("" + index);
             columnDesc.setName((csvColumnDesc).getName());
             columnDesc.setDatatype((csvColumnDesc).getType());
             columnDescs.add(columnDesc);
-            index++;
         }
 
         tableDesc.setColumns(columnDescs.toArray(new ColumnDesc[columnDescs.size()]));
@@ -634,12 +634,13 @@ public class TableService extends BasicService {
         return tableDesc;
     }
 
-    public TableExtDesc generateTableExtDesc(TableDesc tableDesc, String separator) {
+    public TableExtDesc generateTableExtDesc(TableDesc tableDesc, boolean withHeader, String separator) {
         TableExtDesc tableExtDesc = new TableExtDesc();
         tableExtDesc.setIdentity(tableDesc.getIdentity());
         tableExtDesc.setUuid(RandomUtil.randomUUID().toString());
         tableExtDesc.setLastModified(0);
         tableExtDesc.init(tableDesc.getProject());
+        tableExtDesc.addDataSourceProp("withHeader", Boolean.toString(withHeader));
         tableExtDesc.addDataSourceProp("separator", separator);
         return tableExtDesc;
     }

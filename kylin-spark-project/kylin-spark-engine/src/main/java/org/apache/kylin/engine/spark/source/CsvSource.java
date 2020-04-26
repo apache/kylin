@@ -44,6 +44,7 @@ public class CsvSource implements ISource {
                 String path = null;
                 KylinConfig kylinConfig = KylinBuildEnv.get().kylinConfig();
                 String separator;
+                boolean withHeader = false;
                 if (kylinConfig.getDeployEnv().equals("UT")
                         && (parameters != null && parameters.get("separator") == null)) {
                     path = "file:///" + new File(getUtMetaDir(),
@@ -55,6 +56,9 @@ public class CsvSource implements ISource {
                     path = KylinBuildEnv.get().kylinConfig().getHdfsWorkingDirectory() + project + "csv/"
                             + table.identity() + ".csv";
                     separator = parameters.get("separator");
+                    if (parameters.get("withHeader") != null) {
+                        withHeader = Boolean.parseBoolean(parameters.get("withHeader"));
+                    }
                 }
                 switch (separator) {
                 case "space":
@@ -68,8 +72,7 @@ public class CsvSource implements ISource {
                 }
 
                 Dataset<Row> delimiter = ss.read().option("delimiter", separator)
-                        //                            .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS")
-                        .schema(table.toSchema()).csv(path);
+                        .option("header", withHeader).schema(table.toSchema()).csv(path);
                 return delimiter;
             }
         };
