@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kylin-all
+  namespace: kylin-quickstart
+spec:
+  serviceName: kylin-svc
+  replicas: 1
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - kylin
+      - key: query
+        operator: In
+        values:
+          - "true"
+      - key: job
+        operator: In
+        values:
+          - "true"
+  template:
+    metadata:
+      labels:
+        app: kylin
+        query: "true"
+        job: "true"
+    spec:
+      hostAliases:
+        - ip: "10.1.3.90"
+          hostnames:
+            - "cdh-master"
+        - ip: "10.1.3.92"
+          hostnames:
+            - "cdh-worker-1"
+        - ip: "10.1.3.93"
+          hostnames:
+            - "cdh-worker-2"
+        - ip: "10.1.3.91"
+          hostnames:
+            - "cdh-client"
+      containers:
+        - name: kylin
+          image: kylin-client:3.0.1-cdh57
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+          args:
+            - $TOOL_HOME/bootstrap.sh server -d;
+          ports:
+            - containerPort: 7070
+            - containerPort: 7443
+          volumeMounts:
+            - name: kylin-config
+              mountPath: /root/kylin/conf
+            - name: kylin-logs
+              mountPath: /root/kylin/logs
+            - name: tomcat-logs
+              mountPath: /root/kylin/tomcat/logs
+            - mountPath: /etc/hadoop/conf
+              name: hadoop-config
+            - mountPath: /etc/hive/conf
+              name: hive-config
+            - mountPath: /etc/hbase/conf
+              name: hbase-config
+          resources:
+            requests:
+              memory: 4Gi
+              cpu: 2
+            limits:
+              memory: 4Gi
+              cpu: 2
+      volumes:
+        - name: kylin-logs
+          emptyDir:
+            sizeLimit: 4Gi
+        - name: tomcat-logs
+          emptyDir:
+            sizeLimit: 2Gi
+        - configMap:
+            name: hadoop-config
+          name: hadoop-config
+        - configMap:
+            name: hive-config
+          name: hive-config
+        - configMap:
+            name: hbase-config
+          name: hbase-config
+        - configMap:
+            name: kylin-config
+          name: kylin-config

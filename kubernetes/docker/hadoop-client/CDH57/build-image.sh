@@ -1,0 +1,1 @@
+docker build -t hadoop-client:cdh57 .

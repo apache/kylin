@@ -1,0 +1,6 @@
+## Steps
+
+1. Build **hadoop-client** docker image.
+2. Build **kylin-client** docker image.
+3. Go to `config` dir, prepare configuration file for Kylin and Hadoop.
+4. Go to `template` dir,  modify system resources entry and deploy kylin service.

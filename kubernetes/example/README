@@ -1,0 +1,10 @@
+## Example
+
+> This dir provided a deployment template with all required files.
+
+### Pre-requirement
+
+- A healthy CDH 5.7 cluster
+- A healthy on-premise K8s cluster
+
+### Step
