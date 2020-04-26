@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kylin-all
+  namespace: kylin
+spec:
+  serviceName: kylin-svc
+  replicas: 1
+  selector:
+    matchExpressions:
+    - key: app
+      operator: In
+      values:
+      - kylin
+    - key: query
+      operator: In
+      values:
+      - "true"
+    - key: job
+      operator: In
+      values:
+      - "true"
+  template:
+    metadata:
+      labels:
+        app: kylin
+        query: "true"
+        job: "true"
+    spec:
+      containers:
+      - name: kylin
+        image: apachekylin/kylin:{version}
+        command:
+        - sh
+        - -c
+        args:
+        - cp $KYLIN_HOME/tomcat-config/* $KYLIN_HOME/tomcat/conf;
+          cp $KYLIN_HOME/sso-config/* $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/classes;
+          $TOOL_HOME/bootstrap.sh server -d;
+        ports:
+        - containerPort: 7070
+        - containerPort: 7443
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - $TOOL_HOME/check-liveness.sh
+          initialDelaySeconds: 120
+          periodSeconds: 60
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - $TOOL_HOME/check-readiness.sh
+          initialDelaySeconds: 120
+          periodSeconds: 60
+          failureThreshold: 30
+        volumeMounts:
+        - name: kylin-config
+          mountPath: /home/b_kylin/kylin2/conf
+        - name: tomcat-config
+          mountPath: /home/b_kylin/kylin2/tomcat-config
+        - name: kylin-logs
+          mountPath: /home/b_kylin/kylin2/logs
+        - name: tomcat-logs
+          mountPath: /home/b_kylin/kylin2/tomcat/logs
+        - name: sso-config
+          mountPath: /home/b_kylin/kylin2/sso-config
+        resources:
+          requests:
+            memory: 124Gi
+            cpu: 24
+          limits:
+            memory: 124Gi
+            cpu: 32
+      - name: filebeat
+        image: docker.elastic.co/beats/filebeat:6.4.3
+        args:
+        - -c
+        - /usr/share/filebeat/config/filebeat.yml
+        - -e
+        volumeMounts:
+        - name: kylin-logs
+          mountPath: /var/log/kylin
+        - name: tomcat-logs
+          mountPath: /var/log/tomcat
+        - name: filebeat-config
+          mountPath: /usr/share/filebeat/config
+          readOnly: true
+        resources:
+          requests:
+            memory: 4Gi
+            cpu: 2
+          limits:
+            memory: 4Gi
+            cpu: 2
+      volumes:
+      - name: kylin-logs
+        emptyDir:
+          sizeLimit: 30Gi
+      - name: tomcat-logs
+        emptyDir:
+          sizeLimit: 2Gi
+      - name: kylin-config
+        secret:
+          secretName: kylin-config
+          items:
+          - key: kylin.properties
+            path: kylin.properties
+          - key: kylin-tools-log4j.properties
+            path: kylin-tools-log4j.properties
+          - key: kylin_hive_conf.xml
+            path: kylin_hive_conf.xml
+          - key: kylin_job_conf_inmem.xml
+            path: kylin_job_conf_inmem.xml
+          - key: kylin-server-log4j.properties
+            path: kylin-server-log4j.properties
+          - key: kylin_job_conf.xml
+            path: kylin_job_conf.xml
+          - key: setenv.sh
+            path: setenv.sh
+      - name: tomcat-config
+        secret:
+          secretName: tomcat-config
+      - name: sso-config
+        secret:
+          secretName: sso-config
+      - name: filebeat-config
+        secret:
+          secretName: filebeat-config

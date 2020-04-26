@@ -1,0 +1,110 @@
+###################### Filebeat Configuration Example #########################
+
+# This file is an example configuration file highlighting only the most common
+# options. The filebeat.reference.yml file from the same directory contains all the
+# supported options with more comments. You can use it as a reference.
+#
+# You can find the full configuration reference here:
+# https://www.elastic.co/guide/en/beats/filebeat/index.html
+
+# For more available modules and options, please see the filebeat.reference.yml sample
+# configuration file.
+
+#=========================== Filebeat prospectors =============================
+
+filebeat.prospectors:
+
+# kylin log #
+- type: log
+  enabled: true
+  paths:
+    - /var/log/kylin/kylin.log
+  multiline.pattern: '^\d{4}-([1][0-2]|[0][0-9])-([3][0-1]|[1-2][0-9]|[0][1-9]|[1-9]) ([2][0-3]|[0-1][0-9]|[1-9]):[0-5][0-9]:([0-5][0-9]|[6][0])'
+  multiline.negate: true
+  multiline.match: after
+  fields:
+    name: "service"
+    pipeline: "service"
+
+# kylin out#
+- type: log
+  enabled: true
+  paths:
+    - /var/log/kylin/kylin.gc.*.current
+  multiline.pattern: '^\d{4}-(?:0?[1-9]|1[0-2])-(?:(?:0[1-9])|(?:[12][0-9])|(?:3[01])|[1-9])T(?:2[0123]|[01]?[0-9]):(?:[0-5][0-9]):(?:(?:[0-5]?[0-9]|60)(?:[:.,][0-9]+)?)(?:Z|[+-](?:2[0123]|[01]?[0-9])(?::?(?:[0-5][0-9])))'
+  multiline.negate: true
+  multiline.match: after
+  fields:
+    name: "gc"
+    pipeline: "gc"
+
+# kylin out#
+- type: log
+  enabled: true
+  paths:
+    - /var/log/kylin/kylin.out
+  multiline.pattern: '^\b(?:Jan?|Feb?|Mar?|Apr?|May?|Jun?|Jul?|Aug?|Sep?|Oct?|Nov?|Dec?)\b (?:(?:0[1-9])|(?:[12][0-9])|(?:3[01])|[1-9]), \d{4} (?:2[0123]|[01]?[0-9]):(?:[0-5][0-9]):(?:(?:[0-5]?[0-9]|60)(?:[:.,][0-9]+)?) (?:AM|PM)'
+  multiline.negate: true
+  multiline.match: after
+  fields:
+    name: "out"
+    pipeline: "catalina"
+
+# access log #
+- type: log
+  paths:
+    - /var/log/tomcat/localhost_access_log.txt
+  fields:
+    name: "access"
+    pipeline: "access"
+
+# catalina log #
+- type: log
+  paths:
+    - /var/log/tomcat/catalina.*.log
+  multiline.pattern: '^\b(?:Jan?|Feb?|Mar?|Apr?|May?|Jun?|Jul?|Aug?|Sep?|Oct?|Nov?|Dec?)\b (?:(?:0[1-9])|(?:[12][0-9])|(?:3[01])|[1-9]), \d{4} (?:2[0123]|[01]?[0-9]):(?:[0-5][0-9]):(?:(?:[0-5]?[0-9]|60)(?:[:.,][0-9]+)?) (?:AM|PM)'
+  multiline.negate: true
+  multiline.match: after
+  fields:
+    name: "catalina"
+    pipeline: "catalina"
+
+# localhost log #
+- type: log
+  paths:
+    - /var/log/tomcat/localhost.*.log
+  multiline.pattern: '^\b(?:Jan?|Feb?|Mar?|Apr?|May?|Jun?|Jul?|Aug?|Sep?|Oct?|Nov?|Dec?)\b (?:(?:0[1-9])|(?:[12][0-9])|(?:3[01])|[1-9]), \d{4} (?:2[0123]|[01]?[0-9]):(?:[0-5][0-9]):(?:(?:[0-5]?[0-9]|60)(?:[:.,][0-9]+)?) (?:AM|PM)'
+  multiline.negate: true
+  multiline.match: after
+  fields:
+    name: "localhost"
+    pipeline: "catalina"
+
+
+#============================= Filebeat modules ===============================
+
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+
+#==================== Elasticsearch template setting ==========================
+
+setup.template:
+  enabled: false
+
+#============================== Kibana =====================================
+setup.kibana:
+
+#================================ Outputs =====================================
+
+# Configure what output to use when sending the data collected by the beat.
+
+#-------------------------- Elasticsearch output ------------------------------
+output.elasticsearch:
+  # Array of hosts to connect to.
+  hosts: []
+  protocol: "https"
+  username: ""
+  password: ""
+  index: "kylin-%{[fields.name]}-%{+yyyy-MM-dd}"
