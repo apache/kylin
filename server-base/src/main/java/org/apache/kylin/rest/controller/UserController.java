@@ -191,6 +191,8 @@ public class UserController extends BasicController {
         }
         logger.info("Saving {}", user);
 
+        user.setPassword(pwdEncode(user.getPassword()));
+
         completeAuthorities(user);
         userService.updateUser(user);
         return get(userName);
