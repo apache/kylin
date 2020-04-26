@@ -1,0 +1,1 @@
+docker build -t hadoop-client:apache-hadoop2.7 .
