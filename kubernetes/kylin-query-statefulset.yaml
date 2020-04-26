@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations: {}
+  name: kylin-query
+  namespace: kylin
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: kylin
+      type: query
+  serviceName: kylin
+  template:
+    metadata:
+      labels:
+        app: kylin
+        type: query
+    spec:
+      containers:
+        - image: 'apachekylin/apache-kylin:3.0.0-cdh57'
+          imagePullPolicy: Always
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - bash
+                  - '-c'
+                  - |
+                    set -ex
+                    # initialize the keytab
+                    kinit -kt /home/kylin/kylin.keytab kylin
+                    # set the kylin.server.mode
+                    sed "s/kylin\.server\.mode.*/kylin\.server\.mode=query/g" /mnt/kylin-config/kylin.properties > ${KYLIN_HOME}/conf/kylin.properties
+                    sed -i "s/kylin\.server\.host-address.*/kylin\.server\.host-address=`hostname`\.kylin:7070/g" ${KYLIN_HOME}/conf/kylin.properties
+                    sed -i "s/export KYLIN_JVM_SETTINGS.*/export KYLIN_JVM_SETTINGS=\"-Xms16g -Xmx16g -XX:NewSize=3g -XX:MaxNewSize=3g -XX:SurvivorRatio=4 -XX:+CMSClassUnloadingEnabled -XX:+CMSParallelRemarkEnabled -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:CMSInitiatingOccupancyFraction=70 -XX:+DisableExplicitGC -XX:+HeapDumpOnOutOfMemoryError\"/g" ${KYLIN_HOME}/conf/setenv.sh
+                    # unarchive the war file and replace the applicationContext if needed
+                    mkdir ${KYLIN_HOME}/tomcat/webapps/kylin
+                    cd ${KYLIN_HOME}/tomcat/webapps/kylin
+                    jar -xvf ${KYLIN_HOME}/tomcat/webapps/kylin.war
+                    cp /mnt/kylin-context/applicationContext.xml ${KYLIN_HOME}/tomcat/webapps/kylin/WEB-INF/classes
+          name: kylin
+          ports:
+            - containerPort: 7070
+          readinessProbe:
+            httpGet:
+              path: /kylin
+              port: 7070
+          resources:
+            limits:
+              cpu: 8
+              memory: 20G
+            requests:
+              cpu: 8
+              memory: 20G
+          volumeMounts:
+            - mountPath: /etc/hadoop/conf
+              name: hadoop-config
+            - mountPath: /etc/hive/conf
+              name: hive-config
+            - mountPath: /etc/hbase/conf
+              name: hbase-config
+            - mountPath: /home/kylin
+              name: kylin-keytab
+            - mountPath: /etc/krb5.conf
+              name: krb5-config
+              subPath: krb5.conf
+            - mountPath: /mnt/kylin-context
+              name: kylin-context
+            - mountPath: /mnt/kylin-config
+              name: kylin-config
+      volumes:
+        - configMap:
+            name: hadoop-config
+          name: hadoop-config
+        - configMap:
+            name: hive-config
+          name: hive-config
+        - configMap:
+            name: hbase-config
+          name: hbase-config
+        - configMap:
+            name: kylin-config
+          name: kylin-config
+        - configMap:
+            name: krb5-config
+          name: krb5-config
+        - configMap:
+            name: kylin-context
+          name: kylin-context
+        - name: kylin-keytab
+          secret:
+            secretName: kylin-keytab
+  updateStrategy:
+    type: RollingUpdate

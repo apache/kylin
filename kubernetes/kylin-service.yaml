@@ -1,0 +1,44 @@
+# Headless service for stable DNS entries of StatefulSet members.
+apiVersion: v1
+kind: Service
+metadata:
+  name: kylin
+  labels:
+    app: kylin
+spec:
+  ports:
+    - name: kylin
+      port: 7070
+  clusterIP: None
+  selector:
+    app: kylin
+---
+# For job instances.
+apiVersion: v1
+kind: Service
+metadata:
+  name: kylin-job
+spec:
+  type: ClusterIP
+  selector:
+    app: kylin
+    type: job
+  ports:
+    - protocol: TCP
+      port: 7070
+      targetPort: 7070
+---
+# For query instances.
+apiVersion: v1
+kind: Service
+metadata:
+  name: kylin-query
+spec:
+  type: ClusterIP
+  selector:
+    app: kylin
+    type: query
+  ports:
+    - protocol: TCP
+      port: 7070
+      targetPort: 7070
