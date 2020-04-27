@@ -21,6 +21,7 @@ package org.apache.kylin.engine.spark.job;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
+import org.apache.kylin.job.exception.SchedulerException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,13 +30,13 @@ import org.junit.Test;
 public class NSparkExecutableTest extends LocalWithSparkSessionTest {
 
     @Before
-    public void setup() {
-        createTestMetadata();
+    public void setup() throws SchedulerException {
+        super.setup();
     }
 
     @After
     public void destroy() {
-        cleanupTestMetadata();
+        super.after();
     }
 
     @Test
