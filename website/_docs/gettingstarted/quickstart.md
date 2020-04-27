@@ -28,15 +28,18 @@ We have uploaded the user facing Kylin image to the Docker repository. Users do 
 
 #### Step1
 First, execute the following command to pull the image from the Docker repository:
+
 ```
 docker pull apachekylin/apache-kylin-standalone:3.0.1
 ```
+
 The image here contains the latest version of Kylin: Kylin v3.0.1. This image contains all of the big data components that Kylin depends on, so it takes a long time to pull the image – please be patient. After the pull is successful, it is displayed as follows:
 
 ![](/images/docs/quickstart/pull_docker.png)
 
 #### Step2
 Execute the following command to start the container:
+
 ```
 docker run -d \
 -m 8G \
@@ -48,6 +51,7 @@ docker run -d \
 -p 16010:16010 \
 apachekylin/apache-kylin-standalone:3.0.1
 ```
+
 The container will start shortly. Since the specified port in the container has been mapped to the local port, you can directly open the pages of each service in the local browser, such as:
 - Kylin Page: http://127.0.0.1:7070/kylin/
 - HDFS NameNode Page: http://127.0.0.1:50070
@@ -107,6 +111,7 @@ When your environment meets the above prerequisites, you can install and start u
 
 #### Step1. Download the Kylin Archive
 Download a binary for your version of Hadoop from [Apache Kylin Download Site](https://kylin.apache.org/download/). Currently, the latest versions are Kylin 3.0.1 and Kylin 2.6.5, of which, version 3.0 supports the function of ingesting data in real time for pre-calculation. If your Hadoop environment is CDH 5.7, you can download Kylin 3.0.0 using the following command line:
+
 ```
 cd /usr/local/
 wget http://apache.website-solution.net/kylin/apache-kylin-3.0.0/apache-kylin-3.0.0-bin-cdh57.tar.gz
@@ -114,6 +119,7 @@ wget http://apache.website-solution.net/kylin/apache-kylin-3.0.0/apache-kylin-3.
 
 #### Step2. Extract Kylin
 Extract the downloaded Kylin archive and configure the environment variable KYLIN_HOME to point to the extracted directory:
+
 ```
 tar -zxvf  apache-kylin-3.0.0-bin-cdh57.tar.gz
 cd apache-kylin-3.0.0-bin-cdh57
@@ -122,13 +128,17 @@ export KYLIN_HOME=`pwd`
 
 #### Step3. Download Spark
 Since Kylin checks the Spark environment when it starts, you need to set SPARK_HOME:
+
 ```
 export SPARK_HOME=/path/to/spark
 ```
+
 If you don’t have a Spark environment already downloaded, you can also download Spark using Kylin’s own script:
+
 ```
 $KYLIN_HOME/bin/download-spark.sh
 ```
+
 The script will place the decompressed Spark in the $ KYLIN_HOME directory. If SPARK_HOME is not set in the system, the Spark in the $ KYLIN_HOME directory will be found automatically when Kylin is started.
 
 #### Step4. Environmental Inspection
@@ -138,15 +148,19 @@ The script will print out detailed error messages if any errors are identified. 
 
 #### Step5. Start Kylin
 Run 
+
 ```
 $KYLIN_HOME/bin/kylin.sh
 ```
+
 Start script to start Kylin. If the startup is successful, the following will be output at the end of the command line:
+
 ```
 A new Kylin instance is started by root. To stop it, run 'kylin.sh stop'
 Check the log at /usr/local/apache-kylin-3.0.0-bin-cdh57/logs/kylin.log
 Web UI is at http://<hostname>:7070/kylin
 ```
+
 The default port started by Kylin is 7070. You can use $ KYLIN_HOME/bin/kylin-port-replace-util.sh set number to modify the port. The modified port is 7070 + number.
 
 #### Step6. Visit Kylin
@@ -155,9 +169,11 @@ The initial username and password are ADMIN/KYLIN. After the server starts, you 
 
 #### Step7. Create Sample Cube
 Kylin provides a script to create a sample cube for users to quickly experience Kylin. Run from the command line:
+
 ```
 $KYLIN_HOME/bin/sample.sh
 ```
+
 After completing, log in to Kylin, click System -> Configuration -> Reload Metadata to reload the metadata.
 
 After the metadata is reloaded, you can see a project named learn_kylin in Project in the upper left corner. 
