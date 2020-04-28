@@ -20,31 +20,27 @@ package org.apache.kylin.query.runtime.plans
 import java.util
 import java.util.concurrent.ConcurrentHashMap
 
-import com.google.common.collect.{Lists, Sets}
 import org.apache.calcite.DataContext
-import org.apache.kylin.common.{QueryContext, QueryContextFacade}
+import org.apache.kylin.common.QueryContextFacade
 import org.apache.kylin.cube.CubeInstance
 import org.apache.kylin.metadata.model._
-import org.apache.kylin.metadata.realization.IRealization
 import org.apache.kylin.metadata.tuple.TupleInfo
-import org.apache.kylin.metadata.TableMetadataManager
-import org.apache.kylin.query.relnode.{OLAPRel, OLAPTableScan}
 import org.apache.kylin.query.SchemaProcessor
 import org.apache.kylin.query.exception.UnsupportedQueryException
-import org.apache.kylin.query.runtime.{DerivedProcess, RuntimeHelper, SparderLookupManager, SparkOperation}
+import org.apache.kylin.query.relnode.{OLAPRel, OLAPTableScan}
+import org.apache.kylin.query.runtime.{DerivedProcess, RuntimeHelper, SparderLookupManager}
 import org.apache.kylin.storage.hybrid.HybridInstance
 import org.apache.kylin.storage.spark.HadoopFileStorageQuery
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{ArrayType, DoubleType, StructField, StructType}
-import org.apache.spark.sql.{DataFrame, SparderContext, _}
 import org.apache.spark.sql.utils.SparkTypeUtil
-import org.apache.spark.utils.{LogEx, LogUtils}
+import org.apache.spark.sql.{DataFrame, SparderContext, _}
+import org.apache.spark.utils.LogEx
 
 import scala.collection.JavaConverters._
 
 // scalastyle:off
 object TableScanPlan extends LogEx {
-
 
   val cacheDf: ThreadLocal[ConcurrentHashMap[String, DataFrame]] = new ThreadLocal[ConcurrentHashMap[String, DataFrame]] {
     override def initialValue: ConcurrentHashMap[String, DataFrame] = {
@@ -55,7 +51,6 @@ object TableScanPlan extends LogEx {
   def createOLAPTable(rel: OLAPRel, dataContext: DataContext): DataFrame = logTime("table scan", info = true) {
     val olapContext = rel.getContext
     val realization = olapContext.realization
-    val session: SparkSession = SparderContext.getSparkSession
     QueryContextFacade.current()
       .setContextRealization(olapContext.id, realization.getName, realization.getStorageType)
     val cubeInstance: CubeInstance = realization match {
@@ -86,6 +81,8 @@ object TableScanPlan extends LogEx {
       .format("parquet")
       .cuboidTable(cubeInstance, cuboid)
       .toDF(schemaNames: _*)
+    // may have multi TopN measures.
+    val topNMeasureIndexes = df.schema.fields.map(_.dataType).zipWithIndex.filter(_._1.isInstanceOf[ArrayType]).map(_._2)
     val tuple = DerivedProcess.process(olapContext, cuboid, cubeInstance, df, request)
     df = tuple._1
     var topNMapping: Map[Int, Column] = Map.empty
@@ -107,7 +104,8 @@ object TableScanPlan extends LogEx {
       df.schema,
       columnIndex,
       tupleIdx,
-      topNMapping)
+      topNMapping,
+      topNMeasureIndexes)
     df.select(columns: _*)
   }
 
@@ -172,7 +170,6 @@ object TableScanPlan extends LogEx {
         index._1, dimCols(index._2).getIdentity.replaceAll("\\.", "_"))))
     }).+:(numericTupleIdx, col(sumColName)).toMap
 
-
     (flattenedDF.toDF(newSchema.fieldNames: _*), topNMapping)
   }
 
@@ -191,11 +188,10 @@ object TableScanPlan extends LogEx {
   }
 
   // copy from NCubeTupleConverter
-  def getTupleIdx(
-    selectedDimensions: util.Set[TblColRef],
-    selectedMetrics: util.Set[FunctionDesc],
-    tupleInfo: TupleInfo): Array[Int] = {
-    var tupleIdx: Array[Int] =
+  def getTupleIdx(selectedDimensions: util.Set[TblColRef],
+                  selectedMetrics: util.Set[FunctionDesc],
+                  tupleInfo: TupleInfo): Array[Int] = {
+    val tupleIdx: Array[Int] =
       new Array[Int](selectedDimensions.size + selectedMetrics.size)
 
     var i = 0
@@ -228,10 +224,7 @@ object TableScanPlan extends LogEx {
   }
 
   def createLookupTable(rel: OLAPTableScan, dataContext: DataContext): DataFrame = {
-
-
     val start = System.currentTimeMillis()
-    val session = SparderContext.getSparkSession
     val olapContext = rel.getContext
     var cube: CubeInstance = null
     olapContext.realization match {
