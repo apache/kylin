@@ -26,10 +26,9 @@ import org.apache.kylin.query.{SchemaProcessor, UdfManager}
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.catalyst.expressions.Literal
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{ArrayType, DataTypes, StructType}
+import org.apache.spark.sql.types.{DataTypes, StructType}
 
 import scala.collection.mutable
-import scala.collection.JavaConverters._
 
 // scalastyle:off
 object RuntimeHelper {
@@ -46,15 +45,15 @@ object RuntimeHelper {
     name
   }
 
-  def gtSchemaToCalciteSchema(
-    primaryKey: ImmutableBitSet,
-    deriveSummary: DeriveSummary,
-    factTableName: String,
-    allColumns: List[TblColRef],
-    sourceSchema: StructType,
-    gtColIdx: Array[Int],
-    tupleIdx: Array[Int],
-    topNMapping: Map[Int, Column]): Seq[Column] = {
+  def gtSchemaToCalciteSchema(primaryKey: ImmutableBitSet,
+                              deriveSummary: DeriveSummary,
+                              factTableName: String,
+                              allColumns: List[TblColRef],
+                              sourceSchema: StructType,
+                              gtColIdx: Array[Int],
+                              tupleIdx: Array[Int],
+                              topNMapping: Map[Int, Column],
+                              topNMeasureIndexes: Array[Int]): Seq[Column] = {
     val gTInfoNames = SchemaProcessor.buildFactTableSortNames(sourceSchema)
     val calciteToGTinfo = tupleIdx.zipWithIndex.toMap
     var deriveMap: Map[Int, Column] = Map.empty
@@ -68,7 +67,7 @@ object RuntimeHelper {
           // see CubeDesc.initDimensionColumns()
           require(hostToDerived.calciteIdx.length == 1)
           require(hostToDerived.hostIdx.length == 1)
-          val fkColumnRef = hostToDerived.join.getFKSide.getColumns.asScala.head
+          val fkColumnRef = hostToDerived.join.getForeignKeyColumns
           columns.append(
             (
               hostToDerived.calciteIdx.apply(0),
@@ -78,7 +77,7 @@ object RuntimeHelper {
                     .generateDeriveTableSchemaName(
                       derivedTableName,
                       hostToDerived.derivedIndex.apply(0),
-                      fkColumnRef.getName)
+                      fkColumnRef(0).getName)
                     .toString)))
         } else {
           hostToDerived.calciteIdx.zip(hostToDerived.derivedIndex).foreach {
@@ -90,8 +89,6 @@ object RuntimeHelper {
       }.toMap
     }
 
-    // may have multi TopN measures.
-    val topNIndexs = sourceSchema.fields.map(_.dataType).zipWithIndex.filter(_._1.isInstanceOf[ArrayType])
     allColumns.indices
       .zip(allColumns)
       .map {
@@ -106,8 +103,8 @@ object RuntimeHelper {
             topNMapping.apply(index)
           } else if (calciteToGTinfo.contains(index)) {
             val gTInfoIndex = gtColIdx.apply(calciteToGTinfo.apply(index))
-            val hasTopN = topNMapping.nonEmpty && topNIndexs.nonEmpty
-            if (hasTopN && topNIndexs.map(_._2).contains(gTInfoIndex)) {
+            val hasTopN = topNMapping.nonEmpty && topNMeasureIndexes.nonEmpty
+            if (hasTopN && topNMeasureIndexes.contains(gTInfoIndex)) {
               // topn measure will be erase when calling inline
               literalOne.as(s"${factTableName}_${columnName}")
             } else if (primaryKey.get(gTInfoIndex)) {
