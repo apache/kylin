@@ -32,7 +32,8 @@
   - install/configuration
   - install/kylin_aws_emr
   - install/kylin_docker
-  
+  - install/kylin_on_kubernetes
+
 - title: Tutorial
   docs:
   - tutorial/kylin_sample

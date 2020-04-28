@@ -24,6 +24,7 @@
   - install/configuration
   - install/kylin_aws_emr
   - install/kylin_docker
+  - install/kylin_on_kubernetes
 
 - title: 教程
   docs:
