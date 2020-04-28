@@ -121,7 +121,7 @@ public class FlinkCubingMerge extends AbstractApplication implements Serializabl
         }
 
         Job job = Job.getInstance();
-        FlinkUtil.modifyFlinkHadoopConfiguration(job); // set dfs.replication=2 and enable compress
+        FlinkUtil.modifyFlinkHadoopConfiguration(job); // set dfs.replication and enable compress
 
         HadoopUtil.deletePath(job.getConfiguration(), new Path(outputPath));
         final SerializableConfiguration sConf = new SerializableConfiguration(job.getConfiguration());
@@ -206,7 +206,7 @@ public class FlinkCubingMerge extends AbstractApplication implements Serializabl
                 final String cuboidOutputPath = FlinkBatchMergeJobBuilder2.getCuboidOutputPathsByLevel(outputPath, level);
 
                 Job jobInstanceForEachOutputFormat = Job.getInstance();
-                FlinkUtil.modifyFlinkHadoopConfiguration(jobInstanceForEachOutputFormat); // set dfs.replication=2 and enable compress
+                FlinkUtil.modifyFlinkHadoopConfiguration(jobInstanceForEachOutputFormat); // set dfs.replication and enable compress
                 FlinkUtil.setHadoopConfForCuboid(jobInstanceForEachOutputFormat, cubeSegment, metaUrl);
 
                 FileOutputFormat.setOutputPath(jobInstanceForEachOutputFormat, new Path(cuboidOutputPath));

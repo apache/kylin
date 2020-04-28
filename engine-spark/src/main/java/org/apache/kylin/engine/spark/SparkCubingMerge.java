@@ -112,7 +112,7 @@ public class SparkCubingMerge extends AbstractApplication implements Serializabl
         conf.set("spark.kryo.registrationRequired", "true").registerKryoClasses(kryoClassArray);
 
         try (JavaSparkContext sc = new JavaSparkContext(conf)) {
-            SparkUtil.modifySparkHadoopConfiguration(sc.sc()); // set dfs.replication=2 and enable compress
+            SparkUtil.modifySparkHadoopConfiguration(sc.sc(), AbstractHadoopJob.loadKylinConfigFromHdfs(new SerializableConfiguration(sc.hadoopConfiguration()), metaUrl)); // set dfs.replication and enable compress
             KylinSparkJobListener jobListener = new KylinSparkJobListener();
             sc.sc().addSparkListener(jobListener);
 

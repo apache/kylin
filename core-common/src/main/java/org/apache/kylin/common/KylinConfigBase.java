@@ -1432,6 +1432,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getPropertiesByPrefix("kylin.engine.mr.base-cuboid-config-override.");
     }
 
+    public String getCuboidDfsReplication() {
+        return getOptional("kylin.engine.cuboid.dfs.replication", "2");
+    }
+
     public Map<String, String> getSparkConfigOverride() {
         return getPropertiesByPrefix("kylin.engine.spark-conf.");
     }
