@@ -223,7 +223,7 @@ public class FlinkCubingByLayer extends AbstractApplication implements Serializa
             final KylinConfig kylinConfig) throws Exception {
         final String cuboidOutputPath = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(hdfsBaseLocation, level);
         final SerializableConfiguration sConf = new SerializableConfiguration(job.getConfiguration());
-        FlinkUtil.modifyFlinkHadoopConfiguration(job); // set dfs.replication=2 and enable compress
+        FlinkUtil.modifyFlinkHadoopConfiguration(job); // set dfs.replication and enable compress
         FlinkUtil.setHadoopConfForCuboid(job, cubeSeg, metaUrl);
 
         HadoopOutputFormat<Text, Text> hadoopOF =

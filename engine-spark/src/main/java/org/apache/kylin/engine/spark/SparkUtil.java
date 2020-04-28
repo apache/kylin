@@ -137,8 +137,8 @@ public class SparkUtil {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
     }
 
-    public static void modifySparkHadoopConfiguration(SparkContext sc) throws Exception {
-        sc.hadoopConfiguration().set("dfs.replication", "2"); // cuboid intermediate files, replication=2
+    public static void modifySparkHadoopConfiguration(SparkContext sc, KylinConfig kylinConfig) throws Exception {
+        sc.hadoopConfiguration().set("dfs.replication", kylinConfig.getCuboidDfsReplication()); // cuboid intermediate files
         sc.hadoopConfiguration().set("mapreduce.output.fileoutputformat.compress", "true");
         sc.hadoopConfiguration().set("mapreduce.output.fileoutputformat.compress.type", "BLOCK");
         sc.hadoopConfiguration().set("mapreduce.output.fileoutputformat.compress.codec", "org.apache.hadoop.io.compress.DefaultCodec"); // or org.apache.hadoop.io.compress.SnappyCodec
