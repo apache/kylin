@@ -115,12 +115,6 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         OLAPRel.RewriteImplementor rewriteImplementor = new OLAPRel.RewriteImplementor();
         rewriteImplementor.visitChild(this, getInput());
 
-        if (System.getProperty("calcite.debug") != null) {
-            String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
-            System.out.println("EXECUTION PLAN AFTER REWRITE");
-            System.out.println(dumpPlan);
-            QueryContextFacade.current().setCalcitePlan(this.copy(getTraitSet(), getInputs()));
-        }
         final PhysType physType = PhysTypeImpl.of(enumImplementor.getTypeFactory(), getRowType(),
                 pref.preferCustom());
         if (KylinConfig.getInstanceFromEnv().isSparkEngineEnabled()) {
@@ -142,6 +136,14 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             OLAPRel.JavaImplementor impl = new OLAPRel.JavaImplementor(enumImplementor);
             EnumerableRel inputAsEnum = impl.createEnumerable((OLAPRel) getInput());
             this.replaceInput(0, inputAsEnum);
+
+            if (System.getProperty("calcite.debug") != null) {
+                String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
+                System.out.println("EXECUTION PLAN AFTER REWRITE");
+                System.out.println(dumpPlan);
+                QueryContextFacade.current().setCalcitePlan(this.copy(getTraitSet(), getInputs()));
+            }
+
             return impl.visitChild(this, 0, inputAsEnum, pref);
         }
     }
