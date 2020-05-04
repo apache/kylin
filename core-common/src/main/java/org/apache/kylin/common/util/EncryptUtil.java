@@ -36,7 +36,7 @@ public class EncryptUtil {
             return null;
         }
         try {
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            Cipher cipher = Cipher.getInstance("AES/CFB/PKCS5Padding");
             final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
             final String encryptedString = Base64.encodeBase64String(cipher.doFinal(strToEncrypt.getBytes(
@@ -52,7 +52,7 @@ public class EncryptUtil {
             return null;
         }
         try {
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
+            Cipher cipher = Cipher.getInstance("AES/CFB/PKCS5Padding");
             final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
             final String decryptedString = new String(cipher.doFinal(Base64.decodeBase64(strToDecrypt)), StandardCharsets.UTF_8);
