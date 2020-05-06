@@ -21,6 +21,7 @@ package org.apache.kylin.engine.spark.metadata.cube.source;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ImplementationSwitch;
 import org.apache.kylin.metadata.model.ISourceAware;
+import org.apache.kylin.source.ISource;
 
 public class SourceFactory {
 

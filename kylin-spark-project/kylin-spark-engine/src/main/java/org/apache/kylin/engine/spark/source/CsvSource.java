@@ -19,20 +19,30 @@
 package org.apache.kylin.engine.spark.source;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.spark.NSparkCubingEngine.NSparkCubingSource;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
 import org.apache.kylin.engine.spark.metadata.TableDesc;
-import org.apache.kylin.engine.spark.metadata.cube.source.ISource;
 import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.source.IReadableTable;
+import org.apache.kylin.source.ISampleDataDeployer;
+import org.apache.kylin.source.ISource;
+import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourcePartition;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 public class CsvSource implements ISource {
+    public CsvSource() {
+    }
+
+    //used by reflection
+    public CsvSource(KylinConfig config) {
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -92,5 +102,30 @@ public class CsvSource implements ISource {
             throw new IllegalStateException();
         }
         return utMetaDir;
+    }
+
+    @Override
+    public ISourceMetadataExplorer getSourceMetadataExplorer() {
+        return null;
+    }
+
+    @Override
+    public IReadableTable createReadableTable(org.apache.kylin.metadata.model.TableDesc tableDesc, String uuid) {
+        return null;
+    }
+
+    @Override
+    public ISampleDataDeployer getSampleDataDeployer() {
+        return null;
+    }
+
+    @Override
+    public void unloadTable(String tableName, String project) throws IOException {
+
+    }
+
+    @Override
+    public void close() throws IOException {
+
     }
 }
