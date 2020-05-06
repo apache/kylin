@@ -88,6 +88,11 @@ public class KafkaInputBase {
             }
         }
 
+        @Override
+        public void addStepPhase_ReplaceFlatTableGlobalColumnValue(DefaultChainedExecutable jobFlow) {
+            //do nothing
+        }
+
         protected String getJobWorkingDir(DefaultChainedExecutable jobFlow) {
             return JobBuilderSupport.getJobWorkingDir(config.getHdfsWorkingDirectory(), jobFlow.getId());
         }
