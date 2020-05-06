@@ -661,13 +661,19 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     /**
-     * MR/Hive global domain dic (reuse dict from other global dic column)
+     * MR/Hive global domain dic (reuse dict from other cube's MR/Hive global dic column)
      * @return
      */
     public Map<String, String> getMrHiveDictRefColumns() {
         Map<String, String> result = new HashMap<>();
-
-        //toDo Implementation of Mr/Hive global domain dict config
+        String columnStr = getOptional("kylin.dictionary.mr-hive.ref.columns", "");
+        if (!StringUtils.isEmpty(columnStr)) {
+            String[] pairs = columnStr.split(",");
+            for (String pair : pairs) {
+                String [] infos = pair.split(":");
+                result.put(infos[0], infos[1]);
+            }
+        }
         return result;
     }
 
