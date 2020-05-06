@@ -36,6 +36,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
+import org.apache.kylin.engine.mr.steps.BuildGlobalHiveDictPartBuildJob;
 import org.apache.kylin.engine.mr.steps.CalculateStatsFromBaseCuboidJob;
 import org.apache.kylin.engine.mr.steps.CreateDictionaryJob;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
@@ -204,6 +205,22 @@ public class JobBuilderSupport {
         return result;
     }
 
+
+    public MapReduceExecutable createBuildGlobalHiveDictPartBuildJob(String jobId) {
+        MapReduceExecutable result = new MapReduceExecutable();
+        result.setName(ExecutableConstants.STEP_NAME_GLOBAL_DICT_PART_BUILD_DICTVAL);
+        result.setMapReduceJobClass(BuildGlobalHiveDictPartBuildJob.class);
+        StringBuilder cmd = new StringBuilder();
+        appendMapReduceParameters(cmd);
+        appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getRealization().getName());
+        appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
+        appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME,
+                ExecutableConstants.STEP_NAME_GLOBAL_DICT_PART_BUILD_DICTVAL + seg.getRealization().getName() + "_Step");
+        appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, getBuildGlobalDictionaryBasePath(jobId));
+        result.setMapReduceParams(cmd.toString());
+        return result;
+    }
+
     public UpdateCubeInfoAfterBuildStep createUpdateCubeInfoAfterBuildStep(String jobId, LookupMaterializeContext lookupMaterializeContext) {
         final UpdateCubeInfoAfterBuildStep result = new UpdateCubeInfoAfterBuildStep();
         result.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
@@ -339,6 +356,10 @@ public class JobBuilderSupport {
 
     public String getShrunkenDictionaryPath(String jobId) {
         return getRealizationRootPath(jobId) + "/dictionary_shrunken";
+    }
+
+    public String getBuildGlobalDictionaryBasePath(String jobId) {
+        return getRealizationRootPath(jobId) + "/global_dic";
     }
 
     public String getDictRootPath(String jobId) {

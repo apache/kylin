@@ -19,7 +19,8 @@
 package org.apache.kylin.engine.mr;
 
 import java.util.List;
-
+import java.util.Objects;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidUtil;
 import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
@@ -57,6 +58,21 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
 
         // Phase 1: Create Flat Table & Materialize Hive View in Lookup Tables
         inputSide.addStepPhase1_CreateFlatTable(result);
+
+        // build global dict
+        KylinConfig dictConfig = seg.getConfig();
+        String[] mrHiveDictColumns = dictConfig.getMrHiveDictColumnsExcludeRefColumns();
+
+        if (Objects.nonNull(mrHiveDictColumns) && mrHiveDictColumns.length > 0
+                && !"".equals(mrHiveDictColumns[0])) {
+
+            //parallel part build
+            result.addTask(createBuildGlobalHiveDictPartBuildJob(jobId));
+
+            //toDo parallel total build
+        }
+
+        //toDo merge global dic and replace flat table
 
         // Phase 2: Build Dictionary
         result.addTask(createFactDistinctColumnsStep(jobId));
