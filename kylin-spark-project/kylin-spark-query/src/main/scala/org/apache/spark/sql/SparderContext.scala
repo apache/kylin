@@ -29,6 +29,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.execution.ui.PostQueryExecutionForKylin
 import org.apache.spark.sql.catalyst.parser.ParseException
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
+import org.apache.spark.sql.KylinSession._
 import java.util.concurrent.atomic.AtomicReference
 
 import org.apache.kylin.common.KylinConfig
@@ -94,7 +95,7 @@ object SparderContext extends Logging {
   }
 
   def getTotalCore: Int = {
-    val sparkConf = initSparkConf(getSparkSession.sparkContext.getConf)
+    val sparkConf = getSparkSession.sparkContext.getConf
     if (sparkConf.get("spark.master").startsWith("local")) {
       return 1
     }
@@ -121,11 +122,6 @@ object SparderContext extends Logging {
           override def run(): Unit = {
             try {
               val kylinConf: KylinConfig = KylinConfig.getInstanceFromEnv
-              val sparkConf = new SparkConf()
-              kylinConf.getSparkConf.asScala.foreach {
-                case (k, v) =>
-                  sparkConf.set(k, v)
-              }
               val sparkSession = System.getProperty("spark.local") match {
                 case "true" =>
                   SparkSession.builder
@@ -135,8 +131,7 @@ object SparderContext extends Logging {
                       ext.injectPlannerStrategy(_ => KylinSourceStrategy)
                     }
                     .enableHiveSupport()
-                    .config(sparkConf)
-                    .getOrCreate()
+                    .getOrCreateKylinSession()
                 case _ =>
                   SparkSession.builder
                     .appName("sparder-sql-context")
@@ -145,8 +140,7 @@ object SparderContext extends Logging {
                       ext.injectPlannerStrategy(_ => KylinSourceStrategy)
                     }
                     .enableHiveSupport()
-                    .config(sparkConf)
-                    .getOrCreate()
+                    .getOrCreateKylinSession()
               }
               spark = sparkSession
               logInfo("Spark context started successfully with stack trace:")
@@ -157,7 +151,6 @@ object SparderContext extends Logging {
                   .getContextClassLoader
                   .toString)
               registerListener(sparkSession.sparkContext)
-              UdfManager.create(spark)
               initMonitorEnv()
               APP_MASTER_TRACK_URL = null
             } catch {
@@ -180,18 +173,6 @@ object SparderContext extends Logging {
       }
     }
   }
-
-  private lazy val conf: KylinConfig = KylinConfig.getInstanceFromEnv
-
-  def initSparkConf(sparkConf: SparkConf): SparkConf = {
-    //add spark configuration from kylin.properties
-    conf.getSparkConf.asScala.foreach {
-      case (k, v) =>
-        sparkConf.set(k, v)
-    }
-    sparkConf
-  }
-
 
   def registerListener(sc: SparkContext): Unit = {
     val sparkListener = new SparkListener {
@@ -234,8 +215,7 @@ object SparderContext extends Logging {
    */
   def withClassLoad[T](body: => T): T = {
     //    val originClassLoad = Thread.currentThread().getContextClassLoader
-    // fixme aron
-            Thread.currentThread().setContextClassLoader(ClassLoaderUtils.getSparkClassLoader)
+    Thread.currentThread().setContextClassLoader(ClassLoaderUtils.getSparkClassLoader)
     val t = body
     //    Thread.currentThread().setContextClassLoader(originClassLoad)
     t
