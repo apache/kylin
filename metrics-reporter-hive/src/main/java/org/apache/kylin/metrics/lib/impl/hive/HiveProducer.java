@@ -117,7 +117,7 @@ public class HiveProducer {
         }
         contentFilePrefix = hostName + "-" + System.currentTimeMillis() + "-part-";
         String fsUri = fs.getUri().toString();
-        supportAppend = !fsUri.startsWith("s3") && !fsUri.startsWith("wasb"); // AWS EMR and Azure HDInsight
+        supportAppend = fsUri.startsWith("hdfs") ; // Only HDFS is appendable
         logger.info("For {}, supportAppend was set to {}", fsUri, supportAppend);
     }
 
