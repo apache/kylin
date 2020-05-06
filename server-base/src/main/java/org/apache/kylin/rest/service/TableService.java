@@ -57,6 +57,7 @@ import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.spark.SparkColumnCardinality;
 import org.apache.kylin.engine.spark.SparkExecutable;
+import org.apache.kylin.engine.spark.source.CsvSource;
 import org.apache.kylin.job.execution.CardinalityExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -407,6 +408,9 @@ public class TableService extends BasicService {
 
     public List<TableSnapshotResponse> getLookupTableSnapshots(String project, String tableName) throws IOException {
         TableDesc tableDesc = getTableManager().getTableDesc(tableName, project);
+        if (SourceManager.getSource(tableDesc).getClass() == CsvSource.class) {
+            return new ArrayList<>();
+        }
         IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc, null);
         TableSignature signature = hiveTable.getSignature();
         return internalGetLookupTableSnapshots(tableName, signature);

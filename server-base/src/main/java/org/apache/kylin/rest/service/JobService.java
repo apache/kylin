@@ -248,7 +248,7 @@ public class JobService extends BasicService implements InitializingBean {
                 //TODO: Clean the code for org.apache.kylin.source.ISource and org.apache.kylin.engine.spark.metadata.cube.source.ISource
                 SourcePartition src;
                 if (cube.getSourceType() == ISourceAware.ID_SPARK) {
-                    org.apache.kylin.engine.spark.metadata.cube.source.ISource source = SourceFactory.getSparkSource();
+                    ISource source = SourceFactory.getSparkSource();
                     src = new SourcePartition(tsRange, segRange, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
                     src = source.enrichSourcePartitionBeforeBuild(cube, src);
                 } else {
