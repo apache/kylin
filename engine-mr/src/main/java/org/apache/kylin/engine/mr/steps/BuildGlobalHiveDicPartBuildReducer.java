@@ -62,14 +62,12 @@ public class BuildGlobalHiveDicPartBuildReducer extends KylinReducer<Text, LongW
             colIndex = key.getBytes()[0];//col index
             colName = dicCols[colIndex];
         }
-        logAFewRows(key.toString());
-        mos.write(colIndex+"", new LongWritable(count), new Text(keyBytes), "part_sort/"+colIndex);
-    }
 
-    private void logAFewRows(String value) {
         if(count<10){
-            logger.info("key:{}, temp dict num :{},colIndex:{},colName:{}", value, count, colIndex, colName);
+            logger.info("key:{}, temp dict num :{}, colIndex:{}, colName:{}", key.toString(), count, colIndex, colName);
         }
+
+        mos.write(colIndex+"", new LongWritable(count), new Text(keyBytes), "part_sort/"+colIndex);
     }
 
     @Override
@@ -79,7 +77,7 @@ public class BuildGlobalHiveDicPartBuildReducer extends KylinReducer<Text, LongW
         String partition = conf.get(MRJobConfig.TASK_PARTITION);
         mos.write(colIndex + "", new LongWritable(count), new Text(partition), "reduce_stats/" + colIndex);
         mos.close();
-        logger.info("Reduce partition num {} finish,this reduce done item count is {}" , partition, count);
+        logger.info("Reduce partition num {} finish, this reduce done item count is {}" , partition, count);
     }
 
 }
