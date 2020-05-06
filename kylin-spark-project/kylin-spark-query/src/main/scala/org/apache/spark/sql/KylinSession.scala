@@ -20,12 +20,10 @@ package org.apache.spark.sql
 
 import java.io.File
 import java.nio.file.Paths
-import java.sql.SQLException
 
 import org.apache.hadoop.security.UserGroupInformation
 import org.apache.kylin.common.KylinConfig
-import org.apache.kylin.query.{QueryConnection, UdfManager}
-import org.apache.kylin.query.util.QueryUtil
+import org.apache.kylin.query.{UdfManager}
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.{SparkListener, SparkListenerApplicationEnd}
 import org.apache.spark.sql.SparkSession.Builder
@@ -34,7 +32,6 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.utils.KylinReflectUtils
 
 import scala.collection.JavaConverters._
-import scala.util.{Failure, Success, Try}
 
 class KylinSession(
   @transient val sc: SparkContext,
@@ -100,6 +97,7 @@ object KylinSession extends Logging {
           // set app name if not given
           val conf = new SparkConf()
           options.foreach { case (k, v) => conf.set(k, v) }
+          // override spark configuration properties with kylin.properties
           val sparkConf = initSparkConf(conf)
           val sc = SparkContext.getOrCreate(sparkConf)
           // maybe this is an existing SparkContext, update its SparkConf which maybe used
@@ -114,6 +112,7 @@ object KylinSession extends Logging {
             SparkSession.setDefaultSession(null)
           }
         })
+        //To support functions registed with UdfManager, such as CountDistinct, TopN, Percentile, etc.
         UdfManager.create(session)
         session
       }
@@ -140,7 +139,7 @@ object KylinSession extends Logging {
       if (sparkConf.getBoolean("user.kylin.session", false)) {
         return sparkConf
       }
-      sparkConf.set("spark.executor.plugins", "org.apache.spark.memory.MonitorExecutorExtension")
+      //sparkConf.set("spark.executor.plugins", "org.apache.spark.memory.MonitorExecutorExtension")
       // kerberos
       if (conf.isKerberosEnabled) {
         sparkConf.set("spark.yarn.keytab", conf.getKerberosKeytabPath)
@@ -174,14 +173,14 @@ object KylinSession extends Logging {
       if (!"true".equalsIgnoreCase(System.getProperty("spark.local"))) {
         if (sparkConf.get("spark.master").startsWith("yarn")) {
           sparkConf.set("spark.yarn.dist.jars",
-            KylinConfig.getInstanceFromEnv.getKylinJobJarPath)
+            KylinConfig.getInstanceFromEnv.getKylinParquetJobJarPath)
           sparkConf.set("spark.yarn.dist.files", conf.sparderFiles())
         } else {
           sparkConf.set("spark.jars", conf.sparderJars)
           sparkConf.set("spark.files", conf.sparderFiles())
         }
 
-        val fileName = KylinConfig.getInstanceFromEnv.getKylinJobJarPath
+        val fileName = KylinConfig.getInstanceFromEnv.getKylinParquetJobJarPath
         sparkConf.set("spark.executor.extraClassPath", Paths.get(fileName).getFileName.toString)
 
         val krb5conf = " -Djava.security.krb5.conf=./__spark_conf__/__hadoop_conf__/krb5.conf"
