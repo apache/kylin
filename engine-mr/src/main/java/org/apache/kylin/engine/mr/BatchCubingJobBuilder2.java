@@ -73,7 +73,10 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
             result.addTask(createBuildGlobalHiveDicTotalBuildJob(jobId));
         }
 
-        //toDo merge global dic and replace flat table
+        //merge global dic and replace flat table
+        if(Objects.nonNull(dictConfig.getMrHiveDictColumns()) && dictConfig.getMrHiveDictColumns().length > 0 && !"".equals(dictConfig.getMrHiveDictColumns()[0])){
+            inputSide.addStepPhase_ReplaceFlatTableGlobalColumnValue(result);
+        }
 
         // Phase 2: Build Dictionary
         result.addTask(createFactDistinctColumnsStep(jobId));

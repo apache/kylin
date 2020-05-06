@@ -126,6 +126,30 @@ public class HiveInputBase {
             addStepPhase1_DoMaterializeLookupTable(jobFlow);
         }
 
+        @Override
+        public void addStepPhase_ReplaceFlatTableGlobalColumnValue(DefaultChainedExecutable jobFlow) {
+            KylinConfig dictConfig = (flatDesc.getSegment()).getConfig();
+            final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
+            String[] mrHiveDictColumnsExcludeRefCols = dictConfig.getMrHiveDictColumnsExcludeRefColumns();
+            Map<String, String> dictRef = dictConfig.getMrHiveDictRefColumns();
+            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
+
+            String globalDictDatabase = dictConfig.getMrHiveDictDB();
+            if (null == globalDictDatabase) {
+                throw new IllegalArgumentException("Mr-Hive Global dict database is null.");
+            }
+            String globalDictTable = cubeName + dictConfig.getMrHiveDictTableSuffix();
+            if(Objects.nonNull(mrHiveDictColumnsExcludeRefCols) && mrHiveDictColumnsExcludeRefCols.length > 0) {
+                //merge to dict table step
+                jobFlow.addTask(createHiveGlobalDictMergeGlobalDict(flatDesc, hiveInitStatements, cubeName, mrHiveDictColumnsExcludeRefCols, globalDictDatabase, globalDictTable));
+
+                for (String item : mrHiveDictColumnsExcludeRefCols) {
+                    dictRef.put(item, "");
+                }
+            }
+            //toDo add replace step
+        }
+
         protected void addStepPhase1_DoCreateMrHiveGlobalDict(DefaultChainedExecutable jobFlow,
                 String[] mrHiveDictColumns, String globalDictDatabase, String globalDictTable) {
             final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
@@ -180,49 +204,43 @@ public class HiveInputBase {
             return step;
         }
 
-        protected static AbstractExecutable createMrHiveGlobalDictReplaceStep(IJoinedFlatTableDesc flatDesc,
-                String hiveInitStatements, String hdfsWorkingDir, String cubeName, String[] mrHiveDictColumns,
-                String flatTableDatabase, String globalDictDatabase, String globalDictTable) {
+        protected static AbstractExecutable createHiveGlobalDictMergeGlobalDict(IJoinedFlatTableDesc flatDesc,
+                                                                                String hiveInitStatements, String cubeName, String[] mrHiveDictColumns,
+                                                                                String globalDictDatabase, String globalDictTable) {
+
+            String globalDictItermediateTable = MRHiveDictUtil.getMRHiveFlatTableGlobalDictTableName(flatDesc);
+
+            StringBuffer addPartition = new StringBuffer();
+            Map<String, String> maxDictValMap = new HashMap<>();
             Map<String, String> dictHqlMap = new HashMap<>();
             for (String dictColumn : mrHiveDictColumns) {
-                StringBuilder dictHql = new StringBuilder();
-                TblColRef dictColumnRef = null;
-
-                String flatTable = flatTableDatabase + "." + flatDesc.getTableName();
-                // replace the flat table's dict column value
-                dictHql.append("INSERT OVERWRITE TABLE " + flatTable + " \n");
                 try {
-                    dictHql.append("SELECT \n");
-                    Integer flatTableColumnSize = flatDesc.getAllColumns().size();
-                    for (int i = 0; i < flatTableColumnSize; i++) {
-                        TblColRef tblColRef = flatDesc.getAllColumns().get(i);
-                        if (i > 0) {
-                            dictHql.append(",");
-                        }
-                        if (JoinedFlatTable.colName(tblColRef, flatDesc.useAlias()).equalsIgnoreCase(dictColumn)) {
-                            dictHql.append("b. dict_val \n");
-                            dictColumnRef = tblColRef;
-                        } else {
-                            dictHql.append("a." + JoinedFlatTable.colName(tblColRef) + " \n");
-                        }
-                    }
-                    dictHql.append("FROM " + flatTable + " a \n" + "LEFT OUTER JOIN \n" + "( \n"
-                            + "SELECT dict_key, dict_val FROM " + globalDictDatabase + "." + globalDictTable
-                            + " WHERE dict_column = '" + dictColumn + "' \n" + ") b \n" + " ON a."
-                            + JoinedFlatTable.colName(dictColumnRef) + " = b.dict_key;");
-                    dictHqlMap.put(dictColumn, dictHql.toString());
+                    addPartition.append("alter table ").append(globalDictItermediateTable)
+                            .append(" add  IF NOT EXISTS partition (dict_column='").append(dictColumn)
+                            .append("');").append(" \n");
+
+                    String dictHql = "INSERT OVERWRITE TABLE " + globalDictDatabase + "." + globalDictTable + " \n"
+                            + "PARTITION (dict_column = '" + dictColumn + "') \n"
+                            + "SELECT dict_key, dict_val FROM "
+                            + globalDictDatabase + "." + globalDictTable + " \n" + "WHERE dict_column = '" + dictColumn
+                            + "' \n" + flatDesc.getDataModel().getConfig().getHiveUnionStyle() + " \n"
+                            + "SELECT dict_key, dict_val FROM "
+                            + globalDictItermediateTable + " \n" + " WHERE dict_column = '" + dictColumn + "' ;\n";
+                    dictHqlMap.put(dictColumn, dictHql);
                 } catch (Exception e) {
                     logger.error("", e);
                 }
             }
+            String hiveInitStatementForUnstrict = "set hive.mapred.mode=unstrict;";
             CreateMrHiveDictStep step = new CreateMrHiveDictStep();
-            step.setInitStatement(hiveInitStatements);
+            step.setInitStatement(hiveInitStatements + hiveInitStatementForUnstrict + addPartition);
             step.setCreateTableStatementMap(dictHqlMap);
-            step.setIsUnLock(true);
+            step.setMaxDictStatementMap(maxDictValMap);
+            step.setIsLock(false);
+            step.setIsUnLock(false);
             step.setLockPathName(cubeName);
-
             CubingExecutableUtil.setCubeName(cubeName, step.getParams());
-            step.setName(ExecutableConstants.STEP_NAME_GLOBAL_DICT_MRHIVE_REPLACE_DICTVAL);
+            step.setName(ExecutableConstants.STEP_NAME_GLOBAL_DICT_MRHIVE_BUILD_DICTVAL);
             return step;
         }
 
