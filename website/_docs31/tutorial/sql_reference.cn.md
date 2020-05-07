@@ -185,7 +185,7 @@ SELECT cal_dt ,sum(price) AS sum_price FROM (SELECT kylin_cal_dt.cal_dt, kylin_s
 在表中存在至少一个匹配时，```INNER JOIN``` 关键字返回行。
 例子：
 {% highlight Groff markup %}
-SELECT kylin_cal_dt.cal_dt, kylin_sales.price FROM kylin_sales INNER JOIN kylin_cal_dt AS kylin_cal_dt ON kylin_sales.part_dt**** = kylin_cal_dt.cal_dt;
+SELECT kylin_cal_dt.cal_dt, kylin_sales.price FROM kylin_sales INNER JOIN kylin_cal_dt AS kylin_cal_dt ON kylin_sales.part_dt = kylin_cal_dt.cal_dt;
 {% endhighlight %}
 
 ### LEFT JOIN {#LEFTJOIN}

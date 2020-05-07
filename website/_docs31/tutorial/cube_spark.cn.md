@@ -133,6 +133,27 @@ Kylin 启动后，访问 Kylin 网站，在 "Advanced Setting" 页，编辑名�
 
 所有步骤成功执行后，Cube 的状态变为 "Ready" 且您可以像往常那样进行查询。
 
+## 通过Apache Livy使用Spark
+开启使用Livy需要修改如下配置：
+
+{% highlight Groff markup %}
+kylin.engine.livy-conf.livy-enabled=true
+kylin.engine.livy-conf.livy-url=http://ip:8998
+kylin.engine.livy-conf.livy-key.file=hdfs:///path/kylin-job-3.0.0-SNAPSHOT.jar
+kylin.engine.livy-conf.livy-arr.jars=hdfs:///path/hbase-client-1.2.0-{$env.version}.jar,hdfs:///path/hbase-common-1.2.0-{$env.version}.jar,hdfs:///path/hbase-hadoop-compat-1.2.0-{$env.version}.jar,hdfs:///path/hbase-hadoop2-compat-1.2.0-{$env.version}.jar,hdfs:///path/hbase-server-1.2.0-{$env.version}.jar,hdfs:///path/htrace-core-3.2.0-incubating.jar,hdfs:///path/metrics-core-2.2.0.jar  
+{% endhighlight %}
+
+需要注意的是jar包路径之间不能存在空格。
+
+## 可选功能
+
+现在构建步骤中的'extract fact table distinct value' 和 'build dimension dictionary' 两个步骤也可以使用Spark进行构建了。相关的配置如下：
+
+{% highlight Groff markup %}
+kylin.engine.spark-fact-distinct=true
+kylin.engine.spark-dimension-dictionary=true 
+{% endhighlight %}
+
 ## 疑难解答
 
 当出现 error，您可以首先查看 "logs/kylin.log". 其中包含 Kylin 执行的所有 Spark 命令，例如:
