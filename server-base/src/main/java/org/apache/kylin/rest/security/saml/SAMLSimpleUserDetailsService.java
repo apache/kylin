@@ -50,15 +50,13 @@ public class SAMLSimpleUserDetailsService implements org.springframework.securit
     public Object loadUserBySAML(SAMLCredential samlCredential) throws UsernameNotFoundException {
         final String userEmail = samlCredential.getAttributeAsString("email");
         logger.debug("samlCredential.email:" + userEmail);
-        final String userName = userEmail.substring(0, userEmail.indexOf("@"));
-
         KylinUserManager userManager = KylinUserManager.getInstance(KylinConfig.getInstanceFromEnv());
-        ManagedUser existUser = userManager.get(userName);
+        ManagedUser existUser = userManager.get(userEmail);
         // create if not exists
         if (existUser == null) {
-            ManagedUser user = new ManagedUser(userName, NO_EXISTENCE_PASSWORD, true, defaultAuthorities);
+            ManagedUser user = new ManagedUser(userEmail, NO_EXISTENCE_PASSWORD, true, defaultAuthorities);
             userManager.update(user);
         }
-        return userManager.get(userName);
+        return userManager.get(userEmail);
     }
 }
