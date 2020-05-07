@@ -82,7 +82,7 @@ public class NSparkCubingStep extends NSparkExecutable {
         Set<String> segmentIds = Sets.newHashSet(org.apache.hadoop.util.StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS)));
         CubeSegment toUpdateSegs = distCube.getSegmentById(segmentIds.iterator().next());
 
-        List<CubeSegment> tobe = currentInstanceCopy.calculateToBeSegments(toUpdateSegs);//所有New状态的segment
+        List<CubeSegment> tobe = currentInstanceCopy.calculateToBeSegments(toUpdateSegs);
 
         if (tobe.contains(toUpdateSegs) == false)
             throw new IllegalStateException(
