@@ -23,6 +23,9 @@ import java.util
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.lock.DistributedLock
 import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.engine.spark.builder.DFBuilderHelper._
+import org.apache.kylin.engine.spark.job.NSparkCubingUtil
+import org.apache.kylin.engine.spark.metadata.{ColumnDesc, SegmentInfo}
 import org.apache.spark.dict.NGlobalDictionaryV2
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
@@ -31,9 +34,6 @@ import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{Column, Dataset, Row, SparkSession}
 
 import scala.collection.JavaConverters._
-import org.apache.kylin.engine.spark.builder.DFBuilderHelper._
-import org.apache.kylin.engine.spark.job.NSparkCubingUtil
-import org.apache.kylin.engine.spark.metadata.{ColumnDesc, SegmentInfo}
 
 class DFDictionaryBuilder(val dataset: Dataset[Row],
                           val seg: SegmentInfo,
@@ -45,7 +45,7 @@ class DFDictionaryBuilder(val dataset: Dataset[Row],
 
   @throws[IOException]
   def buildDictSet(): Unit = {
-    logInfo(s"Building global dictionaries V2 for seg $seg")
+    logInfo(s"Start building global dictionaries V2 for seg $seg")
     val m = s"Build global dictionaries V2 for seg $seg succeeded"
     time(m, colRefSet.asScala.foreach(col => safeBuild(col)))
   }
@@ -55,20 +55,20 @@ class DFDictionaryBuilder(val dataset: Dataset[Row],
     val sourceColumn = ref.identity
     lock.lock(getLockPath(sourceColumn), Long.MaxValue)
     try
-        if (lock.lock(getLockPath(sourceColumn))) {
-          val dictColDistinct = dataset.select(wrapCol(ref)).distinct
-          ss.sparkContext.setJobDescription("Calculate bucket size " + ref.identity)
-          val bucketPartitionSize = DictionaryBuilderHelper.calculateBucketSize(seg, ref, dictColDistinct)
-          val m = s"Building global dictionaries V2 for $sourceColumn"
-          time(m, build(ref, bucketPartitionSize, dictColDistinct))
-        }
+      if (lock.lock(getLockPath(sourceColumn))) {
+        val dictColDistinct = dataset.select(wrapCol(ref)).distinct
+        ss.sparkContext.setJobDescription("Calculate bucket size " + ref.identity)
+        val bucketPartitionSize = DictionaryBuilderHelper.calculateBucketSize(seg, ref, dictColDistinct)
+        val m = s"Build global dictionaries V2 for column $sourceColumn succeeded"
+        time(m, build(ref, bucketPartitionSize, dictColDistinct))
+      }
     finally lock.unlock(getLockPath(sourceColumn))
   }
 
   @throws[IOException]
   private[builder] def build(ref: ColumnDesc, bucketPartitionSize: Int, afterDistinct: Dataset[Row]): Unit = {
     val columnName = ref.identity
-    logInfo(s"Start building global dict V2 for column ${columnName}.")
+    logInfo(s"Start building global dictionaries V2 for column $columnName.")
 
     val globalDict = new NGlobalDictionaryV2(seg.project, ref.tableAliasName, ref.columnName, seg.kylinconf.getHdfsWorkingDirectory)
     globalDict.prepareWrite()
@@ -87,8 +87,6 @@ class DFDictionaryBuilder(val dataset: Dataset[Row],
 
     globalDict.writeMetaDict(bucketPartitionSize, seg.kylinconf.getGlobalDictV2MaxVersions, seg.kylinconf.getGlobalDictV2VersionTTL)
   }
-
-
 
   private def getLockPath(pathName: String) = s"/${seg.project}${HadoopUtil.GLOBAL_DICT_STORAGE_ROOT}/$pathName/lock"
 
