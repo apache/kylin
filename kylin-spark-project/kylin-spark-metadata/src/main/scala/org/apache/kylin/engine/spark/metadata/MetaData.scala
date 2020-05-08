@@ -27,7 +27,11 @@ import org.apache.spark.sql.types.{DataType, StructField, StructType}
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.mutable
 
-class ColumnDesc(val columnName: String, val dataType: DataType, val tableName: String, val tableAliasName: String, val id: Int) extends Serializable {
+class ColumnDesc(val columnName: String,
+                 val dataType: DataType,
+                 val tableName: String,
+                 val tableAliasName: String,
+                 val id: Int) extends Serializable {
   def identity: String = s"$tableAliasName.$columnName"
 
   def isColumnType: Boolean = true
@@ -38,19 +42,29 @@ object ColumnDesc {
   ColumnDesc = new ColumnDesc(columnName, dataType, tableName, tableAliasName, id)
 }
 
-case class LiteralColumnDesc(
-                              override val columnName: String, override val dataType: DataType,
-                              override val tableName: String, override val tableAliasName: String, override val id: Int, val value: Any)
+case class LiteralColumnDesc(override val columnName: String,
+                             override val dataType: DataType,
+                             override val tableName: String,
+                             override val tableAliasName: String,
+                             override val id: Int,
+                             value: Any)
   extends ColumnDesc(columnName, dataType, tableName, tableAliasName, id) {
   override def isColumnType: Boolean = false
 }
 
-case class ComputedColumnDesc(
-                               override val columnName: String, override val dataType: DataType,
-                               override val tableName: String, override val tableAliasName: String, override val id: Int, val expression: String = "")
+case class ComputedColumnDesc(override val columnName: String,
+                              override val dataType: DataType,
+                              override val tableName: String,
+                              override val tableAliasName: String,
+                              override val id: Int,
+                              expression: String = "")
   extends ColumnDesc(columnName, dataType, tableName, tableAliasName, id)
 
-case class TableDesc(tableName: String, databaseName: String, columns: List[ColumnDesc], alias: String, sourceType: Int, addInfo: util.Map[String, String]) {
+case class TableDesc(tableName: String,
+                     databaseName: String,
+                     columns: List[ColumnDesc],
+                     alias: String, sourceType: Int,
+                     addInfo: util.Map[String, String]) {
   def identity: String = s"$databaseName.$tableName"
 
   def toSchema: StructType = {
@@ -60,7 +74,7 @@ case class TableDesc(tableName: String, databaseName: String, columns: List[Colu
 
 case class FunctionDesc(functionName: String, returnType: DTType, pra: List[ColumnDesc], expression: String) {
   override def toString: String = {
-    s"${functionName} par=${pra.map(_.columnName).mkString(",")} dt=${returnType}"
+    s"$functionName par=${pra.map(_.columnName).mkString(",")} dt=$returnType"
   }
 }
 
@@ -74,6 +88,8 @@ case class DTType(dataType: String, precision: Int, scale: Int) {
       org.apache.kylin.metadata.datatype.DataType.getType(s"$dataType")
     }
   }
+
+  override def toString: String = s"$dataType($precision, $scale)"
 }
 
 case class JoinDesc(lookupTable: TableDesc, PKS: Array[ColumnDesc], FKS: Array[ColumnDesc], joinType: String)
@@ -111,4 +127,6 @@ case class SegmentInfo(id: String,
   def getSnapShot2JavaMap(): java.util.Map[String, String] = {
     snapshotInfo.asJava
   }
+
+  override def toString: String = s"${id}_${name}_$identifier"
 }
