@@ -43,7 +43,7 @@ public class HBaseFlinkOutputTransition implements IFlinkOutput {
 
     @Override
     public IFlinkBatchCubingOutputSide getBatchCubingOutputSide(final CubeSegment seg) {
-        final HBaseMRSteps steps = new HBaseMRSteps(seg);
+        final HBaseJobSteps steps = new HBaseFlinkSteps(seg);
 
         return new IFlinkBatchCubingOutputSide() {
 
@@ -69,7 +69,7 @@ public class HBaseFlinkOutputTransition implements IFlinkOutput {
     @Override
     public IFlinkBatchMergeOutputSide getBatchMergeOutputSide(final CubeSegment seg) {
         return new IFlinkBatchMergeOutputSide() {
-            final HBaseMRSteps steps = new HBaseMRSteps(seg);
+            final HBaseJobSteps steps = new HBaseFlinkSteps(seg);
 
             @Override
             public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow) {
