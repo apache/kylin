@@ -24,6 +24,7 @@ import static java.lang.String.format;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -243,37 +244,51 @@ public class TableSchemaUpdateChecker {
         }
     }
 
-    private void checkValidationInModel(TableDesc newTableDesc, List<String> issues, DataModelDesc usedModel){
+    private void checkValidationInModel(TableDesc newTableDesc, List<String> issues, DataModelDesc usedModel) {
+        List<String> violateColumns = Lists.newArrayList();
+
         final String fullTableName = newTableDesc.getIdentity();
-        // if user reloads a fact table used by model, then all used columns must match current schema
         if (usedModel.isFactTable(fullTableName)) {
             TableDesc factTable = usedModel.findFirstTable(fullTableName).getTableDesc();
-            List<String> violateColumns = checkAllColumnsInFactTable(usedModel, factTable, newTableDesc);
-            if (!violateColumns.isEmpty()) {
-                issues.add(format(Locale.ROOT, "Column %s used in model[%s], but changed " + "in hive",
-                        violateColumns, usedModel.getName()));
-            }
+            violateColumns.addAll(checkAllColumnsInFactTable(usedModel, factTable, newTableDesc));
         }
 
-        // if user reloads a lookup table used by cube, only append column(s) are allowed, all existing columns
-        // must be the same (except compatible type changes)
         if (usedModel.isLookupTable(fullTableName)) {
-            TableDesc lookupTable = usedModel.findFirstTable(fullTableName).getTableDesc();
-            if (!checkAllColumnsInTableDesc(lookupTable, newTableDesc)) {
-                issues.add(format(Locale.ROOT, "Table '%s' is used as Lookup Table in model[%s], but "
-                                + "changed in " + "hive, only append operation are supported on hive table as lookup table",
-                        lookupTable.getIdentity(), usedModel.getName()));
-            }
+            violateColumns.addAll(checkAllColumnsInLookupTable(usedModel, newTableDesc));
+        }
+
+        if (!violateColumns.isEmpty()) {
+            issues.add(format(Locale.ROOT, "Column %s used in model[%s], but not exist " + "in hive", violateColumns,
+                    usedModel.getName()));
         }
     }
 
-    private List<String> checkAllColumnsInFactTable(DataModelDesc usedModel, TableDesc factTable, TableDesc newTableDesc) {
+    // columns in usedModel should not be deleted in new table 
+    private List<String> checkAllColumnsInLookupTable(DataModelDesc usedModel, TableDesc newTableDesc) {
+        List<String> violateColumns = Lists.newArrayList();
+
+        Set<String> newColumns = Sets.newHashSet(newTableDesc.getColumns()).stream()
+                .map(c -> c.getName().toUpperCase(Locale.ROOT)).collect(Collectors.toSet());
+        for (ModelDimensionDesc dim : usedModel.getDimensions()) {
+            if (dim.getTable().equalsIgnoreCase(newTableDesc.getIdentity())) {
+                Set<String> oldColumns = Sets.newHashSet(dim.getColumns()).stream().map(c -> c.toUpperCase(Locale.ROOT))
+                        .collect(Collectors.toSet());
+                oldColumns.removeAll(newColumns);
+                violateColumns.addAll(oldColumns);
+            }
+        }
+
+        return violateColumns;
+    }
+    
+    private List<String> checkAllColumnsInFactTable(DataModelDesc usedModel, TableDesc factTable,
+            TableDesc newTableDesc) {
         List<String> violateColumns = Lists.newArrayList();
 
         for (ColumnDesc column : findUsedColumnsInFactTable(usedModel, factTable)) {
             if (!column.isComputedColumn()) {
                 ColumnDesc newCol = newTableDesc.findColumnByName(column.getName());
-                if (newCol == null || !isColumnCompatible(column, newCol)) {
+                if (newCol == null) {
                     violateColumns.add(column.getName());
                 }
             }
