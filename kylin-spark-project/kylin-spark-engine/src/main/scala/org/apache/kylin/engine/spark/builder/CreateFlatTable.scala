@@ -24,8 +24,8 @@ import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.engine.spark.builder.DFBuilderHelper.{ENCODE_SUFFIX, _}
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil._
-import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree
 import org.apache.kylin.engine.spark.metadata._
+import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.functions.{col, expr}
@@ -33,11 +33,10 @@ import org.apache.spark.sql.{Dataset, Row, SparkSession}
 
 import scala.collection.JavaConverters._
 
-class CreateFlatTable(
-  val seg: SegmentInfo,
-  val toBuildTree: SpanningTree,
-  val ss: SparkSession,
-  val sourceInfo: NBuildSourceInfo) extends Logging {
+class CreateFlatTable(val seg: SegmentInfo,
+                      val toBuildTree: SpanningTree,
+                      val ss: SparkSession,
+                      val sourceInfo: NBuildSourceInfo) extends Logging {
 
   import org.apache.kylin.engine.spark.builder.CreateFlatTable._
 
@@ -47,7 +46,7 @@ class CreateFlatTable(
     var rootFactDataset = generateTableDataset(seg.factTable, ccCols.toSeq, ss, seg.project)
     rootFactDataset = applyFilterCondition(seg, rootFactDataset)
 
-    logInfo(s"Create flattable need join lookup tables ${needJoin}, need encode cols ${needEncode}")
+    logInfo(s"Create flattable need join lookup tables $needJoin, need encode cols $needEncode")
 
     (needJoin, needEncode) match {
       case (true, true) =>
@@ -75,11 +74,10 @@ class CreateFlatTable(
     changeSchemeToColumnIndice(rootFactDataset, seg)
   }
 
-  private def encodeWithCols(
-    ds: Dataset[Row],
-    ccCols: Set[ColumnDesc],
-    dictCols: Set[ColumnDesc],
-    encodeCols: Set[ColumnDesc]): Dataset[Row] = {
+  private def encodeWithCols(ds: Dataset[Row],
+                             ccCols: Set[ColumnDesc],
+                             dictCols: Set[ColumnDesc],
+                             encodeCols: Set[ColumnDesc]): Dataset[Row] = {
     val ccDataset = withColumn(ds, ccCols)
     buildDict(ccDataset, dictCols)
     encodeColumn(ccDataset, encodeCols)
@@ -95,8 +93,10 @@ class CreateFlatTable(
 
   private def buildDict(ds: Dataset[Row], dictCols: Set[ColumnDesc]): Unit = {
     val matchedCols = filterCols(ds, dictCols)
-    val builder = new DFDictionaryBuilder(ds, seg, ss, Sets.newHashSet(matchedCols.asJavaCollection))
-    builder.buildDictSet()
+    if (!matchedCols.isEmpty) {
+      val builder = new DFDictionaryBuilder(ds, seg, ss, Sets.newHashSet(matchedCols.asJavaCollection))
+      builder.buildDictSet()
+    }
   }
 
   private def encodeColumn(ds: Dataset[Row], encodeCols: Set[ColumnDesc]): Dataset[Row] = {
@@ -112,12 +112,11 @@ class CreateFlatTable(
 object CreateFlatTable extends Logging {
   type GlobalDictType = (Set[ColumnDesc], Set[ColumnDesc])
 
-  private def generateTableDataset(
-    tableInfo: TableDesc,
-    cols: Seq[ColumnDesc],
-    ss: SparkSession,
-    project: String = null,
-    sourceInfo: NBuildSourceInfo = null) = {
+  private def generateTableDataset(tableInfo: TableDesc,
+                                   cols: Seq[ColumnDesc],
+                                   ss: SparkSession,
+                                   project: String = null,
+                                   sourceInfo: NBuildSourceInfo = null) = {
     var dataset: Dataset[Row] =
       if (sourceInfo != null && !StringUtils.isBlank(sourceInfo.getViewFactTablePath)) {
         ss.read.parquet(sourceInfo.getViewFactTablePath).alias(tableInfo.alias)
@@ -132,10 +131,9 @@ object CreateFlatTable extends Logging {
     dataset.select(selectedCols: _*)
   }
 
-  private def generateLookupTableDataset(
-    desc: SegmentInfo,
-    cols: Seq[ColumnDesc],
-    ss: SparkSession): Array[(JoinDesc, Dataset[Row])] = {
+  private def generateLookupTableDataset(desc: SegmentInfo,
+                                         cols: Seq[ColumnDesc],
+                                         ss: SparkSession): Array[(JoinDesc, Dataset[Row])] = {
     desc.joindescs.map {
       joinDesc =>
         (joinDesc, generateTableDataset(joinDesc.lookupTable, cols, ss))
@@ -146,7 +144,7 @@ object CreateFlatTable extends Logging {
     var afterFilter = ds
 
     if (StringUtils.isNotBlank(desc.filterCondition)) {
-      var afterConvertCondition = desc.filterCondition
+      val afterConvertCondition = desc.filterCondition
       logInfo(s"Filter condition is $afterConvertCondition")
       afterFilter = afterFilter.where(afterConvertCondition)
     }
@@ -156,22 +154,20 @@ object CreateFlatTable extends Logging {
     afterFilter
   }
 
-  def joinFactTableWithLookupTables(
-    rootFactDataset: Dataset[Row],
-    lookupTableDatasetMap: Array[(JoinDesc, Dataset[Row])],
-    buildDesc: SegmentInfo,
-    ss: SparkSession): Dataset[Row] = {
+  def joinFactTableWithLookupTables(rootFactDataset: Dataset[Row],
+                                    lookupTableDatasetMap: Array[(JoinDesc, Dataset[Row])],
+                                    buildDesc: SegmentInfo,
+                                    ss: SparkSession): Dataset[Row] = {
     lookupTableDatasetMap.foldLeft(rootFactDataset)(
       (joinedDataset: Dataset[Row], tuple: (JoinDesc, Dataset[Row])) =>
         joinTableDataset(buildDesc.factTable, tuple._1, joinedDataset, tuple._2, ss))
   }
 
-  def joinTableDataset(
-    rootFactDesc: TableDesc,
-    joinDesc: JoinDesc,
-    rootFactDataset: Dataset[Row],
-    lookupDataset: Dataset[Row],
-    ss: SparkSession): Dataset[Row] = {
+  def joinTableDataset(rootFactDesc: TableDesc,
+                       joinDesc: JoinDesc,
+                       rootFactDataset: Dataset[Row],
+                       lookupDataset: Dataset[Row],
+                       ss: SparkSession): Dataset[Row] = {
     var afterJoin = rootFactDataset
     val joinType = joinDesc.joinType
     if (joinType != null && !StringUtils.isEmpty(joinType)) {
@@ -182,12 +178,12 @@ object CreateFlatTable extends Logging {
           s"Invalid join condition of fact table: $rootFactDesc,fk: ${fk.mkString(",")}," +
             s" lookup table:$JoinDesc, pk: ${pk.mkString(",")}")
       }
-      val equiConditionColPairs = fk.zip(pk).map(joinKey =>
+      val equivConditionColPairs = fk.zip(pk).map(joinKey =>
         col(convertFromDot(joinKey._1.identity))
           .equalTo(col(convertFromDot(joinKey._2.identity))))
       logInfo(s"Lookup table schema ${lookupDataset.schema.treeString}")
 
-      val condition = equiConditionColPairs.reduce(_ && _)
+      val condition = equivConditionColPairs.reduce(_ && _)
       logInfo(s"Root table ${rootFactDesc.identity}, join table ${joinDesc.lookupTable.alias}, condition: ${condition.toString()}")
       afterJoin = afterJoin.join(lookupDataset, condition, joinType)
     }
@@ -232,10 +228,7 @@ object CreateFlatTable extends Logging {
     sb.toString()
   }
 
-
-  def changeSchemaToAliasDotName(
-    original: Dataset[Row],
-    alias: String): Dataset[Row] = {
+  def changeSchemaToAliasDotName(original: Dataset[Row], alias: String): Dataset[Row] = {
     val sf = original.schema.fields
     val newSchema = sf
       .map(field => convertFromDot(alias + "." + field.name))
