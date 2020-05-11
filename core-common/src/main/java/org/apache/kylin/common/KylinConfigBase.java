@@ -2354,6 +2354,45 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     // ============================================================================
+    // CUBE MIGRATION
+    // ============================================================================
+    public int getMigrationRuleExpansionRateThreshold() {
+        return Integer.parseInt(getOptional("kylin.cube.migration.expansion-rate", "5"));
+    }
+
+    public int getMigrationRuleQueryGeneratorMaxDimensions() {
+        return Integer.parseInt(getOptional("kylin.cube.migration.query-generator-max-dimension-number", "3"));
+    }
+
+    public int getMigrationRuleQueryLatency() {
+        return 1000 * Integer.parseInt(getOptional("kylin.cube.migration.query-latency-seconds", "2"));
+    }
+
+    public int getMigrationRuleQueryLatencyMaxThreads() {
+        return Integer.parseInt(getOptional("kylin.cube.migration.query-latency-max-threads", "5"));
+    }
+
+    public int getMigrationRuleQueryEvaluationIteration() {
+        return Integer.parseInt(getOptional("kylin.cube.migration.query-latency-iteration", "5"));
+    }
+
+    public String getMigrationLocalAddress() {
+        return getOptional("kylin.cube.migration.source-address", "localhost:80");
+    }
+
+    public String getMigrationTargetAddress() {
+        return getOptional("kylin.cube.migration.target-address", "sandbox:80");
+    }
+
+    public String getMigrationEmailSuffix() {
+        return getOptional("kylin.cube.migration.mail-suffix", "@mail.com");
+    }
+
+    public boolean isMigrationApplyQueryLatencyRule() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.migration.rule-query-latency-enabled", "true"));
+    }
+
+    // ============================================================================
     // tool
     // ============================================================================
     public boolean isAllowAutoMigrateCube() {

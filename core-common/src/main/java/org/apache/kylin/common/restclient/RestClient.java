@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
 
+import com.google.common.base.Strings;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -207,12 +208,13 @@ public class RestClient {
         try {
             response = client.execute(request);
             String msg = EntityUtils.toString(response.getEntity());
-            Map<String, String> map = JsonUtil.readValueAsMap(msg);
-            msg = map.get("config");
 
             if (response.getStatusLine().getStatusCode() != 200)
                 throw new IOException(INVALID_RESPONSE + response.getStatusLine().getStatusCode()
                         + " with cache wipe url " + url + "\n" + msg);
+
+            Map<String, String> map = JsonUtil.readValueAsMap(msg);
+            msg = map.get("config");
             return msg;
         } finally {
             cleanup(request, response);
@@ -350,6 +352,26 @@ public class RestClient {
         return content;
     }
 
+    public void checkCompatibility(String jsonRequest) throws IOException {
+        checkCompatibility(jsonRequest, baseUrl + "/cubes/checkCompatibility");
+    }
+
+    private void checkCompatibility(String jsonRequest, String url) throws IOException {
+        HttpPost post = newPost(url);
+        try {
+            post.setEntity(new StringEntity(jsonRequest, "UTF-8"));
+            HttpResponse response = client.execute(post);
+            if (response.getStatusLine().getStatusCode() != 200) {
+                String msg = getContent(response);
+                Map<String, String> kvMap = JsonUtil.readValueAsMap(msg);
+                String exception = kvMap.containsKey("exception") ? kvMap.get("exception") : "unknown";
+                throw new IOException(exception);
+            }
+        } finally {
+            post.releaseConnection();
+        }
+    }
+    
     private HashMap dealResponse(HttpResponse response) throws IOException {
         if (response.getStatusLine().getStatusCode() != 200) {
             throw new IOException(INVALID_RESPONSE + response.getStatusLine().getStatusCode());
@@ -362,9 +384,11 @@ public class RestClient {
     private void addHttpHeaders(HttpRequestBase method) {
         method.addHeader("Accept", "application/json, text/plain, */*");
         method.addHeader("Content-Type", APPLICATION_JSON);
-        String basicAuth = DatatypeConverter
-                .printBase64Binary((this.userName + ":" + this.password).getBytes(StandardCharsets.UTF_8));
-        method.addHeader("Authorization", "Basic " + basicAuth);
+        if (!Strings.isNullOrEmpty(this.userName) && !Strings.isNullOrEmpty(this.password)) {
+            String basicAuth = DatatypeConverter
+                    .printBase64Binary((this.userName + ":" + this.password).getBytes(StandardCharsets.UTF_8));
+            method.addHeader("Authorization", "Basic " + basicAuth);
+        }
     }
 
     private HttpPost newPost(String url) {

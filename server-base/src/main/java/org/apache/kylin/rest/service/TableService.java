@@ -117,6 +117,15 @@ public class TableService extends BasicService {
     @Autowired
     private AclEvaluate aclEvaluate;
 
+    public TableSchemaUpdateChecker getSchemaUpdateChecker() {
+        return new TableSchemaUpdateChecker(getTableManager(), getCubeManager(), getDataModelManager());
+    }
+
+    public void checkTableCompatibility(String prj, TableDesc tableDesc) {
+        TableSchemaUpdateChecker.CheckResult result = getSchemaUpdateChecker().allowReload(tableDesc, prj);
+        result.raiseExceptionWhenInvalid();
+    }
+    
     public List<TableDesc> getTableDescByProject(String project, boolean withExt) throws IOException {
         aclEvaluate.checkProjectReadPermission(project);
         List<TableDesc> tables = getProjectManager().listDefinedTables(project);
