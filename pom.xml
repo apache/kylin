@@ -363,6 +363,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-cube-migration</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-tool</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -1374,6 +1379,7 @@
     <module>metrics-reporter-hive</module>
     <module>metrics-reporter-kafka</module>
     <module>cache</module>
+    <module>cube-migration</module>
     <module>datasource-sdk</module>
     <module>storage-stream</module>
     <module>stream-receiver</module>

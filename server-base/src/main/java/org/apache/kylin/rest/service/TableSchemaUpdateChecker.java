@@ -50,7 +50,7 @@ public class TableSchemaUpdateChecker {
     private final CubeManager cubeManager;
     private final DataModelManager dataModelManager;
 
-    static class CheckResult {
+    public static class CheckResult {
         private final boolean valid;
         private final String reason;
 
@@ -59,7 +59,7 @@ public class TableSchemaUpdateChecker {
             this.reason = reason;
         }
 
-        void raiseExceptionWhenInvalid() {
+        public void raiseExceptionWhenInvalid() {
             if (!valid) {
                 throw new RuntimeException(reason);
             }

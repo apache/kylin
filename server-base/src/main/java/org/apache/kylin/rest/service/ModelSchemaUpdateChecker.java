@@ -169,6 +169,10 @@ public class ModelSchemaUpdateChecker {
     }
 
     public CheckResult allowEdit(DataModelDesc modelDesc, String prj) {
+        return allowEdit(modelDesc, prj, !modelDesc.isDraft());
+    }
+
+    public CheckResult allowEdit(DataModelDesc modelDesc, String prj, boolean needInit) {
 
         final String modelName = modelDesc.getName();
         // No model
@@ -176,7 +180,9 @@ public class ModelSchemaUpdateChecker {
         if (existing == null) {
             return CheckResult.validOnFirstCreate(modelName);
         }
-        modelDesc.init(metadataManager.getConfig(), metadataManager.getAllTablesMap(prj));
+        if (needInit) {
+            modelDesc.init(metadataManager.getConfig(), metadataManager.getAllTablesMap(prj));
+        }
 
         // No cube
         List<CubeInstance> cubes = findCubeByModel(modelName);

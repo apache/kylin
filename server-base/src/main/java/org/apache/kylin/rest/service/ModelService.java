@@ -148,12 +148,12 @@ public class ModelService extends BasicService {
     public DataModelDesc updateModelAndDesc(String project, DataModelDesc desc) throws IOException {
         aclEvaluate.checkProjectWritePermission(project);
         validateModel(project, desc);
-        checkModelCompatible(project, desc);
+        checkModelCompatibility(project, desc);
         getDataModelManager().updateDataModelDesc(desc);
         return desc;
     }
 
-    public void checkModelCompatible(String project, DataModelDesc dataModalDesc) {
+    public void checkModelCompatibility(String project, DataModelDesc dataModalDesc) {
         ProjectInstance prjInstance = getProjectManager().getProject(project);
         if (prjInstance == null) {
             throw new BadRequestException("Project " + project + " does not exist");
@@ -165,6 +165,23 @@ public class ModelService extends BasicService {
         ModelSchemaUpdateChecker checker = new ModelSchemaUpdateChecker(getTableManager(), getCubeManager(),
                 getDataModelManager());
         ModelSchemaUpdateChecker.CheckResult result = checker.allowEdit(dataModalDesc, project);
+        result.raiseExceptionWhenInvalid();
+    }
+
+    public void checkModelCompatibility(String project, DataModelDesc dataModalDesc, List<TableDesc> tableDescList) {
+        ProjectInstance prjInstance = getProjectManager().getProject(project);
+        if (prjInstance == null) {
+            throw new BadRequestException("Project " + project + " does not exist");
+        }
+        ModelSchemaUpdateChecker checker = new ModelSchemaUpdateChecker(getTableManager(), getCubeManager(),
+                getDataModelManager());
+
+        Map<String, TableDesc> tableDescMap = Maps.newHashMapWithExpectedSize(tableDescList.size());
+        for (TableDesc tableDesc : tableDescList) {
+            tableDescMap.put(tableDesc.getIdentity(), tableDesc);
+        }
+        dataModalDesc.init(getConfig(), tableDescMap);
+        ModelSchemaUpdateChecker.CheckResult result = checker.allowEdit(dataModalDesc, project, false);
         result.raiseExceptionWhenInvalid();
     }
 

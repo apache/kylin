@@ -161,7 +161,8 @@ public class JoinedFlatTable {
         return sql.toString();
     }
 
-    static void appendJoinStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, boolean singleLine, SqlDialect sqlDialect) {
+    public static void appendJoinStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, boolean singleLine,
+            SqlDialect sqlDialect) {
         final String sep = singleLine ? " " : "\n";
         Set<TableRef> dimTableCache = new HashSet<>();
 
