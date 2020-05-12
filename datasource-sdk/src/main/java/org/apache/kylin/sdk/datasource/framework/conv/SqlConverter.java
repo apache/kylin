@@ -41,7 +41,7 @@ public class SqlConverter {
     }
 
     public String convertSql(String orig) {
-        String converted = orig;
+        String converted = orig.replaceAll("`", "\"");
 
         if (!configurer.skipHandleDefault()) {
             String escapedDefault = SqlDialect.CALCITE
