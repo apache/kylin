@@ -15,10 +15,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-select * from(
-  select cal_dt, lstg_format_name, sum(price) as GMV,
-  100*sum(price)/first_value(sum(price)) over (partition by lstg_format_name,SLR_SEGMENT_CD order by cast(cal_dt as timestamp) range interval '1' day PRECEDING) as "last_day",
-  first_value(sum(price)) over (partition by lstg_format_name order by cast(cal_dt as timestamp) range cast(366 as INTERVAL day) preceding)
+select * from (  select cal_dt, lstg_format_name, sum(price) as GMV,
+  100*sum(price)/first_value(sum(price)) over (partition by lstg_format_name,SLR_SEGMENT_CD order by cast(cal_dt as timestamp)) as "last_day",
+  first_value(sum(price)) over (partition by lstg_format_name order by cast(cal_dt as timestamp))
   from test_kylin_fact as "last_year"
   where cal_dt between '2013-01-08' and '2013-01-15' or cal_dt between '2013-01-07' and '2013-01-15' or cal_dt between '2012-01-01' and '2012-01-15'
   group by cal_dt, lstg_format_name,SLR_SEGMENT_CD
