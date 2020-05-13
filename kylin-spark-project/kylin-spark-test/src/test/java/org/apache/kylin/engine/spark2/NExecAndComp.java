@@ -129,8 +129,8 @@ public class NExecAndComp {
             } else if (compareLevel == CompareLevel.NONE) {
                 Dataset<Row> sparkResult = queryWithSpark(prj, sql, query.getFirst());
                 List<Row> sparkRows = sparkResult.toJavaRDD().collect();
-                List<Row> kapRows = SparkQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
-                if (!compareResults(normRows(sparkRows), normRows(kapRows), compareLevel)) {
+                List<Row> kylinRows = SparkQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
+                if (!compareResults(normRows(sparkRows), normRows(kylinRows), compareLevel)) {
                     logger.error("Failed on compare query ({}) :{}", joinType, query);
                     throw new IllegalArgumentException("query (" + joinType + ") :" + query + " result not match");
                 }
