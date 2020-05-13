@@ -126,7 +126,7 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
         for (Pair<String, Throwable> result : results) {
             if (result.getSecond() != null) {
                 succeed = false;
-                logger.error("CI failed on:" + result.getFirst(), result.getSecond());
+                 logger.error("CI failed on:" + result.getFirst(), result.getSecond());
             }
         }
         if (!succeed) {
@@ -155,31 +155,31 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_derived"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_datetime"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_subquery"));
-//            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_distinct_dim"));
-//            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_timestamp"));
-//            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_orderby"));
-//            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_snowflake"));
-//            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_topn"));
-//            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_join"));
-//            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_union"));
-//            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_hive"));
-//            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_distinct_precisely"));
-//            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_powerbi"));
-////            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_raw"));
-//            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_value"));
-//            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_magine"));
-//            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_cross_join"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_distinct_dim"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_timestamp"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_orderby"));
+            //tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_snowflake"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_topn"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_join"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_union"));
+            //tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_hive"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_distinct_precisely"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_powerbi"));
+            //tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_raw"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_value"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_magine"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_cross_join"));
 
             // same row count
-//            tasks.add(new QueryCallable(CompareLevel.SAME_ROWCOUNT, joinType, "sql_tableau"));
+            tasks.add(new QueryCallable(CompareLevel.SAME_ROWCOUNT, joinType, "sql_tableau"));
 
             // none
-//            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_window"));
-//            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_h2_uncapable"));
-//            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_grouping"));
-//            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_intersect_count"));
-//            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_percentile"));
-//            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_distinct"));
+            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_window"));
+            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_h2_uncapable"));
+            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_grouping"));
+            tasks.add(new QueryCallable(CompareLevel.SAME_SQL_COMPARE, joinType, "sql_intersect_count"));
+            //tasks.add(new QueryCallable(CompareLevel.SAME_SQL_COMPARE, joinType, "sql_percentile"));
+            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_distinct"));
 //
 //            //execLimitAndValidate
 //            //            tasks.add(new QueryCallable(CompareLevel.SUBSET, joinType, "sql"));
