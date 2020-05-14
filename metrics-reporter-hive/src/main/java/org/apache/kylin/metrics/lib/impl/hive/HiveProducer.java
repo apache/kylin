@@ -123,6 +123,7 @@ public class HiveProducer {
 
     public void close() {
         tableFieldSchemaCache.cleanUp();
+        closeFout();
     }
 
     public void send(final Record record) throws Exception {
