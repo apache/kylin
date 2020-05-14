@@ -41,6 +41,7 @@ import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlVisitor;
 import org.apache.commons.lang.text.StrBuilder;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
@@ -57,14 +58,14 @@ public class PushDownUtil {
     }
 
     public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownSelectQuery(String project, String sql,
-            String defaultSchema, SQLException sqlException, boolean isPrepare) throws Exception {
-        PushDownExecutor executor = new PushDownExecutor();
+            String defaultSchema, SQLException sqlException, boolean isPrepare, KylinConfig kylinConfig) throws Exception {
+        PushDownExecutor executor = new PushDownExecutor(kylinConfig);
         return executor.pushDownQuery(project, sql, defaultSchema, sqlException, true, isPrepare);
     }
 
     public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownNonSelectQuery(String project,
             String sql, String defaultSchema, boolean isPrepare) throws Exception {
-        PushDownExecutor executor = new PushDownExecutor();
+        PushDownExecutor executor = new PushDownExecutor(null);
         return executor.pushDownQuery(project, sql, defaultSchema, null, true, isPrepare);
     }
 

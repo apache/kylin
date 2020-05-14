@@ -22,6 +22,7 @@ import org.apache.kylin.sdk.datasource.adaptor.AdaptorConfig;
 import org.apache.kylin.sdk.datasource.adaptor.DefaultAdaptor;
 import org.apache.kylin.sdk.datasource.adaptor.MysqlAdaptor;
 import org.apache.kylin.sdk.datasource.adaptor.PostgresqlAdaptor;
+import org.apache.kylin.sdk.datasource.adaptor.PrestoAdaptor;
 
 public class SourceConnectorFactory {
     public static JdbcConnector getJdbcConnector(KylinConfig config) {
@@ -47,16 +48,39 @@ public class SourceConnectorFactory {
         }
     }
 
+    public static JdbcConnector getPushDownConnector(KylinConfig config) {
+        String jdbcUrl = config.getJdbcUrl(null);
+        String jdbcDriver = config.getJdbcDriverClass(null);
+        String jdbcUser = config.getJdbcUsername(null);
+        String jdbcPass = config.getJdbcPassword(null);
+        String adaptorClazz = config.getJdbcSourceAdaptor();
+
+        AdaptorConfig jdbcConf = new AdaptorConfig(jdbcUrl, jdbcDriver, jdbcUser, jdbcPass);
+        jdbcConf.poolMaxIdle = config.getPoolMaxIdle(null);
+        jdbcConf.poolMinIdle = config.getPoolMinIdle(null);
+        jdbcConf.poolMaxTotal = config.getPoolMaxTotal(null);
+        jdbcConf.datasourceId = config.getJdbcSourceDialect();
+
+        if (adaptorClazz == null)
+            adaptorClazz = decideAdaptorClassName(jdbcConf.datasourceId);
+
+        try {
+            return new JdbcConnector(AdaptorFactory.createJdbcAdaptor(adaptorClazz, jdbcConf));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get JdbcConnector from env.", e);
+        }
+    }
+
     private static String decideAdaptorClassName(String dataSourceId) {
         switch (dataSourceId) {
         case "mysql":
             return MysqlAdaptor.class.getName();
         case "postgresql":
             return PostgresqlAdaptor.class.getName();
+        case "presto":
+            return PrestoAdaptor.class.getName();
         default:
             return DefaultAdaptor.class.getName();
         }
     }
 }
-
-
