@@ -85,3 +85,17 @@ kylin.query.pushdown.id1.jdbc.pool-min-idle
 用户在提交查询时，若查询下压发挥作用，则在log里有相应的记录。
 
    ![](/images/tutorial/2.1/push_down/push_down_2.png)
+
+### Pushdown to Presto 
+
+如果你希望查询下压到Presto，你可以在 Project 级别配置以下参数以启用 Presto 查询下压 (通过 KYLIN-4491 引入)。
+
+{% highlight Groff markup %}
+kylin.query.pushdown.runner-class-name=org.apache.kylin.query.pushdown.PushDownRunnerOtherImpl
+kylin.source.jdbc.dialect=presto
+kylin.source.jdbc.adaptor=org.apache.kylin.sdk.datasource.adaptor.PrestoAdaptor
+kylin.query.pushdown.jdbc.url={YOUR_URL}
+kylin.query.pushdown.jdbc.driver=com.facebook.presto.jdbc.PrestoDriver
+kylin.query.pushdown.jdbc.username={USER_NAME}
+kylin.query.pushdown.jdbc.password={PASSWORD}
+{% endhighlight %}    

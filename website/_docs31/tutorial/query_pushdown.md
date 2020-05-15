@@ -93,4 +93,18 @@ After Query Pushdown is configured, user is allowed to do flexible queries to th
 If query is answered by backup engine, `Is Query Push-Down` is set to `true` in the log.
 
    ![](/images/tutorial/2.1/push_down/push_down_2.png)
-# 
+   
+  
+### Pushdown to Presto 
+
+If you want your query be push down to Presto, you can set following configuration in Project level properties (Introduced in KYLIN-4491).
+
+{% highlight Groff markup %}
+kylin.query.pushdown.runner-class-name=org.apache.kylin.query.pushdown.PushDownRunnerOtherImpl
+kylin.source.jdbc.dialect=presto
+kylin.source.jdbc.adaptor=org.apache.kylin.sdk.datasource.adaptor.PrestoAdaptor
+kylin.query.pushdown.jdbc.url={YOUR_URL}
+kylin.query.pushdown.jdbc.driver=com.facebook.presto.jdbc.PrestoDriver
+kylin.query.pushdown.jdbc.username={USER_NAME}
+kylin.query.pushdown.jdbc.password={PASSWORD}
+{% endhighlight %}    
