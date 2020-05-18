@@ -167,14 +167,6 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
     return angular.isString(_config);
   }
 
-  this.isAutoMigrateCubeEnabled = function(){
-    var status = this.getProperty("kylin.tool.auto-migrate-cube.enabled").trim();
-    if(status && status =='true'){
-      return true;
-    }
-    return false;
-  }
-
   this.getSourceType = function(){
     this.sourceType = this.getProperty("kylin.source.default").trim();
     if (!this.sourceType) {

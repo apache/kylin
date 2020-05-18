@@ -2250,7 +2250,7 @@ public abstract class KylinConfigBase implements Serializable {
                 + "kylin.web.help,kylin.web.hide-measures,kylin.web.link-streaming-guide,kylin.server.external-acl-provider,"
                 + "kylin.security.profile,kylin.security.additional-profiles,"
                 + "kylin.htrace.show-gui-trace-toggle,kylin.web.export-allow-admin,kylin.web.export-allow-other,"
-                + "kylin.cube.cubeplanner.enabled,kylin.web.dashboard-enabled,kylin.tool.auto-migrate-cube.enabled,"
+                + "kylin.cube.cubeplanner.enabled,kylin.web.dashboard-enabled,"
                 + "kylin.job.scheduler.default,kylin.web.default-time-filter");
     }
 
@@ -2394,29 +2394,6 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isMigrationApplyQueryLatencyRule() {
         return Boolean.parseBoolean(getOptional("kylin.cube.migration.rule-query-latency-enabled", "true"));
-    }
-
-    // ============================================================================
-    // tool
-    // ============================================================================
-    public boolean isAllowAutoMigrateCube() {
-        return Boolean.parseBoolean(getOptional("kylin.tool.auto-migrate-cube.enabled", FALSE));
-    }
-
-    public boolean isAutoMigrateCubeCopyAcl() {
-        return Boolean.parseBoolean(getOptional("kylin.tool.auto-migrate-cube.copy-acl", TRUE));
-    }
-
-    public boolean isAutoMigrateCubePurge() {
-        return Boolean.parseBoolean(getOptional("kylin.tool.auto-migrate-cube.purge-src-cube", TRUE));
-    }
-
-    public String getAutoMigrateCubeSrcConfig() {
-        return getOptional("kylin.tool.auto-migrate-cube.src-config", "");
-    }
-
-    public String getAutoMigrateCubeDestConfig() {
-        return getOptional("kylin.tool.auto-migrate-cube.dest-config", "");
     }
 
     // ============================================================================
