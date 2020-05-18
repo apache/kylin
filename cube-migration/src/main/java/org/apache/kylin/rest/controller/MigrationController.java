@@ -45,6 +45,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -82,6 +83,21 @@ public class MigrationController extends BasicController {
         return cube;
     }
 
+    @RequestMapping(value = "/{cubeName}/migrateRuleCheck", method = { RequestMethod.GET })
+    @ResponseBody
+    public String migrationRuleCheck(@PathVariable String cubeName, @RequestParam String projectName,
+            @RequestParam(value = "targetHost", required = false) String targetHost) {
+        CubeInstance cube = getCubeInstance(cubeName);
+        try {
+            MigrationRuleSet.Context ctx = new MigrationRuleSet.Context(queryService, cube, getTargetHost(targetHost),
+                    projectName);
+            return migrationService.checkRule(ctx);
+        } catch (Exception e) {
+            logger.error("Request migration failed.", e);
+            throw new BadRequestException(e.getMessage());
+        }
+    }
+    
     @RequestMapping(value = "/{cubeName}/migrateRequest", method = { RequestMethod.PUT })
     @ResponseBody
     public String requestMigration(@PathVariable String cubeName, @RequestBody MigrationRequest request) {
