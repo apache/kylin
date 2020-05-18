@@ -359,35 +359,6 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
       });
     };
 
-    $scope.isAutoMigrateCubeEnabled = function(){
-      return kylinConfig.isAutoMigrateCubeEnabled();
-    };
-
-    $scope.migrateCube = function (cube) {
-      SweetAlert.swal({
-        title: '',
-        text: "The cube will overwrite the same cube in prod env" +
-        "\nMigrating cube will elapse a couple of minutes." +
-        "\nPlease wait.",
-        type: '',
-        showCancelButton: true,
-        confirmButtonColor: '#DD6B55',
-        confirmButtonText: "Yes",
-        closeOnConfirm: true
-      }, function(isConfirm) {
-        if(isConfirm){
-          loadingRequest.show();
-          CubeService.autoMigrate({cubeId: cube.name, propName: $scope.projectModel.selectedProject}, {}, function (result) {
-            loadingRequest.hide();
-            MessageBox.successNotify(cube.name + ' migrate successfully!');
-          },function(e){
-            loadingRequest.hide();
-            SweetAlert.swal('Migrate failed!', "Please contact your ADMIN.", 'error');
-          });
-        }
-      });
-    };
-
     $scope.startJobSubmit = function (cube) {
 
       $scope.metaModel={
