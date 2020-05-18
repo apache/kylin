@@ -21,27 +21,16 @@ package org.apache.kylin.job.impl.curator;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.x.discovery.ServiceCache;
-import org.apache.curator.x.discovery.ServiceDiscovery;
-import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.curator.x.discovery.details.InstanceSerializer;
-import org.apache.curator.x.discovery.details.ServiceCacheListener;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.ServerMode;
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.common.util.ZKUtil;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -54,9 +43,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
-import org.apache.kylin.shaded.com.google.common.base.Function;
-import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import com.google.common.annotations.VisibleForTesting;
 
 public class CuratorScheduler implements Scheduler<AbstractExecutable> {
 
@@ -64,15 +51,10 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
     private boolean started = false;
     private CuratorFramework curatorClient = null;
     private static CuratorLeaderSelector jobClient = null;
-    private ServiceDiscovery<LinkedHashMap> serviceDiscovery = null;
-    private ServiceCache<LinkedHashMap> serviceCache = null;
     private KylinConfig kylinConfig;
     private AtomicInteger count = new AtomicInteger();
 
     static final String JOB_ENGINE_LEADER_PATH = "/job_engine/leader";
-    static final String KYLIN_SERVICE_PATH = "/service";
-    static final String SERVICE_NAME = "kylin";
-    static final String SERVICE_PAYLOAD_DESCRIPTION = "description";
 
     // the default constructor should exist for reflection initialization
     public CuratorScheduler() {
@@ -100,13 +82,7 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
                 curatorClient = ZKUtil.getZookeeperClient(kylinConfig);
             }
 
-            final String serverMode = jobEngineConfig.getConfig().getServerMode();
-            final String restAddress = kylinConfig.getServerRestAddress();
-            try {
-                registerInstance(restAddress, serverMode);
-            } catch (Exception e) {
-                throw new SchedulerException(e);
-            }
+            String restAddress = kylinConfig.getServerRestAddress();
 
             String jobEnginePath = JOB_ENGINE_LEADER_PATH;
 
@@ -120,77 +96,11 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
                     throw new SchedulerException(e);
                 }
             } else {
-                logger.info("server mode: " + jobEngineConfig.getConfig().getServerMode() + ", no need to run job scheduler");
+                logger.info("server mode: " + jobEngineConfig.getConfig().getServerMode()
+                        + ", no need to run job scheduler");
             }
             started = true;
         }
-    }
-
-    private void registerInstance(String restAddress, String mode) throws Exception {
-        final String host = restAddress.substring(0, restAddress.indexOf(":"));
-        final String port = restAddress.substring(restAddress.indexOf(":") + 1);
-
-        final JsonInstanceSerializer<LinkedHashMap> serializer = new JsonInstanceSerializer<>(LinkedHashMap.class);
-        final String servicePath = KYLIN_SERVICE_PATH;
-        serviceDiscovery = ServiceDiscoveryBuilder.builder(LinkedHashMap.class).client(curatorClient)
-                .basePath(servicePath).serializer(serializer).build();
-        serviceDiscovery.start();
-
-        serviceCache = serviceDiscovery.serviceCacheBuilder().name(SERVICE_NAME)
-                .threadFactory(Executors.defaultThreadFactory()).build();
-
-        serviceCache.addListener(new ServiceCacheListener() {
-            @Override
-            public void stateChanged(CuratorFramework curatorFramework, ConnectionState connectionState) {
-            }
-
-            @Override
-            public void cacheChanged() {
-                logger.info("Service discovery get cacheChanged notification");
-                final List<ServiceInstance<LinkedHashMap>> instances = serviceCache.getInstances();
-                final List<String> instanceNodes = Lists.transform(instances,
-                        new Function<ServiceInstance<LinkedHashMap>, String>() {
-
-                            @Nullable
-                            @Override
-                            public String apply(@Nullable ServiceInstance<LinkedHashMap> stringServiceInstance) {
-                                return (String) stringServiceInstance.getPayload().get(SERVICE_PAYLOAD_DESCRIPTION);
-                            }
-                        });
-
-                final String restServersInCluster = //
-                        StringUtil.join(instanceNodes.stream().map(input -> { //
-                            String[] split = input.split(":"); //
-                            return split[0] + ":" + split[1]; //
-                        }).collect(Collectors.toList()), ","); //
-
-
-                logger.info("kylin.server.cluster-servers update to " + restServersInCluster);
-                // update cluster servers
-                System.setProperty("kylin.server.cluster-servers", restServersInCluster);
-
-                // get servers and its mode(query, job, all)
-                final String restServersInClusterWithMode = StringUtil.join(instanceNodes, ",");
-                logger.info("kylin.server.cluster-servers-with-mode update to " + restServersInClusterWithMode);
-                System.setProperty("kylin.server.cluster-servers-with-mode", restServersInClusterWithMode);
-            }
-        });
-        serviceCache.start();
-
-        final LinkedHashMap<String, String> instanceDetail = new LinkedHashMap<>();
-
-        instanceDetail.put(SERVICE_PAYLOAD_DESCRIPTION, restAddress + ":" + mode);
-        ServiceInstance<LinkedHashMap> thisInstance = ServiceInstance.<LinkedHashMap> builder().name(SERVICE_NAME)
-                .payload(instanceDetail).port(Integer.valueOf(port)).address(host).build();
-
-        for (ServiceInstance<LinkedHashMap> instance : serviceCache.getInstances()) {
-            // Check for registered instances to avoid being double registered
-            if (instance.getAddress().equals(thisInstance.getAddress())
-                    && instance.getPort().equals(thisInstance.getPort())) {
-                serviceDiscovery.unregisterService(instance);
-            }
-        }
-        serviceDiscovery.registerService(thisInstance);
     }
 
     private void monitorJobEngine() {
@@ -220,8 +130,6 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
 
     @Override
     public void shutdown() throws SchedulerException {
-        IOUtils.closeQuietly(serviceCache);
-        IOUtils.closeQuietly(serviceDiscovery);
         IOUtils.closeQuietly(curatorClient);
         IOUtils.closeQuietly(jobClient);
         started = false;
