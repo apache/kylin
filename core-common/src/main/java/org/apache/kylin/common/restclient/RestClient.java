@@ -353,6 +353,13 @@ public class RestClient {
     }
 
     public void checkCompatibility(String jsonRequest) throws IOException {
+        checkCompatibility(jsonRequest, false);
+    }
+
+    public void checkCompatibility(String jsonRequest, boolean ifHiveCheck) throws IOException {
+        if (ifHiveCheck) {
+            checkCompatibility(jsonRequest, baseUrl + "/cubes/checkCompatibility/hiveTable");
+        }
         checkCompatibility(jsonRequest, baseUrl + "/cubes/checkCompatibility");
     }
 
