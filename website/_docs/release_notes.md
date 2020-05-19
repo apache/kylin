@@ -15,6 +15,41 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v3.0.2 - 2020-05-19
+_Tag:_ [kylin-3.0.2](https://github.com/apache/kylin/tree/kylin-3.0.2)
+This is a bugfix release after 3.0.1, with 6 enhancements and 19 bug fixes.
+
+__Improvement__
+
+* [KYLIN-3628] - Query with lookup table always use latest snapshot
+* [KYLIN-4132] - Kylin needn't use "org.apache.directory.api.util.Strings" to import api-util.jar
+* [KYLIN-4388] - Refine the Dockerfile
+* [KYLIN-4390] - Update tomcat to 7.0.100
+* [KYLIN-4400] - Use beeline as hive client in system-cube.sh
+* [KYLIN-4437] - Should replace deprecated "mapred.job.name"
+
+__Bug Fix__
+
+* [KYLIN-4119] - The admin of project can't operate the action of Hybrids
+* [KYLIN-4206] - Build kylin on EMR 5.23. The kylin version is 2.6.4. When building the cube, the hive table cannot be found
+* [KYLIN-4340] - Fix bug of get value of isSparkFactDistinctEnable for cube not correct
+* [KYLIN-4353] - Realtime Segment is not closed in expected duration
+* [KYLIN-4354] - Prune segment not using given filter when using jdbc preparestatement
+* [KYLIN-4370] - Spark job failing with JDBC source on 8th step with error : org.apache.kylin.engine.spark.SparkCubingByLayer. Root cause: Table or view not found: `default`.`kylin_intermediate table'
+* [KYLIN-4372] - Docker entrypoint delete file too later cause ZK started by HBase crash
+* [KYLIN-4379] - Calculate column cardinality cannot use kylin config overwrite cause job failed
+* [KYLIN-4383] - Kylin Integrated Issue with Amazon EMR and AWS Glue in HiveMetaStoreClientFactory.java
+* [KYLIN-4385] - KYLIN system cube failing to update table when run on EMR with S3 as storage and EMRFS
+* [KYLIN-4396] - File Descriptor Leakage in MR Build Engine
+* [KYLIN-4397] - Use newLinkedHashMap in AssignmentUtil.java
+* [KYLIN-4405] - Internal exception when trying to build cube whose modal has null PartitionDesc
+* [KYLIN-4425] - Refactor Diagnosis Tool
+* [KYLIN-4426] - Refine CliCommandExecutor
+* [KYLIN-4433] - When uhc step is turned on, Build Dimension Dictionary job cannot get correct configuration
+* [KYLIN-4438] - Null password may cause RuntimeException when starting up
+* [KYLIN-4470] - The user cannot log in kylin normally after being assigned to a group
+* [KYLIN-4481] - Project-level ACL lookups not working for non-admin SAML-federated users
+
 ## v3.0.1 - 2020-02-20
 _Tag:_ [kylin-3.0.1](https://github.com/apache/kylin/tree/kylin-3.0.1)
 This is a bugfix release after 3.0.0, with 10 enhancements and 14 bug fixes.
@@ -302,6 +337,36 @@ __Bug Fix__
 * [KYLIN-3916] - Fix cube build action issue after streaming migrate
 * [KYLIN-3922] - Fail to update coprocessor when run DeployCoprocessorCLI
 * [KYLIN-3923] - UT GeneralColumnDataTest fail
+
+## v2.6.6 - 2020-05-19
+_Tag:_ [kylin-2.6.6](https://github.com/apache/kylin/tree/kylin-2.6.6)
+This is a bugfix release after 2.6.5, with 6 enhancements and 14 bug fixes.
+
+__Improvement__
+
+* [KYLIN-3628] - Query with lookup table always use latest snapshot
+* [KYLIN-4132] - Kylin needn't use "org.apache.directory.api.util.Strings" to import api-util.jar
+* [KYLIN-4160] - Auto redirect to host:port/kylin when user only enter host:port in broswer
+* [KYLIN-4314] - Support union in intersect_count() function
+* [KYLIN-4390] - Update tomcat to 7.0.100
+* [KYLIN-4400] - Use beeline as hive client in system-cube.sh
+
+__Bug Fix__
+
+* [KYLIN-4072] - CDH 6.x find-hbase-dependency.sh return with "base-common lib not found"
+* [KYLIN-4119] - The admin of project can't operate the action of Hybrids
+* [KYLIN-4206] - Build kylin on EMR 5.23. The kylin version is 2.6.4. When building the cube, the hive table cannot be found
+* [KYLIN-4245] - SqlConverter returns wrong syntax SQL when SqlParser fails for JDBC source
+* [KYLIN-4354] - Prune segment not using given filter when using jdbc preparestatement
+* [KYLIN-4370] - Spark job failing with JDBC source on 8th step with error : org.apache.kylin.engine.spark.SparkCubingByLayer. Root cause: Table or view not found: `default`.`kylin_intermediate table'
+* [KYLIN-4379] - Calculate column cardinality cannot use kylin config overwrite cause job failed
+* [KYLIN-4383] - Kylin Integrated Issue with Amazon EMR and AWS Glue in HiveMetaStoreClientFactory.java
+* [KYLIN-4385] - KYLIN system cube failing to update table when run on EMR with S3 as storage and EMRFS
+* [KYLIN-4405] - Internal exception when trying to build cube whose modal has null PartitionDesc
+* [KYLIN-4426] - Refine CliCommandExecutor
+* [KYLIN-4433] - When uhc step is turned on, Build Dimension Dictionary job cannot get correct configuration
+* [KYLIN-4438] - Null password may cause RuntimeException when starting up
+* [KYLIN-4481] - Project-level ACL lookups not working for non-admin SAML-federated users
 
 ## v2.6.5 - 2020-02-20
 _Tag:_ [kylin-2.6.5](https://github.com/apache/kylin/tree/kylin-2.6.5)
