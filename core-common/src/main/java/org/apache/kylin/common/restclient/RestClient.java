@@ -30,7 +30,6 @@ import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
 
-import com.google.common.base.Strings;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -55,6 +54,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 
 /**
  */
@@ -175,6 +175,25 @@ public class RestClient {
         }
     }
 
+    public void announceWipeCache(String entity, String event, String cacheKey) throws IOException {
+        String url = baseUrl + "/cache/announce/" + entity + "/" + cacheKey + "/" + event;
+        HttpPut request = new HttpPut(url);
+
+        try {
+            HttpResponse response = client.execute(request);
+
+            if (response.getStatusLine().getStatusCode() != 200) {
+                String msg = EntityUtils.toString(response.getEntity());
+                throw new IOException("Invalid response " + response.getStatusLine().getStatusCode()
+                        + " with announce cache wipe url " + url + "\n" + msg);
+            }
+        } catch (Exception ex) {
+            throw new IOException(ex);
+        } finally {
+            request.releaseConnection();
+        }
+    }
+    
     public void wipeCache(String entity, String event, String cacheKey) throws IOException {
         HttpPut request;
         String url;
@@ -202,8 +221,19 @@ public class RestClient {
     }
 
     public String getKylinProperties() throws IOException {
-        String url = baseUrl + "/admin/config";
-        HttpGet request = new HttpGet(url);
+        return getConfiguration(baseUrl + "/admin/config", false);
+    }
+
+    public String getHDFSConfiguration() throws IOException {
+        return getConfiguration(baseUrl + "/admin/config/hdfs", true);
+    }
+
+    public String getHBaseConfiguration() throws IOException {
+        return getConfiguration(baseUrl + "/admin/config/hbase", true);
+    }
+
+    private String getConfiguration(String url, boolean ifAuth) throws IOException {
+        HttpGet request = ifAuth ? newGet(url) : new HttpGet(url);
         HttpResponse response = null;
         try {
             response = client.execute(request);
@@ -372,7 +402,7 @@ public class RestClient {
                 String msg = getContent(response);
                 Map<String, String> kvMap = JsonUtil.readValueAsMap(msg);
                 String exception = kvMap.containsKey("exception") ? kvMap.get("exception") : "unknown";
-                throw new IOException(exception);
+                throw new IOException("Error code: " + response.getStatusLine().getStatusCode() + "\n" + exception);
             }
         } finally {
             post.releaseConnection();
@@ -411,7 +441,7 @@ public class RestClient {
     }
 
     private HttpGet newGet(String url) {
-        HttpGet get = new HttpGet();
+        HttpGet get = new HttpGet(url);
         addHttpHeaders(get);
         return get;
     }

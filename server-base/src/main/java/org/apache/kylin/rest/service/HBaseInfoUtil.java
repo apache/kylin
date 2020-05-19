@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.common.KylinConfig;
@@ -28,13 +29,17 @@ import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
 import org.apache.kylin.storage.hbase.util.HBaseUnionUtil;
 
 public class HBaseInfoUtil {
-    
+
     @SuppressWarnings("unused") // used by reflection
     public static HBaseResponse getHBaseInfo(String tableName, KylinConfig config) throws IOException {
         if (!config.getStorageUrl().getScheme().equals("hbase"))
             return null;
-        
+
         Connection conn = HBaseUnionUtil.getConnection(config, tableName);
+        return getHBaseInfo(tableName, conn);
+    }
+
+    public static HBaseResponse getHBaseInfo(String tableName, Connection conn) throws IOException {
         HBaseResponse hr = null;
         long tableSize = 0;
         int regionCount = 0;
@@ -53,5 +58,13 @@ public class HBaseInfoUtil {
         hr.setTableSize(tableSize);
         hr.setRegionCount(regionCount);
         return hr;
+    }
+
+    public static boolean checkEquals(HBaseResponse hbaseR1, HBaseResponse hbaseR2) {
+        if (hbaseR1 == hbaseR2)
+            return true;
+        return Objects.equals(hbaseR1.getTableName(), hbaseR2.getTableName())
+                && hbaseR1.getTableSize() == hbaseR2.getTableSize()
+                && hbaseR1.getRegionCount() == hbaseR2.getRegionCount();
     }
 }
