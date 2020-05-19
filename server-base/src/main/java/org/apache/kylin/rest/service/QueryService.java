@@ -55,6 +55,8 @@ import org.apache.calcite.prepare.CalcitePrepareImpl;
 import org.apache.calcite.prepare.OnlyPrepareEarlyAbortException;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.BasicSqlType;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
@@ -324,9 +326,27 @@ public class QueryService extends BasicService {
             }
         }
 
+        // if Realization Names is empty, get value from SQLResponse.
         if (realizationNames.isEmpty()) {
             if (!Strings.isNullOrEmpty(response.getCube())) {
                 realizationNames.addAll(Lists.newArrayList(StringUtil.splitByComma(response.getCube())));
+            }
+        }
+
+        // if Cuboid Ids is empty, get value from SQLResponse.
+        if (cuboidIds.isEmpty()) {
+            List<QueryContext.CubeSegmentStatisticsResult> cubeSegmentStatisticsList =
+                    response.getCubeSegmentStatisticsList();
+            if (CollectionUtils.isNotEmpty(cubeSegmentStatisticsList)) {
+                cubeSegmentStatisticsList.forEach(cubeSegmentStatResult -> {
+                    if (MapUtils.isNotEmpty(cubeSegmentStatResult.getCubeSegmentStatisticsMap())) {
+                        cubeSegmentStatResult.getCubeSegmentStatisticsMap().values().forEach(cubeSegmentStatMap -> {
+                            cubeSegmentStatMap.values().forEach(cubeSegmentStat -> {
+                                cuboidIds.add(cubeSegmentStat.getTargetCuboidId());
+                            });
+                        });
+                    }
+                });
             }
         }
 
@@ -410,6 +430,9 @@ public class QueryService extends BasicService {
         final QueryContext queryContext = QueryContextFacade.current();
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
+            // force clear the query context before a new query
+            OLAPContext.clearThreadLocalContexts();
+
             SQLResponse sqlResponse = null;
             String sql = sqlRequest.getSql();
             String project = sqlRequest.getProject();
@@ -663,8 +686,6 @@ public class QueryService extends BasicService {
             parameters.put(OLAPContext.PRM_USER_AUTHEN_INFO, userInfo);
             parameters.put(OLAPContext.PRM_ACCEPT_PARTIAL_RESULT, String.valueOf(sqlRequest.isAcceptPartial()));
             OLAPContext.setParameters(parameters);
-            // force clear the query context before a new query
-            OLAPContext.clearThreadLocalContexts();
 
             // special case for prepare query.
             List<List<String>> results = Lists.newArrayList();
