@@ -20,6 +20,7 @@ package org.apache.kylin.common;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.ClassUtil;
@@ -569,6 +570,25 @@ public class KylinConfig extends KylinConfigBase {
 
     public synchronized void reloadFromSiteProperties() {
         reloadKylinConfig(buildSiteProperties());
+    }
+
+    public static String getConfigAsString(Configuration conf) {
+        final StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, String> entry : conf) {
+            sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
+        }
+        return sb.toString();
+    }
+
+    public static Configuration getConfigFromString(String configInStr) throws IOException {
+        Properties props = new Properties();
+        props.load(new StringReader(configInStr));
+
+        Configuration config = new Configuration();
+        for (Map.Entry<Object, Object> entry : props.entrySet()) {
+            config.set((String) entry.getKey(), (String) entry.getValue());
+        }
+        return config;
     }
 
     public KylinConfig base() {

@@ -168,11 +168,7 @@ public class ModelService extends BasicService {
         result.raiseExceptionWhenInvalid();
     }
 
-    public void checkModelCompatibility(String project, DataModelDesc dataModalDesc, List<TableDesc> tableDescList) {
-        ProjectInstance prjInstance = getProjectManager().getProject(project);
-        if (prjInstance == null) {
-            throw new BadRequestException("Project " + project + " does not exist");
-        }
+    public void checkModelCompatibility(DataModelDesc dataModalDesc, List<TableDesc> tableDescList) {
         ModelSchemaUpdateChecker checker = new ModelSchemaUpdateChecker(getTableManager(), getCubeManager(),
                 getDataModelManager());
 
@@ -181,7 +177,7 @@ public class ModelService extends BasicService {
             tableDescMap.put(tableDesc.getIdentity(), tableDesc);
         }
         dataModalDesc.init(getConfig(), tableDescMap);
-        ModelSchemaUpdateChecker.CheckResult result = checker.allowEdit(dataModalDesc, project, false);
+        ModelSchemaUpdateChecker.CheckResult result = checker.allowEdit(dataModalDesc, null, false);
         result.raiseExceptionWhenInvalid();
     }
 

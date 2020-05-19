@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.persistence.WriteConflictException;
@@ -48,6 +49,8 @@ import org.apache.kylin.shaded.com.google.common.collect.Lists;
 public class DataModelManager {
 
     private static final Logger logger = LoggerFactory.getLogger(DataModelManager.class);
+    public static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<DataModelDesc>(
+            DataModelDesc.class);
 
     public static DataModelManager getInstance(KylinConfig config) {
         return config.getManager(DataModelManager.class);

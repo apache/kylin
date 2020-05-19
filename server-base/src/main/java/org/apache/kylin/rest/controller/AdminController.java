@@ -112,6 +112,28 @@ public class AdminController extends BasicController {
         return configRes;
     }
 
+    @RequestMapping(value = "/config/hdfs", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public GeneralResponse getHDFSConfig() throws IOException {
+        String config = adminService.getHadoopConfigAsString();
+
+        GeneralResponse configRes = new GeneralResponse();
+        configRes.put("config", config);
+
+        return configRes;
+    }
+
+    @RequestMapping(value = "/config/hbase", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public GeneralResponse getHBaseConfig() throws IOException {
+        String config = adminService.getHBaseConfigAsString();
+
+        GeneralResponse configRes = new GeneralResponse();
+        configRes.put("config", config);
+
+        return configRes;
+    }
+
     @RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public MetricsResponse cubeMetrics(MetricsRequest request) {
