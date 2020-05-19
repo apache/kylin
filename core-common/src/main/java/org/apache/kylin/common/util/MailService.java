@@ -90,6 +90,7 @@ public class MailService {
         email.setHostName(host);
         email.setStartTLSEnabled(starttlsEnabled);
         if (starttlsEnabled) {
+            email.setSSLOnConnect(true);
             email.setSslSmtpPort(port);
         } else {
             email.setSmtpPort(Integer.parseInt(port));
