@@ -163,6 +163,25 @@ public class MigrationController extends BasicController {
         }
     }
 
+    /**
+     * Check the schema compatibility for table
+     */
+    @RequestMapping(value = "/checkCompatibility/hiveTable", method = { RequestMethod.POST })
+    @ResponseBody
+    public void checkHiveTableCompatibility(@RequestBody CompatibilityCheckRequest request) {
+        try {
+            List<TableDesc> tableDescList = deserializeTableDescList(request);
+            for (TableDesc tableDesc : tableDescList) {
+                logger.info("Schema compatibility check for table {}", tableDesc.getName());
+                tableService.checkHiveTableCompatibility(request.getProjectName(), tableDesc);
+                logger.info("Pass schema compatibility check for table {}", tableDesc.getName());
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw new ConflictException(e.getMessage(), e);
+        }
+    }
+
     private List<TableDesc> deserializeTableDescList(CompatibilityCheckRequest request) {
         List<TableDesc> result = Lists.newArrayList();
         try {

@@ -125,6 +125,28 @@ public class TableService extends BasicService {
         TableSchemaUpdateChecker.CheckResult result = getSchemaUpdateChecker().allowReload(tableDesc, prj);
         result.raiseExceptionWhenInvalid();
     }
+
+    public void checkHiveTableCompatibility(String prj, TableDesc tableDesc) throws Exception {
+        Preconditions.checkNotNull(tableDesc.getDatabase());
+        Preconditions.checkNotNull(tableDesc.getName());
+
+        String database = tableDesc.getDatabase().toUpperCase(Locale.ROOT);
+        String tableName = tableDesc.getName().toUpperCase(Locale.ROOT);
+        ProjectInstance projectInstance = getProjectManager().getProject(prj);
+        ISourceMetadataExplorer explr = SourceManager.getSource(projectInstance).getSourceMetadataExplorer();
+
+        TableDesc hiveTableDesc;
+        try {
+            Pair<TableDesc, TableExtDesc> pair = explr.loadTableMetadata(database, tableName, prj);
+            hiveTableDesc = pair.getFirst();
+        } catch (Exception e) {
+            logger.error("Fail to get metadata for hive table {} due to ", tableDesc.getIdentity(), e);
+            throw new RuntimeException("Fail to get metadata for hive table" + tableDesc.getIdentity());
+        }
+
+        TableSchemaUpdateChecker.CheckResult result = getSchemaUpdateChecker().allowMigrate(tableDesc, hiveTableDesc);
+        result.raiseExceptionWhenInvalid();
+    }
     
     public List<TableDesc> getTableDescByProject(String project, boolean withExt) throws IOException {
         aclEvaluate.checkProjectReadPermission(project);

@@ -23,22 +23,23 @@ import static java.lang.String.format;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.kylin.shaded.com.google.common.base.Predicate;
 import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 import org.apache.kylin.shaded.com.google.common.collect.Iterables;
@@ -339,5 +340,54 @@ public class TableSchemaUpdateChecker {
         }
 
         return usedColumns;
+    }
+
+    public CheckResult allowMigrate(TableDesc newTableDesc, TableDesc hiveTableDesc) throws Exception {
+        final String fullTableName = newTableDesc.getIdentity();
+
+        List<String> issues = Lists.newArrayList();
+        checkAllColumnsInHiveTableDesc(hiveTableDesc, newTableDesc, issues);
+        if (issues.isEmpty()) {
+            return new CheckResult(true,
+                    format(Locale.ROOT, "Table '%s' is compatible with existing hive table", fullTableName));
+        } else {
+            return new CheckResult(false, format(Locale.ROOT,
+                    "Table '%s' is incompatible with existing hive table due to '%s'", fullTableName, issues));
+        }
+    }
+
+    private void checkAllColumnsInHiveTableDesc(TableDesc hiveTable, TableDesc newTable, List<String> issues) {
+        ColumnDesc[] hiveTableCols = hiveTable.getColumns();
+        ColumnDesc[] newTableCols = newTable.getColumns();
+
+        if (hiveTableCols.length < newTableCols.length) {
+            Set<String> colNamesNew = Lists.newArrayList(newTableCols).stream().map(input -> input.getName())
+                    .collect(Collectors.toSet());
+            Set<String> colNamesHive = Lists.newArrayList(hiveTableCols).stream().map(input -> input.getName())
+                    .collect(Collectors.toSet());
+            colNamesNew.removeAll(colNamesHive);
+            issues.add(format(Locale.ROOT, "columns %s are not existing in hive table", colNamesNew));
+            return;
+        }
+
+        Map<String, ColumnDesc> hiveColMap = Lists.newArrayList(hiveTableCols).stream()
+                .collect(Collectors.toMap(input -> input.getName().toUpperCase(Locale.ROOT), input -> input));
+        Map<String, ColumnDesc> newColMap = Lists.newArrayList(newTableCols).stream()
+                .collect(Collectors.toMap(input -> input.getName().toUpperCase(Locale.ROOT), input -> input));
+
+        List<String> violateColumns = Lists.newArrayList();
+        for (String colName : newColMap.keySet()) {
+            ColumnDesc hiveCol = hiveColMap.get(colName);
+            if (hiveCol == null) {
+                issues.add(format(Locale.ROOT, "column %s is not existing in hive table", colName));
+                continue;
+            }
+            if (!isColumnCompatible(hiveCol, newColMap.get(colName))) {
+                violateColumns.add(colName);
+            }
+        }
+        if (!violateColumns.isEmpty()) {
+            issues.add(format(Locale.ROOT, "Columns %s are incompatible " + "in hive", violateColumns));
+        }
     }
 }
