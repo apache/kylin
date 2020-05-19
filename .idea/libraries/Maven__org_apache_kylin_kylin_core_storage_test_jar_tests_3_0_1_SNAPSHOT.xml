@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.apache.kylin:kylin-core-storage:test-jar:tests:3.0.1-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/core-storage/pom.xml!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/core-storage/kylin-core-storage-3.0.1-SNAPSHOT-test-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/core-storage/kylin-core-storage-3.0.1-SNAPSHOT-test-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

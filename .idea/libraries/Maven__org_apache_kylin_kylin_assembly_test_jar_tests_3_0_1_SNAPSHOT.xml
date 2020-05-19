@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.apache.kylin:kylin-assembly:test-jar:tests:3.0.1-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/assembly/pom.xml!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/assembly/kylin-assembly-3.0.1-SNAPSHOT-test-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/assembly/kylin-assembly-3.0.1-SNAPSHOT-test-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

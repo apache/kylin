@@ -7,7 +7,7 @@ permalink: /download/index.html
 You can verify the download by following these [procedures](https://www.apache.org/info/verification.html) and using these [KEYS](https://www.apache.org/dist/kylin/KEYS).
 
 #### v3.0.2
-- Kylin 3.0.0 is a major release of Kylin's next generation after 2.x, with the new real-time OLAP feature, Kylin can query streaming data with sub-second latency. Kylin 3.0.2 is a release after 3.0.0, with 25 bug fixes and enhancement. To learn about real-time OLAP, please visit [the tech blog](/blog/2019/04/12/rt-streaming-design/) and [the tutorial](/docs/tutorial/realtime_olap.html) for real-time OLAP.
+- This is a release after 3.0.1, with 25 bug fixes and enhancement. Check the release notes.
 - [Release notes](/docs/release_notes.html), [installation guide](/docs/install/index.html) and [upgrade guide](/docs/howto/howto_upgrade.html)
 - Source download: [apache-kylin-3.0.2-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.0.2/apache-kylin-3.0.2-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.0.2/apache-kylin-3.0.2-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.0.2/apache-kylin-3.0.2-source-release.zip.sha256)\]
 - Binary for Hadoop 2 download:
@@ -19,7 +19,7 @@ You can verify the download by following these [procedures](https://www.apache.o
   - for Cloudera CDH 6.0/6.1 (check [KYLIN-3564](https://issues.apache.org/jira/browse/KYLIN-3564) first) - [apache-kylin-3.0.2-bin-cdh60.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.0.2/apache-kylin-3.0.2-bin-cdh60.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.0.2/apache-kylin-3.0.2-bin-cdh60.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.0.2/apache-kylin-3.0.2-bin-cdh60.tar.gz.sha256)\]
 
 #### v2.6.6
-- This is a release after 2.6.5 with 20 bug fixes and enhancement. Check the release notes.
+- This is a release after 2.6.5, with 20 bug fixes and enhancement. Check the release notes.
 - [Release notes](/docs/release_notes.html), [installation guide](/docs/install/index.html) and [upgrade guide](/docs/howto/howto_upgrade.html)
 - Source download: [apache-kylin-2.6.6-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-source-release.zip.sha256)\]
 - Binary for Hadoop 2 download:
