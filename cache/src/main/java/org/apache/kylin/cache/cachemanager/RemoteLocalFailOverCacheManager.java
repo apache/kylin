@@ -68,4 +68,9 @@ public class RemoteLocalFailOverCacheManager extends AbstractCacheManager {
     void enableRemoteCacheManager() {
         remoteCacheManager.setClusterHealth(true);
     }
+
+    @VisibleForTesting
+    MemcachedCacheManager getRemoteCacheManager() {
+        return remoteCacheManager;
+    }
 }

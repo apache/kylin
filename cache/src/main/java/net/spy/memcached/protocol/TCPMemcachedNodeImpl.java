@@ -19,10 +19,12 @@
 package net.spy.memcached.protocol;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.UnsupportedAddressTypeException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
@@ -42,6 +44,9 @@ import net.spy.memcached.protocol.binary.TapAckOperationImpl;
 /**
  * Represents a node with the memcached cluster, along with buffering and
  * operation queues.
+ *
+ * This is a modified version of the net.spy.memcached.protocol.TCPMemcachedNodeImpl
+ * Override the final method getSocketAddress() to refresh SocketAddress to achieve same hostname with ip changing
  */
 public abstract class TCPMemcachedNodeImpl extends SpyObject implements MemcachedNode {
 
@@ -415,7 +420,11 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject implements Memcache
      * @see net.spy.memcached.MemcachedNode#getSocketAddress()
      */
     public final SocketAddress getSocketAddress() {
-        return socketAddress;
+        if (!(socketAddress instanceof InetSocketAddress)) {
+            throw new UnsupportedAddressTypeException();
+        }
+        InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
+        return new InetSocketAddress(inetSocketAddress.getHostName(), inetSocketAddress.getPort());
     }
 
     /*
