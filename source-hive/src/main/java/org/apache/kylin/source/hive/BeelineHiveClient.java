@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.hive.common.StatsSetupConst;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.SourceConfigurationUtil;
 
@@ -134,11 +135,11 @@ public class BeelineHiveClient implements IHiveClient {
         ResultSet resultSet = null;
         long count = 0;
         try {
-            String query = "select count(*) from ";
-            resultSet = stmt.executeQuery(query.concat(database + "." + tableName));
-            if (resultSet.next()) {
-                count = resultSet.getLong(1);
-            }
+            String exe = "use ";
+            stmt.execute(exe.concat(database));
+            String des = "describe formatted ";
+            resultSet = stmt.executeQuery(des.concat(tableName));
+            count = extractNumRows(resultSet);
         } finally {
             DBUtils.closeQuietly(resultSet);
         }
@@ -281,6 +282,22 @@ public class BeelineHiveClient implements IHiveClient {
                 builder.setSkipHeaderLineCount(resultSet.getString(3).trim());
             }
         }
+    }
+
+    private long extractNumRows(ResultSet resultSet) throws SQLException {
+        long rowCount = 0L;
+        outer:
+        while (resultSet.next()) {
+            if ("Table Parameters:".equals(resultSet.getString(1).trim())) {
+                while (resultSet.next()) {
+                    if (StatsSetupConst.ROW_COUNT.equals(resultSet.getString(2).trim())) {
+                        rowCount = Long.parseLong(resultSet.getString(3).trim());
+                        break outer;
+                    }
+                }
+            }
+        }
+        return rowCount;
     }
 
     public void close() {
