@@ -38,7 +38,7 @@ public enum TimePropertyEnum {
         this.propertyName = propertyName;
     }
 
-    public static TimePropertyEnum getByPropertyName(String propertyName) {
+    public static TimePropertyEnum getByKey(String propertyName) {
         if (Strings.isNullOrEmpty(propertyName)) {
             return null;
         }
