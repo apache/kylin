@@ -59,8 +59,11 @@ public class MemcachedCacheManager extends AbstractCacheManager {
     protected Collection<? extends Cache> loadCaches() {
         Cache successCache = new MemCachedCacheAdaptor(
                 new MemcachedChunkingCache(MemcachedCache.create(memcachedCacheConfig, CacheConstants.QUERY_CACHE)));
+        Cache userCache = new MemCachedCacheAdaptor(
+                new MemcachedCache(MemcachedCache.create(memcachedCacheConfig, CacheConstants.USER_CACHE, 86400)));
 
         addCache(successCache);
+        addCache(userCache);
 
         Collection<String> names = getCacheNames();
         Collection<Cache> caches = Lists.newArrayList();
