@@ -2501,4 +2501,8 @@ public abstract class KylinConfigBase implements Serializable {
     public String getIntersectFilterOrSeparator() {
         return getOptional("kylin.query.intersect.separator", "|");
     }
+
+    public int getDefaultTimeFilter() {
+        return Integer.parseInt(getOptional("kylin.web.default-time-filter", "2"));
+    }
 }
