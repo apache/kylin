@@ -83,35 +83,31 @@ else
     echo "...................................................[`setColor 32 PASS`]"
 fi
 
-source ${dir}/find-spark-dependency.sh
-if [[ $? == 0 ]]; then
+
+bash ${dir}/find-spark-dependency.sh
+rtn=$?
+if [[ $rtn == 0 ]]; then
     echo "...................................................[`setColor 32 PASS`]"
+elif [[ $rtn == 3 ]]; then
+    echo "...................................................[`setColor 33 SKIP`]"
 fi
 
-source ${dir}/find-flink-dependency.sh
-if [[ $? == 0 ]]; then
+bash ${dir}/find-flink-dependency.sh
+rtn=$?
+if [[ $rtn == 0 ]]; then
     echo "...................................................[`setColor 32 PASS`]"
+elif [[ $rtn == 3 ]]; then
+    echo "...................................................[`setColor 33 SKIP`]"
 fi
 
-SPARK_EVENTLOG_DIR=`bash $KYLIN_HOME/bin/get-properties.sh kylin.engine.spark-conf.spark.eventLog.dir`
-if [ -n "$SPARK_EVENTLOG_DIR" ]
-then
-    hadoop ${hadoop_conf_param} fs -mkdir -p $SPARK_EVENTLOG_DIR
-    if [ $? != 0 ]
-    then
-        quit "Failed to create $SPARK_EVENTLOG_DIR. Please make sure the user has right to access $SPARK_EVENTLOG_DIR"
-    fi
+bash ${dir}/find-kafka-dependency.sh
+rtn=$?
+if [[ $rtn == 0 ]]; then
+    echo "...................................................[`setColor 32 PASS`]"
+elif [[ $rtn == 3 ]]; then
+    echo "...................................................[`setColor 33 SKIP`]"
 fi
 
-SPARK_HISTORYLOG_DIR=`bash $KYLIN_HOME/bin/get-properties.sh kylin.engine.spark-conf.spark.history.fs.logDirectory`
-if [ -n "$SPARK_HISTORYLOG_DIR" ]
-then
-    hadoop ${hadoop_conf_param} fs -mkdir -p $SPARK_HISTORYLOG_DIR
-    if [ $? != 0 ]
-    then
-        quit "Failed to create $SPARK_HISTORYLOG_DIR. Please make sure the user has right to access $SPARK_HISTORYLOG_DIR"
-    fi
-fi
 
 ${KYLIN_HOME}/bin/check-port-availability.sh ||  exit 1;
 
