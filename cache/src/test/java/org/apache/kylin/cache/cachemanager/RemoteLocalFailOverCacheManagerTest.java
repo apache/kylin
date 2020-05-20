@@ -32,6 +32,8 @@ import org.springframework.cache.ehcache.EhCacheCache;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+//
+//import net.spy.memcached.MemcachedClientIF;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:cacheContext.xml" })
@@ -58,5 +60,17 @@ public class RemoteLocalFailOverCacheManagerTest {
         cacheManager.enableRemoteCacheManager();
         Assert.assertTrue("Memcached enabled",
                 cacheManager.getCache(QUERY_CACHE) instanceof MemcachedCacheManager.MemCachedCacheAdaptor);
+//
+//        MemcachedCacheManager remoteCacheManager = cacheManager.getRemoteCacheManager();
+//        for (int i = 0; i < 1000; i++) {
+//            MemcachedClientIF client = (MemcachedClientIF) remoteCacheManager.getCache(QUERY_CACHE).getNativeCache();
+//            System.out.println(i + " available servers: " + client.getAvailableServers() + "; unavailable servers: "
+//                    + client.getUnavailableServers());
+//            try {
+//                client.get("key");
+//                Thread.sleep(2000L);
+//            } catch (Exception e) {
+//            }
+//        }
     }
 }
