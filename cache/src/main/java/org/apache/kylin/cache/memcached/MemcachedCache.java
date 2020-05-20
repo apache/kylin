@@ -20,8 +20,11 @@ package org.apache.kylin.cache.memcached;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -136,11 +139,22 @@ public class MemcachedCache {
                     .setOpQueueMaxBlockTime(config.getTimeout()).setOpTimeout(config.getTimeout())
                     .setReadBufferSize(config.getReadBufferSize()).setOpQueueFactory(opQueueFactory).build();
             return new MemcachedCache(new MemcachedClient(new MemcachedConnectionFactory(connectionFactory),
-                    AddrUtil.getAddresses(hostsStr)), config, memcachedPrefix, timeToLive);
+                    getResolvedAddrList(hostsStr)), config, memcachedPrefix, timeToLive);
         } catch (IOException e) {
             logger.error("Unable to create MemcachedCache instance.", e);
             throw Throwables.propagate(e);
         }
+    }
+
+    public static List<InetSocketAddress> getResolvedAddrList(String hostsStr) {
+        List<InetSocketAddress> addrs = AddrUtil.getAddresses(hostsStr);
+        Iterator<InetSocketAddress> addrIterator = addrs.iterator();
+        while (addrIterator.hasNext()) {
+            if (addrIterator.next().isUnresolved()) {
+                addrIterator.remove();
+            }
+        }
+        return addrs;
     }
 
     public String getName() {
