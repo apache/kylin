@@ -36,7 +36,7 @@ arr=(`echo $hbase_classpath | cut -d ":" -f 1- | sed 's/:/ /g'`)
 hbase_common_path=
 for data in ${arr[@]}
 do
-    result=`echo $data | grep -e 'hbase-common[a-z0-9A-Z\.-]*jar' | grep -v tests`
+    result=`echo $data | grep -e 'hbase-[common,shaded\-client][a-z0-9A-Z\.-]*jar' | grep -v tests`
     if [ $result ]
     then
         hbase_common_path=$data
