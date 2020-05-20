@@ -111,3 +111,4 @@ ${KYLIN_HOME}/bin/check-port-availability.sh ||  exit 1;
 
 echo ""
 echo `setColor 33 "Checking environment finished successfully. To check again, run 'bin/check-env.sh' manually."`
+
