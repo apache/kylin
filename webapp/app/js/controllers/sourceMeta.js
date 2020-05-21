@@ -433,9 +433,10 @@ KylinApp
         $scope.loadHive();
       }
 
-      $scope.confirmReload = function () {
-        scope.reloadTable($scope.selectTable, $scope.isCalculate.val).then(function () {
-          $scope.cancel();
+      $scope.confirmReload = function() {
+        $scope.cancel();
+        scope.reloadTable($scope.selectTable, $scope.isCalculate.val).then(function() {
+          scope.aceSrcTbLoaded(true);
         })
       }
 
