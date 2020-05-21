@@ -18,24 +18,24 @@
 
 package org.apache.kylin.metrics.lib.impl.hive;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hive.cli.CliSessionState;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.ql.Driver;
-import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
-import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metrics.lib.ActiveReservoirReporter;
 import org.apache.kylin.metrics.lib.Record;
@@ -45,13 +45,13 @@ import org.apache.kylin.source.hive.HiveMetaStoreClientFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class HiveProducer {
 
@@ -183,30 +183,20 @@ public class HiveProducer {
             }
             hql.append(")");
             logger.debug("create partition by {}.", hql);
-            Driver driver = null;
-            CliSessionState session = null;
+
+            CliCommandExecutor getCliCommandExecutor = null;
+            String useDatabaseHql = null;
+            HiveCmdBuilder hiveCmdBuilder = null;
             try {
-                driver = new Driver(hiveConf);
-                session = new CliSessionState(hiveConf);
-                SessionState.start(session);
-                CommandProcessorResponse res = driver.run(hql.toString());
-                if (res.getResponseCode() != 0) {
-                    logger.warn("Fail to add partition. HQL: {}; Cause by: {}",
-                            hql.toString(),
-                            res.toString());
-                }
-                session.close();
-                driver.close();
+                getCliCommandExecutor = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
+                useDatabaseHql = "USE " + ActiveReservoirReporter.KYLIN_PREFIX + ";";
+                hiveCmdBuilder = new HiveCmdBuilder();
+                hiveCmdBuilder.addStatement(useDatabaseHql);
+                hiveCmdBuilder.addStatement(hql.toString());
+                getCliCommandExecutor.execute(hiveCmdBuilder.build());
             } catch (Exception ex) {
                 // Do not let hive exception stop HiveProducer from writing file, so catch and report it here
                 logger.error("create partition failed, please create it manually : " + hql, ex);
-            } finally {
-                if (session != null) {
-                    session.close();
-                }
-                if (driver != null) {
-                    driver.close();
-                }
             }
         }
 
