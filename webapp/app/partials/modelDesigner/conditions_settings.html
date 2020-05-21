@@ -111,7 +111,7 @@
               <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Date Format</b></label>
               <div class="col-xs-12 col-sm-6">
                 <select chosen
-                        width="'98.5%'"
+                        width="'49%'"
                         ng-if="state.mode=='edit'"
                         ng-model="partition_date.type"
                         ng-required="partition_date.type"
@@ -121,9 +121,9 @@
                         data-placement="">
                   <option value="">--Select Date Format--</option>
                 </select>
-                <input
+                <input width="'49%'"
                   class="form-control format-input"
-                  ng-if="partition_date.type === 'other'"
+                  ng-if="state.mode == 'edit' && partition_date.type === 'other'"
                   ng-model="partition_date.format"
                   ng-required="partition_date.format"
                   ng-class="{ 'col-5': partition_date.type === 'other' }"
@@ -172,7 +172,7 @@
               <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Time Format</b></label>
               <div class="col-xs-12 col-sm-6">
                 <select chosen
-                  width="'98.5%'"
+                  width="'49%'"
                   ng-if="state.mode=='edit'"
                   ng-model="partition_time.type"
                   ng-required="partition_time.type"
@@ -181,9 +181,9 @@
                   data-placement="">
                   <option value="">--Select Time Format--</option>
                 </select>
-                <input
+                <input width="'49%'"
                   class="form-control format-input"
-                  ng-if="partition_time.type === 'other'"
+                  ng-if="state.mode == 'edit' && partition_time.type === 'other'"
                   ng-model="partition_time.format"
                   ng-required="partition_time.format"
                   ng-class="{ 'col-5': partition_time.type === 'other' }"
