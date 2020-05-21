@@ -42,7 +42,6 @@ public interface MetadataConstants {
     String P_SEGMENT_NAMES = "segmentNames";
     String P_JOB_ID = "jobId";
     String P_JOB_TYPE = "jobType";
-    String P_LAYOUT_IDS = "layoutIds";
     String P_CLASS_NAME = "className";
     String P_JARS = "jars";
     String P_DIST_META_URL = "distMetaUrl";
@@ -52,6 +51,7 @@ public interface MetadataConstants {
     String P_DATA_RANGE_START = "dataRangeStart";
     String P_DATA_RANGE_END = "dataRangeEnd";
     String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
+    String P_CUBOID_NUMBER = "cuboidsNum";
 
     public static final String TABLE_EXD_CARDINALITY = "cardinality";
     public static final String TABLE_EXD_DELIM = "delim";

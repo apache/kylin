@@ -20,6 +20,7 @@ package org.apache.kylin.job.execution;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.IllegalFormatException;
 import java.util.List;
@@ -41,6 +42,7 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
 import org.apache.kylin.job.util.MailNotificationUtil;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -640,4 +642,28 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return info;
     }
 
+    public int computeStepDriverMemory() {
+        String cuboidsNum = getParam(MetadataConstants.P_CUBOID_NUMBER);
+        if (cuboidsNum != null) {
+            return computeDriverMemory(Integer.valueOf(cuboidsNum));
+        }
+        return 0;
+    }
+
+    //Default driver memory base is 1024M
+    //Adujst driver memory by cuboid number with stratogy[2 -> 20 -> 100]
+    //If cuboid number is 10, then driver.memory=2*1024=2048M
+    public static Integer computeDriverMemory(Integer cuboidNum) {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        int[] driverMemoryStrategy = config.getSparkEngineDriverMemoryStrategy();
+        List strategy = Lists.newArrayList(cuboidNum);
+        Arrays.stream(driverMemoryStrategy).forEach(x -> strategy.add(Integer.valueOf(x)));
+        Collections.sort(strategy);
+        int index = strategy.indexOf(cuboidNum);
+        int driverMemoryMaximum = config.getSparkEngineDriverMemoryMaximum();
+        int driverMemoryBase = config.getSparkEngineDriverMemoryBase();
+
+        driverMemoryBase += driverMemoryBase * index;
+        return Math.min(driverMemoryBase, driverMemoryMaximum);
+    }
 }

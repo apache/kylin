@@ -27,7 +27,9 @@ import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.query.util.PushDownUtil;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.spark.sql.KylinSparkEnv;
+import org.apache.spark.sql.SparderContext;
 import org.apache.spark.sql.catalyst.analysis.NoSuchTableException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -45,6 +47,7 @@ public class NBadQueryAndPushDownTest extends LocalWithSparkSessionTest {
     @Override
     public void setup() throws SchedulerException {
         super.setup();
+        SparderContext.setSparkSession(KylinSparkEnv.getSparkSession());
     }
 
     @Override
@@ -103,42 +106,28 @@ public class NBadQueryAndPushDownTest extends LocalWithSparkSessionTest {
     }
 
     @Test
-    public void testPushDownWithSemicolonQuery() throws Exception {
-        final String sql = "select 1 from test_kylin_fact";
-        KylinConfig.getInstanceFromEnv().setProperty(PUSHDOWN_RUNNER_KEY,
-                "org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl");
-        pushDownSql(getProject(), sql, 10, 0,
-                new SQLException(new NoRealizationFoundException("test for semicolon query push down")));
-        try {
-            pushDownSql(getProject(), sql, 10, 1,
-                    new SQLException(new NoRealizationFoundException("test for semicolon query push down")));
-        } catch (Exception sqlException) {
-            Assert.assertTrue(ExceptionUtils.getRootCauseMessage(sqlException).contains("input 'OFFSET'"));
-        }
-    }
-
-    @Test
     public void testPushDownNonEquiSql() throws Exception {
         File sqlFile = new File("src/test/resources/query/sql_pushdown/query11.sql");
         String sql = new String(Files.readAllBytes(sqlFile.toPath()), StandardCharsets.UTF_8);
         KylinConfig.getInstanceFromEnv().setProperty(PUSHDOWN_RUNNER_KEY, "");
         try {
             NExecAndComp.queryCubeAndSkipCompute(DEFAULT_PROJECT_NAME, sql);
-        } catch (SQLException e) {
+        } catch (Exception e) {
+            if (e instanceof SQLException)
             KylinConfig.getInstanceFromEnv().setProperty(PUSHDOWN_RUNNER_KEY,
                     "org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl");
-            pushDownSql(DEFAULT_PROJECT_NAME, sql, 0, 0, e);
+            pushDownSql(getProject(), sql, 0, 0, (SQLException) e);
         }
     }
-
 
     private Pair<List<List<String>>, List<SelectedColumnMeta>> pushDownSql(String prjName, String sql, int limit,
                                                                            int offset, SQLException sqlException)
             throws Exception {
         populateSSWithCSVData(KylinConfig.getInstanceFromEnv(), prjName, KylinSparkEnv.getSparkSession());
         String pushdownSql = NExecAndComp.removeDataBaseInSql(sql);
+        String massagedSql = QueryUtil.appendLimitOffsetToSql(pushdownSql, limit, offset);
         Pair<List<List<String>>, List<SelectedColumnMeta>> result = PushDownUtil.tryPushDownSelectQuery(prjName,
-                pushdownSql, "DEFAULT", sqlException, BackdoorToggles.getPrepareOnly());
+                massagedSql, "DEFAULT", sqlException, BackdoorToggles.getPrepareOnly());
         if (result == null) {
             throw sqlException;
         }

@@ -32,7 +32,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -119,8 +118,8 @@ public abstract class SparkApplication {
         String hdfsMetalUrl = getParam(MetadataConstants.P_DIST_META_URL);
         jobId = getParam(MetadataConstants.P_JOB_ID);
         project = getParam(MetadataConstants.P_PROJECT_NAME);
-        if (getParam(MetadataConstants.P_LAYOUT_IDS) != null) {
-            layoutSize = StringUtils.split(getParam(MetadataConstants.P_LAYOUT_IDS), ",").length;
+        if (getParam(MetadataConstants.P_CUBOID_NUMBER) != null) {
+            layoutSize = Integer.valueOf(getParam(MetadataConstants.P_CUBOID_NUMBER));
         }
         try (KylinConfig.SetAndUnsetThreadLocalConfig autoCloseConfig = KylinConfig
                 .setAndUnsetThreadLocalConfig(MetaDumpUtil.loadKylinConfigFromHdfs(hdfsMetalUrl))) {
