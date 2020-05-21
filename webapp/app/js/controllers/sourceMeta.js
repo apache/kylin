@@ -419,8 +419,9 @@ KylinApp
       }
 
       $scope.confirmReload = function() {
+        $scope.cancel();
         scope.reloadTable($scope.selectTable, $scope.isCalculate.val).then(function() {
-          $scope.cancel();
+          scope.aceSrcTbLoaded(true);
         })
       }
 
@@ -450,9 +451,6 @@ KylinApp
              scope.aceSrcTbLoaded(true);
            });
       }
-
-
-
     };
 
     $scope.editStreamingConfig = function(tableName){
