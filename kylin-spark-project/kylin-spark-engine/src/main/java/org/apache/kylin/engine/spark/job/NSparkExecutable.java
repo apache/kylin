@@ -164,7 +164,7 @@ public class NSparkExecutable extends AbstractExecutable {
     String dumpArgs() throws ExecuteException {
         File tmpDir = null;
         try {
-            tmpDir = File.createTempFile(MetadataConstants.P_LAYOUT_IDS, "");
+            tmpDir = File.createTempFile(MetadataConstants.P_SEGMENT_IDS, "");
             FileUtils.writeByteArrayToFile(tmpDir, JsonUtil.writeValueAsBytes(getParams()));
 
             logger.info("Spark job args json is : {}.", JsonUtil.writeValueAsString(getParams()));
@@ -271,6 +271,9 @@ public class NSparkExecutable extends AbstractExecutable {
 
     protected Map<String, String> getSparkConfigOverride(KylinConfig config) {
         Map<String, String> sparkConfigOverride = config.getSparkConfigOverride();
+        if (!sparkConfigOverride.containsKey("spark.driver.memory")) {
+            sparkConfigOverride.put("spark.driver.memory", computeStepDriverMemory() + "m");
+        }
         if (UserGroupInformation.isSecurityEnabled()) {
             sparkConfigOverride.put("spark.hadoop.hive.metastore.sasl.enabled", "true");
         }

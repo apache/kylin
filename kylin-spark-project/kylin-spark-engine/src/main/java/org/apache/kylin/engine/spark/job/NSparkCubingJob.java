@@ -96,6 +96,7 @@ public class NSparkCubingJob extends CubingJob {
         job.setParam(MetadataConstants.P_DATA_RANGE_START, String.valueOf(startTime));
         job.setParam(MetadataConstants.P_DATA_RANGE_END, String.valueOf(endTime));
         job.setParam(MetadataConstants.P_OUTPUT_META_URL, job.cube.getConfig().getMetadataUrl().toString());
+        job.setParam(MetadataConstants.P_CUBOID_NUMBER, String.valueOf(job.cube.getDescriptor().getAllCuboids().size()));
 
         JobStepFactory.addStep(job, JobStepType.RESOURCE_DETECT, job.cube);
         JobStepFactory.addStep(job, JobStepType.CUBING, job.cube);
