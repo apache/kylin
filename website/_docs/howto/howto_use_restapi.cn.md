@@ -7,13 +7,20 @@ since: v0.7.1
 ---
 
 This page lists the major RESTful APIs provided by Kylin.
-
-* Query
+* Authentication
    * [Authentication](#authentication)
+* Query
    * [Query](#query)
+   * [Prepare query](#prepare-query)
+   * [Save query](#save-query)
+   * [Remove saved query](#remove-saved-query)
+   * [Get saved queries](#get-saved-queries)
+   * [Get running queries](#get-running-queries)
+   * [Stop query](#stop-query)
    * [List queryable tables](#list-queryable-tables)
 * CUBE
    * [Create cube](#create-cube)
+   * [Update cube](#update-cube)
    * [List cubes](#list-cubes)
    * [Get cube](#get-cube)
    * [Get cube descriptor (dimension, measure info, etc)](#get-cube-descriptor)
@@ -24,10 +31,20 @@ This page lists the major RESTful APIs provided by Kylin.
    * [Purge cube](#purge-cube)
    * [Delete segment](#delete-segment)
    * [Auto-Merge segment](#auto-merge-segment)
+   * [Get sql of a cube](#get-sql-of-a-cube)
+   * [Get sql of a cube segment](#get-sql-of-a-cube-segment)
+   * [Force rebuild lookup table snapshot](#force-rebuild-lookup-table-snapshot)
+   * [Clone cube](#clone-cube)
+   * [Delete Cube](#delete-cube)
+   * [Get hbase info](#get-hbase-info)
+   * [Get current cuboid](#get-current-cuboid)
+   * [Migrate cube](#migrate-cube)
 * MODEL
    * [Create model](#create-model)
+   * [Update model](#update-model)
    * [Get modelDescData](#get-modeldescdata)
    * [Delete model](#delete-model)
+   * [Clone model](#clone-model)
 * JOB
    * [Resume job](#resume-job)
    * [Pause job](#pause-job)
@@ -36,17 +53,29 @@ This page lists the major RESTful APIs provided by Kylin.
    * [Get job status](#get-job-status)
    * [Get job step output](#get-job-step-output)
    * [Get job list](#get-job-list)
+   * [Get job status overview](#get-job-status-overview)
+   * [Resubmit realtime build job](#resubmit-realtime-build-job)
+   * [Rollback job](#rollback-job)
 * Metadata
    * [Get Hive Table](#get-hive-table)
    * [Get Hive Tables](#get-hive-tables)
    * [Load Hive Tables](#load-hive-tables)
+   * [Unload Hive Tables](#unload-hive-tables)
+   * [Show databases in hive](#show-databases-in-hive)
+   * [Show tables in a hive database](#show-tables-in-a-hive-database)
 * Cache
    * [Wipe cache](#wipe-cache)
+   * [Announce wipe cache](#announce-wipe-cache)
+   * [Hot load kylin config](#hot-load-kylin-config)
 * Streaming
    * [Initiate cube start position](#initiate-cube-start-position)
    * [Build stream cube](#build-stream-cube)
    * [Check segment holes](#check-segment-holes)
    * [Fill segment holes](#fill-segment-holes)
+   * [Get streaming configs](#get-streaming-configs)
+   * [Get Kafka configs](#get-kafka-configs)
+   * [Create streaming schema](#create-streaming-schema)
+   * [Update streaming tables](#update-streaming-schema)
 * ACL
    * [Get users can query the table](#get-users-can-query-the-table)
    * [Get users cannot query the table](#get-users-cannot-query-the-table)
@@ -70,23 +99,33 @@ python -c "import base64; print base64.standard_b64encode('$UserName:$Password')
 #### Response Sample
 
 ```sh
-{  
-   "userDetails":{  
-      "password":null,
-      "username":"sample",
-      "authorities":[  
-         {  
-            "authority":"ROLE_ANALYST"
-         },
-         {  
-            "authority":"ROLE_MODELER"
-         }
-      ],
-      "accountNonExpired":true,
-      "accountNonLocked":true,
-      "credentialsNonExpired":true,
-      "enabled":true
-   }
+{
+    "userDetails": {
+        "username": "sample",
+        "password": "null",
+        "authorities": [
+            {
+                "authority": "ROLE_ADMIN"
+            },
+            {
+                "authority": "ROLE_ANALYST"
+            },
+            {
+                "authority": "ROLE_MODELER"
+            },
+            {
+                "authority": "ALL_USERS"
+            }
+        ],
+        "disabled": false,
+        "defaultPassword": false,
+        "locked": false,
+        "lockedTime": 0,
+        "wrongTime": 0,
+        "uuid": "3704ba8c-deb1-ac47-729d-c1039c1bd6ec",
+        "last_modified": 1585219480112,
+        "version": "3.0.0.20500"
+    }
 }
 ```
 
@@ -233,10 +272,86 @@ curl -X POST -H "Authorization: Basic XXXXXXXXX" -H "Content-Type: application/j
 ```
 
 
+## Prepare query
+`POST /kylin/api/query/prestate`    
+   
+#### Request Body
+* sql - `required` `string` The text of sql statement.
+* offset - `optional` `int` Query offset. If offset is set in sql, curIndex will be ignored.
+* limit - `optional` `int` Query limit. If limit is set in sql, perPage will be ignored.
+* acceptPartial - `optional` `bool` Whether accept a partial result or not, default be "false". Set to "false" for production use. 
+* project - `optional` `string` Project to perform query. Default value is 'DEFAULT'.
+
+#### Request Sample
+
+```sh
+{  
+   "sql":"select * from TEST_KYLIN_FACT",
+   "offset":0,
+   "limit":50000,
+   "acceptPartial":false,
+   "project":"DEFAULT"
+}
+```
+
+
+## Save query
+`POST /kylin/api/saved_queries`
+
+#### Request Body
+* sql - `required` `string` The text of sql statement.
+* name - `required` `string` Sql name.
+* project - `required` `string` Project to perform query.
+* description - `optional` `string` Sql description.
+
+#### Request Sample
+
+```sh
+{
+	"sql": "select count(*) from kylin_sales",
+	"name": "test",
+	"project": "learn_kylin"
+}
+```
+
+
+## Remove saved query
+`DELETE /kylin/api/saved_queries/{id}`
+
+#### Request Parameters
+* id - `required` `string` The id of saved query you want to remove
+
+
+## Get saved queries
+`GET /kylin/api/saved_queries` 
+
+#### Response Sample
+```
+[
+    {
+        "name": "test",
+        "project": "learn_kylin",
+        "sql": "select count(*) from kylin_sales",
+        "description": null,
+        "id": "-1674470999"
+    }
+]
+```
+
+## Get running queries
+`GET /kylin/api/query/runningQueries`
+
+## Stop Query
+`PUT /kylin/api/query/{queryId}/stop`
+
+#### Path Variable
+* queryId - `required` `String` The queryId of you want to stop. You can obtain it by `Get running queries`.
+
+
 ## List queryable tables
 `GET /kylin/api/tables_and_columns`
 
-#### Request Parameters
+#### Path Variable
 * project - `required` `string` The project to load tables
 
 #### Response Sample
@@ -342,6 +457,19 @@ curl -X POST -H "Authorization: Basic XXXXXXXXX" -H "Content-Type: application/j
 "streamingCube": null
 }
 ```
+
+## Update Cube
+`PUT /kylin/api/cubes`
+
+#### Request Body
+(Same as "Create Cube")
+
+#### Request Sample
+(Same as "Create Cube")
+
+#### Response Sample
+(Same as "Create Cube")
+
 
 ## List cubes
 `GET /kylin/api/cubes`
@@ -1038,6 +1166,79 @@ curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/js
 ## Auto-merge Segment
 `PUT /kylin/api/cubes/{cubeName}/automerge`
 
+   
+## Get sql of a cube
+`GET /kylin/api/cubes/{cubeName}/sql`
+
+#### Path variable
+* cubeName - `required` `string` Cube name.
+
+#### Response Sample
+```sh
+{
+    "sql": "SELECT\n`KYLIN_SALES`.`TRANS_ID` as `KYLIN_SALES_TRANS_ID`\n,`KYLIN_SALES`.`PART_DT` as `KYLIN_SALES_PART_DT`\n,`KYLIN_CAL_DT`.`YEAR_BEG_DT` as `KYLIN_CAL_DT_YEAR_BEG_DT`\n,`KYLIN_CAL_DT`.`MONTH_BEG_DT` as `KYLIN_CAL_DT_MONTH_BEG_DT`\n,`KYLIN_CAL_DT`.`WEEK_BEG_DT` as `KYLIN_CAL_DT_WEEK_BEG_DT`\n,`KYLIN_SALES`.`LEAF_CATEG_ID` as `KYLIN_SALES_LEAF_CATEG_ID`\n,`KYLIN_SALES`.`LSTG_SITE_ID` as `KYLIN_SALES_LSTG_SITE_ID`\n,`KYLIN_CATEGORY_GROUPINGS`.`USER_DEFINED_FIELD1` as `KYLIN_CATEGORY_GROUPINGS_USER_DEFINED_FIELD1`\n,`KYLIN_CATEGORY_GROUPINGS`.`USER_DEFINED_FIELD3` as `KYLIN_CATEGORY_GROUPINGS_USER_DEFINED_FIELD3`\n,`KYLIN_CATEGORY_GROUPINGS`.`META_CATEG_NAME` as `KYLIN_CATEGORY_GROUPINGS_META_CATEG_NAME`\n,`KYLIN_CATEGORY_GROUPINGS`.`CATEG_LVL2_NAME` as `KYLIN_CATEGORY_GROUPINGS_CATEG_LVL2_NAME`\n,`KYLIN_CATEGORY_GROUPINGS`.`CATEG_LVL3_NAME` as `KYLIN_CATEGORY_GROUPINGS_CATEG_LVL3_NAME`\n,`KYLIN_SALES`.`LSTG_FORMAT_NAME` as `KYLIN_SALES_LSTG_FORMAT_NAME`\n,`KYLIN_SALES`.`SELLER_ID` as `KYLIN_SALES_SELLER_ID`\n,`KYLIN_SALES`.`BUYER_ID` as `KYLIN_SALES_BUYER_ID`\n,`BUYER_ACCOUNT`.`ACCOUNT_BUYER_LEVEL` as `BUYER_ACCOUNT_ACCOUNT_BUYER_LEVEL`\n,`SELLER_ACCOUNT`.`ACCOUNT_SELLER_LEVEL` as `SELLER_ACCOUNT_ACCOUNT_SELLER_LEVEL`\n,`BUYER_ACCOUNT`.`ACCOUNT_COUNTRY` as `BUYER_ACCOUNT_ACCOUNT_COUNTRY`\n,`SELLER_ACCOUNT`.`ACCOUNT_COUNTRY` as `SELLER_ACCOUNT_ACCOUNT_COUNTRY`\n,`BUYER_COUNTRY`.`NAME` as `BUYER_COUNTRY_NAME`\n,`SELLER_COUNTRY`.`NAME` as `SELLER_COUNTRY_NAME`\n,`KYLIN_SALES`.`OPS_USER_ID` as `KYLIN_SALES_OPS_USER_ID`\n,`KYLIN_SALES`.`OPS_REGION` as `KYLIN_SALES_OPS_REGION`\n,`KYLIN_CAL_DT`.`CAL_DT` as `KYLIN_CAL_DT_CAL_DT`\n,`KYLIN_CATEGORY_GROUPINGS`.`LEAF_CATEG_ID` as `KYLIN_CATEGORY_GROUPINGS_LEAF_CATEG_ID`\n,`KYLIN_CATEGORY_GROUPINGS`.`SITE_ID` as `KYLIN_CATEGORY_GROUPINGS_SITE_ID`\n,`BUYER_ACCOUNT`.`ACCOUNT_ID` as `BUYER_ACCOUNT_ACCOUNT_ID`\n,`SELLER_ACCOUNT`.`ACCOUNT_ID` as `SELLER_ACCOUNT_ACCOUNT_ID`\n,`BUYER_COUNTRY`.`COUNTRY` as `BUYER_COUNTRY_COUNTRY`\n,`SELLER_COUNTRY`.`COUNTRY` as `SELLER_COUNTRY_COUNTRY`\n,`KYLIN_SALES`.`PRICE` as `KYLIN_SALES_PRICE`\n FROM `DEFAULT`.`KYLIN_SALES` as `KYLIN_SALES`\nINNER JOIN `DEFAULT`.`KYLIN_CAL_DT` as `KYLIN_CAL_DT`\nON `KYLIN_SALES`.`PART_DT` = `KYLIN_CAL_DT`.`CAL_DT`\nINNER JOIN `DEFAULT`.`KYLIN_CATEGORY_GROUPINGS` as `KYLIN_CATEGORY_GROUPINGS`\nON `KYLIN_SALES`.`LEAF_CATEG_ID` = `KYLIN_CATEGORY_GROUPINGS`.`LEAF_CATEG_ID` AND `KYLIN_SALES`.`LSTG_SITE_ID` = `KYLIN_CATEGORY_GROUPINGS`.`SITE_ID`\nINNER JOIN `DEFAULT`.`KYLIN_ACCOUNT` as `BUYER_ACCOUNT`\nON `KYLIN_SALES`.`BUYER_ID` = `BUYER_ACCOUNT`.`ACCOUNT_ID`\nINNER JOIN `DEFAULT`.`KYLIN_ACCOUNT` as `SELLER_ACCOUNT`\nON `KYLIN_SALES`.`SELLER_ID` = `SELLER_ACCOUNT`.`ACCOUNT_ID`\nINNER JOIN `DEFAULT`.`KYLIN_COUNTRY` as `BUYER_COUNTRY`\nON `BUYER_ACCOUNT`.`ACCOUNT_COUNTRY` = `BUYER_COUNTRY`.`COUNTRY`\nINNER JOIN `DEFAULT`.`KYLIN_COUNTRY` as `SELLER_COUNTRY`\nON `SELLER_ACCOUNT`.`ACCOUNT_COUNTRY` = `SELLER_COUNTRY`.`COUNTRY`\nWHERE 1=1"
+}
+```
+
+
+## Get sql of a cube segment
+`GET /kylin/api/cubes/{cubeName}/segs/{segmentName}/sql`
+
+#### Path variable
+* cubeName - `required` `string` Cube name.
+* segmentName - `required` `string` Segment name.
+
+#### Response Sample
+```sh
+{
+    "sql": "SELECT\n`KYLIN_SALES`.`TRANS_ID` as `KYLIN_SALES_TRANS_ID`\n,`KYLIN_SALES`.`PART_DT` as `KYLIN_SALES_PART_DT`\n,`KYLIN_CAL_DT`.`YEAR_BEG_DT` as `KYLIN_CAL_DT_YEAR_BEG_DT`\n,`KYLIN_CAL_DT`.`MONTH_BEG_DT` as `KYLIN_CAL_DT_MONTH_BEG_DT`\n,`KYLIN_CAL_DT`.`WEEK_BEG_DT` as `KYLIN_CAL_DT_WEEK_BEG_DT`\n,`KYLIN_SALES`.`LEAF_CATEG_ID` as `KYLIN_SALES_LEAF_CATEG_ID`\n,`KYLIN_SALES`.`LSTG_SITE_ID` as `KYLIN_SALES_LSTG_SITE_ID`\n,`KYLIN_CATEGORY_GROUPINGS`.`USER_DEFINED_FIELD1` as `KYLIN_CATEGORY_GROUPINGS_USER_DEFINED_FIELD1`\n,`KYLIN_CATEGORY_GROUPINGS`.`USER_DEFINED_FIELD3` as `KYLIN_CATEGORY_GROUPINGS_USER_DEFINED_FIELD3`\n,`KYLIN_CATEGORY_GROUPINGS`.`META_CATEG_NAME` as `KYLIN_CATEGORY_GROUPINGS_META_CATEG_NAME`\n,`KYLIN_CATEGORY_GROUPINGS`.`CATEG_LVL2_NAME` as `KYLIN_CATEGORY_GROUPINGS_CATEG_LVL2_NAME`\n,`KYLIN_CATEGORY_GROUPINGS`.`CATEG_LVL3_NAME` as `KYLIN_CATEGORY_GROUPINGS_CATEG_LVL3_NAME`\n,`KYLIN_SALES`.`LSTG_FORMAT_NAME` as `KYLIN_SALES_LSTG_FORMAT_NAME`\n,`KYLIN_SALES`.`SELLER_ID` as `KYLIN_SALES_SELLER_ID`\n,`KYLIN_SALES`.`BUYER_ID` as `KYLIN_SALES_BUYER_ID`\n,`BUYER_ACCOUNT`.`ACCOUNT_BUYER_LEVEL` as `BUYER_ACCOUNT_ACCOUNT_BUYER_LEVEL`\n,`SELLER_ACCOUNT`.`ACCOUNT_SELLER_LEVEL` as `SELLER_ACCOUNT_ACCOUNT_SELLER_LEVEL`\n,`BUYER_ACCOUNT`.`ACCOUNT_COUNTRY` as `BUYER_ACCOUNT_ACCOUNT_COUNTRY`\n,`SELLER_ACCOUNT`.`ACCOUNT_COUNTRY` as `SELLER_ACCOUNT_ACCOUNT_COUNTRY`\n,`BUYER_COUNTRY`.`NAME` as `BUYER_COUNTRY_NAME`\n,`SELLER_COUNTRY`.`NAME` as `SELLER_COUNTRY_NAME`\n,`KYLIN_SALES`.`OPS_USER_ID` as `KYLIN_SALES_OPS_USER_ID`\n,`KYLIN_SALES`.`OPS_REGION` as `KYLIN_SALES_OPS_REGION`\n,`KYLIN_CAL_DT`.`CAL_DT` as `KYLIN_CAL_DT_CAL_DT`\n,`KYLIN_CATEGORY_GROUPINGS`.`LEAF_CATEG_ID` as `KYLIN_CATEGORY_GROUPINGS_LEAF_CATEG_ID`\n,`KYLIN_CATEGORY_GROUPINGS`.`SITE_ID` as `KYLIN_CATEGORY_GROUPINGS_SITE_ID`\n,`BUYER_ACCOUNT`.`ACCOUNT_ID` as `BUYER_ACCOUNT_ACCOUNT_ID`\n,`SELLER_ACCOUNT`.`ACCOUNT_ID` as `SELLER_ACCOUNT_ACCOUNT_ID`\n,`BUYER_COUNTRY`.`COUNTRY` as `BUYER_COUNTRY_COUNTRY`\n,`SELLER_COUNTRY`.`COUNTRY` as `SELLER_COUNTRY_COUNTRY`\n,`KYLIN_SALES`.`PRICE` as `KYLIN_SALES_PRICE`\n FROM `DEFAULT`.`KYLIN_SALES` as `KYLIN_SALES`\nINNER JOIN `DEFAULT`.`KYLIN_CAL_DT` as `KYLIN_CAL_DT`\nON `KYLIN_SALES`.`PART_DT` = `KYLIN_CAL_DT`.`CAL_DT`\nINNER JOIN `DEFAULT`.`KYLIN_CATEGORY_GROUPINGS` as `KYLIN_CATEGORY_GROUPINGS`\nON `KYLIN_SALES`.`LEAF_CATEG_ID` = `KYLIN_CATEGORY_GROUPINGS`.`LEAF_CATEG_ID` AND `KYLIN_SALES`.`LSTG_SITE_ID` = `KYLIN_CATEGORY_GROUPINGS`.`SITE_ID`\nINNER JOIN `DEFAULT`.`KYLIN_ACCOUNT` as `BUYER_ACCOUNT`\nON `KYLIN_SALES`.`BUYER_ID` = `BUYER_ACCOUNT`.`ACCOUNT_ID`\nINNER JOIN `DEFAULT`.`KYLIN_ACCOUNT` as `SELLER_ACCOUNT`\nON `KYLIN_SALES`.`SELLER_ID` = `SELLER_ACCOUNT`.`ACCOUNT_ID`\nINNER JOIN `DEFAULT`.`KYLIN_COUNTRY` as `BUYER_COUNTRY`\nON `BUYER_ACCOUNT`.`ACCOUNT_COUNTRY` = `BUYER_COUNTRY`.`COUNTRY`\nINNER JOIN `DEFAULT`.`KYLIN_COUNTRY` as `SELLER_COUNTRY`\nON `SELLER_ACCOUNT`.`ACCOUNT_COUNTRY` = `SELLER_COUNTRY`.`COUNTRY`\nWHERE 1=1 AND (`KYLIN_SALES`.`PART_DT` >= '2012-01-01' AND `KYLIN_SALES`.`PART_DT` < '2012-01-03')\n"
+}
+```
+
+
+## Force rebuild lookup table snapshot
+`PUT /kylin/api/cubes/{cubeName}/refresh_lookup`
+
+
+## Clone cube
+`PUT /kylin/api/cubes/{cubeName}/clone`
+
+
+## Delete cube
+`DELETE /kylin/api/cubes/{cubeName}`
+
+
+## Get hbase info
+`GET /kylin/api/cubes/{cubeName}/hbase`
+
+#### Response Sample
+```sh
+[
+    {
+        "segmentName": "20120101000000_20120103000000",
+        "segmentUUID": null,
+        "segmentStatus": "READY",
+        "tableName": "KYLIN_E1VT22737D",
+        "tableSize": 0,
+        "regionCount": 1,
+        "dateRangeStart": 1325376000000,
+        "dateRangeEnd": 1325548800000,
+        "sourceOffsetStart": 0,
+        "sourceOffsetEnd": 0,
+        "sourceCount": 29
+    }
+]
+```
+
+
+## Get current cuboid
+`GET /kylin/api/cubes/{cubeName}/cuboids/current`
+
+
+## Migrate Cube
+`POST /kylin/api/cubes/{cube}/{project}/migrate`
+
+
 ***
 
 ## Create Model
@@ -1049,7 +1250,7 @@ curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/js
 * projectName - `required` `string` projectName to which model belongs
 
 #### Request Sample
-```
+```sh
 {
 "modelDescData": "{\"uuid\": \"0928468a-9fab-4185-9a14-6f2e7c74823f\",\"last_modified\": 0,\"version\": \"3.0.0.20500\",\"name\": \"kylin_test_model\",\"owner\": null,\"is_draft\": false,\"description\": \"\",\"fact_table\": \"DEFAULT.KYLIN_SALES\",\"lookups\": [{\"table\": \"DEFAULT.KYLIN_CAL_DT\",\"kind\": \"LOOKUP\",\"alias\": \"KYLIN_CAL_DT\",\"join\": {\"type\": \"inner\",\"primary_key\": [\"KYLIN_CAL_DT.CAL_DT\"],\"foreign_key\": [\"KYLIN_SALES.PART_DT\"]}},{\"table\": \"DEFAULT.KYLIN_CATEGORY_GROUPINGS\",\"kind\": \"LOOKUP\",\"alias\": \"KYLIN_CATEGORY_GROUPINGS\",\"join\": {\"type\": \"inner\",\"primary_key\": [\"KYLIN_CATEGORY_GROUPINGS.LEAF_CATEG_ID\",\"KYLIN_CATEGORY_GROUPINGS.SITE_ID\"],\"foreign_key\": [\"KYLIN_SALES.LEAF_CATEG_ID\",\"KYLIN_SALES.LSTG_SITE_ID\"]}},{\"table\": \"DEFAULT.KYLIN_ACCOUNT\",\"kind\": \"LOOKUP\",\"alias\": \"BUYER_ACCOUNT\",\"join\": {\"type\": \"inner\",\"primary_key\": [\"BUYER_ACCOUNT.ACCOUNT_ID\"],\"foreign_key\": [\"KYLIN_SALES.BUYER_ID\"]}},{\"table\": \"DEFAULT.KYLIN_ACCOUNT\",\"kind\": \"LOOKUP\",\"alias\": \"SELLER_ACCOUNT\",\"join\": {\"type\": \"inner\",\"primary_key\": [\"SELLER_ACCOUNT.ACCOUNT_ID\"],\"foreign_key\": [\"KYLIN_SALES.SELLER_ID\"]}},{\"table\": \"DEFAULT.KYLIN_COUNTRY\",\"kind\": \"LOOKUP\",\"alias\": \"BUYER_COUNTRY\",\"join\": {\"type\": \"inner\",\"primary_key\": [\"BUYER_COUNTRY.COUNTRY\"],\"foreign_key\": [\"BUYER_ACCOUNT.ACCOUNT_COUNTRY\"]}},{\"table\": \"DEFAULT.KYLIN_COUNTRY\",\"kind\": \"LOOKUP\",\"alias\": \"SELLER_COUNTRY\",\"join\": {\"type\": \"inner\",\"primary_key\": [\"SELLER_COUNTRY.COUNTRY\"],\"foreign_key\": [\"SELLER_ACCOUNT.ACCOUNT_COUNTRY\"]}}],\"dimensions\": [{\"table\": \"KYLIN_SALES\",\"columns\": [\"TRANS_ID\",\"SELLER_ID\",\"BUYER_ID\",\"PART_DT\",\"LEAF_CATEG_ID\",\"LSTG_FORMAT_NAME\",\"LSTG_SITE_ID\",\"OPS_USER_ID\",\"OPS_REGION\"]},{\"table\": \"KYLIN_CAL_DT\",\"columns\": [\"CAL_DT\",\"WEEK_BEG_DT\",\"MONTH_BEG_DT\",\"YEAR_BEG_DT\"]},{\"table\": \"KYLIN_CATEGORY_GROUPINGS\",\"columns\": [\"USER_DEFINED_FIELD1\",\"USER_DEFINED_FIELD3\",\"META_CATEG_NAME\",\"CATEG_LVL2_NAME\",\"CATEG_LVL3_NAME\",\"LEAF_CATEG_ID\",\"SITE_ID\"]},{\"table\": \"BUYER_ACCOUNT\",\"columns\": [\"ACCOUNT_ID\",\"ACCOUNT_BUYER_LEVEL\",\"ACCOUNT_SELLER_LEVEL\",\"ACCOUNT_COUNTRY\",\"ACCOUNT_CONTACT\"]},{\"table\": \"SELLER_ACCOUNT\",\"columns\": [\"ACCOUNT_ID\",\"ACCOUNT_BUYER_LEVEL\",\"ACCOUNT_SELLER_LEVEL\",\"ACCOUNT_COUNTRY\",\"ACCOUNT_CONTACT\"]},{\"table\": \"BUYER_COUNTRY\",\"columns\": [\"COUNTRY\",\"NAME\"]},{\"table\": \"SELLER_COUNTRY\",\"columns\": [\"COUNTRY\",\"NAME\"]}],\"metrics\": [\"KYLIN_SALES.PRICE\",\"KYLIN_SALES.ITEM_COUNT\"],\"filter_condition\": \"\",\"partition_desc\": {\"partition_date_column\": \"KYLIN_SALES.PART_DT\",\"partition_time_column\": null,\"partition_date_start\": 1325376000000,\"partition_date_format\": \"yyyy-MM-dd\",\"partition_time_format\": \"HH:mm:ss\",\"partition_type\": \"APPEND\",\"partition_condition_builder\": \"org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder\"},\"capacity\": \"MEDIUM\"}",
 "modelName": "kylin_test_model",
@@ -1070,6 +1271,20 @@ curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/js
 "seekingExprAdvice": false
 }
 ```
+
+
+## Update Model
+`PUT /kylin/api/models`
+
+#### Request Body
+(Same as "Create Model")
+
+#### Request Sample
+(Same as "Create Model")
+
+#### Response Sample
+(Same as "Create Model")
+
 
 ## Get ModelDescData
 `GET /kylin/api/models`
@@ -1276,6 +1491,9 @@ curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/js
 #### Path variable
 * modelName - `required` `string` Model name.
 
+## Clone Model
+`PUT /kylin/api/models/{modelName}/clone`
+
 ***
 
 ## Resume Job
@@ -1456,6 +1674,81 @@ GET: /kylin/api/jobs?cubeName=kylin_sales_cube&limit=15&offset=0&projectName=lea
   }
 ]
 ```
+
+## Get Job Status Overview
+`GET /kylin/api/jobs/overview`
+
+### Request Variables
+(Same as "Get job list")
+
+#### Response Sample
+```sh
+{
+    "DISCARDED": 0,
+    "NEW": 0,
+    "STOPPED": 0,
+    "PENDING": 0,
+    "RUNNING": 0,
+    "FINISHED": 1,
+    "ERROR": 0
+}
+```
+
+## Resubmit realtime build job
+`PUT /kylin/api/jobs/{jobId}/resubmit`
+
+## Rollback job
+`PUT /kylin/api/{jobId}/steps/{stepId}/rollback`
+
+#### Path Parameters
+* jobId - `required` `string` job id you want to rollback
+* stepId - `required` `string` specify rollback step id, e.g.(Create Intermediate Flat Hive:1)
+
+For example, rollback job to Create Intermediate Flat Hive:
+`PUT: kylin/api/jobs/4e84cb5e-a929-89c7-6240-768fa9835d89/steps/1/rollback`
+
+#### Response Sample
+```sh
+{
+    "uuid": "4e84cb5e-a929-89c7-6240-768fa9835d89",
+    "last_modified": 1590054128311,
+    "version": "3.0.0.20500",
+    "name": "BUILD CUBE - kylin_sales_cube - 20120102000000_20120103000000 - CST 2020-05-21 17:38:59",
+    "projectName": "learn_kylin",
+    "type": "BUILD",
+    "duration": 187,
+    "related_cube": "kylin_sales_cube",
+    "display_cube_name": "kylin_sales_cube",
+    "related_segment": "fca98f62-cb3f-8b53-5bf1-94a85334560b",
+    "exec_start_time": 1590053963522,
+    "exec_end_time": 0,
+    "exec_interrupt_time": 0,
+    "mr_waiting": 39,
+    "steps": [
+        {
+            "interruptCmd": null,
+            "id": "4e84cb5e-a929-89c7-6240-768fa9835d89-00",
+            "name": "Create Intermediate Flat Hive Table",
+            "sequence_id": 0,
+            "exec_cmd": null,
+            "interrupt_cmd": null,
+            "exec_start_time": 0,
+            "exec_end_time": 0,
+            "exec_wait_time": 0,
+            "step_status": "PENDING",
+            "cmd_type": "SHELL_CMD_HADOOP",
+            "info": {},
+            "run_async": false
+        },
+        ...
+    ],
+    "submitter": "ADMIN",
+    "job_status": "RUNNING",
+    "build_instance": "20984@host",
+    "progress": 0.0
+}
+```
+
 ***
 
 ## Get Hive Table
@@ -1563,6 +1856,29 @@ GET: /kylin/api/jobs?cubeName=kylin_sales_cube&limit=15&offset=0&projectName=lea
     "result.unloaded": ["sapmle_08"]
 }
 ```
+   
+## Unload Hive Tables
+`DELETE /kylin/api/tables/{tables}/{project}`
+
+#### Path Parameters
+* tables - `required` `string` table names you want to unload, separated with comma.
+* project - `required` `String`  the project which the tables belong to.
+
+#### Response Sample 
+```sh
+{
+    "result.unload.success": [
+        "kylin_sales"
+    ],
+    "result.unload.fail": []
+}
+```
+
+## Show databases in hive
+`GET /kylin/api/tables/hive`
+
+## Show tables in a hive database
+`GET /kylin/api/tables/hive/{database}`
 
 ***
 
@@ -1573,6 +1889,17 @@ GET: /kylin/api/jobs?cubeName=kylin_sales_cube&limit=15&offset=0&projectName=lea
 * type - `required` `string` 'METADATA' or 'CUBE'
 * name - `required` `string` Cache key, e.g the cube name.
 * action - `required` `string` 'create', 'update' or 'drop'
+
+
+## Announce wipe cache
+`PUT /kylin/api/cache/announce/{type}/{name}/{action}`
+
+#### Path variable
+(Same as "Wipe cache")
+
+## Hot load kylin config
+`POST /kylin/api/cache/announce/config`
+
 
 ***
 
@@ -1645,6 +1972,102 @@ This API is specific for stream cube's building;
 
 #### Path variable
 * cubeName - `required` `string` Cube name
+
+## Get streaming configs
+`GET /kylin/api/streaming/getConfig`
+
+#### Response sample
+```sh
+[
+    {
+        "uuid": "8b2b9dfe-777c-4d39-bf89-8472ec929193",
+        "last_modified": 1587528491000,
+        "version": "3.0.0.20500",
+        "name": "DEFAULT.KYLIN_STREAMING_TABLE",
+        "type": "kafka"
+    }
+]
+``` 
+
+## Get kafka configs
+`GET /kylin/api/streaming/getKfkConfig`
+
+#### Response sample
+```sh
+[
+    {
+        "uuid": "8b2b9dfe-777c-4d39-bf89-8472ec919193",
+        "last_modified": 1587528491000,
+        "version": "3.0.0.20500",
+        "name": "DEFAULT.KYLIN_STREAMING_TABLE",
+        "clusters": [
+            {
+                "uuid": null,
+                "last_modified": 0,
+                "version": "3.0.0.20500",
+                "brokers": [
+                    {
+                        "id": 0,
+                        "host": "localhost",
+                        "port": 9092
+                    }
+                ]
+            }
+        ],
+        "topic": "kylin_streaming_topic",
+        "timeout": 60000,
+        "parserName": "org.apache.kylin.source.kafka.TimedJsonStreamParser",
+        "timestampField": "order_time",
+        "margin": 0,
+        "splitRows": 1000000,
+        "parserProperties": null
+    }
+]
+``` 
+
+## Create streaming schema
+`POST /kylin/api/streaming` 
+
+#### Request body
+* project - `required` `string` Project which you want create streaming schema to.
+* tableData - `required` `string` Streaming table desc.
+* streamingConfig - `required` `string` Streaming config.
+* kafkaConfig - `required` `string` Kafka config.
+
+#### Request sample
+```
+{
+	"project":"test",
+	"tableData":"{\"uuid\": \"e286e39e-41d7-44c2-8fa2-41b365123987\",\"last_modified\": 0,\"version\": \"3.0.0.20500\",\"name\": \"KYLIN_TEST_STREAMING_TABLE\",\"columns\": [{\"id\": \"1\",\"name\": \"AMOUNT\",\"datatype\": \"decimal(19,4)\"},{\"id\": 3,\"name\": \"ORDER_TIME\",\"datatype\": \"timestamp\",\"index\": \"T\"}],\"source_type\": 1,\"table_type\": null,\"database\": \"DEFAULT\"}",
+	"streamingConfig":"{\"uuid\": \"8b2b9dfe-777c-4d39-bf89-8472ec929193\",\"last_modified\": 0,\"version\": \"3.0.0.20500\",\"name\": \"DEFAULT.KYLIN_TEST_STREAMING_TABLE\",\"type\": \"kafka\"}",
+    "kafkaConfig":"{\"uuid\": \"8b2b9dfe-777c-4d39-bf89-8472ec919193\",\"last_modified\": 0,\"version\": \"3.0.0.20500\",\"name\": \"DEFAULT.KYLIN_STREAMING_TABLE\",\"clusters\": [{\"uuid\": null,\"last_modified\": 0,\"version\": \"3.0.0.20500\",\"brokers\": [{\"id\": 0,\"host\": \"localhost\",\"port\": 9092}]}],\"topic\": \"kylin_streaming_topic\",\"timeout\": 60000,\"parserName\": \"org.apache.kylin.source.kafka.TimedJsonStreamParser\",\"timestampField\": \"order_time\",\"margin\": 0,\"splitRows\": 1000000,\"parserProperties\": null}"
+}
+```
+
+#### Response sample
+```sh
+{
+    "project": "test",
+    "tableData": "{\"uuid\": \"e286e39e-41d7-44c2-8fa2-41b365123987\",\"last_modified\": 0,\"version\": \"3.0.0.20500\",\"name\": \"KYLIN_TEST_STREAMING_TABLE\",\"columns\": [{\"id\": \"1\",\"name\": \"AMOUNT\",\"datatype\": \"decimal(19,4)\"},{\"id\": 3,\"name\": \"ORDER_TIME\",\"datatype\": \"timestamp\",\"index\": \"T\"}],\"source_type\": 1,\"table_type\": null,\"database\": \"DEFAULT\"}",
+    "streamingConfig": "{\"uuid\": \"8b2b9dfe-777c-4d39-bf89-8472ec929193\",\"last_modified\": 0,\"version\": \"3.0.0.20500\",\"name\": \"DEFAULT.KYLIN_TEST_STREAMING_TABLE\",\"type\": \"kafka\"}",
+    "kafkaConfig": "{\"uuid\": \"8b2b9dfe-777c-4d39-bf89-8472ec919193\",\"last_modified\": 0,\"version\": \"3.0.0.20500\",\"name\": \"DEFAULT.KYLIN_STREAMING_TABLE\",\"clusters\": [{\"uuid\": null,\"last_modified\": 0,\"version\": \"3.0.0.20500\",\"brokers\": [{\"id\": 0,\"host\": \"localhost\",\"port\": 9092}]}],\"topic\": \"kylin_streaming_topic\",\"timeout\": 60000,\"parserName\": \"org.apache.kylin.source.kafka.TimedJsonStreamParser\",\"timestampField\": \"order_time\",\"margin\": 0,\"splitRows\": 1000000,\"parserProperties\": null}",
+    "successful": true,
+    "message": null
+}
+```
+   
+## Update streaming schema
+`PUT /kylin/api/streaming`
+
+#### Request body
+(Same as "Create streaming schema)
+
+#### Request sample
+(Same as "Create streaming schema)
+
+#### Response sample
+(Same as "Create streaming schema) 
+
 
 ***
 
