@@ -84,27 +84,27 @@ else
 fi
 
 
-bash ${dir}/find-spark-dependency.sh
+source ${dir}/find-spark-dependency.sh
 rtn=$?
 if [[ $rtn == 0 ]]; then
     echo "...................................................[`setColor 32 PASS`]"
-elif [[ $rtn == 3 ]]; then
+else
     echo "...................................................[`setColor 33 SKIP`]"
 fi
 
-bash ${dir}/find-flink-dependency.sh
+source ${dir}/find-flink-dependency.sh
 rtn=$?
 if [[ $rtn == 0 ]]; then
     echo "...................................................[`setColor 32 PASS`]"
-elif [[ $rtn == 3 ]]; then
+else
     echo "...................................................[`setColor 33 SKIP`]"
 fi
 
-bash ${dir}/find-kafka-dependency.sh
+source ${dir}/find-kafka-dependency.sh
 rtn=$?
 if [[ $rtn == 0 ]]; then
     echo "...................................................[`setColor 32 PASS`]"
-elif [[ $rtn == 3 ]]; then
+else
     echo "...................................................[`setColor 33 SKIP`]"
 fi
 
