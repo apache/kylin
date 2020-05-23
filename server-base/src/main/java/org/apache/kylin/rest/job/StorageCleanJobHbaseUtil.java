@@ -177,7 +177,7 @@ public class StorageCleanJobHbaseUtil {
                 hbaseAdmin.deleteTable(htableName);
                 logger.info("Deleted HBase table " + htableName);
             } else {
-                logger.info("HBase table" + htableName + " does not exist");
+                logger.info("HBase table " + htableName + " does not exist");
             }
             return null;
         }
