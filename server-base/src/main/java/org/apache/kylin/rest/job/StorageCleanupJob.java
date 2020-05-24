@@ -170,7 +170,7 @@ public class StorageCleanupJob extends AbstractApplication {
 
     protected void cleanUnusedHBaseTables() throws IOException {
         if ("hbase".equals(config.getStorageUrl().getScheme()) && !"".equals(config.getMetadataUrl().getScheme())) {
-            final int deleteTimeoutMin = 10; // Unit minute
+            final int deleteTimeoutMin = 2; // Unit minute
             try {
                 // use reflection to isolate NoClassDef errors when HBase is not available
                 Class hbaseCleanUpUtil = Class.forName("org.apache.kylin.rest.job.StorageCleanJobHbaseUtil");
