@@ -64,10 +64,13 @@ public class QueryServiceTest extends ServiceTestBase {
         //        queryService.removeQuery(queryService.getQueries("ADMIN").get(0).getProperty("id"));
         //        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
 
+        String project = ProjectInstance.DEFAULT_PROJECT_NAME;
+        String sql = "select * from test_table";
+
         SQLRequest request = new SQLRequest();
-        request.setSql("select * from test_table");
+        request.setSql(sql);
         request.setAcceptPartial(true);
-        QueryContext queryContext = QueryContextFacade.current();
+        QueryContext queryContext = QueryContextFacade.startQuery(project, sql, "ADMIN");
         SQLResponse response = new SQLResponse();
         response.setHitExceptionCache(true);
         queryService.logQuery(queryContext.getQueryId(), request, response);

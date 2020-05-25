@@ -27,6 +27,7 @@ import javax.management.ObjectName;
 
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryContextFacade;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.ServiceTestBase;
@@ -118,11 +119,13 @@ public class QueryMetricsTest extends ServiceTestBase {
         System.setProperty("kylin.metrics.reporter-query-enabled", "true");
         QueryMetricsFacade.init();
 
+        String project = ProjectInstance.DEFAULT_PROJECT_NAME;
+        String sql = "select * from TEST_KYLIN_FACT";
         SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setSql("select * from TEST_KYLIN_FACT");
-        sqlRequest.setProject("default");
+        sqlRequest.setSql(sql);
+        sqlRequest.setProject(project);
 
-        QueryContext context = QueryContextFacade.current();
+        QueryContext context = QueryContextFacade.startQuery(project, sql, "ADMIN");
         
         SQLResponse sqlResponse = new SQLResponse();
         sqlResponse.setDuration(10);

@@ -18,6 +18,7 @@
 
 package org.apache.kylin.stream.server.rest.controller;
 
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.stream.server.rest.exception.InternalErrorException;
 import org.apache.kylin.stream.server.rest.model.SQLRequest;
@@ -71,6 +72,8 @@ public class QueryController extends BasicController {
             long startTime = System.currentTimeMillis();
             SQLResponse sqlResponse;
             try {
+                QueryContextFacade.startQuery(project, sql, "system");
+
                 sqlResponse = queryService.query(sqlRequest);
                 sqlResponse.setDuration(System.currentTimeMillis() - startTime);
                 logger.info(

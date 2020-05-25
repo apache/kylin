@@ -30,11 +30,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.apache.kylin.common.util.RandomUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Holds per query information and statistics.
@@ -49,12 +48,14 @@ public class QueryContext {
     public interface QueryStopListener {
         void stop(QueryContext query);
     }
-
-    private long queryStartMillis;
-
+    
     private final String queryId;
-    private String username;
-    private String project;
+    private final String project;
+    private final String sql;
+    private final String username;
+    private final int maxConnThreads;
+    private final long queryStartMillis;
+    
     private Set<String> groups;
     private AtomicLong scannedRows = new AtomicLong();
     private AtomicLong returnedRows = new AtomicLong();
@@ -70,18 +71,19 @@ public class QueryContext {
     private List<RPCStatistics> rpcStatisticsList = Lists.newCopyOnWriteArrayList();
     private Map<Integer, CubeSegmentStatisticsResult> cubeSegmentStatisticsResultMap = Maps.newConcurrentMap();
 
-    final int maxConnThreads;
-
     private ExecutorService connPool;
 
-    QueryContext(int maxConnThreads) {
-        this(maxConnThreads, System.currentTimeMillis());
+    QueryContext(String projectName, String sql, String user, int maxConnThreads) {
+        this(projectName, sql, user, maxConnThreads, System.currentTimeMillis());
     }
 
-    QueryContext(int maxConnThreads, long startMills) {
-        queryId = RandomUtil.randomUUID().toString();
-        queryStartMillis = startMills;
+    QueryContext(String projectName, String sql, String user, int maxConnThreads, long startMills) {
+        this.queryId = RandomUtil.randomUUID().toString();
+        this.project = projectName;
+        this.sql = sql;
+        this.username = user;
         this.maxConnThreads = maxConnThreads;
+        this.queryStartMillis = startMills;
     }
 
     public ExecutorService getConnectionPool(ExecutorService sharedConnPool) {
@@ -119,16 +121,8 @@ public class QueryContext {
         return username;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
     public String getProject() {
         return project;
-    }
-
-    public void setProject(String project) {
-        this.project = project;
     }
 
     public Set<String> getGroups() {

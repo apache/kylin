@@ -118,6 +118,9 @@ import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.QueryRequestLimits;
 import org.apache.kylin.rest.util.SQLResponseSignatureUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
 import org.apache.kylin.storage.stream.StreamStorageQuery;
@@ -132,9 +135,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.shaded.com.google.common.base.Preconditions;
-import org.apache.kylin.shaded.com.google.common.base.Strings;
-import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * @author xduo
@@ -413,7 +413,8 @@ public class QueryService extends BasicService {
         }
         // project not found
         ProjectManager mgr = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
-        if (mgr.getProject(sqlRequest.getProject()) == null) {
+        ProjectInstance projectInstance = mgr.getProject(sqlRequest.getProject());
+        if (projectInstance == null) {
             throw new BadRequestException(
                     String.format(Locale.ROOT, msg.getPROJECT_NOT_FOUND(), sqlRequest.getProject()));
         }
@@ -425,18 +426,22 @@ public class QueryService extends BasicService {
             BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
 
         // set initial info when starting a query
-        final QueryContext queryContext = QueryContextFacade.current();
-        queryContext.setUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+        String project = sqlRequest.getProject();
+        String sql = sqlRequest.getSql();
+        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (userName == null) {
+            userName = "unknown";
+        }
+        final QueryContext queryContext = QueryContextFacade.startQuery(project, sql, userName,
+                projectInstance.getConfig().getHBaseMaxConnectionThreadsPerQuery());
         queryContext.setGroups(AclPermissionUtil.getCurrentUserGroups());
-        queryContext.setProject(sqlRequest.getProject());
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
             // force clear the query context before a new query
             OLAPContext.clearThreadLocalContexts();
 
             SQLResponse sqlResponse = null;
-            String sql = sqlRequest.getSql();
-            String project = sqlRequest.getProject();
+            
             boolean isQueryCacheEnabled = isQueryCacheEnabled(kylinConfig);
             logger.info("Using project: " + project);
             logger.info("The original query:  " + sql);
