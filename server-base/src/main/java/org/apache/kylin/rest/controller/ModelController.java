@@ -208,6 +208,7 @@ public class ModelController extends BasicController {
         }
 
         DataModelDesc newModelDesc = DataModelDesc.getCopyOf(modelDesc);
+        newModelDesc.setProjectName(project);
         newModelDesc.setName(newModelName);
         try {
             newModelDesc = modelService.createModelDesc(project, newModelDesc);
