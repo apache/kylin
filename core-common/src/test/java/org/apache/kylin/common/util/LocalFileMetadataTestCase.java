@@ -74,7 +74,12 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
     }
 
     public static void cleanAfterClass() {
-        File directory = new File(LOCALMETA_TEMP_DATA);
+        File directory;
+        if (new File(LOCALMETA_TEMP_DATA).exists()) {
+            directory = new File(LOCALMETA_TEMP_DATA);
+        } else {
+            directory = new File("../" + LOCALMETA_TEMP_DATA);
+        }
         try {
             FileUtils.deleteDirectory(directory);
         } catch (IOException e) {
