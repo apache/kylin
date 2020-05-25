@@ -43,6 +43,7 @@ import org.apache.kylin.common.SubThreadPoolExecutor;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
+import org.apache.kylin.common.tracer.TracerConstants.TagEnum;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesSerializer;
@@ -62,6 +63,10 @@ import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.shaded.com.google.common.cache.CacheBuilder;
+import org.apache.kylin.shaded.com.google.common.cache.CacheLoader;
+import org.apache.kylin.shaded.com.google.common.cache.LoadingCache;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.gtrecord.DummyPartitionStreamer;
 import org.apache.kylin.storage.gtrecord.StorageResponseGTScatter;
@@ -75,12 +80,10 @@ import org.apache.kylin.storage.hbase.util.HBaseUnionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.shaded.com.google.common.cache.CacheBuilder;
-import org.apache.kylin.shaded.com.google.common.cache.CacheLoader;
-import org.apache.kylin.shaded.com.google.common.cache.LoadingCache;
-import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.HBaseZeroCopyByteString;
+
+import io.opentracing.Span;
 
 public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
@@ -204,9 +207,12 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         logger.info(
                 "The scan {} for segment {} is as below with {} separate raw scans, shard part of start/end key is set to 0",
                 Integer.toHexString(System.identityHashCode(scanRequest)), cubeSeg, rawScans.size());
+        StringBuilder fuzzyKeySizeInfo = new StringBuilder();
         for (RawScan rs : rawScans) {
+            fuzzyKeySizeInfo.append("RawScanFuzzyKey:").append(rs.fuzzyKeys.size()).append(";");
             logScan(rs, cubeSeg.getStorageLocationIdentifier());
         }
+        final String fuzzyKeySizeStr = fuzzyKeySizeInfo.toString();
 
         logger.debug("Submitting rpc to {} shards starting from shard {}, scan range count {}", shardNum,
                 cuboidBaseShard, rawScans.size());
@@ -221,6 +227,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                 cubeSeg.getConfig().getQuerySegmentCacheMaxSize() * 1024 * 1024);
         String calculatedSegmentQueryCacheKey = null;
         if (querySegmentCacheEnabled) {
+            Span segmentCacheSpan = queryContext.startFetchSegmentCache(cubeSeg.getCubeInstance().getName(),
+                    cubeSeg.getName());
             try {
                 logger.info("Query-{}: try to get segment result from cache for segment:{}", queryContext.getQueryId(),
                         cubeSeg);
@@ -251,6 +259,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                 }
             } catch (Exception e) {
                 logger.error("Fail to handle cached segment result from cache", e);
+            } finally {
+                segmentCacheSpan.finish();
             }
         }
         final String segmentQueryCacheKey = calculatedSegmentQueryCacheKey;
@@ -279,8 +289,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                 @Override
                 public void run() {
                     runEPRange(queryContext, logHeader, compressionResult, builder.build(), epRange.getFirst(),
-                            epRange.getSecond(), epResultItr, querySegmentCacheEnabled, segmentQueryResultBuilder,
-                            segmentQueryCacheKey);
+                            epRange.getSecond(), epResultItr, fuzzyKeySizeStr, querySegmentCacheEnabled,
+                            segmentQueryResultBuilder, segmentQueryCacheKey);
                 }
             });
         }
@@ -290,8 +300,12 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
     private void runEPRange(final QueryContext queryContext, final String logHeader, final boolean compressionResult,
             final CubeVisitProtos.CubeVisitRequest request, byte[] startKey, byte[] endKey,
-            final ExpectedSizeIterator epResultItr, final boolean querySegmentCacheEnabled,
+            final ExpectedSizeIterator epResultItr, String fuzzyKeySizeStr, final boolean querySegmentCacheEnabled,
             final SegmentQueryResult.Builder segmentQueryResultBuilder, final String segmentQueryCacheKey) {
+        String range = BytesUtil.toHex(startKey) + "-" + BytesUtil.toHex(endKey);
+        final Span epRangeSpan = queryContext.startEPRangeQuerySpan(range, cubeSeg.getCubeInstance().getName(),
+                cubeSeg.getName(), cubeSeg.getStorageLocationIdentifier(), cuboid.getInputID(), cuboid.getId(),
+                fuzzyKeySizeStr);
 
         final String queryId = queryContext.getQueryId();
 
@@ -333,9 +347,12 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
                             ServerRpcController controller = new ServerRpcController();
                             BlockingRpcCallback<CubeVisitResponse> rpcCallback = new BlockingRpcCallback<>();
+
+                            final Span regionRPCSpan = queryContext.startRegionRPCSpan(regionServerName, epRangeSpan);
+                            CubeVisitResponse response = null;
                             try {
                                 rowsService.visitCube(controller, request, rpcCallback);
-                                CubeVisitResponse response = rpcCallback.get();
+                                response = rpcCallback.get();
                                 if (controller.failedOnException()) {
                                     throw controller.getFailedOn();
                                 }
@@ -343,6 +360,27 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                             } catch (Exception e) {
                                 throw e;
                             } finally {
+                                if (response != null) {
+                                    Stats stats = response.getStats();
+                                    regionRPCSpan.setTag(TagEnum.RPC_DURATION.toString(),
+                                            String.valueOf(stats.getServiceEndTime() - stats.getServiceStartTime()));
+                                    regionRPCSpan.setTag(TagEnum.RPC_SCAN_COUNT.toString(),
+                                            String.valueOf(stats.getScannedRowCount()));
+                                    regionRPCSpan.setTag(TagEnum.RPC_FILTER_COUNT.toString(),
+                                            String.valueOf(stats.getFilteredRowCount()));
+                                    regionRPCSpan.setTag(TagEnum.RPC_AGG_COUNT.toString(),
+                                            String.valueOf(stats.getAggregatedRowCount()));
+                                    regionRPCSpan.setTag(TagEnum.RPC_SERIALIZED_BYTES.toString(),
+                                            String.valueOf(stats.getSerializedSize()));
+                                    regionRPCSpan.setTag(TagEnum.RPC_SYSTEMLOAD.toString(),
+                                            String.valueOf(stats.getSystemCpuLoad()));
+                                    regionRPCSpan.setTag(TagEnum.RPC_FREE_MEM.toString(),
+                                            String.valueOf(stats.getFreePhysicalMemorySize()));
+                                    regionRPCSpan.setTag(TagEnum.RPC_FREE_SWAP.toString(),
+                                            String.valueOf(stats.getFreeSwapSpaceSize()));
+                                    regionRPCSpan.setTag(TagEnum.RPC_ETC_MSG.toString(), stats.getEtcMsg());
+                                }
+                                regionRPCSpan.finish();
                                 // Reset the interrupted state
                                 Thread.interrupted();
                             }
@@ -461,6 +499,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         } catch (Throwable ex) {
             queryContext.stop(ex);
+        } finally {
+            epRangeSpan.finish();
         }
 
         if (queryContext.isStopped()) {

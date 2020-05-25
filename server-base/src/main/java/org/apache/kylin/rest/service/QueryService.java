@@ -136,6 +136,8 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.opentracing.Span;
+
 /**
  * @author xduo
  */
@@ -464,7 +466,7 @@ public class QueryService extends BasicService {
                 }
 
                 if (sqlResponse == null && isQueryCacheEnabled) {
-                    sqlResponse = searchQueryInCache(sqlRequest);
+                    sqlResponse = searchQueryInCacheWithSpan(sqlRequest);
                 }
 
                 // real execution if required
@@ -608,6 +610,15 @@ public class QueryService extends BasicService {
         return username;
     }
 
+    public SQLResponse searchQueryInCacheWithSpan(SQLRequest sqlRequest) {
+        Span cacheSpan = QueryContextFacade.current().startFetchCache();
+        try {
+            return searchQueryInCache(sqlRequest);
+        } finally {
+            cacheSpan.finish();
+        }
+    }
+
     public SQLResponse searchQueryInCache(SQLRequest sqlRequest) {
         Cache cache = cacheManager.getCache(QUERY_CACHE);
         Cache.ValueWrapper wrapper = cache.get(sqlRequest.getCacheKey());
@@ -701,7 +712,7 @@ public class QueryService extends BasicService {
                         columnMetas);
             }
             if (!isPrepareRequest) {
-                return executeRequest(correctedSql, sqlRequest, conn);
+                return executeRequestWithSpan(correctedSql, sqlRequest, conn);
             } else {
                 long prjLastModifyTime = getProjectManager().getProject(sqlRequest.getProject()).getLastModified();
                 preparedContextKey = new PreparedContextKey(sqlRequest.getProject(), prjLastModifyTime, correctedSql);
@@ -721,7 +732,7 @@ public class QueryService extends BasicService {
                 } else {
                     preparedContext = createPreparedContext(sqlRequest.getProject(), sqlRequest.getSql());
                 }
-                return executePrepareRequest(correctedSql, prepareSqlRequest, preparedContext);
+                return executePrepareRequestWithSpan(correctedSql, prepareSqlRequest, preparedContext);
             }
 
         } finally {
@@ -990,6 +1001,12 @@ public class QueryService extends BasicService {
         }
     }
 
+    private SQLResponse executeRequestWithSpan(String correctedSql, SQLRequest sqlRequest, Connection conn)
+            throws Exception {
+        QueryContextFacade.current().startSqlParse();
+        return executeRequest(correctedSql, sqlRequest, conn);
+    }
+
     /**
      * @param correctedSql
      * @param sqlRequest
@@ -1022,6 +1039,12 @@ public class QueryService extends BasicService {
         return buildSqlResponse(sqlRequest.getProject(), isPushDown, r.getFirst(), r.getSecond());
     }
 
+    private SQLResponse executePrepareRequestWithSpan(String correctedSql, PrepareSqlRequest sqlRequest,
+            PreparedContext preparedContext) throws Exception {
+        QueryContextFacade.current().startSqlParse();
+        return executePrepareRequest(correctedSql, sqlRequest, preparedContext);
+    }
+    
     private SQLResponse executePrepareRequest(String correctedSql, PrepareSqlRequest sqlRequest,
             PreparedContext preparedContext) throws Exception {
         ResultSet resultSet = null;

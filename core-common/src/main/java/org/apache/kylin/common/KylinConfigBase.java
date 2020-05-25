@@ -2666,4 +2666,11 @@ public abstract class KylinConfigBase implements Serializable {
     public int getDefaultTimeFilter() {
         return Integer.parseInt(getOptional("kylin.web.default-time-filter", "2"));
     }
+
+    // ============================================================================
+    // Trace
+    // ============================================================================
+    public String getTracerCollectorEndpoint() {
+        return getOptional("kylin.trace.collector-endpoint", "");
+    }
 }

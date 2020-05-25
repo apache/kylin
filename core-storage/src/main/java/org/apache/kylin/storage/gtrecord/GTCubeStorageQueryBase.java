@@ -62,15 +62,16 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.metadata.tuple.TupleInfo;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.translate.DerivedFilterTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.shaded.com.google.common.collect.Lists;
-import org.apache.kylin.shaded.com.google.common.collect.Maps;
-import org.apache.kylin.shaded.com.google.common.collect.Sets;
+import io.opentracing.Span;
 
 public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
@@ -86,6 +87,15 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
     @Override
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
+        Span queryPlanSpan = QueryContextFacade.current().startQueryPlan();
+        try {
+            return searchInner(context, sqlDigest, returnTupleInfo);
+        } finally {
+            queryPlanSpan.finish();
+        }
+    }
+
+    public ITupleIterator searchInner(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
         GTCubeStorageQueryRequest request = getStorageQueryRequest(context, sqlDigest, returnTupleInfo);
 
         List<CubeSegmentScanner> scanners = Lists.newArrayList();
@@ -101,7 +111,6 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
         if (scanners.isEmpty())
             return ITupleIterator.EMPTY_TUPLE_ITERATOR;
-
         return new SequentialCubeTupleIterator(scanners, request.getCuboid(), request.getDimensions(),
                 request.getDynGroups(), request.getGroups(), request.getMetrics(), returnTupleInfo,
                 request.getContext(), sqlDigest);

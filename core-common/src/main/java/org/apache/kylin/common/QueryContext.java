@@ -29,11 +29,17 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
+import org.apache.kylin.common.tracer.TracerConstants.OperationEum;
+import org.apache.kylin.common.tracer.TracerConstants.TagEnum;
+import org.apache.kylin.common.tracer.TracerManager;
+import org.apache.kylin.common.tracer.TracerWrapper;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.opentracing.Span;
 
 /**
  * Holds per query information and statistics.
@@ -48,14 +54,19 @@ public class QueryContext {
     public interface QueryStopListener {
         void stop(QueryContext query);
     }
-    
+
+    private static final String SPAN_QUERY_SERVER = KylinConfig.getInstanceFromEnv().getDeployEnv() + "-Query";
+
     private final String queryId;
     private final String project;
     private final String sql;
     private final String username;
     private final int maxConnThreads;
     private final long queryStartMillis;
-    
+
+    private final TracerWrapper tracer;
+    private final Span rootSpan;
+
     private Set<String> groups;
     private AtomicLong scannedRows = new AtomicLong();
     private AtomicLong returnedRows = new AtomicLong();
@@ -84,6 +95,13 @@ public class QueryContext {
         this.username = user;
         this.maxConnThreads = maxConnThreads;
         this.queryStartMillis = startMills;
+
+        this.tracer = TracerManager.getTracerWrapper(SPAN_QUERY_SERVER);
+        this.rootSpan = tracer.startSpan(OperationEum.MAIN, null);
+        rootSpan.setTag(TagEnum.PROJECT.toString(), projectName);
+        rootSpan.setTag(TagEnum.SQL.toString(), sql);
+        rootSpan.setTag(TagEnum.QUERY_ID.toString(), queryId);
+        rootSpan.setTag(TagEnum.SUBMITTER.toString(), user);
     }
 
     public ExecutorService getConnectionPool(ExecutorService sharedConnPool) {
@@ -208,6 +226,60 @@ public class QueryContext {
         for (QueryStopListener stopListener : stopListeners) {
             stopListener.stop(this);
         }
+    }
+
+    public Span activeSpan() {
+        return tracer.activeSpan();
+    }
+
+    public Span startFetchCache() {
+        return tracer.startSpan(OperationEum.FETCH_CACHE_STEP, rootSpan);
+    }
+
+    public Span startSqlParse() {
+        return tracer.startSpan(OperationEum.SQL_PARSE_STEP, rootSpan);
+    }
+
+    public Span startQueryPlan() {
+        return tracer.startSpan(OperationEum.QUERY_PLAN_STEP, rootSpan);
+    }
+
+    public Span startFetchSegmentCache(String cubeName, String segmentName) {
+        Span span = tracer.startSpan(OperationEum.FETCH_SEGMENT_CACHE_STEP, rootSpan);
+        span.setTag(TagEnum.CUBE.toString(), cubeName);
+        span.setTag(TagEnum.SEGMENT.toString(), segmentName);
+        return span;
+    }
+
+    public Span startEPRangeQuerySpan(String range, String cubeName, String segmentName, String table, long sourceId,
+            long targetId, String fuzzyKeySizeStr) {
+        Span span = tracer.startSpan(OperationEum.ENDPOINT_RANGE_REQUEST, rootSpan);
+        span.setTag(TagEnum.EPRANGE.toString(), range);
+        span.setTag(TagEnum.CUBE.toString(), cubeName);
+        span.setTag(TagEnum.SEGMENT.toString(), segmentName);
+        span.setTag(TagEnum.HTABLE.toString(), table);
+
+        StringBuilder cuboIdInfo = new StringBuilder();
+        cuboIdInfo.append("sourceId[" + sourceId).append("]");
+        cuboIdInfo.append("targetId[" + targetId).append("]");
+        span.setTag(TagEnum.CUBOID.toString(), cuboIdInfo.toString());
+
+        // fuzzyKeySizeStr for checking whether the fuzzy key is too large
+        span.setTag(TagEnum.FUZZY_KEY_SIZE.toString(), fuzzyKeySizeStr);
+        return span;
+    }
+
+    public Span startRegionRPCSpan(String regionServerName, Span epRangeQuerySpan) {
+        Span span = tracer.startSpan(OperationEum.REGION_SERVER_RPC, epRangeQuerySpan);
+        span.setTag(TagEnum.REGION_SERVER.toString(), regionServerName);
+        return span;
+    }
+
+    public Span startStreamingReceiverQuerySpan(String cubeName, int rsID) {
+        Span span = tracer.startSpan(OperationEum.STREAMING_RECEIVER_REQUEST.toString(), rootSpan);
+        span.setTag(TagEnum.CUBE.toString(), cubeName);
+        span.setTag(TagEnum.REPLICA_SET.toString(), String.valueOf(rsID));
+        return span;
     }
 
     public Throwable getThrowable() {
