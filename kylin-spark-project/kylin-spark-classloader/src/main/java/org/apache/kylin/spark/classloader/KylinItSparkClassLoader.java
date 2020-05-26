@@ -95,7 +95,7 @@ public class KylinItSparkClassLoader extends URLClassLoader {
             addURL(new File("../query/target/classes").toURI().toURL());
             addURL(new File("../query/target/test-classes").toURI().toURL());
             addURL(new File("../udf/target/classes").toURI().toURL());
-            System.setProperty("kap.query.engine.sparder-additional-files", sparkFile.getCanonicalPath());
+            System.setProperty("kylin.query.engine.sparder-additional-files", sparkFile.getCanonicalPath());
         } catch (IOException e) {
             e.printStackTrace();
         }

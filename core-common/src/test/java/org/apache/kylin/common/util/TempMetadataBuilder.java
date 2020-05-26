@@ -48,15 +48,11 @@ public class TempMetadataBuilder {
         return new TempMetadataBuilder(debug, TEMP_TEST_METADATA, N_KAP_META_TEST_DATA).build();
     }
 
-    public static String prepareNLocalTempMetadata(boolean debug, String... overlay) {
-        String[] nOverlay = new String[overlay.length + 1];
-        nOverlay[0] = N_KAP_META_TEST_DATA;
-        System.arraycopy(overlay, 0, nOverlay, 1, overlay.length);
-        // for spark-project
-        if (!new File(nOverlay[0]).exists()) {
-            nOverlay[0] = "../" + nOverlay[0];
+    public static String prepareNLocalTempMetadata(boolean debug, String overlay) {
+        if (new File(overlay).exists()) {
+            return new TempMetadataBuilder(debug, "../" + TEMP_TEST_METADATA, overlay).build();
         }
-        return new TempMetadataBuilder(debug, TEMP_TEST_METADATA, nOverlay).build();
+        return new TempMetadataBuilder(debug, TEMP_TEST_METADATA, overlay).build();
     }
 
     // ============================================================================

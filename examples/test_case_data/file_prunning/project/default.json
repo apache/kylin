@@ -1,0 +1,25 @@
+{
+  "uuid" : "2fbca32a-a33e-4b69-83dd-0bb8b1f8c91b",
+  "last_modified" : 1589195277971,
+  "version" : "3.9.9.1",
+  "name" : "default",
+  "tables" : [ "DEFAULT.TEST_KYLIN_FACT", "DEFAULT.TEST_ORDER", "DEFAULT.TEST_MEASURE" ],
+  "owner" : null,
+  "status" : null,
+  "create_time_utc" : 0,
+  "last_update_time" : null,
+  "description" : null,
+  "realizations" : [ {
+    "type" : "CUBE",
+    "realization" : "file_pruning_cube"
+  }, {
+    "type" : "CUBE",
+    "realization" : "file_pruning_cube2"
+  }, {
+    "type" : "CUBE",
+    "realization" : "file_pruning_cube_measure"
+  } ],
+  "models" : [ "file_pruning_model","file_pruning_model2","file_pruning_model_measure" ],
+  "ext_filters" : [ ],
+  "override_kylin_properties" : { }
+}

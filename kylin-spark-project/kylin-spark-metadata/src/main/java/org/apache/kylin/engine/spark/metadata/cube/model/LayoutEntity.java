@@ -64,7 +64,7 @@ public class LayoutEntity implements IStorageAware {
     long sourceRows;
     long byteSize;
     long fileCount;
-    long shardNum;
+    int shardNum;
 
     @Override
     public int getStorageType() {
@@ -107,6 +107,10 @@ public class LayoutEntity implements IStorageAware {
         return shardByColumns;
     }
 
+    public void setShardByColumns(List<Integer> shardByColumns) {
+        this.shardByColumns = shardByColumns;
+    }
+
     public boolean fullyDerive(LayoutEntity child) {
        return orderedDimensions.keySet().containsAll(child.orderedDimensions.keySet()) &&
                 orderedMeasures.keySet().containsAll(child.orderedMeasures.keySet()) ;
@@ -144,11 +148,11 @@ public class LayoutEntity implements IStorageAware {
         this.sourceRows = sourceRows;
     }
 
-    public long getShardNum() {
+    public int getShardNum() {
         return shardNum;
     }
 
-    public void setShardNum(long shardNum) {
+    public void setShardNum(int shardNum) {
         this.shardNum = shardNum;
     }
 

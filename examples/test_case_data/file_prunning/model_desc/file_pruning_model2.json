@@ -1,0 +1,40 @@
+{
+  "uuid" : "7622b8c5-a5fb-e10b-4038-4cbccfc2df24",
+  "last_modified" : 1589268019470,
+  "version" : "3.9.9.1",
+  "name" : "file_pruning_model2",
+  "owner" : "ADMIN",
+  "is_draft" : false,
+  "description" : "",
+  "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
+  "lookups" : [ {
+    "table" : "DEFAULT.TEST_ORDER",
+    "kind" : "LOOKUP",
+    "alias" : "TEST_ORDER",
+    "join" : {
+      "type" : "left",
+      "primary_key" : [ "TEST_ORDER.ORDER_ID" ],
+      "foreign_key" : [ "TEST_KYLIN_FACT.ORDER_ID" ]
+    }
+  } ],
+  "dimensions" : [ {
+    "table" : "TEST_KYLIN_FACT",
+    "columns" : [ "SELLER_ID", "PRICE", "SLR_SEGMENT_CD", "LSTG_FORMAT_NAME", "CAL_DT", "ORDER_ID" ]
+  }, {
+    "table" : "TEST_ORDER",
+    "columns" : [ "ORDER_ID", "TEST_DATE_ENC" ]
+  } ],
+  "metrics" : [ ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "TEST_KYLIN_FACT.CAL_DT",
+    "partition_time_column" : null,
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd",
+    "partition_time_format" : "HH:mm:ss",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM",
+  "projectName" : "default"
+}

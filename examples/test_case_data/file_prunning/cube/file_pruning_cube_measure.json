@@ -1,0 +1,17 @@
+{
+  "uuid" : "5909c670-1f02-e36f-c2d0-c0a76582b71b",
+  "last_modified" : 1589522991510,
+  "version" : "3.9.9.1",
+  "name" : "file_pruning_cube_measure",
+  "owner" : "ADMIN",
+  "descriptor" : "file_pruning_cube_measure",
+  "display_name" : "file_pruning_cube_measure",
+  "cost" : 50,
+  "status" : "DISABLED",
+  "segments" : [ ],
+  "create_time_utc" : 1589268257717,
+  "cuboid_bytes" : null,
+  "cuboid_bytes_recommend" : null,
+  "cuboid_last_optimized" : 0,
+  "snapshots" : { }
+}
