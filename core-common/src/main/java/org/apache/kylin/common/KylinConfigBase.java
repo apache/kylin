@@ -2737,7 +2737,7 @@ public abstract class KylinConfigBase implements Serializable {
                 path1 = storageFile.getCanonicalPath();
             }
 
-            return getOptional("kap.query.engine.sparder-additional-files", path1);
+            return getOptional("kylin.query.engine.sparder-additional-files", path1);
         } catch (IOException e) {
             return "";
         }
@@ -2751,7 +2751,7 @@ public abstract class KylinConfigBase implements Serializable {
                 path1 = storageFile.getCanonicalPath();
             }
 
-            return getOptional("kap.query.engine.sparder-additional-jars", path1);
+            return getOptional("kylin.query.engine.sparder-additional-jars", path1);
         } catch (IOException e) {
             return "";
         }
@@ -2771,11 +2771,11 @@ public abstract class KylinConfigBase implements Serializable {
      */
 
     public Boolean isKerberosEnabled() {
-        return Boolean.valueOf(getOptional("kap.kerberos.enabled", FALSE));
+        return Boolean.valueOf(getOptional("kylin.kerberos.enabled", FALSE));
     }
 
     public String getKerberosKeytab() {
-        return getOptional("kap.kerberos.keytab", "");
+        return getOptional("kylin.kerberos.keytab", "");
     }
 
     public String getKerberosKeytabPath() {
@@ -2783,27 +2783,27 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getKerberosZKPrincipal() {
-        return getOptional("kap.kerberos.zookeeper.server.principal", "zookeeper/hadoop");
+        return getOptional("kylin.kerberos.zookeeper.server.principal", "zookeeper/hadoop");
     }
 
     public Long getKerberosTicketRefreshInterval() {
-        return Long.valueOf(getOptional("kap.kerberos.ticket.refresh.interval.minutes", "720"));
+        return Long.valueOf(getOptional("kylin.kerberos.ticket.refresh.interval.minutes", "720"));
     }
 
     public Long getKerberosMonitorInterval() {
-        return Long.valueOf(getOptional("kap.kerberos.monitor.interval.minutes", "10"));
+        return Long.valueOf(getOptional("kylin.kerberos.monitor.interval.minutes", "10"));
     }
 
     public String getKerberosPlatform() {
-        return getOptional("kap.kerberos.platform", "");
+        return getOptional("kylin.kerberos.platform", "");
     }
 
     public Boolean getPlatformZKEnable() {
-        return Boolean.valueOf(getOptional("kap.platform.zk.kerberos.enable", FALSE));
+        return Boolean.valueOf(getOptional("kylin.platform.zk.kerberos.enable", FALSE));
     }
 
     public String getKerberosKrb5Conf() {
-        return getOptional("kap.kerberos.krb5.conf", "krb5.conf");
+        return getOptional("kylin.kerberos.krb5.conf", "krb5.conf");
     }
 
     public String getKerberosKrb5ConfPath() {
@@ -2811,7 +2811,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getKerberosJaasConf() {
-        return getOptional("kap.kerberos.jaas.conf", "jaas.conf");
+        return getOptional("kylin.kerberos.jaas.conf", "jaas.conf");
     }
 
     public String getKerberosJaasConfPath() {
@@ -2819,7 +2819,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getKerberosPrincipal() {
-        return getOptional("kap.kerberos.principal");
+        return getOptional("kylin.kerberos.principal");
     }
     public String getIntersectFilterOrSeparator() {
         return getOptional("kylin.query.intersect.separator", "|");

@@ -25,6 +25,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
 import org.apache.kylin.job.exception.SchedulerException;
+import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -55,6 +56,9 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
     private static final Logger logger = LoggerFactory.getLogger(NManualBuildAndQueryTest.class);
 
     private boolean succeed = true;
+    protected KylinConfig config;
+    protected CubeManager cubeMgr;
+    protected ExecutableManager execMgr;
 
     @Override
     public void setup() throws SchedulerException {
@@ -66,6 +70,9 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
         priorities.put(RealizationType.HYBRID, 0);
         priorities.put(RealizationType.CUBE, 0);
         Candidate.setPriorities(priorities);
+        config = KylinConfig.getInstanceFromEnv();
+        cubeMgr = CubeManager.getInstance(config);
+        execMgr = ExecutableManager.getInstance(config);
     }
 
     @Override

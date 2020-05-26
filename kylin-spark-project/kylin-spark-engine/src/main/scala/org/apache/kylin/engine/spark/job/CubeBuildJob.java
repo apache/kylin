@@ -30,6 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -56,7 +57,6 @@ import org.apache.kylin.engine.spark.utils.Metrics;
 import org.apache.kylin.engine.spark.utils.QueryExecutionCache;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.IStorageAware;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -76,7 +76,7 @@ public class CubeBuildJob extends SparkApplication {
 
     private CubeManager cubeManager;
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
-
+    private Map<Long, Short> cuboidShardNum = Maps.newHashMap();
     public static void main(String[] args) {
         CubeBuildJob nDataflowBuildJob = new CubeBuildJob();
         nDataflowBuildJob.execute(args);
@@ -150,6 +150,7 @@ public class CubeBuildJob extends SparkApplication {
         segment.setLastBuildJobID(getParam(MetadataConstants.P_JOB_ID));
         segment.setInputRecords(sourceRowCount);
         segment.setSnapshots(new ConcurrentHashMap<>(segmentInfo.getSnapShot2JavaMap()));
+        segment.setCuboidShardNums(cuboidShardNum);
         Map<String, String> additionalInfo = segment.getAdditionalInfo();
         additionalInfo.put("storageType", "" + IStorageAware.ID_PARQUET);
         segment.setAdditionalInfo(additionalInfo);
@@ -348,6 +349,7 @@ public class CubeBuildJob extends SparkApplication {
         layout.setSourceRows(metrics.getMetrics(Metrics.SOURCE_ROWS_CNT()));
         int shardNum = BuildUtils.repartitionIfNeed(layout, storage, path, tempPath, config, ss);
         layout.setShardNum(shardNum);
+        cuboidShardNum.put(layoutId, (short)shardNum);
         ss.sparkContext().setLocalProperty(QueryExecutionCache.N_EXECUTION_ID_KEY(), null);
         QueryExecutionCache.removeQueryExecution(queryExecutionId);
         BuildUtils.fillCuboidInfo(layout, path);

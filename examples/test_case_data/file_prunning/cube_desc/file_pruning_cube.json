@@ -1,0 +1,135 @@
+{
+  "uuid" : "330b1839-1baf-5e4f-7f4c-ad173a5217c8",
+  "last_modified" : 1589194835241,
+  "version" : "3.9.9.1",
+  "name" : "file_pruning_cube",
+  "is_draft" : false,
+  "model_name" : "file_pruning_model",
+  "description" : "",
+  "null_string" : null,
+  "dimensions" : [ {
+    "name" : "ORDER_ID",
+    "table" : "TEST_ORDER",
+    "column" : "ORDER_ID",
+    "derived" : null
+  }, {
+    "name" : "BUYER_ID",
+    "table" : "TEST_ORDER",
+    "column" : "BUYER_ID",
+    "derived" : null
+  }, {
+    "name" : "TEST_DATE_ENC",
+    "table" : "TEST_ORDER",
+    "column" : "TEST_DATE_ENC",
+    "derived" : null
+  }, {
+    "name" : "TEST_TIME_ENC",
+    "table" : "TEST_ORDER",
+    "column" : "TEST_TIME_ENC",
+    "derived" : null
+  }, {
+    "name" : "ORDER_ID",
+    "table" : "TEST_KYLIN_FACT",
+    "column" : null,
+    "derived" : [ "ORDER_ID" ]
+  }, {
+    "name" : "LSTG_FORMAT_NAME",
+    "table" : "TEST_KYLIN_FACT",
+    "column" : "LSTG_FORMAT_NAME",
+    "derived" : null
+  }, {
+    "name" : "SLR_SEGMENT_CD",
+    "table" : "TEST_KYLIN_FACT",
+    "column" : "SLR_SEGMENT_CD",
+    "derived" : null
+  }, {
+    "name" : "SELLER_ID",
+    "table" : "TEST_KYLIN_FACT",
+    "column" : "SELLER_ID",
+    "derived" : null
+  }, {
+    "name" : "PRICE",
+    "table" : "TEST_KYLIN_FACT",
+    "column" : "PRICE",
+    "derived" : null
+  } ],
+  "measures" : [ {
+    "name" : "_COUNT_",
+    "function" : {
+      "expression" : "COUNT",
+      "parameter" : {
+        "type" : "constant",
+        "value" : "1"
+      },
+      "returntype" : "bigint"
+    }
+  } ],
+  "dictionaries" : [ ],
+  "rowkey" : {
+    "rowkey_columns" : [ {
+      "column" : "TEST_ORDER.ORDER_ID",
+      "encoding" : "dict",
+      "isShardBy" : false
+    }, {
+      "column" : "TEST_ORDER.BUYER_ID",
+      "encoding" : "dict",
+      "isShardBy" : false
+    }, {
+      "column" : "TEST_ORDER.TEST_DATE_ENC",
+      "encoding" : "date",
+      "isShardBy" : false
+    }, {
+      "column" : "TEST_ORDER.TEST_TIME_ENC",
+      "encoding" : "time",
+      "isShardBy" : false
+    }, {
+      "column" : "TEST_KYLIN_FACT.SELLER_ID",
+      "encoding" : "dict",
+      "isShardBy" : true
+    }, {
+      "column" : "TEST_KYLIN_FACT.PRICE",
+      "encoding" : "dict",
+      "isShardBy" : false
+    }, {
+      "column" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD",
+      "encoding" : "dict",
+      "isShardBy" : false
+    } , {
+      "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
+      "encoding" : "dict",
+      "isShardBy" : false
+    } ]
+  },
+  "hbase_mapping" : {
+    "column_family" : [ {
+      "name" : "F1",
+      "columns" : [ {
+        "qualifier" : "M",
+        "measure_refs" : [ "_COUNT_" ]
+      } ]
+    } ]
+  },
+  "aggregation_groups" : [ {
+    "includes" : [ "TEST_ORDER.ORDER_ID", "TEST_ORDER.BUYER_ID", "TEST_ORDER.TEST_DATE_ENC", "TEST_ORDER.TEST_TIME_ENC" ],
+    "select_rule" : {
+      "hierarchy_dims" : [ ],
+      "mandatory_dims" : [ ],
+      "joint_dims" : [ ]
+    }
+  } ],
+  "signature" : "2BsFyXxmB2F+FNlH4RxDwQ==",
+  "notify_list" : [ ],
+  "status_need_notify" : [ "ERROR", "DISCARDED", "SUCCEED" ],
+  "partition_date_start" : 0,
+  "partition_date_end" : 3153600000000,
+  "auto_merge_time_ranges" : [ ],
+  "volatile_range" : 0,
+  "retention_range" : 0,
+  "engine_type" : 6,
+  "storage_type" : 4,
+  "override_kylin_properties" : { },
+  "cuboid_black_list" : [ ],
+  "parent_forward" : 3,
+  "mandatory_dimension_set_list" : [ ],
+  "snapshot_table_desc_list" : [ ]
+}

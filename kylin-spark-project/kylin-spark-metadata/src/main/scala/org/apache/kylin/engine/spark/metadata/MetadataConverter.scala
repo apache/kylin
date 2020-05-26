@@ -23,7 +23,6 @@ import java.util.regex.Pattern
 import java.{lang, util}
 
 import org.apache.commons.lang.StringUtils
-import org.apache.kylin.common.util.DateFormat
 import org.apache.kylin.cube.cuboid.Cuboid
 import org.apache.kylin.cube.{CubeInstance, CubeSegment, CubeUpdate}
 import org.apache.kylin.engine.spark.metadata.cube.BitUtils
@@ -117,22 +116,22 @@ object MetadataConverter {
   }
 
   def toLayoutEntity(cubeInstance: CubeInstance, cuboid: Cuboid): LayoutEntity = {
-    val (columnIndexes, idToColumnMap, measureId) = genIDToColumnMap(cubeInstance)
-    genLayoutEntity(columnIndexes, idToColumnMap, measureId, cuboid.getId)
+    val (columnIndexes, shardByColumnsId, idToColumnMap, measureId) = genIDToColumnMap(cubeInstance)
+    genLayoutEntity(columnIndexes, shardByColumnsId, idToColumnMap, measureId, cuboid.getId)
   }
 
   def extractEntityAndMeasures(cubeInstance: CubeInstance): (List[LayoutEntity], Map[Integer, FunctionDesc]) = {
-    val (columnIndexes, idToColumnMap, measureId) = genIDToColumnMap(cubeInstance)
+    val (columnIndexes, shardByColumnsId, idToColumnMap, measureId) = genIDToColumnMap(cubeInstance)
     (cubeInstance.getDescriptor.getInitialCuboidScheduler
       .getAllCuboidIds
       .asScala
       .map { long =>
-        genLayoutEntity(columnIndexes, idToColumnMap, measureId, long)
+        genLayoutEntity(columnIndexes, shardByColumnsId, idToColumnMap, measureId, long)
       }.toList, measureId.asScala.toMap)
   }
 
   private def genLayoutEntity(
-                               columnIndexes: List[Integer], idToColumnMap: java.util.Map[Integer, ColumnDesc],
+                               columnIndexes: List[Integer], shardByColumnsId: List[Integer], idToColumnMap: java.util.Map[Integer, ColumnDesc],
                                measureId: java.util.Map[Integer, FunctionDesc], long: lang.Long) = {
     val dimension = BitUtils.tailor(columnIndexes.asJava, long)
     val integerToDesc = new util.LinkedHashMap[Integer, ColumnDesc]()
@@ -141,16 +140,29 @@ object MetadataConverter {
     entity.setId(long)
     entity.setOrderedDimensions(integerToDesc)
     entity.setOrderedMeasures(measureId)
+    val shards = shardByColumnsId.filter(column => dimension.contains(column))
+    entity.setShardByColumns(shards.asJava)
     entity
   }
 
-  private def genIDToColumnMap(cubeInstance: CubeInstance): (List[Integer], java.util.Map[Integer, ColumnDesc], java.util.Map[Integer, FunctionDesc]) = {
+  private def genIDToColumnMap(cubeInstance: CubeInstance): (List[Integer], List[Integer], java.util.Map[Integer, ColumnDesc], java.util.Map[Integer, FunctionDesc]) = {
     val dimensionIndex = new util.LinkedHashMap[Integer, ColumnDesc]()
     val columns = cubeInstance.getDescriptor
       .getRowkey
       .getRowKeyColumns
     val dimensionMapping = columns
       .map(co => (co.getColRef, co.getBitIndex))
+
+    val shardByColumns = cubeInstance.getDescriptor
+      .getRowkey
+      .getShardByColumns
+
+    val dimensionMap = dimensionMapping.toMap
+    val shardByColumnsId = shardByColumns.asScala.toList
+            .map(column => dimensionMap.get(column))
+            .filter(v => v != null)
+            .map(column => Integer.valueOf(column.get))
+
     val set = dimensionMapping.map(_._1).toSet
     val refs = cubeInstance.getAllColumns.asScala.diff(set)
       .zipWithIndex
@@ -185,7 +197,7 @@ object MetadataConverter {
           parametrs, measure.getFunction.getExpression)
         measureIndex.put(Integer.valueOf(index), desc)
       }
-    (idToColumnMap, dimensionIndex, measureIndex)
+    (idToColumnMap, shardByColumnsId, dimensionIndex, measureIndex)
   }
 
   def extractEntityList2JavaList(cubeInstance: CubeInstance): java.util.List[LayoutEntity] = {

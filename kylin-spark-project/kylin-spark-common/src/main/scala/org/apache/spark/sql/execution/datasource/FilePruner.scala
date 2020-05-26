@@ -21,17 +21,17 @@ package org.apache.spark.sql.execution.datasource
 import java.sql.{Date, Timestamp}
 
 import org.apache.hadoop.fs.{FileStatus, Path}
-import org.apache.kylin.common.util.{DateFormat, HadoopUtil}
-import org.apache.kylin.common.{KylinConfig, QueryContext, QueryContextFacade}
+import org.apache.kylin.common.util.DateFormat
 import org.apache.kylin.cube.cuboid.Cuboid
 import org.apache.kylin.cube.CubeInstance
-import org.apache.kylin.engine.spark.metadata.cube.PathManager
+import org.apache.kylin.engine.spark.metadata.cube.model.ForestSpanningTree
+import org.apache.kylin.engine.spark.metadata.cube.{ManagerHub, PathManager}
 import org.apache.kylin.engine.spark.metadata.MetadataConverter
 import org.apache.kylin.metadata.model.{PartitionDesc, SegmentStatusEnum}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.analysis.Resolver
 import org.apache.spark.sql.catalyst.expressions.{Attribute, AttributeSet, EmptyRow, Expression, Literal}
-import org.apache.spark.sql.catalyst.{expressions, InternalRow}
+import org.apache.spark.sql.catalyst.{InternalRow, expressions}
 import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types.{StructField, StructType}
@@ -39,6 +39,7 @@ import org.apache.spark.sql.{AnalysisException, SparkSession}
 import org.apache.spark.sql.utils.SparkTypeUtil
 import org.apache.spark.util.collection.BitSet
 
+import scala.collection.JavaConversions
 import scala.collection.JavaConverters._
 
 case class SegmentDirectory(segmentName: String, identifier: String, files: Seq[FileStatus])
@@ -216,9 +217,9 @@ class FilePruner(
     }.toIterator.toSeq
     //    QueryContextFacade.current().record("fetch_file_status")
     // shards pruning
-    //    selected = afterPruning("shard", dataFilters, selected) {
-    //      pruneShards
-    //    }
+    selected = afterPruning("shard", dataFilters, selected) {
+      pruneShards
+    }
     //    QueryContextFacade.current().record("shard_pruning")
     val totalFileSize = selected.flatMap(partition => partition.files).map(_.getLen).sum
     logInfo(s"totalFileSize is ${totalFileSize}")
@@ -283,31 +284,36 @@ class FilePruner(
     filteredStatuses
   }
 
-  //  private def pruneShards(
-  //    filters: Seq[Expression],
-  //    segDirs: Seq[SegmentDirectory]): Seq[SegmentDirectory] = {
-  //    val filteredStatuses = if (layoutEntity.getShardByColumns.size() != 1) {
-  //      segDirs
-  //    } else {
-  //      val normalizedFiltersAndExpr = filters.reduce(expressions.And)
-  //
-  //      val pruned = segDirs.map { case SegmentDirectory(segID, files) =>
-  //        val partitionNumber = cubeInstance.getSegmentById(segID).getLayout(layout.getId).getPartitionNum
-  //        require(partitionNumber > 0, "Shards num with shard by col should greater than 0.")
-  //
-  //        val bitSet = getExpressionShards(normalizedFiltersAndExpr, shardByColumn.name, partitionNumber)
-  //
-  //        val selected = files.filter(f => {
-  //          val partitionId = FilePruner.getPartitionId(f.getPath)
-  //          bitSet.get(partitionId)
-  //        })
-  //        SegmentDirectory(segID, selected)
-  //      }
-  //      logInfo(s"Selected files after shards pruning:" + pruned.flatMap(_.files).map(_.getPath.toString).mkString(";"))
-  //      pruned
-  //    }
-  //    filteredStatuses
-  //  }
+    private def pruneShards(
+      filters: Seq[Expression],
+      segDirs: Seq[SegmentDirectory]): Seq[SegmentDirectory] = {
+      val filteredStatuses = if (layoutEntity.getShardByColumns.size() != 1) {
+        segDirs
+      } else {
+        val normalizedFiltersAndExpr = filters.reduce(expressions.And)
+
+        val pruned = segDirs.map { case SegmentDirectory(segName, segIdentifier, files) =>
+          val segment = cubeInstance.getSegment(segName, SegmentStatusEnum.READY);
+          val segID = segment.getUuid
+          val segmentInfo = ManagerHub.getSegmentInfo(cubeInstance.getConfig, cubeInstance.getId, segID)
+          val spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(segmentInfo.toBuildLayouts))
+          //val partitionNumber = spanningTree.getLayoutEntity(layoutEntity.getId).getShardNum
+          val partitionNumber = segment.getCuboidShardNum(layoutEntity.getId).toInt
+          require(partitionNumber > 0, "Shards num with shard by col should greater than 0.")
+
+          val bitSet = getExpressionShards(normalizedFiltersAndExpr, shardByColumn.name, partitionNumber)
+
+          val selected = files.filter(f => {
+            val partitionId = FilePruner.getPartitionId(f.getPath)
+            bitSet.get(partitionId)
+          })
+          SegmentDirectory(segName, segIdentifier, selected)
+        }
+        logInfo(s"Selected files after shards pruning:" + pruned.flatMap(_.files).map(_.getPath.toString).mkString(";"))
+        pruned
+      }
+      filteredStatuses
+    }
 
   override lazy val inputFiles: Array[String] = Array.empty[String]
 

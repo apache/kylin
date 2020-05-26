@@ -1,0 +1,67 @@
+{
+  "uuid" : "330b1839-1baf-5e4f-7f4c-ad173a5217c9",
+  "last_modified" : 1589194835241,
+  "version" : "3.9.9.1",
+  "name" : "file_pruning_cube_measure",
+  "is_draft" : false,
+  "model_name" : "file_pruning_model_measure",
+  "description" : "",
+  "null_string" : null,
+  "dimensions" : [ {
+    "name" : "name1",
+    "table" : "TEST_MEASURE",
+    "column" : "name1",
+    "derived" : null
+  }],
+  "measures" : [ {
+    "name" : "_COUNT_",
+    "function" : {
+      "expression" : "COUNT",
+      "parameter" : {
+        "type" : "constant",
+        "value" : "1"
+      },
+      "returntype" : "bigint"
+    }
+  } ],
+  "dictionaries" : [ ],
+  "rowkey" : {
+    "rowkey_columns" : [ {
+      "column" : "TEST_MEASURE.name1",
+      "encoding" : "dict",
+      "isShardBy" : true
+    } ]
+  },
+  "hbase_mapping" : {
+    "column_family" : [ {
+      "name" : "F1",
+      "columns" : [ {
+        "qualifier" : "M",
+        "measure_refs" : [ "_COUNT_" ]
+      } ]
+    } ]
+  },
+  "aggregation_groups" : [ {
+    "includes" : [ "TEST_MEASURE.name1" ],
+    "select_rule" : {
+      "hierarchy_dims" : [ ],
+      "mandatory_dims" : [ ],
+      "joint_dims" : [ ]
+    }
+  } ],
+  "signature" : "2BsFyXxmB2F+FNlH4RxDwQ==",
+  "notify_list" : [ ],
+  "status_need_notify" : [ "ERROR", "DISCARDED", "SUCCEED" ],
+  "partition_date_start" : 0,
+  "partition_date_end" : 3153600000000,
+  "auto_merge_time_ranges" : [ ],
+  "volatile_range" : 0,
+  "retention_range" : 0,
+  "engine_type" : 6,
+  "storage_type" : 4,
+  "override_kylin_properties" : { },
+  "cuboid_black_list" : [ ],
+  "parent_forward" : 3,
+  "mandatory_dimension_set_list" : [ ],
+  "snapshot_table_desc_list" : [ ]
+}

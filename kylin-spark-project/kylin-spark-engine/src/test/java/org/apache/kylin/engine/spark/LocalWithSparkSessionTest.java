@@ -44,6 +44,7 @@ import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.lock.MockJobLock;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -80,9 +81,6 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
     private Map<String, String> systemProp = Maps.newHashMap();
     protected static SparkConf sparkConf;
     protected static SparkSession ss;
-    protected KylinConfig config;
-    protected CubeManager cubeMgr;
-    protected ExecutableManager execMgr;
 
     @Before
     public void setup() throws SchedulerException {
@@ -95,9 +93,6 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
         }
-        config = KylinConfig.getInstanceFromEnv();
-        cubeMgr = CubeManager.getInstance(config);
-        execMgr = ExecutableManager.getInstance(config);
     }
 
     @After
@@ -142,6 +137,12 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         getTestConfig().setProperty("kylin.query.security.acl-tcr-enabled", "false");
     }
 
+    public void createTestMetadata(String metadataDir) {
+        String tempMetadataDir = TempMetadataBuilder.prepareNLocalTempMetadata(false, metadataDir);
+        KylinConfig.setKylinConfigForLocalTest(tempMetadataDir);
+        getTestConfig().setProperty("kylin.query.security.acl-tcr-enabled", "false");
+    }
+
     protected ExecutableState wait(AbstractExecutable job) throws InterruptedException {
         while (true) {
             Thread.sleep(500);
@@ -153,13 +154,18 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
     }
 
     protected void cleanupSegments(String cubeName) throws IOException {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        CubeManager cubeMgr = CubeManager.getInstance(config);
         CubeInstance cube = cubeMgr.getCube(cubeName);
         cubeMgr.updateCubeDropSegments(cube, cube.getSegments());
     }
 
     public ExecutableState buildCuboid(String cubeName, SegmentRange.TSRange tsRange) throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        CubeManager cubeMgr = CubeManager.getInstance(config);
         CubeInstance cube = cubeMgr.getCube(cubeName);
-
+        ExecutableManager execMgr = ExecutableManager.getInstance(config);
+        DataModelManager.getInstance(config).getModels();
         // ready cube, segment, cuboid layout
         CubeSegment oneSeg = cubeMgr.appendSegment(cube, tsRange);
         NSparkCubingJob job = NSparkCubingJob.create(Sets.newHashSet(oneSeg), "ADMIN");
@@ -175,6 +181,9 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
     }
 
     protected ExecutableState mergeSegments(String cubeName, long start, long end, boolean force) throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        CubeManager cubeMgr = CubeManager.getInstance(config);
+        ExecutableManager execMgr = ExecutableManager.getInstance(config);
         CubeInstance cube = cubeMgr.reloadCube(cubeName);
         CubeSegment mergeSegment = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(start, end), null, force);
         NSparkMergingJob mergeJob = NSparkMergingJob.merge(mergeSegment,  "ADMIN");
@@ -183,6 +192,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
     }
 
     protected void fullBuildCube(String cubeName) throws Exception {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
         Assert.assertTrue(config.getHdfsWorkingDirectory().startsWith("file:"));
         // cleanup all segments first
         cleanupSegments(cubeName);

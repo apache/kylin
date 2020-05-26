@@ -17,8 +17,11 @@
  */
 package org.apache.kylin.engine.spark2;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
 import org.apache.kylin.job.exception.SchedulerException;
+import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.KylinSparkEnv;
@@ -30,10 +33,16 @@ public class BuildAndQueryEmptySegmentsTest extends LocalWithSparkSessionTest {
 
     private static final String CUBE_NAME = "ci_left_join_cube";
     private static final String SQL = "SELECT COUNT(1) as TRANS_CNT from TEST_KYLIN_FACT";
+    protected KylinConfig config;
+    protected CubeManager cubeMgr;
+    protected ExecutableManager execMgr;
 
     @Override
     public void setup() throws SchedulerException {
         super.setup();
+        config = KylinConfig.getInstanceFromEnv();
+        cubeMgr = CubeManager.getInstance(config);
+        execMgr = ExecutableManager.getInstance(config);
     }
 
     @Override

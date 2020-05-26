@@ -20,6 +20,7 @@ package org.apache.kylin.engine.spark.source;
 
 import com.clearspring.analytics.util.Lists;
 import com.google.common.collect.Maps;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -52,10 +53,12 @@ import java.util.Set;
 public class CsvSourceTest extends LocalWithSparkSessionTest {
 
     private static final String CUBE_NAME = "ci_left_join_cube";
+    protected KylinConfig config;
 
     @Override
     public void setup() throws SchedulerException {
         super.setup();
+        config = KylinConfig.getInstanceFromEnv();
         KylinBuildEnv.getOrCreate(config);
     }
 

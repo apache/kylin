@@ -20,6 +20,7 @@ package org.apache.kylin.engine.spark.job;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
 import org.apache.kylin.engine.spark.NSparkCubingEngine;
@@ -59,12 +60,16 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
     private static final Logger logger = LoggerFactory.getLogger(SparkCubingJobTest.class);
     private static StructType OUT_SCHEMA = null;
     private KylinConfig kylinConfig;
+    protected CubeManager cubeMgr;
+    protected ExecutableManager execMgr;
 
     @Override
     public void setup() throws SchedulerException {
         super.setup();
         kylinConfig = KylinConfig.getInstanceFromEnv();
         kylinConfig.setProperty("kylin.source.provider.0", "org.apache.kylin.engine.spark.source.HiveSource");
+        cubeMgr = CubeManager.getInstance(kylinConfig);
+        execMgr = ExecutableManager.getInstance(kylinConfig);
     }
 
     @Override
