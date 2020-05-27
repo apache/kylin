@@ -335,7 +335,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
                             HRegionLocation regionLocation = getStartRegionLocation(rowsService);
                             String regionServerName = regionLocation == null ? "UNKNOWN" : regionLocation.getHostname();
-                            logger.info("Query-{}: send request to the init region server {} on table {} ", queryId,
+                            logger.debug("Query-{}: send request to the init region server {} on table {} ", queryId,
                                     regionServerName, table.getName());
 
                             queryContext.addQueryStopListener(new QueryContext.QueryStopListener() {
@@ -427,7 +427,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                 return;
                             }
 
-                            logger.info(logHeader + getStatsString(region, result));
+                            logger.debug(logHeader + getStatsString(region, result));
 
                             Stats stats = result.getStats();
                             queryContext.addAndGetScannedRows(stats.getScannedRowCount());
@@ -490,13 +490,13 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                                         cubeSeg.getCubeInstance().getName(), cubeSeg.getName());
                                         if (cubeSegmentStatistics != null) {
                                             segmentQueryResultBuilder.setCubeSegmentStatistics(cubeSegmentStatistics);
-                                            logger.info(
+                                            logger.debug(
                                                     "Query-{}: try to put segment query result to cache for segment:{}",
                                                     queryContext.getQueryId(), cubeSeg);
                                             SegmentQueryResult segmentQueryResult = segmentQueryResultBuilder.build();
                                             SegmentQueryCache.getInstance().put(segmentQueryCacheKey,
                                                     segmentQueryResult);
-                                            logger.info(
+                                            logger.debug(
                                                     "Query-{}: successfully put segment query result to cache for segment:{}",
                                                     queryContext.getQueryId(), cubeSeg);
                                         }
