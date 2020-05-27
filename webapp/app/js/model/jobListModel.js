@@ -56,8 +56,13 @@ KylinApp.service('JobList',function(JobService, $q, kylinConfig, jobConfig){
                 _this.jobs[id].dropped = false;
             });
             defer.resolve(jobs.length);
-          },function(){
-            defer.reject("failed to load jobs");
+        },function(e){
+          var msg = 'failed to load jobs';
+          if (e.data && e.data.exception) {
+            var message = e.data.exception;
+            msg = !!(message) ? message : msg;
+          }
+          defer.reject(msg);
         });
         return defer.promise;
     };
@@ -73,8 +78,13 @@ KylinApp.service('JobList',function(JobService, $q, kylinConfig, jobConfig){
           }
         });
         defer.resolve(jobsOverview);
-      },function(){
-        defer.reject("failed to load job overview");
+      },function(e){
+        var msg = 'failed to load job overview';
+        if (e.data && e.data.exception) {
+          var message = e.data.exception;
+          msg = !!(message) ? message : msg;
+        }
+        defer.reject(msg);
       });
       return defer.promise;
     };
