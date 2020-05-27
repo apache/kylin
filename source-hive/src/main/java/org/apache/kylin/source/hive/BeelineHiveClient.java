@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
@@ -131,7 +132,34 @@ public class BeelineHiveClient implements IHiveClient {
 
     @Override
     public long getHiveTableRows(String database, String tableName) throws Exception {
-        return getHiveTableMeta(database, tableName).rowNum;
+        ResultSet resultSet = null;
+        long count = 0;
+        try {
+            HiveTableMetaBuilder builder = new HiveTableMetaBuilder();
+            String exe = "use ";
+            stmt.execute(exe.concat(database));
+            String des = "describe formatted ";
+            resultSet = stmt.executeQuery(des.concat(tableName));
+            extractHiveTableMeta(resultSet, builder);
+            count = builder.createHiveTableMeta().rowNum;
+            if (count <= 0) {
+                String querySQL = "select count(*) from ".concat(database + "." + tableName);
+                List<Object[]> datas = null;
+                try {
+                    datas = getHiveResult(querySQL);
+                    if (Objects.nonNull(datas) && !datas.isEmpty()) {
+                        count = Integer.parseInt(datas.get(0)[0] + "");
+                    } else {
+                        throw new IOException("execute get hive table rows result fail : " + querySQL);
+                    }
+                } catch (Exception e) {
+                    throw new IOException("execute get hive table rows result fail : " + querySQL, e);
+                }
+            }
+        } finally {
+            DBUtils.closeQuietly(resultSet);
+        }
+        return count;
     }
 
     @Override

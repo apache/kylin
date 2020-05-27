@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Hive meta API client for Kylin
@@ -126,8 +127,24 @@ public class CLIHiveClient implements IHiveClient {
 
     @Override
     public long getHiveTableRows(String database, String tableName) throws Exception {
+        long count = 0;
         Table table = getMetaStoreClient().getTable(database, tableName);
-        return getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.ROW_COUNT);
+        count = getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.ROW_COUNT);
+        if (count <= 0) {
+            String querySQL = "select count(*) from ".concat(database + "." + tableName);
+            List<Object[]> datas = null;
+            try {
+                datas = getHiveResult(querySQL);
+                if (Objects.nonNull(datas) && !datas.isEmpty()) {
+                    count = Integer.parseInt(datas.get(0)[0] + "");
+                } else {
+                    throw new IOException("execute get hive table rows result fail : " + querySQL);
+                }
+            } catch (Exception e) {
+                throw new IOException("execute get hive table rows result fail : " + querySQL, e);
+            }
+        }
+        return count;
     }
 
     @Override
