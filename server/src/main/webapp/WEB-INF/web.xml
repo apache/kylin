@@ -45,6 +45,7 @@
         	classpath:applicationContext.xml
 			classpath:kylinSecurity.xml
             classpath:kylinMetrics.xml
+            classpath:kylinAuditLog.xml
 			classpath*:kylin-*-plugin.xml
 		</param-value>
     </context-param>

@@ -533,4 +533,8 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         return o.lastModified < this.lastModified ? -1 : o.lastModified > this.lastModified ? 1 : 0;
     }
 
+    @Override
+    public String toString() {
+        return "Job[name=" + getName() + "]";
+    }
 }
