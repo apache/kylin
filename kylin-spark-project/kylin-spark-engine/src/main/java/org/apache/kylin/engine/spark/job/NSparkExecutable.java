@@ -149,9 +149,10 @@ public class NSparkExecutable extends AbstractExecutable {
         if (config.isUTEnv() || config.isZKLocal()) {
             return runLocalMode(filePath, config);
         } else {
-            killOrphanApplicationIfExists(config);
+            logger.info("Task id: {}", getId());
+            killOrphanApplicationIfExists(config, getId());
             return runSparkSubmit(config, hadoopConf, jars, kylinJobJar,
-                    "-className " + getSparkSubmitClassName() + " " + filePath);
+                    "-className " + getSparkSubmitClassName() + " " + filePath, getParent().getId());
         }
     }
 
@@ -209,7 +210,7 @@ public class NSparkExecutable extends AbstractExecutable {
         return originalConfig;
     }
 
-    private void killOrphanApplicationIfExists(KylinConfig config) {
+    private void killOrphanApplicationIfExists(KylinConfig config, String jobId) {
         PatternedLogger patternedLogger = new PatternedLogger(logger);
         String orphanApplicationId = null;
 
@@ -233,7 +234,7 @@ public class NSparkExecutable extends AbstractExecutable {
                     orphanApplicationId = report.getApplicationId().toString();
                     // kill orphan application by command line
                     String killApplicationCmd = "yarn application -kill " + orphanApplicationId;
-                    config.getCliCommandExecutor().execute(killApplicationCmd, patternedLogger);
+                    config.getCliCommandExecutor().execute(killApplicationCmd, patternedLogger, jobId);
                 }
             }
         } catch (YarnException | IOException ex2) {
@@ -242,7 +243,7 @@ public class NSparkExecutable extends AbstractExecutable {
     }
 
     private ExecuteResult runSparkSubmit(KylinConfig config, String hadoopConf, String jars,
-            String kylinJobJar, String appArgs) {
+            String kylinJobJar, String appArgs, String jobId) {
         PatternedLogger patternedLogger;
         if (config.isJobLogPrintEnabled()) {
             patternedLogger = new PatternedLogger(logger);
@@ -254,7 +255,7 @@ public class NSparkExecutable extends AbstractExecutable {
             String cmd = generateSparkCmd(config, hadoopConf, jars, kylinJobJar, appArgs);
 
             CliCommandExecutor exec = new CliCommandExecutor();
-            Pair<Integer, String> result = exec.execute(cmd, patternedLogger);
+            Pair<Integer, String> result = exec.execute(cmd, patternedLogger, jobId);
 
             Map<String, String> extraInfo = makeExtraInfo(patternedLogger.getInfo());
             ExecuteResult ret = ExecuteResult.createSucceed(result.getSecond());

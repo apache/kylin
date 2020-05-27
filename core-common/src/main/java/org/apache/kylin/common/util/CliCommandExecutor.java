@@ -25,6 +25,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.JobProcessContext;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -80,13 +82,13 @@ public class CliCommandExecutor {
     }
 
     public Pair<Integer, String> execute(String command) throws IOException {
-        return execute(command, new SoutLogger());
+        return execute(command, new SoutLogger(), null);
     }
 
-    public Pair<Integer, String> execute(String command, Logger logAppender) throws IOException {
+    public Pair<Integer, String> execute(String command, Logger logAppender, String jobId) throws IOException {
         Pair<Integer, String> r;
         if (remoteHost == null) {
-            r = runNativeCommand(command, logAppender);
+            r = runNativeCommand(command, logAppender, jobId);
         } else {
             r = runRemoteCommand(command, logAppender);
         }
@@ -116,50 +118,61 @@ public class CliCommandExecutor {
         }
     }
 
-    private Pair<Integer, String> runNativeCommand(String command, Logger logAppender) throws IOException {
-        String[] cmd = new String[3];
-        String osName = System.getProperty("os.name");
-        if (osName.startsWith("Windows")) {
-            cmd[0] = "cmd.exe";
-            cmd[1] = "/C";
-        } else {
-            cmd[0] = "/bin/bash";
-            cmd[1] = "-c";
-        }
-        cmd[2] = command;
-
-        ProcessBuilder builder = new ProcessBuilder(cmd);
-        builder.redirectErrorStream(true);
-        Process proc = builder.start();
-
-        BufferedReader reader = new BufferedReader(
-                new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8));
-        String line;
-        StringBuilder result = new StringBuilder();
-        while ((line = reader.readLine()) != null && !Thread.currentThread().isInterrupted()) {
-            result.append(line).append('\n');
-            if (logAppender != null) {
-                logAppender.log(line);
-            }
-        }
-
-        if (Thread.interrupted()) {
-            logger.info("CliCommandExecutor is interruppted by other, kill the sub process: " + command);
-            proc.destroy();
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                // do nothing
-            }
-            return Pair.newPair(1, "Killed");
-        }
-
+    private Pair<Integer, String> runNativeCommand(String command, Logger logAppender, String jobId) throws IOException {
         try {
-            int exitCode = proc.waitFor();
-            return Pair.newPair(exitCode, result.toString());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IOException(e);
+            String[] cmd = new String[3];
+            String osName = System.getProperty("os.name");
+            if (osName.startsWith("Windows")) {
+                cmd[0] = "cmd.exe";
+                cmd[1] = "/C";
+            } else {
+                cmd[0] = "/bin/bash";
+                cmd[1] = "-c";
+            }
+            cmd[2] = command;
+
+            ProcessBuilder builder = new ProcessBuilder(cmd);
+            builder.redirectErrorStream(true);
+            Process proc = builder.start();
+
+            if (StringUtils.isNotBlank(jobId)) {
+                logger.info("Register process {} to {}", proc.toString(), jobId);
+                JobProcessContext.registerProcess(jobId, proc);
+            }
+
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8));
+            String line;
+            StringBuilder result = new StringBuilder();
+            while ((line = reader.readLine()) != null && !Thread.currentThread().isInterrupted()) {
+                result.append(line).append('\n');
+                if (logAppender != null) {
+                    logAppender.log(line);
+                }
+            }
+
+            if (Thread.interrupted()) {
+                logger.info("CliCommandExecutor is interruppted by other, kill the sub process: " + command);
+                proc.destroy();
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    // do nothing
+                }
+                return Pair.newPair(1, "Killed");
+            }
+
+            try {
+                int exitCode = proc.waitFor();
+                return Pair.newPair(exitCode, result.toString());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException(e);
+            }
+        } finally {
+            if (StringUtils.isNotBlank(jobId)) {
+                JobProcessContext.removeProcess(jobId);
+            }
         }
     }
 

@@ -31,6 +31,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.JobProcessContext;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -477,9 +478,34 @@ public class ExecutableManager {
             }
             executableDao.updateJobOutput(jobOutput);
             logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
+
+            if (needDestroyProcess(oldStatus, newStatus)) {
+                logger.debug("need kill {}, from {} to {}", jobId, oldStatus, newStatus);
+                // kill spark-submit process
+                destroyProcess(jobId);
+            }
         } catch (PersistentException e) {
             logger.error("error change job:" + jobId + " to " + newStatus);
             throw new RuntimeException(e);
+        }
+    }
+
+    private boolean needDestroyProcess(ExecutableState from, ExecutableState to) {
+        if (from != ExecutableState.RUNNING || to == null) {
+            return false;
+        }
+        return to == ExecutableState.STOPPED || to == ExecutableState.READY || to == ExecutableState.DISCARDED
+                || to == ExecutableState.ERROR;
+    }
+
+    public void destroyProcess(String jobId) {
+        // in ut env, there is no process for job, just do nothing
+        if (!config.isUTEnv()) {
+            Process process = JobProcessContext.getProcess(jobId);
+            if (process != null && process.isAlive()) {
+                logger.info("Will destroy process " + process.toString());
+                process.destroyForcibly();
+            }
         }
     }
 

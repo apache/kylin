@@ -314,7 +314,7 @@ public class SparkExecutable extends AbstractExecutable {
                 public Pair<Integer, String> call() throws Exception {
                     Pair<Integer, String> result;
                     try {
-                        result = exec.execute(cmd, patternedLogger);
+                        result = exec.execute(cmd, patternedLogger, null);
                     } catch (Exception e) {
                         logger.error("error run spark job:", e);
                         result = new Pair<>(-1, e.getMessage());
@@ -453,7 +453,7 @@ public class SparkExecutable extends AbstractExecutable {
         CliCommandExecutor executor = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
         PatternedLogger patternedLogger = new PatternedLogger(logger);
         String stateCmd = String.format(Locale.ROOT, "yarn application -status %s", appId);
-        executor.execute(stateCmd, patternedLogger);
+        executor.execute(stateCmd, patternedLogger, null);
         Map<String, String> info = patternedLogger.getInfo();
         return info.get(ExecutableConstants.YARN_APP_STATE);
     }

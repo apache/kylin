@@ -132,7 +132,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
             if (config.isLivyEnabled() && cube.getEngineType() == IEngineAware.ID_SPARK) {
                 MRHiveDictUtil.runLivySqlJob(stepLogger, config, ImmutableList.copyOf(hiveCmdBuilder.getStatements()), getManager(), getId());
             } else {
-                Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger);
+                Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger, null);
                 if (response.getFirst() != 0) {
                     throw new RuntimeException("Failed to create mr hive dict, error code " + response.getFirst());
                 }
@@ -197,7 +197,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
             boolean flag = true;
             while (flag && currTimes <= maxTimes) {
                 try {
-                    Pair<Integer, String> result = config.getCliCommandExecutor().execute(cmd, stepLogger);
+                    Pair<Integer, String> result = config.getCliCommandExecutor().execute(cmd, stepLogger, null);
                     stepLogger.log(result.toString());
                     flag = false;
                 } catch (Exception e) {
