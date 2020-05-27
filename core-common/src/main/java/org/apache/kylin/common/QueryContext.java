@@ -82,6 +82,8 @@ public class QueryContext {
     private List<RPCStatistics> rpcStatisticsList = Lists.newCopyOnWriteArrayList();
     private Map<Integer, CubeSegmentStatisticsResult> cubeSegmentStatisticsResultMap = Maps.newConcurrentMap();
 
+    private ConcurrentMap<String, Boolean> isAlreadyAlert = Maps.newConcurrentMap();
+
     private ExecutorService connPool;
 
     QueryContext(String projectName, String sql, String user, int maxConnThreads) {
@@ -127,10 +129,18 @@ public class QueryContext {
         }
     }
 
+    public boolean isAlreadyAlert() {
+        return isAlreadyAlert.putIfAbsent(queryId, true) != null;
+    }
+
     public String getQueryId() {
         return queryId == null ? "" : queryId;
     }
 
+    public String getSql() {
+        return sql;
+    }
+    
     public long getAccumulatedMillis() {
         return System.currentTimeMillis() - queryStartMillis;
     }
@@ -142,7 +152,7 @@ public class QueryContext {
     public String getProject() {
         return project;
     }
-
+    
     public Set<String> getGroups() {
         return groups;
     }
@@ -232,6 +242,18 @@ public class QueryContext {
         return tracer.activeSpan();
     }
 
+    public String getSpanTagValue(Span span, String tagName) {
+        return String.valueOf(tracer.getTagValue(span, tagName));
+    }
+
+    public long getSpanStart(Span span) {
+        return tracer.getStart(span);
+    }
+
+    public long getSpanDuration(Span span) {
+        return tracer.getDuration(span);
+    }
+    
     public Span startFetchCache() {
         return tracer.startSpan(OperationEum.FETCH_CACHE_STEP, rootSpan);
     }

@@ -18,16 +18,10 @@
 
 package org.apache.kylin.rest.util;
 
-import com.google.common.base.Joiner;
-
 public class MailNotificationUtil {
     public static final String MIGRATION_REQUEST = "MIGRATION_REQUEST";
     public static final String MIGRATION_REJECTED = "MIGRATION_REJECTED";
     public static final String MIGRATION_APPROVED = "MIGRATION_APPROVED";
     public static final String MIGRATION_COMPLETED = "MIGRATION_COMPLETED";
     public static final String MIGRATION_FAILED = "MIGRATION_FAILED";
-
-    public static String getMailTitle(String... titleParts) {
-        return "[" + Joiner.on("]-[").join(titleParts) + "]";
-    }
 }

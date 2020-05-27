@@ -24,7 +24,9 @@ import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.DataFormatException;
 
 import org.apache.commons.lang3.SerializationUtils;
@@ -49,6 +51,7 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.CompressionUtils;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.LoggableCachedThreadPool;
 import org.apache.kylin.common.util.Pair;
@@ -67,6 +70,7 @@ import org.apache.kylin.shaded.com.google.common.cache.CacheBuilder;
 import org.apache.kylin.shaded.com.google.common.cache.CacheLoader;
 import org.apache.kylin.shaded.com.google.common.cache.LoadingCache;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.gtrecord.DummyPartitionStreamer;
 import org.apache.kylin.storage.gtrecord.StorageResponseGTScatter;
@@ -316,6 +320,9 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             final Table table = conn.getTable(TableName.valueOf(cubeSeg.getStorageLocationIdentifier()),
                     queryContext.getConnectionPool(projThreadPool));
 
+            final AtomicLong fastest = new AtomicLong(3600 * 1000);
+            final long rpcRequestSubmitTime = System.currentTimeMillis();
+            final ConcurrentMap<CubeVisitResponse, Span> regionRPCSpanMap = Maps.newConcurrentMap();
             table.coprocessorService(CubeVisitService.class, startKey, endKey, //
                     new Batch.Call<CubeVisitService, CubeVisitResponse>() {
                         public CubeVisitResponse call(CubeVisitService rowsService) throws IOException {
@@ -379,6 +386,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                     regionRPCSpan.setTag(TagEnum.RPC_FREE_SWAP.toString(),
                                             String.valueOf(stats.getFreeSwapSpaceSize()));
                                     regionRPCSpan.setTag(TagEnum.RPC_ETC_MSG.toString(), stats.getEtcMsg());
+                                    regionRPCSpanMap.put(response, regionRPCSpan);
                                 }
                                 regionRPCSpan.finish();
                                 // Reset the interrupted state
@@ -463,10 +471,13 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                 }
                             }
 
+                            Span regionRPCSpan = regionRPCSpanMap.get(result);
                             if (rpcException != null) {
                                 queryContext.stop(rpcException);
+                                alertException(epRangeSpan, regionRPCSpan, rpcException);
                                 return;
                             }
+                            alertSlowRegion(epRangeSpan, regionRPCSpan, stats, rpcRequestSubmitTime, fastest);
 
                             epResultItr.append(queueData);
                             // put segment query result to cache if cache is enabled
@@ -655,6 +666,62 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         BytesUtil.writeVInt(cols.length, out);
         for (ByteArray col : cols) {
             col.exportData(out);
+        }
+    }
+
+    private void alertException(final Span epRangeSpan, final Span regionRPCSpan, Exception rpcException) {
+        if (!queryContext.isAlreadyAlert() || !(rpcException instanceof ResourceLimitExceededException)) {
+            int alertRecipient;
+            if (rpcException instanceof ResourceLimitExceededException) {
+                alertRecipient = HBaseRPCHealthCheck.KYLIN_USER;
+            } else if (rpcException instanceof KylinTimeoutException) {
+                alertRecipient = HBaseRPCHealthCheck.KYLIN_HBASE;
+            } else {
+                alertRecipient = HBaseRPCHealthCheck.KYLIN_ADMIN;
+            }
+            HBaseRPCHealthCheck.alert(queryContext, epRangeSpan, regionRPCSpan, rpcException, alertRecipient);
+        }
+    }
+
+    private void alertSlowRegion(final Span epRangeSpan, final Span regionRPCSpan, final Stats stats,
+            long rpcRequestSubmitTime, AtomicLong fastest) {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+
+        long rpcStartTime = queryContext.getSpanStart(regionRPCSpan);
+        long rpcDuration = queryContext.getSpanDuration(regionRPCSpan);
+
+        logger.info("Query-{}: regionRPCSpan spend time {}.", queryContext.getQueryId(), rpcDuration);
+        long fastTime = fastest.get();
+        while (rpcDuration < fastTime) {
+            if (fastest.compareAndSet(fastTime, rpcDuration)) {
+                break;
+            }
+            fastTime = fastest.get();
+        }
+        if (rpcDuration > 1000 * config.getHBaseBadRegionDetectThreshold()) {
+            if (rpcDuration > config.getHBaseBadRegionDetectMultiplier() * fastest.get()
+                    || rpcDuration > config.getHBaseBadRegionDetectMultiplier()
+                            * (stats.getServiceEndTime() - stats.getServiceStartTime())) {
+                if (queryContext.isAlreadyAlert()) {
+                    return;
+                }
+                StringBuilder alerts = new StringBuilder();
+                alerts.append("Slow region detected at: ")
+                        .append(DateFormat.formatToTimeWithoutMilliStr(System.currentTimeMillis())).append(". \n");
+                alerts.append("Total scanned row: ").append(stats.getScannedRowCount()).append(". \n");
+                alerts.append("Total filtered row: ").append(stats.getFilteredRowCount()).append(". \n");
+                alerts.append("Total aggregated row: ").append(stats.getAggregatedRowCount()).append(". \n");
+                alerts.append("RPC task start latency: ").append(rpcStartTime - rpcRequestSubmitTime).append(". \n");
+                alerts.append("RPC client call start time: ").append(rpcStartTime).append(". \n");
+                alerts.append("RPC client call end time: ").append((rpcStartTime + rpcDuration)).append(". \n");
+                alerts.append("Server CPU usage: ").append(stats.getSystemCpuLoad()).append(". \n");
+                alerts.append("Server physical mem left: ").append(stats.getFreePhysicalMemorySize()).append(". \n");
+                alerts.append("Server swap mem left: ").append(stats.getFreeSwapSpaceSize()).append(". \n");
+                alerts.append("Etc message: ").append(stats.getEtcMsg()).append(". \n");
+                alerts.append("Normal Complete: ").append(stats.getNormalComplete() == 1).append(". \n");
+                HBaseRPCHealthCheck.alert(queryContext, epRangeSpan, regionRPCSpan, alerts.toString(),
+                        HBaseRPCHealthCheck.KYLIN_HBASE);
+            }
         }
     }
 }

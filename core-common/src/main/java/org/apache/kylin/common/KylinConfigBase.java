@@ -18,20 +18,6 @@
 
 package org.apache.kylin.common;
 
-import org.apache.kylin.shaded.com.google.common.collect.Lists;
-import org.apache.kylin.shaded.com.google.common.collect.Maps;
-import org.apache.kylin.shaded.com.google.common.collect.Sets;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.text.StrSubstitutor;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.kylin.common.lock.DistributedLockFactory;
-import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.common.util.CliCommandExecutor;
-import org.apache.kylin.common.util.HadoopUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -48,6 +34,20 @@ import java.util.SortedSet;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.lock.DistributedLockFactory;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An abstract class to encapsulate access to a set of 'properties'.
@@ -1495,6 +1495,22 @@ public abstract class KylinConfigBase implements Serializable {
 
     public int getHBaseMaxConnectionThreadsPerProject() {
         return Integer.parseInt(getOptional("kylin.storage.hbase.max-hconnection-threads-per-project", "800"));
+    }
+
+    public String[] getHBaseAdminDls() {
+        return getOptionalStringArray("kylin.storage.hbase.notification-admin-emails", null);
+    }
+
+    public boolean isHBaseBadRegionDetectEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.storage.hbase.bad-region-detect-enabled", "true"));
+    }
+
+    public int getHBaseBadRegionDetectThreshold() {
+        return Integer.parseInt(getOptional("kylin.storage.hbase.bad-region-detect-threshold", "15"));
+    }
+
+    public int getHBaseBadRegionDetectMultiplier() {
+        return Integer.parseInt(getOptional("kylin.storage.hbase.bad-region-detect-multiplier", "10"));
     }
 
     // ============================================================================
