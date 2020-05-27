@@ -65,12 +65,13 @@
                         <h4>
                             Project: <span class="label label-info">{{projectModel.getSelectedProject()}}</span>
                             &nbsp&nbsp Cube:
-                            <ui-select style="display: inline-flex; width: 250px" ng-model="mandatary_cube" ng-init="getSelected($select)">
-                              <ui-select-match placeholder="Filter ..." style="overflow: auto;width: 250px">{{$select.selected}}</ui-select-match>
-                              <ui-select-choices repeat="cube in cubeItems | filter:$select.search" style="word-break:break-all;">
-                                <span ng-bind-html="cube | highlight: $select.search"></span>
-                              </ui-select-choices>
-                            </ui-select>
+                            <select chosen ng-model="specifyCube"
+                                    ng-options="cube for cube in cubeItems"
+                                    style="display: inline-flex; width: 250px"
+                                    data-placeholder="Filter ..."
+                                    class="chosen-select">
+                              <option value=""> -- Choose Cube -- </option>
+                            </select>
                             <i class="fa fa-info-circle" title="Specify cube to query"  kylinpopover template="specifyCubeTip.html" placement="right"></i>
                         </h4>
                     </div>
