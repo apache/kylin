@@ -57,7 +57,7 @@ KylinApp
         };
 
         $scope.locationChangeConfirmed = false;
-        $scope.selectDirective = null;
+        $scope.specifyCube = null;
         $scope.cubeItems = [];
 
         var Query = {
@@ -253,8 +253,8 @@ KylinApp
         $scope.query = function (query) {
             scrollToButton();
             var backdoorToggles = null;
-            if ($scope.selectDirective.selected != null && $scope.selectDirective.selected !== "-- All cubes in current project --") {
-              backdoorToggles = {"DEBUG_TOGGLE_HIT_CUBE": $scope.selectDirective.selected};
+            if ($scope.specifyCube != null) {
+              backdoorToggles = {"DEBUG_TOGGLE_HIT_CUBE": $scope.specifyCube};
             }
             QueryService.query({}, {sql: query.sql, offset: 0, limit: $scope.rowsPerPage, acceptPartial: query.acceptPartial, project: query.project, backdoorToggles: backdoorToggles}, function (result) {
                 scrollToButton();
@@ -403,10 +403,6 @@ KylinApp
             });
         }
 
-        $scope.getSelected = function (selected) {
-          $scope.selectDirective = selected;
-        }
-
         var saveQueryController = function ($scope, $modalInstance, curQuery, QueryService) {
             $scope.curQuery = curQuery;
 
@@ -426,10 +422,7 @@ KylinApp
           $scope.listCachedQueries();
           $scope.listSavedQueries();
           $scope.cubeItems = [];
-          $scope.cubeItems.push("-- All cubes in current project --")
-          if ($scope.selectDirective != null) {
-            $scope.selectDirective.clearSelected();
-          }
+          $scope.specifyCube = null;
           CubeService.list({projectName:newValue}, function (_cubes) {
             if (_cubes !== 0) {
               angular.forEach(_cubes,function(cube){
