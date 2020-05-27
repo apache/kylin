@@ -56,7 +56,7 @@ public class SqoopCmdStep extends AbstractExecutable {
         cmd = String.format(Locale.ROOT, "%s/bin/sqoop import -Dorg.apache.sqoop.splitter.allow_text_splitter=true "
                 + generateSqoopConfigArgString() + cmd, config.getSqoopHome());
         stepLogger.log(String.format(Locale.ROOT, "exe cmd:%s", cmd));
-        Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger);
+        Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger, null);
         getManager().addJobInfo(getId(), stepLogger.getInfo());
         if (response.getFirst() != 0) {
             throw new RuntimeException("Failed to create flat hive table, error code " + response.getFirst());

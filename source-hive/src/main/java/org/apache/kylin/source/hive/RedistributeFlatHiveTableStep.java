@@ -56,7 +56,7 @@ public class RedistributeFlatHiveTableStep extends AbstractExecutable {
         stepLogger.log("Redistribute table, cmd: ");
         stepLogger.log(cmd);
 
-        Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger);
+        Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger, null);
         getManager().addJobInfo(getId(), stepLogger.getInfo());
 
         if (response.getFirst() != 0) {

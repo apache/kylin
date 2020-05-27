@@ -45,7 +45,7 @@ public class ShellExecutable extends AbstractExecutable {
         try {
             logger.info("executing:" + getCmd());
             final PatternedLogger patternedLogger = new PatternedLogger(logger);
-            final Pair<Integer, String> result = context.getConfig().getCliCommandExecutor().execute(getCmd(), patternedLogger);
+            final Pair<Integer, String> result = context.getConfig().getCliCommandExecutor().execute(getCmd(), patternedLogger, null);
             getManager().addJobInfo(getId(), patternedLogger.getInfo());
             return result.getFirst() == 0 ? new ExecuteResult(ExecuteResult.State.SUCCEED, result.getSecond())
                     : ExecuteResult.createFailed(new ShellException(result.getSecond()));

@@ -1140,7 +1140,7 @@ public class CubeService extends BasicService implements InitializingBean {
         PatternedLogger patternedLogger = new PatternedLogger(logger);
 
         try {
-            exec.execute(cmd, patternedLogger);
+            exec.execute(cmd, patternedLogger, null);
         } catch (IOException e) {
             throw new InternalErrorException("Failed to perform one-click migrating", e);
         }

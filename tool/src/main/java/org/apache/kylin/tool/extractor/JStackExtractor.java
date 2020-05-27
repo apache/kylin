@@ -53,7 +53,7 @@ public class JStackExtractor extends AbstractInfoExtractor {
 
     private static void dumpKylinJStack(File outputFile) throws IOException {
         String jstackDumpCmd = String.format(Locale.ROOT, "jstack -l %s", getKylinPid());
-        Pair<Integer, String> result = new CliCommandExecutor().execute(jstackDumpCmd, null);
+        Pair<Integer, String> result = new CliCommandExecutor().execute(jstackDumpCmd, null, null);
         FileUtils.writeStringToFile(outputFile, result.getSecond());
     }
 }

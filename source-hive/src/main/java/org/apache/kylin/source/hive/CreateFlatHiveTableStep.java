@@ -56,7 +56,7 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
         stepLogger.log("Create and distribute table, cmd: ");
         stepLogger.log(cmd);
 
-        Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger);
+        Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger, null);
         Map<String, String> info = stepLogger.getInfo();
 
         //get the flat Hive table size

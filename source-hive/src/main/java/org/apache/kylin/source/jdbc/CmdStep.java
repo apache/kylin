@@ -47,7 +47,7 @@ public class CmdStep extends AbstractExecutable {
     protected void sqoopFlatHiveTable(KylinConfig config) throws IOException {
         String cmd = getParam("cmd");
         stepLogger.log(String.format(Locale.ROOT, "exe cmd:%s", cmd));
-        Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger);
+        Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger, null);
         getManager().addJobInfo(getId(), stepLogger.getInfo());
         if (response.getFirst() != 0) {
             throw new RuntimeException("Failed to create flat hive table, error code " + response.getFirst());

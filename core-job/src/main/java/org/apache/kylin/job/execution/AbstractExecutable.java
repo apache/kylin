@@ -39,6 +39,7 @@ import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.exception.JobStoppedException;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
 import org.apache.kylin.job.util.MailNotificationUtil;
@@ -103,6 +104,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     protected void onExecuteStart(ExecutableContext executableContext) {
+        checkJobPaused();
         Map<String, String> info = Maps.newHashMap();
         info.put(START_TIME, Long.toString(System.currentTimeMillis()));
         getManager().updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
@@ -157,6 +159,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
+        checkJobPaused();
         if (!isDiscarded()) {
             getManager().addJobInfo(getId(), END_TIME, Long.toString(System.currentTimeMillis()));
             String output = null;
@@ -186,6 +189,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                     pauseOnRetry();
                     logger.info("Begin to retry, retry time: {}", retry);
                 }
+                checkJobPaused();
                 catchedException = null;
                 result = null;
                 try {
@@ -210,6 +214,8 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
             onExecuteFinishedWithRetry(result, executableContext);
         } catch (ExecuteException e) {
             throw e;
+        } catch (JobStoppedException e) {
+            result = ExecuteResult.createSucceed();
         } catch (Exception e) {
             throw new ExecuteException(e);
         }
@@ -389,6 +395,17 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         }
     }
 
+    public void checkJobPaused() {
+        AbstractExecutable job = this;
+        if (getParentId() != null) {
+            job = getParent();
+        }
+        logger.info("The state of job is:" + job.getStatus());
+        if (ExecutableState.STOPPED.equals(job.getStatus()) || ExecutableState.DISCARDED.equals(job.getStatus())) {
+            throw new JobStoppedException();
+        }
+    }
+
     public final String getSubmitter() {
         return getParam(SUBMITTER);
     }
@@ -499,6 +516,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     /**
+     *
      * The larger the value, the higher priority
      * */
     public int getDefaultPriority() {
@@ -610,8 +628,17 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     public final String getParentId() {
         return getParam(PARENT_ID);
     }
+
+    public final AbstractExecutable getParent() {
+        return getManager().getJob(getParam(PARENT_ID));
+    }
+
     public final void setParentId(String parentId) {
         setParam(PARENT_ID, parentId);
+    }
+
+    public final void setParent(AbstractExecutable parent) {
+        setParentId(parent.getId());
     }
 
     //will modify input info
