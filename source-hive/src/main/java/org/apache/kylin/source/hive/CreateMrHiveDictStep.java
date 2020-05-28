@@ -58,8 +58,9 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
     private static final String GET_SQL = "\" Get Max Dict Value Sql : \"";
 
     protected void createMrHiveDict(KylinConfig config, DistributedLock lock) throws Exception {
-        logger.info("start to run createMrHiveDict {}", getId());
+        logger.info("Start to run createMrHiveDict {}", getId());
         try {
+            // Step 1: Apply for lock if required
             if (getIsLock()) {
                 getLock(lock);
             }
@@ -72,12 +73,13 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
             if (sql != null && sql.length() > 0) {
                 hiveCmdBuilder.addStatement(sql);
             }
-            Map<String, String> maxDictValMap = deserilizeForMap(getMaxDictStatementMap());
-            Map<String, String> dictSqlMap = deserilizeForMap(getCreateTableStatementMap());
+            Map<String, String> maxDictValMap = deserializeForMap(getMaxDictStatementMap());
+            Map<String, String> dictSqlMap = deserializeForMap(getCreateTableStatementMap());
 
-            if (dictSqlMap != null && dictSqlMap.size() > 0) {
+            // Step 2: Execute HQL
+            if (!dictSqlMap.isEmpty()) {
                 IHiveClient hiveClient = HiveClientFactory.getHiveClient();
-                if (maxDictValMap != null && maxDictValMap.size() > 0) {
+                if (!maxDictValMap.isEmpty()) {
                     if (maxDictValMap.size() == dictSqlMap.size()) {
                         maxDictValMap.forEach((columnName, maxDictValSql) -> {
                             int max = 0;
@@ -111,7 +113,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
 
             final String cmd = hiveCmdBuilder.toString();
 
-            stepLogger.log("MR/Hive dict, cmd: " + cmd);
+            stepLogger.log("Build Hive Global Dictionary by: " + cmd);
 
             CubeManager manager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = manager.getCube(getCubeName());
@@ -123,9 +125,9 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
                 if (response.getFirst() != 0) {
                     throw new RuntimeException("Failed to create MR/Hive dict, error code " + response.getFirst());
                 }
-                getManager().addJobInfo(getId(), stepLogger.getInfo());
             }
 
+            // Step 3: Release lock if required
             if (getIsUnlock()) {
                 unLock(lock);
             }
@@ -153,20 +155,10 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
                 lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentThread();
             }
 
-            String preHdfsShell = getPreHdfsShell();
-            if (Objects.nonNull(preHdfsShell) && !"".equalsIgnoreCase(preHdfsShell)) {
-                doRetry(preHdfsShell, config);
-            }
-
             createMrHiveDict(config, lock);
 
-            String postfixHdfsCmd = getPostfixHdfsShell();
-            if (Objects.nonNull(postfixHdfsCmd) && !"".equalsIgnoreCase(postfixHdfsCmd)) {
-                doRetry(postfixHdfsCmd, config);
-            }
-
             if (isDiscarded()) {
-                if (getIsLock()) {
+                if (getIsLock() && lock != null) {
                     unLock(lock);
                 }
                 return new ExecuteResult(ExecuteResult.State.DISCARDED, stepLogger.getBufferedLog());
@@ -224,35 +216,19 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
     }
 
     public void setCreateTableStatementMap(Map<String, String> dictSqlMap) {
-        setParam("HiveRedistributeDataMap", serilizeToMap(dictSqlMap));
+        setParam("DictSqlMap", serializeMap(dictSqlMap));
     }
 
     public String getCreateTableStatementMap() {
-        return getParam("HiveRedistributeDataMap");
+        return getParam("DictSqlMap");
     }
 
     public void setMaxDictStatementMap(Map<String, String> maxDictValMap) {
-        setParam("DictMaxMap", serilizeToMap(maxDictValMap));
+        setParam("DictMaxMap", serializeMap(maxDictValMap));
     }
 
     public String getMaxDictStatementMap() {
         return getParam("DictMaxMap");
-    }
-
-    public String getPreHdfsShell() {
-        return getParam("preHdfsCmd");
-    }
-
-    public void setPrefixHdfsShell(String cmd) {
-        setParam("preHdfsCmd", cmd);
-    }
-
-    public String getPostfixHdfsShell() {
-        return getParam("postfixHdfsCmd");
-    }
-
-    public void setPostfixHdfsShell(String cmd) {
-        setParam("postfixHdfsCmd", cmd);
     }
 
     public void setIsLock(Boolean isLock) {
@@ -261,7 +237,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
 
     public boolean getIsLock() {
         String isLock = getParam("isLock");
-        return Strings.isNullOrEmpty(isLock) ? false : Boolean.parseBoolean(isLock);
+        return !Strings.isNullOrEmpty(isLock) && Boolean.parseBoolean(isLock);
     }
 
     public void setJobFlowJobId(String jobId) {
@@ -278,7 +254,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
 
     public boolean getIsUnlock() {
         String isUnLock = getParam("isUnLock");
-        return Strings.isNullOrEmpty(isUnLock) ? false : Boolean.parseBoolean(isUnLock);
+        return !Strings.isNullOrEmpty(isUnLock) && Boolean.parseBoolean(isUnLock);
     }
 
     public void setLockPathName(String pathName) {
@@ -368,7 +344,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
                                 }
                             }
                         }
-                        isLocked = true;//get lock fail,will try again
+                        isLocked = true; //get lock fail,will try again
                     }
                 }
                 // wait 1 min and try again
@@ -402,7 +378,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
         }
     }
 
-    private static String serilizeToMap(Map<String, String> map) {
+    private static String serializeMap(Map<String, String> map) {
         JSONArray result = new JSONArray();
         if (map != null && map.size() > 0) {
             map.forEach((key, value) -> {
@@ -418,7 +394,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
         return result.toString();
     }
 
-    private static Map<String, String> deserilizeForMap(String mapStr) {
+    private static Map<String, String> deserializeForMap(String mapStr) {
         Map<String, String> result = new HashMap<>();
         if (mapStr != null) {
             try {

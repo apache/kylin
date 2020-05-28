@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common;
 
@@ -162,7 +162,6 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     /**
-     *
      * @param propertyKeys the collection of the properties; if null will return all properties
      * @return properties which contained in propertyKeys
      */
@@ -581,21 +580,28 @@ public abstract class KylinConfigBase implements Serializable {
 
 
     // ============================================================================
-    // mr-hive dict
+    // Hive Global dictionary by mr/hive
     // ============================================================================
     public String[] getMrHiveDictColumns() {
         String columnStr = getMrHiveDictColumnsStr();
-        if (!columnStr.equals("")) {
+        if (!StringUtils.isEmpty(columnStr)) {
             return columnStr.split(",");
         }
         return new String[0];
+    }
+
+    /**
+     * @return the hdfs path for Hive Global dictionary table
+     */
+    public String getHiveDatabaseDir() {
+        return this.getOptional("kylin.source.hive.databasedir", "");
     }
 
     public String[] getMrHiveDictColumnsExcludeRefColumns() {
         String[] excludeRefCols = null;
         String[] hiveDictColumns = getMrHiveDictColumns();
         Map<String, String> refCols = getMrHiveDictRefColumns();
-        if(Objects.nonNull(hiveDictColumns) && hiveDictColumns.length>0) {
+        if (Objects.nonNull(hiveDictColumns) && hiveDictColumns.length > 0) {
             excludeRefCols = Arrays.stream(hiveDictColumns).filter(x -> !refCols.containsKey(x)).toArray(String[]::new);
         }
         return excludeRefCols;
@@ -603,40 +609,40 @@ public abstract class KylinConfigBase implements Serializable {
 
     /**
      * set kylin.dictionary.mr-hive.columns in Cube level config , value are the columns which want to use MR/Hive to build global dict ,
-     * Format, tableAliasName_ColumnName, multiple columns separated by commas,eg KYLIN_SALES_BUYER_ID,KYLIN_SALES_SELLER_ID
-     * @return  if mr-hive dict not enabled, return "";
-     *          else return {TABLE_NAME}_{COLUMN_NAME1},{TABLE_NAME}_{COLUMN_NAME2}"
+     * Format, tableAliasName_ColumnName, multiple columns separated by comma,eg KYLIN_SALES_BUYER_ID,KYLIN_SALES_SELLER_ID
+     *
+     * @return if mr-hive dict not enabled, return "";
+     * else return {TABLE_NAME}_{COLUMN_NAME1},{TABLE_NAME}_{COLUMN_NAME2}"
      */
     private String getMrHiveDictColumnsStr() {
         return getOptional("kylin.dictionary.mr-hive.columns", "");
     }
 
     /**
-     * @return  The global dic reduce num per column. Default 2  per column.
+     * @return The global dic reduce num per column. Default 2  per column.
      */
     public Integer[] getMrHiveDictColumnsReduceNumExcludeRefCols() {
         String[] excludeRefCols = getMrHiveDictColumnsExcludeRefColumns();
 
-        if(Objects.nonNull(excludeRefCols) && excludeRefCols.length>0) {
+        if (Objects.nonNull(excludeRefCols) && excludeRefCols.length > 0) {
             String[] arr = null;
             Map<String, Integer> colNum = new HashMap<>();
             Integer[] reduceNumArr = new Integer[excludeRefCols.length];
             String[] columnReduceNum = getMrHiveDictColumnsReduceNumStr().split(",");
 
-            //change set columnReduceNum to map struct
             try {
-                for(int i=0;i<columnReduceNum.length;i++){
-                    if(!StringUtils.isBlank(columnReduceNum[i])) {
+                for (int i = 0; i < columnReduceNum.length; i++) {
+                    if (!StringUtils.isBlank(columnReduceNum[i])) {
                         arr = columnReduceNum[i].split(":");
                         colNum.put(arr[0], Integer.parseInt(arr[1]));
                     }
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 logger.error("set kylin.dictionary.mr-hive.columns.reduce.num error {} , the value should like colAilasName:reduceNum,colAilasName:reduceNum", getMrHiveDictColumnsReduceNumStr());
             }
 
             for (int i = 0; i < excludeRefCols.length; i++) {
-                reduceNumArr[i] = colNum.containsKey(excludeRefCols[i])?colNum.get(excludeRefCols[i]): DEFAULT_MR_HIVE_GLOBAL_DICT_REDUCE_NUM_PER_COLUMN;
+                reduceNumArr[i] = colNum.containsKey(excludeRefCols[i]) ? colNum.get(excludeRefCols[i]) : DEFAULT_MR_HIVE_GLOBAL_DICT_REDUCE_NUM_PER_COLUMN;
             }
 
             Arrays.asList(reduceNumArr).stream().forEach(x -> {
@@ -646,7 +652,7 @@ public abstract class KylinConfigBase implements Serializable {
             });
 
             return reduceNumArr;
-        }else {
+        } else {
             return null;
         }
     }
@@ -654,15 +660,13 @@ public abstract class KylinConfigBase implements Serializable {
     /**
      * Set kylin.dictionary.mr-hive.columns.reduce.num in Cube level config , value are the reduce number for global dict columns which are set in kylin.dictionary.mr-hive.columns.
      * Format, tableAliasName_ColumnName:number, multiple columns separated by commas,eg KYLIN_SALES_BUYER_ID:5,KYLIN_SALES_SELLER_ID:3
-     * @return
      */
     private String getMrHiveDictColumnsReduceNumStr() {
         return getOptional("kylin.dictionary.mr-hive.columns.reduce.num", "");
     }
 
     /**
-     * MR/Hive global domain dic (reuse dict from other cube's MR/Hive global dic column)
-     * @return
+     * MR/Hive global domain dictionary (reuse dict from other cube's MR/Hive global dic column)
      */
     public Map<String, String> getMrHiveDictRefColumns() {
         Map<String, String> result = new HashMap<>();
@@ -670,7 +674,7 @@ public abstract class KylinConfigBase implements Serializable {
         if (!StringUtils.isEmpty(columnStr)) {
             String[] pairs = columnStr.split(",");
             for (String pair : pairs) {
-                String [] infos = pair.split(":");
+                String[] infos = pair.split(":");
                 result.put(infos[0], infos[1]);
             }
         }
@@ -685,8 +689,8 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.dictionary.mr-hive.table.suffix", "_global_dict");
     }
 
-    public String getMrHiveDictIntermediateTTableSuffix() {
-        return getOptional("kylin.dictionary.mr-hive.intermediate.table.suffix", "__group_by");
+    public String getMrHiveDistinctValueTableSuffix() {
+        return getOptional("kylin.dictionary.mr-hive.intermediate.table.suffix", "__distinct_value");
     }
 
     // ============================================================================
@@ -1100,9 +1104,6 @@ public abstract class KylinConfigBase implements Serializable {
         return this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT);
     }
 
-    public String getHiveDatabaseDir() {
-        return this.getOptional("kylin.source.hive.databasedir", "");
-    }
 
     public String getFlatTableStorageFormat() {
         return this.getOptional("kylin.source.hive.flat-table-storage-format", "SEQUENCEFILE");
@@ -2326,7 +2327,7 @@ public abstract class KylinConfigBase implements Serializable {
         return getPropertiesByPrefix("kylin.metrics.");
     }
 
-    public int printSampleEventRatio(){
+    public int printSampleEventRatio() {
         String val = getOptional("kylin.metrics.kafka-sample-ratio", "10000");
         return Integer.parseInt(val);
     }
@@ -2558,7 +2559,7 @@ public abstract class KylinConfigBase implements Serializable {
         return (getOptional("kylin.stream.event.timezone", ""));
     }
 
-    public boolean isAutoResubmitDiscardJob(){
+    public boolean isAutoResubmitDiscardJob() {
         return Boolean.parseBoolean(getOptional("kylin.stream.auto-resubmit-after-discard-enabled", "true"));
     }
 

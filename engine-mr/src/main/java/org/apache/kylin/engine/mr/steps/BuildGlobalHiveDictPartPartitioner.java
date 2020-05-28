@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
+
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
@@ -28,7 +29,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 
-public class BuildGlobalHiveDicPartPartitioner extends Partitioner<Text, NullWritable> implements Configurable {
+public class BuildGlobalHiveDictPartPartitioner extends Partitioner<Text, NullWritable> implements Configurable {
     private Configuration conf;
 
     private Integer[] reduceNumArr;
@@ -49,21 +50,19 @@ public class BuildGlobalHiveDicPartPartitioner extends Partitioner<Text, NullWri
 
     @Override
     public int getPartition(Text key, NullWritable value, int numReduceTasks) {
-        //get first byte, the first byte value is the dic col index ,start from 0
+        // get first byte, the first byte value is the dic col index ,start from 0
         int colIndex = key.getBytes()[0];
         int colReduceNum = reduceNumArr[colIndex];
 
         int colReduceNumOffset = 0;
-        for (int i=0;i<colIndex;i++){
-            colReduceNumOffset += reduceNumArr[i] ;
+        for (int i = 0; i < colIndex; i++) {
+            colReduceNumOffset += reduceNumArr[i];
         }
 
-        //Calculate reduce number , reduce num = (value.hash % colReduceNum) + colReduceNumOffset
+        // Calculate reduce number , reduce num = (value.hash % colReduceNum) + colReduceNumOffset
         byte[] keyBytes = Bytes.copy(key.getBytes(), 1, key.getLength() - 1);
-        int hashCode = new Text(keyBytes).hashCode() &  0x7FFFFFFF ;
-        int reduceNo = hashCode % colReduceNum + colReduceNumOffset;
-
-        return reduceNo;
+        int hashCode = new Text(keyBytes).hashCode() & 0x7FFFFFFF;
+        return hashCode % colReduceNum + colReduceNumOffset;
     }
 
     @Override
