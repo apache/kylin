@@ -88,6 +88,10 @@ public class FunctionDesc implements Serializable {
     private DataType returnDataType;
     private MeasureType<?> measureType;
     private boolean isDimensionAsMetric = false;
+
+    /**
+     * The flag of Hive Global Dictionary for COUNT_DISTINCT
+     */
     private boolean isMrDict = false;
 
     public boolean isMrDict() {

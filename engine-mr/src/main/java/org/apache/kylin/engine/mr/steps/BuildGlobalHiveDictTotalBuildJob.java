@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
+
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -40,8 +41,8 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BuildGlobalHiveDicTotalBuildJob extends AbstractHadoopJob {
-    protected static final Logger logger = LoggerFactory.getLogger(BuildGlobalHiveDicTotalBuildJob.class);
+public class BuildGlobalHiveDictTotalBuildJob extends AbstractHadoopJob {
+    protected static final Logger logger = LoggerFactory.getLogger(BuildGlobalHiveDictTotalBuildJob.class);
 
     @Override
     public int run(String[] args) throws Exception {
@@ -77,7 +78,7 @@ public class BuildGlobalHiveDicTotalBuildJob extends AbstractHadoopJob {
             job.getConfiguration().set("last.max.dic.value.path", getOptionValue(OPTION_GLOBAL_DIC_MAX_DISTINCT_COUNT));
             job.getConfiguration().setBoolean("mapreduce.output.fileoutputformat.compress", false);
 
-            job.setJarByClass(BuildGlobalHiveDicTotalBuildJob.class);
+            job.setJarByClass(BuildGlobalHiveDictTotalBuildJob.class);
 
             setJobClasspath(job, cube.getConfig());
 
@@ -95,8 +96,8 @@ public class BuildGlobalHiveDicTotalBuildJob extends AbstractHadoopJob {
             // prevent to create zero-sized default output
             LazyOutputFormat.setOutputFormatClass(job, TextOutputFormat.class);
 
-            //delete output
-            Path baseOutputPath =new Path(getOptionValue(OPTION_OUTPUT_PATH));
+            // delete output
+            Path baseOutputPath = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             deletePath(job.getConfiguration(), baseOutputPath);
 
             attachSegmentMetadataWithDict(segment, job.getConfiguration());
@@ -107,10 +108,10 @@ public class BuildGlobalHiveDicTotalBuildJob extends AbstractHadoopJob {
         }
     }
 
-    private void setOutput(Job job, String[] dicColsArry, String outputBase){
+    private void setOutput(Job job, String[] dicColsArr, String outputBase) {
         // make each reducer output to respective dir
         ///user/prod_kylin/tmp/kylin2/globaldic_test/kylin-188c9f9d_dabb_944e_9f20_99dc95be66e6/bs_order_scene_day_new_cube_clone/dict_column=DM_ES_REPORT_ORDER_VIEW0420_DRIVER_ID/part_sort
-        for(int i=0;i<dicColsArry.length;i++){
+        for (int i = 0; i < dicColsArr.length; i++) {
             MultipleOutputs.addNamedOutput(job, i + "", TextOutputFormat.class, Text.class, LongWritable.class);
         }
         Path outputPath = new Path(outputBase);
@@ -120,7 +121,7 @@ public class BuildGlobalHiveDicTotalBuildJob extends AbstractHadoopJob {
     private void setInput(Job job, String input) throws IOException {
         Path path = new Path(input);
         FileSystem fs = path.getFileSystem(job.getConfiguration());
-        if(!fs.exists(path)){
+        if (!fs.exists(path)) {
             fs.mkdirs(path);
         }
         FileInputFormat.setInputPaths(job, getOptionValue(OPTION_INPUT_PATH));

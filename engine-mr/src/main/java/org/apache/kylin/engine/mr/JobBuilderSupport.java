@@ -6,15 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.engine.mr;
 
@@ -37,7 +37,7 @@ import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
-import org.apache.kylin.engine.mr.steps.BuildGlobalHiveDicTotalBuildJob;
+import org.apache.kylin.engine.mr.steps.BuildGlobalHiveDictTotalBuildJob;
 import org.apache.kylin.engine.mr.steps.BuildGlobalHiveDictPartBuildJob;
 import org.apache.kylin.engine.mr.steps.CalculateStatsFromBaseCuboidJob;
 import org.apache.kylin.engine.mr.steps.CreateDictionaryJob;
@@ -155,7 +155,7 @@ public class JobBuilderSupport {
     }
 
     public MapReduceExecutable createCalculateStatsFromBaseCuboid(String inputPath, String outputPath,
-            CuboidModeEnum cuboidMode) {
+                                                                  CuboidModeEnum cuboidMode) {
         MapReduceExecutable result = new MapReduceExecutable();
         result.setName(ExecutableConstants.STEP_NAME_CALCULATE_STATS_FROM_BASE_CUBOID);
         result.setMapReduceJobClass(CalculateStatsFromBaseCuboidJob.class);
@@ -224,10 +224,10 @@ public class JobBuilderSupport {
         return result;
     }
 
-    public MapReduceExecutable createBuildGlobalHiveDicTotalBuildJob(String jobId) {
+    public MapReduceExecutable createBuildGlobalHiveDictTotalBuildJob(String jobId) {
         MapReduceExecutable result = new MapReduceExecutable();
         result.setName(ExecutableConstants.STEP_NAME_GLOBAL_DICT_TOTAL_BUILD_DICTVAL);
-        result.setMapReduceJobClass(BuildGlobalHiveDicTotalBuildJob.class);
+        result.setMapReduceJobClass(BuildGlobalHiveDictTotalBuildJob.class);
         StringBuilder cmd = new StringBuilder();
         appendMapReduceParameters(cmd);
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getRealization().getName());
@@ -384,26 +384,26 @@ public class JobBuilderSupport {
     }
 
     public String getBuildGlobalHiveDicTotalBuildJobInputPath(String jobId) {
-        return getBuildGlobalDictionaryBasePath(jobId)+"/part_sort";
+        return getBuildGlobalDictionaryBasePath(jobId) + "/part_sort";
     }
 
     public String getBuildGlobalDictionaryMaxDistinctCountPath(String jobId) {
         KylinConfig conf = seg.getConfig();
         String dbDir = conf.getHiveDatabaseDir();
         IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(seg);
-        String tableName = flatDesc.getTableName()+conf.getMrHiveDictIntermediateTTableSuffix();
-        String outPut = dbDir+"/"+tableName+"/dict_column="+BatchConstants.CFG_GLOBAL_DICT_STATS_PARTITION_VALUE;
+        String tableName = flatDesc.getTableName() + conf.getMrHiveDistinctValueTableSuffix();
+        String outPut = dbDir + "/" + tableName + "/dict_column=" + BatchConstants.CFG_GLOBAL_DICT_STATS_PARTITION_VALUE;
         return outPut;
     }
 
     public String getBuildGlobalDictionaryPartReduceStatsPathV2(String jobId) {
-        return getBuildGlobalDictionaryBasePath(jobId)+ "/reduce_stats";
+        return getBuildGlobalDictionaryBasePath(jobId) + "/reduce_stats";
     }
 
-    public String getBuildGlobalDictionaryTotalOutput(KylinConfig config){
+    public String getBuildGlobalDictionaryTotalOutput(KylinConfig config) {
         String dbDir = config.getHiveDatabaseDir();
-        String tableName = EngineFactory.getJoinedFlatTableDesc(seg).getTableName()+config.getMrHiveDictTableSuffix();
-        String path = dbDir+"/"+tableName;
+        String tableName = EngineFactory.getJoinedFlatTableDesc(seg).getTableName() + config.getMrHiveDictTableSuffix();
+        String path = dbDir + "/" + tableName;
         return path;
     }
 
@@ -509,7 +509,7 @@ public class JobBuilderSupport {
         List<FileStatus> outputs = Lists.newArrayList();
         scanFiles(input, fs, outputs);
         long size = 0L;
-        for (FileStatus stat: outputs) {
+        for (FileStatus stat : outputs) {
             size += stat.getLen();
         }
         return size;

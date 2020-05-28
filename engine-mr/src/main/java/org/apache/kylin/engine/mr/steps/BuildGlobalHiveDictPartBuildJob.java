@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
+
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -47,7 +48,7 @@ public class BuildGlobalHiveDictPartBuildJob extends AbstractHadoopJob {
     @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();
-        String[] dicColsArr=null;
+        String[] dicColsArr = null;
 
         try {
             options.addOption(OPTION_JOB_NAME);
@@ -78,7 +79,7 @@ public class BuildGlobalHiveDictPartBuildJob extends AbstractHadoopJob {
             setJobClasspath(job, cube.getConfig());
 
             //FileInputFormat.setInputPaths(job, input);
-            setInputput(job, dicColsArr, getInputPath(config, segment));
+            setInput(job, dicColsArr, getInputPath(config, segment));
 
             // make each reducer output to respective dir
             setOutput(job, dicColsArr, getOptionValue(OPTION_OUTPUT_PATH));
@@ -94,15 +95,14 @@ public class BuildGlobalHiveDictPartBuildJob extends AbstractHadoopJob {
             job.setOutputValueClass(Text.class);
 
             job.setMapperClass(BuildGlobalHiveDictPartBuildMapper.class);
-
-            job.setPartitionerClass(BuildGlobalHiveDicPartPartitioner.class);
-            job.setReducerClass(BuildGlobalHiveDicPartBuildReducer.class);
+            job.setPartitionerClass(BuildGlobalHiveDictPartPartitioner.class);
+            job.setReducerClass(BuildGlobalHiveDictPartBuildReducer.class);
 
             // prevent to create zero-sized default output
             LazyOutputFormat.setOutputFormatClass(job, TextOutputFormat.class);
 
-            //delete output
-            Path baseOutputPath =new Path(getOptionValue(OPTION_OUTPUT_PATH));
+            // delete output
+            Path baseOutputPath = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             deletePath(job.getConfiguration(), baseOutputPath);
 
             attachSegmentMetadataWithDict(segment, job.getConfiguration());
@@ -113,44 +113,41 @@ public class BuildGlobalHiveDictPartBuildJob extends AbstractHadoopJob {
         }
     }
 
-    private void setOutput(Job job, String[] dicColsArry, String outputBase){
+    private void setOutput(Job job, String[] dicColsArr, String outputBase) {
         // make each reducer output to respective dir
-        //eg: /user/kylin/tmp/kylin/globaldic_test/kylin-188c9f9d_dabb_944e_9f20_99dc95be66e6/kylin_sales_cube_mr/dict_column=KYLIN_SALES_SELLER_ID/part_sort
-        for(int i=0;i<dicColsArry.length;i++){
+        // eg: /user/kylin/tmp/kylin/globaldic_test/kylin-188c9f9d_dabb_944e_9f20_99dc95be66e6/kylin_sales_cube_mr/dict_column=KYLIN_SALES_SELLER_ID/part_sort
+        for (int i = 0; i < dicColsArr.length; i++) {
             MultipleOutputs.addNamedOutput(job, i + "", TextOutputFormat.class, LongWritable.class, Text.class);
         }
-        Path outputPath=new Path(outputBase);
+        Path outputPath = new Path(outputBase);
         FileOutputFormat.setOutputPath(job, outputPath);
     }
 
-    private void setInputput(Job job, String[] dicColsArray, String inputBase) throws IOException {
-        StringBuffer paths=new StringBuffer();
+    private void setInput(Job job, String[] dicColsArray, String inputBase) throws IOException {
+        StringBuffer paths = new StringBuffer();
         // make each reducer output to respective dir
-        for(String col:dicColsArray){
+        for (String col : dicColsArray) {
             paths.append(inputBase).append("/dict_column=").append(col).append(",");
         }
-
         paths.delete(paths.length() - 1, paths.length());
         FileInputFormat.setInputPaths(job, paths.toString());
-
     }
 
-    private void setReduceNum(Job job, KylinConfig config){
+    private void setReduceNum(Job job, KylinConfig config) {
         Integer[] reduceNumArr = config.getMrHiveDictColumnsReduceNumExcludeRefCols();
         int totalReduceNum = 0;
-        for(Integer num:reduceNumArr){
-            totalReduceNum +=num;
+        for (Integer num : reduceNumArr) {
+            totalReduceNum += num;
         }
         logger.info("BuildGlobalHiveDictPartBuildJob total reduce num is {}", totalReduceNum);
         job.setNumReduceTasks(totalReduceNum);
     }
 
-    private String getInputPath(KylinConfig config, CubeSegment segment){
+    private String getInputPath(KylinConfig config, CubeSegment segment) {
         String dbDir = config.getHiveDatabaseDir();
-        String tableName = EngineFactory.getJoinedFlatTableDesc(segment).getTableName()+config.getMrHiveDictIntermediateTTableSuffix();
-        String input = dbDir+"/"+tableName;
-        logger.info("part build base input path:"+input);
+        String tableName = EngineFactory.getJoinedFlatTableDesc(segment).getTableName() + config.getMrHiveDistinctValueTableSuffix();
+        String input = dbDir + "/" + tableName;
+        logger.info("part build base input path:" + input);
         return input;
     }
-
 }

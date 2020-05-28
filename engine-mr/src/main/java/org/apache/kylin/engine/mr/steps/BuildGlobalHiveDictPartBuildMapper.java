@@ -20,6 +20,7 @@ package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
@@ -62,12 +63,12 @@ public class BuildGlobalHiveDictPartBuildMapper<KEYIN, Object> extends KylinMapp
         String colName = name.split("=")[1];
         logger.info("this map build col name :{}", colName);
 
-        for(int i=0;i<dicCols.length;i++){
-            if(dicCols[i].equalsIgnoreCase(colName)){
-                colIndex=i;
+        for (int i = 0; i < dicCols.length; i++) {
+            if (dicCols[i].equalsIgnoreCase(colName)) {
+                colIndex = i;
             }
         }
-        if(colIndex<0 || colIndex>127){
+        if (colIndex < 0 || colIndex > 127) {
             logger.error("kylin.dictionary.mr-hive.columns colIndex :{} error ", colIndex);
             logger.error("kylin.dictionary.mr-hive.columns set error,mr-hive columns's count should less than 128");
         }
@@ -77,7 +78,7 @@ public class BuildGlobalHiveDictPartBuildMapper<KEYIN, Object> extends KylinMapp
 
     @Override
     public void doMap(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
-        count ++;
+        count++;
         writeFieldValue(context, key.toString());
     }
 
@@ -94,7 +95,7 @@ public class BuildGlobalHiveDictPartBuildMapper<KEYIN, Object> extends KylinMapp
         tmpbuf.put(valueBytes);
         outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
         context.write(outputKey, NullWritable.get());
-        if(count<10){
+        if (count < 10) {
             logger.info("colIndex:{},input key:{}", colIndex, value);
         }
     }
