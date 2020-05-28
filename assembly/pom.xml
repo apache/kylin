@@ -232,6 +232,10 @@
                                     <pattern>org.apache.commons.jocl</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.commons.jocl</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>com.codahale.metrics</pattern>
+                                    <shadedPattern>${shadeBase}.com.codahale.metrics</shadedPattern>
+                                </relocation>
                             </relocations>
                             <filters>
                                 <filter>
