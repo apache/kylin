@@ -33,7 +33,6 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
-import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,10 +53,10 @@ public class NSparkCubingJob extends CubingJob {
 
     // for test use only
     public static NSparkCubingJob create(Set<CubeSegment> segments, String submitter) {
-        return create(segments, submitter, JobTypeEnum.INDEX_BUILD, UUID.randomUUID().toString());
+        return create(segments, submitter, CubingJobTypeEnum.BUILD, UUID.randomUUID().toString());
     }
 
-    public static NSparkCubingJob create(Set<CubeSegment> segments, String submitter, JobTypeEnum jobType,
+    public static NSparkCubingJob create(Set<CubeSegment> segments, String submitter, CubingJobTypeEnum jobType,
             String jobId) {
         Preconditions.checkArgument(!segments.isEmpty());
         Preconditions.checkArgument(submitter != null);
@@ -80,7 +79,6 @@ public class NSparkCubingJob extends CubingJob {
         job.setId(jobId);
         job.setName(builder.toString());
         job.setProjectName(job.cube.getProject());
-        job.setJobType(jobType);
         job.setTargetSubject(job.cube.getModel().getId());
         job.setTargetSegments(segments.stream().map(x -> String.valueOf(x.getUuid())).collect(Collectors.toList()));
         job.setProject(job.cube.getProject());
@@ -98,6 +96,8 @@ public class NSparkCubingJob extends CubingJob {
         job.setParam(MetadataConstants.P_OUTPUT_META_URL, job.cube.getConfig().getMetadataUrl().toString());
         job.setParam(MetadataConstants.P_CUBOID_NUMBER, String.valueOf(job.cube.getDescriptor().getAllCuboids().size()));
 
+        //set param for job metrics
+        job.setParam(MetadataConstants.P_JOB_TYPE, jobType.toString());
         JobStepFactory.addStep(job, JobStepType.RESOURCE_DETECT, job.cube);
         JobStepFactory.addStep(job, JobStepType.CUBING, job.cube);
 

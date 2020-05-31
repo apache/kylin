@@ -255,11 +255,13 @@ public class NSparkExecutable extends AbstractExecutable {
 
             CliCommandExecutor exec = new CliCommandExecutor();
             Pair<Integer, String> result = exec.execute(cmd, patternedLogger, jobId);
+            updateMetaAfterBuilding(config);
+            //Add metrics information to execute result for JobMetricsFacade
 
+            getManager().addJobInfo(getId(), getJobMetricsInfo(config));
             Map<String, String> extraInfo = makeExtraInfo(patternedLogger.getInfo());
             ExecuteResult ret = ExecuteResult.createSucceed(result.getSecond());
             ret.getExtraInfo().putAll(extraInfo);
-            updateMetaAfterBuilding(config);
             return ret;
         } catch (Exception e) {
             return ExecuteResult.createError(e);
@@ -267,6 +269,10 @@ public class NSparkExecutable extends AbstractExecutable {
     }
 
     protected void updateMetaAfterBuilding(KylinConfig config) throws IOException {
+    }
+
+    protected Map<String, String> getJobMetricsInfo(KylinConfig config) {
+        return Maps.newHashMap();
     }
 
     protected Map<String, String> getSparkConfigOverride(KylinConfig config) {
@@ -335,6 +341,9 @@ public class NSparkExecutable extends AbstractExecutable {
             Class<? extends Object> appClz = ClassUtil.forName(getSparkSubmitClassName(), Object.class);
             appClz.getMethod("main", String[].class).invoke(null, (Object) new String[] { appArgs });
             updateMetaAfterBuilding(config);
+
+            //Add metrics information to execute result for JobMetricsFacade
+            getManager().addJobInfo(getId(), getJobMetricsInfo(config));
             return ExecuteResult.createSucceed();
         } catch (Exception e) {
             return ExecuteResult.createError(e);

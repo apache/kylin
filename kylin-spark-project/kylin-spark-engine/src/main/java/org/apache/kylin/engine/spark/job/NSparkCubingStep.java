@@ -19,9 +19,11 @@
 package org.apache.kylin.engine.spark.job;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
+import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
@@ -37,6 +39,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -105,5 +108,15 @@ public class NSparkCubingStep extends NSparkExecutable {
             update.setStatus(RealizationStatusEnum.READY);
         }
         cubeManager.updateCube(update);
+    }
+
+    @Override
+    protected Map<String, String> getJobMetricsInfo(KylinConfig config) {
+        CubeManager cubeManager = CubeManager.getInstance(config);
+        CubeInstance cube = cubeManager.getCube(getCubeName());
+        Map<String, String> joblogInfo = Maps.newHashMap();
+        joblogInfo.put(CubingJob.SOURCE_SIZE_BYTES, String.valueOf(cube.getInputRecordSizeBytes()));
+        joblogInfo.put(CubingJob.CUBE_SIZE_BYTES, String.valueOf(cube.getSizeKB()));
+        return joblogInfo;
     }
 }
