@@ -44,7 +44,7 @@ public class NSparkMergingJob extends CubingJob {
     private static final Logger logger = LoggerFactory.getLogger(NSparkMergingJob.class);
 
     public static NSparkMergingJob merge(CubeSegment mergedSegment, String submitter) {
-        return NSparkMergingJob.merge(mergedSegment, submitter, JobTypeEnum.INDEX_MERGE, UUID.randomUUID().toString());
+        return NSparkMergingJob.merge(mergedSegment, submitter, CubingJobTypeEnum.MERGE, UUID.randomUUID().toString());
     }
 
     /**
@@ -52,7 +52,7 @@ public class NSparkMergingJob extends CubingJob {
      *
      * @param mergedSegment, new segment that expect to merge, which should contains a couple of ready segments.
      */
-    public static NSparkMergingJob merge(CubeSegment mergedSegment, String submitter, JobTypeEnum jobType, String jobId) {
+    public static NSparkMergingJob merge(CubeSegment mergedSegment, String submitter, CubingJobTypeEnum jobType, String jobId) {
         CubeInstance cube = mergedSegment.getCubeInstance();
 
         NSparkMergingJob job = new NSparkMergingJob();
@@ -70,7 +70,6 @@ public class NSparkMergingJob extends CubingJob {
         job.setTargetSubject(mergedSegment.getModel().getUuid());
         job.setTargetSegments(Lists.newArrayList(String.valueOf(mergedSegment.getUuid())));
         job.setProject(mergedSegment.getProject());
-        job.setJobType(jobType);
         job.setSubmitter(submitter);
 
         job.setParam(MetadataConstants.P_JOB_ID, jobId);

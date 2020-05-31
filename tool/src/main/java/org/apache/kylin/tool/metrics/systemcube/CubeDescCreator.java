@@ -451,7 +451,7 @@ public class CubeDescCreator {
         desc.setNotifyList(Lists.<String> newArrayList());
         desc.setStatusNeedNotify(Lists.newArrayList(JobStatusEnum.ERROR.toString()));
         desc.setAutoMergeTimeRanges(new long[] { 86400000L, 604800000L, 2419200000L });
-        desc.setEngineType(IEngineAware.ID_MR_V2);
+        desc.setEngineType(IEngineAware.ID_SPARK_II);
         desc.setStorageType(storageType);
         desc.setAggregationGroups(Lists.newArrayList(aggGroup));
         desc.getOverrideKylinProps().putAll(overrideProperties);
