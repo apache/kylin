@@ -32,7 +32,8 @@ fi
 if [ -z "$SPARK_HOME" ]
 then
     verbose "SPARK_HOME wasn't set, use $KYLIN_HOME/spark"
-    spark_home=$KYLIN_HOME/spark
+    export SPARK_HOME=$KYLIN_HOME/spark
+    spark_home=$SPARK_HOME
 fi
 
 if [ ! -d "$spark_home/jars" ]
@@ -40,13 +41,4 @@ if [ ! -d "$spark_home/jars" ]
     quit "spark not found, set SPARK_HOME, or run bin/download-spark.sh"
 fi
 
-spark_dependency=`find -L $spark_home/jars -name '*.jar' ! -name '*slf4j*' ! -name '*calcite*' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
-if [ -z "$spark_dependency" ]
-then
-    quit "spark jars not found"
-else
-    verbose "spark dependency: $spark_dependency"
-    export spark_dependency
-fi
-echo "export spark_dependency=$spark_dependency" > ${dir}/cached-spark-dependency.sh
 
