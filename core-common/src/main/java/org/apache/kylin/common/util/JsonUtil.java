@@ -45,12 +45,10 @@ public class JsonUtil {
     // reuse the object mapper to save memory footprint
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final ObjectMapper indentMapper = new ObjectMapper();
-    private static final ObjectMapper typeMapper = new ObjectMapper();
 
     static {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         indentMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-        typeMapper.enableDefaultTyping();
     }
 
     public static <T> T readValue(File src, Class<T> valueType)
@@ -93,10 +91,6 @@ public class JsonUtil {
         return mapper.readTree(content);
     }
 
-    public static <T> T readValueWithTyping(InputStream src, Class<T> valueType) throws IOException {
-        return typeMapper.readValue(src, valueType);
-    }
-
     public static void writeValueIndent(OutputStream out, Object value)
             throws IOException, JsonGenerationException, JsonMappingException {
         indentMapper.writeValue(out, value);
@@ -117,9 +111,5 @@ public class JsonUtil {
 
     public static String writeValueAsIndentString(Object value) throws JsonProcessingException {
         return indentMapper.writeValueAsString(value);
-    }
-
-    public static void writeValueWithTyping(OutputStream out, Object value) throws IOException {
-        typeMapper.writeValue(out, value);
     }
 }
