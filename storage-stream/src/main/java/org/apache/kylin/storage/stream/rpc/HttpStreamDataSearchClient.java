@@ -74,6 +74,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  */
 public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
     public static final Logger logger = LoggerFactory.getLogger(HttpStreamDataSearchClient.class);
+    public static final long WAIT_DURATION = 2 * 60000 ;
 
     private static ExecutorService executorService;
     static {
@@ -97,7 +98,7 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
             final TupleFilter tupleFilter, final Set<TblColRef> dimensions, final Set<TblColRef> groups,
             final Set<FunctionDesc> metrics, final int storagePushDownLimit, final boolean allowStorageAggregation) {
         List<ReplicaSet> replicaSetsOfCube = assignmentsCache.getReplicaSetsByCube(cube.getName());
-        int timeout = 120 * 1000; // timeout should be configurable
+        int timeout = cube.getConfig().getStreamingRPCHttpReadTimeout() * 2;
         final QueuedStreamingTupleIterator result = new QueuedStreamingTupleIterator(replicaSetsOfCube.size(), timeout);
         final QueryContext query = QueryContextFacade.current();
 
@@ -167,7 +168,7 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
             return foundReceiver;
         }
 
-        if (System.currentTimeMillis() - lastFailTime > 2 * 60 * 1000) { // retry every 2 minutes
+        if (System.currentTimeMillis() - lastFailTime > WAIT_DURATION) { // retry every 2 minutes
             return foundReceiver;
         }
 
@@ -177,16 +178,16 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
     public Iterator<ITuple> doSearch(DataRequest dataRequest, CubeInstance cube, StreamingTupleConverter tupleConverter,
             RecordsSerializer recordsSerializer, Node receiver, TupleInfo tupleInfo) throws Exception {
         String queryId = dataRequest.getQueryId();
-        logger.info("send query to receiver " + receiver + " with query id:" + queryId);
         String url = "http://" + receiver.getHost() + ":" + receiver.getPort() + "/kylin/api/data/query";
 
         try {
+            int connTimeout = cube.getConfig().getStreamingRPCHttpConnTimeout();
+            int readTimeout = cube.getConfig().getStreamingRPCHttpReadTimeout();
+            dataRequest.setDeadline(System.currentTimeMillis() + (int)(readTimeout * 1.5));
             String content = JsonUtil.writeValueAsString(dataRequest);
             Stopwatch sw;
             sw = Stopwatch.createUnstarted();
             sw.start();
-            int connTimeout = cube.getConfig().getStreamingRPCHttpConnTimeout();
-            int readTimeout = cube.getConfig().getStreamingRPCHttpReadTimeout();
             String msg = restService.postRequest(url, content, connTimeout, readTimeout);
 
             logger.info("query-{}: receive response from {} take time:{}", queryId, receiver, sw.elapsed(MILLISECONDS));
