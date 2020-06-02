@@ -36,6 +36,7 @@ public class DataRequest {
     private boolean allowStorageAggregation;
 
     private long requestSendTime;
+    private long deadline;
     private boolean enableDetailProfile;
     private String storageBehavior;
 
@@ -141,5 +142,13 @@ public class DataRequest {
 
     public void setHavingFilter(String havingFilter) {
         this.havingFilter = havingFilter;
+    }
+
+    public long getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(long deadline) {
+        this.deadline = deadline;
     }
 }
