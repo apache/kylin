@@ -49,10 +49,14 @@ import java.util.List;
  */
 public class PushDownExecutor {
     private final Logger logger = LoggerFactory.getLogger(PushDownExecutor.class);
-    private KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+    private KylinConfig kylinConfig;
 
-    public PushDownExecutor() {
-
+    public PushDownExecutor(KylinConfig config) {
+        if (config == null) {
+            kylinConfig = KylinConfig.getInstanceFromEnv();
+        } else {
+            kylinConfig = config;
+        }
     }
 
     public Pair<List<List<String>>, List<SelectedColumnMeta>> pushDownQuery(String project,
