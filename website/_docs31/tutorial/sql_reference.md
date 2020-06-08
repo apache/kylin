@@ -45,6 +45,7 @@ Apache Kylin relies on Apache Calcite to parse and optimize the SQL statements. 
 　[CAST](#CAST)
 [SUSTRING](#SUBSTRING)
 [COALESCE](#COALESCE)
+[STDDEV_SUM](#STDDEV_SUM)
 
 ## Data Type
 
@@ -377,6 +378,23 @@ Example:
 SELECT COALESCE(lstg_format_name, '888888888888') FROM kylin_sales;
 {% endhighlight %}
 
+## [STDDEV_SUM](#STDDEV_SUM)
+Example: The first query is shortcut of the second query. ```stddev_sum``` is a UDAF which introduced in KYLIN-3361.
+{% highlight Groff markup %}
+select A, stddev_sum(sampling_dim, m)
+from T
+group by A
+{% endhighlight %}
+
+{% highlight Groff markup %}
+select A, stddev(SUM_M)
+from (
+      select A, sampling_dim, sum(m) as SUM_M
+      from T
+      group by A, sampling_dim
+) a
+group by A
+{% endhighlight %}
 
 ## DATA TYPE {#DATATYPE}
 

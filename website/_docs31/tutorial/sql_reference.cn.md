@@ -46,6 +46,7 @@ Apache Kylin 使用 Apache Calcite 做 SQL 解析和优化。作为一款 OLAP �
 
 [SUSTRING](#SUBSTRING)
 [COALESCE](#COALESCE)
+[STDDEV_SUM](#STDDEV_SUM)
 
 ## 数据类型
 [数据类型](#datatype)
@@ -372,6 +373,24 @@ SELECT SUBSTRING(lstg_format_name, 1) FROM kylin_sales;
 例子：
 {% highlight Groff markup %}
 SELECT COALESCE(lstg_format_name, '888888888888') FROM kylin_sales;
+{% endhighlight %}
+
+## [STDDEV_SUM](#STDDEV_SUM)
+例子: 第一个查询和第二个查询是对等的，```stddev_sum``` 是一个在 KYLIN-3361 引入的 UDAF。
+{% highlight Groff markup %}
+select A, stddev_sum(sampling_dim, m)
+from T
+group by A
+{% endhighlight %}
+
+{% highlight Groff markup %}
+select A, stddev(SUM_M)
+from (
+      select A, sampling_dim, sum(m) as SUM_M
+      from T
+      group by A, sampling_dim
+) a
+group by A
 {% endhighlight %}
 
 ## 数据类型 {#datatype}

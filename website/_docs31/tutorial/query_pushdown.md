@@ -100,7 +100,7 @@ If query is answered by backup engine, `Is Query Push-Down` is set to `true` in 
 If you want your query be push down to Presto, you can set following configuration in Project level properties (Introduced in KYLIN-4491).
 
 {% highlight Groff markup %}
-kylin.query.pushdown.runner-class-name=org.apache.kylin.query.pushdown.PushDownRunnerOtherImpl
+kylin.query.pushdown.runner-class-name=org.apache.kylin.query.pushdown.PushdownRunnerSDKImpl
 kylin.source.jdbc.dialect=presto
 kylin.source.jdbc.adaptor=org.apache.kylin.sdk.datasource.adaptor.PrestoAdaptor
 kylin.query.pushdown.jdbc.url={YOUR_URL}

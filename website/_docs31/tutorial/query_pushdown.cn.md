@@ -91,7 +91,7 @@ kylin.query.pushdown.id1.jdbc.pool-min-idle
 如果你希望查询下压到Presto，你可以在 Project 级别配置以下参数以启用 Presto 查询下压 (通过 KYLIN-4491 引入)。
 
 {% highlight Groff markup %}
-kylin.query.pushdown.runner-class-name=org.apache.kylin.query.pushdown.PushDownRunnerOtherImpl
+kylin.query.pushdown.runner-class-name=org.apache.kylin.query.pushdown.PushdownRunnerSDKImpl
 kylin.source.jdbc.dialect=presto
 kylin.source.jdbc.adaptor=org.apache.kylin.sdk.datasource.adaptor.PrestoAdaptor
 kylin.query.pushdown.jdbc.url={YOUR_URL}
