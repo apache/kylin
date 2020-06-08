@@ -119,6 +119,7 @@ curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8"
 * limit - `optional` `int` Query limit. If limit is set in sql, perPage will be ignored.
 * acceptPartial - `optional` `bool` Whether accept a partial result or not, default be "false". Set to "false" for production use. 
 * project - `optional` `string` Project to perform query. Default value is 'DEFAULT'.
+* backdoorToggles - `optional` `map` You can set a key/value pair (`"DEBUG_TOGGLE_HIT_CUBE":"SimpleCube_01"`) to specific cube for your query. Default is empty map.
 
 #### Request Sample
 

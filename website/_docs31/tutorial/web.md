@@ -45,9 +45,9 @@ Kylin's web offer a simple query tool for user to run SQL to explore existing cu
 > 
 > 2. Aggregation function and GROUP BY are supported
 
-Go to "Insight" menu.
+Go to "Insight" menu. You can specific cube for your query in **Cube** DropDownList .
 
-![](/images/tutorial/1.5/Kylin-Web-Tutorial/8 query.png)
+![](/images/tutorial/Kylin-Web-Tutorial/insight-query-part.png)
 
 * Source Tables:
 
