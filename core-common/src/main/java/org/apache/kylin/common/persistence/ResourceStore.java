@@ -682,6 +682,7 @@ abstract public class ResourceStore {
 
     public static class VisitFilter {
         public String pathPrefix = null;
+        public String pathExcludeSuffix = null;
         public long lastModStart = Long.MIN_VALUE;
         public long lastModEndExclusive = Long.MAX_VALUE;
 
@@ -702,6 +703,14 @@ abstract public class ResourceStore {
             this.lastModEndExclusive = lastModEndExclusive;
         }
 
+        public void setPathExcludeSuffix(String pathExcludeSuffix) {
+            this.pathExcludeSuffix = pathExcludeSuffix;
+        }
+
+        public boolean hasPathExcludeSuffixFilter() {
+            return pathExcludeSuffix != null;
+        }
+
         public boolean hasPathPrefixFilter() {
             return pathPrefix != null;
         }
@@ -713,6 +722,11 @@ abstract public class ResourceStore {
         public boolean matches(String resPath, long lastModified) {
             if (hasPathPrefixFilter()) {
                 if (!resPath.startsWith(pathPrefix))
+                    return false;
+            }
+
+            if (hasPathExcludeSuffixFilter()) {
+                if (resPath.endsWith(pathExcludeSuffix))
                     return false;
             }
 

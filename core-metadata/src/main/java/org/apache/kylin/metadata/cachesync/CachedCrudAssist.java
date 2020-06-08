@@ -124,7 +124,9 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         cache.clear();
         loadErrors.clear();
 
-        Map<String, T> entities = store.getAllResourcesMap(resRootPath, true, null, new ContentReader(serializer));
+        ResourceStore.VisitFilter filter = new ResourceStore.VisitFilter();
+        filter.setPathExcludeSuffix(MetadataConstants.CRC_FILE_SURFIX);
+        Map<String, T> entities = store.getAllResourcesMap(resRootPath, true, filter, new ContentReader(serializer));
         for (Map.Entry<String,T> entitySet: entities.entrySet()) {
             String path = entitySet.getKey();
             if (!path.endsWith(resPathSuffix)) {

@@ -25,6 +25,7 @@ package org.apache.kylin.metadata;
 public interface MetadataConstants {
 
     public static final String FILE_SURFIX = ".json";
+    public static final String CRC_FILE_SURFIX = ".crc";
     //Identifier Type, user or group
     public static final String TYPE_USER = "user";
     public static final String TYPE_GROUP = "group";
