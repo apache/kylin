@@ -327,7 +327,7 @@ public class TableMetadataManager {
 
     public void reloadTableExtQuietly(String table, String project) {
         try (AutoLock lock = srcExtMapLock.lockForWrite()) {
-            srcExtCrud.reloadQuietly(TableExtDesc.concatResourcePath(table, project));
+            srcExtCrud.reloadQuietly(TableDesc.makeResourceName(table, project));
         }
     }
 

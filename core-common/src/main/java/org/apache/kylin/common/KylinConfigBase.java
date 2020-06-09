@@ -204,6 +204,15 @@ public abstract class KylinConfigBase implements Serializable {
         }
     }
 
+    final protected String[] getRawStringArray(String prop, String[] dft) {
+        final String property = properties.getProperty(prop);
+        if (!StringUtils.isBlank(property)) {
+            return property.split("\\s*,\\s*");
+        } else {
+            return dft;
+        }
+    }
+
     final protected int[] getOptionalIntArray(String prop, String[] dft) {
         String[] strArray = getOptionalStringArray(prop, dft);
         int[] intArray = new int[strArray.length];
@@ -711,7 +720,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean isRowKeyEncodingAutoConvert() {
-        return Boolean.parseBoolean(getOptional("kylin.cube.kylin.cube.rowkey-encoding-auto-convert", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.cube.rowkey-encoding-auto-convert", "true"));
     }
     
     public String getSegmentAdvisor() {
@@ -2136,6 +2145,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptionalStringArray("kylin.server.cluster-servers", new String[0]);
     }
 
+    public String[] getRawRestServers() {
+        return getRawStringArray("kylin.server.cluster-servers", new String[0]);
+    }
+
     public String getServerRestAddress() {
         return getOptional("kylin.server.host-address", "localhost:7070");
     }
@@ -2250,6 +2263,7 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getPropertiesWhiteList() {
         return getOptional("kylin.web.properties.whitelist", "kylin.web.timezone,kylin.query.cache-enabled,kylin.env,"
+                + "kylin.cube.migration.enabled,"
                 + "kylin.web.hive-limit,kylin.storage.default,"
                 + "kylin.engine.default,kylin.web.link-hadoop,kylin.web.link-diagnostic,"
                 + "kylin.web.contact-mail,kylin.web.help.length,kylin.web.help.0,kylin.web.help.1,kylin.web.help.2,"
@@ -2367,6 +2381,10 @@ public abstract class KylinConfigBase implements Serializable {
     // ============================================================================
     // CUBE MIGRATION
     // ============================================================================
+    public boolean isMigrationCubeEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.migration.enabled", FALSE));
+    }
+
     public int getMigrationRuleExpansionRateThreshold() {
         return Integer.parseInt(getOptional("kylin.cube.migration.expansion-rate", "5"));
     }
@@ -2395,12 +2413,12 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.cube.migration.target-address", "sandbox:80");
     }
 
-    public String getMigrationEmailSuffix() {
-        return getOptional("kylin.cube.migration.mail-suffix", "@mail.com");
+    public String getNotificationMailSuffix() {
+        return getOptional("kylin.cube.notification-mail-suffix", "@mail.com");
     }
 
     public boolean isMigrationApplyQueryLatencyRule() {
-        return Boolean.parseBoolean(getOptional("kylin.cube.migration.rule-query-latency-enabled", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.cube.migration.rule-query-latency-enabled", TRUE));
     }
 
     // ============================================================================
