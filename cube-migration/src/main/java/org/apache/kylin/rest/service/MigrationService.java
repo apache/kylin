@@ -169,7 +169,7 @@ public class MigrationService extends BasicService {
         logger.info("ProjectUUID : " + prjInstance.getUuid());
         Acl acl = accessService.getAcl(ae);
 
-        String mailSuffix = KylinConfig.getInstanceFromEnv().getMigrationEmailSuffix();
+        String mailSuffix = KylinConfig.getInstanceFromEnv().getNotificationMailSuffix();
         List<String> cubeAdmins = Lists.newArrayList();
         if (acl != null) {
             for (AccessControlEntry ace : acl.getEntries()) {

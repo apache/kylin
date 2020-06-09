@@ -645,10 +645,10 @@ public class CubeMigrationCLI extends AbstractApplication {
     }
 
     private void updateMeta(KylinConfig config, String projectName, String cubeName, DataModelDesc model) {
-        String[] nodes = config.getRestServers();
+        String[] nodes = config.getRawRestServers();
         Map<String, String> tableToProjects = new HashMap<>();
         for (TableRef tableRef : model.getAllTables()) {
-            tableToProjects.put(tableRef.getTableIdentity(), tableRef.getTableDesc().getProject());
+            tableToProjects.put(tableRef.getTableIdentity(), projectName);
         }
 
         for (String node : nodes) {

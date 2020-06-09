@@ -141,7 +141,7 @@ public class TableService extends BasicService {
             hiveTableDesc = pair.getFirst();
         } catch (Exception e) {
             logger.error("Fail to get metadata for hive table {} due to ", tableDesc.getIdentity(), e);
-            throw new RuntimeException("Fail to get metadata for hive table" + tableDesc.getIdentity());
+            throw new RuntimeException("Fail to get metadata for hive table " + tableDesc.getIdentity());
         }
 
         TableSchemaUpdateChecker.CheckResult result = getSchemaUpdateChecker().allowMigrate(tableDesc, hiveTableDesc);
