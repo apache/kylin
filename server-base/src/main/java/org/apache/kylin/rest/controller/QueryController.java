@@ -134,6 +134,7 @@ public class QueryController extends BasicController {
     @RequestMapping(value = "/query/format/{format}", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
     public void downloadQueryResult(@PathVariable String format, SQLRequest sqlRequest, HttpServletResponse response) {
+        sqlRequest.setSql(new String(sqlRequest.getSql().getBytes("iso8859-1"),"UTF-8"));
         KylinConfig config = queryService.getConfig();
         Message msg = MsgPicker.getMsg();
 
