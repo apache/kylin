@@ -19,7 +19,6 @@
 
 source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
 
-echo Retrieving Kafka dependency...
 
 kafka_home=
 
