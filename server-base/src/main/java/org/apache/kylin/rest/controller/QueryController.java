@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -133,7 +134,8 @@ public class QueryController extends BasicController {
 
     @RequestMapping(value = "/query/format/{format}", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
-    public void downloadQueryResult(@PathVariable String format, SQLRequest sqlRequest, HttpServletResponse response) {
+    public void downloadQueryResult(@PathVariable String format, SQLRequest sqlRequest, HttpServletResponse response) throws UnsupportedEncodingException {
+        sqlRequest.setSql(new String(sqlRequest.getSql().getBytes("iso8859-1"), StandardCharsets.UTF_8));
         KylinConfig config = queryService.getConfig();
         Message msg = MsgPicker.getMsg();
 
