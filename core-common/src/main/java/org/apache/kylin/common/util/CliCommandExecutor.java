@@ -163,8 +163,10 @@ public class CliCommandExecutor {
         }
     }
 
-    public static final String COMMAND_INJECT_REX = "[ &`>|{}()$;\\-#~!+*”\\\\]+";
+    public static final String COMMAND_BLOCK_LIST = "[ &`>|{}()$;\\-#~!+*\\\\]+";
     public static final String COMMAND_WHITE_LIST = "[^\\w%,@/:=?.\"\\[\\]]";
+    public static final String HIVE_BLOCK_LIST = "[ <>()$;\\-#!+*\"'/=%@]+";
+
 
     /**
      * <pre>
@@ -188,17 +190,21 @@ public class CliCommandExecutor {
      * </pre>
      */
     public static String checkParameter(String commandParameter) {
-        return checkParameter(commandParameter, COMMAND_INJECT_REX);
+        return checkParameter(commandParameter, COMMAND_BLOCK_LIST);
     }
 
     public static String checkParameterWhiteList(String commandParameter) {
         return checkParameter(commandParameter, COMMAND_WHITE_LIST);
     }
 
+    public static String checkHiveProperty(String hiveProperty) {
+        return checkParameter(hiveProperty, HIVE_BLOCK_LIST);
+    }
+
     private static String checkParameter(String commandParameter, String rex) {
         String repaired = commandParameter.replaceAll(rex, "");
         if (repaired.length() != commandParameter.length()) {
-            logger.info("Detected illegal character in command {} by {} , replace it to {}.", commandParameter, rex, repaired);
+            logger.warn("Detected illegal character in command {} by {} , replace it to {}.", commandParameter, rex, repaired);
         }
         return repaired;
     }
