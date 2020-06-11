@@ -955,7 +955,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getHiveDatabaseForIntermediateTable() {
-        return this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT);
+        return CliCommandExecutor.checkHiveProperty(this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT));
     }
 
     public String getFlatTableStorageFormat() {
@@ -1948,6 +1948,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isWebDashboardEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.web.dashboard-enabled", FALSE));
+    }
+
+    public boolean isWebConfigEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.web.set-config-enable", FALSE));
     }
 
     public String getPropertiesWhiteList() {
