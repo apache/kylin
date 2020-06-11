@@ -1263,6 +1263,9 @@ public class JobService extends BasicService implements InitializingBean {
                                 try {
                                     ExecutableOutputPO executableOutputPO = allExecutableOutputPO
                                             .get(executable.getId());
+                                    if (executableOutputPO == null) {
+                                        return false;
+                                    }
                                     ExecutableState state = ExecutableState.valueOf(executableOutputPO.getStatus());
                                     return statusList.contains(state);
 
