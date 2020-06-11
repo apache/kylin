@@ -25,6 +25,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.util.VersionUtil;
+import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
@@ -129,6 +130,9 @@ public class AdminController extends BasicController {
 
     @RequestMapping(value = "/config", method = { RequestMethod.PUT }, produces = { "application/json" })
     public void updateKylinConfig(@RequestBody UpdateConfigRequest updateConfigRequest) {
+        if (!adminService.configWritableStatus()) {
+            throw new BadRequestException("Update configuration from API is not allowed.");
+        }
         adminService.updateConfig(updateConfigRequest.getKey(), updateConfigRequest.getValue());
     }
 

@@ -91,6 +91,11 @@ public class AdminService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    public boolean configWritableStatus() {
+        return KylinConfig.getInstanceFromEnv().isWebConfigEnabled();
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void cleanupStorage() {
         StorageCleanupJob job = null;
         try {

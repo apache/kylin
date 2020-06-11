@@ -35,6 +35,12 @@ public class CliCommandExecutorTest {
             {"c1 | ${c2}", "c1c2"},
     };
 
+    private String[][] properties = {
+            {"default;show tables", "defaultshowtables"},
+            {"default_kylin;drop tables;", "default_kylindroptables"},
+            {"db and 1=2", "dband12"}
+    };
+
     @Test
     public void testCmd() {
         for (String[] pair : commands) {
@@ -46,6 +52,13 @@ public class CliCommandExecutorTest {
     public void testCmd2() {
         for (String[] pair : commands) {
             assertEquals(pair[1], CliCommandExecutor.checkParameterWhiteList(pair[0]));
+        }
+    }
+
+    @Test
+    public void testHiveProperties() {
+        for (String[] pair : properties) {
+            assertEquals(pair[1], CliCommandExecutor.checkHiveProperty(pair[0]));
         }
     }
 }
