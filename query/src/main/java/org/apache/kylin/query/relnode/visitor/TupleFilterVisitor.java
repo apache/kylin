@@ -149,12 +149,34 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
             filter = new UnsupportedTupleFilter(TupleFilter.FilterOperatorEnum.UNSUPPORTED);
         }
 
+        boolean isChildValueDateTimeType = false;
         for (RexNode operand : call.operands) {
             TupleFilter childFilter = operand.accept(this);
             if (filter == null) {
                 filter = cast(childFilter, call.type);
             } else {
                 filter.addChild(childFilter);
+            }
+            if (operand instanceof RexLiteral && ((RexLiteral) operand).getValue() instanceof GregorianCalendar) {
+                isChildValueDateTimeType = true;
+            }
+        }
+        if (filter instanceof CompareTupleFilter) {
+            CompareTupleFilter compFilter = (CompareTupleFilter) filter;
+            if (compFilter.getChildren().size() == 2 && compFilter.getChildren().get(0) instanceof ColumnTupleFilter
+                    && compFilter.getChildren().get(1) instanceof ConstantTupleFilter) {
+                ColumnTupleFilter colFilter = (ColumnTupleFilter) compFilter.getChildren().get(0);
+                ConstantTupleFilter constFilter = (ConstantTupleFilter) compFilter.getChildren().get(1);
+                if (isChildValueDateTimeType && colFilter.getColumn().getType().isStringFamily()) {
+                    Set<Object> newValues = Sets.newHashSet();
+                    for (Object v : constFilter.getValues()) {
+                        newValues.add(DateFormat.formatToDateStr(DateFormat.stringToMillis(v.toString())));
+                    }
+                    ConstantTupleFilter newConstFilter = new ConstantTupleFilter(newValues);
+                    filter = new CompareTupleFilter(filter.getOperator());
+                    filter.addChild(colFilter);
+                    filter.addChild(newConstFilter);
+                }
             }
         }
 
