@@ -207,7 +207,7 @@ public class CoordinatorTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testReassignWithoutExeception() throws IOException {
+    public void testReassignWithoutException() throws IOException {
 
         ReceiverAdminClient receiverAdminClient = mockSuccessReceiverAdminClient();
         coordinator = new Coordinator(metadataStore, receiverAdminClient);
