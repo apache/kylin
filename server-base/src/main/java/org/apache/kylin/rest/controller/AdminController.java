@@ -20,6 +20,9 @@ package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.kylin.common.KylinConfig;
@@ -50,6 +53,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 @RequestMapping(value = "/admin")
 public class AdminController extends BasicController {
+
+    private Set<String> propertiesWhiteList = new HashSet<>();
 
     @Autowired
     @Qualifier("adminService")
@@ -128,9 +133,12 @@ public class AdminController extends BasicController {
         adminService.cleanupStorage();
     }
 
-    @RequestMapping(value = "/config", method = { RequestMethod.PUT }, produces = { "application/json" })
+    @RequestMapping(value = "/config", method = {RequestMethod.PUT}, produces = {"application/json"})
     public void updateKylinConfig(@RequestBody UpdateConfigRequest updateConfigRequest) {
-        if (!adminService.configWritableStatus()) {
+        if (propertiesWhiteList.isEmpty()) {
+            propertiesWhiteList.addAll(Arrays.asList(KylinConfig.getInstanceFromEnv().getPropertiesWhiteListForModification().split(",")));
+        }
+        if (!adminService.configWritableStatus() && !propertiesWhiteList.contains(updateConfigRequest.getKey())) {
             throw new BadRequestException("Update configuration from API is not allowed.");
         }
         adminService.updateConfig(updateConfigRequest.getKey(), updateConfigRequest.getValue());

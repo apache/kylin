@@ -2286,6 +2286,13 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.web.set-config-enable", FALSE));
     }
 
+    /**
+     * @see #isWebConfigEnabled
+     */
+    public String getPropertiesWhiteListForModification() {
+        return getOptional("kylin.web.properties.whitelist", "kylin.query.cache-enabled");
+    }
+
     public String getPropertiesWhiteList() {
         return getOptional("kylin.web.properties.whitelist", "kylin.web.timezone,kylin.query.cache-enabled,kylin.env,"
                 + "kylin.web.hive-limit,kylin.storage.default,"
