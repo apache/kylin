@@ -558,7 +558,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
         if (latestRemoteSegment != null) {
             minAcceptEventTime = latestRemoteSegment.getTSRange().end.v;
         }
-        if (minAcceptEventTime > 0) {
+        if (minAcceptEventTime > 0 && minAcceptEventTime < System.currentTimeMillis()) {
             consumer.setMinAcceptEventTime(minAcceptEventTime);
         }
         StreamingCubeConsumeState consumeState = streamMetadataStore.getStreamingCubeConsumeState(cubeName);

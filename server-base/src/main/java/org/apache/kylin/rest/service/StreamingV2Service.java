@@ -6,15 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.service;
 
@@ -98,6 +98,11 @@ public class StreamingV2Service extends BasicService {
     public StreamingV2Service() {
         streamMetadataStore = StreamMetadataStoreFactory.getStreamMetaDataStore();
         receiverAdminClient = new HttpReceiverAdminClient();
+    }
+
+    StreamingV2Service(StreamMetadataStore metadataStore, ReceiverAdminClient adminClient) {
+        streamMetadataStore = metadataStore;
+        receiverAdminClient = adminClient;
     }
 
     public List<StreamingSourceConfig> listAllStreamingConfigs(final String table) throws IOException {
@@ -228,10 +233,10 @@ public class StreamingV2Service extends BasicService {
         getCoordinatorClient().reAssignCube(cubeName, newAssignment);
     }
 
-    private void validateAssignment(CubeAssignment newAssignment) {
+    void validateAssignment(CubeAssignment newAssignment) {
         Map<Integer, List<Partition>> assignments = newAssignment.getAssignments();
         Map<Integer, Set<Partition>> assignmentSet = assignments.keySet().stream().collect(
-                Collectors.toMap(Function.identity(), HashSet::new));
+                Collectors.toMap(Function.identity(), x -> new HashSet<>(assignments.get(x))));
 
         Set<Integer> inputReplicaSetIDs = assignments.keySet();
         Set<Integer> allReplicaSetIDs = Sets.newHashSet(streamMetadataStore.getReplicaSetIDs());
