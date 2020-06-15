@@ -38,7 +38,7 @@ class FairSchedulerParser extends SchedulerParser {
   private def queueAvailableResource(queueName: String): AvailableResource = {
     val queues: JList[JsonNode] = root.findParents("queueName")
     val nodes = queues.asScala.filter(queue => parseValue(queue.get("queueName")).equals(queueName))
-    require(nodes.size == 1)
+    require(nodes.size == 1, s"Error occurred when check queue $queueName available resource. Ignore it.")
     val resource = calAvailableResource(nodes.head)
     logInfo(s"Queue available resource: $resource.")
     resource
