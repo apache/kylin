@@ -2316,6 +2316,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.htrace.trace-every-query", FALSE));
     }
 
+    public String getKylinMetricsEventTimeZone() {
+        return getOptional("kylin.metrics.event-time-zone", getTimeZone()).toUpperCase(Locale.ROOT);
+    }
+    
     public boolean isKylinMetricsMonitorEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.metrics.monitor-enabled", FALSE));
     }
