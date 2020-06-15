@@ -143,11 +143,13 @@ It's worth noting that there shouldn't be spaces between the paths of two jars.
 
 ## Optional
 
-As we all know, the cubing job includes several steps and the steps 'extract fact table distinct value' and 'build dimension dictionary' can also be built by spark. The configurations are as follows.
+As we all know, the cubing job includes several steps and the steps 'create Intermediate Flat Hive Table', 'extract fact table distinct value', 'build dimension dictionary' and 'build UHC dimension dictionary' can also be built by spark. The configurations are as follows.
 
 {% highlight Groff markup %}
+kylin.engine.spark-create-table-enabled=true
 kylin.engine.spark-fact-distinct=true
 kylin.engine.spark-dimension-dictionary=true 
+kylin.engine.spark-uhc-dictionary=true
 {% endhighlight %}
 
 ## Troubleshooting

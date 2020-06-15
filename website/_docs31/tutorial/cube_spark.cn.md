@@ -147,11 +147,13 @@ kylin.engine.livy-conf.livy-arr.jars=hdfs:///path/hbase-client-1.2.0-{$env.versi
 
 ## 可选功能
 
-现在构建步骤中的'extract fact table distinct value' 和 'build dimension dictionary' 两个步骤也可以使用Spark进行构建了。相关的配置如下：
+现在构建步骤中的'create Intermediate Flat Hive Table', 'extract fact table distinct value', 'build dimension dictionary'和'build UHC dimension dictionary' 步骤也可以使用Spark进行构建了。相关的配置如下：
 
 {% highlight Groff markup %}
+kylin.engine.spark-create-table-enabled=true
 kylin.engine.spark-fact-distinct=true
 kylin.engine.spark-dimension-dictionary=true 
+kylin.engine.spark-uhc-dictionary=true
 {% endhighlight %}
 
 ## 疑难解答
