@@ -18,12 +18,12 @@
 
 package org.apache.kylin.metrics.lib.impl;
 
+import org.apache.kylin.common.KylinConfig;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
-
-import org.apache.kylin.common.KylinConfig;
 
 public class RecordEventTimeDetail {
     private static final TimeZone timeZone;
@@ -31,9 +31,9 @@ public class RecordEventTimeDetail {
     private static final ThreadLocal<SimpleDateFormat> timeFormatThreadLocal = new ThreadLocal<>();
 
     static {
-        timeZone = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone());
+        timeZone = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getKylinMetricsEventTimeZone());
     }
-
+    
     public final String year_begin_date;
     public final String month_begin_date;
     public final String date;
