@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -72,6 +73,10 @@ public class HiveProducer {
      */
     private final boolean supportAppend;
 
+    private final boolean closeFileEveryAppend;
+
+    private final Map<String, String> kylinSpecifiedConfig = new HashMap<>();
+
     public HiveProducer(String metricType, Properties props) throws Exception {
         this(metricType, props, new HiveConf());
     }
@@ -80,7 +85,13 @@ public class HiveProducer {
         this.metricType = metricType;
         hiveConf = hiveConfig;
         for (Map.Entry<Object, Object> e : props.entrySet()) {
-            hiveConf.set(e.getKey().toString(), e.getValue().toString());
+            String key = e.getKey().toString();
+            String value = e.getValue().toString();
+            if (key.startsWith("kylin.")) {
+                kylinSpecifiedConfig.put(key, value);
+            } else {
+                hiveConf.set(key, value);
+            }
         }
 
         fs = FileSystem.get(hiveConf);
@@ -119,6 +130,9 @@ public class HiveProducer {
         String fsUri = fs.getUri().toString();
         supportAppend = fsUri.startsWith("hdfs") ; // Only HDFS is appendable
         logger.info("For {}, supportAppend was set to {}", fsUri, supportAppend);
+
+        closeFileEveryAppend = !supportAppend
+                || Boolean.parseBoolean(kylinSpecifiedConfig.get("kylin.hive.producer.close-file-every-append"));
     }
 
     public void close() {
@@ -270,7 +284,7 @@ public class HiveProducer {
                     + " due to ", e);
             closeFout();
         }
-        if (!supportAppend) {
+        if (closeFileEveryAppend) {
             closeFout();
         }
     }
