@@ -79,6 +79,8 @@ webapp/CHANGELOG.md
 # package file
 build/tomcat
 build/lib
+build/VERSION
+
 *.tgz
 *.tar.gz
 webapp/app/components/*
