@@ -46,6 +46,8 @@ Apache Kylin relies on Apache Calcite to parse and optimize the SQL statements. 
 [SUSTRING](#SUBSTRING)
 [COALESCE](#COALESCE)
 [STDDEV_SUM](#STDDEV_SUM)
+[INTERSECT_COUNT](#INTERSECT_COUNT)
+[INTERSECT_VALUE](#INTERSECT_VALUE)
 
 ## Data Type
 
@@ -394,6 +396,49 @@ from (
       group by A, sampling_dim
 ) a
 group by A
+{% endhighlight %}
+
+## [INTERSECT_COUNT]{#INTERSECT_COUNT}
+INTERSECT_COUNT is used to calculate the retention rate. The measure to be calculated have defined precisely count distinct measure.
+Example 1: Refer to [intersect_count](http://kylin.apache.org/blog/2016/11/28/intersect-count/)
+{% highlight Groff markup %}
+select city, version,
+intersect_count(uuid, dt, array['20161014']) as first_day,
+intersect_count(uuid, dt, array['20161015']) as second_day,
+intersect_count(uuid, dt, array['20161016']) as third_day,
+intersect_count(uuid, dt, array['20161014', '20161015']) as retention_oneday,
+intersect_count(uuid, dt, array['20161014', '20161015', '20161016']) as retention_twoday
+from visit_log
+where dt in ('2016104', '20161015', '20161016')
+group by city, version
+{% endhighlight %}
+
+Example 1: Refer to KYLIN-4314
+{% highlight Groff markup %}
+select city, version,
+intersect_count(uuid, dt, array['20161014']) as first_day,
+intersect_count(uuid, dt, array['20161015']) as second_day,
+intersect_count(uuid, dt, array['20161016']) as third_day,
+intersect_count(uuid, dt, array['20161014', '20161015']) as retention_oneday,
+intersect_count(uuid, dt, array['20161014|20161015', '20161016']) as retention_twoday
+from visit_log
+where dt in ('2016104', '20161015', '20161016')
+group by city, version
+{% endhighlight %}
+
+## [INTERSECT_VALUE]{#INTERSECT_VALUE}
+INTERSECT_COUNT returns the bitmap details of the retained value. The measure to be calculated have defined precisely count distinct measure.
+Example：
+{% highlight Groff markup %}
+select city, version,
+intersect_value(uuid, dt, array['20161014']) as first_day,
+intersect_value(uuid, dt, array['20161015']) as second_day,
+intersect_value(uuid, dt, array['20161016']) as third_day,
+intersect_value(uuid, dt, array['20161014', '20161015']) as retention_oneday,
+intersect_value(uuid, dt, array['20161014|20161015', '20161016']) as retention_twoday
+from visit_log
+where dt in ('2016104', '20161015', '20161016')
+group by city, version
 {% endhighlight %}
 
 ## DATA TYPE {#DATATYPE}
