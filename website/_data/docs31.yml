@@ -43,6 +43,7 @@
   - tutorial/sql_reference
   - tutorial/project_level_acl
   - tutorial/cube_spark
+  - tutorial/cube_flink
   - tutorial/cube_streaming
   - tutorial/realtime_olap
   - tutorial/cube_build_performance

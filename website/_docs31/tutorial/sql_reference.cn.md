@@ -395,7 +395,7 @@ from (
 group by A
 {% endhighlight %}
 
-## [INTERSECT_COUNT]{#INTERSECT_COUNT}
+## INTERSECT_COUNT {#INTERSECT_COUNT}
 INTERSECT_COUNT函数用于计算留存率，计算留存率的measure必须经过count_distinct精确去重的预计算。
 例子1: 参考[intersect_count](http://kylin.apache.org/blog/2016/11/28/intersect-count/)
 {% highlight Groff markup %}
@@ -423,7 +423,7 @@ where dt in ('2016104', '20161015', '20161016')
 group by city, version
 {% endhighlight %}
 
-## [INTERSECT_VALUE]{#INTERSECT_VALUE}
+## INTERSECT_VALUE {#INTERSECT_VALUE}
 INTERSECT_COUNT函数用于返回留存值的bitmap明细，使用它之前必须经过count_distinct精确去重的预计算。
 例子：
 {% highlight Groff markup %}
