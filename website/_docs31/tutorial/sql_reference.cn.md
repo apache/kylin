@@ -47,6 +47,8 @@ Apache Kylin 使用 Apache Calcite 做 SQL 解析和优化。作为一款 OLAP �
 [SUSTRING](#SUBSTRING)
 [COALESCE](#COALESCE)
 [STDDEV_SUM](#STDDEV_SUM)
+[INTERSECT_COUNT](#INTERSECT_COUNT)
+[INTERSECT_VALUE](#INTERSECT_VALUE)
 
 ## 数据类型
 [数据类型](#datatype)
@@ -391,6 +393,49 @@ from (
       group by A, sampling_dim
 ) a
 group by A
+{% endhighlight %}
+
+## [INTERSECT_COUNT]{#INTERSECT_COUNT}
+INTERSECT_COUNT函数用于计算留存率，计算留存率的measure必须经过count_distinct精确去重的预计算。
+例子1: 参考[intersect_count](http://kylin.apache.org/blog/2016/11/28/intersect-count/)
+{% highlight Groff markup %}
+select city, version,
+intersect_count(uuid, dt, array['20161014']) as first_day,
+intersect_count(uuid, dt, array['20161015']) as second_day,
+intersect_count(uuid, dt, array['20161016']) as third_day,
+intersect_count(uuid, dt, array['20161014', '20161015']) as retention_oneday,
+intersect_count(uuid, dt, array['20161014', '20161015', '20161016']) as retention_twoday
+from visit_log
+where dt in ('2016104', '20161015', '20161016')
+group by city, version
+{% endhighlight %}
+
+例子2: 参考KYLIN-4314
+{% highlight Groff markup %}
+select city, version,
+intersect_count(uuid, dt, array['20161014']) as first_day,
+intersect_count(uuid, dt, array['20161015']) as second_day,
+intersect_count(uuid, dt, array['20161016']) as third_day,
+intersect_count(uuid, dt, array['20161014', '20161015']) as retention_oneday,
+intersect_count(uuid, dt, array['20161014|20161015', '20161016']) as retention_twoday
+from visit_log
+where dt in ('2016104', '20161015', '20161016')
+group by city, version
+{% endhighlight %}
+
+## [INTERSECT_VALUE]{#INTERSECT_VALUE}
+INTERSECT_COUNT函数用于返回留存值的bitmap明细，使用它之前必须经过count_distinct精确去重的预计算。
+例子：
+{% highlight Groff markup %}
+select city, version,
+intersect_value(uuid, dt, array['20161014']) as first_day,
+intersect_value(uuid, dt, array['20161015']) as second_day,
+intersect_value(uuid, dt, array['20161016']) as third_day,
+intersect_value(uuid, dt, array['20161014', '20161015']) as retention_oneday,
+intersect_value(uuid, dt, array['20161014|20161015', '20161016']) as retention_twoday
+from visit_log
+where dt in ('2016104', '20161015', '20161016')
+group by city, version
 {% endhighlight %}
 
 ## 数据类型 {#datatype}
