@@ -71,7 +71,7 @@ public class MRHiveDictUtil {
     protected static final Pattern HDFS_LOCATION = Pattern.compile("LOCATION \'(.*)\';");
 
     public enum DictHiveType {
-        GroupBy("group_by"), MrDictLockPath("/mr_dict_lock/"), MrEphemeralDictLockPath(
+        MrDictLockPath("/mr_dict_lock/"), MrEphemeralDictLockPath(
                 "/mr_dict_ephemeral_lock/");
         private String name;
 

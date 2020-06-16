@@ -114,8 +114,8 @@ public interface BatchConstants {
     String ARG_BASE64_ENCODED_STEP_NAME = "base64StepName";
     String ARG_SQL_COUNT = "sqlCount";
     String ARG_BASE64_ENCODED_SQL = "base64EncodedSql";
-    String ARG_GLOBAL_DIC_PART_REDUCE_STATS = "global_dic_part_reduce_stats";
-    String ARG_GLOBAL_DIC_MAX_DISTINCT_COUNT = "globa_dicl_max_distinct_count";
+    String ARG_GLOBAL_DIC_PART_REDUCE_STATS = "global_dict_part_reduce_stats";
+    String ARG_GLOBAL_DIC_MAX_DISTINCT_COUNT = "global_dict_max_distinct_count";
 
     /**
      * logger and counter
