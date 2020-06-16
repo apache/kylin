@@ -375,9 +375,12 @@ public class HiveInputBase {
             String[] mrHiveDicts = flatDesc.getSegment().getConfig().getMrHiveDictColumns();
             if (Objects.nonNull(mrHiveDicts) && mrHiveDicts.length > 0) {
                 String dictDb = flatDesc.getSegment().getConfig().getMrHiveDictDB();
-                String tableName = dictDb + "." + flatDesc.getTableName() + "_"
-                        + MRHiveDictUtil.DictHiveType.GroupBy.getName();
+                String tableName = dictDb + "." + flatDesc.getTableName()
+                        + flatDesc.getSegment().getConfig().getMrHiveDistinctValueTableSuffix();
+                String tableName2 = dictDb + "." + flatDesc.getTableName()
+                        + flatDesc.getSegment().getConfig().getMrHiveDictTableSuffix();
                 deleteTables.add(tableName);
+                deleteTables.add(tableName2);
             }
             step.setIntermediateTables(deleteTables);
 
