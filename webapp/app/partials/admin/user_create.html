@@ -41,7 +41,7 @@
       <div class="form-group">
         <label><b>User Password</b></label>
         <div class="clearfix">
-          <input ng-pattern="pwdPattern" required name="pwd_input" type="password" class="form-control" placeholder="The password should contain at least one number, letter and special character（~!@#$%^&*(){}|:&quot;\<\>?[];\',./`)." ng-model="user.password"/>
+          <input ng-pattern="pwdPattern" required name="pwd_input" type="password" class="form-control" placeholder="The password should have at least 8 characters, and contain at least one number, letter and special character（~!@#$%^&*(){}|:&quot;\<\>?[];\',./`)." ng-model="user.password"/>
           <span class="text-warning"
                           ng-if="user_create_form.pwd_input.$error.required  && user_create_form.pwd_input.$dirty"
                     >&nbsp;The password is required</span>
