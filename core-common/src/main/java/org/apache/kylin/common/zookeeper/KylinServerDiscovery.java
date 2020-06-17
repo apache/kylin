@@ -18,6 +18,7 @@
 
 package org.apache.kylin.common.zookeeper;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -33,7 +34,7 @@ import org.apache.curator.x.discovery.ServiceCache;
 import org.apache.curator.x.discovery.ServiceDiscovery;
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
-import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
+import org.apache.curator.x.discovery.details.InstanceSerializer;
 import org.apache.curator.x.discovery.details.ServiceCacheListener;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.StringUtil;
@@ -41,6 +42,9 @@ import org.apache.kylin.common.util.ZKUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -160,5 +164,34 @@ public class KylinServerDiscovery implements Closeable {
     public void close() throws IOException {
         IOUtils.closeQuietly(serviceCache);
         IOUtils.closeQuietly(serviceDiscovery);
+    }
+
+    static class JsonInstanceSerializer<T> implements InstanceSerializer<T> {
+        private final ObjectMapper mapper;
+        private final Class<T> payloadClass;
+        private final JavaType type;
+
+        JsonInstanceSerializer(Class<T> payloadClass) {
+            this.payloadClass = payloadClass;
+            this.mapper = new ObjectMapper();
+
+            // to bypass https://issues.apache.org/jira/browse/CURATOR-394
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+            this.type = this.mapper.getTypeFactory().constructType(ServiceInstance.class);
+        }
+
+        public ServiceInstance<T> deserialize(byte[] bytes) throws Exception {
+            ServiceInstance rawServiceInstance = this.mapper.readValue(bytes, this.type);
+            this.payloadClass.cast(rawServiceInstance.getPayload());
+            return rawServiceInstance;
+        }
+
+        public byte[] serialize(ServiceInstance<T> instance) throws Exception {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            mapper.convertValue(instance.getPayload(), payloadClass);
+            this.mapper.writeValue(out, instance);
+            return out.toByteArray();
+        }
     }
 }
