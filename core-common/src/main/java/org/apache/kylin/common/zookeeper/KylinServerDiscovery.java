@@ -116,9 +116,17 @@ public class KylinServerDiscovery implements Closeable {
             serviceCache.start();
 
             registerSelf();
+            int i = 1;
+            long maxWaitingTime = 60 * 1000L; // 1 min
             while (!isFinishInit.get()) {
                 logger.info("Haven't registered, waiting ...");
-                Thread.sleep(100L);
+                long waitingTime = i * i * 100L;
+                if (waitingTime > maxWaitingTime) {
+                    waitingTime = maxWaitingTime;
+                } else {
+                    i++;
+                }
+                Thread.sleep(waitingTime);
             }
         } catch (Exception e) {
             throw new RuntimeException("Fail to initialize due to ", e);
