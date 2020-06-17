@@ -51,8 +51,8 @@
       <div class="form-group">
         <label><b>User New Password</b></label>
         <div class="clearfix">
-          <input required ng-pattern="pwdPattern" name="pwd_input" type="password" class="form-control" 
-                 placeholder="The password should contain at least one number, letter and special character（~!@#$%^&*(){}|:&quot;\<\>?[];\',./`)."
+          <input required ng-pattern="pwdPattern" name="pwd_input" type="password" class="form-control"
+                 placeholder="The password should have at least 8 characters, and contain at least one number, letter and special character（~!@#$%^&*(){}|:&quot;\<\>?[];\',./`)."
                  ng-model="changePwdUser.newPassword"/>
           <span class="text-warning"
                           ng-if="change_pwd_form.pwd_input.$error.required  && change_pwd_form.pwd_input.$dirty"
@@ -65,8 +65,8 @@
       <div class="form-group">
         <label><b>Confirm New Password</b></label>
         <div class="clearfix">
-          <input required name="pwd_new_input" type="password" class="form-control" 
-                 placeholder="The password should contain at least one number, letter and special character（~!@#$%^&*(){}|:&quot;\<\>?[];\',./`)." 
+          <input required name="pwd_new_input" type="password" class="form-control"
+                 placeholder="The password should have at least 8 characters, and contain at least one number, letter and special character（~!@#$%^&*(){}|:&quot;\<\>?[];\',./`)."
                  ng-model="changePwdUser.repeatPassword"/>
             <span class="text-warning"
                  ng-if="user_create_form.pwd_new_input.$error.required  && user_create_form.pwd_new_input.$dirty"
