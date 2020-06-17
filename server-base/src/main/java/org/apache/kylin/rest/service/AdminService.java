@@ -31,16 +31,18 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OrderedProperties;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.job.StorageCleanupJob;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  */
@@ -91,6 +93,11 @@ public class AdminService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    public boolean configWritableStatus() {
+        return KylinConfig.getInstanceFromEnv().isWebConfigEnabled();
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void cleanupStorage() {
         StorageCleanupJob job = null;
         try {
@@ -111,5 +118,17 @@ public class AdminService extends BasicService {
         }
 
         return KylinConfig.getInstanceFromEnv().exportToString(propertyKeys);
+    }
+
+    public String getHadoopConfigAsString() throws IOException {
+        logger.debug("Get Kylin Hadoop Config");
+
+        return KylinConfig.getConfigAsString(HadoopUtil.getCurrentConfiguration());
+    }
+
+    public String getHBaseConfigAsString() throws IOException {
+        logger.debug("Get Kylin HBase Config");
+
+        return KylinConfig.getConfigAsString(HBaseConnection.getCurrentHBaseConfiguration());
     }
 }

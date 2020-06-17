@@ -55,8 +55,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
@@ -321,6 +321,10 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         return snapshots;
     }
 
+    public void resetSnapshots() {
+        snapshots = new ConcurrentHashMap<String, String>();
+    }
+
     public String getSnapshotResPath(String table) {
         return getSnapshots().get(table);
     }
@@ -356,6 +360,11 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         getDictionaries().put(dictKey, dictResPath);
     }
 
+    public String removeDictResPath(TblColRef col) {
+        String dictKey = col.getIdentity();
+        return getDictionaries().remove(dictKey);
+    }
+    
     public void setStorageLocationIdentifier(String storageLocationIdentifier) {
         this.storageLocationIdentifier = storageLocationIdentifier;
     }
@@ -654,5 +663,42 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
 
     public void setStreamSourceCheckpoint(String streamSourceCheckpoint) {
         this.streamSourceCheckpoint = streamSourceCheckpoint;
+    }
+
+    public static CubeSegment getCopyOf(CubeSegment other) {
+        CubeSegment copy = new CubeSegment();
+        copy.cubeInstance = other.cubeInstance;
+        copy.uuid = other.uuid;
+        copy.name = other.name;
+        copy.storageLocationIdentifier = other.storageLocationIdentifier;
+        copy.dateRangeStart = other.dateRangeStart;
+        copy.dateRangeEnd = other.dateRangeEnd;
+        copy.sourceOffsetStart = other.sourceOffsetStart;
+        copy.sourceOffsetEnd = other.sourceOffsetEnd;
+        copy.status = other.status;
+        copy.sizeKB = other.sizeKB;
+        copy.isMerged = other.isMerged;
+        copy.estimateRatio = other.estimateRatio == null ? null : Lists.newArrayList(other.estimateRatio);
+        copy.inputRecords = other.inputRecords;
+        copy.inputRecordsSize = other.inputRecordsSize;
+        copy.lastBuildTime = other.lastBuildTime;
+        copy.lastBuildJobID = other.lastBuildJobID;
+        copy.createTimeUTC = other.createTimeUTC;
+        copy.cuboidShardNums.putAll(other.cuboidShardNums);
+        copy.totalShards = other.totalShards;
+        copy.blackoutCuboids.addAll(other.blackoutCuboids);
+        copy.getDictionaries().putAll(other.getDictionaries());
+        copy.getSnapshots().putAll(other.getSnapshots());
+        copy.rowkeyStats.addAll(other.rowkeyStats);
+        copy.sourcePartitionOffsetStart.putAll(other.sourcePartitionOffsetStart);
+        copy.sourcePartitionOffsetEnd.putAll(other.sourcePartitionOffsetEnd);
+        if (other.streamSourceCheckpoint != null) {
+            copy.streamSourceCheckpoint = other.streamSourceCheckpoint;
+        }
+        copy.additionalInfo.putAll(other.additionalInfo);
+        copy.dimensionRangeInfoMap = other.dimensionRangeInfoMap == null ? null
+                : Maps.newHashMap(other.dimensionRangeInfoMap);
+        copy.binarySignature = other.binarySignature;
+        return copy;
     }
 }

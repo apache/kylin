@@ -27,8 +27,8 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.support.AbstractCacheManager;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 public class RemoteLocalFailOverCacheManager extends AbstractCacheManager {
     private static final Logger logger = LoggerFactory.getLogger(RemoteLocalFailOverCacheManager.class);
@@ -67,5 +67,10 @@ public class RemoteLocalFailOverCacheManager extends AbstractCacheManager {
     @VisibleForTesting
     void enableRemoteCacheManager() {
         remoteCacheManager.setClusterHealth(true);
+    }
+
+    @VisibleForTesting
+    MemcachedCacheManager getRemoteCacheManager() {
+        return remoteCacheManager;
     }
 }

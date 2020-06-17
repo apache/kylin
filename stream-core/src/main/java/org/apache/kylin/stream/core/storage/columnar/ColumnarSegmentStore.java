@@ -54,10 +54,10 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.common.io.Files;
+import org.apache.kylin.shaded.com.google.common.base.Charsets;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.io.Files;
 
 public class ColumnarSegmentStore implements IStreamingSegmentStore {
     private static final String STATE_FILE = "_STATE";

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkArgument;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,7 +38,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.realization.SQLDigest.SQLCall;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
 
 /**
  * Created by sunyerui on 15/12/10.
@@ -112,8 +112,8 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
                 int id;
                 TblColRef literalCol = measureDesc.getFunction().getParameter().getColRefs().get(0);
                 if (needDictionaryColumn(measureDesc.getFunction()) && dictionaryMap.containsKey(literalCol)) {
-                        Dictionary<String> dictionary = dictionaryMap.get(literalCol);
-                        id = dictionary.getIdFromValue(values[0]);
+                    Dictionary<String> dictionary = dictionaryMap.get(literalCol);
+                    id = dictionary.getIdFromValue(values[0]);
                 } else {
                     id = Integer.parseInt(values[0]);
                 }
@@ -153,6 +153,8 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
     private boolean needDictionaryColumn(FunctionDesc functionDesc) {
         DataType dataType = functionDesc.getParameter().getColRefs().get(0).getType();
         if (functionDesc.isMrDict()) {
+            // If isMrDict set to true, it means related column has been
+            // encoded in previous step by Hive Global Dictionary
             return false;
         }
         if (dataType.isIntegerFamily() && !dataType.isBigInt()) {

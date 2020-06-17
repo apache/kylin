@@ -18,9 +18,9 @@
 
 package org.apache.kylin.cube.model;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkArgument;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkState;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -42,6 +42,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.IntStream;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
@@ -85,11 +86,11 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Joiner;
+import org.apache.kylin.shaded.com.google.common.collect.Iterables;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  */
@@ -482,6 +483,70 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
     public Set<Long> getMandatoryCuboids() {
         return mandatoryCuboids;
+    }
+
+    public boolean equalsRaw(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        CubeDesc that = (CubeDesc) o;
+
+        if (!Objects.equals(name, that.name))
+            return false;
+        if (!Objects.equals(modelName, that.modelName))
+            return false;
+        if (!Objects.equals(description, that.description))
+            return false;
+        if (!Objects.equals(dimensions, that.dimensions))
+            return false;
+        if (!Objects.equals(measures, that.measures))
+            return false;
+        if (!Objects.equals(dictionaries, that.dictionaries))
+            return false;
+        if (!Arrays.equals(rowkey.getRowKeyColumns(), that.rowkey.getRowKeyColumns()))
+            return false;
+        if (!Objects.equals(nullStrings, that.nullStrings))
+            return false;
+        if (!Arrays.equals(hbaseMapping.getColumnFamily(), that.hbaseMapping.getColumnFamily()))
+            return false;
+        if (aggregationGroups != that.aggregationGroups) {
+            if (aggregationGroups == null || that.aggregationGroups == null) {
+                return false;
+            } else if (!IntStream.range(0, aggregationGroups.size())
+                    .allMatch(i -> Arrays.equals(aggregationGroups.get(i).getIncludes(),
+                            that.aggregationGroups.get(i).getIncludes())
+                            && Objects.equals(aggregationGroups.get(i).getSelectRule(),
+                                    that.aggregationGroups.get(i).getSelectRule()))) {
+                return false;
+            }
+        }
+        if (!Objects.equals(notifyList, that.notifyList))
+            return false;
+        if (!Objects.equals(statusNeedNotify, that.statusNeedNotify))
+            return false;
+        if (!Arrays.equals(autoMergeTimeRanges, that.autoMergeTimeRanges))
+            return false;
+        if (!Objects.equals(retentionRange, that.retentionRange))
+            return false;
+        if (!Objects.equals(engineType, that.engineType))
+            return false;
+        if (!Objects.equals(storageType, that.storageType))
+            return false;
+        if (!Objects.equals(overrideKylinProps, that.overrideKylinProps))
+            return false;
+        if (!Objects.equals(snapshotTableDescList, that.snapshotTableDescList))
+            return false;
+        if (!Objects.equals(partitionDateStart, that.partitionDateStart))
+            return false;
+        if (!Objects.equals(partitionDateEnd, that.partitionDateEnd))
+            return false;
+        if (!Objects.equals(parentForward, that.parentForward))
+            return false;
+        if (!Objects.equals(mandatoryDimensionSetList, that.mandatoryDimensionSetList))
+            return false;
+        return Objects.equals(cuboidBlackSet, that.cuboidBlackSet);
     }
 
     @Override
@@ -1297,6 +1362,43 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.parentForward = parentForward;
     }
 
+    /**
+     * Get columns which need dictionaries during cube building, while don't need to store them
+     */
+    public Set<TblColRef> getAllColumnsNeedDictionaryForBuildingOnly() {
+        Set<TblColRef> result = Sets.newHashSet();
+        Set<TblColRef> colsNeedDictStored = Sets.newHashSet();
+
+        // dictionaries in measures
+        for (MeasureDesc measure : measures) {
+            FunctionDesc func = measure.getFunction();
+            MeasureType<?> aggrType = func.getMeasureType();
+
+            // cols need dict stored in a measure
+            Set<TblColRef> colSet = Sets.newHashSet();
+            colSet.addAll(aggrType.getColumnsNeedDictionary(func));
+            colSet.removeAll(aggrType.getColumnsNeedDictionaryForBuildingOnly(func));
+            colsNeedDictStored.addAll(colSet);
+
+            result.addAll(aggrType.getColumnsNeedDictionaryForBuildingOnly(func));
+        }
+
+        // dictionaries in dimensions
+        colsNeedDictStored.addAll(getAllDimsHaveDictionary());
+
+        // any additional dictionaries
+        if (dictionaries != null) {
+            for (DictionaryDesc dictDesc : dictionaries) {
+                TblColRef col = dictDesc.getColumnRef();
+                colsNeedDictStored.add(col);
+            }
+        }
+
+        result.removeAll(colsNeedDictStored);
+
+        return result;
+    }
+    
     /**
      * Get dimensions that have dictionary
      */

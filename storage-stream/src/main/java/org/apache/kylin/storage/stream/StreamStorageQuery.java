@@ -43,8 +43,8 @@ import org.apache.kylin.stream.core.query.StreamingDataQueryPlanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  * Streaming storage query
@@ -68,10 +68,14 @@ public class StreamStorageQuery extends CubeStorageQuery {
         long maxHistorySegmentTime = -1;
         StreamingDataQueryPlanner segmentsPlanner = new StreamingDataQueryPlanner(cubeInstance.getDescriptor(),
                 request.getFilter());
+        long current = System.currentTimeMillis();
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
             TSRange segmentRange = cubeSeg.getTSRange();
             if (segmentRange.end.v > maxHistorySegmentTime) {
-                maxHistorySegmentTime = cubeSeg.getTSRange().end.v;
+                if (cubeSeg.getTSRange().end.v < current) {
+                    // In normal case, the segment for future time range is not reasonable in streaming case
+                    maxHistorySegmentTime = cubeSeg.getTSRange().end.v;
+                }
             }
             CubeSegmentScanner scanner;
 

@@ -28,11 +28,14 @@ import java.util.TimeZone;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Array;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
+import org.apache.kylin.cube.model.RowKeyColDesc;
+import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.dict.lookup.ILookupTable;
 import org.apache.kylin.dimension.TimeDerivedColumnType;
 import org.apache.kylin.measure.MeasureType;
@@ -45,8 +48,8 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * Convert Object[] (decoded GTRecord) to tuple
@@ -74,6 +77,8 @@ public class CubeTupleConverter implements ITupleConverter {
     private final long timeZoneOffset;
 
     public final int nSelectedDims;
+
+    private final RowKeyDesc rowKeyDesc;
 
     public CubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, //
             Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, int[] gtColIdx, TupleInfo returnTupleInfo) {
@@ -116,7 +121,7 @@ public class CubeTupleConverter implements ITupleConverter {
         }
 
         for (FunctionDesc metric : selectedMetrics) {
-            if (metric.needRewrite()) {
+            if (metric.needRewriteField()) {
                 String rewriteFieldName = metric.getRewriteFieldName();
                 tupleIdx[i] = tupleInfo.hasField(rewriteFieldName) ? tupleInfo.getFieldIndex(rewriteFieldName) : -1;
             } else {
@@ -148,6 +153,8 @@ public class CubeTupleConverter implements ITupleConverter {
                 }
             }
         }
+
+        rowKeyDesc = cubeSeg.getCubeDesc().getRowkey();
     }
 
     // load only needed dictionaries
@@ -169,6 +176,7 @@ public class CubeTupleConverter implements ITupleConverter {
             if (ti >= 0) {
                 // add offset to return result according to timezone
                 if (autoJustByTimezone && timestampColumn.contains(ti)) {
+                    // For streaming
                     try {
                         String v = toString(gtValues[i]);
                         if (v != null) {
@@ -179,7 +187,8 @@ public class CubeTupleConverter implements ITupleConverter {
                         tuple.setDimensionValue(ti, toString(gtValues[i]));
                     }
                 } else {
-                    tuple.setDimensionValue(ti, toString(gtValues[i]));
+                    // For batch
+                    setDimensionValue(tuple, ti, toString(gtValues[i]));
                 }
             }
         }
@@ -206,6 +215,33 @@ public class CubeTupleConverter implements ITupleConverter {
                 advMeasureFillers.get(i).reload(measureValue);
             }
             return advMeasureFillers;
+        }
+    }
+
+    private void setDimensionValue(Tuple tuple, int idx, String valueStr) {
+        if (valueStr == null) {
+            tuple.setDimensionValueDirectly(idx, valueStr);
+            return;
+        }
+
+        Object valueConvert = null;
+        TblColRef col = tupleInfo.getColumn(idx);
+        RowKeyColDesc rowKeyColDesc = rowKeyDesc.getColDescUncheck(col);
+        if (rowKeyColDesc != null) {
+            // convert value if inconsistency exists between rowkey col encoding & col data type
+            if (col.getType().isDate() && !RowKeyColDesc.isDateDimEnc(rowKeyColDesc)) {
+                long tmpValue = (Long) Tuple.convertOptiqCellValue(valueStr, "timestamp");
+                valueConvert = Tuple.millisToEpicDays(tmpValue);
+            } else if (col.getType().isDatetime() && !RowKeyColDesc.isTimeDimEnc(rowKeyColDesc)) {
+                int tmpValue = (Integer) Tuple.convertOptiqCellValue(valueStr, "date");
+                valueConvert = Tuple.epicDaysToMillis(tmpValue);
+            }
+        }
+
+        if (valueConvert != null) {
+            tuple.setDimensionValueDirectly(idx, valueConvert);
+        } else {
+            tuple.setDimensionValue(idx, valueStr);
         }
     }
 
@@ -262,6 +298,10 @@ public class CubeTupleConverter implements ITupleConverter {
                 public void fillDerivedColumns(Object[] gtValues, Tuple tuple) {
                     for (int i = 0; i < hostTmpIdx.length; i++) {
                         lookupKey.data[i] = CubeTupleConverter.toString(gtValues[hostTmpIdx[i]]);
+                        // if the primary key of lookup table is date time type, do this change in case of data type inconsistency
+                        if (deriveInfo.join.getPrimaryKeyColumns()[i].getType().isDateTimeFamily()) {
+                            lookupKey.data[i] = String.valueOf(DateFormat.stringToMillis(lookupKey.data[i]));
+                        }
                     }
 
                     String[] lookupRow = lookupTable.getRow(lookupKey);

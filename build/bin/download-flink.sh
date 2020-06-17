@@ -35,11 +35,11 @@ if [[ `uname -a` =~ "Darwin" ]]; then
     alias md5cmd="md5 -q"
 fi
 
-flink_version="1.9.0"
+flink_version="1.9.2"
 scala_version="2.11"
 flink_shaded_version="10.0"
 hadoop_version="2.7.5"
-flink_pkg_md5="e0b5ce7f6352009c74b6c369f5872a5a"
+flink_pkg_md5="0718a04fe0a641cc5f5368124a4c54a5"
 flink_shaded_hadoop_md5="4287a314bfb09a3dc957cbda3f91d7ca"
 
 if [ ! -f "flink-${flink_version}-bin-scala_${scala_version}.tgz" ]; then

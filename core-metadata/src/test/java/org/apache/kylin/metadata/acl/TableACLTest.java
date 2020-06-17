@@ -25,7 +25,7 @@ import org.apache.kylin.metadata.MetadataConstants;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class TableACLTest {
     private static Set<String> EMPTY_GROUP_SET = new HashSet<>();

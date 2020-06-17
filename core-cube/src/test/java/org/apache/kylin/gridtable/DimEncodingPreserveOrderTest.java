@@ -31,8 +31,8 @@ import org.apache.kylin.dimension.OneMoreByteVLongDimEnc;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Ordering;
 
 public class DimEncodingPreserveOrderTest {
     private static List<long[]> successValue;

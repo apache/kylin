@@ -34,7 +34,7 @@ import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 @Component("encodingService")
 public class EncodingService extends BasicService {

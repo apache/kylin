@@ -20,7 +20,7 @@ package org.apache.kylin.rest.request;
 
 import java.util.Map;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class JobBuildRequest2 {
     

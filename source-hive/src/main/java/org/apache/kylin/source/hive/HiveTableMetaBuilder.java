@@ -20,7 +20,7 @@ package org.apache.kylin.source.hive;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class HiveTableMetaBuilder {
     private String tableName;
@@ -32,6 +32,7 @@ public class HiveTableMetaBuilder {
     private int lastAccessTime;
     private long fileSize;
     private long fileNum;
+    private long rowNum;
     private int skipHeaderLineCount;
     private boolean isNative = true;
     private List<HiveTableMeta.HiveTableColumnMeta> allColumns = Lists.newArrayList();
@@ -82,6 +83,11 @@ public class HiveTableMetaBuilder {
         return this;
     }
 
+    public HiveTableMetaBuilder setRowNum(long rowNum) {
+        this.rowNum = rowNum;
+        return this;
+    }
+
     public HiveTableMetaBuilder setSkipHeaderLineCount(String skipHeaderLineCount) {
         if (null == skipHeaderLineCount)
             this.skipHeaderLineCount = 0;
@@ -106,6 +112,6 @@ public class HiveTableMetaBuilder {
     }
 
     public HiveTableMeta createHiveTableMeta() {
-        return new HiveTableMeta(tableName, sdLocation, sdInputFormat, sdOutputFormat, owner, tableType, lastAccessTime, fileSize, fileNum, skipHeaderLineCount, isNative, allColumns, partitionColumns);
+        return new HiveTableMeta(tableName, sdLocation, sdInputFormat, sdOutputFormat, owner, tableType, lastAccessTime, fileSize, fileNum, rowNum, skipHeaderLineCount, isNative, allColumns, partitionColumns);
     }
 }

@@ -49,8 +49,8 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  */
@@ -185,7 +185,7 @@ public class TableMetadataManager {
             Map<String, TableDesc> ret = new LinkedHashMap<>();
             for (String tableName : prjTableNames) {
                 String tableIdentity = getTableIdentity(tableName);
-                ret.put(tableIdentity, getProjectSpecificTableDesc(tableIdentity, prj));
+                ret.put(tableIdentity, getProjectSpecificTableDesc(tableIdentity, prj, true));
             }
             return ret;
         }
@@ -195,8 +195,12 @@ public class TableMetadataManager {
      * Get TableDesc by name
      */
     public TableDesc getTableDesc(String tableName, String prj) {
+        return getTableDesc(tableName, prj, true);
+    }
+
+    public TableDesc getTableDesc(String tableName, String prj, boolean ifUseGlobal) {
         try (AutoLock lock = srcTableMapLock.lockForWrite()) {
-            return getProjectSpecificTableDesc(getTableIdentity(tableName), prj);
+            return getProjectSpecificTableDesc(getTableIdentity(tableName), prj, ifUseGlobal);
         }
     }
 
@@ -205,11 +209,11 @@ public class TableMetadataManager {
      * 
      * All locks on srcTableMapLock are WRITE LOCKS because of this method!!
      */
-    private TableDesc getProjectSpecificTableDesc(String fullTableName, String prj) {
+    private TableDesc getProjectSpecificTableDesc(String fullTableName, String prj, boolean ifUseGlobal) {
         String key = mapKey(fullTableName, prj);
         TableDesc result = srcTableMap.get(key);
 
-        if (result == null) {
+        if (result == null && ifUseGlobal) {
             try (AutoLock lock = srcTableMapLock.lockForWrite()) {
                 result = srcTableMap.get(mapKey(fullTableName, null));
                 if (result != null) {
@@ -323,7 +327,7 @@ public class TableMetadataManager {
 
     public void reloadTableExtQuietly(String table, String project) {
         try (AutoLock lock = srcExtMapLock.lockForWrite()) {
-            srcExtCrud.reloadQuietly(TableExtDesc.concatResourcePath(table, project));
+            srcExtCrud.reloadQuietly(TableDesc.makeResourceName(table, project));
         }
     }
 
@@ -399,6 +403,21 @@ public class TableMetadataManager {
                 return;
 
             srcExtCrud.delete(t);
+        }
+    }
+
+    public void saveNewTableExtFromOld(String oldTableId, String prj, String newTableId) throws IOException {
+        try (AutoLock lock = srcExtMapLock.lockForWrite()) {
+            String path = TableExtDesc.concatResourcePath(oldTableId, prj);
+            ResourceStore store = getStore();
+            TableExtDesc newTableExt = store.getResource(path, TABLE_EXT_SERIALIZER);
+            if (newTableExt != null) {
+                newTableExt.setIdentity(newTableId);
+                newTableExt.setLastModified(0L);
+
+                newTableExt.init(prj);
+                srcExtCrud.save(newTableExt);
+            }
         }
     }
 

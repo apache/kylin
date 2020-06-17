@@ -18,7 +18,7 @@
 
 package org.apache.kylin.storage.hbase.cube;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.kylin.common.QueryContext.CubeSegmentStatistics;
 import org.apache.kylin.storage.hbase.cube.v2.SegmentQueryResult;

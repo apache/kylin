@@ -145,14 +145,10 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
         })
       }
 
-      if (modelstate==false){
-    	  if (isEditJson) {
-    		  $location.path("/models/edit/" + model.name + "/descriptionjson");
-    	  } else {
-    		  $location.path("/models/edit/" + model.name);
-    	  }
+      if (isEditJson) {
+        $location.path("/models/edit/" + model.name + "/descriptionjson");
       } else {
-        SweetAlert.swal('Sorry','This model is still used by '+ cubename.join(','));
+        $location.path("/models/edit/" + model.name);
       }
     })
 

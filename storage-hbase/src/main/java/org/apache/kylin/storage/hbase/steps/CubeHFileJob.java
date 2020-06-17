@@ -18,8 +18,11 @@
 
 package org.apache.kylin.storage.hbase.steps;
 
+import static org.apache.hadoop.hbase.HBaseConfiguration.merge;
+
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Locale;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
@@ -46,8 +49,6 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.hadoop.hbase.HBaseConfiguration.merge;
 
 /**
  * @author George Song (ysong1)
@@ -77,7 +78,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
             CubeInstance cube = cubeMgr.getCube(cubeName);
 
-            // use current hbase configuration
+            // construct configuration for the MR job cluster
             Configuration configuration = new Configuration(HBaseConnection.getCurrentHBaseConfiguration());
             String[] allServices = getAllServices(configuration);
             merge(configuration, getConf());
@@ -95,10 +96,14 @@ public class CubeHFileJob extends AbstractHadoopJob {
             // add metadata to distributed cache
             attachCubeMetadata(cube, job.getConfiguration());
 
-            HTable htable = new HTable(configuration, getOptionValue(OPTION_HTABLE_NAME));
+            // construct configuration for the HBase cluster
+            Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
+            HTable htable = new HTable(hbaseConf, getOptionValue(OPTION_HTABLE_NAME).toUpperCase(Locale.ROOT));
 
             // Automatic config !
             HFileOutputFormat3.configureIncrementalLoad(job, htable);
+            HFileOutputFormat3.configureHConnection(job, hbaseConf, getJobTempDir());
+
             reconfigurePartitions(configuration, partitionFilePath);
 
             job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -109,7 +114,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
             job.setSortComparatorClass(RowKeyWritable.RowKeyComparator.class);
 
             // set block replication to 3 for hfiles
-            configuration.set(DFSConfigKeys.DFS_REPLICATION_KEY, "3");
+            job.getConfiguration().set(DFSConfigKeys.DFS_REPLICATION_KEY, "3");
 
             this.deletePath(job.getConfiguration(), output);
 

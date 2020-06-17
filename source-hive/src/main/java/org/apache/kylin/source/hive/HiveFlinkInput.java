@@ -18,7 +18,7 @@
 
 package org.apache.kylin.source.hive;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.engine.flink.IFlinkInput;
 import org.apache.kylin.job.JoinedFlatTable;

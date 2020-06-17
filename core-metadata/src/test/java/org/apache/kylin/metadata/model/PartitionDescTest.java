@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.model;
 
 import java.io.IOException;
 
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Assert;
@@ -28,9 +29,12 @@ import org.junit.Test;
 
 public class PartitionDescTest extends LocalFileMetadataTestCase {
 
+    private PartitionDesc.DefaultPartitionConditionBuilder partitionConditionBuilder;
+
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
+        partitionConditionBuilder = new PartitionDesc.DefaultPartitionConditionBuilder();
     }
 
     @After
@@ -58,4 +62,24 @@ public class PartitionDescTest extends LocalFileMetadataTestCase {
                 dateRangeCondition);
     }
 
+    // [KYLIN-4495] Support custom date formats for partition date column
+    @Test
+    public void testCustomDateFormat() {
+        PartitionDesc partitionDesc = new PartitionDesc();
+        TblColRef col = TblColRef.mockup(TableDesc.mockup("DEFAULT.TABLE_NAME"), 1, "DATE_COLUMN", "string");
+        partitionDesc.setPartitionDateColumnRef(col);
+        partitionDesc.setPartitionDateColumn(col.getCanonicalName());
+        partitionDesc.setPartitionDateFormat("yyyy/MM/dd");
+        SegmentRange.TSRange range = new SegmentRange.TSRange(
+                DateFormat.stringToMillis("2016-02-22"),
+                DateFormat.stringToMillis("2016-02-23"));
+        String condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc, null, range, null);
+        Assert.assertEquals(
+                "UNKNOWN_ALIAS.DATE_COLUMN >= '2016/02/22' AND UNKNOWN_ALIAS.DATE_COLUMN < '2016/02/23'",
+                condition);
+
+        range = new SegmentRange.TSRange(0L, 0L);
+        condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc, null, range, null);
+        Assert.assertEquals("1=0", condition);
+    }
 }

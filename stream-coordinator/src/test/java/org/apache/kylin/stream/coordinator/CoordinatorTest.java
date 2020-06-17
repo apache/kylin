@@ -18,7 +18,7 @@
 
 package org.apache.kylin.stream.coordinator;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.curator.test.TestingServer;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.ZKUtil;
@@ -207,7 +207,7 @@ public class CoordinatorTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testReassignWithoutExeception() throws IOException {
+    public void testReassignWithoutException() throws IOException {
 
         ReceiverAdminClient receiverAdminClient = mockSuccessReceiverAdminClient();
         coordinator = new Coordinator(metadataStore, receiverAdminClient);

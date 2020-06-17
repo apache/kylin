@@ -118,4 +118,21 @@ public class DictionaryDesc implements java.io.Serializable {
         desc.builderClass = builderClass;
         return desc;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DictionaryDesc that = (DictionaryDesc) o;
+        return Objects.equals(column, that.column) &&
+                Objects.equals(reuseColumn, that.reuseColumn) &&
+                Objects.equals(builderClass, that.builderClass) &&
+                Objects.equals(cube, that.cube) &&
+                Objects.equals(model, that.model);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(column, reuseColumn, builderClass, cube, model);
+    }
 }

@@ -20,7 +20,7 @@ package org.apache.kylin.metrics.lib.impl;
 
 import java.util.Locale;
 
-import com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 
 public enum TimePropertyEnum {
     YEAR("KYEAR_BEGIN_DATE"),
@@ -38,7 +38,7 @@ public enum TimePropertyEnum {
         this.propertyName = propertyName;
     }
 
-    public static TimePropertyEnum getByPropertyName(String propertyName) {
+    public static TimePropertyEnum getByKey(String propertyName) {
         if (Strings.isNullOrEmpty(propertyName)) {
             return null;
         }

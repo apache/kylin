@@ -100,9 +100,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  * CubeController is defined as Restful API entrance for UI.
@@ -1036,13 +1036,6 @@ public class CubeController extends BasicController {
             throw new TooManyRequestException(
                     "There is already " + cube.getBuildingSegments().size() + " building segment; ");
         }
-    }
-
-    @RequestMapping(value = "/{cube}/{project}/migrate", method = { RequestMethod.POST })
-    @ResponseBody
-    public void migrateCube(@PathVariable String cube, @PathVariable String project) {
-        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cube);
-        cubeService.migrateCube(cubeInstance, project);
     }
 
     public void setCubeService(CubeService cubeService) {

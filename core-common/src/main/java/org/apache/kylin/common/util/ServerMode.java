@@ -23,7 +23,7 @@ import java.util.Locale;
 
 import org.apache.kylin.common.KylinConfig;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class ServerMode {
     public final static String SERVER_MODE_QUERY = "query";

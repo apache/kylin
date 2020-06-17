@@ -41,11 +41,10 @@ import org.apache.kylin.job.impl.threadpool.DefaultContext;
 import org.apache.kylin.job.util.MailNotificationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.base.MoreObjects;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  */
@@ -558,7 +557,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         } catch (RuntimeException e) {
             logger.error("failed to get job status:" + getId(), e);
         }
-        return Objects.toStringHelper(this).add("id", getId()).add("name", getName()).add("state", state)
+        return MoreObjects.toStringHelper(this).add("id", getId()).add("name", getName()).add("state", state)
                 .toString();
     }
 }

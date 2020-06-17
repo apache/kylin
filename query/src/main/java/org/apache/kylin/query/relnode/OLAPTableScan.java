@@ -61,6 +61,7 @@ import org.apache.calcite.rel.rules.JoinUnionTransposeRule;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
 import org.apache.calcite.rel.rules.SemiJoinRule;
 import org.apache.calcite.rel.rules.SortJoinTransposeRule;
+import org.apache.calcite.rel.rules.SortProjectTransposeRule;
 import org.apache.calcite.rel.rules.SortUnionTransposeRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -75,6 +76,7 @@ import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.enumerator.DictionaryEnumerator;
 import org.apache.kylin.query.optrule.AggregateProjectReduceRule;
+import org.apache.kylin.query.optrule.KylinSortProjectTransposeRule;
 import org.apache.kylin.query.optrule.OLAPAggregateRule;
 import org.apache.kylin.query.optrule.OLAPFilterRule;
 import org.apache.kylin.query.optrule.OLAPJoinRule;
@@ -211,6 +213,10 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
         // see Dec 26th email @ http://mail-archives.apache.org/mod_mbox/calcite-dev/201412.mbox/browser
         planner.removeRule(ExpandConversionRule.INSTANCE);
+
+        // KYLIN-4464 do not pushdown sort when there is a window function in projection
+        planner.removeRule(SortProjectTransposeRule.INSTANCE);
+        planner.addRule(KylinSortProjectTransposeRule.INSTANCE);
     }
 
     protected void addRules(final RelOptPlanner planner, List<String> rules) {

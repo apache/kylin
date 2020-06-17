@@ -14,12 +14,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.engine.spark;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
@@ -36,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ *
  */
 public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
 
@@ -47,7 +49,7 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
     public SparkBatchCubingJobBuilder2(CubeSegment newSegment, String submitter) {
         this(newSegment, submitter, 0);
     }
-    
+
     public SparkBatchCubingJobBuilder2(CubeSegment newSegment, String submitter, Integer priorityOffset) {
         super(newSegment, submitter, priorityOffset);
         this.inputSide = SparkUtil.getBatchCubingInputSide(seg);
@@ -63,6 +65,9 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
 
         // Phase 1: Create Flat Table & Materialize Hive View in Lookup Tables
         inputSide.addStepPhase1_CreateFlatTable(result);
+
+        // Build global dictionary in distributed way
+        buildHiveGlobalDictionaryByMR(result, jobId);
 
         // Phase 2: Build Dictionary
         if (seg.getConfig().isSparkFactDistinctEnable()) {
@@ -184,7 +189,7 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
 
 
     public void configureSparkJob(final CubeSegment seg, final SparkExecutable sparkExecutable,
-            final String jobId, final String cuboidRootPath) {
+                                  final String jobId, final String cuboidRootPath) {
         final IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(seg);
         final String tablePath = JoinedFlatTable.getTableDir(flatTableDesc, getJobWorkingDir(jobId));
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
@@ -209,5 +214,29 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
         Map<String, String> param = new HashMap<>();
         param.put("path", getDumpMetadataPath(jobId));
         return new StorageURL(kylinConfig.getMetadataUrl().getIdentifier(), "hdfs", param).toString();
+    }
+
+    /**
+     * Build hive global dictionary by MR and encode corresponding column into integer for flat table
+     */
+    protected void buildHiveGlobalDictionaryByMR(final CubingJob result, String jobId) {
+        KylinConfig dictConfig = seg.getConfig();
+        String[] mrHiveDictColumnExcludeRef = dictConfig.getMrHiveDictColumnsExcludeRefColumns();
+        String[] mrHiveDictColumns = dictConfig.getMrHiveDictColumns();
+
+        if (Objects.nonNull(mrHiveDictColumnExcludeRef) && mrHiveDictColumnExcludeRef.length > 0
+                && !"".equals(mrHiveDictColumnExcludeRef[0])) {
+
+            // 1. parallel part build
+            result.addTask(createBuildGlobalHiveDictPartBuildJob(jobId));
+
+            // 2. parallel total build
+            result.addTask(createBuildGlobalHiveDictTotalBuildJob(jobId));
+        }
+
+        // merge global dic and replace flat table
+        if (Objects.nonNull(mrHiveDictColumns) && mrHiveDictColumns.length > 0 && !"".equals(mrHiveDictColumns[0])) {
+            inputSide.addStepPhase_ReplaceFlatTableGlobalColumnValue(result);
+        }
     }
 }

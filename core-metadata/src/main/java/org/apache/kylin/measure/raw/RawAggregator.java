@@ -21,7 +21,7 @@ package org.apache.kylin.measure.raw;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.measure.MeasureAggregator;
 

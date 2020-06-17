@@ -18,9 +18,9 @@
 
 package org.apache.kylin.cube.cuboid.algorithm.generic;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableSet;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.cube.cuboid.algorithm.CuboidStats;
 
 import java.util.BitSet;

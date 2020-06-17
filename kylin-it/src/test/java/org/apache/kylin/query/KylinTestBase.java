@@ -78,8 +78,8 @@ import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Files;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableSet;
+import org.apache.kylin.shaded.com.google.common.io.Files;
 
 /**
  */
@@ -279,7 +279,7 @@ public class KylinTestBase {
         } catch (SQLException sqlException) {
             Pair<List<List<String>>, List<SelectedColumnMeta>> result = PushDownUtil.tryPushDownSelectQuery(
                     ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", sqlException,
-                    BackdoorToggles.getPrepareOnly());
+                    BackdoorToggles.getPrepareOnly(), null);
             if (result == null) {
                 throw sqlException;
             }
@@ -306,7 +306,7 @@ public class KylinTestBase {
         SQLException mockException = new SQLException("", new NoRealizationFoundException(""));
 
         return PushDownUtil.tryPushDownSelectQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", mockException,
-                BackdoorToggles.getPrepareOnly());
+                BackdoorToggles.getPrepareOnly(), null);
     }
 
     protected Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownNonSelectQuery(String sql,

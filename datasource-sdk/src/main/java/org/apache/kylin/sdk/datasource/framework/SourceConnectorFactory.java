@@ -22,13 +22,14 @@ import org.apache.kylin.sdk.datasource.adaptor.AdaptorConfig;
 import org.apache.kylin.sdk.datasource.adaptor.DefaultAdaptor;
 import org.apache.kylin.sdk.datasource.adaptor.MysqlAdaptor;
 import org.apache.kylin.sdk.datasource.adaptor.PostgresqlAdaptor;
+import org.apache.kylin.sdk.datasource.adaptor.PrestoAdaptor;
 
 public class SourceConnectorFactory {
     public static JdbcConnector getJdbcConnector(KylinConfig config) {
-        String jdbcUrl = config.getJdbcSourceConnectionUrl();
-        String jdbcDriver = config.getJdbcSourceDriver();
-        String jdbcUser = config.getJdbcSourceUser();
-        String jdbcPass = config.getJdbcSourcePass();
+        String jdbcUrl = config.getJdbcSourceConnectionUrl() == null ? config.getJdbcUrl(null) : config.getJdbcSourceConnectionUrl();
+        String jdbcDriver = config.getJdbcSourceDriver() == null ? config.getJdbcDriverClass(null) : config.getJdbcSourceDriver();
+        String jdbcUser = config.getJdbcSourceUser() == null ? config.getJdbcUsername(null) : config.getJdbcSourceUser();
+        String jdbcPass = config.getJdbcSourcePass() == null ? config.getJdbcPassword(null) : config.getJdbcSourcePass();
         String adaptorClazz = config.getJdbcSourceAdaptor();
 
         AdaptorConfig jdbcConf = new AdaptorConfig(jdbcUrl, jdbcDriver, jdbcUser, jdbcPass);
@@ -53,10 +54,10 @@ public class SourceConnectorFactory {
             return MysqlAdaptor.class.getName();
         case "postgresql":
             return PostgresqlAdaptor.class.getName();
+        case "presto":
+            return PrestoAdaptor.class.getName();
         default:
             return DefaultAdaptor.class.getName();
         }
     }
 }
-
-

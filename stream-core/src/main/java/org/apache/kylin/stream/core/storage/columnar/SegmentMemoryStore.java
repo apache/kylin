@@ -19,6 +19,7 @@
 package org.apache.kylin.stream.core.storage.columnar;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -28,6 +29,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureAggregators;
@@ -53,9 +55,8 @@ import org.apache.kylin.stream.core.storage.columnar.ParsedStreamingCubeInfo.Cub
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class SegmentMemoryStore implements IStreamingGTSearcher {
     private static Logger logger = LoggerFactory.getLogger(SegmentMemoryStore.class);
@@ -311,7 +312,7 @@ public class SegmentMemoryStore implements IStreamingGTSearcher {
         @Override
         public Iterator<Record> iterator() {
             if (aggBufMap == null || aggBufMap.isEmpty()) {
-                return Iterators.emptyIterator();
+                return Collections.emptyIterator();
             }
 
             return new Iterator<Record>() {

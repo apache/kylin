@@ -29,8 +29,10 @@ import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.measure.dim.DimCountDistinctMeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.measure.hllc.HLLCMeasureType;
+import org.apache.kylin.measure.map.bitmap.BitmapMapMeasureType;
 import org.apache.kylin.measure.percentile.PercentileMeasureType;
 import org.apache.kylin.measure.raw.RawMeasureType;
+import org.apache.kylin.measure.stddev.StdDevSumMeasureType;
 import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
@@ -38,8 +40,8 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * Factory for MeasureType.
@@ -113,6 +115,8 @@ abstract public class MeasureTypeFactory<T> {
         factoryInsts.add(new ExtendedColumnMeasureType.Factory());
         factoryInsts.add(new PercentileMeasureType.Factory());
         factoryInsts.add(new DimCountDistinctMeasureType.Factory());
+        factoryInsts.add(new StdDevSumMeasureType.Factory());
+        factoryInsts.add(new BitmapMapMeasureType.Factory());
 
         logger.info("Checking custom measure types from kylin config");
 

@@ -31,7 +31,7 @@ import java.util.Set;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metrics.lib.Record;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +66,10 @@ public class RecordEvent implements Record, Map<String, Object>, Serializable {
         this(eventType, LOCAL_HOSTNAME);
     }
 
+    public RecordEvent(String eventType, long time) {
+        this(eventType, LOCAL_HOSTNAME, time);
+    }
+    
     public RecordEvent(String eventType, String host) {
         this(eventType, host, System.currentTimeMillis());
     }
@@ -268,7 +272,7 @@ public class RecordEvent implements Record, Map<String, Object>, Serializable {
             return reserveKey;
         }
 
-        public RecordReserveKeyEnum getByKey(String key) {
+        public static RecordReserveKeyEnum getByKey(String key) {
             for (RecordReserveKeyEnum reserveKey : RecordReserveKeyEnum.values()) {
                 if (reserveKey.reserveKey.equalsIgnoreCase(key)) {
                     return reserveKey;

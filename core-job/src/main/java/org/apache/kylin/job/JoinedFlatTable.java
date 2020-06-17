@@ -46,7 +46,7 @@ import static org.apache.kylin.job.util.FlatTableSqlQuoteUtils.quoteIdentifier;
 import static org.apache.kylin.job.util.FlatTableSqlQuoteUtils.quoteTableIdentity;
 import static org.apache.kylin.job.util.FlatTableSqlQuoteUtils.quoteIdentifierInSqlExpr;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class JoinedFlatTable {
     public static final String TEXTFILE = "TEXTFILE";
@@ -161,7 +161,8 @@ public class JoinedFlatTable {
         return sql.toString();
     }
 
-    static void appendJoinStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, boolean singleLine, SqlDialect sqlDialect) {
+    public static void appendJoinStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, boolean singleLine,
+            SqlDialect sqlDialect) {
         final String sep = singleLine ? " " : "\n";
         Set<TableRef> dimTableCache = new HashSet<>();
 

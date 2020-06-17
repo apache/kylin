@@ -26,8 +26,20 @@ public class EncryptUtilTest {
     @Test
     public void testAESEncrypt(){
         String input = "hello world";
-        String result = EncryptUtil.encrypt(input);
-        Assert.assertEquals("4stv/RRleOtvie/8SLHmXA==", result);
+        String result1 = EncryptUtil.encrypt(input);
+        String decrypt1 = EncryptUtil.decrypt(result1);
+        Assert.assertEquals(input, decrypt1);
+        String result2 = EncryptUtil.encrypt(input);
+        Assert.assertEquals(result2, result1);
+
+        input = "this is a long string #&$";
+        result1 = EncryptUtil.encrypt(input);
+        decrypt1 = EncryptUtil.decrypt(result1);
+        Assert.assertEquals(input, decrypt1);
+        result2 = EncryptUtil.encrypt(input);
+        Assert.assertEquals(result2, result1);
+
+
     }
 
     @Test

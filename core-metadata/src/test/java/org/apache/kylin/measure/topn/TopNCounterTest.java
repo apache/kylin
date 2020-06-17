@@ -39,8 +39,8 @@ import org.apache.kylin.common.util.Pair;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 @Ignore("For collecting accuracy statistics, not for functional test")
 public class TopNCounterTest {

@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.NavigableSet;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;

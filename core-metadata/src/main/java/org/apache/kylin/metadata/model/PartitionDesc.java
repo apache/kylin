@@ -22,8 +22,9 @@ import java.io.Serializable;
 import java.util.Locale;
 import java.util.function.Function;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.util.CheckUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.datatype.DataType;
@@ -187,6 +188,77 @@ public class PartitionDesc implements Serializable {
 
     public TblColRef getPartitionTimeColumnRef() {
         return partitionTimeColumnRef;
+    }
+
+    public boolean equalsRaw(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        PartitionDesc other = (PartitionDesc) obj;
+
+        if (!this.partitionType.equals(other.getCubePartitionType()))
+            return false;
+        if (!this.partitionConditionBuilderClz.equals(other.partitionConditionBuilderClz))
+            return false;
+        if (!CheckUtil.equals(this.partitionDateColumn, other.getPartitionDateColumn()))
+            return false;
+        if (!CheckUtil.equals(this.partitionDateFormat, other.getPartitionDateFormat()))
+            return false;
+        if (!CheckUtil.equals(this.partitionTimeColumn, other.getPartitionTimeColumn()))
+            return false;
+        if (!CheckUtil.equals(this.partitionTimeFormat, other.getPartitionTimeFormat()))
+            return false;
+        return true;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        PartitionDesc other = (PartitionDesc) obj;
+
+        if (!this.partitionType.equals(other.getCubePartitionType()))
+            return false;
+        if (!CheckUtil.equals(this.partitionDateColumn, other.getPartitionDateColumn()))
+            return false;
+        if (!CheckUtil.equals(this.partitionDateFormat, other.getPartitionDateFormat()))
+            return false;
+        if (this.partitionDateColumn != null) {
+            if (!this.partitionConditionBuilder.getClass().equals(other.getPartitionConditionBuilder().getClass()))
+                return false;
+            if (this.partitionConditionBuilder instanceof DefaultPartitionConditionBuilder) {
+                if (!CheckUtil.equals(this.partitionTimeColumn, other.getPartitionTimeColumn())) {
+                    return false;
+                }
+                if (!CheckUtil.equals(this.partitionTimeFormat, other.getPartitionTimeFormat())) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + partitionType.hashCode();
+        result = prime * result + partitionConditionBuilderClz.hashCode();
+        result = prime * result + ((partitionDateColumn == null) ? 0 : partitionDateColumn.hashCode());
+        result = prime * result + ((partitionDateFormat == null) ? 0 : partitionDateFormat.hashCode());
+        if (partitionConditionBuilder instanceof DefaultPartitionConditionBuilder) {
+            result = prime * result + ((partitionTimeColumn == null) ? 0 : partitionTimeColumn.hashCode());
+            result = prime * result + ((partitionTimeFormat == null) ? 0 : partitionTimeFormat.hashCode());
+        }
+        return result;
     }
 
     // ============================================================================

@@ -28,9 +28,9 @@ import org.apache.kylin.gridtable.GTRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Iterators;
-import com.google.common.collect.PeekingIterator;
-import com.google.common.collect.UnmodifiableIterator;
+import org.apache.kylin.shaded.com.google.common.collect.Iterators;
+import org.apache.kylin.shaded.com.google.common.collect.PeekingIterator;
+import org.apache.kylin.shaded.com.google.common.collect.UnmodifiableIterator;
 
 /**
  * Merge-sort {@code GTRecord}s in all partitions, assume each partition contains sorted elements.

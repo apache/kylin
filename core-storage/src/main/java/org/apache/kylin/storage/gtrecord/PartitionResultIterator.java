@@ -18,7 +18,7 @@
 
 package org.apache.kylin.storage.gtrecord;
 
-import com.google.common.collect.UnmodifiableIterator;
+import org.apache.kylin.shaded.com.google.common.collect.UnmodifiableIterator;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;

@@ -18,25 +18,25 @@
 
 package org.apache.kylin.stream.core.query;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import org.apache.kylin.stream.core.storage.Record;
 
-import com.google.common.collect.Iterators;
 
 public class SingleThreadResultCollector extends ResultCollector {
 
     @Override
     public Iterator<Record> iterator() {
         if (searchResults.isEmpty()) {
-            return Iterators.emptyIterator();
+            return Collections.emptyIterator();
         }
         Iterator<IStreamingSearchResult> resultIterator = searchResults.iterator();
         return new Iterator<Record>() {
-            Iterator<Record> current = Iterators.emptyIterator();
+            Iterator<Record> current = Collections.emptyIterator();
             IStreamingSearchResult prevResult = null;
 
             @Override

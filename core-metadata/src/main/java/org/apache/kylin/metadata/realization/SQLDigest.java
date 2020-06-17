@@ -30,7 +30,7 @@ import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 
 /**
  */

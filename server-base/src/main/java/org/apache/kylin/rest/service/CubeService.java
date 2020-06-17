@@ -34,7 +34,6 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
@@ -51,7 +50,6 @@ import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.CubeJobLockUtil;
 import org.apache.kylin.engine.mr.common.CuboidRecommenderUtil;
 import org.apache.kylin.job.JobInstance;
-import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.exception.JobException;
@@ -78,7 +76,6 @@ import org.apache.kylin.metrics.property.QueryCubePropertyEnum;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
-import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
@@ -106,11 +103,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Preconditions;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.cache.Cache;
+import org.apache.kylin.shaded.com.google.common.cache.CacheBuilder;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * Stateless & lightweight service facade of cube management functions.
@@ -1105,51 +1101,6 @@ public class CubeService extends BasicService implements InitializingBean {
         sqlRequest.setSql(sql);
 
         return queryService.doQueryWithCache(sqlRequest, false).getResults();
-    }
-
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public void migrateCube(CubeInstance cube, String projectName) {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        if (!config.isAllowAutoMigrateCube()) {
-            throw new InternalErrorException("One click migration is disabled, please contact your ADMIN");
-        }
-
-        for (CubeSegment segment : cube.getSegments()) {
-            if (segment.getStatus() != SegmentStatusEnum.READY) {
-                throw new InternalErrorException(
-                        "At least one segment is not in READY state. Please check whether there are Running or Error jobs.");
-            }
-        }
-
-        String srcCfgUri = config.getAutoMigrateCubeSrcConfig();
-        String dstCfgUri = config.getAutoMigrateCubeDestConfig();
-
-        Preconditions.checkArgument(StringUtils.isNotEmpty(srcCfgUri), "Source configuration should not be empty.");
-        Preconditions.checkArgument(StringUtils.isNotEmpty(dstCfgUri),
-                "Destination configuration should not be empty.");
-
-        String stringBuilder = ("%s/bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI %s %s %s %s %s %s true true");
-        String cmd = String.format(Locale.ROOT,
-                stringBuilder,
-                KylinConfig.getKylinHome(),
-                CliCommandExecutor.checkParameterWhiteList(srcCfgUri),
-                CliCommandExecutor.checkParameterWhiteList(dstCfgUri),
-                cube.getName(),
-                CliCommandExecutor.checkParameterWhiteList(projectName),
-                config.isAutoMigrateCubeCopyAcl(),
-                config.isAutoMigrateCubePurge());
-
-        logger.info("One click migration cmd: " + cmd);
-
-        CliCommandExecutor exec = new CliCommandExecutor();
-        PatternedLogger patternedLogger = new PatternedLogger(logger);
-
-        try {
-            exec.execute(cmd, patternedLogger);
-        } catch (IOException e) {
-            throw new InternalErrorException("Failed to perform one-click migrating", e);
-        }
     }
 
     private class HTableInfoSyncListener extends Broadcaster.Listener {

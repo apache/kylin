@@ -39,8 +39,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Sets;
-import com.google.common.primitives.Longs;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.primitives.Longs;
 
 /**
  * @author George Song (ysong1)

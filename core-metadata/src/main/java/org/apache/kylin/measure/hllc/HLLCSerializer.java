@@ -38,6 +38,9 @@ public class HLLCSerializer extends DataTypeSerializer<HLLCounter> {
 
     @Override
     public void serialize(HLLCounter value, ByteBuffer out) {
+        if (value == null) {
+            value = new HLLCounter(precision);
+        }
         try {
             value.writeRegisters(out);
         } catch (IOException e) {

@@ -18,10 +18,17 @@
 
 package org.apache.kylin.common.util;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
 import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class EncryptUtil {
@@ -31,14 +38,21 @@ public class EncryptUtil {
     private static byte[] key = { 0x74, 0x68, 0x69, 0x73, 0x49, 0x73, 0x41, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b,
             0x65, 0x79 };
 
+    private static final Cipher getCipher(int cipherMode) throws InvalidAlgorithmParameterException,
+            InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException, UnsupportedEncodingException {
+        Cipher cipher = Cipher.getInstance("AES/CFB/PKCS5Padding");
+        final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
+        IvParameterSpec ivSpec = new IvParameterSpec("AAAAAAAAAAAAAAAA".getBytes("UTF-8"));
+        cipher.init(cipherMode, secretKey, ivSpec);
+        return cipher;
+    }
+
     public static String encrypt(String strToEncrypt) {
         if (strToEncrypt == null) {
             return null;
         }
         try {
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            Cipher cipher = getCipher(Cipher.ENCRYPT_MODE);
             final String encryptedString = Base64.encodeBase64String(cipher.doFinal(strToEncrypt.getBytes(
                 StandardCharsets.UTF_8)));
             return encryptedString;
@@ -52,9 +66,7 @@ public class EncryptUtil {
             return null;
         }
         try {
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
-            final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            Cipher cipher = getCipher(Cipher.DECRYPT_MODE);
             final String decryptedString = new String(cipher.doFinal(Base64.decodeBase64(strToDecrypt)), StandardCharsets.UTF_8);
             return decryptedString;
         } catch (Exception e) {

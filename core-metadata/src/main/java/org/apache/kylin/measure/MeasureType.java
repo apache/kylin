@@ -77,6 +77,11 @@ abstract public class MeasureType<T> implements java.io.Serializable {
         return Collections.emptyList();
     }
 
+    /** Some special measures need dictionary for cube building only, don't need to store them. */
+    public List<TblColRef> getColumnsNeedDictionaryForBuildingOnly(FunctionDesc functionDesc) {
+        return Collections.emptyList();
+    }
+
     /* ============================================================================
      * Cube Selection
      * ---------------------------------------------------------------------------- */

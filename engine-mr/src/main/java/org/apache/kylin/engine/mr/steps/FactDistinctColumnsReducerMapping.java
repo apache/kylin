@@ -26,7 +26,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.common.MapReduceUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * Reducers play different roles based on reducer-id:

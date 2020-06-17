@@ -131,6 +131,39 @@ KylinApp
       });
     };
 
+    $scope.calCardinality = function (tableName) {
+      SweetAlert.swal({
+        title: "",
+        text: "Are you sure to recalculate column cardinality?",
+        showCancelButton: true,
+        confirmButtonColor: '#DD6B55',
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        closeOnConfirm: true
+      }, function (isConfirm) {
+        if (isConfirm) {
+          if (!$scope.projectModel.selectedProject) {
+            SweetAlert.swal('', 'Please select a project.', 'info');
+            return;
+          }
+          loadingRequest.show();
+          TableService.genCardinality({tableName: tableName, pro: $scope.projectModel.selectedProject}, {}, function () {
+            loadingRequest.hide();
+            MessageBox.successNotify('Cardinality job has been submitted successfully. Please wait a while to get the numbers.');
+          }, function (e) {
+            loadingRequest.hide();
+            if (e.data && e.data.exception) {
+              var message = e.data.exception;
+              var msg = !!(message) ? message : 'Failed to take action.';
+              SweetAlert.swal('Oops...', msg, 'error');
+            } else {
+              SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+            }
+          });
+        }
+      });
+    };
+
     $scope.openTreeModal = function () {
       if(!$scope.projectModel.selectedProject){
         SweetAlert.swal('Oops...', "Please select a project.", 'info');
@@ -206,7 +239,7 @@ KylinApp
       }, function (isConfirm) {
         if (isConfirm) {
           if (!$scope.projectModel.selectedProject) {
-            SweetAlert.swal('', 'Please choose your project first!.', 'info');
+            SweetAlert.swal('', 'Please select a project.', 'info');
             return;
           }
           loadingRequest.show();
@@ -419,8 +452,9 @@ KylinApp
       }
 
       $scope.confirmReload = function() {
+        $scope.cancel();
         scope.reloadTable($scope.selectTable, $scope.isCalculate.val).then(function() {
-          $scope.cancel();
+          scope.aceSrcTbLoaded(true);
         })
       }
 
@@ -441,7 +475,7 @@ KylinApp
         }
 
         if (!$scope.projectName) {
-          SweetAlert.swal('', 'Please choose your project first!.', 'info');
+          SweetAlert.swal('', 'Please select a project.', 'info');
           return;
         }
 
@@ -450,9 +484,6 @@ KylinApp
              scope.aceSrcTbLoaded(true);
            });
       }
-
-
-
     };
 
     $scope.editStreamingConfig = function(tableName){

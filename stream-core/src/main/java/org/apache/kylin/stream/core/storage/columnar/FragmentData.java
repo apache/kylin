@@ -36,8 +36,8 @@ import org.slf4j.LoggerFactory;
 
 import sun.nio.ch.DirectBuffer;
 
-import com.google.common.collect.Maps;
-import com.google.common.io.Files;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.io.Files;
 
 public class FragmentData {
     private static Logger logger = LoggerFactory.getLogger(FragmentData.class);
