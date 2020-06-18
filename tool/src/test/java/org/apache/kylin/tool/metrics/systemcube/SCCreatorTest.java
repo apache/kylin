@@ -93,6 +93,7 @@ public class SCCreatorTest extends LocalFileMetadataTestCase {
         MetricsSinkDesc metricsSinkDesc = new MetricsSinkDesc();
         metricsSinkDesc.setCubeDescOverrideProperties(cubeDescOverrideProperties);
         List<MetricsSinkDesc> metricsSinkDescList = Lists.newArrayList();
+        metricsSinkDescList.add(metricsSinkDesc);
 
         String outputPath = "src/test/resources/SCSinkTools.json";
         JsonUtil.writeValue(new FileOutputStream(outputPath), metricsSinkDescList);
