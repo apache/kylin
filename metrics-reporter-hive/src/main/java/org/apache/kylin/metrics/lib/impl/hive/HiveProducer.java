@@ -309,7 +309,7 @@ public class HiveProducer {
         fout = null;
     }
 
-    private HiveProducerRecord convertTo(Record record) throws Exception {
+    HiveProducerRecord convertTo(Record record) throws Exception {
         Map<String, Object> rawValue = record.getValueRaw();
 
         //Set partition values for hive table
@@ -330,7 +330,8 @@ public class HiveProducer {
             columnValues.add(rawValue.get(fieldSchema.getName().toUpperCase(Locale.ROOT)));
         }
 
-        return new HiveProducerRecord(tableNameSplits.getFirst(), tableNameSplits.getSecond(), partitionKVs,
-                columnValues);
+        HiveProducerRecord.RecordKey key = new HiveProducerRecord.KeyBuilder(tableNameSplits.getSecond())
+                .setDbName(tableNameSplits.getFirst()).setPartitionKVs(partitionKVs).build();
+        return new HiveProducerRecord(key, columnValues);
     }
 }
