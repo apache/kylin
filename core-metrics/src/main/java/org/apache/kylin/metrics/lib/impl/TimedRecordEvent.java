@@ -44,4 +44,36 @@ public class TimedRecordEvent extends RecordEvent {
         super.resetTime();
         addTimeDetails();
     }
+
+    public String getYear() {
+        return (String) get(TimePropertyEnum.YEAR.toString());
+    }
+
+    public String getMonth() {
+        return (String) get(TimePropertyEnum.MONTH.toString());
+    }
+
+    public String getWeekBeginDate() {
+        return (String) get(TimePropertyEnum.WEEK_BEGIN_DATE.toString());
+    }
+
+    public String getDayDate() {
+        return (String) get(TimePropertyEnum.DAY_DATE.toString());
+    }
+
+    public String getDayTime() {
+        return (String) get(TimePropertyEnum.DAY_TIME.toString());
+    }
+
+    public int getTimeHour() {
+        return (int) get(TimePropertyEnum.TIME_HOUR.toString());
+    }
+
+    public int getTimeMinute() {
+        return (int) get(TimePropertyEnum.TIME_MINUTE.toString());
+    }
+
+    public int getTimeSecond() {
+        return (int) get(TimePropertyEnum.TIME_SECOND.toString());
+    }
 }
