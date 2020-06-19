@@ -115,7 +115,7 @@
         <commons-math3.version>3.1.1</commons-math3.version>
         <commons-collections.version>3.2.2</commons-collections.version>
         <commons-pool.version>2.5.0</commons-pool.version>
-
+        <commons-httpclient.version>3.1</commons-httpclient.version>
         <!-- Calcite deps, keep compatible with calcite.version -->
         <jackson.version>2.10.0</jackson.version>
 
@@ -248,6 +248,11 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-shaded-guava</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-core-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -308,6 +313,11 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-engine-flink</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-source-hive</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -349,6 +359,11 @@
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-assembly</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-cube-migration</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -434,6 +449,24 @@
               <version>${project.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-datasource-sdk</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-datasource-sdk</artifactId>
+                <version>${project.version}</version>
+                <classifier>framework</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-assembly</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+
             <!-- Hadoop2 dependencies -->
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
@@ -508,6 +541,11 @@
                 <optional>true</optional>
             </dependency>
             <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-distcp</artifactId>
+                <version>${hadoop2.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.zookeeper</groupId>
                 <artifactId>zookeeper</artifactId>
                 <version>${zookeeper.version}</version>
@@ -559,6 +597,12 @@
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>
                 <version>${commons-lang.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-httpclient</groupId>
+                <artifactId>commons-httpclient</artifactId>
+                <version>${commons-httpclient.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
@@ -1000,6 +1044,11 @@
                 <artifactId>spring-security-saml2-core</artifactId>
                 <version>${spring.framework.security.extensions.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-cas</artifactId>
+                <version>${spring.framework.security.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
@@ -1012,6 +1061,11 @@
                 <artifactId>jetty-webapp</artifactId>
                 <version>${jetty.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
+                <version>${jetty.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
@@ -1366,7 +1420,7 @@
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
                 <!-- uncomment this on release -->
-                <!--<version>3.4.1</version>-->
+                <version>3.4.1</version>
             </plugin>
         </plugins>
     </build>
