@@ -24,23 +24,39 @@ import time
 
 
 class testBuildCube(unittest.TestCase):
+
+    _base_url = "http://sandbox:7070/kylin/api"
+
+    _headers = {
+        'content-type': "application/json",
+        'authorization': "Basic QURNSU46S1lMSU4=",
+        'cache-control': "no-cache"
+    }
+
+    _clone_cube_url = _base_url + "/cubes/kylin_sales_cube/clone"
+
     def setUp(self):
-        pass
+        self.clone_cube("kylin_sales_cube_spark", "SPARK")
+        self.clone_cube("kylin_sales_cube_flink", "FLINK")
 
     def tearDown(self):
         pass
 
-    def testBuild(self):
-        base_url = "http://sandbox:7070/kylin/api"
-        url = base_url + "/cubes/kylin_sales_cube/rebuild"
-        headers = {
-            'content-type': "application/json",
-            'authorization': "Basic QURNSU46S1lMSU4=",
-            'cache-control': "no-cache"
-        }
+    def clone_cube(self, cube_name, engine_type):
+        payload = {'project': 'learn_kylin',
+                   'cubeName': cube_name}
+        response = requests.request("PUT", self._clone_cube_url, json=payload, headers=self._headers)
+        self.assertEqual(response.status_code, 200, 'Clone cube : ' + cube_name + ' failed.')
+        update_engine_url = self._base_url + "/cubes/" + cube_name + "/" + engine_type
+        response = requests.request("PUT", update_engine_url, headers=self._headers)
+        self.assertEqual(response.status_code, 200, 'Update engine type of cube : ' + cube_name + ' failed.')
+
+    def singleBuild(self, cube_name):
+
+        url = self._base_url + "/cubes/" + cube_name + "/rebuild"
 
         # reload metadata before build cubes
-        cache_response = requests.request("PUT", base_url + "/cache/all/all/update", headers=headers)
+        cache_response = requests.request("PUT", self._base_url + "/cache/all/all/update", headers=self._headers)
         self.assertEqual(cache_response.status_code, 200, 'Metadata cache not refreshed.')
 
         payload = "{\"startTime\": 1325376000000, \"endTime\": 1456790400000, \"buildType\":\"BUILD\"}"
@@ -49,7 +65,7 @@ class testBuildCube(unittest.TestCase):
         while status_code != 200 and try_time <= 3:
             print 'Submit build job, try_time = ' + str(try_time)
             try:
-                response = requests.request("PUT", url, data=payload, headers=headers)
+                response = requests.request("PUT", url, data=payload, headers=self._headers)
                 status_code = response.status_code
             except:
                 status_code = 0
@@ -64,8 +80,8 @@ class testBuildCube(unittest.TestCase):
             print 'Build job is submitted...'
             job_response = json.loads(response.text)
             job_uuid = job_response['uuid']
-            job_url = base_url + "/jobs/" + job_uuid
-            job_response = requests.request("GET", job_url, headers=headers)
+            job_url = self._base_url + "/jobs/" + job_uuid
+            job_response = requests.request("GET", job_url, headers=self._headers)
 
             self.assertEqual(job_response.status_code, 200, 'Build job information fetched failed.')
 
@@ -75,7 +91,7 @@ class testBuildCube(unittest.TestCase):
             while job_status in ('RUNNING', 'PENDING') and try_time <= 30:
                 print 'Wait for job complete, try_time = ' + str(try_time)
                 try:
-                    job_response = requests.request("GET", job_url, headers=headers)
+                    job_response = requests.request("GET", job_url, headers=self._headers)
                     job_info = json.loads(job_response.text)
                     job_status = job_info['job_status']
                 except:
@@ -87,6 +103,13 @@ class testBuildCube(unittest.TestCase):
 
             self.assertEquals(job_status, 'FINISHED', 'Build cube failed, job status is ' + job_status)
             print 'Job complete.'
+
+    def testBuild(self):
+        self.singleBuild("kylin_sales_cube_spark")
+        self.singleBuild("kylin_sales_cube_flink")
+        self.singleBuild("kylin_sales_cube")
+        # wait for kylin_sales_cube to READY
+        time.sleep(10)
 
 
 if __name__ == '__main__':

@@ -53,6 +53,7 @@ import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
+import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
@@ -779,6 +780,30 @@ public class CubeController extends BasicController {
         cubeRequest.setCubeDescData(descData);
         cubeRequest.setSuccessful(true);
         return cubeRequest;
+    }
+
+    @RequestMapping(value = "/{cubeName}/{engineType}", method = RequestMethod.PUT)
+    @ResponseBody
+    public void updateCubeEngineType(@PathVariable String cubeName, @PathVariable String engineType) throws IOException {
+        checkCubeExists(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        CubeDesc desc = cube.getDescriptor();
+        int engineTypeID = desc.getEngineType();
+        switch(engineType) {
+            case "MR_V2":
+                engineTypeID = IEngineAware.ID_MR_V2;
+                break;
+            case "SPARK":
+                engineTypeID = IEngineAware.ID_SPARK;
+                break;
+            case "FLINK":
+                engineTypeID = IEngineAware.ID_FLINK;
+                break;
+            default:
+                logger.warn("Engine type {} is not support", engineType);
+        }
+        desc.setEngineType(engineTypeID);
+        cubeService.updateCubeAndDesc(cube, desc, cube.getProject(), true);
     }
 
     /**

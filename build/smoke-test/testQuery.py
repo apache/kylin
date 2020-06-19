@@ -41,6 +41,7 @@ class testQuery(unittest.TestCase):
     def testQuery(self):
 
         sql_files = glob.glob('sql/*.sql')
+        cube_list = ['kylin_sales_cube', 'kylin_sales_cube_spark', 'kylin_sales_cube_flink']
         index = 0
         query_url = testQuery.base_url + "/query"
         for sql_file in sql_files:
@@ -50,26 +51,36 @@ class testQuery(unittest.TestCase):
             for sql_statement_line in sql_statement_lines:
                 if not sql_statement_line.startswith('--'):
                     sql_statement += sql_statement_line.strip() + ' '
-            payload = "{\"sql\": \"" + sql_statement.strip() + "\", \"offset\": 0, \"limit\": \"50000\", \"acceptPartial\":false, \"project\":\"learn_kylin\"}"
-            print 'Test Query #' + str(index) + ': \n' + sql_statement
-            response = requests.request("POST", query_url, data=payload, headers=testQuery.headers)
+            for cube_name in cube_list:
+                payload = "{\"sql\": \"" + sql_statement.strip() + "\", \"offset\": 0, \"limit\": \"50000\", " \
+                                                                   "\"acceptPartial\":false, " \
+                                                                   "\"project\":\"learn_kylin\", " \
+                                                                   "\"backdoorToggles\":{" \
+                                                                   "\"DEBUG_TOGGLE_HIT_CUBE\":\"" + cube_name + "\"}} "
+                print 'Test Query #' + str(index) + ': \n' + sql_statement
+                response = requests.request("POST", query_url, data=payload, headers=testQuery.headers)
 
-            self.assertEqual(response.status_code, 200, 'Query failed.')
-            actual_result = json.loads(response.text)
-            print 'Query duration: ' + str(actual_result['duration']) + 'ms'
-            del actual_result['duration']
-            del actual_result['hitExceptionCache']
-            del actual_result['storageCacheUsed']
-            del actual_result['totalScanCount']
-            del actual_result['totalScanBytes']
+                self.assertEqual(response.status_code, 200, 'Query failed.')
+                actual_result = json.loads(response.text)
+                print 'Query duration: ' + str(actual_result['duration']) + 'ms'
+                del actual_result['duration']
+                del actual_result['hitExceptionCache']
+                del actual_result['storageCacheUsed']
+                del actual_result['totalScanCount']
+                del actual_result['totalScanBytes']
 
-            expect_result = json.loads(open(sql_file[:-4] + '.json').read().strip())
-            self.assertEqual(actual_result, expect_result, 'Query result does not equal.')
+                expect_result = json.loads(open(sql_file[:-4] + '.json').read().strip())
+                expect_result["cube"] = u'CUBE[name=' + cube_name + ']'
 
-    def testQueryPushDown(self):
-        sql_files = glob.glob('sql/*.sql')
-        index = 0
-        url = testQuery.base_url + "/cubes/kylin_sales_cube/disable"
+                self.assertEqual(actual_result, expect_result, 'Query result does not equal.')
+
+    def disableCube(self):
+        self.disableSingleCube("kylin_sales_cube")
+        self.disableSingleCube("kylin_sales_cube_spark")
+        self.disableSingleCube("kylin_sales_cube_flink")
+
+    def disableSingleCube(self, cube_name):
+        url = testQuery.base_url + "/cubes/" + cube_name + "/disable"
         status_code = 0
         try_time = 1
         while status_code != 200 and try_time <= 3:
@@ -86,8 +97,13 @@ class testQuery(unittest.TestCase):
 
         self.assertEqual(status_code, 200, 'Disable cube failed.')
 
+    def testQueryPushDown(self):
+        self.disableCube()
         # Sleep 3 seconds to ensure cache wiped while do query pushdown
         time.sleep(3)
+
+        sql_files = glob.glob('sql/*.sql')
+        index = 0
 
         query_url = testQuery.base_url + "/query"
         for sql_file in sql_files:
