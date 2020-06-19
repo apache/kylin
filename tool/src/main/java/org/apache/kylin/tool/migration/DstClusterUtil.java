@@ -297,7 +297,7 @@ public class DstClusterUtil extends ClusterUtil {
     }
 
     public void deployCoprocessor(HTableDescriptor tableDesc, String localCoprocessorJar) throws IOException {
-        List<String> existingCoprocessors = tableDesc.getCoprocessors();
+        List<String> existingCoprocessors = (List<String>) tableDesc.getCoprocessors();
         for (String existingCoprocessor : existingCoprocessors) {
             tableDesc.removeCoprocessor(existingCoprocessor);
         }

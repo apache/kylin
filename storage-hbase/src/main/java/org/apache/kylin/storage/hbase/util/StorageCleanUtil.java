@@ -21,7 +21,8 @@ package org.apache.kylin.storage.hbase.util;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,18 +36,18 @@ public class StorageCleanUtil {
     /**
      * this method will close hbaseAdmin after finishing the work.
      */
-    public static void dropHTables(final HBaseAdmin hbaseAdmin, List<String> hTables) {
+    public static void dropHTables(final Admin hbaseAdmin, List<String> hTables) {
         runSingleThreadTaskQuietly(() -> {
             try {
                 for (String htable : hTables) {
                     logger.info("Deleting HBase table {}", htable);
 
-                    if (hbaseAdmin.tableExists(htable)) {
-                        if (hbaseAdmin.isTableEnabled(htable)) {
-                            hbaseAdmin.disableTable(htable);
+                    if (hbaseAdmin.tableExists(TableName.valueOf(htable))) {
+                        if (hbaseAdmin.isTableEnabled(TableName.valueOf(htable))) {
+                            hbaseAdmin.disableTable(TableName.valueOf(htable));
                         }
 
-                        hbaseAdmin.deleteTable(htable);
+                        hbaseAdmin.deleteTable(TableName.valueOf(htable));
                         logger.info("Deleted HBase table {}", htable);
                     } else {
                         logger.info("HBase table {} does not exist.", htable);

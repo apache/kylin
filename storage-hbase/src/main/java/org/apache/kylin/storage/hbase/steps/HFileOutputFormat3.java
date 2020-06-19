@@ -39,6 +39,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellComparatorImpl;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HConstants;
@@ -47,24 +48,24 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValueUtil;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.classification.InterfaceAudience;
-import org.apache.hadoop.hbase.classification.InterfaceStability;
+import org.apache.hadoop.hbase.regionserver.HStoreFile;
+import org.apache.yetus.audience.InterfaceAudience;
+import org.apache.yetus.audience.InterfaceStability;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.RegionLocator;
 import org.apache.hadoop.hbase.client.Table;
-import org.apache.hadoop.hbase.fs.HFileSystem;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.io.compress.Compression;
 import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
-import org.apache.hadoop.hbase.io.hfile.AbstractHFileWriter;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
 import org.apache.hadoop.hbase.io.hfile.HFile;
 import org.apache.hadoop.hbase.io.hfile.HFileContext;
 import org.apache.hadoop.hbase.io.hfile.HFileContextBuilder;
+import org.apache.hadoop.hbase.io.hfile.HFileWriterImpl;
 import org.apache.hadoop.hbase.mapreduce.KeyValueSerialization;
 import org.apache.hadoop.hbase.mapreduce.KeyValueSortReducer;
 import org.apache.hadoop.hbase.mapreduce.MutationSerialization;
@@ -74,7 +75,7 @@ import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
 import org.apache.hadoop.hbase.mapreduce.TextSortReducer;
 import org.apache.hadoop.hbase.regionserver.BloomType;
 import org.apache.hadoop.hbase.regionserver.HStore;
-import org.apache.hadoop.hbase.regionserver.StoreFile;
+import org.apache.hadoop.hbase.regionserver.StoreFileWriter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
@@ -150,7 +151,7 @@ public class HFileOutputFormat3 extends FileOutputFormat<ImmutableBytesWritable,
         final long maxsize = conf.getLong(HConstants.HREGION_MAX_FILESIZE, HConstants.DEFAULT_MAX_FILE_SIZE);
         // Invented config.  Add to hbase-*.xml if other than default compression.
         final String defaultCompressionStr = conf.get("hfile.compression", Compression.Algorithm.NONE.getName());
-        final Algorithm defaultCompression = AbstractHFileWriter.compressionByName(defaultCompressionStr);
+        final Algorithm defaultCompression = HFileWriterImpl.compressionByName(defaultCompressionStr);
         final boolean compactionExclude = conf.getBoolean("hbase.mapreduce.hfileoutputformat.compaction.exclude",
                 false);
 
@@ -281,12 +282,13 @@ public class HFileOutputFormat3 extends FileOutputFormat<ImmutableBytesWritable,
                 HFileContext hFileContext = contextBuilder.build();
 
                 if (null == favoredNodes) {
-                    wl.writer = new StoreFile.WriterBuilder(conf, new CacheConfig(tempConf), fs)
-                            .withOutputDir(familydir).withBloomType(bloomType).withComparator(KeyValue.COMPARATOR)
-                            .withFileContext(hFileContext).build();
+                    StoreFileWriter.Builder writerBuilder = new StoreFileWriter.Builder(conf, CacheConfig.DISABLED, fs);
+                    wl.writer = writerBuilder.withOutputDir(familydir).withBloomType(bloomType)
+                            .withComparator(new CellComparatorImpl.MetaCellComparator()).withFileContext(hFileContext).build();
                 } else {
-                    wl.writer = new StoreFile.WriterBuilder(conf, new CacheConfig(tempConf), new HFileSystem(fs))
-                            .withOutputDir(familydir).withBloomType(bloomType).withComparator(KeyValue.COMPARATOR)
+                    StoreFileWriter.Builder writerBuilder = new StoreFileWriter.Builder(conf, CacheConfig.DISABLED, fs);
+                    wl.writer = writerBuilder.withOutputDir(familydir).withBloomType(bloomType)
+                            .withComparator(new CellComparatorImpl.MetaCellComparator())
                             .withFileContext(hFileContext).withFavoredNodes(favoredNodes).build();
                 }
 
@@ -294,12 +296,12 @@ public class HFileOutputFormat3 extends FileOutputFormat<ImmutableBytesWritable,
                 return wl;
             }
 
-            private void close(final StoreFile.Writer w) throws IOException {
+            private void close(final StoreFileWriter w) throws IOException {
                 if (w != null) {
-                    w.appendFileInfo(StoreFile.BULKLOAD_TIME_KEY, Bytes.toBytes(System.currentTimeMillis()));
-                    w.appendFileInfo(StoreFile.BULKLOAD_TASK_KEY, Bytes.toBytes(context.getTaskAttemptID().toString()));
-                    w.appendFileInfo(StoreFile.MAJOR_COMPACTION_KEY, Bytes.toBytes(true));
-                    w.appendFileInfo(StoreFile.EXCLUDE_FROM_MINOR_COMPACTION_KEY, Bytes.toBytes(compactionExclude));
+                    w.appendFileInfo(HStoreFile.BULKLOAD_TIME_KEY, Bytes.toBytes(System.currentTimeMillis()));
+                    w.appendFileInfo(HStoreFile.BULKLOAD_TASK_KEY, Bytes.toBytes(context.getTaskAttemptID().toString()));
+                    w.appendFileInfo(HStoreFile.MAJOR_COMPACTION_KEY, Bytes.toBytes(true));
+                    w.appendFileInfo(HStoreFile.EXCLUDE_FROM_MINOR_COMPACTION_KEY, Bytes.toBytes(compactionExclude));
                     w.appendTrackedTimestampsToMetadata();
                     w.close();
                 }
@@ -319,7 +321,7 @@ public class HFileOutputFormat3 extends FileOutputFormat<ImmutableBytesWritable,
      */
     static class WriterLength {
         long written = 0;
-        StoreFile.Writer writer = null;
+        StoreFileWriter writer = null;
     }
 
     /**
@@ -553,7 +555,7 @@ public class HFileOutputFormat3 extends FileOutputFormat<ImmutableBytesWritable,
         Map<byte[], String> stringMap = createFamilyConfValueMap(conf, COMPRESSION_FAMILIES_CONF_KEY);
         Map<byte[], Algorithm> compressionMap = new TreeMap<byte[], Algorithm>(Bytes.BYTES_COMPARATOR);
         for (Map.Entry<byte[], String> e : stringMap.entrySet()) {
-            Algorithm algorithm = AbstractHFileWriter.compressionByName(e.getValue());
+            Algorithm algorithm = HFileWriterImpl.compressionByName(e.getValue());
             compressionMap.put(e.getKey(), algorithm);
         }
         return compressionMap;

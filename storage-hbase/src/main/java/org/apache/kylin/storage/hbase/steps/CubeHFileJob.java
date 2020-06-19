@@ -36,7 +36,6 @@ import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.RegionLocator;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Writable;
@@ -56,10 +55,6 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Locale;
-
-import static org.apache.hadoop.hbase.HBaseConfiguration.merge;
-
 /**
  * @author George Song (ysong1)
  */
@@ -67,6 +62,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
     protected static final Logger logger = LoggerFactory.getLogger(CubeHFileJob.class);
 
+    @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();
 
@@ -114,7 +110,8 @@ public class CubeHFileJob extends AbstractHadoopJob {
             Table table = connection.getTable(TableName.valueOf(hTableName));
             RegionLocator regionLocator = connection.getRegionLocator(TableName.valueOf(hTableName));
             // Automatic config !
-            HFileOutputFormat2.configureIncrementalLoad(job, table, regionLocator);
+            HFileOutputFormat3.configureIncrementalLoad(job, table, regionLocator);
+            HFileOutputFormat3.configureHConnection(job, hbaseConf, getJobTempDir());
             reconfigurePartitions(hbaseConf, partitionFilePath);
 
             job.setInputFormatClass(SequenceFileInputFormat.class);

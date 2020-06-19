@@ -46,7 +46,6 @@ import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpConstants;
 import org.apache.hadoop.tools.DistCpOptions;
-import org.apache.hadoop.tools.OptionsParser;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.JsonUtil;
@@ -693,9 +692,8 @@ public class CubeMigrationCrossClusterCLI extends AbstractApplication {
     protected void copyHDFSPath(String srcDir, Configuration srcConf, String dstDir, Configuration dstConf)
             throws Exception {
         logger.info("start to copy hdfs directory from {} to {}", srcDir, dstDir);
-        DistCpOptions distCpOptions = OptionsParser.parse(new String[] { srcDir, dstDir });
-        distCpOptions.preserve(DistCpOptions.FileAttribute.BLOCKSIZE);
-        distCpOptions.setBlocking(true);
+        DistCpOptions.Builder builder = new DistCpOptions.Builder(new Path(srcDir), new Path(dstDir));
+        DistCpOptions distCpOptions = builder.preserve(DistCpOptions.FileAttribute.BLOCKSIZE).withBlocking(true).build();
         setTargetPathExists(distCpOptions);
         DistCp distCp = new DistCp(getConfOfDistCp(), distCpOptions);
         distCp.execute();
@@ -714,7 +712,6 @@ public class CubeMigrationCrossClusterCLI extends AbstractApplication {
         Path target = inputOptions.getTargetPath();
         FileSystem targetFS = target.getFileSystem(dstCluster.jobConf);
         boolean targetExists = targetFS.exists(target);
-        inputOptions.setTargetPathExists(targetExists);
         dstCluster.jobConf.setBoolean(DistCpConstants.CONF_LABEL_TARGET_PATH_EXISTS, targetExists);
     }
 

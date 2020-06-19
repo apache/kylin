@@ -34,6 +34,7 @@ public class HBaseFlinkSteps extends HBaseJobSteps {
         super(seg);
     }
 
+    @Override
     public AbstractExecutable createConvertCuboidToHfileStep(String jobId) {
         String cuboidRootPath = getCuboidRootPath(jobId);
         String inputPath = cuboidRootPath + (cuboidRootPath.endsWith("/") ? "" : "/");

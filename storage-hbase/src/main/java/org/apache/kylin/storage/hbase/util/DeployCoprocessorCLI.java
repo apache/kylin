@@ -42,6 +42,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.Admin;
@@ -203,7 +204,7 @@ public class DeployCoprocessorCLI {
                 skipTableCnt ++;
                 continue;
             }
-            HTableDescriptor tableDesc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
+            tableDesc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
             String gitTag = tableDesc.getValue(IRealizationConstants.HTableGitTag);
             if (commitInfo.equals(gitTag)) {
                 filteredList.add(tableName);
@@ -300,6 +301,11 @@ public class DeployCoprocessorCLI {
     public static void addCoprocessorOnHTable(TableDescriptorBuilder descBuilder, Path hdfsCoprocessorJar) throws IOException {
         logger.info("Add coprocessor on " + descBuilder.build().getTableName().toString());
         descBuilder.addCoprocessor(CubeEndpointClass, hdfsCoprocessorJar, 1001, null);
+    }
+
+    public static void addCoprocessorOnHTable(HTableDescriptor desc, Path hdfsCoprocessorJar) throws IOException {
+        logger.info("Add coprocessor on " + desc.getNameAsString());
+        desc.addCoprocessor(CubeEndpointClass, hdfsCoprocessorJar, 1001, null);
     }
 
     public static boolean resetCoprocessor(String tableName, Admin hbaseAdmin, Path hdfsCoprocessorJar)

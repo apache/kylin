@@ -190,7 +190,7 @@ public class StorageCleanJobHbaseUtil {
             } else {
                 logger.info("HBase table " + htableName + " does not exist");
             }
-            return htableName;
+            return htableName.getNameAsString();
         }
     }
 
