@@ -88,6 +88,10 @@ public class KafkaReservoirReporter extends ActiveReservoirReporter {
         stop();
     }
 
+    KafkaReservoirListener getListener() {
+        return listener;
+    }
+
     /**
      * A builder for {@link KafkaReservoirReporter} instances.
      */
@@ -113,7 +117,7 @@ public class KafkaReservoirReporter extends ActiveReservoirReporter {
         }
     }
 
-    private class KafkaReservoirListener extends KafkaActiveReserviorListener {
+    class KafkaReservoirListener extends KafkaActiveReserviorListener {
         protected final Producer<byte[], byte[]> producer;
 
         private KafkaReservoirListener(Properties props) {

@@ -115,4 +115,12 @@ public abstract class KafkaActiveReserviorListener implements ActiveReservoirLis
         logger.debug("Cannot find topic {}", topic);
         topicsIfAvailable.put(topic, System.currentTimeMillis());
     }
+
+    public long getNRecord() {
+        return nRecord;
+    }
+
+    public long getNRecordSkip() {
+        return nRecordSkip;
+    }
 }
