@@ -36,6 +36,7 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metrics.lib.ActiveReservoirReporter;
 import org.apache.kylin.metrics.lib.Record;
@@ -126,7 +127,7 @@ public class HiveProducer {
         } catch (UnknownHostException e) {
             hostName = "UNKNOWN";
         }
-        contentFilePrefix = hostName + "-" + System.currentTimeMillis() + "-part-";
+        contentFilePrefix = hostName + KylinConfig.getInstanceFromEnv().getHiveProducerFileSuffix() + "-" + System.currentTimeMillis() + "-part-";
         String fsUri = fs.getUri().toString();
         supportAppend = fsUri.startsWith("hdfs") ; // Only HDFS is appendable
         logger.info("For {}, supportAppend was set to {}", fsUri, supportAppend);

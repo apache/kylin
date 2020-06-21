@@ -2670,4 +2670,9 @@ public abstract class KylinConfigBase implements Serializable {
     public int getDefaultTimeFilter() {
         return Integer.parseInt(getOptional("kylin.web.default-time-filter", "2"));
     }
+
+    public String getHiveProducerFileSuffix() {
+        String suffix = getOptional("kylin.metrics.hive.producer.file.suffix", "");
+        return suffix;
+    }
 }
