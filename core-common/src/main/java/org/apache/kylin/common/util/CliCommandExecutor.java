@@ -163,7 +163,7 @@ public class CliCommandExecutor {
         }
     }
 
-    public static final String COMMAND_BLOCK_LIST = "[ &`>|{}()$;\\-#~!+*\\\\]+";
+    public static final String COMMAND_BLOCK_LIST = "[ &`>|{}()$;\\#~!+*\\\\]+";
     public static final String COMMAND_WHITE_LIST = "[^\\w%,@/:=?.\"\\[\\]]";
     public static final String HIVE_BLOCK_LIST = "[ <>()$;\\-#!+*\"'/=%@]+";
 
