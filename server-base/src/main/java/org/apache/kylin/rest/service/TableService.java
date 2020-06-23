@@ -19,15 +19,18 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -92,6 +95,9 @@ import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.shaded.com.google.common.collect.SetMultimap;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
+
+import static org.apache.kylin.job.constant.ExecutableConstants.STEP_NAME_CALCULATE_COLUMN_CARDINALITY;
+import static org.apache.kylin.job.constant.ExecutableConstants.STEP_NAME_SAVE_CARDINALITY_TO_METADATA;
 
 @Component("tableService")
 public class TableService extends BasicService {
@@ -534,9 +540,14 @@ public class TableService extends BasicService {
         }
 
         CardinalityExecutable job = new CardinalityExecutable();
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         //make sure the job could be scheduled when the DistributedScheduler is enable.
+        SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss", Locale.ROOT);
+        format.setTimeZone(TimeZone.getTimeZone(kylinConfig.getTimeZone()));
         job.setParam("segmentId", tableName);
-        job.setName("Hive Column Cardinality calculation for table '" + tableName + "'");
+        job.setProjectName(prj);
+        job.setName("Hive Column Cardinality - " + tableName + " - "
+            + format.format(new Date(System.currentTimeMillis())));
         job.setSubmitter(submitter);
 
         String outPath = getConfig().getHdfsWorkingDirectory() + "cardinality/" + job.getId() + "/" + tableName;
@@ -549,12 +560,14 @@ public class TableService extends BasicService {
             step1.setParam(SparkColumnCardinality.OPTION_PRJ.getOpt(), prj);
             step1.setParam(SparkColumnCardinality.OPTION_TABLE_NAME.getOpt(), tableName);
             step1.setParam(SparkColumnCardinality.OPTION_COLUMN_COUNT.getOpt(), String.valueOf(table.getColumnCount()));
+            step1.setName(STEP_NAME_CALCULATE_COLUMN_CARDINALITY);
             job.addTask(step1);
         } else {
             MapReduceExecutable step1 = new MapReduceExecutable();
             step1.setMapReduceJobClass(HiveColumnCardinalityJob.class);
             step1.setMapReduceParams(param);
             step1.setParam("segmentId", tableName);
+            step1.setName(STEP_NAME_CALCULATE_COLUMN_CARDINALITY);
             job.addTask(step1);
         }
 
@@ -563,6 +576,7 @@ public class TableService extends BasicService {
         step2.setJobClass(HiveColumnCardinalityUpdateJob.class);
         step2.setJobParams(param);
         step2.setParam("segmentId", tableName);
+        step2.setName(STEP_NAME_SAVE_CARDINALITY_TO_METADATA);
         job.addTask(step2);
         tableExt.setJodID(job.getId());
         getTableManager().saveTableExt(tableExt, prj);
