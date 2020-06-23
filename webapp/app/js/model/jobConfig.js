@@ -44,6 +44,8 @@ KylinApp.constant('jobConfig', {
   searchMode: [
     {name: 'CUBING', value: 'CUBING_ONLY'},
     {name: 'CHECK POINT', value: 'CHECKPOINT_ONLY'},
+    {name: 'CARDINALITY', value: 'CARDINALITY_ONLY'},
+    {name: 'SNAPSHOT', value: 'SNAPSHOT_ONLY'},
     {name: 'ALL', value: 'ALL'}
   ],
   queryitems: [
