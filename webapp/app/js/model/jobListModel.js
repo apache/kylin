@@ -23,6 +23,7 @@
 KylinApp.service('JobList',function(JobService, $q, kylinConfig, jobConfig){
     var _this = this;
     this.jobs={};
+    this.jobsOverview={};
     this.jobFilter = {
         cubeName : null,
         timeFilterId : kylinConfig.getJobTimeFilterId(),
@@ -72,7 +73,8 @@ KylinApp.service('JobList',function(JobService, $q, kylinConfig, jobConfig){
       JobService.overview(jobRequest, function (jobsOverview) {
         angular.forEach(jobConfig.allStatus, function (key) {
           if (angular.isDefined(jobsOverview[key.name])) {
-            key.count = "(" + jobsOverview[key.name] + ")"
+            key.count = "(" + jobsOverview[key.name] + ")";
+            _this.jobsOverview[key.name] = jobsOverview[key.name];
           } else {
             key.count = "";
           }
@@ -91,5 +93,6 @@ KylinApp.service('JobList',function(JobService, $q, kylinConfig, jobConfig){
 
     this.removeAll = function(){
         _this.jobs={};
+        _this.jobsOverview={};
     };
 });
