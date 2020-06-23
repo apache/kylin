@@ -164,9 +164,20 @@ KylinApp
                 JobService.resume({jobId: job.uuid}, {}, function (job) {
                   loadingRequest.hide();
                   JobList.jobs[job.uuid] = job;
+                  var oldStatus;
                   if (angular.isDefined($scope.state.selectedJob)) {
+                    oldStatus = $scope.state.selectedJob.job_status;
                     $scope.state.selectedJob = JobList.jobs[$scope.state.selectedJob.uuid];
                   }
+                  angular.forEach(jobConfig.allStatus, function (key) {
+                    if (key.name === oldStatus) {
+                      JobList.jobsOverview[key.name] -= 1;
+                      key.count = "(" + (JobList.jobsOverview[key.name]) + ")";
+                    } else if (key.name === job.job_status) {
+                      JobList.jobsOverview[key.name] += 1;
+                      key.count = "(" + (JobList.jobsOverview[key.name]) + ")";
+                    }
+                  });
                   MessageBox.successNotify('Job has been resumed successfully!');
                 }, function (e) {
                   loadingRequest.hide();
@@ -198,11 +209,21 @@ KylinApp
                 JobService.cancel({jobId: job.uuid}, {}, function (job) {
                     loadingRequest.hide();
                     $scope.safeApply(function() {
-                        JobList.jobs[job.uuid] = job;
-                        if (angular.isDefined($scope.state.selectedJob)) {
-                            $scope.state.selectedJob = JobList.jobs[ $scope.state.selectedJob.uuid];
+                      JobList.jobs[job.uuid] = job;
+                      var oldStatus;
+                      if (angular.isDefined($scope.state.selectedJob)) {
+                        oldStatus = $scope.state.selectedJob.job_status;
+                        $scope.state.selectedJob = JobList.jobs[$scope.state.selectedJob.uuid];
+                      }
+                      angular.forEach(jobConfig.allStatus, function (key) {
+                        if (key.name === oldStatus) {
+                          JobList.jobsOverview[key.name] -= 1;
+                          key.count = "(" + (JobList.jobsOverview[key.name]) + ")";
+                        } else if (key.name === job.job_status) {
+                          JobList.jobsOverview[key.name] += 1;
+                          key.count = "(" + (JobList.jobsOverview[key.name]) + ")";
                         }
-
+                      });
                     });
                     MessageBox.successNotify('Job has been discarded successfully!');
                 },function(e){
@@ -235,10 +256,20 @@ KylinApp
               loadingRequest.hide();
               $scope.safeApply(function() {
                 JobList.jobs[job.uuid] = job;
+                var oldStatus;
                 if (angular.isDefined($scope.state.selectedJob)) {
-                  $scope.state.selectedJob = JobList.jobs[ $scope.state.selectedJob.uuid];
+                  oldStatus = $scope.state.selectedJob.job_status;
+                  $scope.state.selectedJob = JobList.jobs[$scope.state.selectedJob.uuid];
                 }
-
+                angular.forEach(jobConfig.allStatus, function (key) {
+                  if (key.name === oldStatus) {
+                    JobList.jobsOverview[key.name] -= 1;
+                    key.count = "(" + (JobList.jobsOverview[key.name]) + ")";
+                  } else if (key.name === job.job_status) {
+                    JobList.jobsOverview[key.name] += 1;
+                    key.count = "(" + (JobList.jobsOverview[key.name]) + ")";
+                  }
+                });
               });
               MessageBox.successNotify('Job has been paused successfully!');
             },function(e){
@@ -271,6 +302,13 @@ KylinApp
               loadingRequest.hide();
               MessageBox.successNotify('Job has been dropped successfully!');
               $scope.jobList.jobs[job.uuid].dropped = true;
+              var oldState = job.job_status;
+              angular.forEach(jobConfig.allStatus, function (key) {
+                if (key.name === oldState) {
+                  JobList.jobsOverview[key.name] -= 1;
+                  key.count = "(" + (JobList.jobsOverview[key.name]) + ")";
+                }
+              });
             },function(e){
               loadingRequest.hide();
               if(e.data&& e.data.exception){
