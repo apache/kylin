@@ -285,7 +285,7 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         } else {
             info.append(", No Fuzzy Key");
         }
-        logger.info(info.toString());
+        logger.debug(info.toString());
     }
 
     protected long getCoprocessorTimeoutMillis() {

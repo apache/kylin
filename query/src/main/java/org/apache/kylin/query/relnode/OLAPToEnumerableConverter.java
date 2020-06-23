@@ -21,6 +21,7 @@ package org.apache.kylin.query.relnode;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.opentracing.Span;
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
 import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
 import org.apache.calcite.plan.ConventionTraitDef;
@@ -118,7 +119,13 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             QueryContextFacade.current().setCalcitePlan(this.copy(getTraitSet(), getInputs()));
         }
 
-        return impl.visitChild(this, 0, inputAsEnum, pref);
+        Result result = impl.visitChild(this, 0, inputAsEnum, pref);
+        //Finish sql parse span
+        Span sqlParseSpan = QueryContextFacade.current().activeSpan();
+        if (sqlParseSpan != null) {
+            sqlParseSpan.finish();
+        }
+        return result;
     }
 
      protected List<OLAPContext> listContextsHavingScan() {

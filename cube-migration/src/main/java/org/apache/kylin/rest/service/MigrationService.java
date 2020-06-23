@@ -210,10 +210,10 @@ public class MigrationService extends BasicService {
 
         // No project name for rejected title
         if (state == MailNotificationUtil.MIGRATION_REJECTED) {
-            title = MailNotificationUtil.getMailTitle("MIGRATION", root.get("status"), root.get("envname"),
+            title = MailTemplateProvider.getMailTitle("MIGRATION", root.get("status"), root.get("envname"),
                     root.get("cubename"));
         } else {
-            title = MailNotificationUtil.getMailTitle("MIGRATION", root.get("status"), root.get("envname"),
+            title = MailTemplateProvider.getMailTitle("MIGRATION", root.get("status"), root.get("envname"),
                     root.get("projectname"), root.get("cubename"));
         }
 

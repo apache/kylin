@@ -24,29 +24,24 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.common.threadlocal.InternalThreadLocal;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class QueryContextFacade {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryContextFacade.class);
 
     private static final ConcurrentMap<String, QueryContext> RUNNING_CTX_MAP = Maps.newConcurrentMap();
-    private static final InternalThreadLocal<QueryContext> CURRENT_CTX = new InternalThreadLocal<QueryContext>() {
-        @Override
-        protected QueryContext initialValue() {
-            QueryContext queryContext = new QueryContext(
-                    KylinConfig.getInstanceFromEnv().getHBaseMaxConnectionThreadsPerQuery());
-            RUNNING_CTX_MAP.put(queryContext.getQueryId(), queryContext);
-            return queryContext;
-        }
-    };
+    private static final InternalThreadLocal<QueryContext> CURRENT_CTX = new InternalThreadLocal<>();
 
     public static QueryContext current() {
-        return CURRENT_CTX.get();
+        QueryContext ret = CURRENT_CTX.get();
+        if (ret == null) {
+            throw new RuntimeException("Query context hasn't been initialized!!!");
+        }
+        return ret;
     }
 
     /**
@@ -58,6 +53,17 @@ public class QueryContextFacade {
             RUNNING_CTX_MAP.remove(queryContext.getQueryId());
             CURRENT_CTX.remove();
         }
+    }
+
+    public static QueryContext startQuery(String project, String sql, String user) {
+        return startQuery(project, sql, user, KylinConfig.getInstanceFromEnv().getHBaseMaxConnectionThreadsPerQuery());
+    }
+
+    public static QueryContext startQuery(String project, String sql, String user, int maxHBaseConnectionThreads) {
+        QueryContext query = new QueryContext(project, sql, user, maxHBaseConnectionThreads);
+        CURRENT_CTX.set(query);
+        RUNNING_CTX_MAP.put(query.getQueryId(), query);
+        return query;
     }
 
     /**
@@ -97,8 +103,8 @@ public class QueryContextFacade {
      */
     public static TreeSet<QueryContext> getLongRunningQueries(long runningTime) {
         SortedSet<QueryContext> allRunningQueries = getAllRunningQueries();
-        QueryContext tmpCtx = new QueryContext(KylinConfig.getInstanceFromEnv().getHBaseMaxConnectionThreadsPerQuery(),
-                runningTime + 1L); // plus 1 to include those contexts in same accumulatedMills but different uuid
+        QueryContext tmpCtx = new QueryContext(null, null, null,
+                KylinConfig.getInstanceFromEnv().getHBaseMaxConnectionThreadsPerQuery(), runningTime + 1L); // plus 1 to include those contexts in same accumulatedMills but different uuid
         return (TreeSet<QueryContext>) allRunningQueries.headSet(tmpCtx);
     }
 }

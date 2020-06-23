@@ -16,12 +16,33 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.rest.util;
+package org.apache.kylin.common.tracer;
 
-public class MailNotificationUtil {
-    public static final String MIGRATION_REQUEST = "MIGRATION_REQUEST";
-    public static final String MIGRATION_REJECTED = "MIGRATION_REJECTED";
-    public static final String MIGRATION_APPROVED = "MIGRATION_APPROVED";
-    public static final String MIGRATION_COMPLETED = "MIGRATION_COMPLETED";
-    public static final String MIGRATION_FAILED = "MIGRATION_FAILED";
+import io.jaegertracing.internal.JaegerSpan;
+import io.jaegertracing.internal.JaegerTracer;
+import io.opentracing.Span;
+
+public class JaegerTracerWrapper extends TracerWrapper {
+
+    JaegerTracerWrapper(JaegerTracer tracer) {
+        super(tracer);
+    }
+
+    @Override
+    public Object getTagValue(Span span, String tagName) {
+        return ((JaegerSpan) span).getTags().get(tagName);
+    }
+
+    // by Millisecond
+    @Override
+    public long getStart(Span span) {
+        return ((JaegerSpan) span).getStart() / 1000;
+    }
+
+    // by Millisecond
+    @Override
+    public long getDuration(Span span) {
+        return ((JaegerSpan) span).getDuration() / 1000;
+    }
+
 }

@@ -16,12 +16,31 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.rest.util;
+package org.apache.kylin.common.tracer;
 
-public class MailNotificationUtil {
-    public static final String MIGRATION_REQUEST = "MIGRATION_REQUEST";
-    public static final String MIGRATION_REJECTED = "MIGRATION_REJECTED";
-    public static final String MIGRATION_APPROVED = "MIGRATION_APPROVED";
-    public static final String MIGRATION_COMPLETED = "MIGRATION_COMPLETED";
-    public static final String MIGRATION_FAILED = "MIGRATION_FAILED";
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+public class TracerManagerTest extends LocalFileMetadataTestCase {
+
+    @Before
+    public void setUp() throws Exception {
+        this.createTestMetadata();
+    }
+
+    @After
+    public void after() throws Exception {
+        this.cleanupTestMetadata();
+    }
+
+    @Test
+    public void testGetJaegerTracerWrapper() {
+        TracerWrapper tracerWrapper = TracerManager.getTracerWrapper("Query");
+        Assert.assertTrue(tracerWrapper instanceof JaegerTracerWrapper);
+
+        Assert.assertSame(tracerWrapper, TracerManager.getTracerWrapper("Query"));
+    }
 }

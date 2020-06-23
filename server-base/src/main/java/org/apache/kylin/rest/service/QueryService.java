@@ -118,6 +118,9 @@ import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.QueryRequestLimits;
 import org.apache.kylin.rest.util.SQLResponseSignatureUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
 import org.apache.kylin.storage.stream.StreamStorageQuery;
@@ -132,9 +135,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.shaded.com.google.common.base.Preconditions;
-import org.apache.kylin.shaded.com.google.common.base.Strings;
-import org.apache.kylin.shaded.com.google.common.collect.Lists;
+
+import io.opentracing.Span;
 
 /**
  * @author xduo
@@ -413,7 +415,8 @@ public class QueryService extends BasicService {
         }
         // project not found
         ProjectManager mgr = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
-        if (mgr.getProject(sqlRequest.getProject()) == null) {
+        ProjectInstance projectInstance = mgr.getProject(sqlRequest.getProject());
+        if (projectInstance == null) {
             throw new BadRequestException(
                     String.format(Locale.ROOT, msg.getPROJECT_NOT_FOUND(), sqlRequest.getProject()));
         }
@@ -425,18 +428,22 @@ public class QueryService extends BasicService {
             BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
 
         // set initial info when starting a query
-        final QueryContext queryContext = QueryContextFacade.current();
-        queryContext.setUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+        String project = sqlRequest.getProject();
+        String sql = sqlRequest.getSql();
+        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (userName == null) {
+            userName = "unknown";
+        }
+        final QueryContext queryContext = QueryContextFacade.startQuery(project, sql, userName,
+                projectInstance.getConfig().getHBaseMaxConnectionThreadsPerQuery());
         queryContext.setGroups(AclPermissionUtil.getCurrentUserGroups());
-        queryContext.setProject(sqlRequest.getProject());
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
             // force clear the query context before a new query
             OLAPContext.clearThreadLocalContexts();
 
             SQLResponse sqlResponse = null;
-            String sql = sqlRequest.getSql();
-            String project = sqlRequest.getProject();
+            
             boolean isQueryCacheEnabled = isQueryCacheEnabled(kylinConfig);
             logger.info("Using project: " + project);
             logger.info("The original query:  " + sql);
@@ -459,7 +466,7 @@ public class QueryService extends BasicService {
                 }
 
                 if (sqlResponse == null && isQueryCacheEnabled) {
-                    sqlResponse = searchQueryInCache(sqlRequest);
+                    sqlResponse = searchQueryInCacheWithSpan(sqlRequest);
                 }
 
                 // real execution if required
@@ -603,6 +610,15 @@ public class QueryService extends BasicService {
         return username;
     }
 
+    public SQLResponse searchQueryInCacheWithSpan(SQLRequest sqlRequest) {
+        Span cacheSpan = QueryContextFacade.current().startFetchCache();
+        try {
+            return searchQueryInCache(sqlRequest);
+        } finally {
+            cacheSpan.finish();
+        }
+    }
+
     public SQLResponse searchQueryInCache(SQLRequest sqlRequest) {
         Cache cache = cacheManager.getCache(QUERY_CACHE);
         Cache.ValueWrapper wrapper = cache.get(sqlRequest.getCacheKey());
@@ -615,6 +631,7 @@ public class QueryService extends BasicService {
         }
 
         // Check whether duplicate query exists
+        int lazyCount = 0;
         while (response.isRunning()) {
             // Wait at most one minute
             if (System.currentTimeMillis() - response.getLazyQueryStartTime() >= getConfig()
@@ -622,7 +639,9 @@ public class QueryService extends BasicService {
                 cache.evict(sqlRequest.getCacheKey());
                 return null;
             }
-            logger.info("Duplicated SQL request is running, waiting...");
+            if (lazyCount++ % 100 == 0) {
+                logger.info("Duplicated SQL request is running, waiting...");
+            }
             try {
                 Thread.sleep(100L);
             } catch (InterruptedException e) {
@@ -696,7 +715,7 @@ public class QueryService extends BasicService {
                         columnMetas);
             }
             if (!isPrepareRequest) {
-                return executeRequest(correctedSql, sqlRequest, conn);
+                return executeRequestWithSpan(correctedSql, sqlRequest, conn);
             } else {
                 long prjLastModifyTime = getProjectManager().getProject(sqlRequest.getProject()).getLastModified();
                 preparedContextKey = new PreparedContextKey(sqlRequest.getProject(), prjLastModifyTime, correctedSql);
@@ -716,7 +735,7 @@ public class QueryService extends BasicService {
                 } else {
                     preparedContext = createPreparedContext(sqlRequest.getProject(), sqlRequest.getSql());
                 }
-                return executePrepareRequest(correctedSql, prepareSqlRequest, preparedContext);
+                return executePrepareRequestWithSpan(correctedSql, prepareSqlRequest, preparedContext);
             }
 
         } finally {
@@ -985,6 +1004,12 @@ public class QueryService extends BasicService {
         }
     }
 
+    private SQLResponse executeRequestWithSpan(String correctedSql, SQLRequest sqlRequest, Connection conn)
+            throws Exception {
+        QueryContextFacade.current().startSqlParse();
+        return executeRequest(correctedSql, sqlRequest, conn);
+    }
+
     /**
      * @param correctedSql
      * @param sqlRequest
@@ -1017,6 +1042,12 @@ public class QueryService extends BasicService {
         return buildSqlResponse(sqlRequest.getProject(), isPushDown, r.getFirst(), r.getSecond());
     }
 
+    private SQLResponse executePrepareRequestWithSpan(String correctedSql, PrepareSqlRequest sqlRequest,
+            PreparedContext preparedContext) throws Exception {
+        QueryContextFacade.current().startSqlParse();
+        return executePrepareRequest(correctedSql, sqlRequest, preparedContext);
+    }
+    
     private SQLResponse executePrepareRequest(String correctedSql, PrepareSqlRequest sqlRequest,
             PreparedContext preparedContext) throws Exception {
         ResultSet resultSet = null;

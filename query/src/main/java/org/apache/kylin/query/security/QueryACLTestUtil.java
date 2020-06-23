@@ -18,14 +18,15 @@
 
 package org.apache.kylin.query.security;
 
-import org.apache.kylin.query.QueryConnection;
-import org.apache.kylin.query.relnode.OLAPContext;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.kylin.common.QueryContextFacade;
+import org.apache.kylin.query.QueryConnection;
+import org.apache.kylin.query.relnode.OLAPContext;
 
 public class QueryACLTestUtil {
     public static void setUser(String username) {
@@ -35,6 +36,8 @@ public class QueryACLTestUtil {
     }
 
     public static void mockQuery(String project, String sql) throws SQLException {
+        QueryContextFacade.startQuery(project, sql, "ADMIN");
+
         Connection conn = null;
         Statement statement = null;
         try {

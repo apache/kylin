@@ -36,6 +36,7 @@ import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.query.QueryConnection;
 import org.apache.kylin.query.util.QueryInfoCollector;
@@ -65,11 +66,14 @@ public class QueryInfoCollectorTest extends LocalFileMetadataTestCase {
         enableCube("ci_inner_join_cube", "ci_left_join_cube");
 
         try {
-            connection = QueryConnection.getConnection("default");
+            String project = ProjectInstance.DEFAULT_PROJECT_NAME;
+            connection = QueryConnection.getConnection(project);
             statement = connection.createStatement();
-            String sql = "select count(*) as cnt1 from test_kylin_fact inner join test_account on seller_id = account_id\n" +
-                    "union all\n" +
-                    "select count(*) as cnt2 from test_kylin_fact left join test_account on seller_id = account_id";
+            String sql = "select count(*) as cnt1 from test_kylin_fact inner join test_account on seller_id = account_id\n"
+                    + "union all\n"
+                    + "select count(*) as cnt2 from test_kylin_fact left join test_account on seller_id = account_id";
+
+            QueryContextFacade.startQuery(project, sql, "ADMIN");
             resultSet = statement.executeQuery(sql);
 
             Assert.assertNotNull(resultSet);
@@ -91,7 +95,7 @@ public class QueryInfoCollectorTest extends LocalFileMetadataTestCase {
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         try {
-            String project = "default";
+            String project = ProjectInstance.DEFAULT_PROJECT_NAME;
             String expectedCube = "CUBE[name=ci_left_join_cube]";
 
             String sqlWithCube = "select count(*) from test_kylin_fact";
@@ -142,6 +146,8 @@ public class QueryInfoCollectorTest extends LocalFileMetadataTestCase {
             Statement statement = connection.createStatement();
 
             try {
+                QueryContextFacade.startQuery(project, sql, "ADMIN");
+
                 statement.executeQuery(sql);
                 return QueryInfoCollector.current().getCubeNameString();
             } catch (Exception e) {

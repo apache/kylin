@@ -240,7 +240,7 @@ public class KylinTestBase {
     protected ITable executeQuery(IDatabaseConnection dbConn, String queryName, String sql, boolean needSort)
             throws Exception {
         QueryContextFacade.resetCurrent();
-        QueryContextFacade.current().setProject(ProjectInstance.DEFAULT_PROJECT_NAME);
+        QueryContextFacade.startQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "ADMIN");
 
         // change join type to match current setting
         sql = changeJoinType(sql, joinType);
@@ -262,7 +262,7 @@ public class KylinTestBase {
 
     protected int executeQuery(String sql, boolean needDisplay) throws Exception {
         QueryContextFacade.resetCurrent();
-        QueryContextFacade.current().setProject(ProjectInstance.DEFAULT_PROJECT_NAME);
+        QueryContextFacade.startQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "ADMIN");
 
         // change join type to match current setting
         sql = changeJoinType(sql, joinType);
@@ -317,7 +317,7 @@ public class KylinTestBase {
     protected ITable executeDynamicQuery(IDatabaseConnection dbConn, String queryName, String sql,
             List<String> parameters, boolean needSort) throws Exception {
         QueryContextFacade.resetCurrent();
-        QueryContextFacade.current().setProject(ProjectInstance.DEFAULT_PROJECT_NAME);
+        QueryContextFacade.startQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "ADMIN");
 
         // change join type to match current setting
         sql = changeJoinType(sql, joinType);

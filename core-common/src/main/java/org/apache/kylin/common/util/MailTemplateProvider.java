@@ -23,6 +23,7 @@ import java.io.Writer;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.shaded.com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,10 @@ public class MailTemplateProvider {
 
     public static MailTemplateProvider getInstance() {
         return DEFAULT_INSTANCE;
+    }
+
+    public static String getMailTitle(String... titleParts) {
+        return "[" + Joiner.on("]-[").join(titleParts) + "]";
     }
 
     private final Configuration configuration;

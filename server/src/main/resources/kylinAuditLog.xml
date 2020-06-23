@@ -1,0 +1,106 @@
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop-4.2.xsd">
+
+    <description>Kylin Audit Log</description>
+
+    <aop:config>
+        <aop:aspect ref="auditLog">
+            <!--cube audit-->
+            <aop:pointcut id="cubeBehavior"
+                          expression="within(org.apache.kylin.rest.service.CubeService)
+                          and @annotation(org.springframework.security.access.prepost.PreAuthorize)
+                          and not execution(* org.apache.kylin.rest.service.CubeService.saveDraft(..))
+                          and not execution(* org.apache.kylin.rest.service.CubeService.getRecommendCuboidStatistics(..))"/>
+            <aop:before pointcut-ref="cubeBehavior" method="auditAllParamWithSignature"/>
+            <aop:after-throwing pointcut-ref="cubeBehavior" method="executeFailed" throwing="reason"/>
+            <aop:after pointcut-ref="cubeBehavior" method="finish"/>
+
+            <!--job audit-->
+            <aop:pointcut id="existingJobBehavior"
+                          expression="execution(* org.apache.kylin.rest.service.JobService.resumeJob(..))
+                          or execution(* org.apache.kylin.rest.service.JobService.cancelJob(..))
+                          or execution(* org.apache.kylin.rest.service.JobService.pauseJob(..))
+                          or execution(* org.apache.kylin.rest.service.JobService.dropJob(..))
+                          or execution(* org.apache.kylin.rest.service.JobService.rollbackJob(..))"/>
+            <aop:before pointcut-ref="existingJobBehavior" method="auditAllParamWithSignature"/>
+            <aop:pointcut id="submitJobBehavior"
+                          expression="execution(* org.apache.kylin.rest.service.JobService.submitJob(..))"/>
+            <aop:before pointcut-ref="submitJobBehavior" method="submitJobAudit"/>
+            <aop:pointcut id="optimizeJobBehavior"
+                          expression="execution(* org.apache.kylin.rest.service.JobService.submitOptimizeJob(..))"/>
+            <aop:before pointcut-ref="optimizeJobBehavior" method="optimizeJobAudit"/>
+            <aop:pointcut id="recoverSegmentOptimizeJobBehavior"
+                          expression="execution(* org.apache.kylin.rest.service.JobService.submitRecoverSegmentOptimizeJob(..))"/>
+            <aop:before pointcut-ref="recoverSegmentOptimizeJobBehavior" method="recoverSegmentOptimizeJobAudit"/>
+            <aop:pointcut id="jobBehavior"
+                          expression="within(org.apache.kylin.rest.service.JobService) and @annotation(org.springframework.security.access.prepost.PreAuthorize)"/>
+            <aop:after-throwing pointcut-ref="jobBehavior" method="executeFailed" throwing="reason"/>
+            <aop:after pointcut-ref="jobBehavior" method="finish"/>
+
+            <!--model audit-->
+            <aop:pointcut id="modelBehavior"
+                          expression="execution(* org.apache.kylin.rest.service.ModelService.createModelDesc(..))
+                          or execution(* org.apache.kylin.rest.service.ModelService.updateModelAndDesc(..))
+                          or execution(* org.apache.kylin.rest.service.ModelService.dropModel(..))"/>
+            <aop:before pointcut-ref="modelBehavior" method="auditAllParamWithSignature"/>
+            <aop:after-throwing pointcut-ref="modelBehavior" method="executeFailed" throwing="reason"/>
+            <aop:after pointcut-ref="modelBehavior" method="finish"/>
+
+            <!--project audit-->
+            <aop:pointcut id="projectBehavior"
+                          expression="within(org.apache.kylin.rest.service.ProjectService)
+                          and @annotation(org.springframework.security.access.prepost.PreAuthorize)
+                          and not execution(* org.apache.kylin.rest.service.ProjectService.addStreamingTable(..))"/>
+            <aop:before pointcut-ref="projectBehavior" method="auditAllParamWithSignature"/>
+            <aop:after-throwing pointcut-ref="projectBehavior" method="executeFailed" throwing="reason"/>
+            <aop:after pointcut-ref="projectBehavior" method="finish"/>
+
+            <!--table audit-->
+            <aop:pointcut id="tableBehavior"
+                          expression="execution(* org.apache.kylin.rest.service.TableService.loadHiveTablesToProject(..))
+                          or execution(* org.apache.kylin.rest.service.TableService.calculateCardinalityWithoutAuth(..))
+                          or execution(* org.apache.kylin.rest.service.TableService.unLoadHiveTable(..))"/>
+            <aop:before pointcut-ref="tableBehavior" method="auditAllParamWithSignature"/>
+            <aop:after-throwing pointcut-ref="tableBehavior" method="executeFailed" throwing="reason"/>
+            <aop:after pointcut-ref="tableBehavior" method="finish"/>
+
+            <!--access audit-->
+            <aop:pointcut id="accessGrantBehavior"
+                          expression="execution(* org.apache.kylin.rest.service.AccessService.grant(..)) and args(ae, permission, sid)"/>
+            <aop:before pointcut-ref="accessGrantBehavior" method="accessGrantAudit"/>
+            <aop:pointcut id="accessUpdateBehavior"
+                          expression="execution(* org.apache.kylin.rest.service.AccessService.update(..)) and args(ae, accessEntryId, newPermission)"/>
+            <aop:before pointcut-ref="accessUpdateBehavior" method="accessUpdateAudit"/>
+            <aop:pointcut id="accessRevokeBehavior"
+                          expression="execution(* org.apache.kylin.rest.service.AccessService.revoke(..)) and args(ae, accessEntryId)"/>
+            <aop:before pointcut-ref="accessRevokeBehavior" method="accessRevokeAudit"/>
+            <aop:pointcut id="accessCleanBehavior"
+                          expression="execution(* org.apache.kylin.rest.service.AccessService.clean(..)) and args(ae, deleteChildren)"/>
+            <aop:before pointcut-ref="accessCleanBehavior" method="accessCleanAudit"/>
+            <aop:pointcut id="accessBehavior"
+                          expression="within(org.apache.kylin.rest.service.AccessService) and @annotation(org.springframework.security.access.prepost.PreAuthorize)"/>
+            <aop:after-throwing pointcut-ref="accessBehavior" method="executeFailed" throwing="reason"/>
+            <aop:after pointcut-ref="accessBehavior" method="finish"/>
+
+        </aop:aspect>
+    </aop:config>
+</beans>

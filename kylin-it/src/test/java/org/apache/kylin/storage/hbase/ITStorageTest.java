@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -35,6 +36,7 @@ import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.realization.SQLDigest.SQLCall;
 import org.apache.kylin.metadata.tuple.ITuple;
@@ -91,6 +93,7 @@ public class ITStorageTest extends HBaseMetadataTestCase {
         List<FunctionDesc> aggregations = mockup.buildAggregations();
         TupleFilter filter = mockup.buildFilter1(groups.get(0));
 
+        QueryContextFacade.startQuery(ProjectInstance.DEFAULT_PROJECT_NAME, "", "ADMIN");
         int count = search(groups, aggregations, filter, context);
         assertTrue(count >= 0);
     }

@@ -18,6 +18,8 @@
 
 package org.apache.kylin.storage.stream.rpc;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
@@ -47,11 +49,15 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.metadata.tuple.TupleInfo;
+import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.kylin.stream.coordinator.assign.AssignmentsCache;
-import org.apache.kylin.stream.core.model.ReplicaSet;
 import org.apache.kylin.stream.core.model.DataRequest;
 import org.apache.kylin.stream.core.model.DataResponse;
 import org.apache.kylin.stream.core.model.Node;
+import org.apache.kylin.stream.core.model.ReplicaSet;
 import org.apache.kylin.stream.core.query.ResponseResultSchema;
 import org.apache.kylin.stream.core.query.StreamingTupleConverter;
 import org.apache.kylin.stream.core.query.StreamingTupleIterator;
@@ -62,12 +68,7 @@ import org.apache.kylin.stream.core.util.RestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
-import org.apache.kylin.shaded.com.google.common.collect.Lists;
-import org.apache.kylin.shaded.com.google.common.collect.Maps;
-import org.apache.kylin.shaded.com.google.common.collect.Sets;
-
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import io.opentracing.Span;
 
 /**
  * TODO use long connection rather than short connection
@@ -114,12 +115,16 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
             executorService.submit(new Runnable() {
                 @Override
                 public void run() {
+                    final Span streamingQuerySpan = query.startStreamingReceiverQuerySpan(cubeDesc.getName(),
+                            rs.getReplicaSetID());
                     try {
                         Iterator<ITuple> tuplesBlock = search(dataRequest, cube, tupleConverter, recordsSerializer, rs,
                                 tupleInfo);
                         result.addBlock(tuplesBlock);
                     } catch (Exception e) {
                         result.setEndpointException(e);
+                    } finally {
+                        streamingQuerySpan.finish();
                     }
                 }
             });
