@@ -92,4 +92,7 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_REPLACE_DICTVAL = "Build Hive Global Dict - replace intermediate table";
 
     public static final String FLINK_SPECIFIC_CONFIG_NAME_MERGE_DICTIONARY = "mergedict";
+
+    public static final String STEP_NAME_CALCULATE_COLUMN_CARDINALITY = "Calculate Hive Table Column Cardinality";
+    public static final String STEP_NAME_SAVE_CARDINALITY_TO_METADATA = "Save cardinality result to Metadata";
 }
