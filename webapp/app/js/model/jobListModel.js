@@ -26,7 +26,7 @@ KylinApp.service('JobList',function(JobService, $q, kylinConfig, jobConfig){
     this.jobFilter = {
         cubeName : null,
         timeFilterId : kylinConfig.getJobTimeFilterId(),
-        searchModeId: 2,
+        searchModeId: 4,
         statusIds: []
     };
 
@@ -34,7 +34,7 @@ KylinApp.service('JobList',function(JobService, $q, kylinConfig, jobConfig){
         this.jobFilter = {
           cubeName : null,
           timeFilterId : kylinConfig.getJobTimeFilterId(),
-          searchModeId: 2,
+          searchModeId: 4,
           statusIds: []
         };
     };
