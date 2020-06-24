@@ -6,19 +6,17 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.hbase.steps;
-
-import static org.apache.hadoop.hbase.HBaseConfiguration.merge;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -54,6 +52,8 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.hadoop.hbase.HBaseConfiguration.merge;
+
 /**
  * @author George Song (ysong1)
  */
@@ -61,7 +61,6 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
     protected static final Logger logger = LoggerFactory.getLogger(CubeHFileJob.class);
 
-    @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();
 
@@ -84,7 +83,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
             CubeInstance cube = cubeMgr.getCube(cubeName);
 
-            // construct configuration for the MR job cluster
+            // use current hbase configuration
             Configuration configuration = new Configuration(HBaseConnection.getCurrentHBaseConfiguration());
             String[] allServices = getAllServices(configuration);
             merge(configuration, getConf());
@@ -110,7 +109,6 @@ public class CubeHFileJob extends AbstractHadoopJob {
             RegionLocator regionLocator = connection.getRegionLocator(TableName.valueOf(hTableName));
             // Automatic config !
             HFileOutputFormat3.configureIncrementalLoad(job, table, regionLocator);
-            HFileOutputFormat3.configureHConnection(job, hbaseConf, getJobTempDir());
             reconfigurePartitions(hbaseConf, partitionFilePath);
 
             job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -121,7 +119,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
             job.setSortComparatorClass(RowKeyWritable.RowKeyComparator.class);
 
             // set block replication to 3 for hfiles
-            job.getConfiguration().set(DFSConfigKeys.DFS_REPLICATION_KEY, "3");
+            configuration.set(DFSConfigKeys.DFS_REPLICATION_KEY, "3");
 
             this.deletePath(job.getConfiguration(), output);
 
@@ -173,9 +171,9 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
     private String[] getAllServices(Configuration hbaseConf) {
         Collection<String> hbaseHdfsServices
-            = hbaseConf.getTrimmedStringCollection(DFSConfigKeys.DFS_NAMESERVICES);
+                = hbaseConf.getTrimmedStringCollection(DFSConfigKeys.DFS_NAMESERVICES);
         Collection<String> mainNameServices
-            = getConf().getTrimmedStringCollection(DFSConfigKeys.DFS_NAMESERVICES);
+                = getConf().getTrimmedStringCollection(DFSConfigKeys.DFS_NAMESERVICES);
         mainNameServices.addAll(hbaseHdfsServices);
         return mainNameServices.toArray(new String[0]);
     }
