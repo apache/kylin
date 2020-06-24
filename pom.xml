@@ -594,7 +594,7 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
-                <scope>provided</scope>
+                <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>com.jcraft</groupId>
@@ -704,11 +704,23 @@
                 <groupId>org.apache.hive</groupId>
                 <artifactId>hive-jdbc</artifactId>
                 <version>${hive.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>jetty-runner</artifactId>
+                        <groupId>org.eclipse.jetty</groupId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.hive.hcatalog</groupId>
                 <artifactId>hive-hcatalog-core</artifactId>
                 <version>${hive-hcatalog.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>jetty-runner</artifactId>
+                        <groupId>org.eclipse.jetty</groupId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <!-- Yarn dependencies -->
             <dependency>
@@ -1080,11 +1092,6 @@
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-servlet</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-runner</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>

@@ -217,6 +217,7 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -224,7 +225,8 @@
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-runner</artifactId>
+            <artifactId>jetty-util</artifactId>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
