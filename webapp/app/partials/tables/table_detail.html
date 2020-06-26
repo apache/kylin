@@ -149,7 +149,7 @@
                   <td
                     style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
                     <!--{{ tableModel.selectedSrcTable.cardinality[column.name]}}-->
-                    {{column.cardinality}}
+                    {{column.cardinality || 'N/A'}}
                   </td>
                   <td
                     style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
