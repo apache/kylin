@@ -850,6 +850,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     endTime: 0
   };
   $scope.message = "";
+  $scope.refreshType = 'normal';
   var startTime;
   if(cube.segments.length == 0){
     startTime = (!!cube.detail.partition_date_start)?cube.detail.partition_date_start:0;
@@ -950,6 +951,51 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
   $scope.cancel = function () {
     $modalInstance.dismiss('cancel');
   };
+
+  $scope.getAdvRefreshTimeOptions = function(status) {
+    if ('start' === status) {
+      var startTimeOptions = [];
+      var lastInd = $scope.cube.segments.length - 1;
+      angular.forEach($scope.cube.segments, function(segment, ind) {
+        startTimeOptions.push(segment.date_range_start);
+        if (lastInd == ind) {
+          startTimeOptions.push(segment.date_range_end);
+        }
+      });
+      return startTimeOptions;
+    } else if ('end' === status) {
+      var endTimeOptions = [];
+      angular.forEach($scope.cube.segments, function(segment, ind) {
+        endTimeOptions.push(segment.date_range_end);
+      });
+      return endTimeOptions;
+    }
+  };
+  $scope.advRefreshStartTimeOptions = $scope.getAdvRefreshTimeOptions('start');
+  $scope.advRefreshEndTimeOptions = $scope.getAdvRefreshTimeOptions('end');
+  $scope.endTimeTypeCustomize = false;
+
+  $scope.changeEndTimeDisplay = function() {
+    $scope.endTimeTypeCustomize = !$scope.endTimeTypeCustomize;
+  };
+
+  $scope.setDateRange = function($view, $dates) {
+    var minDate = $scope.cube.segments[$scope.cube.segments.length-1].date_range_end;
+    // var maxDate = moment().startOf($view).valueOf(); // Now
+    angular.forEach($dates, function(date) {
+      var utcDateValue = date.utcDateValue;
+      date.selectable = utcDateValue >= minDate; // && utcDateValue <= maxDate;
+    });
+  };
+
+  $scope.changeRefreshType = function (type) {
+    $scope.refreshType = type;
+    if (type ==='normal') {
+      $scope.jobBuildRequest.buildType = 'REFRESH';
+    } else if (type === 'advance'){
+      $scope.jobBuildRequest.buildType = 'BUILD';
+    }
+  }
 };
 
 
