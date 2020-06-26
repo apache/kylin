@@ -20,70 +20,136 @@
     <div class="modal-header">
         <h4 tooltip="refresh">CUBE REFRESH CONFIRM</h4>
     </div>
-    <div class="modal-body" style="background-color: white">
-        <div ng-if="metaModel.model.partition_desc.partition_date_column" class="row">
-            <div class="col-md-2"></div>
-            <div class="col-md-8">
-                <div ng-if="!!!(cube.segments) || cube.segments.length == 0">
-                    <span class="text-info">No Segment to refresh.</span>
-                </div>
-                <div ng-if="cube.segments.length > 0" class="row">
-                    <table class="table table-striped list" >
-                        <tbody>
-                        <tr>
-                            <td>PARTITION DATE COLUMN</td>
-                            <td>{{metaModel.model.partition_desc.partition_date_column}}</td>
-                        </tr>
-                        <tr>
-                            <td>REFRESH SEGMENT</td>
-                            <td>
-                                <select ng-model="selectedSegment"
-                                        ng-init="selectedSegment=cube.segments[0];segmentSelected(selectedSegment);"
-                                        ng-options="segment as segment.name for segment in cube.segments"
-                                        ng-change="segmentSelected(selectedSegment)">
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>SEGMENT DETAIL</td>
-                            <td>
-                                <table class="table table-condensed">
-                                    <tr>
-                                        <td>Start Date (Include)</td>
-                                        <td>{{selectedSegment.date_range_start |  reverseToGMT0}}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>End Date (Exclude)</td>
-                                        <td>{{selectedSegment.date_range_end |  reverseToGMT0}}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Last build Time</td>
-                                        <td>{{selectedSegment.last_build_time | utcToConfigTimeZone}}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Last build ID</td>
-                                        <td>{{selectedSegment.last_build_job_id}}</td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div ng-if="message">
-                    <span class="text-warning">{{message}}</span>
-                </div>
+    <div class="modal-body">
+      <div ng-if="metaModel.model.partition_desc.partition_date_column" class="nav-tabs-custom" style="box-shadow:none">
+        <ul class="nav nav-tabs" style="margin-bottom: 40px">
+          <li class="{{(!refreshType || refreshType=='normal')? 'active':''}}">
+            <a href="" ng-click="changeRefreshType('normal')">Refresh</a>
+          </li>
+          <li class="{{refreshType=='advance'? 'active':''}}">
+            <a href="" ng-click="changeRefreshType('advance')">Advance Refresh</a>
+          </li>
+        </ul>
+        <!-- Refresh -->
+        <div ng-if="!refreshType || refreshType=='normal'" class="row">
+          <div class="col-md-2"></div>
+          <div class="col-md-8">
+            <div ng-if="!!!(cube.segments) || cube.segments.length == 0">
+              <span class="text-info">No Segment to refresh.</span>
             </div>
-            <div class="col-md-2"></div>
+            <div ng-if="cube.segments.length > 0" class="row">
+              <table class="table table-striped list" >
+                <tbody>
+                <tr>
+                  <td>PARTITION DATE COLUMN</td>
+                  <td>{{metaModel.model.partition_desc.partition_date_column}}</td>
+                </tr>
+                <tr>
+                  <td>REFRESH SEGMENT</td>
+                  <td>
+                    <select ng-model="selectedSegment"
+                            ng-init="selectedSegment=cube.segments[0];segmentSelected(selectedSegment);"
+                            ng-options="segment as segment.name for segment in cube.segments"
+                            ng-change="segmentSelected(selectedSegment)">
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>SEGMENT DETAIL</td>
+                  <td>
+                    <table class="table table-condensed">
+                      <tr>
+                        <td>Start Date (Include)</td>
+                        <td>{{selectedSegment.date_range_start |  reverseToGMT0}}</td>
+                      </tr>
+                      <tr>
+                        <td>End Date (Exclude)</td>
+                        <td>{{selectedSegment.date_range_end |  reverseToGMT0}}</td>
+                      </tr>
+                      <tr>
+                        <td>Last build Time</td>
+                        <td>{{selectedSegment.last_build_time | utcToConfigTimeZone}}</td>
+                      </tr>
+                      <tr>
+                        <td>Last build ID</td>
+                        <td>{{selectedSegment.last_build_job_id}}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <div ng-if="message">
+              <span class="text-warning">{{message}}</span>
+            </div>
+          </div>
+          <div class="col-md-2"></div>
         </div>
 
-        <div ng-if="!metaModel.model.partition_desc.partition_date_column" class="row">
-            <div class="col-md-2"></div>
-            <div class="col-md-8">
-                <span>No partition date column defined. If you want to rebuild the cube, please click "Build".</span>
+        <!-- Adv Refresh -->
+        <div ng-if="refreshType=='advance'" class="row">
+          <div class="col-md-2"></div>
+          <div class="col-md-8">
+            <div ng-if="!!!(cube.segments) || cube.segments.length == 0">
+              <span class="text-info">No Segment to refresh.</span>
             </div>
-            <div class="col-md-2"></div>
+            <div ng-if="cube.segments.length > 0" class="row">
+              <table class="table table-striped list" ng-if="(cube.segments|filter: {status: 'NEW'}).length == 0">
+                <tbody>
+                <tr>
+                  <td>PARTITION DATE COLUMN</td>
+                  <td>{{metaModel.model.partition_desc.partition_date_column}}</td>
+                </tr>
+                <tr>
+                  <td>START DATE</td>
+                  <td>
+                    <select ng-model="jobBuildRequest.startTime"
+                            ng-init="jobBuildRequest.endTime=advRefreshStartTimeOptions[0];"
+                            ng-options="startTimeOption | reverseToGMT0 for startTimeOption in advRefreshStartTimeOptions">
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td width="30%;">END DATE</td>
+                  <td width="70%;">
+                    <select ng-if="!endTimeTypeCustomize" ng-model="jobBuildRequest.endTime"
+                            ng-options="endTimeOption | reverseToGMT0 for endTimeOption in advRefreshEndTimeOptions">
+                    </select>
+                    <div class="dropdown" style="width:200px; display:inline-block;" ng-if="endTimeTypeCustomize">
+                      <a class="dropdown-toggle" id="dropdown2" role="button" data-toggle="dropdown" data-target="#" href="#">
+                        <div class="input-group"><input type="text" class="form-control" date-timepicker-timezone readonly data-ng-model="jobBuildRequest.endTime" ng-change="changeEndTime('customize')" timezone="{{cube.model.partition_desc.partition_time_zone}}">
+                          <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                        </div>
+                      </a>
+                      <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                        <datetimepicker  data-ng-model="jobBuildRequest.endTime" data-datetimepicker-config="{ dropdownSelector: '#dropdown2' }" data-before-render="setDateRange($view, $dates)" data-on-set-time="formatEndTime(newDate, oldDate)"/>
+                      </ul>
+                    </div>
+                    <i class="fa" ng-class="{'fa-calendar adv-refresh-customized-off': !endTimeTypeCustomize, 'fa-list adv-refresh-customized-on': endTimeTypeCustomize}"  ng-click="changeEndTimeDisplay()"></i>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+
+              <div ng-if="(cube.segments|filter: {status: 'NEW'}).length > 0">
+                <span class="text-warning">There exists a build request of this cube, the job may be running or error. If you need a new build, please wait for its complete or discard it.</span>
+              </div>
+            </div>
+            <div ng-if="message">
+              <span class="text-warning">{{message}}</span>
+            </div>
+          </div>
+          <div class="col-md-2"></div>
         </div>
+      </div>
+      <div ng-if="!metaModel.model.partition_desc.partition_date_column" class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+          <span>No partition date column defined. If you want to rebuild the cube, please click "Build".</span>
+        </div>
+        <div class="col-md-2"></div>
+      </div>
     </div>
 
     <div class="modal-footer">
