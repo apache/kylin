@@ -40,10 +40,16 @@ function retrieveDependency() {
         source ${dir}/cached-hive-dependency.sh
         source ${dir}/cached-hbase-dependency.sh
         source ${dir}/cached-hadoop-conf-dir.sh
+        source ${dir}/cached-kafka-dependency.sh
+        source ${dir}/cached-spark-dependency.sh
+        source ${dir}/cached-flink-dependency.sh
     else
         source ${dir}/find-hive-dependency.sh
         source ${dir}/find-hbase-dependency.sh
         source ${dir}/find-hadoop-conf-dir.sh
+        source ${dir}/find-kafka-dependency.sh
+        source ${dir}/find-spark-dependency.sh
+        source ${dir}/find-flink-dependency.sh
     fi
 
     #retrive $KYLIN_EXTRA_START_OPTS
