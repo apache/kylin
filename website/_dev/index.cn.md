@@ -26,9 +26,14 @@ Gitbox 的镜像：[https://gitbox.apache.org/repos/asf?p=kylin.git ](https://gi
 在 Apache JIRA 上的 "Kylin" 项目追踪 issues（[浏览](http://issues.apache.org/jira/browse/KYLIN))。
 
 ### 路线图
-- 支持 Hadoop 3.0（纠偏编码)
-- 完全使用 Spark 的 Cube 引擎
-- 接入更多的源（MySQL，Oracle，Spark SQL 等)
+- 支持 Hadoop 3.0（纠偏编码) ： 完成
+- 完全使用 Spark 的 Cube 引擎 ： 完成
+- 接入更多的源（MySQL，Oracle，Spark SQL 等) ： 完成
+- 支持实时数据分析的 Lambda 架构 ： 完成
+- 更好的存储引擎（Druid，Kudu，Parquet，等) ： Parquet 存储正在开发中(v4.0)
+- 分布式查询执行引擎 ： 与 Parquet 存储一起进行中
+- 容器化/Kubernetes ：进行中
 - 无需构建 Cube 的即席查询 
-- 更好的存储引擎（Druid，Kudu，等)
-- 支持实时数据分析的 Lambda 架构
+
+
+

@@ -26,9 +26,11 @@ Static Code Analysis: [SonarCube dashboard](https://builds.apache.org/analysis/o
 Track issues on the "Kylin" Project on the Apache JIRA ([browse](http://issues.apache.org/jira/browse/KYLIN)).
 
 ### Roadmap
-- Hadoop 3.0 support (Erasure Coding)
-- Fully on Spark Cube engine
-- Connect more data sources (MySQL, Oracle, SparkSQL, etc)
+- Hadoop 3.0 support (Erasure Coding) : DONE
+- Fully on Spark Cube engine : DONE
+- Connect more data sources (MySQL, Oracle, SparkSQL, etc) : DONE
+- Real-time analytics with Lambda Architecture : DONE
+- Better storage (Druid, Kudu, Parquet, etc) : Parquet storage is in-progress (v4.0)
+- Distributed query execution engine : Together with Parquet storage
+- Containerlization/Kubernetes : In progress
 - Ad-hoc queries without Cubing
-- Better storage (Druid, Kudu, etc)
-- Real-time analytics with Lambda Architecture
