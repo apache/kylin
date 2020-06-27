@@ -12,9 +12,7 @@ Welcome to Apache Kylin™: Analytical Data Warehouse for Big Data
 Apache Kylin™ is an open source Distributed Analytical Data Warehouse for big data; It was designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets.
 
 This is the document for the latest released version (v3.0). Document of other versions: 
-* [v3.0-alpha document](/docs30)
 * [v2.4 document](/docs24)
-* [v2.3 document](/docs23)
 * [Archived](/archive/)
 
 Installation & Setup
