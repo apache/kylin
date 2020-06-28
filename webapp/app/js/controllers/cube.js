@@ -88,6 +88,24 @@ KylinApp.controller('CubeCtrl', function ($scope, $rootScope, AccessService, Mes
         });
     };
 
+    $scope.getOwnerString = function (cube) {
+        cube.newOwner = cube.owner;
+    };
+
+    $scope.updateOwner = function (cube) {
+      CubeService.updateOwner({cubeId: cube.name}, cube.newOwner, function () {
+        cube.owner = cube.newOwner;
+        MessageBox.successNotify('Owner updated successfully!');
+      },function(e){
+        if(e.data&& e.data.exception){
+          var message =e.data.exception;
+          var msg = !!(message) ? message : 'Failed to take action.';
+          SweetAlert.swal('Oops...', msg, 'error');
+        }else{
+          SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+        }
+      });
+    };
     $scope.getHbaseInfo = function (cube) {
         if (!cube.hbase) {
             CubeService.getHbaseInfo({cubeId: cube.name, propValue: null, action: null}, function (hbase) {

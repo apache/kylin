@@ -42,6 +42,7 @@ KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
     getCube: {method: 'GET', params: {}, isArray: false},
     getSql: {method: 'GET', params: {action: 'sql'}, isArray: false},
     updateNotifyList: {method: 'PUT', params: {propName: 'notify_list'}, isArray: false},
+    updateOwner: {method: 'PUT', params: {propName: 'owner'}, isArray: false},
     cost: {method: 'PUT', params: {action: 'cost'}, isArray: false},
     rebuildLookUp: {method: 'PUT', params: {propName: 'segs', action: 'refresh_lookup'}, isArray: false},
     rebuildCube: {method: 'PUT', params: {action: 'rebuild'}, isArray: false},

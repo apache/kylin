@@ -26,6 +26,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -580,6 +581,18 @@ public class CubeService extends BasicService implements InitializingBean {
         CubeDesc desc = cube.getDescriptor();
         desc.setNotifyList(notifyList);
         getCubeDescManager().updateCubeDesc(desc);
+    }
+
+    public CubeInstance updateCubeOwner(CubeInstance cube, String owner) throws IOException {
+        aclEvaluate.checkProjectWritePermission(cube);
+        if (Objects.equals(cube.getOwner(), owner)) {
+            // Do nothing
+            return cube;
+        }
+        cube.setOwner(owner);
+
+        CubeUpdate update = new CubeUpdate(cube.latestCopyForWrite()).setOwner(owner);
+        return getCubeManager().updateCube(update);
     }
 
     public CubeInstance rebuildLookupSnapshot(CubeInstance cube, String segmentName, String lookupTable)

@@ -22,6 +22,7 @@ KylinApp.factory('ProjectService', ['$resource', function ($resource, config) {
     listReadable: {method: 'GET', params: {action:'readable'}, isArray: true},
     save: {method: 'POST', params: {}, isArray: false},
     update: {method: 'PUT', params: {}, isArray: false},
-    delete: {method: 'DELETE', params: {}, isArray: false}
+    delete: {method: 'DELETE', params: {}, isArray: false},
+    updateOwner: {method: 'PUT', params: {propName: 'owner'}, isArray: false}
   });
 }]);
