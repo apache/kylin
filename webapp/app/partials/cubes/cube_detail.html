@@ -37,6 +37,10 @@
             ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask) && !newAccess">
             <a href="" ng-click="cube.visiblePage='notification';getNotifyListString(cube);">Notification</a>
         </li>
+        <li class="{{cube.visiblePage=='owner'? 'active':''}}"
+            ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask) && !newAccess">
+            <a href="" ng-click="cube.visiblePage='owner';getOwnerString(cube)">Owner</a>
+        </li>
         <li class="{{cube.visiblePage=='hbase'? 'active':''}}"
             ng-if="userService.hasRole('ROLE_ADMIN')  || hasPermission('cube' ,cube, permissions.ADMINISTRATION.mask) && !newAccess">
             <a href="" ng-click="cube.visiblePage='hbase';getHbaseInfo(cube)">Storage</a>
@@ -100,7 +104,20 @@
         </div>
     </div>
 
-  <div class="cube-detail" ng-show="cube.visiblePage=='hbase'">
+    <div class="cube-detail" ng-show="cube.visiblePage=='owner'">
+        <div style="margin: 15px;">
+            <h5><b>Owner:</b></h5>
+            <div class="form-group">
+                <input ng-model="cube.newOwner" class="form-control" placeholder="User List..." />
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary btn-sm" ng-click="updateOwner(cube)">Save</button>
+            </div>
+            <div class="space-4"></div>
+        </div>
+    </div>
+
+    <div class="cube-detail" ng-show="cube.visiblePage=='hbase'">
         <div style="margin: 15px; overflow: hidden;">
             <div ng-if="cube.hbase">
               <div class="hr hr8 hr-double hr-dotted"></div>

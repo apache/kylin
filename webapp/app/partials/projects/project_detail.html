@@ -28,6 +28,10 @@
         <li class="{{project.visiblePage=='config'? 'active':''}}">
             <a href="" ng-click="project.visiblePage='config';">Configuration Overwrites</a>
         </li>
+        <li class="{{project.visiblePage=='owner'? 'active':''}}"
+            ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',project, permissions.ADMINISTRATION.mask)">
+            <a href="" ng-click="project.visiblePage='owner';getOwnerString(project)">Owner</a>
+        </li>
     </ul>
 
     <div class="cube-detail" ng-if="project.visiblePage=='cubes'">
@@ -87,6 +91,23 @@
             <div class="col-xs-1"></div>
             <div class="col-xs-10">
                 <div ng-include src="'partials/common/access.html'" ng-init="entity=project;type='ProjectInstance';"></div>
+            </div>
+            <div class="col-xs-1"></div>
+        </div>
+    </div>
+
+    <div class="cube-detail" ng-show="project.visiblePage=='owner'">
+        <div class="row">
+            <div class="col-xs-1"></div>
+            <div class="col-xs-10">
+                <h5><b>Owner:</b></h5>
+                <div class="form-group">
+                    <input ng-model="project.newOwner" class="form-control" placeholder="User List..." />
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary btn-sm" ng-click="updateOwner(project)">Save</button>
+                </div>
+                <div class="space-4"></div>
             </div>
             <div class="col-xs-1"></div>
         </div>
