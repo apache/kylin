@@ -238,6 +238,18 @@ public class ProjectManager {
         }
     }
 
+    // update project itself
+    public ProjectInstance updateProjectOwner(ProjectInstance project, String newOwner) throws IOException {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
+            project.setOwner(newOwner);
+
+            if (project.getUuid() == null)
+                project.updateRandomUuid();
+
+            return save(project);
+        }
+    }
+
     public void removeProjectLocal(String proj) {
         try (AutoLock lock = prjMapLock.lockForWrite()) {
             projectMap.removeLocal(proj);
