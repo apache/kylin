@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -74,6 +75,10 @@ public class ModelController extends BasicController {
     @Autowired
     @Qualifier("projectService")
     private ProjectService projectService;
+
+    @Autowired
+    @Qualifier("validateUtil")
+    private ValidateUtil validateUtil;
 
     @RequestMapping(value = "/validate/{modelName}", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
@@ -221,6 +226,56 @@ public class ModelController extends BasicController {
 
         modelRequest.setUuid(newModelDesc.getUuid());
         modelRequest.setSuccessful(true);
+        return modelRequest;
+    }
+
+
+    /**
+     * Update model owner
+     *
+     * @param modelName
+     * @param owner
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{modelName}/owner", method = { RequestMethod.PUT }, produces = {
+        "application/json" })
+    @ResponseBody
+    public ModelRequest updateModelOwner(@PathVariable String modelName, @RequestBody String owner)
+        throws JsonProcessingException {
+        DataModelDesc modelDesc = null;
+        try {
+            validateUtil.checkIdentifiersExists(owner, true);
+            DataModelDesc desc = modelService.getDataModelManager().getDataModelDesc(modelName);
+            if (null == desc) {
+                throw new NotFoundException("Data Model with name " + modelName + " not found..");
+            }
+
+            if (Objects.equals(desc.getOwner(), owner)) {
+                modelDesc = desc;
+            } else {
+                DataModelDesc newModelDesc = DataModelDesc.getCopyOf(desc);
+                newModelDesc.setOwner(owner);
+                modelDesc = modelService.updateModelAndDesc(newModelDesc.getProject(), newModelDesc);
+            }
+        } catch (AccessDeniedException accessDeniedException) {
+            throw new ForbiddenException("You don't have right to update this model's owner.");
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+
+        ModelRequest modelRequest = new ModelRequest();
+        modelRequest.setProject(modelDesc.getProject());
+        modelRequest.setModelName(modelName);
+        modelRequest.setUuid(modelDesc.getUuid());
+        if (modelDesc.getError().isEmpty()) {
+            modelRequest.setSuccessful(true);
+        } else {
+            logger.warn("Model " + modelDesc.getName() + " fail to update because " + modelDesc.getError());
+            updateRequest(modelRequest, false, omitMessage(modelDesc.getError()));
+        }
+        String descData = JsonUtil.writeValueAsIndentString(modelDesc);
+        modelRequest.setModelDescData(descData);
         return modelRequest;
     }
 
