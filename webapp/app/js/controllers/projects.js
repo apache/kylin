@@ -91,10 +91,29 @@ KylinApp
                 }
             });
         }
-        
+
         $scope.getMapLength = function(map) {
-        	return Object.keys(map).length;
+        	  return Object.keys(map).length;
         }
+
+        $scope.getOwnerString = function (project) {
+            project.newOwner = project.owner;
+        };
+
+        $scope.updateOwner = function (project) {
+            ProjectService.updateOwner({projecId: project.name}, project.newOwner, function () {
+                project.owner = project.newOwner;
+                MessageBox.successNotify('Owner updated successfully!');
+            },function(e){
+                if(e.data&& e.data.exception){
+                    var message =e.data.exception;
+                    var msg = !!(message) ? message : 'Failed to take action.';
+                    SweetAlert.swal('Oops...', msg, 'error');
+                } else{
+                    SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                }
+            });
+        };
     }
 );
 

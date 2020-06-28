@@ -129,6 +129,10 @@ public class CubeController extends BasicController {
     private QueryService queryService;
 
     @Autowired
+    @Qualifier("validateUtil")
+    private ValidateUtil validateUtil;
+
+    @Autowired
     private AclEvaluate aclEvaluate;
 
     @RequestMapping(value = "{cubeName}/validate", method = RequestMethod.GET, produces = { "application/json" })
@@ -255,6 +259,30 @@ public class CubeController extends BasicController {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         try {
             cubeService.updateCubeNotifyList(cube, notifyList);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
+    /**
+     * Update cube owner
+     *
+     * @param cubeName
+     * @param owner
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/owner", method = { RequestMethod.PUT }, produces = {
+        "application/json" })
+    @ResponseBody
+    public CubeInstance updateCubeOwner(@PathVariable String cubeName, @RequestBody String owner) {
+        checkCubeExists(cubeName);
+        try {
+            validateUtil.checkIdentifiersExists(owner, true);
+            CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+            return cubeService.updateCubeOwner(cube, owner);
+        } catch (AccessDeniedException accessDeniedException) {
+            throw new ForbiddenException("You don't have right to update this cube's owner.");
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
@@ -1044,5 +1072,9 @@ public class CubeController extends BasicController {
 
     public void setJobService(JobService jobService) {
         this.jobService = jobService;
+    }
+
+    public void setValidateUtil(ValidateUtil validateUtil) {
+        this.validateUtil = validateUtil;
     }
 }
