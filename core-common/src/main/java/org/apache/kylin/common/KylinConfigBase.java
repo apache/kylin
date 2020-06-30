@@ -1739,7 +1739,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getLivyRestApiBacktick() {
-        return getOptional("kylin.engine.livy.backtick.quote", "");
+        return getOptional("kylin.engine.livy.backtick.quote", "\\\\`");
     }
 
     public String getLivyUrl() {
