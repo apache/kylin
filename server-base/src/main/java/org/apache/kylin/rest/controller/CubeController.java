@@ -595,6 +595,22 @@ public class CubeController extends BasicController {
 
     }
 
+    @RequestMapping(value = "/{cubeName}/fast", method = {RequestMethod.DELETE})
+    @ResponseBody
+    public void deleteCubeFast(@PathVariable String cubeName) {
+        checkCubeExists(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+
+        //drop Cube
+        try {
+            cubeService.deleteCubeFast(cube);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to delete cube. " + " Caused by: " + e.getMessage(), e);
+        }
+
+    }
+
     /**
      * save cubeDesc
      *
