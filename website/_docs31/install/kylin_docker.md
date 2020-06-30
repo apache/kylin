@@ -11,19 +11,17 @@ In order to allow users to easily try Kylin, and to facilitate developers to ver
 - Jdk 1.8
 - Hadoop 2.7.0
 - Hive 1.2.1
-- Hbase 1.1.2
+- Hbase 1.1.2 (with Zookeeper)
 - Spark 2.3.1
-- Zookeeper 3.4.6
 - Kafka 1.1.1
 - MySQL 5.1.73
-- Maven 3.6.1
 
 ## Quickly try Kylin
 
 We have pushed the Kylin image for the user to the docker hub. Users do not need to build the image locally, just execute the following command to pull the image from the docker hub: 
 
 {% highlight Groff markup %}
-docker pull apachekylin/apache-kylin-standalone:3.0.1
+docker pull apachekylin/apache-kylin-standalone:3.1.0
 {% endhighlight %}
 
 After the pull is successful, execute the following command to start the container: 
@@ -37,7 +35,7 @@ docker run -d \
 -p 8032:8032 \
 -p 8042:8042 \
 -p 16010:16010 \
-apachekylin/apache-kylin-standalone:3.0.1
+apachekylin/apache-kylin-standalone:3.1.0
 {% endhighlight %}
 
 The following services are automatically started when the container starts: 

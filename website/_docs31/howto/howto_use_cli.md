@@ -103,42 +103,6 @@ All supported parameters are listed below:
 | project <project>                 | (Required) Specify the target project for the new cubes.                                                                                                                                           |
 | srcPath <srcPath>                 | (Required) Specify the path to the extracted Cube metadata zip file.                                                                                                                               |
 
-## CubeMigrationCLI.java
-
-### Function
-CubeMigrationCLI.java can migrate a cube from a Kylin environment to another, for example, promote a well tested cube from the testing env to production env. Note that the different Kylin environments should share the same Hadoop cluster, including HDFS, HBase and HIVE. 
-
-Please note, this tool will migrate the Kylin metadata, rename the Kylin HDFS folders and update HBase table's metadata. It doesn't migrate data across Hadoop clusters. 
-
-### How to use
-
-
-{% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI <srcKylinConfigUri> <dstKylinConfigUri> <cubeName> <projectName> <copyAclOrNot> <purgeOrNot> <overwriteIfExists> <realExecute> <migrateSegmentOrNot>
-{% endhighlight %}
-For example: 
-{% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI kylin-qa:7070 kylin-prod:7070 kylin_sales_cube learn_kylin true false false true false
-{% endhighlight %}
-After the command is successfully executed, please reload Kylin metadata, the cube you want to migrate will appear in the target environment.
-
-All supported parameters are listed below:
-　If the data model of the cube you want to migrate does not exist in the target environment, this tool will also migrate the model.
-　If you set `overwriteIfExists` to `false`, and the cube exists in the target environment, the tool will stop to proceed.
-　If you set `migrateSegmentOrNot` to `true`, please make sure the cube has `READY` segments, they will be migrated to target environment together.
-
-| Parameter           | Description                                                                                |
-| ------------------- | :----------------------------------------------------------------------------------------- |
-| srcKylinConfigUri   | The URL of the source environment's Kylin configuration. It can be `host:7070`, or an absolute file path to the `kylin.properties`.                                                      |
-| dstKylinConfigUri   | The URL of the target environment's Kylin configuration.                                                     |
-| cubeName            | the name of cube to be migrated.                                        |
-| projectName         | The target project in the target environment. If it doesn't exist, create it before run this command.                          |
-| copyAclOrNot        | `true` or `false`: whether copy the cube ACL to target environment.                                |
-| purgeOrNot          | `true` or `false`: whether to purge the cube from source environment after it be migrated to target environment.                 |
-| overwriteIfExists   | `true` or `false`: whether to overwrite if it already exists in the target environment.                             |
-| realExecute         | `true` or `false`: If false, just print the operations to take (dry-run mode); if true, do the real migration.               |
-| migrateSegmentOrNot | (Optional) `true` or `false`: whether copy segment info to the target environment. Default true.   |
-
 ## CubeMigrationCheckCLI.java
 
 ### Function
