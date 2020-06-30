@@ -363,6 +363,15 @@ public class CubeService extends BasicService implements InitializingBean {
         cleanSegmentStorage(cube, toRemoveSegs);
     }
 
+    public void deleteCubeFast(CubeInstance cube) throws IOException {
+        aclEvaluate.checkProjectWritePermission(cube);
+        // user make sure no job running and no hybrid cube, so no check jobs status and hybrid definition
+        int cubeNum = getCubeManager().getCubesByDesc(cube.getDescriptor().getName()).size();
+        getCubeManager().dropCube(cube.getName(), cubeNum == 1);//only delete cube desc when no other cube is using it
+
+    }
+
+
     /**
      * Stop all jobs belonging to this cube and clean out all segments
      *
