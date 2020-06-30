@@ -131,7 +131,11 @@ public class Broadcaster implements Closeable {
                         for (final String node : restServers) {
                             if (!(toWhere.equals("all") || toWhere.equals(node)))
                                 continue;
-                            
+
+                            //exclude itself
+                            if (node.equals(config.getServerRestAddress())) {
+                                continue;
+                            }
                             announceThreadPool.execute(new Runnable() {
                                 @Override
                                 public void run() {
