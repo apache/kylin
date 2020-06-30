@@ -41,6 +41,7 @@
   - tutorial/web
   - tutorial/create_cube
   - tutorial/cube_build_job
+  - tutorial/cube_migration
   - tutorial/sql_reference
   - tutorial/project_level_acl
   - tutorial/cube_spark
