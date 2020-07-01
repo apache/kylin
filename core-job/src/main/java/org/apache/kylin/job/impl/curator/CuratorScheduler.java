@@ -18,7 +18,6 @@
 
 package org.apache.kylin.job.impl.curator;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.concurrent.Executors;
@@ -27,8 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.x.discovery.ServiceInstance;
-import org.apache.curator.x.discovery.details.InstanceSerializer;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.ServerMode;
 import org.apache.kylin.common.util.ZKUtil;
@@ -40,9 +37,6 @@ import org.apache.kylin.job.lock.JobLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 
 public class CuratorScheduler implements Scheduler<AbstractExecutable> {
@@ -154,35 +148,6 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
 
     public static CuratorLeaderSelector getLeaderSelector() {
         return jobClient;
-    }
-
-    static class JsonInstanceSerializer<T> implements InstanceSerializer<T> {
-        private final ObjectMapper mapper;
-        private final Class<T> payloadClass;
-        private final JavaType type;
-
-        JsonInstanceSerializer(Class<T> payloadClass) {
-            this.payloadClass = payloadClass;
-            this.mapper = new ObjectMapper();
-
-            // to bypass https://issues.apache.org/jira/browse/CURATOR-394
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-            this.type = this.mapper.getTypeFactory().constructType(ServiceInstance.class);
-        }
-
-        public ServiceInstance<T> deserialize(byte[] bytes) throws Exception {
-            ServiceInstance rawServiceInstance = this.mapper.readValue(bytes, this.type);
-            this.payloadClass.cast(rawServiceInstance.getPayload());
-            return rawServiceInstance;
-        }
-
-        public byte[] serialize(ServiceInstance<T> instance) throws Exception {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            mapper.convertValue(instance.getPayload(), payloadClass);
-            this.mapper.writeValue(out, instance);
-            return out.toByteArray();
-        }
     }
 
 }

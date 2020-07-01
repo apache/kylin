@@ -29,7 +29,6 @@ import org.apache.curator.utils.CloseableUtils;
 import org.apache.curator.x.discovery.ServiceDiscovery;
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
-import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.ZKUtil;
 import org.junit.After;
@@ -77,7 +76,8 @@ public class KylinServerDiscoveryTest extends LocalFileMetadataTestCase {
         CuratorFramework curatorClient = null;
         try {
             String servicePath = KylinServerDiscovery.SERVICE_PATH;
-            final JsonInstanceSerializer<LinkedHashMap> serializer = new JsonInstanceSerializer<>(LinkedHashMap.class);
+            final KylinServerDiscovery.JsonInstanceSerializer<LinkedHashMap> serializer =
+                    new KylinServerDiscovery.JsonInstanceSerializer<>(LinkedHashMap.class);
             curatorClient = ZKUtil.newZookeeperClient(zkString, new ExponentialBackoffRetry(3000, 3));
             serviceDiscovery = ServiceDiscoveryBuilder.builder(LinkedHashMap.class).client(curatorClient)
                     .basePath(servicePath).serializer(serializer).build();

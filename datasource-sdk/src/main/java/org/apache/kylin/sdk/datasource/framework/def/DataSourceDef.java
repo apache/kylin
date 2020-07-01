@@ -169,6 +169,10 @@ public class DataSourceDef {
                 }
             }
         }
+
+        for (String k : propertyDefMap.keySet()) {
+            logger.debug("Check {}, {} : {}", k, propertyDefMap.get(k).getName(), propertyDefMap.get(k).getValue());
+        }
     }
 
     // ===================================================================
