@@ -16,6 +16,7 @@
   docs:
   - index
   - gettingstarted/faq
+  - gettingstarted/kylin-quickstart
 
 - title: 安装
   docs:
@@ -70,4 +71,4 @@
   - howto/howto_backup_metadata
   - howto/howto_cleanup_storage
   - howto/howto_use_cli
-
+  - howto/howto_use_hive_mr_dict

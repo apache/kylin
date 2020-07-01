@@ -24,6 +24,7 @@
   - gettingstarted/faq
   - gettingstarted/events
   - gettingstarted/best_practices
+  - gettingstarted/kylin-quickstart
 
 - title: Installation
   docs:
@@ -55,6 +56,7 @@
   - tutorial/setup_jdbc_datasource
   - tutorial/hybrid
   - tutorial/mysql_metastore
+  - tutorial/lambda_mode_and_timezone_realtime_olap
 
 - title: Integration
   docs:
@@ -88,3 +90,7 @@
   - howto/howto_enable_zookeeper_acl
   - howto/howto_use_health_check_cli
   - howto/howto_use_hive_mr_dict
+
+- title: Security
+  docs:
+    - security
