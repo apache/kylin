@@ -28,14 +28,22 @@ The *job* mode means that the service is only used for job scheduling, not for q
 
 Since v2.0, Kylin supports multiple job engines running together, which is more extensible, available and reliable than the default job scheduler.
 
-To enable the distributed job scheduler, you need to set or update the configs in the `kylin.properties`:
+To enable the distributed job scheduler, you need to set or update the configs in the `kylin.properties`, there are two configuration options:
+
+#### 1 Use `distributedscheduler`
 
 ```properties
 kylin.job.scheduler.default=2
 kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock
 ```
 
-Please add all job servers and query servers to the `kylin.server.cluster-servers`.
+#### 2 Use `CuratorScheculer`（Since v3.0.0-alpha）
+
+```properties
+kylin.job.scheduler.default=100
+```
+
+Please add all job servers and query servers to the `kylin.server.cluster-servers` after finished configuring scheduler.
 
 
 
