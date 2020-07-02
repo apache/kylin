@@ -404,6 +404,14 @@ public class CnMessage extends Message {
         return "找不到诊断包, 路径: %s";
     }
 
+    public String getDIAG_PROJECT_NOT_FOUND() {
+        return "找不到项目: %s.";
+    }
+
+    public String getDIAG_JOBID_NOT_FOUND() {
+        return "找不到任务ID: %s.";
+    }
+
     // Encoding
     public String getVALID_ENCODING_NOT_AVAILABLE() {
         return "无法为数据类型: %s 提供合法的编码";
