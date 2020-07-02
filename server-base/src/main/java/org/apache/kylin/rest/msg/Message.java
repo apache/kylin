@@ -417,6 +417,14 @@ public class Message {
         return "Diagnosis package not found in directory: %s.";
     }
 
+    public String getDIAG_PROJECT_NOT_FOUND() {
+        return "Can not find project: %s.";
+    }
+
+    public String getDIAG_JOBID_NOT_FOUND() {
+        return "Can not find job id: %s.";
+    }
+
     // Encoding
     public String getVALID_ENCODING_NOT_AVAILABLE() {
         return "Can not provide valid encodings for datatype: %s.";
