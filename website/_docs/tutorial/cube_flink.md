@@ -1,8 +1,8 @@
 ---
-layout: docs30
+layout: docs
 title:  Build Cube with Flink
 categories: tutorial
-permalink: /docs30/tutorial/cube_flink.html
+permalink: /docs/tutorial/cube_flink.html
 ---
 Kylin v3.1 introduces the Flink cube engine, it uses Apache Flink to replace MapReduce in the build cube step; You can check [KYLIN-3758](https://issues.apache.org/jira/browse/KYLIN-3758). The current document uses the sample cube to demo how to try the new engine.
 
@@ -122,5 +122,5 @@ You can copy the cmd to execute manually in shell and then tunning the parameter
 
 ## Go further
 
-If you're a Kylin administrator but new to Flink, suggest you go through [Flink documents](https://ci.apache.org/projects/flink/flink-docs30-release-1.9/), and don't forget to update the configurations accordingly. 
+If you're a Kylin administrator but new to Flink, suggest you go through [Flink documents](https://ci.apache.org/projects/flink/flink-docs-release-1.9/), and don't forget to update the configurations accordingly. 
 If you have any question, comment, or bug fix, welcome to discuss in dev@kylin.apache.org.

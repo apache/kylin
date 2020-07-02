@@ -23,14 +23,16 @@ __Conferences__
 
 __Meetup__
 
+* [Apache Kylin Meetup on Line](https://mp.weixin.qq.com/s/KOCZNhInrJNDLXp5nD9V2w), China; 7:00 PM - 9:00 PM, Saturday, 2020-03-14
+* [Apache Kylin Meetup @Beijing](https://www.huodongxing.com/event/2516174942311), China; 1:00PM - 5:00PM, Saturday, 2019-11-16
 * [Apache Kylin Meetup @Berlin](https://www.meetup.com/Apache-Kylin-Meetup-Berlin/events/264945114) ([Slides](https://www.slideshare.net/ssuser931288/presentations)), Berlin, Germany; 7:00PM - 8:30PM, Thursday, 2019-10-24
-* [Apache Kylin Meetup @Shenzhen](https://www.huodongxing.com/event/3506680147611), China; 12:30PM - 17:00PM, Saturday, 2019-09-07
+* [Apache Kylin Meetup @Shenzhen](https://www.huodongxing.com/event/3506680147611), China; 12:30AM - 5:00PM, Saturday, 2019-09-07
 * [Apache Kylin Meetup @California](https://www.meetup.com/Apache-Kylin/events/263433976), San Jose, US; 6:30 PM - 8:30 PM, Wednesday, 2019-08-07
 * [Apache Kylin Meetup @Chengdu](https://www.huodongxing.com/event/4489409598500), China; 1:00 PM - 5:00 PM, Saturday, 2019-05-25
 * [Apache Kylin Meetup @Beijing](https://www.huodongxing.com/event/7484371439700), China; 1:00 PM - 5:30 PM, Saturday, 2019-04-13
 * [Apache Kylin Meetup @Shanghai](http://www.huodongxing.com/event/4476570217900) ([Slides](https://kyligence.io/zh/resource/case-study-zh/)), China; 1:00 PM - 4:30 PM, Saturday, 2019-02-23 
 * [Apache Kylin for Extreme OLAP and Big Data @eBay South Campus](https://www.eventbrite.com/e/thursday-nov-29-meetup-apache-kylin-for-extreme-olap-and-big-data-tickets-52275347973?aff=estw), Sanjose, CA, US; 6:30 PM - 8:30 PM, Thursday, 2018-11-29 
-* [Apache Kylin Meetup @Hangzhou](http://www.huodongxing.com/event/7461326621900), China; 1:30PM - 17:00PM, Saturday, 2018-10-26
+* [Apache Kylin Meetup @Hangzhou](http://www.huodongxing.com/event/7461326621900), China; 1:30PM - 5:00PM, Saturday, 2018-10-26
 * [CDAP in Cloud, Extreme OLAP w Apache Kylin, Twitter Reviews & DataStax](https://www.meetup.com/BigDataApps/events/253429041/) @ Google Cloud, US; 6:00PM to 8:00PM, 2018-8-29
 * [Apache Kylin Meetup @Beijing Meituan&Dianping](http://www.huodongxing.com/event/7452131278400), China; 1:30PM - 17:00PM, Saturday, 2018-8-11
 * [Apache Kylin Meetup @Shanghai Bestpay](http://www.huodongxing.com/event/2449364807100?td=4222685755750), China; 1:30PM - 17:00PM, Saturday, 2018-7-28

@@ -1,12 +1,12 @@
 ---
-layout: docs
+layout: docs30
 title:  Real-time OLAP
 categories: tutorial
-permalink: /docs/tutorial/realtime_olap.html
+permalink: /docs30/tutorial/realtime_olap.html
 ---
 
 Kylin v3.0.0 releases the brand new real-time OLAP feature, by the power of new added streaming receiver cluster, Kylin can query streaming data with *sub-second latency*. You can check [this tech blog](/blog/2019/04/12/rt-streaming-design/) for the overall design and core concept. 
-If you prefer to ingest kafka event in micro-batch way(with about 10-minutes level latency), you may consider using older [Near RT streaming](/docs/tutorial/cube_streaming.html). Since these two feature are all for kafka data source, don't mix them.
+If you prefer to ingest kafka event in micro-batch way(with about 10-minutes level latency), you may consider using older [Near RT streaming](/docs30/tutorial/cube_streaming.html). Since these two feature are all for kafka data source, don't mix them.
 
 This doc is a step by step tutorial, illustrating how to create and build a sample streaming cube.
 In this tutorial, we will use Hortonworks HDP-2.4.0.0.169 Sandbox VM + Kafka v1.0.2(Scala 2.11) as the environment.
@@ -17,9 +17,9 @@ In this tutorial, we will use Hortonworks HDP-2.4.0.0.169 Sandbox VM + Kafka v1.
 4. Start consumption
 5. Monitor receiver
 
-The configuration can be found at [Real-time OLAP configuration](http://kylin.apache.org/docs/install/configuration.html#realtime-olap).
+The configuration can be found at [Real-time OLAP configuration](http://kylin.apache.org/docs30/install/configuration.html#realtime-olap).
 The detail can be found at [Deep Dive into Real-time OLAP](http://kylin.apache.org/blog/2019/07/01/deep-dive-real-time-olap/).
-If you want to configure timezone for derived time column or learn how to update streaming cube's segment, please check this [Lambda Mode and Timezone](/docs/tutorial/lambda_mode_and_timezone_realtime_olap.html).
+If you want to configure timezone for derived time column or learn how to update streaming cube's segment, please check this [Lambda Mode and Timezone](/docs30/tutorial/lambda_mode_and_timezone_realtime_olap.html).
 
 ----
 

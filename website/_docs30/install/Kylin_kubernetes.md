@@ -1,8 +1,8 @@
 ---
-layout: docs
+layout: docs30
 title:  "Deploy Kylin on Kubernetes"
 categories: install
-permalink: /docs/install/kylin_on_kubernetes.html
+permalink: /docs30/install/kylin_on_kubernetes.html
 since: v3.0.2
 ---
 

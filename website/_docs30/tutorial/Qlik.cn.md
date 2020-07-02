@@ -10,7 +10,7 @@ Qlik Sense 是新一代自助式数据可视化工具。它是一款完整的商
 
 ### 安装 Kylin ODBC 驱动程序
 
-有关安装信息，参考页面 [Kylin ODBC 驱动](http://kylin.apache.org/cn/docs/tutorial/odbc.html).
+有关安装信息，参考页面 [Kylin ODBC 驱动](http://kylin.apache.org/cn/docs30/tutorial/odbc.html).
 
 ### 安装 Qlik Sense
 

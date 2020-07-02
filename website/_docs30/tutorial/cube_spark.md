@@ -137,7 +137,7 @@ kylin.engine.livy-conf.livy-enabled=true
 kylin.engine.livy-conf.livy-url=http://ip:8998
 kylin.engine.livy-conf.livy-key.file=hdfs:///path/kylin-job-3.0.0-SNAPSHOT.jar
 kylin.engine.livy-conf.livy-arr.jars=hdfs:///path/hbase-client-1.2.0-{$env.version}.jar,hdfs:///path/hbase-common-1.2.0-{$env.version}.jar,hdfs:///path/hbase-hadoop-compat-1.2.0-{$env.version}.jar,hdfs:///path/hbase-hadoop2-compat-1.2.0-{$env.version}.jar,hdfs:///path/hbase-server-1.2.0-{$env.version}.jar,hdfs:///path/htrace-core-3.2.0-incubating.jar,hdfs:///path/metrics-core-2.2.0.jar  
-{% endhighlight %}  
+{% endhighlight %}
 It's worth noting that there shouldn't be spaces between the paths of two jars. 
 
 
@@ -150,7 +150,6 @@ kylin.engine.spark-fact-distinct=true
 kylin.engine.spark-dimension-dictionary=true 
 kylin.engine.spark-udc-dictionary=true
 {% endhighlight %}
-
 
 ## Troubleshooting
 
@@ -197,6 +196,6 @@ The workaround is: add `hbase-hadoop2-compat-*.jar` and `hbase-hadoop-compat-*.j
 
 ## Go further
 
-If you're a Kylin administrator but new to Spark, suggest you go through [Spark documents](https://spark.apache.org/docs/2.1.0/), and don't forget to update the configurations accordingly. You can enable Spark [Dynamic Resource Allocation](https://spark.apache.org/docs/2.1.0/job-scheduling.html#dynamic-resource-allocation) so that it can auto scale/shrink for different work load. Spark's performance relies on Cluster's memory and CPU resource, while Kylin's Cube build is a heavy task when having a complex data model and a huge dataset to build at one time. If your cluster resource couldn't fulfill, errors like "OutOfMemorry" will be thrown in Spark executors, so please use it properly. For Cube which has UHC dimension, many combinations (e.g, a full cube with more than 12 dimensions), or memory hungry measures (Count Distinct, Top-N), suggest to use the MapReduce engine. If your Cube model is simple, all measures are SUM/MIN/MAX/COUNT, source data is small to medium scale, Spark engine would be a good choice. Besides, Streaming build isn't supported in this engine so far (KYLIN-2484).
+If you're a Kylin administrator but new to Spark, suggest you go through [Spark documents](https://spark.apache.org/docs30/2.1.0/), and don't forget to update the configurations accordingly. You can enable Spark [Dynamic Resource Allocation](https://spark.apache.org/docs30/2.1.0/job-scheduling.html#dynamic-resource-allocation) so that it can auto scale/shrink for different work load. Spark's performance relies on Cluster's memory and CPU resource, while Kylin's Cube build is a heavy task when having a complex data model and a huge dataset to build at one time. If your cluster resource couldn't fulfill, errors like "OutOfMemorry" will be thrown in Spark executors, so please use it properly. For Cube which has UHC dimension, many combinations (e.g, a full cube with more than 12 dimensions), or memory hungry measures (Count Distinct, Top-N), suggest to use the MapReduce engine. If your Cube model is simple, all measures are SUM/MIN/MAX/COUNT, source data is small to medium scale, Spark engine would be a good choice. Besides, Streaming build isn't supported in this engine so far (KYLIN-2484).
 
 If you have any question, comment, or bug fix, welcome to discuss in dev@kylin.apache.org.

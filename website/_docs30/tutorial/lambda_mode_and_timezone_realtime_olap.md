@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Lambda mode and Timezone in Real-time OLAP
 categories: tutorial
 permalink: /docs30/tutorial/lambda_mode_and_timezone_realtime_olap.html
@@ -7,7 +7,7 @@ permalink: /docs30/tutorial/lambda_mode_and_timezone_realtime_olap.html
 
 Kylin v3.0.0 will release the real-time OLAP feature, by the power of newly added streaming reciever cluster, Kylin can query streaming data with sub-second latency. You can check [this tech blog](/blog/2019/04/12/rt-streaming-design/) for the overall design and core concept. 
 
-If you want to find a step by step tutorial, please check this [this tech blog](/docs/tutorial/realtime_olap.html).
+If you want to find a step by step tutorial, please check this [this tech blog](/docs30/tutorial/realtime_olap.html).
 In this article, we will introduce how to update segment and set timezone for derived time column in realtime OLAP cube. 
 
 # Background

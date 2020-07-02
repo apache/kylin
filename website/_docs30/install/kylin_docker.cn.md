@@ -6,12 +6,12 @@ permalink: /cn/docs30/install/kylin_docker.html
 since: v3.0.0
 ---
 
-为了让用户方便的试用Kylin，以及方便开发者在修改了源码后进行验证及调试。我们提供了 Kylin 的 docker 镜像。该镜像中，Kylin 依赖的各个服务均已正确的安装及部署，包括：
+为了让用户方便的试用 Kylin，以及方便开发者在修改了源码后进行验证及调试。我们提供了 Kylin 的 docker 镜像。该镜像中，Kylin 依赖的各个服务均已正确的安装及部署，包括：
 
-- JDK 1.8
+- Jdk 1.8
 - Hadoop 2.7.0
 - Hive 1.2.1
-- HBase 1.1.2 (with Zookeeper)
+- Hbase 1.1.2 (with Zookeeper)
 - Spark 2.3.1
 - Kafka 1.1.1
 - MySQL 5.1.73
@@ -61,8 +61,8 @@ apachekylin/apache-kylin-standalone:3.1.0
 
 为容器设置资源方法请参考：
 
-- Mac 用户：<https://docs.docker.com/docker-for-mac/#advanced>
-- Linux 用户：<https://docs.docker.com/config/containers/resource_constraints/#memory>
+- Mac 用户：<https://docs30.docker.com/docker-for-mac/#advanced>
+- Linux 用户：<https://docs30.docker.com/config/containers/resource_constraints/#memory>
 
 ---
 

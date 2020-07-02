@@ -1,7 +1,7 @@
 ---
-layout: docs
+layout: docs30
 title:  Security Issues
-categories: docs
+categories: docs30
 permalink: /docs30/security.html
 ---
 

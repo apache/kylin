@@ -1,7 +1,7 @@
 ---
 layout: docs30-cn
 title: 概述
-categories: docs
+categories: docs30
 permalink: /cn/docs30/index.html
 ---
 
@@ -12,10 +12,7 @@ permalink: /cn/docs30/index.html
 Apache Kylin™是一个开源的、分布式的分析型数据仓库，提供 Hadoop 之上的 SQL 查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由eBay Inc.开发并贡献至开源社区。
 
 查看其它版本文档: 
-* [v3.0 document](/docs)
-* [v3.0-alpha document](/docs30)
-* [v2.4 document](/cn/docs24/)
-* [v2.3 document](/cn/docs23/)
+* [v2.4 document](/cn/docs3024/)
 * [归档](/archive/)
 
 安装
@@ -58,13 +55,14 @@ Apache Kylin™是一个开源的、分布式的分析型数据仓库，提供 H
 9. [Qlik Sense 集成](tutorial/Qlik.html)
 10. [Apache Superset](tutorial/superset.html)
 11. [Redash](/blog/2018/05/08/redash-kylin-plugin-strikingly/)
+12. [Davinci](/cn_blog/2019/11/29/Davinci-Kylin-Insight/)
 
 
 帮助
 ------------  
-1. [备份 Kylin 元数据](howto/howto_backup_metadata.html)
+1. [备份元数据](howto/howto_backup_metadata.html)
 2. [清理存储](howto/howto_cleanup_storage.html)
-
+3. [版本升级](howto/howto_upgrade.html)
 
 
 

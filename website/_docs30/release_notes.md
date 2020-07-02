@@ -182,9 +182,44 @@ __Bug Fix__
 * [KYLIN-4598] - Missing dependency when run kylin.sh org.apache.kylin.*
 
 
+## v3.0.2 - 2020-05-19
+_Tag:_ [kylin-3.0.2](https://github.com/apache/kylin/tree/kylin-3.0.2)
+This is a bugfix release after 3.0.1, with 6 enhancements and 19 bug fixes.
+
+__Improvement__
+
+* [KYLIN-3628] - Query with lookup table always use latest snapshot
+* [KYLIN-4132] - Kylin needn't use "org.apache.directory.api.util.Strings" to import api-util.jar
+* [KYLIN-4388] - Refine the Dockerfile
+* [KYLIN-4390] - Update tomcat to 7.0.100
+* [KYLIN-4400] - Use beeline as hive client in system-cube.sh
+* [KYLIN-4437] - Should replace deprecated "mapred.job.name"
+
+__Bug Fix__
+
+* [KYLIN-4119] - The admin of project can't operate the action of Hybrids
+* [KYLIN-4206] - Build kylin on EMR 5.23. The kylin version is 2.6.4. When building the cube, the hive table cannot be found
+* [KYLIN-4340] - Fix bug of get value of isSparkFactDistinctEnable for cube not correct
+* [KYLIN-4353] - Realtime Segment is not closed in expected duration
+* [KYLIN-4354] - Prune segment not using given filter when using jdbc preparestatement
+* [KYLIN-4370] - Spark job failing with JDBC source on 8th step with error : org.apache.kylin.engine.spark.SparkCubingByLayer. Root cause: Table or view not found: `default`.`kylin_intermediate table'
+* [KYLIN-4372] - Docker entrypoint delete file too later cause ZK started by HBase crash
+* [KYLIN-4379] - Calculate column cardinality cannot use kylin config overwrite cause job failed
+* [KYLIN-4383] - Kylin Integrated Issue with Amazon EMR and AWS Glue in HiveMetaStoreClientFactory.java
+* [KYLIN-4385] - KYLIN system cube failing to update table when run on EMR with S3 as storage and EMRFS
+* [KYLIN-4396] - File Descriptor Leakage in MR Build Engine
+* [KYLIN-4397] - Use newLinkedHashMap in AssignmentUtil.java
+* [KYLIN-4405] - Internal exception when trying to build cube whose modal has null PartitionDesc
+* [KYLIN-4425] - Refactor Diagnosis Tool
+* [KYLIN-4426] - Refine CliCommandExecutor
+* [KYLIN-4433] - When uhc step is turned on, Build Dimension Dictionary job cannot get correct configuration
+* [KYLIN-4438] - Null password may cause RuntimeException when starting up
+* [KYLIN-4470] - The user cannot log in kylin normally after being assigned to a group
+* [KYLIN-4481] - Project-level ACL lookups not working for non-admin SAML-federated users
+
 ## v3.0.1 - 2020-02-20
 _Tag:_ [kylin-3.0.1](https://github.com/apache/kylin/tree/kylin-3.0.1)
-This is a bugfix release after 3.0.1, with 10 enhancements and 14 bug fixes.
+This is a bugfix release after 3.0.0, with 10 enhancements and 14 bug fixes.
 
 __Improvement__
 
@@ -470,6 +505,36 @@ __Bug Fix__
 * [KYLIN-3922] - Fail to update coprocessor when run DeployCoprocessorCLI
 * [KYLIN-3923] - UT GeneralColumnDataTest fail
 
+## v2.6.6 - 2020-05-19
+_Tag:_ [kylin-2.6.6](https://github.com/apache/kylin/tree/kylin-2.6.6)
+This is a bugfix release after 2.6.5, with 6 enhancements and 14 bug fixes.
+
+__Improvement__
+
+* [KYLIN-3628] - Query with lookup table always use latest snapshot
+* [KYLIN-4132] - Kylin needn't use "org.apache.directory.api.util.Strings" to import api-util.jar
+* [KYLIN-4160] - Auto redirect to host:port/kylin when user only enter host:port in broswer
+* [KYLIN-4314] - Support union in intersect_count() function
+* [KYLIN-4390] - Update tomcat to 7.0.100
+* [KYLIN-4400] - Use beeline as hive client in system-cube.sh
+
+__Bug Fix__
+
+* [KYLIN-4072] - CDH 6.x find-hbase-dependency.sh return with "base-common lib not found"
+* [KYLIN-4119] - The admin of project can't operate the action of Hybrids
+* [KYLIN-4206] - Build kylin on EMR 5.23. The kylin version is 2.6.4. When building the cube, the hive table cannot be found
+* [KYLIN-4245] - SqlConverter returns wrong syntax SQL when SqlParser fails for JDBC source
+* [KYLIN-4354] - Prune segment not using given filter when using jdbc preparestatement
+* [KYLIN-4370] - Spark job failing with JDBC source on 8th step with error : org.apache.kylin.engine.spark.SparkCubingByLayer. Root cause: Table or view not found: `default`.`kylin_intermediate table'
+* [KYLIN-4379] - Calculate column cardinality cannot use kylin config overwrite cause job failed
+* [KYLIN-4383] - Kylin Integrated Issue with Amazon EMR and AWS Glue in HiveMetaStoreClientFactory.java
+* [KYLIN-4385] - KYLIN system cube failing to update table when run on EMR with S3 as storage and EMRFS
+* [KYLIN-4405] - Internal exception when trying to build cube whose modal has null PartitionDesc
+* [KYLIN-4426] - Refine CliCommandExecutor
+* [KYLIN-4433] - When uhc step is turned on, Build Dimension Dictionary job cannot get correct configuration
+* [KYLIN-4438] - Null password may cause RuntimeException when starting up
+* [KYLIN-4481] - Project-level ACL lookups not working for non-admin SAML-federated users
+
 ## v2.6.5 - 2020-02-20
 _Tag:_ [kylin-2.6.5](https://github.com/apache/kylin/tree/kylin-2.6.5)
 This is a bugfix release after 2.6.4, with 12 enhancements and 20 bug fixes.
@@ -527,7 +592,6 @@ __Improvement__
 * [KYLIN-4099] - Using no blocking RDD unpersist in spark cubing job
 * [KYLIN-4121] - Cleanup hive view intermediate tables after job be finished
 * [KYLIN-4140] - Add the time filter for current day jobs and make default values for web configurable
-* [KYLIN-4160] - Auto redirect to host:port/kylin when user only enter host:port in broswer
 
 __Bug Fix__
 
@@ -799,7 +863,7 @@ __Bug fix__
 
 ## v2.5.1 - 2018-11-06
 _Tag:_ [kylin-2.5.1](https://github.com/apache/kylin/tree/kylin-2.5.1)
-This is a bugfix release after 2.5.0, with 30 bug fixes and enhancement. Check [How to upgrade](/docs/howto/howto_upgrade.html).
+This is a bugfix release after 2.5.0, with 30 bug fixes and enhancement. Check [How to upgrade](/docs30/howto/howto_upgrade.html).
 
 __Improvement__
 
@@ -839,7 +903,7 @@ __Bug fix__
 
 ## v2.5.0 - 2018-09-16
 _Tag:_ [kylin-2.5.0](https://github.com/apache/kylin/tree/kylin-2.5.0)
-This is a major release after 2.4, with 96 bug fixes and enhancement. Check [How to upgrade](/docs/howto/howto_upgrade.html).
+This is a major release after 2.4, with 96 bug fixes and enhancement. Check [How to upgrade](/docs30/howto/howto_upgrade.html).
 
 __New Feature__
 
@@ -949,7 +1013,7 @@ __Bug fix__
 
 ## v2.4.1 - 2018-09-09
 _Tag:_ [kylin-2.4.1](https://github.com/apache/kylin/tree/kylin-2.4.1)
-This is a bug fix release after 2.4.0, with 22 bug fixes and enhancement. Check [How to upgrade](/docs/howto/howto_upgrade.html).
+This is a bug fix release after 2.4.0, with 22 bug fixes and enhancement. Check [How to upgrade](/docs30/howto/howto_upgrade.html).
 
 __Improvement__
 
@@ -982,7 +1046,7 @@ __Bug fix__
 
 ## v2.4.0 - 2018-06-23
 _Tag:_ [kylin-2.4.0](https://github.com/apache/kylin/tree/kylin-2.4.0)
-This is a major release after 2.3.x, with 8 new features and more than 30 bug fixes bug fixes and enhancement. Check [How to upgrade](/docs/howto/howto_upgrade.html).
+This is a major release after 2.3.x, with 8 new features and more than 30 bug fixes bug fixes and enhancement. Check [How to upgrade](/docs30/howto/howto_upgrade.html).
 
 __New Feature__
 
@@ -1070,7 +1134,7 @@ __Sub-task__
 
 ## v2.3.2 - 2018-07-08
 _Tag:_ [kylin-2.3.2](https://github.com/apache/kylin/tree/kylin-2.3.2)
-This is a bug fix release after 2.3.1, with 12 bug fixes and enhancement. Check [How to upgrade](/docs23/howto/howto_upgrade.html).
+This is a bug fix release after 2.3.1, with 12 bug fixes and enhancement. Check [How to upgrade](/docs3023/howto/howto_upgrade.html).
 
 __Improvement__
 
@@ -1092,7 +1156,7 @@ __Bug fix__
 
 ## v2.3.1 - 2018-03-28
 _Tag:_ [kylin-2.3.1](https://github.com/apache/kylin/tree/kylin-2.3.1)
-This is a bug fix release after 2.3.0, with 12 bug fixes and enhancement. Check [How to upgrade](/docs/howto/howto_upgrade.html).
+This is a bug fix release after 2.3.0, with 12 bug fixes and enhancement. Check [How to upgrade](/docs30/howto/howto_upgrade.html).
 
 __Improvement__
 
@@ -1115,7 +1179,7 @@ __Bug fix__
 
 ## v2.3.0 - 2018-03-04
 _Tag:_ [kylin-2.3.0](https://github.com/apache/kylin/tree/kylin-2.3.0)
-This is a major release after 2.2, with more than 250 bug fixes and enhancement. Check [How to upgrade](/docs/howto/howto_upgrade.html).
+This is a major release after 2.2, with more than 250 bug fixes and enhancement. Check [How to upgrade](/docs30/howto/howto_upgrade.html).
 
 __New Feature__
 
@@ -1384,7 +1448,7 @@ __Sub-Task__
 ## v2.2.0 - 2017-11-03
 
 _Tag:_ [kylin-2.2.0](https://github.com/apache/kylin/tree/kylin-2.2.0)
-This is a major release after 2.1, with more than 70 bug fixes and enhancements. Check [How to upgrade](/docs21/howto/howto_upgrade.html).
+This is a major release after 2.1, with more than 70 bug fixes and enhancements. Check [How to upgrade](/docs3021/howto/howto_upgrade.html).
 
 __New Feature__
 
@@ -1475,7 +1539,7 @@ __Task__
 ## v2.1.0 - 2017-08-17
 
 _Tag:_ [kylin-2.1.0](https://github.com/apache/kylin/tree/kylin-2.1.0)
-This is a major release after 2.0, with more than 100 bug fixes and enhancements. Check [How to upgrade](/docs21/howto/howto_upgrade.html).
+This is a major release after 2.0, with more than 100 bug fixes and enhancements. Check [How to upgrade](/docs3021/howto/howto_upgrade.html).
 
 __New Feature__
 
@@ -1599,7 +1663,7 @@ __Bug fix__
 ## v2.0.0 - 2017-04-30
 
 _Tag:_ [kylin-2.0.0](https://github.com/apache/kylin/tree/kylin-2.0.0)
-This is a major release with **Spark Cubing**, **Snowflake Data Model** and runs **TPC-H Benchmark**. Check out [the download](/download/) and the [how to upgrade guide](/docs20/howto/howto_upgrade.html).
+This is a major release with **Spark Cubing**, **Snowflake Data Model** and runs **TPC-H Benchmark**. Check out [the download](/download/) and the [how to upgrade guide](/docs3020/howto/howto_upgrade.html).
 
 __New Feature__
 
@@ -1840,7 +1904,7 @@ __Tasks__
 ## v1.6.0 - 2016-11-26
 
 _Tag:_ [kylin-1.6.0](https://github.com/apache/kylin/tree/kylin-1.6.0)
-This is a major release with better support for using Apache Kafka as data source. Check [how to upgrade](/docs16/howto/howto_upgrade.html) to do the upgrading.
+This is a major release with better support for using Apache Kafka as data source. Check [how to upgrade](/docs3016/howto/howto_upgrade.html) to do the upgrading.
 
 __New Feature__
 
@@ -1969,7 +2033,7 @@ __Bug fix__
 
 ## v1.5.4 - 2016-09-15
 _Tag:_ [kylin-1.5.4](https://github.com/apache/kylin/tree/kylin-1.5.4)
-This version includes bug fixs/enhancements as well as new features; It is backward compatiple with v1.5.3; While after upgrade, you still need update coprocessor, refer to [How to update coprocessor](/docs15/howto/howto_update_coprocessor.html).
+This version includes bug fixs/enhancements as well as new features; It is backward compatiple with v1.5.3; While after upgrade, you still need update coprocessor, refer to [How to update coprocessor](/docs3015/howto/howto_update_coprocessor.html).
 
 __New Feature__
 
@@ -2043,7 +2107,7 @@ __Improvement__
 
 ## v1.5.3 - 2016-07-28
 _Tag:_ [kylin-1.5.3](https://github.com/apache/kylin/tree/kylin-1.5.3)
-This version includes many bug fixs/enhancements as well as new features; It is backward compatiple with v1.5.2; But after upgrade, you need to update coprocessor, refer to [How to update coprocessor](/docs15/howto/howto_update_coprocessor.html).
+This version includes many bug fixs/enhancements as well as new features; It is backward compatiple with v1.5.2; But after upgrade, you need to update coprocessor, refer to [How to update coprocessor](/docs3015/howto/howto_update_coprocessor.html).
 
 __New Feature__
 
@@ -2152,7 +2216,7 @@ __Bug fix__
 ## v1.5.2 - 2016-05-26
 _Tag:_ [kylin-1.5.2](https://github.com/apache/kylin/tree/kylin-1.5.2)
 
-This version is backward compatiple with v1.5.1. But after upgrade to v1.5.2 from v1.5.1, you need to update coprocessor, refer to [How to update coprocessor](/docs15/howto/howto_update_coprocessor.html).
+This version is backward compatiple with v1.5.1. But after upgrade to v1.5.2 from v1.5.1, you need to update coprocessor, refer to [How to update coprocessor](/docs3015/howto/howto_update_coprocessor.html).
 
 __Highlights__
 
@@ -2249,7 +2313,7 @@ __Bug fix__
 ## v1.5.1 - 2016-04-13
 _Tag:_ [kylin-1.5.1](https://github.com/apache/kylin/tree/kylin-1.5.1)
 
-This version is backward compatiple with v1.5.0. But after upgrade to v1.5.1 from v1.5.0, you need to update coprocessor, refer to [How to update coprocessor](/docs15/howto/howto_update_coprocessor.html).
+This version is backward compatiple with v1.5.0. But after upgrade to v1.5.1 from v1.5.0, you need to update coprocessor, refer to [How to update coprocessor](/docs3015/howto/howto_update_coprocessor.html).
 
 __Highlights__
 
@@ -2409,7 +2473,7 @@ __Improvement__
 * [KYLIN-883] - Using configurable option for Hive intermediate tables created by Kylin job
 * [KYLIN-893] - Remove the dependency on quartz and metrics
 * [KYLIN-895] - Add "retention_range" attribute for cube instance, and automatically drop the oldest segment when exceeds retention
-* [KYLIN-896] - Clean ODBC code, add them into main repository and write docs to help compiling
+* [KYLIN-896] - Clean ODBC code, add them into main repository and write docs30 to help compiling
 * [KYLIN-901] - Add tool for cleanup Kylin metadata storage
 * [KYLIN-902] - move streaming related parameters into StreamingConfig
 * [KYLIN-909] - Adapt GTStore to hbase endpoint
@@ -2959,7 +3023,7 @@ __Improvement__
 
 __Task__
 
-* [KYLIN-884] - Restructure docs and website
+* [KYLIN-884] - Restructure docs30 and website
 * [KYLIN-907] - Improve Kylin community development experience
 * [KYLIN-954] - Release v1.0 (formerly v0.7.3)
 * [KYLIN-863] - create empty segment when there is no data in one single streaming batch

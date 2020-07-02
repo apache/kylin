@@ -2,7 +2,7 @@
 layout: docs30-cn
 title: 项目和表级别权限控制
 categories: tutorial
-permalink: /cn/docs30/tutorial/project_table_level_acl.html
+permalink: /cn/docs30/tutorial/project_level_acl.html
 since: v2.1.0
 ---
 

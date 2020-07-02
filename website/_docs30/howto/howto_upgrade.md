@@ -31,8 +31,8 @@ Below are versions specific guides:
 
 Kylin v2.2.0 cube metadata is compitable with v2.1.0, but you need aware the following changes:
 
-* Cube ACL is removed, use Project Level ACL instead. You need to manually configure Project Permissions to migrate your existing Cube Permissions. Please refer to [Project Level ACL](/docs21/tutorial/project_level_acl.html).
-* Update HBase coprocessor. The HBase tables for existing cubes need be updated to the latest coprocessor. Follow [this guide](/docs21/howto/howto_update_coprocessor.html) to update.
+* Cube ACL is removed, use Project Level ACL instead. You need to manually configure Project Permissions to migrate your existing Cube Permissions. Please refer to [Project Level ACL](/docs3021/tutorial/project_level_acl.html).
+* Update HBase coprocessor. The HBase tables for existing cubes need be updated to the latest coprocessor. Follow [this guide](/docs3021/howto/howto_update_coprocessor.html) to update.
 
 
 ## Upgrade from v2.0.0 to v2.1.0
@@ -49,7 +49,7 @@ After the migration finished, you can delete the legacy "kylin_metadata_user" an
 
 2) From v2.1, Kylin hides the default settings in "conf/kylin.properties"; You only need uncomment or add the customized properties in it.
 
-3) Spark is upgraded from v1.6.3 to v2.1.1, if you customized Spark configurations in kylin.properties, please upgrade them as well by referring to [Spark documentation](https://spark.apache.org/docs/2.1.0/).
+3) Spark is upgraded from v1.6.3 to v2.1.1, if you customized Spark configurations in kylin.properties, please upgrade them as well by referring to [Spark documentation](https://spark.apache.org/docs30/2.1.0/).
 
 4) If you are running Kylin with two clusters (compute/query separated), need copy the big metadata files (which are persisted in HDFS instead of HBase) from the Hadoop cluster to HBase cluster.
 

@@ -37,6 +37,7 @@
   - tutorial/sql_reference
   - tutorial/project_level_acl
   - tutorial/cube_spark
+  - tutorial/cube_flink
   - tutorial/cube_streaming
   - tutorial/realtime_olap
   - tutorial/cube_build_performance
@@ -70,4 +71,4 @@
   - howto/howto_backup_metadata
   - howto/howto_cleanup_storage
   - howto/howto_use_cli
-
+  - howto/howto_use_hive_mr_dict

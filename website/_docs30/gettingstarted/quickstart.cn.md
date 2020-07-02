@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  快速开始
 categories: 开始
 permalink: /cn/docs30/gettingstarted/kylin-quickstart.html
@@ -33,7 +33,7 @@ docker pull apachekylin/apache-kylin-standalone:3.0.1
 ```
 
 此处的镜像包含的是kylin最新Release版本kylin 3.0.1。由于该镜像中包含了所有kylin依赖的大数据组件，所以拉取镜像需要的时间较长，请耐心等待。Pull成功后显示如下：
-![](/images/docs/quickstart/pull_docker.png)
+![](/images/docs30/quickstart/pull_docker.png)
 
 #### step2、执行以下命令来启动容器：
 
@@ -196,7 +196,7 @@ ${KYLIN_HOME}/bin/sample-streaming.sh
 
 该脚本会在 localhost:9092 broker 中创建名为 kylin_streaming_topic 的 Kafka Topic，它也会每秒随机发送 100 条 messages 到 kylin_streaming_topic，然后你可以对kylin_streaming_cube进行构建。
 
-关于sample cube，可以参考[Sample Cube](/cn/docs/tutorial/kylin_sample.html)。
+关于sample cube，可以参考[Sample Cube](/cn/docs30/tutorial/kylin_sample.html)。
 
 当然，你也可以根据下面的教程来尝试创建自己的Cube。
 
@@ -204,36 +204,36 @@ ${KYLIN_HOME}/bin/sample-streaming.sh
 
 登陆kylin后，点击左上角的+号来创建Project：
 
-![](/images/docs/quickstart/create_project.png)
+![](/images/docs30/quickstart/create_project.png)
 
 #### step9、加载Hive表
 
 点击Model->Data Source->Load Table From Tree，
 Kylin会读取到Hive数据源中的表并以树状方式显示出来，你可以选择自己要使用的表，然后点击sync进行将其加载到kylin。
 
-![](/images/docs/quickstart/load_hive_table.png)
+![](/images/docs30/quickstart/load_hive_table.png)
 
 #### step10、创建模型
 
 点击Model->New->New Model：
 
-![](/images/docs/quickstart/create_model.png)
+![](/images/docs30/quickstart/create_model.png)
 
 输入Model Name点击Next进行下一步，选择Fact Table和Lookup Table，添加Lookup Table时需要设置与事实表的JOIN条件。
 
-![](/images/docs/quickstart/add_lookup_table.png)
+![](/images/docs30/quickstart/add_lookup_table.png)
 
 然后点击Next到下一步添加Dimension：
 
-![](/images/docs/quickstart/model_add_dimension.png)
+![](/images/docs30/quickstart/model_add_dimension.png)
 
 点击Next下一步添加Measure：
 
-![](/images/docs/quickstart/model_add_measure.png)
+![](/images/docs30/quickstart/model_add_measure.png)
 
 点击Next下一步跳转到设置时间分区列和过滤条件页面，时间分区列用于增量构建时选择时间范围，如果不设置时间分区列则代表该model下的cube都是全量构建。过滤条件会在打平表时用于where条件。
 
-![](/images/docs/quickstart/set_partition_column.png)
+![](/images/docs30/quickstart/set_partition_column.png)
 
 最后点击Save保存模型。
 
@@ -241,35 +241,35 @@ Kylin会读取到Hive数据源中的表并以树状方式显示出来，你可�
 
 选择Model->New->New Cube
 
-![](/images/docs/quickstart/create_cube.png)
+![](/images/docs30/quickstart/create_cube.png)
 
 点击Next到下一步添加Dimension，Lookup Table的维度可以设置为Normal（普通维度）或者Derived（衍生维度）两种类型，默认设置为衍生维度，衍生维度代表该列可以从所属维度表的主键中衍生出来，所以实际上只有主键列会被Cube加入计算。
 
-![](/images/docs/quickstart/cube_add_dimension.png)
+![](/images/docs30/quickstart/cube_add_dimension.png)
 
 点击Next到下一步，点击+Measure来添加需要预计算的度量。Kylin会默认创建一个Count(1)的度量。Kylin支持SUM、MIN、MAX、COUNT、COUNT_DISTINCT、TOP_N、EXTENDED_COLUMN、PERCENTILE八种度量。请为COUNT_DISTINCT和TOP_N选择合适的返回类型，这关系到Cube的大小。添加完成之后点击ok，该Measure将会显示在Measures列表中
 
-![](/images/docs/quickstart/cube_add_measure.png)
+![](/images/docs30/quickstart/cube_add_measure.png)
 
 添加完所有Measure后点击Next进行下一步，这一页是关于Cube数据刷新的设置。在这里可以设施自动合并的阈值（Auto Merge Thresholds）、数据保留的最短时间（Retention Threshold）以及第一个Segment的起点时间。
 
-![](/images/docs/quickstart/segment_auto_merge.png)
+![](/images/docs30/quickstart/segment_auto_merge.png)
 
 点击Next跳转到下一页高级设置。在这里可以设置聚合组、RowKeys、Mandatory Cuboids、Cube Engine等。
 
-关于高级设置的详细信息，可以参考[create_cube](/cn/docs/tutorial/create_cube.html) 页面中的步骤5，其中对聚合组等设置进行了详细介绍。
+关于高级设置的详细信息，可以参考[create_cube](/cn/docs30/tutorial/create_cube.html) 页面中的步骤5，其中对聚合组等设置进行了详细介绍。
 
 关于更多维度优化，可以阅读[aggregation-group](/blog/2016/02/18/new-aggregation-group/)。 
 
-![](/images/docs/quickstart/advance_setting.png)
+![](/images/docs30/quickstart/advance_setting.png)
 
-对于高级设置不是很熟悉时可以先保持默认设置，点击Next跳转到Kylin Properties页面，你可以在这里重写cube级别的kylin配置项，定义覆盖的属性，配置项请参考[配置项](/cn/docs/install/configuration.html)。
+对于高级设置不是很熟悉时可以先保持默认设置，点击Next跳转到Kylin Properties页面，你可以在这里重写cube级别的kylin配置项，定义覆盖的属性，配置项请参考[配置项](/cn/docs30/install/configuration.html)。
 
-![](/images/docs/quickstart/properties.png)
+![](/images/docs30/quickstart/properties.png)
 
 配置完成后，点击Next按钮到下一页，这里可以预览你正在创建的Cube的基本信息，并且可以返回之前的步骤进行修改。如果没有需要修改的部分，就可以点击Save按钮完成Cube创建。之后，这个Cube将会出现在你的Cube列表中。
 
-![](/images/docs/quickstart/cube_list.png)
+![](/images/docs30/quickstart/cube_list.png)
 
 #### step12、构建Cube
 
@@ -282,20 +282,20 @@ Cube的构建方式通常有两种：全量构建和增量构建。
 
 如果设置了时间分区列，则会出现如下页面，在这里你要选择构建数据的起止时间：
 
-![](/images/docs/quickstart/cube_build.png)
+![](/images/docs30/quickstart/cube_build.png)
 
 设置好起止时间后，点击Submit提交构建任务。然后你可以在Monitor页面观察构建任务的状态。Kylin会在页面上显示每一个步骤的运行状态、输出日志以及MapReduce任务。可以在${KYLIN_HOME}/logs/kylin.log中查看更详细的日志信息。
 
-![](/images/docs/quickstart/job_monitor.png)
+![](/images/docs30/quickstart/job_monitor.png)
 
 任务构建完成后，Cube状态会变成READY，并且可以看到Segment的信息。
 
-![](/images/docs/quickstart/segment_info.png)
+![](/images/docs30/quickstart/segment_info.png)
 
 #### step13、查询Cube
 
 Cube构建完成后，在Insight页面的Tables列表下面可以看到构建完成的Cube的table，并可以对其进行查询.查询语句击中Cube后会返回存储在Hbase中的预计算结果。
 
-![](/images/docs/quickstart/query_cube.png)
+![](/images/docs30/quickstart/query_cube.png)
 
 恭喜，进行到这里你已经具备了使用Kylin的基本技能，可以去发现和探索更多更强大的功能了。

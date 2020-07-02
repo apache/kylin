@@ -65,7 +65,7 @@ $KYLIN_HOME/bin/download-spark.sh
 
 ### Kylin tarball 目录
 * `bin`: shell 脚本，用于启动／停止 Kylin，备份／恢复 Kylin 元数据，以及一些检查端口、获取 Hive/HBase 依赖的方法等；
-* `conf`: Hadoop 任务的 XML 配置文件，这些文件的作用可参考[配置页面](/docs/install/configuration.html)
+* `conf`: Hadoop 任务的 XML 配置文件，这些文件的作用可参考[配置页面](/docs30/install/configuration.html)
 * `lib`: 供外面应用使用的 jar 文件，例如 Hadoop 任务 jar, JDBC 驱动, HBase coprocessor 等.
 * `meta_backups`: 执行 `bin/metastore.sh backup` 后的默认的备份目录;
 * `sample_cube` 用于创建样例 Cube 和表的文件。
@@ -123,6 +123,6 @@ Kylin 会在 HDFS 上生成文件，根目录是 "/kylin/", 然后会使用 Kyli
 通常, `/kylin/kylin_metadata` 目录下会有这么几种子目录：`cardinality`, `coprocessor`, `kylin-job_id`, `resources`, `jdbc-resources`. 
 1. `cardinality`: Kylin 加载 Hive 表时，会启动一个 MR 任务来计算各个列的基数，输出结果会暂存在此目录。此目录可以安全清除。
 2. `coprocessor`: Kylin 用于存放 HBase coprocessor jar 的目录；请勿删除。
-3. `kylin-job_id`: Cube 计算过程的数据存储目录，请勿删除。 如需要清理，请遵循 [storage cleanup guide](/docs/howto/howto_cleanup_storage.html). 
-4. `resources`: Kylin 默认会将元数据存放在 HBase，但对于太大的文件（如字典或快照），会转存到 HDFS 的该目录下，请勿删除。如需要清理，请遵循 [cleanup resources from metadata](/docs/howto/howto_backup_metadata.html) 
+3. `kylin-job_id`: Cube 计算过程的数据存储目录，请勿删除。 如需要清理，请遵循 [storage cleanup guide](/docs30/howto/howto_cleanup_storage.html). 
+4. `resources`: Kylin 默认会将元数据存放在 HBase，但对于太大的文件（如字典或快照），会转存到 HDFS 的该目录下，请勿删除。如需要清理，请遵循 [cleanup resources from metadata](/docs30/howto/howto_backup_metadata.html) 
 5. `jdbc-resources`：性质同上，只在使用 MySQL 做元数据存储时候出现。

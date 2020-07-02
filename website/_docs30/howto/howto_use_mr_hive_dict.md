@@ -64,4 +64,3 @@ More detail about this feature please refer [Apache Kylin Wiki](https://cwiki.ap
 - https://issues.apache.org/jira/browse/KYLIN-3905
 - https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Union
 - http://kylin.apache.org/blog/2016/08/01/count-distinct-in-kylin/
-- https://cwiki.apache.org/confluence/display/KYLIN/Introduction+to+Hive+Global+Dictionary

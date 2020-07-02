@@ -2,7 +2,7 @@
 layout: docs30
 title: Project And Table Level ACL
 categories: tutorial
-permalink: /docs30/tutorial/project_table_level_acl.html
+permalink: /docs30/tutorial/project_level_acl.html
 since: v2.1.0
 ---
 
