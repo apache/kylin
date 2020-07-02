@@ -380,7 +380,7 @@ public class JobBuilderSupport {
     }
 
     public String getBuildGlobalDictionaryBasePath(String jobId) {
-        return getRealizationRootPath(jobId) + "/global_dic";
+        return getRealizationRootPath(jobId) + "/global_dict";
     }
 
     public String getBuildGlobalHiveDicTotalBuildJobInputPath(String jobId) {
@@ -389,7 +389,7 @@ public class JobBuilderSupport {
 
     public String getBuildGlobalDictionaryMaxDistinctCountPath(String jobId) {
         KylinConfig conf = seg.getConfig();
-        String dbDir = conf.getGlobalDictHiveDatabaseDir();
+        String dbDir = conf.getIntermediateTableDatabaseDir();
         IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(seg);
         String tableName = flatDesc.getTableName() + conf.getMrHiveDistinctValueTableSuffix();
         String outPut = dbDir + "/" + tableName + "/dict_column=" + BatchConstants.CFG_GLOBAL_DICT_STATS_PARTITION_VALUE;
@@ -401,7 +401,7 @@ public class JobBuilderSupport {
     }
 
     public String getBuildGlobalDictionaryTotalOutput(KylinConfig config) {
-        String dbDir = config.getGlobalDictHiveDatabaseDir();
+        String dbDir = config.getIntermediateTableDatabaseDir();
         String tableName = EngineFactory.getJoinedFlatTableDesc(seg).getTableName() + config.getMrHiveDictTableSuffix();
         String path = dbDir + "/" + tableName;
         return path;
