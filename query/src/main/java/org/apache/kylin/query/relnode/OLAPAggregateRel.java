@@ -385,6 +385,9 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                                 }
                             }
                             if (!ifGood) {
+                                String expression = getAggrFuncName(aggCall);
+                                FunctionDesc aggFunc = FunctionDesc.newInstance(expression, parameter, null);
+                                this.aggregations.add(aggFunc);
                                 continue;
                             }
                             tupleExpr = getCountSumExpression(tupleExpr);
