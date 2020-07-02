@@ -109,7 +109,7 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
 
 **步骤2. 维度**
 
-1. 点击 `Add Dimension`，在弹窗中显示的事实表和 lookup 表里勾选输入需要的列。Lookup 表的列有2个选项：“Normal” 和 “Derived”（默认）。“Normal” 添加一个普通独立的维度列，“Derived” 添加一个 derived 维度，derived 维度不会计算入 cube，将由事实表的外键推算出。阅读更多【如何优化 cube】（/docs15/howto/howto_optimize_cubes.html）。
+1. 点击 `Add Dimension`，在弹窗中显示的事实表和 lookup 表里勾选输入需要的列。Lookup 表的列有2个选项：“Normal” 和 “Derived”（默认）。“Normal” 添加一个普通独立的维度列，“Derived” 添加一个 derived 维度，derived 维度不会计算入 cube，将由事实表的外键推算出。阅读更多【如何优化 cube】（/docs3015/howto/howto_optimize_cubes.html）。
 
     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/7 cube-dimension-batch.png)
 

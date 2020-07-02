@@ -6,7 +6,7 @@ permalink: /docs30/tutorial/cube_build_performance.html
 ---
  *This tutorial is an example step by step about how to optimize build of cube.* 
  
-In this scenario we're trying to optimize a very simple Cube, with 1 fact and 1 lookup table (Date Dimension). Before do a real tunning, please get an overall understanding about Cube build process from [Optimize Cube Build](/docs20/howto/howto_optimize_build.html)
+In this scenario we're trying to optimize a very simple Cube, with 1 fact and 1 lookup table (Date Dimension). Before do a real tunning, please get an overall understanding about Cube build process from [Optimize Cube Build](/docs3020/howto/howto_optimize_build.html)
 
 ![]( /images/tutorial/2.0/cube_build_performance/01.png)
 
@@ -164,7 +164,7 @@ The problem is that partitions were not used to generate several Mappers
 ![]( /images/tutorial/2.0/cube_build_performance/12.png)
 
 	
-(I checked this issue with ShaoFeng Shi. He thinks the problem is that there are few many rows and we are not working with a real Hadoop cluster. See this [tech note](http://kylin.apache.org/docs16/howto/howto_optimize_build.html)).
+(I checked this issue with ShaoFeng Shi. He thinks the problem is that there are few many rows and we are not working with a real Hadoop cluster. See this [tech note](http://kylin.apache.org/docs3016/howto/howto_optimize_build.html)).
 	
 
 ### Resume of results

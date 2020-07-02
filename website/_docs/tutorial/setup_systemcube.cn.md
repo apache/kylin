@@ -20,19 +20,14 @@ permalink: /cn/docs/tutorial/setup_systemcube.html
 
 ```
 [
-  [
-    "org.apache.kylin.tool.metrics.systemcube.util.HiveSinkTool",
     {
-      "storage_type": 2,
-      "cube_desc_override_properties": [
-        "java.util.HashMap",
-        {
-          "kylin.cube.algorithm": "INMEM",
-          "kylin.cube.max-building-segments": "1"
-        }
-      ]
+       "sink": "hive",
+       "storage_type": 2,
+       "cube_desc_override_properties": {
+         "kylin.cube.algorithm": "INMEM",
+         "kylin.cube.max-building-segments": "1"
+       }
     }
-  ]
 ]
 ```
 
@@ -117,6 +112,16 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
 50 */12 * * * sh ${KYLIN_HOME}/bin/system_cube_build.sh KYLIN_HIVE_METRICS_JOB_EXCEPTION_QA 3600000 12000
 
 {% endhighlight %}
+
+## 自动创建系统cube
+
+从kylin 2.6.0开始提供system-cube.sh脚本，用户可以通过执行此脚本来自动创建系统cube。
+
+- 创建系统cube：`sh system-cube.sh setup`
+
+- 构建系统cube：`sh bin/system-cube.sh build`
+
+- 为系统cube添加定时任务：`bin/system.sh cron`
 
 ## 系统 Cube 的细节
 

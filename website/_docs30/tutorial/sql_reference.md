@@ -5,7 +5,7 @@ categories: tutorial
 permalink: /docs30/tutorial/sql_reference.html
 ---
    
-Apache Kylin relies on Apache Calcite to parse and optimize the SQL statements. As an OLAP engine, Kylin supports `SELECT` statements, while doesn't support others like `INSERT`, `UPDATE` and `DELETE` operations in SQL, so Kylin's SQL grammer is a subset of Apache Calcite. This page lists the SQL grammar, the functions and the basic data types that Kylin supports. You can also check [Calcite SQL reference](https://calcite.apache.org/docs/reference.html) for more detailed info. 
+Apache Kylin relies on Apache Calcite to parse and optimize the SQL statements. As an OLAP engine, Kylin supports `SELECT` statements, while doesn't support others like `INSERT`, `UPDATE` and `DELETE` operations in SQL, so Kylin's SQL grammer is a subset of Apache Calcite. This page lists the SQL grammar, the functions and the basic data types that Kylin supports. You can also check [Calcite SQL reference](https://calcite.apache.org/docs30/reference.html) for more detailed info. 
    
 ## Grammar
 
@@ -45,9 +45,6 @@ Apache Kylin relies on Apache Calcite to parse and optimize the SQL statements. 
 　[CAST](#CAST)
 [SUSTRING](#SUBSTRING)
 [COALESCE](#COALESCE)
-[STDDEV_SUM](#STDDEV_SUM)
-[INTERSECT_COUNT](#INTERSECT_COUNT)
-[INTERSECT_VALUE](#INTERSECT_VALUE)
 
 ## Data Type
 
@@ -380,66 +377,6 @@ Example:
 SELECT COALESCE(lstg_format_name, '888888888888') FROM kylin_sales;
 {% endhighlight %}
 
-## [STDDEV_SUM](#STDDEV_SUM)
-Example: The first query is shortcut of the second query. ```stddev_sum``` is a UDAF which introduced in KYLIN-3361.
-{% highlight Groff markup %}
-select A, stddev_sum(sampling_dim, m)
-from T
-group by A
-{% endhighlight %}
-
-{% highlight Groff markup %}
-select A, stddev(SUM_M)
-from (
-      select A, sampling_dim, sum(m) as SUM_M
-      from T
-      group by A, sampling_dim
-) a
-group by A
-{% endhighlight %}
-
-## INTERSECT_COUNT {#INTERSECT_COUNT}
-INTERSECT_COUNT is used to calculate the retention rate. The measure to be calculated have defined precisely count distinct measure.
-Example 1: Refer to [intersect_count](http://kylin.apache.org/blog/2016/11/28/intersect-count/)
-{% highlight Groff markup %}
-select city, version,
-intersect_count(uuid, dt, array['20161014']) as first_day,
-intersect_count(uuid, dt, array['20161015']) as second_day,
-intersect_count(uuid, dt, array['20161016']) as third_day,
-intersect_count(uuid, dt, array['20161014', '20161015']) as retention_oneday,
-intersect_count(uuid, dt, array['20161014', '20161015', '20161016']) as retention_twoday
-from visit_log
-where dt in ('2016104', '20161015', '20161016')
-group by city, version
-{% endhighlight %}
-
-Example 1: Refer to KYLIN-4314
-{% highlight Groff markup %}
-select city, version,
-intersect_count(uuid, dt, array['20161014']) as first_day,
-intersect_count(uuid, dt, array['20161015']) as second_day,
-intersect_count(uuid, dt, array['20161016']) as third_day,
-intersect_count(uuid, dt, array['20161014', '20161015']) as retention_oneday,
-intersect_count(uuid, dt, array['20161014|20161015', '20161016']) as retention_twoday
-from visit_log
-where dt in ('2016104', '20161015', '20161016')
-group by city, version
-{% endhighlight %}
-
-## INTERSECT_VALUE {#INTERSECT_VALUE}
-INTERSECT_COUNT returns the bitmap details of the retained value. The measure to be calculated have defined precisely count distinct measure.
-Example：
-{% highlight Groff markup %}
-select city, version,
-intersect_value(uuid, dt, array['20161014']) as first_day,
-intersect_value(uuid, dt, array['20161015']) as second_day,
-intersect_value(uuid, dt, array['20161016']) as third_day,
-intersect_value(uuid, dt, array['20161014', '20161015']) as retention_oneday,
-intersect_value(uuid, dt, array['20161014|20161015', '20161016']) as retention_twoday
-from visit_log
-where dt in ('2016104', '20161015', '20161016')
-group by city, version
-{% endhighlight %}
 
 ## DATA TYPE {#DATATYPE}
 

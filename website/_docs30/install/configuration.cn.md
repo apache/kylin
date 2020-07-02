@@ -19,6 +19,7 @@ permalink: /cn/docs30/install/configuration.html
     - [部署 Kylin](#deploy-config)
 	- [分配更多内存给 Kylin 实例](#kylin-jvm-settings)
 	- [任务引擎高可用](#job-engine-ha)
+	- [任务引擎安全模式](#job-engine-safemode)
 	- [读写分离配置](#rw-deploy)
 	- [RESTful Webservice](#rest-config)
 - [Metastore 配置](#kylin_metastore)
@@ -37,12 +38,18 @@ permalink: /cn/docs30/install/configuration.html
 	- [字典相关](#dict-config)
 	- [超高基维度的处理](#uhc-config)
 	- [Spark 构建引擎](#spark-cubing)
+	- [通过 Livy 提交 Spark 任务](#livy-submit-spark-job)
 	- [Spark 资源动态分配](#dynamic-allocation)
 	- [任务相关](#job-config)
 	- [启用邮件通知](#email-notification)
 	- [启用 Cube Planner](#cube-planner)
     - [HBase 存储](#hbase-config)
+    - [备用 Hbase 存储](#secondary-hbase)
+    - [任务输出](#job-output)
     - [启用压缩](#compress-config)
+    - [实时 OLAP](#realtime-olap)
+- [清理存储配置](#storage-clean-up-configuration)
+    - [存储清理相关](#storage-clean-up-config)
 - [查询配置](#kylin-query)
     - [查询相关](#query-config)
     - [模糊查询](#fuzzy)
@@ -177,9 +184,15 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 - `kylin.job.scheduler.default=2`：启用分布式任务调度器
 - `kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock`：开启分布式任务锁
 
-> 提示：更多信息请参考 [集群模式部署](/cn/docs/install/kylin_cluster.html) 中的**任务引擎高可用**部分。
+> 提示：更多信息请参考 [集群模式部署](/cn/docs30/install/kylin_cluster.html) 中的**任务引擎高可用**部分。
 
 
+### 任务引擎安全模式   {#job-engine-safemode}
+
+安全模式仅在默认调度器中生效
+
+- `kylin.job.scheduler.safemode=TRUE`: 启用安全模式，新提交的任务不会被执行。
+- `kylin.job.scheduler.safemode.runable-projects=project1,project2`: 安全模式下仍然可以执行的项目列表，支持设置多个。
 
 ### 读写分离配置   {#rw-deploy}
 
@@ -216,7 +229,7 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 - `kylin.metadata.hbase-rpc-timeout`：指定 HBase 执行 RPC 操作的超时时间，默认值为 5000(ms)
 - `kylin.metadata.hbase-client-retries-number`：指定 HBase 重试次数，默认值为 1（次）
 - `kylin.metadata.resource-store-provider.jdbc`：指定 JDBC 使用的类，默认值为 `org.apache.kylin.common.persistence.JDBCResourceStore`
-- `kylin.metadata.hbasemapping-adapter`: 如果你想要使用自定义的从cube设置映射到hbase列族的方法, 你可以实现接口`org.apache.kylin.cube.model.IHBaseMappingAdapter`中的方法并将实现类配置在这里 
+
 
 
 ### 基于 MySQL 的 Metastore (测试) {#mysql-metastore}
@@ -231,7 +244,7 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 - `kylin.metadata.jdbc.max-cell-size`：默认值为 1(MB)
 - `kylin.metadata.resource-store-provider.jdbc`：指定 JDBC 使用的类，默认值为 org.apache.kylin.common.persistence.JDBCResourceStore
 
-> 提示：更多信息请参考[基于 MySQL 的 Metastore 配置](/cn/docs/tutorial/mysql_metastore.html)
+> 提示：更多信息请参考[基于 MySQL 的 Metastore 配置](/cn/docs30/tutorial/mysql_metastore.html)
 
 
 
@@ -265,7 +278,7 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 - `kylin.source.jdbc.sqoop-mapper-num`：指定应该分为多少个切片，Sqoop 将为每一个切片运行一个 mapper，默认值为 4
 - `kylin.source.jdbc.field-delimiter`：指定字段分隔符， 默认值为 \
 
-> 提示：更多信息请参考[建立 JDBC 数据源](/cn/docs/tutorial/setup_jdbc_datasource.html)。
+> 提示：更多信息请参考[建立 JDBC 数据源](/cn/docs30/tutorial/setup_jdbc_datasource.html)。
 
 
 
@@ -301,7 +314,7 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 - `kylin.cube.size-estimate-memhungry-ratio`：已废弃，默认值为 0.05
 - `kylin.cube.size-estimate-countdistinct-ratio`：包含精确去重度量的 Cube 大小估计，默认值为 0.5
 - `kylin.cube.size-estimate-topn-ratio`：包含 TopN 度量的 Cube 大小估计，默认值为 0.5 
-- `kylin.cube.size-estimate-enable-optimize`: 构建缓解中，是否使用已构建的 Cube 数据对构建大小结果的预估进行调整，默认值为 false
+
 
 
 
@@ -338,6 +351,7 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 - `kylin.source.hive.database-for-flat-table`：指定存放 Hive 中间表的 Hive 数据库名字，默认值为 default，请确保启动 Kylin 实例的用户有操作该数据库的权限
 - `kylin.source.hive.flat-table-storage-format`：指定 Hive 中间表的存储格式，默认值为 SEQUENCEFILE
 - `kylin.source.hive.flat-table-field-delimiter`：指定 Hive 中间表的分隔符，默认值为  \u001F 
+- `kylin.source.hive.intermediate-table-prefix`：指定 Hive 中间表的表名前缀，默认值为  kylin\_intermediate\_ 
 - `kylin.source.hive.redistribute-flat-table`：是否重分配 Hive 平表，默认值为 TRUE
 - `kylin.source.hive.redistribute-column-count`：重分配列的数量，默认值为 3
 - `kylin.source.hive.table-dir-create-first`：默认值为 FALSE
@@ -351,6 +365,7 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 - `kylin.engine.mr.max-cuboid-stats-calculator-number`：用于计算 Cube 统计数据的线程数量，默认值为 1
 - `kylin.engine.mr.build-dict-in-reducer`：是否在构建任务 **Extract Fact Table Distinct Columns** 的 Reduce 阶段构建字典，默认值为 TRUE
 - `kylin.engine.mr.yarn-check-interval-seconds`：构建引擎间隔多久检查 Hadoop 任务的状态，默认值为 10（s）    
+- `kylin.engine.mr.use-local-classpath`: 是否使用本地 mapreduce 应用的 classpath。默认值为 TRUE    
 
 
 
@@ -364,7 +379,7 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 - `kylin.dictionary.append-max-versions`：默认值为 3
 - `kylin.dictionary.append-version-ttl`：默认值为 259200000
 - `kylin.dictionary.resuable`：是否重用字典，默认值为 FALSE
-- `kylin.dictionary.shrunken-from-global-enabled`：是否缩小全局字典，默认值为 FALSE
+- `kylin.dictionary.shrunken-from-global-enabled`：是否缩小全局字典，默认值为 TRUE
 
 
 
@@ -399,8 +414,19 @@ Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一�
 - `kylin.engine.spark-conf-mergedict.spark.executor.memory`：为合并字典申请更多的内存，默认值为 6G
 - `kylin.engine.spark-conf-mergedict.spark.memory.fraction`：给系统预留的内存百分比，默认值为 0.2
 
-> 提示：更多信息请参考 [用 Spark 构建 Cube](/cn/docs/tutorial/cube_spark.html)。
+> 提示：更多信息请参考 [用 Spark 构建 Cube](/cn/docs30/tutorial/cube_spark.html)。
 
+
+
+### 通过 Livy 提交 Spark 任务 {#livy-submit-spark-job}
+
+- `kylin.engine.livy-conf.livy-enabled`：是否开启 Livy 进行 Spark 任务的提交。默认值为 *FALSE*
+- `kylin.engine.livy-conf.livy-url`：指定了 Livy 的 URL。例如 *http://127.0.0.1:8998*
+- `kylin.engine.livy-conf.livy-key.*`：指定了 Livy 的 name-key 配置。例如 *kylin.engine.livy-conf.livy-key.name=kylin-livy-1*
+- `kylin.engine.livy-conf.livy-arr.*`：指定了 Livy 数组类型的配置。以逗号分隔。例如 *kylin.engine.livy-conf.livy-arr.jars=hdfs://your_self_path/hbase-common-1.4.8.jar,hdfs://your_self_path/hbase-server-1.4.8.jar,hdfs://your_self_path/hbase-client-1.4.8.jar*
+- `kylin.engine.livy-conf.livy-map.*`：指定了 Spark 配置。例如 *kylin.engine.livy-conf.livy-map.spark.executor.instances=10*
+
+> 提示：更多信息请参考 [Apache Livy Rest API](http://livy.incubator.apache.org/docs30/latest/rest-api.html)。
 
 
 ### Spark 资源动态分配 {#dynamic-allocation}
@@ -412,7 +438,7 @@ Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一�
 - `kylin.engine.spark-conf.spark.dynamicAllocation.maxExecutors`：最多申请的 Executor 数量
 - `kylin.engine.spark-conf.spark.dynamicAllocation.executorIdleTimeout`：Executor 空闲时间超过设置的值后，除非有缓存数据，不然会被移除，默认值为 60(s)
 
-> 提示：更多信息请参考 [Dynamic Resource Allocation](http://spark.apache.org/docs/1.6.2/job-scheduling.html#dynamic-resource-allocation)。
+> 提示：更多信息请参考 [Dynamic Resource Allocation](http://spark.apache.org/docs30/1.6.2/job-scheduling.html#dynamic-resource-allocation)。
 
 
 
@@ -422,6 +448,7 @@ Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一�
 - `kylin.job.allow-empty-segment`：是否容忍数据源为空，默认值为 TRUE
 - `kylin.job.max-concurrent-jobs`：最大构建并发数，默认值为 10
 - `kylin.job.retry`：构建任务失败后的重试次数，默认值为 0
+- `kylin.job.retry-interval`: 每次重试的间隔毫秒数。默认值为 30000
 - `kylin.job.scheduler.priority-considered`：是否考虑任务优先级，默认值为 FALSE
 - `kylin.job.scheduler.priority-bar-fetch-from-queue`：指定从优先级队列中获取任务的时间间隔，默认值为 20(s)
 - `kylin.job.scheduler.poll-interval-second`：从队列中获取任务的时间间隔，默认值为 30(s)
@@ -461,7 +488,7 @@ Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一�
 - `kylin.cube.cubeplanner.algorithm-threshold-genetic`：默认值为 23
 
 
-> 提示：更多信息请参考 [使用 Cube Planner](/cn/docs/tutorial/use_cube_planner.html)。
+> 提示：更多信息请参考 [使用 Cube Planner](/cn/docs30/tutorial/use_cube_planner.html)。
 
 
 
@@ -489,6 +516,26 @@ Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一�
 - `kylin.storage.hbase.hconnection-threads-alive-seconds`：指定线程存活时间，默认值为 60 
 - `kylin.storage.hbase.replication-scope`：指定集群复制范围，默认值为 0
 - `kylin.storage.hbase.scan-cache-rows`：指定扫描缓存行数，默认值为 1024
+
+
+
+### 备用 Hbase 存储   {#secondary-hbase}
+
+Kylin支持用户配置备用Hbase，这样在集群迁移时，Kylin仍然可以从旧集群中查询到构建好的Cube数据。
+
+- `kylin.secondary.storage.url`: 指定备用Hbase的集群地址以及metadata url，zookeeper信息. 例如 *kylin.secondary.storage.url=hostname:kylin_metadata@hbase,hbase.zookeeper.quorum=hostname:11000,zookeeper.znode.parent=/hbase/*.如果还有其他的配置项，可以以<key> = <value>的形式添加在后面.
+
+
+> 提示：更多信息请参考 [KYLIN-4175](https://issues.apache.org/jira/browse/KYLIN-4175)。
+
+
+
+### 任务输出   {#job-output}
+
+为了避免job output的内容太多，用户可以设置output的最大长度。
+
+- `kylin.job.execute-output.max-size`: Job output的最大长度. 默认值为10484760.
+- `kylin.engine.spark.output.max-size`: Spark job output的最大长度. 默认值为10484760.
 
 
 
@@ -539,6 +586,63 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 	<description></description>
 </property>
 ```
+
+
+
+### 实时 OLAP    {#realtime-olap}
+
+#### 全局设置
+
+- `kylin.stream.job.dfs.block.size`: 指定了流式构建 Cuboid 任务所需 HDFS 块的大小。默认值为 *16M*。
+- `kylin.stream.index.path`: 指定了存储segment cache file的本地路径(包括本地fragment file和checkpoint file)。支持相对路径和绝对路径，默认值是 *stream_index*，也就是写到`$KYLIN_HOME/stream_index`，如果数据量很大的话将会占用大量磁盘空间，您也可以根据您的需求写成绝对路径以将数据放到数据盘。
+- `kylin.stream.node`: 指定了 receiver/coordinator的地址。格式应该为`hostname:port`或者`port`。如果设置成`port`，Kylin将会自动补全hostname；如果不设置该属性，将会使用默认的端口(Coordinator:7070，Receiver:9090)。当进程启动时，会将自身注册到Metadata。
+- `kylin.stream.metadata.store.type`: 指定了Realtime集群信息的元数据存储。默认值是 *zk*。
+- `kylin.stream.receiver.use-threads-per-query`: 指定了每个查询使用的线程资源数量。默认值是*8*。
+
+#### Cube 级别设置
+
+- `kylin.stream.index.maxrows`: 指定了缓存在堆内的聚合后的事件最大行数。默认值是*50000*。这个参数会影响Fragment File的数量，可以根据需求适当调高。
+- `kylin.stream.cube-num-of-consumer-tasks`: 指定了一个topic的全部消息的摄入将由哪多少Replica Set来负责。如果您的消息速率较大，需要适当提升这个数值。默认值是*3*。
+- `kylin.stream.segment.retention.policy`: 当Segment状态变为*IMMUTABLE*，该配置指定了Receiver如何处理本地Segment Cache。可选值包含`purge`和`fullBuild`。设置为`purge`后，Receiver会等待一定时间后删除本地数据；设置为`fullBuild`后，数据会上传到HDFS并等待构建。默认值是*fullBuild*。
+- `kylin.stream.build.additional.cuboids`: 默认情况下Receiver只构建base cuboid来回答查询，可以在Receiver端是否构建额外的cuboid，如果你希望优化某些查询的响应时间。具体哪些额外的Cuboid需要被构建由高级配置页面的强制Cuboid指定。
+- `kylin.stream.cube.window`: 指定了Streaming Segment的长度。默认值是*3600*。详情参阅[deep-dive-real-time-olap](http://kylin.apache.org/blog/2019/07/01/deep-dive-real-time-olap/)。
+- `kylin.stream.cube.duration`: 指定了Streaming Segment会等待迟到的消息多久，默认值是 *7200*(秒)。 详情参阅[deep-dive-real-time-olap](http://kylin.apache.org/blog/2019/07/01/deep-dive-real-time-olap/)。
+- `kylin.stream.cube.duration.max`: 指定了Streaming Segment保持Active的最长时间。默认值是 *43200*。详情参阅[deep-dive-real-time-olap](http://kylin.apache.org/blog/2019/07/01/deep-dive-real-time-olap/)。
+- `kylin.stream.checkpoint.file.max.num`: 指定了Receiver为每一个Cube保留的checkpoint文件数量。默认值是 *5*。
+- `kylin.stream.index.checkpoint.intervals`: 指定了Receiver进行checkpoint的间隔。默认值是 *300*。
+- `kylin.stream.immutable.segments.max.num`: 指定了在Receiver端，一个Cube最多可以保持多少个*IMMUTABLE*segment，因为Receiver端的性能和Fragment File的数量呈负相关。默认值是 *100*。
+- `kylin.stream.consume.offsets.latest`:指定了Receiver从什么位置开始消费，设置成*true*则从最新的offset开始消费，false则从最老的位置消费。默认值是 *true*。
+
+#### 高级设置
+
+- `kylin.stream.assigner`: 值是一个类的名字，这个类应该是`org.apache.kylin.stream.coordinator.assign.Assigner`的实现类，用于指定如何将Kafka Topic 下的各个Partition分配给各个Replica Set。默认值是 *DefaultAssigner*，其策略会努力将工作负载分配给负责partition数量少的Replica Set，以使得各个Replica Set工作负载相对均衡。
+- `kylin.stream.coordinator.client.timeout.millsecond`: 指定和Coordinator HTTP连接的Timeout，默认值是 *5000*。
+- `kylin.stream.receiver.client.timeout.millsecond`:指定和Receiver HTTP连接的Timeout，默认值是 *5000*。
+- `kylin.stream.receiver.http.max.threads`: 指定了Receiver端的Http连接最大线程数。默认值为 *200*。
+- `kylin.stream.receiver.http.min.threads`: 指定了Receiver端的Http连接最小线程数。默认值为 *10*。
+- `kylin.stream.receiver.query-core-threads`: 指定了Receiver用于scan的线程数量，默认值是*50*。
+- `kylin.stream.receiver.query-max-threads`: 指定了Receiver用于scan的线程最大数量，默认值是*200*。
+- `kylin.stream.segment-max-fragments`: Receiver端每次MemoryStore大小达到阈值(`kylin.stream.index.maxrows`)，会落盘形成一个Fragment File，Receiver会尝试尽可能合并这些Fragment File来减少数据冗余。这个配置项会指定触发merge的阈值，默认值是*50*。
+- `kylin.stream.segment-min-fragments`: Receiver端的每次merge后不会使文件数量少于这个阈值，默认值是 *15*。
+- `kylin.stream.max-fragment-size-mb`: 合并后，每个Fragment File的大小不会超过该值，默认值是 *300*。
+- `kylin.stream.fragments-auto-merge-enable`: 是否开启后台自动合并Fragment File。默认值是 *true*。
+- `kylin.stream.metrics.option`: 指定是否开启Receiver端的metrics信息收集, 可选值是 csv/console/jmx。
+- `kylin.stream.event.timezone`: 指定从Event Time衍生出来的时间衍生列如`HOUR_START`/`DAY_START`使用哪种时区，默认是UTC时间。
+- `kylin.stream.auto-resubmit-after-discard-enabled`: 当用户 discard了某一个 Realtime的构建任务，是否自动重新提交新任务。
+
+> 提示：入门教程 请参考 [Real-time OLAP](/docs30/tutorial/realtime_olap.html)。
+
+
+
+### 存储清理配置  {#storage-clean-up-configuration}
+
+本小节介绍 Kylin 存储清理有关的配置。
+
+
+
+### 存储清理相关 {#storage-clean-up-config}
+
+- `kylin.storage.clean-after-delete-operation`: 是否清理 HBase 和 HDFS 中的 segment 数据。默认值为 FALSE。
 
 
 
@@ -617,7 +721,7 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 - `kylin.query.pushdown.update-enabled`：指定是否在查询下压中开启 update，默认值为 FALSE
 - `kylin.query.pushdown.cache-enabled`：是否开启下压查询的缓存来提高相同查询语句的查询效率，默认值为 FALSE
 
-> 提示：更多信息请参考[查询下压](/cn/docs/tutorial/query_pushdown.html)
+> 提示：更多信息请参考[查询下压](/cn/docs30/tutorial/query_pushdown.html)
 
 
 
@@ -625,6 +729,7 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 
 - `kylin.query.force-limit`：该参数通过为 select * 语句强制添加 LIMIT 分句，达到缩短数据返回时间的目的，该参数默认值为 -1，将该参数值设置为正整数，如 1000，该值会被应用到 LIMIT 分句，查询语句最终会被转化成 select * from fact_table limit 1000
 - `kylin.storage.limit-push-down-enabled`: 默认值为 *TRUE*，设置为 *FALSE* 意味着关闭存储层的 limit-pushdown 
+- `kylin.query.flat-filter-max-children`：指定打平 filter 时 filter 的最大值。默认值为 500000 
 
 
 

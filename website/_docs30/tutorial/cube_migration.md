@@ -147,7 +147,3 @@ All supported parameters are listed below:
 | distCpJobQueue | (Optional) The mapreduce.job.queuename for DistCp job.   |
 | distCpJobMemory | (Optional) The mapreduce.map.memory.mb for DistCp job.   |
 | nThread | (Optional) The number of threads for migrating cube data in parallel.   |
-
-
-
-

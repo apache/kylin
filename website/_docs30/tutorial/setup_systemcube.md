@@ -20,14 +20,19 @@ For example:
 
 ```
 [
+  [
+    "org.apache.kylin.tool.metrics.systemcube.util.HiveSinkTool",
     {
-       "sink": "hive",
-       "storage_type": 2,
-       "cube_desc_override_properties": {
-         "kylin.cube.algorithm": "INMEM",
-         "kylin.cube.max-building-segments": "1"
-       }
+      "storage_type": 2,
+      "cube_desc_override_properties": [
+        "java.util.HashMap",
+        {
+          "kylin.cube.algorithm": "INMEM",
+          "kylin.cube.max-building-segments": "1"
+        }
+      ]
     }
+  ]
 ]
 ```
 
@@ -112,16 +117,6 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
 50 */12 * * * sh ${KYLIN_HOME}/bin/system_cube_build.sh KYLIN_HIVE_METRICS_JOB_EXCEPTION_QA 3600000 12000
 
 {% endhighlight %}
-
-## Automatically create System Cube
-
-Kylin provides system-cube.sh from v2.6.0, users can automatically create system cube by executing this script.
-
-- Create System Cube：`sh system-cube.sh setup`
-
-- Build System Cube：`sh bin/system-cube.sh build`
-
-- Add crontab job for System Cube：`bin/system.sh cron`
 
 ## Details of System Cube
 

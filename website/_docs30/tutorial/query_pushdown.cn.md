@@ -8,12 +8,9 @@ since: v2.1
 
 ### Kylin 支持查询下压
 
-对于没有cube能查得结果的sql，Kylin支持将这类查询通过JDBC下压至备用查询引擎如Hive, SparkSQL, Impala等来查得结果。
+对于没有cube能查得结果的sql，Kylin支持将这类查询通过JDBC下压至备用查询引擎如Hive, SparkSQL, Impala等来查得结果。以下以Hive为例说明开启步骤，由于Kylin本事就将Hive作为数据源，作为Query Pushdown引擎也更易使用与配置。
 
 ### 查询下压配置
-
-#### 下压至单个引擎
-以Hive为例说明开启步骤
 
 1. 修改配置文件`kylin.properties`打开Query Pushdown注释掉的配置项`kylin.query.pushdown.runner-class-name`，设置为`org.apache.kylin.query.adhoc.PushDownRunnerJdbcImpl`
 
@@ -40,41 +37,7 @@ since: v2.1
 
 {% endhighlight %}
 
-然后，重启Kylin
-
-#### 下压至多个引擎
-自 v3.0.0 起，开始支持通过JDBC下压至多个引擎进行查询。
-通过配置 `kylin.query.pushdown.runner.ids` 来指定多个引擎id，id 之间以 `,` 进行分隔，如：
-
-{% highlight Groff markup %}
-kylin.query.pushdown.runner.ids=id1,id2,id3
-{% endhighlight %}
-
-指定了三个下压引擎，这三个引擎可以是同类型或不同类型的引擎。
-
-多引擎下压同样支持指定具体的 jdbc 参数，参数含义和上述单个引擎下压相同，请看下面的配置
-
-{% highlight Groff markup %}
-kylin.query.pushdown.{id}.jdbc.url
-kylin.query.pushdown.{id}.jdbc.driver
-kylin.query.pushdown.{id}.jdbc.username
-kylin.query.pushdown.{id}.jdbc.password
-kylin.query.pushdown.{id}.jdbc.pool-max-total
-kylin.query.pushdown.{id}.jdbc.pool-max-idle
-kylin.query.pushdown.{id}.jdbc.pool-min-idle
-{% endhighlight %}
-
-当要为某个引擎指定具体的 jdbc 参数时，请将上面的 `{id}` 替换为真实的引擎 id，如替换为 `id1` 的各配置为:
-
-{% highlight Groff markup %}
-kylin.query.pushdown.id1.jdbc.url
-kylin.query.pushdown.id1.jdbc.driver
-kylin.query.pushdown.id1.jdbc.username
-kylin.query.pushdown.id1.jdbc.password
-kylin.query.pushdown.id1.jdbc.pool-max-total
-kylin.query.pushdown.id1.jdbc.pool-max-idle
-kylin.query.pushdown.id1.jdbc.pool-min-idle
-{% endhighlight %}
+3. 重启Kylin
 
 ### 进行查询下压
 
@@ -85,17 +48,3 @@ kylin.query.pushdown.id1.jdbc.pool-min-idle
 用户在提交查询时，若查询下压发挥作用，则在log里有相应的记录。
 
    ![](/images/tutorial/2.1/push_down/push_down_2.png)
-
-### Pushdown to Presto 
-
-如果你希望查询下压到Presto，你可以在 Project 级别配置以下参数以启用 Presto 查询下压 (通过 KYLIN-4491 引入)。
-
-{% highlight Groff markup %}
-kylin.query.pushdown.runner-class-name=org.apache.kylin.query.pushdown.PushdownRunnerSDKImpl
-kylin.source.jdbc.dialect=presto
-kylin.source.jdbc.adaptor=org.apache.kylin.sdk.datasource.adaptor.PrestoAdaptor
-kylin.query.pushdown.jdbc.url={YOUR_URL}
-kylin.query.pushdown.jdbc.driver=com.facebook.presto.jdbc.PrestoDriver
-kylin.query.pushdown.jdbc.username={USER_NAME}
-kylin.query.pushdown.jdbc.password={PASSWORD}
-{% endhighlight %}    

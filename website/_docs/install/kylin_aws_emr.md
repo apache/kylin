@@ -7,41 +7,41 @@ permalink: /docs/install/kylin_aws_emr.html
 
 This document introduces how to run Kylin on EMR.
 
-
-
 ### Recommended Version
 
-* AWS EMR 5.7 (for EMR 5.8 and above, please refer to [KYLIN-3129](https://issues.apache.org/jira/browse/KYLIN-3129))
-* Apache Kylin v2.2.0 or above for HBase 1.x
-
+* AWS EMR 5.27 or later 
+* Apache Kylin v3.0.0 or above for HBase 1.x
 
 
 ### Start EMR cluster
 
 Launch an EMR cluster with AWS web console, command line or API. Select *HBase* in the applications as Kylin need HBase service. 
 
-You can select "HDFS" or "S3" as the storage for HBase, depending on whether you need Cube data be persisted after shutting down the cluster. EMR HDFS uses the local disk of EC2 instances, which will erase the data when cluster is stopped, then Kylin metadata and Cube data can be lost.
-
+You can choose "HDFS" or "S3" as the storage for HBase, depending on whether you need Cube data be persisted after shutting down the cluster. EMR HDFS uses the local disk of EC2 instances, which will erase the data when cluster is stopped, then Kylin metadata and Cube data will be lost.
 If you use S3 as HBase's storage, you need customize its configuration for `hbase.rpc.timeout`, because the bulk load to S3 is a copy operation, when data size is huge, HBase region server need wait much longer to finish than on HDFS.
+If you want your metadata of Hive is persisted outside of EMR cluster, you can choose AWS Glue or RDS of the metadata of Hive. Thus you can build a state-less OLAP service by Kylin in cloud.
+
+Let create a demo EMR cluster via AWS CLI，with 
+1. S3 as HBase storage (optional)
+2. Glue as Hive Metadata (optional)
+3. Enable consist metadata of S3 to make sure data wouldn't lose (optional)
 
 ```
-[  {
-    "Classification": "hbase-site",
-    "Properties": {
-      "hbase.rpc.timeout": "3600000",
-      "hbase.rootdir": "s3://yourbucket/EMRROOT"
-    }
-  },
-  {
-    "Classification": "hbase",
-    "Properties": {
-      "hbase.emr.storageMode": "s3"
-    }
-  }
-]
+aws emr create-cluster --applications Name=Hadoop Name=Hive Name=Pig Name=HBase Name=Spark Name=Sqoop Name=Tez  Name=ZooKeeper \
+	--release-label emr-5.28.0 \
+	--instance-groups '[{"InstanceCount":2,"EbsConfiguration":{"EbsBlockDeviceConfigs":[{"VolumeSpecification":{"SizeInGB":50,"VolumeType":"gp2"},"VolumesPerInstance":1}]},"InstanceGroupType":"CORE","InstanceType":"m5.xlarge","Name":"Worker Node"},{"InstanceCount":1,"EbsConfiguration":{"EbsBlockDeviceConfigs":[{"VolumeSpecification":{"SizeInGB":100,"VolumeType":"gp2"},"VolumesPerInstance":1}]},"InstanceGroupType":"MASTER","InstanceType":"m5.xlarge","Name":"Master Node"}]' \
+	--configurations '[{"Classification":"hbase","Properties":{"hbase.emr.storageMode":"s3"}},{"Classification":"hbase-site","Properties":{"hbase.rootdir":"s3://{S3_BUCKET}/hbase/data","hbase.rpc.timeout": "3600000"}},{"Classification":"hive-site","Properties":{"hive.metastore.client.factory.class":"com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"}}]' \
+	--name 'Kylin3.0Cluster_Original' \
+	--emrfs Consistent=true \
+	--region cn-northwest-1
 ```
 
+### Support Glue as metadata of Hive
 
+If you want to enable support read metadata from Glue, please refer to `https://github.com/awslabs/aws-glue-data-catalog-client-for-apache-hive-metastore` and build two jars.
+
+1. aws-glue-datacatalog-client-common-xxx.jar
+2. aws-glue-datacatalog-hive2-client-xxx.jar
 
 ### Install Kylin
 
@@ -51,11 +51,9 @@ When EMR cluster is in "Waiting" status, you can SSH into its master  node, down
 sudo mkdir /usr/local/kylin
 sudo chown hadoop /usr/local/kylin
 cd /usr/local/kylin
-wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz
-tar -zxvf apache-kylin-2.5.0-bin-hbase1x.tar.gz
+wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-3.0.0/apache-kylin-3.0.0-bin-hbase1x.tar.gz
+tar -zxvf apache-kylin-3.0.0-bin-hbase1x.tar.gz
 ```
-
-
 
 ### Configure Kylin
 
@@ -140,12 +138,67 @@ or
 hadoop fs -mkdir s3://yourbucket/kylin
 ```
 
+### Solve jar conflict
+- Add following env variable in ~/.bashrc
+
+```sh
+export HIVE_HOME=/usr/lib/hive
+export HADOOP_HOME=/usr/lib/hadoop
+export HBASE_HOME=/usr/lib/hbase
+export SPARK_HOME=/usr/lib/spark
+
+export KYLIN_HOME=/home/ec2-user/apache-kylin-3.0.0-SNAPSHOT-bin
+export HCAT_HOME=/usr/lib/hive-hcatalog
+export KYLIN_CONF_HOME=$KYLIN_HOME/conf
+export tomcat_root=$KYLIN_HOME/tomcat
+export hive_dependency=$HIVE_HOME/conf:$HIVE_HOME/lib/:$HIVE_HOME/lib/hive-hcatalog-core.jar:$SPARK_HOME/jars/
+export PATH=$KYLIN_HOME/bin:$PATH
+
+export hive_dependency=$HIVE_HOME/conf:$HIVE_HOME/lib/*:$HIVE_HOME/lib/hive-hcatalog-core.jar:/usr/share/aws/hmclient/lib/*:$SPARK_HOME/jars/*:$HBASE_HOME/lib/*.jar:$HBASE_HOME/*.jar
+```
+
+- Remove joda.jar
+
+```sh
+mv $HIVE_HOME/lib/jackson-datatype-joda-2.4.6.jar $HIVE_HOME/lib/jackson-datatype-joda-2.4.6.jar.backup
+```
+
+- Modify bin/kylin.sh
+Add following content on the top of bin/kylin.sh
+
+```sh
+export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:$hive_dependency:$HBASE_CLASSPATH_PREFIX
+```
+
+### Enable glue as metadata for Hive(Optional)
+1. Put `aws-glue-datacatalog-client-common-xxx.jar` and `aws-glue-datacatalog-hive2-client-xxx.jar` under $KYLIN_HOME/lib.
+2. Set `kylin.source.hive.metadata-type=gluecatalog` in `kylin.properties`
+
+### Configure Spark
+
+- Build a Spark's flat jar 
+
+```sh
+rm -rf $KYLIN_HOME/spark_jars
+mkdir $KYLIN_HOME/spark_jars
+cp /usr/lib/spark/jars/*.jar $KYLIN_HOME/spark_jars
+cp -f /usr/lib/hbase/lib/*.jar $KYLIN_HOME/spark_jars
+
+rm -f netty-3.9.9.Final.jar 
+rm -f netty-all-4.1.8.Final.jar
+
+ jar cv0f spark-libs.jar -C $KYLIN_HOME/spark_jars .
+aws s3 cp spark-libs.jar s3://{YOUR_BUCKET}/kylin/package/  # You choose s3 as your working-dir
+hadoop fs -put spark-libs.jar hdfs://kylin/package/  # You choose hdfs as your working-dir
+```
+- Set `kylin.engine.spark-conf.spark.yarn.archive=PATH_TO_SPARK_LIB` in `kylin.properties`
+
+
 ### Start Kylin
 
 The start is the same as on normal Hadoop:
 
-```
-export KYLIN_HOME=/usr/local/kylin/apache-kylin-2.2.0-bin
+```sh
 $KYLIN_HOME/bin/sample.sh
 $KYLIN_HOME/bin/kylin.sh start
 ```
@@ -153,26 +206,6 @@ $KYLIN_HOME/bin/kylin.sh start
 Don't forget to enable the 7070 port access in the security group for EMR master - "ElasticMapReduce-master", or with SSH tunnel to the master node, then you can access Kylin Web GUI at http://\<master\-dns\>:7070/kylin
 
 Build the sample Cube, and then run queries when the Cube is ready. You can browse S3 to see whether the data is safely persisted.
-
-
-
-### Spark Configuration
-
-EMR's Spark version may be incompatible with Kylin, so you couldn't directly use EMR's Spark. You need to set "SPARK_HOME" environment variable to Kylin's Spark folder (KYLIN_HOME/spark) before start Kylin. To access files on S3 or EMRFS, we need to copy EMR's implementation jars to Spark.
-
-```sh
-export SPARK_HOME=$KYLIN_HOME/spark
-
-cp /usr/lib/hadoop-lzo/lib/*.jar $KYLIN_HOME/spark/jars/
-cp /usr/share/aws/emr/emrfs/lib/emrfs-hadoop-assembly-*.jar $KYLIN_HOME/spark/jars/
-cp /usr/lib/hadoop/hadoop-common*-amzn-*.jar $KYLIN_HOME/spark/jars/
-
-$KYLIN_HOME/bin/kylin.sh start
-```
-
-You can also copy EMR's spark-defaults configuration to Kylin's spark for a better utilization of the cluster resources.
-
-
 
 ### Shut down EMR Cluster
 
@@ -185,10 +218,19 @@ bash /usr/lib/hbase/bin/disable_all_tables.sh
 ```
 
 To restart a cluster with the same HBase data, specify the same Amazon S3 location as the previous cluster either in the AWS Management Console or using the "hbase.rootdir" configuration property. For more information about EMR HBase, refer to [HBase on Amazon S3](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-hbase-s3.html)
-
-
 	
-## Deploy Kylin in a dedicated EC2 
+### Deploy Kylin in a dedicated EC2 
 
 Running Kylin in a dedicated client node (not master, core or task) is recommended. You can start a separate EC2 instance within the same VPC and subnet as your EMR, copy the Hadoop clients from master node to it, and then install Kylin in it. This can improve the stability of services in master node as well as Kylin itself. 
 	
+### Trouble shotting
+
+- If you set S3 as your working dir and find some "Wrong FS" exception in kylin.log(if you enable shrunken dictionary), please try to modify $KYLIN_HOME/conf/kylin_hive_conf.xml, /etc/hive/conf/hive-site.xml, /etc/hadoop/conf/core-site.xml.
+
+```xml
+  <property>
+    <name>fs.defaultFS</name>
+    <value>s3://{YOUR_BUCKET}</value>
+    <!--<value>hdfs://ip-172-31-6-58.cn-northwest-1.compute.internal:8020</value>-->
+  </property>
+```

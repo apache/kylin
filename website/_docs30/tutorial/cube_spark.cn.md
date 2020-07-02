@@ -199,6 +199,6 @@ Caused by: java.util.NoSuchElementException
 
 ## 进一步
 
-如果您是 Kylin 的管理员但是对于 Spark 是新手，建议您浏览 [Spark 文档](https://spark.apache.org/docs/2.1.2/)，别忘记相应地去更新配置。您可以开启 Spark 的 [Dynamic Resource Allocation](https://spark.apache.org/docs/2.1.2/job-scheduling.html#dynamic-resource-allocation) ，以便其对于不同的工作负载能自动伸缩。Spark 性能依赖于集群的内存和 CPU 资源，当有复杂数据模型和巨大的数据集一次构建时 Kylin 的 Cube 构建将会是一项繁重的任务。如果您的集群资源不能够执行，Spark executors 就会抛出如 "OutOfMemorry" 这样的错误，因此请合理的使用。对于有 UHC dimension，过多组合 (例如，一个 cube 超过 12 dimensions)，或耗尽内存的度量 (Count Distinct，Top-N) 的 Cube，建议您使用 MapReduce engine。如果您的 Cube 模型较为简单，所有度量都是 SUM/MIN/MAX/COUNT，源数据规模小至中等，Spark engine 将会是个好的选择。
+如果您是 Kylin 的管理员但是对于 Spark 是新手，建议您浏览 [Spark 文档](https://spark.apache.org/docs30/2.1.2/)，别忘记相应地去更新配置。您可以开启 Spark 的 [Dynamic Resource Allocation](https://spark.apache.org/docs30/2.1.2/job-scheduling.html#dynamic-resource-allocation) ，以便其对于不同的工作负载能自动伸缩。Spark 性能依赖于集群的内存和 CPU 资源，当有复杂数据模型和巨大的数据集一次构建时 Kylin 的 Cube 构建将会是一项繁重的任务。如果您的集群资源不能够执行，Spark executors 就会抛出如 "OutOfMemorry" 这样的错误，因此请合理的使用。对于有 UHC dimension，过多组合 (例如，一个 cube 超过 12 dimensions)，或耗尽内存的度量 (Count Distinct，Top-N) 的 Cube，建议您使用 MapReduce engine。如果您的 Cube 模型较为简单，所有度量都是 SUM/MIN/MAX/COUNT，源数据规模小至中等，Spark engine 将会是个好的选择。
 
 如果您有任何问题，意见，或 bug 修复，欢迎在 dev@kylin.apache.org 中讨论。

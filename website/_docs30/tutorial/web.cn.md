@@ -48,9 +48,9 @@ Kylin 的网页版为用户提供了一个简单的查询工具来运行 SQL 以
 > 
 > 2. 支持聚合函数和 group by
 
-由菜单栏进入 “Insight” 页面：你可以在 **Cube** 下拉框选择你希望查询击中的 Cube。
+由菜单栏进入 “Insight” 页面：
 
-![](/images/tutorial/Kylin-Web-Tutorial/insight-query-part.png)
+![](/images/tutorial/1.5/Kylin-Web-Tutorial/8 query.png)
 
 * 源表：
 

@@ -102,7 +102,7 @@ You can use letters, numbers and '_' to name your cube (blank space in name is n
 
 **Step 2. Dimensions**
 
-1. Click `Add Dimension`, it pops up a window: tick columns that you need from FactTable and LookupTable. There are two options for LookupTable columns: "Normal" and "Derived" (default). "Normal" is to add a normal independent dimension column, "Derived" is to add a derived dimension column (deriving from the FK of the fact table). Read more in [How to optimize cubes](/docs15/howto/howto_optimize_cubes.html).
+1. Click `Add Dimension`, it pops up a window: tick columns that you need from FactTable and LookupTable. There are two options for LookupTable columns: "Normal" and "Derived" (default). "Normal" is to add a normal independent dimension column, "Derived" is to add a derived dimension column (deriving from the FK of the fact table). Read more in [How to optimize cubes](/docs3015/howto/howto_optimize_cubes.html).
 
    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/7 cube-dimension-batch.png)
 

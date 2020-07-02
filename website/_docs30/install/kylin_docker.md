@@ -61,8 +61,8 @@ In order to allow Kylin to build the cube smoothly, the memory resource we confi
 
 For the resource setting method for the container, please refer to:
 
-- Mac user: <https://docs.docker.com/docker-for-mac/#advanced>
-- Linux user: <https://docs.docker.com/config/containers/resource_constraints/#memory>
+- Mac user: <https://docs30.docker.com/docker-for-mac/#advanced>
+- Linux user: <https://docs30.docker.com/config/containers/resource_constraints/#memory>
 
 ---
 

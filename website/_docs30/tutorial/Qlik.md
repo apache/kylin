@@ -9,7 +9,7 @@ Qlik Sense delivers intuitive platform solutions for self-service data visualiza
 
 ### Install Kylin ODBC Driver
 
-For the installation information, please refer to [Kylin ODBC Driver](http://kylin.apache.org/docs/tutorial/odbc.html).
+For the installation information, please refer to [Kylin ODBC Driver](http://kylin.apache.org/docs30/tutorial/odbc.html).
 
 ### Install Qlik Sense
 

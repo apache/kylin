@@ -10,7 +10,7 @@ permalink: /docs30/tutorial/hue.html
 However, there isn’t any manual to use with Kylin.
 
 ### Pre-requisites
-Build a cube sample of Kylin with: [Quick Start with Sample Cube](http://kylin.apache.org/docs/tutorial/kylin_sample.html), will be enough.
+Build a cube sample of Kylin with: [Quick Start with Sample Cube](http://kylin.apache.org/docs30/tutorial/kylin_sample.html), will be enough.
 
 You can check: 
 
@@ -67,7 +67,7 @@ Start and connect to Hue:
 {% highlight Groff markup %}
     build/env/bin/hue runserver_plus localhost:8888
 {% endhighlight %}
-* runserver_plus: is like runserver with [debugger](http://django-extensions.readthedocs.io/en/latest/runserver_plus.html#usage)
+* runserver_plus: is like runserver with [debugger](http://django-extensions.readthedocs30.io/en/latest/runserver_plus.html#usage)
 * localIP: Port, usually Hue uses 8888
 
 The output must be similar to:
@@ -112,7 +112,7 @@ The purpose is to add a snipped in a notebook with Kylin queries
 
 References:
 * [Custom SQL Databases](http://gethue.com/custom-sql-query-editors/)	
-* [Manual: Kylin JDBC Driver](http://kylin.apache.org/docs/howto/howto_jdbc.html)
+* [Manual: Kylin JDBC Driver](http://kylin.apache.org/docs30/howto/howto_jdbc.html)
 * [GitHub: Kylin JDBC Driver](https://github.com/apache/kylin/tree/3b2ebd243cfe233ea7b1a80285f4c2110500bbe5/jdbc)
 
 Register JDBC Driver

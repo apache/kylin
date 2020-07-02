@@ -1,8 +1,8 @@
 ---
-layout: docs
+layout: docs30
 title:  Kylin Health Check(NEW)
 categories: howto
-permalink: /docs/howto/howto_use_health_check_cli.html
+permalink: /docs30/howto/howto_use_health_check_cli.html
 ---
 
 ## Get started

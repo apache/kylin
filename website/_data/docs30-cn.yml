@@ -16,6 +16,7 @@
   docs:
   - index
   - gettingstarted/faq
+  - gettingstarted/kylin-quickstart
 
 - title: 安装
   docs:
@@ -24,6 +25,7 @@
   - install/configuration
   - install/kylin_aws_emr
   - install/kylin_docker
+  - install/kylin_on_kubernetes
 
 - title: 教程
   docs:
@@ -31,6 +33,7 @@
   - tutorial/web
   - tutorial/create_cube
   - tutorial/cube_build_job
+  - tutorial/cube_migration
   - tutorial/sql_reference
   - tutorial/project_level_acl
   - tutorial/cube_spark

@@ -67,7 +67,7 @@ $KYLIN_HOME/bin/download-spark.sh
 
 ### Kylin tarball structure
 * `bin`: shell scripts to start/stop Kylin service, backup/restore metadata, as well as some utility scripts.
-* `conf`: XML configuration files. The function of these xml files can be found in [configuration page](/docs/install/configuration.html)
+* `conf`: XML configuration files. The function of these xml files can be found in [configuration page](/docs30/install/configuration.html)
 * `lib`: Kylin jar files for external use, like the Hadoop job jar, JDBC driver, HBase coprocessor jar, etc.
 * `meta_backups`: default backup folder when run "bin/metastore.sh backup";
 * `sample_cube`: files to create the sample cube and its tables.
@@ -122,6 +122,6 @@ Kylin will generate files on HDFS. The root folder is "/kylin/", but will have t
 Usually, there are at least these four kind of directories under `/kylin/kylin_metadata`: `cardinality`, `coprocessor`, `kylin-job_id`, `resources`. 
 1. `cardinality`: the output folder of the cardinality calculation job when Kylin loads a Hive table. It can be cleaned when there is no job running;
 2. `coprocessor`: the folder that Kylin puts HBase coprocessor jar file. Please do not delete it. 
-3. `kylin-job_id`: the cubing job's output folder. Please keep them; if need a cleanup, follow the [storage cleanup guide](/docs/howto/howto_cleanup_storage.html). 
-4. `resources`: the metadata entries that too big to persisted in HBase (e.g, a dictionary or table snapshot); Please do not delete it; if need a cleanup, follow the [cleanup resources from metadata](/docs/howto/howto_backup_metadata.html) 
+3. `kylin-job_id`: the cubing job's output folder. Please keep them; if need a cleanup, follow the [storage cleanup guide](/docs30/howto/howto_cleanup_storage.html). 
+4. `resources`: the metadata entries that too big to persisted in HBase (e.g, a dictionary or table snapshot); Please do not delete it; if need a cleanup, follow the [cleanup resources from metadata](/docs30/howto/howto_backup_metadata.html) 
 5. `jdbc-resources`: similar as `resources`, only appeared when using MySQL as the metadata storage。

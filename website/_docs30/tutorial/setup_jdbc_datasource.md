@@ -88,6 +88,6 @@ Click **Load table** button and then input table' name, or click the "Load Table
 
 Click "Sync", Kylin will load the tables' definition through the JDBC interface. You can see tables and columns when tables are loaded successfully, similar as Hive.
 
-![](/images/docs/jdbc-datasource/load_table_03.png)
+![](/images/docs30/jdbc-datasource/load_table_03.png)
 
 Go ahead and design your model and Cube. When building the Cube, Kylin will use Sqoop to import the data to HDFS, and then run building over it.

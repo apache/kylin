@@ -5,7 +5,7 @@ categories: tutorial
 permalink: /cn/docs30/tutorial/sql_reference.html
 ---
 
-Apache Kylin 使用 Apache Calcite 做 SQL 解析和优化。作为一款 OLAP 引擎, Kylin 支持 `SELECT` 操作，而不支持其它操作例如 `INSERT`，`UPDATE` 和 `DELETE`，因此 Kylin 的 SQL 语法是 Apache Calcite 支持语法的一个子集。本文列举了 Kylin 支持的 SQL 语法、函数以及数据类型，但可能并不完整。您可以查看 [Calcite SQL reference](https://calcite.apache.org/docs/reference.html) 以了解更多内容。 
+Apache Kylin 使用 Apache Calcite 做 SQL 解析和优化。作为一款 OLAP 引擎, Kylin 支持 `SELECT` 操作，而不支持其它操作例如 `INSERT`，`UPDATE` 和 `DELETE`，因此 Kylin 的 SQL 语法是 Apache Calcite 支持语法的一个子集。本文列举了 Kylin 支持的 SQL 语法、函数以及数据类型，但可能并不完整。您可以查看 [Calcite SQL reference](https://calcite.apache.org/docs30/reference.html) 以了解更多内容。 
 
 ## 语法
 [QUERY SYNTAX](#QUERYSYNTAX)
@@ -46,9 +46,6 @@ Apache Kylin 使用 Apache Calcite 做 SQL 解析和优化。作为一款 OLAP �
 
 [SUSTRING](#SUBSTRING)
 [COALESCE](#COALESCE)
-[STDDEV_SUM](#STDDEV_SUM)
-[INTERSECT_COUNT](#INTERSECT_COUNT)
-[INTERSECT_VALUE](#INTERSECT_VALUE)
 
 ## 数据类型
 [数据类型](#datatype)
@@ -375,67 +372,6 @@ SELECT SUBSTRING(lstg_format_name, 1) FROM kylin_sales;
 例子：
 {% highlight Groff markup %}
 SELECT COALESCE(lstg_format_name, '888888888888') FROM kylin_sales;
-{% endhighlight %}
-
-## [STDDEV_SUM](#STDDEV_SUM)
-例子: 第一个查询和第二个查询是对等的，```stddev_sum``` 是一个在 KYLIN-3361 引入的 UDAF。
-{% highlight Groff markup %}
-select A, stddev_sum(sampling_dim, m)
-from T
-group by A
-{% endhighlight %}
-
-{% highlight Groff markup %}
-select A, stddev(SUM_M)
-from (
-      select A, sampling_dim, sum(m) as SUM_M
-      from T
-      group by A, sampling_dim
-) a
-group by A
-{% endhighlight %}
-
-## INTERSECT_COUNT {#INTERSECT_COUNT}
-INTERSECT_COUNT函数用于计算留存率，计算留存率的measure必须经过count_distinct精确去重的预计算。
-例子1: 参考[intersect_count](http://kylin.apache.org/blog/2016/11/28/intersect-count/)
-{% highlight Groff markup %}
-select city, version,
-intersect_count(uuid, dt, array['20161014']) as first_day,
-intersect_count(uuid, dt, array['20161015']) as second_day,
-intersect_count(uuid, dt, array['20161016']) as third_day,
-intersect_count(uuid, dt, array['20161014', '20161015']) as retention_oneday,
-intersect_count(uuid, dt, array['20161014', '20161015', '20161016']) as retention_twoday
-from visit_log
-where dt in ('2016104', '20161015', '20161016')
-group by city, version
-{% endhighlight %}
-
-例子2: 参考KYLIN-4314
-{% highlight Groff markup %}
-select city, version,
-intersect_count(uuid, dt, array['20161014']) as first_day,
-intersect_count(uuid, dt, array['20161015']) as second_day,
-intersect_count(uuid, dt, array['20161016']) as third_day,
-intersect_count(uuid, dt, array['20161014', '20161015']) as retention_oneday,
-intersect_count(uuid, dt, array['20161014|20161015', '20161016']) as retention_twoday
-from visit_log
-where dt in ('2016104', '20161015', '20161016')
-group by city, version
-{% endhighlight %}
-
-## INTERSECT_VALUE {#INTERSECT_VALUE}
-INTERSECT_COUNT函数用于返回留存值的bitmap明细，使用它之前必须经过count_distinct精确去重的预计算。
-例子：
-{% highlight Groff markup %}
-select city, version,
-intersect_value(uuid, dt, array['20161014']) as first_day,
-intersect_value(uuid, dt, array['20161015']) as second_day,
-intersect_value(uuid, dt, array['20161016']) as third_day,
-intersect_value(uuid, dt, array['20161014', '20161015']) as retention_oneday,
-intersect_value(uuid, dt, array['20161014|20161015', '20161016']) as retention_twoday
-from visit_log
-where dt in ('2016104', '20161015', '20161016')
-group by city, version
 {% endhighlight %}
 
 ## 数据类型 {#datatype}

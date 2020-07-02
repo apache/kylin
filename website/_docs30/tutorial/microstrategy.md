@@ -68,7 +68,7 @@ Now you can start creating reports with Kylin as data source.
 
    ​	Reports with custom groups
 
-3. Dimension named with Kylin keywords will cause sql to error out. You may find Kylin keywords here, it is recommended to avoid naming the column name as Kylin keywords, especially when you use MicroStrategy as the front-end BI tool, as far as we know there is no setting in MicroStrategy that can escape the keyword.  [https://calcite.apache.org/docs/reference.html#keywords](https://calcite.apache.org/docs/reference.html#keywords)
+3. Dimension named with Kylin keywords will cause sql to error out. You may find Kylin keywords here, it is recommended to avoid naming the column name as Kylin keywords, especially when you use MicroStrategy as the front-end BI tool, as far as we know there is no setting in MicroStrategy that can escape the keyword.  [https://calcite.apache.org/docs30/reference.html#keywords](https://calcite.apache.org/docs30/reference.html#keywords)
 
 4. If underlying Kylin data model has left join from fact table to lookup table, In order for Microstrategy to also generate the same left join in sql, please follow below MicroStrategy TN to modify VLDB property:
 
