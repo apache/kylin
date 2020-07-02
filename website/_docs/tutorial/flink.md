@@ -15,7 +15,7 @@ There were several attempts to do this in Scala and JDBC, but none of them works
 * [attempt1](http://apache-flink-user-mailing-list-archive.2336050.n4.nabble.com/JDBCInputFormat-preparation-with-Flink-1-1-SNAPSHOT-and-Scala-2-11-td5371.html)  
 * [attempt2](http://apache-flink-user-mailing-list-archive.2336050.n4.nabble.com/Type-of-TypeVariable-OT-in-class-org-apache-flink-api-common-io-RichInputFormat-could-not-be-determi-td7287.html)  
 * [attempt3](http://stackoverflow.com/questions/36067881/create-dataset-from-jdbc-source-in-flink-using-scala)  
-* [attempt4](https://codegists.com/snippet/scala/jdbcissuescala_zeitgeist_scala); 
+* [attempt4](https://codegists.com/snippet/scala/jdbcissuescala_zeitgeist_scala)
 
 We will try use CreateInput and [JDBCInputFormat](https://ci.apache.org/projects/flink/flink-docs-release-1.2/dev/batch/index.html) in batch mode and access via JDBC to Kylin. But it isn’t implemented in Scala, is only in Java [MailList](http://apache-flink-user-mailing-list-archive.2336050.n4.nabble.com/jdbc-JDBCInputFormat-td9393.html). This doc will go step by step solving these problems.
 

@@ -72,12 +72,15 @@ Here let's take a look of how to deploy a kylin cluster which connect to CDH 5.7
 3 Create statefulset and service for memcached.
 
 - Apply kubernetes objects.
+
 ```
 $ kubectl apply -f memcached/
 service/cache-svc created
 statefulset.apps/kylin-memcached created
 ```
+
 - Check hostname of cache service.
+
 ``` 
 $ kubectl run -it--image=busybox:1.28.4--rm--restart=Never sh -n test-dns
 If you don't see a command prompt, try pressing enter.
@@ -91,6 +94,7 @@ Address 1: 192.168.11.44 kylin-memcached-0.cache-svc.kylin-example.svc.cluster.l
 
 4 Create statefulset and service for Apache Kylin.
 - Modify memcached configuration.
+
 ``` 
 // modify memcached hostname(session sharing)
 // memcachedNodes="n1:kylin-memcached-0.cache-svc.kylin-example.svc.cluster.local:11211"
@@ -100,7 +104,9 @@ $ vim ../config/tomcat/context.xml
 $ vim ../config/kylin-job/kylin.properties
 $ vim ../config/kylin-query/kylin.properties
 ```
+
 - Create configMap
+
 ``` 
 $ kubectl create configmap -n kylin-example hadoop-config \
 --from-file=../config/hadoop/core-site.xml \
@@ -153,7 +159,9 @@ $ kubectl create configmap -n kylin-example tomcat-config  \
 --from-file=../config/tomcat/context.xml \
 --dry-run -o yaml | kubectl apply -f -
 ```
+
 - Deploy Kylin's Job server
+
 ```
 $ kubectl apply -f kylin-job/
 service/kylin-job-svc created
@@ -172,6 +180,7 @@ statefulset.apps/kylin-query created
   - http://${HOSTNAME}:30012/kylin for Query Server
 
 6 Clean up
+
 
 ``` 
 $ kubectl delete -f memcached/

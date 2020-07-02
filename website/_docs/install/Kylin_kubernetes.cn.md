@@ -61,12 +61,15 @@ Apache Kylin 是一个开源的的分布式的，针对大数据场景下的高�
 
 3 部署 Memcached 服务
 - Apply kubernetes objects.
+
 ```
 $ kubectl apply -f memcached/
 service/cache-svc created
 statefulset.apps/kylin-memcached created
 ```
+
 - 获取 Memcached 服务地址
+
 ``` 
 $ kubectl run -it--image=busybox:1.28.4--rm--restart=Never sh -n test-dns
 If you don't see a command prompt, try pressing enter.
@@ -80,6 +83,7 @@ Address 1: 192.168.11.44 kylin-memcached-0.cache-svc.kylin-example.svc.cluster.l
 
 4 部署 Kylin 服务
 - 修改 Memcached 配置
+
 ``` 
 ## modify memcached hostname(session sharing)
 ## memcachedNodes="n1:kylin-memcached-0.cache-svc.kylin-example.svc.cluster.local:11211"
@@ -89,7 +93,9 @@ modify memcached hostname(query cache)
 $ vim ../config/kylin-job/kylin.properties
 $ vim ../config/kylin-query/kylin.properties
 ```
+
 - 创建 ConfigMap
+
 ``` 
 $ kubectl create configmap -n kylin-example hadoop-config \
 --from-file=../config/hadoop/core-site.xml \
@@ -142,13 +148,17 @@ $ kubectl create configmap -n kylin-example tomcat-config  \
 --from-file=../config/tomcat/context.xml \
 --dry-run -o yaml | kubectl apply -f -
 ```
+
 - 部署 Kylin 的 Job server
+
 ```
 $ kubectl apply -f kylin-job/
 service/kylin-job-svc created
 statefulset.apps/kylin-job created
 ```
+
 - 部署 Kylin 的 Query server
+
 ``` 
 $ kubectl apply -f kylin-query/
 service/kylin-query-svc created
@@ -159,6 +169,7 @@ statefulset.apps/kylin-query created
   - http://${HOSTNAME}:30012/kylin 对应 QueryServer
 
 6 停止 Kylin 服务
+
 ``` 
 $ kubectl delete -f memcached/
 $ kubectl delete -f kylin-query/
@@ -167,6 +178,7 @@ $ kubectl delete -f kylin-job/
 
 ## 问题诊断
 - 获取指定 Pod 的日志
+
 ```
 ##  Output of : sh kylin.sh start
 $ kubectl logs kylin-job-0 kylin -n kylin-example
@@ -174,11 +186,13 @@ $ kubectl logs -f kylin-job-0 kylin -n kylin-example
 ```
  
 - 访问指定 Pod
+
 ``` 
 $ kubectl exec -it  {POD_NAME} -n kylin-example-- bash
 ```   
 
 - 检查指定 Pod 启动失败原因
+
 ``` 
 $ kubectl get pod {POD_NAME} -n kylin-example -o yaml
 ```

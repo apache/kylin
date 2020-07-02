@@ -29,22 +29,23 @@ Kylin 实例是无状态的服务，运行时的状态信息存储在 HBase meta
 
 使用多任务引擎，你可以在多个 Kylin 节点上配置它的角色为 `job` 或 `all`。
 
-为了避免它们之间产生竞争，需要在`kylin.properties`中配置任务调度器为分布式调度，有如下两种配置方式可以选择：
-
-#### 1 使用`DistributedScheduler`进行任务调度
+为了避免它们之间产生竞争，需要在`kylin.properties`中配置任务调度器为分布式调度：
 
 ```properties
 kylin.job.scheduler.default=2
 kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock
 ```
+然后将所有任务和查询节点的地址注册到 `kylin.server.cluster-servers`。
 
-#### 2 使用`CuratorScheculer`进行任务调度（从 v3.0.0-alpha 开始支持）
+### 配置`CuratorScheculer`进行任务调度
+
+从 v3.0.0-alpha 开始，kylin引入基于Curator的主从模式多任务引擎调度器，用户可以修改如下配置来启用CuratorScheculer：
 
 ```properties
 kylin.job.scheduler.default=100
+kylin.server.self-discovery-enabled=true
 ```
 
-配置完调度器，记得将所有任务和查询节点的地址注册到 `kylin.server.cluster-servers`。
 
 
 

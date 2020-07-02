@@ -110,8 +110,8 @@ Kylin 启动后，访问 Kylin 网站，在 "Advanced Setting" 页，编辑名�
 现在构建步骤中的'extract fact table distinct value' 和 'Convert Cuboid Data to HFile' 两个步骤也可以使用Flink进行构建。相关的配置如下：
 
 {% highlight Groff markup %}
-kylin.engine.flink-fact-distinct=TRUE
-kylin.engine.flink-cube-hfile=TRUE
+kylin.engine.flink-fact-distinct=true
+kylin.engine.flink-cube-hfile=true
 {% endhighlight %}
 
 ## 疑难解答

@@ -30,20 +30,21 @@ Since v2.0, Kylin supports multiple job engines running together, which is more 
 
 To enable the distributed job scheduler, you need to set or update the configs in the `kylin.properties`, there are two configuration options:
 
-#### 1 Use `distributedscheduler`
-
 ```properties
 kylin.job.scheduler.default=2
 kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock
 ```
 
-#### 2 Use `CuratorScheculer`（Since v3.0.0-alpha）
+Then please add all job servers and query servers to the `kylin.server.cluster-servers`.
+
+### Use `CuratorScheculer`
+
+Since v3.0.0-alpha, kylin introduces the master-slave mode multiple job engines scheduler based on Curator. Users can modify the following configuration to enable CuratorScheduler:
 
 ```properties
 kylin.job.scheduler.default=100
+kylin.server.self-discovery-enabled=true
 ```
-
-Please add all job servers and query servers to the `kylin.server.cluster-servers` after finished configuring scheduler.
 
 
 

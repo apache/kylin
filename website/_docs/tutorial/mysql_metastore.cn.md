@@ -8,7 +8,6 @@ since: v2.5.0
 
 Kylin 支持 MySQL 作为 Metastore 存储。
 
-> **注意**：该功能还在测试中，建议您谨慎使用。
 
 
 

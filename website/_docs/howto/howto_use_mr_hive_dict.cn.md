@@ -34,7 +34,8 @@ Hive Global Dictionary功能与shrunken global dictionary(KYLIN-3491)是冲突�
 - `kylin.dictionary.mr-hive.intermediate.table.suffix` is used to specific suffix for distinct value table, default value is *_group_by*.
 - `kylin.dictionary.mr-hive.columns.reduce.num` A key/value structure(or a map), which key is {TABLE_NAME}_{COLUMN_NAME}, and value is number for expected reducers in Build Segment Level Dictionary (MR job Parallel Part Build).
 - `kylin.dictionary.mr-hive.ref.columns` To reuse other global dictionary(s), you can specific a list here, to refer to some existent global dictionary(s) built by another cube.
-
+- `kylin.source.hive.databasedir` The location of Hive table in HDFS.
+ 
 ----
 
 ### Step by Step
@@ -60,6 +61,7 @@ Hive Global Dictionary功能与shrunken global dictionary(KYLIN-3491)是冲突�
 - https://issues.apache.org/jira/browse/KYLIN-3491
 - https://issues.apache.org/jira/browse/KYLIN-3841
 - https://issues.apache.org/jira/browse/KYLIN-3905
+- https://issues.apache.org/jira/browse/KYLIN-4342
 - https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Union
-- http://kylin.apache.org/blog/2016/08/01/count-distinct-in-kylin/
+- https://kylin.apache.org/blog/2016/08/01/count-distinct-in-kylin/
 - https://cwiki.apache.org/confluence/display/KYLIN/Introduction+to+Hive+Global+Dictionary

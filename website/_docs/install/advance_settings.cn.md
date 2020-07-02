@@ -113,7 +113,7 @@ kylin.job.admin.dls=adminstrator-address
 所有的 jobs 管理员都会收到通知。建模者和分析师需要将邮箱填写在 cube 创建的第一页的 "Notification List" 中，然后即可收到关于该 cube 的通知。
 
 
-## 支持 MySQL 作为 Kylin metadata 的存储(测试)
+## 支持 MySQL 作为 Kylin metadata 的存储
 
 Kylin 支持 MySQL 作为 metadata 的存储；为了使该功能生效，您需要执行以下步骤：
 
@@ -154,7 +154,6 @@ java -classpath kylin-server-base-\<version\>.jar:kylin-core-common-\<version\>.
 
 *启动 Kylin
 
-*注意：该功能还在测试中，建议您谨慎使用*
 
 ## 使用 SparkSql 创建 Hive 中间表
 
