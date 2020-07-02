@@ -154,6 +154,7 @@ function retrieveStartCommand() {
     -Dkylin.flink.dependency=${flink_dependency} \
     -Dkylin.hadoop.conf.dir=${kylin_hadoop_conf_dir} \
     -Dkylin.server.host-address=${kylin_rest_address} \
+    -Dkylin.source.hive.warehouse-dir=${hiveWarehouseDir} \
     -Dspring.profiles.active=${spring_profile} \
     org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start"
 }
