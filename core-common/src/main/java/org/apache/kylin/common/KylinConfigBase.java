@@ -29,6 +29,7 @@ import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -611,8 +612,8 @@ public abstract class KylinConfigBase implements Serializable {
     /**
      * @return the hdfs path for Hive Global dictionary table
      */
-    public String getHiveDatabaseDir() {
-        return this.getOptional("kylin.source.hive.databasedir", "");
+    public String getGlobalDictHiveDatabaseDir() {
+        return this.getOptional("kylin.source.hive.global-dict-database-dir", getHiveDatabaseDir(getMrHiveDictDB()));
     }
 
     public String[] getMrHiveDictColumnsExcludeRefColumns() {
@@ -1057,6 +1058,17 @@ public abstract class KylinConfigBase implements Serializable {
     // SOURCE.HIVE
     // ============================================================================
 
+    public String getHiveDatabaseDir(String databaseName) {
+        String dbDir = System.getProperty("kylin.source.hive.warehouse-dir");
+        if (!StringUtil.isEmpty(databaseName) && !databaseName.equalsIgnoreCase(DEFAULT)) {
+            if (!dbDir.endsWith("/")) {
+                dbDir += "/";
+            }
+            dbDir += databaseName + ".db";
+        }
+        return dbDir;
+    }
+
     public int getDefaultSource() {
         return Integer.parseInt(getOptional("kylin.source.default", "0"));
     }
@@ -1125,7 +1137,6 @@ public abstract class KylinConfigBase implements Serializable {
     public String getHiveDatabaseForIntermediateTable() {
         return CliCommandExecutor.checkHiveProperty(this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT));
     }
-
 
     public String getFlatTableStorageFormat() {
         return this.getOptional("kylin.source.hive.flat-table-storage-format", "SEQUENCEFILE");

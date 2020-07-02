@@ -207,5 +207,7 @@ hive_dependency=${hive_conf_path}:${hive_lib}:${hcatalog}
 verbose "hive dependency is $hive_dependency"
 export hive_dependency
 export hive_conf_path
+export hiveWarehouseDir=`hive -e 'set hive.metastore.warehouse.dir;' | awk '{split($0,a,"="); print a[2]}'`
+echo "export hiveWarehouseDir=$hiveWarehouseDir"
 echo "export hive_dependency=$hive_dependency
 export hive_conf_path=$hive_conf_path" > ${dir}/cached-hive-dependency.sh
