@@ -104,8 +104,8 @@ After all steps be successfully executed, the Cube becomes "Ready" and you can q
 As we all know, the cubing job includes several steps and the steps 'extract fact table distinct value' and 'Convert Cuboid Data to HFile' can also be built by flink. The configurations are as follows.
 
 {% highlight Groff markup %}
-kylin.engine.flink-fact-distinct=TRUE
-kylin.engine.flink-cube-hfile=TRUE
+kylin.engine.flink-fact-distinct=true
+kylin.engine.flink-cube-hfile=true
 {% endhighlight %}
 
 

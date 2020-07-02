@@ -81,6 +81,9 @@ This page lists the major RESTful APIs provided by Kylin.
    * [Get users cannot query the table](#get-users-cannot-query-the-table)
    * [Put user to table blacklist](#put-user-to-table-blacklist)
    * [Delete user from table blacklist](#delete-user-from-table-blacklist)
+* Metrics
+   * [Get all metrics](#get-all-metrics)
+   * [Get specific type of metrics](#get-specific-type-of-metrics)
    
 ## Authentication
 `POST /kylin/api/user/authentication`
@@ -2105,6 +2108,28 @@ This API is specific for stream cube's building;
 * table - `required` `string` table name
 * name - `required` `string` user name or group name you want to delete from table blacklist
 
+***
+
+## Get all metrics
+`GET /kylin/api/jmetrics/`
+
+#### Response sample
+```
+{
+  "version": "3.0.0",
+  "gauges": {},
+  "counters": {},
+  "histograms": {},
+  "meters": {},
+  "timers": {}
+}
+```
+
+## Get specific type of metrics
+`GET /kylin/api/jmetrics/{type}`
+
+#### Path variable
+* type - `required` `string` Specific type of metrics you want, e.g meters
 
 ## Use RESTful API in Javascript
 

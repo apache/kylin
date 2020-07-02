@@ -113,7 +113,7 @@ Restart Kylin server to take effective. To disable, set `mail.enabled` back to `
 Administrator will get notifications for all jobs. Modeler and Analyst need enter email address into the "Notification List" at the first page of cube wizard, and then will get notified for that cube.
 
 
-## Enable MySQL as Kylin metadata storage (beta)
+## Enable MySQL as Kylin metadata storage
 
 Kylin can use MySQL as the metadata storage, for the scenarios that HBase is not the best option; To enable this, you can perform the following steps: 
 
@@ -151,7 +151,6 @@ java -classpath kylin-server-base-\<version\>.jar:kylin-core-common-\<version\>.
 
 * Start Kylin
 
-**Note: The feature is in beta now.**
 
 ## Use SparkSql to create intermediate flat Hive table 
 

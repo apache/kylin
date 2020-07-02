@@ -24,7 +24,7 @@ permalink: /cn/docs/install/configuration.html
 	- [RESTful Webservice](#rest-config)
 - [Metastore 配置](#kylin_metastore)
     - [元数据相关](#metadata)
-    - [基于 MySQL 的 Metastore (测试)](#mysql-metastore)
+    - [基于 MySQL 的 Metastore](#mysql-metastore)
 - [构建配置](#kylin-build)
     - [Hive 客户端 & SparkSQL](#hive-client-and-sparksql)
     - [配置 JDBC 数据源](#jdbc-datasource)
@@ -232,9 +232,7 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 
 
 
-### 基于 MySQL 的 Metastore (测试) {#mysql-metastore}
-
-> **注意**：该功能还在测试中，建议用户谨慎使用。
+### 基于 MySQL 的 Metastore {#mysql-metastore}
 
 - `kylin.metadata.url`：指定元数据路径
 - `kylin.metadata.jdbc.dialect`：指定 JDBC 方言

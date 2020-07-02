@@ -8,7 +8,7 @@ since: v3.1.0
 
 ## Migrate on the same Hadoop cluster
 
-### Pre-requisitions to use cube migration
+### Pre-requisites to use cube migration
 
 1. Only cube admin can migrate the cubes as the "migrate" button is **ONLY** visible to cube admin.
 2. The cube status must be **ready** before migration which you have built the segment and confirmed the performance.

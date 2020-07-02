@@ -23,7 +23,7 @@ permalink: /docs/install/configuration.html
 	- [RESTful Webservice](#rest-config)
 - [Metastore Configuration](#kylin_metastore)
     - [Metadata-related](#metadata)
-    - [MySQL Metastore Configuration (Beta)](#mysql-metastore)
+    - [MySQL Metastore Configuration](#mysql-metastore)
 - [Modeling Configuration](#kylin-build)
     - [Hive Client and SparkSQL](#hive-client-and-sparksql)
     - [JDBC Datasource Configuration](#jdbc-datasource)
@@ -235,9 +235,8 @@ This section introduces Kylin Metastore related configuration.
 
 
 
-### MySQL Metastore Configuration (Beta) {#mysql-metastore}
+### MySQL Metastore Configuration {#mysql-metastore}
 
-> *Note*: This feature is still being tested and it is recommended to use it with caution.
 
 - `kylin.metadata.url`: specifies the metadata path
 - `kylin.metadata.jdbc.dialect`: specifies JDBC dialect
