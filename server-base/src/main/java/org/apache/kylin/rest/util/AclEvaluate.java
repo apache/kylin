@@ -60,25 +60,42 @@ public class AclEvaluate {
         return getProjectInstance(projectName);
     }
 
+    public void checkProjectAdminPermission(ProjectInstance projectInstance) {
+        aclUtil.hasProjectAdminPermission(projectInstance);
+    }
+
+    //for raw project
+    public void checkProjectReadPermission(ProjectInstance projectInstance) {
+        aclUtil.hasProjectReadPermission(projectInstance);
+    }
+
+    public void checkProjectWritePermission(ProjectInstance projectInstance) {
+        aclUtil.hasProjectWritePermission(projectInstance);
+    }
+
+    public void checkProjectOperationPermission(ProjectInstance projectInstance) {
+        aclUtil.hasProjectOperationPermission(projectInstance);
+    }
+
     public void checkProjectAdminPermission(String projectName) {
         ProjectInstance projectInstance = getProjectInstance(projectName);
-        aclUtil.hasProjectAdminPermission(projectInstance);
+        checkProjectAdminPermission(projectInstance);
     }
 
     //for raw project
     public void checkProjectReadPermission(String projectName) {
         ProjectInstance projectInstance = getProjectInstance(projectName);
-        aclUtil.hasProjectReadPermission(projectInstance);
+        checkProjectReadPermission(projectInstance);
     }
 
     public void checkProjectWritePermission(String projectName) {
         ProjectInstance projectInstance = getProjectInstance(projectName);
-        aclUtil.hasProjectWritePermission(projectInstance);
+        checkProjectWritePermission(projectInstance);
     }
 
     public void checkProjectOperationPermission(String projectName) {
         ProjectInstance projectInstance = getProjectInstance(projectName);
-        aclUtil.hasProjectOperationPermission(projectInstance);
+        checkProjectOperationPermission(projectInstance);
     }
 
     //for cube acl entity
