@@ -135,7 +135,7 @@ public class MRHiveDictUtil {
         ddl.append("CREATE TABLE IF NOT EXISTS " + globalTableName + " \n");
         ddl.append("( \n ");
         ddl.append("  dict_key" + " " + "STRING" + " COMMENT '' , \n");
-        ddl.append("  dict_val" + " " + "STRING" + " COMMENT '' \n");
+        ddl.append("  dict_val" + " " + "INT" + " COMMENT '' \n");
         ddl.append(") \n");
         ddl.append("COMMENT '' \n");
         ddl.append("PARTITIONED BY (dict_column string) \n");
@@ -196,7 +196,7 @@ public class MRHiveDictUtil {
                 + "\n" + "SELECT CONCAT_WS(',', tc.dict_column, cast(tc.total_distinct_val AS String), if(tm.max_dict_val is null, '0', cast(max_dict_val as string))) "
                 + "\n" + "FROM ("
                 + "\n" + "    SELECT dict_column, count(1) total_distinct_val"
-                + "\n" + "    FROM " + globalDictDatabase + "." + distinctValueTable
+                + "\n" + "    FROM " + distinctValueTable
                 + "\n" + "    WHERE DICT_COLUMN != '" + BatchConstants.CFG_GLOBAL_DICT_STATS_PARTITION_VALUE + "'"
                 + "\n" + "    GROUP BY dict_column) tc "
                 + "\n" + "LEFT JOIN (\n"

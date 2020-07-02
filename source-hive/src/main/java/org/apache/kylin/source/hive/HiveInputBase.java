@@ -296,7 +296,6 @@ public class HiveInputBase {
                                 .append(globalDictDatabase).append(".").append(refGlobalDictTable)
                                 .append(" WHERE dict_column = '").append(refDictColumn).append("') b \n")
                                 .append("ON a.").append(JoinedFlatTable.colName(dictColumnRef)).append(" = b.dict_key;");
-                        dictHqlMap.put(dictColumn, insertOverwriteHql.toString());
                     } else {
                         // Note: use hive global dictionary built by current cube
                         insertOverwriteHql
@@ -374,10 +373,9 @@ public class HiveInputBase {
             // mr-hive dict and inner table do not need delete hdfs
             String[] mrHiveDicts = flatDesc.getSegment().getConfig().getMrHiveDictColumns();
             if (Objects.nonNull(mrHiveDicts) && mrHiveDicts.length > 0) {
-                String dictDb = flatDesc.getSegment().getConfig().getMrHiveDictDB();
-                String tableName = dictDb + "." + flatDesc.getTableName()
+                String tableName = flatTableDatabase + "." + flatDesc.getTableName()
                         + flatDesc.getSegment().getConfig().getMrHiveDistinctValueTableSuffix();
-                String tableName2 = dictDb + "." + flatDesc.getTableName()
+                String tableName2 = flatTableDatabase + "." + flatDesc.getTableName()
                         + flatDesc.getSegment().getConfig().getMrHiveDictTableSuffix();
                 deleteTables.add(tableName);
                 deleteTables.add(tableName2);
