@@ -99,6 +99,39 @@ CubeMetaIngester.java 将提取的 cube 注入到另一个 metadata store 中。
 | project <project>                 | (Required) Specify the target project for the new cubes.                              
 | srcPath <srcPath>                 | (Required) Specify the path to the extracted Cube metadata zip file.                                                                                                                               |
 
+##  CubeMigrationCLI.java
+
+### 作用
+CubeMigrationCLI.java 用于迁移 cubes。例如：将 cube 从测试环境迁移到生产环境。请注意，不同的环境是共享相同的 Hadoop 集群，包括 HDFS，HBase 和 HIVE。此 CLI 不支持跨 Hadoop 集群的数据迁移。
+
+### 如何使用
+前八个参数必须有且次序不能改变。
+{% highlight Groff markup %}
+./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI <srcKylinConfigUri> <dstKylinConfigUri> <cubeName> <projectName> <copyAclOrNot> <purgeOrNot> <overwriteIfExists> <realExecute> <migrateSegmentOrNot>
+{% endhighlight %}
+例如：
+{% highlight Groff markup %}
+./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI kylin-qa:7070 kylin-prod:7070 kylin_sales_cube learn_kylin true false false true false
+{% endhighlight %}
+命令执行成功后，请 reload metadata，您想要迁移的 cube 将会存在于迁移后的 project 中。
+
+下面会列出所有支持的参数：
+　如果您使用 `cubeName` 这个参数，但想要迁移的 cube 所对应的 model 在要迁移的环境中不存在，model 的数据也会迁移过去。
+　如果您将 `overwriteIfExists` 设置为 false，且该 cube 已存在于要迁移的环境中，当您运行命令，cube 存在的提示信息将会出现。
+　如果您将 `migrateSegmentOrNot` 设置为 true，请保证 Kylin metadata 的 HDFS 目录存在且 Cube 的状态为 READY。
+
+| Parameter           | Description                                                                                |
+| ------------------- | :----------------------------------------------------------------------------------------- |
+| srcKylinConfigUri   | The URL of the source environment's Kylin configuration. It can be `host:7070`, or an absolute file path to the `kylin.properties`.                                                     |
+| dstKylinConfigUri   | The URL of the target environment's Kylin configuration.                                                 |
+| cubeName            | the name of Cube to be migrated.(Make sure it exist)                                       |
+| projectName         | The target project in the target environment.(Make sure it exist)                          |
+| copyAclOrNot        | `true` or `false`: whether copy Cube ACL to target environment.                                |
+| purgeOrNot          | `true` or `false`: whether purge the Cube from src server after the migration.                 |
+| overwriteIfExists   | `true` or `false`: overwrite cube if it already exists in the target environment.                             |
+| realExecute         | `true` or `false`: if false, just print the operations to take, if true, do the real migration.               |
+| migrateSegmentOrNot | (Optional) true or false: whether copy segment data to target environment. Default true.   |
+
 ## CubeMigrationCheckCLI.java
 
 ### 作用

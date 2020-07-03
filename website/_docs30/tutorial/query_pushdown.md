@@ -8,12 +8,11 @@ since: v2.1
 
 ### Introduction
 
-If a query can not be answered by any cube, Kylin supports pushing down such query to backup query engines like Hive, SparkSQL, Impala through JDBC.
+If a query can not be answered by any cube, Kylin supports pushing down such query to backup query engines like Hive, SparkSQL, Impala through JDBC. In the following, Hive is used as an example, as it is one of Kylin's data sources and be convenient to configure. 
 
 
 ### Query Pushdown config
 
-#### Pushdown to single engine
 1. In Kylin's installation directory, uncomment configuration item `kylin.query.pushdown.runner-class-name` of config file `kylin.properties`, and set it to `org.apache.kylin.query.adhoc.PushDownRunnerJdbcImpl`
 
 
@@ -35,8 +34,6 @@ If a query can not be answered by any cube, Kylin supports pushing down such que
 
 Here is a sample configuration; remember to change host "hiveserver" and port "10000" with your cluster configuraitons.
 
-Then, restart Kylin.
-
 {% highlight Groff markup %}
 kylin.query.pushdown.runner-class-name=org.apache.kylin.query.adhoc.PushDownRunnerJdbcImpl
 kylin.query.pushdown.jdbc.url=jdbc:hive2://hiveserver:10000/default
@@ -49,40 +46,8 @@ kylin.query.pushdown.jdbc.pool-min-idle=0
 
 {% endhighlight %}
 
-#### Pushdown to multi engines
-Since v3.0.0, Kylin supports pushdown query to multiple engines through JDBC.
-You can specify multiple engine ids by configuring `kylin.query.pushdown.runner.ids`, separated by `,`, such as:
 
-{% highlight Groff markup %}
-kylin.query.pushdown.runner.ids=id1,id2,id3
-{% endhighlight %}
-
-Three depression engines are specified. These three engines can be the same type or different types.
-
-Multi-engine pushdown also supports specifying specific jdbc parameters. The meaning of the parameters is the same as the single engine pushdown described above. Please see the configuration below:
-
-{% highlight Groff markup %}
-kylin.query.pushdown.{id}.jdbc.url
-kylin.query.pushdown.{id}.jdbc.driver
-kylin.query.pushdown.{id}.jdbc.username
-kylin.query.pushdown.{id}.jdbc.password
-kylin.query.pushdown.{id}.jdbc.pool-max-total
-kylin.query.pushdown.{id}.jdbc.pool-max-idle
-kylin.query.pushdown.{id}.jdbc.pool-min-idle
-{% endhighlight %}
-
-When specifying a specific jdbc parameter for an engine, please replace the above `{id}` with the real engine id, such as the configuration of `id1`:
-
-{% highlight Groff markup %}
-kylin.query.pushdown.id1.jdbc.url
-kylin.query.pushdown.id1.jdbc.driver
-kylin.query.pushdown.id1.jdbc.username
-kylin.query.pushdown.id1.jdbc.password
-kylin.query.pushdown.id1.jdbc.pool-max-total
-kylin.query.pushdown.id1.jdbc.pool-max-idle
-kylin.query.pushdown.id1.jdbc.pool-min-idle
-{% endhighlight %}
-
+3. Restart Kylin
 
 ### Do Query Pushdown
 
@@ -93,18 +58,4 @@ After Query Pushdown is configured, user is allowed to do flexible queries to th
 If query is answered by backup engine, `Is Query Push-Down` is set to `true` in the log.
 
    ![](/images/tutorial/2.1/push_down/push_down_2.png)
-   
-  
-### Pushdown to Presto 
-
-If you want your query be push down to Presto, you can set following configuration in Project level properties (Introduced in KYLIN-4491).
-
-{% highlight Groff markup %}
-kylin.query.pushdown.runner-class-name=org.apache.kylin.query.pushdown.PushdownRunnerSDKImpl
-kylin.source.jdbc.dialect=presto
-kylin.source.jdbc.adaptor=org.apache.kylin.sdk.datasource.adaptor.PrestoAdaptor
-kylin.query.pushdown.jdbc.url={YOUR_URL}
-kylin.query.pushdown.jdbc.driver=com.facebook.presto.jdbc.PrestoDriver
-kylin.query.pushdown.jdbc.username={USER_NAME}
-kylin.query.pushdown.jdbc.password={PASSWORD}
-{% endhighlight %}    
+# 

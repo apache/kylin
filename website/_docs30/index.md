@@ -1,7 +1,7 @@
 ---
 layout: docs30
 title: Overview
-categories: docs30
+categories: docs
 permalink: /docs30/index.html
 ---
 
@@ -12,7 +12,8 @@ Welcome to Apache Kylin™: Analytical Data Warehouse for Big Data
 Apache Kylin™ is an open source Distributed Analytical Data Warehouse for big data; It was designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets.
 
 This is the document for the latest released version (v3.0). Document of other versions: 
-* [v2.4 document](/docs3024)
+* [v3.0 document](/docs30)
+* [v2.4 document](/docs24)
 * [Archived](/archive/)
 
 Installation & Setup
@@ -30,16 +31,15 @@ Tutorial
 2. [Web Interface](tutorial/web.html)
 3. [Cube Wizard](tutorial/create_cube.html)
 4. [Cube Build and Job Monitoring](tutorial/cube_build_job.html)
-5. [Cube Migration](tutorial/cube_migration.html)
-6. [SQL reference](tutorial/sql_reference.html)
-7. [Build Cube with Streaming Data](tutorial/cube_streaming.html)
-8. [Build Cube with Spark Engine](tutorial/cube_spark.html)
-9. [Cube Build Tuning](tutorial/cube_build_performance.html)
-10. [Enable Query Pushdown](tutorial/query_pushdown.html)
-11. [Setup System Cube](tutorial/setup_systemcube.html)
-12. [Optimize with Cube Planner](tutorial/use_cube_planner.html)
-13. [Use System Dashboard](tutorial/use_dashboard.html)
-14. [Setup JDBC Data Source](tutorial/setup_jdbc_datasource.html)
+5. [SQL reference](tutorial/sql_reference.html)
+6. [Build Cube with Streaming Data](tutorial/cube_streaming.html)
+7. [Build Cube with Spark Engine](tutorial/cube_spark.html)
+8. [Cube Build Tuning](tutorial/cube_build_performance.html)
+9. [Enable Query Pushdown](tutorial/query_pushdown.html)
+10. [Setup System Cube](tutorial/setup_systemcube.html)
+11. [Optimize with Cube Planner](tutorial/use_cube_planner.html)
+12. [Use System Dashboard](tutorial/use_dashboard.html)
+13. [Setup JDBC Data Source](tutorial/setup_jdbc_datasource.html)
 
 
 Connectivity and APIs

@@ -17,13 +17,13 @@ There were several attempts to do this in Scala and JDBC, but none of them works
 * [attempt3](http://stackoverflow.com/questions/36067881/create-dataset-from-jdbc-source-in-flink-using-scala)  
 * [attempt4](https://codegists.com/snippet/scala/jdbcissuescala_zeitgeist_scala); 
 
-We will try use CreateInput and [JDBCInputFormat](https://ci.apache.org/projects/flink/flink-docs30-release-1.2/dev/batch/index.html) in batch mode and access via JDBC to Kylin. But it isn’t implemented in Scala, is only in Java [MailList](http://apache-flink-user-mailing-list-archive.2336050.n4.nabble.com/jdbc-JDBCInputFormat-td9393.html). This doc will go step by step solving these problems.
+We will try use CreateInput and [JDBCInputFormat](https://ci.apache.org/projects/flink/flink-docs-release-1.2/dev/batch/index.html) in batch mode and access via JDBC to Kylin. But it isn’t implemented in Scala, is only in Java [MailList](http://apache-flink-user-mailing-list-archive.2336050.n4.nabble.com/jdbc-JDBCInputFormat-td9393.html). This doc will go step by step solving these problems.
 
 ### Pre-requisites
 
 * Need an instance of Kylin, with a Cube; [Sample Cube](kylin_sample.html) will be good enough.
 * [Scala](http://www.scala-lang.org/) and [Apache Flink](http://flink.apache.org/) Installed
-* [IntelliJ](https://www.jetbrains.com/idea/) Installed and configured for Scala/Flink (see [Flink IDE setup guide](https://ci.apache.org/projects/flink/flink-docs30-release-1.1/internals/ide_setup.html) )
+* [IntelliJ](https://www.jetbrains.com/idea/) Installed and configured for Scala/Flink (see [Flink IDE setup guide](https://ci.apache.org/projects/flink/flink-docs-release-1.1/internals/ide_setup.html) )
 
 ### Used software:
 
@@ -95,7 +95,7 @@ This is the new error to solve:
   ![](/images/Flink-Tutorial/04.png)
 
 
-* If check the code of [JDBCInputFormat.java](https://github.com/apache/flink/blob/master/flink-batch-connectors/flink-jdbc/src/main/java/org/apache/flink/api/java/io/jdbc/JDBCInputFormat.java#L69), we can see [this new property](https://github.com/apache/flink/commit/09b428bd65819b946cf82ab1fdee305eb5a941f5#diff-9b49a5041d50d9f9fad3f8060b3d1310R69) (and mandatory) added on Apr 2016 by [FLINK-3750](https://issues.apache.org/jira/browse/FLINK-3750)  Manual [JDBCInputFormat](https://ci.apache.org/projects/flink/flink-docs30-master/api/java/org/apache/flink/api/java/io/jdbc/JDBCInputFormat.html) v1.2 in Java
+* If check the code of [JDBCInputFormat.java](https://github.com/apache/flink/blob/master/flink-batch-connectors/flink-jdbc/src/main/java/org/apache/flink/api/java/io/jdbc/JDBCInputFormat.java#L69), we can see [this new property](https://github.com/apache/flink/commit/09b428bd65819b946cf82ab1fdee305eb5a941f5#diff-9b49a5041d50d9f9fad3f8060b3d1310R69) (and mandatory) added on Apr 2016 by [FLINK-3750](https://issues.apache.org/jira/browse/FLINK-3750)  Manual [JDBCInputFormat](https://ci.apache.org/projects/flink/flink-docs-master/api/java/org/apache/flink/api/java/io/jdbc/JDBCInputFormat.html) v1.2 in Java
 
    Add the new Property: **setRowTypeInfo**
    

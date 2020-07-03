@@ -35,7 +35,7 @@ docker pull apachekylin/apache-kylin-standalone:3.0.1
 
 The image here contains the latest version of Kylin: Kylin v3.0.1. This image contains all of the big data components that Kylin depends on, so it takes a long time to pull the image – please be patient. After the pull is successful, it is displayed as follows:
 
-![](/images/docs30/quickstart/pull_docker.png)
+![](/images/docs/quickstart/pull_docker.png)
 
 #### Step2
 Execute the following command to start the container:
@@ -189,36 +189,36 @@ Of course, you can also try to create your own cube based on the following tutor
 #### Step8. Create Project 
 After logging in to Kylin, click the + in the upper left corner to create a Project.
 
-![](/images/docs30/quickstart/create_project.png)
+![](/images/docs/quickstart/create_project.png)
 
 #### Step9. Load Hive Table
 Click Model -> the Data Source -> the Load the From the Table Tree. 
 Kylin reads the Hive data source table and displays it in a tree. You can choose the tables you would like to add to models and then click Sync. The selected tables will then be loaded into Kylin.
 
-![](/images/docs30/quickstart/load_hive_table.png)
+![](/images/docs/quickstart/load_hive_table.png)
 
 They then appear in the Tables directory of the data source.
 
 #### Step10. Create the Model
 Click Model -> New -> New Model:
 
-![](/images/docs30/quickstart/create_model.png)
+![](/images/docs/quickstart/create_model.png)
 
 Enter the Model Name and click Next, then select Fact Table and Lookup Table. You need to set the JOIN condition with the fact table when adding Lookup Table.
 
-![](/images/docs30/quickstart/add_lookup_table.png)
+![](/images/docs/quickstart/add_lookup_table.png)
 
 Then click Next to select Dimension:
 
-![](/images/docs30/quickstart/model_add_dimension.png)
+![](/images/docs/quickstart/model_add_dimension.png)
 
 Next, Select Measure:
 
-![](/images/docs30/quickstart/model_add_measure.png)
+![](/images/docs/quickstart/model_add_measure.png)
 
 The next step is to set the time partition column and filter conditions. The time partition column is used to select the time range during incremental construction. If no time partition column is set, it means that the cubes under this model are all built. The filter condition is used for the where condition when flattening the table.
 
-![](/images/docs30/quickstart/set_partition_column.png)
+![](/images/docs/quickstart/set_partition_column.png)
 
 Then, click Save to save the model.
 
@@ -226,11 +226,11 @@ Then, click Save to save the model.
 
 Model -> New -> New Cube:
 
-![](/images/docs30/quickstart/create_cube.png)
+![](/images/docs/quickstart/create_cube.png)
 
 Click Next to add Dimension. The dimensions of the Lookup Table can be set to Normal or Derived. The default setting is derived dimension. Derived dimension means that the column can be derived from the primary key of the dimension table. In fact, only the primary key column will be calculated by the cube.
 
-![](/images/docs30/quickstart/cube_add_dimension.png)
+![](/images/docs/quickstart/cube_add_dimension.png)
 
 Click Next and click + Measure to add a pre-calculated measure.
 
@@ -239,12 +239,12 @@ Kylin creates a Count (1) metric by default. Kylin supports eight metrics: SUM, 
 Please select the appropriate return type for COUNT_DISTINCT and TOP_N, which is related to the size of the cube. 
 Click OK after the addition is complete and the measure will be displayed in the Measures list.
 
-![](/images/docs30/quickstart/cube_add_measure.png)
+![](/images/docs/quickstart/cube_add_measure.png)
 
 After adding all of the measures, click Next to proceed. This page is about the settings for cube data refresh. 
 Here you can set the threshold for automatic merge (Auto Merge Thresholds), the minimum time for data retention (Retention Threshold) and the start time of the first segment.
 
-![](/images/docs30/quickstart/segment_auto_merge.png)
+![](/images/docs/quickstart/segment_auto_merge.png)
 
 Click Next to continue going through the Advanced Settings. 
 Here you can set the aggregation group, RowKeys, Mandatory Cuboids, Cube Engine, etc.
@@ -253,19 +253,19 @@ For more information about Advanced Settings, you can refer to Step 5 on the [cr
 
 For more dimensional optimization, you can read: [aggregation-group](/blog/2016/02/18/new-aggregation-group/).
 
-![](/images/docs30/quickstart/advance_setting.png)
+![](/images/docs/quickstart/advance_setting.png)
 
 If you are not familiar with Advanced Settings, you can keep the default settings first. Click Next to jump to the Kylin Properties page. Here you can override the cube-level Kylin configuration items and define the properties to be covered. 
 For configuration items, please refer to: [configuration](/docs30/install/configuration.html).
 
-![](/images/docs30/quickstart/properties.png)
+![](/images/docs/quickstart/properties.png)
 
 After the configuration is complete, click the Next button to the next page. 
 Here you can preview the basic information of the cube you are creating and you can return to the previous steps to modify it. 
 If you don’t need to make any changes, you can click the Save button to complete the cube creation. 
 After that, this cube will appear in your cube list.
 
-![](/images/docs30/quickstart/cube_list.png)
+![](/images/docs/quickstart/cube_list.png)
 
 #### Step12. Build Cube
 
@@ -277,24 +277,24 @@ If the time partition column is not set in the model to which the cube belongs, 
 
 Click Submit to submit the build task directly. If a time partition column is set, the following page will appear, where you will need to select the start and end time for building the data.
 
-![](/images/docs30/quickstart/cube_build.png)
+![](/images/docs/quickstart/cube_build.png)
 
 After setting the start and end time, click Submit to submit the build task. 
 You can then observe the status of the build task on the Monitor page. 
 Kylin displays the running status of each step on the page, the output log and MapReduce tasks. 
 You can view more detailed log information in ${KYLIN_HOME}/logs/kylin.log.
 
-![](/images/docs30/quickstart/job_monitor.png)
+![](/images/docs/quickstart/job_monitor.png)
 
 After the job is built, the status of the cube will change to READY and you can see the segment information.
 
-![](/images/docs30/quickstart/segment_info.png)
+![](/images/docs/quickstart/segment_info.png)
 
 #### Step13. Query Cube
 After the cube is built, you can see the table of the built cube and query it under the Tables list on the Insight page. 
 After the query hits the cube, it returns the pre-calculated results stored in HBase.
 
-![](/images/docs30/quickstart/query_cube.png)
+![](/images/docs/quickstart/query_cube.png)
 
 Congratulations, you have already acquired the basic skills for using Kylin and you can now discover and explore more and more powerful functions.
 
