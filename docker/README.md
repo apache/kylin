@@ -4,19 +4,17 @@ In order to allow users to easily try Kylin, and to facilitate developers to ver
 - Jdk 1.8
 - Hadoop 2.7.0
 - Hive 1.2.1
-- Hbase 1.1.2
+- Hbase 1.1.2 (With Zookeeper)
 - Spark 2.3.1
-- Zookeeper 3.4.6
 - Kafka 1.1.1
 - MySQL 5.1.73
-- Maven 3.6.1
 
 ## Quickly try Kylin with pre-built images
 
 We have pushed the Kylin images to the [docker hub](https://hub.docker.com/r/apachekylin/apache-kylin-standalone). You do not need to build the image locally, just pull the image from remote (you can browse docker hub to check the available versions):
 
 ```
-docker pull apachekylin/apache-kylin-standalone:3.0.1
+docker pull apachekylin/apache-kylin-standalone:3.1.0
 ```
 
 After the pull is successful, execute "sh run_container.sh" or the following command to start the container:
@@ -30,7 +28,7 @@ docker run -d \
 -p 8032:8032 \
 -p 8042:8042 \
 -p 16010:16010 \
-apache-kylin-standalone
+apachekylin/apache-kylin-standalone:3.1.0
 ```
 
 The following services are automatically started when the container starts: 
@@ -70,7 +68,7 @@ If you want to login into the Docker container, run "docker ps" to get the conta
 ```
 > docker ps
 CONTAINER ID        IMAGE                                              COMMAND                  CREATED             STATUS              PORTS                                                                                                                                                NAMES
-c15d10ff6bf1        apachekylin/apache-kylin-standalone:3.0.1   "/home/admin/entrypo…"   55 minutes ago      Up 55 minutes       0.0.0.0:7070->7070/tcp, 0.0.0.0:8032->8032/tcp, 0.0.0.0:8042->8042/tcp, 0.0.0.0:8088->8088/tcp, 0.0.0.0:50070->50070/tcp, 0.0.0.0:16010->16010/tcp   romantic_moser
+c15d10ff6bf1        apachekylin/apache-kylin-standalone:3.1.0 "/home/admin/entrypo…"   55 minutes ago      Up 55 minutes       0.0.0.0:7070->7070/tcp, 0.0.0.0:8032->8032/tcp, 0.0.0.0:8042->8042/tcp, 0.0.0.0:8088->8088/tcp, 0.0.0.0:50070->50070/tcp, 0.0.0.0:16010->16010/tcp   romantic_moser
 ```
 
 Then run "docker -it <container id> bash" to login it with bash:

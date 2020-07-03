@@ -45,10 +45,7 @@ $HADOOP_HOME/sbin/yarn-daemon.sh start nodemanager
 $HADOOP_HOME/sbin/mr-jobhistory-daemon.sh start historyserver
 
 # start hbase
-if [ ! -f "/home/admin/first_run" ]
-then
-    rm -rf /data/zookeeper/*
-fi
+rm -rf /data/zookeeper/*
 $HBASE_HOME/bin/start-hbase.sh
 
 # start kafka
@@ -82,7 +79,7 @@ then
     $KAFKA_HOME/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 3 --topic kylin_streaming_topic
 fi
 
-nohup $KYLIN_HOME/bin/kylin.sh org.apache.kylin.source.kafka.util.KafkaSampleProducer --topic kylin_streaming_topic --broker localhost:9092 > /dev/null 2>&1 > /tmp/kafka-sample.log &
+# nohup $KYLIN_HOME/bin/kylin.sh org.apache.kylin.source.kafka.util.KafkaSampleProducer --topic kylin_streaming_topic --broker localhost:9092 > /dev/null 2>&1 > /tmp/kafka-sample.log &
 # create sample cube at the first time
 if [ ! -f "/home/admin/first_run" ]
 then
