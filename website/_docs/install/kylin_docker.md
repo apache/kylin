@@ -8,7 +8,7 @@ since: v3.0.0
 
 In order to allow users to easily try Kylin, and to facilitate developers to verify and debug after modifying the source code. We provide Kylin's docker image. In this image, each service that Kylin relies on is properly installed and deployed, including:
 
-- Jdk 1.8
+- JDK 1.8
 - Hadoop 2.7.0
 - Hive 1.2.1
 - Hbase 1.1.2 (with Zookeeper)

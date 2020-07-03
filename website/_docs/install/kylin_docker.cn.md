@@ -8,7 +8,7 @@ since: v3.0.0
 
 为了让用户方便的试用 Kylin，以及方便开发者在修改了源码后进行验证及调试。我们提供了 Kylin 的 docker 镜像。该镜像中，Kylin 依赖的各个服务均已正确的安装及部署，包括：
 
-- Jdk 1.8
+- JDK 1.8
 - Hadoop 2.7.0
 - Hive 1.2.1
 - Hbase 1.1.2 (with Zookeeper)

@@ -8,11 +8,12 @@ permalink: /docs/howto/howto_use_hive_mr_dict.html
 ## Global Dictionary in Hive
 
 ### Background
-Count distinct(bitmap) measure is very important for many scenario, such as PageView statistics, and Kylin support count distinct since 1.5.3 .
-Apache Kylin implements precisely count distinct measure based on bitmap, and use global dictionary to encode string value into integer. 
-Currently we have to build global dictionary in single process/JVM, which may take a lot of time and memory for UHC. 
-Kylin v3.0.0 introduce Hive global dictionary v1(KYLIN-3841). By this feature, we use Hive, a distributed SQL engine to build global dictionary.
-For improve performance, kylin v3.1.0 use MapReduce replace HQL in some steps, introduce Hive global dictionary v2(KYLIN-4342).
+
+- Count distinct(bitmap) measure is very important for many scenario, such as PageView statistics, and Kylin support count distinct since 1.5.3 .
+- Apache Kylin implements precisely count distinct measure based on bitmap, and use global dictionary to encode string value into integer.
+- Currently we have to build global dictionary in single process/JVM, which may take a lot of time and memory for UHC.
+- Kylin v3.0.0 introduce Hive global dictionary v1(KYLIN-3841). By this feature, we use Hive, a distributed SQL engine to build global dictionary.
+- For improve performance, kylin v3.1.0 use MapReduce replace HQL in some steps, introduce Hive global dictionary v2(KYLIN-4342).
 
 ### Benefit Summary
 1.Build Global Dictionary in distributed way, thus building job spent less time.
