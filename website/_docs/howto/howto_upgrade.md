@@ -19,6 +19,18 @@ Running as a Hadoop client, Apache Kylin's metadata and Cube data are persistend
 
 Below are versions specific guides:
 
+## Upgrade from 3.0 to 3.1.0
+
+1)`Set Config` on web of kylin v3.1.0 is turned off by default.
+2) [KYLIN-4478](https://issues.apache.org/jira/browse/KYLIN-4478) modified the encryption algorithm. If you enable LDAP in kylin, you need to re-encoded the password of the LDAP server configured in kylin.properties:
+
+```
+cd $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/lib
+java -classpath kylin-server-base-\<versioin\>.jar:kylin-core-common-\<versioin\>.jar:spring-beans-4.3.10.RELEASE.jar:spring-core-4.3.10.RELEASE.jar:commons-codec-1.7.jar org.apache.kylin.rest.security.PasswordPlaceholderConfigurer AES <your_password>
+```
+
+Then update the re-encoded password to `kylin.security.ldap.connection-password=<your_password_encrypted>`.
+
 ## Upgrade from 2.4 to 2.5.0
 
 * Kylin 2.5 need Java 8; Please upgrade Java if you're running with Java 7.
