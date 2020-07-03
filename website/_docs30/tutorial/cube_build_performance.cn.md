@@ -6,7 +6,7 @@ permalink: /cn/docs30/tutorial/cube_build_performance.html
 ---
  *本教程是关于如何一步步优化 cube build 的样例。* 
  
-在这个场景中我们尝试优化一个简单的 Cube，用 1 张 fact 和 1 张 lookup 表 (日期 Dimension)。在真正的调整之前，请从 [优化 Cube Build](/docs3020/howto/howto_optimize_build.html) 中大体了解关于 Cube build 的过程
+在这个场景中我们尝试优化一个简单的 Cube，用 1 张 fact 和 1 张 lookup 表 (日期 Dimension)。在真正的调整之前，请从 [优化 Cube Build](/docs20/howto/howto_optimize_build.html) 中大体了解关于 Cube build 的过程
 
 ![]( /images/tutorial/2.0/cube_build_performance/01.png)
 
@@ -164,7 +164,7 @@ SELECT *
 ![]( /images/tutorial/2.0/cube_build_performance/12.png)
 
 	
-(我和 ShaoFeng Shi 检查了这个问题。他认为问题是这里只有很少的 rows 而且我们不是使用的真实的 Hadoop 集群。请看这个 [tech note](http://kylin.apache.org/docs3016/howto/howto_optimize_build.html))。
+(我和 ShaoFeng Shi 检查了这个问题。他认为问题是这里只有很少的 rows 而且我们不是使用的真实的 Hadoop 集群。请看这个 [tech note](http://kylin.apache.org/docs16/howto/howto_optimize_build.html))。
 	
 
 ### 结果摘要

@@ -88,6 +88,6 @@ kylin.source.jdbc.sqoop-mapper-num=4
 
 点击 "Sync"，Kylin 通过 JDBC 接口加载表定义。当表加载成功后您可以查看表和列，和 Hive 相似。
 
-![](/images/docs30/jdbc-datasource/load_table_03.png)
+![](/images/docs/jdbc-datasource/load_table_03.png)
 
 继续向前设计您的 model 和 Cube。当 building Cube 时，Kylin 将会使用 Sqoop 从 HDFS 中引入数据，然后在其上运行 building。

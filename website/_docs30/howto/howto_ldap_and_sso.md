@@ -1,5 +1,5 @@
 ---
-layout: docs30
+layout: docs
 title: Secure with LDAP and SSO
 categories: howto
 permalink: /docs30/howto/howto_ldap_and_sso.html
@@ -56,7 +56,7 @@ Set "kylin.security.profile=ldap" in conf/kylin.properties, then restart Kylin s
 
 ## Enable SSO authentication
 
-From v1.5, Kylin provides SSO with SAML. The implementation is based on Spring Security SAML Extension. You can read [this reference](http://docs30.spring.io/autorepo/docs30/spring-security-saml/1.0.x-SNAPSHOT/reference/htmlsingle/) to get an overall understand.
+From v1.5, Kylin provides SSO with SAML. The implementation is based on Spring Security SAML Extension. You can read [this reference](http://docs.spring.io/autorepo/docs30/spring-security-saml/1.0.x-SNAPSHOT/reference/htmlsingle/) to get an overall understand.
 
 Before trying this, you should have successfully enabled LDAP and managed users with it, as SSO server may only do authentication, Kylin need search LDAP to get the user's detail information.
 

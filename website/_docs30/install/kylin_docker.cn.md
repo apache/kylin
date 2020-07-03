@@ -8,20 +8,22 @@ since: v3.0.0
 
 为了让用户方便的试用 Kylin，以及方便开发者在修改了源码后进行验证及调试。我们提供了 Kylin 的 docker 镜像。该镜像中，Kylin 依赖的各个服务均已正确的安装及部署，包括：
 
-- Jdk 1.8
+- JDK 1.8
 - Hadoop 2.7.0
 - Hive 1.2.1
-- Hbase 1.1.2 (with Zookeeper)
+- HBase 1.1.2
 - Spark 2.3.1
+- Zookeeper 3.4.6
 - Kafka 1.1.1
 - MySQL 5.1.73
+- Maven 3.6.1
 
 ## 快速试用 Kylin
 
 我们已将面向用户的 Kylin 镜像上传至 docker 仓库，用户无需在本地构建镜像，直接执行以下命令从 docker 仓库 pull 镜像：
 
 {% highlight Groff markup %}
-docker pull apachekylin/apache-kylin-standalone:3.1.0
+docker pull apachekylin/apache-kylin-standalone:3.0.1
 {% endhighlight %}
 
 pull 成功后，执行以下命令启动容器：
@@ -35,7 +37,7 @@ docker run -d \
 -p 8032:8032 \
 -p 8042:8042 \
 -p 16010:16010 \
-apachekylin/apache-kylin-standalone:3.1.0
+apachekylin/apache-kylin-standalone:3.0.1
 {% endhighlight %}
 
 在容器启动时，会自动启动以下服务：
@@ -61,8 +63,8 @@ apachekylin/apache-kylin-standalone:3.1.0
 
 为容器设置资源方法请参考：
 
-- Mac 用户：<https://docs30.docker.com/docker-for-mac/#advanced>
-- Linux 用户：<https://docs30.docker.com/config/containers/resource_constraints/#memory>
+- Mac 用户：<https://docs.docker.com/docker-for-mac/#advanced>
+- Linux 用户：<https://docs.docker.com/config/containers/resource_constraints/#memory>
 
 ---
 

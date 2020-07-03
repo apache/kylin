@@ -1,5 +1,5 @@
 ---
-layout: docs30
+layout: docs
 title:  Optimize Cube Build
 categories: howto
 permalink: /docs30/howto/howto_optimize_build.html

@@ -67,7 +67,7 @@ Start and connect to Hue:
 {% highlight Groff markup %}
     build/env/bin/hue runserver_plus localhost:8888
 {% endhighlight %}
-* runserver_plus: is like runserver with [debugger](http://django-extensions.readthedocs30.io/en/latest/runserver_plus.html#usage)
+* runserver_plus: is like runserver with [debugger](http://django-extensions.readthedocs.io/en/latest/runserver_plus.html#usage)
 * localIP: Port, usually Hue uses 8888
 
 The output must be similar to:

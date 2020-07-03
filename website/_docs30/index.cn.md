@@ -1,7 +1,7 @@
 ---
 layout: docs30-cn
 title: 概述
-categories: docs30
+categories: docs
 permalink: /cn/docs30/index.html
 ---
 
@@ -12,7 +12,8 @@ permalink: /cn/docs30/index.html
 Apache Kylin™是一个开源的、分布式的分析型数据仓库，提供 Hadoop 之上的 SQL 查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由eBay Inc.开发并贡献至开源社区。
 
 查看其它版本文档: 
-* [v2.4 document](/cn/docs3024/)
+* [v3.0 document](/cn/docs30)
+* [v2.4 document](/cn/docs24/)
 * [归档](/archive/)
 
 安装
@@ -30,16 +31,15 @@ Apache Kylin™是一个开源的、分布式的分析型数据仓库，提供 H
 2. [Web 界面](tutorial/web.html)
 3. [Cube 创建](tutorial/create_cube.html)
 4. [Cube 构建和 Job 监控](tutorial/cube_build_job.html)
-5. [Cube 迁移](tutorial/cube_migration.html)
-6. [SQL 快速参考](tutorial/sql_reference.html)
-7. [用 Kafka 流构建 Cube](tutorial/cube_streaming.html)
-8. [用 Spark 构建 Cube](tutorial/cube_spark.html)
-9. [优化 Cube 构建](tutorial/cube_build_performance.html)
-10. [查询下压](tutorial/query_pushdown.html)
-11. [建立 System Cube](tutorial/setup_systemcube.html)
-12. [使用 Cube Planner](tutorial/use_cube_planner.html)
-13. [使用 Dashboard](tutorial/use_dashboard.html)
-14. [建立 JDBC 数据源](tutorial/setup_jdbc_datasource.html)
+5. [SQL 快速参考](tutorial/sql_reference.html)
+6. [用 Kafka 流构建 Cube](tutorial/cube_streaming.html)
+7. [用 Spark 构建 Cube](tutorial/cube_spark.html)
+8. [优化 Cube 构建](tutorial/cube_build_performance.html)
+9. [查询下压](tutorial/query_pushdown.html)
+10. [建立 System Cube](tutorial/setup_systemcube.html)
+11. [使用 Cube Planner](tutorial/use_cube_planner.html)
+12. [使用 Dashboard](tutorial/use_dashboard.html)
+13. [建立 JDBC 数据源](tutorial/setup_jdbc_datasource.html)
 
 
 工具集成
