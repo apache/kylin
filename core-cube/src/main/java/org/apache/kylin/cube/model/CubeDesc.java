@@ -42,6 +42,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.codec.binary.Base64;
@@ -1616,38 +1617,37 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return null;
     }
 
-    public List<TblColRef> getAllGlobalDictColumns() {
-        List<TblColRef> globalDictCols = new ArrayList<TblColRef>();
+    private List<TblColRef> getAllGlobalDictColumns() {
         List<DictionaryDesc> dictionaryDescList = getDictionaries();
 
         if (dictionaryDescList == null) {
-            return globalDictCols;
+            return new ArrayList<>();
         }
 
-        for (DictionaryDesc dictionaryDesc : dictionaryDescList) {
-            String cls = dictionaryDesc.getBuilderClass();
-            if (GlobalDictionaryBuilder.class.getName().equals(cls)
-                    || SegmentAppendTrieDictBuilder.class.getName().equals(cls))
-                globalDictCols.add(dictionaryDesc.getColumnRef());
-        }
-        return globalDictCols;
+        return dictionaryDescList.stream().filter(dict -> {
+            String cls = dict.getBuilderClass();
+            return GlobalDictionaryBuilder.class.getName().equals(cls)
+                    || SegmentAppendTrieDictBuilder.class.getName().equals(cls);
+        }).map(DictionaryDesc::getColumnRef).collect(Collectors.toList());
+    }
+
+    public List<TblColRef> getAllGlobalDictColumnsNeedBuilt() {
+        Set<String> mrhiveDictColumns = new HashSet<>(Arrays.asList(config.getMrHiveDictColumns()));
+
+        List<TblColRef> allGlobalDictColumns = getAllGlobalDictColumns();
+        return allGlobalDictColumns.stream()
+                .filter(col -> !mrhiveDictColumns.contains(col.getTableAlias() + "_" + col.getName()))
+                .collect(Collectors.toList());
     }
 
     public boolean isShrunkenDictFromGlobalEnabled() {
-        boolean needShrunkenDict = config.isShrunkenDictFromGlobalEnabled() && !getAllGlobalDictColumns().isEmpty();
-        boolean needMrHiveDict = config.getMrHiveDictColumns().length > 0;
-        if (needMrHiveDict && needShrunkenDict) {
-            logger.info("ShrunkenDict cannot work with MrHiveDict, so shutdown ShrunkenDict.");
-            return false;
-        } else {
-            return needShrunkenDict;
-        }
+        return config.isShrunkenDictFromGlobalEnabled() && !getAllGlobalDictColumnsNeedBuilt().isEmpty();
     }
 
     // UHC (ultra high cardinality column): contain the ShardByColumns and the GlobalDictionaryColumns
     public List<TblColRef> getAllUHCColumns() {
         List<TblColRef> uhcColumns = new ArrayList<>();
-        uhcColumns.addAll(getAllGlobalDictColumns());
+        uhcColumns.addAll(getAllGlobalDictColumnsNeedBuilt());
         uhcColumns.addAll(getShardByColumns());
         return uhcColumns;
     }

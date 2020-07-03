@@ -379,7 +379,7 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
 
     public Map<TblColRef, Dictionary<String>> buildGlobalDictionaryMap(int globalColumnsSize) {
         Map<TblColRef, Dictionary<String>> result = Maps.newHashMapWithExpectedSize(globalColumnsSize);
-        for (TblColRef col : getCubeDesc().getAllGlobalDictColumns()) {
+        for (TblColRef col : getCubeDesc().getAllGlobalDictColumnsNeedBuilt()) {
             result.put(col, getDictionary(col));
         }
         return result;

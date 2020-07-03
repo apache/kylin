@@ -55,7 +55,7 @@ public class DictionaryGetterUtil {
         String inputSplitSignature = getInputSplitSignature(cubeSegment, inputSplit);
         FileSystem fs = FileSystem.get(configuration);
         ShrunkenDictionary.StringValueSerializer valueSerializer = new ShrunkenDictionary.StringValueSerializer();
-        for (TblColRef colRef : cubeSegment.getCubeDesc().getAllGlobalDictColumns()) {
+        for (TblColRef colRef : cubeSegment.getCubeDesc().getAllGlobalDictColumnsNeedBuilt()) {
             Path colShrunkenDictDir = new Path(shrunkenDictPath, colRef.getIdentity());
             Path colShrunkenDictPath = new Path(colShrunkenDictDir, inputSplitSignature);
             if (!fs.exists(colShrunkenDictPath)) {
