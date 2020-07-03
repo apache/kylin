@@ -81,7 +81,7 @@ public class ExtractDictionaryFromGlobalMapper<KEYIN, Object> extends KylinMappe
 
         intermediateTableDesc = new CubeJoinedFlatTableEnrich(EngineFactory.getJoinedFlatTableDesc(cubeSeg), cubeDesc);
 
-        globalColumns = cubeDesc.getAllGlobalDictColumns();
+        globalColumns = cubeDesc.getAllGlobalDictColumnsNeedBuilt();
         globalColumnIndex = new int[globalColumns.size()];
         globalColumnValues = Lists.newArrayListWithExpectedSize(globalColumns.size());
 
