@@ -12,7 +12,6 @@ permalink: /cn/docs30/index.html
 Apache Kylin™是一个开源的、分布式的分析型数据仓库，提供 Hadoop 之上的 SQL 查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由eBay Inc.开发并贡献至开源社区。
 
 查看其它版本文档: 
-* [v3.0 document](/cn/docs30)
 * [v2.4 document](/cn/docs24/)
 * [归档](/archive/)
 
