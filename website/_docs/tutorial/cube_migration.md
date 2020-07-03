@@ -6,17 +6,29 @@ permalink: /docs/tutorial/cube_migration.html
 since: v3.1.0
 ---
 
-## Migrate on the same Hadoop cluster
+Cube migration is used to migrate cube from QA env to PROD env, Kylin v3.1.0 enhances this feature, the list of enhanced functions is showed as below:
 
-### Pre-requisites to use cube migration
+- Use some internal rules to check the quality and compatibility of cube by Kylin before migration, instead of checking manually;
+- Use email to send cube migration request and result notification;
+- Support to migrate across two Hadoop cluster;
+
+## I. Migrate on the same Hadoop cluster
+
+There are two ways to migrate cube from QA env to PROD env on the same Hadoop cluster:
+
+- Use the Kylin portal;
+- Use 'CubeMigrationCLI.java' CLI;
+
+### 1. Pre-requisitions to use cube migration
 
 1. Only cube admin can migrate the cubes as the "migrate" button is **ONLY** visible to cube admin.
-2. The cube status must be **ready** before migration which you have built the segment and confirmed the performance.
+2. The cube status must be **READY** before migration which you have built the segment and confirmed the performance.
 3. The Property '**kylin.cube.migration.enabled**' must be true.
 4. The target project must exist on Kylin PROD env before migration.
 5. The QA env and PROD env must share the same Hadoop cluster, including HDFS, HBase and HIVE.
 
-### Steps to migrate a cube through the Kylin portal
+### 2. Steps to migrate a cube through the Kylin portal
+
 First of all, make sure that you have authority of the cube you want to migrate.
 
 #### Step 1
@@ -33,7 +45,7 @@ After you click 'Migrate' button, you will see a pop-up window:
 Check if the target project name is what you want. It uses the same project name on QA env as default target project name. If the target project name is different on PROD env, please replace with the correct one.
 
 #### Step 4
-Click 'Validate' button to verify the cube validity. It may take couple of minutes to validate the cube on the backend and show the validity results on a pop-up window:
+Click 'Validate' button to verify the cube validity. It may take couple of minutes to validate the cube on the backend and show the validity results on a pop-up window.
 
    **Common exceptions and suggested solutions**
 
@@ -54,7 +66,7 @@ If validations are ok, click 'Submit' button to send the migration request email
    ![](/images/tutorial/3.1/Kylin-Cube-Migration/3_cube_migration_request_succ.png)
 
 #### Step 6
-Cubes administrator will receive a migration request email, and can click the 'Action' drop down button in the 'Actions' column and select operation 'Approve Migration' button to migrate cube or select 'Reject Migration' button to reject request. It also will send a notification email to the migration requester:
+Cubes administrator will receive a migration request email, and can click the 'Action' drop down button in the 'Admins' column and select operation 'Approve Migration' button to migrate cube or select 'Reject Migration' button to reject request. It also will send a notification email to the migration requester:
 
    ![](/images/tutorial/3.1/Kylin-Cube-Migration/4_approve_reject.png)
 
@@ -73,7 +85,7 @@ If migrate successfully, it will show the message below:
 #### Step 9
 Finally, go to Kylin portal on PROD env, and refresh the 'Model' page, you will see the cube you migrated from QA env and the status of this cube is **DISABLED**.
 
-### Use 'CubeMigrationCLI.java' CLI to migrate cube
+### 3. Use 'CubeMigrationCLI.java' CLI to migrate cube
 
 #### Function
 CubeMigrationCLI.java can migrate a cube from a Kylin environment to another, for example, promote a well tested cube from the testing env to production env. Note that the different Kylin environments should share the same Hadoop cluster, including HDFS, HBase and HIVE.
@@ -92,9 +104,10 @@ For example:
 After the command is successfully executed, please reload Kylin metadata, the cube you want to migrate will appear in the target environment.
 
 All supported parameters are listed below:
-　If the data model of the cube you want to migrate does not exist in the target environment, this tool will also migrate the model.
-　If you set `overwriteIfExists` to `false`, and the cube exists in the target environment, the tool will stop to proceed.
-　If you set `migrateSegmentOrNot` to `true`, please make sure the cube has `READY` segments, they will be migrated to target environment together.
+
+- If the data model of the cube you want to migrate does not exist in the target environment, this tool will also migrate the model.
+- If you set `overwriteIfExists` to `false`, and the cube exists in the target environment, the tool will stop to proceed.
+- If you set `migrateSegmentOrNot` to `true`, please make sure the cube has `READY` segments, they will be migrated to target environment together.
 
 | Parameter           | Description                                                                                |
 | ------------------- | :----------------------------------------------------------------------------------------- |
@@ -108,15 +121,18 @@ All supported parameters are listed below:
 | realExecute         | `true` or `false`: If false, just print the operations to take (dry-run mode); if true, do the real migration.               |
 | migrateSegmentOrNot | (Optional) `true` or `false`: whether copy segment info to the target environment. Default true.   |
 
-## Migrate across two Hadoop clusters
+## II. Migrate across two Hadoop clusters
 
-**Note**: Currently it just supports to use 'CubeMigrationCrossClusterCLI.java' CLI to migrate cube across two Hadoop clusters.
+**Note**:
 
-### Pre-requisitions to use cube migration
-1. The cube status must be **ready** before migration which you have built the segment and confirmed the performance.
+- Currently it only supports to use 'CubeMigrationCrossClusterCLI.java' CLI to migrate cube across two Hadoop clusters.
+- Support to migrate cube data (segments data on HBase) from QA env to PROD env.
+
+### 1. Pre-requisitions to use cube migration
+1. The cube status must be **READY** before migration which you have built the segment and confirmed the performance.
 2. The target project name of PROD env must be the same as the one on QA env.
 
-### How to use 'CubeMigrationCrossClusterCLI.java' CLI to migrate cube
+### 2. How to use 'CubeMigrationCrossClusterCLI.java' CLI to migrate cube
 
 {% highlight Groff markup %}
 ./bin/kylin.sh org.apache.kylin.tool.migration.CubeMigrationCrossClusterCLI <kylinUriSrc> <kylinUriDst> <updateMappingPath> <cube> <hybrid> <project> <all> <dstHiveCheck> <overwrite> <schemaOnly> <execute> <coprocessorPath> <codeOfFSHAEnabled> <distCpJobQueue> <distCpJobMemory> <nThread>
@@ -140,14 +156,10 @@ All supported parameters are listed below:
 | all   | Migrate all projects.  **Note**: You must add only one of above four parameters: 'cube', 'hybrid', 'project' or 'all'.                            |
 | dstHiveCheck         | (Optional) Whether to check target hive tables, the default value is true.               |
 | overwrite | (Optional) Whether to overwrite existing cubes, the default value is false.   |
-| schemaOnly | (Optional) Whether only migrate cube related schema, the default value is true.   |
+| schemaOnly | (Optional) Whether only migrate cube related schema, the default value is true. **Note**: If set to false, it will migrate cube data too.  |
 | execute | (Optional) Whether it's to execute the migration, the default value is false.   |
 | coprocessorPath | (Optional) The path of coprocessor to be deployed, the default value is get from KylinConfigBase.getCoprocessorLocalJar().   |
 | codeOfFSHAEnabled | (Optional) Whether to enable the namenode ha of clusters.   |
 | distCpJobQueue | (Optional) The mapreduce.job.queuename for DistCp job.   |
 | distCpJobMemory | (Optional) The mapreduce.map.memory.mb for DistCp job.   |
 | nThread | (Optional) The number of threads for migrating cube data in parallel.   |
-
-
-
-

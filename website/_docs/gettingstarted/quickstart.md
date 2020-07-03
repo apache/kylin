@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs
 title:  Quick Start
 categories: start
 permalink: /docs/gettingstarted/kylin-quickstart.html
@@ -14,15 +14,13 @@ Users can follow these steps to get an initial understanding of how to use Kylin
 
 In order to make it easy for users to try out Kylin, Zhu Weibin of Ant Financial has contributed “Kylin Docker Image” to the community. In this image, various services that Kylin depends on have been installed and deployed, including:
 
-- Jdk 1.8
+- JDK 1.8
 - Hadoop 2.7.0
 - Hive 1.2.1
-- Hbase 1.1.2
+- Hbase 1.1.2 (with Zookeeper)
 - Spark 2.3.1
-- Zookeeper 3.4.6
 - Kafka 1.1.1
-- Mysql
-- Maven 3.6.1
+- MySQL 5.1.73
 
 We have uploaded the user facing Kylin image to the Docker repository. Users do not need to build the image locally; they only need to install Docker to experience Kylin’s one-click installation.
 
@@ -30,10 +28,10 @@ We have uploaded the user facing Kylin image to the Docker repository. Users do 
 First, execute the following command to pull the image from the Docker repository:
 
 ```
-docker pull apachekylin/apache-kylin-standalone:3.0.1
+docker pull apachekylin/apache-kylin-standalone:3.1.0
 ```
 
-The image here contains the latest version of Kylin: Kylin v3.0.1. This image contains all of the big data components that Kylin depends on, so it takes a long time to pull the image – please be patient. After the pull is successful, it is displayed as follows:
+The image here contains the latest version of Kylin: Kylin v3.1.0. This image contains all of the big data components that Kylin depends on, so it takes a long time to pull the image – please be patient. After the pull is successful, it is displayed as follows:
 
 ![](/images/docs/quickstart/pull_docker.png)
 
@@ -49,7 +47,7 @@ docker run -d \
 -p 8032:8032 \
 -p 8042:8042 \
 -p 16010:16010 \
-apachekylin/apache-kylin-standalone:3.0.1
+apachekylin/apache-kylin-standalone:3.1.0
 ```
 
 The container will start shortly. Since the specified port in the container has been mapped to the local port, you can directly open the pages of each service in the local browser, such as:
@@ -68,13 +66,13 @@ When the container starts, the following services are automatically started:
 It will also automatically run $ KYLIN_HOME / bin / sample.sh and create a kylin_streaming_topic in Kafka and continue to send data to that topic to allow users to experience building and querying cubes in batches and streams as soon as the container is launched.
 
 Users can enter the container through the docker exec command. The relevant environment variables in the container are as follows:
-- JAVA_HOME = / home / admin / jdk1.8.0_141
-- HADOOP_HOME = / home / admin / hadoop-2.7.0
-- KAFKA_HOME = / home / admin / kafka_2.11-1.1.1
-- SPARK_HOME = / home / admin / spark-2.3.1-bin-hadoop2.6
-- HBASE_HOME = / home / admin / hbase-1.1.2
-- HIVE_HOME = / home / admin / apache-hive-1.2.1-bin
-- KYLIN_HOME = / home / admin / apache-kylin-3.0.0-alpha2-bin-hbase1x
+- JAVA_HOME = /home/admin/jdk1.8.0_141
+- HADOOP_HOME = /home/admin/hadoop-2.7.0
+- KAFKA_HOME = /home/admin/kafka_2.11-1.1.1
+- SPARK_HOME = /home/admin/spark-2.3.1-bin-hadoop2.6
+- HBASE_HOME = /home/admin/hbase-1.1.2
+- HIVE_HOME = /home/admin/apache-hive-1.2.1-bin
+- KYLIN_HOME = /home/admin/apache-kylin-3.1.0-bin-hbase1x
 
 After logging in to Kylin with user/password of ADMIN/KYLIN, users can use the sample cube to experience the construction and query of the cube, or they can create and query their own models and cubes by following the tutorial from Step 8 in “Install and Use Kylin Based on a Hadoop Environment” below.
 
@@ -110,19 +108,19 @@ It is recommended to use an integrated Hadoop environment for Kylin installation
 When your environment meets the above prerequisites, you can install and start using Kylin.
 
 #### Step1. Download the Kylin Archive
-Download a binary for your version of Hadoop from [Apache Kylin Download Site](https://kylin.apache.org/download/). Currently, the latest versions are Kylin 3.0.1 and Kylin 2.6.5, of which, version 3.0 supports the function of ingesting data in real time for pre-calculation. If your Hadoop environment is CDH 5.7, you can download Kylin 3.0.0 using the following command line:
+Download a binary for your version of Hadoop from [Apache Kylin Download Site](https://kylin.apache.org/download/). Currently, the latest versions are Kylin 3.1.0 and Kylin 2.6.6, of which, version 3.0 supports the function of ingesting data in real time for pre-calculation. If your Hadoop environment is CDH 5.7, you can download Kylin 3.1.0 using the following command line:
 
 ```
 cd /usr/local/
-wget http://apache.website-solution.net/kylin/apache-kylin-3.0.0/apache-kylin-3.0.0-bin-cdh57.tar.gz
+wget http://apache.website-solution.net/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-cdh57.tar.gz
 ```
 
 #### Step2. Extract Kylin
 Extract the downloaded Kylin archive and configure the environment variable KYLIN_HOME to point to the extracted directory:
 
 ```
-tar -zxvf  apache-kylin-3.0.0-bin-cdh57.tar.gz
-cd apache-kylin-3.0.0-bin-cdh57
+tar -zxvf  apache-kylin-3.1.0-bin-cdh57.tar.gz
+cd apache-kylin-3.1.0-bin-cdh57
 export KYLIN_HOME=`pwd`
 ```
 
@@ -157,7 +155,7 @@ Start script to start Kylin. If the startup is successful, the following will be
 
 ```
 A new Kylin instance is started by root. To stop it, run 'kylin.sh stop'
-Check the log at /usr/local/apache-kylin-3.0.0-bin-cdh57/logs/kylin.log
+Check the log at /usr/local/apache-kylin-3.1.0-bin-cdh57/logs/kylin.log
 Web UI is at http://<hostname>:7070/kylin
 ```
 

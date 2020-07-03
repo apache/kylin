@@ -14,25 +14,23 @@ since: v0.6.x
 ### 一、	从docker镜像安装使用kylin（不需要提前准备hadoop环境）
 为了让用户方便的试用 Kylin，我们提供了 Kylin 的 docker 镜像。该镜像中，Kylin 依赖的各个服务均已正确的安装及部署，包括：
 
-- jdk 1.8
+- JDK 1.8
 - Hadoop 2.7.0
 - Hive 1.2.1
-- Hbase 1.1.2
+- Hbase 1.1.2 (with Zookeeper)
 - Spark 2.3.1
-- Zookeeper 3.4.6
 - Kafka 1.1.1
-- Mysql
-- Maven 3.6.1
+- MySQL 5.1.73
 
 我们已将面向用户的 Kylin 镜像上传至 docker 仓库，用户无需在本地构建镜像，只需要安装docker，就可以体验kylin的一键安装。
 
 #### step1、首先执行以下命令从 docker 仓库 pull 镜像：
 
 ```
-docker pull apachekylin/apache-kylin-standalone:3.0.1
+docker pull apachekylin/apache-kylin-standalone:3.1.0
 ```
 
-此处的镜像包含的是kylin最新Release版本kylin 3.0.1。由于该镜像中包含了所有kylin依赖的大数据组件，所以拉取镜像需要的时间较长，请耐心等待。Pull成功后显示如下：
+此处的镜像包含的是kylin最新Release版本kylin 3.1.0。由于该镜像中包含了所有kylin依赖的大数据组件，所以拉取镜像需要的时间较长，请耐心等待。Pull成功后显示如下：
 ![](/images/docs/quickstart/pull_docker.png)
 
 #### step2、执行以下命令来启动容器：
@@ -46,7 +44,7 @@ docker run -d \
 -p 8032:8032 \
 -p 8042:8042 \
 -p 16010:16010 \
-apachekylin/apache-kylin-standalone:3.0.1
+apachekylin/apache-kylin-standalone:3.1.0
 ```
 
 容器会很快启动，由于容器内指定端口已经映射到本机端口，可以直接在本机浏览器中打开各个服务的页面，如：
@@ -74,7 +72,7 @@ KAFKA_HOME=/home/admin/kafka_2.11-1.1.1
 SPARK_HOME=/home/admin/spark-2.3.1-bin-hadoop2.6
 HBASE_HOME=/home/admin/hbase-1.1.2
 HIVE_HOME=/home/admin/apache-hive-1.2.1-bin
-KYLIN_HOME=/home/admin/apache-kylin-3.0.0-alpha2-bin-hbase1x
+KYLIN_HOME=/home/admin/apache-kylin-3.1.0-bin-hbase1x
 ```
 
 使用ADMIN/KYLIN的用户名和密码组合登陆Kylin后，用户可以使用sample cube来体验cube的构建和查询，也可以按照下面“基于hadoop环境安装使用kylin”中从step8之后的教程来创建并查询属于自己的model和cube。
@@ -105,11 +103,11 @@ CentOS 6.5+ 或Ubuntu 16.0.4+
 
 #### step1、下载kylin压缩包
 
-从[Apache Kylin Download Site](https://kylin.apache.org/download/)下载一个适用于你的Hadoop版本的二进制文件。目前最新Release版本是kylin 3.0.1和kylin 2.6.5，其中3.0版本支持实时摄入数据进行预计算的功能。以CDH 5.的hadoop环境为例，可以使用如下命令行下载kylin 3.0.0：
+从[Apache Kylin Download Site](https://kylin.apache.org/download/)下载一个适用于你的Hadoop版本的二进制文件。目前最新Release版本是kylin 3.1.0和kylin 2.6.6，其中3.0版本支持实时摄入数据进行预计算的功能。以CDH 5.的hadoop环境为例，可以使用如下命令行下载kylin 3.1.0：
 
 ```
 cd /usr/local/
-wget http://apache.website-solution.net/kylin/apache-kylin-3.0.0/apache-kylin-3.0.0-bin-cdh57.tar.gz
+wget http://apache.website-solution.net/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-cdh57.tar.gz
 ```
 
 #### step2、解压kylin
@@ -117,8 +115,8 @@ wget http://apache.website-solution.net/kylin/apache-kylin-3.0.0/apache-kylin-3.
 解压下载得到的kylin压缩包，并配置环境变量KYLIN_HOME指向解压目录：
 
 ```
-tar -zxvf  apache-kylin-3.0.0-bin-cdh57.tar.gz
-cd apache-kylin-3.0.0-bin-cdh57
+tar -zxvf  apache-kylin-3.1.0-bin-cdh57.tar.gz
+cd apache-kylin-3.1.0-bin-cdh57
 export KYLIN_HOME=`pwd`
 ```
 
@@ -160,7 +158,7 @@ $KYLIN_HOME/bin/kylin.sh start
 
 ```
 A new Kylin instance is started by root. To stop it, run 'kylin.sh stop'
-Check the log at /usr/local/apache-kylin-3.0.0-bin-cdh57/logs/kylin.log
+Check the log at /usr/local/apache-kylin-3.1.0-bin-cdh57/logs/kylin.log
 Web UI is at http://<hostname>:7070/kylin
 ```
 
