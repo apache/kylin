@@ -45,7 +45,7 @@ kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock
 kylin.job.scheduler.default=100
 kylin.server.self-discovery-enabled=true
 ```
-
+更多关于kylin任务调度器的细节可以参考[Apache Kylin Wiki](https://cwiki.apache.org/confluence/display/KYLIN/Comparison+of+Kylin+Job+scheduler)
 
 
 

@@ -39,14 +39,14 @@ Then please add all job servers and query servers to the `kylin.server.cluster-s
 
 ### Use `CuratorScheculer`
 
-Since v3.0.0-alpha, kylin introduces the master-slave mode multiple job engines scheduler based on Curator. Users can modify the following configuration to enable CuratorScheduler:
+Since v3.0.0-alpha, kylin introduces the Leader/Follower mode multiple job engines scheduler based on Curator. Users can modify the following configuration to enable CuratorScheduler:
 
 ```properties
 kylin.job.scheduler.default=100
 kylin.server.self-discovery-enabled=true
 ```
 
-
+For more details about the kylin job scheduler, please refer to [Apache Kylin Wiki](https://cwiki.apache.org/confluence/display/KYLIN/Comparison+of+Kylin+Job+scheduler)
 
 ### Installing a load balancer
 
