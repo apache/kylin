@@ -58,7 +58,7 @@ public class NSparkExecutableTest extends LocalWithSparkSessionTest {
             Assert.assertTrue(cmd.contains("export HADOOP_CONF_DIR"));
             Assert.assertTrue(cmd.contains("spark-submit"));
             Assert.assertTrue(cmd.contains("spark.executor.extraClassPath=job.jar"));
-            Assert.assertTrue(cmd.contains("spark.driver.log4j.appender.hdfs.File="));
+            Assert.assertTrue(cmd.contains("log4j.configuration="));
         } finally {
             if (StringUtils.isEmpty(kylinHome)) {
                 System.clearProperty("KYLIN_HOME");
