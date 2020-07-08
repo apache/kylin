@@ -20,6 +20,7 @@
 #exit if find error
 # ============================================================================
 
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/set-kylin-home.sh $@
 set -o pipefail  # trace ERR through pipes
 set -o errtrace  # trace ERR through 'time command' and other functions
 function error() {
