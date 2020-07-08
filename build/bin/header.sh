@@ -19,6 +19,7 @@
 
 # source me
 
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/set-kylin-home.sh $@
 verbose=${verbose:-""}
 
 while getopts ":v" opt; do
