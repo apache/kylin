@@ -56,7 +56,9 @@ public class QueryRouter {
                 candidates.add(new Candidate(real, sqlDigest));
             if (BackdoorToggles.getForceHitCube() != null && BackdoorToggles.getForceHitCube().equalsIgnoreCase(real.getName())) {
                 logger.info("Force choose {} as selected cube for specific purpose.", real.getName());
-                return real;
+                candidates = Lists.newArrayListWithCapacity(1);
+                candidates.add(new Candidate(real, sqlDigest));
+                break;
             }
         }
 
