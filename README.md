@@ -14,11 +14,37 @@ Apache Kylin
 
 Apache Kylin is an open source Distributed Analytics Engine, contributed by eBay Inc., provides SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets.
 
-For more details, see the website [http://kylin.apache.org](http://kylin.apache.org).
+For more details, see the website [http://kylin.apache.org](http://kylin.apache.org), Chinese version:[http://kylin.apache.org/cn/](http://kylin.apache.org/cn/).
+
+Get start kylin in 5 min with Docker
+=============
+In order to allow users to try Kylin easily, we provide Kylin’s docker image.
+
+Just run codes below in your terminal. After 3~5 mins, you can access Kylin WebUI [http://127.0.0.1:7070/kylin/login](http://127.0.0.1:7070/kylin/login) in your browser.
+
+1. pull docker image
+```bash
+docker pull apachekylin/apache-kylin-standalone:3.1.0
+```
+2. start the container
+```bash
+docker run -d \
+    -m 8G \
+    -p 7070:7070 \
+    -p 8088:8088 \
+    -p 50070:50070 \
+    -p 8032:8032 \
+    -p 8042:8042 \
+    -p 16010:16010 \
+    apachekylin/apache-kylin-standalone:3.1.0
+```
+You can get more detail about this docker image in [kylin website](http://kylin.apache.org/docs/install/kylin_docker.html)
+
 
 Documentation
 =============
 Please refer to [http://kylin.apache.org/docs/](http://kylin.apache.org/docs/).
+Chinese version: [http://kylin.apache.org/cn/docs/](http://kylin.apache.org/cn/docs/).
 
 Get Help
 ============
