@@ -1,0 +1,19 @@
+{
+  "uuid" : "2eaca32a-a33e-4b69-83dd-0bb8b1f8c91b",
+  "last_modified" : 1594722756813,
+  "version" : "3.9.9.1",
+  "name" : "ssb",
+  "tables" : [ "SSB.DATES", "SSB.SUPPLIER", "SSB.LINEORDER", "SSB.CUSTOMER", "SSB.PART", "SSB.P_LINEORDER" ],
+  "owner" : null,
+  "status" : null,
+  "create_time_utc" : 0,
+  "last_update_time" : null,
+  "description" : null,
+  "realizations" : [ {
+    "type" : "CUBE",
+    "realization" : "ssb"
+  } ],
+  "models" : [ "ssb" ],
+  "ext_filters" : [ ],
+  "override_kylin_properties" : { }
+}
