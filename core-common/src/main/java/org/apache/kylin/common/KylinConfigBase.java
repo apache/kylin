@@ -276,7 +276,9 @@ public abstract class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public boolean isDevEnv() {
-        return "DEV".equals(getOptional("kylin.env", "DEV")) || "UT".equals(getOptional("kylin.env", "DEV"));
+        return "DEV".equals(getOptional("kylin.env", "DEV"))
+                || "UT".equals(getOptional("kylin.env", "DEV"))
+                || "LOCAL".equals(getOptional("kylin.env", "DEV"));
     }
 
     public String getDeployEnv() {
@@ -2602,6 +2604,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isUTEnv() {
         return "UT".equals(getDeployEnv());
+    }
+
+    public boolean isLocalEnv() {
+        return "LOCAL".equals(getDeployEnv());
     }
 
     public int snapshotParallelBuildTimeoutSeconds() {

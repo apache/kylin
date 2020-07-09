@@ -1,0 +1,17 @@
+{
+  "uuid" : "2fbca32a-a33e-4b69-83dd-0bb8b1f8c53b",
+  "last_modified" : 1594722751542,
+  "version" : "3.9.9.1",
+  "name" : "kylin_sales_cube",
+  "owner" : "ADMIN",
+  "descriptor" : "kylin_sales_cube",
+  "display_name" : "kylin_sales_cube",
+  "cost" : 50,
+  "status" : "DISABLED",
+  "segments" : [ ],
+  "create_time_utc" : 0,
+  "cuboid_bytes" : null,
+  "cuboid_bytes_recommend" : null,
+  "cuboid_last_optimized" : 0,
+  "snapshots" : { }
+}

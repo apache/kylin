@@ -1,6 +1,7 @@
 {
   "uuid" : "cd92588f-b987-4a12-b90f-e32c44345c64",
-  "version" : "2.1",
+  "version" : "1.5.3",
+  "is_draft" : false,
   "name" : "ssb",
   "description" : "",
   "lookups" : [ {
@@ -33,31 +34,30 @@
     }
   } ],
   "dimensions" : [ {
-    "table" : "V_LINEORDER",
-    "columns" : [ "LO_DATE", "LO_PARTKEY", "LO_CUSTKEY", "LO_ORDERDATE", "LO_SUPPKEY" ]
+    "table" : "SSB.P_LINEORDER",
+    "columns" : [ "LO_ORDERDATE" ]
   }, {
-    "table" : "PART",
-    "columns" : [ "P_MFGR", "P_CATEGORY", "P_BRAND", "P_PARTKEY" ]
+    "table" : "SSB.PART",
+    "columns" : [ "P_MFGR", "P_CATEGORY", "P_BRAND" ]
   }, {
-    "table" : "CUSTOMER",
-    "columns" : [ "C_CITY", "C_NATION", "C_REGION", "C_CUSTKEY" ]
+    "table" : "SSB.CUSTOMER",
+    "columns" : [ "C_CITY", "C_NATION", "C_REGION" ]
   }, {
-    "table" : "SUPPLIER",
-    "columns" : [ "S_CITY", "S_NATION", "S_REGION", "S_SUPPKEY" ]
+    "table" : "SSB.SUPPLIER",
+    "columns" : [ "S_CITY", "S_NATION", "S_REGION", "S_SUPPKEY", "S_NAME" ]
   }, {
-    "table" : "DATES",
-    "columns" : [ "D_YEAR", "D_YEARMONTHNUM", "D_YEARMONTH", "D_WEEKNUMINYEAR", "D_DATEKEY" ]
+    "table" : "SSB.DATES",
+    "columns" : [ "D_YEAR", "D_YEARMONTHNUM", "D_YEARMONTH", "D_WEEKNUMINYEAR", "D_MONTH" ]
   } ],
   "metrics" : [ "LO_REVENUE", "LO_SUPPLYCOST", "V_REVENUE" ],
-  "last_modified" : 1457444314662,
-  "fact_table" : "SSB.V_LINEORDER",
+  "capacity" : "MEDIUM",
+  "last_modified" : 1464441928669,
+  "fact_table" : "SSB.P_LINEORDER",
   "filter_condition" : "",
   "partition_desc" : {
-    "partition_date_column" : "SSB.V_LINEORDER.LO_DATE",
-    "partition_time_column" : null,
+    "partition_date_column" : "SSB.P_LINEORDER.LO_ORDERDATE",
     "partition_date_start" : 0,
     "partition_date_format" : "yyyyMMdd",
-    "partition_time_format" : "HH:mm:ss",
     "partition_type" : "APPEND",
     "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
   }

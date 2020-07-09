@@ -59,7 +59,12 @@ public class CsvSource implements ISource {
                         && (parameters != null && parameters.get("separator") == null)) {
                     path = "file:///" + new File(getUtMetaDir(),
                             "../../examples/test_case_data/parquet_test/data/" + table.identity() + ".csv")
-                                    .getAbsolutePath();
+                            .getAbsolutePath();
+                    separator = "";
+                } else if (kylinConfig.getDeployEnv().equals("LOCAL")) {
+                    path = "file:///" + new File(kylinConfig.getMetadataUrlPrefix(),
+                            "data/" + table.identity() + ".csv")
+                            .getAbsolutePath();
                     separator = "";
                 } else {
                     String project = parameters.get("project") == null ? "" : parameters.get("project") + "/";
