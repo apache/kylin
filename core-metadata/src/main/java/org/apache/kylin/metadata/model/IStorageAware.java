@@ -20,11 +20,11 @@ package org.apache.kylin.metadata.model;
 
 public interface IStorageAware {
 
-    public static final int ID_HBASE = 0;
-    public static final int ID_HYBRID = 1;
-    public static final int ID_SHARDED_HBASE = 2;
-    public static final int ID_REALTIME_AND_HBASE = 3;
-    public static final int ID_PARQUET = 4;
+    int ID_HBASE = 0;
+    int ID_HYBRID = 1;
+    int ID_SHARDED_HBASE = 2;
+    int ID_REALTIME_AND_HBASE = 3;
+    int ID_PARQUET = 4;
 
     int getStorageType();
 }

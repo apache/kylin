@@ -369,7 +369,7 @@
   "volatile_range" : 0,
   "retention_range" : 0,
   "engine_type" : 6,
-  "storage_type" : 2,
+  "storage_type" : 4,
   "override_kylin_properties" : {
     "kylin.cube.algorithm" : "LAYER",
     "kylin.dictionary.shrunken-from-global-enabled" : "false"
