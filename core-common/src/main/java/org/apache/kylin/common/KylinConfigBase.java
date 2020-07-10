@@ -1250,7 +1250,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public int getDefaultStorageEngine() {
-        return Integer.parseInt(getOptional("kylin.storage.default", "2"));
+        return Integer.parseInt(getOptional("kylin.storage.default", "4"));
     }
 
     public StorageURL getStorageUrl() {
@@ -1428,7 +1428,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public int getDefaultCubeEngine() {
-        return Integer.parseInt(getOptional("kylin.engine.default", "2"));
+        return Integer.parseInt(getOptional("kylin.engine.default", "6"));
     }
 
     public String getKylinParquetJobJarPath() {

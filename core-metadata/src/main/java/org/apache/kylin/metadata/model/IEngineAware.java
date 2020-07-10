@@ -21,14 +21,14 @@ package org.apache.kylin.metadata.model;
 public interface IEngineAware {
 
     @Deprecated
-    public static final int ID_MR_V1 = 0;
+    int ID_MR_V1 = 0;
 
-    public static final int ID_MR_V2 = 2;
-    public static final int ID_MR_II = 3;
-    public static final int ID_SPARK = 4;
-    public static final int ID_FLINK = 5;
+    int ID_MR_V2 = 2;
+    int ID_MR_II = 3;
+    int ID_SPARK = 4;
+    int ID_FLINK = 5;
 
-    public static final int ID_SPARK_II= 6;
+    int ID_SPARK_II= 6;
 
     int getEngineType();
 }
