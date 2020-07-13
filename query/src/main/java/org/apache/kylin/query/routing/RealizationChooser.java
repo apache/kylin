@@ -185,6 +185,10 @@ public class RealizationChooser {
             }
 
             RealizationCost cost = new RealizationCost(real);
+            if (BackdoorToggles.getForceHitCube() != null && BackdoorToggles.getForceHitCube().equalsIgnoreCase(real.getName())) {
+                logger.info("Force choose {} as selected model for specific purpose.", real.getModel());
+                cost = new RealizationCost(-1, 0);
+            }
             DataModelDesc m = real.getModel();
             Set<IRealization> set = models.get(m);
             if (set == null) {
@@ -237,6 +241,11 @@ public class RealizationChooser {
     private static class RealizationCost implements Comparable<RealizationCost> {
         final public int priority;
         final public int cost;
+
+        public RealizationCost(int priority, int cost) {
+            this.priority = priority;
+            this.cost = cost;
+        }
 
         public RealizationCost(IRealization real) {
             // ref Candidate.PRIORITIES
