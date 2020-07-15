@@ -33,8 +33,16 @@ then
     beeline_params=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.beeline-params`
     hive_env=`${beeline_shell} ${hive_conf_properties} ${beeline_params} --outputformat=dsv -e "set;" 2>&1 | grep --text 'env:CLASSPATH' `
 else
-    source ${dir}/check-hive-usability.sh
-    hive_env=`hive ${hive_conf_properties} -e set 2>&1 | grep 'env:CLASSPATH'`
+    if [ ! -f ${dir}/hive-env-classpath.txt ]
+    then
+        echo "init hive env classpath"
+        source ${dir}/check-hive-usability.txt
+        hive_env=`hive ${hive_conf_properties} -e set 2>&1 | grep 'env:CLASSPATH'`
+        echo $hive_env > ${dir}/hive-env-classpath.txt
+    else
+        echo "load hive-env-classpath.txt"
+        hive_env=`cat ${dir}/hive-env-classpath.txt`
+    fi
 fi
 
 if [ -z $hive_env ]
