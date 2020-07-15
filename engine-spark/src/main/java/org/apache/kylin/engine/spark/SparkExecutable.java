@@ -59,6 +59,7 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -298,7 +299,7 @@ public class SparkExecutable extends AbstractExecutable {
             logger.info("cmd: " + cmd);
             final ExecutorService executorService = Executors.newSingleThreadExecutor();
             final CliCommandExecutor exec = new CliCommandExecutor();
-            final PatternedLogger patternedLogger = new PatternedLogger(logger, new PatternedLogger.ILogListener() {
+            final PatternedLogger patternedLogger = new PatternedLogger(logger, IEngineAware.ID_SPARK, new PatternedLogger.ILogListener() {
                 @Override
                 public void onLogEvent(String infoKey, Map<String, String> info) {
                     // only care three properties here
