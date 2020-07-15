@@ -41,6 +41,7 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.Segments;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -225,7 +226,7 @@ public class FlinkExecutable extends AbstractExecutable {
             logger.info("cmd: " + cmd);
             final ExecutorService executorService = Executors.newSingleThreadExecutor();
             final CliCommandExecutor exec = new CliCommandExecutor();
-            final PatternedLogger patternedLogger = new PatternedLogger(logger, (String infoKey, Map<String, String> info) -> {
+            final PatternedLogger patternedLogger = new PatternedLogger(logger, IEngineAware.ID_FLINK, (String infoKey, Map<String, String> info) -> {
                 // only care three properties here
                 if (ExecutableConstants.FLINK_JOB_ID.equals(infoKey)
                         || ExecutableConstants.YARN_APP_ID.equals(infoKey)

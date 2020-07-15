@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 import org.apache.kylin.common.util.BufferedLogger;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.constant.ExecutableConstants;
+import org.apache.kylin.metadata.model.IEngineAware;
 import org.slf4j.Logger;
 
 import com.google.common.collect.Maps;
@@ -71,19 +72,22 @@ public class PatternedLogger extends BufferedLogger {
         patternMap.put(PATTERN_HIVE_APP_ID_URL, new Pair(ExecutableConstants.YARN_APP_URL, 2));
         patternMap.put(PATTERN_HIVE_APP_ID_URL_2, new Pair(ExecutableConstants.YARN_APP_URL, 1));
         patternMap.put(PATTERN_HIVE_BYTES_WRITTEN, new Pair(ExecutableConstants.HDFS_BYTES_WRITTEN, 2));
-        patternMap.put(PATTERN_SPARK_APP_ID, new Pair(ExecutableConstants.SPARK_JOB_ID, 1));
-        patternMap.put(PATTERN_SPARK_APP_URL, new Pair(ExecutableConstants.YARN_APP_URL, 1));
         patternMap.put(PATTERN_JOB_STATE, new Pair(ExecutableConstants.YARN_APP_STATE, 1));
-        patternMap.put(PATTERN_FLINK_APP_ID, new Pair(ExecutableConstants.FLINK_JOB_ID, 1));
-        patternMap.put(PATTERN_FLINK_APP_URL, new Pair(ExecutableConstants.YARN_APP_URL, 1));
     }
 
     public PatternedLogger(Logger wrappedLogger) {
         super(wrappedLogger);
     }
 
-    public PatternedLogger(Logger wrappedLogger, ILogListener listener) {
+    public PatternedLogger(Logger wrappedLogger, int engineType, ILogListener listener) {
         super(wrappedLogger);
+        if (engineType == IEngineAware.ID_SPARK) {
+            patternMap.put(PATTERN_SPARK_APP_ID, new Pair(ExecutableConstants.SPARK_JOB_ID, 1));
+            patternMap.put(PATTERN_SPARK_APP_URL, new Pair(ExecutableConstants.YARN_APP_URL, 1));
+        } else if (engineType == IEngineAware.ID_FLINK) {
+            patternMap.put(PATTERN_FLINK_APP_ID, new Pair(ExecutableConstants.FLINK_JOB_ID, 1));
+            patternMap.put(PATTERN_FLINK_APP_URL, new Pair(ExecutableConstants.YARN_APP_URL, 1));
+        }
         this.listener = listener;
     }
 
