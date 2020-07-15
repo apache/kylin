@@ -42,6 +42,7 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.parquet.Strings;
 import org.slf4j.LoggerFactory;
@@ -187,7 +188,7 @@ public class SparkExecutableLivy extends SparkExecutable {
             formatArgs(livyRestBuilder.getArgs());
 
             final LivyRestExecutor executor = new LivyRestExecutor();
-            final PatternedLogger patternedLogger = new PatternedLogger(logger, (infoKey, info) -> {
+            final PatternedLogger patternedLogger = new PatternedLogger(logger, IEngineAware.ID_SPARK, (infoKey, info) -> {
                 // only care three properties here
                 if (ExecutableConstants.SPARK_JOB_ID.equals(infoKey) || ExecutableConstants.YARN_APP_ID.equals(infoKey)
                         || ExecutableConstants.YARN_APP_URL.equals(infoKey)) {
