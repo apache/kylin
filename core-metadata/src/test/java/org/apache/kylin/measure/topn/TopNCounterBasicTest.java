@@ -24,12 +24,25 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class TopNCounterBasicTest {
+
+    @Before
+    public void setup() throws Exception {
+        HBaseMetadataTestCase.staticCreateTestMetadata();
+    }
+
+    @After
+    public void after() throws Exception {
+        HBaseMetadataTestCase.staticCleanupTestMetadata();
+    }
 
     @Test
     public void testTopNCounter() {
@@ -128,10 +141,47 @@ public class TopNCounterBasicTest {
         // X: 4+2, C: 2+1, A: 3+0, B: 2 +3, Y: 1+0 Z: 1 +0
         vs.merge(vs2);
         List<Counter<String>> topK = vs.topK(3);
+        assertEquals(6, vs.getCounterList().size());
         for (Counter<String> c : topK) {
             assertTrue(Arrays.asList("A", "B", "X").contains(c.getItem()));
         }
+        assertEquals(3, topK.size());
+        assertEquals("X", topK.get(0).getItem());
+        assertEquals(6, topK.get(0).getCount(), 0);
+        assertEquals("B", topK.get(1).getItem());
+        assertEquals(5, topK.get(1).getCount(), 0);
+        assertEquals("A", topK.get(2).getItem());
+        assertEquals(4, topK.get(2).getCount(), 0);
+    }
 
+    @Test
+    public void testMergeWithSortFalse() {
+
+        TopNCounter<String> vs = new TopNCounter<String>(5);
+        String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "B", "A" };
+        for (String i : stream) {
+            vs.offer(i);
+        }
+
+        String[] stream2 = { "B", "B", "Z", "Z", "B", "C", "X", "X" };
+        TopNCounter<String> vs2 = new TopNCounter<String>(5);
+        for (String i : stream2) {
+            vs2.offer(i);
+        }
+        // X: 4+2, C: 2+1, A: 4+0, B: 2+3, Y: 1+0 Z: 1+2
+        vs.merge(vs2, false);
+        List<Counter<String>> topK = vs.topK(3);
+        assertEquals(5, vs.getCounterList().size());
+        for (Counter<String> c : topK) {
+            assertTrue(Arrays.asList("A", "B", "X").contains(c.getItem()));
+        }
+        assertEquals(3, topK.size());
+        assertEquals("X", topK.get(0).getItem());
+        assertEquals(6, topK.get(0).getCount(), 0);
+        assertEquals("B", topK.get(1).getItem());
+        assertEquals(5, topK.get(1).getCount(), 0);
+        assertEquals("A", topK.get(2).getItem());
+        assertEquals(4, topK.get(2).getCount(), 0);
     }
 
     @Test

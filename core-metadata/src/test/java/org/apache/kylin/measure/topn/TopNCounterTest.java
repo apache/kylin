@@ -167,17 +167,20 @@ public class TopNCounterTest {
             startPosition += slice;
         }
 
-        TopNCounterTest.SpaceSavingConsumer[] mergedCounters = singleMerge(parallelCounters);
-
         TopNCounterTest.HashMapConsumer accurateCounter = new TopNCounterTest.HashMapConsumer();
         feedDataToConsumer(dataFile, accurateCounter, 0, TOTAL_RECORDS);
 
+        TopNCounterTest.SpaceSavingConsumer[] mergedCounters = singleMerge(parallelCounters, true);
+
         compareResult(mergedCounters[0], accurateCounter);
+
+        TopNCounterTest.SpaceSavingConsumer[] mergedCounterWithSortFalse = singleMerge(parallelCounters, false);
+        compareResult(mergedCounterWithSortFalse[0], accurateCounter);
         FileUtils.forceDelete(new File(dataFile));
 
     }
 
-    private TopNCounterTest.SpaceSavingConsumer[] singleMerge(TopNCounterTest.SpaceSavingConsumer[] consumers)
+    private TopNCounterTest.SpaceSavingConsumer[] singleMerge(TopNCounterTest.SpaceSavingConsumer[] consumers, boolean sortAndRetain)
             throws IOException, ClassNotFoundException {
         List<TopNCounterTest.SpaceSavingConsumer> list = Lists.newArrayList();
         if (consumers.length == 1)
@@ -185,11 +188,22 @@ public class TopNCounterTest {
 
         TopNCounterTest.SpaceSavingConsumer merged = new TopNCounterTest.SpaceSavingConsumer(TOP_K * SPACE_SAVING_ROOM);
 
-        for (int i = 0, n = consumers.length; i < n; i++) {
-            merged.vs.merge(consumers[i].vs);
+        if (sortAndRetain) {
+            for (int i = 0, n = consumers.length; i < n; i++) {
+                merged.vs.merge(consumers[i].vs);
+            }
+        } else {
+            for (int i = 0, n = consumers.length; i < n; i++) {
+                merged.vs.merge(consumers[i].vs, false);
+            }
         }
 
-        merged.vs.retain(TOP_K * SPACE_SAVING_ROOM); // remove extra elements;
+        if (sortAndRetain) {
+            merged.vs.retain(TOP_K * SPACE_SAVING_ROOM); // remove extra elements;
+        } else {
+            merged.vs.sortAndRetain(TOP_K * SPACE_SAVING_ROOM); // remove extra elements;
+        }
+
         return new TopNCounterTest.SpaceSavingConsumer[] { merged };
 
     }
