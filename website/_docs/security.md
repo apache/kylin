@@ -11,10 +11,6 @@ __Severity__
 
 Important
 
-__Vendor__
-
-The Apache Software Foundation
-
 __Versions Affected__
 
 Kylin 2.0.0, 2.1.0, 2.2.0, 2.3.0, 2.3.1, 2.3.2, 2.4.0, 2.4.1, 2.5.0, 2.5.1, 2.5.2, 2.6.0, 2.6.1, 2.6.2, 2.6.3, 2.6.4, 2.6.5, 2.6.6, 3.0.0-alpha, 3.0.0-alpha2, 3.0.0-beta, 3.0.0, 3.0.1 3.0.2
@@ -37,10 +33,6 @@ We would like to thank Rupeng Wang from Kyligence for reporting and fix this iss
 __Severity__
 
 Important
-
-__Vendor__
-
-The Apache Software Foundation
 
 __Versions Affected__
 
@@ -65,22 +57,9 @@ __Severity__
 
 Important
 
-__Vendor__
-
-The Apache Software Foundation
-
-
 __Versions Affected__
 
-Kylin 2.3.0 to 2.3.2
-
-Kylin 2.4.0 to 2.4.1
-
-Kylin 2.5.0 to 2.5.2
-
-Kylin 2.6.0 to 2.6.4
-
-Kylin 3.0.0-alpha, Kylin 3.0.0-alpha2, Kylin 3.0.0-beta, Kylin 3.0.0
+Kylin 2.3.0 to 2.3.2, 2.4.0 to 2.4.1, 2.5.0 to 2.5.2, 2.6.0 to 2.6.4, 3.0.0-alpha, 3.0.0-alpha2, 3.0.0-beta, 3.0.0
 
 __Description__
 
@@ -98,24 +77,11 @@ This issue was discovered by ﻿Jonathan Leitschuh
 
 __Severity__
 
-
 Important
-
-__Vendor__
-
-The Apache Software Foundation
 
 __Versions Affected__
 
-Kylin 2.3.0 to 2.3.2
-
-Kylin 2.4.0 to 2.4.1
-
-Kylin 2.5.0 to 2.5.2
-
-Kylin 2.6.0 to 2.6.5
-
-Kylin 3.0.0-alpha, Kylin 3.0.0-alpha2, Kylin 3.0.0-beta, Kylin 3.0.0, Kylin 3.0.1
+Kylin 2.3.0 to 2.3.2, 2.4.0 to 2.4.1, 2.5.0 to 2.5.2, 2.6.0 to 2.6.5, 3.0.0-alpha, 3.0.0-alpha2, 3.0.0-beta, 3.0.0, 3.0.1
 
 __Description__
 
