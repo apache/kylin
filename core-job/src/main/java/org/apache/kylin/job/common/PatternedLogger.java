@@ -36,6 +36,7 @@ import org.apache.kylin.shaded.com.google.common.collect.Maps;
 public class PatternedLogger extends BufferedLogger {
     private final Map<String, String> info = Maps.newHashMap();
     private ILogListener listener = null;
+    private int engineType;
 
     private static final Pattern PATTERN_APP_ID = Pattern.compile("Submitted application (.*?) to ResourceManager");
     private static final Pattern PATTERN_APP_URL = Pattern.compile("The url to track the job: (.*)");
@@ -72,7 +73,11 @@ public class PatternedLogger extends BufferedLogger {
         patternMap.put(PATTERN_HIVE_APP_ID_URL, new Pair(ExecutableConstants.YARN_APP_URL, 2));
         patternMap.put(PATTERN_HIVE_APP_ID_URL_2, new Pair(ExecutableConstants.YARN_APP_URL, 1));
         patternMap.put(PATTERN_HIVE_BYTES_WRITTEN, new Pair(ExecutableConstants.HDFS_BYTES_WRITTEN, 2));
+        patternMap.put(PATTERN_SPARK_APP_ID, new Pair(ExecutableConstants.SPARK_JOB_ID, 1));
+        patternMap.put(PATTERN_SPARK_APP_URL, new Pair(ExecutableConstants.YARN_APP_URL, 1));
         patternMap.put(PATTERN_JOB_STATE, new Pair(ExecutableConstants.YARN_APP_STATE, 1));
+        patternMap.put(PATTERN_FLINK_APP_ID, new Pair(ExecutableConstants.FLINK_JOB_ID, 1));
+        patternMap.put(PATTERN_FLINK_APP_URL, new Pair(ExecutableConstants.YARN_APP_URL, 1));
     }
 
     public PatternedLogger(Logger wrappedLogger) {
@@ -81,13 +86,7 @@ public class PatternedLogger extends BufferedLogger {
 
     public PatternedLogger(Logger wrappedLogger, int engineType, ILogListener listener) {
         super(wrappedLogger);
-        if (engineType == IEngineAware.ID_SPARK) {
-            patternMap.put(PATTERN_SPARK_APP_ID, new Pair(ExecutableConstants.SPARK_JOB_ID, 1));
-            patternMap.put(PATTERN_SPARK_APP_URL, new Pair(ExecutableConstants.YARN_APP_URL, 1));
-        } else if (engineType == IEngineAware.ID_FLINK) {
-            patternMap.put(PATTERN_FLINK_APP_ID, new Pair(ExecutableConstants.FLINK_JOB_ID, 1));
-            patternMap.put(PATTERN_FLINK_APP_URL, new Pair(ExecutableConstants.YARN_APP_URL, 1));
-        }
+        this.engineType = engineType;
         this.listener = listener;
     }
 
@@ -98,6 +97,11 @@ public class PatternedLogger extends BufferedLogger {
         for (Pattern pattern : patternMap.keySet()) {
             matcher = pattern.matcher(message);
             if (matcher.find()) {
+                if (pattern == PATTERN_SPARK_APP_ID && engineType == IEngineAware.ID_FLINK) {
+                    pattern = PATTERN_FLINK_APP_ID;
+                } else if (pattern == PATTERN_FLINK_APP_ID && engineType == IEngineAware.ID_SPARK) {
+                    pattern = PATTERN_SPARK_APP_ID;
+                }
                 String key = patternMap.get(pattern).getFirst();
                 int index = patternMap.get(pattern).getSecond();
                 String value = matcher.group(index);
