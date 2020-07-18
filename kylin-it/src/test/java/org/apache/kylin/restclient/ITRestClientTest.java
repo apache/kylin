@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -102,6 +103,25 @@ public class ITRestClientTest extends HBaseMetadataTestCase {
         RestClient client = new RestClient(HOST, PORT, USERNAME, PASSWD);
         String sql = "select count(*) from TEST_KYLIN_FACT; ";
         HttpResponse result = client.query(sql, PROJECT_NAME);
+    }
+
+    @Test
+    public void testGetConfigByAdmin() throws Exception {
+        RestClient client = new RestClient(HOST, PORT, USERNAME, PASSWD);
+        String result = client.getKylinProperties();
+        assertTrue(result != null && result.length() > 0);
+    }
+
+    @Test(expected = IOException.class)
+    public void testGetConfigUnauthorized() throws Exception {
+        RestClient client = new RestClient(HOST, PORT, "", "");
+        client.getKylinProperties();
+    }
+
+    @Test(expected = IOException.class)
+    public void testGetConfigNonAdmin() throws Exception {
+        RestClient client = new RestClient(HOST, PORT, "MODELER", "MODELER");
+        client.getKylinProperties();
     }
 
     protected static void stopJetty() throws Exception {
