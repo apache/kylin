@@ -221,7 +221,7 @@ public class RestClient {
     }
 
     public String getKylinProperties() throws IOException {
-        return getConfiguration(baseUrl + "/admin/config", false);
+        return getConfiguration(baseUrl + "/admin/config", true);
     }
 
     public String getHDFSConfiguration() throws IOException {
