@@ -84,6 +84,7 @@ public class NSparkMergingJob extends CubingJob {
         job.setParam(MetadataConstants.P_DATA_RANGE_END, mergedSegment.getSegRange().end.toString());
         job.setParam(MetadataConstants.P_OUTPUT_META_URL, cube.getConfig().getMetadataUrl().toString());
         job.setParam(MetadataConstants.P_JOB_TYPE, String.valueOf(JobTypeEnum.INDEX_MERGE));
+        job.setParam(MetadataConstants.P_CUBOID_NUMBER, String.valueOf(cube.getDescriptor().getAllCuboids().size()));
 
         JobStepFactory.addStep(job, JobStepType.RESOURCE_DETECT, cube);
         JobStepFactory.addStep(job, JobStepType.MERGING, cube);

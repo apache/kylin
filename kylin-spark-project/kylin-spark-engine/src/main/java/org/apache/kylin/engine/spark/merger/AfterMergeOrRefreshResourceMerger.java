@@ -38,7 +38,7 @@ import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 
-import com.clearspring.analytics.util.Lists;
+import com.google.common.collect.Lists;
 
 public class AfterMergeOrRefreshResourceMerger extends MetadataMerger {
 

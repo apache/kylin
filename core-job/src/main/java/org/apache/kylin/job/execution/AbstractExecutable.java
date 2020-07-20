@@ -674,7 +674,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         if (cuboidsNum != null) {
             return computeDriverMemory(Integer.valueOf(cuboidsNum));
         }
-        return 0;
+        return 1024;
     }
 
     //Default driver memory base is 1024M
