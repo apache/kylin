@@ -32,10 +32,6 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <properties>
-        <test2w3>wok</test2w3>
-    </properties>
-
     <modules>
         <module>kylin-spark-metadata</module>
         <module>kylin-spark-common</module>
