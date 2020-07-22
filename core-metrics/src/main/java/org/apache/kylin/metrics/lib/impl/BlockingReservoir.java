@@ -60,6 +60,10 @@ public class BlockingReservoir extends AbstractActiveReservoir {
     }
 
     public BlockingReservoir(int minReportSize, int maxReportSize, int maxReportTime) {
+        this(minReportSize, maxReportSize, maxReportSize, MAX_QUEUE_SIZE);
+    }
+
+    public BlockingReservoir(int minReportSize, int maxReportSize, int maxReportTime, int maxQueueSize) {
         Preconditions.checkArgument(minReportSize > 0, "minReportSize should be larger than 0");
         Preconditions.checkArgument(maxReportSize >= minReportSize,
                 "maxReportSize should not be less than minBatchSize");
@@ -68,7 +72,7 @@ public class BlockingReservoir extends AbstractActiveReservoir {
         this.maxReportSize = maxReportSize;
         this.maxReportTime = maxReportTime * 60 * 1000L;
 
-        this.recordsQueue = new LinkedBlockingQueue<>(MAX_QUEUE_SIZE);
+        this.recordsQueue = new LinkedBlockingQueue<>(maxQueueSize);
         this.listeners = Lists.newArrayList();
 
         this.records = Lists.newArrayListWithExpectedSize(this.maxReportSize);
