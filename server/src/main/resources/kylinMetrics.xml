@@ -34,9 +34,14 @@
             <value>500</value>
         </constructor-arg>
 
-        <!-- minReportTime, min duration(in minute) between two report action-->
+        <!-- maxReportTime, max duration(in minute) between two report action-->
         <constructor-arg index="2">
             <value>10</value>
+        </constructor-arg>
+
+        <!-- maxQueueSize, max queue size of LinkedBlockingQueue-->
+        <constructor-arg index="3">
+            <value>50000</value>
         </constructor-arg>
     </bean>
 
