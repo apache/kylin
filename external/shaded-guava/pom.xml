@@ -67,8 +67,8 @@
                             </artifactSet>
                             <relocations>
                                 <relocation>
-                                    <pattern>com.google.common</pattern>
-                                    <shadedPattern>${shadeBase}.com.google.common</shadedPattern>
+                                    <pattern>com.google</pattern>
+                                    <shadedPattern>${shadeBase}.com.google</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
