@@ -73,6 +73,7 @@
                                           value="org.apache.kylin.metrics.lib.impl.hive.HiveReservoirReporter"/>
                                 <property name="second">
                                     <props>
+                                        <prop key="kylin.hive.producer.close-file-every-append">true</prop>
                                     </props>
                                 </property>
                             </bean>

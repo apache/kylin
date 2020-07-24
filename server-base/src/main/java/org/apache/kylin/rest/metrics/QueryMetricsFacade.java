@@ -36,14 +36,15 @@ import org.apache.kylin.metrics.lib.impl.TimedRecordEvent;
 import org.apache.kylin.metrics.property.QueryCubePropertyEnum;
 import org.apache.kylin.metrics.property.QueryPropertyEnum;
 import org.apache.kylin.metrics.property.QueryRPCPropertyEnum;
+import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
+import org.apache.kylin.shaded.com.google.common.hash.HashFunction;
+import org.apache.kylin.shaded.com.google.common.hash.Hashing;
 
 /**
  * The entrance of metrics features.
@@ -55,7 +56,7 @@ public class QueryMetricsFacade {
     private static final HashFunction hashFunc = Hashing.murmur3_128();
 
     private static boolean enabled = false;
-    private static ConcurrentHashMap<String, QueryMetrics> metricsMap = new ConcurrentHashMap<String, QueryMetrics>();
+    private static ConcurrentHashMap<String, QueryMetrics> metricsMap = new ConcurrentHashMap<>();
 
     public static void init() {
         enabled = KylinConfig.getInstanceFromEnv().getQueryMetricsEnabled();
@@ -65,7 +66,7 @@ public class QueryMetricsFacade {
         DefaultMetricsSystem.initialize("Kylin");
     }
 
-    public static long getSqlHashCode(String sql) {
+    private static long getSqlHashCode(String sql) {
         return hashFunc.hashString(sql, Charset.forName("UTF-8")).asLong();
     }
 
@@ -111,36 +112,41 @@ public class QueryMetricsFacade {
             //For update rpc level related metrics
             MetricsManager.getInstance().update(rpcMetricsEvent);
         }
-        long sqlHashCode = getSqlHashCode(sqlRequest.getSql());
         for (QueryContext.CubeSegmentStatisticsResult contextEntry : sqlResponse.getCubeSegmentStatisticsList()) {
             RecordEvent queryMetricsEvent = new TimedRecordEvent(
                     KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectQuery());
             setQueryWrapper(queryMetricsEvent, //
-                    user, sqlHashCode, sqlResponse.isStorageCacheUsed() ? "CACHE" : contextEntry.getQueryType(),
+                    user, sqlRequest.getSql(), sqlResponse.isStorageCacheUsed() ? "CACHE" : contextEntry.getQueryType(),
                     norm(sqlRequest.getProject()), contextEntry.getRealization(), contextEntry.getRealizationType(),
                     sqlResponse.getThrowable());
 
             long totalStorageReturnCount = 0L;
-            for (Map<String, QueryContext.CubeSegmentStatistics> cubeEntry : contextEntry.getCubeSegmentStatisticsMap()
-                    .values()) {
-                for (QueryContext.CubeSegmentStatistics segmentEntry : cubeEntry.values()) {
-                    RecordEvent cubeSegmentMetricsEvent = new TimedRecordEvent(
-                            KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectQueryCube());
+            if (contextEntry.getQueryType().equalsIgnoreCase(OLAPQuery.EnumeratorTypeEnum.OLAP.name())) {
+                for (Map<String, QueryContext.CubeSegmentStatistics> cubeEntry : contextEntry.getCubeSegmentStatisticsMap()
+                        .values()) {
+                    for (QueryContext.CubeSegmentStatistics segmentEntry : cubeEntry.values()) {
+                        RecordEvent cubeSegmentMetricsEvent = new TimedRecordEvent(
+                                KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectQueryCube());
 
-                    setCubeWrapper(cubeSegmentMetricsEvent, //
-                            norm(sqlRequest.getProject()), segmentEntry.getCubeName(), segmentEntry.getSegmentName(),
-                            segmentEntry.getSourceCuboidId(), segmentEntry.getTargetCuboidId(),
-                            segmentEntry.getFilterMask());
+                        setCubeWrapper(cubeSegmentMetricsEvent, //
+                                norm(sqlRequest.getProject()), segmentEntry.getCubeName(), segmentEntry.getSegmentName(),
+                                segmentEntry.getSourceCuboidId(), segmentEntry.getTargetCuboidId(),
+                                segmentEntry.getFilterMask());
 
-                    setCubeStats(cubeSegmentMetricsEvent, //
-                            segmentEntry.getCallCount(), segmentEntry.getCallTimeSum(), segmentEntry.getCallTimeMax(),
-                            segmentEntry.getStorageSkippedRows(), segmentEntry.getStorageScannedRows(),
-                            segmentEntry.getStorageReturnedRows(), segmentEntry.getStorageAggregatedRows(),
-                            segmentEntry.isIfSuccess(), 1.0 / cubeEntry.size());
+                        setCubeStats(cubeSegmentMetricsEvent, //
+                                segmentEntry.getCallCount(), segmentEntry.getCallTimeSum(), segmentEntry.getCallTimeMax(),
+                                segmentEntry.getStorageSkippedRows(), segmentEntry.getStorageScannedRows(),
+                                segmentEntry.getStorageReturnedRows(), segmentEntry.getStorageAggregatedRows(),
+                                segmentEntry.isIfSuccess(), 1.0 / cubeEntry.size());
 
-                    totalStorageReturnCount += segmentEntry.getStorageReturnedRows();
-                    //For update cube segment level related query metrics
-                    MetricsManager.getInstance().update(cubeSegmentMetricsEvent);
+                        totalStorageReturnCount += segmentEntry.getStorageReturnedRows();
+                        //For update cube segment level related query metrics
+                        MetricsManager.getInstance().update(cubeSegmentMetricsEvent);
+                    }
+                }
+            } else {
+                if (!sqlResponse.getIsException()) {
+                    totalStorageReturnCount = sqlResponse.getResults().size();
                 }
             }
             setQueryStats(queryMetricsEvent, //
@@ -199,10 +205,11 @@ public class QueryMetricsFacade {
         metricsEvent.put(QueryCubePropertyEnum.WEIGHT_PER_HIT.toString(), weightPerHit);
     }
 
-    private static void setQueryWrapper(RecordEvent metricsEvent, String user, long queryHashCode, String queryType,
+    private static void setQueryWrapper(RecordEvent metricsEvent, String user, String sql, String queryType,
             String projectName, String realizationName, int realizationType, Throwable throwable) {
         metricsEvent.put(QueryPropertyEnum.USER.toString(), user);
-        metricsEvent.put(QueryPropertyEnum.ID_CODE.toString(), queryHashCode);
+        metricsEvent.put(QueryPropertyEnum.ID_CODE.toString(), getSqlHashCode(sql));
+        metricsEvent.put(QueryPropertyEnum.SQL.toString(), sql);
         metricsEvent.put(QueryPropertyEnum.TYPE.toString(), queryType);
         metricsEvent.put(QueryPropertyEnum.PROJECT.toString(), projectName);
         metricsEvent.put(QueryPropertyEnum.REALIZATION.toString(), realizationName);

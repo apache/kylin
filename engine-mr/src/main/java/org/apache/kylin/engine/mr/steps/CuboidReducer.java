@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import java.util.Locale;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;

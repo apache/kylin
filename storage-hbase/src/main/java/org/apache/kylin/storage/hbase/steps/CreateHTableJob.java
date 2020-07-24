@@ -34,7 +34,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.KeyValueUtil;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
@@ -57,8 +56,8 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  */
@@ -118,10 +117,10 @@ public class CreateHTableJob extends AbstractHadoopJob {
         splitKeys = getRegionSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment,
                 partitionFilePath.getParent());
 
-        CubeHTableUtil.createHTable(cubeSegment, splitKeys);
+        CubeHTableUtil.createHTable(cubeSegment, splitKeys, true);
 
         // export configuration in advance to avoid connecting to hbase from spark
-        if (cubeDesc.getEngineType()== IEngineAware.ID_SPARK){
+        if (cubeDesc.getEngineType() == IEngineAware.ID_SPARK || cubeDesc.getEngineType() == IEngineAware.ID_FLINK) {
             exportHBaseConfiguration(cubeSegment.getStorageLocationIdentifier());
         }
         return 0;
@@ -133,7 +132,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         HadoopUtil.healSickConfig(hbaseConf);
         Job job = Job.getInstance(hbaseConf, hbaseTableName);
         HTable table = new HTable(hbaseConf, hbaseTableName);
-        HFileOutputFormat2.configureIncrementalLoadMap(job, table);
+        HFileOutputFormat3.configureIncrementalLoadMap(job, table);
 
         logger.info("Saving HBase configuration to {}", hbaseConfPath);
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
@@ -281,8 +280,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
             hfileSizeMB = mbPerRegion / 2f;
         }
 
-        int compactionThreshold = Integer.parseInt(hbaseConf.get("hbase.hstore.compactionThreshold", "3"));
-        logger.info("hbase.hstore.compactionThreshold is {}", compactionThreshold);
+        int compactionThreshold = kylinConfig.getHBaseRegionCompactionThreshold();
+        logger.info("kylin.storage.hbase.region-compaction-threshold is " + compactionThreshold);
         if (hfileSizeMB > 0.0f && hfileSizeMB * compactionThreshold < mbPerRegion) {
             hfileSizeMB = ((float) mbPerRegion) / compactionThreshold;
         }

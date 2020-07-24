@@ -47,11 +47,12 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.kylin.engine.spark.ISparkInput.ISparkBatchCubingInputSide;
 import org.apache.kylin.engine.spark.ISparkInput.ISparkBatchMergeInputSide;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.hive.HiveUtils;
 
 public class SparkUtil {
 
@@ -136,8 +137,8 @@ public class SparkUtil {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
     }
 
-    public static void modifySparkHadoopConfiguration(SparkContext sc) throws Exception {
-        sc.hadoopConfiguration().set("dfs.replication", "2"); // cuboid intermediate files, replication=2
+    public static void modifySparkHadoopConfiguration(SparkContext sc, KylinConfig kylinConfig) throws Exception {
+        sc.hadoopConfiguration().set("dfs.replication", kylinConfig.getCuboidDfsReplication()); // cuboid intermediate files
         sc.hadoopConfiguration().set("mapreduce.output.fileoutputformat.compress", "true");
         sc.hadoopConfiguration().set("mapreduce.output.fileoutputformat.compress.type", "BLOCK");
         sc.hadoopConfiguration().set("mapreduce.output.fileoutputformat.compress.codec", "org.apache.hadoop.io.compress.DefaultCodec"); // or org.apache.hadoop.io.compress.SnappyCodec
@@ -167,7 +168,8 @@ public class SparkUtil {
     }
 
     private static JavaRDD<String[]> getOtherFormatHiveInput(JavaSparkContext sc, String hiveTable) {
-        SparkSession sparkSession = SparkSession.builder().config(sc.getConf()).enableHiveSupport().getOrCreate();
+        SparkSession sparkSession = SparkSession.builder().sparkContext(HiveUtils.withHiveExternalCatalog(sc.sc()))
+                .config(sc.getConf()).enableHiveSupport().getOrCreate();
         final Dataset intermediateTable = sparkSession.table(hiveTable);
         return intermediateTable.javaRDD().map(new Function<Row, String[]>() {
             @Override

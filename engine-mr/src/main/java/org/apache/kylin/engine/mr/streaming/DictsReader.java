@@ -32,7 +32,7 @@ import org.apache.kylin.stream.core.storage.columnar.protocol.FragmentMetaInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
 
 public class DictsReader extends ColumnarFilesReader {
     private static final Logger logger = LoggerFactory.getLogger(DictsReader.class);
@@ -51,10 +51,12 @@ public class DictsReader extends ColumnarFilesReader {
         dataInputStream = fs.open(dataFilePath);
         Dictionary dict;
         String colName;
+        logger.info("Reading dictionary from {}", dataFilePath.getName());
         for (DimDictionaryMetaInfo dimDictMetaInfo : dimDictMetaInfos) {
             dataInputStream.seek(dimDictMetaInfo.getStartOffset());
             dict = DictionarySerializer.deserialize(dataInputStream);
             colName = dimDictMetaInfo.getDimName();
+            logger.info("Add dict for {}", colName);
             builder.put(colName, dict);
         }
         return builder.build();

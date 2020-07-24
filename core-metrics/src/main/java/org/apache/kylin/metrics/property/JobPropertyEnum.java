@@ -18,7 +18,7 @@
 
 package org.apache.kylin.metrics.property;
 
-import com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 
 /**
  * Definition of Metrics dimension and measure for Cube building job
@@ -33,6 +33,7 @@ public enum JobPropertyEnum {
     ALGORITHM("CUBING_TYPE"),
     STATUS("JOB_STATUS"),
     EXCEPTION("EXCEPTION"),
+    EXCEPTION_MSG("EXCEPTION_MSG"),
 
     SOURCE_SIZE("TABLE_SIZE"),
     CUBE_SIZE("CUBE_SIZE"),

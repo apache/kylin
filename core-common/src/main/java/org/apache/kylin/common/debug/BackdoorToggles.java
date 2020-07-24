@@ -24,12 +24,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.Pair;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * BackdoorToggles and QueryContext are similar because they're both hosting per-query thread local variables.
@@ -69,6 +69,10 @@ public class BackdoorToggles {
             return null;
 
         return map.get(key);
+    }
+
+    public static String getForceHitCube(){
+        return getString(DEBUG_TOGGLE_HIT_CUBE);
     }
 
     public static String getCoprocessorBehavior() {
@@ -383,4 +387,12 @@ public class BackdoorToggles {
      }
      */
     public final static String DEBUG_TOGGLE_STREAMING_DETAIL_PROFILE = "DEBUG_TOGGLE_STREAMING_DETAIL_PROFILE";
+
+
+    /**
+     * The cube chosen by Kylin may not be enough correct, user should have
+     *  the right to choose which cube he want to query in some case, please
+     *  check https://issues.apache.org/jira/browse/KYLIN-4312 for information.
+     */
+    public final static String DEBUG_TOGGLE_HIT_CUBE = "DEBUG_TOGGLE_HIT_CUBE";
 }

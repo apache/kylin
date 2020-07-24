@@ -34,8 +34,8 @@ import org.apache.kylin.dict.DictionarySerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableSet;
 
 public class ColumnarSplitDictReader extends ColumnarSplitReader {
     private static Logger logger = LoggerFactory.getLogger(ColumnarSplitDictReader.class);
@@ -68,7 +68,7 @@ public class ColumnarSplitDictReader extends ColumnarSplitReader {
         itr = set.iterator();
         readCount = new AtomicInteger(0);
 
-        logger.debug("Reader for dictinary reader initialized. ");
+        logger.info("Reader for dictionary reader initialized. ");
     }
 
     @Override

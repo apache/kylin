@@ -18,38 +18,40 @@
 
 package org.apache.kylin.rest.service;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Preconditions;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Predicate;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
+import org.apache.kylin.shaded.com.google.common.collect.Iterables;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class TableSchemaUpdateChecker {
     private final TableMetadataManager metadataManager;
     private final CubeManager cubeManager;
     private final DataModelManager dataModelManager;
 
-    static class CheckResult {
+    public static class CheckResult {
         private final boolean valid;
         private final String reason;
 
@@ -58,7 +60,7 @@ public class TableSchemaUpdateChecker {
             this.reason = reason;
         }
 
-        void raiseExceptionWhenInvalid() {
+        public void raiseExceptionWhenInvalid() {
             if (!valid) {
                 throw new RuntimeException(reason);
             }
@@ -128,6 +130,10 @@ public class TableSchemaUpdateChecker {
         } else if (column.getType().isNumberFamily()) {
             // Both are float/double should be fine.
             return newCol.getType().isNumberFamily();
+        } else if ((column.getType().isStringFamily() && newCol.getType().isDateTimeFamily())
+                && metadataManager.getConfig().isAbleChangeStringToDateTime()) {
+            // String can be converted to Date or Time
+            return true;
         } else {
             // only compare base type name, changing precision or scale should be fine
             return column.getTypeName().equals(newCol.getTypeName());
@@ -239,37 +245,51 @@ public class TableSchemaUpdateChecker {
         }
     }
 
-    private void checkValidationInModel(TableDesc newTableDesc, List<String> issues, DataModelDesc usedModel){
+    private void checkValidationInModel(TableDesc newTableDesc, List<String> issues, DataModelDesc usedModel) {
+        List<String> violateColumns = Lists.newArrayList();
+
         final String fullTableName = newTableDesc.getIdentity();
-        // if user reloads a fact table used by model, then all used columns must match current schema
         if (usedModel.isFactTable(fullTableName)) {
             TableDesc factTable = usedModel.findFirstTable(fullTableName).getTableDesc();
-            List<String> violateColumns = checkAllColumnsInFactTable(usedModel, factTable, newTableDesc);
-            if (!violateColumns.isEmpty()) {
-                issues.add(format(Locale.ROOT, "Column %s used in model[%s], but changed " + "in hive",
-                        violateColumns, usedModel.getName()));
-            }
+            violateColumns.addAll(checkAllColumnsInFactTable(usedModel, factTable, newTableDesc));
         }
 
-        // if user reloads a lookup table used by cube, only append column(s) are allowed, all existing columns
-        // must be the same (except compatible type changes)
         if (usedModel.isLookupTable(fullTableName)) {
-            TableDesc lookupTable = usedModel.findFirstTable(fullTableName).getTableDesc();
-            if (!checkAllColumnsInTableDesc(lookupTable, newTableDesc)) {
-                issues.add(format(Locale.ROOT, "Table '%s' is used as Lookup Table in model[%s], but "
-                                + "changed in " + "hive, only append operation are supported on hive table as lookup table",
-                        lookupTable.getIdentity(), usedModel.getName()));
-            }
+            violateColumns.addAll(checkAllColumnsInLookupTable(usedModel, newTableDesc));
+        }
+
+        if (!violateColumns.isEmpty()) {
+            issues.add(format(Locale.ROOT, "Column %s used in model[%s], but not exist " + "in hive", violateColumns,
+                    usedModel.getName()));
         }
     }
 
-    private List<String> checkAllColumnsInFactTable(DataModelDesc usedModel, TableDesc factTable, TableDesc newTableDesc) {
+    // columns in usedModel should not be deleted in new table 
+    private List<String> checkAllColumnsInLookupTable(DataModelDesc usedModel, TableDesc newTableDesc) {
+        List<String> violateColumns = Lists.newArrayList();
+
+        Set<String> newColumns = Sets.newHashSet(newTableDesc.getColumns()).stream()
+                .map(c -> c.getName().toUpperCase(Locale.ROOT)).collect(Collectors.toSet());
+        for (ModelDimensionDesc dim : usedModel.getDimensions()) {
+            if (dim.getTable().equalsIgnoreCase(newTableDesc.getIdentity())) {
+                Set<String> oldColumns = Sets.newHashSet(dim.getColumns()).stream().map(c -> c.toUpperCase(Locale.ROOT))
+                        .collect(Collectors.toSet());
+                oldColumns.removeAll(newColumns);
+                violateColumns.addAll(oldColumns);
+            }
+        }
+
+        return violateColumns;
+    }
+    
+    private List<String> checkAllColumnsInFactTable(DataModelDesc usedModel, TableDesc factTable,
+            TableDesc newTableDesc) {
         List<String> violateColumns = Lists.newArrayList();
 
         for (ColumnDesc column : findUsedColumnsInFactTable(usedModel, factTable)) {
             if (!column.isComputedColumn()) {
                 ColumnDesc newCol = newTableDesc.findColumnByName(column.getName());
-                if (newCol == null || !isColumnCompatible(column, newCol)) {
+                if (newCol == null) {
                     violateColumns.add(column.getName());
                 }
             }
@@ -320,5 +340,54 @@ public class TableSchemaUpdateChecker {
         }
 
         return usedColumns;
+    }
+
+    public CheckResult allowMigrate(TableDesc newTableDesc, TableDesc hiveTableDesc) throws Exception {
+        final String fullTableName = newTableDesc.getIdentity();
+
+        List<String> issues = Lists.newArrayList();
+        checkAllColumnsInHiveTableDesc(hiveTableDesc, newTableDesc, issues);
+        if (issues.isEmpty()) {
+            return new CheckResult(true,
+                    format(Locale.ROOT, "Table '%s' is compatible with existing hive table", fullTableName));
+        } else {
+            return new CheckResult(false, format(Locale.ROOT,
+                    "Table '%s' is incompatible with existing hive table due to '%s'", fullTableName, issues));
+        }
+    }
+
+    private void checkAllColumnsInHiveTableDesc(TableDesc hiveTable, TableDesc newTable, List<String> issues) {
+        ColumnDesc[] hiveTableCols = hiveTable.getColumns();
+        ColumnDesc[] newTableCols = newTable.getColumns();
+
+        if (hiveTableCols.length < newTableCols.length) {
+            Set<String> colNamesNew = Lists.newArrayList(newTableCols).stream().map(input -> input.getName())
+                    .collect(Collectors.toSet());
+            Set<String> colNamesHive = Lists.newArrayList(hiveTableCols).stream().map(input -> input.getName())
+                    .collect(Collectors.toSet());
+            colNamesNew.removeAll(colNamesHive);
+            issues.add(format(Locale.ROOT, "columns %s are not existing in hive table", colNamesNew));
+            return;
+        }
+
+        Map<String, ColumnDesc> hiveColMap = Lists.newArrayList(hiveTableCols).stream()
+                .collect(Collectors.toMap(input -> input.getName().toUpperCase(Locale.ROOT), input -> input));
+        Map<String, ColumnDesc> newColMap = Lists.newArrayList(newTableCols).stream()
+                .collect(Collectors.toMap(input -> input.getName().toUpperCase(Locale.ROOT), input -> input));
+
+        List<String> violateColumns = Lists.newArrayList();
+        for (String colName : newColMap.keySet()) {
+            ColumnDesc hiveCol = hiveColMap.get(colName);
+            if (hiveCol == null) {
+                issues.add(format(Locale.ROOT, "column %s is not existing in hive table", colName));
+                continue;
+            }
+            if (!isColumnCompatible(hiveCol, newColMap.get(colName))) {
+                violateColumns.add(colName);
+            }
+        }
+        if (!violateColumns.isEmpty()) {
+            issues.add(format(Locale.ROOT, "Columns %s are incompatible " + "in hive", violateColumns));
+        }
     }
 }

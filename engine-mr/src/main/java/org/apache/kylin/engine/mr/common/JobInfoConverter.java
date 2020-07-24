@@ -61,6 +61,7 @@ public class JobInfoConverter {
         }
     }
 
+
     public static JobInstance parseToJobInstance(CubingJob job, Map<String, Output> outputs) {
         if (job == null) {
             logger.warn("job is null.");
@@ -73,16 +74,26 @@ public class JobInfoConverter {
             return null;
         }
 
-        CubingJob cubeJob = (CubingJob) job;
-        CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+        CubingJob cubeJob = job;
+        String cubeName = CubingExecutableUtil.getCubeName(cubeJob.getParams());
+        String displayCubeName = cubeName;
+        try {
+            CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
+            if (cube != null) {
+                cubeName = cube.getName();
+                displayCubeName = cube.getDisplayName();
+            }
+        } catch (Exception e) {
+            logger.warn("Fail to get cube instance for {}.", cubeName);
+        }
 
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setProjectName(cubeJob.getProjectName());
-        result.setRelatedCube(cube != null ? cube.getName() : CubingExecutableUtil.getCubeName(cubeJob.getParams()));
-        result.setDisplayCubeName(cube != null ? cube.getDisplayName() : CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+        result.setRelatedCube(cubeName);
+        result.setDisplayCubeName(displayCubeName);
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
+        result.setRelatedSegmentName(CubingExecutableUtil.getSegmentName(cubeJob.getParams()));
         result.setLastModified(output.getLastModified());
         result.setSubmitter(job.getSubmitter());
         result.setUuid(job.getId());

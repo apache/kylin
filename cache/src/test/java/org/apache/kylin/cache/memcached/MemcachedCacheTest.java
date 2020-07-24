@@ -21,6 +21,8 @@ package org.apache.kylin.cache.memcached;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -32,7 +34,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.GetFuture;
@@ -80,5 +82,12 @@ public class MemcachedCacheTest extends LocalFileMetadataTestCase {
         for (String key : keyValueMap.keySet()) {
             Assert.assertEquals("The value should not change", keyValueMap.get(key), memCachedAdaptor.get(key).get());
         }
+    }
+
+    @Test
+    public void testGetResolvedAddrList() {
+        String hostsStr = "localhost:11211,fafddafaf:11211,fadfafaerqr:11211";
+        List<InetSocketAddress> addrList = MemcachedCache.getResolvedAddrList(hostsStr);
+        Assert.assertEquals(1, addrList.size());
     }
 }

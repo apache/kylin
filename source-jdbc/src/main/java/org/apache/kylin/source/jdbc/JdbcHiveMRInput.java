@@ -49,7 +49,7 @@ public class JdbcHiveMRInput extends JdbcHiveInputBase implements IMRInput {
     public static class JdbcMRBatchCubingInputSide extends JdbcBaseBatchCubingInputSide implements IMRBatchCubingInputSide {
 
         public JdbcMRBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
-            super(flatDesc);
+            super(flatDesc, false);
         }
 
         @Override

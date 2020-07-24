@@ -73,7 +73,7 @@ import org.slf4j.LoggerFactory;
 import scala.Tuple2;
 
 /**
- * Spark application to build cube with the "by-layer" algorithm. Only support source data from Hive; Metadata in HBase.
+ * Spark application to build cube with the "by-layer" algorithm.
  */
 public class SparkCubingByLayer extends AbstractApplication implements Serializable {
 
@@ -130,7 +130,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         JavaSparkContext sc = new JavaSparkContext(conf);
         sc.sc().addSparkListener(jobListener);
         HadoopUtil.deletePath(sc.hadoopConfiguration(), new Path(outputPath));
-        SparkUtil.modifySparkHadoopConfiguration(sc.sc()); // set dfs.replication=2 and enable compress
+        SparkUtil.modifySparkHadoopConfiguration(sc.sc(), AbstractHadoopJob.loadKylinConfigFromHdfs(new SerializableConfiguration(sc.hadoopConfiguration()), metaUrl)); // set dfs.replication and enable compress
         final SerializableConfiguration sConf = new SerializableConfiguration(sc.hadoopConfiguration());
         KylinConfig envConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
 

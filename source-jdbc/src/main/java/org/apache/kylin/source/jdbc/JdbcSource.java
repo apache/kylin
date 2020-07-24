@@ -31,13 +31,15 @@ import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourcePartition;
 
 public class JdbcSource implements ISource {
+    private final KylinConfig config;
     //used by reflection
     public JdbcSource(KylinConfig config) {
+        this.config = config;
     }
 
     @Override
     public ISourceMetadataExplorer getSourceMetadataExplorer() {
-        return new JdbcExplorer();
+        return new JdbcExplorer(this.config);
     }
 
     @SuppressWarnings("unchecked")
@@ -66,7 +68,7 @@ public class JdbcSource implements ISource {
 
     @Override
     public ISampleDataDeployer getSampleDataDeployer() {
-        return new JdbcExplorer();
+        return new JdbcExplorer(this.config);
     }
 
     @Override

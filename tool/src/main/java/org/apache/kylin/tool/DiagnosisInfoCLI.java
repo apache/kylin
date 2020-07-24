@@ -36,12 +36,20 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
-import org.apache.kylin.tool.util.ToolUtil;
+import org.apache.kylin.common.util.ToolUtil;
+import org.apache.kylin.stream.core.util.NamedThreadFactory;
+import org.apache.kylin.tool.extractor.AbstractInfoExtractor;
+import org.apache.kylin.tool.extractor.ClientEnvExtractor;
+import org.apache.kylin.tool.extractor.CubeMetaExtractor;
+import org.apache.kylin.tool.extractor.JStackExtractor;
+import org.apache.kylin.tool.extractor.JobInstanceExtractor;
+import org.apache.kylin.tool.extractor.KylinLogExtractor;
+import org.apache.kylin.tool.extractor.SparkEnvInfoExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class DiagnosisInfoCLI extends AbstractInfoExtractor {
     private static final Logger logger = LoggerFactory.getLogger(DiagnosisInfoCLI.class);
@@ -142,7 +150,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                 : DEFAULT_PERIOD;
 
         logger.info("Start diagnosis info extraction in {} threads.", threadsNum);
-        executorService = Executors.newFixedThreadPool(threadsNum);
+        executorService = Executors.newFixedThreadPool(threadsNum, new NamedThreadFactory("GeneralDiagnosis"));
 
         // export cube metadata
         executorService.execute(new Runnable() {
@@ -150,9 +158,9 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
             public void run() {
                 logger.info("Start to extract metadata.");
                 try {
-                    String[] cubeMetaArgs = { "-packagetype", "cubemeta", "-destDir",
+                    String[] cubeMetaArgs = {"-packagetype", "cubemeta", "-destDir",
                             new File(exportDir, "metadata").getAbsolutePath(), "-project", projectNames, "-compress",
-                            "false", "-includeJobs", "false", "-submodule", "true" };
+                            "false", "-includeJobs", "false", "-submodule", "true"};
                     CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
                     logger.info("CubeMetaExtractor args: " + Arrays.toString(cubeMetaArgs));
                     cubeMetaExtractor.execute(cubeMetaArgs);
@@ -169,8 +177,8 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                 public void run() {
                     logger.info("Start to extract jobs.");
                     try {
-                        String[] jobArgs = { "-destDir", new File(exportDir, "jobs").getAbsolutePath(), "-period",
-                                Integer.toString(period), "-compress", "false", "-submodule", "true" };
+                        String[] jobArgs = {"-destDir", new File(exportDir, "jobs").getAbsolutePath(), "-period",
+                                Integer.toString(period), "-compress", "false", "-submodule", "true"};
                         JobInstanceExtractor jobInstanceExtractor = new JobInstanceExtractor();
                         jobInstanceExtractor.execute(jobArgs);
                     } catch (Exception e) {
@@ -188,13 +196,13 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                     logger.info("Start to extract HBase usage.");
                     try {
                         // use reflection to isolate NoClassDef errors when HBase is not available
-                        String[] hbaseArgs = { "-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project",
-                                projectNames, "-compress", "false", "-submodule", "true" };
+                        String[] hbaseArgs = {"-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project",
+                                projectNames, "-compress", "false", "-submodule", "true"};
                         logger.info("HBaseUsageExtractor args: " + Arrays.toString(hbaseArgs));
-                        Object extractor = ClassUtil.newInstance("org.apache.kylin.tool.HBaseUsageExtractor");
+                        Object extractor = ClassUtil.newInstance("org.apache.kylin.tool.extractor.HBaseUsageExtractor");
                         Method execute = extractor.getClass().getMethod("execute", String[].class);
                         execute.invoke(extractor, (Object) hbaseArgs);
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         logger.error("Error in export HBase usage.", e);
                     }
                 }
@@ -232,8 +240,8 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                 @Override
                 public void run() {
                     try {
-                        String[] clientArgs = { "-destDir", new File(exportDir, "client").getAbsolutePath(),
-                                "-compress", "false", "-submodule", "true" };
+                        String[] clientArgs = {"-destDir", new File(exportDir, "client").getAbsolutePath(),
+                                "-compress", "false", "-submodule", "true"};
                         ClientEnvExtractor clientEnvExtractor = new ClientEnvExtractor();
                         logger.info("ClientEnvExtractor args: " + Arrays.toString(clientArgs));
                         clientEnvExtractor.execute(clientArgs);
@@ -250,8 +258,8 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
             public void run() {
                 logger.info("Start to extract logs.");
                 try {
-                    String[] logsArgs = { "-destDir", new File(exportDir, "logs").getAbsolutePath(), "-logPeriod",
-                            Integer.toString(period), "-compress", "false", "-submodule", "true" };
+                    String[] logsArgs = {"-destDir", new File(exportDir, "logs").getAbsolutePath(), "-logPeriod",
+                            Integer.toString(period), "-compress", "false", "-submodule", "true"};
                     KylinLogExtractor logExtractor = new KylinLogExtractor();
                     logger.info("KylinLogExtractor args: " + Arrays.toString(logsArgs));
                     logExtractor.execute(logsArgs);
@@ -261,8 +269,27 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
             }
         });
 
+        // dump jstack
+        String[] jstackDumpArgs = {"-destDir", exportDir.getAbsolutePath(), "-compress", "false", "-submodule",
+                "true", "-submodule", "true"};
+        logger.info("JStackExtractor args: {}", Arrays.toString(jstackDumpArgs));
+        try {
+            new JStackExtractor().execute(jstackDumpArgs);
+        } catch (Exception e) {
+            logger.error("Error execute jstack dump extractor");
+        }
+
+        // export spark conf
+        String[] sparkEnvArgs = {"-destDir", new File(exportDir, "spark").getAbsolutePath(), "-compress", "false", "-submodule", "true"};
+        try {
+            new SparkEnvInfoExtractor().execute(sparkEnvArgs);
+        } catch (Exception e) {
+            logger.error("Error execute spark extractor");
+        }
+
         executorService.shutdown();
         try {
+            logger.info("Waiting for completed.");
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

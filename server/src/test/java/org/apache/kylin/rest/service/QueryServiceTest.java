@@ -34,6 +34,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 
 /**
  * @author xduo
@@ -45,8 +47,7 @@ public class QueryServiceTest extends ServiceTestBase {
     QueryService queryService;
 
     @Autowired
-    @Qualifier("cacheService")
-    private CacheService cacheService;
+    CacheManager cacheManager;
 
     @Test
     public void testBasics() throws JobException, IOException, SQLException {
@@ -96,6 +97,27 @@ public class QueryServiceTest extends ServiceTestBase {
             Assert.assertEquals(
                     "WITH tableId as (select * from some_table1) , tableId2 AS (select * FROM some_table2) select * from tableId join tableId2 on tableId.a = tableId2.b;",
                     response.getExceptionMessage());
+        }
+    }
+
+    @Test
+    public void testSyntaxError() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setProperty("kylin.query.cache-enabled", "true");
+        config.setProperty("kylin.query.lazy-query-enabled", "true");
+
+        String badSql = "select with syntax error";
+
+        SQLRequest request = new SQLRequest();
+        request.setProject("default");
+        request.setSql(badSql);
+
+        try (SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(config)) {
+            queryService.doQueryWithCache(request, false);
+        } catch (Exception e) {
+            // expected error
+            Cache.ValueWrapper wrapper = cacheManager.getCache(QueryService.QUERY_CACHE).get(request.getCacheKey());
+            Assert.assertTrue(wrapper == null || wrapper.get() == null);
         }
     }
 }

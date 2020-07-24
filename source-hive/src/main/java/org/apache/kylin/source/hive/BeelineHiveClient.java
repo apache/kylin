@@ -32,14 +32,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.SourceConfigurationUtil;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class BeelineHiveClient implements IHiveClient {
 
@@ -55,7 +56,7 @@ public class BeelineHiveClient implements IHiveClient {
         }
         String[] splits = StringUtils.split(beelineParams);
         String url = "", username = "", password = "";
-        for (int i = 0; i < splits.length; i++) {
+        for (int i = 0; i < splits.length - 1; i++) {
             if ("-u".equals(splits[i])) {
                 url = stripQuotes(splits[i + 1]);
             }
@@ -70,8 +71,13 @@ public class BeelineHiveClient implements IHiveClient {
                 BufferedReader br = null;
                 try {
                     br = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
-                    password = br.readLine();
-                    br.close();
+                    try {
+                        password = br.readLine();
+                    } finally {
+                        if (null != br) {
+                            br.close();
+                        }
+                    }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -129,10 +135,26 @@ public class BeelineHiveClient implements IHiveClient {
         ResultSet resultSet = null;
         long count = 0;
         try {
-            String query = "select count(*) from ";
-            resultSet = stmt.executeQuery(query.concat(database + "." + tableName));
-            if (resultSet.next()) {
-                count = resultSet.getLong(1);
+            HiveTableMetaBuilder builder = new HiveTableMetaBuilder();
+            String exe = "use ";
+            stmt.execute(exe.concat(database));
+            String des = "describe formatted ";
+            resultSet = stmt.executeQuery(des.concat(tableName));
+            extractHiveTableMeta(resultSet, builder);
+            count = builder.createHiveTableMeta().rowNum;
+            if (count <= 0) {
+                String querySQL = "select count(*) from ".concat(database + "." + tableName);
+                List<Object[]> datas = null;
+                try {
+                    datas = getHiveResult(querySQL);
+                    if (Objects.nonNull(datas) && !datas.isEmpty()) {
+                        count = Integer.parseInt(datas.get(0)[0] + "");
+                    } else {
+                        throw new IOException("execute get hive table rows result fail : " + querySQL);
+                    }
+                } catch (Exception e) {
+                    throw new IOException("execute get hive table rows result fail : " + querySQL, e);
+                }
             }
         } finally {
             DBUtils.closeQuietly(resultSet);
@@ -271,6 +293,9 @@ public class BeelineHiveClient implements IHiveClient {
             }
             if ("numFiles".equals(resultSet.getString(2).trim())) {
                 builder.setFileNum(Long.parseLong(resultSet.getString(3).trim()));
+            }
+            if ("numRows".equals(resultSet.getString(2).trim())) {
+                builder.setRowNum(Long.parseLong(resultSet.getString(3).trim()));
             }
             if ("skip.header.line.count".equals(resultSet.getString(2).trim())) {
                 builder.setSkipHeaderLineCount(resultSet.getString(3).trim());

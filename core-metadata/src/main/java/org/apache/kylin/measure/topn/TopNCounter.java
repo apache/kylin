@@ -27,8 +27,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * Modified from the StreamSummary.java in https://github.com/addthis/stream-lib
@@ -238,18 +238,18 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
         }
     }
 
-    private static final Comparator ASC_COMPARATOR = new Comparator<Counter>() {
+    static final Comparator ASC_COMPARATOR = new Comparator<Counter>() {
         @Override
         public int compare(Counter o1, Counter o2) {
-            return o1.getCount() > o2.getCount() ? 1 : o1.getCount() == o2.getCount() ? 0 : -1;
+            return Double.compare(o1.getCount(), o2.getCount());
         }
 
     };
 
-    private static final Comparator DESC_COMPARATOR = new Comparator<Counter>() {
+    static final Comparator DESC_COMPARATOR = new Comparator<Counter>() {
         @Override
         public int compare(Counter o1, Counter o2) {
-            return o1.getCount() > o2.getCount() ? -1 : o1.getCount() == o2.getCount() ? 0 : 1;
+            return Double.compare(o2.getCount(), o1.getCount());
         }
 
     };

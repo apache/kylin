@@ -1,0 +1,104 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<configuration>
+    <property>
+        <name>mapreduce.job.split.metainfo.maxsize</name>
+        <value>-1</value>
+        <description>The maximum permissible size of the split metainfo file.
+            The JobTracker won't attempt to read split metainfo files bigger than
+            the configured value. No limits if set to -1.
+        </description>
+    </property>
+
+    <property>
+        <name>mapreduce.map.output.compress</name>
+        <value>true</value>
+        <description>Compress map outputs</description>
+    </property>
+
+    <!--
+    The default map outputs compress codec is org.apache.hadoop.io.compress.DefaultCodec,
+    if SnappyCodec is supported, org.apache.hadoop.io.compress.SnappyCodec could be used.
+    -->
+    <!--
+    <property>
+        <name>mapreduce.map.output.compress.codec</name>
+        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
+        <description>The compression codec to use for map outputs
+        </description>
+    </property>
+    -->
+    <property>
+        <name>mapreduce.output.fileoutputformat.compress</name>
+        <value>true</value>
+        <description>Compress the output of a MapReduce job</description>
+    </property>
+    <!--
+    The default job outputs compress codec is org.apache.hadoop.io.compress.DefaultCodec,
+    if SnappyCodec is supported, org.apache.hadoop.io.compress.SnappyCodec could be used.
+    -->
+    <!--
+    <property>
+        <name>mapreduce.output.fileoutputformat.compress.codec</name>
+        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
+        <description>The compression codec to use for job outputs
+        </description>
+    </property>
+    -->
+    <property>
+        <name>mapreduce.output.fileoutputformat.compress.type</name>
+        <value>BLOCK</value>
+        <description>The compression type to use for job outputs</description>
+    </property>
+
+    <property>
+        <name>mapreduce.job.max.split.locations</name>
+        <value>2000</value>
+        <description>No description</description>
+    </property>
+
+    <property>
+        <name>dfs.replication</name>
+        <value>2</value>
+        <description>Block replication</description>
+    </property>
+
+    <property>
+        <name>mapreduce.task.timeout</name>
+        <value>7200000</value>
+        <description>Set task timeout to 1 hour</description>
+    </property>
+
+    <!--Additional config for cube merge job, giving more memory -->
+    <property>
+        <name>mapreduce.map.memory.mb</name>
+        <value>3072</value>
+        <description></description>
+    </property>
+
+    <property>
+        <name>mapreduce.map.java.opts</name>
+        <value>-Xmx2700m -XX:OnOutOfMemoryError='kill -9 %p'</value>
+        <description></description>
+    </property>
+
+    <property>
+        <name>mapreduce.task.io.sort.mb</name>
+        <value>200</value>
+        <description></description>
+    </property>
+</configuration>

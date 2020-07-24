@@ -28,6 +28,7 @@ import java.util.Set;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.tool.extractor.CubeMetaExtractor;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -35,8 +36,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class CubeMetaExtractorTest extends LocalFileMetadataTestCase {
 

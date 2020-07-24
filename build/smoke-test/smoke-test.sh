@@ -69,6 +69,7 @@ sed -i 's/#*\(kylin.query.pushdown.jdbc.url*\)/\1/' conf/kylin.properties
 sed -i 's/#*\(kylin.query.pushdown.jdbc.driver*\)/\1/' conf/kylin.properties
 sed -i 's/#*\(kylin.query.pushdown.jdbc.username*\)/\1/' conf/kylin.properties
 
+${KYLIN_HOME}/bin/download-flink.sh
 ${KYLIN_HOME}/bin/kylin.sh start
 
 echo "Wait 3 minutes for service start."

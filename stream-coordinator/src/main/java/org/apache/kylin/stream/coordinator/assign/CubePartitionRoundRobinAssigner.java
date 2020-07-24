@@ -31,12 +31,12 @@ import org.apache.kylin.stream.core.model.CubeAssignment;
 import org.apache.kylin.stream.core.model.ReplicaSet;
 import org.apache.kylin.stream.core.source.Partition;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Function;
+import org.apache.kylin.shaded.com.google.common.collect.FluentIterable;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableSet;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class CubePartitionRoundRobinAssigner implements Assigner {
 
@@ -53,7 +53,7 @@ public class CubePartitionRoundRobinAssigner implements Assigner {
             public Integer apply(ReplicaSet rs) {
                 return rs.getReplicaSetID();
             }
-        }).toImmutableSet();
+        }).toSet();
 
         Map<Integer, Map<String, List<Partition>>> existingRSAssignmentsMap = AssignmentUtil
                 .convertCubeAssign2ReplicaSetAssign(existingAssignments);
@@ -146,9 +146,9 @@ public class CubePartitionRoundRobinAssigner implements Assigner {
         Collections.sort(replicaSets, new Comparator<ReplicaSet>() {
             @Override
             public int compare(ReplicaSet o1, ReplicaSet o2) {
-                Integer partitionNum1Obj = replicaSetPartitionNumMap.get(o1);
+                Integer partitionNum1Obj = replicaSetPartitionNumMap.get(o1.getReplicaSetID());
                 int partitionNum1 = partitionNum1Obj == null ? 0 : partitionNum1Obj;
-                Integer partitionNum2Obj = replicaSetPartitionNumMap.get(o2);
+                Integer partitionNum2Obj = replicaSetPartitionNumMap.get(o2.getReplicaSetID());
                 int partitionNum2 = partitionNum2Obj == null ? 0 : partitionNum2Obj;
                 return partitionNum1 - partitionNum2;
             }

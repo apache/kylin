@@ -6,20 +6,22 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.engine.mr;
 
 import java.util.List;
+import java.util.Objects;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidUtil;
 import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
@@ -58,6 +60,9 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         // Phase 1: Create Flat Table & Materialize Hive View in Lookup Tables
         inputSide.addStepPhase1_CreateFlatTable(result);
 
+        // Build global dictionary in distributed way
+        buildHiveGlobalDictionaryByMR(result, jobId);
+
         // Phase 2: Build Dictionary
         result.addTask(createFactDistinctColumnsStep(jobId));
 
@@ -86,7 +91,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         result.addTask(createUpdateCubeInfoAfterBuildStep(jobId, lookupMaterializeContext));
         inputSide.addStepPhase4_Cleanup(result);
         outputSide.addStepPhase4_Cleanup(result);
-        
+
         // Set the task priority if specified
         result.setPriorityBasedOnPriorityOffset(priorityOffset);
         result.getTasks().forEach(task -> task.setPriorityBasedOnPriorityOffset(priorityOffset));
@@ -194,6 +199,30 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         ndCuboidStep.setMapReduceParams(cmd.toString());
         ndCuboidStep.setMapReduceJobClass(getNDCuboidJob());
         return ndCuboidStep;
+    }
+
+    /**
+     * Build hive global dictionary by MR and encode corresponding column into integer for flat table
+     */
+    protected void buildHiveGlobalDictionaryByMR(final CubingJob result, String jobId) {
+        KylinConfig dictConfig = seg.getConfig();
+        String[] mrHiveDictColumnExcludeRef = dictConfig.getMrHiveDictColumnsExcludeRefColumns();
+        String[] mrHiveDictColumns = dictConfig.getMrHiveDictColumns();
+
+        if (Objects.nonNull(mrHiveDictColumnExcludeRef) && mrHiveDictColumnExcludeRef.length > 0
+                && !"".equals(mrHiveDictColumnExcludeRef[0])) {
+
+            // 1. parallel part build
+            result.addTask(createBuildGlobalHiveDictPartBuildJob(jobId));
+
+            // 2. parallel total build
+            result.addTask(createBuildGlobalHiveDictTotalBuildJob(jobId));
+        }
+
+        // Merge new dictionary entry into global dictionary and replace/encode flat table
+        if (Objects.nonNull(mrHiveDictColumns) && mrHiveDictColumns.length > 0 && !"".equals(mrHiveDictColumns[0])) {
+            inputSide.addStepPhase_ReplaceFlatTableGlobalColumnValue(result);
+        }
     }
 
     protected Class<? extends AbstractHadoopJob> getNDCuboidJob() {

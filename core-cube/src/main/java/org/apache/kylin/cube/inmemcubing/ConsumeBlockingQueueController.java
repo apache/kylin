@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class ConsumeBlockingQueueController<T> implements Iterator<T> {
     public final static int DEFAULT_BATCH_SIZE = 1000;

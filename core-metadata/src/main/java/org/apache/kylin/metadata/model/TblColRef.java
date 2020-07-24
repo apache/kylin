@@ -18,7 +18,7 @@
 
 package org.apache.kylin.metadata.model;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkArgument;
 
 import java.io.Serializable;
 import java.util.List;
@@ -277,6 +277,11 @@ public class TblColRef implements Serializable {
     // return DB.TABLE.COLUMN
     public String getColumWithTableAndSchema() {
         return (getTableWithSchema() + "." + column.getName()).toUpperCase(Locale.ROOT);
+    }
+
+
+    public String getColumnWithTable() {
+        return (getTable() + "." + column.getName()).toUpperCase(Locale.ROOT);
     }
 
     // used by projection rewrite, see OLAPProjectRel

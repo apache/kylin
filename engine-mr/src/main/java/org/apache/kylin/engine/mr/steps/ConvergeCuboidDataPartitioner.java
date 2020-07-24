@@ -18,8 +18,6 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import java.util.Random;
-
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
@@ -27,11 +25,13 @@ import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.kylin.cube.common.RowKeySplitter;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.hash.HashFunction;
+import org.apache.kylin.shaded.com.google.common.hash.Hashing;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 public class ConvergeCuboidDataPartitioner extends Partitioner<Text, Text> implements Configurable {
 
-    private Random rand = new Random();
+    private static final HashFunction hashFunc = Hashing.murmur3_128();
 
     private Configuration conf;
     private boolean enableSharding;
@@ -40,12 +40,14 @@ public class ConvergeCuboidDataPartitioner extends Partitioner<Text, Text> imple
 
     @Override
     public int getPartition(Text key, Text value, int numReduceTasks) {
+        long hash = hashFunc.hashBytes(key.getBytes()).asLong();
+
         long cuboidID = RowKeySplitter.getCuboidId(key.getBytes(), enableSharding);
         // the first numReduceBaseCuboid are for base cuboid
         if (cuboidID == baseCuboidID) {
-            return rand.nextInt(numReduceBaseCuboid);
+            return getRemainder(hash, numReduceBaseCuboid);
         } else {
-            return numReduceBaseCuboid + rand.nextInt(numReduceTasks - numReduceBaseCuboid);
+            return numReduceBaseCuboid + getRemainder(hash, numReduceTasks - numReduceBaseCuboid);
         }
     }
 
@@ -63,5 +65,10 @@ public class ConvergeCuboidDataPartitioner extends Partitioner<Text, Text> imple
     @Override
     public Configuration getConf() {
         return conf;
+    }
+
+    private static int getRemainder(long val, int base) {
+        int rem = (int) val % base;
+        return rem >= 0 ? rem : rem + base;
     }
 }

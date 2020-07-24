@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
 
 mkdir -p ${KYLIN_HOME}/logs
 
@@ -67,6 +67,23 @@ then
     fi
 
     exit 0
+elif [ $# -gt 2 ] # user can choose to use more flexibly options
+then
+    source ${dir}/find-hive-dependency.sh
+
+    if [ -f "${dir}/setenv-tool.sh" ]
+        then source ${dir}/setenv-tool.sh
+    fi
+    mkdir -p ${KYLIN_HOME}/ext
+    export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/conf:${KYLIN_HOME}/tool/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH_PREFIX}
+    export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${hive_dependency}
+
+    hbase ${KYLIN_EXTRA_START_OPTS} \
+      -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties \
+      -Dcatalina.home=${tomcat_root} \
+      "$@"
+
+     exit 0
 else
     echo "usage: diag.sh Project|JobId [target_path]"
     exit 1

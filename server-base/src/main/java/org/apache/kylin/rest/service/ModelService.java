@@ -39,6 +39,7 @@ import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.msg.Message;
@@ -53,8 +54,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  * @author jiazhong
@@ -136,12 +137,7 @@ public class ModelService extends BasicService {
             throw new BadRequestException(String.format(Locale.ROOT, msg.getDUPLICATE_MODEL_NAME(), desc.getName()));
         }
 
-        String factTableName = desc.getRootFactTableName();
-        TableDesc tableDesc = getTableManager().getTableDesc(factTableName, projectName);
-        if (tableDesc.getSourceType() == ISourceAware.ID_STREAMING
-                && (desc.getPartitionDesc() == null || desc.getPartitionDesc().getPartitionDateColumn() == null)) {
-            throw new IllegalArgumentException("Must define a partition column.");
-        }
+        validateModel(projectName, desc);
 
         DataModelDesc createdDesc = null;
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -151,8 +147,47 @@ public class ModelService extends BasicService {
 
     public DataModelDesc updateModelAndDesc(String project, DataModelDesc desc) throws IOException {
         aclEvaluate.checkProjectWritePermission(project);
+        validateModel(project, desc);
+        checkModelCompatibility(project, desc);
         getDataModelManager().updateDataModelDesc(desc);
         return desc;
+    }
+
+    public void checkModelCompatibility(String project, DataModelDesc dataModalDesc) {
+        ProjectInstance prjInstance = getProjectManager().getProject(project);
+        if (prjInstance == null) {
+            throw new BadRequestException("Project " + project + " does not exist");
+        }
+        if (!prjInstance.getConfig().isModelSchemaUpdaterCheckerEnabled()) {
+            logger.info("Skip the check for model schema update");
+            return;
+        }
+        ModelSchemaUpdateChecker checker = new ModelSchemaUpdateChecker(getTableManager(), getCubeManager(),
+                getDataModelManager());
+        ModelSchemaUpdateChecker.CheckResult result = checker.allowEdit(dataModalDesc, project);
+        result.raiseExceptionWhenInvalid();
+    }
+
+    public void checkModelCompatibility(DataModelDesc dataModalDesc, List<TableDesc> tableDescList) {
+        ModelSchemaUpdateChecker checker = new ModelSchemaUpdateChecker(getTableManager(), getCubeManager(),
+                getDataModelManager());
+
+        Map<String, TableDesc> tableDescMap = Maps.newHashMapWithExpectedSize(tableDescList.size());
+        for (TableDesc tableDesc : tableDescList) {
+            tableDescMap.put(tableDesc.getIdentity(), tableDesc);
+        }
+        dataModalDesc.init(getConfig(), tableDescMap);
+        ModelSchemaUpdateChecker.CheckResult result = checker.allowEdit(dataModalDesc, null, false);
+        result.raiseExceptionWhenInvalid();
+    }
+
+    public void validateModel(String project, DataModelDesc desc) throws IllegalArgumentException {
+        String factTableName = desc.getRootFactTableName();
+        TableDesc tableDesc = getTableManager().getTableDesc(factTableName, project);
+        if ((tableDesc.getSourceType() == ISourceAware.ID_STREAMING || tableDesc.isStreamingTable())
+                && (desc.getPartitionDesc() == null || desc.getPartitionDesc().getPartitionDateColumn() == null)) {
+            throw new IllegalArgumentException("Must define a partition column.");
+        }
     }
 
     public void dropModel(DataModelDesc desc) throws IOException {
@@ -286,8 +321,7 @@ public class ModelService extends BasicService {
 
         StringBuilder checkRet = new StringBuilder();
         if (cubes != null && cubes.size() != 0 && !historyModels.isEmpty()) {
-            dataModelDesc.init(getConfig(), getTableManager().getAllTablesMap(project),
-                    getDataModelManager().getModels(project), false);
+            dataModelDesc.init(getConfig(), getTableManager().getAllTablesMap(project));
 
             List<String> curModelDims = getModelCols(dataModelDesc);
             List<String> curModelMeasures = getModelMeasures(dataModelDesc);

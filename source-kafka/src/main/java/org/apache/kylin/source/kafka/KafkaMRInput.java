@@ -93,8 +93,16 @@ public class KafkaMRInput extends KafkaInputBase implements IMRInput {
 
         @Override
         public String getInputSplitSignature(InputSplit inputSplit) {
-            FileSplit baseSplit = (FileSplit) inputSplit;
-            return baseSplit.getPath().getName() + "_" + baseSplit.getStart() + "_" + baseSplit.getLength();
+            FileSplit fs = null;
+            if (inputSplit instanceof FileSplit) {
+                fs = (FileSplit) inputSplit;
+            } else if (inputSplit instanceof org.apache.hadoop.mapreduce.lib.input.FileSplit) {
+                fs = new FileSplit((org.apache.hadoop.mapreduce.lib.input.FileSplit) inputSplit);
+            } else {
+                throw new IllegalArgumentException("Wrong input split: " + inputSplit);
+            }
+
+            return fs.getPath().getName() + "_" + fs.getStart() + "_" + fs.getLength();
         }
     }
 

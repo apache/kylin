@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -92,6 +93,9 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
             }
         }
 
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        List<Double> cuboidEstimateRatio = cubingJob.findEstimateRatio(mergedSegment, config);
+
         // update segment info
         mergedSegment.setSizeKB(cubeSizeBytes / 1024);
         mergedSegment.setInputRecords(sourceCount);
@@ -100,6 +104,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         mergedSegment.setLastBuildTime(System.currentTimeMillis());
         mergedSegment.setDimensionRangeInfoMap(mergedSegDimRangeMap);
         mergedSegment.setStreamSourceCheckpoint(lastMergedSegment != null ? lastMergedSegment.getStreamSourceCheckpoint() : null);
+        mergedSegment.setEstimateRatio(cuboidEstimateRatio);
 
         if (isOffsetCube) {
             SegmentRange.TSRange tsRange = new SegmentRange.TSRange(tsStartMin, tsEndMax);

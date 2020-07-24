@@ -28,7 +28,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class HiveCmdBuilder {
     public static final Logger logger = LoggerFactory.getLogger(HiveCmdBuilder.class);
@@ -52,7 +52,7 @@ public class HiveCmdBuilder {
         hiveConfProps = SourceConfigurationUtil.loadHiveConfiguration();
         hiveConfProps.putAll(kylinConfig.getHiveConfigOverride());
         if (StringUtils.isNotEmpty(jobName)) {
-            addStatement("set mapred.job.name='" + jobName + "';");
+            addStatement("set mapreduce.job.name=" + jobName + ";");
         }
     }
 

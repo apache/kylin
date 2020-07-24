@@ -25,7 +25,7 @@ import java.util.Comparator;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 public class GTRecord implements Comparable<GTRecord> {
 
@@ -59,10 +59,6 @@ public class GTRecord implements Comparable<GTRecord> {
 
     public ByteArray get(int i) {
         return cols[i];
-    }
-
-    public Object getValue(int i) {
-        return info.codeSystem.decodeColumnValue(i, cols[i].asBuffer());
     }
 
     public ByteArray[] getInternal() {

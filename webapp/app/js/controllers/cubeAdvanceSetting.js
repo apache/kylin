@@ -177,12 +177,20 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
 
   }
 
-  $scope.isReuse=false;
+  var ReuseEnum = {
+    BUILD: 1,
+    SELF: 2,
+    DOMAIN: 3
+  };
+
+  $scope.isReuse=1;
   $scope.addNew=false;
   $scope.newDictionaries = {
     "column":null,
     "builder": null,
-    "reuse": null
+    "reuse": null,
+    "model": null,
+    "cube": null
   }
 
   $scope.initUpdateDictionariesStatus = function(){
@@ -198,11 +206,13 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
       $scope.updateDictionariesStatus.isEdit = true;
       $scope.addNew=true;
       $scope.updateDictionariesStatus.editIndex = index;
-      if(dictionaries.builder==null){
-        $scope.isReuse=true;
+      if(dictionaries.builder==null && dictionaries.model==null){
+        $scope.isReuse = ReuseEnum.SELF;
+      } else if (dictionaries.model!=null){
+        $scope.isReuse = ReuseEnum.DOMAIN;
       }
       else{
-        $scope.isReuse=false;
+        $scope.isReuse = ReuseEnum.BUILD;
       }
     }
     else{
@@ -231,7 +241,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
       $scope.initUpdateDictionariesStatus();
       $scope.nextDictionariesInit();
       $scope.addNew = !$scope.addNew;
-      $scope.isReuse = false;
+      $scope.isReuse = ReuseEnum.BUILD;
       return true;
 
   };
@@ -240,7 +250,9 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     $scope.nextDic = {
       "coiumn":null,
       "builder":null,
-      "reuse":null
+      "reuse":null,
+      "model":null,
+      "cube":null
     }
   }
 
@@ -261,16 +273,25 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
 
   $scope.clearNewDictionaries = function (){
     $scope.newDictionaries = null;
-    $scope.isReuse=false;
+    $scope.isReuse = ReuseEnum.BUILD;
     $scope.initUpdateDictionariesStatus();
     $scope.nextDictionariesInit();
     $scope.addNew=!$scope.addNew;
   }
 
-  $scope.change = function (){
+  $scope.change = function (type){
     $scope.newDictionaries.builder=null;
     $scope.newDictionaries.reuse=null;
-    $scope.isReuse=!$scope.isReuse;
+    $scope.newDictionaries.domain=null;
+    $scope.newDictionaries.model=null;
+    $scope.newDictionaries.cube=null;
+    if(type == 'domain'){
+      $scope.isReuse = ReuseEnum.DOMAIN;
+    }else if (type == 'builder'){
+      $scope.isReuse = ReuseEnum.BUILD;
+    }else if (type == 'reuse'){
+      $scope.isReuse = ReuseEnum.SELF;
+    }
   }
 
   $scope.removeElement =  function(arr,element){
@@ -522,6 +543,10 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     });
     return cubeLookups;
   };
+
+  $scope.isAvailableEngine = function(engine_type) {
+    return !($scope.cubeMetaFrame.storage_type === 3 && engine_type.value === 4);
+  }
 
   $scope.cubeLookups = $scope.getCubeLookups();
 });

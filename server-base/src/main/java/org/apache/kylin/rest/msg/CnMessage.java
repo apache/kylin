@@ -69,6 +69,10 @@ public class CnMessage extends Message {
         return "非 READY 状态 segment '%s' 不能被删除, 请先抛弃它正在运行的任务";
     }
 
+    public String getDELETE_SEG_FROM_READY_CUBE() {
+        return "segment '%s' 不能从 READY 状态的 cube '%s' 中删除, 请先disable cube";
+    }
+
     public String getINVALID_BUILD_TYPE() {
         return "非法构建类型: '%s'";
     }
@@ -398,6 +402,14 @@ public class CnMessage extends Message {
 
     public String getDIAG_PACKAGE_NOT_FOUND() {
         return "找不到诊断包, 路径: %s";
+    }
+
+    public String getDIAG_PROJECT_NOT_FOUND() {
+        return "找不到项目: %s.";
+    }
+
+    public String getDIAG_JOBID_NOT_FOUND() {
+        return "找不到任务ID: %s.";
     }
 
     // Encoding

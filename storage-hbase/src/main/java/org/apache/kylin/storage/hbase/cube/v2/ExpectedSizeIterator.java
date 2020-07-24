@@ -19,6 +19,7 @@
 package org.apache.kylin.storage.hbase.cube.v2;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -27,7 +28,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.gridtable.GTScanRequest;
 
-import com.google.common.base.Throwables;
+import org.apache.kylin.shaded.com.google.common.base.Throwables;
 
 class ExpectedSizeIterator implements Iterator<byte[]> {
     private final QueryContext queryContext;
@@ -55,7 +56,7 @@ class ExpectedSizeIterator implements Iterator<byte[]> {
     @Override
     public byte[] next() {
         if (current >= expectedSize) {
-            throw new IllegalStateException("Won't have more data");
+            throw new NoSuchElementException("Won't have more data");
         }
         try {
             current++;

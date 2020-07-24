@@ -21,14 +21,14 @@ package org.apache.kylin.metrics.lib;
 import java.util.Map;
 
 /**
- * Metrics message
+ * Metrics event in Metrics System
  */
 public interface Record {
 
     /**
-     *  For classification
+     *  For classification, will mapping to Hive Table or Kafka Topic
      */
-    String getType();
+    String getSubject();
 
     /**
      *  For keep ordering in the same category

@@ -30,7 +30,7 @@ import org.apache.kylin.stream.core.model.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class ReplicaSetLeaderSelector extends LeaderSelectorListenerAdapter implements Closeable {
     private static final Logger logger = LoggerFactory.getLogger(ReplicaSetLeaderSelector.class);
@@ -73,7 +73,7 @@ public class ReplicaSetLeaderSelector extends LeaderSelectorListenerAdapter impl
         }
         while (true) {
             try {
-                Thread.sleep(5 * 60 * 1000);
+                Thread.sleep(5 * 60 * 1000L);
             } catch (InterruptedException exception) {
                 Thread.interrupted();
                 break;

@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.security;
 
+import java.util.UUID;
+
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.job.JobInstance;
@@ -30,6 +32,10 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 public class AclEntityFactory implements AclEntityType {
 
     public static RootPersistentEntity createAclEntity(String entityType, String uuid) {
+        // Validate the uuid first, exception will be thrown if the uuid string is not a valid uuid
+        UUID uuidObj = UUID.fromString(uuid);
+        uuid = uuidObj.toString();
+
         if (CUBE_INSTANCE.equals(entityType)) {
             CubeInstance cubeInstance = new CubeInstance();
             cubeInstance.setUuid(uuid);

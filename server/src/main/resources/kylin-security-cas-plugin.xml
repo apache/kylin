@@ -1,0 +1,146 @@
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:scr="http://www.springframework.org/schema/security"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
+
+    <beans profile="authn-cas">
+        <context:annotation-config/>
+        <context:component-scan base-package="org.springframework.security.cas"/>
+
+        <!-- public resources -->
+        <scr:http security="none" pattern="/image/**"/>
+        <scr:http security="none" pattern="/css/**"/>
+        <scr:http security="none" pattern="/less/**"/>
+        <scr:http security="none" pattern="/fonts/**"/>
+        <scr:http security="none" pattern="/js/**"/>
+        <scr:http security="none" pattern="/login/**"/>
+        <scr:http security="none" pattern="/routes.json"/>
+
+        <!-- Secured Rest API urls with basic authentication -->
+        <scr:http pattern="/api/**" use-expressions="true" authentication-manager-ref="authenticationManager">
+            <scr:csrf disabled="true"/>
+            <scr:http-basic entry-point-ref="unauthorisedEntryPoint"/>
+            <scr:intercept-url pattern="/api/user/authentication*/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/query/runningQueries" access="hasRole('ROLE_ADMIN')"/>
+            <scr:intercept-url pattern="/api/query/*/stop" access="hasRole('ROLE_ADMIN')"/>
+            <scr:intercept-url pattern="/api/query*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/**/metrics" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cache*/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST')"/>
+            <scr:intercept-url pattern="/api/cubes*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/models*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/streaming*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/job*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/admin/public_config" access="permitAll"/>
+            <scr:intercept-url pattern="/api/projects*/*" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')"/>
+            <scr:intercept-url pattern="/api/tables/**/snapshotLocalCache/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/**" access="isAuthenticated()"/>
+
+            <scr:form-login login-page="/login"/>
+            <scr:session-management session-fixation-protection="newSession"/>
+        </scr:http>
+
+        <!-- filter on /cas/** for form login compatibility -->
+        <scr:http pattern="/cas/**" auto-config="true" entry-point-ref="casEntryPoint" use-expressions="false"
+                  authentication-manager-ref="authenticationManager">
+            <scr:csrf disabled="true"/>
+            <scr:intercept-url pattern="/cas/**" access="IS_AUTHENTICATED_FULLY"/>
+            <scr:custom-filter before="CAS_FILTER" ref="casHandleSingleLogoutFilter"/>
+            <scr:custom-filter position="CAS_FILTER" ref="casAuthenticationFilter"/>
+        </scr:http>
+        <scr:http auto-config="true" use-expressions="false" authentication-manager-ref="authenticationManager">
+            <scr:csrf disabled="true"/>
+            <scr:http-basic entry-point-ref="unauthorisedEntryPoint"/>
+            <scr:intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
+            <scr:form-login login-page="/login"/>
+            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-success-url="/login"
+                        logout-url="/j_spring_security_logout"/>
+        </scr:http>
+        
+        <!-- AuthenticationProvider based on username/password authentication -->
+        <bean id="kylinUserAuthProvider" class="org.apache.kylin.rest.security.KylinAuthenticationProvider">
+            <constructor-arg>
+                <bean class="org.springframework.security.authentication.dao.DaoAuthenticationProvider">
+                    <property name="userDetailsService">
+                        <bean class="org.apache.kylin.rest.service.KylinUserService"/>
+                    </property>
+                    <property name="passwordEncoder">
+                        <bean class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+                    </property>
+                </bean>
+            </constructor-arg>
+        </bean>
+        <!-- AuthenticationProvider based on CAS authentication -->
+        <bean id="casAuthenticationProvider"
+              class="org.springframework.security.cas.authentication.CasAuthenticationProvider">
+            <property name="key" value="changeit"/>
+            <property name="authenticationUserDetailsService" ref="casUserDetailsService"/>
+            <property name="serviceProperties" ref="casServiceProperties"/>
+            <property name="ticketValidator" ref="casValidator"/>
+        </bean>
+        <!-- Default AuthenticationManager which tried in order until one provider return non-null -->
+        <bean id="authenticationManager" class="org.springframework.security.authentication.ProviderManager">
+            <constructor-arg>
+                <list>
+                    <ref bean="casAuthenticationProvider"/>
+                    <ref bean="kylinUserAuthProvider"/>
+                </list>
+            </constructor-arg>
+        </bean>
+        <bean id="casAuthenticationFilter" class="org.springframework.security.cas.web.CasAuthenticationFilter">
+            <property name="serviceProperties" ref="casServiceProperties"/>
+            <property name="authenticationManager" ref="authenticationManager"/>
+            <property name="filterProcessesUrl" value="/cas/service"/>
+        </bean>
+        
+        <!-- CAS Client related beans -->
+        <bean id="casServiceProperties" class="org.springframework.security.cas.ServiceProperties">
+            <property name="artifactParameter" value="${kylin.security.cas.artifact-param:ticket}"/>
+            <property name="serviceParameter" value="${kylin.security.cas.service-param:service}"/>
+            <property name="authenticateAllArtifacts" value="${kylin.security.cas.auth-all-artifact:false}"/>
+            <property name="sendRenew" value="${kylin.security.cas.send-renew:false}"/>
+            <property name="service" value="${kylin.server.url}/cas/service"/>
+        </bean>
+        <bean id="casEntryPoint" class="org.springframework.security.cas.web.CasAuthenticationEntryPoint">
+            <property name="loginUrl" value="${kylin.security.cas.server.login-url}"/>
+            <property name="encodeServiceUrlWithSessionId" value="true"/>
+            <property name="serviceProperties" ref="casServiceProperties"/>
+        </bean>
+        <bean id="casValidator" class="org.jasig.cas.client.validation.Cas20ServiceTicketValidator">
+            <constructor-arg index="0" name="casServerUrlPrefix" value="${kylin.security.cas.server.prefix}"/>
+        </bean>
+        <bean id="casUserDetailsService" class="org.apache.kylin.rest.security.cas.CasUserDetailsService">
+            <property name="defaultAuthorities" value="${kylin.security.cas.default-groups:ALL_USERS}"/>
+        </bean>
+        <!-- handle the CAS server to ends the CAS SSO session, not used -->
+        <bean id="casHandleSingleLogoutFilter" class="org.jasig.cas.client.session.SingleSignOutFilter"/>
+        <!-- logout in Kylin when CAS SSO session ends. redirect to CAS server logout page when accessing /cas/logout -->
+        <bean id="casRequestSingleLogoutFilter"
+              class="org.springframework.security.web.authentication.logout.LogoutFilter">
+            <constructor-arg value="${kylin.security.cas.server.logout-url}"/>
+            <constructor-arg>
+                <bean class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler"/>
+            </constructor-arg>
+            <property name="filterProcessesUrl" value="/cas/logout"/>
+        </bean>
+    </beans>
+</beans>

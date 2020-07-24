@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -59,7 +60,7 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 public class HBaseResourceStore extends PushdownResourceStore {
 
@@ -91,8 +92,12 @@ public class HBaseResourceStore extends PushdownResourceStore {
                 .parseInt(getConnection().getConfiguration().get("hbase.client.keyvalue.maxsize", "10485760"));
     }
 
-    Connection getConnection() throws IOException {
+    protected Connection getConnection() throws IOException {
         return HBaseConnection.get(metadataUrl);
+    }
+
+    protected Configuration getCurrentHBaseConfiguration() {
+        return HBaseConnection.getCurrentHBaseConfiguration();
     }
 
     private StorageURL buildMetadataUrl(KylinConfig kylinConfig) throws IOException {
@@ -336,7 +341,10 @@ public class HBaseResourceStore extends PushdownResourceStore {
             if (!ok) {
                 long real = getResourceTimestampImpl(resPath);
                 throw new WriteConflictException(
-                        "Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but it is " + real);
+                        "Overwriting conflict " + resPath +
+                                ", expect old TS " + oldTS +
+                                ", but it is " + real +
+                                ", the expected new TS: " + newTS);
             }
 
             return newTS;

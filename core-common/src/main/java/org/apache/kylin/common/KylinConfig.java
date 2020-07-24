@@ -18,6 +18,18 @@
 
 package org.apache.kylin.common;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.kylin.common.restclient.RestClient;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.OrderedProperties;
+import org.apache.kylin.common.util.VersionUtil;
+import org.apache.zookeeper.Shell;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,17 +48,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.restclient.RestClient;
-import org.apache.kylin.common.threadlocal.InternalThreadLocal;
-import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.common.util.OrderedProperties;
-import org.apache.zookeeper.Shell;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 /**
  */
@@ -92,14 +95,25 @@ public class KylinConfig extends KylinConfigBase {
 
     }
 
+    public static File getKylinHomeAtBestEffort() {
+        String kylinHome = KylinConfig.getKylinHome();
+        if (kylinHome != null) {
+            return new File(kylinHome).getAbsoluteFile();
+        } else {
+            File confFile = KylinConfig.getSitePropertiesFile();
+            return confFile.getAbsoluteFile().getParentFile().getParentFile();
+        }
+    }
+
     /**
      * Build default ordered properties from classpath, due to those files exist in core-common.jar, no need to load them each time.
      */
     private static void buildDefaultOrderedProperties() {
         // 1. load default configurations from classpath.
         // we have a kylin-defaults.properties in kylin/core-common/src/main/resources
-        try{
-            URL resource = Thread.currentThread().getContextClassLoader().getResource(KYLIN_DEFAULT_CONF_PROPERTIES_FILE);
+        try {
+            URL resource = Thread.currentThread().getContextClassLoader()
+                    .getResource(KYLIN_DEFAULT_CONF_PROPERTIES_FILE);
             Preconditions.checkNotNull(resource);
             logger.info("Loading kylin-defaults.properties from {}", resource.getPath());
             loadPropertiesFromInputStream(resource.openStream(), defaultOrderedProperties);
@@ -135,7 +149,7 @@ public class KylinConfig extends KylinConfigBase {
 
                     config = new KylinConfig();
                     config.reloadKylinConfig(buildSiteProperties());
-
+                    VersionUtil.loadKylinVersion();
                     logger.info("Initialized a new KylinConfig from getInstanceFromEnv : "
                             + System.identityHashCode(config));
                     SYS_ENV_INSTANCE = config;
@@ -200,8 +214,8 @@ public class KylinConfig extends KylinConfigBase {
                                 METADATA_URI_PREFIX + metaUri + " is a local file but not kylin.properties");
                     }
                 } else {
-                    throw new IllegalStateException(
-                            METADATA_URI_PREFIX + metaUri + " looks like a file but it's neither a file nor a directory");
+                    throw new IllegalStateException(METADATA_URI_PREFIX + metaUri
+                            + " looks like a file but it's neither a file nor a directory");
                 }
             } else {
                 if (RestClient.matchFullRestPattern(metaUri))
@@ -401,7 +415,8 @@ public class KylinConfig extends KylinConfigBase {
     private static void loadPropertiesFromInputStream(InputStream inputStream, OrderedProperties properties) {
         Preconditions.checkNotNull(properties);
 
-        try (BufferedReader confReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+        try (BufferedReader confReader = new BufferedReader(
+                new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
             OrderedProperties temp = new OrderedProperties();
             temp.load(confReader);
             temp = BCC.check(temp);
@@ -513,7 +528,15 @@ public class KylinConfig extends KylinConfigBase {
             String value = entry.getValue().toString();
             orderedProperties.setProperty(key, value);
         }
-
+        // Reset some properties which might be overriden by system properties
+        String[] systemProps = { "kylin.server.cluster-servers", "kylin.server.cluster-servers-with-mode" };
+        for (String sysProp : systemProps) {
+            String sysPropValue = System.getProperty(sysProp);
+            if (!Strings.isNullOrEmpty(sysPropValue)) {
+                orderedProperties.setProperty(sysProp, sysPropValue);
+            }
+        }
+        
         final StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
             sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
@@ -547,6 +570,25 @@ public class KylinConfig extends KylinConfigBase {
 
     public synchronized void reloadFromSiteProperties() {
         reloadKylinConfig(buildSiteProperties());
+    }
+
+    public static String getConfigAsString(Configuration conf) {
+        final StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, String> entry : conf) {
+            sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
+        }
+        return sb.toString();
+    }
+
+    public static Configuration getConfigFromString(String configInStr) throws IOException {
+        Properties props = new Properties();
+        props.load(new StringReader(configInStr));
+
+        Configuration config = new Configuration();
+        for (Map.Entry<Object, Object> entry : props.entrySet()) {
+            config.set((String) entry.getKey(), (String) entry.getValue());
+        }
+        return config;
     }
 
     public KylinConfig base() {

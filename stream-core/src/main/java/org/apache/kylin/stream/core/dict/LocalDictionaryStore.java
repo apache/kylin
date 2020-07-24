@@ -17,7 +17,7 @@
  */
 package org.apache.kylin.stream.core.dict;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.kylin.common.util.ByteArray;
 import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.ColumnFamilyHandle;

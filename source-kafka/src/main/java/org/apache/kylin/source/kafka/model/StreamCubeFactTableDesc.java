@@ -20,7 +20,6 @@ package org.apache.kylin.source.kafka.model;
 
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
@@ -127,7 +126,7 @@ public class StreamCubeFactTableDesc implements IJoinedFlatTableDesc, Serializab
      * @return
      */
     protected String makeTableName(CubeDesc cubeDesc, CubeSegment cubeSegment) {
-        return MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + cubeDesc.getName().toLowerCase(Locale.ROOT) + "_"
+        return cubeDesc.getConfig().getHiveIntermediateTablePrefix() + cubeDesc.getName().toLowerCase(Locale.ROOT) + "_"
                 + cubeSegment.getUuid().replaceAll("-", "_") + "_fact";
     }
 }

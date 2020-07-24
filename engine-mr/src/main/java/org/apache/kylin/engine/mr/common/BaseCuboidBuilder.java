@@ -73,7 +73,7 @@ public class BaseCuboidBuilder implements java.io.Serializable {
         measureCodec = new BufferedMeasureCodec(measureDescList);
 
         kvBuilder = new KeyValueBuilder(intermediateTableDesc);
-        checkMrDictClolumn();
+        checkHiveGlobalDictionaryColumn();
     }
 
     public BaseCuboidBuilder(KylinConfig kylinConfig, CubeDesc cubeDesc, CubeSegment cubeSegment,
@@ -92,7 +92,7 @@ public class BaseCuboidBuilder implements java.io.Serializable {
         measureCodec = new BufferedMeasureCodec(measureDescList);
 
         kvBuilder = new KeyValueBuilder(intermediateTableDesc);
-        checkMrDictClolumn();
+        checkHiveGlobalDictionaryColumn();
     }
 
     public byte[] buildKey(String[] flatRow) {
@@ -121,7 +121,7 @@ public class BaseCuboidBuilder implements java.io.Serializable {
         }
     }
 
-    private void checkMrDictClolumn(){
+    private void checkHiveGlobalDictionaryColumn(){
         Set<String> mrDictColumnSet = new HashSet<>();
         if (kylinConfig.getMrHiveDictColumns() != null) {
             Collections.addAll(mrDictColumnSet, kylinConfig.getMrHiveDictColumns());
@@ -133,7 +133,7 @@ public class BaseCuboidBuilder implements java.io.Serializable {
                 TblColRef colRef = functionDesc.getParameter().getColRefs().get(0);
                 if (mrDictColumnSet.contains(JoinedFlatTable.colName(colRef, true))) {
                     functionDesc.setMrDict(true);
-                    logger.info("setMrDict for {}", colRef);
+                    logger.info("Enable hive global dictionary for {}", colRef);
                     measure.setFunction(functionDesc);
                 }
             }

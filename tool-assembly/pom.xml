@@ -28,7 +28,7 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>3.0.0-SNAPSHOT</version>
+        <version>3.1.1-SNAPSHOT</version>
     </parent>
 
     <properties>
@@ -40,13 +40,12 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-tool</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-shaded-guava</artifactId>
+        </dependency>
 
         <!-- As KylinConfigCLI will be called before Hbase/Hive/Hadoop dependency loaded, has to define the following as compile in tool -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <scope>compile</scope>
-        </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
@@ -60,6 +59,11 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -98,24 +102,25 @@
                                     <include>log4j:log4j</include>
                                     <include>commons-io:commons-io</include>
                                     <include>commons-lang:commons-lang</include>
+                                    <include>org.apache.commons:commons-compress</include>
                                     <include>org.apache.commons:commons-lang3</include>
                                     <include>org.apache.commons:commons-email</include>
-                                    <include>com.google.guava:guava</include>
                                     <include>org.apache.kylin:*</include>
                                     <include>org.springframework.security:spring-security-core</include>
                                     <include>org.springframework.security:spring-security-acl</include>
                                     <include>org.springframework:spring-core</include>
                                     <include>com.fasterxml.jackson*:*</include>
+                                    <include>com.tdunning*:*</include>
                                 </includes>
                             </artifactSet>
                             <relocations>
                                 <relocation>
-                                    <pattern>com.google.common</pattern>
-                                    <shadedPattern>${shadeBase}.com.google.common</shadedPattern>
-                                </relocation>
-                                <relocation>
                                     <pattern>org.apache.commons.io</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.commons.io</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons.compress</pattern>
+                                    <shadedPattern>${shadeBase}.org.apache.commons.compress</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.apache.commons.lang</pattern>
@@ -132,6 +137,10 @@
                                 <relocation>
                                     <pattern>com.fasterxml.jackson</pattern>
                                     <shadedPattern>${shadeBase}.com.fasterxml.jackson</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.tdunning</pattern>
+                                    <shadedPattern>${shadeBase}.com.tdunning</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>

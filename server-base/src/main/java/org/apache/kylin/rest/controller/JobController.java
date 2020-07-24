@@ -24,9 +24,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
+import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.JobListRequest;
 import org.apache.kylin.rest.service.JobService;
@@ -68,9 +70,11 @@ public class JobController extends BasicController {
             }
         }
 
-        JobTimeFilterEnum timeFilter = JobTimeFilterEnum.LAST_ONE_WEEK;
+        JobTimeFilterEnum timeFilter = null;
         if (null != jobRequest.getTimeFilter()) {
             timeFilter = JobTimeFilterEnum.getByCode(jobRequest.getTimeFilter());
+        } else {
+            timeFilter = JobTimeFilterEnum.getByCode(KylinConfig.getInstanceFromEnv().getDefaultTimeFilter());
         }
 
         JobService.JobSearchMode jobSearchMode = JobService.JobSearchMode.CUBING_ONLY;
@@ -181,11 +185,35 @@ public class JobController extends BasicController {
     public JobInstance resume(@PathVariable String jobId) {
         try {
             final JobInstance jobInstance = jobService.getJobInstance(jobId);
+            if (jobInstance == null) {
+                throw new BadRequestException("Cannot find job: " + jobId);
+            }
             jobService.resumeJob(jobInstance);
             return jobService.getJobInstance(jobId);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e);
+        }
+    }
+
+    /**
+     * resubmit streaming segment
+     *
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{jobId}/resubmit", method = { RequestMethod.PUT }, produces = {
+            "application/json" })
+    @ResponseBody
+    public void resubmitJob(@PathVariable String jobId) throws IOException {
+        try {
+            final JobInstance jobInstance = jobService.getJobInstance(jobId);
+            if (jobInstance == null) {
+                throw new BadRequestException("Cannot find job: " + jobId);
+            }
+            jobService.resubmitJob(jobInstance);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw e;
         }
     }
 
@@ -201,6 +229,9 @@ public class JobController extends BasicController {
 
         try {
             final JobInstance jobInstance = jobService.getJobInstance(jobId);
+            if (jobInstance == null) {
+                throw new BadRequestException("Cannot find job: " + jobId);
+            }
             jobService.cancelJob(jobInstance);
             return jobService.getJobInstance(jobId);
         } catch (Exception e) {
@@ -221,6 +252,9 @@ public class JobController extends BasicController {
 
         try {
             final JobInstance jobInstance = jobService.getJobInstance(jobId);
+            if (jobInstance == null) {
+                throw new BadRequestException("Cannot find job: " + jobId);
+            }
             jobService.pauseJob(jobInstance);
             return jobService.getJobInstance(jobId);
         } catch (Exception e) {
@@ -242,6 +276,9 @@ public class JobController extends BasicController {
     public JobInstance rollback(@PathVariable String jobId, @PathVariable String stepId) {
         try {
             final JobInstance jobInstance = jobService.getJobInstance(jobId);
+            if (jobInstance == null) {
+                throw new BadRequestException("Cannot find job: " + jobId);
+            }
             jobService.rollbackJob(jobInstance, stepId);
             return jobService.getJobInstance(jobId);
         } catch (Exception e) {
@@ -262,6 +299,9 @@ public class JobController extends BasicController {
         JobInstance jobInstance = null;
         try {
             jobInstance = jobService.getJobInstance(jobId);
+            if (jobInstance == null) {
+                throw new BadRequestException("Cannot find job: " + jobId);
+            }
             jobService.dropJob(jobInstance);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);

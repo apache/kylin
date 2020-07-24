@@ -23,7 +23,7 @@ import java.util.HashMap;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class RowKeyEncoderProvider implements java.io.Serializable {
 

@@ -157,6 +157,7 @@ public class OLAPContext {
     public TupleFilter havingFilter;
     public List<JoinDesc> joins = new LinkedList<>();
     public JoinsTree joinsTree;
+    public boolean isBorrowedContext = false; // Whether preparedContext is borrowed from cache
     List<TblColRef> sortColumns;
     List<SQLDigest.OrderEnum> sortOrders;
 
@@ -188,10 +189,10 @@ public class OLAPContext {
             Set<TblColRef> rtMetricColumns = new HashSet<>();
             List<DynamicFunctionDesc> dynFuncs = Lists.newLinkedList();
             for (FunctionDesc functionDesc : aggregations) {
-                if (functionDesc instanceof DynamicFunctionDesc) {
+                if (functionDesc instanceof DynamicFunctionDesc && !functionDesc.isDimensionAsMetric()) {
                     DynamicFunctionDesc dynFunc = (DynamicFunctionDesc) functionDesc;
-                    rtMetricColumns.addAll(dynFunc.getMeasureColumnSet());
-                    rtDimColumns.addAll(dynFunc.getFilterColumnSet());
+                    rtMetricColumns.addAll(dynFunc.getRuntimeFuncMap().keySet());
+                    rtDimColumns.addAll(dynFunc.getRuntimeDimensions());
                     dynFuncs.add(dynFunc);
                 }
             }
@@ -200,7 +201,7 @@ public class OLAPContext {
                     metricsColumns, aggregations, aggrSqlCalls, dynFuncs, // aggregation
                     rtDimColumns, rtMetricColumns, // runtime related columns
                     filterColumns, filter, havingFilter, // filter
-                    sortColumns, sortOrders, limitPrecedesAggr, hasLimit, // sort & limit
+                    sortColumns, sortOrders, limitPrecedesAggr, hasLimit, isBorrowedContext, // sort & limit
                     involvedMeasure);
         }
         return sqlDigest;

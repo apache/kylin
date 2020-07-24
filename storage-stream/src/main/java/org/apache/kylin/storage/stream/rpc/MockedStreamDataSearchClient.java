@@ -34,6 +34,7 @@ public class MockedStreamDataSearchClient extends HttpStreamDataSearchClient {
 
     @Override
     public Iterator<ITuple> doSearch(DataRequest dataRequest, CubeInstance cube, StreamingTupleConverter tupleConverter, RecordsSerializer recordsSerializer, Node receiver, TupleInfo tupleInfo) throws Exception {
+        dataRequest.setDeadline(System.currentTimeMillis() + 60000L);
         DataResponse response = new DataController().query(dataRequest);
         return deserializeResponse(tupleConverter, recordsSerializer, cube.getName(), tupleInfo, response);
     }

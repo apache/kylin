@@ -23,7 +23,6 @@ import java.util.List;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.job.util.FlatTableSqlQuoteUtils;
 import org.apache.kylin.source.kafka.model.StreamCubeFactTableDesc;
 import org.apache.kylin.engine.mr.IInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
@@ -41,7 +40,7 @@ import org.apache.kylin.source.hive.GarbageCollectionStep;
 import org.apache.kylin.source.kafka.hadoop.KafkaFlatTableJob;
 import org.apache.kylin.source.kafka.job.MergeOffsetStep;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 import static org.apache.kylin.job.util.FlatTableSqlQuoteUtils.quoteTableIdentity;
 
@@ -87,6 +86,11 @@ public class KafkaInputBase {
                 jobFlow.addTask(createFlatTable(hiveTableDatabase, baseLocation, cubeName,
                         streamFactDesc, intermediateTables, intermediatePaths));
             }
+        }
+
+        @Override
+        public void addStepPhase_ReplaceFlatTableGlobalColumnValue(DefaultChainedExecutable jobFlow) {
+            //do nothing
         }
 
         protected String getJobWorkingDir(DefaultChainedExecutable jobFlow) {
@@ -158,8 +162,9 @@ public class KafkaInputBase {
         final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);
         final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatDesc, baseLocation);
         String insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatDesc);
-        insertDataHqls = insertDataHqls.replace(flatDesc.getDataModel().getRootFactTable().getTableIdentityQuoted(FlatTableSqlQuoteUtils.getQuote()) + " ",
-                quoteTableIdentity(hiveTableDatabase, streamFactDesc.getTableName()) + " ");
+        insertDataHqls = insertDataHqls.replace(
+                quoteTableIdentity(flatDesc.getDataModel().getRootFactTable(), null) + " ",
+                quoteTableIdentity(hiveTableDatabase, streamFactDesc.getTableName(), null) + " ");
 
         CreateFlatHiveTableStep step = new CreateFlatHiveTableStep();
         CubingExecutableUtil.setCubeName(cubeName, step.getParams());

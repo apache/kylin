@@ -17,8 +17,8 @@
 */
 package org.apache.kylin.source.adhocquery;
 
-import static com.google.common.base.Predicates.equalTo;
-import static com.google.common.base.Predicates.not;
+import static org.apache.kylin.shaded.com.google.common.base.Predicates.equalTo;
+import static org.apache.kylin.shaded.com.google.common.base.Predicates.not;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.FluentIterable;
+import org.apache.kylin.shaded.com.google.common.collect.FluentIterable;
 
 //TODO: Some workaround ways to make sql readable by hive parser, should replaced it with a more well-designed way
 public class HivePushDownConverter implements IPushDownConverter {

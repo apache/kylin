@@ -39,6 +39,7 @@ import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryContext.CubeSegmentStatistics;
+import org.apache.kylin.common.SubThreadPoolExecutor;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
@@ -57,7 +58,10 @@ import org.apache.kylin.gridtable.GTScanRange;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTUtil;
 import org.apache.kylin.gridtable.IGTScanner;
+import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.model.ISegment;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.gtrecord.DummyPartitionStreamer;
 import org.apache.kylin.storage.gtrecord.StorageResponseGTScatter;
@@ -67,10 +71,14 @@ import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.Cub
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse.Stats;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitService;
+import org.apache.kylin.storage.hbase.util.HBaseUnionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.cache.CacheBuilder;
+import org.apache.kylin.shaded.com.google.common.cache.CacheLoader;
+import org.apache.kylin.shaded.com.google.common.cache.LoadingCache;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.HBaseZeroCopyByteString;
 
@@ -80,6 +88,38 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
     private static ExecutorService executorService = new LoggableCachedThreadPool();
 
+    private static LoadingCache<String, ExecutorService> projectThreadPoolMap = CacheBuilder.newBuilder()
+            .build(new CacheLoader<String, ExecutorService>() {
+                @Override
+                public ExecutorService load(String projName) throws Exception {
+                    ExecutorService sharedPool = HBaseConnection.getCoprocessorPool();
+                    ProjectInstance projInst = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                            .getProject(projName);
+                    return new SubThreadPoolExecutor(sharedPool, "PROJECT",
+                            projInst.getConfig().getHBaseMaxConnectionThreadsPerProject());
+                }
+            });
+
+    private static class ProjectThreadPoolSyncListener extends Broadcaster.Listener {
+        @Override
+        public void onClearAll(Broadcaster broadcaster) throws IOException {
+            projectThreadPoolMap.invalidateAll();
+            logger.info("Project level thread pools are cleared");
+        }
+
+        @Override
+        public void onEntityChange(Broadcaster broadcaster, String entity, Broadcaster.Event event, String cacheKey)
+                throws IOException {
+            projectThreadPoolMap.invalidate(cacheKey);
+            logger.info("Thread pool map for project {} is cleared", cacheKey);
+        }
+    }
+
+    static {
+        Broadcaster.getInstance(KylinConfig.getInstanceFromEnv())
+                .registerStaticListener(new ProjectThreadPoolSyncListener(), "project");
+    }
+    
     public CubeHBaseEndpointRPC(ISegment segment, Cuboid cuboid, GTInfo fullGTInfo, StorageContext context) {
         super(segment, cuboid, fullGTInfo, context);
     }
@@ -140,9 +180,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         // primary key (also the 0th column block) is always selected
         final ImmutableBitSet selectedColBlocks = scanRequest.getSelectedColBlocks().set(0);
-
-        // globally shared connection, does not require close
-        final Connection conn = HBaseConnection.get(cubeSeg.getCubeInstance().getConfig().getStorageUrl());
 
         final List<IntList> hbaseColumnsToGTIntList = Lists.newArrayList();
         List<List<Integer>> hbaseColumnsToGT = getHBaseColumnsGTMapping(selectedColBlocks);
@@ -241,7 +278,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             executorService.submit(new Runnable() {
                 @Override
                 public void run() {
-                    runEPRange(queryContext, logHeader, compressionResult, builder.build(), conn, epRange.getFirst(),
+                    runEPRange(queryContext, logHeader, compressionResult, builder.build(), epRange.getFirst(),
                             epRange.getSecond(), epResultItr, querySegmentCacheEnabled, segmentQueryResultBuilder,
                             segmentQueryCacheKey);
                 }
@@ -252,15 +289,18 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
     }
 
     private void runEPRange(final QueryContext queryContext, final String logHeader, final boolean compressionResult,
-            final CubeVisitProtos.CubeVisitRequest request, final Connection conn, byte[] startKey, byte[] endKey,
+            final CubeVisitProtos.CubeVisitRequest request, byte[] startKey, byte[] endKey,
             final ExpectedSizeIterator epResultItr, final boolean querySegmentCacheEnabled,
             final SegmentQueryResult.Builder segmentQueryResultBuilder, final String segmentQueryCacheKey) {
 
         final String queryId = queryContext.getQueryId();
 
         try {
+            final Connection conn =  HBaseUnionUtil.getConnection(cubeSeg.getConfig(), cubeSeg.getStorageLocationIdentifier());
+            ExecutorService projThreadPool = projectThreadPoolMap
+                    .get(queryContext.getProject().toUpperCase(Locale.ROOT));
             final Table table = conn.getTable(TableName.valueOf(cubeSeg.getStorageLocationIdentifier()),
-                    HBaseConnection.getCoprocessorPool());
+                    queryContext.getConnectionPool(projThreadPool));
 
             table.coprocessorService(CubeVisitService.class, startKey, endKey, //
                     new Batch.Call<CubeVisitService, CubeVisitResponse>() {
@@ -363,14 +403,26 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                             - stats.getFilteredRowCount(),
                                     stats.getAggregatedRowCount(), stats.getScannedBytes());
 
+                            byte[] rawData = HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows());
+                            byte[] queueData = rawData;
                             if (queryContext.getScannedBytes() > cubeSeg.getConfig().getQueryMaxScanBytes()) {
                                 rpcException = new ResourceLimitExceededException(
                                         "Query scanned " + queryContext.getScannedBytes() + " bytes exceeds threshold "
                                                 + cubeSeg.getConfig().getQueryMaxScanBytes());
-                            } else if (queryContext.getReturnedRows() > cubeSeg.getConfig().getQueryMaxReturnRows()) {
-                                rpcException = new ResourceLimitExceededException(
-                                        "Query returned " + queryContext.getReturnedRows() + " rows exceeds threshold "
-                                                + cubeSeg.getConfig().getQueryMaxReturnRows());
+                            } else {
+                                try {
+                                    if (compressionResult) {
+                                        queueData = CompressionUtils.decompress(rawData);
+                                    }
+                                } catch (IOException | DataFormatException e) {
+                                    throw new RuntimeException(logHeader + "Error when decompressing", e);
+                                }
+                                if (queryContext.addAndGetReturnedBytes(queueData.length) > cubeSeg.getConfig()
+                                        .getQueryMaxReturnBytes()) {
+                                    rpcException = new ResourceLimitExceededException("Query returned "
+                                            + queryContext.getReturnedBytes() + " bytes exceeds threshold "
+                                            + cubeSeg.getConfig().getQueryMaxReturnBytes());
+                                }
                             }
 
                             if (rpcException != null) {
@@ -378,42 +430,31 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                 return;
                             }
 
-                            try {
-                                byte[] rawData = HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows());
-                                if (compressionResult) {
-                                    epResultItr.append(CompressionUtils.decompress(rawData));
-                                } else {
-                                    epResultItr.append(rawData);
-                                }
-                                // put segment query result to cache if cache is enabled
-                                if (querySegmentCacheEnabled) {
-                                    try {
-                                        segmentQueryResultBuilder.putRegionResult(rawData);
-                                        if (segmentQueryResultBuilder.isComplete()) {
-                                            CubeSegmentStatistics cubeSegmentStatistics = queryContext
-                                                    .getCubeSegmentStatistics(storageContext.ctxId,
-                                                            cubeSeg.getCubeInstance().getName(), cubeSeg.getName());
-                                            if (cubeSegmentStatistics != null) {
-                                                segmentQueryResultBuilder
-                                                        .setCubeSegmentStatistics(cubeSegmentStatistics);
-                                                logger.info(
-                                                        "Query-{}: try to put segment query result to cache for segment:{}",
-                                                        queryContext.getQueryId(), cubeSeg);
-                                                SegmentQueryResult segmentQueryResult = segmentQueryResultBuilder
-                                                        .build();
-                                                SegmentQueryCache.getInstance().put(segmentQueryCacheKey,
-                                                        segmentQueryResult);
-                                                logger.info(
-                                                        "Query-{}: successfully put segment query result to cache for segment:{}",
-                                                        queryContext.getQueryId(), cubeSeg);
-                                            }
+                            epResultItr.append(queueData);
+                            // put segment query result to cache if cache is enabled
+                            if (querySegmentCacheEnabled) {
+                                try {
+                                    segmentQueryResultBuilder.putRegionResult(rawData);
+                                    if (segmentQueryResultBuilder.isComplete()) {
+                                        CubeSegmentStatistics cubeSegmentStatistics = queryContext
+                                                .getCubeSegmentStatistics(storageContext.ctxId,
+                                                        cubeSeg.getCubeInstance().getName(), cubeSeg.getName());
+                                        if (cubeSegmentStatistics != null) {
+                                            segmentQueryResultBuilder.setCubeSegmentStatistics(cubeSegmentStatistics);
+                                            logger.info(
+                                                    "Query-{}: try to put segment query result to cache for segment:{}",
+                                                    queryContext.getQueryId(), cubeSeg);
+                                            SegmentQueryResult segmentQueryResult = segmentQueryResultBuilder.build();
+                                            SegmentQueryCache.getInstance().put(segmentQueryCacheKey,
+                                                    segmentQueryResult);
+                                            logger.info(
+                                                    "Query-{}: successfully put segment query result to cache for segment:{}",
+                                                    queryContext.getQueryId(), cubeSeg);
                                         }
-                                    } catch (Throwable t) {
-                                        logger.error("Fail to put query segment result to cache", t);
                                     }
+                                } catch (Throwable t) {
+                                    logger.error("Fail to put query segment result to cache", t);
                                 }
-                            } catch (IOException | DataFormatException e) {
-                                throw new RuntimeException(logHeader + "Error when decompressing", e);
                             }
                         }
                     });

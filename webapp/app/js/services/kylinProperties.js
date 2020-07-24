@@ -33,16 +33,22 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
   this.getProperty = function (name) {
     if(angular.isUndefined(name)
         || name.length === 0
-        || angular.isUndefined(_config)){
+        || angular.isUndefined(_config)
+        || _config.length === 0){
       return '';
     }
-    var keyIndex = _config.indexOf(name + '=');
-    var keyLength = name.length;
-    var partialResult = _config.substr(keyIndex);
-    var preValueIndex = partialResult.indexOf("=");
-    var sufValueIndex = partialResult.indexOf("\n", 2);
-    return partialResult.substring(preValueIndex + 1, sufValueIndex);
-
+    var nameAugmented = name + '=';
+    var keyIndex = 0;
+    if(_config.substr(0, nameAugmented.length) !== nameAugmented){
+       nameAugmented = "\n" + nameAugmented;
+       keyIndex = _config.indexOf(nameAugmented);
+       if(keyIndex === -1){
+          return '';
+       }     
+    }
+    var partialResult = _config.substr(keyIndex + nameAugmented.length);
+    var sufValueIndex = partialResult.indexOf("\n");
+    return partialResult.substring(0, sufValueIndex);
   }
 
   this.getTimeZone = function () {
@@ -54,6 +60,14 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
 
   this.isCacheEnabled = function(){
     var status = this.getProperty("kylin.query.cache-enabled").trim();
+    if(status!=='false'){
+      return true;
+    }
+    return false;
+  }
+
+  this.isCubeMigrationEnabled = function(){
+    var status = this.getProperty("kylin.cube.migration.enabled").trim();
     if(status!=='false'){
       return true;
     }
@@ -108,6 +122,12 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
         _doc.link = this.getProperty("kylin.web.help." + i).trim().split("|")[2];
         Config.documents.push(_doc);
       }
+      // Other help list
+      // 1. apache kylin version info
+      Config.documents.push({
+        name: 'aboutKylin',
+        displayName: 'About Kylin'
+      });
     } catch (e) {
       $log.error("failed to load kylin web info");
     }
@@ -153,14 +173,6 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
 
   this.isInitialized = function() {
     return angular.isString(_config);
-  }
-
-  this.isAutoMigrateCubeEnabled = function(){
-    var status = this.getProperty("kylin.tool.auto-migrate-cube.enabled").trim();
-    if(status && status =='true'){
-      return true;
-    }
-    return false;
   }
 
   this.getSourceType = function(){

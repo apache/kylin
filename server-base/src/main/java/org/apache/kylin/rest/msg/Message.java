@@ -65,6 +65,10 @@ public class Message {
         return "Cannot delete segment '%s' as its status is not READY. Discard the on-going job for it.";
     }
 
+    public String getDELETE_SEG_FROM_READY_CUBE() {
+        return "Cannot delete segment '%s' from ready cube '%s'. Please disable the cube first.";
+    }
+
     public String getINVALID_BUILD_TYPE() {
         return "Invalid build type: '%s'.";
     }
@@ -411,6 +415,14 @@ public class Message {
 
     public String getDIAG_PACKAGE_NOT_FOUND() {
         return "Diagnosis package not found in directory: %s.";
+    }
+
+    public String getDIAG_PROJECT_NOT_FOUND() {
+        return "Can not find project: %s.";
+    }
+
+    public String getDIAG_JOBID_NOT_FOUND() {
+        return "Can not find job id: %s.";
     }
 
     // Encoding

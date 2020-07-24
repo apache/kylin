@@ -18,7 +18,12 @@
 
 package org.apache.kylin.rest.job;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -47,18 +52,14 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class KylinHealthCheckJob extends AbstractApplication {
     private static final Logger logger = LoggerFactory.getLogger(KylinHealthCheckJob.class);
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_FIX = OptionBuilder.withArgName("fix").hasArg().isRequired(false)
-            .withDescription("Fix the unhealth cube").create("fix");
+            .withDescription("Fix the unhealthy cube").create("fix");
 
     public static void main(String[] args) throws Exception {
         new KylinHealthCheckJob().execute(args);
@@ -130,7 +131,7 @@ public class KylinHealthCheckJob extends AbstractApplication {
 
     private void sendMail(String content) {
         logger.info("Send Kylin cluster report");
-        String subject = "Kylin Cluster Health Resport of " + config.getClusterName() + " on "
+        String subject = "Kylin Cluster Health Report of " + config.getClusterName() + " on "
                 + new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(new Date());
         List<String> users = Lists.newArrayList(config.getAdminDls());
         new MailService(config).sendMail(users, subject, content, false);
@@ -188,7 +189,7 @@ public class KylinHealthCheckJob extends AbstractApplication {
                                 "Project: {} cube: {} segment: {} cube id data: {} don't exist and need to rebuild it",
                                 cube.getProject(), cube.getName(), segment, path);
                         reporter.log(
-                                "The rebuild url: -d '{\"startTime\":'{}', \"endTime\":'{}', \"buildType\":\"REFRESH\"}' /kylin/api/cubes/{}/build",
+                                "The rebuild url: -d '{\"startTime\":{}, \"endTime\":{}, \"buildType\":\"REFRESH\"}' /kylin/api/cubes/{}/build",
                                 segment.getTSRange().start, segment.getTSRange().end, cube.getName());
                     }
                 }
@@ -199,20 +200,27 @@ public class KylinHealthCheckJob extends AbstractApplication {
     private void checkHBaseTables(List<CubeInstance> cubes) throws IOException {
         reporter.log("## Checking HBase Table of segments");
         HBaseAdmin hbaseAdmin = new HBaseAdmin(HBaseConfiguration.create());
-        for (CubeInstance cube : cubes) {
-            for (CubeSegment segment : cube.getSegments()) {
-                if (segment.getStatus() != SegmentStatusEnum.NEW) {
-                    String tableName = segment.getStorageLocationIdentifier();
-                    if ((!hbaseAdmin.tableExists(tableName)) || (!hbaseAdmin.isTableEnabled(tableName))) {
-                        reporter.log("HBase table: {} not exist for segment: {}, project: {}", tableName, segment,
-                                cube.getProject());
-                        reporter.log(
-                                "The rebuild url: -d '{\"startTime\":'{}', \"endTime\":'{}', \"buildType\":\"REFRESH\"}' /kylin/api/cubes/{}/build",
-                                segment.getTSRange().start, segment.getTSRange().end, cube.getName());
+        try {
+            for (CubeInstance cube : cubes) {
+                for (CubeSegment segment : cube.getSegments()) {
+                    if (segment.getStatus() != SegmentStatusEnum.NEW) {
+                        String tableName = segment.getStorageLocationIdentifier();
+                        if ((!hbaseAdmin.tableExists(tableName)) || (!hbaseAdmin.isTableEnabled(tableName))) {
+                            reporter.log("HBase table: {} not exist for segment: {}, project: {}", tableName, segment,
+                                    cube.getProject());
+                            reporter.log(
+                                    "The rebuild url: -d '{\"startTime\":{}, \"endTime\":{}, \"buildType\":\"REFRESH\"}' /kylin/api/cubes/{}/build",
+                                    segment.getTSRange().start, segment.getTSRange().end, cube.getName());
+                        }
                     }
                 }
             }
+        } finally {
+            if (null != hbaseAdmin) {
+                hbaseAdmin.close();
+            }
         }
+
     }
 
     private void checkCubeHoles(List<CubeInstance> cubes) {
@@ -281,7 +289,7 @@ public class KylinHealthCheckJob extends AbstractApplication {
             long sizeRecordSize = cube.getInputRecordSizeBytes();
             if (sizeRecordSize > 0) {
                 long cubeDataSize = cube.getSizeKB() * 1024;
-                double expansionRate = cubeDataSize / sizeRecordSize;
+                double expansionRate = (double) cubeDataSize / sizeRecordSize;
                 if (sizeRecordSize > 1L * expansionCheckMinCubeSizeInGb * 1024 * 1024 * 1024) {
                     if (expansionRate > warningExpansionRate) {
                         logger.info("Cube: {} in project: {} with too large expansion rate: {}, cube data size: {}G",

@@ -29,7 +29,7 @@
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
-        <version>3.0.0-SNAPSHOT</version>
+        <version>3.1.1-SNAPSHOT</version>
     </parent>
 
     <properties>
@@ -50,6 +50,15 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-engine-spark</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-engine-flink</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-engine-flink</artifactId>
         </dependency>
 
         <!-- Env & Test -->
@@ -126,6 +135,12 @@
             <artifactId>spark-core_2.11</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- Flink dependency -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-java</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -148,6 +163,7 @@
                             </transformers>
                             <artifactSet>
                                 <includes>
+                                    <include>org.apache.kylin:kylin-shaded-guava</include>
                                     <include>org.apache.kylin:kylin-core-common</include>
                                     <include>org.apache.kylin:kylin-core-metadata</include>
                                     <include>org.apache.kylin:kylin-core-dictionary</include>

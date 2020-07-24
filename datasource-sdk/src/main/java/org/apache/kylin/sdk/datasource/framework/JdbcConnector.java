@@ -30,14 +30,14 @@ import javax.sql.rowset.CachedRowSet;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.sdk.datasource.adaptor.AbstractJdbcAdaptor;
 import org.apache.kylin.sdk.datasource.framework.conv.ConvMaster;
-import org.apache.kylin.sdk.datasource.framework.conv.DefaultConfiguer;
+import org.apache.kylin.sdk.datasource.framework.conv.DefaultConfigurer;
 import org.apache.kylin.sdk.datasource.framework.conv.SqlConverter;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDef;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDefProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class JdbcConnector implements Closeable {
     private static final Logger logger = LoggerFactory.getLogger(JdbcConnector.class);
@@ -54,7 +54,7 @@ public class JdbcConnector implements Closeable {
         jdbcDs = provider.getById(this.adaptor.getDataSourceId());
         DataSourceDef kylinDs = provider.getDefault();
         convMaster = new ConvMaster(kylinDs, jdbcDs);
-        SqlConverter.IConfigurer configurer = new DefaultConfiguer(this.adaptor, jdbcDs);
+        SqlConverter.IConfigurer configurer = new DefaultConfigurer(this.adaptor, jdbcDs);
         this.sqlConverter = new SqlConverter(configurer, convMaster);
     }
 

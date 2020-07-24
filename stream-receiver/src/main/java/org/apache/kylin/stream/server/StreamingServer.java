@@ -33,7 +33,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.fs.FileStatus;
@@ -90,9 +90,9 @@ import org.apache.kylin.stream.server.retention.RetentionPolicyInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeListener, IConsumerProvider {
     private static final Logger logger = LoggerFactory.getLogger(StreamingServer.class);
@@ -159,10 +159,19 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
             @Override
             public void run() {
                 Collection<StreamingSegmentManager> segmentManagers = getAllCubeSegmentManagers();
+                long curr = System.currentTimeMillis();
                 for (StreamingSegmentManager segmentManager : segmentManagers) {
                     CubeInstance cubeInstance = segmentManager.getCubeInstance();
                     String cubeName = cubeInstance.getName();
                     try {
+                        Collection<StreamingCubeSegment> activeSegments = segmentManager.getActiveSegments();
+                        for (StreamingCubeSegment segment : activeSegments) {
+                            long delta = curr - segment.getLastUpdateTime();
+                            if (curr > segment.getDateRangeEnd() && delta > segmentManager.cubeDuration) {
+                                logger.debug("Make {} immutable because it lastUpdate[{}] exceed wait duration.", segment.getSegmentName(), segment.getLastUpdateTime());
+                                segmentManager.makeSegmentImmutable(segment.getSegmentName());
+                            }
+                        }
                         RetentionPolicyInfo retentionPolicyInfo = new RetentionPolicyInfo();
                         String policyName = cubeInstance.getConfig().getStreamingSegmentRetentionPolicy();
                         Map<String, String> policyProps = cubeInstance.getConfig()
@@ -549,7 +558,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
         if (latestRemoteSegment != null) {
             minAcceptEventTime = latestRemoteSegment.getTSRange().end.v;
         }
-        if (minAcceptEventTime > 0) {
+        if (minAcceptEventTime > 0 && minAcceptEventTime < System.currentTimeMillis()) {
             consumer.setMinAcceptEventTime(minAcceptEventTime);
         }
         StreamingCubeConsumeState consumeState = streamMetadataStore.getStreamingCubeConsumeState(cubeName);

@@ -24,8 +24,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.persistence.WriteConflictException;
 import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.common.util.ClassUtil;
@@ -40,13 +42,15 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  */
 public class DataModelManager {
 
     private static final Logger logger = LoggerFactory.getLogger(DataModelManager.class);
+    public static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<DataModelDesc>(
+            DataModelDesc.class);
 
     public static DataModelManager getInstance(KylinConfig config) {
         return config.getManager(DataModelManager.class);
@@ -86,9 +90,11 @@ public class DataModelManager {
                 getDataModelImplClass(), dataModelDescMap) {
             @Override
             protected DataModelDesc initEntityAfterReload(DataModelDesc model, String resourceName) {
-                String prj = ProjectManager.getInstance(config).getProjectOfModel(model.getName()).getName();
+                String prj = (null == model.getProjectName()
+                        ? ProjectManager.getInstance(config).getProjectOfModel(model.getName()).getName()
+                        : model.getProjectName());
                 if (!model.isDraft()) {
-                    model.init(config, getAllTablesMap(prj), getModels(prj), true);
+                    model.init(config, getAllTablesMap(prj));
                 }
                 return model;
             }
@@ -240,24 +246,21 @@ public class DataModelManager {
 
             ProjectManager prjMgr = ProjectManager.getInstance(config);
             ProjectInstance prj = prjMgr.getProject(projectName);
-            if (prj.containsModel(name))
+            if (prj.containsModel(name)) {
                 throw new IllegalStateException("project " + projectName + " already contains model " + name);
-
-            try {
-                // Temporarily register model under project, because we want to 
-                // update project formally after model is saved.
-                prj.getModels().add(name);
-
-                desc.setOwner(owner);
-                logger.info("Saving Model {} to Project {} with {} as owner", desc.getName(), projectName, owner);
-                desc = saveDataModelDesc(desc);
-
-            } finally {
-                prj.getModels().remove(name);
             }
+            desc.setOwner(owner);
+            logger.info("Saving Model {} to Project {} with {} as owner", desc.getName(), projectName, owner);
+            desc = saveDataModelDesc(desc, projectName);
 
             // now that model is saved, update project formally
-            prjMgr.addModelToProject(name, projectName);
+            try {
+                prjMgr.addModelToProject(name, projectName);
+            } catch (WriteConflictException e) {
+                logger.warn("Add model: {} to project: {} failed for write conflicts, rollback", name, projectName, e);
+                crud.delete(desc);
+                throw e;
+            }
 
             return desc;
         }
@@ -270,16 +273,14 @@ public class DataModelManager {
                 throw new IllegalArgumentException("DataModelDesc '" + name + "' does not exist.");
             }
 
-            return saveDataModelDesc(desc);
+            return saveDataModelDesc(desc, ProjectManager.getInstance(config).getProjectOfModel(desc.getName()).getName());
         }
     }
 
-    private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
-
-        String prj = ProjectManager.getInstance(config).getProjectOfModel(dataModelDesc.getName()).getName();
+    private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc, String projectName) throws IOException {
 
         if (!dataModelDesc.isDraft())
-            dataModelDesc.init(config, this.getAllTablesMap(prj), getModels(prj), false);
+            dataModelDesc.init(config, this.getAllTablesMap(projectName));
 
         crud.save(dataModelDesc);
 

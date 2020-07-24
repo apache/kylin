@@ -24,7 +24,7 @@ import java.util.Map;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 
-import com.google.common.base.Objects;
+import org.apache.kylin.shaded.com.google.common.base.MoreObjects;
 
 /**
  * Defines a set of source records that will be built into a cube segment.
@@ -86,7 +86,7 @@ public class SourcePartition {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("tsRange", tsRange).add("segRange", segRange).add("sourcePartitionOffsetStart", sourcePartitionOffsetStart.toString()).add("sourcePartitionOffsetEnd", sourcePartitionOffsetEnd.toString()).toString();
+        return MoreObjects.toStringHelper(this).add("tsRange", tsRange).add("segRange", segRange).add("sourcePartitionOffsetStart", sourcePartitionOffsetStart.toString()).add("sourcePartitionOffsetEnd", sourcePartitionOffsetEnd.toString()).toString();
     }
 
     public static SourcePartition getCopyOf(SourcePartition origin) {

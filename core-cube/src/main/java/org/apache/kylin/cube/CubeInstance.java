@@ -18,18 +18,19 @@
 
 package org.apache.kylin.cube;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.kylin.cube.cuboid.CuboidModeEnum.CURRENT;
 import static org.apache.kylin.cube.cuboid.CuboidModeEnum.RECOMMEND;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -66,8 +67,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Objects;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
@@ -271,6 +272,33 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         } else if (!name.equals(other.name))
             return false;
         return true;
+    }
+
+    public boolean equalsRaw(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        CubeInstance that = (CubeInstance) o;
+        if (!java.util.Objects.equals(name, that.name))
+            return false;
+        if (!java.util.Objects.equals(owner, that.owner))
+            return false;
+        if (!java.util.Objects.equals(descName, that.descName))
+            return false;
+        if (!java.util.Objects.equals(displayName, that.displayName))
+            return false;
+        if (!java.util.Objects.equals(status, that.status))
+            return false;
+
+        if (!java.util.Objects.equals(segments, that.segments))
+            return false;
+        if (!java.util.Arrays.equals(cuboidBytes, that.cuboidBytes))
+            return false;
+        if (!java.util.Arrays.equals(cuboidBytesRecommend, that.cuboidBytesRecommend))
+            return false;
+        return java.util.Objects.equals(snapshots, that.snapshots);
     }
 
     // ============================================================================
@@ -695,6 +723,10 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return snapshots;
     }
 
+    public void resetSnapshots() {
+        snapshots = Maps.newHashMap();
+    }
+
     public String getSnapshotResPath(String tableName) {
         return getSnapshots().get(tableName);
     }
@@ -703,18 +735,27 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         getSnapshots().put(table, snapshotResPath);
     }
 
-    public static CubeInstance getCopyOf(CubeInstance cubeInstance) {
-        CubeInstance newCube = new CubeInstance();
-        newCube.setName(cubeInstance.getName());
-        newCube.setSegments(cubeInstance.getSegments());
-        newCube.setDescName(cubeInstance.getDescName());
-        newCube.setConfig((KylinConfigExt) cubeInstance.getConfig());
-        newCube.setStatus(cubeInstance.getStatus());
-        newCube.setOwner(cubeInstance.getOwner());
-        newCube.setCost(cubeInstance.getCost());
-        newCube.setCreateTimeUTC(System.currentTimeMillis());
-        newCube.updateRandomUuid();
-        return newCube;
+    public static CubeInstance getCopyOf(CubeInstance other) {
+        CubeInstance ret = new CubeInstance();
+        ret.setName(other.getName());
+        ret.setOwner(other.getOwner());
+        ret.setDescName(other.getDescName());
+        ret.setCost(other.getCost());
+        ret.setStatus(other.getStatus());
+        ret.setSegments(other.getSegments());
+        ret.setCreateTimeUTC(System.currentTimeMillis());
+        if (other.cuboidBytes != null) {
+            ret.cuboidBytes = Arrays.copyOf(other.cuboidBytes, other.cuboidBytes.length);
+        }
+        if (other.cuboidBytesRecommend != null) {
+            ret.cuboidBytesRecommend = Arrays.copyOf(other.cuboidBytesRecommend, other.cuboidBytesRecommend.length);
+        }
+        ret.cuboidLastOptimized = other.cuboidLastOptimized;
+        ret.getSnapshots().putAll(other.getSnapshots());
+
+        ret.setConfig((KylinConfigExt) other.getConfig());
+        ret.updateRandomUuid();
+        return ret;
     }
 
     public static CubeSegment findSegmentWithJobId(String jobID, CubeInstance cubeInstance) {

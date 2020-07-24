@@ -20,4 +20,5 @@ package org.apache.kylin.cache.cachemanager;
 
 public class CacheConstants {
     public static final String QUERY_CACHE = "StorageCache";
+    public static final String USER_CACHE = "UserCache";
 }

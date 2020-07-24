@@ -51,7 +51,7 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 import static org.apache.kylin.metadata.realization.SQLDigest.OrderEnum.DESCENDING;
 
@@ -129,7 +129,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             private List<TblColRef> literalCols = null;
             private int keyLength = 0;
 
-            private DimensionEncoding[] newDimensionEncodings = null;
+            private volatile DimensionEncoding[] newDimensionEncodings = null;
             private int newKeyLength = 0;
             private boolean needReEncode = true;
 
@@ -395,6 +395,11 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     @Override
     public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
+        // If sqlDiegest is already adjusted, then not to adjust it again.
+        if (sqlDigest.isBorrowedContext) {
+            return;
+        }
+
         if (sqlDigest.aggregations.size() > 1) {
             return;
         }

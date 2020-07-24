@@ -32,6 +32,7 @@ public class DateFormat {
     public static final String DEFAULT_TIME_PATTERN = "HH:mm:ss";
     public static final String DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS = "yyyy-MM-dd HH:mm:ss";
     public static final String DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS = "yyyy-MM-dd HH:mm:ss.SSS";
+    public static final String DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS_OFFSET = "yyyy-MM-dd HH:mm:ss.SSSZZ";
     public static final String YYYY_MM_DD_HH_MM = "yyyy-MM-dd HH:mm";
     public static final String YYYY_MM_DD_HH = "yyyy-MM-dd HH";
     public static final String YYYYMMDDHHMMSS = "yyyyMMddHHmmss";
@@ -39,12 +40,19 @@ public class DateFormat {
     public static final String YYYYMMDDHH = "yyyyMMddHH";
     public static final String ISO_8601_24H_FULL_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
 
-    public static final String[] SUPPORTED_DATETIME_PATTERN = { //
-            DEFAULT_DATE_PATTERN, //
-            DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS, //
-            DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS, //
-            COMPACT_DATE_PATTERN, //
-            ISO_8601_24H_FULL_FORMAT};
+    public static final String[] SUPPORTED_DATETIME_PATTERN = {
+            DEFAULT_DATE_PATTERN,
+            DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS,
+            DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS,
+            DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS_OFFSET,
+            COMPACT_DATE_PATTERN,
+            ISO_8601_24H_FULL_FORMAT,
+            YYYY_MM_DD_HH_MM,
+            YYYY_MM_DD_HH,
+            YYYYMMDDHHMMSS,
+            YYYYMMDDHHMM,
+            YYYYMMDDHH
+    };
 
     static final private Map<String, FastDateFormat> formatMap = new ConcurrentHashMap<String, FastDateFormat>();
 
@@ -137,6 +145,8 @@ public class DateFormat {
         } else if (str.length() > 19) {
             if (str.contains("T")) {
                 return stringToDate(str, ISO_8601_24H_FULL_FORMAT).getTime();
+            } else if (str.contains("+")) {
+                return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS_OFFSET).getTime();
             } else {
                 return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS).getTime();
             }

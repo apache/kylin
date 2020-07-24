@@ -61,6 +61,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import com.google.common.testing.EqualsTester;
 
 public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
     private static final String RESOURCE_DIR = "/dict/append_dict_test/" + RandomUtil.randomUUID();
@@ -68,7 +69,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
     private static String LOCAL_BASE_DIR;
 
     @Before
-    public void beforeTest() {
+    public void beforeTest() throws IOException {
         staticCreateTestMetadata();
         KylinConfig.getInstanceFromEnv().setProperty("kylin.dictionary.append-entry-size", "50000");
         BASE_DIR = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/resources/GlobalDict" + RESOURCE_DIR
@@ -592,4 +593,115 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         }
     }
 
+    @Test
+    public void testTooManySliceEvictions() throws IOException {
+        KylinConfig.getInstanceFromEnv().setProperty("kylin.dictionary.max-cache-size", "3");
+        AppendTrieDictionaryBuilder builder = createBuilder();
+        for (int i = 0; i < 100000; i++) {
+            builder.addValue(Integer.toString(i));
+        }
+        AppendTrieDictionary dict = builder.build(0);
+
+        assertEquals(4, dict.getDictMetadata().sliceFileMap.size());
+        assertEquals(1, dict.getIdFromValue("0", 0));
+        assertEquals(0, dict.getCacheStats().evictionCount());
+        assertEquals(1, dict.getCacheStats().loadCount());
+
+        List<String> keys = new ArrayList<>(100000);
+        for (int i = 0; i < 100000; i++) {
+            keys.add(Integer.toString(i));
+        }
+        Collections.sort(keys);
+        for (String key : keys) {
+            assertEquals(Integer.parseInt(key) + 1, dict.getIdFromValue(key, 0));
+        }
+        assertEquals(1, dict.getCacheStats().evictionCount());
+        assertEquals(4, dict.getCacheStats().loadCount());
+
+        // out of order
+        Collections.shuffle(keys);
+        try {
+            for (String key : keys) {
+                assertEquals(Integer.parseInt(key) + 1, dict.getIdFromValue(key, 0));
+            }
+            assertFalse("Should throw RuntimeException for too many dict slice evictions", true);
+        } catch (RuntimeException e) {
+            assertEquals("Too many dict slice evictions", e.getMessage().substring(0, 29));
+        }
+        assertEquals(22, dict.getCacheStats().evictionCount());
+        assertEquals(25, dict.getCacheStats().loadCount());
+
+        KylinConfig.getInstanceFromEnv().setProperty("kylin.dictionary.max-cache-size", "-1");
+    }
+
+    @Test
+    public void testEqualsAndHashCode() throws IOException {
+        AppendTrieDictionaryBuilder builder = createBuilder();
+        AppendTrieDictionary dict1 = builder.build(0);
+        AppendTrieDictionary dict2 = builder.build(1);
+
+        int maxEntriesPerSlice = KylinConfig.getInstanceFromEnv().getAppendDictEntrySize();
+        String tempBaseDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/resources/GlobalDict"
+                + "/dict/append_dict_test/" + RandomUtil.randomUUID() + "/";
+        AppendTrieDictionaryBuilder builder2 = new AppendTrieDictionaryBuilder(tempBaseDir, maxEntriesPerSlice, true);
+        AppendTrieDictionary dict3 = builder2.build(0);
+        AppendTrieDictionary dict4 = builder2.build(1);
+
+        new EqualsTester().addEqualityGroup(dict1, dict2).addEqualityGroup(dict3, dict4).testEquals();
+    }
+
+    @Test
+    public void testToString() {
+        AppendTrieDictionary dict = createDefaultTestDict();
+        assertEquals("AppendTrieDictionary(" + BASE_DIR + ")", dict.toString());
+    }
+
+    @Test
+    public void testContains() {
+        AppendTrieDictionary dict = createDefaultTestDict();
+        assertEquals(false, dict.contains(dict));
+    }
+
+    @Test
+    public void testGetMinId() {
+        AppendTrieDictionary dict = createDefaultTestDict();
+        assertEquals(0, dict.getMinId());
+    }
+
+    @Test
+    public void testGetMaxId() throws IOException {
+        AppendTrieDictionaryBuilder builder = createBuilder();
+        builder.addValue("a");
+        builder.addValue("b");
+        builder.addValue("c");
+        builder.addValue("d");
+        builder.addValue("e");
+        builder.addValue("f");
+        AppendTrieDictionary dict = builder.build(0);
+        assertEquals(6, dict.getMaxId());
+    }
+
+    @Test
+    public void testGetSizeOfId() {
+        AppendTrieDictionary dict = createDefaultTestDict();
+        assertEquals(4, dict.getSizeOfId());
+    }
+
+    @Test
+    public void testGetSizeOfValue() throws IOException {
+        AppendTrieDictionaryBuilder builder = createBuilder();
+        builder.addValue("a");
+        builder.addValue("aaaaaa");
+        AppendTrieDictionary dict = builder.build(0);
+        assertEquals(6, dict.getSizeOfValue());
+    }
+
+    private AppendTrieDictionary createDefaultTestDict() {
+        try {
+            return createBuilder().build(0);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to prepare dict for testing.");
+        }
+
+    }
 }

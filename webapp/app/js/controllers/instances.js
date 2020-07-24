@@ -54,7 +54,7 @@ KylinApp
       if ($scope.selectedLeaders.indexOf(node) >= 0) {
         return "Job Node (Leader)";
       } else {
-        return "Job Node (Follower)";
+        return "Job Node";
       }
     }
 

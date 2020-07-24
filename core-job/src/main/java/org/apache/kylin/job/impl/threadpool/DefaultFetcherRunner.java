@@ -20,7 +20,9 @@ package org.apache.kylin.job.impl.threadpool;
 
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.SetThreadName;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.Executable;
@@ -54,7 +56,7 @@ public class DefaultFetcherRunner extends FetcherRunner {
             nError = 0;
             nDiscarded = 0;
             nSUCCEED = 0;
-            for (final String id : getExecutableManger().getAllJobIdsInCache()) {
+            for (final String id : getExecutableManager().getAllJobIdsInCache()) {
                 if (isJobPoolFull()) {
                     return;
                 }
@@ -63,18 +65,46 @@ public class DefaultFetcherRunner extends FetcherRunner {
                     nRunning++;
                     continue;
                 }
+                if (succeedJobs.contains(id)) {
+                    nSUCCEED++;
+                    continue;
+                }
 
-                final Output outputDigest = getExecutableManger().getOutputDigest(id);
+                final Output outputDigest;
+                try {
+                    outputDigest = getExecutableManager().getOutputDigest(id);
+                } catch (IllegalArgumentException e) {
+                    logger.warn("job " + id + " output digest is null, skip.", e);
+                    nOthers++;
+                    continue;
+                }
                 if ((outputDigest.getState() != ExecutableState.READY)) {
                     // logger.debug("Job id:" + id + " not runnable");
                     jobStateCount(id);
                     continue;
                 }
 
-                final AbstractExecutable executable = getExecutableManger().getJob(id);
+                final AbstractExecutable executable = getExecutableManager().getJob(id);
+                if (executable == null) {
+                    logger.info("job " + id + " get job is null, skip.");
+                    nOthers++;
+                    continue;
+                }
                 if (!executable.isReady()) {
                     nOthers++;
                     continue;
+                }
+
+                KylinConfig config = jobEngineConfig.getConfig();
+                if (config.isSchedulerSafeMode()) {
+                    String cubeName = executable.getCubeName();
+                    String projectName = CubeManager.getInstance(config).getCube(cubeName).getProject();
+                    if (!config.getSafeModeRunnableProjects().contains(projectName) &&
+                            executable.getStartTime() == 0) {
+                        logger.info("New job is pending for scheduler in safe mode. Project: {}, job: {}",
+                                projectName, executable.getName());
+                        continue;
+                    }
                 }
 
                 nReady++;

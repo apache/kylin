@@ -17,7 +17,8 @@
 # limitations under the License.
 #
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
+
 
 kafka_home=
 
@@ -25,7 +26,7 @@ echo Retrieving kafka dependency...
 
 if [ -z "$KAFKA_HOME" ]
 then
-    verbose "Couldn't find kafka home. If you want to enable streaming processing, Please set KAFKA_HOME to the path which contains kafka dependencies."
+    echo "Couldn't find kafka home. If you want to enable streaming processing, Please set KAFKA_HOME to the path which contains kafka dependencies."
 else
     verbose "KAFKA_HOME is set to: $KAFKA_HOME, use it to locate kafka dependencies."
     kafka_home=$KAFKA_HOME

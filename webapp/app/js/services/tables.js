@@ -25,6 +25,7 @@ KylinApp.factory('TableService', ['$resource', function ($resource, config) {
     genCardinality: {method: 'PUT', params: {action: 'cardinality'}, isArray: false},
     showHiveDatabases: {method: 'GET', params: {action:'hive'}, cache: true, isArray: true},
     showHiveTables: {method: 'GET', params: {action:'hive'}, cache: true, isArray: true},
-    getSnapshots: {method: 'GET', params: {action: 'snapshots'}, isArray: true}
+    getSnapshots: {method: 'GET', params: {action: 'snapshots'}, isArray: true},
+    getSupportedDatetimePatterns: {method: 'GET', params: {action: 'supported_datetime_patterns'}, isArray: true}
   });
 }]);

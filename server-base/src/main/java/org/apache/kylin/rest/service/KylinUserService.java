@@ -47,7 +47,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 public class KylinUserService implements UserService {
 
@@ -60,8 +60,6 @@ public class KylinUserService implements UserService {
     public static final String SUPER_ADMIN = "ADMIN";
 
     public static final Serializer<ManagedUser> SERIALIZER = new JsonSerializer<>(ManagedUser.class);
-
-    private static final String ACTIVE_PROFILES_NAME = "spring.profiles.active";
 
     private static final String ADMIN = "ADMIN";
     private static final String MODELER = "MODELER";
@@ -76,7 +74,8 @@ public class KylinUserService implements UserService {
     public KylinUserService(List<User> users) throws IOException {
         pwdEncoder = new BCryptPasswordEncoder();
         synchronized (KylinUserService.class) {
-            if (!StringUtils.equals("testing", System.getProperty(ACTIVE_PROFILES_NAME))) {
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            if (!StringUtils.equals("testing", kylinConfig.getSecurityProfile())) {
                 return;
             }
             List<ManagedUser> all = listUsers();
@@ -112,21 +111,21 @@ public class KylinUserService implements UserService {
 
     protected ResourceStore aclStore;
 
-    private boolean evictCacheFlag = false;
-
-    @Override
-    public boolean isEvictCacheFlag() {
-        return evictCacheFlag;
-    }
-
-    @Override
-    public void setEvictCacheFlag(boolean evictCacheFlag) {
-        this.evictCacheFlag = evictCacheFlag;
-    }
-
     @PostConstruct
     public void init() throws IOException {
         aclStore = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
+
+        // check members
+        if (pwdEncoder == null) {
+            pwdEncoder = new BCryptPasswordEncoder();
+        }
+        // add default admin user if there is none
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        if (kylinConfig.createAdminWhenAbsent() && listAdminUsers().isEmpty()) {
+            logger.info("default admin user created: username=ADMIN, password=*****");
+            createUser(new ManagedUser(ADMIN, pwdEncoder.encode(ADMIN_DEFAULT), true, Constant.ROLE_ADMIN,
+                    Constant.GROUP_ALL_USERS));
+        }
     }
 
     @Override
@@ -145,7 +144,6 @@ public class KylinUserService implements UserService {
         }
         getKylinUserManager().update(managedUser);
         logger.trace("update user : {}", user.getUsername());
-        setEvictCacheFlag(true);
     }
 
     @Override
@@ -155,7 +153,6 @@ public class KylinUserService implements UserService {
         }
         getKylinUserManager().delete(userName);
         logger.trace("delete user : {}", userName);
-        setEvictCacheFlag(true);
     }
 
     @Override

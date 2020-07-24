@@ -18,17 +18,13 @@
 
 package org.apache.kylin.rest.service;
 
-import org.apache.kylin.rest.security.ManagedUser;
-import org.springframework.security.provisioning.UserDetailsManager;
-
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.kylin.rest.security.ManagedUser;
+import org.springframework.security.provisioning.UserDetailsManager;
+
 public interface UserService extends UserDetailsManager {
-
-    boolean isEvictCacheFlag();
-
-    void setEvictCacheFlag(boolean evictCacheFlag);
 
     List<ManagedUser> listUsers() throws IOException;
 

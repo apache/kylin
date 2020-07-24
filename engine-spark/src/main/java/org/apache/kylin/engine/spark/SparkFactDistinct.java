@@ -92,13 +92,13 @@ import org.apache.spark.util.LongAccumulator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.hash.HashFunction;
+import org.apache.kylin.shaded.com.google.common.hash.Hasher;
+import org.apache.kylin.shaded.com.google.common.hash.Hashing;
 
 import scala.Tuple2;
 import scala.Tuple3;
@@ -548,7 +548,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
                 Hasher hc = hf.newHasher();
                 String colValue = row[rowkeyColIndex[i]];
                 if (colValue != null) {
-                    rowHashCodes[i] = hc.putString(colValue).hash().asBytes();
+                    rowHashCodes[i] = hc.putUnencodedChars(colValue).hash().asBytes();
                 } else {
                     rowHashCodes[i] = hc.putInt(0).hash().asBytes();
                 }
@@ -572,7 +572,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
                 String colValue = row[rowkeyColIndex[i]];
                 if (colValue == null)
                     colValue = "0";
-                byte[] bytes = hc.putString(colValue).hash().asBytes();
+                byte[] bytes = hc.putUnencodedChars(colValue).hash().asBytes();
                 rowHashCodesLong[i] = (Bytes.toLong(bytes) + i);//add column ordinal to the hash value to distinguish between (a,b) and (b,a)
             }
 
@@ -673,6 +673,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         private String minValue = null;
         private boolean isDimensionCol;
         private boolean isDictCol;
+        private KylinConfig kConfig;
         private List<Tuple2<String, Tuple3<Writable, Writable, String>>> result;
 
         public MultiOutputFunction(String cubeName, String metaurl, SerializableConfiguration conf,
@@ -685,7 +686,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
 
         private void init() throws IOException {
             taskId = TaskContext.getPartitionId();
-            KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
+            kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
             try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
                     .setAndUnsetThreadLocalConfig(kConfig)) {
                 CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
@@ -771,8 +772,11 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
 
                 // output dict object
                 if (buildDictInReducer) {
-                    Dictionary<String> dict = builder.build();
-                    outputDict(col, dict, result);
+                    try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                            .setAndUnsetThreadLocalConfig(kConfig)) {
+                        Dictionary<String> dict = builder.build();
+                        outputDict(col, dict, result);
+                    }
                 }
             }
 

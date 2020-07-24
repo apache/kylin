@@ -22,7 +22,7 @@ import org.apache.kylin.common.StorageURL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 /**
  * it need identifier to transfer relative path to absolute path when building cube like reading global dict and

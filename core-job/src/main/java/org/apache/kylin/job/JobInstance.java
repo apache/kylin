@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
@@ -58,6 +58,8 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
     private String displayCubeName;
     @JsonProperty("related_segment")
     private String relatedSegment;
+    @JsonProperty("related_segment_name")
+    private String relatedSegmentName;
     @JsonProperty("exec_start_time")
     private long execStartTime;
     @JsonProperty("exec_end_time")
@@ -208,6 +210,14 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
     public void setRelatedSegment(String relatedSegment) {
         this.relatedSegment = relatedSegment;
+    }
+
+    public String getRelatedSegmentName() {
+        return relatedSegmentName;
+    }
+
+    public void setRelatedSegmentName(String relatedSegmentName) {
+        this.relatedSegmentName = relatedSegmentName;
     }
 
     /**

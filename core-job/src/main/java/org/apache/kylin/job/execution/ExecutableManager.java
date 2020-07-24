@@ -21,6 +21,7 @@ package org.apache.kylin.job.execution;
 import static org.apache.kylin.job.constant.ExecutableConstants.MR_JOB_ID;
 import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
 import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
+import static org.apache.kylin.job.constant.ExecutableConstants.FLINK_JOB_ID;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -31,8 +32,10 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.kafka.KafkaMsgProducer;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
+import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
@@ -41,9 +44,9 @@ import org.apache.kylin.job.exception.PersistentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  */
@@ -64,11 +67,15 @@ public class ExecutableManager {
 
     private final KylinConfig config;
     private final ExecutableDao executableDao;
+    private KafkaMsgProducer kafkaMsgProducer;
 
     private ExecutableManager(KylinConfig config) {
         logger.info("Using metadata url: " + config);
         this.config = config;
         this.executableDao = ExecutableDao.getInstance(config);
+        if (config.jobStatusWriteKafka()) {
+            this.kafkaMsgProducer = KafkaMsgProducer.getInstance();
+        }
     }
 
     private static ExecutablePO parse(AbstractExecutable executable) {
@@ -122,6 +129,7 @@ public class ExecutableManager {
 
     public void updateCheckpointJob(String jobId, List<AbstractExecutable> subTasksForCheck) {
         try {
+            jobId = jobId.replaceAll("[./]", "");
             final ExecutablePO job = executableDao.getJob(jobId);
             Preconditions.checkArgument(job != null, "there is no related job for job id:" + jobId);
 
@@ -140,6 +148,7 @@ public class ExecutableManager {
     //for ut
     public void deleteJob(String jobId) {
         try {
+            jobId = jobId.replaceAll("[./]", "");
             executableDao.deleteJob(jobId);
         } catch (PersistentException e) {
             logger.error("fail to delete job:" + jobId, e);
@@ -149,6 +158,7 @@ public class ExecutableManager {
 
     public AbstractExecutable getJob(String uuid) {
         try {
+            uuid = uuid.replaceAll("[./]", "");
             return parseTo(executableDao.getJob(uuid));
         } catch (PersistentException e) {
             logger.error("fail to get job:" + uuid, e);
@@ -166,6 +176,7 @@ public class ExecutableManager {
 
     public Output getOutput(String uuid) {
         try {
+            uuid = uuid.replaceAll("[./]", "");
             final ExecutableOutputPO jobOutput = executableDao.getJobOutput(uuid);
             Preconditions.checkArgument(jobOutput != null, "there is no related output for job id:" + uuid);
             return parseOutput(jobOutput);
@@ -472,9 +483,61 @@ public class ExecutableManager {
             }
             executableDao.updateJobOutput(jobOutput);
             logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
+
+            //write status to kafka
+            if (config.jobStatusWriteKafka()) {
+                AbstractExecutable executable = getJob(jobId);
+                if (executable == null) {
+                    return;
+                }
+                if (executable instanceof DefaultChainedExecutable) {
+                    StringBuffer result = new StringBuffer();
+
+                    DefaultChainedExecutable job = (DefaultChainedExecutable)executable;
+
+                    result.append("{");
+
+                    result.append("\"jobId\":\"" + job.getId() + "\",");
+                    result.append("\"jobName\":\"" + job.getName() + "\",");
+                    result.append("\"status\":\"" + parseToJobStatus(job.getStatus()).name() + "\",");
+                    result.append("\"subTaskSize\": \"" + job.getTasks().size() + "\",");
+
+                    result.append("\"subTasks\":[");
+                    job.getTasks().forEach(item -> {
+                        result.append("{");
+                        result.append("\"jobId\":\"" + item.getId() + "\",");
+                        result.append("\"jobName\":\"" + item.getName() + "\",");
+                        result.append("\"status\":\"" + parseToJobStatus(item.getStatus()).name() + "\"");
+                        result.append("},");
+                    });
+                    String resultStr = result.substring(0, result.length() - 1);
+                    resultStr += "]}";
+
+                    kafkaMsgProducer.sendJobStatusMessage(resultStr);
+                }
+            }
         } catch (PersistentException e) {
             logger.error("error change job:" + jobId + " to " + newStatus);
             throw new RuntimeException(e);
+        }
+    }
+
+    private JobStatusEnum parseToJobStatus(ExecutableState state) {
+        switch (state) {
+            case READY:
+                return JobStatusEnum.PENDING;
+            case RUNNING:
+                return JobStatusEnum.RUNNING;
+            case ERROR:
+                return JobStatusEnum.ERROR;
+            case DISCARDED:
+                return JobStatusEnum.DISCARDED;
+            case SUCCEED:
+                return JobStatusEnum.FINISHED;
+            case STOPPED:
+                return JobStatusEnum.STOPPED;
+            default:
+                throw new RuntimeException("invalid state:" + state);
         }
     }
 
@@ -552,10 +615,11 @@ public class ExecutableManager {
             }
         }
 
-        if (info.containsKey(YARN_APP_ID) && !StringUtils.isEmpty(config.getJobTrackingURLPattern())) {
+        if ((info.containsKey(YARN_APP_ID) || info.containsKey(FLINK_JOB_ID)) && !StringUtils.isEmpty(config.getJobTrackingURLPattern())) {
             String pattern = config.getJobTrackingURLPattern();
+            String jobId = info.containsKey(YARN_APP_ID) ? info.get(YARN_APP_ID) : info.get(FLINK_JOB_ID);
             try {
-                String newTrackingURL = String.format(Locale.ROOT, pattern, info.get(YARN_APP_ID));
+                String newTrackingURL = String.format(Locale.ROOT, pattern, jobId);
                 info.put(YARN_APP_URL, newTrackingURL);
             } catch (IllegalFormatException ife) {
                 logger.error("Illegal tracking url pattern: " + config.getJobTrackingURLPattern());

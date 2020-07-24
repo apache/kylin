@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -89,7 +89,7 @@ public class UpdateDictionaryStep extends AbstractExecutable {
             FileStatus[] fileStatuss = fs.listStatus(new Path(dictInfoPath), new PathFilter() {
                 @Override
                 public boolean accept(Path path) {
-                    return path.getName().startsWith("part");
+                    return path.getName().startsWith("part") || path.getName().startsWith("tmp");
                 }
             });
 

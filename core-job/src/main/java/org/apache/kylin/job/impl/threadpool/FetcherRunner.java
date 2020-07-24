@@ -19,7 +19,9 @@
 package org.apache.kylin.job.impl.threadpool;
 
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.Executable;
@@ -29,7 +31,7 @@ import org.apache.kylin.job.execution.Output;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
 
 public abstract class FetcherRunner implements Runnable {
 
@@ -39,6 +41,7 @@ public abstract class FetcherRunner implements Runnable {
     protected DefaultContext context;
     protected JobExecutor jobExecutor;
     protected volatile boolean fetchFailed = false;
+    protected Set<String> succeedJobs = Sets.newHashSet();//cache succeed jobid
     protected static int nRunning, nReady, nStopped, nOthers, nError, nDiscarded, nSUCCEED;
 
     public FetcherRunner(JobEngineConfig jobEngineConfig, DefaultContext context, JobExecutor jobExecutor) {
@@ -71,9 +74,10 @@ public abstract class FetcherRunner implements Runnable {
     }
     
     protected void jobStateCount(String id) {
-        final Output outputDigest = getExecutableManger().getOutputDigest(id);
+        final Output outputDigest = getExecutableManager().getOutputDigest(id);
         // logger.debug("Job id:" + id + " not runnable");
         if (outputDigest.getState() == ExecutableState.SUCCEED) {
+            succeedJobs.add(id);
             nSUCCEED++;
         } else if (outputDigest.getState() == ExecutableState.ERROR) {
             nError++;
@@ -83,7 +87,7 @@ public abstract class FetcherRunner implements Runnable {
             nStopped++;
         } else {
             if (fetchFailed) {
-                getExecutableManger().forceKillJob(id);
+                getExecutableManager().forceKillJob(id);
                 nError++;
             } else {
                 nOthers++;
@@ -96,7 +100,7 @@ public abstract class FetcherRunner implements Runnable {
         this.fetchFailed = fetchFailed;
     }
 
-    ExecutableManager getExecutableManger() {
+    ExecutableManager getExecutableManager() {
         return ExecutableManager.getInstance(jobEngineConfig.getConfig());
     }
 }

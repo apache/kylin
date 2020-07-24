@@ -32,7 +32,7 @@ import java.util.Random;
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler.CuboidTree;
 import org.junit.Test;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class TreeCuboidSchedulerTest {
 

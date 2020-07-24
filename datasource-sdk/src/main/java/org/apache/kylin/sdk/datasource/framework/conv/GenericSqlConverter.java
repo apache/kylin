@@ -23,8 +23,8 @@ import java.util.concurrent.TimeUnit;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDef;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDefProvider;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import org.apache.kylin.shaded.com.google.common.cache.Cache;
+import org.apache.kylin.shaded.com.google.common.cache.CacheBuilder;
 
 public class GenericSqlConverter {
 
@@ -51,7 +51,7 @@ public class GenericSqlConverter {
         DataSourceDef sourceDs = provider.getById(sourceDialect);
         final DataSourceDef targetDs = provider.getById(targetDialect);
         ConvMaster convMaster = new ConvMaster(sourceDs, targetDs);
-        SqlConverter.IConfigurer configurer = new DefaultConfiguer(targetDs);
+        SqlConverter.IConfigurer configurer = new DefaultConfigurer(targetDs);
         return new SqlConverter(configurer, convMaster);
     }
 }

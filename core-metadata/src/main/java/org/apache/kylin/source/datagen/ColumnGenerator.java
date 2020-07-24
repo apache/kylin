@@ -28,6 +28,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.TreeSet;
 
@@ -37,7 +38,7 @@ import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 public class ColumnGenerator {
 
@@ -179,7 +180,7 @@ public class ColumnGenerator {
                 // double
                 return formatNumber(randomDouble());
             } else {
-                throw new IllegalStateException();
+                throw new NoSuchElementException();
             }
         }
 
@@ -224,6 +225,9 @@ public class ColumnGenerator {
 
         @Override
         public String next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
             return "" + (next++);
         }
     }
@@ -251,8 +255,8 @@ public class ColumnGenerator {
         @Override
         public String next() {
             if (values.isEmpty())
-                return null;
-            
+                throw new NoSuchElementException();
+
             return values.get(rand.nextInt(values.size()));
         }
     }
@@ -314,7 +318,7 @@ public class ColumnGenerator {
             if (input.hasNext()) {
                 r = input.next();
             }
-            
+
             if (rand.nextDouble() < nullPct) {
                 r = nullStr;
             }

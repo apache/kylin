@@ -26,12 +26,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CardinalityRequest;
 import org.apache.kylin.rest.request.HiveTableRequest;
+import org.apache.kylin.rest.request.TableUpdateRequest;
 import org.apache.kylin.rest.response.TableSnapshotResponse;
 import org.apache.kylin.rest.service.TableACLService;
 import org.apache.kylin.rest.service.TableService;
@@ -48,7 +51,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  * @author xduo
@@ -130,6 +133,21 @@ public class TableController extends BasicController {
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
         return result;
+    }
+
+    @RequestMapping(value = "/{project}/update", method = { RequestMethod.POST }, produces = { "application/json" })
+    @ResponseBody
+    public void updateHiveTables(@PathVariable String project, @RequestBody TableUpdateRequest request)
+            throws IOException {
+        try {
+            tableService.updateHiveTable(project, request.getMapping(), request.isUseExisting());
+        } catch (BadRequestException e) {
+            logger.error("Failed to update Hive Table", e);
+            throw e;
+        } catch (Throwable e) {
+            logger.error("Failed to update Hive Table", e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
     }
 
     @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.DELETE }, produces = { "application/json" })
@@ -242,6 +260,12 @@ public class TableController extends BasicController {
     public List<TableSnapshotResponse> getTableSnapshots(@PathVariable final String project,
             @PathVariable final String tableName) throws IOException {
         return tableService.getLookupTableSnapshots(project, tableName);
+    }
+
+    @RequestMapping(value = "/supported_datetime_patterns", method = { RequestMethod.GET })
+    @ResponseBody
+    public String[] getSupportedDatetimePatterns() {
+        return DateFormat.SUPPORTED_DATETIME_PATTERN;
     }
 
     public void setTableService(TableService tableService) {

@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 
 public class ColumnToRowJob extends AbstractHadoopJob {
     private static final Logger logger = LoggerFactory.getLogger(ColumnToRowJob.class);
-    private static final long DEFAULT_SIZE_PER_REDUCER = 16 * 1024 * 1024;
+    private static final long DEFAULT_SIZE_PER_REDUCER = 16 * 1024 * 1024L;
     private static final int MAX_REDUCERS = 1000;
 
     @Override

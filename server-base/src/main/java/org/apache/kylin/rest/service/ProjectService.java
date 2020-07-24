@@ -24,12 +24,13 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Sets;
-import org.apache.directory.api.util.Strings;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.rest.constant.Constant;
@@ -47,9 +48,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Predicate;
+import org.apache.kylin.shaded.com.google.common.collect.Iterators;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * @author xduo
@@ -108,6 +109,18 @@ public class ProjectService extends BasicService {
                 newDescription, overrideProps);
 
         logger.debug("Project updated.");
+        return updatedProject;
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION')")
+    public ProjectInstance updateProjectOwner(ProjectInstance currentProject, String newOwner)
+        throws IOException {
+        if (Objects.equals(currentProject.getOwner(), newOwner)) {
+            // Do nothing
+            return currentProject;
+        }
+        ProjectInstance updatedProject = getProjectManager().updateProjectOwner(currentProject, newOwner);
+        logger.debug("Project owner updated.");
         return updatedProject;
     }
 
@@ -186,7 +199,7 @@ public class ProjectService extends BasicService {
         }
 
         // listAll method may not need a single param.But almost all listAll method pass
-        if (!Strings.isEmpty(projectName)) {
+        if (!StringUtils.isEmpty(projectName)) {
             readableProjects = Lists
                     .newArrayList(Iterators.filter(readableProjects.iterator(), new Predicate<ProjectInstance>() {
                         @Override

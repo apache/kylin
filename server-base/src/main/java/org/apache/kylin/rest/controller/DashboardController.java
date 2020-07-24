@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.CubeService;
@@ -67,8 +68,9 @@ public class DashboardController extends BasicController {
             @RequestParam(value = "startTime") String startTime, @RequestParam(value = "endTime") String endTime) {
         checkAuthorization(projectName);
         MetricsResponse queryMetrics = new MetricsResponse();
-        String sql = dashboardService.getQueryMetricsSQL(startTime, endTime, projectName, cubeName);
-        SQLResponse sqlResponse = queryService.querySystemCube(sql);
+        PrepareSqlRequest sqlRequest = dashboardService.getQueryMetricsSQLRequest(startTime, endTime, projectName,
+                cubeName);
+        SQLResponse sqlResponse = queryService.doQueryWithCache(sqlRequest);
         if (!sqlResponse.getIsException()) {
             queryMetrics.increase("queryCount",
                     dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(0)));
@@ -89,8 +91,9 @@ public class DashboardController extends BasicController {
             @RequestParam(value = "startTime") String startTime, @RequestParam(value = "endTime") String endTime) {
         checkAuthorization(projectName);
         MetricsResponse jobMetrics = new MetricsResponse();
-        String sql = dashboardService.getJobMetricsSQL(startTime, endTime, projectName, cubeName);
-        SQLResponse sqlResponse = queryService.querySystemCube(sql);
+        PrepareSqlRequest sqlRequest = dashboardService.getJobMetricsSQLRequest(startTime, endTime, projectName,
+                cubeName);
+        SQLResponse sqlResponse = queryService.doQueryWithCache(sqlRequest);
         if (!sqlResponse.getIsException()) {
             jobMetrics.increase("jobCount", dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(0)));
             jobMetrics.increase("avgJobBuildTime",
@@ -110,9 +113,9 @@ public class DashboardController extends BasicController {
             @RequestParam(value = "cubeName", required = false) String cubeName,
             @RequestParam(value = "startTime") String startTime, @RequestParam(value = "endTime") String endTime) {
         checkAuthorization(projectName);
-        String sql = dashboardService.getChartSQL(startTime, endTime, projectName, cubeName, dimension, metric,
-                category);
-        return dashboardService.transformChartData(queryService.querySystemCube(sql));
+        PrepareSqlRequest sqlRequest = dashboardService.getChartSQLRequest(startTime, endTime, projectName, cubeName,
+                dimension, metric, category);
+        return dashboardService.transformChartData(queryService.doQueryWithCache(sqlRequest));
     }
 
     private void checkAuthorization(String projectName) {

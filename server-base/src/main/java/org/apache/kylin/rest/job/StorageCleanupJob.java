@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -54,16 +54,15 @@ import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.base.Predicate;
+import org.apache.kylin.shaded.com.google.common.collect.Iterables;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class StorageCleanupJob extends AbstractApplication {
 
@@ -171,7 +170,7 @@ public class StorageCleanupJob extends AbstractApplication {
 
     protected void cleanUnusedHBaseTables() throws IOException {
         if ("hbase".equals(config.getStorageUrl().getScheme()) && !"".equals(config.getMetadataUrl().getScheme())) {
-            final int deleteTimeoutMin = 10; // Unit minute
+            final int deleteTimeoutMin = 2; // Unit minute
             try {
                 // use reflection to isolate NoClassDef errors when HBase is not available
                 Class hbaseCleanUpUtil = Class.forName("org.apache.kylin.rest.job.StorageCleanJobHbaseUtil");
@@ -269,7 +268,7 @@ public class StorageCleanupJob extends AbstractApplication {
                         + " with status " + state);
             }
         }
-
+        long maxSegMergeSpan = KylinConfig.getInstanceFromEnv().getMaxSegmentMergeSpan();
         // remove every segment working dir from deletion list
         for (CubeInstance cube : cubeMgr.reloadAndListAllCubes()) {
             for (CubeSegment seg : cube.getSegments()) {
@@ -282,9 +281,14 @@ public class StorageCleanupJob extends AbstractApplication {
                         Path p = Path.getPathWithoutSchemeAndAuthority(new Path(path));
                         path = HadoopUtil.getFileSystem(path).makeQualified(p).toString();
                     }
-                    allHdfsPathsNeedToBeDeleted.remove(path);
-                    logger.info("Skip " + path + " from deletion list, as the path belongs to segment " + seg
-                            + " of cube " + cube.getName());
+                    if (maxSegMergeSpan > 0 && seg.getTSRange().duration() >= maxSegMergeSpan) {
+                        logger.info("Keep " + path + " from deletion list, as the path belongs to segment " + seg
+                                + " of cube " + cube.getName() + " with max merging span.");
+                    } else {
+                        allHdfsPathsNeedToBeDeleted.remove(path);
+                        logger.info("Skip " + path + " from deletion list, as the path belongs to segment " + seg
+                                + " of cube " + cube.getName());
+                    }
                 }
             }
         }
@@ -307,19 +311,20 @@ public class StorageCleanupJob extends AbstractApplication {
 
     private void cleanUnusedIntermediateHiveTableInternal() throws Exception {
         final int uuidLength = 36;
-        final String prefix = MetadataConstants.KYLIN_INTERMEDIATE_PREFIX;
+        final String prefix = config.getHiveIntermediateTablePrefix();
         final String uuidPattern = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
         List<String> hiveTableNames = getHiveTables();
         Iterable<String> kylinIntermediates = Iterables.filter(hiveTableNames, new Predicate<String>() {
             @Override
             public boolean apply(@Nullable String input) {
-                return input != null && input.startsWith(MetadataConstants.KYLIN_INTERMEDIATE_PREFIX);
+                return input != null && input.startsWith(prefix);
             }
         });
 
         List<String> allJobs = executableManager.getAllJobIds();
         List<String> workingJobList = new ArrayList<String>();
+        List<String> allUuids = getAllUuids(allJobs);
         Map<String, String> segmentId2JobId = Maps.newHashMap();
 
         for (String jobId : allJobs) {
@@ -368,6 +373,11 @@ public class StorageCleanupJob extends AbstractApplication {
 
             if (!UUID_PATTERN.matcher(uuid).matches()) {
                 logger.debug("Skip table because pattern doesn't match, " + tableName);
+                continue;
+            }
+
+            if (!allUuids.contains(uuid)) {
+                logger.debug("Skip table because is not current deployment create, " + tableName);
                 continue;
             }
 
@@ -455,6 +465,22 @@ public class StorageCleanupJob extends AbstractApplication {
                         segmentId2JobId.toString());
             }
         }
+    }
+
+    private List<String> getAllUuids(List<String> allJobs) {
+        List<String> allUuids = new ArrayList<>();
+        for (String jobId : allJobs) {
+            allUuids.add(jobId);
+            try {
+                String segmentId = getSegmentIdFromJobId(jobId);
+                if (segmentId != null) {
+                    allUuids.add(segmentId);
+                }
+            } catch (Exception ex) {
+                logger.warn("Failed to find segment ID from job ID " + jobId + ", ignore it");
+            }
+        }
+        return allUuids;
     }
 
     private String getSegmentIdFromJobId(String jobId) {

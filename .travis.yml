@@ -21,7 +21,7 @@ addons:
   sonarcloud:
     organization: "kylin"
     token:
-      secure: "c918989d018ae3af899798716c35f4fe125296a4"
+      secure: "2ca24e5a04ad1fca4ca956953810421aa8bd1470"
 
 cache:
   directories:
@@ -31,6 +31,12 @@ jdk:
   - openjdk8
 
 before_script:
+  - echo "Downloading Maven 3.5.3"
+      && wget https://archive.apache.org/dist/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.zip
+      && unzip -qq apache-maven-3.5.3-bin.zip
+      && export M2_HOME=$PWD/apache-maven-3.5.3
+      && export PATH=$M2_HOME/bin:$PATH
+      && mvn -version
   - echo "MAVEN_OPTS='-Xms1024m -Xmx3072m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=384m'" > ~/.mavenrc
   - sed -i 's/log4j.logger.org.apache.kylin=DEBUG/log4j.logger.org.apache.kylin=WARN/g' build/conf/kylin-server-log4j.properties
   - sed -i 's/log4j.logger.org.apache.kylin=DEBUG/log4j.logger.org.apache.kylin=WARN/g' build/conf/kylin-tools-log4j.properties
@@ -41,7 +47,7 @@ script:
         echo "The pull request from ${TRAVIS_PULL_REQUEST_SLUG} is an EXTERNAL pull request. Skip sonar analysis.";
     else
         git fetch --unshallow --quiet;
-        mvn sonar:sonar -e;
+        mvn sonar:sonar -e -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=2ca24e5a04ad1fca4ca956953810421aa8bd1470 -Dsonar.organization=kylin;
     fi
 
 notification:

@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.mr.common;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,8 +32,8 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class CuboidStatsReaderUtil {
 
@@ -45,7 +46,7 @@ public class CuboidStatsReaderUtil {
         } catch (IOException e) {
             logger.warn("Fail to read statistics for cube " + cubeInstance.getName() + " due to " + e);
         }
-        return statisticsMerged.isEmpty() ? null : statisticsMerged;
+        return statisticsMerged == null ? Collections.emptyMap() : statisticsMerged;
     }
 
     public static Pair<Map<Long, Long>, Map<Long, Double>> readCuboidStatsAndSizeFromCube(Set<Long> cuboidIds,

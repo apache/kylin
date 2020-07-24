@@ -23,14 +23,17 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
@@ -41,7 +44,7 @@ import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class HadoopUtil {
     @SuppressWarnings("unused")
@@ -75,7 +78,6 @@ public class HadoopUtil {
         }
         //  https://issues.apache.org/jira/browse/KYLIN-3064
         conf.set("yarn.timeline-service.enabled", "false");
-
         return conf;
     }
 
@@ -231,6 +233,27 @@ public class HadoopUtil {
 
             return map;
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    public static List<String> readDistinctColumnValues(Configuration conf, String inputPath) throws IOException {
+        try (SequenceFile.Reader reader = new SequenceFile.Reader(HadoopUtil.getWorkingFileSystem(conf), new Path(inputPath), conf)) {
+            List<String> values = Lists.newArrayList();
+
+            NullWritable key = (NullWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+            Text value = (Text) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+
+            while (reader.next(key, value)) {
+                values.add(value.toString());
+            }
+
+            return values;
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    public static List<String> readDistinctColumnValues(String inputPath) throws IOException {
+        return readDistinctColumnValues(HadoopUtil.getCurrentConfiguration(), inputPath);
     }
 
     public static Map<String, String> readFromSequenceFile(String inputPath) throws IOException {

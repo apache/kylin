@@ -1,0 +1,124 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kylin-job
+  namespace: kylin-prod
+spec:
+  serviceName: kylin-svc
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kylin
+      role: job
+  template:
+    metadata:
+      labels:
+        app: kylin
+        role: job
+    spec:
+      containers:
+      - name: kylin
+        image: kylin-client:{VERSION}
+        imagePullPolicy: IfNotPresent
+        command:
+        - sh
+        - -c
+        args:
+        - cp $KYLIN_HOME/tomcat-config/* $KYLIN_HOME/tomcat/conf;
+          cp $KYLIN_HOME/kylin-more-config $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/classes/;
+          $TOOL_HOME/bootstrap.sh server -d;
+        ports:
+        - containerPort: 7070
+        - containerPort: 7443
+        volumeMounts:
+        - name: kylin-job-config
+          mountPath: /home/apache_kylin/kylin/conf
+        - name: tomcat-config
+          mountPath: /home/apache_kylin/kylin/tomcat-config
+        - name: kylin-more-config
+          mountPath: /home/apache_kylin/kylin/kylin-more-config/
+        - name: hadoop-config
+          mountPath: /etc/hadoop/conf
+        - name: hive-config
+          mountPath: /etc/hive/conf
+        - name: hbase-config
+          mountPath: /etc/hbase/conf
+        - name: kylin-logs
+          mountPath: /home/apache_kylin/kylin/logs
+        - name: tomcat-logs
+          mountPath: /home/apache_kylin/kylin/tomcat/logs
+        resources:
+          requests:
+            memory: 16Gi
+            cpu: 8
+          limits:
+            memory: 16Gi
+            cpu: 8
+      - name: filebeat
+        image: docker.elastic.co/beats/filebeat:6.4.3
+        args:
+        - -c
+        - /usr/share/filebeat/config/filebeat.yml
+        - -e
+        volumeMounts:
+        - name: kylin-logs
+          mountPath: /home/apache_kylin/kylin/logs
+        - name: tomcat-logs
+          mountPath: /home/apache_kylin/kylin/tomcat/logs
+        - name: filebeat-config
+          mountPath: /usr/share/filebeat/config
+          readOnly: true
+        resources:
+          requests:
+            memory: 3Gi
+            cpu: 2
+          limits:
+            memory: 3Gi
+            cpu: 2
+      volumes:
+      - name: kylin-logs
+        emptyDir:
+          sizeLimit: 20Gi
+      - name: tomcat-logs
+        emptyDir:
+          sizeLimit: 10Gi
+      - configMap:
+          name: hadoop-config
+        name: hadoop-config
+      - configMap:
+          name: hive-config
+        name: hive-config
+      - configMap:
+          name: hbase-config
+        name: hbase-config
+      - configMap:
+          name: kylin-job-config
+        name: kylin-job-config
+      - configMap:
+          name: tomcat-config
+        name: tomcat-config
+      - configMap:
+          name: filebeat-config
+        name: filebeat-config
+      - configMap:
+          name: kylin-more-config
+        name: kylin-more-config
+  updateStrategy:
+    type: RollingUpdate

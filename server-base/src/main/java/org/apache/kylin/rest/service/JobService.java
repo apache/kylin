@@ -34,9 +34,10 @@ import java.util.TimeZone;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.zookeeper.KylinServerDiscovery;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -46,6 +47,8 @@ import org.apache.kylin.engine.mr.BatchOptimizeJobCheckpointBuilder;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.LookupSnapshotBuildJob;
 import org.apache.kylin.engine.mr.LookupSnapshotJobBuilder;
+import org.apache.kylin.engine.mr.common.CubeJobLockUtil;
+import org.apache.kylin.engine.mr.StreamingCubingEngine;
 import org.apache.kylin.engine.mr.common.JobInfoConverter;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.JobInstance;
@@ -77,6 +80,9 @@ import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.SourcePartition;
 import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
+import org.apache.kylin.source.hive.MRHiveDictUtil;
+import org.apache.kylin.stream.coordinator.Coordinator;
+import org.apache.kylin.stream.core.model.SegmentBuildState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -85,12 +91,12 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Function;
+import org.apache.kylin.shaded.com.google.common.base.Predicate;
+import org.apache.kylin.shaded.com.google.common.base.Predicates;
+import org.apache.kylin.shaded.com.google.common.collect.FluentIterable;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  * @author ysong1
@@ -129,6 +135,11 @@ public class JobService extends BasicService implements InitializingBean {
         final Scheduler<AbstractExecutable> scheduler = (Scheduler<AbstractExecutable>) SchedulerFactory
                 .scheduler(kylinConfig.getSchedulerType());
 
+        if (kylinConfig.getServerSelfDiscoveryEnabled()) {
+            KylinServerDiscovery.getInstance();
+        }
+        logger.info("Cluster servers: {}", Lists.newArrayList(kylinConfig.getRestServers()));
+        
         scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
 
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
@@ -495,6 +506,7 @@ public class JobService extends BasicService implements InitializingBean {
             result.setDisplayCubeName(cubeName);
         }
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
+        result.setRelatedSegmentName(CubingExecutableUtil.getSegmentName(cubeJob.getParams()));
         result.setLastModified(cubeJob.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());
@@ -523,6 +535,7 @@ public class JobService extends BasicService implements InitializingBean {
         result.setProjectName(job.getProjectName());
         result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(job.getParams()));
+        result.setRelatedSegmentName(CubingExecutableUtil.getSegmentName(job.getParams()));
         result.setLastModified(job.getLastModified());
         result.setSubmitter(job.getSubmitter());
         result.setUuid(job.getId());
@@ -579,6 +592,37 @@ public class JobService extends BasicService implements InitializingBean {
         getExecutableManager().resumeJob(job.getId());
     }
 
+    public void resubmitJob(JobInstance job) throws IOException {
+        aclEvaluate.checkProjectOperationPermission(job);
+
+        Coordinator coordinator = Coordinator.getInstance();
+        CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+        String cubeName = job.getRelatedCube();
+        CubeInstance cubeInstance = cubeManager.getCube(cubeName);
+
+        String segmentName = job.getRelatedSegmentName();
+        try {
+            Pair<Long, Long> segmentRange = CubeSegment.parseSegmentName(segmentName);
+            logger.info("submit streaming segment build, cube:{} segment:{}", cubeName, segmentName);
+            CubeSegment newSeg = coordinator.getCubeManager().appendSegment(cubeInstance,
+                    new SegmentRange.TSRange(segmentRange.getFirst(), segmentRange.getSecond()));
+
+            DefaultChainedExecutable executable = new StreamingCubingEngine().createStreamingCubingJob(newSeg, aclEvaluate.getCurrentUserName());
+            coordinator.getExecutableManager().addJob(executable);
+            CubingJob cubingJob = (CubingJob) executable;
+            newSeg.setLastBuildJobID(cubingJob.getId());
+
+            SegmentBuildState.BuildState state = new SegmentBuildState.BuildState();
+            state.setBuildStartTime(System.currentTimeMillis());
+            state.setState(SegmentBuildState.BuildState.State.BUILDING);
+            state.setJobId(cubingJob.getId());
+            coordinator.getStreamMetadataStore().updateSegmentBuildState(cubeName, segmentName, state);
+        } catch (Exception e) {
+            logger.error("streaming job submit fail, cubeName:" + cubeName + " segment:" + segmentName, e);
+            throw e;
+        }
+    }
+
     public void rollbackJob(JobInstance job, String stepId) {
         aclEvaluate.checkProjectOperationPermission(job);
         getExecutableManager().rollbackJob(job.getId(), stepId);
@@ -602,6 +646,34 @@ public class JobService extends BasicService implements InitializingBean {
             AbstractExecutable executable = getExecutableManager().getJob(job.getId());
             if (executable instanceof CubingJob) {
                 cancelCubingJobInner((CubingJob) executable);
+                //release global mr hive dict lock if exists
+                if (executable.getStatus().isFinalState()) {
+                    try {
+                        DistributedLock lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentThread();
+                        if (lock.isLocked(MRHiveDictUtil.getLockPath(executable.getCubeName(), job.getId()))) {//release mr/hive global dict lock if exists
+                            lock.purgeLocks(MRHiveDictUtil.getLockPath(executable.getCubeName(), null));
+                            logger.info("{} unlock global MR/Hive dict lock path({}) success", job.getId(),
+                                    MRHiveDictUtil.getLockPath(executable.getCubeName(), null));
+                            if (lock.isLocked(MRHiveDictUtil.getEphemeralLockPath(executable.getCubeName()))) {//release mr/hive global dict Ephemeral lock if exists
+                                lock.purgeLocks(MRHiveDictUtil.getEphemeralLockPath(executable.getCubeName()));
+                                logger.info("{} unlock global MR/Hive dict ephemeral lock path({}) success", job.getId(),
+                                        MRHiveDictUtil.getEphemeralLockPath(executable.getCubeName()));
+                            }
+                        }
+
+                        if(lock.isLocked(CubeJobLockUtil.getLockPath(executable.getCubeName(), job.getId()))){//release cube job dict lock if exists
+                                lock.purgeLocks(CubeJobLockUtil.getLockPath(executable.getCubeName(), null));
+                                logger.info("{} unlock cube job dict lock path({}) success", job.getId(), CubeJobLockUtil.getLockPath(executable.getCubeName(), null));
+
+                                if (lock.isLocked(CubeJobLockUtil.getEphemeralLockPath(executable.getCubeName()))) {//release cube job Ephemeral lock if exists
+                                    lock.purgeLocks(CubeJobLockUtil.getEphemeralLockPath(executable.getCubeName()));
+                                    logger.info("{} unlock cube job ephemeral lock path({}) success", job.getId(), CubeJobLockUtil.getEphemeralLockPath(executable.getCubeName()));
+                                }
+                            }
+                    }catch (Exception e){
+                        logger.error("get some error when release cube {} job {} job id {} " , executable.getCubeName(), job.getName(), job.getId());
+                    }
+                }
             } else if (executable instanceof CheckpointExecutable) {
                 cancelCheckpointJobInner((CheckpointExecutable) executable);
             } else {
@@ -671,7 +743,7 @@ public class JobService extends BasicService implements InitializingBean {
             + SecurityContextHolder.getContext().getAuthentication().getName());
         if (job.getStatus().isComplete()) {
           throw new IllegalStateException(
-              "The job " + job.getId() + " has already been finished and cannot be stopped.");
+                  "The job " + job.getId() + " has already been finished and cannot be stopped.");
         }
         getExecutableManager().pauseJob(job.getId());
     }
@@ -847,7 +919,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtils.isEmpty(jobName)) {
                                     return true;
                                 }
 
@@ -947,7 +1019,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtils.isEmpty(jobName)) {
                                     return true;
                                 }
 
@@ -1157,6 +1229,9 @@ public class JobService extends BasicService implements InitializingBean {
                                 try {
                                     ExecutableOutputPO executableOutputPO = allExecutableOutputPO
                                             .get(executable.getId());
+                                    if (executableOutputPO == null) {
+                                        return false;
+                                    }
                                     ExecutableState state = ExecutableState.valueOf(executableOutputPO.getStatus());
                                     return statusList.contains(state);
 
@@ -1171,7 +1246,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtils.isEmpty(jobName)) {
                                     return true;
                                 }
 
@@ -1246,7 +1321,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtils.isEmpty(jobName)) {
                                     return true;
                                 }
 

@@ -76,6 +76,9 @@ public class MergeCuboidJob extends CuboidJob {
             job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(Text.class);
 
+            //set dfs.replication
+            job.getConfiguration().set("dfs.replication", KylinConfig.getInstanceFromEnv().getCuboidDfsReplication());
+
             // set inputs
             IMROutput2.IMRMergeOutputFormat outputFormat = MRUtil.getBatchMergeOutputSide2(cubeSeg).getOutputFormat();
             outputFormat.configureJobInput(job, input);

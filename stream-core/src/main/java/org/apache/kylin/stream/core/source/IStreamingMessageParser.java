@@ -20,6 +20,9 @@ package org.apache.kylin.stream.core.source;
 
 import org.apache.kylin.stream.core.model.StreamingMessage;
 
+/**
+ * ExtensionPoint for parse message
+ */
 public interface IStreamingMessageParser<T> {
     StreamingMessage parse(T sourceMessage);
 }

@@ -44,7 +44,7 @@ import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
 
 /**
  * A distributed lock based on zookeeper. Every instance is owned by a client, on whose behalf locks are acquired and/or released.
@@ -131,6 +131,34 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
             throw zpie;
         }
     }
+
+    @Override
+    public boolean globalPermanentLock(String lockPath) {
+        logger.debug("{} trying to lock {}", client, lockPath);
+
+        // curator closed in some case(like Expired),restart it
+        if (curator.getState() != CuratorFrameworkState.STARTED) {
+            curator = ZKUtil.getZookeeperClient(KylinConfig.getInstanceFromEnv());
+        }
+
+        try {
+            curator.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(lockPath, clientBytes);
+        } catch (KeeperException.NodeExistsException ex) {
+            logger.debug("{} check {} is already locked", client, lockPath);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Error while " + client + " trying to lock " + lockPath, ex);
+        }
+
+        String lockOwner = peekLock(lockPath);
+        if (client.equals(lockOwner)) {
+            logger.info("{} acquired lock at {}", client, lockPath);
+            return true;
+        } else {
+            logger.debug("{} failed to acquire lock at {}, which is held by {}", client, lockPath, lockOwner);
+            return false;
+        }
+    }
+
 
     private void lockInternal(String lockPath) {
         try {

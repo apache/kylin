@@ -249,7 +249,7 @@
           "type": "column",
           "value": "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
         },
-        "returntype": "bitmap"
+        "returntype": "bitmap_map"
       }
     },
     {
@@ -595,7 +595,8 @@
   "override_kylin_properties": {
     "kylin.cube.algorithm": "LAYER",
     "kylin.dictionary.shrunken-from-global-enabled": "false",
-    "kylin.dictionary.mr-hive.columns": "TEST_KYLIN_FACT_TEST_COUNT_DISTINCT_BITMAP"
+    "kylin.dictionary.mr-hive.columns": "TEST_KYLIN_FACT_TEST_COUNT_DISTINCT_BITMAP",
+    "kylin.source.hive.databasedir" : "/apps/hive/warehouse"
   },
   "partition_date_start": 0
 }

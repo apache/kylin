@@ -18,6 +18,8 @@
 
 package org.apache.kylin.job.util;
 
+import org.apache.calcite.sql.SqlDialect;
+import org.apache.kylin.common.SourceDialect;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.Assert;
 import org.junit.Before;
@@ -139,6 +141,16 @@ public class FlatTableSqlQuoteUtilsTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testQuoteWithIdentifier() {
-        Assert.assertEquals("`abc`", FlatTableSqlQuoteUtils.quoteIdentifier("abc"));
+        Assert.assertEquals("`abc`", FlatTableSqlQuoteUtils.quoteIdentifier("abc", null));
+        Assert.assertEquals("abc", FlatTableSqlQuoteUtils.quoteIdentifier("abc", FlatTableSqlQuoteUtils.NON_QUOTE_DIALECT));
+        Assert.assertEquals("\"abc\"", FlatTableSqlQuoteUtils.quoteIdentifier("abc", SqlDialect.DatabaseProduct.POSTGRESQL.getDialect()));
+        Assert.assertEquals("`abc`", FlatTableSqlQuoteUtils.quoteIdentifier("abc", FlatTableSqlQuoteUtils.HIVE_DIALECT));
+        Assert.assertEquals("[abc]", FlatTableSqlQuoteUtils.quoteIdentifier("abc", SqlDialect.DatabaseProduct.MSSQL.getDialect()));
+        Assert.assertEquals("`abc`", FlatTableSqlQuoteUtils.quoteIdentifier("abc", SqlDialect.DatabaseProduct.MYSQL.getDialect()));
+
+        Assert.assertEquals("`abc`", FlatTableSqlQuoteUtils.quoteIdentifier(SourceDialect.MYSQL, "abc"));
+        Assert.assertEquals("`abc`", FlatTableSqlQuoteUtils.quoteIdentifier(SourceDialect.HIVE, "abc"));
+        Assert.assertEquals("[abc]", FlatTableSqlQuoteUtils.quoteIdentifier(SourceDialect.MSSQL, "abc"));
+        Assert.assertEquals("\"abc\"", FlatTableSqlQuoteUtils.quoteIdentifier(SourceDialect.POSTGRESQL, "abc"));
     }
 }

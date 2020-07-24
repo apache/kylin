@@ -35,8 +35,8 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.io.CountingOutputStream;
-import com.google.common.io.Files;
+import org.apache.kylin.shaded.com.google.common.io.CountingOutputStream;
+import org.apache.kylin.shaded.com.google.common.io.Files;
 
 public class GeneralColumnDataTest extends LocalFileMetadataTestCase {
 

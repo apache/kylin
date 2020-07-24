@@ -27,15 +27,15 @@ import org.apache.kylin.dimension.FixedLenDimEnc;
 import org.apache.kylin.dimension.TimeDimEnc;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.kylin.shaded.com.google.common.base.MoreObjects;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 /**
  * @author yangli9
@@ -44,6 +44,14 @@ import org.slf4j.LoggerFactory;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class RowKeyColDesc implements java.io.Serializable {
     private static final Logger logger = LoggerFactory.getLogger(RowKeyColDesc.class);
+
+    public static boolean isDateDimEnc(RowKeyColDesc rowKeyColDesc) {
+        return DateDimEnc.ENCODING_NAME.equals(rowKeyColDesc.getEncodingName());
+    }
+
+    public static boolean isTimeDimEnc(RowKeyColDesc rowKeyColDesc) {
+        return TimeDimEnc.ENCODING_NAME.equals(rowKeyColDesc.getEncodingName());
+    }
 
     @JsonProperty("column")
     private String column;
@@ -81,12 +89,14 @@ public class RowKeyColDesc implements java.io.Serializable {
         // convert date/time dictionary on date/time column to DimensionEncoding implicitly
         // however date/time dictionary on varchar column is still required
         DataType type = colRef.getType();
-        if (DictionaryDimEnc.ENCODING_NAME.equals(encodingName)) {
+        if (DictionaryDimEnc.ENCODING_NAME.equals(encodingName) && cubeDesc.getConfig().isRowKeyEncodingAutoConvert()) {
             if (type.isDate()) {
                 encoding = encodingName = DateDimEnc.ENCODING_NAME;
+                logger.info("Implicitly convert encoding to {}", encodingName);
             }
             if (type.isTimeFamily()) {
                 encoding = encodingName = TimeDimEnc.ENCODING_NAME;
+                logger.info("Implicitly convert encoding to {}", encodingName);
             }
         }
 
@@ -166,7 +176,7 @@ public class RowKeyColDesc implements java.io.Serializable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("column", column).add("encoding", encoding).toString();
+        return MoreObjects.toStringHelper(this).add("column", column).add("encoding", encoding).toString();
     }
 
     @Override

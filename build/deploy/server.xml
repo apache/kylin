@@ -74,6 +74,7 @@
                    compressionMinSize="2048"
                    noCompressionUserAgents="gozilla,traviata"
                    compressableMimeType="text/html,text/xml,text/javascript,application/javascript,application/json,text/css,text/plain"
+                   URIEncoding="UTF-8"
         />
         <!-- A "Connector" using the shared thread pool-->
         <!-- Define a SSL HTTP/1.1 Connector on port 8443
@@ -81,14 +82,16 @@
              style configuration. When using the APR/native implementation, the
              OpenSSL style configuration is required as described in the APR/native
              documentation -->
+        <!--
         <Connector port="7443" protocol="org.apache.coyote.http11.Http11Protocol"
                    maxThreads="150" SSLEnabled="true" scheme="https" secure="true"
                    keystoreFile="conf/.keystore" keystorePass="changeit"
                    clientAuth="false" sslProtocol="TLS" />
-
+        -->
         <!-- Define an AJP 1.3 Connector on port 8009 -->
+        <!--
         <Connector port="9009" protocol="AJP/1.3" redirectPort="9443" />
-
+        -->
 
         <!-- An Engine represents the entry point (within Catalina) that processes
              every request.  The Engine implementation for Tomcat stand alone

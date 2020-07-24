@@ -45,7 +45,7 @@ public class RedistributeFlatHiveTableStep extends AbstractExecutable {
     }
 
     private void redistributeTable(KylinConfig config, int numReducers) throws IOException {
-        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(getName());
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(getName() + " " + getCubeName() + " " + getId());
         hiveCmdBuilder.overwriteHiveProps(config.getHiveConfigOverride());
         hiveCmdBuilder.addStatement(getInitStatement());
         hiveCmdBuilder.addStatement("set mapreduce.job.reduces=" + numReducers + ";\n");

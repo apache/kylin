@@ -24,8 +24,8 @@ import java.util.Map;
 import org.apache.kylin.stream.core.model.CubeAssignment;
 import org.apache.kylin.stream.core.source.Partition;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class AssignmentUtil {
 
@@ -44,7 +44,7 @@ public class AssignmentUtil {
                 List<Partition> partitions = cubeAssignment.getPartitionsByReplicaSetID(replicaSetID);
                 Map<String, List<Partition>> nodeAssignment = nodeAssignmentsMap.get(replicaSetID);
                 if (nodeAssignment == null) {
-                    nodeAssignment = Maps.newHashMap();
+                    nodeAssignment = Maps.newLinkedHashMap();
                     nodeAssignmentsMap.put(replicaSetID, nodeAssignment);
                 }
                 nodeAssignment.put(cubeName, partitions);

@@ -20,7 +20,7 @@ package org.apache.kylin.metrics.property;
 
 import java.util.Locale;
 
-import com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 
 /**
  * Definition of Metrics dimension and measure for Query Basic
@@ -28,6 +28,7 @@ import com.google.common.base.Strings;
 public enum QueryPropertyEnum {
 
     ID_CODE("QUERY_HASH_CODE"),
+    SQL("QUERY_SQL"),
     TYPE("QUERY_TYPE"),
     USER("KUSER"),
     PROJECT("PROJECT"),

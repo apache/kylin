@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import net.spy.memcached.compat.SpyObject;
 import net.spy.memcached.util.DefaultKetamaNodeLocatorConfiguration;
@@ -54,8 +55,8 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
     private final Map<InetSocketAddress, Integer> weights;
     private final boolean isWeightedKetama;
     private final KetamaNodeLocatorConfiguration config;
-    private volatile TreeMap<Long, MemcachedNode> ketamaNodes;
-    private volatile Collection<MemcachedNode> allNodes;
+    private AtomicReference<TreeMap<Long, MemcachedNode>> ketamaNodes = new AtomicReference<>();
+    private AtomicReference<Collection<MemcachedNode>> allNodes = new AtomicReference<>();
 
     /**
      * Create a new KetamaNodeLocator using specified nodes and the specifed hash
@@ -117,7 +118,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
     public RefinedKetamaNodeLocator(List<MemcachedNode> nodes, HashAlgorithm alg,
             Map<InetSocketAddress, Integer> nodeWeights, KetamaNodeLocatorConfiguration configuration) {
         super();
-        allNodes = nodes;
+        allNodes.set(nodes);
         hashAlg = alg;
         config = configuration;
         weights = nodeWeights;
@@ -128,8 +129,8 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
     private RefinedKetamaNodeLocator(TreeMap<Long, MemcachedNode> smn, Collection<MemcachedNode> an, HashAlgorithm alg,
             Map<InetSocketAddress, Integer> nodeWeights, KetamaNodeLocatorConfiguration conf) {
         super();
-        ketamaNodes = smn;
-        allNodes = an;
+        ketamaNodes.set(smn);
+        allNodes.set(an);
         hashAlg = alg;
         config = conf;
         weights = nodeWeights;
@@ -137,7 +138,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
     }
 
     public Collection<MemcachedNode> getAll() {
-        return allNodes;
+        return allNodes.get();
     }
 
     public MemcachedNode getPrimary(final String k) {
@@ -152,7 +153,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
 
     MemcachedNode getNodeForKey(long hash) {
         final MemcachedNode rv;
-        if (!ketamaNodes.containsKey(hash)) {
+        if (!ketamaNodes.get().containsKey(hash)) {
             // Java 1.6 adds a ceilingKey method, but I'm still stuck in 1.5
             // in a lot of places, so I'm doing this myself.
             SortedMap<Long, MemcachedNode> tailMap = getKetamaNodes().tailMap(hash);
@@ -183,7 +184,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
 
     public NodeLocator getReadonlyCopy() {
         TreeMap<Long, MemcachedNode> smn = new TreeMap<Long, MemcachedNode>(getKetamaNodes());
-        Collection<MemcachedNode> an = new ArrayList<MemcachedNode>(allNodes.size());
+        Collection<MemcachedNode> an = new ArrayList<MemcachedNode>(allNodes.get().size());
 
         // Rewrite the values a copy of the map.
         for (Map.Entry<Long, MemcachedNode> me : smn.entrySet()) {
@@ -191,7 +192,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
         }
 
         // Copy the allNodes collection.
-        for (MemcachedNode n : allNodes) {
+        for (MemcachedNode n : allNodes.get()) {
             an.add(new MemcachedNodeROImpl(n));
         }
 
@@ -200,7 +201,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
 
     @Override
     public void updateLocator(List<MemcachedNode> nodes) {
-        allNodes = nodes;
+        allNodes.set(nodes);
         setKetamaNodes(nodes);
     }
 
@@ -208,7 +209,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
      * @return the ketamaNodes
      */
     protected TreeMap<Long, MemcachedNode> getKetamaNodes() {
-        return ketamaNodes;
+        return ketamaNodes.get();
     }
 
     /**
@@ -263,7 +264,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
             }
         }
         assert newNodeMap.size() == numReps * nodes.size();
-        ketamaNodes = newNodeMap;
+        ketamaNodes.set(newNodeMap);
     }
 
     private List<Long> ketamaNodePositionsAtIteration(MemcachedNode node, int iteration) {

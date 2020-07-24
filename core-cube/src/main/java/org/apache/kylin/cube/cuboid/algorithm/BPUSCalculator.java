@@ -25,9 +25,9 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  * Calculate the benefit based on Benefit Per Unit Space.
@@ -120,7 +120,7 @@ public class BPUSCalculator implements BenefitPolicy {
     protected double getCostSaving(long descendant, long cuboid) {
         long cuboidCost = getCuboidCost(cuboid);
         long descendantAggCost = getCuboidAggregationCost(descendant);
-        return descendantAggCost - cuboidCost;
+        return (double) descendantAggCost - cuboidCost;
     }
 
     protected Long getCuboidCost(long cuboid) {

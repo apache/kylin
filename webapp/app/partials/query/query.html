@@ -64,6 +64,15 @@
                     <div class="pull-left">
                         <h4>
                             Project: <span class="label label-info">{{projectModel.getSelectedProject()}}</span>
+                            &nbsp&nbsp Cube:
+                            <select chosen ng-model="specifyCube"
+                                    ng-options="cube for cube in cubeItems"
+                                    style="display: inline-flex; width: 250px"
+                                    data-placeholder="Filter ..."
+                                    class="chosen-select">
+                              <option value=""> -- Choose Cube -- </option>
+                            </select>
+                            <i class="fa fa-info-circle" title="Specify cube to query"  kylinpopover template="specifyCubeTip.html" placement="right"></i>
                         </h4>
                     </div>
                     <div class="pull-right">
@@ -229,3 +238,7 @@
 </div>
 
 <div ng-include="'partials/projects/project_create.html'"></div>
+
+<script type="text/ng-template" id="specifyCubeTip.html">
+  <p style="font-size: 8px;">Specify the cube to query, other cubes in current project won't be queried.</p>
+</script>

@@ -30,7 +30,7 @@ import org.apache.kylin.common.SourceDialect;
 import org.apache.kylin.source.hive.DBConnConf;
 import org.apache.kylin.source.jdbc.SqlUtil;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 public class SQLServerJdbcMetadata extends DefaultJdbcMetadata {
     public SQLServerJdbcMetadata(DBConnConf dbConnConf) {
@@ -63,6 +63,6 @@ public class SQLServerJdbcMetadata extends DefaultJdbcMetadata {
 
     @Override
     public SourceDialect getDialect() {
-        return SourceDialect.SQL_SERVER;
+        return SourceDialect.MSSQL;
     }
 }

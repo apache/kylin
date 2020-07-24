@@ -47,7 +47,7 @@ import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 @Ignore("KylinQueryTest is contained by ITCombinationTest")
 public class ITKylinQueryTest extends KylinTestBase {
@@ -237,6 +237,11 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testJoinCastQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_join", null, true);
+    }
+
+    @Test
+    public void testNonEqualJoin() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_non_equal_join", null, true);
     }
 
     @Test

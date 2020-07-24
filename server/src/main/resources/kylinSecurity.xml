@@ -236,11 +236,14 @@
             <scr:http-basic entry-point-ref="unauthorisedEntryPoint"/>
 
             <scr:intercept-url pattern="/api/user/authentication*/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cubes/checkCompatibility" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cubes/checkCompatibility/hiveTable" access="permitAll"/>
             <scr:intercept-url pattern="/api/query/runningQueries" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/query/*/stop" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/query*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/**/metrics" access="permitAll"/>
+            <scr:intercept-url pattern="/api/**/jmetrics/**" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/cache*/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/streaming_coordinator/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/service_discovery/state/is_active_job_node" access="permitAll"/>
@@ -250,6 +253,8 @@
             <scr:intercept-url pattern="/api/streaming*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/job*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/admin/public_config" access="permitAll"/>
+            <scr:intercept-url pattern="/api/admin/config" access="permitAll"/>
+            <scr:intercept-url pattern="/api/admin/version" access="permitAll"/>
             <scr:intercept-url pattern="/api/projects" access="permitAll"/>
             <scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/tables/**/snapshotLocalCache/**" access="permitAll"/>
@@ -285,11 +290,14 @@
             <scr:http-basic entry-point-ref="unauthorisedEntryPoint"/>
 
             <scr:intercept-url pattern="/api/user/authentication*/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cubes/checkCompatibility" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cubes/checkCompatibility/hiveTable" access="permitAll"/>
             <scr:intercept-url pattern="/api/query/runningQueries" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/query/*/stop" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/query*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/**/metrics" access="permitAll"/>
+            <scr:intercept-url pattern="/api/**/jmetrics/**" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/cache*/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/streaming_coordinator/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST')"/>
@@ -361,6 +369,7 @@
         <bean id="successRedirectHandler"
               class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler">
             <property name="defaultTargetUrl" value="/models"/>
+            <property name="alwaysUseDefaultTargetUrl" value="true"/>
         </bean>
 
         <!-- Handler deciding where to redirect user after failed login -->

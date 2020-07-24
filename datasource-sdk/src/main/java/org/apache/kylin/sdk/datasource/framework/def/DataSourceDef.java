@@ -33,8 +33,8 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 @JacksonXmlRootElement(localName = "DATASOURCE_DEF")
 public class DataSourceDef {
@@ -168,6 +168,10 @@ public class DataSourceDef {
                     dataTypeMap.put(sourceType.toUpperCase(Locale.ROOT), typeValue);
                 }
             }
+        }
+
+        for (String k : propertyDefMap.keySet()) {
+            logger.debug("Check {}, {} : {}", k, propertyDefMap.get(k).getName(), propertyDefMap.get(k).getValue());
         }
     }
 

@@ -37,10 +37,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
+import javax.annotation.Nullable;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.apache.curator.framework.recipes.leader.LeaderSelectorListenerAdapter;
@@ -56,6 +54,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.StreamingCubingEngine;
+import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -67,23 +66,23 @@ import org.apache.kylin.stream.coordinator.assign.Assigner;
 import org.apache.kylin.stream.coordinator.assign.AssignmentUtil;
 import org.apache.kylin.stream.coordinator.assign.AssignmentsCache;
 import org.apache.kylin.stream.coordinator.assign.CubePartitionRoundRobinAssigner;
+import org.apache.kylin.stream.coordinator.assign.DefaultAssigner;
+import org.apache.kylin.stream.coordinator.client.CoordinatorClient;
 import org.apache.kylin.stream.coordinator.exception.ClusterStateException;
-import org.apache.kylin.stream.coordinator.exception.StoreException;
-import org.apache.kylin.stream.coordinator.exception.ClusterStateException.TransactionStep;
 import org.apache.kylin.stream.coordinator.exception.ClusterStateException.ClusterState;
+import org.apache.kylin.stream.coordinator.exception.ClusterStateException.TransactionStep;
 import org.apache.kylin.stream.coordinator.exception.CoordinateException;
 import org.apache.kylin.stream.coordinator.exception.NotLeadCoordinatorException;
-import org.apache.kylin.stream.coordinator.assign.DefaultAssigner;
-import org.apache.kylin.stream.core.consumer.ConsumerStartProtocol;
-import org.apache.kylin.stream.core.model.CubeAssignment;
-import org.apache.kylin.stream.core.model.ReplicaSet;
-import org.apache.kylin.stream.coordinator.client.CoordinatorClient;
+import org.apache.kylin.stream.coordinator.exception.StoreException;
 import org.apache.kylin.stream.core.client.HttpReceiverAdminClient;
 import org.apache.kylin.stream.core.client.ReceiverAdminClient;
+import org.apache.kylin.stream.core.consumer.ConsumerStartProtocol;
 import org.apache.kylin.stream.core.model.AssignRequest;
 import org.apache.kylin.stream.core.model.ConsumerStatsResponse;
+import org.apache.kylin.stream.core.model.CubeAssignment;
 import org.apache.kylin.stream.core.model.Node;
 import org.apache.kylin.stream.core.model.PauseConsumersRequest;
+import org.apache.kylin.stream.core.model.ReplicaSet;
 import org.apache.kylin.stream.core.model.ResumeConsumerRequest;
 import org.apache.kylin.stream.core.model.SegmentBuildState;
 import org.apache.kylin.stream.core.model.StartConsumersRequest;
@@ -96,20 +95,22 @@ import org.apache.kylin.stream.core.source.ISourcePositionHandler;
 import org.apache.kylin.stream.core.source.ISourcePositionHandler.MergeStrategy;
 import org.apache.kylin.stream.core.source.IStreamingSource;
 import org.apache.kylin.stream.core.source.Partition;
-import org.apache.kylin.stream.core.source.StreamingTableSourceInfo;
 import org.apache.kylin.stream.core.source.StreamingSourceFactory;
+import org.apache.kylin.stream.core.source.StreamingTableSourceInfo;
 import org.apache.kylin.stream.core.util.HDFSUtil;
 import org.apache.kylin.stream.core.util.NamedThreadFactory;
 import org.apache.kylin.stream.core.util.NodeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.MapDifference;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
-import javax.annotation.Nullable;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.shaded.com.google.common.base.Function;
+import org.apache.kylin.shaded.com.google.common.collect.Collections2;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.MapDifference;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  * <pre>
@@ -1133,12 +1134,20 @@ public class Coordinator implements CoordinatorClient {
     private List<String> findSegmentsCanBuild(String cubeName) {
         List<String> result = Lists.newArrayList();
         CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
+        // in optimization
+        if (isInOptimize(cubeInstance)) {
+            return result;
+        }
+        int allowMaxBuildingSegments = cubeInstance.getConfig().getMaxBuildingSegments();
         CubeSegment latestHistoryReadySegment = cubeInstance.getLatestReadySegment();
         long minSegmentStart = -1;
         if (latestHistoryReadySegment != null) {
             minSegmentStart = latestHistoryReadySegment.getTSRange().end.v;
+        } else {
+            // there is no ready segment, to make cube planner work, only 1 segment can build
+            logger.info("there is no ready segments for cube:{}, so only allow 1 segment build concurrently", cubeName);
+            allowMaxBuildingSegments = 1;
         }
-        int allowMaxBuildingSegments = cubeInstance.getConfig().getMaxBuildingSegments();
 
         CubeAssignment assignments = streamMetadataStore.getAssignmentsByCube(cubeName);
         Set<Integer> cubeAssignedReplicaSets = assignments.getReplicaSetIDs();
@@ -1193,6 +1202,8 @@ public class Coordinator implements CoordinatorClient {
                         state.setJobId(cubingJob.getId());
                         streamMetadataStore.updateSegmentBuildState(cubeName, segmentState.getSegmentName(), state);
                         segmentState.setState(state);
+                        logger.info("segment:{} is discard", segmentState.getSegmentName());
+                        continue;
                     } else {
                         logger.info("job:{} is in running, job state: {}", jobId, jobState);
                         continue;
@@ -1210,6 +1221,33 @@ public class Coordinator implements CoordinatorClient {
             leftQuota--;
         }
         return result;
+    }
+
+    private boolean isInOptimize(CubeInstance cube) {
+        Segments<CubeSegment> readyPendingSegments = cube.getSegments(SegmentStatusEnum.READY_PENDING);
+        if (readyPendingSegments.size() > 0) {
+            logger.info("The cube {} has READY_PENDING segments {}. It's not allowed for building", cube.getName(),
+                    readyPendingSegments);
+            return true;
+        }
+        Segments<CubeSegment> newSegments = cube.getSegments(SegmentStatusEnum.NEW);
+        for (CubeSegment newSegment : newSegments) {
+            String jobId = newSegment.getLastBuildJobID();
+            if (jobId == null) {
+                continue;
+            }
+            AbstractExecutable job = getExecutableManager().getJob(jobId);
+            if (job != null && job instanceof CubingJob) {
+                CubingJob cubingJob = (CubingJob) job;
+                if (CubingJob.CubingJobTypeEnum.OPTIMIZE.toString().equals(cubingJob.getJobType())) {
+                    logger.info(
+                            "The cube {} is in optimization. It's not allowed to build new segments during optimization.",
+                            cube.getName());
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -1297,7 +1335,7 @@ public class Coordinator implements CoordinatorClient {
             restoreJobStatusChecker();
             while (true) {
                 try {
-                    Thread.sleep(5 * 60 * 1000);
+                    Thread.sleep(5 * 60 * 1000L);
                 } catch (InterruptedException exception) {
                     Thread.interrupted();
                     break;

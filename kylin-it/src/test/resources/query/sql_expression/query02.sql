@@ -19,7 +19,7 @@
 select LSTG_FORMAT_NAME,
     sum(price),
     sum(case
-    when LSTG_FORMAT_NAME = 'ABIN' then 2*price
+    when LSTG_FORMAT_NAME = 'ABIN' then 2*price + ITEM_COUNT
     when LSTG_FORMAT_NAME = 'Auction' then (1+2)*price*(2+3)+(2+3)*(3+2)*(4+5)-4+5
     else 3
     end)

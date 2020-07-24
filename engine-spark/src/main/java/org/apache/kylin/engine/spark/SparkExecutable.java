@@ -26,6 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -42,7 +43,10 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.CubeUpdate;
+import org.apache.kylin.cube.model.CubeDescTiretreeGlobalDomainDictUtil;
 import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
 import org.apache.kylin.engine.spark.exception.SparkException;
@@ -75,7 +79,6 @@ public class SparkExecutable extends AbstractExecutable {
     public void setClassName(String className) {
         this.setParam(CLASS_NAME, className);
     }
-
 
     public void setJobId(String jobId) {
         this.setParam(JOB_ID, jobId);
@@ -157,7 +160,7 @@ public class SparkExecutable extends AbstractExecutable {
         }
     }
 
-    private ExecuteResult onResumed(String appId, ExecutableManager mgr) throws ExecuteException {
+    protected ExecuteResult onResumed(String appId, ExecutableManager mgr) throws ExecuteException {
         Map<String, String> info = new HashMap<>();
         try {
             logger.info("spark_job_id:" + appId + " resumed");
@@ -207,7 +210,7 @@ public class SparkExecutable extends AbstractExecutable {
             CubeInstance cube;
             if (cubeName != null) {
                 cube = CubeManager.getInstance(context.getConfig()).getCube(cubeName);
-            } else {  // Cube name can't be got when loading hive table
+            } else { // Cube name can't be got when loading hive table
                 cube = null;
             }
             final KylinConfig config;
@@ -243,7 +246,8 @@ public class SparkExecutable extends AbstractExecutable {
             if (StringUtils.isEmpty(jars)) {
                 jars = jobJar;
             }
-            if (cube != null) {
+
+            if (cube != null && !isCreateFlatTable()) {
                 setAlgorithmLayer();
                 String segmentID = this.getParam(SparkCubingByLayer.OPTION_SEGMENT_ID.getOpt());
                 CubeSegment segment = cube.getSegmentById(segmentID);
@@ -276,7 +280,8 @@ public class SparkExecutable extends AbstractExecutable {
             if (StringUtils.isNotEmpty(config.getHBaseClusterFs())) {
                 String fileSystems = sparkConfs.get("spark.yarn.access.hadoopFileSystems");
                 if (StringUtils.isNotEmpty(fileSystems)) {
-                    sparkConfs.put("spark.yarn.access.hadoopFileSystems", fileSystems + "," + config.getHBaseClusterFs());
+                    sparkConfs.put("spark.yarn.access.hadoopFileSystems",
+                            fileSystems + "," + config.getHBaseClusterFs());
                 } else {
                     sparkConfs.put("spark.yarn.access.hadoopFileSystems", config.getHBaseClusterFs());
                 }
@@ -367,6 +372,12 @@ public class SparkExecutable extends AbstractExecutable {
                     }
                     readCounters(joblogInfo);
                     getManager().addJobInfo(getId(), joblogInfo);
+                    if (joblogInfo.containsKey(ExecutableConstants.SPARK_DIMENSION_DIC_SEGMENT_ID)) {
+                        updateSparkDimensionDicMetadata(config, cube,
+                                joblogInfo.get(ExecutableConstants.SPARK_DIMENSION_DIC_SEGMENT_ID));
+                        logger.info("Finished update dictionaries and snapshot info from {} to {}.",
+                                this.getParam(SparkBuildDictionary.OPTION_META_URL.getOpt()), config.getMetadataUrl());
+                    }
                     return new ExecuteResult(ExecuteResult.State.SUCCEED, patternedLogger.getBufferedLog());
                 }
                 // clear SPARK_JOB_ID on job failure.
@@ -403,6 +414,31 @@ public class SparkExecutable extends AbstractExecutable {
         }
     }
 
+    //to update metadata from hdfs due to the step build dimension dic using spark dump metadata to hdfs
+    private void updateSparkDimensionDicMetadata(KylinConfig config, CubeInstance cube, String segmentId)
+            throws IOException {
+        KylinConfig hdfsConfig = AbstractHadoopJob
+                .loadKylinConfigFromHdfs(this.getParam(SparkBuildDictionary.OPTION_META_URL.getOpt()));
+        CubeInstance cubeInstance = CubeManager.getInstance(hdfsConfig).reloadCube(cube.getName());
+        CubeSegment segment = cubeInstance.getSegmentById(segmentId);
+
+        CubeSegment oldSeg = cube.getSegmentById(segmentId);
+        oldSeg.setDictionaries((ConcurrentHashMap<String, String>) segment.getDictionaries());
+        oldSeg.setSnapshots((ConcurrentHashMap) segment.getSnapshots());
+        oldSeg.getRowkeyStats().addAll(segment.getRowkeyStats());
+        CubeInstance cubeCopy = cube.latestCopyForWrite();
+        CubeUpdate update = new CubeUpdate(cubeCopy);
+        update.setToUpdateSegs(oldSeg);
+        CubeManager.getInstance(config).updateCube(update);
+
+        Set<String> dumpList = new LinkedHashSet<>();
+        dumpList.addAll(segment.getDictionaryPaths());
+        dumpList.addAll(segment.getSnapshotPaths());
+
+        JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segment.getConfig(),
+                config.getMetadataUrl().toString());
+    }
+
     // Spark Cubing can only work in layer algorithm
     protected void setAlgorithmLayer() {
         ExecutableManager execMgr = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -410,7 +446,7 @@ public class SparkExecutable extends AbstractExecutable {
         cubingJob.setAlgorithm(CubingJob.AlgorithmEnum.LAYER);
     }
 
-    private String getAppState(String appId) throws IOException {
+    protected String getAppState(String appId) throws IOException {
         if (StringUtils.isEmpty(appId)) {
             throw new IOException("The app is is null or empty");
         }
@@ -422,13 +458,13 @@ public class SparkExecutable extends AbstractExecutable {
         return info.get(ExecutableConstants.YARN_APP_STATE);
     }
 
-    private void killApp(String appId) throws IOException, InterruptedException {
+    protected void killApp(String appId) throws IOException, InterruptedException {
         CliCommandExecutor executor = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
         String killCmd = String.format(Locale.ROOT, "yarn application -kill %s", appId);
         executor.execute(killCmd);
     }
 
-    private int killAppRetry(String appId) throws IOException, InterruptedException {
+    protected int killAppRetry(String appId) throws IOException, InterruptedException {
         if (StringUtils.isEmpty(appId)) {
             logger.warn("The app is is null or empty");
             return 0;
@@ -471,12 +507,16 @@ public class SparkExecutable extends AbstractExecutable {
             // cube statistics is not available for new segment
             dumpList.add(segment.getStatisticsResourcePath());
         }
+        //tiretree global domain dic
+        CubeDescTiretreeGlobalDomainDictUtil.cuboidJob(segment.getCubeDesc(), dumpList);
+
         JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segment.getConfig(),
                 this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
     }
 
     private void attachSegmentsMetadataWithDict(List<CubeSegment> segments) throws IOException {
-        Set<String> dumpList = new LinkedHashSet<>(JobRelatedMetaUtil.collectCubeMetadata(segments.get(0).getCubeInstance()));
+        Set<String> dumpList = new LinkedHashSet<>(
+                JobRelatedMetaUtil.collectCubeMetadata(segments.get(0).getCubeInstance()));
         ResourceStore rs = ResourceStore.getStore(segments.get(0).getConfig());
         for (CubeSegment segment : segments) {
             dumpList.addAll(segment.getDictionaryPaths());
@@ -484,6 +524,8 @@ public class SparkExecutable extends AbstractExecutable {
                 // cube statistics is not available for new segment
                 dumpList.add(segment.getStatisticsResourcePath());
             }
+            //tiretree global domain dic
+            CubeDescTiretreeGlobalDomainDictUtil.cuboidJob(segment.getCubeDesc(), dumpList);
         }
         JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segments.get(0).getConfig(),
                 this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
@@ -503,5 +545,9 @@ public class SparkExecutable extends AbstractExecutable {
         if (saveAsNames.length > i && StringUtils.isBlank(saveAsNames[i]) == false) {
             info.put(saveAsNames[i].trim(), counter);
         }
+    }
+
+    private boolean isCreateFlatTable() {
+        return ExecutableConstants.STEP_NAME_CREATE_FLAT_TABLE_WITH_SPARK.equals(getName());
     }
 }

@@ -22,7 +22,9 @@ import java.io.Serializable;
 import java.util.Locale;
 import java.util.function.Function;
 
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.util.CheckUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.datatype.DataType;
@@ -71,13 +73,19 @@ public class PartitionDesc implements Serializable {
         if (StringUtils.isEmpty(partitionDateColumn))
             return;
 
-        partitionDateColumnRef = model.findColumn(partitionDateColumn);
-        partitionDateColumn = partitionDateColumnRef.getIdentity();
-        if (StringUtils.isBlank(partitionTimeColumn) == false) {
-            partitionTimeColumnRef = model.findColumn(partitionTimeColumn);
-            partitionTimeColumn = partitionTimeColumnRef.getIdentity();
-        }
+        //Support CustomYearMonthDayFieldPartitionConditionBuilder, partitionDateColumn split by ","
         partitionConditionBuilder = (IPartitionConditionBuilder) ClassUtil.newInstance(partitionConditionBuilderClz);
+        if (partitionConditionBuilder instanceof CustomYearMonthDayFieldPartitionConditionBuilder) {
+            ((CustomYearMonthDayFieldPartitionConditionBuilder)partitionConditionBuilder).init(this, model);
+        } else {
+            partitionDateColumnRef = model.findColumn(partitionDateColumn);
+            partitionDateColumn = partitionDateColumnRef.getIdentity();
+            if (StringUtils.isBlank(partitionTimeColumn) == false) {
+                partitionTimeColumnRef = model.findColumn(partitionTimeColumn);
+                partitionTimeColumn = partitionTimeColumnRef.getIdentity();
+            }
+        }
+
     }
 
     public boolean partitionColumnIsYmdInt() {
@@ -180,6 +188,77 @@ public class PartitionDesc implements Serializable {
 
     public TblColRef getPartitionTimeColumnRef() {
         return partitionTimeColumnRef;
+    }
+
+    public boolean equalsRaw(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        PartitionDesc other = (PartitionDesc) obj;
+
+        if (!this.partitionType.equals(other.getCubePartitionType()))
+            return false;
+        if (!this.partitionConditionBuilderClz.equals(other.partitionConditionBuilderClz))
+            return false;
+        if (!CheckUtil.equals(this.partitionDateColumn, other.getPartitionDateColumn()))
+            return false;
+        if (!CheckUtil.equals(this.partitionDateFormat, other.getPartitionDateFormat()))
+            return false;
+        if (!CheckUtil.equals(this.partitionTimeColumn, other.getPartitionTimeColumn()))
+            return false;
+        if (!CheckUtil.equals(this.partitionTimeFormat, other.getPartitionTimeFormat()))
+            return false;
+        return true;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        PartitionDesc other = (PartitionDesc) obj;
+
+        if (!this.partitionType.equals(other.getCubePartitionType()))
+            return false;
+        if (!CheckUtil.equals(this.partitionDateColumn, other.getPartitionDateColumn()))
+            return false;
+        if (!CheckUtil.equals(this.partitionDateFormat, other.getPartitionDateFormat()))
+            return false;
+        if (this.partitionDateColumn != null) {
+            if (!this.partitionConditionBuilder.getClass().equals(other.getPartitionConditionBuilder().getClass()))
+                return false;
+            if (this.partitionConditionBuilder instanceof DefaultPartitionConditionBuilder) {
+                if (!CheckUtil.equals(this.partitionTimeColumn, other.getPartitionTimeColumn())) {
+                    return false;
+                }
+                if (!CheckUtil.equals(this.partitionTimeFormat, other.getPartitionTimeFormat())) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + partitionType.hashCode();
+        result = prime * result + partitionConditionBuilderClz.hashCode();
+        result = prime * result + ((partitionDateColumn == null) ? 0 : partitionDateColumn.hashCode());
+        result = prime * result + ((partitionDateFormat == null) ? 0 : partitionDateFormat.hashCode());
+        if (partitionConditionBuilder instanceof DefaultPartitionConditionBuilder) {
+            result = prime * result + ((partitionTimeColumn == null) ? 0 : partitionTimeColumn.hashCode());
+            result = prime * result + ((partitionTimeFormat == null) ? 0 : partitionTimeFormat.hashCode());
+        }
+        return result;
     }
 
     // ============================================================================
@@ -321,9 +400,8 @@ public class PartitionDesc implements Serializable {
             long endExclusive = (Long) segRange.end.v;
 
             TblColRef partitionColumn = partDesc.getPartitionDateColumnRef();
-            if (partitionColumn != null) {
-                partitionColumn.setQuotedFunc(func);
-            }
+            Preconditions.checkNotNull(partitionColumn);
+            partitionColumn.setQuotedFunc(func);
             String tableAlias = partitionColumn.getTableAlias();
 
             String concatField = String.format(Locale.ROOT, "CONCAT(%s.YEAR,'-',%s.MONTH,'-',%s.DAY)", tableAlias,
@@ -337,6 +415,51 @@ public class PartitionDesc implements Serializable {
             builder.append(concatField + " < '" + DateFormat.formatToDateStr(endExclusive) + "'");
 
             return builder.toString();
+        }
+    }
+
+    /**
+     * Another implementation of IPartitionConditionBuilder, for the fact tables which have three custom partition columns like "Y", "M", "D" means "YEAR", "MONTH", and "DAY";
+     * This class will conicat the three columns into yyyy-MM-dd format for query hive;
+     * implements Serializable for spark build
+     */
+    public static class CustomYearMonthDayFieldPartitionConditionBuilder implements IPartitionConditionBuilder, Serializable {
+        private String yearPartitionDateColumn;
+        private String monthPartitionDateColumn;
+        private String dayPartitionDateColumn;
+        @Override
+        public String buildDateRangeCondition(PartitionDesc partDesc, ISegment seg, SegmentRange segRange, Function<TblColRef, String> func) {
+            long startInclusive = (Long) segRange.start.v;
+            long endExclusive = (Long) segRange.end.v;
+
+            TblColRef partitionColumn = partDesc.getPartitionDateColumnRef();
+            if (partitionColumn != null) {
+                partitionColumn.setQuotedFunc(func);
+            }
+            String concatField = String.format(Locale.ROOT, "CONCAT(%s,'-',%s,'-',%s)", yearPartitionDateColumn,
+                    monthPartitionDateColumn, dayPartitionDateColumn);
+            StringBuilder builder = new StringBuilder();
+
+            if (startInclusive > 0) {
+                builder.append(concatField + " >= '" + DateFormat.formatToDateStr(startInclusive) + "' ");
+                builder.append("AND ");
+            }
+            builder.append(concatField + " < '" + DateFormat.formatToDateStr(endExclusive) + "'");
+
+            return builder.toString();
+        }
+
+        public void init(PartitionDesc partitionDesc, DataModelDesc model) {
+            String[] yearMonthDayColumns = partitionDesc.getPartitionDateColumn().split(",");
+            if (yearMonthDayColumns.length != 3) {
+                throw new IllegalArgumentException(partitionDesc.getPartitionDateColumn() + " is not year, month, and day columns");
+            }
+            TblColRef yearRef = model.findColumn(yearMonthDayColumns[0]);
+            yearPartitionDateColumn = yearRef.getIdentity();
+            monthPartitionDateColumn = model.findColumn(yearMonthDayColumns[1]).getIdentity();
+            dayPartitionDateColumn = model.findColumn(yearMonthDayColumns[2]).getIdentity();
+            //for partition desc isPartitioned() true
+            partitionDesc.setPartitionDateColumnRef(yearRef);
         }
     }
 

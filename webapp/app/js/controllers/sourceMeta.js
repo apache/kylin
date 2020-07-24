@@ -27,6 +27,8 @@ KylinApp
     $scope.window = 0.68 * $window.innerHeight;
     $scope.tableConfig = tableConfig;
     $scope.isCalculate = true;
+    $scope.selectedTsPattern = '';
+    $scope.selfDefinedTsPattern = false;
 
     $scope.state = {
       filterAttr: 'id', filterReverse: false, reverseColumn: 'id',
@@ -129,6 +131,39 @@ KylinApp
       });
     };
 
+    $scope.calCardinality = function (tableName) {
+      SweetAlert.swal({
+        title: "",
+        text: "Are you sure to recalculate column cardinality?",
+        showCancelButton: true,
+        confirmButtonColor: '#DD6B55',
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        closeOnConfirm: true
+      }, function (isConfirm) {
+        if (isConfirm) {
+          if (!$scope.projectModel.selectedProject) {
+            SweetAlert.swal('', 'Please select a project.', 'info');
+            return;
+          }
+          loadingRequest.show();
+          TableService.genCardinality({tableName: tableName, pro: $scope.projectModel.selectedProject}, {}, function () {
+            loadingRequest.hide();
+            MessageBox.successNotify('Cardinality job has been submitted successfully. Please wait a while to get the numbers.');
+          }, function (e) {
+            loadingRequest.hide();
+            if (e.data && e.data.exception) {
+              var message = e.data.exception;
+              var msg = !!(message) ? message : 'Failed to take action.';
+              SweetAlert.swal('Oops...', msg, 'error');
+            } else {
+              SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+            }
+          });
+        }
+      });
+    };
+
     $scope.openTreeModal = function () {
       if(!$scope.projectModel.selectedProject){
         SweetAlert.swal('Oops...', "Please select a project.", 'info');
@@ -204,7 +239,7 @@ KylinApp
       }, function (isConfirm) {
         if (isConfirm) {
           if (!$scope.projectModel.selectedProject) {
-            SweetAlert.swal('', 'Please choose your project first!.', 'info');
+            SweetAlert.swal('', 'Please select a project.', 'info');
             return;
           }
           loadingRequest.show();
@@ -417,8 +452,9 @@ KylinApp
       }
 
       $scope.confirmReload = function() {
+        $scope.cancel();
         scope.reloadTable($scope.selectTable, $scope.isCalculate.val).then(function() {
-          $scope.cancel();
+          scope.aceSrcTbLoaded(true);
         })
       }
 
@@ -439,7 +475,7 @@ KylinApp
         }
 
         if (!$scope.projectName) {
-          SweetAlert.swal('', 'Please choose your project first!.', 'info');
+          SweetAlert.swal('', 'Please select a project.', 'info');
           return;
         }
 
@@ -448,9 +484,6 @@ KylinApp
              scope.aceSrcTbLoaded(true);
            });
       }
-
-
-
     };
 
     $scope.editStreamingConfig = function(tableName){
@@ -1050,6 +1083,8 @@ KylinApp
             template: '',
             dataTypeArr: tableConfig.dataTypes,
             TSColumnArr: [],
+            TSPatternArr: ['MS', 'S'],
+            TSParserArr: ['org.apache.kylin.stream.source.kafka.LongTimeParser', 'org.apache.kylin.stream.source.kafka.DateTimeParser'],
             TSColumnSelected: '',
             TSParser: 'org.apache.kylin.stream.source.kafka.LongTimeParser',
             TSPattern: 'MS',
@@ -1290,6 +1325,34 @@ KylinApp
               $scope.streaming.TSColumnSelected = '';
             }
           }
+        }
+      };
+
+      $scope.updateDateTimeParserOption = function(parser) {
+        if (parser === $scope.streaming.TSParserArr[0]) {
+          $scope.streaming.TSPatternArr = [];
+          $scope.streaming.TSPatternArr.push('MS');
+          $scope.streaming.TSPatternArr.push('S');
+          $scope.streaming.TSPattern = 'MS';
+        } else if (parser === $scope.streaming.TSParserArr[1]) {
+          $scope.streaming.TSPatternArr = [];
+          TableService.getSupportedDatetimePatterns({}, function (patterns) {
+            $scope.streaming.TSPatternArr = patterns;
+            $scope.streaming.TSPatternArr.push('--- Other ---');
+            $scope.streaming.TSPattern = 'yyyy-MM-dd HH:mm:ss.SSS';
+          }, function (e) {
+            return;
+          });
+        }
+      };
+
+      $scope.updateTsPatternOption = function(pattern) {
+        if (pattern === '--- Other ---') {
+          $scope.selfDefinedTsPattern = true;
+          $scope.streaming.TSPattern = '';
+        } else {
+          $scope.selfDefinedTsPattern = pattern;
+          $scope.selfDefinedTsPattern = false;
         }
       };
 

@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.WriteConflictException;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.JsonUtil;
@@ -193,12 +194,24 @@ public class DictionaryManager {
         ResourceStore store = getStore();
         if (StringUtils.isBlank(dictPath))
             return NONE_INDICATOR;
-        long now = System.currentTimeMillis();
-        store.updateTimestamp(dictPath, now);
-        logger.info("Update dictionary {} lastModifiedTime to {}", dictPath, now);
-        DictionaryInfo dictInfo = load(dictPath, true);
-        updateDictCache(dictInfo);
-        return dictInfo;
+
+        int retry = 7;
+        while (retry-- > 0) {
+            try {
+                long now = System.currentTimeMillis();
+                store.updateTimestamp(dictPath, now);
+                logger.info("Update dictionary {} lastModifiedTime to {}", dictPath, now);
+                return loadAndUpdateLocalCache(dictPath);
+            } catch (WriteConflictException e) {
+                if (retry <= 0) {
+                    logger.error("Retry is out, till got error, abandoning...", e);
+                    throw e;
+                }
+                logger.warn("Write conflict to update dictionary " + dictPath + " retry remaining " + retry
+                        + ", will retry...");
+            }
+        }
+        return loadAndUpdateLocalCache(dictPath);
     }
 
     private void initDictInfo(Dictionary<String> newDict, DictionaryInfo newDictInfo) {
@@ -409,6 +422,12 @@ public class DictionaryManager {
         logger.info("Saving dictionary at {}", path);
 
         store.putBigResource(path, dict, System.currentTimeMillis(), DictionaryInfoSerializer.FULL_SERIALIZER);
+    }
+
+    private DictionaryInfo loadAndUpdateLocalCache(String dictPath) throws IOException {
+        DictionaryInfo dictInfo = load(dictPath, true);
+        updateDictCache(dictInfo);
+        return dictInfo;
     }
 
     DictionaryInfo load(String resourcePath, boolean loadDictObj) throws IOException {

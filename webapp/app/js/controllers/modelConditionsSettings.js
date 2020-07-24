@@ -30,6 +30,7 @@ KylinApp.controller('ModelConditionsSettingsCtrl', function ($scope, $modal,Meta
   // firstValue: For fixing ng-chosen cannot watch first value change.
   $scope.partition_date = { type: '', format: '', firstValue: '' };
   $scope.partition_time = { type: '', format: '', firstValue: '' };
+  $scope.partition_ymd_columns = { year_column: '', month_column: '', day_column: ''};
 
   $scope.initSetting = function (){
     $scope.selectedTables={fact:VdmUtil.getNameSpaceAliasName($scope.modelsManager.selectedModel.partition_desc.partition_date_column)}
@@ -160,8 +161,19 @@ KylinApp.controller('ModelConditionsSettingsCtrl', function ($scope, $modal,Meta
       return;
     }
   };
+
+  $scope.partitionYMDColumnChange = function (type, value) {
+    if (type === 'Y') {
+      $scope.modelsManager.selectedModel.partition_desc.partition_date_column = value + ',' + $scope.partition_ymd_columns.month_column + ',' + $scope.partition_ymd_columns.day_column;
+    } else if (type === 'M') {
+      $scope.modelsManager.selectedModel.partition_desc.partition_date_column = $scope.partition_ymd_columns.year_column + ',' + value + ',' + $scope.partition_ymd_columns.day_column;
+    } else if (type === 'D') {
+      $scope.modelsManager.selectedModel.partition_desc.partition_date_column = $scope.partition_ymd_columns.year_column + ',' + $scope.partition_ymd_columns.month_column + ',' + value;
+    }
+  };
   
-  $scope.partitionColumn ={
+  $scope.partitionColumn = {
+      "hasSeparateDateColumns": false,
       "hasSeparateTimeColumn" : false
   }
 
@@ -186,9 +198,19 @@ KylinApp.controller('ModelConditionsSettingsCtrl', function ($scope, $modal,Meta
   if($scope.modelsManager.selectedModel.partition_desc.partition_time_column){
     $scope.partitionColumn.hasSeparateTimeColumn = true;
   }
-  $scope.toggleHasSeparateColumn = function(){
+  $scope.toggleHasSeparateTimeColumn = function(){
     if($scope.partitionColumn.hasSeparateTimeColumn == false){
       $scope.modelsManager.selectedModel.partition_desc.partition_time_column = null;
+    }
+  }
+  $scope.toggleHasSeparateDateColumns = function(){
+    $scope.modelsManager.selectedModel.partition_desc.partition_date_column = null;
+    if($scope.partitionColumn.hasSeparateDateColumns == false){
+      $scope.partition_ymd_columns = { year_column: '', month_column: '', day_column: ''};
+      $scope.modelsManager.selectedModel.partition_desc.partition_condition_builder = null;
+    } else {
+      $scope.partition_date.type = 'yyyy-MM-dd';
+      $scope.modelsManager.selectedModel.partition_desc.partition_condition_builder = 'org.apache.kylin.metadata.model.PartitionDesc$CustomYearMonthDayFieldPartitionConditionBuilder';
     }
   }
 });

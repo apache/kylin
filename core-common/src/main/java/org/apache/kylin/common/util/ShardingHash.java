@@ -18,8 +18,8 @@
 
 package org.apache.kylin.common.util;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
+import org.apache.kylin.shaded.com.google.common.hash.HashFunction;
+import org.apache.kylin.shaded.com.google.common.hash.Hashing;
 
 public class ShardingHash {
 

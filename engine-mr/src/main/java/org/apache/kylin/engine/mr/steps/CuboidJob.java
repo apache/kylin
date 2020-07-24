@@ -144,6 +144,9 @@ public class CuboidJob extends AbstractHadoopJob {
             job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(Text.class);
 
+            //set dfs.replication
+            job.getConfiguration().set("dfs.replication", KylinConfig.getInstanceFromEnv().getCuboidDfsReplication());
+
             // set input
             configureMapperInputFormat(segment);
 

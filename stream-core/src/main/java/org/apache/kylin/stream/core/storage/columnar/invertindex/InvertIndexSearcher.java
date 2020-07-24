@@ -35,8 +35,8 @@ import org.apache.kylin.stream.core.storage.columnar.protocol.CuboidMetaInfo;
 import org.apache.kylin.stream.core.storage.columnar.protocol.DimensionMetaInfo;
 import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class InvertIndexSearcher {
     Map<String, ColInvertIndexSearcher> colIndexSearchers = Maps.newHashMap();

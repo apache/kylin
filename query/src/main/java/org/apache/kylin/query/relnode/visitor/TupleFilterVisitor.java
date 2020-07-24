@@ -52,6 +52,8 @@ import org.apache.kylin.metadata.filter.UnsupportedTupleFilter;
 import org.apache.kylin.metadata.filter.function.Functions;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.relnode.ColumnRowType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.GregorianCalendar;
@@ -62,11 +64,13 @@ import java.util.TimeZone;
 
 public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
 
+    private static Logger logger = LoggerFactory.getLogger(TupleFilterVisitor.class);
+
     final ColumnRowType inputRowType;
 
     // is the fact table is a streamingv2 table
     private boolean autoJustByTimezone = false;
-    private static final long TIME_ZONE_OFFSET = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone())
+    private static final long TIME_ZONE_OFFSET = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getStreamingDerivedTimeTimezone())
             .getRawOffset();
 
     public TupleFilterVisitor(ColumnRowType inputRowType) {
@@ -145,12 +149,34 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
             filter = new UnsupportedTupleFilter(TupleFilter.FilterOperatorEnum.UNSUPPORTED);
         }
 
+        boolean isChildValueDateTimeType = false;
         for (RexNode operand : call.operands) {
             TupleFilter childFilter = operand.accept(this);
             if (filter == null) {
                 filter = cast(childFilter, call.type);
             } else {
                 filter.addChild(childFilter);
+            }
+            if (operand instanceof RexLiteral && ((RexLiteral) operand).getValue() instanceof GregorianCalendar) {
+                isChildValueDateTimeType = true;
+            }
+        }
+        if (filter instanceof CompareTupleFilter) {
+            CompareTupleFilter compFilter = (CompareTupleFilter) filter;
+            if (compFilter.getChildren().size() == 2 && compFilter.getChildren().get(0) instanceof ColumnTupleFilter
+                    && compFilter.getChildren().get(1) instanceof ConstantTupleFilter) {
+                ColumnTupleFilter colFilter = (ColumnTupleFilter) compFilter.getChildren().get(0);
+                ConstantTupleFilter constFilter = (ConstantTupleFilter) compFilter.getChildren().get(1);
+                if (isChildValueDateTimeType && colFilter.getColumn().getType().isStringFamily()) {
+                    Set<Object> newValues = Sets.newHashSet();
+                    for (Object v : constFilter.getValues()) {
+                        newValues.add(DateFormat.formatToDateStr(DateFormat.stringToMillis(v.toString())));
+                    }
+                    ConstantTupleFilter newConstFilter = new ConstantTupleFilter(newValues);
+                    filter = new CompareTupleFilter(filter.getOperator());
+                    filter.addChild(colFilter);
+                    filter.addChild(newConstFilter);
+                }
             }
         }
 
@@ -221,9 +247,10 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
                     newValues.add(null);
                 } else {
                     long ts = DateFormat.stringToMillis(v.toString());
-                    //  minus offset by timezone in RelNode level
-                    // this will affect request sent to storage level
-                    if (autoJustByTimezone) {
+                    // Change column value of date/timestamp type from local timezone to UTC timezone by minus offset in RelNode level.
+                    // This will change request sent to storage level(receiver), thus affect segment/fragment level purge.
+                    if (autoJustByTimezone && (type.getFamily() == SqlTypeFamily.TIMESTAMP
+                            || type.getFamily() == SqlTypeFamily.DATETIME)) {
                         ts -= TIME_ZONE_OFFSET;
                     }
                     newValues.add(String.valueOf(ts));

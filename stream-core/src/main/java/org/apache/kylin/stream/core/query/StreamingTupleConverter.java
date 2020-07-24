@@ -33,7 +33,7 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.stream.core.storage.Record;
 import org.apache.kylin.dimension.TimeDerivedColumnType;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,8 +55,8 @@ public class StreamingTupleConverter {
 
     final List<MeasureType.IAdvMeasureFiller> advMeasureFillers;
     final List<Integer> advMeasureIndexInGTValues;
-    final boolean autoTimezone = KylinConfig.getInstanceFromEnv().isStreamingAutoJustTimezone();
-    private static final long TIME_ZONE_OFFSET = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone())
+    final boolean autoTimezone = KylinConfig.getInstanceFromEnv().getStreamingDerivedTimeTimezone().length() > 0;
+    private static final long TIME_ZONE_OFFSET = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getStreamingDerivedTimeTimezone())
             .getRawOffset();
 
     public StreamingTupleConverter(ResponseResultSchema schema, TupleInfo returnTupleInfo) {

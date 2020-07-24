@@ -19,7 +19,6 @@
 package org.apache.kylin.cube.gridtable;
 
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -31,8 +30,8 @@ import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class CuboidToGridTableMappingExt extends CuboidToGridTableMapping {
     private final List<TblColRef> dynDims;
@@ -51,10 +50,10 @@ public class CuboidToGridTableMappingExt extends CuboidToGridTableMapping {
         super(cuboid);
         this.dynDims = dynDims;
         this.dynFuncs = dynFuncs;
-        init();
+        initialize();
     }
 
-    private void init() {
+    private void initialize() {
         dynGtDataTypes = Lists.newArrayList();
         dynGtColBlocks = Lists.newArrayList();
         dynDim2gt = Maps.newHashMap();
@@ -120,15 +119,5 @@ public class CuboidToGridTableMappingExt extends CuboidToGridTableMapping {
             r = dynMetrics2gt.get(metric);
         }
         return r == null ? -1 : r;
-    }
-
-    @Override
-    public int[] getMetricsIndexes(Collection<FunctionDesc> metrics) {
-        int[] result = new int[metrics.size()];
-        int i = 0;
-        for (FunctionDesc metric : metrics) {
-            result[i++] = getIndexOf(metric);
-        }
-        return result;
     }
 }

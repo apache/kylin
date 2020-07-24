@@ -19,7 +19,7 @@
 'use strict';
 
 KylinApp
-    .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, $modal, MessageService, $domUtilityService, $timeout, TableService, SweetAlert, VdmUtil) {
+    .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, CubeService, $modal, MessageService, $domUtilityService, $timeout, TableService, SweetAlert, VdmUtil) {
         $scope.mainPanel = 'query';
         if ($routeParams.queryPanel) {
             $scope.mainPanel = $routeParams.queryPanel;
@@ -55,6 +55,10 @@ KylinApp
         $scope.state = {
             selectedProject: null
         };
+
+        $scope.locationChangeConfirmed = false;
+        $scope.specifyCube = null;
+        $scope.cubeItems = [];
 
         var Query = {
             createNew: function (sql, project) {
@@ -248,7 +252,11 @@ KylinApp
 
         $scope.query = function (query) {
             scrollToButton();
-            QueryService.query({}, {sql: query.sql, offset: 0, limit: $scope.rowsPerPage, acceptPartial: query.acceptPartial, project: query.project}, function (result) {
+            var backdoorToggles = null;
+            if ($scope.specifyCube != null) {
+              backdoorToggles = {"DEBUG_TOGGLE_HIT_CUBE": $scope.specifyCube};
+            }
+            QueryService.query({}, {sql: query.sql, offset: 0, limit: $scope.rowsPerPage, acceptPartial: query.acceptPartial, project: query.project, backdoorToggles: backdoorToggles}, function (result) {
                 scrollToButton();
                 $scope.parseQueryResult(query, result, (!result || result.isException) ? 'failed' : 'success');
                 $scope.curQuery.result.hasMore = (query.result.results && query.result.results.length == $scope.rowsPerPage);
@@ -413,31 +421,43 @@ KylinApp
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
           $scope.listCachedQueries();
           $scope.listSavedQueries();
+          $scope.cubeItems = [];
+          $scope.specifyCube = null;
+          CubeService.list({projectName:newValue}, function (_cubes) {
+            if (_cubes !== 0) {
+              angular.forEach(_cubes,function(cube){
+                if (cube.status==="READY"){
+                  $scope.cubeItems.push(cube.name);
+                }
+              })
+            }
+          })
         });
 
         $scope.$on('$locationChangeStart', function (event, next, current) {
             var isExecuting = false;
+            var nextURL = $location.path();
             angular.forEach($scope.queries, function (query, index) {
                 if (query.status == "executing") {
                     isExecuting = true;
                 }
             });
 
-            if (isExecuting && (next.replace(current, "").indexOf("#") != 0)) {
+            if (!$scope.locationChangeConfirmed && isExecuting && (next.replace(current, "").indexOf("#") != 0)) {
                 event.preventDefault();
                 SweetAlert.swal({
-                    title: '',
-                    text: "You've executing query in current page, are you sure to leave this page?",
-                    type: '',
-                    showCancelButton: true,
-                    confirmButtonColor: '#DD6B55',
-                    confirmButtonText: "Yes",
-                    closeOnConfirm: true
+                  title: '',
+                  text: "You've executing query in current page, are you sure to leave this page?",
+                  type: '',
+                  showCancelButton: true,
+                  confirmButtonColor: '#DD6B55',
+                  confirmButtonText: "Yes",
+                  closeOnConfirm: true
                 }, function(isConfirm) {
                     if(isConfirm){
-                        $location.path($location.url(next).hash());
+                      $scope.locationChangeConfirmed = true;
+                      $location.path(nextURL);
                     }
-
                 });
             }
         });
@@ -504,11 +524,11 @@ KylinApp
                 $scope.chart = undefined;
 
                 var selectedDimension = query.graph.state.dimensions;
-                if (selectedDimension && query.graph.type.dimension.types.indexOf(selectedDimension.type) > -1) {
+                var selectedMetric = query.graph.state.metrics;
+                if (selectedDimension && selectedMetric && query.graph.type.dimension.types.indexOf(selectedDimension.type) > -1) {
                     $scope.chart = {};
 
                     var chartType = query.graph.type.value;
-                    var selectedMetric = query.graph.state.metrics;
 
                     var dataValues = [];
                     angular.forEach(query.result.results, function(result, ind) {

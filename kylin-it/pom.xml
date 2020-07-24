@@ -29,7 +29,7 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>3.0.0-SNAPSHOT</version>
+        <version>3.1.1-SNAPSHOT</version>
     </parent>
 
     <properties>
@@ -68,6 +68,16 @@
             <artifactId>kylin-server</artifactId>
             <classifier>classes</classifier>
             <version>${project.parent.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-server</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-shaded-guava</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -169,6 +179,12 @@
         <dependency>
             <groupId>org.dbunit</groupId>
             <artifactId>dbunit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.mrunit</groupId>
+            <artifactId>mrunit</artifactId>
+            <classifier>hadoop2</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -481,6 +497,9 @@
                                         <argument>-DengineType=${engineType}</argument>
                                         <argument>
                                               -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                        </argument>
+                                        <argument>
+                                            -Dkylin.source.hive.warehouse-dir=/apps/hive/warehouse
                                         </argument>
                                         <argument>
                                             -javaagent:${project.basedir}/..//dev-support/org.jacoco.agent-${jacoco.version}-runtime.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-engine.exec

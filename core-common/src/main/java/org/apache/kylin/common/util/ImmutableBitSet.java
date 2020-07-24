@@ -20,6 +20,7 @@ package org.apache.kylin.common.util;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class ImmutableBitSet implements Iterable<Integer> {
 
@@ -186,6 +187,9 @@ public class ImmutableBitSet implements Iterable<Integer> {
 
             @Override
             public Integer next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
                 return arr[index++];
             }
 

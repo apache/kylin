@@ -31,7 +31,7 @@
   <groupId>org.apache.kylin</groupId>
   <artifactId>kylin</artifactId>
   <packaging>pom</packaging>
-  <version>3.0.0-SNAPSHOT</version>
+  <version>3.1.1-SNAPSHOT</version>
 
   <name>Apache Kylin</name>
   <url>http://kylin.apache.org</url>
@@ -48,7 +48,7 @@
     <maven-site.version>3.5.1</maven-site.version>
     <maven-install.version>2.5.2</maven-install.version>
     <maven-resources.version>3.0.1</maven-resources.version>
-    <maven-shade.version>3.0.0</maven-shade.version>
+    <maven-shade.version>3.1.0</maven-shade.version>
     <maven-jar.version>3.0.2</maven-jar.version>
     <maven-war.version>2.6</maven-war.version>
     <maven-release.version>2.5.3</maven-release.version>
@@ -60,7 +60,7 @@
     <eclipse.lifecycle-mapping.version>1.0.1</eclipse.lifecycle-mapping.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <puppycrawl.version>8.6</puppycrawl.version>
+    <puppycrawl.version>8.18</puppycrawl.version>
     <spotbugs.version>3.1.1</spotbugs.version>
 
     <kylin.version>3.0.0</kylin.version>
@@ -70,39 +70,44 @@
     <yarn.version>2.7.1</yarn.version>
 
     <!-- Hive versions -->
-    <hive.version>1.2.1</hive.version>
-    <hive-hcatalog.version>1.2.1</hive-hcatalog.version>
+    <hive.version>1.2.2</hive.version>
+    <hive-hcatalog.version>1.2.2</hive-hcatalog.version>
 
     <!-- HBase versions -->
     <hbase-hadoop2.version>1.1.1</hbase-hadoop2.version>
 
     <!-- Kafka versions -->
-    <kafka.version>1.0.0</kafka.version>
+    <kafka.version>2.1.1</kafka.version>
 
     <!-- Spark versions -->
-    <spark.version>2.3.2</spark.version>
+    <spark.version>2.4.5</spark.version>
     <kryo.version>4.0.0</kryo.version>
+
+    <!-- Flink versions -->
+    <flink.version>1.9.2</flink.version>
 
     <!-- mysql versions -->
     <mysql-connector.version>5.1.8</mysql-connector.version>
 
     <!-- Scala versions -->
-    <scala.version>2.11.0</scala.version>
+    <scala.version>2.11.12</scala.version>
 
     <reflections.version>0.9.10</reflections.version>
 
     <!-- Calcite Version, the kylin fork is: https://github.com/Kyligence/calcite -->
-    <calcite.version>1.16.0-kylin-r2</calcite.version>
+    <calcite.version>1.16.0-kylin-r5</calcite.version>
     <avatica.version>1.12.0</avatica.version>
 
     <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
-    <zookeeper.version>3.4.13</zookeeper.version>
+    <zookeeper.version>3.4.14</zookeeper.version>
     <curator.version>2.12.0</curator.version>
     <jsr305.version>3.0.1</jsr305.version>
+    <!-- kylin use shaded-guava, this version for unify guava version of other dependencies -->
     <guava.version>14.0</guava.version>
     <jsch.version>0.1.54</jsch.version>
     <commons-cli.version>1.2</commons-cli.version>
     <commons-lang.version>2.6</commons-lang.version>
+    <commons-httpclient.version>3.1</commons-httpclient.version>
     <commons-io.version>2.4</commons-io.version>
     <commons-upload.version>1.3.3</commons-upload.version>
     <commons-math3.version>3.1.1</commons-math3.version>
@@ -110,7 +115,7 @@
     <commons-pool.version>2.5.0</commons-pool.version>
 
     <!-- Calcite deps, keep compatible with calcite.version -->
-    <jackson.version>2.9.5</jackson.version>
+    <jackson.version>2.10.0</jackson.version>
 
     <!-- Test Dependency versions -->
     <antlr.version>3.4</antlr.version>
@@ -118,32 +123,33 @@
     <mrunit.version>1.1.0</mrunit.version>
     <dbunit.version>2.5.4</dbunit.version>
     <h2.version>1.4.196</h2.version>
-    <jetty.version>9.3.22.v20171030</jetty.version>
+    <jetty.version>9.4.26.v20200117</jetty.version>
     <jamm.version>0.3.1</jamm.version>
     <mockito.version>2.7.14</mockito.version>
     <mockito-all.version>1.9.5</mockito-all.version>
     <powermock.version>1.7.0</powermock.version>
+    <guava-testlib.version>28.2-jre</guava-testlib.version>
 
     <!-- Commons -->
     <commons-lang3.version>3.4</commons-lang3.version>
     <commons-email.version>1.5</commons-email.version>
     <commons-validator.version>1.4.0</commons-validator.version>
-    <commons-compress.version>1.18</commons-compress.version>
+    <commons-compress.version>1.19</commons-compress.version>
     <commons-dbcp.version>1.4</commons-dbcp.version>
 
     <!-- Utility -->
     <log4j.version>1.2.17</log4j.version>
     <slf4j.version>1.7.21</slf4j.version>
-    <xerces.version>2.11.0</xerces.version>
+    <xerces.version>2.12.0</xerces.version>
     <xalan.version>2.7.2</xalan.version>
     <ehcache.version>2.10.2.2.21</ehcache.version>
     <memcached.verion>2.12.3</memcached.verion>
-    <apache-httpclient.version>4.2.5</apache-httpclient.version>
+    <apache-httpclient.version>4.3.6</apache-httpclient.version>
     <roaring.version>0.6.18</roaring.version>
     <cglib.version>3.2.4</cglib.version>
     <supercsv.version>2.4.0</supercsv.version>
     <cors.version>2.5</cors.version>
-    <tomcat.version>7.0.91</tomcat.version>
+    <tomcat.version>7.0.100</tomcat.version>
     <t-digest.version>3.1</t-digest.version>
     <freemarker.version>2.3.23</freemarker.version>
     <rocksdb.version>5.9.2</rocksdb.version>
@@ -153,8 +159,8 @@
     <dropwizard.version>3.1.2</dropwizard.version>
     <!-- REST Service, ref https://github.com/spring-projects/spring-boot/blob/v1.3.8.RELEASE/spring-boot-dependencies/pom.xml -->
     <spring.boot.version>1.3.8.RELEASE</spring.boot.version>
-    <spring.framework.version>4.3.10.RELEASE</spring.framework.version>
-    <spring.framework.security.version>4.2.3.RELEASE</spring.framework.security.version>
+    <spring.framework.version>4.3.20.RELEASE</spring.framework.version>
+    <spring.framework.security.version>4.2.14.RELEASE</spring.framework.security.version>
     <spring.framework.security.extensions.version>1.0.2.RELEASE</spring.framework.security.extensions.version>
     <opensaml.version>2.6.6</opensaml.version>
     <aspectj.version>1.8.9</aspectj.version>
@@ -172,7 +178,7 @@
     </sonar.jacoco.excludes>
 
     <!-- JVM Args for Testing -->
-    <argLine>-Xms1G -Xmx2G -XX:MaxPermSize=512M -Duser.timezone=UTC</argLine>
+    <argLine>-Xms1G -Xmx2G -XX:MaxPermSize=512M -noverify -Duser.timezone=UTC</argLine>
   </properties>
 
   <licenses>
@@ -242,6 +248,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-shaded-guava</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-core-common</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -302,6 +313,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-engine-flink</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-source-hive</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -343,6 +359,11 @@
       <dependency>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-assembly</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-cube-migration</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -521,6 +542,11 @@
         <optional>true</optional>
       </dependency>
       <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-distcp</artifactId>
+        <version>${hadoop2.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.zookeeper</groupId>
         <artifactId>zookeeper</artifactId>
         <version>${zookeeper.version}</version>
@@ -542,15 +568,15 @@
         <version>${curator.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.google.code.findbugs</groupId>
         <artifactId>jsr305</artifactId>
         <version>${jsr305.version}</version>
         <scope>provided</scope>
-      </dependency>
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>${guava.version}</version>
       </dependency>
       <dependency>
         <groupId>com.jcraft</groupId>
@@ -568,6 +594,12 @@
         <groupId>commons-lang</groupId>
         <artifactId>commons-lang</artifactId>
         <version>${commons-lang.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>commons-httpclient</groupId>
+        <artifactId>commons-httpclient</artifactId>
+        <version>${commons-httpclient.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
@@ -741,6 +773,24 @@
         <artifactId>kryo-shaded</artifactId>
         <version>${kryo.version}</version>
         <scope>provided</scope>
+      </dependency>
+      <!-- Flink dependency -->
+      <dependency>
+        <groupId>org.apache.flink</groupId>
+        <artifactId>flink-java</artifactId>
+        <version>${flink.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.flink</groupId>
+        <artifactId>flink-scala_2.11</artifactId>
+        <version>${flink.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.flink</groupId>
+        <artifactId>flink-hadoop-compatibility_2.11</artifactId>
+        <version>${flink.version}</version>
       </dependency>
       <!-- Kafka dependency -->
       <dependency>
@@ -969,6 +1019,11 @@
         <artifactId>spring-security-saml2-core</artifactId>
         <version>${spring.framework.security.extensions.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-cas</artifactId>
+        <version>${spring.framework.security.version}</version>
+      </dependency>
 
       <dependency>
         <groupId>org.eclipse.jetty</groupId>
@@ -1070,7 +1125,7 @@
     <repository>
       <id>central</id>
       <name>Central Repository</name>
-      <url>http://repo.maven.apache.org/maven2</url>
+      <url>https://repo.maven.apache.org/maven2</url>
       <layout>default</layout>
       <snapshots>
         <enabled>false</enabled>
@@ -1079,7 +1134,7 @@
 
     <repository>
       <id>conjars</id>
-      <url>http://conjars.org/repo/</url>
+      <url>https://conjars.org/repo/</url>
     </repository>
 
     <repository>
@@ -1095,7 +1150,7 @@
     <repository>
       <id>kyligence</id>
       <name>Kyligence Repository</name>
-      <url>http://repository.kyligence.io/repository/maven-public/
+      <url>https://repository.kyligence.io/repository/maven-public/
       </url>
       <releases>
         <enabled>true</enabled>
@@ -1297,12 +1352,13 @@
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
         <!-- uncomment this on release -->
-        <!--<version>3.4.1</version>-->
+        <version>3.4.1</version>
       </plugin>
     </plugins>
   </build>
 
   <modules>
+    <module>external</module>
     <module>core-common</module>
     <module>core-metadata</module>
     <module>core-dictionary</module>
@@ -1328,12 +1384,14 @@
     <module>metrics-reporter-hive</module>
     <module>metrics-reporter-kafka</module>
     <module>cache</module>
+    <module>cube-migration</module>
     <module>datasource-sdk</module>
     <module>storage-stream</module>
     <module>stream-receiver</module>
     <module>stream-coordinator</module>
     <module>stream-core</module>
     <module>stream-source-kafka</module>
+    <module>engine-flink</module>
   </modules>
 
   <reporting>

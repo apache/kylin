@@ -47,7 +47,7 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
     private static final Pattern HDFS_LOCATION = Pattern.compile("LOCATION \'(.*)\';");
 
     protected void createFlatHiveTable(KylinConfig config) throws IOException {
-        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(getName());
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(getName() + " " + getCubeName() + " " + getId());
         hiveCmdBuilder.overwriteHiveProps(config.getHiveConfigOverride());
         hiveCmdBuilder.addStatement(getInitStatement());
         hiveCmdBuilder.addStatement(getCreateTableStatement());
@@ -84,6 +84,14 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
 
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+        stepLogger.setILogListener((infoKey, info) -> {
+                    // only care two properties here
+                    if (ExecutableConstants.YARN_APP_ID.equals(infoKey)
+                            || ExecutableConstants.YARN_APP_URL.equals(infoKey)) {
+                        getManager().addJobInfo(getId(), info);
+                    }
+                }
+        );
         KylinConfig config = getCubeSpecificConfig();
         try {
             createFlatHiveTable(config);

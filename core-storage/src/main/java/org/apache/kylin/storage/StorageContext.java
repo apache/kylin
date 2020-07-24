@@ -30,7 +30,7 @@ import org.apache.kylin.storage.gtrecord.GTCubeStorageQueryBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Range;
+import org.apache.kylin.shaded.com.google.common.collect.Range;
 
 /**
  * @author xjiang
@@ -155,7 +155,7 @@ public class StorageContext {
             return;
         }
 
-        long temp = this.getOffset() + this.getLimit();
+        long temp = this.getOffset() + (long) this.getLimit();
 
         if (!isValidPushDownLimit(temp)) {
             logger.warn("Not enabling limit push down because current limit is invalid: " + this.getLimit());

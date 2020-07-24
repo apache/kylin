@@ -41,8 +41,7 @@ public class SqlConverter {
     }
 
     public String convertSql(String orig) {
-        // for jdbc source, convert quote from backtick to double quote
-        String converted = orig.replaceAll("`", "\"");
+        String converted = orig;
 
         if (!configurer.skipHandleDefault()) {
             String escapedDefault = SqlDialect.CALCITE
@@ -52,12 +51,17 @@ public class SqlConverter {
         }
 
         if (!configurer.skipDefaultConvert()) {
+            String beforeConvert = converted;
             try {
+                // calcite cannot recognize `, convert ` to " before parse
+                converted = converted.replaceAll("`", "\"");
                 SqlNode sqlNode = SqlParser.create(converted).parseQuery();
                 sqlNode = sqlNode.accept(sqlNodeConverter);
                 converted = sqlWriter.format(sqlNode);
             } catch (Throwable e) {
-                logger.error("Failed to default convert sql, will use the input: {}", orig, e);
+                logger.error("Failed to default convert sql, will use the input: {}", beforeConvert, e);
+                // revert to beforeConvert when occur Exception
+                converted = beforeConvert;
             } finally {
                 sqlWriter.reset();
             }
@@ -93,7 +97,7 @@ public class SqlConverter {
 
         String fixAfterDefaultConvert(String orig);
 
-        SqlDialect getSqlDialect() throws SQLException;
+        SqlDialect getSqlDialect();
 
         boolean allowNoOffset();
 

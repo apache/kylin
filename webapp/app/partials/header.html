@@ -62,8 +62,9 @@
             <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-book"></i> Help <i
               class="ace-icon fa fa-caret-down"></i></a>
             <ul class="user-menu dropdown-menu-right dropdown-menu dropdown-yellow dropdown-caret dropdown-close">
-              <li ng-repeat="document in config.documents" ng-if="document.link">
-                <a target="_blank" href="{{document.link}}">{{document.displayName}}</a>
+              <li ng-repeat="document in config.documents" >
+                <a target="_blank" ng-if="document.link" href="{{document.link}}">{{document.displayName}}</a>
+                <a target="_blank" ng-if="!document.link" ng-click="showHelpInfo(document.name)">{{document.displayName}}</a>
               </li>
             </ul>
           </li>
@@ -75,6 +76,7 @@
             </a>
             <ul class="user-menu dropdown-menu-right dropdown-menu dropdown-yellow dropdown-caret dropdown-close"
                 role="menu">
+              <li><a href="user/profile"><i class="ace-icon fa fa-user"></i> Profile</a></li>
               <li><a ng-click="logout()"><i class="ace-icon fa fa-power-off"></i> Logout</a></li>
             </ul>
           </li>
@@ -85,3 +87,25 @@
 
 
 </div>
+
+<script type="text/ng-template" id="aboutKylin.html">
+  <div class="modal-header">
+      <h4>About Apache Kylin</h4> <i ng-click="cancel()" class="fa fa-close"></i>
+  </div>
+  <div class="modal-body">
+    <img src="image/logo.png" style="margin: 0 auto;position:relative;display:block" height="80px" width="80px">
+    <p><a href="http://kylin.apache.org/" target="_blank">Apache Kylin™</a> is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop/Spark supporting extremely large datasets, original contributed from eBay Inc.</p>
+    <p>You can <a href="mailto:user-subscribe@kylin.apache.org">Subscribe</a> user mailing list to discuss with community members, any advices or questions in using kylin you can send mail to <a href="mailto:user@kylin.apache.org">user@kylin.apache.org</a>.</p>
+    <div class="split-line"></div>
+    <div style="font-size:12px">
+      <div>
+        <span>Version: </span>
+        <span>{{versionInfo['kylin.version']}}</span>
+      </div>
+      <div >
+        <span>Commit: </span>
+        <span>{{versionInfo['kylin.version.commitId']}}</span>
+      </div>
+    </div>
+  </div>
+</script>

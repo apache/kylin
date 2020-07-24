@@ -27,7 +27,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.slf4j.Logger;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * A logger which parses certain patterns from log
@@ -51,8 +51,12 @@ public class PatternedLogger extends BufferedLogger {
 
     // spark
     private static final Pattern PATTERN_SPARK_APP_ID = Pattern.compile("Submitted application (.*)");
-    private static final Pattern PATTERN_SPARK_APP_URL = Pattern.compile("tracking URL: (.*)");
+    private static final Pattern PATTERN_SPARK_APP_URL = Pattern.compile("(?i)Tracking URL: (.*)");
     private static final Pattern PATTERN_JOB_STATE = Pattern.compile("Final-State : (.*?)$");
+
+    //flink
+    private static final Pattern PATTERN_FLINK_APP_ID = Pattern.compile("Submitted application (.*)");
+    private static final Pattern PATTERN_FLINK_APP_URL = Pattern.compile("tracking URL: (.*)");
 
 
     private static Map<Pattern, Pair<String, Integer>> patternMap = Maps.newHashMap(); // key is pattern, value is a pair, the first is property key, second is pattern index.
@@ -70,6 +74,8 @@ public class PatternedLogger extends BufferedLogger {
         patternMap.put(PATTERN_SPARK_APP_ID, new Pair(ExecutableConstants.SPARK_JOB_ID, 1));
         patternMap.put(PATTERN_SPARK_APP_URL, new Pair(ExecutableConstants.YARN_APP_URL, 1));
         patternMap.put(PATTERN_JOB_STATE, new Pair(ExecutableConstants.YARN_APP_STATE, 1));
+        patternMap.put(PATTERN_FLINK_APP_ID, new Pair(ExecutableConstants.FLINK_JOB_ID, 1));
+        patternMap.put(PATTERN_FLINK_APP_URL, new Pair(ExecutableConstants.YARN_APP_URL, 1));
     }
 
     public PatternedLogger(Logger wrappedLogger) {
@@ -109,5 +115,8 @@ public class PatternedLogger extends BufferedLogger {
     public interface ILogListener{
         void onLogEvent(String infoKey, Map<String, String> info);
     }
-    
+
+    public void setILogListener(ILogListener listener){
+        this.listener = listener;
+    }
 }

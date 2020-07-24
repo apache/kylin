@@ -82,7 +82,7 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
 
     private static void printUsage() {
         System.out.println(
-                "Usage: java org.apache.kylin.rest.security.PasswordPlaceholderConfigurer <EncryptMethod> <your_password>");
+                "Usage: ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.rest.security.PasswordPlaceholderConfigurer <EncryptMethod> <your_password>");
         System.out.println("EncryptMethod: AES or BCrypt");
     }
 
