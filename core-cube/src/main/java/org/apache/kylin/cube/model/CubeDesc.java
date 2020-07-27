@@ -1459,24 +1459,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return desc.isGlobal();
     }
 
-    public boolean isExtSnapshotTable(String tableName) {
-        SnapshotTableDesc desc = getSnapshotTableDesc(tableName);
-        if (desc == null) {
-            return false;
-        }
-        return desc.isExtSnapshotTable();
-    }
-
-    public List<String> getAllExtLookupSnapshotTypes() {
-        List<String> result = Lists.newArrayList();
-        for (SnapshotTableDesc snapshotTableDesc : snapshotTableDescList) {
-            if (snapshotTableDesc.isExtSnapshotTable()) {
-                result.add(snapshotTableDesc.getStorageType());
-            }
-        }
-        return result;
-    }
-
     public boolean isStreamingCube() {
         return getModel().getRootFactTable().getTableDesc().isStreamingTable();
     }

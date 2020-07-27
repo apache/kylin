@@ -111,10 +111,8 @@ public class DictionaryGeneratorCLI {
             TableRef table = dim.getTableRef();
             if (cubeSeg.getModel().isLookupTable(table)) {
                 // only the snapshot desc is not ext type, need to take snapshot
-                if (!cubeSeg.getCubeDesc().isExtSnapshotTable(table.getTableIdentity())) {
-                    toSnapshot.add(table.getTableIdentity());
-                    toCheckLookup.add(table);
-                }
+                toSnapshot.add(table.getTableIdentity());
+                toCheckLookup.add(table);
             }
         }
 
