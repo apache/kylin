@@ -25,11 +25,11 @@
     <name>Apache Kylin - MapReduce Engine</name>
     <description>Apache Kylin - MapReduce Engine</description>
 
-    <parent>
-        <groupId>org.apache.kylin</groupId>
-        <artifactId>kylin</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
-    </parent>
+<!--    <parent>-->
+<!--        <groupId>org.apache.kylin</groupId>-->
+<!--        <artifactId>kylin</artifactId>-->
+<!--        <version>4.0.0-SNAPSHOT</version>-->
+<!--    </parent>-->
 
     <dependencies>
         <dependency>
@@ -53,10 +53,6 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-metrics</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-stream-core</artifactId>
         </dependency>
 
         <!-- Env & Test -->
@@ -111,13 +107,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-stream-core</artifactId>
-            <type>test-jar</type>
-            <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
