@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,16 +16,29 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest;
+package org.apache.kylin.engine.mr.exception;
 
-import java.io.IOException;
+/**
+ */
+public class HadoopShellException extends Exception {
 
-import org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI;
+    public HadoopShellException() {
+    }
 
-public class DebugDeployCLI {
+    public HadoopShellException(String message) {
+        super(message);
+    }
 
-    public static void main(String[] args) throws IOException {
-        DebugTomcat.setupDebugEnv();
-        DeployCoprocessorCLI.main(new String[] { "default", "all" });
+    public HadoopShellException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public HadoopShellException(Throwable cause) {
+        super(cause);
+    }
+
+    public HadoopShellException(String message, Throwable cause, boolean enableSuppression,
+            boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

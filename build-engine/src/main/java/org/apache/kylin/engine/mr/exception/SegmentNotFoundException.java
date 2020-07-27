@@ -16,21 +16,29 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.dict.lookup;
+package org.apache.kylin.engine.mr.exception;
 
-import org.apache.kylin.metadata.model.TableDesc;
+/**
+ */
+public class SegmentNotFoundException extends Exception {
 
-public interface IExtLookupProvider {
-    ILookupTable getLookupTable(TableDesc tableDesc, ExtTableSnapshotInfo extTableSnapshot);
+    public SegmentNotFoundException() {
+    }
 
-    /**
-     * @return the local cache if the provider has, return null if no local cache exist
-     */
-    IExtLookupTableCache getLocalCache();
+    public SegmentNotFoundException(String message) {
+        super(message);
+    }
 
-    /**
-     * Return an adaptor that implements specified interface as requested by the build engine.
-     * The ILookupMaterializer in particular, is required by the MR build engine.
-     */
-    <I> I adaptToBuildEngine(Class<I> engineInterface);
+    public SegmentNotFoundException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public SegmentNotFoundException(Throwable cause) {
+        super(cause);
+    }
+
+    public SegmentNotFoundException(String message, Throwable cause, boolean enableSuppression,
+            boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }
