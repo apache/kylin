@@ -131,6 +131,17 @@ public class MapReduceExecutable extends AbstractExecutable {
             final Map<String, String> extra = mgr.getOutput(getId()).getExtra();
             if (extra.containsKey(ExecutableConstants.MR_JOB_ID)) {
                 job = new Cluster(conf).getJob(JobID.forName(extra.get(ExecutableConstants.MR_JOB_ID)));
+                if (job == null) {
+                    logger.error("getJob by jobId {} failed , please check RM or job history server", extra.get("mr_job_id"));
+                    if (isDiscarded()) {
+                        if (getIsNeedLock()) {
+                            releaseLock(lock);
+                        }
+                        return new ExecuteResult(ExecuteResult.State.DISCARDED, "job failed");
+                    } else {
+                        return ExecuteResult.createFailed(new MapReduceException("job failed"));
+                    }
+                }
                 logger.info("mr_job_id:" + extra.get(ExecutableConstants.MR_JOB_ID) + " resumed");
             } else {
                 final Constructor<? extends AbstractHadoopJob> constructor = ClassUtil
