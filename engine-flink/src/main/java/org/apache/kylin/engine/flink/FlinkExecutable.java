@@ -210,6 +210,10 @@ public class FlinkExecutable extends AbstractExecutable {
                     }
                 }
             }
+
+            //set job name
+            sb.append(" -ynm ").append(this.getName().replaceAll(" ", "-")).append(" ");
+            
             if (StringUtils.isNotBlank(jars)) {
                 String[] splitJars = jars.split(",\\s*");
                 Set<String> setJars = new HashSet();
