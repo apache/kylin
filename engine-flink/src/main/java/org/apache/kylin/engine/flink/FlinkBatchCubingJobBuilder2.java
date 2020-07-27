@@ -145,7 +145,7 @@ public class FlinkBatchCubingJobBuilder2 extends JobBuilderSupport {
 
         StringUtil.appendWithSeparator(jars, seg.getConfig().getFlinkAdditionalJars());
         flinkExecutable.setJars(jars.toString());
-        flinkExecutable.setName(ExecutableConstants.STEP_NAME_BUILD_FLINK_CUBE);
+        flinkExecutable.setName(ExecutableConstants.STEP_NAME_BUILD_FLINK_CUBE + ":" + seg.toString());
     }
 
     public String getSegmentMetadataUrl(KylinConfig kylinConfig, String jobId) {
