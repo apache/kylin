@@ -28,7 +28,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-spark-test</artifactId>
-    <name>Apche Kylin on parquet - Integration Test</name>
+    <name>Apache Kylin 4.X - Integration Test</name>
 
     <properties>
         <hdp.version/>
@@ -45,10 +45,17 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-common</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-job</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-server-base</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-spark-engine</artifactId>
@@ -131,19 +138,19 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-it</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.calcite.avatica</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.kylin</groupId>-->
+<!--            <artifactId>kylin-it</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>org.apache.calcite.avatica</groupId>-->
+<!--                    <artifactId>*</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--            <type>test-jar</type>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-spark-query</artifactId>

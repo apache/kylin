@@ -24,7 +24,7 @@
 
     <artifactId>kylin-spark-engine</artifactId>
     <packaging>jar</packaging>
-    <name>Apche Kylin on parquet - Spark Engine</name>
+    <name>Apache Kylin 4.X - Spark Engine</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
@@ -70,17 +70,6 @@
         </dependency>
 
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-            <version>${mockito.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <scope>test</scope>
@@ -89,13 +78,6 @@
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.11</artifactId>
-            <version>3.0.0</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -129,7 +111,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-engine-mr</artifactId>
+            <artifactId>kylin-build-engine</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.kylin</groupId>

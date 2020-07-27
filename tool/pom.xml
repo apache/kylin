@@ -43,20 +43,23 @@
 
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-storage-hbase</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-engine-mr</artifactId>
+            <artifactId>kylin-metastore-hbase</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-source-kafka</artifactId>
+            <artifactId>kylin-core-metadata</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-source-hive</artifactId>
+            <artifactId>kylin-core-job</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-core-storage</artifactId>
         </dependency>
 
         <dependency>
@@ -64,9 +67,15 @@
             <artifactId>kylin-server-base</artifactId>
         </dependency>
 
+
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-stream-core</artifactId>
+            <artifactId>kylin-metrics-reporter-hive</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-metrics-reporter-kafka</artifactId>
         </dependency>
 
         <!--Env-->
