@@ -60,7 +60,7 @@ public class AdminServiceTest extends ServiceTestBase {
                     "kylin.web.timezone=\n" +
                     "kylin.server.external-acl-provider=\n" +
                     "kylin.tool.auto-migrate-cube.enabled=\n" +
-                    "kylin.storage.default=2\n" +
+                    "kylin.storage.default=4\n" +
                     "kylin.cube.cubeplanner.enabled=true\n" +
                     "kylin.web.help=\n" +
                     "kylin.web.export-allow-other=true\n" +

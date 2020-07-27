@@ -48,10 +48,8 @@ import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.stream.core.source.StreamingSourceConfig;
 import org.apache.kylin.tool.metrics.systemcube.def.MetricsSinkDesc;
 import org.apache.kylin.tool.metrics.systemcube.streamingv2.KafkaTopicCreator;
-import org.apache.kylin.tool.metrics.systemcube.streamingv2.StreamingMetadataCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,7 +132,6 @@ public class SCCreator extends AbstractApplication {
         List<DataModelDesc> kylinModels = Lists.newArrayList();
         List<CubeDesc> cubeDescList = Lists.newArrayList();
         List<CubeInstance> kylinCubeInstances = Lists.newArrayList();
-        List<StreamingSourceConfig> streamingSourceConfigs = Lists.newArrayList();
 
 
         boolean hasHive = false;
@@ -151,11 +148,11 @@ public class SCCreator extends AbstractApplication {
             kylinCubeInstances.addAll(generateKylinCubeInstanceForSystemCube(owner, sinkDesc));
 
             if (sinkDesc.useKafka()) {
-                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsJob(config, sinkDesc));
-                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsJobException(config, sinkDesc));
-                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsQuery(config, sinkDesc));
-                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsQueryRpcCall(config, sinkDesc));
-                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsQueryCube(config, sinkDesc));
+//                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsJob(config, sinkDesc));
+//                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsJobException(config, sinkDesc));
+//                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsQuery(config, sinkDesc));
+//                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsQueryRpcCall(config, sinkDesc));
+//                streamingSourceConfigs.add(StreamingMetadataCreator.generateKylinTableForMetricsQueryCube(config, sinkDesc));
             }
         }
 
@@ -182,9 +179,9 @@ public class SCCreator extends AbstractApplication {
             generateKylinCubeInstanceFileForSystemCube(output, cubeInstance);
         }
 
-        for (StreamingSourceConfig sourceConfig : streamingSourceConfigs) {
-            generateKylinStreamingConfigForSystemCube(output, sourceConfig);
-        }
+//        for (StreamingSourceConfig sourceConfig : streamingSourceConfigs) {
+//            generateKylinStreamingConfigForSystemCube(output, sourceConfig);
+//        }
     }
 
     private List<TableDesc> generateKylinTableForSystemCube(MetricsSinkDesc sinkDesc) {
@@ -251,10 +248,10 @@ public class SCCreator extends AbstractApplication {
                 ModelCreator.MODELDESC_SERIALIZER);
     }
 
-    private void generateKylinStreamingConfigForSystemCube(String output, StreamingSourceConfig streamingConfig) throws IOException {
-        saveSystemCubeMetadataToFile(output + D_STREAMING_V2 + streamingConfig.getName() + ".json", streamingConfig,
-                StreamingMetadataCreator.STREAMING_SOURCE_CONFIG_SERIALIZER);
-    }
+//    private void generateKylinStreamingConfigForSystemCube(String output, StreamingSourceConfig streamingConfig) throws IOException {
+//        saveSystemCubeMetadataToFile(output + D_STREAMING_V2 + streamingConfig.getName() + ".json", streamingConfig,
+//                StreamingMetadataCreator.STREAMING_SOURCE_CONFIG_SERIALIZER);
+//    }
 
     private void generateKylinCubeInstanceFileForSystemCube(String output, CubeInstance cubeInstance)
             throws IOException {

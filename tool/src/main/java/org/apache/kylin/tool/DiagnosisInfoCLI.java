@@ -20,7 +20,6 @@ package org.apache.kylin.tool;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -32,19 +31,18 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.common.util.ToolUtil;
-import org.apache.kylin.stream.core.util.NamedThreadFactory;
-import org.apache.kylin.tool.extractor.AbstractInfoExtractor;
-import org.apache.kylin.tool.extractor.ClientEnvExtractor;
-import org.apache.kylin.tool.extractor.CubeMetaExtractor;
-import org.apache.kylin.tool.extractor.JStackExtractor;
 import org.apache.kylin.tool.extractor.JobInstanceExtractor;
+import org.apache.kylin.tool.extractor.AbstractInfoExtractor;
+import org.apache.kylin.tool.extractor.CubeMetaExtractor;
+import org.apache.kylin.tool.extractor.ClientEnvExtractor;
 import org.apache.kylin.tool.extractor.KylinLogExtractor;
 import org.apache.kylin.tool.extractor.SparkEnvInfoExtractor;
+import org.apache.kylin.tool.extractor.JStackExtractor;
+import org.apache.kylin.tool.extractor.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -183,27 +181,6 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                         jobInstanceExtractor.execute(jobArgs);
                     } catch (Exception e) {
                         logger.error("Error in export jobs.", e);
-                    }
-                }
-            });
-        }
-
-        // export HBase
-        if (includeHBase) {
-            executorService.execute(new Runnable() {
-                @Override
-                public void run() {
-                    logger.info("Start to extract HBase usage.");
-                    try {
-                        // use reflection to isolate NoClassDef errors when HBase is not available
-                        String[] hbaseArgs = {"-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project",
-                                projectNames, "-compress", "false", "-submodule", "true"};
-                        logger.info("HBaseUsageExtractor args: " + Arrays.toString(hbaseArgs));
-                        Object extractor = ClassUtil.newInstance("org.apache.kylin.tool.extractor.HBaseUsageExtractor");
-                        Method execute = extractor.getClass().getMethod("execute", String[].class);
-                        execute.invoke(extractor, (Object) hbaseArgs);
-                    } catch (Exception e) {
-                        logger.error("Error in export HBase usage.", e);
                     }
                 }
             });

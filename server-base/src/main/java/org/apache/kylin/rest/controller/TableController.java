@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,7 +33,6 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
-import org.apache.kylin.rest.request.CardinalityRequest;
 import org.apache.kylin.rest.request.HiveTableRequest;
 import org.apache.kylin.rest.response.TableSnapshotResponse;
 import org.apache.kylin.rest.service.TableACLService;
@@ -127,9 +125,9 @@ public class TableController extends BasicController {
             String[] unloaded = new String[allTables.size()];
             allTables.toArray(unloaded);
             result.put("result.unloaded", unloaded);
-            if (request.isCalculate()) {
-                tableService.calculateCardinalityIfNotPresent(loaded, submitter, project);
-            }
+//            if (request.isCalculate()) {
+//                tableService.calculateCardinalityIfNotPresent(loaded, submitter, project);
+//            }
         } catch (Throwable e) {
             logger.error("Failed to load Hive Table", e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
@@ -168,23 +166,23 @@ public class TableController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "/{project}/{tableNames}/cardinality", method = { RequestMethod.PUT }, produces = {
-            "application/json" })
-    @ResponseBody
-    public CardinalityRequest generateCardinality(@PathVariable String tableNames,
-            @RequestBody CardinalityRequest request, @PathVariable String project) throws Exception {
-        String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
-        String[] tables = StringUtil.splitByComma(tableNames);
-        try {
-            for (String table : tables) {
-                tableService.calculateCardinality(table.trim().toUpperCase(Locale.ROOT), submitter, project);
-            }
-        } catch (IOException e) {
-            logger.error("Failed to calculate cardinality", e);
-            throw new InternalErrorException(e.getLocalizedMessage(), e);
-        }
-        return request;
-    }
+//    @RequestMapping(value = "/{project}/{tableNames}/cardinality", method = { RequestMethod.PUT }, produces = {
+//            "application/json" })
+//    @ResponseBody
+//    public CardinalityRequest generateCardinality(@PathVariable String tableNames,
+//            @RequestBody CardinalityRequest request, @PathVariable String project) throws Exception {
+//        String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
+//        String[] tables = StringUtil.splitByComma(tableNames);
+//        try {
+//            for (String table : tables) {
+//                tableService.calculateCardinality(table.trim().toUpperCase(Locale.ROOT), submitter, project);
+//            }
+//        } catch (IOException e) {
+//            logger.error("Failed to calculate cardinality", e);
+//            throw new InternalErrorException(e.getLocalizedMessage(), e);
+//        }
+//        return request;
+//    }
 
     /**
      * Show all databases in Hive
@@ -220,26 +218,6 @@ public class TableController extends BasicController {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
-    }
-
-    @RequestMapping(value = "/{project}/{tableName}/{snapshotID}/snapshotLocalCache", method = { RequestMethod.PUT })
-    @ResponseBody
-    public void updateSnapshotLocalCache(@PathVariable final String project, @PathVariable final String tableName,
-            @PathVariable final String snapshotID) {
-        tableService.updateSnapshotLocalCache(project, tableName, snapshotID);
-    }
-
-    @RequestMapping(value = "/{tableName}/{snapshotID}/snapshotLocalCache/state", method = { RequestMethod.GET })
-    @ResponseBody
-    public String getSnapshotLocalCacheState(@PathVariable final String tableName,
-            @PathVariable final String snapshotID) {
-        return tableService.getSnapshotLocalCacheState(tableName, snapshotID);
-    }
-
-    @RequestMapping(value = "/{tableName}/{snapshotID}/snapshotLocalCache", method = { RequestMethod.DELETE })
-    @ResponseBody
-    public void removeSnapshotLocalCache(@PathVariable final String tableName, @PathVariable final String snapshotID) {
-        tableService.removeSnapshotLocalCache(tableName, snapshotID);
     }
 
     @RequestMapping(value = "/{project}/{tableName}/snapshots", method = { RequestMethod.GET })

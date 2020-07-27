@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.apache.kylin.common.util.RandomUtil;
 import org.slf4j.Logger;
@@ -167,10 +168,12 @@ public class QueryContext {
         return sourceScanRows.addAndGet(rows);
     }
 
+    @Clarification(priority = Clarification.Priority.MAJOR, msg = "remove this")
     public void addQueryStopListener(QueryStopListener listener) {
         this.stopListeners.add(listener);
     }
 
+    @Clarification(priority = Clarification.Priority.MAJOR, msg = "Maybe we can change spark.scheduler.pool to implement resource isolation.")
     public void setHighPriorityQuery(boolean highPriorityQuery) {
         isHighPriorityQuery = highPriorityQuery;
     }
@@ -203,10 +206,12 @@ public class QueryContext {
         this.dataset = dataset;
     }
 
+    @Clarification(priority = Clarification.Priority.MAJOR, msg = "remove this")
     public boolean isTableIndex() {
         return isTableIndex;
     }
 
+    @Clarification(priority = Clarification.Priority.MAJOR, msg = "remove this")
     public void setTableIndex(boolean tableIndex) {
         isTableIndex = tableIndex;
     }

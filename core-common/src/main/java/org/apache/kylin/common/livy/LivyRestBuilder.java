@@ -20,6 +20,7 @@ package org.apache.kylin.common.livy;
 
 import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.common.util.SourceConfigurationUtil;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -28,9 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Map;
 
-/**
- *
- */
+@Clarification(priority = Clarification.Priority.MINOR, msg = "I guess it should be removed, we may not continue support this  feature.")
 public class LivyRestBuilder {
     protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(LivyRestBuilder.class);
 

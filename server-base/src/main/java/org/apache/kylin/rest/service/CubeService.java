@@ -28,14 +28,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.CliCommandExecutor;
-import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -66,7 +63,6 @@ import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -90,12 +86,7 @@ import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.ValidateUtil;
-import org.apache.kylin.storage.hbase.HBaseConnection;
-import org.apache.kylin.storage.hbase.util.StorageCleanUtil;
 import org.apache.kylin.storage.hybrid.HybridInstance;
-import org.apache.kylin.stream.coordinator.StreamMetadataStoreFactory;
-import org.apache.kylin.stream.coordinator.client.CoordinatorClient;
-import org.apache.kylin.stream.coordinator.client.CoordinatorClientFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -428,23 +419,23 @@ public class CubeService extends BasicService implements InitializingBean {
             CubeInstance cubeInstance = getCubeManager().updateCubeStatus(cube, RealizationStatusEnum.DISABLED);
             cubeStatusUpdated = true;
             // for streaming cube.
-            if (isStreamingCube) {
-                //drop not ready segments
-                CubeSegment[] buildingSegments = new CubeSegment[cubeInstance.getBuildingSegments().size()];
-                Segments segments = cubeInstance.getBuildingSegments();
-                if (!CollectionUtils.isEmpty(segments)) {
-                    for (int i = 0; i < segments.size(); i++) {
-                        buildingSegments[i] = (CubeSegment) segments.get(i);
-                    }
-                    getCubeManager().dropOptmizingSegments(cubeInstance, buildingSegments);
-                }
-                //unAssign cube
-                getStreamingCoordinator().unAssignCube(cubeName);
-
-                //discard jobs
-                releaseAllJobs(cubeInstance);
-
-            }
+//            if (isStreamingCube) {
+//                //drop not ready segments
+//                CubeSegment[] buildingSegments = new CubeSegment[cubeInstance.getBuildingSegments().size()];
+//                Segments segments = cubeInstance.getBuildingSegments();
+//                if (!CollectionUtils.isEmpty(segments)) {
+//                    for (int i = 0; i < segments.size(); i++) {
+//                        buildingSegments[i] = (CubeSegment) segments.get(i);
+//                    }
+//                    getCubeManager().dropOptmizingSegments(cubeInstance, buildingSegments);
+//                }
+//                //unAssign cube
+//                getStreamingCoordinator().unAssignCube(cubeName);
+//
+//                //discard jobs
+//                releaseAllJobs(cubeInstance);
+//
+//            }
             return cubeInstance;
         } catch (Exception e) {
             cube.setStatus(ostatus);
@@ -492,9 +483,9 @@ public class CubeService extends BasicService implements InitializingBean {
             CubeInstance cubeInstance = getCubeManager().updateCubeStatus(cube, RealizationStatusEnum.READY);
             cubeStatusUpdated = true;
             // for streaming cube.
-            if (cube.getDescriptor().isStreamingCube()) {
-                getStreamingCoordinator().assignCube(cube.getName());
-            }
+//            if (cube.getDescriptor().isStreamingCube()) {
+//                getStreamingCoordinator().assignCube(cube.getName());
+//            }
             return cubeInstance;
         } catch (Exception e) {
             cube.setStatus(ostatus);
@@ -507,9 +498,9 @@ public class CubeService extends BasicService implements InitializingBean {
         }
     }
 
-    private CoordinatorClient getStreamingCoordinator() {
-        return CoordinatorClientFactory.createCoordinatorClient(StreamMetadataStoreFactory.getStreamMetaDataStore());
-    }
+//    private CoordinatorClient getStreamingCoordinator() {
+//        return CoordinatorClientFactory.createCoordinatorClient(StreamMetadataStoreFactory.getStreamMetaDataStore());
+//    }
 
     public MetricsResponse calculateMetrics(MetricsRequest request) {
         List<CubeInstance> cubes = this.getCubeManager().listAllCubes();
@@ -652,8 +643,8 @@ public class CubeService extends BasicService implements InitializingBean {
                         seg.getLastBuildJobID()));
             }
 
-            StorageCleanUtil.dropHTables(new HBaseAdmin(HBaseConnection.getCurrentHBaseConfiguration()), toDropHTables);
-            StorageCleanUtil.deleteHDFSPath(HadoopUtil.getWorkingFileSystem(), toDelHDFSPaths);
+//            StorageCleanUtil.dropHTables(new HBaseAdmin(HBaseConnection.getCurrentHBaseConfiguration()), toDropHTables);
+//            StorageCleanUtil.deleteHDFSPath(HadoopUtil.getWorkingFileSystem(), toDelHDFSPaths);
         }
     }
 

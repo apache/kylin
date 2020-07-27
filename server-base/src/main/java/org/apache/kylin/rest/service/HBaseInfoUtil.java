@@ -18,40 +18,31 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-import java.util.Map;
-
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.rest.response.HBaseResponse;
-import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
-import org.apache.kylin.storage.hbase.util.HBaseUnionUtil;
-
 public class HBaseInfoUtil {
     
-    @SuppressWarnings("unused") // used by reflection
-    public static HBaseResponse getHBaseInfo(String tableName, KylinConfig config) throws IOException {
-        if (!config.getStorageUrl().getScheme().equals("hbase"))
-            return null;
-        
-        Connection conn = HBaseUnionUtil.getConnection(config, tableName);
-        HBaseResponse hr = null;
-        long tableSize = 0;
-        int regionCount = 0;
-
-        HBaseRegionSizeCalculator cal = new HBaseRegionSizeCalculator(tableName, conn);
-        Map<byte[], Long> sizeMap = cal.getRegionSizeMap();
-
-        for (long s : sizeMap.values()) {
-            tableSize += s;
-        }
-
-        regionCount = sizeMap.size();
-
-        // Set response.
-        hr = new HBaseResponse();
-        hr.setTableSize(tableSize);
-        hr.setRegionCount(regionCount);
-        return hr;
-    }
+//    @SuppressWarnings("unused") // used by reflection
+//    public static HBaseResponse getHBaseInfo(String tableName, KylinConfig config) throws IOException {
+//        if (!config.getStorageUrl().getScheme().equals("hbase"))
+//            return null;
+//
+//        Connection conn = HBaseUnionUtil.getConnection(config, tableName);
+//        HBaseResponse hr = null;
+//        long tableSize = 0;
+//        int regionCount = 0;
+//
+//        HBaseRegionSizeCalculator cal = new HBaseRegionSizeCalculator(tableName, conn);
+//        Map<byte[], Long> sizeMap = cal.getRegionSizeMap();
+//
+//        for (long s : sizeMap.values()) {
+//            tableSize += s;
+//        }
+//
+//        regionCount = sizeMap.size();
+//
+//        // Set response.
+//        hr = new HBaseResponse();
+//        hr.setTableSize(tableSize);
+//        hr.setRegionCount(regionCount);
+//        return hr;
+//    }
 }

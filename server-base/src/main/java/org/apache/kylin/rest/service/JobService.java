@@ -45,9 +45,7 @@ import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.BatchOptimizeJobCheckpointBuilder;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.LookupSnapshotBuildJob;
-import org.apache.kylin.engine.mr.LookupSnapshotJobBuilder;
 import org.apache.kylin.engine.mr.common.CubeJobLockUtil;
-import org.apache.kylin.engine.mr.StreamingCubingEngine;
 import org.apache.kylin.engine.mr.common.JobInfoConverter;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.spark.metadata.cube.source.SourceFactory;
@@ -72,7 +70,6 @@ import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
@@ -81,8 +78,6 @@ import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.SourcePartition;
-import org.apache.kylin.stream.coordinator.Coordinator;
-import org.apache.kylin.stream.core.model.SegmentBuildState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -254,7 +249,7 @@ public class JobService extends BasicService implements InitializingBean {
                 } else {
                     ISource source = SourceManager.getSource(cube);
                     src = new SourcePartition(tsRange, segRange, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
-                    src = source.enrichSourcePartitionBeforeBuild(cube, src);
+//                    src = source.enrichSourcePartitionBeforeBuild(cube, src);
                 }
 
                 newSeg = getCubeManager().appendSegment(cube, src);
@@ -408,20 +403,20 @@ public class JobService extends BasicService implements InitializingBean {
         return optimizeJobInstance;
     }
 
-    public JobInstance submitLookupSnapshotJob(CubeInstance cube, String lookupTable, List<String> segmentIDs,
-            String submitter) throws IOException {
-        Message msg = MsgPicker.getMsg();
-        TableDesc tableDesc = getTableManager().getTableDesc(lookupTable, cube.getProject());
-        if (tableDesc.isView()) {
-            throw new BadRequestException(
-                    String.format(Locale.ROOT, msg.getREBUILD_SNAPSHOT_OF_VIEW(), tableDesc.getName()));
-        }
-        LookupSnapshotBuildJob job = new LookupSnapshotJobBuilder(cube, lookupTable, segmentIDs, submitter).build();
-        getExecutableManager().addJob(job);
-
-        JobInstance jobInstance = getLookupSnapshotBuildJobInstance(job);
-        return jobInstance;
-    }
+//    public JobInstance submitLookupSnapshotJob(CubeInstance cube, String lookupTable, List<String> segmentIDs,
+//            String submitter) throws IOException {
+//        Message msg = MsgPicker.getMsg();
+//        TableDesc tableDesc = getTableManager().getTableDesc(lookupTable, cube.getProject());
+//        if (tableDesc.isView()) {
+//            throw new BadRequestException(
+//                    String.format(Locale.ROOT, msg.getREBUILD_SNAPSHOT_OF_VIEW(), tableDesc.getName()));
+//        }
+//        LookupSnapshotBuildJob job = new LookupSnapshotJobBuilder(cube, lookupTable, segmentIDs, submitter).build();
+//        getExecutableManager().addJob(job);
+//
+//        JobInstance jobInstance = getLookupSnapshotBuildJobInstance(job);
+//        return jobInstance;
+//    }
 
     private void checkCubeDescSignature(CubeInstance cube) {
         Message msg = MsgPicker.getMsg();
@@ -599,36 +594,36 @@ public class JobService extends BasicService implements InitializingBean {
         getExecutableManager().resumeJob(job.getId());
     }
 
-    public void resubmitJob(JobInstance job) throws IOException {
-        aclEvaluate.checkProjectOperationPermission(job);
-
-        Coordinator coordinator = Coordinator.getInstance();
-        CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-        String cubeName = job.getRelatedCube();
-        CubeInstance cubeInstance = cubeManager.getCube(cubeName);
-
-        String segmentName = job.getRelatedSegmentName();
-        try {
-            Pair<Long, Long> segmentRange = CubeSegment.parseSegmentName(segmentName);
-            logger.info("submit streaming segment build, cube:{} segment:{}", cubeName, segmentName);
-            CubeSegment newSeg = coordinator.getCubeManager().appendSegment(cubeInstance,
-                    new SegmentRange.TSRange(segmentRange.getFirst(), segmentRange.getSecond()));
-
-            DefaultChainedExecutable executable = new StreamingCubingEngine().createStreamingCubingJob(newSeg, aclEvaluate.getCurrentUserName());
-            coordinator.getExecutableManager().addJob(executable);
-            CubingJob cubingJob = (CubingJob) executable;
-            newSeg.setLastBuildJobID(cubingJob.getId());
-
-            SegmentBuildState.BuildState state = new SegmentBuildState.BuildState();
-            state.setBuildStartTime(System.currentTimeMillis());
-            state.setState(SegmentBuildState.BuildState.State.BUILDING);
-            state.setJobId(cubingJob.getId());
-            coordinator.getStreamMetadataStore().updateSegmentBuildState(cubeName, segmentName, state);
-        } catch (Exception e) {
-            logger.error("streaming job submit fail, cubeName:" + cubeName + " segment:" + segmentName, e);
-            throw e;
-        }
-    }
+//    public void resubmitJob(JobInstance job) throws IOException {
+//        aclEvaluate.checkProjectOperationPermission(job);
+//
+////        Coordinator coordinator = Coordinator.getInstance();
+//        CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+//        String cubeName = job.getRelatedCube();
+//        CubeInstance cubeInstance = cubeManager.getCube(cubeName);
+//
+//        String segmentName = job.getRelatedSegmentName();
+//        try {
+//            Pair<Long, Long> segmentRange = CubeSegment.parseSegmentName(segmentName);
+//            logger.info("submit streaming segment build, cube:{} segment:{}", cubeName, segmentName);
+//            CubeSegment newSeg = coordinator.getCubeManager().appendSegment(cubeInstance,
+//                    new SegmentRange.TSRange(segmentRange.getFirst(), segmentRange.getSecond()));
+//
+//            DefaultChainedExecutable executable = new StreamingCubingEngine().createStreamingCubingJob(newSeg, aclEvaluate.getCurrentUserName());
+//            coordinator.getExecutableManager().addJob(executable);
+//            CubingJob cubingJob = (CubingJob) executable;
+//            newSeg.setLastBuildJobID(cubingJob.getId());
+//
+//            SegmentBuildState.BuildState state = new SegmentBuildState.BuildState();
+//            state.setBuildStartTime(System.currentTimeMillis());
+//            state.setState(SegmentBuildState.BuildState.State.BUILDING);
+//            state.setJobId(cubingJob.getId());
+//            coordinator.getStreamMetadataStore().updateSegmentBuildState(cubeName, segmentName, state);
+//        } catch (Exception e) {
+//            logger.error("streaming job submit fail, cubeName:" + cubeName + " segment:" + segmentName, e);
+//            throw e;
+//        }
+//    }
 
     public void rollbackJob(JobInstance job, String stepId) {
         aclEvaluate.checkProjectOperationPermission(job);

@@ -20,7 +20,6 @@ package org.apache.kylin.tool.extractor;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -55,13 +54,9 @@ import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.metadata.streaming.StreamingConfig;
 import org.apache.kylin.metadata.streaming.StreamingManager;
-import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
-import org.apache.kylin.stream.core.source.StreamingSourceConfig;
-import org.apache.kylin.stream.core.source.StreamingSourceConfigManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,7 +127,6 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private HybridManager hybridManager;
     private CubeManager cubeManager;
     private StreamingManager streamingManager;
-    private StreamingSourceConfigManager streamingSourceConfigManager;
     private CubeDescManager cubeDescManager;
     private ExecutableDao executableDao;
     private RealizationRegistry realizationRegistry;
@@ -198,7 +192,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         executableDao = ExecutableDao.getInstance(kylinConfig);
         realizationRegistry = RealizationRegistry.getInstance(kylinConfig);
         badQueryHistoryManager = BadQueryHistoryManager.getInstance(kylinConfig);
-        streamingSourceConfigManager = StreamingSourceConfigManager.getInstance(kylinConfig);
+//        streamingSourceConfigManager = StreamingSourceConfigManager.getInstance(kylinConfig);
 
         addRequired(ResourceStore.METASTORE_UUID_TAG);
 
@@ -348,9 +342,9 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             // add tables
             addTables(modelDesc);
             // add streaming stuff
-            addStreamingConfig(cube);
+//            addStreamingConfig(cube);
             // add streamingV2
-            addStreamingV2Config(cube);
+//            addStreamingV2Config(cube);
             // add cube
             addRequired(CubeDesc.concatResourcePath(cubeDesc.getName()));
             // add project
@@ -432,32 +426,32 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         }
     }
 
-    private void addStreamingConfig(CubeInstance cube) {
-        streamingManager = StreamingManager.getInstance(kylinConfig);
-        for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
-            if (streamingConfig.getName() != null
-                    && streamingConfig.getName().equalsIgnoreCase(cube.getRootFactTable())) {
-                addRequired(StreamingConfig.concatResourcePath(streamingConfig.getName()));
-                addRequired(KafkaConfig.concatResourcePath(streamingConfig.getName()));
-            }
-        }
-    }
+//    private void addStreamingConfig(CubeInstance cube) {
+//        streamingManager = StreamingManager.getInstance(kylinConfig);
+//        for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
+//            if (streamingConfig.getName() != null
+//                    && streamingConfig.getName().equalsIgnoreCase(cube.getRootFactTable())) {
+//                addRequired(StreamingConfig.concatResourcePath(streamingConfig.getName()));
+//                addRequired(KafkaConfig.concatResourcePath(streamingConfig.getName()));
+//            }
+//        }
+//    }
 
-    private void addStreamingV2Config(CubeInstance cube) {
-        Collection<StreamingSourceConfig> streamingConfigs;
-        try {
-            streamingConfigs = streamingSourceConfigManager.listAllStreaming();
-        } catch (IOException ioe) {
-            logger.error("", ioe);
-            return;
-        }
-        for (StreamingSourceConfig streamingConfig : streamingConfigs) {
-            if (streamingConfig.getName() != null
-                    && streamingConfig.getName().equalsIgnoreCase(cube.getRootFactTable())) {
-                addRequired(StreamingSourceConfig.concatResourcePath(streamingConfig.getName()));
-            }
-        }
-    }
+//    private void addStreamingV2Config(CubeInstance cube) {
+//        Collection<StreamingSourceConfig> streamingConfigs;
+//        try {
+//            streamingConfigs = streamingSourceConfigManager.listAllStreaming();
+//        } catch (IOException ioe) {
+//            logger.error("", ioe);
+//            return;
+//        }
+//        for (StreamingSourceConfig streamingConfig : streamingConfigs) {
+//            if (streamingConfig.getName() != null
+//                    && streamingConfig.getName().equalsIgnoreCase(cube.getRootFactTable())) {
+//                addRequired(StreamingSourceConfig.concatResourcePath(streamingConfig.getName()));
+//            }
+//        }
+//    }
 
     private void addRequired(String record) {
         logger.info("adding required resource {}", record);
