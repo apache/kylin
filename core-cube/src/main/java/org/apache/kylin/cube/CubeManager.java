@@ -51,8 +51,6 @@ import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
-import org.apache.kylin.dict.lookup.ExtTableSnapshotInfo;
-import org.apache.kylin.dict.lookup.ExtTableSnapshotInfoManager;
 import org.apache.kylin.dict.lookup.ILookupTable;
 import org.apache.kylin.dict.lookup.LookupProviderFactory;
 import org.apache.kylin.dict.lookup.SnapshotManager;
@@ -544,11 +542,7 @@ public class CubeManager implements IRealizationProvider {
         String tableName = join.getPKSide().getTableIdentity();
         CubeDesc cubeDesc = cubeSegment.getCubeDesc();
         SnapshotTableDesc snapshotTableDesc = cubeDesc.getSnapshotTableDesc(tableName);
-        if (snapshotTableDesc == null || !snapshotTableDesc.isExtSnapshotTable()) {
-            return getInMemLookupTable(cubeSegment, join, snapshotTableDesc);
-        } else {
-            return getExtLookupTable(cubeSegment, tableName, snapshotTableDesc);
-        }
+        return getInMemLookupTable(cubeSegment, join, snapshotTableDesc);
     }
 
     private ILookupTable getInMemLookupTable(CubeSegment cubeSegment, JoinDesc join,
@@ -565,16 +559,6 @@ public class CubeManager implements IRealizationProvider {
             throw new IllegalStateException(
                     "Failed to load lookup table " + tableName + " from snapshot " + snapshotResPath, e);
         }
-    }
-
-    private ILookupTable getExtLookupTable(CubeSegment cubeSegment, String tableName,
-            SnapshotTableDesc snapshotTableDesc) {
-        String snapshotResPath = getSnapshotResPath(cubeSegment, tableName, snapshotTableDesc);
-
-        ExtTableSnapshotInfo extTableSnapshot = ExtTableSnapshotInfoManager.getInstance(config)
-                .getSnapshot(snapshotResPath);
-        TableDesc tableDesc = getMetadataManager().getTableDesc(tableName, cubeSegment.getProject());
-        return LookupProviderFactory.getExtLookupTable(tableDesc, extTableSnapshot);
     }
 
     private String getSnapshotResPath(CubeSegment cubeSegment, String tableName, SnapshotTableDesc snapshotTableDesc) {

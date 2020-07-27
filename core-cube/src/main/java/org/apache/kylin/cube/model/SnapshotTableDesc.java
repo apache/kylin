@@ -60,16 +60,4 @@ public class SnapshotTableDesc implements java.io.Serializable{
     public void setGlobal(boolean global) {
         this.global = global;
     }
-
-    public boolean isExtSnapshotTable() {
-        return !SnapshotTable.STORAGE_TYPE_METASTORE.equals(storageType);
-    }
-
-    public boolean isEnableLocalCache() {
-        return enableLocalCache;
-    }
-
-    public void setEnableLocalCache(boolean enableLocalCache) {
-        this.enableLocalCache = enableLocalCache;
-    }
 }
