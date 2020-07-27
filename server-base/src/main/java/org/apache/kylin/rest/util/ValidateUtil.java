@@ -50,7 +50,7 @@ import com.google.common.base.Preconditions;
 
 @Component("validateUtil")
 public class ValidateUtil {
-    private final static Pattern alphaNumUnderscorePattren = Pattern.compile("[a-zA-Z0-9_]+");
+    private final static Pattern alphaNumUnderscorePattern = Pattern.compile("[a-zA-Z0-9_]+");
 
     @Autowired
     @Qualifier("tableService")
@@ -73,7 +73,11 @@ public class ValidateUtil {
     private IUserGroupService userGroupService;
 
     public static boolean isAlphanumericUnderscore(String toCheck) {
-        return toCheck == null ? false : alphaNumUnderscorePattren.matcher(toCheck).matches();
+        return toCheck != null && alphaNumUnderscorePattern.matcher(toCheck).matches();
+    }
+
+    public static String convertStringToBeAlphanumericUnderscore(String toBeConverted) {
+        return toBeConverted.replaceAll("[^a-zA-Z0-9_]", "");
     }
 
     public void checkIdentifiersExists(String name, boolean isPrincipal) throws IOException {

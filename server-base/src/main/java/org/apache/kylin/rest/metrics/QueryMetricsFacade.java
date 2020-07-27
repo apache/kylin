@@ -36,6 +36,7 @@ import org.apache.kylin.metrics.lib.impl.TimedRecordEvent;
 import org.apache.kylin.metrics.property.QueryCubePropertyEnum;
 import org.apache.kylin.metrics.property.QueryPropertyEnum;
 import org.apache.kylin.metrics.property.QueryRPCPropertyEnum;
+import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.slf4j.Logger;
@@ -121,26 +122,32 @@ public class QueryMetricsFacade {
                     sqlResponse.getThrowable());
 
             long totalStorageReturnCount = 0L;
-            for (Map<String, QueryContext.CubeSegmentStatistics> cubeEntry : contextEntry.getCubeSegmentStatisticsMap()
-                    .values()) {
-                for (QueryContext.CubeSegmentStatistics segmentEntry : cubeEntry.values()) {
-                    RecordEvent cubeSegmentMetricsEvent = new TimedRecordEvent(
-                            KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectQueryCube());
+            if (contextEntry.getQueryType().equalsIgnoreCase(OLAPQuery.EnumeratorTypeEnum.OLAP.name())) {
+                for (Map<String, QueryContext.CubeSegmentStatistics> cubeEntry : contextEntry.getCubeSegmentStatisticsMap()
+                        .values()) {
+                    for (QueryContext.CubeSegmentStatistics segmentEntry : cubeEntry.values()) {
+                        RecordEvent cubeSegmentMetricsEvent = new TimedRecordEvent(
+                                KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectQueryCube());
 
-                    setCubeWrapper(cubeSegmentMetricsEvent, //
-                            norm(sqlRequest.getProject()), segmentEntry.getCubeName(), segmentEntry.getSegmentName(),
-                            segmentEntry.getSourceCuboidId(), segmentEntry.getTargetCuboidId(),
-                            segmentEntry.getFilterMask());
+                        setCubeWrapper(cubeSegmentMetricsEvent, //
+                                norm(sqlRequest.getProject()), segmentEntry.getCubeName(), segmentEntry.getSegmentName(),
+                                segmentEntry.getSourceCuboidId(), segmentEntry.getTargetCuboidId(),
+                                segmentEntry.getFilterMask());
 
-                    setCubeStats(cubeSegmentMetricsEvent, //
-                            segmentEntry.getCallCount(), segmentEntry.getCallTimeSum(), segmentEntry.getCallTimeMax(),
-                            segmentEntry.getStorageSkippedRows(), segmentEntry.getStorageScannedRows(),
-                            segmentEntry.getStorageReturnedRows(), segmentEntry.getStorageAggregatedRows(),
-                            segmentEntry.isIfSuccess(), 1.0 / cubeEntry.size());
+                        setCubeStats(cubeSegmentMetricsEvent, //
+                                segmentEntry.getCallCount(), segmentEntry.getCallTimeSum(), segmentEntry.getCallTimeMax(),
+                                segmentEntry.getStorageSkippedRows(), segmentEntry.getStorageScannedRows(),
+                                segmentEntry.getStorageReturnedRows(), segmentEntry.getStorageAggregatedRows(),
+                                segmentEntry.isIfSuccess(), 1.0 / cubeEntry.size());
 
-                    totalStorageReturnCount += segmentEntry.getStorageReturnedRows();
-                    //For update cube segment level related query metrics
-                    MetricsManager.getInstance().update(cubeSegmentMetricsEvent);
+                        totalStorageReturnCount += segmentEntry.getStorageReturnedRows();
+                        //For update cube segment level related query metrics
+                        MetricsManager.getInstance().update(cubeSegmentMetricsEvent);
+                    }
+                }
+            } else {
+                if (!sqlResponse.getIsException()) {
+                    totalStorageReturnCount = sqlResponse.getResults().size();
                 }
             }
             setQueryStats(queryMetricsEvent, //

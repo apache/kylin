@@ -34,7 +34,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.KeyValueUtil;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
@@ -133,7 +132,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         HadoopUtil.healSickConfig(hbaseConf);
         Job job = Job.getInstance(hbaseConf, hbaseTableName);
         HTable table = new HTable(hbaseConf, hbaseTableName);
-        HFileOutputFormat2.configureIncrementalLoadMap(job, table);
+        HFileOutputFormat3.configureIncrementalLoadMap(job, table);
 
         logger.info("Saving HBase configuration to {}", hbaseConfPath);
         FileSystem fs = HadoopUtil.getWorkingFileSystem();

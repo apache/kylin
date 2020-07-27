@@ -305,6 +305,7 @@ public class StorageCleanupJob extends AbstractApplication {
 
         List<String> allJobs = executableManager.getAllJobIds();
         List<String> workingJobList = new ArrayList<String>();
+        List<String> allUuids = getAllUuids(allJobs);
         Map<String, String> segmentId2JobId = Maps.newHashMap();
 
         for (String jobId : allJobs) {
@@ -353,6 +354,11 @@ public class StorageCleanupJob extends AbstractApplication {
 
             if (!UUID_PATTERN.matcher(uuid).matches()) {
                 logger.debug("Skip table because pattern doesn't match, " + tableName);
+                continue;
+            }
+
+            if (!allUuids.contains(uuid)) {
+                logger.debug("Skip table because is not current deployment create, " + tableName);
                 continue;
             }
 
@@ -437,6 +443,22 @@ public class StorageCleanupJob extends AbstractApplication {
                         segmentId2JobId.toString());
             }
         }
+    }
+
+    private List<String> getAllUuids(List<String> allJobs) {
+        List<String> allUuids = new ArrayList<>();
+        for (String jobId : allJobs) {
+            allUuids.add(jobId);
+            try {
+                String segmentId = getSegmentIdFromJobId(jobId);
+                if (segmentId != null) {
+                    allUuids.add(segmentId);
+                }
+            } catch (Exception ex) {
+                logger.warn("Failed to find segment ID from job ID " + jobId + ", ignore it");
+            }
+        }
+        return allUuids;
     }
 
     private String getSegmentIdFromJobId(String jobId) {

@@ -295,7 +295,7 @@ public class CubeMigrationCLI extends AbstractApplication {
             for (TableRef tableRef : tableRefs) {
                 String tableId = tableRef.getTableIdentity();
                 if (path.contains(tableId)) {
-                    String prj = TableDesc.parseResourcePath(path).getSecond();
+                    String prj = TableDesc.parseResourcePath(path).getProject();
                     if (prj == null && tableMap.get(tableId) == null)
                         tableMap.put(tableRef.getTableIdentity(), path);
 
@@ -629,7 +629,7 @@ public class CubeMigrationCLI extends AbstractApplication {
     
     private String renameTableWithinProject(String srcItem) {
         if (dstProject != null && srcItem.contains(ResourceStore.TABLE_RESOURCE_ROOT)) {
-            String tableIdentity = TableDesc.parseResourcePath(srcItem).getFirst();
+            String tableIdentity = TableDesc.parseResourcePath(srcItem).getTable();
             if (srcItem.contains(ResourceStore.TABLE_EXD_RESOURCE_ROOT))
                 return TableExtDesc.concatResourcePath(tableIdentity, dstProject);
             else

@@ -885,7 +885,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getHiveDatabaseForIntermediateTable() {
-        return this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT);
+        return CliCommandExecutor.checkHiveProperty(this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT));
     }
 
     public String getFlatTableStorageFormat() {
@@ -975,6 +975,10 @@ abstract public class KylinConfigBase implements Serializable {
         } else {
             return v;
         }
+    }
+
+    public String getHiveMetaDataType() {
+        return getOptional("kylin.source.hive.metadata-type", "hcatalog");
     }
 
     // ============================================================================
@@ -1446,7 +1450,7 @@ abstract public class KylinConfigBase implements Serializable {
     // check KYLIN-3358, need deploy coprocessor if enabled
     // finally should be deprecated
     public boolean isDynamicColumnEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.enable-dynamic-column", TRUE));
+        return Boolean.parseBoolean(getOptional("kylin.query.enable-dynamic-column", FALSE));
     }
 
     //check KYLIN-1684, in most cases keep the default value
@@ -1808,6 +1812,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.web.dashboard-enabled", FALSE));
     }
 
+    public boolean isWebConfigEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.web.set-config-enable", FALSE));
+    }
+
     public String getPropertiesWhiteList() {
         return getOptional("kylin.web.properties.whitelist", "kylin.web.timezone,kylin.query.cache-enabled,kylin.env,"
                 + "kylin.web.hive-limit,kylin.storage.default,"
@@ -1973,5 +1981,9 @@ abstract public class KylinConfigBase implements Serializable {
 
     public boolean isLimitPushDownEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.storage.limit-push-down-enabled", TRUE));
+    }
+
+    public String getIntersectFilterOrSeparator() {
+        return getOptional("kylin.query.intersect.separator", "|");
     }
 }

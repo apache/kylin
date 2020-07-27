@@ -45,7 +45,6 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
@@ -62,6 +61,7 @@ import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -713,7 +713,8 @@ public class CubeManager implements IRealizationProvider {
             checkInputRanges(tsRange, segRange);
 
             // fix start/end a bit
-            if (cubeCopy.getModel().getPartitionDesc().isPartitioned()) {
+            PartitionDesc partitionDesc = cubeCopy.getModel().getPartitionDesc();
+            if (partitionDesc != null && partitionDesc.isPartitioned()) {
                 // if missing start, set it to where last time ends
                 if (tsRange != null && tsRange.start.v == 0) {
                     CubeDesc cubeDesc = cubeCopy.getDescriptor();
@@ -745,8 +746,8 @@ public class CubeManager implements IRealizationProvider {
             CubeInstance cubeCopy = cube.latestCopyForWrite(); // get a latest copy
 
             checkInputRanges(tsRange, segRange);
-
-            if (cubeCopy.getModel().getPartitionDesc().isPartitioned() == false) {
+            PartitionDesc partitionDesc = cubeCopy.getModel().getPartitionDesc();
+            if (partitionDesc == null || partitionDesc.isPartitioned() == false) {
                 // full build
                 tsRange = null;
                 segRange = null;
@@ -1239,7 +1240,7 @@ public class CubeManager implements IRealizationProvider {
                     IRealization realization = registry.getRealization(entry.getType(), entry.getRealization());
                     if (realization != null && realization.isReady() && realization instanceof CubeInstance) {
                         CubeInstance current = (CubeInstance) realization;
-                        if (checkMeetSnapshotTable(current, lookupTableName)) {
+                        if (current.getDescriptor().findDimensionByTable(lookupTableName) != null) {
                             CubeSegment segment = current.getLatestReadySegment();
                             if (segment != null) {
                                 long latestBuildTime = segment.getLastBuildTime();
@@ -1254,31 +1255,12 @@ public class CubeManager implements IRealizationProvider {
             }
         } catch (Exception e) {
             logger.info("Unexpected error.", e);
+            throw e;
         }
         if (!cubeInstance.equals(cube)) {
             logger.debug("Picked cube {} over {} as it provides a more recent snapshot of the lookup table {}", cube,
                     cubeInstance, lookupTableName);
         }
         return cube == null ? cubeInstance : cube;
-    }
-
-    /**
-     * check if {toCheck} has snapshot of {lookupTableName}
-     * @param lookupTableName look like {SCHMEA}.{TABLE}
-     */
-    private boolean checkMeetSnapshotTable(CubeInstance toCheck, String lookupTableName) {
-        boolean checkRes = false;
-        String lookupTbl = lookupTableName;
-        String[] strArr = lookupTableName.split("\\.");
-        if (strArr.length > 1) {
-            lookupTbl = strArr[strArr.length - 1];
-        }
-        for (DimensionDesc dimensionDesc : toCheck.getDescriptor().getDimensions()) {
-            if (dimensionDesc.getTableRef().getTableName().equalsIgnoreCase(lookupTbl)) {
-                checkRes = true;
-                break;
-            }
-        }
-        return checkRes;
     }
 }

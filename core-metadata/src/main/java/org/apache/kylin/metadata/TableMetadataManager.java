@@ -35,7 +35,6 @@ import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
@@ -43,6 +42,7 @@ import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableDesc.TableProject;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -118,7 +118,7 @@ public class TableMetadataManager {
                 TableDesc.class, srcTableMap) {
             @Override
             protected TableDesc initEntityAfterReload(TableDesc t, String resourceName) {
-                String prj = TableDesc.parseResourcePath(resourceName).getSecond();
+                String prj = TableDesc.parseResourcePath(resourceName).getProject();
                 t.init(config, prj);
                 return t;
             }
@@ -138,9 +138,9 @@ public class TableMetadataManager {
                     srcTableCrud.reloadQuietly(cacheKey);
             }
 
-            Pair<String, String> pair = TableDesc.parseResourcePath(cacheKey);
-            String table = pair.getFirst();
-            String prj = pair.getSecond();
+            TableProject tableProject = TableDesc.parseResourcePath(cacheKey);
+            String table = tableProject.getTable();
+            String prj = tableProject.getProject();
 
             if (prj == null) {
                 for (ProjectInstance p : ProjectManager.getInstance(config).findProjectsByTable(table)) {
@@ -299,7 +299,7 @@ public class TableMetadataManager {
                     t = convertOldTableExtToNewer(resourceName);
                 }
 
-                String prj = TableDesc.parseResourcePath(resourceName).getSecond();
+                String prj = TableDesc.parseResourcePath(resourceName).getProject();
                 t.init(prj);
                 return t;
             }
@@ -424,7 +424,7 @@ public class TableMetadataManager {
         String cardinality = attrs.get(MetadataConstants.TABLE_EXD_CARDINALITY);
 
         // parse table identity from file name
-        String tableIdentity = TableDesc.parseResourcePath(resourceName).getFirst();
+        String tableIdentity = TableDesc.parseResourcePath(resourceName).getTable();
         TableExtDesc result = new TableExtDesc();
         result.setIdentity(tableIdentity);
         result.setUuid(RandomUtil.randomUUID().toString());
@@ -484,6 +484,7 @@ public class TableMetadataManager {
 
     public void removeExternalFilter(String name) throws IOException {
         try (AutoLock lock = extFilterMapLock.lockForWrite()) {
+            name = name.replaceAll("[./]", "");
             extFilterCrud.delete(name);
         }
     }

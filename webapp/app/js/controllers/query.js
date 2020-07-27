@@ -56,6 +56,8 @@ KylinApp
             selectedProject: null
         };
 
+        $scope.locationChangeConfirmed = false;
+
         var Query = {
             createNew: function (sql, project) {
                 var query = {
@@ -424,20 +426,23 @@ KylinApp
             });
 
             if (isExecuting && (next.replace(current, "").indexOf("#") != 0)) {
-                SweetAlert.swal({
-                    title: '',
-                    text: "You've executing query in current page, are you sure to leave this page?",
-                    type: '',
-                    showCancelButton: true,
-                    confirmButtonColor: '#DD6B55',
-                    confirmButtonText: "Yes",
-                    closeOnConfirm: true
-                }, function(isConfirm) {
-                    if(!isConfirm){
-                        event.preventDefault();
-                    }
-
-                });
+                if (!$scope.locationChangeConfirmed) {
+                    event.preventDefault();
+                    SweetAlert.swal({
+                      title: '',
+                      text: "You've executing query in current page, are you sure to leave this page?",
+                      type: '',
+                      showCancelButton: true,
+                      confirmButtonColor: '#DD6B55',
+                      confirmButtonText: "Yes",
+                      closeOnConfirm: true
+                    }, function(isConfirm) {
+                        if(isConfirm){
+                          $scope.locationChangeConfirmed = true;
+                          $location.path($location.url(next).hash());
+                        }
+                    });
+                }
             }
         });
 
@@ -503,11 +508,11 @@ KylinApp
                 $scope.chart = undefined;
 
                 var selectedDimension = query.graph.state.dimensions;
-                if (selectedDimension && query.graph.type.dimension.types.indexOf(selectedDimension.type) > -1) {
+                var selectedMetric = query.graph.state.metrics;
+                if (selectedDimension && selectedMetric && query.graph.type.dimension.types.indexOf(selectedDimension.type) > -1) {
                     $scope.chart = {};
 
                     var chartType = query.graph.type.value;
-                    var selectedMetric = query.graph.state.metrics;
 
                     var dataValues = [];
                     angular.forEach(query.result.results, function(result, ind) {

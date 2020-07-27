@@ -86,9 +86,11 @@ public class DataModelManager {
                 getDataModelImplClass(), dataModelDescMap) {
             @Override
             protected DataModelDesc initEntityAfterReload(DataModelDesc model, String resourceName) {
-                String prj = ProjectManager.getInstance(config).getProjectOfModel(model.getName()).getName();
+                String prj = (null == model.getProjectName()
+                        ? ProjectManager.getInstance(config).getProjectOfModel(model.getName()).getName()
+                        : model.getProjectName());
                 if (!model.isDraft()) {
-                    model.init(config, getAllTablesMap(prj), getModels(prj), true);
+                    model.init(config, getAllTablesMap(prj));
                 }
                 return model;
             }
@@ -236,21 +238,12 @@ public class DataModelManager {
 
             ProjectManager prjMgr = ProjectManager.getInstance(config);
             ProjectInstance prj = prjMgr.getProject(projectName);
-            if (prj.containsModel(name))
+            if (prj.containsModel(name)) {
                 throw new IllegalStateException("project " + projectName + " already contains model " + name);
-
-            try {
-                // Temporarily register model under project, because we want to 
-                // update project formally after model is saved.
-                prj.getModels().add(name);
-
-                desc.setOwner(owner);
-                logger.info("Saving Model {} to Project {} with {} as owner", desc.getName(), projectName, owner);
-                desc = saveDataModelDesc(desc);
-
-            } finally {
-                prj.getModels().remove(name);
             }
+            desc.setOwner(owner);
+            logger.info("Saving Model {} to Project {} with {} as owner", desc.getName(), projectName, owner);
+            desc = saveDataModelDesc(desc, projectName);
 
             // now that model is saved, update project formally
             prjMgr.addModelToProject(name, projectName);
@@ -266,16 +259,14 @@ public class DataModelManager {
                 throw new IllegalArgumentException("DataModelDesc '" + name + "' does not exist.");
             }
 
-            return saveDataModelDesc(desc);
+            return saveDataModelDesc(desc, ProjectManager.getInstance(config).getProjectOfModel(desc.getName()).getName());
         }
     }
 
-    private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
-
-        String prj = ProjectManager.getInstance(config).getProjectOfModel(dataModelDesc.getName()).getName();
+    private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc, String projectName) throws IOException {
 
         if (!dataModelDesc.isDraft())
-            dataModelDesc.init(config, this.getAllTablesMap(prj), getModels(prj), false);
+            dataModelDesc.init(config, this.getAllTablesMap(projectName));
 
         crud.save(dataModelDesc);
 

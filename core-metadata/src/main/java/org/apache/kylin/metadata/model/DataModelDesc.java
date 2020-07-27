@@ -104,6 +104,9 @@ public class DataModelDesc extends RootPersistentEntity {
     @JsonProperty("capacity")
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
+    @JsonProperty("projectName")
+    private String projectName; //for KYLIN-4080
+
     // computed attributes
     private TableRef rootFactTableRef;
     private Set<TableRef> factTableRefs = Sets.newLinkedHashSet();
@@ -342,13 +345,11 @@ public class DataModelDesc extends RootPersistentEntity {
     /**
      * @param isOnlineModel will affect the exposed view of project specific tables
      */
-    public void init(KylinConfig config, Map<String, TableDesc> tables, List<DataModelDesc> otherModels,
-            boolean isOnlineModel) {
-        initInternal(config, tables, otherModels, isOnlineModel);
+    public void init(KylinConfig config, Map<String, TableDesc> tables) {
+        initInternal(config, tables);
     }
 
-    public void initInternal(KylinConfig config, Map<String, TableDesc> tables, List<DataModelDesc> otherModels,
-            boolean isOnlineModel) {
+    public void initInternal(KylinConfig config, Map<String, TableDesc> tables) {
         this.config = config;
 
         initJoinTablesForUpgrade();
@@ -362,7 +363,7 @@ public class DataModelDesc extends RootPersistentEntity {
 
         boolean reinit = validate();
         if (reinit) { // model slightly changed by validate() and must init() again
-            initInternal(config, tables, otherModels, isOnlineModel);
+            initInternal(config, tables);
         }
     }
 
@@ -767,6 +768,14 @@ public class DataModelDesc extends RootPersistentEntity {
         return ProjectManager.getInstance(getConfig()).getProjectOfModel(this.getName());
     }
 
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
+    }
+
     public static DataModelDesc getCopyOf(DataModelDesc orig) {
         return copy(orig, new DataModelDesc());
     }
@@ -783,6 +792,7 @@ public class DataModelDesc extends RootPersistentEntity {
         copy.metrics = orig.metrics;
         copy.filterCondition = orig.filterCondition;
         copy.capacity = orig.capacity;
+        copy.projectName = orig.projectName;
         if (orig.getPartitionDesc() != null) {
             copy.partitionDesc = PartitionDesc.getCopyOf(orig.getPartitionDesc());
         }

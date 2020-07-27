@@ -28,25 +28,20 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.kylin.common.util.EncryptUtil;
+
 /**
  */
 public class BroadcasterReceiveServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
-
-    public interface BroadcasterHandler {
-
-        void handle(String type, String name, String event);
-    }
-
+    private static final Pattern PATTERN = Pattern.compile("/(.+)/(.+)/(.+)");
+    private static final Pattern PATTERN2 = Pattern.compile("/(.+)/(.+)");
     private final BroadcasterHandler handler;
 
     public BroadcasterReceiveServlet(BroadcasterHandler handler) {
         this.handler = handler;
     }
-
-    private static final Pattern PATTERN = Pattern.compile("/(.+)/(.+)/(.+)");
-    private static final Pattern PATTERN2 = Pattern.compile("/(.+)/(.+)");
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -72,7 +67,8 @@ public class BroadcasterReceiveServlet extends HttpServlet {
             if (handler != null) {
                 handler.handle(type, cacheKey, event);
             }
-            resp.getWriter().write("type:" + type + " name:" + cacheKey + " event:" + event);
+            resp.getWriter().write("Encrypted(type:" + EncryptUtil.encrypt(type) + " name:" + EncryptUtil.encrypt(cacheKey)
+                    + " event:" + EncryptUtil.encrypt(event) + ")");
         } else if (matcher2.matches()) {
             String type = matcher2.group(1);
             String event = matcher2.group(2);
@@ -82,10 +78,16 @@ public class BroadcasterReceiveServlet extends HttpServlet {
             if (handler != null) {
                 handler.handle(type, cacheKey, event);
             }
-            resp.getWriter().write("type:" + type + " name:" + cacheKey + " event:" + event);
+            resp.getWriter().write("Encrypted(type:" + EncryptUtil.encrypt(type) + " name:" + EncryptUtil.encrypt(cacheKey)
+                    + " event:" + EncryptUtil.encrypt(event) + ")");
         } else {
             resp.getWriter().write("not valid uri");
         }
         resp.getWriter().close();
+    }
+
+    public interface BroadcasterHandler {
+
+        void handle(String type, String name, String event);
     }
 }
