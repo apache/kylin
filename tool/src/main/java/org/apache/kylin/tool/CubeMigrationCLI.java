@@ -66,7 +66,6 @@ import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.hbase.HBaseConnection;
-import org.apache.kylin.stream.core.source.StreamingSourceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -339,10 +338,10 @@ public class CubeMigrationCLI extends AbstractApplication {
             metaResource.add(ACL_PREFIX + cube.getModel().getUuid());
         }
 
-        if (cubeDesc.isStreamingCube()) {
-            // add streaming source config info for streaming cube
-            metaResource.add(StreamingSourceConfig.concatResourcePath(cubeDesc.getModel().getRootFactTableName()));
-        }
+//        if (cubeDesc.isStreamingCube()) {
+//            // add streaming source config info for streaming cube
+//            metaResource.add(StreamingSourceConfig.concatResourcePath(cubeDesc.getModel().getRootFactTableName()));
+//        }
     }
 
     @Override

@@ -32,18 +32,18 @@ import org.junit.Test;
  */
 public class ITHiveTableReaderTest extends HBaseMetadataTestCase {
 
-    @Test
-    public void test() throws IOException {
-        HiveTableReader reader = new HiveTableReader("default", "test_kylin_fact");
-        int rowNumber = 0;
-        while (reader.next()) {
-            String[] row = reader.getRow();
-            Assert.assertEquals(12, row.length);
-            //System.out.println(ArrayUtils.toString(row));
-            rowNumber++;
-        }
-
-        reader.close();
-        Assert.assertEquals(10000, rowNumber);
-    }
+//    @Test
+//    public void test() throws IOException {
+//        HiveTableReader reader = new HiveTableReader("default", "test_kylin_fact");
+//        int rowNumber = 0;
+//        while (reader.next()) {
+//            String[] row = reader.getRow();
+//            Assert.assertEquals(12, row.length);
+//            //System.out.println(ArrayUtils.toString(row));
+//            rowNumber++;
+//        }
+//
+//        reader.close();
+//        Assert.assertEquals(10000, rowNumber);
+//    }
 }

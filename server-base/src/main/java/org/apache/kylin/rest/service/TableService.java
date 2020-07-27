@@ -47,20 +47,9 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.dict.lookup.ExtTableSnapshotInfo;
-import org.apache.kylin.dict.lookup.ExtTableSnapshotInfoManager;
-import org.apache.kylin.dict.lookup.IExtLookupTableCache.CacheState;
-import org.apache.kylin.dict.lookup.LookupProviderFactory;
 import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
-import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
-import org.apache.kylin.engine.mr.common.MapReduceExecutable;
-import org.apache.kylin.engine.spark.SparkColumnCardinality;
-import org.apache.kylin.engine.spark.SparkExecutable;
 import org.apache.kylin.engine.spark.source.CsvSource;
-import org.apache.kylin.job.execution.CardinalityExecutable;
-import org.apache.kylin.job.execution.ExecutableManager;
-import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.CsvColumnDesc;
@@ -79,8 +68,6 @@ import org.apache.kylin.source.IReadableTable.TableSignature;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceManager;
-import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityJob;
-import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityUpdateJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -357,54 +344,22 @@ public class TableService extends BasicService {
         return descs;
     }
 
-    public void calculateCardinalityIfNotPresent(String[] tables, String submitter, String prj) throws Exception {
-        // calculate cardinality for Hive source
-        ProjectInstance projectInstance = getProjectManager().getProject(prj);
-        if (projectInstance == null || projectInstance.getSourceType() != ISourceAware.ID_HIVE) {
-            return;
-        }
-        TableMetadataManager metaMgr = getTableManager();
-        ExecutableManager exeMgt = ExecutableManager.getInstance(getConfig());
-        for (String table : tables) {
-            TableExtDesc tableExtDesc = metaMgr.getTableExt(table, prj);
-            String jobID = tableExtDesc.getJodID();
-            if (null == jobID || ExecutableState.RUNNING != exeMgt.getOutput(jobID).getState()) {
-                calculateCardinality(table, submitter, prj);
-            }
-        }
-    }
-
-    public void updateSnapshotLocalCache(String project, String tableName, String snapshotID) {
-        ExtTableSnapshotInfoManager snapshotInfoManager = ExtTableSnapshotInfoManager.getInstance(getConfig());
-        ExtTableSnapshotInfo extTableSnapshotInfo = snapshotInfoManager.getSnapshot(tableName, snapshotID);
-        TableDesc tableDesc = getTableManager().getTableDesc(tableName, project);
-        if (extTableSnapshotInfo == null) {
-            throw new IllegalArgumentException(
-                    "cannot find ext snapshot info for table:" + tableName + " snapshot:" + snapshotID);
-        }
-        LookupProviderFactory.rebuildLocalCache(tableDesc, extTableSnapshotInfo);
-    }
-
-    public void removeSnapshotLocalCache(String tableName, String snapshotID) {
-        ExtTableSnapshotInfoManager snapshotInfoManager = ExtTableSnapshotInfoManager.getInstance(getConfig());
-        ExtTableSnapshotInfo extTableSnapshotInfo = snapshotInfoManager.getSnapshot(tableName, snapshotID);
-        if (extTableSnapshotInfo == null) {
-            throw new IllegalArgumentException(
-                    "cannot find ext snapshot info for table:" + tableName + " snapshot:" + snapshotID);
-        }
-        LookupProviderFactory.removeLocalCache(extTableSnapshotInfo);
-    }
-
-    public String getSnapshotLocalCacheState(String tableName, String snapshotID) {
-        ExtTableSnapshotInfoManager snapshotInfoManager = ExtTableSnapshotInfoManager.getInstance(getConfig());
-        ExtTableSnapshotInfo extTableSnapshotInfo = snapshotInfoManager.getSnapshot(tableName, snapshotID);
-        if (extTableSnapshotInfo == null) {
-            throw new IllegalArgumentException(
-                    "cannot find ext snapshot info for table:" + tableName + " snapshot:" + snapshotID);
-        }
-        CacheState cacheState = LookupProviderFactory.getCacheState(extTableSnapshotInfo);
-        return cacheState.name();
-    }
+//    public void calculateCardinalityIfNotPresent(String[] tables, String submitter, String prj) throws Exception {
+//        // calculate cardinality for Hive source
+//        ProjectInstance projectInstance = getProjectManager().getProject(prj);
+//        if (projectInstance == null || projectInstance.getSourceType() != ISourceAware.ID_HIVE) {
+//            return;
+//        }
+//        TableMetadataManager metaMgr = getTableManager();
+//        ExecutableManager exeMgt = ExecutableManager.getInstance(getConfig());
+//        for (String table : tables) {
+//            TableExtDesc tableExtDesc = metaMgr.getTableExt(table, prj);
+//            String jobID = tableExtDesc.getJodID();
+//            if (null == jobID || ExecutableState.RUNNING != exeMgt.getOutput(jobID).getState()) {
+//                calculateCardinality(table, submitter, prj);
+//            }
+//        }
+//    }
 
     public List<TableSnapshotResponse> getLookupTableSnapshots(String project, String tableName) throws IOException {
         TableDesc tableDesc = getTableManager().getTableDesc(tableName, project);
@@ -418,25 +373,12 @@ public class TableService extends BasicService {
 
     List<TableSnapshotResponse> internalGetLookupTableSnapshots(String tableName, TableSignature signature)
             throws IOException {
-        ExtTableSnapshotInfoManager extSnapshotInfoManager = ExtTableSnapshotInfoManager.getInstance(getConfig());
         SnapshotManager snapshotManager = SnapshotManager.getInstance(getConfig());
-        List<ExtTableSnapshotInfo> extTableSnapshots = extSnapshotInfoManager.getSnapshots(tableName);
         List<SnapshotTable> metaStoreTableSnapshots = snapshotManager.getSnapshots(tableName, signature);
 
         Map<String, List<String>> snapshotUsageMap = getSnapshotUsages();
 
         List<TableSnapshotResponse> result = Lists.newArrayList();
-        for (ExtTableSnapshotInfo extTableSnapshot : extTableSnapshots) {
-            TableSnapshotResponse response = new TableSnapshotResponse();
-            response.setSnapshotID(extTableSnapshot.getId());
-            response.setSnapshotType(TableSnapshotResponse.TYPE_EXT);
-            response.setLastBuildTime(extTableSnapshot.getLastBuildTime());
-            response.setStorageType(extTableSnapshot.getStorageType());
-            response.setSourceTableSize(extTableSnapshot.getSignature().getSize());
-            response.setSourceTableLastModifyTime(extTableSnapshot.getSignature().getLastModifiedTime());
-            response.setCubesAndSegmentsUsage(snapshotUsageMap.get(extTableSnapshot.getResourcePath()));
-            result.add(response);
-        }
 
         for (SnapshotTable metaStoreTableSnapshot : metaStoreTableSnapshots) {
             TableSnapshotResponse response = new TableSnapshotResponse();
@@ -484,62 +426,62 @@ public class TableService extends BasicService {
         return snapshotCubeSegmentMap;
     }
 
-    /**
-     * Generate cardinality for table This will trigger a hadoop job
-     * The result will be merged into table exd info
-     *
-     * @param tableName
-     */
-    public void calculateCardinality(String tableName, String submitter, String prj) throws Exception {
-        aclEvaluate.checkProjectWritePermission(prj);
-        Message msg = MsgPicker.getMsg();
-
-        tableName = normalizeHiveTableName(tableName);
-        TableDesc table = getTableManager().getTableDesc(tableName, prj);
-        final TableExtDesc tableExt = getTableManager().getTableExt(tableName, prj);
-        if (table == null) {
-            BadRequestException e = new BadRequestException(
-                    String.format(Locale.ROOT, msg.getTABLE_DESC_NOT_FOUND(), tableName));
-            logger.error("Cannot find table descriptor " + tableName, e);
-            throw e;
-        }
-
-        CardinalityExecutable job = new CardinalityExecutable();
-        //make sure the job could be scheduled when the DistributedScheduler is enable.
-        job.setParam("segmentId", tableName);
-        job.setName("Hive Column Cardinality calculation for table '" + tableName + "'");
-        job.setSubmitter(submitter);
-
-        String outPath = getConfig().getHdfsWorkingDirectory() + "cardinality/" + job.getId() + "/" + tableName;
-        String param = "-table " + tableName + " -output " + outPath + " -project " + prj;
-
-        if (getConfig().isSparkCardinalityEnabled()) { // use spark engine to calculate cardinality
-            SparkExecutable step1 = new SparkExecutable();
-            step1.setClassName(SparkColumnCardinality.class.getName());
-            step1.setParam(SparkColumnCardinality.OPTION_OUTPUT.getOpt(), outPath);
-            step1.setParam(SparkColumnCardinality.OPTION_PRJ.getOpt(), prj);
-            step1.setParam(SparkColumnCardinality.OPTION_TABLE_NAME.getOpt(), tableName);
-            step1.setParam(SparkColumnCardinality.OPTION_COLUMN_COUNT.getOpt(), String.valueOf(table.getColumnCount()));
-            job.addTask(step1);
-        } else {
-            MapReduceExecutable step1 = new MapReduceExecutable();
-            step1.setMapReduceJobClass(HiveColumnCardinalityJob.class);
-            step1.setMapReduceParams(param);
-            step1.setParam("segmentId", tableName);
-            job.addTask(step1);
-        }
-
-        HadoopShellExecutable step2 = new HadoopShellExecutable();
-
-        step2.setJobClass(HiveColumnCardinalityUpdateJob.class);
-        step2.setJobParams(param);
-        step2.setParam("segmentId", tableName);
-        job.addTask(step2);
-        tableExt.setJodID(job.getId());
-        getTableManager().saveTableExt(tableExt, prj);
-
-        getExecutableManager().addJob(job);
-    }
+//    /**
+//     * Generate cardinality for table This will trigger a hadoop job
+//     * The result will be merged into table exd info
+//     *
+//     * @param tableName
+//     */
+//    public void calculateCardinality(String tableName, String submitter, String prj) throws Exception {
+//        aclEvaluate.checkProjectWritePermission(prj);
+//        Message msg = MsgPicker.getMsg();
+//
+//        tableName = normalizeHiveTableName(tableName);
+//        TableDesc table = getTableManager().getTableDesc(tableName, prj);
+//        final TableExtDesc tableExt = getTableManager().getTableExt(tableName, prj);
+//        if (table == null) {
+//            BadRequestException e = new BadRequestException(
+//                    String.format(Locale.ROOT, msg.getTABLE_DESC_NOT_FOUND(), tableName));
+//            logger.error("Cannot find table descriptor " + tableName, e);
+//            throw e;
+//        }
+//
+//        CardinalityExecutable job = new CardinalityExecutable();
+//        //make sure the job could be scheduled when the DistributedScheduler is enable.
+//        job.setParam("segmentId", tableName);
+//        job.setName("Hive Column Cardinality calculation for table '" + tableName + "'");
+//        job.setSubmitter(submitter);
+//
+//        String outPath = getConfig().getHdfsWorkingDirectory() + "cardinality/" + job.getId() + "/" + tableName;
+//        String param = "-table " + tableName + " -output " + outPath + " -project " + prj;
+//
+//        if (getConfig().isSparkCardinalityEnabled()) { // use spark engine to calculate cardinality
+//            SparkExecutable step1 = new SparkExecutable();
+//            step1.setClassName(SparkColumnCardinality.class.getName());
+//            step1.setParam(SparkColumnCardinality.OPTION_OUTPUT.getOpt(), outPath);
+//            step1.setParam(SparkColumnCardinality.OPTION_PRJ.getOpt(), prj);
+//            step1.setParam(SparkColumnCardinality.OPTION_TABLE_NAME.getOpt(), tableName);
+//            step1.setParam(SparkColumnCardinality.OPTION_COLUMN_COUNT.getOpt(), String.valueOf(table.getColumnCount()));
+//            job.addTask(step1);
+//        } else {
+//            MapReduceExecutable step1 = new MapReduceExecutable();
+//            step1.setMapReduceJobClass(HiveColumnCardinalityJob.class);
+//            step1.setMapReduceParams(param);
+//            step1.setParam("segmentId", tableName);
+//            job.addTask(step1);
+//        }
+//
+//        HadoopShellExecutable step2 = new HadoopShellExecutable();
+//
+//        step2.setJobClass(HiveColumnCardinalityUpdateJob.class);
+//        step2.setJobParams(param);
+//        step2.setParam("segmentId", tableName);
+//        job.addTask(step2);
+//        tableExt.setJodID(job.getId());
+//        getTableManager().saveTableExt(tableExt, prj);
+//
+//        getExecutableManager().addJob(job);
+//    }
 
     public String normalizeHiveTableName(String tableName) {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);

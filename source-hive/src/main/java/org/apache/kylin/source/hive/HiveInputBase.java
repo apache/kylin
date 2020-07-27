@@ -43,10 +43,6 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.IInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
-import org.apache.kylin.engine.spark.SparkCreatingFlatTable;
-import org.apache.kylin.engine.spark.SparkExecutable;
-import org.apache.kylin.engine.spark.SparkExecutableFactory;
-import org.apache.kylin.engine.spark.SparkSqlBatch;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -264,13 +260,6 @@ public class HiveInputBase {
                 if (kylinConfig.isLivyEnabled()) {
                     jobFlow.addTask(createFlatHiveTableByLivyStep(hiveInitStatements,
                             jobWorkingDir, cubeName, flatDesc));
-                } else {
-                    if (kylinConfig.isSparCreateHiveTableViaSparkEnable()) {
-                        jobFlow.addTask(createFlatHiveTableBySparkSql(hiveInitStatements,
-                                jobWorkingDir, cubeName, flatDesc));
-                    } else {
-                        jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName, flatDesc));
-                    }
                 }
             } else {
                 jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName, flatDesc));
@@ -356,52 +345,6 @@ public class HiveInputBase {
         CubingExecutableUtil.setCubeName(cubeName, step.getParams());
         step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
         return step;
-    }
-
-    protected static AbstractExecutable createFlatHiveTableBySparkSql(String hiveInitStatements,
-            String jobWorkingDir, String cubeName, IJoinedFlatTableDesc flatDesc) {
-        final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);
-        final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatDesc,
-                jobWorkingDir);
-        String insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatDesc);
-
-        KylinConfig config = flatDesc.getSegment().getConfig();
-        final SparkExecutable sparkExecutable = SparkExecutableFactory.instance(config);
-        sparkExecutable.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_TABLE_WITH_SPARK);
-        sparkExecutable.setClassName(SparkCreatingFlatTable.class.getName());
-
-        sparkExecutable.setParam(SparkSqlBatch.OPTION_CUBE_NAME.getOpt(), cubeName);
-        sparkExecutable.setParam(SparkSqlBatch.OPTION_STEP_NAME.getOpt(),
-                base64EncodeStr(ExecutableConstants.STEP_NAME_CREATE_FLAT_TABLE_WITH_SPARK));
-        sparkExecutable.setParam(SparkSqlBatch.OPTION_SEGMENT_ID.getOpt(),
-                flatDesc.getSegment().getName());
-        sparkExecutable.setParam(SparkSqlBatch.OPTION_SQL_COUNT.getOpt(),
-                String.valueOf(SparkCreatingFlatTable.SQL_COUNT));
-
-        sparkExecutable.setParam(SparkCreatingFlatTable.getSqlOption(0).getOpt(),
-                base64EncodeStr(hiveInitStatements));
-        sparkExecutable.setParam(SparkCreatingFlatTable.getSqlOption(1).getOpt(),
-                base64EncodeStr(dropTableHql));
-
-        // createTableHql include create table sql and alter table sql
-        String[] sqlArr = createTableHql.trim().split(";");
-        if (2 != sqlArr.length) {
-            throw new RuntimeException("create table hql should combined by a create table sql " +
-                    "and a alter sql, but got: " + createTableHql);
-        }
-        sparkExecutable.setParam(SparkCreatingFlatTable.getSqlOption(2).getOpt(),
-                base64EncodeStr(sqlArr[0]));
-        sparkExecutable.setParam(SparkCreatingFlatTable.getSqlOption(3).getOpt(),
-                base64EncodeStr(sqlArr[1]));
-
-        sparkExecutable.setParam(SparkCreatingFlatTable.getSqlOption(4).getOpt(),
-                base64EncodeStr(insertDataHqls));
-
-        StringBuilder jars = new StringBuilder();
-        StringUtil.appendWithSeparator(jars, config.getSparkAdditionalJars());
-        sparkExecutable.setJars(jars.toString());
-
-        return sparkExecutable;
     }
 
     private static String base64EncodeStr(String str) {

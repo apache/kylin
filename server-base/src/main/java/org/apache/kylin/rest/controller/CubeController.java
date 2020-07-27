@@ -47,12 +47,10 @@ import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
-import org.apache.kylin.engine.mr.common.CuboidStatsReaderUtil;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
@@ -70,7 +68,6 @@ import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.request.JobBuildRequest;
 import org.apache.kylin.rest.request.JobBuildRequest2;
 import org.apache.kylin.rest.request.JobOptimizeRequest;
-import org.apache.kylin.rest.request.LookupSnapshotBuildRequest;
 import org.apache.kylin.rest.response.CubeInstanceResponse;
 import org.apache.kylin.rest.response.CuboidTreeResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -83,7 +80,6 @@ import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.ValidateUtil;
-import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -290,28 +286,6 @@ public class CubeController extends BasicController {
             final CubeManager cubeMgr = cubeService.getCubeManager();
             final CubeInstance cube = cubeMgr.getCube(cubeName);
             return cubeService.rebuildLookupSnapshot(cube, segmentName, lookupTable);
-        } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage(), e);
-        }
-    }
-
-    /**
-     * Force rebuild a cube's lookup table snapshot
-     *
-     * @throws IOException
-     */
-    @RequestMapping(value = "/{cubeName}/refresh_lookup", method = { RequestMethod.PUT }, produces = {
-            "application/json" })
-    @ResponseBody
-    public JobInstance rebuildLookupSnapshot(@PathVariable String cubeName,
-            @RequestBody LookupSnapshotBuildRequest request) {
-        try {
-            final CubeManager cubeMgr = cubeService.getCubeManager();
-            final CubeInstance cube = cubeMgr.getCube(cubeName);
-            String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
-            return jobService.submitLookupSnapshotJob(cube, request.getLookupTableName(), request.getSegmentIDs(),
-                    submitter);
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
@@ -903,31 +877,31 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/cuboids/current", method = RequestMethod.GET)
-    @ResponseBody
-    public CuboidTreeResponse getCurrentCuboids(@PathVariable String cubeName) {
-        checkCubeExists(cubeName);
-        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-        // The cuboid tree displayed should be consistent with the current one
-        CuboidScheduler cuboidScheduler = cube.getCuboidScheduler();
-        Map<Long, Long> cuboidStatsMap = cube.getCuboids();
-        if (cuboidStatsMap == null) {
-            cuboidStatsMap = CuboidStatsReaderUtil.readCuboidStatsFromCube(cuboidScheduler.getAllCuboidIds(), cube);
-        }
-
-        Map<Long, Long> hitFrequencyMap = null;
-        Map<Long, Long> queryMatchMap = null;
-        try {
-            hitFrequencyMap = getTargetCuboidHitFrequency(cubeName);
-            queryMatchMap = cubeService.getCuboidQueryMatchCount(cubeName);
-        } catch (Exception e) {
-            logger.warn("Fail to query on system cube due to " + e);
-        }
-
-        Set<Long> currentCuboidSet = cube.getCuboidScheduler().getAllCuboidIds();
-        return cubeService.getCuboidTreeResponse(cuboidScheduler, cuboidStatsMap, hitFrequencyMap, queryMatchMap,
-                currentCuboidSet);
-    }
+//    @RequestMapping(value = "/{cubeName}/cuboids/current", method = RequestMethod.GET)
+//    @ResponseBody
+//    public CuboidTreeResponse getCurrentCuboids(@PathVariable String cubeName) {
+//        checkCubeExists(cubeName);
+//        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+//        // The cuboid tree displayed should be consistent with the current one
+//        CuboidScheduler cuboidScheduler = cube.getCuboidScheduler();
+//        Map<Long, Long> cuboidStatsMap = cube.getCuboids();
+//        if (cuboidStatsMap == null) {
+//            cuboidStatsMap = CuboidStatsReaderUtil.readCuboidStatsFromCube(cuboidScheduler.getAllCuboidIds(), cube);
+//        }
+//
+//        Map<Long, Long> hitFrequencyMap = null;
+//        Map<Long, Long> queryMatchMap = null;
+//        try {
+//            hitFrequencyMap = getTargetCuboidHitFrequency(cubeName);
+//            queryMatchMap = cubeService.getCuboidQueryMatchCount(cubeName);
+//        } catch (Exception e) {
+//            logger.warn("Fail to query on system cube due to " + e);
+//        }
+//
+//        Set<Long> currentCuboidSet = cube.getCuboidScheduler().getAllCuboidIds();
+//        return cubeService.getCuboidTreeResponse(cuboidScheduler, cuboidStatsMap, hitFrequencyMap, queryMatchMap,
+//                currentCuboidSet);
+//    }
 
     @RequestMapping(value = "/{cubeName}/cuboids/recommend", method = RequestMethod.GET)
     @ResponseBody
@@ -968,38 +942,38 @@ public class CubeController extends BasicController {
         return cubeService.getCuboidHitFrequency(cubeName, false);
     }
 
-    /**
-     * Initiate the very beginning of a streaming cube. Will seek the latest offests of each partition from streaming
-     * source (kafka) and record in the cube descriptor; In the first build job, it will use these offests as the start point.
-     *
-     * @param cubeName
-     * @return
-     */
-    @RequestMapping(value = "/{cubeName}/init_start_offsets", method = { RequestMethod.PUT }, produces = {
-            "application/json" })
-    @ResponseBody
-    public GeneralResponse initStartOffsets(@PathVariable String cubeName) {
-        checkCubeExists(cubeName);
-        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
-        if (cubeInstance.getSourceType() != ISourceAware.ID_STREAMING) {
-            String msg = "Cube '" + cubeName + "' is not a Streaming Cube.";
-            throw new IllegalArgumentException(msg);
-        }
-
-        final GeneralResponse response = new GeneralResponse();
-        try {
-            final Map<Integer, Long> startOffsets = KafkaClient.getLatestOffsets(cubeInstance);
-            CubeDesc desc = cubeInstance.getDescriptor();
-            desc.setPartitionOffsetStart(startOffsets);
-            cubeService.getCubeDescManager().updateCubeDesc(desc);
-            response.setProperty("result", "success");
-            response.setProperty("offsets", startOffsets.toString());
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-
-        return response;
-    }
+//    /**
+//     * Initiate the very beginning of a streaming cube. Will seek the latest offests of each partition from streaming
+//     * source (kafka) and record in the cube descriptor; In the first build job, it will use these offests as the start point.
+//     *
+//     * @param cubeName
+//     * @return
+//     */
+//    @RequestMapping(value = "/{cubeName}/init_start_offsets", method = { RequestMethod.PUT }, produces = {
+//            "application/json" })
+//    @ResponseBody
+//    public GeneralResponse initStartOffsets(@PathVariable String cubeName) {
+//        checkCubeExists(cubeName);
+//        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
+//        if (cubeInstance.getSourceType() != ISourceAware.ID_STREAMING) {
+//            String msg = "Cube '" + cubeName + "' is not a Streaming Cube.";
+//            throw new IllegalArgumentException(msg);
+//        }
+//
+//        final GeneralResponse response = new GeneralResponse();
+//        try {
+//            final Map<Integer, Long> startOffsets = KafkaClient.getLatestOffsets(cubeInstance);
+//            CubeDesc desc = cubeInstance.getDescriptor();
+//            desc.setPartitionOffsetStart(startOffsets);
+//            cubeService.getCubeDescManager().updateCubeDesc(desc);
+//            response.setProperty("result", "success");
+//            response.setProperty("offsets", startOffsets.toString());
+//        } catch (Throwable e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        return response;
+//    }
 
     private CubeDesc deserializeCubeDesc(CubeRequest cubeRequest) {
         CubeDesc desc = null;

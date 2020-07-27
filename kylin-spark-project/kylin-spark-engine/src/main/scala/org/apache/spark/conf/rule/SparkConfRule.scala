@@ -102,7 +102,7 @@ class ExecutorInstancesRule extends SparkConfRule {
     val layoutSize = helper.getOption(SparkConfHelper.LAYOUT_SIZE)
     val requiredCores = helper.getOption(SparkConfHelper.REQUIRED_CORES)
     logInfo(s"RequiredCores is $requiredCores")
-    val baseExecutorInstances = KylinConfig.getInstanceFromEnv.getSparkEngineBaseExuctorInstances
+    val baseExecutorInstances = KylinConfig.getInstanceFromEnv.getSparkEngineBaseExecutorInstances
     val calculateExecutorInsByLayoutSize = calculateExecutorInstanceSizeByLayoutSize(Integer.parseInt(layoutSize))
 
 
@@ -128,18 +128,18 @@ class ExecutorInstancesRule extends SparkConfRule {
   }
 
   override def fallback(helper: SparkConfHelper): Unit = {
-    helper.setConf(SparkConfHelper.EXECUTOR_INSTANCES, KylinConfig.getInstanceFromEnv.getSparkEngineBaseExuctorInstances.toString)
+    helper.setConf(SparkConfHelper.EXECUTOR_INSTANCES, KylinConfig.getInstanceFromEnv.getSparkEngineBaseExecutorInstances.toString)
   }
 
 
   def calculateExecutorInstanceSizeByLayoutSize(layoutSize: Int): Int = {
     logInfo(s"Calculate the number of executor instance size based on the number of layouts: $layoutSize")
     val config: KylinConfig = KylinConfig.getInstanceFromEnv
-    val baseInstances: Integer = config.getSparkEngineBaseExuctorInstances
+    val baseInstances: Integer = config.getSparkEngineBaseExecutorInstances
     var instanceMultiple = 1
 
     if (layoutSize != -1) {
-      val instanceStrategy: String = config.getSparkEngineExuctorInstanceStrategy
+      val instanceStrategy: String = config.getSparkEngineExecutorInstanceStrategy
       val tuple = instanceStrategy.split(",")
         .zipWithIndex
         .partition(tp => tp._2 % 2 == 0)

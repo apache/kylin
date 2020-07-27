@@ -27,7 +27,6 @@ import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.job.exception.SchedulerException;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 

@@ -118,7 +118,6 @@ import org.apache.kylin.rest.util.SQLResponseSignatureUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
-import org.apache.kylin.storage.stream.StreamStorageQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -495,19 +494,19 @@ public class QueryService extends BasicService {
 
             boolean realtimeQuery = false;
             Collection<OLAPContext> olapContexts = OLAPContext.getThreadLocalContexts();
-            if (olapContexts != null) {
-                for (OLAPContext ctx : olapContexts) {
-                    try {
-                        if (ctx.storageContext.getStorageQuery() instanceof StreamStorageQuery) {
-                            realtimeQuery = true;
-                            logger.debug("Shutdown query cache for realtime.");
-                        }
-                    } catch (Exception e) {
-                        logger.error("Error", e);
-                    }
-
-                }
-            }
+//            if (olapContexts != null) {
+//                for (OLAPContext ctx : olapContexts) {
+////                    try {
+////                        if (ctx.storageContext.getStorageQuery() instanceof StreamStorageQuery) {
+////                            realtimeQuery = true;
+////                            logger.debug("Shutdown query cache for realtime.");
+////                        }
+////                    } catch (Exception e) {
+////                        logger.error("Error", e);
+////                    }
+//
+//                }
+//            }
 
             if (checkCondition(queryCacheEnabled, "query cache is disabled") //
                     && checkCondition(!Strings.isNullOrEmpty(sqlResponse.getCube()),

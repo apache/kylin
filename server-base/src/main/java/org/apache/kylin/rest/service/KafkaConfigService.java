@@ -18,16 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
-import org.apache.kylin.rest.exception.BadRequestException;
-import org.apache.kylin.rest.msg.Message;
-import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -36,64 +27,64 @@ public class KafkaConfigService extends BasicService {
     @Autowired
     private AclEvaluate aclEvaluate;
 
-    public List<KafkaConfig> listAllKafkaConfigs(final String kafkaConfigName) throws IOException {
-        List<KafkaConfig> kafkaConfigs = new ArrayList<KafkaConfig>();
-        //        CubeInstance cubeInstance = (null != cubeName) ? getCubeManager().getCube(cubeName) : null;
-        if (null == kafkaConfigName) {
-            kafkaConfigs = getKafkaManager().listAllKafkaConfigs();
-        } else {
-            List<KafkaConfig> configs = getKafkaManager().listAllKafkaConfigs();
-            for (KafkaConfig config : configs) {
-                if (kafkaConfigName.equals(config.getName())) {
-                    kafkaConfigs.add(config);
-                }
-            }
-        }
-
-        return kafkaConfigs;
-    }
-
-    public List<KafkaConfig> getKafkaConfigs(final String kafkaConfigName, final String project, final Integer limit,
-            final Integer offset) throws IOException {
-        aclEvaluate.checkProjectWritePermission(project);
-        List<KafkaConfig> kafkaConfigs;
-        kafkaConfigs = listAllKafkaConfigs(kafkaConfigName);
-
-        if (limit == null || offset == null) {
-            return kafkaConfigs;
-        }
-
-        if ((kafkaConfigs.size() - offset) < limit) {
-            return kafkaConfigs.subList(offset, kafkaConfigs.size());
-        }
-
-        return kafkaConfigs.subList(offset, offset + limit);
-    }
-
-    public KafkaConfig createKafkaConfig(KafkaConfig config, String project) throws IOException {
-        aclEvaluate.checkProjectAdminPermission(project);
-        Message msg = MsgPicker.getMsg();
-
-        if (getKafkaManager().getKafkaConfig(config.getName()) != null) {
-            throw new BadRequestException(
-                    String.format(Locale.ROOT, msg.getKAFKA_CONFIG_ALREADY_EXIST(), config.getName()));
-        }
-        getKafkaManager().createKafkaConfig(config);
-        return config;
-    }
-
-    public KafkaConfig updateKafkaConfig(KafkaConfig config, String project) throws IOException {
-        aclEvaluate.checkProjectAdminPermission(project);
-        return getKafkaManager().updateKafkaConfig(config);
-    }
-
-    public KafkaConfig getKafkaConfig(String configName, String project) throws IOException {
-        aclEvaluate.checkProjectWritePermission(project);
-        return getKafkaManager().getKafkaConfig(configName);
-    }
-
-    public void dropKafkaConfig(KafkaConfig config, String project) throws IOException {
-        aclEvaluate.checkProjectAdminPermission(project);
-        getKafkaManager().removeKafkaConfig(config);
-    }
+//    public List<KafkaConfig> listAllKafkaConfigs(final String kafkaConfigName) throws IOException {
+//        List<KafkaConfig> kafkaConfigs = new ArrayList<KafkaConfig>();
+//        //        CubeInstance cubeInstance = (null != cubeName) ? getCubeManager().getCube(cubeName) : null;
+//        if (null == kafkaConfigName) {
+//            kafkaConfigs = getKafkaManager().listAllKafkaConfigs();
+//        } else {
+//            List<KafkaConfig> configs = getKafkaManager().listAllKafkaConfigs();
+//            for (KafkaConfig config : configs) {
+//                if (kafkaConfigName.equals(config.getName())) {
+//                    kafkaConfigs.add(config);
+//                }
+//            }
+//        }
+//
+//        return kafkaConfigs;
+//    }
+//
+//    public List<KafkaConfig> getKafkaConfigs(final String kafkaConfigName, final String project, final Integer limit,
+//            final Integer offset) throws IOException {
+//        aclEvaluate.checkProjectWritePermission(project);
+//        List<KafkaConfig> kafkaConfigs;
+//        kafkaConfigs = listAllKafkaConfigs(kafkaConfigName);
+//
+//        if (limit == null || offset == null) {
+//            return kafkaConfigs;
+//        }
+//
+//        if ((kafkaConfigs.size() - offset) < limit) {
+//            return kafkaConfigs.subList(offset, kafkaConfigs.size());
+//        }
+//
+//        return kafkaConfigs.subList(offset, offset + limit);
+//    }
+//
+//    public KafkaConfig createKafkaConfig(KafkaConfig config, String project) throws IOException {
+//        aclEvaluate.checkProjectAdminPermission(project);
+//        Message msg = MsgPicker.getMsg();
+//
+//        if (getKafkaManager().getKafkaConfig(config.getName()) != null) {
+//            throw new BadRequestException(
+//                    String.format(Locale.ROOT, msg.getKAFKA_CONFIG_ALREADY_EXIST(), config.getName()));
+//        }
+//        getKafkaManager().createKafkaConfig(config);
+//        return config;
+//    }
+//
+//    public KafkaConfig updateKafkaConfig(KafkaConfig config, String project) throws IOException {
+//        aclEvaluate.checkProjectAdminPermission(project);
+//        return getKafkaManager().updateKafkaConfig(config);
+//    }
+//
+//    public KafkaConfig getKafkaConfig(String configName, String project) throws IOException {
+//        aclEvaluate.checkProjectWritePermission(project);
+//        return getKafkaManager().getKafkaConfig(configName);
+//    }
+//
+//    public void dropKafkaConfig(KafkaConfig config, String project) throws IOException {
+//        aclEvaluate.checkProjectAdminPermission(project);
+//        getKafkaManager().removeKafkaConfig(config);
+//    }
 }

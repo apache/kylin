@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
@@ -32,7 +30,6 @@ import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.streaming.StreamingManager;
 import org.apache.kylin.metrics.MetricsManager;
-import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.storage.hybrid.HybridManager;
 
 public abstract class BasicService {
@@ -63,9 +60,9 @@ public abstract class BasicService {
         return StreamingManager.getInstance(getConfig());
     }
 
-    public KafkaConfigManager getKafkaManager() throws IOException {
-        return KafkaConfigManager.getInstance(getConfig());
-    }
+//    public KafkaConfigManager getKafkaManager() throws IOException {
+//        return KafkaConfigManager.getInstance(getConfig());
+//    }
 
     public CubeDescManager getCubeDescManager() {
         return CubeDescManager.getInstance(getConfig());

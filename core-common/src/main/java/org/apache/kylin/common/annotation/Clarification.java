@@ -14,26 +14,29 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
+package org.apache.kylin.common.annotation;
 
-package org.apache.kylin.dict.lookup;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.apache.kylin.metadata.model.TableDesc;
+/**
+ * Please add more documentation to me and remove me after that.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER,
+        ElementType.CONSTRUCTOR, ElementType.LOCAL_VARIABLE, ElementType.PACKAGE})
+public @interface Clarification {
 
-public interface IExtLookupTableCache {
-    enum CacheState {NONE, IN_BUILDING, AVAILABLE}
+    Priority priority();
 
-    /**
-     * @param tableDesc
-     * @param extTableSnapshotInfo
-     * @param buildIfNotExist if true, when the cached lookup table not exist, build it.
-     * @return null if no cached lookup table exist
-     */
-    ILookupTable getCachedLookupTable(TableDesc tableDesc, ExtTableSnapshotInfo extTableSnapshotInfo, boolean buildIfNotExist);
+    String msg() default "N/A";
 
-    void buildSnapshotCache(TableDesc tableDesc, ExtTableSnapshotInfo extTableSnapshotInfo, ILookupTable sourceTable);
-
-    void removeSnapshotCache(ExtTableSnapshotInfo extTableSnapshotInfo);
-
-    CacheState getCacheState(ExtTableSnapshotInfo extTableSnapshotInfo);
+    enum Priority {
+        MINOR,
+        MAJOR,
+        CRITICAL
+    }
 }
