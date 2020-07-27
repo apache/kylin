@@ -1,8 +1,8 @@
 ---
-layout: docs-cn
+layout: docs40-cn
 title:  "实用 CLI 工具"
 categories: howto
-permalink: /cn/docs/howto/howto_use_cli.html
+permalink: /cn/docs40/howto/howto_use_cli.html
 ---
 Kylin 提供一些方便实用的工具类。这篇文档会介绍以下几个工具类：KylinConfigCLI.java，CubeMetaExtractor.java，CubeMetaIngester.java，CubeMigrationCLI.java 和 CubeMigrationCheckCLI.java。在使用这些工具类前，首先要切换到 KYLIN_HOME 目录下。
 
@@ -54,7 +54,7 @@ CubeMetaExtractor.java 用于提取与 cube 相关的信息以达到调试/分�
 ./bin/kylin.sh org.apache.kylin.tool.extractor.CubeMetaExtractor -cube querycube -destDir /root/newconfigdir1
 {% endhighlight %}
 结果：
-命令执行成功后，您想要抽取的 cube / project / hybrid 将会存在于您指定的 destDir 目录中。
+命令执行成功后，您想要抽取的 cube/project/hybrid 将会存在于您指定的 destDir 目录中。
 
 下面会列出所有支持的参数：
 
@@ -92,31 +92,9 @@ CubeMetaIngester.java 将提取的 cube 注入到另一个 metadata store 中。
 
 下面会列出所有支持的参数：
 
-| Parameter                                          | Description                                                                                                                                                                                        |
-| -------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| forceIngest <forceIngest>                          | Skip the target cube, model and table check and ingest by force. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false.                      |
-| overwriteTables <overwriteTables>                  | If table meta conflicts, overwrite the one in metadata store with the one in srcPath. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false. |
-| createProjectIfNotExists <createProjectIdNotExists>| If the specified project is not exists, kylin will create it.                                                                                                                                      |
-| project <project>                                  | (Required) Specify the target project for the new cubes.                                                                                                                                           |
-| srcPath <srcPath>                                  | (Required) Specify the path to the extracted Cube metadata zip file.                                                                                                                               |
-
-## CubeMigrationCheckCLI.java
-
-### 作用
-CubeMigrationCheckCLI.java 用于在迁移 Cube 之后检查“KYLIN_HOST”属性是否与 dst 中所有 Cube segment 对应的 HTable 的 MetadataUrlPrefix 一致。CubeMigrationCheckCLI.java 会在 CubeMigrationCLI.java 中被调用，通常不单独使用。
-
-### 如何使用
-{% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCheckCLI -fix <conf_value> -dstCfgUri <dstCfgUri_value> -cube <cube_name>
-{% endhighlight %}
-例如：
-{% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCheckCLI -fix true -dstCfgUri kylin-prod:7070 -cube querycube
-{% endhighlight %}
-下面会列出所有支持的参数：
-
-| Parameter           | Description                                                                   |
-| ------------------- | :---------------------------------------------------------------------------- |
-| fix                 | Fix the inconsistent Cube segments' HOST, default false                       |
-| dstCfgUri           | The KylinConfig of the Cube’s new home                                       |
-| cube                | The name of Cube migrated                                                     |
+| Parameter                         | Description                                                                                                                                                                                        |
+| --------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| forceIngest <forceIngest>         | Skip the target cube, model and table check and ingest by force. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false.                      |
+| overwriteTables <overwriteTables> | If table meta conflicts, overwrite the one in metadata store with the one in srcPath. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false. |
+| project <project>                 | (Required) Specify the target project for the new cubes.                              
+| srcPath <srcPath>                 | (Required) Specify the path to the extracted Cube metadata zip file.                                                                                                                               |

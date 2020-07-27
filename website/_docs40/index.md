@@ -1,8 +1,8 @@
 ---
-layout: docs
+layout: docs40
 title: Overview
 categories: docs
-permalink: /docs/index.html
+permalink: /docs40/index.html
 ---
 
 
@@ -11,13 +11,10 @@ Welcome to Apache Kylin™: Analytical Data Warehouse for Big Data
 
 Apache Kylin™ is an open source Distributed Analytical Data Warehouse for big data; It was designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets.
 
-This is the document for the latest released version (v3.1.0). Document of other versions:
-* [v4.0 document](/docs40) 
+This is the document for Apache Kylin4.0. Document of other versions:
 * [v3.0 document](/docs30) 
 * [v2.4 document](/docs24)
 * [Archived](/archive/)
-
-If you are interested in Kylin v4.0.0-alpha, feel free to check detail at [v4.0 Wiki](https://cwiki.apache.org/confluence/display/KYLIN/User+Manual+4.X) .
 
 Installation & Setup
 ------------  
@@ -26,7 +23,6 @@ Installation & Setup
 3. [Deploy in cluster mode](install/kylin_cluster.html)
 4. [Advanced settings](install/advance_settings.html)
 5. [Run Kylin with Docker](install/kylin_docker.html)
-6. [Install Kylin on AWS EMR](install/kylin_aws_emr.html)
 
 Tutorial
 ------------  
@@ -34,17 +30,14 @@ Tutorial
 2. [Web Interface](tutorial/web.html)
 3. [Cube Wizard](tutorial/create_cube.html)
 4. [Cube Build and Job Monitoring](tutorial/cube_build_job.html)
-5. [Cube Migration](tutorial/cube_migration.html)
-6. [SQL reference](tutorial/sql_reference.html)
-7. [Build Cube with Streaming Data](tutorial/cube_streaming.html)
-8. [Build Cube with Spark Engine](tutorial/cube_spark.html)
-9. [Cube Build Tuning](tutorial/cube_build_performance.html)
-10. [Enable Query Pushdown](tutorial/query_pushdown.html)
-11. [Setup System Cube](tutorial/setup_systemcube.html)
-12. [Optimize with Cube Planner](tutorial/use_cube_planner.html)
-13. [Use System Dashboard](tutorial/use_dashboard.html)
-14. [Setup JDBC Data Source](tutorial/setup_jdbc_datasource.html)
-
+5. [SQL reference](tutorial/sql_reference.html)
+6. [Cube Build Tuning](tutorial/cube_build_performance.html)
+7. [Enable Query Pushdown](tutorial/query_pushdown.html)
+8. [Setup System Cube](tutorial/setup_systemcube.html)
+9. [Optimize with Cube Planner](tutorial/use_cube_planner.html)
+10. [Use System Dashboard](tutorial/use_dashboard.html)
+11. [Optimize build and query](howto/howto_optimize_build_and_query.html)
+12. [Config Spark Pool](howto/howto_config_spark_pool.html)
 
 Connectivity and APIs
 ------------  
