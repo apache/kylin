@@ -39,9 +39,10 @@
             <value>10</value>
         </constructor-arg>
 
-        <!-- maxQueueSize, max queue size of LinkedBlockingQueue-->
+        <!-- maxQueueSize, max queue size of records in BlockingReservoir;
+            set zero or a negative number if you prefer a unbounded LinkedBlockingQueue -->
         <constructor-arg index="3">
-            <value>50000</value>
+            <value>500000</value>
         </constructor-arg>
     </bean>
 
