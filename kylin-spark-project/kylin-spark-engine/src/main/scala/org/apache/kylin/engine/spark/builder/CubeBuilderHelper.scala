@@ -26,9 +26,9 @@ import org.apache.spark.sql.{Column, Dataset, Row}
 
 import scala.util.{Failure, Success, Try}
 
-object DFBuilderHelper extends Logging {
+object CubeBuilderHelper extends Logging {
 
-  val ENCODE_SUFFIX = "_KE_ENCODE"
+  val ENCODE_SUFFIX = "_KYLIN_ENCODE"
 
   def filterCols(dsSeq: Seq[Dataset[Row]], needCheckCols: Set[ColumnDesc]): Set[ColumnDesc] = {
     needCheckCols -- dsSeq.flatMap(ds => filterCols(ds, needCheckCols))

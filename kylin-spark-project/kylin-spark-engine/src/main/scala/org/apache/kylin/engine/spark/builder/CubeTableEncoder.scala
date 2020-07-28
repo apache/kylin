@@ -19,10 +19,10 @@ package org.apache.kylin.engine.spark.builder
 
 import java.util
 
-import org.apache.kylin.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
+import org.apache.kylin.engine.spark.builder.CubeBuilderHelper.ENCODE_SUFFIX
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil._
-import org.apache.kylin.engine.spark.metadata.{SegmentInfo, ColumnDesc}
-import org.apache.spark.dict.NGlobalDictionaryV2
+import org.apache.kylin.engine.spark.metadata.{ColumnDesc, SegmentInfo}
+import org.apache.spark.dict.NGlobalDictionary
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.KylinFunctions._
 import org.apache.spark.sql.functions.{col, _}
@@ -32,7 +32,7 @@ import org.apache.spark.sql.{Dataset, Row}
 import scala.collection.JavaConverters._
 import scala.collection.mutable._
 
-object DFTableEncoder extends Logging {
+object CubeTableEncoder extends Logging {
 
   def encodeTable(ds: Dataset[Row], seg: SegmentInfo, cols: util.Set[ColumnDesc]): Dataset[Row] = {
     val structType = ds.schema
@@ -45,7 +45,7 @@ object DFTableEncoder extends Logging {
 
     cols.asScala.foreach(
       ref => {
-        val globalDict = new NGlobalDictionaryV2(seg.project, ref.tableAliasName, ref.columnName, seg.kylinconf.getHdfsWorkingDirectory)
+        val globalDict = new NGlobalDictionary(seg.project, ref.tableAliasName, ref.columnName, seg.kylinconf.getHdfsWorkingDirectory)
         val bucketSize = globalDict.getBucketSizeOrDefault(seg.kylinconf.getGlobalDictV2MinHashPartitions)
         val enlargedBucketSize = (((minBucketSize / bucketSize) + 1) * bucketSize).toInt
 

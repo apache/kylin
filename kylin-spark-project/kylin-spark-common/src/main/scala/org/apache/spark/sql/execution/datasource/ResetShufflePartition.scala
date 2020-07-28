@@ -26,9 +26,9 @@ trait ResetShufflePartition extends Logging {
   def setShufflePartitions(bytes: Long, sparkSession: SparkSession): Unit = {
     QueryContextFacade.current().addAndGetSourceScanBytes(bytes)
     val defaultParallelism = sparkSession.sparkContext.defaultParallelism
-    val kapConfig = KylinConfig.getInstanceFromEnv
-    val partitionsNum = if (kapConfig.getSparkSqlShufflePartitions != -1) {
-      kapConfig.getSparkSqlShufflePartitions
+    val kylinConfig = KylinConfig.getInstanceFromEnv
+    val partitionsNum = if (kylinConfig.getSparkSqlShufflePartitions != -1) {
+      kylinConfig.getSparkSqlShufflePartitions
     } else {
       Math.min(QueryContextFacade.current().getSourceScanBytes / (
         KylinConfig.getInstanceFromEnv.getQueryPartitionSplitSizeMB * 1024 * 1024 * 2) + 1,

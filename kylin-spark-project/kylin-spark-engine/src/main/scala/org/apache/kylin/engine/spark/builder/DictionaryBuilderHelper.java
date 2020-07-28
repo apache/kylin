@@ -22,7 +22,7 @@ import java.io.IOException;
 import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 import org.apache.kylin.engine.spark.metadata.ColumnDesc;
 import org.apache.spark.dict.NGlobalDictMetaInfo;
-import org.apache.spark.dict.NGlobalDictionaryV2;
+import org.apache.spark.dict.NGlobalDictionary;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
@@ -43,7 +43,7 @@ public class DictionaryBuilderHelper {
      *  than the threshold multiplied by KylinConfigBase.getGlobalDictV2BucketOverheadFactor
      */
     public static int calculateBucketSize(SegmentInfo desc, ColumnDesc col, Dataset<Row> afterDistinct) throws IOException {
-        NGlobalDictionaryV2 globalDict = new NGlobalDictionaryV2(desc.project(), col.tableAliasName(), col.columnName(),
+        NGlobalDictionary globalDict = new NGlobalDictionary(desc.project(), col.tableAliasName(), col.columnName(),
                 desc.kylinconf().getHdfsWorkingDirectory());
         int bucketPartitionSize = globalDict.getBucketSizeOrDefault(desc.kylinconf().getGlobalDictV2MinHashPartitions());
         int bucketThreshold = desc.kylinconf().getGlobalDictV2ThresholdBucketSize();

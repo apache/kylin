@@ -22,7 +22,7 @@ import org.apache.spark.TaskContext
 import java.util
 
 import org.apache.spark.util.TaskCompletionListener
-import org.apache.spark.dict.{NBucketDictionary, NGlobalDictionaryV2}
+import org.apache.spark.dict.{NBucketDictionary, NGlobalDictionary}
 
 object DictEncodeImpl {
 
@@ -42,7 +42,7 @@ object DictEncodeImpl {
   private def initBucketDict(dictParams: String, bucketSize: String): NBucketDictionary = {
     val partitionID = TaskContext.get.partitionId
     val encodeBucketId = partitionID % bucketSize.toInt
-    val globalDict = new NGlobalDictionaryV2(dictParams)
+    val globalDict = new NGlobalDictionary(dictParams)
 
     val cachedBucketDict = globalDict.loadBucketDictionary(encodeBucketId)
     DictEncodeImpl.cacheBucketDict.get.put(dictParams, cachedBucketDict)

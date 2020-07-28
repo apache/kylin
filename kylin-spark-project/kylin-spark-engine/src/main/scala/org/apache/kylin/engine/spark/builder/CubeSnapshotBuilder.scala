@@ -41,7 +41,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.Breaks._
 import scala.util.{Failure, Success, Try}
 
-class DFSnapshotBuilder extends Logging {
+class CubeSnapshotBuilder extends Logging {
 
   var ss: SparkSession = _
   var seg: SegmentInfo = _

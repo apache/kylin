@@ -33,7 +33,7 @@ public abstract class MetadataMerger {
         return config;
     }
 
-    public abstract void merge(String dataflowId, String segmentIds, ResourceStore remoteResourceStore, String jobType);
+    public abstract void merge(String cubeId, String segmentIds, ResourceStore remoteResourceStore, String jobType);
 
     public abstract void merge(AbstractExecutable abstractExecutable);
 

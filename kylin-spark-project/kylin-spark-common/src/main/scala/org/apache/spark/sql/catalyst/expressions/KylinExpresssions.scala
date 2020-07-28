@@ -17,8 +17,8 @@
  */
 package org.apache.spark.sql.catalyst.expressions
 
-import org.apache.kylin.engine.spark.common.util.KapDateTimeUtils
-import org.apache.spark.dict.{NBucketDictionary, NGlobalDictionaryV2}
+import org.apache.kylin.engine.spark.common.util.KylinDateTimeUtils
+import org.apache.spark.dict.{NBucketDictionary, NGlobalDictionary}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.DeclarativeAggregate
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
@@ -37,7 +37,7 @@ import org.apache.spark.sql.types._
   """
 )
 // scalastyle:on line.size.limit
-case class KapAddMonths(startDate: Expression, numMonths: Expression)
+case class KylinAddMonths(startDate: Expression, numMonths: Expression)
   extends BinaryExpression
     with ImplicitCastInputTypes {
 
@@ -52,17 +52,17 @@ case class KapAddMonths(startDate: Expression, numMonths: Expression)
   override def nullSafeEval(start: Any, months: Any): Any = {
     val time = start.asInstanceOf[Long]
     val month = months.asInstanceOf[Int]
-    KapDateTimeUtils.addMonths(time, month)
+    KylinDateTimeUtils.addMonths(time, month)
   }
 
   override def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
-    val dtu = KapDateTimeUtils.getClass.getName.stripSuffix("$")
+    val dtu = KylinDateTimeUtils.getClass.getName.stripSuffix("$")
     defineCodeGen(ctx, ev, (sd, m) => {
       s"""$dtu.addMonths($sd, $m)"""
     })
   }
 
-  override def prettyName: String = "kap_add_months"
+  override def prettyName: String = "kylin_add_months"
 }
 
 // Returns the date that is num_months after start_date.
@@ -78,7 +78,7 @@ case class KapAddMonths(startDate: Expression, numMonths: Expression)
   """
 )
 // scalastyle:on line.size.limit
-case class KapSubtractMonths(a: Expression, b: Expression)
+case class KylinSubtractMonths(a: Expression, b: Expression)
   extends BinaryExpression
     with ImplicitCastInputTypes {
 
@@ -91,18 +91,18 @@ case class KapSubtractMonths(a: Expression, b: Expression)
   override def dataType: DataType = IntegerType
 
   override def nullSafeEval(date0: Any, date1: Any): Any = {
-    KapDateTimeUtils.dateSubtractMonths(date0.asInstanceOf[Int],
+    KylinDateTimeUtils.dateSubtractMonths(date0.asInstanceOf[Int],
       date1.asInstanceOf[Int])
   }
 
   override def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
-    val dtu = KapDateTimeUtils.getClass.getName.stripSuffix("$")
+    val dtu = KylinDateTimeUtils.getClass.getName.stripSuffix("$")
     defineCodeGen(ctx, ev, (d0, d1) => {
       s"""$dtu.dateSubtractMonths($d0, $d1)"""
     })
   }
 
-  override def prettyName: String = "kap_months_between"
+  override def prettyName: String = "kylin_months_between"
 }
 
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
@@ -174,7 +174,7 @@ case class Sum0(child: Expression)
   override lazy val evaluateExpression: Expression = sum
 }
 
-case class KapDayOfWeek(a: Expression)
+case class KylinDayOfWeek(a: Expression)
   extends UnaryExpression
     with ImplicitCastInputTypes {
 
@@ -185,19 +185,19 @@ case class KapDayOfWeek(a: Expression)
   override protected def doGenCode(
     ctx: CodegenContext,
     ev: ExprCode): ExprCode = {
-    val dtu = KapDateTimeUtils.getClass.getName.stripSuffix("$")
+    val dtu = KylinDateTimeUtils.getClass.getName.stripSuffix("$")
     defineCodeGen(ctx, ev, (d) => {
       s"""$dtu.dayOfWeek($d)"""
     })
   }
 
   override def nullSafeEval(date: Any): Any = {
-    KapDateTimeUtils.dayOfWeek(date.asInstanceOf[Int])
+    KylinDateTimeUtils.dayOfWeek(date.asInstanceOf[Int])
   }
 
   override def dataType: DataType = IntegerType
 
-  override def prettyName: String = "kap_day_of_week"
+  override def prettyName: String = "kylin_day_of_week"
 }
 
 case class TimestampAdd(left: Expression, mid: Expression, right: Expression) extends TernaryExpression with ExpectsInputTypes {
@@ -293,7 +293,7 @@ case class DictEncode(left: Expression, mid: Expression, right: Expression) exte
   override protected def doGenCode(
     ctx: CodegenContext,
     ev: ExprCode): ExprCode = {
-    val globalDictClass = classOf[NGlobalDictionaryV2].getName
+    val globalDictClass = classOf[NGlobalDictionary].getName
     val bucketDictClass = classOf[NBucketDictionary].getName
 
     val globalDictTerm = ctx.addMutableState(globalDictClass, s"${mid.simpleString.replace("[", "").replace("]", "")}_globalDict")
@@ -307,7 +307,7 @@ case class DictEncode(left: Expression, mid: Expression, right: Expression) exte
          | private void init${bucketDictTerm.replace("[", "").replace("]", "")}BucketDict(int idx) {
          |   try {
          |     int bucketId = idx % $bucketSizeTerm;
-         |     $globalDictTerm = new org.apache.spark.dict.NGlobalDictionaryV2("$dictParamsTerm");
+         |     $globalDictTerm = new org.apache.spark.dict.NGlobalDictionary("$dictParamsTerm");
          |     $bucketDictTerm = $globalDictTerm.loadBucketDictionary(bucketId);
          |   } catch (Exception e) {
          |     throw new RuntimeException(e);

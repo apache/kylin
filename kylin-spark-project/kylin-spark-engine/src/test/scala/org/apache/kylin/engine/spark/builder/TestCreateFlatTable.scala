@@ -114,7 +114,7 @@ class TestCreateFlatTable extends SparderBaseFunSuite with SharedSparkSession wi
   private def checkEncodeCols(ds: Dataset[Row], segment: CubeSegment, needEncode: Boolean) = {
     val seg = MetadataConverter.getSegmentInfo(segment.getCubeInstance, segment.getUuid, segment.getName, segment.getStorageLocationIdentifier)
     val globalDictSet = seg.toBuildDictColumns
-    val actualEncodeDictSize = ds.schema.count(_.name.endsWith(DFBuilderHelper.ENCODE_SUFFIX))
+    val actualEncodeDictSize = ds.schema.count(_.name.endsWith(CubeBuilderHelper.ENCODE_SUFFIX))
     if (needEncode) {
       Assert.assertEquals(globalDictSet.size, actualEncodeDictSize)
     } else {

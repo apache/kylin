@@ -52,7 +52,7 @@ object ProjectPlan extends Logging {
           k_lit(c._1._1).as(s"${System.identityHashCode(rel)}_prj${c._2}")
         }
       })
-      .map(c => { // find and rename the duplicated columns KAP#16751
+      .map(c => { // find and rename the duplicated columns
         if (!(duplicatedColumnsCount contains c)) {
           duplicatedColumnsCount += (c -> 0)
           c

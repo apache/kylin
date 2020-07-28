@@ -21,7 +21,7 @@ package org.apache.kylin.engine.spark.common.util
 import org.apache.calcite.avatica.util.TimeUnitRange
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
 
-object KapDateTimeUtils {
+object KylinDateTimeUtils {
   val MICROS_PER_MILLIS: Long = 1000L
   val MILLIS_PER_SECOND: Long = 1000L
   val MILLIS_PER_MINUTE: Long = MILLIS_PER_SECOND * 60L

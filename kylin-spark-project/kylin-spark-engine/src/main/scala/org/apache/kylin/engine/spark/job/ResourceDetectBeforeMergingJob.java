@@ -28,7 +28,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.spark.application.SparkApplication;
-import org.apache.kylin.engine.spark.builder.DFLayoutMergeAssist;
+import org.apache.kylin.engine.spark.builder.CubeMergeAssist;
 import org.apache.kylin.engine.spark.metadata.MetadataConverter;
 import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -70,14 +70,14 @@ public class ResourceDetectBeforeMergingJob extends SparkApplication {
         }
         infos.clearMergingSegments();
         infos.recordMergingSegments(segmentInfos);
-        Map<Long, DFLayoutMergeAssist> mergeCuboidsAssist = CubeMergeJob.generateMergeAssist(segmentInfos, ss);
+        Map<Long, CubeMergeAssist> mergeCuboidsAssist = CubeMergeJob.generateMergeAssist(segmentInfos, ss);
         ResourceDetectUtils.write(
                 new Path(config.getJobTmpShareDir(project, jobId), ResourceDetectUtils.countDistinctSuffix()),
                 ResourceDetectUtils
                         .findCountDistinctMeasure(JavaConversions.asJavaCollection(mergedSegInfo.toBuildLayouts())));
         Map<String, List<String>> resourcePaths = Maps.newHashMap();
         infos.clearSparkPlans();
-        for (Map.Entry<Long, DFLayoutMergeAssist> entry : mergeCuboidsAssist.entrySet()) {
+        for (Map.Entry<Long, CubeMergeAssist> entry : mergeCuboidsAssist.entrySet()) {
             Dataset<Row> afterMerge = entry.getValue().merge(config, getParam(MetadataConstants.P_CUBE_NAME));
             infos.recordSparkPlan(afterMerge.queryExecution().sparkPlan());
             List<Path> paths = JavaConversions

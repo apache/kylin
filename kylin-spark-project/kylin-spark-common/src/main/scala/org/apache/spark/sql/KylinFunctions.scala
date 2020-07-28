@@ -17,12 +17,12 @@
 */
 package org.apache.spark.sql
 
-import org.apache.kylin.engine.spark.common.util.KapDateTimeUtils
+import org.apache.kylin.engine.spark.common.util.KylinDateTimeUtils
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{AbstractDataType, DataType, DateType, IntegerType}
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, DictEncode, Expression, ExpressionInfo, ExpressionUtils, ImplicitCastInputTypes, In, KapAddMonths, Like, Literal, RoundBase, SplitPart, Sum0, TimestampAdd, TimestampDiff, Truncate, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, DictEncode, Expression, ExpressionInfo, ExpressionUtils, ImplicitCastInputTypes, In, KylinAddMonths, Like, Literal, RoundBase, SplitPart, Sum0, TimestampAdd, TimestampDiff, Truncate, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.aggregate.AggregateFunction
 import org.apache.spark.sql.udaf.{ApproxCountDistinct, IntersectCount, PreciseCountDistinct}
 
@@ -33,15 +33,15 @@ object KylinFunctions {
     Column(func.toAggregateExpression(isDistinct))
   }
 
-  def kap_add_months(startDate: Column, numMonths: Column): Column = {
-    Column(KapAddMonths(startDate.expr, numMonths.expr))
+  def kylin_add_months(startDate: Column, numMonths: Column): Column = {
+    Column(KylinAddMonths(startDate.expr, numMonths.expr))
   }
 
   def dict_encode(column: Column, dictParams: Column, bucketSize: Column): Column = {
     Column(DictEncode(column.expr, dictParams.expr, bucketSize.expr))
   }
 
-  // special lit for KE.
+  // special lit for KYLIN.
   def k_lit(literal: Any): Column = literal match {
     case c: Column => c
     case s: Symbol => new ColumnName(s.name)
@@ -52,14 +52,14 @@ object KylinFunctions {
 
   def in(value: Expression, list: Seq[Expression]): Column = Column(In(value, list))
 
-  def kap_day_of_week(date: Column): Column = Column(KapDayOfWeek(date.expr))
+  def kylin_day_of_week(date: Column): Column = Column(KylinDayOfWeek(date.expr))
 
-  def kap_truncate(column: Column, scale: Int): Column = {
+  def kylin_truncate(column: Column, scale: Int): Column = {
     Column(TRUNCATE(column.expr, Literal(scale)))
   }
 
-  def kap_subtract_months(date0: Column, date1: Column): Column = {
-    Column(KapSubtractMonths(date0.expr, date1.expr))
+  def kylin_subtract_months(date0: Column, date1: Column): Column = {
+    Column(KylinSubtractMonths(date0.expr, date1.expr))
   }
 
   def precise_count_distinct(column: Column): Column =
@@ -99,7 +99,7 @@ case class TRUNCATE(child: Expression, scale: Expression)
 }
 
 // scalastyle:on line.size.limit
-case class KapSubtractMonths(a: Expression, b: Expression)
+case class KylinSubtractMonths(a: Expression, b: Expression)
   extends BinaryExpression
     with ImplicitCastInputTypes {
 
@@ -112,21 +112,21 @@ case class KapSubtractMonths(a: Expression, b: Expression)
   override def dataType: DataType = IntegerType
 
   override def nullSafeEval(date0: Any, date1: Any): Any = {
-    KapDateTimeUtils.dateSubtractMonths(date0.asInstanceOf[Int],
+    KylinDateTimeUtils.dateSubtractMonths(date0.asInstanceOf[Int],
       date1.asInstanceOf[Int])
   }
 
   override def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
-    val dtu = KapDateTimeUtils.getClass.getName.stripSuffix("$")
+    val dtu = KylinDateTimeUtils.getClass.getName.stripSuffix("$")
     defineCodeGen(ctx, ev, (d0, d1) => {
       s"""$dtu.dateSubtractMonths($d0, $d1)"""
     })
   }
 
-  override def prettyName: String = "kap_months_between"
+  override def prettyName: String = "kylin_months_between"
 }
 
-case class KapDayOfWeek(a: Expression)
+case class KylinDayOfWeek(a: Expression)
   extends UnaryExpression
     with ImplicitCastInputTypes {
 
@@ -137,19 +137,19 @@ case class KapDayOfWeek(a: Expression)
   override protected def doGenCode(
     ctx: CodegenContext,
     ev: ExprCode): ExprCode = {
-    val dtu = KapDateTimeUtils.getClass.getName.stripSuffix("$")
+    val dtu = KylinDateTimeUtils.getClass.getName.stripSuffix("$")
     defineCodeGen(ctx, ev, (d) => {
       s"""$dtu.dayOfWeek($d)"""
     })
   }
 
   override def nullSafeEval(date: Any): Any = {
-    KapDateTimeUtils.dayOfWeek(date.asInstanceOf[Int])
+    KylinDateTimeUtils.dayOfWeek(date.asInstanceOf[Int])
   }
 
   override def dataType: DataType = IntegerType
 
-  override def prettyName: String = "kap_day_of_week"
+  override def prettyName: String = "kylin_day_of_week"
 }
 
 object FunctionEntity {

@@ -57,9 +57,7 @@ public class CsvSource implements ISource {
                 boolean withHeader = false;
                 if (kylinConfig.getDeployEnv().equals("UT")
                         && (parameters != null && parameters.get("separator") == null)) {
-                    path = "file:///" + new File(getUtMetaDir(),
-                            "../../examples/test_case_data/parquet_test/data/" + table.identity() + ".csv")
-                            .getAbsolutePath();
+                    path = "file:///" + new File(getUtMetaDir(), "data/" + table.identity() + ".csv").getAbsolutePath();
                     separator = "";
                 } else if (kylinConfig.getDeployEnv().equals("LOCAL")) {
                     path = "file:///" + new File(kylinConfig.getMetadataUrlPrefix(),

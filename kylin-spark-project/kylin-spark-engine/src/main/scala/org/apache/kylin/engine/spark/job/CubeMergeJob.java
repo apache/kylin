@@ -19,7 +19,6 @@
 package org.apache.kylin.engine.spark.job;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,7 +26,6 @@ import java.util.UUID;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 import org.apache.kylin.engine.spark.metadata.cube.ManagerHub;
 import org.apache.kylin.engine.spark.metadata.cube.PathManager;
@@ -48,7 +46,7 @@ import com.google.common.collect.Maps;
 
 import org.apache.kylin.engine.spark.NSparkCubingEngine;
 import org.apache.kylin.engine.spark.application.SparkApplication;
-import org.apache.kylin.engine.spark.builder.DFLayoutMergeAssist;
+import org.apache.kylin.engine.spark.builder.CubeMergeAssist;
 import org.apache.kylin.engine.spark.utils.BuildUtils;
 import org.apache.kylin.engine.spark.utils.JobMetrics;
 import org.apache.kylin.engine.spark.utils.JobMetricsUtils;
@@ -85,8 +83,8 @@ public class CubeMergeJob extends SparkApplication {
         CubeSegment mergedSeg = cube.getSegmentById(segmentId);
         SegmentInfo mergedSegInfo = ManagerHub.getSegmentInfo(config, getParam(MetadataConstants.P_CUBE_ID), mergedSeg.getUuid());
 
-        Map<Long, DFLayoutMergeAssist> mergeCuboidsAssist = generateMergeAssist(mergingSegInfos, ss);
-        for (DFLayoutMergeAssist assist : mergeCuboidsAssist.values()) {
+        Map<Long, CubeMergeAssist> mergeCuboidsAssist = generateMergeAssist(mergingSegInfos, ss);
+        for (CubeMergeAssist assist : mergeCuboidsAssist.values()) {
             SpanningTree spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(mergedSegInfo.toBuildLayouts()));
             Dataset<Row> afterMerge = assist.merge(config, cube.getName());
             LayoutEntity layout = assist.getLayout();
@@ -116,19 +114,19 @@ public class CubeMergeJob extends SparkApplication {
         }
     }
 
-    public static Map<Long, DFLayoutMergeAssist> generateMergeAssist(List<SegmentInfo> mergingSegments,
-                                                                     SparkSession ss) {
+    public static Map<Long, CubeMergeAssist> generateMergeAssist(List<SegmentInfo> mergingSegments,
+                                                                 SparkSession ss) {
         // collect layouts need to merge
-        Map<Long, DFLayoutMergeAssist> mergeCuboidsAssist = Maps.newConcurrentMap();
+        Map<Long, CubeMergeAssist> mergeCuboidsAssist = Maps.newConcurrentMap();
         for (SegmentInfo seg : mergingSegments) {
             scala.collection.immutable.List<LayoutEntity> cuboids = seg.layouts();
             for (int i = 0; i < cuboids.size(); i++) {
                 LayoutEntity cuboid = cuboids.apply(i);
                 long layoutId = cuboid.getId();
 
-                DFLayoutMergeAssist assist = mergeCuboidsAssist.get(layoutId);
+                CubeMergeAssist assist = mergeCuboidsAssist.get(layoutId);
                 if (assist == null) {
-                    assist = new DFLayoutMergeAssist();
+                    assist = new CubeMergeAssist();
                     assist.addCuboid(cuboid);
                     assist.setSs(ss);
                     assist.setLayout(cuboid);
@@ -144,7 +142,7 @@ public class CubeMergeJob extends SparkApplication {
     }
 
     private LayoutEntity saveAndUpdateCuboid(Dataset<Row> dataset, SegmentInfo seg, LayoutEntity layout,
-                                             DFLayoutMergeAssist assist) throws IOException {
+                                             CubeMergeAssist assist) throws IOException {
         long layoutId = layout.getId();
         long sourceCount = 0L;
 
@@ -191,8 +189,8 @@ public class CubeMergeJob extends SparkApplication {
     }
 
     public static void main(String[] args) {
-        CubeMergeJob nDataflowBuildJob = new CubeMergeJob();
-        nDataflowBuildJob.execute(args);
+        CubeMergeJob cubeMergeJob = new CubeMergeJob();
+        cubeMergeJob.execute(args);
     }
 
 }

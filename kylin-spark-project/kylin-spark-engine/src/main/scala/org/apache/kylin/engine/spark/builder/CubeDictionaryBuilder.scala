@@ -23,10 +23,10 @@ import java.util
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.lock.DistributedLock
 import org.apache.kylin.common.util.HadoopUtil
-import org.apache.kylin.engine.spark.builder.DFBuilderHelper._
+import org.apache.kylin.engine.spark.builder.CubeBuilderHelper._
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.kylin.engine.spark.metadata.{ColumnDesc, SegmentInfo}
-import org.apache.spark.dict.NGlobalDictionaryV2
+import org.apache.spark.dict.NGlobalDictionary
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions.{col, expr}
@@ -35,10 +35,10 @@ import org.apache.spark.sql.{Column, Dataset, Row, SparkSession}
 
 import scala.collection.JavaConverters._
 
-class DFDictionaryBuilder(val dataset: Dataset[Row],
-                          val seg: SegmentInfo,
-                          val ss: SparkSession,
-                          val colRefSet: util.Set[ColumnDesc]) extends Logging with Serializable {
+class CubeDictionaryBuilder(val dataset: Dataset[Row],
+                            val seg: SegmentInfo,
+                            val ss: SparkSession,
+                            val colRefSet: util.Set[ColumnDesc]) extends Logging with Serializable {
 
   @transient
   val lock: DistributedLock = KylinConfig.getInstanceFromEnv.getDistributedLockFactory.lockForCurrentThread
@@ -70,7 +70,7 @@ class DFDictionaryBuilder(val dataset: Dataset[Row],
     val columnName = ref.identity
     logInfo(s"Start building global dictionaries V2 for column $columnName.")
 
-    val globalDict = new NGlobalDictionaryV2(seg.project, ref.tableAliasName, ref.columnName, seg.kylinconf.getHdfsWorkingDirectory)
+    val globalDict = new NGlobalDictionary(seg.project, ref.tableAliasName, ref.columnName, seg.kylinconf.getHdfsWorkingDirectory)
     globalDict.prepareWrite()
     val broadcastDict = ss.sparkContext.broadcast(globalDict)
 
