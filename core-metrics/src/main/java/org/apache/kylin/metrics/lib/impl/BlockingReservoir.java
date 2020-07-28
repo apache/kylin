@@ -39,7 +39,7 @@ import org.apache.kylin.shaded.com.google.common.util.concurrent.ThreadFactoryBu
 public class BlockingReservoir extends AbstractActiveReservoir {
 
     private static final Logger logger = LoggerFactory.getLogger(BlockingReservoir.class);
-    private static final int MAX_QUEUE_SIZE = 50000;
+    private static final int MAX_QUEUE_SIZE = 500000;
 
     /**
      * Cache for metrics message with max size is maxReportSize
@@ -60,7 +60,7 @@ public class BlockingReservoir extends AbstractActiveReservoir {
     }
 
     public BlockingReservoir(int minReportSize, int maxReportSize, int maxReportTime) {
-        this(minReportSize, maxReportSize, maxReportSize, MAX_QUEUE_SIZE);
+        this(minReportSize, maxReportSize, maxReportTime, MAX_QUEUE_SIZE);
     }
 
     public BlockingReservoir(int minReportSize, int maxReportSize, int maxReportTime, int maxQueueSize) {
@@ -68,11 +68,11 @@ public class BlockingReservoir extends AbstractActiveReservoir {
         Preconditions.checkArgument(maxReportSize >= minReportSize,
                 "maxReportSize should not be less than minBatchSize");
         Preconditions.checkArgument(maxReportTime > 0, "maxReportTime should be larger than 0");
-        this.minReportSize = minReportSize;
         this.maxReportSize = maxReportSize;
         this.maxReportTime = maxReportTime * 60 * 1000L;
 
-        this.recordsQueue = new LinkedBlockingQueue<>(maxQueueSize);
+        this.recordsQueue = maxQueueSize <= 0 ? new LinkedBlockingQueue<>() : new LinkedBlockingQueue<>(maxQueueSize);
+        this.minReportSize = minReportSize;
         this.listeners = Lists.newArrayList();
 
         this.records = Lists.newArrayListWithExpectedSize(this.maxReportSize);
