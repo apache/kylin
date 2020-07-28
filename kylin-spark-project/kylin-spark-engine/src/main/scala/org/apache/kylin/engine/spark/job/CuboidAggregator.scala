@@ -21,7 +21,7 @@ package org.apache.kylin.engine.spark.job
 import java.util
 import java.util.Locale
 
-import org.apache.kylin.engine.spark.builder.DFBuilderHelper.ENCODE_SUFFIX
+import org.apache.kylin.engine.spark.builder.CubeBuilderHelper.ENCODE_SUFFIX
 import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree
 import org.apache.kylin.engine.spark.metadata.{ColumnDesc, DTType, FunctionDesc, LiteralColumnDesc}
 import org.apache.kylin.measure.bitmap.BitmapMeasureType

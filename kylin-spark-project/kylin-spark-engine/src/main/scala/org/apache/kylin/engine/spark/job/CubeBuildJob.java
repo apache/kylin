@@ -78,8 +78,8 @@ public class CubeBuildJob extends SparkApplication {
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
     private Map<Long, Short> cuboidShardNum = Maps.newHashMap();
     public static void main(String[] args) {
-        CubeBuildJob nDataflowBuildJob = new CubeBuildJob();
-        nDataflowBuildJob.execute(args);
+        CubeBuildJob cubeBuildJob = new CubeBuildJob();
+        cubeBuildJob.execute(args);
     }
 
     @Override
@@ -120,7 +120,7 @@ public class CubeBuildJob extends SparkApplication {
                 infos.recordSpanningTree(segId, spanningTree);
 
                 logger.info("Updating segment info");
-                updateSegmentInfo(getParam(MetadataConstants.P_CUBE_ID), seg, buildFromFlatTable.getCount());
+                updateSegmentInfo(getParam(MetadataConstants.P_CUBE_ID), seg, buildFromFlatTable.getFlattableDS().count());
             }
             updateSegmentSourceBytesSize(getParam(MetadataConstants.P_CUBE_ID),
                     ResourceDetectUtils.getSegmentSourceSize(shareDir));

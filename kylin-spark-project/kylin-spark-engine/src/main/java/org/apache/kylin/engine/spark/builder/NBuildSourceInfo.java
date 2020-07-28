@@ -84,14 +84,6 @@ public class NBuildSourceInfo {
         this.viewFactTablePath = viewFactTablePath;
     }
 
-    public void setCount(long count) {
-        this.count = count;
-    }
-
-    public long getCount() {
-        return count;
-    }
-
     public void setLayoutId(long layoutId) {
         this.layoutId = layoutId;
     }

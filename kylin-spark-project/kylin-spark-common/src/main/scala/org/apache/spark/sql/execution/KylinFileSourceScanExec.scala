@@ -26,7 +26,6 @@ import org.apache.spark.sql.catalyst.plans.physical.{HashPartitioning, Partition
 import org.apache.spark.sql.catalyst.{InternalRow, TableIdentifier}
 import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.execution.metric.SQLMetrics
-import org.apache.spark.sql.execution.SQLExecution
 import org.apache.spark.sql.execution.datasource.{FilePruner, ShardSpec}
 import org.apache.spark.sql.types.StructType
 

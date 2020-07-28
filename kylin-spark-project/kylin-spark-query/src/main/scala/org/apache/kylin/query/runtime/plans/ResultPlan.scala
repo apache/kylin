@@ -62,11 +62,11 @@ object ResultPlan extends Logging {
     val resultTypes = rowType.getFieldList.asScala
     val jobGroup = Thread.currentThread().getName
     val sparkContext = SparderContext.getSparkSession.sparkContext
-    val kapConfig = KylinConfig.getInstanceFromEnv
+    val kylinConfig = KylinConfig.getInstanceFromEnv
     var pool = "heavy_tasks"
     val partitionsNum =
-      if (kapConfig.getSparkSqlShufflePartitions != -1) {
-        kapConfig.getSparkSqlShufflePartitions
+      if (kylinConfig.getSparkSqlShufflePartitions != -1) {
+        kylinConfig.getSparkSqlShufflePartitions
       } else {
         Math.min(QueryContextFacade.current().getSourceScanBytes / PARTITION_SPLIT_BYTES + 1,
           SparderContext.getTotalCore).toInt

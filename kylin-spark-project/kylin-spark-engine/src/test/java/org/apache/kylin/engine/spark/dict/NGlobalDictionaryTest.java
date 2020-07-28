@@ -34,7 +34,7 @@ import org.apache.spark.dict.NBucketDictionary;
 import org.apache.spark.dict.NGlobalDictHDFSStore;
 import org.apache.spark.dict.NGlobalDictMetaInfo;
 import org.apache.spark.dict.NGlobalDictStore;
-import org.apache.spark.dict.NGlobalDictionaryV2;
+import org.apache.spark.dict.NGlobalDictionary;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -52,7 +52,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class NGlobalDictionaryV2Test extends LocalWithSparkSessionTest {
+public class NGlobalDictionaryTest extends LocalWithSparkSessionTest {
 
     private final static int BUCKET_SIZE = 10;
 
@@ -84,8 +84,8 @@ public class NGlobalDictionaryV2Test extends LocalWithSparkSessionTest {
     private void roundTest(int size) throws IOException {
         System.out.println("GlobalDictionaryV2Test -> roundTest -> " + System.currentTimeMillis());
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        NGlobalDictionaryV2 dict1 = new NGlobalDictionaryV2("t1", "a", "spark", config.getHdfsWorkingDirectory());
-        NGlobalDictionaryV2 dict2 = new NGlobalDictionaryV2("t2", "a", "local", config.getHdfsWorkingDirectory());
+        NGlobalDictionary dict1 = new NGlobalDictionary("t1", "a", "spark", config.getHdfsWorkingDirectory());
+        NGlobalDictionary dict2 = new NGlobalDictionary("t2", "a", "local", config.getHdfsWorkingDirectory());
         List<String> stringList = generateRandomData(size);
         Collections.sort(stringList);
         runWithSparkBuildGlobalDict(dict1, stringList);
@@ -102,7 +102,7 @@ public class NGlobalDictionaryV2Test extends LocalWithSparkSessionTest {
         return stringList;
     }
 
-    private void runWithSparkBuildGlobalDict(NGlobalDictionaryV2 dict, List<String> stringSet) throws IOException {
+    private void runWithSparkBuildGlobalDict(NGlobalDictionary dict, List<String> stringSet) throws IOException {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         dict.prepareWrite();
         List<Row> rowList = Lists.newLinkedList();
@@ -129,7 +129,7 @@ public class NGlobalDictionaryV2Test extends LocalWithSparkSessionTest {
         dict.writeMetaDict(BUCKET_SIZE, config.getGlobalDictV2MaxVersions(), config.getGlobalDictV2VersionTTL());
     }
 
-    private void runWithLocalBuildGlobalDict(NGlobalDictionaryV2 dict, List<String> stringSet) throws IOException {
+    private void runWithLocalBuildGlobalDict(NGlobalDictionary dict, List<String> stringSet) throws IOException {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         dict.prepareWrite();
         HashPartitioner partitioner = new HashPartitioner(BUCKET_SIZE);
@@ -153,13 +153,13 @@ public class NGlobalDictionaryV2Test extends LocalWithSparkSessionTest {
         dict.writeMetaDict(BUCKET_SIZE, config.getGlobalDictV2MaxVersions(), config.getGlobalDictV2VersionTTL());
     }
 
-    private void compareTwoModeVersionNum(NGlobalDictionaryV2 dict1, NGlobalDictionaryV2 dict2) throws IOException {
+    private void compareTwoModeVersionNum(NGlobalDictionary dict1, NGlobalDictionary dict2) throws IOException {
         NGlobalDictStore store1 = new NGlobalDictHDFSStore(dict1.getResourceDir());
         NGlobalDictStore store2 = new NGlobalDictHDFSStore(dict2.getResourceDir());
         Assert.assertEquals(store1.listAllVersions().length, store2.listAllVersions().length);
     }
 
-    private void compareTwoVersionDict(NGlobalDictionaryV2 dict1, NGlobalDictionaryV2 dict2) throws IOException {
+    private void compareTwoVersionDict(NGlobalDictionary dict1, NGlobalDictionary dict2) throws IOException {
         NGlobalDictMetaInfo metadata1 = dict1.getMetaInfo();
         NGlobalDictMetaInfo metadata2 = dict2.getMetaInfo();
         // compare dict meta info

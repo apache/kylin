@@ -34,8 +34,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DFLayoutMergeAssist implements Serializable {
-    protected static final Logger logger = LoggerFactory.getLogger(DFLayoutMergeAssist.class);
+public class CubeMergeAssist implements Serializable {
+    protected static final Logger logger = LoggerFactory.getLogger(CubeMergeAssist.class);
     private static final int DEFAULT_BUFFER_SIZE = 256;
     private LayoutEntity layout;
     private SegmentInfo newSegment;

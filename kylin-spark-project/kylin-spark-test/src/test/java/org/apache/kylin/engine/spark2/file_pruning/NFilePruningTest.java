@@ -264,7 +264,7 @@ public class NFilePruningTest extends LocalWithSparkSessionTest {
             //pruningWithVariousTypesScenario();
 
         } finally {
-            System.clearProperty("kap.storage.columnar.shard-rowcount");
+            System.clearProperty("kylin.storage.columnar.shard-rowcount");
         }
     }
 
@@ -287,7 +287,7 @@ public class NFilePruningTest extends LocalWithSparkSessionTest {
             NExecAndComp.execAndCompare(query, getProject(), NExecAndComp.CompareLevel.SAME, "left");
 
         } finally {
-            System.clearProperty("kap.storage.columnar.shard-rowcount");
+            System.clearProperty("kylin.storage.columnar.shard-rowcount");
         }
     }
 

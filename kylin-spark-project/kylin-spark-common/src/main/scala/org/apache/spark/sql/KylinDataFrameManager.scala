@@ -21,7 +21,6 @@ package org.apache.spark.sql
 import org.apache.kylin.cube.CubeInstance
 import org.apache.kylin.cube.cuboid.Cuboid
 import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.datasource.FilePruner
 import org.apache.spark.sql.execution.datasources.HadoopFsRelation
 import org.apache.spark.sql.execution.datasources.parquet.ParquetFileFormat
@@ -68,7 +67,7 @@ class KylinDataFrameManager(sparkSession: SparkSession) {
 
   def cuboidTable(cubeInstance: CubeInstance, layout: Cuboid): DataFrame = {
     option("project", cubeInstance.getProject)
-    option("dataflowId", cubeInstance.getUuid)
+    option("cubeId", cubeInstance.getUuid)
     option("cuboidId", layout.getId)
     val indexCatalog = new FilePruner(cubeInstance, layout, sparkSession, options = extraOptions.toMap)
     sparkSession.baseRelationToDataFrame(

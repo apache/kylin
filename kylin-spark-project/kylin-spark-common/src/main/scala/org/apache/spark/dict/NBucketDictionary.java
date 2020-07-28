@@ -27,7 +27,7 @@ import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 
 public class NBucketDictionary {
 
-    protected static final Logger logger = LoggerFactory.getLogger(NGlobalDictionaryV2.class);
+    protected static final Logger logger = LoggerFactory.getLogger(NGlobalDictionary.class);
 
     private String workingDir;
 

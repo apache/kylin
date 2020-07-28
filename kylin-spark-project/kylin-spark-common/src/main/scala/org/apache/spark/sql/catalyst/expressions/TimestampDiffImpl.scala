@@ -20,8 +20,8 @@ package org.apache.spark.sql.catalyst.expressions
 
 import java.util.Locale
 
-import org.apache.kylin.engine.spark.common.util.KapDateTimeUtils._
-import org.apache.kylin.engine.spark.common.util.KapDateTimeUtils
+import org.apache.kylin.engine.spark.common.util.KylinDateTimeUtils._
+import org.apache.kylin.engine.spark.common.util.KylinDateTimeUtils
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
 
 object TimestampDiffImpl {
@@ -69,11 +69,11 @@ object TimestampDiffImpl {
       case "WEEK" | "SQL_TSI_WEEK" =>
         (aMillis - bMillis) / MILLIS_PER_DAY / DAYS_PER_WEEK
       case "MONTH" | "SQL_TSI_MONTH" =>
-        KapDateTimeUtils.subtractMonths(aMillis, bMillis)
+        KylinDateTimeUtils.subtractMonths(aMillis, bMillis)
       case "QUARTER" | "SQL_TSI_QUARTER" =>
-        KapDateTimeUtils.subtractMonths(aMillis, bMillis) / MONTHS_PER_QUARTER
+        KylinDateTimeUtils.subtractMonths(aMillis, bMillis) / MONTHS_PER_QUARTER
       case "YEAR" | "SQL_TSI_YEAR" =>
-        KapDateTimeUtils.subtractMonths(aMillis, bMillis) / MONTHS_PER_QUARTER / QUARTERS_PER_YEAR
+        KylinDateTimeUtils.subtractMonths(aMillis, bMillis) / MONTHS_PER_QUARTER / QUARTERS_PER_YEAR
       case _ =>
         throw new IllegalArgumentException(s"Illegal unit: $unit," +
           s" only support [YEAR, SQL_TSI_YEAR, QUARTER, SQL_TSI_QUARTER, MONTH, SQL_TSI_MONTH, WEEK, SQL_TSI_WEEK, DAY, SQL_TSI_DAY," +

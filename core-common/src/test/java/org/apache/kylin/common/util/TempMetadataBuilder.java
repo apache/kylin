@@ -83,7 +83,6 @@ public class TempMetadataBuilder {
 
             FileUtils.deleteQuietly(new File(dst));
 
-            // KAP files will overwrite Kylin files
             for (String metaSrc : metaSrcs) {
                 FileUtils.copyDirectory(new File(metaSrc), new File(dst));
             }

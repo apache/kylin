@@ -160,7 +160,7 @@ class SparderRexVisitor(
             case num: MonthNum => {
               // both add_month and add_year case
               val ts = k_lit(children.head).cast(TimestampType)
-              return k_lit(kap_add_months(k_lit(ts), num.num))
+              return k_lit(kylin_add_months(k_lit(ts), num.num))
             }
             case _ =>
           }
@@ -242,7 +242,7 @@ class SparderRexVisitor(
 
             val ts1 = k_lit(children.head).cast(TimestampType)
             val ts2 = k_lit(children.last).cast(TimestampType)
-            kap_subtract_months(ts1, ts2)
+            kylin_subtract_months(ts1, ts2)
 
           } else {
             throw new IllegalStateException(

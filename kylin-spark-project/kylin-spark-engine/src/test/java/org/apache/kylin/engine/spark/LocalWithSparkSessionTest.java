@@ -256,7 +256,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         if (type.isBoolean())
             return DataTypes.BooleanType;
 
-        throw new IllegalArgumentException("KAP data type: " + type + " can not be converted to spark's type.");
+        throw new IllegalArgumentException("Kylin data type: " + type + " can not be converted to spark's type.");
     }
 
     public void buildMultiSegs(String cubeName) throws Exception {

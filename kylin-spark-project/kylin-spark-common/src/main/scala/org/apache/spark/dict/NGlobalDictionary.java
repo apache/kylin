@@ -24,9 +24,9 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NGlobalDictionaryV2 implements Serializable {
+public class NGlobalDictionary implements Serializable {
 
-    protected static final Logger logger = LoggerFactory.getLogger(NGlobalDictionaryV2.class);
+    protected static final Logger logger = LoggerFactory.getLogger(NGlobalDictionary.class);
 
     private final static String WORKING_DIR = "working";
 
@@ -48,7 +48,7 @@ public class NGlobalDictionaryV2 implements Serializable {
         return baseDir + WORKING_DIR;
     }
 
-    public NGlobalDictionaryV2(String project, String sourceTable, String sourceColumn, String baseDir)
+    public NGlobalDictionary(String project, String sourceTable, String sourceColumn, String baseDir)
             throws IOException {
         this.project = project;
         this.sourceTable = sourceTable;
@@ -60,7 +60,7 @@ public class NGlobalDictionaryV2 implements Serializable {
         }
     }
 
-    public NGlobalDictionaryV2(String dictParams) throws IOException {
+    public NGlobalDictionary(String dictParams) throws IOException {
         String[] dictInfo = dictParams.split(SEPARATOR);
         this.project = dictInfo[0];
         this.sourceTable = dictInfo[1];

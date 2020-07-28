@@ -81,13 +81,13 @@ public class NExecAndComp {
                 appendLimitQueries++;
             }
 
-            Dataset<Row> kapResult = (recAndQueryResult == null) ? queryWithKap(prj, joinType, sqlAndAddedLimitSql)
-                    : queryWithKap(prj, joinType, sqlAndAddedLimitSql, recAndQueryResult);
+            Dataset<Row> kylinResult = (recAndQueryResult == null) ? queryWithKylin(prj, joinType, sqlAndAddedLimitSql)
+                    : queryWithKylin(prj, joinType, sqlAndAddedLimitSql, recAndQueryResult);
             addQueryPath(recAndQueryResult, query, sql);
             Dataset<Row> sparkResult = queryWithSpark(prj, sql, query.getFirst());
-            List<Row> kapRows = SparkQueryTest.castDataType(kapResult, sparkResult).toJavaRDD().collect();
+            List<Row> kylinRows = SparkQueryTest.castDataType(kylinResult, sparkResult).toJavaRDD().collect();
             List<Row> sparkRows = sparkResult.toJavaRDD().collect();
-            if (!compareResults(normRows(sparkRows), normRows(kapRows), CompareLevel.SUBSET)) {
+            if (!compareResults(normRows(sparkRows), normRows(kylinRows), CompareLevel.SUBSET)) {
                 throw new IllegalArgumentException("Result not match");
             }
         }
@@ -115,8 +115,8 @@ public class NExecAndComp {
 
             // Query from Cube
             long startTime = System.currentTimeMillis();
-            Dataset<Row> cubeResult = (recAndQueryResult == null) ? queryWithKap(prj, joinType, Pair.newPair(sql, sql))
-                    : queryWithKap(prj, joinType, Pair.newPair(sql, sql), recAndQueryResult);
+            Dataset<Row> cubeResult = (recAndQueryResult == null) ? queryWithKylin(prj, joinType, Pair.newPair(sql, sql))
+                    : queryWithKylin(prj, joinType, Pair.newPair(sql, sql), recAndQueryResult);
             addQueryPath(recAndQueryResult, query, sql);
             if (compareLevel == CompareLevel.SAME) {
                 Dataset<Row> sparkResult = queryWithSpark(prj, sql, query.getFirst());
@@ -145,7 +145,7 @@ public class NExecAndComp {
         }
     }
 
-    public static boolean execAndCompareQueryResult(Pair<String, String> queryForKap,
+    public static boolean execAndCompareQueryResult(Pair<String, String> queryForKylin,
                                                     Pair<String, String> queryForSpark, String joinType, String prj,
                                                     Map<String, CompareEntity> recAndQueryResult) {
         String sqlForSpark = changeJoinType(queryForSpark.getSecond(), joinType);
@@ -153,11 +153,11 @@ public class NExecAndComp {
         Dataset<Row> sparkResult = queryWithSpark(prj, queryForSpark.getSecond(), queryForSpark.getFirst());
         List<Row> sparkRows = sparkResult.toJavaRDD().collect();
 
-        String sqlForKap = changeJoinType(queryForKap.getSecond(), joinType);
-        Dataset<Row> cubeResult = queryWithKap(prj, joinType, Pair.newPair(sqlForKap, sqlForKap));
-        List<Row> kapRows = SparkQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
+        String sqlForKylin = changeJoinType(queryForKylin.getSecond(), joinType);
+        Dataset<Row> cubeResult = queryWithKylin(prj, joinType, Pair.newPair(sqlForKylin, sqlForKylin));
+        List<Row> kylinRows = SparkQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
 
-        return sparkRows.equals(kapRows);
+        return sparkRows.equals(kylinRows);
     }
 
     private static List<Row> normRows(List<Row> rows) {
@@ -184,8 +184,8 @@ public class NExecAndComp {
                 "The method has deprecated, please call org.apache.kylin.engine.spark2.NExecAndComp.execAndCompareNew");
     }
 
-    private static Dataset<Row> queryWithKap(String prj, String joinType, Pair<String, String> pair,
-                                             Map<String, CompareEntity> compareEntityMap) {
+    private static Dataset<Row> queryWithKylin(String prj, String joinType, Pair<String, String> pair,
+                                               Map<String, CompareEntity> compareEntityMap) {
 
         compareEntityMap.putIfAbsent(pair.getFirst(), new CompareEntity());
         final CompareEntity entity = compareEntityMap.get(pair.getFirst());
@@ -196,7 +196,7 @@ public class NExecAndComp {
         return rowDataset;
     }
 
-    private static Dataset<Row> queryWithKap(String prj, String joinType, Pair<String, String> sql) {
+    private static Dataset<Row> queryWithKylin(String prj, String joinType, Pair<String, String> sql) {
         return queryFromCube(prj, changeJoinType(sql.getSecond(), joinType));
     }
 

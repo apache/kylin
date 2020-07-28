@@ -17,7 +17,7 @@
  */
 package org.apache.spark.sql.catalyst.expressions
 
-import org.apache.kylin.engine.spark.common.util.KapDateTimeUtils._
+import org.apache.kylin.engine.spark.common.util.KylinDateTimeUtils._
 import java.util.{Calendar, Locale, TimeZone}
 
 import org.apache.spark.sql.catalyst.util.DateTimeUtils

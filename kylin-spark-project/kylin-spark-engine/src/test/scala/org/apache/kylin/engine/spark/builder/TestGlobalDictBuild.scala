@@ -32,7 +32,7 @@ import org.apache.kylin.job.impl.threadpool.DefaultScheduler
 import org.apache.kylin.job.lock.MockJobLock
 import org.apache.kylin.metadata.model.SegmentRange.TSRange
 import org.apache.spark.TaskContext
-import org.apache.spark.dict.{NGlobalDictMetaInfo, NGlobalDictionaryV2}
+import org.apache.spark.dict.{NGlobalDictMetaInfo, NGlobalDictionary}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.functions.col
@@ -112,12 +112,12 @@ class TestGlobalDictBuild extends SparderBaseFunSuite with SharedSparkSession wi
   }
 
   def buildDict(segInfo: SegmentInfo, seg: CubeSegment, randomDataSet: Dataset[Row], dictColSet: Set[ColumnDesc]): NGlobalDictMetaInfo = {
-    val dictionaryBuilder = new DFDictionaryBuilder(randomDataSet, segInfo, randomDataSet.sparkSession, dictColSet)
+    val dictionaryBuilder = new CubeDictionaryBuilder(randomDataSet, segInfo, randomDataSet.sparkSession, dictColSet)
     val col = dictColSet.iterator().next()
     val ds = randomDataSet.select("26").distinct()
     val bucketPartitionSize = DictionaryBuilderHelper.calculateBucketSize(segInfo, col, ds)
     dictionaryBuilder.build(col, bucketPartitionSize, ds)
-    val dict = new NGlobalDictionaryV2(seg.getProject, col.tableName, col.columnName,
+    val dict = new NGlobalDictionary(seg.getProject, col.tableName, col.columnName,
       seg.getConfig.getHdfsWorkingDirectory)
     dict.getMetaInfo
   }

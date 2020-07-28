@@ -35,7 +35,7 @@ object NGlobalDictBuilderAssist extends Logging {
 
   @throws[IOException]
   def resize(ref: ColumnDesc, desc: SegmentInfo, bucketPartitionSize: Int, ss: SparkSession): Unit = {
-    val globalDict = new NGlobalDictionaryV2(desc.project, ref.tableAliasName, ref.columnName, desc.kylinconf.getHdfsWorkingDirectory)
+    val globalDict = new NGlobalDictionary(desc.project, ref.tableAliasName, ref.columnName, desc.kylinconf.getHdfsWorkingDirectory)
 
     val broadcastDict = ss.sparkContext.broadcast(globalDict)
     globalDict.prepareWrite()
@@ -44,7 +44,7 @@ object NGlobalDictBuilderAssist extends Logging {
     val existsDictDs = ss.createDataset(0 to bucketPartitionSize)
       .flatMap {
         bucketId =>
-          val gDict: NGlobalDictionaryV2 = broadcastDict.value
+          val gDict: NGlobalDictionary = broadcastDict.value
           val bucketDict: NBucketDictionary = gDict.loadBucketDictionary(bucketId)
           val tupleList = new util.ArrayList[(String, Long)](bucketDict.getAbsoluteDictMap.size)
           bucketDict.getAbsoluteDictMap.object2LongEntrySet.asScala

@@ -137,7 +137,7 @@ public class TomcatClassLoader extends ParallelWebappClassLoader {
         if (sparkClassLoader.classNeedPreempt(name)) {
             return sparkClassLoader.loadClass(name);
         }
-        // tomcat classpath include KAP_HOME/lib , ensure this classload can load kap class
+        // tomcat classpath include KYLIN_HOME/lib , ensure this classload can load kylin class
         if (isParentCLPrecedent(name) && !isThisCLPrecedent(name)) {
             logger.debug("delegate " + name + " directly to parent");
             return parent.loadClass(name);

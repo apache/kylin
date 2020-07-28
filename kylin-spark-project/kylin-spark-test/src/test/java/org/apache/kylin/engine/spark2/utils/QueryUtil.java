@@ -28,7 +28,6 @@ import org.apache.kylin.query.util.QueryUtil.IQueryTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -70,15 +69,14 @@ public class QueryUtil {
         String[] currentTransformers = queryTransformers.stream().map(Object::getClass).map(Class::getCanonicalName)
                 .toArray(String[]::new);
         String[] configTransformers = kylinConfig.getQueryTransformers();
-        boolean containsCCTransformer = Arrays.stream(configTransformers).anyMatch(t -> t.equals("io.kyligence.kap.query.util.ConvertToComputedColumn"));
         boolean transformersEqual = Objects.deepEquals(currentTransformers, configTransformers);
-        if (transformersEqual && (isCCNeeded || !containsCCTransformer)) {
+        if (transformersEqual && (isCCNeeded)) {
             return;
         }
 
         List<IQueryTransformer> transformers = Lists.newArrayList();
         for (String clz : configTransformers) {
-            if (!isCCNeeded && clz.equals("io.kyligence.kap.query.util.ConvertToComputedColumn"))
+            if (!isCCNeeded)
                 continue;
 
             try {

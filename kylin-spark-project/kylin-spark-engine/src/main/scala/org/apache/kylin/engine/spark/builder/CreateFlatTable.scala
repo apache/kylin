@@ -22,7 +22,7 @@ import java.util.Locale
 
 import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
-import org.apache.kylin.engine.spark.builder.DFBuilderHelper.{ENCODE_SUFFIX, _}
+import org.apache.kylin.engine.spark.builder.CubeBuilderHelper.{ENCODE_SUFFIX, _}
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil._
 import org.apache.kylin.engine.spark.metadata._
 import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree
@@ -94,7 +94,7 @@ class CreateFlatTable(val seg: SegmentInfo,
   private def buildDict(ds: Dataset[Row], dictCols: Set[ColumnDesc]): Unit = {
     val matchedCols = filterCols(ds, dictCols)
     if (!matchedCols.isEmpty) {
-      val builder = new DFDictionaryBuilder(ds, seg, ss, Sets.newHashSet(matchedCols.asJavaCollection))
+      val builder = new CubeDictionaryBuilder(ds, seg, ss, Sets.newHashSet(matchedCols.asJavaCollection))
       builder.buildDictSet()
     }
   }
@@ -103,7 +103,7 @@ class CreateFlatTable(val seg: SegmentInfo,
     val matchedCols = filterCols(ds, encodeCols)
     var encodeDs = ds
     if (!matchedCols.isEmpty) {
-      encodeDs = DFTableEncoder.encodeTable(ds, seg, matchedCols.asJava)
+      encodeDs = CubeTableEncoder.encodeTable(ds, seg, matchedCols.asJava)
     }
     encodeDs
   }

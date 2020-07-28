@@ -68,7 +68,7 @@ class ParentSourceChooser(
         // hacked, for some case, you do not want to trigger buildSnapshot
         // eg: resource detect
         // Move this to a more suitable place
-        val builder = new DFSnapshotBuilder(seg, ss)
+        val builder = new CubeSnapshotBuilder(seg, ss)
         seg = builder.buildSnapshot
       }
       flatTableSource = getFlatTable()
@@ -143,7 +143,6 @@ class ParentSourceChooser(
     val buildSource = new NBuildSourceInfo
     buildSource.setParentStoragePath("NSparkCubingUtil.getStoragePath(dataCuboid)")
     buildSource.setSparkSession(ss)
-    buildSource.setCount(layout.getRows)
     buildSource.setLayoutId(layout.getId)
     buildSource.setLayout(layout)
     buildSource.setByteSize(layout.getByteSize)
@@ -163,7 +162,6 @@ class ParentSourceChooser(
     val flatTable = new CreateFlatTable(seg, toBuildTree, ss, sourceInfo)
     val afterJoin: Dataset[Row] = flatTable.generateDataset(needEncoding, true)
     sourceInfo.setFlattableDS(afterJoin)
-    sourceInfo.setCount(afterJoin.count())
 
     logInfo("No suitable ready layouts could be reused, generate dataset from flat table.")
     sourceInfo
