@@ -45,9 +45,9 @@ function retrieveDependency() {
             source ${dir}/cached-hbase-dependency.sh
         fi
         source ${dir}/cached-hadoop-conf-dir.sh
-        source ${dir}/cached-kafka-dependency.sh
+        # source ${dir}/cached-kafka-dependency.sh
         source ${dir}/cached-spark-dependency.sh
-        source ${dir}/cached-flink-dependency.sh
+        # source ${dir}/cached-flink-dependency.sh
     else
         source ${dir}/find-hive-dependency.sh
         #retrive $hbase_dependency
@@ -57,9 +57,9 @@ function retrieveDependency() {
             source ${dir}/find-hbase-dependency.sh
         fi
         source ${dir}/find-hadoop-conf-dir.sh
-        source ${dir}/find-kafka-dependency.sh
+        # source ${dir}/find-kafka-dependency.sh
         source ${dir}/find-spark-dependency.sh
-        source ${dir}/find-flink-dependency.sh
+        # source ${dir}/find-flink-dependency.sh
     fi
 
     # get hdp_version
@@ -87,9 +87,9 @@ function retrieveDependency() {
 
     # compose hadoop_dependencies
     hadoop_dependencies=${hadoop_dependencies}:`hadoop classpath`
-    if [ -n "${hbase_dependency}" ]; then
-        hadoop_dependencies=${hadoop_dependencies}:${hbase_dependency}
-    fi
+#    if [ -n "${hbase_dependency}" ]; then
+#        hadoop_dependencies=${hadoop_dependencies}:${hbase_dependency}
+#    fi
     if [ -n "${hive_dependency}" ]; then
         hadoop_dependencies=${hadoop_dependencies}:${hive_dependency}
     fi
