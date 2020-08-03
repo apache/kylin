@@ -314,7 +314,13 @@ public class StorageCleanupJob extends AbstractApplication {
         final String prefix = config.getHiveIntermediateTablePrefix();
         final String uuidPattern = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
-        List<String> hiveTableNames = getHiveTables();
+        HiveCmdBuilder.getHiveTablePrefix().set(prefix);
+        List<String> hiveTableNames = null;
+        try {
+            hiveTableNames = getHiveTables();
+        } finally {
+            HiveCmdBuilder.getHiveTablePrefix().remove();
+        }
         Iterable<String> kylinIntermediates = Iterables.filter(hiveTableNames, new Predicate<String>() {
             @Override
             public boolean apply(@Nullable String input) {
