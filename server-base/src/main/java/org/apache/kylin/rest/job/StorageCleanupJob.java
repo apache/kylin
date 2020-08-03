@@ -162,10 +162,28 @@ public class StorageCleanupJob extends AbstractApplication {
 
     // function entrance
     public void cleanup() throws Exception {
-
-        cleanUnusedIntermediateHiveTable();
-        cleanUnusedHBaseTables();
-        cleanUnusedHdfsFiles();
+        boolean error = false;
+        try {
+            cleanUnusedIntermediateHiveTable();
+        } catch (Exception e) {
+            logger.warn("cleanUnusedIntermediateHiveTable() error", e);
+            error = true;
+        }
+        try {
+            cleanUnusedHBaseTables();
+        } catch (Exception e) {
+            logger.warn("cleanUnusedHBaseTables() error", e);
+            error = true;
+        }
+        try {
+            cleanUnusedHdfsFiles();
+        } catch (Exception e) {
+            logger.warn("cleanUnusedHdfsFiles() error", e);
+            error = true;
+        }
+        if (error) {
+            throw new Exception("clean job has exception");
+        }
     }
 
     protected void cleanUnusedHBaseTables() throws IOException {
