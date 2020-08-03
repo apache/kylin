@@ -35,6 +35,10 @@ public class HiveCmdBuilder {
 
     static final String CREATE_HQL_TMP_FILE_TEMPLATE = "cat >%s<<EOL\n%sEOL";
 
+    public static ThreadLocal<String> getHiveTablePrefix() {
+        return hiveTablePrefix;
+    }
+
     public enum HiveClientMode {
         CLI, BEELINE
     }
@@ -42,6 +46,7 @@ public class HiveCmdBuilder {
     private KylinConfig kylinConfig;
     private final Map<String, String> hiveConfProps;
     private final List<String> statements = Lists.newArrayList();
+    private static ThreadLocal<String> hiveTablePrefix = new ThreadLocal<String>();
 
     public HiveCmdBuilder() {
         this("");

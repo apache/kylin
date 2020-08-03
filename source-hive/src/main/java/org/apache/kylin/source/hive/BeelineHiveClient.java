@@ -37,6 +37,7 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.DBUtils;
+import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.SourceConfigurationUtil;
 
 import org.apache.kylin.shaded.com.google.common.base.Preconditions;
@@ -121,8 +122,14 @@ public class BeelineHiveClient implements IHiveClient {
     }
 
     public List<String> getHiveTableNames(String database) throws Exception {
+        String hiveTablePrefix = HiveCmdBuilder.getHiveTablePrefix().get();
         List<String> ret = Lists.newArrayList();
-        ResultSet tables = metaData.getTables(null, database, null, null);
+        ResultSet tables = null;
+        if (StringUtils.isNotBlank(hiveTablePrefix)) {
+            tables = metaData.getTables(null, database, null, null);
+        } else {
+            tables = metaData.getTables(null, database, hiveTablePrefix + "*", null);
+        }
         while (tables.next()) {
             ret.add(String.valueOf(tables.getObject(3)));
         }
