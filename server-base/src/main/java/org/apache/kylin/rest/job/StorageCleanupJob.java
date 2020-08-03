@@ -485,6 +485,9 @@ public class StorageCleanupJob extends AbstractApplication {
 
     private String getSegmentIdFromJobId(String jobId) {
         AbstractExecutable abstractExecutable = executableManager.getJob(jobId);
+        if (abstractExecutable == null) {
+            return null;
+        }
         String segmentId = abstractExecutable.getParam("segmentId");
         return segmentId;
     }
