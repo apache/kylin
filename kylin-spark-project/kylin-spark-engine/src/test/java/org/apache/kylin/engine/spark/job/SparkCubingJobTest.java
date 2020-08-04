@@ -66,6 +66,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
     @Override
     public void setup() throws SchedulerException {
         super.setup();
+        ss.sparkContext().setLogLevel("WARN");
         kylinConfig = KylinConfig.getInstanceFromEnv();
         kylinConfig.setProperty("kylin.source.provider.0", "org.apache.kylin.engine.spark.source.HiveSource");
         cubeMgr = CubeManager.getInstance(kylinConfig);
