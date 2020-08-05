@@ -171,6 +171,7 @@ object KylinSession extends Logging {
       }
 
       if (!"true".equalsIgnoreCase(System.getProperty("spark.local"))) {
+        sparkConf.set("spark.submit.deployMode", conf.getSparkDeployMode)
         if (sparkConf.get("spark.master").startsWith("yarn")) {
           sparkConf.set("spark.yarn.dist.jars",
             KylinConfig.getInstanceFromEnv.getKylinParquetJobJarPath)

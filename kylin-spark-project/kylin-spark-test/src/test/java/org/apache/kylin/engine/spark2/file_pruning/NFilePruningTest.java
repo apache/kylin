@@ -77,27 +77,15 @@ public class NFilePruningTest extends LocalWithSparkSessionTest {
         if (Shell.MAC)
             System.setProperty("org.xerial.snappy.lib.name", "libsnappyjava.jnilib");//for snappy
 
-        sparkConf = new SparkConf().setAppName(UUID.randomUUID().toString()).setMaster("local[4]");
-        sparkConf.set("spark.serializer", "org.apache.spark.serializer.JavaSerializer");
-        sparkConf.set(StaticSQLConf.CATALOG_IMPLEMENTATION().key(), "in-memory");
-        sparkConf.set("spark.sql.shuffle.partitions", "1");
-        sparkConf.set("spark.memory.fraction", "0.1");
-        // opt memory
-        sparkConf.set("spark.shuffle.detectCorrupt", "false");
-        // For sinai_poc/query03, enable implicit cross join conversion
-        sparkConf.set("spark.sql.crossJoin.enabled", "true");
-
-        ss = SparkSession.builder().config(sparkConf).getOrCreate();
-        KylinSparkEnv.setSparkSession(ss);
-        UdfManager.create(ss);
-
-        System.out.println("Check spark sql config [spark.sql.catalogImplementation = "
-                + ss.conf().get("spark.sql.catalogImplementation") + "]");
     }
 
     @Before
     public void setup() throws SchedulerException {
+        overwriteSystemProp("spark.local", "true");
         this.createTestMetadata("../../examples/test_case_data/file_prunning");
+        ss = KylinSparkEnv.getSparkSession();
+        System.out.println("Check spark sql config [spark.sql.catalogImplementation = "
+                + ss.conf().get("spark.sql.catalogImplementation") + "]");
         System.setProperty("kylin.env", "UT");
         System.setProperty("kylin.query.enable-dynamic-column", "false");
         Map<RealizationType, Integer> priorities = Maps.newHashMap();

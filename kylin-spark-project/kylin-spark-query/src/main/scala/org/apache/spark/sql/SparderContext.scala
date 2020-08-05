@@ -125,7 +125,7 @@ object SparderContext extends Logging {
               val sparkSession = System.getProperty("spark.local") match {
                 case "true" =>
                   SparkSession.builder
-                    .master("local")
+                    .master(kylinConf.getSparkMasterUrl("local"))
                     .appName("sparder-test-sql-context")
                     .withExtensions { ext =>
                       ext.injectPlannerStrategy(_ => KylinSourceStrategy)
@@ -135,7 +135,7 @@ object SparderContext extends Logging {
                 case _ =>
                   SparkSession.builder
                     .appName("sparder-sql-context")
-                    .master("yarn-client")
+                    .master(kylinConf.getSparkMasterUrl)
                     .withExtensions { ext =>
                       ext.injectPlannerStrategy(_ => KylinSourceStrategy)
                     }

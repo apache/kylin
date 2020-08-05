@@ -84,10 +84,14 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
 
     @Before
     public void setup() throws SchedulerException {
+        overwriteSystemProp("spark.local", "true");
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
         overwriteSystemProp("calcite.keep-in-clause", "true");
         overwriteSystemProp("kylin.metadata.distributed-lock-impl", "org.apache.kylin.engine.spark.utils.MockedDistributedLock$MockedFactory");
         this.createTestMetadata();
+        ss = KylinSparkEnv.getSparkSession();
+        System.out.println("Check spark sql config [spark.sql.catalogImplementation = "
+                + ss.conf().get("spark.sql.catalogImplementation") + "]");
         DefaultScheduler scheduler = DefaultScheduler.getInstance();
         scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()), new MockJobLock());
         if (!scheduler.hasStarted()) {
@@ -100,6 +104,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         DefaultScheduler.destroyInstance();
         this.cleanupTestMetadata();
         restoreAllSystemProp();
+        ss.stop();
     }
 
     protected void overwriteSystemProp(String key, String value) {
@@ -113,22 +118,6 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         if (Shell.MAC)
             System.setProperty("org.xerial.snappy.lib.name", "libsnappyjava.jnilib");//for snappy
 
-        sparkConf = new SparkConf().setAppName(UUID.randomUUID().toString()).setMaster("local[4]");
-        sparkConf.set("spark.serializer", "org.apache.spark.serializer.JavaSerializer");
-        sparkConf.set(StaticSQLConf.CATALOG_IMPLEMENTATION().key(), "in-memory");
-        sparkConf.set("spark.sql.shuffle.partitions", "1");
-        sparkConf.set("spark.memory.fraction", "0.1");
-        // opt memory
-        sparkConf.set("spark.shuffle.detectCorrupt", "false");
-        // For sinai_poc/query03, enable implicit cross join conversion
-        sparkConf.set("spark.sql.crossJoin.enabled", "true");
-
-        ss = SparkSession.builder().config(sparkConf).getOrCreate();
-        KylinSparkEnv.setSparkSession(ss);
-        UdfManager.create(ss);
-
-        System.out.println("Check spark sql config [spark.sql.catalogImplementation = "
-                + ss.conf().get("spark.sql.catalogImplementation") + "]");
     }
 
     public void createTestMetadata() {

@@ -2826,6 +2826,19 @@ public abstract class KylinConfigBase implements Serializable {
         return getPropertiesByPrefix("kylin.query.spark-conf.");
     }
 
+    public String getSparkMasterUrl(String defaultMaster) {
+        return getSparkConf().getOrDefault("kylin.query.spark-conf.spark.master", defaultMaster);
+    }
+
+    public String getSparkMasterUrl() {
+        return getSparkMasterUrl("yarn");
+    }
+
+    public String getSparkDeployMode() {
+        return getSparkConf().getOrDefault("kylin.query.spark-conf.spark.submit.deployMode",
+                "client");
+    }
+
     public String getIntersectFilterOrSeparator() {
         return getOptional("kylin.query.intersect.separator", "|");
     }
