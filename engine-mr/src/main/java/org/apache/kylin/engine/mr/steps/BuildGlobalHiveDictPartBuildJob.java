@@ -144,7 +144,7 @@ public class BuildGlobalHiveDictPartBuildJob extends AbstractHadoopJob {
     }
 
     private String getInputPath(KylinConfig config, CubeSegment segment) {
-        String dbDir = config.getHiveDatabaseDir();
+        String dbDir = config.getIntermediateTableDatabaseDir();
         String tableName = EngineFactory.getJoinedFlatTableDesc(segment).getTableName() + config.getMrHiveDistinctValueTableSuffix();
         String input = dbDir + "/" + tableName;
         logger.info("part build base input path:" + input);

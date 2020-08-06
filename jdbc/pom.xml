@@ -84,6 +84,7 @@
                             <artifactSet>
                                 <excludes>
                                     <exclude>org.slf4j:jcl-over-slf4j:*</exclude>
+                                    <exclude>com.google.guava:guava:*</exclude>
                                 </excludes>
                             </artifactSet>
 

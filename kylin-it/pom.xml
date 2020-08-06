@@ -499,6 +499,9 @@
                                               -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
                                         </argument>
                                         <argument>
+                                            -Dkylin.source.hive.warehouse-dir=/apps/hive/warehouse
+                                        </argument>
+                                        <argument>
                                             -javaagent:${project.basedir}/..//dev-support/org.jacoco.agent-${jacoco.version}-runtime.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-engine.exec
                                         </argument>
                                         <argument>-classpath</argument>

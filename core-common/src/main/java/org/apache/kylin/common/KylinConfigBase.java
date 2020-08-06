@@ -29,6 +29,7 @@ import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -608,13 +609,6 @@ public abstract class KylinConfigBase implements Serializable {
         return new String[0];
     }
 
-    /**
-     * @return the hdfs path for Hive Global dictionary table
-     */
-    public String getHiveDatabaseDir() {
-        return this.getOptional("kylin.source.hive.databasedir", "");
-    }
-
     public String[] getMrHiveDictColumnsExcludeRefColumns() {
         String[] excludeRefCols = null;
         String[] hiveDictColumns = getMrHiveDictColumns();
@@ -708,7 +702,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getMrHiveDistinctValueTableSuffix() {
-        return getOptional("kylin.dictionary.mr-hive.intermediate.table.suffix", "__distinct_value");
+        return getOptional("kylin.dictionary.mr-hive.intermediate.table.suffix", "_distinct_value");
     }
 
     // ============================================================================
@@ -1057,6 +1051,17 @@ public abstract class KylinConfigBase implements Serializable {
     // SOURCE.HIVE
     // ============================================================================
 
+    public String getHiveDatabaseDir(String databaseName) {
+        String dbDir = System.getProperty("kylin.source.hive.warehouse-dir");
+        if (!StringUtil.isEmpty(databaseName) && !databaseName.equalsIgnoreCase(DEFAULT)) {
+            if (!dbDir.endsWith("/")) {
+                dbDir += "/";
+            }
+            dbDir += databaseName + ".db";
+        }
+        return dbDir;
+    }
+
     public int getDefaultSource() {
         return Integer.parseInt(getOptional("kylin.source.default", "0"));
     }
@@ -1126,6 +1131,9 @@ public abstract class KylinConfigBase implements Serializable {
         return CliCommandExecutor.checkHiveProperty(this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT));
     }
 
+    public String getIntermediateTableDatabaseDir() {
+        return getHiveDatabaseDir(getHiveDatabaseForIntermediateTable());
+    }
 
     public String getFlatTableStorageFormat() {
         return this.getOptional("kylin.source.hive.flat-table-storage-format", "SEQUENCEFILE");
@@ -2669,5 +2677,13 @@ public abstract class KylinConfigBase implements Serializable {
 
     public int getDefaultTimeFilter() {
         return Integer.parseInt(getOptional("kylin.web.default-time-filter", "2"));
+    }
+
+    public boolean jobStatusWriteKafka() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.job-status.write.kafka", FALSE));
+    }
+
+    public Map<String, String> getJobStatusKafkaConfig() {
+        return getPropertiesByPrefix("kylin.engine.job-status.kafka.");
     }
 }

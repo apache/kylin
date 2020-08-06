@@ -22,7 +22,6 @@ import static org.apache.hadoop.hbase.HBaseConfiguration.merge;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Locale;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
@@ -98,7 +97,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
             // construct configuration for the HBase cluster
             Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
-            HTable htable = new HTable(hbaseConf, getOptionValue(OPTION_HTABLE_NAME).toUpperCase(Locale.ROOT));
+            HTable htable = new HTable(hbaseConf, getOptionValue(OPTION_HTABLE_NAME));
 
             // Automatic config !
             HFileOutputFormat3.configureIncrementalLoad(job, htable);
