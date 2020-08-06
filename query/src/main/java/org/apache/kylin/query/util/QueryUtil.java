@@ -178,6 +178,12 @@ public class QueryUtil {
                 msg = "NumberFormatException: " + cause.getMessage();
                 break;
             }
+
+            //where in(...) condition has too many elements
+            if (cause.getClass().equals(StackOverflowError.class)) {
+                msg = "StackOverflowError maybe caused by that filters have too many elements";
+                break;
+            }
             cause = cause.getCause();
         }
 
