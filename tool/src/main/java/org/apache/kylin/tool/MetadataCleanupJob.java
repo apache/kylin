@@ -39,6 +39,11 @@ public class MetadataCleanupJob extends AbstractApplication {
             .isRequired(false).withDescription("Specify how many days of job metadata keeping. Default 30 days")
             .create("jobThreshold");
 
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_DELETE_ALL_JOBS = OptionBuilder.withArgName("deleteAllJobs").hasArg()
+            .isRequired(false).withDescription("Delte all jobs include error jobs. Default false")
+            .create("deleteAllJobs");
+
     public static void main(String[] args) throws Exception {
         new MetadataCleanupJob().execute(args);
     }
@@ -48,6 +53,7 @@ public class MetadataCleanupJob extends AbstractApplication {
         Options options = new Options();
         options.addOption(OPTION_DELETE);
         options.addOption(OPTION_THRESHOLD_FOR_JOB);
+        options.addOption(OPTION_DELETE_ALL_JOBS);
         return options;
     }
 
@@ -59,7 +65,8 @@ public class MetadataCleanupJob extends AbstractApplication {
         int jobOutdatedDays = optionsHelper.hasOption(OPTION_THRESHOLD_FOR_JOB)
                 ? Integer.parseInt(optionsHelper.getOptionValue(OPTION_THRESHOLD_FOR_JOB))
                 : DEFAULT_JOB_OUTDATED_THRESHOLD_DAYS;
+        boolean deleteAllJobs = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_DELETE_ALL_JOBS));
         
-        new org.apache.kylin.rest.job.MetadataCleanupJob().cleanup(delete, jobOutdatedDays);
+        new org.apache.kylin.rest.job.MetadataCleanupJob().cleanup(delete, jobOutdatedDays, deleteAllJobs);
     }
 }
