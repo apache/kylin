@@ -1346,12 +1346,16 @@ KylinApp
         }
       };
 
+      /**
+       *
+       * @param pattern
+       */
       $scope.updateTsPatternOption = function(pattern) {
         if (pattern === '--- Other ---') {
           $scope.selfDefinedTsPattern = true;
           $scope.streaming.TSPattern = '';
         } else {
-          $scope.selfDefinedTsPattern = pattern;
+          $scope.streaming.TSPattern = pattern;
           $scope.selfDefinedTsPattern = false;
         }
       };
