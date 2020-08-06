@@ -80,7 +80,7 @@ public class MetadataCleanupJob {
     }
 
     // function entrance
-    public Map<String, Long> cleanup(boolean delete, int jobOutdatedDays) throws Exception {
+    public Map<String, Long> cleanup(boolean delete, int jobOutdatedDays, boolean deleteAllJobs) throws Exception {
         CubeManager cubeManager = CubeManager.getInstance(config);
         long newResourceTimeCut = System.currentTimeMillis() - NEW_RESOURCE_THREADSHOLD_MS;
         FileSystem fs = HadoopUtil.getWorkingFileSystem(HadoopUtil.getCurrentConfiguration());
@@ -168,7 +168,7 @@ public class MetadataCleanupJob {
         List<ExecutablePO> allExecutable = executableDao.getJobs();
         for (ExecutablePO executable : allExecutable) {
             long lastModified = executable.getLastModified();
-            if (lastModified < outdatedJobTimeCut && isJobComplete(executableDao, executable)) {
+            if (lastModified < outdatedJobTimeCut && (deleteAllJobs || isJobComplete(executableDao, executable))) {
                 String jobResPath = ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + executable.getUuid();
                 String jobOutputResPath = ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + executable.getUuid();
                 long outputLastModified = getTimestamp(jobOutputResPath);
