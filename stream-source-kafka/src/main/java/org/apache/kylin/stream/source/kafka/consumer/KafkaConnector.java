@@ -32,7 +32,7 @@ import org.apache.kylin.stream.core.source.IStreamingSource;
 import org.apache.kylin.stream.core.source.Partition;
 import org.apache.kylin.stream.source.kafka.KafkaSource;
 
-import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class KafkaConnector implements IStreamingConnector {
     private final KafkaConsumer<byte[], byte[]> kafkaConsumer;
@@ -81,10 +81,16 @@ public class KafkaConnector implements IStreamingConnector {
         } else if (startMode == ConsumerStartMode.LATEST) {
             kafkaConsumer.seekToEnd(topicPartitions);
         } else {
+            List<TopicPartition> newTopicPartitions = Lists.newArrayList();
             for (TopicPartition topicPartition : topicPartitions) {
                 Long offset = partitionOffsets.get(topicPartition.partition());
-                kafkaConsumer.seek(topicPartition, offset);
+                if (offset != null) {
+                    kafkaConsumer.seek(topicPartition, offset);
+                } else {
+                    newTopicPartitions.add(topicPartition);
+                }
             }
+            kafkaConsumer.seekToBeginning(newTopicPartitions);
         }
     }
 
