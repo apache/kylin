@@ -129,6 +129,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
 
         System.out.println("Check spark sql config [spark.sql.catalogImplementation = "
                 + ss.conf().get("spark.sql.catalogImplementation") + "]");
+        ss.sparkContext().setLogLevel("WARN");
     }
 
     public void createTestMetadata() {
