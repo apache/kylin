@@ -21,6 +21,10 @@ package org.apache.kylin.query.relnode;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
 import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
 import org.apache.calcite.adapter.enumerable.JavaRowFormat;
@@ -46,8 +50,6 @@ import org.apache.kylin.query.exec.SparderMethod;
 import org.apache.kylin.query.routing.RealizationChooser;
 import org.apache.kylin.query.security.QueryInterceptor;
 import org.apache.kylin.query.security.QueryInterceptorUtil;
-
-import com.google.common.collect.Lists;
 import org.apache.kylin.query.util.QueryInfoCollector;
 
 /**
@@ -55,6 +57,9 @@ import org.apache.kylin.query.util.QueryInfoCollector;
  * see org.apache.calcite.plan.OLAPRelMdRowCount#shouldIntercept(org.apache.calcite.rel.RelNode)
  */
 public class OLAPToEnumerableConverter extends ConverterImpl implements EnumerableRel {
+
+    private static final Logger logger = LoggerFactory.getLogger(OLAPToEnumerableConverter.class);
+
     private static final String SPARDER_CALL_METHOD_NAME = "enumerable";
 
     public OLAPToEnumerableConverter(RelOptCluster cluster, RelTraitSet traits, RelNode input) {
@@ -76,8 +81,8 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
     public Result implement(EnumerableRelImplementor enumImplementor, Prefer pref) {
         if (System.getProperty("calcite.debug") != null) {
             String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
-            System.out.println("EXECUTION PLAN BEFORE REWRITE");
-            System.out.println(dumpPlan);
+            logger.debug("EXECUTION PLAN BEFORE REWRITE");
+            logger.debug(dumpPlan);
         }
 
         QueryContextFacade.current().setWithoutSyntaxError(true);
@@ -98,8 +103,8 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
 
         if (System.getProperty("calcite.debug") != null) {
             String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
-            System.out.println("EXECUTION PLAN AFTER OLAPCONTEXT IS SET");
-            System.out.println(dumpPlan);
+            logger.debug("EXECUTION PLAN AFTER OLAPCONTEXT IS SET");
+            logger.debug(dumpPlan);
         }
 
         RealizationChooser.selectRealization(contexts);
@@ -139,8 +144,8 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
 
             if (System.getProperty("calcite.debug") != null) {
                 String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
-                System.out.println("EXECUTION PLAN AFTER REWRITE");
-                System.out.println(dumpPlan);
+                logger.debug("EXECUTION PLAN AFTER REWRITE");
+                logger.debug(dumpPlan);
                 QueryContextFacade.current().setCalcitePlan(this.copy(getTraitSet(), getInputs()));
             }
 

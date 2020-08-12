@@ -166,10 +166,11 @@ public class CubeMergeJob extends SparkApplication {
         if (rowCount == -1) {
             infos.recordAbnormalLayouts(layout.getId(),
                     "'Job metrics seems null, use count() to collect cuboid rows.'");
-            logger.warn("Can not get cuboid row cnt.");
+            logger.warn("Can not get cuboid row cnt, use count() to collect cuboid rows.");
+            layout.setRows(dataset.count());
+        } else {
+            layout.setRows(rowCount);
         }
-
-        layout.setRows(rowCount);
         layout.setSourceRows(sourceCount);
 
         int partitionNum = BuildUtils.repartitionIfNeed(layout, storage, path, tempPath, config, ss);

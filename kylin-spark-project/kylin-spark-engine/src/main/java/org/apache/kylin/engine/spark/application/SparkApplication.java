@@ -24,7 +24,6 @@ import org.apache.kylin.engine.spark.job.KylinBuildEnv;
 import org.apache.kylin.engine.spark.job.LogJobInfoUtils;
 import org.apache.kylin.engine.spark.job.SparkJobConstants;
 import org.apache.kylin.engine.spark.job.UdfManager;
-import org.apache.kylin.engine.spark.utils.JobMetricsUtils;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.engine.spark.utils.SparkConfHelper;
 import java.io.IOException;
@@ -180,7 +179,7 @@ public abstract class SparkApplication {
                     .getOrCreate();
 
             // for spark metrics
-            JobMetricsUtils.registerListener(ss);
+            //JobMetricsUtils.registerListener(ss);
 
             UdfManager.create(ss);
 
@@ -194,7 +193,7 @@ public abstract class SparkApplication {
                 infos.jobEnd();
             }
             if (ss != null && !ss.conf().get("spark.master").startsWith("local")) {
-                JobMetricsUtils.unRegisterListener(ss);
+                //JobMetricsUtils.unRegisterListener(ss);
                 ss.stop();
             }
         }

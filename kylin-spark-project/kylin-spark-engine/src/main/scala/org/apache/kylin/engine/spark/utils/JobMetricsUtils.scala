@@ -27,8 +27,6 @@ import org.apache.spark.sql.execution._
 import org.apache.spark.sql.execution.aggregate.{HashAggregateExec, ObjectHashAggregateExec, SortAggregateExec}
 import org.apache.spark.sql.execution.joins.{BroadcastHashJoinExec, BroadcastNestedLoopJoinExec, ShuffledHashJoinExec, SortMergeJoinExec}
 import org.apache.spark.sql.execution.streaming.StreamingSymmetricHashJoinExec
-import org.apache.spark.sql.execution.ui.PostQueryExecutionForKylin
-
 
 object JobMetricsUtils extends Logging {
 
@@ -43,7 +41,7 @@ object JobMetricsUtils extends Logging {
       metrics = collectOutputRows(execution.executedPlan)
       logInfo(s"Collect output rows successfully. $metrics")
     } else {
-      logError(s"Collect output rows failed.")
+      logWarning(s"Collect output rows failed.")
     }
     metrics
   }
@@ -93,13 +91,6 @@ object JobMetricsUtils extends Logging {
     sparkListener = new SparkListener {
 
       override def onOtherEvent(event: SparkListenerEvent): Unit = event match {
-        case e: PostQueryExecutionForKylin =>
-          val nExecutionId = e.localProperties.getProperty(QueryExecutionCache.N_EXECUTION_ID_KEY, "")
-          if (nExecutionId != "" && e.queryExecution != null) {
-            QueryExecutionCache.setQueryExecution(nExecutionId, e.queryExecution)
-          } else {
-            logWarning("executionIdStr is null, can't get QueryExecution from SQLExecution.")
-          }
         case _ => // Ignore
       }
     }

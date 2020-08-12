@@ -148,7 +148,7 @@ class KylinFileSourceScanExec(
       }
 
     val filePartitions = Seq.tabulate(shardSpec.numShards) { shardId =>
-      FilePartition(shardId, filesToPartitionId.getOrElse(shardId, Nil))
+      FilePartition(shardId, filesToPartitionId.getOrElse(shardId, Nil).toArray)
     }
 
     new FileScanRDD(fsRelation.sparkSession, readFile, filePartitions)
@@ -205,7 +205,7 @@ class KylinFileSourceScanExec(
         val newPartition =
           FilePartition(
             partitions.size,
-            currentFiles.toArray.toSeq) // Copy to a new Array.
+            currentFiles.toArray) // Copy to a new Array.
         partitions += newPartition
       }
       currentFiles.clear()
