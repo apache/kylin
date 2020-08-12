@@ -34,7 +34,8 @@ trait ResetShufflePartition extends Logging {
         KylinConfig.getInstanceFromEnv.getQueryPartitionSplitSizeMB * 1024 * 1024 * 2) + 1,
         defaultParallelism).toInt
     }
-    sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", partitionsNum.toString)
+    //sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions",
+    //  partitionsNum.toString)
     logInfo(s"Set partition to $partitionsNum, total bytes ${QueryContextFacade.current().getSourceScanBytes}")
   }
 }

@@ -64,7 +64,8 @@ object SparkSqlClient {
 				val paths = ResourceDetectUtils.getPaths(df.queryExecution.sparkPlan)
 				val sourceTableSize = ResourceDetectUtils.getResourceSize(paths: _*) + "b"
 				val partitions = Math.max(1, JavaUtils.byteStringAsMb(sourceTableSize) / basePartitionSize).toString
-				df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", partitions)
+				//df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions",
+				//	partitions)
 				logger.info(s"Auto set spark.sql.shuffle.partitions $partitions")
 			} catch {
 				case e: Throwable =>
@@ -97,7 +98,7 @@ object SparkSqlClient {
 				}
 				else throw e
 		} finally {
-			df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", null)
+			//df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", null)
 			HadoopUtil.setCurrentConfiguration(null)
 		}
 	}

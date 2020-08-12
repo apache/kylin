@@ -29,11 +29,14 @@ object QueryMetricUtils extends Logging {
     try {
       val metrics = plan.collect {
         case exec: KylinFileSourceScanExec =>
-          (exec.metrics.apply("numOutputRows").value, exec.metrics.apply("readBytes").value)
+          //(exec.metrics.apply("numOutputRows").value, exec.metrics.apply("readBytes").value)
+          (exec.metrics.apply("numOutputRows").value, 0l)
         case exec: FileSourceScanExec =>
-          (exec.metrics.apply("numOutputRows").value, exec.metrics.apply("readBytes").value)
+          //(exec.metrics.apply("numOutputRows").value, exec.metrics.apply("readBytes").value)
+          (exec.metrics.apply("numOutputRows").value, 0l)
         case exec: HiveTableScanExec =>
-          (exec.metrics.apply("numOutputRows").value, exec.metrics.apply("readBytes").value)
+          //(exec.metrics.apply("numOutputRows").value, exec.metrics.apply("readBytes").value)
+          (exec.metrics.apply("numOutputRows").value, 0l)
       }
       val scanRows = metrics.map(metric => java.lang.Long.valueOf(metric._1)).toList.asJava
       val scanBytes = metrics.map(metric => java.lang.Long.valueOf(metric._2)).toList.asJava

@@ -83,7 +83,8 @@ object ResultPlan extends Logging {
     sparkContext.setLocalProperty("spark.scheduler.pool", pool)
     val queryId = QueryContextFacade.current().getQueryId
     sparkContext.setLocalProperty(QueryToExecutionIDCache.KYLIN_QUERY_ID_KEY, queryId)
-    df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", partitionsNum.toString)
+    //df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions",
+    //  partitionsNum.toString)
     QueryContextFacade.current().setDataset(df)
 
     sparkContext.setJobGroup(jobGroup,
@@ -136,7 +137,7 @@ object ResultPlan extends Logging {
     val r = body
     // remember clear local properties.
     df.sparkSession.sparkContext.setLocalProperty("spark.scheduler.pool", null)
-    df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", null)
+    //df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", null)
     SparderContext.setDF(df)
     TableScanPlan.cacheDf.get().clear()
     HadoopUtil.setCurrentConfiguration(null)

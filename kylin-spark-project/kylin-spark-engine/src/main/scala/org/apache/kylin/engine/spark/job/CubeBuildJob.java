@@ -215,6 +215,7 @@ public class CubeBuildJob extends SparkApplication {
             cuboidsNumInLayer += toBuildCuboids.size();
             Preconditions.checkState(!toBuildCuboids.isEmpty(), "To be built cuboids is empty.");
             Dataset<Row> parentDS = info.getParentDS();
+            long parentDSCnt = parentDS.count();
 
             for (LayoutEntity index : toBuildCuboids) {
                 Preconditions.checkNotNull(parentDS, "Parent dataset is null when building.");
@@ -226,7 +227,7 @@ public class CubeBuildJob extends SparkApplication {
 
                     @Override
                     public LayoutEntity build() throws IOException {
-                        return buildIndex(seg, index, parentDS, st, info.getLayoutId());
+                        return buildIndex(seg, index, parentDS, st, info.getLayoutId(), parentDSCnt);
                     }
                 }, config);
                 allIndexesInCurrentLayer.add(index);
@@ -288,7 +289,7 @@ public class CubeBuildJob extends SparkApplication {
     }
 
     private LayoutEntity buildIndex(SegmentInfo seg, LayoutEntity cuboid, Dataset<Row> parent,
-                                    SpanningTree spanningTree, long parentId) throws IOException {
+                                    SpanningTree spanningTree, long parentId, long parentDSCnt) throws IOException {
         String parentName = String.valueOf(parentId);
         if (parentId == ParentSourceChooser.FLAT_TABLE_FLAG()) {
             parentName = "flat table";
@@ -304,7 +305,7 @@ public class CubeBuildJob extends SparkApplication {
             Set<Integer> orderedDims = layoutEntity.getOrderedDimensions().keySet();
             Dataset<Row> afterSort = afterPrj.select(NSparkCubingUtil.getColumns(orderedDims))
                     .sortWithinPartitions(NSparkCubingUtil.getColumns(orderedDims));
-            saveAndUpdateLayout(afterSort, seg, layoutEntity);
+            saveAndUpdateLayout(afterSort, seg, layoutEntity, parentDSCnt);
         } else {
             Dataset<Row> afterAgg = CuboidAggregator.agg(ss, parent, dimIndexes, cuboid.getOrderedMeasures(),
                     spanningTree, false);
@@ -316,14 +317,15 @@ public class CubeBuildJob extends SparkApplication {
                     .select(NSparkCubingUtil.getColumns(rowKeys, layoutEntity.getOrderedMeasures().keySet()))
                     .sortWithinPartitions(NSparkCubingUtil.getColumns(rowKeys));
 
-            saveAndUpdateLayout(afterSort, seg, layoutEntity);
+            saveAndUpdateLayout(afterSort, seg, layoutEntity, parentDSCnt);
         }
         ss.sparkContext().setJobDescription(null);
         logger.info("Finished Build index :{}, in segment:{}", cuboid.getId(), seg.id());
         return layoutEntity;
     }
 
-    private void saveAndUpdateLayout(Dataset<Row> dataset, SegmentInfo seg, LayoutEntity layout) throws IOException {
+    private void saveAndUpdateLayout(Dataset<Row> dataset, SegmentInfo seg, LayoutEntity layout,
+                                     long parentDSCnt) throws IOException {
         long layoutId = layout.getId();
 
         // for spark metrics
@@ -343,10 +345,13 @@ public class CubeBuildJob extends SparkApplication {
         long rowCount = metrics.getMetrics(Metrics.CUBOID_ROWS_CNT());
         if (rowCount == -1) {
             infos.recordAbnormalLayouts(layoutId, "'Job metrics seems null, use count() to collect cuboid rows.'");
-            logger.warn("Can not get cuboid row cnt.");
+            logger.warn("Can not get cuboid row cnt, use count() to collect cuboid rows.");
+            layout.setRows(dataset.count());
+            layout.setSourceRows(parentDSCnt);
+        } else {
+            layout.setRows(rowCount);
+            layout.setSourceRows(metrics.getMetrics(Metrics.SOURCE_ROWS_CNT()));
         }
-        layout.setRows(rowCount);
-        layout.setSourceRows(metrics.getMetrics(Metrics.SOURCE_ROWS_CNT()));
         int shardNum = BuildUtils.repartitionIfNeed(layout, storage, path, tempPath, config, ss);
         layout.setShardNum(shardNum);
         cuboidShardNum.put(layoutId, (short)shardNum);

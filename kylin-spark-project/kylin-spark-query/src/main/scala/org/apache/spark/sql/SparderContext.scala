@@ -20,13 +20,11 @@ package org.apache.spark.sql
 
 import java.lang.{Boolean => JBoolean, String => JString}
 
-import org.apache.kylin.query.runtime.plans.QueryToExecutionIDCache
 import org.apache.spark.memory.MonitorEnv
 import org.apache.spark.util.Utils
 import org.apache.spark.scheduler.{SparkListener, SparkListenerEvent}
 import org.apache.kylin.query.UdfManager
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.execution.ui.PostQueryExecutionForKylin
 import org.apache.spark.sql.catalyst.parser.ParseException
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.KylinSession._
@@ -36,8 +34,6 @@ import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.spark.classloader.ClassLoaderUtils
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
 import org.apache.spark.sql.execution.datasource.KylinSourceStrategy
-
-import scala.collection.JavaConverters._
 
 // scalastyle:off
 object SparderContext extends Logging {
@@ -150,7 +146,6 @@ object SparderContext extends Logging {
                   .currentThread()
                   .getContextClassLoader
                   .toString)
-              registerListener(sparkSession.sparkContext)
               initMonitorEnv()
               APP_MASTER_TRACK_URL = null
             } catch {
@@ -178,9 +173,6 @@ object SparderContext extends Logging {
     val sparkListener = new SparkListener {
 
       override def onOtherEvent(event: SparkListenerEvent): Unit = event match {
-        case e: PostQueryExecutionForKylin =>
-          val queryID = e.localProperties.getProperty(QueryToExecutionIDCache.KYLIN_QUERY_ID_KEY, "")
-          QueryToExecutionIDCache.setQueryExecutionID(queryID, e.executionId.toString)
         case _ => // Ignore
       }
     }

@@ -78,19 +78,21 @@ public class PushDownRunnerSparkImplTest extends LocalFileMetadataTestCase {
         queries.add("SELECT cast(ORDER_ID as integer) FROM TEST_KYLIN_FACT limit 10");
         queries.add("SELECT cast(LSTG_SITE_ID as long) FROM TEST_KYLIN_FACT limit 10");
         queries.add("SELECT cast(LSTG_SITE_ID as short) FROM TEST_KYLIN_FACT limit 10");
-        queries.add("SELECT CAST(ORDER_ID AS VARCHAR) FROM TEST_KYLIN_FACT limit 10");
-        queries.add("SELECT CAST(ORDER_ID AS char) FROM TEST_KYLIN_FACT limit 10");
+        queries.add("SELECT CAST(ORDER_ID AS varchar(20)) FROM TEST_KYLIN_FACT limit 10");
+        queries.add("SELECT CAST(ORDER_ID AS char(20)) FROM TEST_KYLIN_FACT limit 10");
         queries.add("select SELLER_ID,ITEM_COUNT,sum(price)\n" + //
                 "from (\n" + //
                 "SELECT SELLER_ID, ITEM_COUNT,price\n" + //
-                "\t, concat(concat(CAST(year(CAST(CAL_DT AS date)) AS varchar), '-'), CAST(month(CAST(CAL_DT AS date)) AS varchar)) AS prt_mth\n" + //
+                "\t, concat(concat(CAST(year(CAST(CAL_DT AS date)) AS varchar(4)), '-'),\n" + //
+                "CAST(month(CAST(CAL_DT AS date)) AS varchar(2))) AS prt_mth\n" + //
                 "FROM TEST_KYLIN_FACT) \n" + //
                 "group by SELLER_ID,ITEM_COUNT,price limit 10"); //
 
         queries.add("select SELLER_ID,ITEM_COUNT,sum(price)\n" + //
                 "from (\n" + //
                 "SELECT SELLER_ID, ITEM_COUNT,price\n" + //
-                "\t, concat(concat(CAST(year(CAST(CAL_DT AS date)) AS char), '-'), CAST(month(CAST(CAL_DT AS date)) AS varchar)) AS prt_mth\n" + //
+                "\t, concat(concat(CAST(year(CAST(CAL_DT AS date)) AS char(4)), '-'),\n" + //
+                "CAST(month(CAST(CAL_DT AS date)) AS char(2))) AS prt_mth\n" + //
                 "FROM TEST_KYLIN_FACT) \n" + //
                 "group by SELLER_ID,ITEM_COUNT,price limit 10");
 
