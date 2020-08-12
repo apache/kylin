@@ -481,6 +481,33 @@ public class JobService extends BasicService implements InitializingBean {
         return getExecutableManager().getOutput(id);
     }
 
+    protected JobInstance getDefaultChainedJob(AbstractExecutable abstractJob) {
+        Message msg = MsgPicker.getMsg();
+        if (abstractJob == null) {
+            return null;
+        }
+        if (!(abstractJob instanceof DefaultChainedExecutable)) {
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getILLEGAL_JOB_TYPE(), abstractJob.getId()));
+        }
+        DefaultChainedExecutable job = (DefaultChainedExecutable) abstractJob;
+        Output output = job.getOutput();
+        final JobInstance result = new JobInstance();
+        result.setName(job.getName());
+        result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
+        result.setRelatedSegment(CubingExecutableUtil.getSegmentId(job.getParams()));
+        result.setLastModified(job.getLastModified());
+        result.setSubmitter(job.getSubmitter());
+        result.setUuid(job.getId());
+        result.setStatus(JobInfoConverter.parseToJobStatus(job.getStatus()));
+        result.setBuildInstance(AbstractExecutable.getBuildInstance(output));
+        result.setDuration(job.getDuration() / 1000);
+        for (int i = 0; i < job.getTasks().size(); ++i) {
+            AbstractExecutable task = job.getTasks().get(i);
+            result.addStep(JobInfoConverter.parseToJobStep(task, i, getExecutableManager().getOutput(task.getId())));
+        }
+        return result;
+    }
+
     protected JobInstance getSingleJobInstance(AbstractExecutable job) {
         Message msg = MsgPicker.getMsg();
 
@@ -634,6 +661,7 @@ public class JobService extends BasicService implements InitializingBean {
         if (null == job.getRelatedCube() || null == getCubeManager().getCube(job.getRelatedCube())
                 || null == job.getRelatedSegment()) {
             getExecutableManager().discardJob(job.getId());
+            job = getJobInstance(job.getId());
         }
 
         logger.info("Cancel job [" + job.getId() + "] trigger by "
@@ -987,13 +1015,17 @@ public class JobService extends BasicService implements InitializingBean {
 
     private boolean checkJobType(final AbstractExecutable executable, final JobSearchMode jobSearchMode) {
         switch (jobSearchMode) {
-        case CHECKPOINT_ONLY:
-            return executable instanceof CheckpointExecutable;
-        case ALL:
-            return executable instanceof CheckpointExecutable || executable instanceof CubingJob;
-        case CUBING_ONLY:
-        default:
-            return executable instanceof CubingJob;
+            case CHECKPOINT_ONLY:
+                return executable instanceof CheckpointExecutable;
+            case CARDINALITY_ONLY:
+                return executable instanceof CardinalityExecutable;
+            case SNAPSHOT_ONLY:
+                return executable instanceof LookupSnapshotBuildJob;
+            case ALL:
+                return executable instanceof DefaultChainedExecutable;
+            case CUBING_ONLY:
+            default:
+                return executable instanceof CubingJob;
         }
     }
 
