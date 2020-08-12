@@ -34,7 +34,7 @@ docker run -d \
     -p 8088:8088 \
     -p 50070:50070 \
     -p 8032:8032 \
-    -p 8042:8042 \
+    -p 8042:8042 \asdfasfa
     -p 16010:16010 \
     apachekylin/apache-kylin-standalone:3.1.0
 ```
