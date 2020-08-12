@@ -59,6 +59,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected static final String END_TIME = "endTime";
     protected static final String INTERRUPT_TIME = "interruptTime";
     protected static final String BUILD_INSTANCE = "buildInstance";
+    protected static final String PROJECT_INSTANCE_NAME = "projectName";
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
     public static final String NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY = "no need to send email, user list is empty";
@@ -559,5 +560,13 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         }
         return MoreObjects.toStringHelper(this).add("id", getId()).add("name", getName()).add("state", state)
                 .toString();
+    }
+
+    public String getProjectName() {
+        return getParam(PROJECT_INSTANCE_NAME);
+    }
+
+    public void setProjectName(String name) {
+        setParam(PROJECT_INSTANCE_NAME, name);
     }
 }
