@@ -110,7 +110,6 @@ public class CubingJob extends DefaultChainedExecutable {
     public static final String CUBE_SIZE_BYTES = "byteSizeBytes";
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
     private static final String DEPLOY_ENV_NAME = "envName";
-    private static final String PROJECT_INSTANCE_NAME = "projectName";
     private static final String JOB_TYPE = "jobType";
     private static final String SEGMENT_NAME = "segmentName";
 
@@ -182,14 +181,6 @@ public class CubingJob extends DefaultChainedExecutable {
 
     public String getDeployEnvName() {
         return getParam(DEPLOY_ENV_NAME);
-    }
-
-    protected void setProjectName(String name) {
-        setParam(PROJECT_INSTANCE_NAME, name);
-    }
-
-    public String getProjectName() {
-        return getParam(PROJECT_INSTANCE_NAME);
     }
 
     public String getJobType() {
