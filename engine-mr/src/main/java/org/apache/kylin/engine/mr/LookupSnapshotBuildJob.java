@@ -36,7 +36,6 @@ public class LookupSnapshotBuildJob extends DefaultChainedExecutable {
     public static final Integer DEFAULT_PRIORITY = 30;
 
     private static final String DEPLOY_ENV_NAME = "envName";
-    private static final String PROJECT_INSTANCE_NAME = "projectName";
 
     private static final String JOB_TYPE = "Lookup ";
 
@@ -76,14 +75,6 @@ public class LookupSnapshotBuildJob extends DefaultChainedExecutable {
 
     public String getDeployEnvName() {
         return getParam(DEPLOY_ENV_NAME);
-    }
-
-    public String getProjectName() {
-        return getParam(PROJECT_INSTANCE_NAME);
-    }
-
-    public void setProjectName(String name) {
-        setParam(PROJECT_INSTANCE_NAME, name);
     }
 
     @Override
