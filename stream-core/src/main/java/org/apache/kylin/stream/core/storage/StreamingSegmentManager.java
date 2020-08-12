@@ -668,6 +668,6 @@ public class StreamingSegmentManager implements Closeable {
     }
 
     public static long resetTimestampByTimeZone(long ts) {
-        return ts + TIME_ZONE_OFFSET;
+        return ts;
     }
 }

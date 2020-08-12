@@ -161,7 +161,7 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
 
         // using time
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.ROOT);
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        dateFormat.setTimeZone(TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone()));
         return dateFormat.format(tsRange.start.v) + "_" + dateFormat.format(tsRange.end.v);
     }
 
