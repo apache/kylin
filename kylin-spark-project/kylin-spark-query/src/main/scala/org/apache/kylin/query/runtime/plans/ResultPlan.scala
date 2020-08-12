@@ -94,8 +94,8 @@ object ResultPlan extends Logging {
     try {
       val rows = df.collect()
       val (scanRows, scanBytes) = QueryMetricUtils.collectScanMetrics(df.queryExecution.executedPlan)
-      QueryContextFacade.current().addAndGetScannedRows(scanRows.iterator().next())
-      QueryContextFacade.current().addAndGetScannedBytes(scanBytes.iterator().next())
+      QueryContextFacade.current().addAndGetScannedRows(scanRows.asScala.map(Long2long(_)).sum)
+      QueryContextFacade.current().addAndGetScannedBytes(scanBytes.asScala.map(Long2long(_)).sum)
       val dt = rows.map { row =>
         var rowIndex = 0
         row.toSeq.map { cell => {
