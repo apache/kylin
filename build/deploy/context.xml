@@ -33,6 +33,6 @@
     <Valve className="org.apache.catalina.valves.CometConnectionManagerValve" />
     -->
 
-    <Loader loaderClass="org.apache.kylin.spark.classloader.DebugTomcatClassLoader"/>
+    <Loader loaderClass="org.apache.kylin.spark.classloader.TomcatClassLoader"/>
 
 </Context>

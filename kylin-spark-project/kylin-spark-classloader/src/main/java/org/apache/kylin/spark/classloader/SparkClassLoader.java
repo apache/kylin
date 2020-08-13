@@ -36,7 +36,7 @@ import java.util.Set;
 public class SparkClassLoader extends URLClassLoader {
     //preempt these classes from parent
     private static String[] SPARK_CL_PREEMPT_CLASSES = new String[] {"org.apache.spark", "scala.",
-            "org.spark_project"};
+            "org.spark_project", "com.esotericsoftware.kryo"};
 
     //preempt these files from parent
     private static String[] SPARK_CL_PREEMPT_FILES = new String[] {"spark-version-info.properties", "HiveClientImpl",
@@ -47,12 +47,12 @@ public class SparkClassLoader extends URLClassLoader {
 
     //when loading class (indirectly used by SPARK_CL_PREEMPT_CLASSES), some of them should use parent's first
     private static String[] PARENT_CL_PRECEDENT_CLASSES = new String[] {
-            //            // Java standard library:
+            // Java standard library:
             "com.sun.", "launcher.", "java.", "javax.", "org.ietf", "org.omg", "org.w3c", "org.xml", "sunw.", "sun.",
             // logging
             "org.apache.commons.logging", "org.apache.log4j", "org.slf4j", "org.apache.hadoop",
             // Hadoop/ZK:
-            "io.kyligence", "org.apache.kylin", "com.intellij", "org.apache.calcite"};
+            "org.apache.kylin", "com.intellij", "org.apache.calcite"};
 
     private static final Set<String> classNotFoundCache = new HashSet<>();
     private static Logger logger = LoggerFactory.getLogger(SparkClassLoader.class);
@@ -121,22 +121,6 @@ public class SparkClassLoader extends URLClassLoader {
         for (File jar : jars) {
             addURL(jar.toURI().toURL());
         }
-        /*if (System.getenv("KYLIN_HOME") != null) {
-            // for prod
-            String kylin_home = System.getenv("KYLIN_HOME");
-            File sparkJar = findFile(kylin_home + "/lib", "kylin-udf-.*-SNAPSHOT.jar");
-            if (sparkJar != null) {
-                logger.info("Add kylin UDF jar to spark classloader : " + sparkJar.getName());
-                addURL(sparkJar.toURI().toURL());
-            } else {
-                throw new RuntimeException(
-                        "Can not find kylin UDF jar, please set KYLIN_HOME and make sure the kylin-udf-*.jar exists in $KYLIN_HOME/lib");
-            }
-        } else if (Files.exists(Paths.get("../udf/target/classes"))) {
-            //  for debugtomcat
-            logger.info("Add kylin UDF classes to spark classloader");
-            addURL(new File("../udf/target/classes").toURI().toURL());
-        }*/
 
     }
 
