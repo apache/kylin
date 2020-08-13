@@ -22,48 +22,27 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.catalina.loader.ParallelWebappClassLoader;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.kylin.spark.classloader.ClassLoaderUtils.findFile;
-
 public class TomcatClassLoader extends ParallelWebappClassLoader {
-    private static String[] PARENT_CL_PRECEDENT_CLASSES = new String[] {
+    private static final String[] PARENT_CL_PRECEDENT_CLASSES = new String[] {
             // Java standard library:
             "com.sun.", "launcher.", "javax.", "org.ietf", "java", "org.omg", "org.w3c", "org.xml", "sunw.",
             // logging
             "org.slf4j", "org.apache.commons.logging", "org.apache.log4j", "org.apache.catalina", "org.apache.tomcat"};
-
-    private static String[] THIS_CL_PRECEDENT_CLASSES = new String[] {"io.kyligence", "org.apache.kylin",
+    private static final String[] THIS_CL_PRECEDENT_CLASSES = new String[] {"org.apache.kylin",
             "org.apache.calcite"};
-
-    private static String[] CODEGEN_CLASSES = new String[] {"org.apache.spark.sql.catalyst.expressions.Object",
+    private static final String[] CODE_GEN_CLASS = new String[] {"org.apache.spark.sql.catalyst.expressions.Object",
             "Baz"};
 
     private static final Set<String> wontFindClasses = new HashSet<>();
 
     static {
-        String tomcatClassLoaderParentClPrecedentClasses = System
-                .getenv("TOMCATCLASSLOADER_PARENT_CL_PRECEDENT_CLASSES");
-        if (!StringUtils.isEmpty(tomcatClassLoaderParentClPrecedentClasses)) {
-            PARENT_CL_PRECEDENT_CLASSES = StringUtils.split(tomcatClassLoaderParentClPrecedentClasses, ",");
-        }
-
-        String tomcatClassLoaderThisClPrecedentClasses = System
-                .getenv("TOMCATCLASSLOADER_THIS_CL_PRECEDENT_CLASSES");
-        if (!StringUtils.isEmpty(tomcatClassLoaderThisClPrecedentClasses)) {
-            THIS_CL_PRECEDENT_CLASSES = StringUtils.split(tomcatClassLoaderThisClPrecedentClasses, ",");
-        }
-
-        String tomcatClassLoaderCodegenClasses = System.getenv("TOMCATCLASSLOADER_CODEGEN_CLASSES");
-        if (!StringUtils.isEmpty(tomcatClassLoaderCodegenClasses)) {
-            CODEGEN_CLASSES = StringUtils.split(tomcatClassLoaderCodegenClasses, ",");
-        }
-
         wontFindClasses.add("Class");
         wontFindClasses.add("Object");
         wontFindClasses.add("org");
@@ -78,9 +57,8 @@ public class TomcatClassLoader extends ParallelWebappClassLoader {
         wontFindClasses.add("String");
     }
 
-    public static TomcatClassLoader defaultClassLoad = null;
     private static Logger logger = LoggerFactory.getLogger(TomcatClassLoader.class);
-    public SparkClassLoader sparkClassLoader;
+    private SparkClassLoader sparkClassLoader;
 
     /**
      * Creates a DynamicClassLoader that can load classes dynamically
@@ -93,53 +71,44 @@ public class TomcatClassLoader extends ParallelWebappClassLoader {
         sparkClassLoader = new SparkClassLoader(this);
         ClassLoaderUtils.setSparkClassLoader(sparkClassLoader);
         ClassLoaderUtils.setOriginClassLoader(this);
-        defaultClassLoad = this;
         init();
     }
 
     public void init() {
-        String sparkHome = System.getenv("SPARK_HOME");
-        if (sparkHome == null || sparkHome.isEmpty()) {
-            throw new RuntimeException("Error found spark home.");
-        }
-        try {
-            //  SparkContext use spi to match deploy mode
-            //  otherwise SparkContext init fail ,can not find yarn deploy mode
-            File yarnJar = findFile(sparkHome + "/jars", "spark-yarn.*.jar");
-            addURL(yarnJar.toURI().toURL());
-            //  jersey in spark will attempt find @Path class file in current classloader.
-            // Not possible to delegate to spark loader
-            // otherwise spark web ui executors tab can not render
-            File coreJar = findFile(sparkHome + "/jars", "spark-core.*.jar");
-            addURL(coreJar.toURI().toURL());
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
+
+        String classPath = System.getProperty("java.class.path");
+        if (classPath == null) {
+            throw new RuntimeException("");
         }
 
+        String[] jars = classPath.split(":");
+        for (String jar : jars) {
+            try {
+                URL url = new File(jar).toURI().toURL();
+                addURL(url);
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
     public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        // when calcite compile class, some stupid class name will be proposed, not worth to actually lookup
         if (isWontFind(name)) {
             throw new ClassNotFoundException();
         }
-        // spark codegen classload parent is Thread.currentThread().getContextClassLoader()
-        // and calcite baz classloader is EnumerableInterpretable.class's classloader
         if (isCodeGen(name)) {
             throw new ClassNotFoundException();
         }
-        // class loaders should conform to global's
+
         if (name.startsWith("org.apache.kylin.spark.classloader")) {
             return parent.loadClass(name);
         }
-        // if spark CL needs preempt
         if (sparkClassLoader.classNeedPreempt(name)) {
             return sparkClassLoader.loadClass(name);
         }
-        // tomcat classpath include KYLIN_HOME/lib , ensure this classload can load kylin class
-        if (isParentCLPrecedent(name) && !isThisCLPrecedent(name)) {
-            logger.debug("delegate " + name + " directly to parent");
+        if (isParentCLPrecedent(name)) {
+            logger.debug("Skipping exempt class " + name + " - delegating directly to parent");
             return parent.loadClass(name);
         }
         return super.loadClass(name, resolve);
@@ -163,21 +132,12 @@ public class TomcatClassLoader extends ParallelWebappClassLoader {
         return false;
     }
 
-    private boolean isThisCLPrecedent(String name) {
-        for (String exemptPrefix : THIS_CL_PRECEDENT_CLASSES) {
-            if (name.startsWith(exemptPrefix)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private boolean isWontFind(String name) {
         return wontFindClasses.contains(name);
     }
 
     private boolean isCodeGen(String name) {
-        for (String exemptPrefix : CODEGEN_CLASSES) {
+        for (String exemptPrefix : CODE_GEN_CLASS) {
             if (name.startsWith(exemptPrefix)) {
                 return true;
             }
