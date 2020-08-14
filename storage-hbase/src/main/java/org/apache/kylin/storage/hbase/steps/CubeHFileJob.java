@@ -58,7 +58,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
     public int run(String[] args) throws Exception {
         Options options = new Options();
-
+        Path tmpPartitionFilePath = null;
         try {
             options.addOption(OPTION_JOB_NAME);
             options.addOption(OPTION_CUBE_NAME);
@@ -101,6 +101,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
             // Automatic config !
             HFileOutputFormat3.configureIncrementalLoad(job, htable);
+            tmpPartitionFilePath = new Path(TotalOrderPartitioner.getPartitionFile(job.getConfiguration()));
             HFileOutputFormat3.configureHConnection(job, hbaseConf, getJobTempDir());
 
             reconfigurePartitions(configuration, partitionFilePath);
@@ -119,8 +120,10 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
             return waitForCompletion(job);
         } finally {
-            if (job != null)
+            if (job != null) {
                 cleanupTempConfFile(job.getConfiguration());
+                this.deletePath(job.getConfiguration(),tmpPartitionFilePath);
+            }
         }
     }
 
