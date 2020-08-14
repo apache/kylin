@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -69,13 +68,6 @@ public class HadoopUtil {
     }
 
     public static Configuration healSickConfig(Configuration conf) {
-        // https://issues.apache.org/jira/browse/KYLIN-953
-        if (StringUtils.isBlank(conf.get("hadoop.tmp.dir"))) {
-            conf.set("hadoop.tmp.dir", "/tmp");
-        }
-        if (StringUtils.isBlank(conf.get("hbase.fs.tmp.dir"))) {
-            conf.set("hbase.fs.tmp.dir", "/tmp");
-        }
         //  https://issues.apache.org/jira/browse/KYLIN-3064
         conf.set("yarn.timeline-service.enabled", "false");
         return conf;
