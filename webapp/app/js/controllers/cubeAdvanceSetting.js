@@ -545,7 +545,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   };
 
   $scope.isAvailableEngine = function(engine_type) {
-    return !($scope.cubeMetaFrame.storage_type === 3 && engine_type.value === 4);
+    return !($scope.cubeMetaFrame.storage_type === 3 && engine_type.value !== 2 );
   }
 
   $scope.cubeLookups = $scope.getCubeLookups();
