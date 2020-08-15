@@ -72,7 +72,7 @@ public class BitmapMapMeasureType extends MeasureType<BitmapCounterMap> {
     }
 
     @Override
-    public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
+    public void validate(FunctionDesc functionDesc) {
         checkArgument(FUNC_COUNT_DISTINCT.equals(functionDesc.getExpression()),
                 "BitmapMapMeasureType only support function %s, got %s", FUNC_COUNT_DISTINCT,
                 functionDesc.getExpression());

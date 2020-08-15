@@ -87,6 +87,7 @@ public class DimCountDistinctMeasureType extends MeasureType<Object> {
         return UDAF_MAP;
     }
 
+    @Override
     public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
         for (MeasureDesc measureDesc : measureDescs) {
             sqlDigest.groupbyColumns.addAll(measureDesc.getFunction().getParameter().getColRefs());

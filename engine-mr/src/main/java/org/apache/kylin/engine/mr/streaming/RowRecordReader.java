@@ -136,7 +136,7 @@ public class RowRecordReader extends ColumnarFilesReader {
                 return measure;
             }
         }
-        return null;
+        throw new IllegalArgumentException("No measure found with name '" + name + "'.");
     }
 
     private Map<String, DimensionEncoding> getDimensionEncodings(FragmentMetaInfo fragmentMetaInfo,

@@ -46,7 +46,7 @@ abstract public class MeasureType<T> implements java.io.Serializable {
      * ---------------------------------------------------------------------------- */
 
     /** Validates a user defined FunctionDesc has expected parameter etc. Throw IllegalArgumentException if anything wrong. */
-    public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
+    public void validate(FunctionDesc functionDesc) {
         return;
     }
 

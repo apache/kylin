@@ -43,7 +43,7 @@ public class RetentionPartialResult {
 
     public void add(Object key, List keyList, Object value) {
         Preconditions.checkArgument(key != null);
-        Preconditions.checkArgument(keyList != null && keyList.size() >= 0);
+        Preconditions.checkArgument(keyList != null && !keyList.isEmpty());
         if (this.keyList == null) {
             this.keyList = Lists.transform(keyList, i -> i.toString());
             childKeyToParentKey = new HashMap<>(5);
