@@ -79,7 +79,8 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
     public RawMeasureType() {
     }
 
-    public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
+    @Override
+    public void validate(FunctionDesc functionDesc) {
         validate(functionDesc.getExpression(), functionDesc.getReturnDataType(), true);
     }
 
