@@ -118,7 +118,7 @@ public class SCCreator extends AbstractApplication {
             output += "/";
         }
 
-        Set<SinkTool> sourceToolSet = JsonUtil.readValue(
+        Set<SinkTool> sourceToolSet = JsonUtil.readValueWithTyping(
                 new BufferedInputStream(new FileInputStream(new File(inputConfig))), HashSet.class);
         run(owner, output, sourceToolSet);
     }
