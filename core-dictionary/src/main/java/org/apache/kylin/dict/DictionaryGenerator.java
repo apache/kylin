@@ -109,6 +109,7 @@ public class DictionaryGenerator {
             @Nullable
             @Override
             public Dictionary<String> apply(@Nullable DictionaryInfo input) {
+                Preconditions.checkNotNull(input);
                 return input.dictionaryObject;
             }
         });

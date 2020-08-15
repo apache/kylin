@@ -68,7 +68,7 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
         broadcaster.notifyListener("test", Event.UPDATE, "");
 
         broadcaster.stopAnnounce();
-        Broadcaster.staticListenerMap.clear();
+        Broadcaster.clearStaticListenerMap();
     }
 
     @Test
@@ -95,7 +95,7 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
         broadcaster.notifyNonStaticListener("test", Event.UPDATE, "");
 
         broadcaster.stopAnnounce();
-        Broadcaster.staticListenerMap.clear();
+        Broadcaster.clearStaticListenerMap();
     }
 
     @Test
@@ -112,7 +112,7 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
             }
 
             broadcaster.stopAnnounce();
-            Broadcaster.staticListenerMap.clear();
+            Broadcaster.clearStaticListenerMap();
         } finally {
             System.clearProperty("kylin.server.cluster-servers");
             System.clearProperty("kylin.metadata.sync-error-handler");

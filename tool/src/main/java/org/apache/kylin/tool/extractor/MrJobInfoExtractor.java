@@ -83,21 +83,22 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
     }
 
     private String getHttpResponse(String url) {
-        DefaultHttpClient client = new DefaultHttpClient();
         String msg = null;
-        int retryTimes = 0;
-        while (msg == null && retryTimes < HTTP_RETRY) {
-            retryTimes++;
+        try (DefaultHttpClient client = new DefaultHttpClient()) {
+            int retryTimes = 0;
+            while (msg == null && retryTimes < HTTP_RETRY) {
+                retryTimes++;
 
-            HttpGet request = new HttpGet(url);
-            try {
-                request.addHeader("accept", "application/json");
-                HttpResponse response = client.execute(request);
-                msg = EntityUtils.toString(response.getEntity());
-            } catch (Exception e) {
-                logger.warn("Failed to fetch http response. Retry={}", retryTimes, e);
-            } finally {
-                request.releaseConnection();
+                HttpGet request = new HttpGet(url);
+                try {
+                    request.addHeader("accept", "application/json");
+                    HttpResponse response = client.execute(request);
+                    msg = EntityUtils.toString(response.getEntity());
+                } catch (Exception e) {
+                    logger.warn("Failed to fetch http response. Retry={}", retryTimes, e);
+                } finally {
+                    request.releaseConnection();
+                }
             }
         }
         return msg;

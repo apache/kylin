@@ -27,16 +27,12 @@ import java.util.NoSuchElementException;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureTransformation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.PeekingIterator;
 
 public class GTAggregateTransformScanner implements IGTScanner {
-
-    private static final Logger logger = LoggerFactory.getLogger(GTAggregateTransformScanner.class);
 
     protected final IGTScanner inputScanner;
     private final GTScanRequest req;

@@ -40,7 +40,7 @@ public class SQLRequest implements Serializable {
 
     private Map<String, String> backdoorToggles;
 
-    protected volatile Object cacheKey = null;
+    protected transient Object cacheKey = null;
 
     public SQLRequest() {
     }

@@ -150,8 +150,8 @@ public class KylinConfig extends KylinConfigBase {
                     config = new KylinConfig();
                     config.reloadKylinConfig(buildSiteProperties());
                     VersionUtil.loadKylinVersion();
-                    logger.info("Initialized a new KylinConfig from getInstanceFromEnv : "
-                            + System.identityHashCode(config));
+                    logger.info("Initialized a new KylinConfig from getInstanceFromEnv : {}",
+                            System.identityHashCode(config));
                     SYS_ENV_INSTANCE = config;
                 } catch (IllegalArgumentException e) {
                     throw new IllegalStateException("Failed to find KylinConfig ", e);
@@ -390,9 +390,9 @@ public class KylinConfig extends KylinConfigBase {
             // 2. load site conf, to keep backward compatibility it's still named kylin.properties
             // actually it's better to be named kylin-site.properties
             File propFile = getSitePropertiesFile();
-            if (propFile == null || !propFile.exists()) {
+            if (!propFile.exists()) {
                 logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE + " at '"
-                        + (propFile != null ? propFile.getAbsolutePath() : "") + "'");
+                        + propFile.getAbsolutePath() + "'");
                 throw new RuntimeException("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
             }
             loadPropertiesFromInputStream(new FileInputStream(propFile), orderedProperties);
@@ -444,7 +444,7 @@ public class KylinConfig extends KylinConfigBase {
 
     // ============================================================================
 
-    transient Map<Class, Object> managersCache = new ConcurrentHashMap<>();
+    private final transient Map<Class, Object> managersCache = new ConcurrentHashMap<>();
 
     private KylinConfig() {
         super();
@@ -454,20 +454,16 @@ public class KylinConfig extends KylinConfigBase {
         super(props, force);
     }
 
-    public <T> T getManager(Class<T> clz) {
+    public <T> T getManager(final Class<T> clz) {
         KylinConfig base = base();
         if (base != this)
             return base.getManager(clz);
-
-        if (managersCache == null) {
-            managersCache = new ConcurrentHashMap<>();
-        }
 
         Object mgr = managersCache.get(clz);
         if (mgr != null)
             return (T) mgr;
 
-        synchronized (clz) {
+        synchronized (managersCache) {
             mgr = managersCache.get(clz);
             if (mgr != null)
                 return (T) mgr;
