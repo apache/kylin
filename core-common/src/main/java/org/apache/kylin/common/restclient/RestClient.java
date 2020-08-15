@@ -201,23 +201,28 @@ public class RestClient {
     }
 
     public String getKylinProperties() throws IOException {
-        String url = baseUrl + "/admin/config";
-        HttpGet request = new HttpGet(url);
+        return getConfiguration(baseUrl + "/admin/config", true);
+    }
+
+    private String getConfiguration(String url, boolean ifAuth) throws IOException {
+        HttpGet request = ifAuth ? newGet(url) : new HttpGet(url);
         HttpResponse response = null;
         try {
             response = client.execute(request);
             String msg = EntityUtils.toString(response.getEntity());
-            Map<String, String> map = JsonUtil.readValueAsMap(msg);
-            msg = map.get("config");
 
             if (response.getStatusLine().getStatusCode() != 200)
                 throw new IOException(INVALID_RESPONSE + response.getStatusLine().getStatusCode()
                         + " with cache wipe url " + url + "\n" + msg);
+
+            Map<String, String> map = JsonUtil.readValueAsMap(msg);
+            msg = map.get("config");
             return msg;
         } finally {
             cleanup(request, response);
         }
     }
+
 
     public boolean enableCache() throws IOException {
         return setCache(true);
