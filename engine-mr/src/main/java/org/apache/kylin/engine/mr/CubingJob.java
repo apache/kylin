@@ -211,12 +211,12 @@ public class CubingJob extends DefaultChainedExecutable {
         final Output output = getManager().getOutput(getId());
         if (state != ExecutableState.ERROR
                 && !cubeInstance.getDescriptor().getStatusNeedNotify().contains(state.toString())) {
-            logger.info("state:" + state + " no need to notify users");
+            logger.info("state:{} no need to notify users", state);
             return null;
         }
 
         if (!MailNotificationUtil.hasMailNotification(state)) {
-            logger.info("Cannot find email template for job state: " + state);
+            logger.info("Cannot find email template for job state: {}", state);
             return null;
         }
 
@@ -289,6 +289,7 @@ public class CubingJob extends DefaultChainedExecutable {
         super.onExecuteFinished(result, executableContext);
     }
 
+    @Override
     protected void onStatusChange(ExecutableContext context, ExecuteResult result, ExecutableState state) {
         super.onStatusChange(context, result, state);
 
@@ -415,9 +416,9 @@ public class CubingJob extends DefaultChainedExecutable {
         try {
             String levelPath = JobBuilderSupport.getCuboidOutputPathsByLevel(rootPath, level);
             FileSystem fs = HadoopUtil.getFileSystem(levelPath);
-            return fs.getContentSummary(new Path(levelPath)).getLength() / (1024L * 1024L);
+            return fs.getContentSummary(new Path(levelPath)).getLength() / (1024.0 * 1024.0);
         } catch (Exception e) {
-            logger.warn("get level real size failed." + e);
+            logger.warn("get level real size failed.", e);
             return 0L;
         }
     }

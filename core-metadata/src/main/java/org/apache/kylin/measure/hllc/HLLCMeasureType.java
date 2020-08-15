@@ -71,7 +71,7 @@ public class HLLCMeasureType extends MeasureType<HLLCounter> {
         this.dataType = dataType;
     }
 
-    public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
+    public void validate(FunctionDesc functionDesc) {
         validate(functionDesc.getExpression(), functionDesc.getReturnDataType(), true);
     }
 

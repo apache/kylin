@@ -79,7 +79,9 @@ public class Broadcaster implements Closeable {
 
     // ============================================================================
 
-    static final Map<String, List<Listener>> staticListenerMap = Maps.newConcurrentMap();
+    private static final Map<String, List<Listener>> staticListenerMap = Maps.newConcurrentMap();
+
+    private static final Object LOCK = new Object();
 
     private KylinConfig config;
     private ExecutorService announceMainLoop;
@@ -142,7 +144,7 @@ public class Broadcaster implements Closeable {
                                     } catch (IOException e) {
                                         logger.error(
                                                 "Announce broadcast event failed, targetNode {} broadcastEvent {}, error msg: {}",
-                                                node, broadcastEvent, e);
+                                                node, broadcastEvent, e.getMessage());
                                         syncErrorHandler.handleAnnounceError(node, restClient, broadcastEvent);
                                     }
                                 }
@@ -201,7 +203,7 @@ public class Broadcaster implements Closeable {
     }
 
     private static void doRegisterListener(Map<String, List<Listener>> lmap, Listener listener, String... entities) {
-        synchronized (lmap) {
+        synchronized (LOCK) {
             // ignore re-registration
             List<Listener> all = lmap.get(SYNC_ALL);
             if (all != null && all.contains(listener)) {
@@ -481,5 +483,9 @@ public class Broadcaster implements Closeable {
                     .toString();
         }
 
+    }
+
+    public static void clearStaticListenerMap() {
+        staticListenerMap.clear();
     }
 }
