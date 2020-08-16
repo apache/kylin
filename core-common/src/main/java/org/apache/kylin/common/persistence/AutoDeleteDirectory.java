@@ -18,6 +18,8 @@
 
 package org.apache.kylin.common.persistence;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -27,16 +29,26 @@ public class AutoDeleteDirectory implements Closeable {
     private final File tempFile;
 
     public AutoDeleteDirectory(File file) {
-        tempFile = file;
+        try {
+            tempFile = file;
+            init();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("create temp file " + file + " failed", e);
+        }
     }
+
     public AutoDeleteDirectory(String prefix, String suffix) {
         try {
             tempFile = File.createTempFile(prefix, suffix);
-            org.apache.commons.io.FileUtils.forceDelete(tempFile); // we need a directory, so delete the file first
-            tempFile.mkdirs();
+            init();
         } catch (IOException e) {
-            throw new RuntimeException("create temp file " + prefix + "****" + suffix + " failed", e);
+            throw new IllegalArgumentException("create temp file " + prefix + "****" + suffix + " failed", e);
         }
+    }
+
+    private void init() throws IOException {
+        FileUtils.forceDelete(tempFile); // we need a directory, so delete the file first
+        tempFile.mkdirs();
     }
 
     public String getAbsolutePath() {
@@ -53,6 +65,8 @@ public class AutoDeleteDirectory implements Closeable {
 
     @Override
     public void close() throws IOException {
-        org.apache.commons.io.FileUtils.forceDelete(tempFile);
+        if (tempFile != null && tempFile.exists()) {
+            FileUtils.forceDelete(tempFile);
+        }
     }
 }
