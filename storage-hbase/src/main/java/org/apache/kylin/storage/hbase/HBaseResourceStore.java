@@ -179,8 +179,8 @@ public class HBaseResourceStore extends PushdownResourceStore {
         String folderPrefix = folderPath.endsWith("/") ? folderPath : folderPath + "/";
         String lookForPrefix = folderPrefix;
         if (filter.hasPathPrefixFilter()) {
-            Preconditions.checkArgument(filter.pathPrefix.startsWith(folderPrefix));
-            lookForPrefix = filter.pathPrefix;
+            Preconditions.checkArgument(filter.getPathPrefix().startsWith(folderPrefix));
+            lookForPrefix = filter.getPathPrefix();
         }
 
         byte[] startRow = Bytes.toBytes(lookForPrefix);
@@ -240,14 +240,14 @@ public class HBaseResourceStore extends PushdownResourceStore {
 
     private FilterList generateTimeFilterList(VisitFilter visitFilter) {
         FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-        if (visitFilter.lastModStart >= 0) { // NOTE: Negative value does not work in its binary form
+        if (visitFilter.getLastModStart() >= 0) { // NOTE: Negative value does not work in its binary form
             SingleColumnValueFilter timeStartFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS,
-                    CompareFilter.CompareOp.GREATER_OR_EQUAL, Bytes.toBytes(visitFilter.lastModStart));
+                    CompareFilter.CompareOp.GREATER_OR_EQUAL, Bytes.toBytes(visitFilter.getLastModStart()));
             filterList.addFilter(timeStartFilter);
         }
-        if (visitFilter.lastModEndExclusive != Long.MAX_VALUE) {
+        if (visitFilter.getLastModEndExclusive() != Long.MAX_VALUE) {
             SingleColumnValueFilter timeEndFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS,
-                    CompareFilter.CompareOp.LESS, Bytes.toBytes(visitFilter.lastModEndExclusive));
+                    CompareFilter.CompareOp.LESS, Bytes.toBytes(visitFilter.getLastModEndExclusive()));
             filterList.addFilter(timeEndFilter);
         }
         return filterList.getFilters().isEmpty() ? null : filterList;
