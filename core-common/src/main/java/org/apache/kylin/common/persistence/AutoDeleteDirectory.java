@@ -19,6 +19,7 @@
 package org.apache.kylin.common.persistence;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 import java.io.Closeable;
 import java.io.File;
@@ -47,7 +48,9 @@ public class AutoDeleteDirectory implements Closeable {
     }
 
     private void init() throws IOException {
-        FileUtils.forceDelete(tempFile); // we need a directory, so delete the file first
+        Preconditions.checkNotNull(tempFile);
+        if (tempFile.exists())
+            FileUtils.forceDelete(tempFile); // we need a directory, so delete the file first
         tempFile.mkdirs();
     }
 
