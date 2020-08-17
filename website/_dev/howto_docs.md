@@ -9,6 +9,13 @@ We write documents in MD format and convert to HTML using [Jekyll](http://jekyll
 
 ## Before your work
 
+Before you add or edit documentation, please deploy the document compilation environment. We provide two ways:
+
+- [Deploy a local document compilation environment](#Deploy a local document compilation environment)
+- [Use Docker to deploy document compilation environment](#Use Docker to deploy document compilation environment)
+
+### <span id="Deploy a local document compilation environment">Deploy a local document compilation environment</span>
+
 Install following tools before you add or edit documentation:  
 
 1. First, make sure Ruby and Gem work on your machine  
@@ -43,7 +50,7 @@ rouge (1.10.1)
 ...
 ```
 
-## Use Docker for document compile
+### <span id="Use Docker to deploy document compilation environment">Use Docker to deploy document compilation environment</span>
 
 The latest kylin release provides dockerfile, to reduce build complexity using docker and Makefile can call docker command.
 
@@ -81,7 +88,7 @@ Apache Kylin's website and documentation is using Jekyll to manage and generate 
 To draft Chinese version document or translate existing one, just add or copy that doc and name with .cn.md as sufffix. It will generate under /cn folder with same name as html file.  
 To add other language, please update _config.yml and follow the same pattern as Chinese version.
 
-# Kylin document structure and navigation menu
+## Kylin document structure and navigation menu
 
 The Kylin [website as the Jekyll source](https://github.com/apache/kylin/tree/document/website) is maintained under the `doucment` branch.
 
@@ -121,7 +128,7 @@ Then add item to docs.yml like:
   - howto/howto_example
 ```
 
-# How to edit document
+## How to edit document
 Open doc with any markdown editor, draft content and preview in local.
 
 Sample Doc:
@@ -138,35 +145,31 @@ since: v0.7.2
 
 ## This is example doc
 The quick brown fox jump over the lazy dog.
-
 ```
 
-# How to add image
+## How to add image
 All impage please put under _images_ folder, in your document, please using below sample to include image:  
 
 ```
 ![](/images/Kylin-Web-Tutorial/2 tables.png)
-
 ```
 
-# How to add link
+## How to add link
 Using relative path for site links, for example:
 
 ```
 [REST API](docs/development/rest_api.html). 
-
 ```
 
-# How to add code highlight
+## How to add code highlight
 We are using [Rouge](https://github.com/jneen/rouge) to highlight code syntax.
 check this doc's source code for more detail sample.
 
-# How to preview in your local
+## How to preview in your local
 You can preview in your markdown editor, to check exactly what it will looks like on website, please run Jekyll from `website` folder:
 
 ```
 jekyll server
-
 ```
 Then access http://127.0.0.1:4000 in your browser.
 
