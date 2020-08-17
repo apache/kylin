@@ -15,8 +15,8 @@ since: v2.1
 #### 下压至单个引擎
 以Hive为例说明开启步骤
 
-1. 修改配置文件`kylin.properties`打开Query Pushdown注释掉的配置项`kylin.query.pushdown.runner-class-name`，设置为`org.apache.kylin.query.adhoc.PushDownRunnerJdbcImpl`
-
+1. 修改配置文件`kylin.properties`打开Query Pushdown注释掉的配置项`kylin.query.pushdown.runner-class-name`，设置为`org.apache.kylin.query.adhoc.PushDownRunnerJdbcImpl`；
+如果你需要将查询下压到presto，请将这项配置设置为`org.apache.kylin.query.pushdown.PushdownRunnerSDKImpl`，其余配置参见本页末尾的[Pushdown to Presto](#pushdown-to-presto)中的介绍。 
 
 2. 在配置文件`kylin.properties`添加如下配置项。若不设置，将使用默认配置项。请不要忘记将"hiveserver"和"10000"替换成环境中Hive运行的主机和端口。
 
@@ -40,7 +40,9 @@ since: v2.1
 
 {% endhighlight %}
 
-然后，重启Kylin
+3. 当 Pushdown 到的查询引擎不是`Hive` 时，请将对应查询引擎的 JDBC 驱动放在 $KYLIN_HOME/ext 目录下，没有此目录时请自行创建。
+
+然后，重启Kylin。
 
 #### 下压至多个引擎
 自 v3.0.0 起，开始支持通过JDBC下压至多个引擎进行查询。
@@ -98,4 +100,6 @@ kylin.query.pushdown.jdbc.url={YOUR_URL}
 kylin.query.pushdown.jdbc.driver=com.facebook.presto.jdbc.PrestoDriver
 kylin.query.pushdown.jdbc.username={USER_NAME}
 kylin.query.pushdown.jdbc.password={PASSWORD}
-{% endhighlight %}    
+{% endhighlight %}  
+
+并且，请自行下载 Presto 的 JDBC 驱动 presto-jdbc-xxx.jar 放置在 $KYLIN_HOME/ext 目录下，没有此目录时请自行创建。  
