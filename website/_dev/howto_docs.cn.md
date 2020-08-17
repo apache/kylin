@@ -9,6 +9,13 @@ permalink: /cn/development/howto_docs.html
 
 ## 工作前
 
+在您添加或修改文档前，请部署文档编译所需的环境，我们提供以下两种方法：
+
+- [本地部署文档编译环境](#本地部署文档编译环境)
+- [使用 Docker 部署文档编译环境（推荐）](#使用 Docker 部署文档编译环境)
+
+### <span id="本地部署文档编译环境">本地部署文档编译环境</span>
+
 在您添加或修改文档前请安装以下工具：  
 
 1. 首先，确保 Ruby 和 Gem 能在您的机器上工作  
@@ -19,7 +26,7 @@ permalink: /cn/development/howto_docs.html
 2. 然后，安装 [Jekyll](http://jekyllrb.com)，以及需要的插件
 	* `gem install jekyll jekyll-multiple-languages kramdown rouge`  
 	* __注意__：一些特定的 jekyll 和 jekyll-multiple-languages 版本不能一起使用（使用 jekyll 3.0.1 和 jekyll-multiple-languages 2.0.3 时我遇到一个 "undefined method" 错误)。这种情况下，`jekyll 2.5.3` 和 `jekyll-multiple-languages 1.0.8` 是已知可运行的版本。
-        * 例如. 使用 `gem install jekyll --version "=2.5.3"` 来安装具体的版本。
+    * 例如，使用 `gem install jekyll --version "=2.5.3"` 来安装具体的版本。
 	* __注意__：对于 Mac 用户，如果 gem 安装时遇到类似这样的错误 'ERROR:  While executing gem ... (Gem::FilePermissionError)'。您可以使用 'brew install ruby' 的方式解决这个问题，然后重启您的终端。
 3. 您可以选择任何 markdown 编辑器
 
@@ -43,7 +50,7 @@ rouge (1.10.1)
 ...
 ```
 
-## 使用 Docker 为文档编译
+### <span id="使用 Docker 部署文档编译环境">使用 Docker 部署文档编译环境</span>
 
 最新版的 kylin 发布提供了 dockerfile，来减少构建复杂性使用 docker 和 Makefile 能调用 docker 命令。
 
@@ -81,7 +88,7 @@ Apache Kylin 的网站和文档使用 Jekyll 来管理和生成，可在 [http:/
 要草拟中文版文档或翻译现有文档，只需添加或复制该文档，名称以 .cn.md 作为后缀。它将在 /cn 文件夹下生成与 html 同名的文件。
 要添加其他语言，请更新 _config.yml 并遵循与中文版相同的模式。  
 
-# Kylin 文档结构以及导航菜单
+## Kylin 文档结构以及导航菜单
 
 [作为 Jekyll 源的 Kylin 网站](https://github.com/apache/kylin/tree/document/website)是在 `doucment` 分支下维护的。
 
@@ -121,7 +128,7 @@ since: v0.7.2
   - howto/howto_example
 ```
 
-# 如何编写文档
+## 如何编写文档
 使用任何 markdown 编辑器打开文档，草拟内容并在本地预览。
 
 样例文档：
@@ -138,35 +145,31 @@ since: v0.7.2
 
 ## This is example doc
 The quick brown fox jump over the lazy dog.
-
 ```
 
-# 如何添加图片
+## 如何添加图片
 所有的图片请放到 _images_ 文件夹下，在你的文件中，请使用以下样式引入图片：  
 
 ```
 ![](/images/Kylin-Web-Tutorial/2 tables.png)
-
 ```
 
-# 如何添加连接
+## 如何添加连接
 使用站点链接的相对路径，例如
 
 ```
 [REST API](docs/development/rest_api.html). 
-
 ```
 
-# 如何添加代码高亮
+## 如何添加代码高亮
 我们使用 [Rouge](https://github.com/jneen/rouge) 突出显示代码语法。
 查看此 doc 的源代码以获取更多详细信息示例。
 
-# 如何在本地预览
+## 如何在本地预览
 您可以在 markdown 编辑器中预览，要检查网站上的确切内容，请从 `website` 文件夹中运行 Jekyll：
 
 ```
 jekyll server
-
 ```
 然后在浏览器中访问 http://127.0.0.1:4000。
 
