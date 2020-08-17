@@ -14,8 +14,10 @@ If a query can not be answered by any cube, Kylin supports pushing down such que
 ### Query Pushdown config
 
 #### Pushdown to single engine
-1. In Kylin's installation directory, uncomment configuration item `kylin.query.pushdown.runner-class-name` of config file `kylin.properties`, and set it to `org.apache.kylin.query.adhoc.PushDownRunnerJdbcImpl`
+Take hive as an example to explain the opening steps:
 
+1. In Kylin's installation directory, uncomment configuration item `kylin.query.pushdown.runner-class-name` of config file `kylin.properties`, and set it to `org.apache.kylin.query.adhoc.PushDownRunnerJdbcImpl`,
+If you need to pushdown the query to presto, please set this configuration to `org.apache.kylin.query.pushdown.PushdownRunnerSDKImpl`. For other configurations, please refer to [Pushdown to Presto](#pushdown-to-presto) at the end of this page.
 
 2. Add configuration items below in config file `kylin.properties`. 
 
@@ -34,6 +36,8 @@ If a query can not be answered by any cube, Kylin supports pushing down such que
    - *kylin.query.pushdown.jdbc.pool-min-idle*: Hive Jdbc's connection pool's min connected connection number, default value is 0
 
 Here is a sample configuration; remember to change host "hiveserver" and port "10000" with your cluster configuraitons.
+
+3. When the query engine pushdown to is not `Hive`, please put the jdbc driver of the corresponding query engine in $KYLIN_HOME/ext directory, if there is no such directory, please create it yourself.
 
 Then, restart Kylin.
 
@@ -108,3 +112,5 @@ kylin.query.pushdown.jdbc.driver=com.facebook.presto.jdbc.PrestoDriver
 kylin.query.pushdown.jdbc.username={USER_NAME}
 kylin.query.pushdown.jdbc.password={PASSWORD}
 {% endhighlight %}    
+
+In addition, please download Presto jdbc driver presto-jdbc-xxx.jar and put it in $KYLIN_HOME/ext directory, if there is no such directory, please create it yourself.
