@@ -183,9 +183,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonProperty("retention_range")
     private long retentionRange = 0;
     @JsonProperty("engine_type")
-    private int engineType = IEngineAware.ID_MR_V2;
+    private int engineType = IEngineAware.ID_SPARK_II;
     @JsonProperty("storage_type")
-    private int storageType = IStorageAware.ID_SHARDED_HBASE;
+    private int storageType = IStorageAware.ID_PARQUET;
     @JsonProperty("override_kylin_properties")
     private LinkedHashMap<String, String> overrideKylinProps = new LinkedHashMap<String, String>();
 
@@ -662,10 +662,11 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 throw new RuntimeException("Error during adapting hbase mapping", e);
             }
         } else {
-            if (hbaseMapping != null) {
-                hbaseMapping.init(this);
-                initMeasureReferenceToColumnFamily();
-            }
+            // skip at Kylin 4.0
+//            if (hbaseMapping != null) {
+//                hbaseMapping.init(this);
+//                initMeasureReferenceToColumnFamily();
+//            }
         }
 
         // check all dimension columns are presented on rowkey
@@ -1515,17 +1516,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 globalDictCols.add(dictionaryDesc.getColumnRef());
         }
         return globalDictCols;
-    }
-
-    public boolean isShrunkenDictFromGlobalEnabled() {
-        boolean needShrunkenDict = config.isShrunkenDictFromGlobalEnabled() && !getAllGlobalDictColumns().isEmpty();
-        boolean needMrHiveDict = config.getMrHiveDictColumns().length > 0;
-        if (needMrHiveDict && needShrunkenDict) {
-            logger.info("ShrunkenDict cannot work with MrHiveDict, so shutdown ShrunkenDict.");
-            return false;
-        } else {
-            return needShrunkenDict;
-        }
     }
 
     // UHC (ultra high cardinality column): contain the ShardByColumns and the GlobalDictionaryColumns

@@ -33,6 +33,7 @@ import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.service.AdminService;
 import org.apache.kylin.rest.service.CubeService;
+import org.apache.spark.sql.SparderContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -103,6 +104,14 @@ public class AdminController extends BasicController {
         final String config = adminService.getPublicConfig();
         GeneralResponse configRes = new GeneralResponse();
         configRes.put("config", config);
+        return configRes;
+    }
+
+    @RequestMapping(value = "/sparder_rul", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public GeneralResponse getSparderUrl() throws IOException {
+        GeneralResponse configRes = new GeneralResponse();
+        configRes.put("url", SparderContext.appMasterTrackURL());
         return configRes;
     }
 
