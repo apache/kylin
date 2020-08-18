@@ -47,7 +47,7 @@ public class PerfLoggerFactory {
                 LOG.error("Performance Logger Class not found:" + e.getMessage());
                 result = new SimplePerfLogger();
             } catch (IllegalAccessException | InstantiationException e) {
-                e.printStackTrace();
+                LOG.error("Error in getPerfLogger: ", e);
             }
             perfLogger.set(result);
         }

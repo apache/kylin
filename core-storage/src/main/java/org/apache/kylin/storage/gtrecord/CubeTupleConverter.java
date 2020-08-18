@@ -145,7 +145,7 @@ public class CubeTupleConverter implements ITupleConverter {
         // prepare derived columns and filler
         Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo = cuboid.getCubeDesc().getHostToDerivedInfo(cuboid.getColumns(), null);
         for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedInfo.entrySet()) {
-            TblColRef[] hostCols = entry.getKey().data;
+            TblColRef[] hostCols = entry.getKey().getData();
             for (DeriveInfo deriveInfo : entry.getValue()) {
                 IDerivedColumnFiller filler = newDerivedColumnFiller(hostCols, deriveInfo);
                 if (filler != null) {
@@ -297,10 +297,10 @@ public class CubeTupleConverter implements ITupleConverter {
                 @Override
                 public void fillDerivedColumns(Object[] gtValues, Tuple tuple) {
                     for (int i = 0; i < hostTmpIdx.length; i++) {
-                        lookupKey.data[i] = CubeTupleConverter.toString(gtValues[hostTmpIdx[i]]);
+                        lookupKey.getData()[i] = CubeTupleConverter.toString(gtValues[hostTmpIdx[i]]);
                         // if the primary key of lookup table is date time type, do this change in case of data type inconsistency
                         if (deriveInfo.join.getPrimaryKeyColumns()[i].getType().isDateTimeFamily()) {
-                            lookupKey.data[i] = String.valueOf(DateFormat.stringToMillis(lookupKey.data[i]));
+                            lookupKey.getData()[i] = String.valueOf(DateFormat.stringToMillis(lookupKey.getData()[i]));
                         }
                     }
 

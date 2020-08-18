@@ -202,7 +202,7 @@ public class KylinConfig extends KylinConfigBase {
             // for the developers using windows, without this condition, it will never find the file
             if (file.exists() || metaUri.contains("/") || Shell.WINDOWS) {
                 if (!file.exists()) {
-                    file.mkdirs();
+                    throw new IllegalArgumentException("File not exists: " + metaUri);
                 }
                 if (file.isDirectory()) {
                     return UriType.LOCAL_FOLDER;

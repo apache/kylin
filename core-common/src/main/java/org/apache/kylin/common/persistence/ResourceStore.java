@@ -681,9 +681,9 @@ abstract public class ResourceStore {
     }
 
     public static class VisitFilter {
-        public String pathPrefix = null;
-        public long lastModStart = Long.MIN_VALUE;
-        public long lastModEndExclusive = Long.MAX_VALUE;
+        private String pathPrefix = null;
+        private long lastModStart = Long.MIN_VALUE;
+        private long lastModEndExclusive = Long.MAX_VALUE;
 
         public VisitFilter() {
         }
@@ -723,6 +723,19 @@ abstract public class ResourceStore {
 
             return true;
         }
+
+        public String getPathPrefix() {
+            return pathPrefix;
+        }
+
+        public long getLastModStart() {
+            return lastModStart;
+        }
+
+        public long getLastModEndExclusive() {
+            return lastModEndExclusive;
+        }
+
     }
 
     /**

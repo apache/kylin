@@ -108,7 +108,7 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
     }
 
     public int getBaseResultCacheMB() {
-        return baseResult.aggrCacheMB;
+        return baseResult.getAggrCacheMB();
     }
 
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
@@ -200,7 +200,7 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
         }
 
         baseCuboidMemTracker.markLow();
-        baseResult.aggrCacheMB = Math.max(baseCuboidMemTracker.getEstimateMB(), 10); // 10 MB at minimal
+        baseResult.setAggrCacheMB(Math.max(baseCuboidMemTracker.getEstimateMB(), 10)); // 10 MB at minimal
 
         makeMemoryBudget();
         return baseResult;
@@ -228,7 +228,7 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
         };
 
         // reserve memory for aggregation cache, can't be larger than the parent
-        memBudget.reserveInsist(consumer, parent.aggrCacheMB);
+        memBudget.reserveInsist(consumer, parent.getAggrCacheMB());
         try {
             return aggregateCuboid(parent, cuboidId);
         } finally {
@@ -270,12 +270,12 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
         logger.info("Reserve {} MB for system basics", reserve);
 
         int budget = systemAvailMB - reserve;
-        if (budget < baseResult.aggrCacheMB) {
+        if (budget < baseResult.getAggrCacheMB()) {
             // make sure we have base aggr cache as minimal
-            budget = baseResult.aggrCacheMB;
+            budget = baseResult.getAggrCacheMB();
             logger.warn(
                     "System avail memory ({} MB) is less than base aggr cache ({} MB) + minimal reservation ({} MB), consider increase JVM heap -Xmx",
-                    systemAvailMB, baseResult.aggrCacheMB, reserve);
+                    systemAvailMB, baseResult.getAggrCacheMB(), reserve);
         }
 
         logger.info("Memory Budget is {} MB", budget);
@@ -333,7 +333,7 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
         if (aggrCacheMB <= 0 && baseResult != null) {
             aggrCacheMB = (int) Math.round(
                     (DERIVE_AGGR_CACHE_CONSTANT_FACTOR + DERIVE_AGGR_CACHE_VARIABLE_FACTOR * nRows / baseResult.nRows) //
-                            * baseResult.aggrCacheMB);
+                            * baseResult.getAggrCacheMB());
         }
 
         CuboidResult result = new CuboidResult(cuboidId, table, nRows, timeSpent, aggrCacheMB);

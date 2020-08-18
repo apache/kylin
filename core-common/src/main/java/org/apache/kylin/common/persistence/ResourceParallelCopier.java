@@ -279,9 +279,9 @@ public class ResourceParallelCopier {
         final public AtomicInteger errorResource = new AtomicInteger();
         final public Set<String> errorResourcePaths = Collections.synchronizedSet(new TreeSet<String>());
 
-        public long createTime = System.nanoTime();
-        public long startTime;
-        public long endTime;
+        private long createTime = System.nanoTime();
+        private long startTime;
+        private long endTime;
 
         private void reset() {
             startTime = endTime = 0;
@@ -353,6 +353,14 @@ public class ResourceParallelCopier {
 
         public boolean hasError() {
             return errorResource.get() > 0;
+        }
+
+        public long getStartTime() {
+            return startTime;
+        }
+
+        public long getEndTime() {
+            return endTime;
         }
     }
 

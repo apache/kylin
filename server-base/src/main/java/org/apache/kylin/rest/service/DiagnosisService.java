@@ -85,16 +85,17 @@ public class DiagnosisService extends BasicService {
     }
 
     public String dumpProjectDiagnosisInfo(String project, File exportPath) throws IOException {
-        Message msg = MsgPicker.getMsg();
+        project = ValidateUtil.convertStringToBeAlphanumericUnderscore(project);
         ProjectInstance projectInstance =
                 ProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                        .getProject(ValidateUtil.convertStringToBeAlphanumericUnderscore(project));
+                        .getProject(project);
         if (null == projectInstance) {
+            Message msg = MsgPicker.getMsg();
             throw new BadRequestException(
                     String.format(Locale.ROOT, msg.getDIAG_PROJECT_NOT_FOUND(), project));
         }
         aclEvaluate.checkProjectOperationPermission(projectInstance);
-        String[] args = { project, exportPath.getAbsolutePath() };
+        String[] args = { projectInstance.getName(), exportPath.getAbsolutePath() };
         runDiagnosisCLI(args);
         return getDiagnosisPackageName(exportPath);
     }
