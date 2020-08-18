@@ -83,7 +83,8 @@
   } ],
   "metrics": [
     "KYLIN_SALES.PRICE",
-    "KYLIN_SALES.ITEM_COUNT"
+    "KYLIN_SALES.ITEM_COUNT",
+    "KYLIN_SALES.ITEM_ID"
   ],
   "last_modified" : 1422435345362,
   "filter_condition" : "",

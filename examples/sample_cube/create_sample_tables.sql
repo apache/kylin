@@ -211,6 +211,7 @@ TRANS_ID bigint
 ,BUYER_ID bigint COMMENT 'Buyer ID'
 ,OPS_USER_ID string COMMENT 'System User ID'
 ,OPS_REGION string COMMENT 'System User Region'
+,ITEM_ID string
 )
 COMMENT 'Sales order table, fact table'
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ','

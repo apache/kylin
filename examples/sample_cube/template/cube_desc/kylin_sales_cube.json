@@ -182,7 +182,18 @@
         "topn.encoding_version.KYLIN_SALES.SELLER_ID": "1"
       }
     }
-  } ],
+  }, {
+      "name": "ITEM_BITMAP",
+      "function": {
+        "expression": "COUNT_DISTINCT",
+        "parameter": {
+          "type": "column",
+          "value": "KYLIN_SALES.ITEM_ID"
+        },
+        "returntype": "bitmap"
+      }
+    }
+  ],
   "rowkey" : {
     "rowkey_columns" : [ {
       "column" : "BUYER_ID",
@@ -251,7 +262,7 @@
       "name" : "F2",
       "columns" : [ {
         "qualifier" : "M",
-        "measure_refs" : [ "SELLER_CNT_HLL", "TOP_SELLER" ]
+        "measure_refs" : [ "SELLER_CNT_HLL", "TOP_SELLER", "ITEM_BITMAP" ]
       } ]
     } ]
   },
