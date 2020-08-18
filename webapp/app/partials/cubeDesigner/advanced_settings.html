@@ -199,7 +199,7 @@
         <div class="form-group large-popover" >
           <h3 style="margin-left:42px">Rowkeys  <i kylinpopover placement="right" title="Rowkey" template="rowkeyTip.html" class="fa fa-info-circle"></i></h3>
           <div style="padding: 0 42px; word-break: normal;">
-            <b>Important: </b>Dimension's position on HBase rowkey is critical for performance. You can drag and drop to adjust the sequence. In short, put filtering dimension before non-filtering dimension, and  put high cardinality dimension before low cardinality dimension.
+            <b>Important: </b>Dimension's position(Rowkey) has impact on query performance. You can drag and drop to adjust the sequence. In short, put filtering dimension before non-filtering dimension, and put high cardinality dimension before low cardinality dimension.
           </div>
           <div style="margin-left:42px">
               <div class="box-body">
@@ -210,8 +210,6 @@
                   <tr>
                     <th>ID</th>
                     <th class="col-xs-5">Column</th>
-                    <th>Encoding</th>
-                    <th>Length</th>
                     <th>Shard By</th>
                   </tr>
                   </thead>
@@ -225,17 +223,10 @@
                     <!-- ID -->
                     <span class="ng-binding">{{($index + 1)}}</span>
                   </td>
+
                   <td>
                     <!--Column Name -->
                     <span>{{rowkey_column.column}}</span>
-                  </td>
-
-                  <td>
-                    <span>{{rowkey_column.encoding}}</span>
-
-                  </td>
-                  <td>
-                    <span>{{rowkey_column.valueLength}}</span>
                   </td>
 
                   <td>
@@ -261,25 +252,6 @@
                              ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column)"  ng-disabled="true"
                              tooltip="rowkey column name.." tooltip-trigger="focus"
                              ng-model="rowkey_column.column" class="form-control">
-                    </td>
-
-                    <td>
-                      <select  style="width:180px;"     ng-disabled="instance.status=='READY'"
-                              chosen ng-model="rowkey_column.encoding"
-                              ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column);"
-                              ng-options="dt.value as dt.name for dt in getEncodings(rowkey_column.column)">
-                        <option value=""></option>
-                      </select>
-                    </td>
-                    <td>
-                      <!--Column Length -->
-                      <input type="text" class="form-control" placeholder="Column Length.."
-                             tooltip="rowkey column length.." tooltip-trigger="focus"
-                             ng-disabled="rowkey_column.encoding.indexOf('dict')>=0||rowkey_column.encoding.indexOf('date')>=0||rowkey_column.encoding.indexOf('time')>=0||instance.status=='READY'"
-                             ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column);"
-                             ng-model="rowkey_column.valueLength" class="form-control">
-
-                      <small class="help-block red" ng-show="state.mode=='edit' && rowkey_column.encoding.indexOf('integer')>=0 && (rowkey_column.valueLength>8 || rowkey_column.valueLength<1)">integer encoding column length should between 1 and 8</small>
                     </td>
 
                     <td>
@@ -387,327 +359,327 @@
             </div>
           </div>
         </div>
-        <div class="form-group large-popover">
-          <h3 style="margin-left:42px">Advanced Dictionaries  <i kylinpopover placement="right" title="Advanced Dictionaries" template="AdvancedDictionariesTip.html" class="fa fa-info-circle"></i></h3>
-          <div style="margin-left:42px">
-            <div class="box-body">
-              <br/>
-              <table class="table table-striped table-hover">
-                <thead>
-                <tr>
-                  <th>Column</th>
-                  <th>Builder Class</th>
-                  <th>Reuse</th>
-                  <th ng-if="state.mode=='edit'">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                  <tr ng-repeat="dictionaries in cubeMetaFrame.dictionaries | filter: state.measureFilter track by $index">
-                    <td>
-                      <!--Column -->
-                      <span>{{dictionaries.column}}</span>
-                    </td>
-                    <td>
-                      <!--Builder-->
-                      <span>{{dictionaries.builder}}</span>
-                    </td>
-                    <td>
-                      <!--Reuse-->
-                      <span>{{dictionaries.model}}.{{dictionaries.cube}}.{{dictionaries.reuse}}</span>
-                    </td>
-                    <td ng-if="state.mode=='edit'">
-                      <!--Edit Button -->
-                      <button class="btn btn-xs btn-info" ng-click="addNewDictionaries(dictionaries, $index)" ng-disabled="instance.status=='READY'">
-                        <i class="fa fa-pencil"></i>
-                      </button>
-                      <!--Remove Button -->
-                      <button class="btn btn-xs  btn-danger" ng-click="removeElement(cubeMetaFrame.dictionaries, dictionaries)" ng-disabled="instance.status=='READY'">
-                        <i class="fa fa-trash-o"></i>
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+<!--        <div class="form-group large-popover">-->
+<!--          <h3 style="margin-left:42px">Advanced Dictionaries  <i kylinpopover placement="right" title="Advanced Dictionaries" template="AdvancedDictionariesTip.html" class="fa fa-info-circle"></i></h3>-->
+<!--          <div style="margin-left:42px">-->
+<!--            <div class="box-body">-->
+<!--              <br/>-->
+<!--              <table class="table table-striped table-hover">-->
+<!--                <thead>-->
+<!--                <tr>-->
+<!--                  <th>Column</th>-->
+<!--                  <th>Builder Class</th>-->
+<!--                  <th>Reuse</th>-->
+<!--                  <th ng-if="state.mode=='edit'">Actions</th>-->
+<!--                </tr>-->
+<!--                </thead>-->
+<!--                <tbody>-->
+<!--                  <tr ng-repeat="dictionaries in cubeMetaFrame.dictionaries | filter: state.measureFilter track by $index">-->
+<!--                    <td>-->
+<!--                      &lt;!&ndash;Column &ndash;&gt;-->
+<!--                      <span>{{dictionaries.column}}</span>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                      &lt;!&ndash;Builder&ndash;&gt;-->
+<!--                      <span>{{dictionaries.builder}}</span>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                      &lt;!&ndash;Reuse&ndash;&gt;-->
+<!--                      <span>{{dictionaries.model}}.{{dictionaries.cube}}.{{dictionaries.reuse}}</span>-->
+<!--                    </td>-->
+<!--                    <td ng-if="state.mode=='edit'">-->
+<!--                      &lt;!&ndash;Edit Button &ndash;&gt;-->
+<!--                      <button class="btn btn-xs btn-info" ng-click="addNewDictionaries(dictionaries, $index)" ng-disabled="instance.status=='READY'">-->
+<!--                        <i class="fa fa-pencil"></i>-->
+<!--                      </button>-->
+<!--                      &lt;!&ndash;Remove Button &ndash;&gt;-->
+<!--                      <button class="btn btn-xs  btn-danger" ng-click="removeElement(cubeMetaFrame.dictionaries, dictionaries)" ng-disabled="instance.status=='READY'">-->
+<!--                        <i class="fa fa-trash-o"></i>-->
+<!--                      </button>-->
+<!--                    </td>-->
+<!--                  </tr>-->
+<!--                </tbody>-->
+<!--              </table>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
         <!--Add Dictionaries Button-->
-        <div class="form-group" style="margin-left:42px;">
-          <button class="btn btn-sm btn-info" ng-click="addNewDictionaries()" ng-show="state.mode=='edit' && !addNew" ng-disabled="instance.status=='READY'">
-            <i class="fa fa-plus"></i> Dictionaries
-          </button>
-       </div>
+<!--        <div class="form-group" style="margin-left:42px;">-->
+<!--          <button class="btn btn-sm btn-info" ng-click="addNewDictionaries()" ng-show="state.mode=='edit' && !addNew" ng-disabled="instance.status=='READY'">-->
+<!--            <i class="fa fa-plus"></i> Dictionaries-->
+<!--          </button>-->
+<!--       </div>-->
        <!--Edit Dictionary-->
-       <ng-form name="edit_mes_form" style="margin-left:42px;">
-         <div class="box box-solid"  ng-if="addNew" style="margin-left:42px;">
-           <div class="box-header">
-             <h4 class="box-title text-info">Edit Dictionaries</h4>
-           </div>
-           <div class="box-body">
-             <div class="row">
-               <div class="col-xs-12">
-                 <!--Column-->
-                 <div class="form-group middle-popover">
-                   <div class="row">
-                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Column</b></label>
-                     <div class="col-xs-12 col-sm-6">
-                       <select class="form-control" chosen
-                               ng-model="newDictionaries.column"
-                               ng-change="measureReturnTypeUpdate();"
-                               ng-options="column as column for column in getFactColumns()" required>
-                         <option value="">-- Select a Column --</option>
-                       </select>
-                     </div>
-                   </div>
-                 </div>
-                 <div class="form-group">
-                   <div class="row" style="margin-left:5px;">
-                     <label class="radio-inline ng-binding ng-scope">
-                       <input type="radio" name="reuse" ng-value=1 ng-model="isReuse"  ng-change="change('builder')"/><b>Builder Class</b>
-                     </label>
-                     <label class="radio-inline ng-binding ng-scope">
-                       <input type="radio" name="reuse"  ng-value=2 ng-model="isReuse" ng-change="change('reuse')"/><b>Reuse Self</b>
-                     </label>
-                     <!-- tiretree add-->
-                     <label class="radio-inline ng-binding ng-scope">
-                       <input type="radio" name="reuse"  ng-value=3 ng-model="isReuse" ng-change="change('domain')"/><b>Reuse Global Domain</b>
-                     </label>
-                     <!-- tiretree end-->
-                   </div>
-                 </div>
-                 <!--Builder-->
-                 <div class="form-group" ng-if="isReuse==1" >
-                   <div class="row">
-                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Builder Class</b></label>
-                     <div class="col-xs-12 col-sm-6">
-                       <select class="form-control" chosen
-                               ng-model="newDictionaries.builder"
-                               ng-options="item.value as item.name for item in cubeConfig.buildDictionaries"
-                               required>
-                         <option value="">-- Select a builder class--</option>
-                       </select>
-                     </div>
-                   </div>
-                 </div>
-                 <!--Reuse-->
-                 <div class="form-group middle-popover" ng-if="isReuse==2" >
-                   <div class="row">
-                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Reuse</b></label>
-                     <div class="col-xs-12 col-sm-6">
-                       <select class="form-control" chosen
-                               ng-model="newDictionaries.reuse"
-                               ng-change="measureReturnTypeUpdate();"
-                               ng-options="column as column for column in getFactColumns()" required>
-                         <option value="">-- Select a Column --</option>
-                       </select>
-                     </div>
-                   </div>
-                 </div>
-                 <!-- Tiretree global dic model cube table.colname start-->
-                 <div class="form-group middle-popover" ng-if="isReuse==3" >
-                   <div class="row">
-                     <label class="col-xs-6 col-sm-4 control-label no-padding-right" ng-class="{'has-error':newDictionaries.model==''}">
-                       <b ng-if="state.mode=='view'">{{dictionaries.model}}</b>
-                       <input ng-model="newDictionaries.model" placeholder="Reuse Model Name"  required class="form-control" ng-if="state.mode=='edit'"/>
-                       <small style="font-weight: normal !important;" class="help-block" ng-show="newDictionaries.model==''">Reuse Model Name is required.</small>
-                     </label>
-                     <div class="col-xs-6 col-sm-4" ng-class="{'has-error':newDictionaries.cube==''}">
-                       <input ng-model="newDictionaries.cube" placeholder="Reuse Cube Name" class="form-control" ng-if="state.mode=='edit'" required/>
-                       <small class="help-block" ng-show="newDictionaries.cube==''">Reuse Cube Name is required.</small>
-                       <span ng-if="state.mode=='view'">{{dictionaries.cube}}</span>
-                     </div>
-                     <div class="col-xs-12 col-sm-4" ng-class="{'has-error':newDictionaries.reuse==''}">
-                       <input ng-model="newDictionaries.reuse" placeholder="Reuse table.column" class="form-control" ng-if="state.mode=='edit'" required/>
-                       <small class="help-block" ng-show="newDictionaries.reuse==''">Reuse table.column is required.</small>
-                       <span ng-if="state.mode=='view'">{{dictionaries.reuse}}</span>
-                     </div>
-                   </div>
-                 </div>
-                 <!--end -->
-               </div>
-             </div>
-           </div>
-           <div class="box-footer">
-             <button class="btn btn-sm btn-info" ng-disabled="edit_mes_form.$invalid"
-                     ng-click="saveNewDictionaries()" ng-show="state.mode=='edit'">OK</button>
-             <button class="btn btn-link" ng-click="clearNewDictionaries()">Cancel</button>
-           </div>
-         </div>
-         <!-- Advanced Lookup Table-->
-         <div class="form-group large-popover" style="margin-bottom:30px;">
-           <h3 style="margin-left:42px;margin-bottom:30px;">Advanced Snapshot Table  <i kylinpopover placement="right" title="Advanced Snapshot Table" template="AdvanceSnapshotTableTip.html" class="fa fa-info-circle"></i></h3>
-           <div style="margin-left:42px">
-             <div class="box-body">
-               <br/>
-               <table class="table table-striped table-hover">
-                 <thead>
-                 <tr>
-                   <th>Snapshot Table</th>
-                   <th>Type</th>
-                   <th>Global</th>
-                   <th ng-if="state.mode=='edit'">Actions</th>
-                 </tr>
-                 </thead>
-                 <tbody>
-                   <tr ng-repeat="snapshotTable in cubeMetaFrame.snapshot_table_desc_list track by $index">
-                     <td>
-                       <p>{{snapshotTable.table_name}}</p>
-                     </td>
-                     <td>
-                       <p>{{snapshotTable.storage_type}}</p>
-                     </td>
-                     <td>
-                       <input type="checkbox" ng-model="snapshotTable.global" disabled="true">
-                     </td>
-                     <td ng-if="state.mode=='edit'">
-                       <button class="btn btn-xs btn-info" ng-click="addNewSnapshot(snapshotTable, $index)" ng-disabled="instance.status=='READY'">
-                         <i class="fa fa-pencil"></i>
-                       </button>
-                       <button class="btn btn-xs  btn-danger" ng-click="removeSnapshotTable($index)" ng-disabled="instance.status=='READY'">
-                         <i class="fa fa-trash-o"></i>
-                       </button>
-                     </td>
-                   </tr>
-                 </tbody>
-               </table>
-             </div>
-           </div>
+<!--       <ng-form name="edit_mes_form" style="margin-left:42px;">-->
+<!--         <div class="box box-solid"  ng-if="addNew" style="margin-left:42px;">-->
+<!--           <div class="box-header">-->
+<!--             <h4 class="box-title text-info">Edit Dictionaries</h4>-->
+<!--           </div>-->
+<!--           <div class="box-body">-->
+<!--             <div class="row">-->
+<!--               <div class="col-xs-12">-->
+<!--                 &lt;!&ndash;Column&ndash;&gt;-->
+<!--                 <div class="form-group middle-popover">-->
+<!--                   <div class="row">-->
+<!--                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Column</b></label>-->
+<!--                     <div class="col-xs-12 col-sm-6">-->
+<!--                       <select class="form-control" chosen-->
+<!--                               ng-model="newDictionaries.column"-->
+<!--                               ng-change="measureReturnTypeUpdate();"-->
+<!--                               ng-options="column as column for column in getFactColumns()" required>-->
+<!--                         <option value="">&#45;&#45; Select a Column &#45;&#45;</option>-->
+<!--                       </select>-->
+<!--                     </div>-->
+<!--                   </div>-->
+<!--                 </div>-->
+<!--                 <div class="form-group">-->
+<!--                   <div class="row" style="margin-left:5px;">-->
+<!--                     <label class="radio-inline ng-binding ng-scope">-->
+<!--                       <input type="radio" name="reuse" ng-value=1 ng-model="isReuse"  ng-change="change('builder')"/><b>Builder Class</b>-->
+<!--                     </label>-->
+<!--                     <label class="radio-inline ng-binding ng-scope">-->
+<!--                       <input type="radio" name="reuse"  ng-value=2 ng-model="isReuse" ng-change="change('reuse')"/><b>Reuse Self</b>-->
+<!--                     </label>-->
+<!--                     &lt;!&ndash; tiretree add&ndash;&gt;-->
+<!--                     <label class="radio-inline ng-binding ng-scope">-->
+<!--                       <input type="radio" name="reuse"  ng-value=3 ng-model="isReuse" ng-change="change('domain')"/><b>Reuse Global Domain</b>-->
+<!--                     </label>-->
+<!--                     &lt;!&ndash; tiretree end&ndash;&gt;-->
+<!--                   </div>-->
+<!--                 </div>-->
+<!--                 &lt;!&ndash;Builder&ndash;&gt;-->
+<!--                 <div class="form-group" ng-if="isReuse==1" >-->
+<!--                   <div class="row">-->
+<!--                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Builder Class</b></label>-->
+<!--                     <div class="col-xs-12 col-sm-6">-->
+<!--                       <select class="form-control" chosen-->
+<!--                               ng-model="newDictionaries.builder"-->
+<!--                               ng-options="item.value as item.name for item in cubeConfig.buildDictionaries"-->
+<!--                               required>-->
+<!--                         <option value="">&#45;&#45; Select a builder class&#45;&#45;</option>-->
+<!--                       </select>-->
+<!--                     </div>-->
+<!--                   </div>-->
+<!--                 </div>-->
+<!--                 &lt;!&ndash;Reuse&ndash;&gt;-->
+<!--                 <div class="form-group middle-popover" ng-if="isReuse==2" >-->
+<!--                   <div class="row">-->
+<!--                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Reuse</b></label>-->
+<!--                     <div class="col-xs-12 col-sm-6">-->
+<!--                       <select class="form-control" chosen-->
+<!--                               ng-model="newDictionaries.reuse"-->
+<!--                               ng-change="measureReturnTypeUpdate();"-->
+<!--                               ng-options="column as column for column in getFactColumns()" required>-->
+<!--                         <option value="">&#45;&#45; Select a Column &#45;&#45;</option>-->
+<!--                       </select>-->
+<!--                     </div>-->
+<!--                   </div>-->
+<!--                 </div>-->
+<!--                 &lt;!&ndash; Tiretree global dic model cube table.colname start&ndash;&gt;-->
+<!--                 <div class="form-group middle-popover" ng-if="isReuse==3" >-->
+<!--                   <div class="row">-->
+<!--                     <label class="col-xs-6 col-sm-4 control-label no-padding-right" ng-class="{'has-error':newDictionaries.model==''}">-->
+<!--                       <b ng-if="state.mode=='view'">{{dictionaries.model}}</b>-->
+<!--                       <input ng-model="newDictionaries.model" placeholder="Reuse Model Name"  required class="form-control" ng-if="state.mode=='edit'"/>-->
+<!--                       <small style="font-weight: normal !important;" class="help-block" ng-show="newDictionaries.model==''">Reuse Model Name is required.</small>-->
+<!--                     </label>-->
+<!--                     <div class="col-xs-6 col-sm-4" ng-class="{'has-error':newDictionaries.cube==''}">-->
+<!--                       <input ng-model="newDictionaries.cube" placeholder="Reuse Cube Name" class="form-control" ng-if="state.mode=='edit'" required/>-->
+<!--                       <small class="help-block" ng-show="newDictionaries.cube==''">Reuse Cube Name is required.</small>-->
+<!--                       <span ng-if="state.mode=='view'">{{dictionaries.cube}}</span>-->
+<!--                     </div>-->
+<!--                     <div class="col-xs-12 col-sm-4" ng-class="{'has-error':newDictionaries.reuse==''}">-->
+<!--                       <input ng-model="newDictionaries.reuse" placeholder="Reuse table.column" class="form-control" ng-if="state.mode=='edit'" required/>-->
+<!--                       <small class="help-block" ng-show="newDictionaries.reuse==''">Reuse table.column is required.</small>-->
+<!--                       <span ng-if="state.mode=='view'">{{dictionaries.reuse}}</span>-->
+<!--                     </div>-->
+<!--                   </div>-->
+<!--                 </div>-->
+<!--                 &lt;!&ndash;end &ndash;&gt;-->
+<!--               </div>-->
+<!--             </div>-->
+<!--           </div>-->
+<!--           <div class="box-footer">-->
+<!--             <button class="btn btn-sm btn-info" ng-disabled="edit_mes_form.$invalid"-->
+<!--                     ng-click="saveNewDictionaries()" ng-show="state.mode=='edit'">OK</button>-->
+<!--             <button class="btn btn-link" ng-click="clearNewDictionaries()">Cancel</button>-->
+<!--           </div>-->
+<!--         </div>-->
+<!--         &lt;!&ndash; Advanced Lookup Table&ndash;&gt;-->
+<!--         <div class="form-group large-popover" style="margin-bottom:30px;">-->
+<!--           <h3 style="margin-left:42px;margin-bottom:30px;">Advanced Snapshot Table  <i kylinpopover placement="right" title="Advanced Snapshot Table" template="AdvanceSnapshotTableTip.html" class="fa fa-info-circle"></i></h3>-->
+<!--           <div style="margin-left:42px">-->
+<!--             <div class="box-body">-->
+<!--               <br/>-->
+<!--               <table class="table table-striped table-hover">-->
+<!--                 <thead>-->
+<!--                 <tr>-->
+<!--                   <th>Snapshot Table</th>-->
+<!--                   <th>Type</th>-->
+<!--                   <th>Global</th>-->
+<!--                   <th ng-if="state.mode=='edit'">Actions</th>-->
+<!--                 </tr>-->
+<!--                 </thead>-->
+<!--                 <tbody>-->
+<!--                   <tr ng-repeat="snapshotTable in cubeMetaFrame.snapshot_table_desc_list track by $index">-->
+<!--                     <td>-->
+<!--                       <p>{{snapshotTable.table_name}}</p>-->
+<!--                     </td>-->
+<!--                     <td>-->
+<!--                       <p>{{snapshotTable.storage_type}}</p>-->
+<!--                     </td>-->
+<!--                     <td>-->
+<!--                       <input type="checkbox" ng-model="snapshotTable.global" disabled="true">-->
+<!--                     </td>-->
+<!--                     <td ng-if="state.mode=='edit'">-->
+<!--                       <button class="btn btn-xs btn-info" ng-click="addNewSnapshot(snapshotTable, $index)" ng-disabled="instance.status=='READY'">-->
+<!--                         <i class="fa fa-pencil"></i>-->
+<!--                       </button>-->
+<!--                       <button class="btn btn-xs  btn-danger" ng-click="removeSnapshotTable($index)" ng-disabled="instance.status=='READY'">-->
+<!--                         <i class="fa fa-trash-o"></i>-->
+<!--                       </button>-->
+<!--                     </td>-->
+<!--                   </tr>-->
+<!--                 </tbody>-->
+<!--               </table>-->
+<!--             </div>-->
+<!--           </div>-->
            <!-- Add  Snapshot-->
-           <div class="form-group" style="margin-left:42px;">
-             <button class="btn btn-sm btn-info" ng-click="addNewSnapshot()" ng-show="state.mode=='edit' && !addNewSanpshot" ng-disabled="instance.status=='READY'">
-               <i class="fa fa-plus"></i> Snapshot Table
-             </button>
-           </div>
+<!--           <div class="form-group" style="margin-left:42px;">-->
+<!--             <button class="btn btn-sm btn-info" ng-click="addNewSnapshot()" ng-show="state.mode=='edit' && !addNewSanpshot" ng-disabled="instance.status=='READY'">-->
+<!--               <i class="fa fa-plus"></i> Snapshot Table-->
+<!--             </button>-->
+<!--           </div>-->
            <!--Edit Snapshot-->
-           <div class="box box-solid"  ng-if="addNewSanpshot" style="margin-left:42px;">
-             <div class="box-header">
-               <h4 class="box-title text-info">Edit Snapshot</h4>
-             </div>
-             <div class="box-body">
-               <div class="row">
-                 <div class="col-xs-8">
-                   <!--Column-->
-                   <div class="form-group middle-popover">
-                     <div class="row">
-                       <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Snapshot Table</b></label>
-                       <div class="col-xs-12 col-sm-6">
-                         <select style="width:95%" chosen ng-model="newSnapshot.select.table_name"
-                              ng-options="tableName as tableName for tableName in cubeLookups">
-                         <option value=""></option>
-                       </select>
-                       </div>
-                     </div>
-                   </div>
-                   <div class="form-group">
-                     <div class="row">
-                       <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Type</b></label>
-                       <div class="col-xs-12 col-sm-6">
-                         <select style="width:95%" chosen ng-model="newSnapshot.select.storage_type"
-                              ng-change="changeSnapshotStorage(newSnapshot.select)"
-                              ng-options="storageType.value as storageType.name for storageType in cubeConfig.snapshotStorageTypes">
-                           <option value=""></option>
-                         </select>
-                       </div>
-                     </div>
-                   </div>
-                   <!--Builder-->
-                   <div class="form-group" ng-if="!isReuse" >
-                     <div class="row">
-                       <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Global</b></label>
-                       <div class="col-xs-12 col-sm-6">
-                         <input type="checkbox" ng-model="newSnapshot.select.global" ng-disabled="(newSnapshot.select.storage_type == 'hbase')">
-                       </div>
-                     </div>
-                   </div>
-                 </div>
-               </div>
-             </div>
-             <div class="box-footer">
-               <button class="btn btn-sm btn-info"
-                     ng-click="addSnapshot(newSnapshot.select)" ng-show="state.mode=='edit'">OK</button>
-               <button class="btn btn-link" ng-click="cancelEditSnapshot()">Cancel</button>
-             </div>
-           </div>
-         </div>
+<!--           <div class="box box-solid"  ng-if="addNewSanpshot" style="margin-left:42px;">-->
+<!--             <div class="box-header">-->
+<!--               <h4 class="box-title text-info">Edit Snapshot</h4>-->
+<!--             </div>-->
+<!--             <div class="box-body">-->
+<!--               <div class="row">-->
+<!--                 <div class="col-xs-8">-->
+<!--                   &lt;!&ndash;Column&ndash;&gt;-->
+<!--                   <div class="form-group middle-popover">-->
+<!--                     <div class="row">-->
+<!--                       <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Snapshot Table</b></label>-->
+<!--                       <div class="col-xs-12 col-sm-6">-->
+<!--                         <select style="width:95%" chosen ng-model="newSnapshot.select.table_name"-->
+<!--                              ng-options="tableName as tableName for tableName in cubeLookups">-->
+<!--                         <option value=""></option>-->
+<!--                       </select>-->
+<!--                       </div>-->
+<!--                     </div>-->
+<!--                   </div>-->
+<!--                   <div class="form-group">-->
+<!--                     <div class="row">-->
+<!--                       <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Type</b></label>-->
+<!--                       <div class="col-xs-12 col-sm-6">-->
+<!--                         <select style="width:95%" chosen ng-model="newSnapshot.select.storage_type"-->
+<!--                              ng-change="changeSnapshotStorage(newSnapshot.select)"-->
+<!--                              ng-options="storageType.value as storageType.name for storageType in cubeConfig.snapshotStorageTypes">-->
+<!--                           <option value=""></option>-->
+<!--                         </select>-->
+<!--                       </div>-->
+<!--                     </div>-->
+<!--                   </div>-->
+<!--                   &lt;!&ndash;Builder&ndash;&gt;-->
+<!--                   <div class="form-group" ng-if="!isReuse" >-->
+<!--                     <div class="row">-->
+<!--                       <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Global</b></label>-->
+<!--                       <div class="col-xs-12 col-sm-6">-->
+<!--                         <input type="checkbox" ng-model="newSnapshot.select.global" ng-disabled="(newSnapshot.select.storage_type == 'hbase')">-->
+<!--                       </div>-->
+<!--                     </div>-->
+<!--                   </div>-->
+<!--                 </div>-->
+<!--               </div>-->
+<!--             </div>-->
+<!--             <div class="box-footer">-->
+<!--               <button class="btn btn-sm btn-info"-->
+<!--                     ng-click="addSnapshot(newSnapshot.select)" ng-show="state.mode=='edit'">OK</button>-->
+<!--               <button class="btn btn-link" ng-click="cancelEditSnapshot()">Cancel</button>-->
+<!--             </div>-->
+<!--           </div>-->
+<!--         </div>-->
          <!--Edit ColumnFamily-->
-         <div class="form-group large-popover" >
-           <h3 style="margin-left:42px">Advanced ColumnFamily  <i kylinpopover placement="right" title="Advanced ColumnFamily" template="AdvancedColumnFamilyTip.html" class="fa fa-info-circle"></i></h3>
-           <div style="margin-left:42px">
-             <div class="box-body">
-               <!-- VIEW MODE -->
-               <div class="row"  ng-if="state.mode=='view'&& cubeMetaFrame.hbase_mapping.column_family.length > 0">
-                 <table class="table table-striped table-hover">
-                   <thead>
-                   <tr>
-                     <th class="col-xs-1">CF</th>
-                     <th class="col-xs-11">Measures</th>
-                   </tr>
-                   </thead>
-                   <tbody class="cube-dimension">
-                   <tr ng-repeat="colFamily in cubeMetaFrame.hbase_mapping.column_family | filter:dimState.filter track by $index">
-                     <!--ID -->
-                     <td class="col-xs-1">
-                       <b>{{colFamily.name}}</b>
-                     </td>
-                     <!--Name -->
-                     <td class="col-xs-11">
-                       <span>{{colFamily.columns[0].measure_refs}}</span>
-                     </td>
-                   </tr>
-                   </tbody>
-                 </table>
-               </div>
+<!--         <div class="form-group large-popover" >-->
+<!--           <h3 style="margin-left:42px">Advanced ColumnFamily  <i kylinpopover placement="right" title="Advanced ColumnFamily" template="AdvancedColumnFamilyTip.html" class="fa fa-info-circle"></i></h3>-->
+<!--           <div style="margin-left:42px">-->
+<!--             <div class="box-body">-->
+<!--               &lt;!&ndash; VIEW MODE &ndash;&gt;-->
+<!--               <div class="row"  ng-if="state.mode=='view'&& cubeMetaFrame.hbase_mapping.column_family.length > 0">-->
+<!--                 <table class="table table-striped table-hover">-->
+<!--                   <thead>-->
+<!--                   <tr>-->
+<!--                     <th class="col-xs-1">CF</th>-->
+<!--                     <th class="col-xs-11">Measures</th>-->
+<!--                   </tr>-->
+<!--                   </thead>-->
+<!--                   <tbody class="cube-dimension">-->
+<!--                   <tr ng-repeat="colFamily in cubeMetaFrame.hbase_mapping.column_family | filter:dimState.filter track by $index">-->
+<!--                     &lt;!&ndash;ID &ndash;&gt;-->
+<!--                     <td class="col-xs-1">-->
+<!--                       <b>{{colFamily.name}}</b>-->
+<!--                     </td>-->
+<!--                     &lt;!&ndash;Name &ndash;&gt;-->
+<!--                     <td class="col-xs-11">-->
+<!--                       <span>{{colFamily.columns[0].measure_refs}}</span>-->
+<!--                     </td>-->
+<!--                   </tr>-->
+<!--                   </tbody>-->
+<!--                 </table>-->
+<!--               </div>-->
 
-               <!-- EDIT MODE -->
-               <div  ng-if="state.mode=='edit'" class="form-group " style="width: 100%">
-                 <table ng-if="cubeMetaFrame.hbase_mapping.column_family.length > 0"
-                        class="table table-hover">
+<!--               &lt;!&ndash; EDIT MODE &ndash;&gt;-->
+<!--               <div  ng-if="state.mode=='edit'" class="form-group " style="width: 100%">-->
+<!--                 <table ng-if="cubeMetaFrame.hbase_mapping.column_family.length > 0"-->
+<!--                        class="table table-hover">-->
 
-                   <tr class="row">
-                     <th class="col-xs-1">CF</th>
-                     <th class="col-xs-10">Measures</th>
-                     <th class="col-xs-1">Actions</th>
-                   </tr>
+<!--                   <tr class="row">-->
+<!--                     <th class="col-xs-1">CF</th>-->
+<!--                     <th class="col-xs-10">Measures</th>-->
+<!--                     <th class="col-xs-1">Actions</th>-->
+<!--                   </tr>-->
 
-                   <tr ng-repeat="colFamily in cubeMetaFrame.hbase_mapping.column_family" ng-init="rowIndex = $index" class="row">
-                     <td class="col-xs-1">
-                       <b>{{colFamily.name}}</b>
-                     </td>
+<!--                   <tr ng-repeat="colFamily in cubeMetaFrame.hbase_mapping.column_family" ng-init="rowIndex = $index" class="row">-->
+<!--                     <td class="col-xs-1">-->
+<!--                       <b>{{colFamily.name}}</b>-->
+<!--                     </td>-->
 
-                     <td class="col-xs-10">
-                       <ui-select
-                         style="width: 100%"
-                         close-on-select="false"
-                         on-select="refreshColumnFamily(cubeMetaFrame.hbase_mapping.column_family, rowIndex, colFamily)"
-                         on-remove="refreshColumnFamily(cubeMetaFrame.hbase_mapping.column_family, rowIndex, colFamily)"
-                         ng-model="colFamily.columns[0].measure_refs"
-                         multiple>
-                         <ui-select-match placeholder="Select Measure...">{{$item}}</ui-select-match>
-                         <ui-select-choices repeat="measure in getAllMeasureNames() | filter:$select.search |assignedMeasureNames:getAssignedMeasureNames()">
-                           {{measure}}
-                         </ui-select-choices>
-                       </ui-select>
-                     </td>
+<!--                     <td class="col-xs-10">-->
+<!--                       <ui-select-->
+<!--                         style="width: 100%"-->
+<!--                         close-on-select="false"-->
+<!--                         on-select="refreshColumnFamily(cubeMetaFrame.hbase_mapping.column_family, rowIndex, colFamily)"-->
+<!--                         on-remove="refreshColumnFamily(cubeMetaFrame.hbase_mapping.column_family, rowIndex, colFamily)"-->
+<!--                         ng-model="colFamily.columns[0].measure_refs"-->
+<!--                         multiple>-->
+<!--                         <ui-select-match placeholder="Select Measure...">{{$item}}</ui-select-match>-->
+<!--                         <ui-select-choices repeat="measure in getAllMeasureNames() | filter:$select.search |assignedMeasureNames:getAssignedMeasureNames()">-->
+<!--                           {{measure}}-->
+<!--                         </ui-select-choices>-->
+<!--                       </ui-select>-->
+<!--                     </td>-->
 
-                     <td class="col-xs-1">
-                       <!--Remove Button -->
-                       <button ng-if="colFamily.columns[0].measure_refs.length == 0" class="btn btn-xs btn-info" ng-click="removeElement(cubeMetaFrame.hbase_mapping.column_family, colFamily)">
-                         <i class="fa fa-minus"></i>
-                       </button>
-                     </td>
+<!--                     <td class="col-xs-1">-->
+<!--                       &lt;!&ndash;Remove Button &ndash;&gt;-->
+<!--                       <button ng-if="colFamily.columns[0].measure_refs.length == 0" class="btn btn-xs btn-info" ng-click="removeElement(cubeMetaFrame.hbase_mapping.column_family, colFamily)">-->
+<!--                         <i class="fa fa-minus"></i>-->
+<!--                       </button>-->
+<!--                     </td>-->
 
-                   </tr>
-                 </table>
-               </div>
+<!--                   </tr>-->
+<!--                 </table>-->
+<!--               </div>-->
 
-               <div class="form-group" >
-                 <button class="btn btn-sm btn-info" ng-click="addColumnFamily()" ng-show="state.mode=='edit'">
-                   <i class="fa fa-plus"></i> ColumnFamily
-                 </button>
-               </div>
+<!--               <div class="form-group" >-->
+<!--                 <button class="btn btn-sm btn-info" ng-click="addColumnFamily()" ng-show="state.mode=='edit'">-->
+<!--                   <i class="fa fa-plus"></i> ColumnFamily-->
+<!--                 </button>-->
+<!--               </div>-->
 
-             </div>
-           </div>
+<!--             </div>-->
+<!--           </div>-->
          </div>
        </ng-form>
      </div>
@@ -729,53 +701,45 @@
       If specified as "true", cube data will be sharded according to its value.
     </p>
 
-    <h4>RowKey Encoding</h4>
-    <ol>
-      <li>
-        "dict" encoding will try to build a dictionaries for the dimension
-      </li>
-      <li>
-        "fixed_length" encoding will encode the dimension vlaues by fixed length bytes with padding
-      </li>
-      <li>
-        "int" encoding uses variable integer to encode integers
-      </li>
-    </ol>
+    <h4>Encoding</h4>
+    <p>
+        Dimension encoding will be delegated to Parquet.
+    </p>
   </div>
 </script>
-<script type="text/ng-template" id="AdvancedDictionariesTip.html">
-  <div>
-    <h4>Special settings for dictionaries.</h4>
-    <ol>
-      <li>
-        "Global Dictionary" is the default dict for precise count distinct measure, which support rollup among all segments.
-      </li>
-      <li>
-        "Segment Dictionary" is the special dict for precise count distinct measure, which is based on one segment and could not
-        support rollup among segments.
-        Specifically, if your cube isn't partitioned or you can ensure all your SQLs will group by your partition_column,
-        you could use "Segment Dictionary" instead of "Global Dictionary".
-      </li>
-    </ol>
-  </div>
-</script>
+<!--<script type="text/ng-template" id="AdvancedDictionariesTip.html">-->
+<!--  <div>-->
+<!--    <h4>Special settings for dictionaries.</h4>-->
+<!--    <ol>-->
+<!--      <li>-->
+<!--        "Global Dictionary" is the default dict for precise count distinct measure, which support rollup among all segments.-->
+<!--      </li>-->
+<!--      <li>-->
+<!--        "Segment Dictionary" is the special dict for precise count distinct measure, which is based on one segment and could not-->
+<!--        support rollup among segments.-->
+<!--        Specifically, if your cube isn't partitioned or you can ensure all your SQLs will group by your partition_column,-->
+<!--        you could use "Segment Dictionary" instead of "Global Dictionary".-->
+<!--      </li>-->
+<!--    </ol>-->
+<!--  </div>-->
+<!--</script>-->
 
-<script type="text/ng-template" id="AdvancedColumnFamilyTip.html">
-  <div>
-    <h4>If there are more than one ultrahigh cardinality precise count distinct measures,
-        you could assign these measures to more column family.</h4>
-  </div>
-</script>
+<!--<script type="text/ng-template" id="AdvancedColumnFamilyTip.html">-->
+<!--  <div>-->
+<!--    <h4>If there are more than one ultrahigh cardinality precise count distinct measures,-->
+<!--        you could assign these measures to more column family.</h4>-->
+<!--  </div>-->
+<!--</script>-->
 <script type="text/ng-template" id="CubeEngineTip.html" >
   <div>
     <h4>
-       Select cube engine for building cube.
+       Select cube engine for building cube. In Kylin 4.X, Spark is the only build engine.
     </h4>
   </div>
 </script>
 
-<script type="text/ng-template" id="AdvanceSnapshotTableTip.html">
-  <div>
-    <h4>Advance snapshot design for global lookup table and provide different storage type.</h4>
-  </div>
-</script>
+<!--<script type="text/ng-template" id="AdvanceSnapshotTableTip.html">-->
+<!--  <div>-->
+<!--    <h4>Advance snapshot design for global lookup table and provide different storage type.</h4>-->
+<!--  </div>-->
+<!--</script>-->
