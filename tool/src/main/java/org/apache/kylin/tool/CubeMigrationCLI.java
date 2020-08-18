@@ -49,8 +49,11 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
+import org.apache.kylin.dict.lookup.ExtTableSnapshotInfo;
+import org.apache.kylin.dict.lookup.ExtTableSnapshotInfoManager;
 import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
@@ -197,6 +200,7 @@ public class CubeMigrationCLI extends AbstractApplication {
                 checkMigrationSuccess(dstConfig, cubeName, true);
             }
             updateMeta(dstConfig, projectName, cubeName, cube.getModel());
+            updateMeta(srcConfig, cube.getProject(), cubeName, cube.getModel());
         } else {
             showOpts();
         }
@@ -247,6 +251,18 @@ public class CubeMigrationCLI extends AbstractApplication {
         for (CubeSegment segment : cube.getSegments()) {
             operations
                     .add(new Opt(OptType.CHANGE_HTABLE_HOST, new Object[] { segment.getStorageLocationIdentifier() }));
+        }
+        ExtTableSnapshotInfoManager srcExtSnapshotManager = ExtTableSnapshotInfoManager.getInstance(srcConfig);
+        List<SnapshotTableDesc> globalSnapshotDescList = cube.getDescriptor().getSnapshotTableDescList();
+        for (SnapshotTableDesc snapshotDesc : globalSnapshotDescList) {
+            if (snapshotDesc.isGlobal()
+                    && ExtTableSnapshotInfo.STORAGE_TYPE_HBASE.equals(snapshotDesc.getStorageType())) {
+                String tableName = snapshotDesc.getTableName();
+                String snapshotResPath = cube.getSnapshotResPath(tableName);
+                ExtTableSnapshotInfo extTableSnapshotInfo = srcExtSnapshotManager.getSnapshot(snapshotResPath);
+                operations.add(new Opt(OptType.CHANGE_HTABLE_HOST,
+                        new Object[] { extTableSnapshotInfo.getStorageLocationIdentifier() }));
+            }
         }
     }
 
@@ -332,6 +348,7 @@ public class CubeMigrationCLI extends AbstractApplication {
                 dictAndSnapshot.addAll(segment.getSnapshotPaths());
                 dictAndSnapshot.addAll(segment.getDictionaryPaths());
             }
+            dictAndSnapshot.addAll(cube.getSnapshotPaths());
         }
 
         if (doAclCopy) {
