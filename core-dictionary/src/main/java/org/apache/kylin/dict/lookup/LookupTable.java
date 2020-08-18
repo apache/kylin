@@ -174,7 +174,7 @@ abstract public class LookupTable<T> {
 
     public void dump() {
         for (Array<T> key : data.keySet()) {
-            System.out.println(toString(key.data) + " => " + toString(data.get(key)));
+            System.out.println(toString(key.getData()) + " => " + toString(data.get(key)));
         }
     }
 

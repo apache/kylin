@@ -24,6 +24,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -118,6 +119,8 @@ import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.QueryRequestLimits;
 import org.apache.kylin.rest.util.SQLResponseSignatureUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
+import org.apache.kylin.shaded.com.google.common.hash.Hasher;
+import org.apache.kylin.shaded.com.google.common.hash.Hashing;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
 import org.apache.kylin.storage.stream.StreamStorageQuery;
@@ -400,7 +403,11 @@ public class QueryService extends BasicService {
 
     public SQLResponse doQueryWithCache(SQLRequest sqlRequest, boolean isQueryInspect) {
         Message msg = MsgPicker.getMsg();
-        sqlRequest.setUsername(getUserName());
+
+        Hasher hasher = Hashing.murmur3_32().newHasher();
+        hasher.putString(getUserName(), StandardCharsets.UTF_8);
+        // use hash of the username to avoid sql injection
+        sqlRequest.setUsername(hasher.hash().toString());
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         String serverMode = kylinConfig.getServerMode();

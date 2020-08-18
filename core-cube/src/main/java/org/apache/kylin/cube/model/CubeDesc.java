@@ -324,7 +324,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         Map<Array<TblColRef>, List<DeriveInfo>> result = new HashMap<Array<TblColRef>, List<DeriveInfo>>();
         for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedMap.entrySet()) {
             Array<TblColRef> hostCols = entry.getKey();
-            boolean hostOnRow = rowCols.containsAll(Arrays.asList(hostCols.data));
+            boolean hostOnRow = rowCols.containsAll(Arrays.asList(hostCols.getData()));
             if (!hostOnRow)
                 continue;
 

@@ -101,8 +101,8 @@ public class DerivedFilterTranslator {
         for (Array<String> entry : satisfyingHostRecords) {
             for (int i = 0; i < pkCols.length; i++) {
                 if (pkCols[i].getType().isDateTimeFamily() && hostCols[i].getType().isStringFamily()) {
-                    long ts = DateFormat.stringToMillis(entry.data[i]);
-                    entry.data[i] = pkCols[i].getType().isDate() ? DateFormat.formatToDateStr(ts)
+                    long ts = DateFormat.stringToMillis(entry.getData()[i]);
+                    entry.getData()[i] = pkCols[i].getType().isDate() ? DateFormat.formatToDateStr(ts)
                             : DateFormat.formatToTimeWithoutMilliStr(ts);
                 }
             }
@@ -151,7 +151,7 @@ public class DerivedFilterTranslator {
                 for (int i = 0; i < hn; i++) {
                     CompareTupleFilter eq = new CompareTupleFilter(FilterOperatorEnum.EQ);
                     eq.addChild(new ColumnTupleFilter(hostCols[i]));
-                    eq.addChild(new ConstantTupleFilter(rec.data[i]));
+                    eq.addChild(new ConstantTupleFilter(rec.getData()[i]));
                     and.addChild(eq);
                 }
                 or.addChild(and);
@@ -163,7 +163,7 @@ public class DerivedFilterTranslator {
     private static List<String> asValues(Set<Array<String>> satisfyingHostRecords) {
         List<String> values = Lists.newArrayListWithCapacity(satisfyingHostRecords.size());
         for (Array<String> rec : satisfyingHostRecords) {
-            values.add(rec.data[0]);
+            values.add(rec.getData()[0]);
         }
         return values;
     }
@@ -195,7 +195,7 @@ public class DerivedFilterTranslator {
         }
 
         for (Array<String> rec : satisfyingHostRecords) {
-            String[] row = rec.data;
+            String[] row = rec.getData();
             for (int i = 0; i < row.length; i++) {
                 min[i] = orders[i].min(min[i], row[i]);
                 max[i] = orders[i].max(max[i], row[i]);
