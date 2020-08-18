@@ -30,9 +30,9 @@ Track issues on the "Kylin" Project on the Apache JIRA ([browse](http://issues.a
 - Fully on Spark Cube engine : DONE (v2.5)
 - Real-time analytics with Lambda Architecture : DONE (v3.0)
 - Connect more data sources (MySQL, SparkSQL, etc) : DONE (v2.6)
-- Flink engine : In-progress (v3.1)
+- Flink engine : Done (v3.1)
 - Cloud-native storage (Parquet) : In-progress (v4.0)
 - Distributed query execution engine (Spark) : In-progress, together with Parquet storage (v4.0)
-- Containerization/Kubernetes support : In progress (v3.1)
+- Containerization/Kubernetes support : Done (v3.1)
 - Pushdown SDK with more engines (Presto, Clickhouse, etc) : In progress (Presto support in v3.1)
 - Ad-hoc queries without Cubing
