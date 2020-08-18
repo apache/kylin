@@ -44,7 +44,7 @@ object SparderContext extends Logging {
   private var initializingThread: Thread = null
 
   @volatile
-  var APP_MASTER_TRACK_URL: String = null
+  var master_app_url: String = _
 
   def getSparkSession: SparkSession = withClassLoad {
     if (spark == null || spark.sparkContext.isStopped) {
@@ -60,7 +60,14 @@ object SparderContext extends Logging {
   }
 
   def setAPPMasterTrackURL(url: String): Unit = {
-    APP_MASTER_TRACK_URL = url
+    master_app_url = url
+  }
+
+  def appMasterTrackURL(): String = {
+    if (master_app_url == null)
+      master_app_url
+    else
+      "Not_initialized"
   }
 
   def isSparkAvailable: Boolean = {
@@ -139,6 +146,7 @@ object SparderContext extends Logging {
                     .getOrCreateKylinSession()
               }
               spark = sparkSession
+              sparkSession.sparkContext.applicationId
               logInfo("Spark context started successfully with stack trace:")
               logInfo(Thread.currentThread().getStackTrace.mkString("\n"))
               logInfo(
@@ -147,7 +155,7 @@ object SparderContext extends Logging {
                   .getContextClassLoader
                   .toString)
               initMonitorEnv()
-              APP_MASTER_TRACK_URL = null
+              master_app_url = null
             } catch {
               case throwable: Throwable =>
                 logError("Error for initializing spark ", throwable)
