@@ -573,17 +573,18 @@ public class CubeController extends BasicController {
             throw new BadRequestException("Cloning cubes across projects is not supported.");
         }
 
+        // explicitly convert the input parameter
+        String newName = ValidateUtil.convertStringToBeAlphanumericUnderscore(newCubeName);
         CubeDesc cubeDesc = cube.getDescriptor();
         CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
-
-        newCubeDesc.setName(newCubeName);
+        newCubeDesc.setName(newName);
 
         CubeInstance newCube;
         try {
             newCube = cubeService.createCubeAndDesc(project, newCubeDesc);
 
             //reload to avoid shallow clone
-            cubeService.getCubeDescManager().reloadCubeDescLocal(newCubeName);
+            cubeService.getCubeDescManager().reloadCubeDescLocal(newName);
         } catch (IOException e) {
             throw new InternalErrorException("Failed to clone cube ", e);
         }

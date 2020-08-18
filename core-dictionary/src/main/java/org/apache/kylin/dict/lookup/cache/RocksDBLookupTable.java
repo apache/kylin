@@ -55,7 +55,7 @@ public class RocksDBLookupTable implements ILookupTable {
 
     @Override
     public String[] getRow(Array<String> key) {
-        byte[] encodeKey = rowEncoder.encodeStringsWithLenPfx(key.data, false);
+        byte[] encodeKey = rowEncoder.encodeStringsWithLenPfx(key.getData(), false);
         try {
             byte[] value = rocksDB.get(encodeKey);
             if (value == null) {

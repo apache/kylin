@@ -59,7 +59,7 @@ public class ServerMode {
         return serverModes.toString();
     }
 
-    public static ServerMode SERVER_MODE = getServerMode();
+    public static final ServerMode SERVER_MODE = getServerMode();
 
     private static ServerMode getServerMode() {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();

@@ -81,7 +81,7 @@ public class LivyRestExecutor {
             }
             logAppender.log("costTime : " + (System.currentTimeMillis() - startTime) / 1000 + " s");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("livy execute failed.", e);
             throw new RuntimeException("livy execute failed. \n" + e.getMessage());
         }
     }
@@ -93,7 +93,7 @@ public class LivyRestExecutor {
             JSONObject stateJson = new JSONObject(statusResult);
             return stateJson.getString("state");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("livy execute failed.", e);
             return "";
         }
     }
@@ -105,7 +105,7 @@ public class LivyRestExecutor {
             JSONObject stateJson = new JSONObject(statusResult);
             return stateJson.getString("msg").equalsIgnoreCase("deleted")? true: false;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("livy execute failed.", e);
             return false;
         }
     }
@@ -129,7 +129,7 @@ public class LivyRestExecutor {
                 }
 
             } catch (JSONException e) {
-                e.printStackTrace();
+                logger.error("livy execute failed.", e);
             }
         }
         return logs;

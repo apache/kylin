@@ -24,7 +24,7 @@ import java.util.Arrays;
  * An array with correct equals(), hashCode(), compareTo() and toString()
  */
 public class Array<T> implements Comparable<Array<T>>, java.io.Serializable {
-    public T[] data;
+    private T[] data;
 
     public Array(T[] data) {
         this.data = data;
@@ -32,6 +32,10 @@ public class Array<T> implements Comparable<Array<T>>, java.io.Serializable {
 
     public String toString() {
         return Arrays.toString(data);
+    }
+
+    public T[] getData() {
+        return data;
     }
 
     @Override
