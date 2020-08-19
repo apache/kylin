@@ -24,10 +24,10 @@ permalink: /cn/development/coding_naming_convention.html
 Kylin 配置名称（在 `kylin.properties` 中的那些)
 
 - 惯例是 `dot.separated.namespace.config-name-separated-by-dash`，所有的字符都是小写。
-- 基本原理：点分隔前缀用于命名空间，如 java 包名。最后一级与类名相同，但要小写并以短划线分隔。结果与常见的 hadoop 配置名称一致，即。`dfs.namenode.servicerpc-bind-host`。
-- 正面例子：`kylin.metadata.url`; `kylin.snapshot.max-mb`
-- 反面例子：`kylin.cube.customEncodingFactories`，应该为 `kylin.cube.custom-encoding-factories`
-- 名称的命名空间（或包）应映射来自配置中使用的 Java 项目和包。 下面是当前名称空间的列表。
+- 基本原理：点分隔前缀用于命名空间，如 java 包名。最后一级与类名相同，但要小写并以短划线分隔。结果与常见的 hadoop 配置名称一致，即 `dfs.namenode.servicerpc-bind-host`。
+- 正面例子：`kylin.metadata.url`， `kylin.snapshot.max-mb`。
+- 反面例子：`kylin.cube.customEncodingFactories`，应该为 `kylin.cube.custom-encoding-factories`。
+- 名称的命名空间（或包）应映射来自配置中使用的 Java 项目和包。 下面是当前名称空间的列表：
   - kylin.env
   - kylin.metadata
   - kylin.snapshot
@@ -55,8 +55,8 @@ Kylin 配置名称（在 `kylin.properties` 中的那些)
 对于配置文件如日志配置，spring 配置，mapreduce job 配置等。
 
 - 惯例是 `words-separated-by-dash.ext`，所有的字符要小写。
-- 基本原理：要和 hadoop 配置文件命名一致，即。hdfs-site.xml
-- 正面例子：`kylin-server-log4j.properties`
-- 反面例子：`kylin_hive_conf.xml`，应该为 `kylin-hive-conf.xml`
+- 基本原理：要和 hadoop 配置文件命名一致，即 `hdfs-site.xml`。
+- 正面例子：`kylin-server-log4j.properties`。
+- 反面例子：`kylin_hive_conf.xml`，应该为 `kylin-hive-conf.xml`。
 
 

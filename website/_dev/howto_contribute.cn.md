@@ -11,8 +11,9 @@ Apache Kylin 一直寻求的不只是代码的贡献，还寻求使用文档，�
 ## 源分支
 代码和文档都在 Git 源代码控制之下。注意不同分支的用途。
 
-* `master`: 新功能的主开发分支
-* `2.[n].x`: 一些主要版本的维护分支
+* `master`：新功能的主开发分支
+* `2.[n].x`：一些 2.x 主要版本的维护分支
+* `3.[n].x`：一些 3.x 主要版本的维护分支
 * `document`: 文档分支
 
 ## 组件及拥有者
@@ -32,12 +33,12 @@ Apache Kylin 有几个子组件。为了更好地帮助社区的发展，我们�
 
 - 如果您认为组件列表需要更新（添加，删除，重命名等），请给 dev 列表写信，我们将对其进行审核。
 
-组件负责人列在了这个 Apache Kylin [JIRA components page](https://issues.apache.org/jira/projects/KYLIN?selectedItem=com.atlassian.jira.jira-projects-plugin:components-page) 页面中的 Description 字段位置。负责人列在“Description”字段中而不是“Component Lead”字段中，因为后者仅允许我们列出一个人，然而其鼓励组件具有多个负责人。
+组件负责人列在了这个 Apache Kylin [JIRA components page](https://issues.apache.org/jira/projects/KYLIN?selectedItem=com.atlassian.jira.jira-projects-plugin:components-page) 页面中的 Description 字段位置。负责人列在 “Description” 字段中而不是 “Component Lead” 字段中，因为后者仅允许我们列出一个人，然而其鼓励组件具有多个负责人。
 
 ## 选择一个任务
 这里有新创建的任务等待被完成，由 JIRA 追踪。为了让其容易被搜索，这里有一些过滤条件。
 
-* 由李扬管理的[任务列表](https://issues.apache.org/jira/issues/?filter=12339895) 。
+* 由李扬管理的[任务列表](https://issues.apache.org/jira/issues/?filter=12339895)。
 * 由 Ted Yu 创建的[任务列表](https://issues.apache.org/jira/issues/?filter=12341496)，重要的小的 bugs 且其中一些很容易被修复。
 * 您也可以在 Kylin JIRA 中搜索标签 “newbie”。
 
@@ -61,7 +62,7 @@ Apache Kylin 有几个子组件。为了更好地帮助社区的发展，我们�
 * 在您的 fork 中进行修改
 	* 目前没有严格的代码样式，但一般规则与现有文件保持一致。例如，对 java 文件使用 4 空格缩进。
 	* 尽可能为代码更改添加测试用例。
-	* 确保“mvn clean package”和“mvn test”能够获得成功。
+	* 确保 “mvn clean package” 和 “mvn test” 能够获得成功。
 	* 充分的单元测试和集成测试是代码更改的必要部分。 
 * [运行测试](/cn/development/howto_test.html) 以确保您的更改质量良好且不会破坏任何内容。如果您的补丁生成不正确或您的代码不符合代码指南，则可能会要求您重做某些工作。
 * 生成补丁并将其附加到相关的 JIRA。
@@ -89,7 +90,7 @@ $ ./dev-support/submit-patch.py -jid KYLIN-xxxxx -b master -srb
 * _性能_：改变不应该降低 Kylin 的性能。
 * _元数据兼容性_：更改应支持旧元数据定义。否则，需要元数据迁移工具和文档。
 * _API 兼容性_：更改不应该破坏公共 API 的功能和行为；如果需要用新 API 替换旧 API，请在那里打印警告消息。
-* _文档_：如果需要同时更新 Kylin 文档，请创建另一个 JIRA，并将“Document”作为要跟踪的组件。在 JIRA 文档中，附加“文档”分支的文档更改 patch。
+* _文档_：如果需要同时更新 Kylin 文档，请创建另一个 JIRA，并将 “Document” 作为要跟踪的组件。在 JIRA 文档中，附加 “文档” 分支的文档更改 patch。
 
 不符合上述规则的补丁可能无法合并。
 
@@ -97,20 +98,20 @@ $ ./dev-support/submit-patch.py -jid KYLIN-xxxxx -b master -srb
 
 在提交之前，适合单个组件范围的修补程序至少需要一个组件负责人的 +1。如果负责人不在 — 在忙或其他 — 两个非负责人（即两个提交者）的 +1，就足够了。
 
-跨组件的 patch 在提交之前至少需要两个 +1s，最好由 x-component patch 涉及的组件负责人的 +1。
+跨组件的 patch 在提交之前至少需要两个 +1，最好由 x-component patch 涉及的组件负责人的 +1。
 
 任何人都可以在 patch 上 -1，任何 -1 都可以否决补丁；在解决 -1 的理由之前，它不能被提交。
 
 
 ## 应用 Patch
-* Committer 将审核 JIRA 中的 Pull Requests 和 Patches 的正确性，性能，设计，编码风格，测试覆盖率
+* Committer 将审核 JIRA 中的 Pull Requests 和 Patches 的正确性，性能，设计，编码风格，测试覆盖率；
 * 必要时进行讨论和修改；
-* committer 将代码合并到目标分支中
-	* 对于 git patch，请使用“git am -s -3 patch-file”命令进行应用；
-	* 如果是来自 github Pull Request，则需要添加“This closing＃”作为提交消息的一部分。这将允许 ASF Git bot 关闭 PR。
+* Committer 将代码合并到目标分支中
+	* 对于 git patch，请使用 “git am -s -3 patch-file” 命令进行应用；
+	* 如果是来自 github Pull Request，则需要添加 “This closing＃” 作为提交消息的一部分。这将允许 ASF Git bot 关闭 PR；
 	* 使用 `git rebase` 确保合并结果是提交的简化。
 
 
 ## 进行文档更改
-查看[如何写文档](/cn/development/howto_docs.html).
+查看[如何写文档](/cn/development/howto_docs.html)。
 

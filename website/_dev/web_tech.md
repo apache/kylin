@@ -36,11 +36,11 @@ Kylin web is a one-page application build on top of restful services. Kylin web 
     * Simple data visualization(line, bar, pie)
 * Cube management:
     * Well-designed cube creation flow
-    * Visualization of cube relational structure.
+    * Visualization of cube relational structure
     * Well-designed cube access management
 * Job management:
     * Job steps and log monitor
     * Kill
     * Resume
-* Useful admin tools.
-* Refined look&feel.
+* Useful admin tools
+* Refined look & feel

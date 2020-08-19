@@ -12,42 +12,42 @@ permalink: /cn/development/dev_env.html
 ## Hadoop 客户端环境
 
 Off-Hadoop-CLI 安装需要您有一个有 hadoop 客户端的机器（或一个 hadoop 沙箱）以及本地开发机器。为了简化操作，我们强烈建议您从 hadoop 沙箱上运行 Kylin 开始。在下面的教程中，我们将使用 Hortonworks®Sandbox2.4.0.0-169，您可以从 Hortonworks 下载页面下载它，展开“Hortonworks Sandbox Archive”链接，然后搜索“HDP® 2.4 on Hortonworks Sandbox”进行下载。建议您为沙箱虚拟机提供足够的内存，首选 8G 或更多。
-**提示：**使用HDP-2.4.0.0.169沙箱并使用10GB或者更多内存进行部署会更好。一些新版本的HDP沙箱使用docker部署它们的集群服务并且封装在虚拟机里面。你需要上传你的项目到docker容器中来运行集成测试，这不太方便。更高的内存将减少虚拟机杀掉测试进程的可能性。
+**提示：**使用HDP-2.4.0.0.169 沙箱并使用 10GB 或者更多内存进行部署会更好。一些新版本的 HDP 沙箱使用 Docker 部署它们的集群服务并且封装在虚拟机里面。你需要上传你的项目到 Docker 容器中来运行集成测试，这不太方便。更高的内存将减少虚拟机杀掉测试进程的可能性。
 
 ### 启动 Hadoop
 
-启动完成之后，你可以使用root账户登陆。
+启动完成之后，你可以使用 root 账户登陆。
 
-在 Hortonworks sandbox 中, ambari 会帮助您运行 hadoop：
+在 Hortonworks sandbox 中，ambari 会帮助您运行 hadoop：
 
 {% highlight Groff markup %}
 ambari-agent start
 ambari-server start
 {% endhighlight %}
 
-然后重置ambari的admin用户密码为`admin`:
+然后重置 ambari 的 admin 用户密码为 `admin`:
 
 {% highlight Groff markup %}
 ambari-admin-password-reset
 {% endhighlight %}
 
-上述命令执行成功后您可以以admin的身份登陆到 ambari 主页 <http://yoursandboxip:8080> 去检查所有组件的状态。默认情况下 ambari 使 HBase 失效，您需要手动启动 `HBase` 服务。
+上述命令执行成功后您可以以 admin 的身份登陆到 ambari 主页 <http://yoursandboxip:8080> 去检查所有组件的状态。默认情况下 ambari 使 HBase 失效，您需要手动启动 `HBase` 服务。
 ![start hbase in ambari](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/installation/starthbase.png)
 
 对于 hadoop 分布式，基本上启动 hadoop 集群，确保 HDFS，YARN，Hive，HBase 运行着即可。
 
 注意：
 
-* 为YARN resource manager 分配 3-4GB 内存.
-* 升级 Sandbox 里的 Java 到 Java 8 (Kyin 2.5 需要 Java 8). 链接原本的JAVA_HOME指向新的将改变每一个用户的jdk版本。否则，你也许会遇到`UnsupportedClassVersionError`异常. 这里有一些邮件是关于这个问题的: [spark task error occurs when run IT in sanbox](https://lists.apache.org/thread.html/46eb7e4083fd25a461f09573fc4225689e61c0d8150463a2c0eb65ef@%3Cdev.kylin.apache.org%3E)     
-**Tips:** 这里有一些关于沙箱的教程会有帮助。 [Learning the Ropes of the HDP Sandbox](https://hortonworks.com/tutorial/learning-the-ropes-of-the-hortonworks-sandbox)  
+* 为 YARN resource manager 分配 3-4GB 内存；
+* 升级 Sandbox 里的 Java 到 Java 8（Kyin 2.5 需要 Java 8），链接原本的 JAVA_HOME 指向新的将改变每一个用户的 JDK 版本。否则，你也许会遇到 `UnsupportedClassVersionError` 异常。这里有一些邮件是关于这个问题的：[spark task error occurs when run IT in sanbox](https://lists.apache.org/thread.html/46eb7e4083fd25a461f09573fc4225689e61c0d8150463a2c0eb65ef@%3Cdev.kylin.apache.org%3E)；    
+**提示：** 这里有一些关于沙箱的教程会有帮助。 [Learning the Ropes of the HDP Sandbox](https://hortonworks.com/tutorial/learning-the-ropes-of-the-hortonworks-sandbox)  
 
 ## 开发机器的环境
 
 
 ### 安装 Maven
 
-最新的 maven 下载地址：<http://maven.apache.org/download.cgi>，我们创建一个符号，以便 `mvn` 可以在任何地方运行。
+最新的 Maven 下载地址：<http://maven.apache.org/download.cgi>，我们创建一个符号，以便 `mvn` 可以在任何地方运行。
 
 {% highlight Groff markup %}
 cd ~
@@ -58,7 +58,7 @@ ln -s /root/apache-maven-3.2.5/bin/mvn /usr/bin/mvn
 
 ### 安装 Spark
 
-在像 /usr/local/spark 这样的本地文件夹下手动安装 Spark；你需要确认所需要的 Spark 的版本，以及从 Spark 下载页面获取下载链接。 Kylin 2.3 - 2.4 需要 Spark 2.1， Kylin 2.5 需要 Spark 2.3; 例如：
+在像 /usr/local/spark 这样的本地文件夹下手动安装 Spark；你需要确认所需要的 Spark 的版本，以及从 Spark 下载页面获取下载链接。 Kylin 2.3 - 2.4 需要 Spark 2.1，Kylin 2.5 需要 Spark 2.3，例如：
 
 {% highlight Groff markup %}
 wget -O /tmp/spark-2.1.2-bin-hadoop2.7.tgz https://archive.apache.org/dist/spark/spark-2.1.2/spark-2.1.2-bin-hadoop2.7.tgz
@@ -68,7 +68,7 @@ ln -s spark-2.1.2-bin-hadoop2.7 spark
 {% endhighlight %}
 
 
-为 hbase 客户端创建本地临时文件夹（如果其不存在）：
+为 HBase 客户端创建本地临时文件夹（如果其不存在）：
 
 {% highlight Groff markup %}
 mkdir -p /hadoop/hbase/local/jars
@@ -83,12 +83,12 @@ chmod 777 /hadoop/hbase/local/jars
 git clone https://github.com/apache/kylin.git
 {% endhighlight %}
 	
-将 Kylin 工件安装到 maven 仓库：
+将 Kylin 工件安装到 Maven 仓库：
 
 {% highlight Groff markup %}
 mvn clean install -DskipTests
 {% endhighlight %}
-如果遇到关于某个插件不存在或是没有找到的错误，请检查pom.xml文件中是否有插件的版本号被注释，并根据注释说明操作。
+如果遇到关于某个插件不存在或是没有找到的错误，请检查 pom.xml 文件中是否有插件的版本号被注释，并根据注释说明操作。
 
 ### 修改本地配置
 
@@ -104,9 +104,9 @@ mvn clean install -DskipTests
  * 在 **examples/test_case_data/sandbox** 中
    * 遍历每一个 xml 配置文件，找到所有的 `sandbox` 和 `sandbox.hortonworks.com`，替换成您的 hadoop hosts;（如果您使用的是 HDP 沙箱，这步可以跳过）
 
-第二种方式：替换host
+第二种方式：替换 host
 
-* 更新您的 `hosts` 文件，将`sandbox` 和 `sandbox.hortonworks.com` 映射为沙箱机器的 IP 。
+* 更新您的 `hosts` 文件，将 `sandbox` 和 `sandbox.hortonworks.com` 映射为沙箱机器的 IP 。
 
 ### 运行单元测试
 运行单元测试来测试每一个 classes 基本功能的有效性。
@@ -119,7 +119,7 @@ mvn test -fae -Dhdp.version=<hdp-version> -P sandbox
 在真正运行集成测试前，需要为测试数据的填充运行一些端到端的 cube 构建作业，同时验证 cube 过程。然后是集成测试。
 
 其可能需要一段时间（也许两个小时），请保持耐心。
- 
+
 {% highlight Groff markup %}
 mvn verify -fae -Dhdp.version=<hdp-version> -P sandbox
 {% endhighlight %}
@@ -142,7 +142,7 @@ npm install -g bower
 bower --allow-root install
 {% endhighlight %}
 
-如果在bower install的过程当中遇到问题，可以尝试命令：
+如果在 bower install 的过程当中遇到问题，可以尝试命令：
 
 {% highlight Groff markup %}
 git config --global url."git://".insteadOf https://
@@ -154,7 +154,7 @@ git config --global url."git://".insteadOf https://
 bower.cmd --allow-root install
 {% endhighlight %}
 
-在 IDE，运行 `org.apache.kylin.rest.DebugTomcat`。将工作目录设置为 /server 文件夹，使用 "kylin-server" 的 classpath。在运行之前，请在IDE安装Scala插件，以保证能够编译spark代码。对于 IntelliJ IDEA  2017 或之前的用户，需要修改 "server/kylin-server.iml" 文件，将所有的 "PROVIDED" 替换为 "COMPILE"；对于 IntelliJ IDEA 2018 用户，请勾选 “Include dependencies with 'Provided' scope”，否则可能会抛出 "java.lang.NoClassDefFoundError: org/apache/catalina/LifecycleListener" 错误。
+在 IDE，运行 `org.apache.kylin.rest.DebugTomcat`。将工作目录设置为 /server 文件夹，使用 "kylin-server" 的 classpath。在运行之前，请在 IDE 安装 Scala 插件，以保证能够编译 Spark 代码。对于 IntelliJ IDEA 2017 或之前的用户，需要修改 "server/kylin-server.iml" 文件，将所有的 "PROVIDED" 替换为 "COMPILE"；对于 IntelliJ IDEA 2018 用户，请勾选 “Include dependencies with 'Provided' scope”，否则可能会抛出 "java.lang.NoClassDefFoundError: org/apache/catalina/LifecycleListener" 错误。
 
 调节 VM options，例如:
 
