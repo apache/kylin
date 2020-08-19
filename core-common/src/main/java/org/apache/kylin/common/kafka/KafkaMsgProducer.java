@@ -36,17 +36,16 @@ public class KafkaMsgProducer {
     private static Map<String, String> kafkaConfig;
     private static String TOPIC_NAME;
 
+    private static final Properties kafkaProperties = new Properties();
 
-    private static Properties kafkaProperties = new Properties() {
-        {
-            put(ProducerConfig.ACKS_CONFIG, "-1");
-            put(ProducerConfig.RETRIES_CONFIG, 3);
-            put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "lz4");
-            put(ProducerConfig.LINGER_MS_CONFIG, 500);
-            put(ProducerConfig.BATCH_SIZE_CONFIG, 10000);
-            put("max.in.flight.requests.per.connection", 1);
-        }
-    };
+    static {
+        kafkaProperties.put(ProducerConfig.ACKS_CONFIG, "-1");
+        kafkaProperties.put(ProducerConfig.RETRIES_CONFIG, 3);
+        kafkaProperties.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "lz4");
+        kafkaProperties.put(ProducerConfig.LINGER_MS_CONFIG, 500);
+        kafkaProperties.put(ProducerConfig.BATCH_SIZE_CONFIG, 10000);
+        kafkaProperties.put("max.in.flight.requests.per.connection", 1);
+    }
 
 
     private KafkaMsgProducer() {
