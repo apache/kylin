@@ -52,7 +52,7 @@ public class ColumnarSplitDataReader extends ColumnarSplitReader {
         init(inputSplit, context);
     }
 
-    public void init(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
+    public void init(InputSplit split, TaskAttemptContext context) throws IOException {
         baseCuboid = Cuboid.getBaseCuboid(cubeDesc);
         rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid);
 

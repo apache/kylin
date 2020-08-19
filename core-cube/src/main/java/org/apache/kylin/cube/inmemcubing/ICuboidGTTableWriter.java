@@ -37,11 +37,11 @@ public abstract class ICuboidGTTableWriter implements ICuboidWriter{
     public void write(long cuboidId, GridTable gridTable) throws IOException {
         long startTime = System.currentTimeMillis();
         GTScanRequest req = new GTScanRequestBuilder().setInfo(gridTable.getInfo()).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest();
-        IGTScanner scanner = gridTable.scan(req);
-        for (GTRecord record : scanner) {
-            write(cuboidId, record);
+        try (IGTScanner scanner = gridTable.scan(req)) {
+            for (GTRecord record : scanner) {
+                write(cuboidId, record);
+            }
         }
-        scanner.close();
         logger.info("Cuboid " + cuboidId + " output takes " + (System.currentTimeMillis() - startTime) + "ms");
     }
 }

@@ -28,7 +28,6 @@ import java.nio.channels.FileChannel.MapMode;
 import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.util.Bytes;
@@ -89,8 +88,7 @@ public class RunLengthCompressColumnTest {
 
         int size = writeCompressData1(rowCnt);
         FileSystem fs = FileSystem.getLocal(new Configuration());
-        FSDataInputStream fsInputStream = fs.open(new Path(tmpColFile.getAbsolutePath()));
-        try (FSInputRLECompressedColumnReader reader = new FSInputRLECompressedColumnReader(fsInputStream, 0, size,
+        try (FSInputRLECompressedColumnReader reader = new FSInputRLECompressedColumnReader(fs, new Path(tmpColFile.getAbsolutePath()), 0, size,
                 rowCnt)) {
             int k = 0;
             for (byte[] val : reader) {

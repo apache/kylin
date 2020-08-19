@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.Nullable;
 
@@ -125,7 +125,7 @@ public class ColumnarMemoryStorePersister {
         FileOutputStream fragmentOutputStream = FileUtils.openOutputStream(fragment.getDataFile());
 
         try (CountingOutputStream fragmentOut = new CountingOutputStream(new BufferedOutputStream(fragmentOutputStream))) {
-            ConcurrentSkipListMap<String[], MeasureAggregator[]> basicCuboidData = memoryStore.getBasicCuboidData();
+            ConcurrentMap<String[], MeasureAggregator[]> basicCuboidData = memoryStore.getBasicCuboidData();
             List<List<Object>> basicCuboidColumnarValues = transformToColumnar(baseCuboidId, dimensions.length,
                     basicCuboidData);
             // persist dictionaries
@@ -139,13 +139,13 @@ public class ColumnarMemoryStorePersister {
             long totalRowCnt = basicCuboidMeta.getNumberOfRows();
 
             // persist additional cuboids
-            Map<CuboidInfo, ConcurrentSkipListMap<String[], MeasureAggregator[]>> additionalCuboidsData = memoryStore
+            Map<CuboidInfo, ConcurrentMap<String[], MeasureAggregator[]>> additionalCuboidsData = memoryStore
                     .getAdditionalCuboidsData();
             if (additionalCuboidsData != null && additionalCuboidsData.size() > 0) {
-                for (Entry<CuboidInfo, ConcurrentSkipListMap<String[], MeasureAggregator[]>> cuboidDataEntry : additionalCuboidsData
+                for (Entry<CuboidInfo, ConcurrentMap<String[], MeasureAggregator[]>> cuboidDataEntry : additionalCuboidsData
                         .entrySet()) {
                     CuboidInfo cuboidInfo = cuboidDataEntry.getKey();
-                    ConcurrentSkipListMap<String[], MeasureAggregator[]> cuboidData = cuboidDataEntry.getValue();
+                    ConcurrentMap<String[], MeasureAggregator[]> cuboidData = cuboidDataEntry.getValue();
                     List<List<Object>> cuboidColumnarValues = transformToColumnar(cuboidInfo.getCuboidID(),
                             cuboidInfo.getDimCount(), cuboidData);
                     CuboidMetaInfo cuboidMeta = persistCuboidData(cuboidInfo.getCuboidID(), cuboidInfo.getDimensions(),
@@ -171,7 +171,7 @@ public class ColumnarMemoryStorePersister {
      * @return
      */
     private List<List<Object>> transformToColumnar(long cuboidId, int dimCnt,
-            ConcurrentSkipListMap<String[], MeasureAggregator[]> aggBufMap) {
+            ConcurrentMap<String[], MeasureAggregator[]> aggBufMap) {
         Stopwatch stopwatch = Stopwatch.createUnstarted();
         stopwatch.start();
         int columnsNum = dimCnt + measures.length;

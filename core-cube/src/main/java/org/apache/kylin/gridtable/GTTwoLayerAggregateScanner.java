@@ -46,6 +46,8 @@ public class GTTwoLayerAggregateScanner implements IGTScanner {
     @Override
     public void close() throws IOException {
         inputScanner.close();
+        secondLayerInputScanner.close();
+        outputScanner.close();
     }
 
     @Override

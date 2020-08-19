@@ -102,11 +102,12 @@ public class MemDiskStoreTest extends LocalFileMetadataTestCase {
         }
         builder.close();
 
-        IGTScanner scanner = table.scan(new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest());
-        int i = 0;
-        for (GTRecord r : scanner) {
-            assertEquals(data.get(i++), r);
+        try (IGTScanner scanner = table.scan(new GTScanRequestBuilder().setInfo(info).setRanges(null)
+                .setDimensions(null).setFilterPushDown(null).createGTScanRequest())) {
+            int i = 0;
+            for (GTRecord r : scanner) {
+                assertEquals(data.get(i++), r);
+            }
         }
-        scanner.close();
     }
 }

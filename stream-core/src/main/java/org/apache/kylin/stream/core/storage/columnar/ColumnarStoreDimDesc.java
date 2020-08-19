@@ -22,7 +22,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.stream.core.storage.columnar.compress.Compression;
@@ -81,14 +82,14 @@ public class ColumnarStoreDimDesc {
         return new NoCompressedColumnReader(dataBuffer, columnDataStartOffset, columnDataLength / rowCount, rowCount);
     }
 
-    public ColumnDataReader getDimReaderFromFSInput(FSDataInputStream inputStream, int columnDataStartOffset,
-            int columnDataLength, int rowCount) throws IOException {
+    public ColumnDataReader getDimReaderFromFSInput(FileSystem fs, Path file, int columnDataStartOffset,
+                                                    int columnDataLength, int rowCount) throws IOException {
         if (compression == Compression.LZ4) {
-            return new FSInputLZ4CompressedColumnReader(inputStream, columnDataStartOffset, columnDataLength, rowCount);
+            return new FSInputLZ4CompressedColumnReader(fs, file, columnDataStartOffset, columnDataLength, rowCount);
         } else if (compression == Compression.RUN_LENGTH) {
-            return new FSInputRLECompressedColumnReader(inputStream, columnDataStartOffset, columnDataLength, rowCount);
+            return new FSInputRLECompressedColumnReader(fs, file, columnDataStartOffset, columnDataLength, rowCount);
         }
-        return new FSInputNoCompressedColumnReader(inputStream, columnDataStartOffset, columnDataLength / rowCount,
+        return new FSInputNoCompressedColumnReader(fs, file, columnDataStartOffset, columnDataLength / rowCount,
                 rowCount);
     }
 }
