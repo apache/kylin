@@ -71,7 +71,7 @@ __Before you start:__
 * Make sure you are using GIT 2.7.2 or above.
 * Make sure you are working on right release version number.
 * Make sure that every “resolved” JIRA case (including duplicates) has a fix version assigned.
-* Make sure you are working in clean dir
+* Make sure you are working in clean dir.
 
 __Configure Apache repository server in Maven__
 If you're the first time to do release, you need update the server authentication information in ~/.m2/settings.xml; If this file doesn't exist, copy a template from $M2_HOME/conf/settings.xml;
@@ -121,19 +121,19 @@ In the "servers" section, make sure the following servers be added, and replace 
 
 __Fix license issues__
 {% highlight bash %}
-# Set passphrase variable without putting it into shell history
+Set passphrase variable without putting it into shell history
 $ read -s GPG_PASSPHRASE
 
-# Make sure that there are no junk files in the sandbox
+Make sure that there are no junk files in the sandbox
 $ git clean -xf
 $ mvn clean
 
-# Make sure all unit tests are passed
+Make sure all unit tests are passed
 $ mvn test
 
-# Check the `org.apache.kylin.common.KylinVersion` class, ensure the value of `CURRENT_KYLIN_VERSION` is the release version. 
+Check the `org.apache.kylin.common.KylinVersion` class, ensure the value of `CURRENT_KYLIN_VERSION` is the release version. 
 
-# Fix any license issues as reported by target/rat.txt
+Fix any license issues as reported by target/rat.txt
 $ mvn -Papache-release -DskipTests -Dgpg.passphrase=${GPG_PASSPHRASE} install
 {% endhighlight %}
 
@@ -157,14 +157,14 @@ $ git push -u origin vX.Y.Z-release
 
 If any of the steps fail, clean up (see below), fix the problem, and start again from the top.  
 {% highlight bash %}
-# Set passphrase variable without putting it into shell history
+Set passphrase variable without putting it into shell history
 $ read -s GPG_PASSPHRASE
 
-# Make sure that there are no junk files in the sandbox
+Make sure that there are no junk files in the sandbox
 $ git clean -xf
 $ mvn clean
 
-# Optionally, do a dry run of the release:prepare step, which sets version numbers. e.g. releaseVersion=2.5.0, developmentVersion=2.5.1-SNAPSHOT, use default tag kylin-2.5.0
+Optionally, do a dry run of the release:prepare step, which sets version numbers. e.g. releaseVersion=2.5.0, developmentVersion=2.5.1-SNAPSHOT, use default tag kylin-2.5.0
 $ mvn -DdryRun=true -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests" release:prepare 2>&1 | tee /tmp/prepare-dry.log
 {% endhighlight %}
 
@@ -245,7 +245,7 @@ $ git status
 $ git reset --hard HEAD
 {% endhighlight %}
 
-# Validate a release
+## Validate a release
 {% highlight bash %}
 # Check unit test
 $ mvn test
@@ -480,6 +480,6 @@ https://kylin.apache.org/
 
 {% endhighlight %}
 
-# Thanks  
+## Thanks  
 This guide drafted with reference from [Apache Calcite](http://calcite.apache.org) Howto doc, Thank you very much.
 

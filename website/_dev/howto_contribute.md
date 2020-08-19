@@ -12,7 +12,8 @@ Apache Kylin is always looking for contributions of not only code, but also usag
 Both code and document are under Git source control. Note the purpose of different branches.
 
 * `master`: Main development branch for new features
-* `2.[n].x`: Maintenance branch for a certain major release
+* `2.[n].x`: Maintenance branch for a certain major release for v2.x
+* `3.[n].x`: Maintenance branch for a certain major release for v3.x
 * `document`: Document branch
 
 ## Components and owners
@@ -55,7 +56,7 @@ If create a new JIRA for bug or feature, remember to provide enough information 
 * Affected version: which Kylin you're using.
 
 ## Making Code Changes
-* [Setup dev env](/development/dev_env.html)
+* [Setup development environment](/development/dev_env.html)
 * Raise a JIRA, describe the feature/enhancement/bug
 * Discuss with others in mailing list or issue comments, make sure the proposed changes fit in with what others are doing and have planned for the project
 * Make changes in your fork
@@ -103,11 +104,11 @@ Any -1 on a patch by anyone vetoes a patch; it cannot be committed until the jus
 
 
 ## Apply Patch
-* Committer will review Pull Requests and Patches in JIRA regarding correctness, performance, design, coding style, test coverage
+* Committer will review Pull Requests and Patches in JIRA regarding correctness, performance, design, coding style, test coverage;
 * Discuss and revise if necessary;
 * Finally committer merge code into target branch
 	* For a git patch, use "git am -s -3 patch-file" command to apply;
-	* If it is from a github Pull Request, need add "This closes #<PR NUMBER>" as part of the commit messages. This will allow ASF Git bot to close the PR.
+	* If it is from a github Pull Request, need add "This closes #<PR NUMBER>" as part of the commit messages. This will allow ASF Git bot to close the PR;
 	* Use `git rebase` to ensure the merged result is a streamline of commits.
 
 

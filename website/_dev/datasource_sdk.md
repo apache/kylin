@@ -21,7 +21,7 @@ Developers do not need coding, what they should do is just create a new configur
 
 Structure of the configuration:
 
-* Root node: 
+* **Root node:** 
 
 ```
 <DATASOURCE_DEF NAME="kylin" ID="mysql" DIALECT="mysql"/>
@@ -31,6 +31,7 @@ The value of ID is normally the same with configuration file.
 The value of DIALECT is defined mainly for quote string for database identifier.  
 For example Mysql use ``, Microsoft sql server use [].   
 Mapping of Kylin DIALECT and Apache Calcite Dialect as belows:  
+
 <table>
   <tbody align="left">  
   <tr>
@@ -92,7 +93,7 @@ Mapping of Kylin DIALECT and Apache Calcite Dialect as belows:
   </tbody>
 </table>
 
-* Property node:  
+* **Property node:**
 Define the properties of the dialect.
 
 <table>
@@ -149,7 +150,7 @@ Define the properties of the dialect.
 </table>
 
 
-* Function node:  
+* **Function node:**
 Developers can define the functions implementation in target data source dialect.  
 For example, we want to implement Greenplum as data source, but Greenplum does not support function such as *TIMESTAMPDIFF*, so we can define in *greenplum.xml* 
 
@@ -165,7 +166,7 @@ contrast with the configuration in *default.xml*
 
 *Data source SDK* provides conversion functions from default to target dialect with same function id.
 
-* Type node:  
+* **Type node:**
 Developers can define the types implementation in target data source dialect.
 Also take Greenplum as example, Greenplum support *BIGINT* instead of *LONG*, so we can define in *greenplum.xml*
 
@@ -221,5 +222,5 @@ kylin.source.jdbc.driver=com.mysql.jdbc.Driver
 Put the configuration file *{dialect}.xml* under directory $KYLIN_HOME/conf/datasource.
 Create jar file for the new Adaptor, and put under directory $KYLIN_HOME/ext.
 
-Other configurations are identical with the former jdbc connection, please refer to [setup_jdbc_datasource](/docs/tutorial/setup_jdbc_datasource.html)
+Other configurations are identical with the former jdbc connection, please refer to [setup_jdbc_datasource](/docs/tutorial/setup_jdbc_datasource.html).
 

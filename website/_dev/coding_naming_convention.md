@@ -55,8 +55,8 @@ For Kylin configuration names (those in `kylin.properties`)
 For configuration files like logging config, spring config, mapreduce job config etc.
 
 - The convention is `words-separated-by-dash.ext`, all chars in lower case.
-- Rationale: Be consistent with hadoop config file names, i.e. hdfs-site.xml
-- Good example: `kylin-server-log4j.properties`
-- Bad example: `kylin_hive_conf.xml`, should be `kylin-hive-conf.xml`
+- Rationale: Be consistent with hadoop config file names, i.e. `hdfs-site.xml`.
+- Good example: `kylin-server-log4j.properties`.
+- Bad example: `kylin_hive_conf.xml`, should be `kylin-hive-conf.xml`.
 
 
