@@ -10,7 +10,7 @@ permalink: /cn/development/doc_spec.html
 
 ### 准备工作
 
-1. 请您根据 [如何写文档](howto_docs.cn.md) 准备撰写文档有关的环境，了解 Kylin 文档结构。
+1. 请您根据 [如何写文档](/cn/development/howto_docs.html) 准备撰写文档有关的环境，了解 Kylin 文档结构。
 2. Kylin 文档使用 Markdown 语法书写，以下简称 md。请您确保您熟悉 [Markdown 语法](https://guides.github.com/features/mastering-markdown/)。
 
 ### 章节结构
