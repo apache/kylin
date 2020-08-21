@@ -510,7 +510,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getHbaseClientRetriesNumber() {
-        return getOptional("kylin.metadata.hbase-client-retries-number", "1");
+        return getOptional("kylin.metadata.hbase-client-retries-number", "3");
     }
 
     public boolean isModelSchemaUpdaterCheckerEnabled() {
