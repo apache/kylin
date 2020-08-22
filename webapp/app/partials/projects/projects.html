@@ -55,6 +55,7 @@
                 </td>
                 <td>{{ project.owner}}</td>
                 <td>{{ project.description}}</td>
+                <td>{{ project.realizations.length}}</td>
                 <td>{{ project.create_time_utc | utcToConfigTimeZone}}</td>
                 <td>
                     <button class="btn btn-xs btn-info" ng-click="toEdit(project)" tooltip="Edit"
