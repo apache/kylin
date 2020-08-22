@@ -21,6 +21,7 @@ KylinApp.constant('projectConfig', {
     {attr: 'name', name: 'Name'},
     {attr: 'owner', name: 'Owner'},
     {attr: 'description', name: 'Description'},
+    {attr: 'realizations.length', name: '#Cubes'},
     {attr: 'create_time_utc', name: 'Create Time'}
   ]
 
