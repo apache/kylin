@@ -89,6 +89,7 @@ public class MailService {
         Email email = new HtmlEmail();
         email.setHostName(host);
         email.setStartTLSEnabled(starttlsEnabled);
+        email.setSSLOnConnect(starttlsEnabled);
         if (starttlsEnabled) {
             email.setSslSmtpPort(port);
         } else {
