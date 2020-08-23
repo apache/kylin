@@ -20,23 +20,22 @@ package org.apache.kylin.stream.core.storage.columnar.compress;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.stream.core.storage.columnar.ColumnDataReader;
 
 public class FSInputNoCompressedColumnReader implements ColumnDataReader {
     private FSDataInputStream fsInputStream;
     private byte[] readBuffer;
-    private int colDataStartOffset;
-    private int colValLength;
     private int rowCount;
 
-    public FSInputNoCompressedColumnReader(FSDataInputStream fsInputStream, int colDataStartOffset, int colValLength,
-            int rowCount) throws IOException {
-        this.fsInputStream = fsInputStream;
-        this.colDataStartOffset = colDataStartOffset;
+    public FSInputNoCompressedColumnReader(FileSystem fs, Path file, int colDataStartOffset, int colValLength,
+                                           int rowCount) throws IOException {
+        this.fsInputStream = fs.open(file);
         fsInputStream.seek(colDataStartOffset);
-        this.colValLength = colValLength;
         this.rowCount = rowCount;
         this.readBuffer = new byte[colValLength];
     }
@@ -65,10 +64,13 @@ public class FSInputNoCompressedColumnReader implements ColumnDataReader {
 
         @Override
         public byte[] next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
             try {
                 fsInputStream.readFully(readBuffer);
             } catch (IOException e) {
-                throw new RuntimeException("error when read data", e);
+                throw new NoSuchElementException("error when read data " + e.getMessage());
             }
             readRowCount++;
             return readBuffer;
