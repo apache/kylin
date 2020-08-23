@@ -23,15 +23,11 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.ValidateContext;
-import org.apache.kylin.metadata.model.MeasureDesc;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,18 +57,5 @@ public class FunctionRuleTest extends LocalFileMetadataTestCase {
         rule.validate(desc, vContext);
         vContext.print(System.out);
         assertTrue(vContext.getResults().length == 0);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testValidateMeasureNamesDuplicated() throws IOException {
-        File f = new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/ssb.json");
-        CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
-
-        MeasureDesc measureDescDuplicated = desc.getMeasures().get(1);
-        List<MeasureDesc> newMeasures = Lists.newArrayList(desc.getMeasures());
-        newMeasures.add(measureDescDuplicated);
-        desc.setMeasures(newMeasures);
-
-        desc.init(config);
     }
 }

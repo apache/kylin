@@ -59,8 +59,9 @@ public class NExecAndComp {
     public enum CompareLevel {
         SAME, // exec and compare
         SAME_ORDER, // exec and compare order
-        SAME_ROWCOUNT, SUBSET, NONE, // batch execute
-        SAME_SQL_COMPARE
+        SAME_ROWCOUNT,
+        SUBSET,
+        NONE, // Do not compare and just return OK
     }
 
     static void execLimitAndValidate(List<Pair<String, String>> queries, String prj, String joinType) {
@@ -87,7 +88,7 @@ public class NExecAndComp {
             Dataset<Row> sparkResult = queryWithSpark(prj, sql, query.getFirst());
             List<Row> kylinRows = SparkQueryTest.castDataType(kylinResult, sparkResult).toJavaRDD().collect();
             List<Row> sparkRows = sparkResult.toJavaRDD().collect();
-            if (!compareResults(normRows(sparkRows), normRows(kylinRows), CompareLevel.SUBSET)) {
+            if (compareResults(normRows(sparkRows), normRows(kylinRows), CompareLevel.SUBSET)) {
                 throw new IllegalArgumentException("Result not match");
             }
         }
@@ -118,6 +119,7 @@ public class NExecAndComp {
             Dataset<Row> cubeResult = (recAndQueryResult == null) ? queryWithKylin(prj, joinType, Pair.newPair(sql, sql))
                     : queryWithKylin(prj, joinType, Pair.newPair(sql, sql), recAndQueryResult);
             addQueryPath(recAndQueryResult, query, sql);
+
             if (compareLevel == CompareLevel.SAME) {
                 Dataset<Row> sparkResult = queryWithSpark(prj, sql, query.getFirst());
                 String result = SparkQueryTest.checkAnswer(SparkQueryTest.castDataType(cubeResult, sparkResult), sparkResult, false);
@@ -125,23 +127,25 @@ public class NExecAndComp {
                     logger.error("Failed on compare query ({}) :{}", joinType, query);
                     logger.error(result);
                     throw new IllegalArgumentException("query (" + joinType + ") :" + query + " result not match");
+                } else {
+                    logger.debug("Passed {}", query.getFirst());
                 }
             } else if (compareLevel == CompareLevel.NONE) {
                 Dataset<Row> sparkResult = queryWithSpark(prj, sql, query.getFirst());
                 List<Row> sparkRows = sparkResult.toJavaRDD().collect();
                 List<Row> kylinRows = SparkQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
-                if (!compareResults(normRows(sparkRows), normRows(kylinRows), compareLevel)) {
+                if (compareResults(normRows(sparkRows), normRows(kylinRows), compareLevel)) {
                     logger.error("Failed on compare query ({}) :{}", joinType, query);
                     throw new IllegalArgumentException("query (" + joinType + ") :" + query + " result not match");
                 }
             } else {
                 cubeResult.persist();
-                System.out.println(
-                        "result comparision is not available, part of the cube results: " + cubeResult.count());
-                cubeResult.show();
+                logger.info(
+                        "result comparision is not available for {}, part of the cube results: {},\n {}" , query.getFirst(),
+                        cubeResult.count(), cubeResult.showString(20, 25 , false));
                 cubeResult.unpersist();
             }
-            logger.info("The query ({}) : {} cost {} (ms)", joinType, query, System.currentTimeMillis() - startTime);
+            logger.trace("The query ({}) : {} cost {} (ms)", query.getFirst(), "", System.currentTimeMillis() - startTime);
         }
     }
 
@@ -286,7 +290,7 @@ public class NExecAndComp {
         return ret;
     }
 
-    public static boolean compareResults(List<Row> expectedResult, List<Row> actualResult, CompareLevel compareLevel) {
+    private static boolean compareResults(List<Row> expectedResult, List<Row> actualResult, CompareLevel compareLevel) {
         boolean good = true;
         if (compareLevel == CompareLevel.SAME_ORDER) {
             good = expectedResult.equals(actualResult);
@@ -329,7 +333,7 @@ public class NExecAndComp {
             printRows("expected", expectedResult);
             printRows("actual", actualResult);
         }
-        return good;
+        return !good;
     }
 
     private static void printRows(String source, List<Row> rows) {
@@ -391,15 +395,15 @@ public class NExecAndComp {
     }
 
     public static Dataset<Row> queryFromCube(String prj, String sqlText) {
-        sqlText = QueryUtil.massageSql(sqlText, prj, 0, 0, "DEFAULT", true);
+        sqlText = QueryUtil.massageSql(sqlText, prj, 0, 0, "DEFAULT");
         return sql(prj, sqlText, null);
     }
 
     public static Dataset<Row> querySparkSql(String sqlText) {
-        logger.info("Fallback this sql to original engine...");
+        logger.trace("Fallback this sql to original engine...");
         long startTs = System.currentTimeMillis();
         Dataset<Row> r = KylinSparkEnv.getSparkSession().sql(sqlText);
-        logger.info("Duration(ms): {}", (System.currentTimeMillis() - startTs));
+        logger.trace("Duration(ms): {}", (System.currentTimeMillis() - startTs));
         return r;
     }
 
@@ -412,11 +416,11 @@ public class NExecAndComp {
             throw new RuntimeException("Sorry your SQL is null...");
 
         try {
-            logger.info("Try to query from cube....");
+            logger.trace("Try to query from cube....");
             long startTs = System.currentTimeMillis();
             Dataset<Row> dataset = queryCubeAndSkipCompute(prj, sqlText, parameters);
-            logger.info("Cool! This sql hits cube...");
-            logger.info("Duration(ms): {}", (System.currentTimeMillis() - startTs));
+            logger.trace("Cool! This sql hits cube...");
+            logger.trace("Duration(ms): {}", (System.currentTimeMillis() - startTs));
             return dataset;
         } catch (Throwable e) {
             logger.error("There is no cube can be used for query [{}]", sqlText);
@@ -523,7 +527,7 @@ public class NExecAndComp {
 
         String ret = StringUtils.join(tokens, " ");
         ret = ret.replaceAll(specialStr, System.getProperty("line.separator"));
-        logger.info("The actual sql executed is: " + ret);
+        logger.trace("The actual sql executed is: " + ret);
 
         return ret;
     }

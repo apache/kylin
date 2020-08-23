@@ -37,7 +37,7 @@ public class SparkEngine implements QueryEngine {
     @Override
     public Enumerable<Object> computeSCALA(DataContext dataContext, RelNode relNode, RelDataType resultType) {
         Dataset<Row> sparkPlan = toSparkPlan(dataContext, relNode);
-        log.debug("SPARK LOGICAL PLAN {}", sparkPlan.queryExecution());
+        log.trace("SPARK LOGICAL PLAN {}", sparkPlan.queryExecution());
         return ResultPlan.getResult(sparkPlan, resultType, ResultType.SCALA()).right().get();
 
     }
@@ -45,18 +45,18 @@ public class SparkEngine implements QueryEngine {
     @Override
     public Enumerable<Object[]> compute(DataContext dataContext, RelNode relNode, RelDataType resultType) {
         Dataset<Row> sparkPlan = toSparkPlan(dataContext, relNode);
-        log.debug("SPARK LOGICAL PLAN {}", sparkPlan.queryExecution());
+        log.trace("SPARK LOGICAL PLAN {}", sparkPlan.queryExecution());
         return ResultPlan.getResult(sparkPlan, resultType, ResultType.NORMAL()).left().get();
     }
 
     private Dataset<Row> toSparkPlan(DataContext dataContext, RelNode relNode) {
-        log.info("Begin planning spark plan.");
+        log.trace("Begin planning spark plan.");
         long start = System.currentTimeMillis();
         CalciteToSparkPlaner calciteToSparkPlaner = new CalciteToSparkPlaner(dataContext);
         long t = System.currentTimeMillis();
         calciteToSparkPlaner.go(relNode);
         long takeTime = System.currentTimeMillis() - start;
-        log.info("Plan take {} ms", takeTime);
+        log.trace("Plan take {} ms", takeTime);
         return calciteToSparkPlaner.getResult();
     }
 }

@@ -225,6 +225,16 @@
       "returntype" : "bitmap"
     }
   }, {
+    "name": "GVM_PERCENTILE",
+    "function": {
+      "expression": "PERCENTILE_APPROX",
+      "parameter": {
+        "type": "column",
+        "value": "TEST_KYLIN_FACT.PRICE"
+      },
+      "returntype": "percentile(100)"
+    }
+  }, {
     "name" : "TEST_COUNT_COLUMN_CNT",
     "function" : {
       "expression" : "COUNT",
@@ -333,7 +343,7 @@
       "name" : "F1",
       "columns" : [ {
         "qualifier" : "M",
-        "measure_refs" : [ "TRANS_CNT", "ITEM_COUNT_SUM", "GMV_SUM", "GMV_CNT", "GMV_MIN", "GMV_MAX", "TEST_COUNT_COLUMN_CNT" ]
+        "measure_refs" : [ "TRANS_CNT", "ITEM_COUNT_SUM", "GMV_SUM", "GMV_CNT", "GMV_MIN", "GMV_MAX", "TEST_COUNT_COLUMN_CNT", "GVM_PERCENTILE" ]
       } ]
     }, {
       "name" : "F2",
@@ -371,16 +381,9 @@
   "engine_type" : 6,
   "storage_type" : 4,
   "override_kylin_properties" : {
-    "kylin.cube.algorithm" : "INMEM",
-    "kylin.dictionary.shrunken-from-global-enabled" : "true"
   },
   "cuboid_black_list" : [ ],
   "parent_forward" : 3,
   "mandatory_dimension_set_list" : [ ],
-  "snapshot_table_desc_list" : [ {
-    "table_name" : "DEFAULT.TEST_CATEGORY_GROUPINGS",
-    "storage_type" : "hbase",
-    "local_cache_enable" : true,
-    "global" : true
-  } ]
+  "snapshot_table_desc_list" : [ ]
 }

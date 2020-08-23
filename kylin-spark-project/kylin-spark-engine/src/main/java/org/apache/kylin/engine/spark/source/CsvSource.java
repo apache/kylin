@@ -101,7 +101,7 @@ public class CsvSource implements ISource {
     private String getUtMetaDir() {
         // this is only meant to be used in UT
         final String utMetaDir = System.getProperty(KylinConfig.KYLIN_CONF);
-        if (utMetaDir == null || !utMetaDir.contains("../example")) {
+        if (utMetaDir == null) {
             throw new IllegalStateException();
         }
         return utMetaDir;

@@ -252,7 +252,7 @@ class FilePruner(
         logInfo(s"$pruningType pruning in ${(endTime - startTime).toDouble / 1000000} ms")
       } catch {
         case th: Throwable =>
-          logError(s"Error occurs when $pruningType, scan all ${pruningType}s.", th)
+          logError(s"Error occurs when $specFilters, scan all ${pruningType}s.", th)
       }
       selected
     }

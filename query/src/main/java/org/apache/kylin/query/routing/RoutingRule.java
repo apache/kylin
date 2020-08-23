@@ -48,7 +48,7 @@ public abstract class RoutingRule {
             String before = getPrintableText(candidates);
             rule.apply(candidates);
             String after = getPrintableText(candidates);
-            logger.info("Applying rule: " + rule + ", realizations before: " + before + ", realizations after: " + after);
+            logger.debug("Applying rule: " + rule + ", realizations before: " + before + ", realizations after: " + after);
         }
     }
 

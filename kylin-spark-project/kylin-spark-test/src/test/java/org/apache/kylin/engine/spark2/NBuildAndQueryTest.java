@@ -32,7 +32,6 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.spark.sql.KylinSparkEnv;
 import org.apache.kylin.engine.spark2.NExecAndComp.CompareLevel;
-import org.apache.spark.sql.SparderContext;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -51,9 +50,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("serial")
-public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
-
-    private static final Logger logger = LoggerFactory.getLogger(NManualBuildAndQueryTest.class);
+public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
+    private static final Logger logger = LoggerFactory.getLogger(NBuildAndQueryTest.class);
 
     private boolean succeed = true;
     protected KylinConfig config;
@@ -81,26 +79,25 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
     }
 
     @Test
-    @Ignore("for developing")
-    public void testTmp() throws Exception {
+    @Ignore("Manually verify for developer if `examples/test_metadata` exists.")
+    public void manualVerifyForDeveloper() throws Exception {
         final KylinConfig config = KylinConfig.getInstanceFromEnv();
-        System.setProperty("noBuild", "true");
-        System.setProperty("isDeveloperMode", "true");
-        buildCubes();
-        populateSSWithCSVData(config, getProject(), SparderContext.getSparkSession());
+        populateSSWithCSVData(config, getProject(), KylinSparkEnv.getSparkSession());
         List<Pair<String, Throwable>> results = execAndGetResults(
                 Lists.newArrayList(new QueryCallable(CompareLevel.SAME, "left", "temp"))); //
         report(results);
     }
 
     @Test
-    public void testBasics() throws Exception {
+    public void verifySqlStandard() throws Exception {
         final KylinConfig config = KylinConfig.getInstanceFromEnv();
-
+        // 1. Kylin side
         buildCubes();
 
-        // build is done, start to test query
+        // 2. Spark side
         populateSSWithCSVData(config, getProject(), KylinSparkEnv.getSparkSession());
+
+        // 3. Compare Kylin with Spark
         List<QueryCallable> tasks = prepareAndGenQueryTasks(config);
         List<Pair<String, Throwable>> results = execAndGetResults(tasks);
         Assert.assertEquals(results.size(), tasks.size());
@@ -110,10 +107,10 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
     private List<Pair<String, Throwable>> execAndGetResults(List<QueryCallable> tasks)
             throws InterruptedException, java.util.concurrent.ExecutionException {
         ThreadPoolExecutor executor = new ThreadPoolExecutor(9//
-                , 9 //
-                , 1 //
-                , TimeUnit.DAYS //
-                , new LinkedBlockingQueue<Runnable>(100));
+                , 9
+                , 1
+                , TimeUnit.DAYS
+                , new LinkedBlockingQueue<>(100));
         CompletionService<Pair<String, Throwable>> service = new ExecutorCompletionService<>(executor);
         for (QueryCallable task : tasks) {
             service.submit(task);
@@ -142,7 +139,7 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
     }
 
     private void failFastIfNeeded(Pair<String, Throwable> result) {
-        if (Boolean.valueOf(System.getProperty("failFast", "false")) && result.getSecond() != null) {
+        if (Boolean.parseBoolean(System.getProperty("failFast", "false")) && result.getSecond() != null) {
             logger.error("CI failed on:" + result.getFirst());
             Assert.fail();
         }
@@ -153,7 +150,6 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
         List<QueryCallable> tasks = new ArrayList<>();
         for (String joinType : joinTypes) {
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql"));
-//            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "temp"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_lookup"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_casewhen"));
 
@@ -165,16 +161,12 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_distinct_dim"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_timestamp"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_orderby"));
-            //tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_snowflake"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_topn"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_join"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_union"));
-            //tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_hive"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_distinct_precisely"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_powerbi"));
-            //tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_raw"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_value"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_magine"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_cross_join"));
 
             // same row count
@@ -184,31 +176,21 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
             tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_window"));
             tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_h2_uncapable"));
             tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_grouping"));
-            tasks.add(new QueryCallable(CompareLevel.SAME_SQL_COMPARE, joinType, "sql_intersect_count"));
-            //tasks.add(new QueryCallable(CompareLevel.SAME_SQL_COMPARE, joinType, "sql_percentile"));
-            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_distinct"));
-//
-//            //execLimitAndValidate
-//            //            tasks.add(new QueryCallable(CompareLevel.SUBSET, joinType, "sql"));
-        }
+            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_percentile"));
 
-        // cc tests
-//        tasks.add(new QueryCallable(CompareLevel.SAME_SQL_COMPARE, "default", "sql_computedcolumn_common"));
-//        tasks.add(new QueryCallable(CompareLevel.SAME_SQL_COMPARE, "default", "sql_computedcolumn_leftjoin"));
-//
-//        tasks.add(new QueryCallable(CompareLevel.SAME, "inner", "sql_magine_inner"));
-//        tasks.add(new QueryCallable(CompareLevel.SAME, "inner", "sql_magine_window"));
-//        tasks.add(new QueryCallable(CompareLevel.SAME, "default", "sql_rawtable"));
-//        tasks.add(new QueryCallable(CompareLevel.SAME, "default", "sql_multi_model"));
+            // HLL is not precise
+            tasks.add(new QueryCallable(CompareLevel.SAME_ROWCOUNT, joinType, "sql_distinct"));
+        }
         logger.info("Total {} tasks.", tasks.size());
         return tasks;
     }
 
     public void buildCubes() throws Exception {
-        if (Boolean.valueOf(System.getProperty("noBuild", "false"))) {
-            System.out.println("Direct query");
-        } else if (Boolean.valueOf(System.getProperty("isDeveloperMode", "false"))) {
-//            fullBuildCube("ci_inner_join_cube");
+        logger.debug("Prepare Kylin data.");
+        if (Boolean.parseBoolean(System.getProperty("noBuild", "false"))) {
+            logger.debug("Query prebuilt cube.");
+        } else if (Boolean.parseBoolean(System.getProperty("isDeveloperMode", "false"))) {
+            //fullBuildCube("ci_inner_join_cube");
             fullBuildCube("ci_left_join_cube");
         } else {
             //buildAndMergeCube("ci_inner_join_cube");
@@ -218,14 +200,14 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
 
     private void buildAndMergeCube(String cubeName) throws Exception {
         if (cubeName.equals("ci_inner_join_cube")) {
-            buildFourSegementAndMerge(cubeName);
+            buildFourSegmentAndMerge(cubeName);
         }
         if (cubeName.equals("ci_left_join_cube")) {
-            buildTwoSegementAndMerge(cubeName);
+            buildTwoSegmentAndMerge(cubeName);
         }
     }
 
-    private void buildTwoSegementAndMerge(String cubeName) throws Exception {
+    private void buildTwoSegmentAndMerge(String cubeName) throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         CubeManager cubeMgr = CubeManager.getInstance(config);
         Assert.assertTrue(config.getHdfsWorkingDirectory().startsWith("file:"));
@@ -233,9 +215,7 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
         // cleanup all segments first
         cleanupSegments(cubeName);
 
-        /**
-         * Round1. Build 2 segment
-         */
+        // Round 1: Build 2 segment
         ExecutableState state;
         state = buildCuboid(cubeName, new SegmentRange.TSRange(dateToLong("2010-01-01"), dateToLong("2012-01-01")));
         Assert.assertEquals(ExecutableState.SUCCEED, state);
@@ -243,30 +223,24 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
         state = buildCuboid(cubeName, new SegmentRange.TSRange(dateToLong("2012-01-01"), dateToLong("2015-01-01")));
         Assert.assertEquals(ExecutableState.SUCCEED, state);
 
-        /**
-         * Round2. Merge two segments
-         */
+        // Round 2: Merge two segments
         state = mergeSegments(cubeName, dateToLong("2010-01-01"), dateToLong("2015-01-01"), false);
         Assert.assertEquals(ExecutableState.SUCCEED, state);
 
-        /**
-         * validate cube segment info
-         */
+        // validate cube segment info
         CubeSegment firstSegment = cubeMgr.reloadCube(cubeName).getSegments().get(0);
 
         Assert.assertEquals(new SegmentRange.TSRange(dateToLong("2010-01-01"), dateToLong("2015-01-01")),
                 firstSegment.getSegRange());
     }
 
-    private void buildFourSegementAndMerge(String cubeName) throws Exception {
+    private void buildFourSegmentAndMerge(String cubeName) throws Exception {
         Assert.assertTrue(config.getHdfsWorkingDirectory().startsWith("file:"));
 
         // cleanup all segments first
         cleanupSegments(cubeName);
 
-        /**
-         * Round1. Build 4 segment
-         */
+        // Round 1: Build 4 segment
         ExecutableState state;
         state = buildCuboid(cubeName, new SegmentRange.TSRange(dateToLong("2010-01-01"), dateToLong("2012-06-01")));
         Assert.assertEquals(ExecutableState.SUCCEED, state);
@@ -280,18 +254,14 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
         state = buildCuboid(cubeName, new SegmentRange.TSRange(dateToLong("2013-06-01"), dateToLong("2015-01-01")));
         Assert.assertEquals(ExecutableState.SUCCEED, state);
 
-        /**
-         * Round2. Merge two segments
-         */
+        // Round 2: Merge two segments
         state = mergeSegments(cubeName, dateToLong("2010-01-01"), dateToLong("2013-01-01"), false);
         Assert.assertEquals(ExecutableState.SUCCEED, state);
 
         state = mergeSegments(cubeName, dateToLong("2013-01-01"), dateToLong("2015-01-01"), false);
         Assert.assertEquals(ExecutableState.SUCCEED, state);
 
-        /**
-         * validate cube segment info
-         */
+        // validate cube segment info
         CubeSegment firstSegment = cubeMgr.reloadCube(cubeName).getSegments().get(0);
         CubeSegment secondSegment = cubeMgr.reloadCube(cubeName).getSegments().get(1);
 
@@ -321,20 +291,16 @@ public class NManualBuildAndQueryTest extends LocalWithSparkSessionTest {
                     List<Pair<String, String>> queries = NExecAndComp
                             .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + "sql");
                     NExecAndComp.execLimitAndValidate(queries, getProject(), joinType);
-                } else if (NExecAndComp.CompareLevel.SAME_SQL_COMPARE.equals(compareLevel)) {
-                    List<Pair<String, String>> queries = NExecAndComp
-                            .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);
-                    NExecAndComp.execAndCompare(queries, getProject(), NExecAndComp.CompareLevel.SAME_SQL_COMPARE, joinType);
                 } else {
                     List<Pair<String, String>> queries = NExecAndComp
                             .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);
                     NExecAndComp.execAndCompare(queries, getProject(), compareLevel, joinType);
                 }
             } catch (Throwable th) {
-                logger.error("Query fail on:", identity);
+                logger.error("Query fail on: {}", identity);
                 return Pair.newPair(identity, th);
             }
-            logger.info("Query succeed on:", identity);
+            logger.info("Query succeed on: {}", identity);
             return Pair.newPair(identity, null);
         }
     }

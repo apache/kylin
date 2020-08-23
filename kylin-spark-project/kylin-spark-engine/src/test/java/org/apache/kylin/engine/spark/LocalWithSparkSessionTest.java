@@ -73,6 +73,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Base class for Parquet Storage IT
+ */
 public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(LocalWithSparkSessionTest.class);
     private static final String CSV_TABLE_DIR = "../../examples/test_metadata/data/%s.csv";
@@ -84,6 +87,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
 
     @Before
     public void setup() throws SchedulerException {
+        logger.info("Prepare temporary data.");
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
         overwriteSystemProp("calcite.keep-in-clause", "true");
         overwriteSystemProp("kylin.metadata.distributed-lock-impl", "org.apache.kylin.engine.spark.utils.MockedDistributedLock$MockedFactory");
@@ -98,6 +102,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
     @After
     public void after() {
         DefaultScheduler.destroyInstance();
+        logger.info("Clean up temporary data.");
         this.cleanupTestMetadata();
         restoreAllSystemProp();
     }
@@ -126,22 +131,19 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         ss = SparkSession.builder().config(sparkConf).getOrCreate();
         KylinSparkEnv.setSparkSession(ss);
         UdfManager.create(ss);
-
-        System.out.println("Check spark sql config [spark.sql.catalogImplementation = "
-                + ss.conf().get("spark.sql.catalogImplementation") + "]");
         ss.sparkContext().setLogLevel("WARN");
     }
 
-    public void createTestMetadata() {
+    private void createTestMetadata() {
+        if(System.getProperty("noBuild", "false").equalsIgnoreCase("true"))
+            return;
         String tempMetadataDir = TempMetadataBuilder.prepareNLocalTempMetadata();
         KylinConfig.setKylinConfigForLocalTest(tempMetadataDir);
-        getTestConfig().setProperty("kylin.query.security.acl-tcr-enabled", "false");
     }
 
-    public void createTestMetadata(String metadataDir) {
+    protected void createTestMetadata(String metadataDir) {
         String tempMetadataDir = TempMetadataBuilder.prepareNLocalTempMetadata(false, metadataDir);
         KylinConfig.setKylinConfigForLocalTest(tempMetadataDir);
-        getTestConfig().setProperty("kylin.query.security.acl-tcr-enabled", "false");
     }
 
     protected ExecutableState wait(AbstractExecutable job) throws InterruptedException {
@@ -204,10 +206,10 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
     protected void restoreAllSystemProp() {
         systemProp.forEach((prop, value) -> {
             if (value == null) {
-                logger.info("Clear {}", prop);
+                logger.trace("Clear {}", prop);
                 System.clearProperty(prop);
             } else {
-                logger.info("restore {}", prop);
+                logger.trace("restore {}", prop);
                 System.setProperty(prop, value);
             }
         });
@@ -215,7 +217,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
     }
 
     protected static void populateSSWithCSVData(KylinConfig kylinConfig, String project, SparkSession sparkSession) {
-
+        logger.debug("Prepare Spark data.");
         ProjectInstance projectInstance = ProjectManager.getInstance(kylinConfig).getProject(project);
         Preconditions.checkArgument(projectInstance != null);
         for (String table : projectInstance.getTables()) {
@@ -235,7 +237,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
             Dataset<Row> ret = sparkSession.read().schema(schema).csv(String.format(Locale.ROOT, CSV_TABLE_DIR, table));
             ret.createOrReplaceTempView(tableDesc.getName());
         }
-
+        logger.debug(sparkSession.sql("show tables").showString(20, 50 , false));
     }
 
     private static DataType convertType(org.apache.kylin.metadata.datatype.DataType type) {

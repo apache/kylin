@@ -53,9 +53,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class NManualBuildAndQueryCuboidTest extends NManualBuildAndQueryTest {
+public class NManualBuildAndQueryCuboidTest extends NBuildAndQueryTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(NManualBuildAndQueryTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(NManualBuildAndQueryCuboidTest.class);
     private static final String DEFAULT_PROJECT = "default";
     private static StructType OUT_SCHEMA = null;
 

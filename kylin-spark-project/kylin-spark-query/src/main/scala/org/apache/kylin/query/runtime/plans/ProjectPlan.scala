@@ -64,7 +64,7 @@ object ProjectPlan extends Logging {
       })
 
     val prj = df.select(selectedColumns: _*)
-    logInfo(s"Gen project cost Time :${System.currentTimeMillis() - start} ")
+    logTrace(s"Gen project cost Time :${System.currentTimeMillis() - start} ")
     prj
   }
 }
