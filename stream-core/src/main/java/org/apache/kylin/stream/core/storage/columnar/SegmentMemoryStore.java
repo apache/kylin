@@ -25,8 +25,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -64,8 +66,8 @@ public class SegmentMemoryStore implements IStreamingGTSearcher {
     protected final ParsedStreamingCubeInfo parsedStreamingCubeInfo;
     protected final String segmentName;
 
-    private volatile Map<CuboidInfo, ConcurrentSkipListMap<String[], MeasureAggregator[]>> cuboidsAggBufMap;
-    private volatile ConcurrentSkipListMap<String[], MeasureAggregator[]> basicCuboidAggBufMap;
+    private volatile Map<CuboidInfo, ConcurrentMap<String[], MeasureAggregator[]>> cuboidsAggBufMap;
+    private volatile ConcurrentMap<String[], MeasureAggregator[]> basicCuboidAggBufMap;
 
     private volatile AtomicInteger rowCount = new AtomicInteger();
     private volatile AtomicInteger originRowCount = new AtomicInteger();
@@ -84,10 +86,10 @@ public class SegmentMemoryStore implements IStreamingGTSearcher {
 
         this.basicCuboidAggBufMap = new ConcurrentSkipListMap<>(StringArrayComparator.INSTANCE);
         List<CuboidInfo> additionalCuboids = parsedStreamingCubeInfo.getAdditionalCuboidsToBuild();
-        if (additionalCuboids != null && additionalCuboids.size() > 0) {
+        if (additionalCuboids != null && !additionalCuboids.isEmpty()) {
             this.cuboidsAggBufMap = new ConcurrentHashMap<>(additionalCuboids.size());
             for (CuboidInfo cuboidInfo : additionalCuboids) {
-                cuboidsAggBufMap.put(cuboidInfo, new ConcurrentSkipListMap<String[], MeasureAggregator[]>(
+                cuboidsAggBufMap.put(cuboidInfo, new ConcurrentSkipListMap<>(
                         StringArrayComparator.INSTANCE));
             }
         }
@@ -107,10 +109,10 @@ public class SegmentMemoryStore implements IStreamingGTSearcher {
         Object[] metricsValues = buildValue(row);
         aggregate(basicCuboidAggBufMap, basicCuboidDimensions, metricsValues);
         if (cuboidsAggBufMap != null) {
-            for (Entry<CuboidInfo, ConcurrentSkipListMap<String[], MeasureAggregator[]>> cuboidAggEntry : cuboidsAggBufMap
+            for (Entry<CuboidInfo, ConcurrentMap<String[], MeasureAggregator[]>> cuboidAggEntry : cuboidsAggBufMap
                     .entrySet()) {
                 CuboidInfo cuboidInfo = cuboidAggEntry.getKey();
-                ConcurrentSkipListMap<String[], MeasureAggregator[]> cuboidAggMap = cuboidAggEntry.getValue();
+                ConcurrentMap<String[], MeasureAggregator[]> cuboidAggMap = cuboidAggEntry.getValue();
                 String[] cuboidDimensions = buildCuboidKey(cuboidInfo, row);
                 aggregate(cuboidAggMap, cuboidDimensions, metricsValues);
             }
@@ -172,7 +174,7 @@ public class SegmentMemoryStore implements IStreamingGTSearcher {
     }
 
     @SuppressWarnings("unchecked")
-    private void aggregate(ConcurrentSkipListMap<String[], MeasureAggregator[]> cuboidAggBufMap, String[] dimensions,
+    private void aggregate(ConcurrentMap<String[], MeasureAggregator[]> cuboidAggBufMap, String[] dimensions,
             Object[] metricsValues) {
         MeasureAggregator[] aggrs = cuboidAggBufMap.get(dimensions);
         if (aggrs != null) {
@@ -217,20 +219,20 @@ public class SegmentMemoryStore implements IStreamingGTSearcher {
         return originRowCount.get();
     }
 
-    public ConcurrentSkipListMap<String[], MeasureAggregator[]> getBasicCuboidData() {
+    public ConcurrentMap<String[], MeasureAggregator[]> getBasicCuboidData() {
         return basicCuboidAggBufMap;
     }
 
-    public Map<CuboidInfo, ConcurrentSkipListMap<String[], MeasureAggregator[]>> getAdditionalCuboidsData() {
+    public Map<CuboidInfo, ConcurrentMap<String[], MeasureAggregator[]>> getAdditionalCuboidsData() {
         return cuboidsAggBufMap;
     }
 
-    public ConcurrentSkipListMap<String[], MeasureAggregator[]> getCuboidData(long cuboidID) {
+    public ConcurrentMap<String[], MeasureAggregator[]> getCuboidData(long cuboidID) {
         if (cuboidID == parsedStreamingCubeInfo.basicCuboid.getId()) {
             return basicCuboidAggBufMap;
         } else {
             CuboidInfo cuboidInfo = new CuboidInfo(cuboidID);
-            ConcurrentSkipListMap<String[], MeasureAggregator[]> result = cuboidsAggBufMap.get(cuboidInfo);
+            ConcurrentMap<String[], MeasureAggregator[]> result = cuboidsAggBufMap.get(cuboidInfo);
             if (result != null) {
                 return result;
             }
@@ -357,6 +359,9 @@ public class SegmentMemoryStore implements IStreamingGTSearcher {
 
                 @Override
                 public Record next() {
+                    if (nextEntry == null)
+                        throw new NoSuchElementException();
+                    
                     try {
                         String[] allDimensions = nextEntry.getKey();
                         MeasureAggregator<?>[] allMetrics = nextEntry.getValue();
@@ -389,8 +394,6 @@ public class SegmentMemoryStore implements IStreamingGTSearcher {
                         System.arraycopy(aggrResult, 0, oneRecord.getMetrics(), 0, aggrResult.length);
                         count++;
                         return oneRecord;
-                    } catch (RuntimeException exception) {
-                        throw exception;
                     } finally {
                         nextEntry = null;
                     }

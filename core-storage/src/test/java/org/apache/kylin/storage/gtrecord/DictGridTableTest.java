@@ -364,12 +364,12 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         long start = System.currentTimeMillis();
         GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null)
                 .setFilterPushDown(filter).createGTScanRequest();
-        IGTScanner scanner = table.scan(req);
         int i = 0;
-        for (GTRecord r : scanner) {
-            i++;
+        try (IGTScanner scanner = table.scan(req)) {
+            for (GTRecord r : scanner) {
+                i++;
+            }
         }
-        scanner.close();
         long end = System.currentTimeMillis();
         System.out.println(
                 (end - start) + "ms with filter cache enabled=" + FilterResultCache.DEFAULT_OPTION + ", " + i + " rows");
@@ -555,17 +555,17 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
 
     private void doScanAndVerify(GridTable table, GTScanRequest req, String... verifyRows) throws IOException {
         System.out.println(req);
-        IGTScanner scanner = table.scan(req);
-        int i = 0;
-        for (GTRecord r : scanner) {
-            System.out.println(r);
-            if (verifyRows == null || i >= verifyRows.length) {
-                Assert.fail();
+        try (IGTScanner scanner = table.scan(req)) {
+            int i = 0;
+            for (GTRecord r : scanner) {
+                System.out.println(r);
+                if (verifyRows == null || i >= verifyRows.length) {
+                    Assert.fail();
+                }
+                assertEquals(verifyRows[i], r.toString());
+                i++;
             }
-            assertEquals(verifyRows[i], r.toString());
-            i++;
         }
-        scanner.close();
     }
 
     public static ByteArray enc(GTInfo info, int col, String value) {

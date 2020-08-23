@@ -71,7 +71,7 @@ public class Bytes {
     /**
      * Size of boolean in bytes
      */
-    public static final int SIZEOF_BOOLEAN = Byte.SIZE / Byte.SIZE;
+    public static final int SIZEOF_BOOLEAN = 1;
 
     /**
      * Size of byte in bytes

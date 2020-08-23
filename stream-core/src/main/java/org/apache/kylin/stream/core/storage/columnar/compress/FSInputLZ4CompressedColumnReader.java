@@ -24,6 +24,8 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.stream.core.storage.columnar.ColumnDataReader;
 
 import net.jpountz.lz4.LZ4Factory;
@@ -40,10 +42,10 @@ public class FSInputLZ4CompressedColumnReader implements ColumnDataReader {
     private LZ4SafeDecompressor deCompressor;
     private FSDataInputStream fsInputStream;
 
-    public FSInputLZ4CompressedColumnReader(FSDataInputStream fsInputStream, int columnDataStartOffset,
-            int columnDataLength, int rowCount) throws IOException {
+    public FSInputLZ4CompressedColumnReader(FileSystem fs, Path file, int columnDataStartOffset,
+                                            int columnDataLength, int rowCount) throws IOException {
         this.rowCount = rowCount;
-        this.fsInputStream = fsInputStream;
+        this.fsInputStream = fs.open(file);
         int footStartOffset = columnDataStartOffset + columnDataLength - 8;
         fsInputStream.seek(footStartOffset);
         this.numValInBlock = fsInputStream.readInt();
@@ -86,11 +88,14 @@ public class FSInputLZ4CompressedColumnReader implements ColumnDataReader {
 
         @Override
         public byte[] next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
             if (currBlockNum == -1 || !decompressedBuffer.hasRemaining()) {
                 try {
                     loadNextBuffer();
                 } catch (IOException e) {
-                    throw new NoSuchElementException("error when read data");
+                    throw new NoSuchElementException("error when read data " + e.getMessage());
                 }
             }
             byte[] readBuffer = new byte[valLen];

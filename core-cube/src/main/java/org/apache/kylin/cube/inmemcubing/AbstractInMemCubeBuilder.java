@@ -101,11 +101,11 @@ abstract public class AbstractInMemCubeBuilder {
     protected void outputCuboid(long cuboidId, GridTable gridTable, ICuboidWriter output) throws IOException {
         long startTime = System.currentTimeMillis();
         GTScanRequest req = new GTScanRequestBuilder().setInfo(gridTable.getInfo()).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest();
-        IGTScanner scanner = gridTable.scan(req);
-        for (GTRecord record : scanner) {
-            output.write(cuboidId, record);
+        try (IGTScanner scanner = gridTable.scan(req)) {
+            for (GTRecord record : scanner) {
+                output.write(cuboidId, record);
+            }
         }
-        scanner.close();
         logger.debug("Cuboid " + cuboidId + " output takes " + (System.currentTimeMillis() - startTime) + "ms");
     }
 

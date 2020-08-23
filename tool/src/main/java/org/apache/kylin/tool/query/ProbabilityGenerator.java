@@ -70,6 +70,10 @@ public class ProbabilityGenerator {
         double[] pQueryArray = new double[nOfEle];
 
         int sumHit = generateHitNumberList(nHitArray);
+
+        if (sumHit == 0)
+            throw new IllegalStateException();
+
         for (int i = 0; i < nOfEle; i++) {
             pQueryArray[i] = nHitArray[i] * 1.0 / sumHit;
         }

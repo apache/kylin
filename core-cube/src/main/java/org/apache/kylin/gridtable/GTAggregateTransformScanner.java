@@ -38,6 +38,7 @@ public class GTAggregateTransformScanner implements IGTScanner {
     private final GTScanRequest req;
     private final GTTwoLayerAggregateParam twoLayerAggParam;
     private long inputRowCount = 0L;
+    private Iterator<GTRecord> iterator = null;
 
     public GTAggregateTransformScanner(IGTScanner inputScanner, GTScanRequest req) {
         this.inputScanner = inputScanner;
@@ -57,9 +58,13 @@ public class GTAggregateTransformScanner implements IGTScanner {
 
     @Override
     public Iterator<GTRecord> iterator() {
-        return twoLayerAggParam.satisfyPrefix(req.getDimensions())
-                ? new FragmentTransformGTRecordIterator(inputScanner.iterator())
-                : new NormalTransformGTRecordIterator(inputScanner.iterator());
+        if (iterator == null) {
+            iterator = twoLayerAggParam.satisfyPrefix(req.getDimensions())
+                    ? new FragmentTransformGTRecordIterator(inputScanner.iterator())
+                    : new NormalTransformGTRecordIterator(inputScanner.iterator());
+        }
+
+        return iterator;
     }
 
     public long getInputRowCount() {
@@ -75,6 +80,7 @@ public class GTAggregateTransformScanner implements IGTScanner {
     private class FragmentTransformGTRecordIterator extends TransformGTRecordIterator {
         private final PrefixFragmentIterator fragmentIterator;
 
+        private GTAggregateScanner aggregateScanner;
         private Iterator<GTRecord> transformedFragment = null;
 
         FragmentTransformGTRecordIterator(Iterator<GTRecord> input) {
@@ -88,6 +94,12 @@ public class GTAggregateTransformScanner implements IGTScanner {
             }
 
             if (!fragmentIterator.hasNext()) {
+                // close resource
+                try {
+                    aggregateScanner.close();
+                } catch (IOException e) {
+                    // do nothing
+                }
                 return false;
             }
 
@@ -106,7 +118,8 @@ public class GTAggregateTransformScanner implements IGTScanner {
                     return fragmentIterator.next();
                 }
             };
-            transformedFragment = new GTAggregateScanner(fragmentScanner, innerReq).iterator();
+            aggregateScanner = new GTAggregateScanner(fragmentScanner, innerReq);
+            transformedFragment = aggregateScanner.iterator();
 
             return hasNext();
         }
@@ -124,6 +137,7 @@ public class GTAggregateTransformScanner implements IGTScanner {
     private class NormalTransformGTRecordIterator extends TransformGTRecordIterator {
 
         private final Iterator<GTRecord> aggRecordIterator;
+        private final GTAggregateScanner aggregateScanner;
 
         NormalTransformGTRecordIterator(final Iterator<GTRecord> input) {
             IGTScanner gtScanner = new IGTScanner() {
@@ -134,6 +148,7 @@ public class GTAggregateTransformScanner implements IGTScanner {
 
                 @Override
                 public void close() throws IOException {
+                    // do nothing
                 }
 
                 @Override
@@ -141,13 +156,21 @@ public class GTAggregateTransformScanner implements IGTScanner {
                     return input;
                 }
             };
-
-            aggRecordIterator = new GTAggregateScanner(gtScanner, innerReq).iterator();
+            aggregateScanner = new GTAggregateScanner(gtScanner, innerReq);
+            aggRecordIterator = aggregateScanner.iterator();
         }
 
         @Override
         public boolean hasNext() {
-            return aggRecordIterator.hasNext();
+            boolean hasNext = aggRecordIterator.hasNext();
+            if (!hasNext) {
+                try {
+                    aggregateScanner.close();
+                } catch (IOException e) {
+                    // do nothing
+                }
+            }
+            return hasNext;
         }
 
         @Override
