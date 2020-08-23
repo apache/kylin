@@ -249,7 +249,7 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
         }
 
         if (consumeDataDone == false) {
-            throw new IllegalStateException("Exec timeout, data not be comsumed completely"); // ensure all messages have been comsumed.
+            throw new IllegalStateException("Exec timeout, data not be consumed completely"); // ensure all messages have been comsumed.
         }
 
         waittime = 0;

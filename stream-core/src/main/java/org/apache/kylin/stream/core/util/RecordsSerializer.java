@@ -113,6 +113,7 @@ public class RecordsSerializer {
 
             @Override
             public Record next() {
+
                 deserializeRecord(oneRecord, inputBuffer);
                 return oneRecord;
             }

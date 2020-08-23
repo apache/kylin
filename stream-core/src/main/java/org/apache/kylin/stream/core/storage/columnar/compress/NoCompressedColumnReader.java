@@ -21,6 +21,7 @@ package org.apache.kylin.stream.core.storage.columnar.compress;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.apache.kylin.stream.core.storage.columnar.ColumnDataReader;
 
@@ -67,6 +68,9 @@ public class NoCompressedColumnReader implements ColumnDataReader {
 
         @Override
         public byte[] next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
             byte[] readBuffer = new byte[colValLength];
             dataBuffer.get(readBuffer);
             readRowCount++;
