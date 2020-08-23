@@ -662,11 +662,11 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 throw new RuntimeException("Error during adapting hbase mapping", e);
             }
         } else {
-            // skip at Kylin 4.0
-//            if (hbaseMapping != null) {
-//                hbaseMapping.init(this);
-//                initMeasureReferenceToColumnFamily();
-//            }
+            // to be removed in Kylin 4.0
+            if (hbaseMapping != null) {
+                hbaseMapping.init(this);
+                initMeasureReferenceToColumnFamily();
+            }
         }
 
         // check all dimension columns are presented on rowkey
@@ -1120,13 +1120,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
                     checkState(!measureSet.contains(colMeasureRefs[i]), "measure (%s) duplicates", colMeasureRefs[i]);
                     measureSet.add(colMeasureRefs[i]);
-
-                    if (storageType > IStorageAware.ID_SHARDED_HBASE) {
-                        checkState(measureIndex[i] > lastMeasureIndex, "measure (%s) is not in order",
-                                colMeasureRefs[i]);
-                        lastMeasureIndex = measureIndex[i];
-                    }
-
                     checkEachMeasureExist.set(measureIndex[i]);
                 }
                 c.setMeasures(measureDescs);

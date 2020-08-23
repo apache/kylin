@@ -575,22 +575,33 @@ public class KylinConfig extends KylinConfigBase {
         return super.hashCode();
     }
 
-    // Only used in test cases!!!
+    /**
+     * This is only used in test.
+     *
+     * 1. Load metadata from localMetaDir
+     * 2. Prepare a temp working-dir
+     */
     public static void setKylinConfigForLocalTest(String localMetaDir) {
         synchronized (KylinConfig.class) {
-            if (new File(localMetaDir, "kylin.properties").exists() == false)
+            if (!new File(localMetaDir, "kylin.properties").exists())
                 throw new IllegalArgumentException(localMetaDir + " is not a valid local meta dir");
 
             destroyInstance();
-            logger.info("Setting KylinConfig to " + localMetaDir);
+            String canonicalPath = localMetaDir;
+            try {
+                // remove the ".." in path string
+                canonicalPath = new File(localMetaDir).getCanonicalPath();
+            } catch (IOException e) {
+                throw new IllegalStateException("");
+            }
 
-            System.setProperty(KylinConfig.KYLIN_CONF, localMetaDir);
+            logger.info("Setting KylinConfig to {} in UT.", canonicalPath);
+            System.setProperty(KylinConfig.KYLIN_CONF, canonicalPath);
 
             KylinConfig config = KylinConfig.getInstanceFromEnv();
-            config.setMetadataUrl(localMetaDir);
+            config.setMetadataUrl(canonicalPath);
 
-            // make sure a local working directory
-            File workingDir = new File(localMetaDir, "working-dir");
+            File workingDir = new File(canonicalPath, "working-dir");
             workingDir.mkdirs();
             String path = workingDir.getAbsolutePath();
             if (!path.startsWith("/"))

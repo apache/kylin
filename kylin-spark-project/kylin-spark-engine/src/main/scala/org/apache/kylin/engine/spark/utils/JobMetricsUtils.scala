@@ -41,7 +41,7 @@ object JobMetricsUtils extends Logging {
       metrics = collectOutputRows(execution.executedPlan)
       logInfo(s"Collect output rows successfully. $metrics")
     } else {
-      logWarning(s"Collect output rows failed.")
+      logInfo(s"Collect output rows failed.")
     }
     metrics
   }

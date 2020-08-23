@@ -345,7 +345,7 @@ public class CubeBuildJob extends SparkApplication {
         long rowCount = metrics.getMetrics(Metrics.CUBOID_ROWS_CNT());
         if (rowCount == -1) {
             infos.recordAbnormalLayouts(layoutId, "'Job metrics seems null, use count() to collect cuboid rows.'");
-            logger.warn("Can not get cuboid row cnt, use count() to collect cuboid rows.");
+            logger.debug("Can not get cuboid row cnt, use count() to collect cuboid rows.");
             layout.setRows(dataset.count());
             layout.setSourceRows(parentDSCnt);
         } else {

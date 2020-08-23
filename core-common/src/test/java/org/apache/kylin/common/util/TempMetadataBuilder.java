@@ -30,22 +30,31 @@ import java.util.List;
 
 public class TempMetadataBuilder {
 
-    public static final String N_KAP_META_TEST_DATA = "../examples/test_case_data/parquet_test";
+    /**
+     * Provided metadata for Parquet Storage
+     */
     public static final String N_SPARK_PROJECT_KYLIN_META_TEST_DATA = "../../examples/test_case_data/parquet_test";
+    public static final String N_SPARK_PROJECT_KYLIN_META_TEST_DATA_2 = "../examples/test_case_data/parquet_test";
+
+    /**
+     * Temporary metadata dir
+     */
     public static final String TEMP_TEST_METADATA = "../examples/test_metadata";
 
     private static final Logger logger = LoggerFactory.getLogger(TempMetadataBuilder.class);
 
+    /**
+     * @see TempMetadataBuilder#TEMP_TEST_METADATA
+     */
     public static String prepareNLocalTempMetadata() {
         return prepareNLocalTempMetadata(false);
     }
 
     public static String prepareNLocalTempMetadata(boolean debug) {
-        // for spark-project
         if (new File(N_SPARK_PROJECT_KYLIN_META_TEST_DATA).exists()) {
             return new TempMetadataBuilder(debug, "../" + TEMP_TEST_METADATA, N_SPARK_PROJECT_KYLIN_META_TEST_DATA).build();
         }
-        return new TempMetadataBuilder(debug, TEMP_TEST_METADATA, N_KAP_META_TEST_DATA).build();
+        return new TempMetadataBuilder(debug, TEMP_TEST_METADATA, N_SPARK_PROJECT_KYLIN_META_TEST_DATA_2).build();
     }
 
     public static String prepareNLocalTempMetadata(boolean debug, String overlay) {
@@ -67,7 +76,8 @@ public class TempMetadataBuilder {
         this.dst = dst;
     }
 
-    public String build() {
+    private String build() {
+        logger.debug("Prepare temp metadata for ut/it .");
         if ("true".equals(System.getProperty("skipMetaPrep"))) {
             return dst;
         }

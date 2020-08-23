@@ -114,13 +114,13 @@ abstract public class MeasureTypeFactory<T> {
         factoryInsts.add(new PercentileMeasureType.Factory());
         factoryInsts.add(new DimCountDistinctMeasureType.Factory());
 
-        logger.info("Checking custom measure types from kylin config");
+        logger.trace("Checking custom measure types from kylin config");
 
         try {
             Map<String, String> customMeasureTypes = KylinConfig.getInstanceFromEnv().getCubeCustomMeasureTypes();
             for (String customFactory : customMeasureTypes.values()) {
                 try {
-                    logger.info("Checking custom measure types from kylin config: " + customFactory);
+                    logger.debug("Checking custom measure types from kylin config: " + customFactory);
                     factoryInsts.add((MeasureTypeFactory<?>) Class.forName(customFactory).newInstance());
                 } catch (Exception e) {
                     throw new IllegalArgumentException("Unrecognized MeasureTypeFactory classname: " + customFactory,
@@ -128,7 +128,7 @@ abstract public class MeasureTypeFactory<T> {
                 }
             }
         } catch (KylinConfigCannotInitException e) {
-            logger.warn("Will not add custome MeasureTypeFactory as KYLIN_CONF nor KYLIN_HOME is set");
+            logger.warn("Will not add custom MeasureTypeFactory as KYLIN_CONF nor KYLIN_HOME is set");
         }
 
         // register factories & data type serializers
@@ -143,7 +143,7 @@ abstract public class MeasureTypeFactory<T> {
                         "Aggregation data type name '" + dataTypeName + "' must be in lower case");
             Class<? extends DataTypeSerializer<?>> serializer = factory.getAggrDataTypeSerializer();
 
-            logger.info("registering " + funcName + "(" + dataTypeName + "), " + factory.getClass());
+            logger.debug("registering " + funcName + "(" + dataTypeName + "), " + factory.getClass());
             DataType.register(dataTypeName);
             DataTypeSerializer.register(dataTypeName, serializer);
             registerUDAF(factory);

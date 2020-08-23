@@ -43,7 +43,7 @@ trait LogEx extends Logging {
     // If action is quite fast, don't logging
     if (end - start > 2) {
       if (info) {
-        logInfo(s"Run $action take ${end - start} ms")
+        logDebug(s"Run $action take ${end - start} ms")
       } else {
         logTrace(s"Run $action take ${end - start} ms")
       }

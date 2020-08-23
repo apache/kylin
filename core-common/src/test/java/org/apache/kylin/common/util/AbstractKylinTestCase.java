@@ -26,10 +26,6 @@ import org.apache.kylin.common.KylinConfig;
  */
 public abstract class AbstractKylinTestCase {
 
-    static {
-        System.setProperty("needCheckCC", "true");
-    }
-
     public abstract void createTestMetadata(String... overlayMetadataDirs) throws Exception;
 
     public abstract void cleanupTestMetadata() throws Exception;
@@ -42,5 +38,4 @@ public abstract class AbstractKylinTestCase {
         System.clearProperty(KylinConfig.KYLIN_CONF);
         KylinConfig.destroyInstance();
     }
-
 }

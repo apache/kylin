@@ -271,7 +271,7 @@ public class ResourceTool {
                 try {
                     RawResource res = src.getResource(path);
                     if (res != null) {
-                        logger.info("Copy path: {} from {} to {}", path, src, dst);
+                        logger.debug("Copy path: {} from {} to {}", path, src, dst);
                         try {
                             dst.putResource(path, res.content(), res.lastModified());
                         } finally {
