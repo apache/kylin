@@ -26,6 +26,7 @@ import org.apache.kylin.stream.core.storage.columnar.GeneralColumnDataReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class LZ4CompressedColumnReader implements ColumnDataReader {
     private int rowCount;
@@ -36,16 +37,13 @@ public class LZ4CompressedColumnReader implements ColumnDataReader {
 
     private int currBlockNum;
     private LZ4SafeDecompressor deCompressor;
-    private ByteBuffer dataBuffer;
     private ByteBuffer decompressedBuffer;
 
-//    private byte[] readBuffer;
     private GeneralColumnDataReader blockDataReader;
 
     public LZ4CompressedColumnReader(ByteBuffer dataBuffer, int columnDataStartOffset, int columnDataLength,
                                  int rowCount) {
         this.rowCount = rowCount;
-        this.dataBuffer = dataBuffer;
         int footStartOffset = columnDataStartOffset + columnDataLength - 8;
         dataBuffer.position(footStartOffset);
         this.numValInBlock = dataBuffer.getInt();
@@ -53,7 +51,6 @@ public class LZ4CompressedColumnReader implements ColumnDataReader {
 
         this.blockDataReader = new GeneralColumnDataReader(dataBuffer, columnDataStartOffset, columnDataLength - 8);
         this.currBlockNum = -1;
-//        this.readBuffer = new byte[valLen];
 
         this.deCompressor = LZ4Factory.fastestInstance().safeDecompressor();
         this.maxBufferLength = numValInBlock * valLen;
@@ -104,6 +101,9 @@ public class LZ4CompressedColumnReader implements ColumnDataReader {
 
         @Override
         public byte[] next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
             if (currBlockNum == -1 || !decompressedBuffer.hasRemaining()) {
                 loadNextBuffer();
             }

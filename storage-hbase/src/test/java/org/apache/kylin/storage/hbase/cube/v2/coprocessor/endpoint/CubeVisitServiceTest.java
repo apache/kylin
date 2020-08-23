@@ -128,17 +128,18 @@ public class CubeVisitServiceTest extends LocalFileMetadataTestCase {
 
         gtInfo = newInfo();
         GridTable gridTable = newTable(gtInfo);
-        IGTScanner scanner = gridTable.scan(new GTScanRequestBuilder().setInfo(gtInfo).setRanges(null)
-                .setDimensions(null).setFilterPushDown(null).createGTScanRequest());
-        for (GTRecord record : scanner) {
-            byte[] value = record.exportColumns(gtInfo.getPrimaryKey()).toBytes();
-            byte[] key = new byte[RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN + value.length];
-            System.arraycopy(Bytes.toBytes(baseCuboid), 0, key, RowConstants.ROWKEY_SHARDID_LEN,
-                    RowConstants.ROWKEY_CUBOIDID_LEN);
-            System.arraycopy(value, 0, key, RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN, value.length);
-            Put put = new Put(key);
-            put.addColumn(FAM, COL_M, record.exportColumns(gtInfo.getColumnBlock(1)).toBytes());
-            region.put(put);
+        try (IGTScanner scanner = gridTable.scan(new GTScanRequestBuilder().setInfo(gtInfo).setRanges(null)
+                .setDimensions(null).setFilterPushDown(null).createGTScanRequest())) {
+            for (GTRecord record : scanner) {
+                byte[] value = record.exportColumns(gtInfo.getPrimaryKey()).toBytes();
+                byte[] key = new byte[RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN + value.length];
+                System.arraycopy(Bytes.toBytes(baseCuboid), 0, key, RowConstants.ROWKEY_SHARDID_LEN,
+                        RowConstants.ROWKEY_CUBOIDID_LEN);
+                System.arraycopy(value, 0, key, RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN, value.length);
+                Put put = new Put(key);
+                put.addColumn(FAM, COL_M, record.exportColumns(gtInfo.getColumnBlock(1)).toBytes());
+                region.put(put);
+            }
         }
     }
 

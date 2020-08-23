@@ -445,15 +445,14 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         long startTime = System.currentTimeMillis();
         logger.info("Calculating cuboid {}", cuboidId);
 
-        GTAggregateScanner scanner = prepareGTAggregationScanner(gridTable, parentId, cuboidId, aggregationColumns, measureColumns);
-        GridTable newGridTable = newGridTableByCuboidID(cuboidId);
-        GTBuilder builder = newGridTable.rebuild();
 
+        GridTable newGridTable = newGridTableByCuboidID(cuboidId);
         ImmutableBitSet allNeededColumns = aggregationColumns.or(measureColumns);
 
         GTRecord newRecord = new GTRecord(newGridTable.getInfo());
         int count = 0;
-        try {
+        try (GTAggregateScanner scanner = prepareGTAggregationScanner(gridTable, parentId, cuboidId, aggregationColumns, measureColumns);
+             GTBuilder builder = newGridTable.rebuild()) {
             for (GTRecord record : scanner) {
                 count++;
                 for (int i = 0; i < allNeededColumns.trueBitCount(); i++) {
@@ -462,10 +461,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                 }
                 builder.write(newRecord);
             }
-
-        } finally {
-            scanner.close();
-            builder.close();
         }
 
         long timeSpent = System.currentTimeMillis() - startTime;

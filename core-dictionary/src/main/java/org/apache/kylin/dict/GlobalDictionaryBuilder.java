@@ -46,9 +46,6 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
     @Override
     public void init(DictionaryInfo dictInfo, int baseId, String hdfsDir) throws IOException {
         sourceColumn = dictInfo.getSourceTable() + "_" + dictInfo.getSourceColumn();
-        lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentThread();
-        lock.lock(getLockPath(sourceColumn), Long.MAX_VALUE);
-
         int maxEntriesPerSlice = KylinConfig.getInstanceFromEnv().getAppendDictEntrySize();
         if (hdfsDir == null) {
             //build in Kylin job server
@@ -56,12 +53,18 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
         }
         String baseDir = hdfsDir + "resources/GlobalDict" + dictInfo.getResourceDir() + "/";
 
+        lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentThread();
+        String lockPath = getLockPath(sourceColumn);
         try {
+            lock.lock(lockPath, Long.MAX_VALUE);
             this.builder = new AppendTrieDictionaryBuilder(baseDir, maxEntriesPerSlice, true);
         } catch (Throwable e) {
-            lock.unlock(getLockPath(sourceColumn));
             throw new RuntimeException(
                     String.format(Locale.ROOT, "Failed to create global dictionary on %s ", sourceColumn), e);
+        } finally {
+            if (lock.isLockedByMe(lockPath)) {
+                lock.unlock(lockPath);
+            }
         }
         this.baseId = baseId;
     }
