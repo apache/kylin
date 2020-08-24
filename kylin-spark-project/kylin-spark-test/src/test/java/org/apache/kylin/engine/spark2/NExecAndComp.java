@@ -121,7 +121,14 @@ public class NExecAndComp {
             addQueryPath(recAndQueryResult, query, sql);
 
             if (compareLevel == CompareLevel.SAME) {
-                Dataset<Row> sparkResult = queryWithSpark(prj, sql, query.getFirst());
+                Dataset<Row> sparkResult = null;
+                String csvDataPathStr = query.getFirst() + ".expected";
+                if(new File(csvDataPathStr).exists()) {
+                    logger.debug("Use expected dataset for {}", sql);
+                    sparkResult = KylinSparkEnv.getSparkSession().read().csv(csvDataPathStr);
+                } else {
+                    sparkResult = queryWithSpark(prj, sql, query.getFirst());
+                }
                 String result = SparkQueryTest.checkAnswer(SparkQueryTest.castDataType(cubeResult, sparkResult), sparkResult, false);
                 if (result != null) {
                     logger.error("Failed on compare query ({}) :{}", joinType, query);
