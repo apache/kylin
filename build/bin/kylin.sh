@@ -141,6 +141,48 @@ function checkBasicKylinProps() {
     fi
 }
 
+function prepareFairScheduler() {
+    cat > ${KYLIN_HOME}/conf/fairscheduler.xml <<EOL
+<?xml version="1.0"?>
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<allocations>
+  <pool name="query_pushdown">
+    <schedulingMode>FAIR</schedulingMode>
+    <weight>1</weight>
+    <minShare>1</minShare>
+  </pool>
+  <pool name="heavy_tasks">
+    <schedulingMode>FAIR</schedulingMode>
+    <weight>5</weight>
+    <minShare>1</minShare>
+  </pool>
+  <pool name="lightweight_tasks">
+    <schedulingMode>FAIR</schedulingMode>
+    <weight>10</weight>
+    <minShare>1</minShare>
+  </pool>
+  <pool name="vip_tasks">
+    <schedulingMode>FAIR</schedulingMode>
+    <weight>15</weight>
+    <minShare>1</minShare>
+  </pool>
+</allocations>
+EOL
+}
+
 function checkRestPort() {
     kylin_rest_address_arr=(${KYLIN_REST_ADDRESS//:/ })
     inuse=`netstat -tlpn | grep "\b${kylin_rest_address_arr[1]}\b"`
@@ -195,6 +237,8 @@ then
     retrieveDependency
 
     checkRestPort
+
+    prepareFairScheduler
 
     ${KYLIN_HOME}/bin/check-migration-acl.sh || { exit 1; }
 

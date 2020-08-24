@@ -72,6 +72,8 @@ public class SQLResponse implements Serializable {
 
     protected boolean queryPushDown = false;
 
+    protected String querySparkPool;
+
     protected byte[] queryStatistics;
     
     protected String traceUrl = null;
@@ -137,6 +139,14 @@ public class SQLResponse implements Serializable {
 
     public void setIsException(boolean v) {
         isException = v;
+    }
+
+    public String getSparkPool() {
+        return querySparkPool;
+    }
+
+    public void setSparkPool(String sparkPool) {
+        querySparkPool = sparkPool;
     }
 
     public String getExceptionMessage() {

@@ -1800,6 +1800,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.query.stream-aggregate-enabled", TRUE));
     }
 
+    public String getProjectQuerySparkPool() {
+        return getOptional("kylin.query.spark.pool", null);
+    }
+
     public boolean isProjectIsolationEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.storage.project-isolation-enable", TRUE));
     }

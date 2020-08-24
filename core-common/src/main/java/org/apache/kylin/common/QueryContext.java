@@ -55,6 +55,8 @@ public class QueryContext {
     private final String queryId;
     private String username;
     private Set<String> groups;
+    private String project;
+    private String sparkPool;
     private AtomicLong scannedRows = new AtomicLong();
     private AtomicLong returnedRows = new AtomicLong();
     private AtomicLong scannedBytes = new AtomicLong();
@@ -118,6 +120,22 @@ public class QueryContext {
 
     public void setGroups(Set<String> groups) {
         this.groups = groups;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
+    }
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setSparkPool(String sparkPool) {
+        this.sparkPool = sparkPool;
+    }
+
+    public String getSparkPool() {
+        return this.sparkPool;
     }
 
     public Object getCalcitePlan() {

@@ -356,6 +356,7 @@ public class QueryService extends BasicService {
         stringBuilder.append("Storage cache used: ").append(storageCacheUsed).append(newLine);
         stringBuilder.append("Is Query Push-Down: ").append(isPushDown).append(newLine);
         stringBuilder.append("Is Prepare: ").append(BackdoorToggles.getPrepareOnly()).append(newLine);
+        stringBuilder.append("Used Spark pool: ").append(response.getSparkPool()).append(newLine);
         stringBuilder.append("Trace URL: ").append(response.getTraceUrl()).append(newLine);
         stringBuilder.append("Message: ").append(response.getExceptionMessage()).append(newLine);
         stringBuilder.append("==========================[QUERY]===============================").append(newLine);
@@ -632,6 +633,7 @@ public class QueryService extends BasicService {
             QueryContext context = QueryContextFacade.current();
             context.setUsername(userInfo);
             context.setGroups(AclPermissionUtil.getCurrentUserGroups());
+            context.setProject(sqlRequest.getProject());
             final Collection<? extends GrantedAuthority> grantedAuthorities = SecurityContextHolder.getContext()
                     .getAuthentication().getAuthorities();
             for (GrantedAuthority grantedAuthority : grantedAuthorities) {
@@ -1163,6 +1165,7 @@ public class QueryService extends BasicService {
         response.setTotalScanCount(queryContext.getScannedRows());
         response.setTotalScanBytes(queryContext.getScannedBytes());
         response.setCubeSegmentStatisticsList(queryContext.getCubeSegmentStatisticsResultList());
+        response.setSparkPool(queryContext.getSparkPool());
         if (getConfig().isQueryCacheSignatureEnabled()) {
             response.setSignature(SQLResponseSignatureUtil.createSignature(getConfig(), response, projectName));
         }
