@@ -21,9 +21,11 @@ import com.google.common.cache.{Cache, CacheBuilder}
 import com.google.common.collect.Lists
 import org.apache.calcite.linq4j.{Enumerable, Linq4j}
 import org.apache.calcite.rel.`type`.RelDataType
+import org.apache.kylin.common.debug.BackdoorToggles
 import org.apache.kylin.common.exceptions.KylinTimeoutException
 import org.apache.kylin.common.{KylinConfig, QueryContext, QueryContextFacade}
 import org.apache.kylin.common.util.HadoopUtil
+import org.apache.kylin.metadata.project.ProjectManager
 import org.apache.kylin.query.runtime.plans.ResultType.ResultType
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SparderContext}
@@ -62,7 +64,11 @@ object ResultPlan extends Logging {
     val resultTypes = rowType.getFieldList.asScala
     val jobGroup = Thread.currentThread().getName
     val sparkContext = SparderContext.getSparkSession.sparkContext
-    val kylinConfig = KylinConfig.getInstanceFromEnv
+    val projectName = QueryContextFacade.current().getProject
+    var kylinConfig = KylinConfig.getInstanceFromEnv
+    if (projectName != null) {
+      kylinConfig = ProjectManager.getInstance(kylinConfig).getProject(projectName).getConfig
+    }
     var pool = "heavy_tasks"
     val partitionsNum =
       if (kylinConfig.getSparkSqlShufflePartitions != -1) {
@@ -71,16 +77,23 @@ object ResultPlan extends Logging {
         Math.min(QueryContextFacade.current().getSourceScanBytes / PARTITION_SPLIT_BYTES + 1,
           SparderContext.getTotalCore).toInt
       }
+
     if (QueryContextFacade.current().isHighPriorityQuery) {
       pool = "vip_tasks"
-    } else if (QueryContextFacade.current().isTableIndex) {
-      pool = "extreme_heavy_tasks"
     } else if (partitionsNum <= SparderContext.getTotalCore) {
       pool = "lightweight_tasks"
     }
 
+    if (kylinConfig.getProjectQuerySparkPool != null) {
+      pool = kylinConfig.getProjectQuerySparkPool
+    }
+    if (BackdoorToggles.getDebugToggleSparkPool != null) {
+      pool = BackdoorToggles.getDebugToggleSparkPool
+    }
+
     // set priority
     sparkContext.setLocalProperty("spark.scheduler.pool", pool)
+    QueryContextFacade.current().setSparkPool(pool)
     val queryId = QueryContextFacade.current().getQueryId
     sparkContext.setLocalProperty(QueryToExecutionIDCache.KYLIN_QUERY_ID_KEY, queryId)
     //df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions",

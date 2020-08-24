@@ -75,6 +75,10 @@ public class BackdoorToggles {
         return getString(DEBUG_TOGGLE_HIT_CUBE);
     }
 
+    public static String getDebugToggleSparkPool(){
+        return getString(DEBUG_TOGGLE_SPARK_POOL);
+    }
+
     public static String getCoprocessorBehavior() {
         return getString(DEBUG_TOGGLE_COPROCESSOR_BEHAVIOR);
     }
@@ -395,4 +399,6 @@ public class BackdoorToggles {
      *  check https://issues.apache.org/jira/browse/KYLIN-4312 for information.
      */
     public final static String DEBUG_TOGGLE_HIT_CUBE = "DEBUG_TOGGLE_HIT_CUBE";
+
+    public final static String DEBUG_TOGGLE_SPARK_POOL = "DEBUG_TOGGLE_SPARK_POOL";
 }

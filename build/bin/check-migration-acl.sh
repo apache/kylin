@@ -25,7 +25,7 @@ metadataUrl=`${dir}/get-properties.sh kylin.metadata.url`
 
 if [[ "${metadataUrl##*@}" != "hbase" ]]
 then
-    echo "Not HBase metadata ${metadataUrl}. Skip check."
+    echo "Not HBase metadata. Skip check."
     exit 0
 fi
 

@@ -34,7 +34,7 @@ public class SQLResponseTest {
     public void testInterfaceConsistency() throws IOException {
         String[] attrArray = new String[] { "columnMetas", "results", "cube", "affectedRowCount", "isException",
                 "exceptionMessage", "duration", "partial", "totalScanCount", "hitExceptionCache", "storageCacheUsed",
-                "pushDown", "traceUrl", "totalScanBytes" };
+                "sparkPool", "pushDown", "traceUrl", "totalScanBytes" };
 
         SQLResponse sqlResponse = new SQLResponse(null, null, "learn_cube", 100, false, null, false, false);
         String jsonStr = JsonUtil.writeValueAsString(sqlResponse);
