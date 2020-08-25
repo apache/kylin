@@ -170,7 +170,7 @@ object CreateFlatTable extends Logging {
                        ss: SparkSession): Dataset[Row] = {
     var afterJoin = rootFactDataset
     val joinType = joinDesc.joinType
-    if (joinType != null && !StringUtils.isEmpty(joinType)) {
+    if (StringUtils.isNotEmpty(joinType)) {
       val pk = joinDesc.PKS
       val fk = joinDesc.FKS
       if (pk.length != fk.length) {

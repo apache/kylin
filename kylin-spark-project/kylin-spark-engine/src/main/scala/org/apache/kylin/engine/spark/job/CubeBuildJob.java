@@ -222,12 +222,13 @@ public class CubeBuildJob extends SparkApplication {
                 buildLayoutWithUpdate.submit(new BuildLayoutWithUpdate.JobEntity() {
                     @Override
                     public String getName() {
-                        return "build-index-" + index.getId();
+                        return "build-cuboid-" + index.getId();
                     }
 
                     @Override
                     public LayoutEntity build() throws IOException {
-                        return buildIndex(seg, index, parentDS, st, info.getLayoutId(), parentDSCnt);
+                        return buildCuboid(seg, index, parentDS, st, info.getLayoutId(),
+                                parentDSCnt);
                     }
                 }, config);
                 allIndexesInCurrentLayer.add(index);
@@ -288,7 +289,7 @@ public class CubeBuildJob extends SparkApplication {
         return ResourceDetectUtils.selectMaxValueInFiles(fileStatuses);
     }
 
-    private LayoutEntity buildIndex(SegmentInfo seg, LayoutEntity cuboid, Dataset<Row> parent,
+    private LayoutEntity buildCuboid(SegmentInfo seg, LayoutEntity cuboid, Dataset<Row> parent,
                                     SpanningTree spanningTree, long parentId, long parentDSCnt) throws IOException {
         String parentName = String.valueOf(parentId);
         if (parentId == ParentSourceChooser.FLAT_TABLE_FLAG()) {

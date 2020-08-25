@@ -38,6 +38,7 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.JobStoppedException;
 import org.apache.kylin.job.exception.PersistentException;
@@ -81,7 +82,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     private AbstractExecutable parentExecutable = null;
     private Map<String, String> params = Maps.newHashMap();
     protected Integer priority;
-    private JobTypeEnum jobType;
+    private CubeBuildTypeEnum jobType;
     protected String project;
     private String targetSubject;
     private List<String> targetSegments = Lists.newArrayList();//uuid of related segments
@@ -592,7 +593,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         this.project = project;
     }
 
-    public void setJobType(JobTypeEnum jobType) {
+    public void setJobType(CubeBuildTypeEnum jobType) {
         this.jobType = jobType;
     }
 

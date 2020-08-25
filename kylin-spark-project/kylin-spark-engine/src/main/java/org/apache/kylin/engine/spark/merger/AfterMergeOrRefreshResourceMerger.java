@@ -30,9 +30,9 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
+import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -69,7 +69,7 @@ public class AfterMergeOrRefreshResourceMerger extends MetadataMerger {
         Collections.sort(toRemoveSegments);
         makeSnapshotForNewSegment(mergedSegment, toRemoveSegments);
 
-        if (String.valueOf(JobTypeEnum.INDEX_MERGE).equals(jobType)) {
+        if (String.valueOf(CubeBuildTypeEnum.MERGE).equals(jobType)) {
             Optional<Long> reduce = toRemoveSegments.stream().map(CubeSegment::getSizeKB).filter(size -> size != -1)
                     .reduce(Long::sum);
             Optional<Long> inputRecords = toRemoveSegments.stream().map(CubeSegment::getInputRecords).filter(records -> records != -1)

@@ -307,6 +307,7 @@ public abstract class KylinConfigBase implements Serializable {
         String metaId = getMetadataUrlPrefix().replace(':', '-');
         //transform relative path for local metadata
         if (metaId.startsWith("../")) {
+            metaId = metaId.replace("../", "");
             metaId = metaId.replace('/', '-');
         }
 

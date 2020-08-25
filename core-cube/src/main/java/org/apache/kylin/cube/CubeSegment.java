@@ -69,7 +69,7 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     @JsonProperty("name")
     private String name;
     @JsonProperty("storage_location_identifier")
-    private String storageLocationIdentifier; // HTable name
+    private String storageLocationIdentifier;
     @JsonProperty("date_range_start")
     private long dateRangeStart;
     @JsonProperty("date_range_end")

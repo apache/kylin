@@ -21,7 +21,5 @@ package org.apache.kylin.engine.spark.job;
 public enum JobStepType {
     RESOURCE_DETECT,
 
-    CLEAN_UP_AFTER_MERGE, CUBING, MERGING,
-
-    SAMPLING
+    CLEAN_UP_AFTER_MERGE, CUBING, MERGING
 }
