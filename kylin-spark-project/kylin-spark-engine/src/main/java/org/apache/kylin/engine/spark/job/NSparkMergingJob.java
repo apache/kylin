@@ -32,7 +32,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.job.execution.JobTypeEnum;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +81,7 @@ public class NSparkMergingJob extends CubingJob {
         job.setParam(MetadataConstants.P_DATA_RANGE_START, mergedSegment.getSegRange().start.toString());
         job.setParam(MetadataConstants.P_DATA_RANGE_END, mergedSegment.getSegRange().end.toString());
         job.setParam(MetadataConstants.P_OUTPUT_META_URL, cube.getConfig().getMetadataUrl().toString());
-        job.setParam(MetadataConstants.P_JOB_TYPE, String.valueOf(JobTypeEnum.INDEX_MERGE));
+        job.setParam(MetadataConstants.P_JOB_TYPE, String.valueOf(jobType));
         job.setParam(MetadataConstants.P_CUBOID_NUMBER, String.valueOf(cube.getDescriptor().getAllCuboids().size()));
 
         JobStepFactory.addStep(job, JobStepType.RESOURCE_DETECT, cube);

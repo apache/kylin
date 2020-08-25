@@ -87,8 +87,8 @@ public class NSparkCubingUtil {
 
     public static String getStoragePath(CubeSegment nDataSegment, Long layoutId) {
         String hdfsWorkingDir = nDataSegment.getConfig().getReadHdfsWorkingDirectory();
-        return   hdfsWorkingDir +
-                getStoragePathWithoutPrefix(nDataSegment.getProject(), nDataSegment.getCubeInstance().getId(), nDataSegment.getUuid(), layoutId);
+        return hdfsWorkingDir + getStoragePathWithoutPrefix(nDataSegment.getProject(),
+                nDataSegment.getCubeInstance().getId(), nDataSegment.getUuid(), layoutId);
     }
 
     static Set<String> toSegmentNames(Segments<CubeSegment> segments) {

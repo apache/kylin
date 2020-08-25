@@ -587,23 +587,23 @@ public class KylinConfig extends KylinConfigBase {
                 throw new IllegalArgumentException(localMetaDir + " is not a valid local meta dir");
 
             destroyInstance();
-            String canonicalPath = localMetaDir;
+
+            logger.info("Setting KylinConfig to {} in UT.", localMetaDir);
+            System.setProperty(KylinConfig.KYLIN_CONF, localMetaDir);
+
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
+            config.setMetadataUrl(localMetaDir);
+
+            // create a local working dir
+            File workingDir = new File(localMetaDir, "working-dir");
+            workingDir.mkdirs();
+            String path = "";
             try {
                 // remove the ".." in path string
-                canonicalPath = new File(localMetaDir).getCanonicalPath();
+                path = workingDir.getCanonicalPath();
             } catch (IOException e) {
                 throw new IllegalStateException("");
             }
-
-            logger.info("Setting KylinConfig to {} in UT.", canonicalPath);
-            System.setProperty(KylinConfig.KYLIN_CONF, canonicalPath);
-
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
-            config.setMetadataUrl(canonicalPath);
-
-            File workingDir = new File(canonicalPath, "working-dir");
-            workingDir.mkdirs();
-            String path = workingDir.getAbsolutePath();
             if (!path.startsWith("/"))
                 path = "/" + path;
             if (!path.endsWith("/"))
