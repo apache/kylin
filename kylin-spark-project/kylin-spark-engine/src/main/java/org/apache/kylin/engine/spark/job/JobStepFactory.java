@@ -20,11 +20,7 @@ package org.apache.kylin.engine.spark.job;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.metadata.MetadataConstants;
-import org.apache.kylin.metadata.model.Segments;
 
 public class JobStepFactory {
 
