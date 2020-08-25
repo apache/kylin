@@ -151,7 +151,8 @@ kylin.engine.livy-conf.livy-arr.jars=hdfs:///path/hbase-client-1.2.0-{$env.versi
 
 {% highlight Groff markup %}
 kylin.engine.spark-fact-distinct=true
-kylin.engine.spark-dimension-dictionary=true 
+kylin.engine.spark-dimension-dictionary=true
+kylin.engine.spark-uhc-dictionary=true
 {% endhighlight %}
 
 ## 疑难解答

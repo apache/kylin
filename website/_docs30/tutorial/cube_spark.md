@@ -148,7 +148,7 @@ As we all know, the cubing job includes several steps and the steps 'extract fac
 {% highlight Groff markup %}
 kylin.engine.spark-fact-distinct=true
 kylin.engine.spark-dimension-dictionary=true 
-kylin.engine.spark-udc-dictionary=true
+kylin.engine.spark-uhc-dictionary=true
 {% endhighlight %}
 
 ## Troubleshooting
