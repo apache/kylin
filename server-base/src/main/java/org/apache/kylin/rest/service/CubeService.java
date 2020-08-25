@@ -29,12 +29,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.CliCommandExecutor;
-import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -630,18 +628,15 @@ public class CubeService extends BasicService implements InitializingBean {
         return cubeInstance;
     }
 
-    // clean segment data in hbase and hdfs
+    // clean segment data in hdfs
     private void cleanSegmentStorage(CubeInstance cube, List<CubeSegment> toRemoveSegs) throws IOException {
         if (!KylinConfig.getInstanceFromEnv().cleanStorageAfterDelOperation()) {
             return;
         }
 
         if (toRemoveSegs != null && !toRemoveSegs.isEmpty()) {
-            for (CubeSegment seg : toRemoveSegs) {
-                String path = PathManager.getSegmentParquetStoragePath(cube, seg.getName(),
-                        seg.getStorageLocationIdentifier());
-                logger.info("Deleting segment HDFS path {}", path);
-                HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), new Path(path));
+            for (CubeSegment segment : toRemoveSegs) {
+                PathManager.deleteSegmentParquetStoragePath(cube, segment);
             }
         }
     }

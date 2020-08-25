@@ -24,11 +24,13 @@ import com.google.common.collect.Sets;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.constant.ExecutableConstants;
+import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
@@ -118,5 +120,12 @@ public class NSparkCubingStep extends NSparkExecutable {
         joblogInfo.put(CubingJob.SOURCE_SIZE_BYTES, String.valueOf(cube.getInputRecordSizeBytes()));
         joblogInfo.put(CubingJob.CUBE_SIZE_BYTES, String.valueOf(cube.getSizeKB()));
         return joblogInfo;
+    }
+
+    @Override
+    public void cleanup() throws ExecuteException {
+        // delete job tmp dir
+        PathManager.deleteJobTempPath(getConfig(), getParam(MetadataConstants.P_PROJECT_NAME),
+                getParam(MetadataConstants.P_JOB_ID));
     }
 }

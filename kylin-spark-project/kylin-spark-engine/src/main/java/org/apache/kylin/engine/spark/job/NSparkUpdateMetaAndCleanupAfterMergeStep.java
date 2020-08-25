@@ -20,11 +20,8 @@ package org.apache.kylin.engine.spark.job;
 
 import java.io.IOException;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -54,11 +51,10 @@ public class NSparkUpdateMetaAndCleanupAfterMergeStep extends NSparkExecutable {
 
         CubeSegment mergedSegment = cube.getSegmentById(mergedSegmentUuid);
         Segments<CubeSegment> mergingSegments = cube.getMergingSegments(mergedSegment);
+        // delete segments which were merged
         for (CubeSegment segment : mergingSegments) {
-            String path = PathManager.getSegmentParquetStoragePath(cube, segment.getName(),
-                    segment.getStorageLocationIdentifier());
             try {
-                HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), new Path(path));
+                PathManager.deleteSegmentParquetStoragePath(cube, segment);
             } catch (IOException e) {
                 throw new ExecuteException("Can not delete segment: " + segment.getName() + ", in cube: " + cube.getName());
             }
@@ -75,5 +71,12 @@ public class NSparkUpdateMetaAndCleanupAfterMergeStep extends NSparkExecutable {
         String mergedSegmentId = getParam(CubingExecutableUtil.SEGMENT_ID);
         AfterMergeOrRefreshResourceMerger merger = new AfterMergeOrRefreshResourceMerger(buildConfig);
         merger.merge(cubeId, mergedSegmentId, resourceStore, getParam(MetadataConstants.P_JOB_TYPE));
+    }
+
+    @Override
+    public void cleanup() throws ExecuteException {
+        // delete job tmp dir
+        PathManager.deleteJobTempPath(getConfig(), getParam(MetadataConstants.P_PROJECT_NAME),
+                getParam(MetadataConstants.P_JOB_ID));
     }
 }
