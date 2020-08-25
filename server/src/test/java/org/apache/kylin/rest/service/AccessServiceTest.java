@@ -214,4 +214,57 @@ public class AccessServiceTest extends ServiceTestBase {
         accessService.revokeProjectPermission("ANALYST", MetadataConstants.TYPE_USER);
         Assert.assertEquals(0, accessService.getAcl(ae).getEntries().size());
     }
+
+    @Test
+    public void testIndexInAclRecord() throws IOException {
+        List<ProjectInstance> projects = projectService.listProjects(10000, 0);
+        assertTrue(projects.size() > 0);
+        ProjectInstance project = projects.get(0);
+        RootPersistentEntity ae = accessService.getAclEntity(PROJECT_INSTANCE, project.getUuid());
+        final Map<Sid, Permission> sidToPerm = new HashMap<>();
+        for (int i = 0; i < 3; i++) {
+            sidToPerm.put(new PrincipalSid("user_" + i), AclPermission.ADMINISTRATION);
+        }
+        accessService.batchGrant(ae, sidToPerm);
+        Assert.assertEquals(3, accessService.getAcl(ae).getEntries().size());
+
+        // check revoke
+        MutableAclRecord newRecord = accessService.revoke(ae, 1);
+        Assert.assertTrue(checkIndexInAclRecord(newRecord, accessService.getAcl(ae)));
+        Assert.assertEquals(2, accessService.getAcl(ae).getEntries().size());
+
+        // check grant
+        PrincipalSid sid = new PrincipalSid("user_1");
+        newRecord = accessService.grant(ae, AclPermission.ADMINISTRATION, sid);
+        Assert.assertTrue(checkIndexInAclRecord(newRecord, accessService.getAcl(ae)));
+        Assert.assertEquals(3, accessService.getAcl(ae).getEntries().size());
+
+        // check update
+        newRecord = accessService.update(ae, 2, AclPermission.OPERATION);
+        Assert.assertTrue(checkIndexInAclRecord(newRecord, accessService.getAcl(ae)));
+        Assert.assertEquals(3, accessService.getAcl(ae).getEntries().size());
+
+        newRecord = accessService.revoke(ae, 0);
+        Assert.assertTrue(checkIndexInAclRecord(newRecord, accessService.getAcl(ae)));
+        Assert.assertEquals(2, accessService.getAcl(ae).getEntries().size());
+
+        newRecord = accessService.revoke(ae, 0);
+        Assert.assertTrue(checkIndexInAclRecord(newRecord, accessService.getAcl(ae)));
+        Assert.assertEquals(1, accessService.getAcl(ae).getEntries().size());
+
+        newRecord = accessService.revoke(ae, 0);
+        Assert.assertTrue(checkIndexInAclRecord(newRecord, accessService.getAcl(ae)));
+        Assert.assertEquals(0, accessService.getAcl(ae).getEntries().size());
+    }
+
+    private boolean checkIndexInAclRecord(MutableAclRecord left, MutableAclRecord right) {
+        for (int i = 0; i < left.getEntries().size(); i++) {
+            AccessControlEntry leftAce = left.getEntries().get(i);
+            AccessControlEntry rightAce = right.getEntries().get(i);
+            if (!(leftAce.equals(rightAce) && leftAce.getId().equals(rightAce.getId()))) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
