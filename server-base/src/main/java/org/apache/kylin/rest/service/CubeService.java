@@ -29,10 +29,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -44,9 +46,9 @@ import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
-import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.CubeJobLockUtil;
 import org.apache.kylin.engine.mr.common.CuboidRecommenderUtil;
+import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.constant.JobStatusEnum;
@@ -360,7 +362,7 @@ public class CubeService extends BasicService implements InitializingBean {
         int cubeNum = getCubeManager().getCubesByDesc(cube.getDescriptor().getName()).size();
         getCubeManager().dropCube(cube.getName(), cubeNum == 1);//only delete cube desc when no other cube is using it
 
-        cleanSegmentStorage(toRemoveSegs);
+        cleanSegmentStorage(cube, toRemoveSegs);
     }
 
     /**
@@ -623,28 +625,24 @@ public class CubeService extends BasicService implements InitializingBean {
 
         CubeInstance cubeInstance = CubeManager.getInstance(getConfig()).updateCubeDropSegments(cube, toDelete);
 
-        cleanSegmentStorage(Collections.singletonList(toDelete));
+        cleanSegmentStorage(cubeInstance, Collections.singletonList(toDelete));
 
         return cubeInstance;
     }
 
     // clean segment data in hbase and hdfs
-    private void cleanSegmentStorage(List<CubeSegment> toRemoveSegs) throws IOException {
+    private void cleanSegmentStorage(CubeInstance cube, List<CubeSegment> toRemoveSegs) throws IOException {
         if (!KylinConfig.getInstanceFromEnv().cleanStorageAfterDelOperation()) {
             return;
         }
 
         if (toRemoveSegs != null && !toRemoveSegs.isEmpty()) {
-            List<String> toDropHTables = Lists.newArrayListWithCapacity(toRemoveSegs.size());
-            List<String> toDelHDFSPaths = Lists.newArrayListWithCapacity(toRemoveSegs.size());
             for (CubeSegment seg : toRemoveSegs) {
-                toDropHTables.add(seg.getStorageLocationIdentifier());
-                toDelHDFSPaths.add(JobBuilderSupport.getJobWorkingDir(seg.getConfig().getHdfsWorkingDirectory(),
-                        seg.getLastBuildJobID()));
+                String path = PathManager.getSegmentParquetStoragePath(cube, seg.getName(),
+                        seg.getStorageLocationIdentifier());
+                logger.info("Deleting segment HDFS path {}", path);
+                HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), new Path(path));
             }
-
-//            StorageCleanUtil.dropHTables(new HBaseAdmin(HBaseConnection.getCurrentHBaseConfiguration()), toDropHTables);
-//            StorageCleanUtil.deleteHDFSPath(HadoopUtil.getWorkingFileSystem(), toDelHDFSPaths);
         }
     }
 
@@ -702,7 +700,7 @@ public class CubeService extends BasicService implements InitializingBean {
         // remove from metadata
         getCubeManager().clearSegments(cube);
 
-        cleanSegmentStorage(toRemoveSegs);
+        cleanSegmentStorage(cube, toRemoveSegs);
     }
 
     public void updateOnNewSegmentReady(String cubeName) {

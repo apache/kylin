@@ -27,14 +27,16 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
+import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.ExecutableContext;
-
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.Segments;
 
 public class NSparkUpdateMetaAndCleanupAfterMergeStep extends NSparkExecutable {
     public NSparkUpdateMetaAndCleanupAfterMergeStep() {
@@ -44,18 +46,21 @@ public class NSparkUpdateMetaAndCleanupAfterMergeStep extends NSparkExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         String cubeId = getParam(MetadataConstants.P_CUBE_ID);
-        String[] segments = StringUtils.split(getParam(MetadataConstants.P_SEGMENT_NAMES), ",");
+        String mergedSegmentUuid = getParam(CubingExecutableUtil.SEGMENT_ID);
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         CubeInstance cube = CubeManager.getInstance(config).getCubeByUuid(cubeId);
 
         updateMetadataAfterMerge(cubeId);
 
-        for (String segmentName : segments) {
-            String path = config.getHdfsWorkingDirectory() + cube.getProject() + "/parquet/" + cube.getName() + "/" + segmentName;
+        CubeSegment mergedSegment = cube.getSegmentById(mergedSegmentUuid);
+        Segments<CubeSegment> mergingSegments = cube.getMergingSegments(mergedSegment);
+        for (CubeSegment segment : mergingSegments) {
+            String path = PathManager.getSegmentParquetStoragePath(cube, segment.getName(),
+                    segment.getStorageLocationIdentifier());
             try {
                 HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), new Path(path));
             } catch (IOException e) {
-                throw new ExecuteException("Can not delete segment: " + segmentName + ", in cube: " + cube.getName());
+                throw new ExecuteException("Can not delete segment: " + segment.getName() + ", in cube: " + cube.getName());
             }
         }
 

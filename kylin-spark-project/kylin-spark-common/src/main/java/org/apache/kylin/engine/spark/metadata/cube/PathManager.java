@@ -31,12 +31,16 @@ public final class PathManager {
 
     public static String getParquetStoragePath(KylinConfig config, String cubeName, String segName, String identifier, String cuboidId) {
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
-        String hdfsWorkDir = config.getHdfsWorkingDirectory(cube.getProject());
-        return hdfsWorkDir + "parquet" + File.separator + cubeName + File.separator + segName + "_" + identifier + File.separator + cuboidId;
+        return getParquetStoragePath(cube, segName, identifier, Long.parseLong(cuboidId));
     }
 
     public static String getParquetStoragePath(CubeInstance cube, String segName, String identifier, Long cuboidId) {
         String hdfsWorkDir = cube.getConfig().getHdfsWorkingDirectory(cube.getProject());
         return hdfsWorkDir + "parquet" + File.separator + cube.getName() + File.separator + segName + "_" + identifier + File.separator + cuboidId;
+    }
+
+    public static String getSegmentParquetStoragePath(CubeInstance cube, String segName, String identifier) {
+        String hdfsWorkDir = cube.getConfig().getHdfsWorkingDirectory(cube.getProject());
+        return hdfsWorkDir + "parquet" + File.separator + cube.getName() + File.separator + segName + "_" + identifier;
     }
 }
