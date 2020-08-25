@@ -35,10 +35,7 @@ import org.junit.Test;
 import org.spark_project.guava.collect.Sets;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class JobStepFactoryTest extends LocalWithSparkSessionTest {
     private KylinConfig config;
