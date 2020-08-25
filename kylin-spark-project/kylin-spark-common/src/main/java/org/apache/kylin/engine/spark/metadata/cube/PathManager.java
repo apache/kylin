@@ -19,10 +19,15 @@
 package org.apache.kylin.engine.spark.metadata.cube;
 
 import java.io.File;
+import java.io.IOException;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,5 +47,44 @@ public final class PathManager {
     public static String getSegmentParquetStoragePath(CubeInstance cube, String segName, String identifier) {
         String hdfsWorkDir = cube.getConfig().getHdfsWorkingDirectory(cube.getProject());
         return hdfsWorkDir + "parquet" + File.separator + cube.getName() + File.separator + segName + "_" + identifier;
+    }
+
+    /**
+     * Delete segment path
+     */
+    public static boolean deleteSegmentParquetStoragePath(CubeInstance cube, CubeSegment segment) throws IOException {
+        if (cube == null || segment == null) {
+            return false;
+        }
+        String path = getSegmentParquetStoragePath(cube, segment.getName(),
+                segment.getStorageLocationIdentifier());
+        logger.info("Deleting segment parquet path {}", path);
+        HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), new Path(path));
+        return true;
+    }
+
+    /**
+     * Delete job temp path
+     */
+    public static boolean deleteJobTempPath(KylinConfig kylinConfig, String project, String jobId) {
+        if (StringUtils.isEmpty(jobId) || StringUtils.isEmpty(project)) {
+            return false;
+        }
+        Path jobTmpPath = new Path(kylinConfig.getJobTmpDir(project));
+        try {
+            Path[] toDeletedPath =
+                    HadoopUtil.getFilteredPath(jobTmpPath.getFileSystem(HadoopUtil.getCurrentConfiguration()),
+                            jobTmpPath, jobId);
+            if (toDeletedPath != null && toDeletedPath.length > 0) {
+                for (Path deletedPath : toDeletedPath) {
+                    logger.info("Deleting job tmp path {}", deletedPath.toString());
+                    HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), deletedPath);
+                }
+            }
+        } catch (IOException e) {
+            logger.error("Can not delete job tmp path: {}", jobTmpPath);
+            return false;
+        }
+        return true;
     }
 }

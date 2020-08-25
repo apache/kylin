@@ -198,6 +198,8 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                 } catch (Throwable e) {
                     logger.error("error running Executable: {}", this.toString());
                     catchedException = e;
+                } finally {
+                    cleanup();
                 }
                 retry++;
                 realException = catchedException != null ? catchedException

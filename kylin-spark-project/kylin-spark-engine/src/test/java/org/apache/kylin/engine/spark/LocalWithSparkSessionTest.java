@@ -31,6 +31,7 @@ import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.spark.builder.CreateFlatTable;
 import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.engine.spark.job.NSparkCubingStep;
@@ -45,6 +46,7 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.lock.MockJobLock;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelManager;
@@ -184,7 +186,11 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         // launch the job
         execMgr.addJob(job);
 
-        return wait(job);
+        ExecutableState result = wait(job);
+
+        checkJobTmpPathDeleted(config, job);
+
+        return result;
     }
 
     protected ExecutableState mergeSegments(String cubeName, long start, long end, boolean force) throws Exception {
@@ -202,6 +208,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
                     segment.getStorageLocationIdentifier());
             Assert.assertFalse(HadoopUtil.getFileSystem(path).exists(new Path(HadoopUtil.makeURI(path))));
         }
+        checkJobTmpPathDeleted(config, mergeJob);
         return result;
     }
 
@@ -305,5 +312,18 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
 
     public String getProject() {
         return "default";
+    }
+
+    protected void checkJobTmpPathDeleted(KylinConfig config, CubingJob job) {
+        String project = job.getParam(MetadataConstants.P_PROJECT_NAME);
+        String jobId = job.getParam(MetadataConstants.P_JOB_ID);
+        Path jobTmpPath = new Path(config.getJobTmpDir(project));
+        try {
+            Path[] jobTmpPathArray =
+                    HadoopUtil.getFilteredPath(jobTmpPath.getFileSystem(HadoopUtil.getCurrentConfiguration()),
+                            jobTmpPath, jobId);
+            Assert.assertTrue(jobTmpPathArray.length == 0);
+        } catch (IOException e) {
+        }
     }
 }
