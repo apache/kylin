@@ -132,7 +132,7 @@ These steps are the "by-layer" cubing process, each step uses the output of prev
 
 Some cuboid can be aggregated from more than 1 parent cubiods, in this case, Kylin will select the minimal parent cuboid. For example, AB can be generated from ABC (id: 1110) and ABD (id: 1101), so ABD will be used as its id is smaller than ABC. Based on this, if D's cardinality is small, the aggregation will be cost-efficient. So, when you design the Cube rowkey sequence, please remember to put low cardinality dimensions to the tail position. This not only benefit the Cube build, but also benefit the Cube query as the post-aggregation follows the same rule.
 
-Usually from the N-D to (N/2)-D the building is slow, because it is the cuboid explosion process: N-D has 1 Cuboid, (N-1)-D has N cuboids, (N-2)-D has N*(N-1) cuboids, etc. After (N/2)-D step, the building gets faster gradually.
+Usually from the N-D to (N/2)-D the building is slow, because it is the cuboid explosion process: N-D has 1 Cuboid, (N-1)-D has N cuboids, (N-2)-D has N*(N-1)/2 cuboids, etc. After (N/2)-D step, the building gets faster gradually.
 
 
 
