@@ -47,8 +47,8 @@
         </thead>
 
         <tbody ng-repeat="project in projects | orderObjectBy:state.filterAttr:state.filterReverse">
-            <tr ng-class="{accordion:true}" style="cursor: pointer">
-                <td  ng-click="project.showDetail=!project.showDetail;">
+            <tr ng-class="{accordion:true}" style="cursor: pointer" ng-click="project.showDetail=!project.showDetail;">
+                <td>
                     <i ng-show="!project.showDetail" class="fa fa-chevron-circle-right blue"></i>
                     <i ng-show="project.showDetail" class="fa fa-chevron-circle-down blue"></i>
                     {{ project.name}}
