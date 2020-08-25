@@ -20,10 +20,12 @@ package org.apache.kylin.engine.spark;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.cube.CubeInstance;
@@ -35,6 +37,7 @@ import org.apache.kylin.engine.spark.job.NSparkCubingStep;
 import org.apache.kylin.engine.spark.job.NSparkMergingJob;
 import org.apache.kylin.engine.spark.job.UdfManager;
 import org.apache.kylin.engine.spark.metadata.MetadataConverter;
+import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -46,6 +49,7 @@ import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -191,7 +195,14 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         CubeSegment mergeSegment = cubeMgr.mergeSegments(cube, new SegmentRange.TSRange(start, end), null, force);
         NSparkMergingJob mergeJob = NSparkMergingJob.merge(mergeSegment,  "ADMIN");
         execMgr.addJob(mergeJob);
-        return wait(mergeJob);
+        ExecutableState result = wait(mergeJob);
+        Segments<CubeSegment> mergingSegments = cube.getMergingSegments(mergeSegment);
+        for (CubeSegment segment : mergingSegments) {
+            String path = PathManager.getSegmentParquetStoragePath(cube, segment.getName(),
+                    segment.getStorageLocationIdentifier());
+            Assert.assertFalse(HadoopUtil.getFileSystem(path).exists(new Path(HadoopUtil.makeURI(path))));
+        }
+        return result;
     }
 
     protected void fullBuildCube(String cubeName) throws Exception {

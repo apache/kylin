@@ -131,13 +131,7 @@ public class JobStepFactoryTest extends LocalWithSparkSessionTest {
         CubeInstance cubeInstance = cubeMgr.reloadCube(CUBE_NAME);
         NSparkUpdateMetaAndCleanupAfterMergeStep cleanStep = job.getCleanUpAfterMergeStep();
         job.getParams().forEach((key, value) -> {
-            if (key.equalsIgnoreCase(MetadataConstants.P_SEGMENT_IDS)) {
-                final List<String> needDeleteSegmentNames = cubeInstance.getMergingSegments(mergedSegment).stream()
-                        .map(CubeSegment::getName).collect(Collectors.toList());
-                Assert.assertEquals(needDeleteSegmentNames, Arrays.asList(cleanStep.getParam(MetadataConstants.P_SEGMENT_NAMES).split(",")));
-            } else {
-                Assert.assertEquals(value, mergeStep.getParam(key));
-            }
+            Assert.assertEquals(value, mergeStep.getParam(key));
         });
         Assert.assertEquals(config.getJobTmpMetaStoreUrl(getProject(), cleanStep.getId()).toString(),
                 cleanStep.getDistMetaUrl());
