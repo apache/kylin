@@ -306,8 +306,8 @@ public class AclService implements MutableAclService, InitializingBean {
 
             updater.update(record);
             try {
-                crud.save(record);
-                return acl; // here we are done
+                AclRecord newRecord = crud.save(record);
+                return new MutableAclRecord(newRecord); // here we are done
 
             } catch (WriteConflictException ise) {
                 if (retry <= 0) {
