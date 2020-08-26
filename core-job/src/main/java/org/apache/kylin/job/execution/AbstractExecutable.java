@@ -199,7 +199,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                     logger.error("error running Executable: {}", this.toString());
                     catchedException = e;
                 } finally {
-                    cleanup();
+                    cleanup(result);
                 }
                 retry++;
                 realException = catchedException != null ? catchedException
@@ -251,7 +251,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected abstract ExecuteResult doWork(ExecutableContext context) throws ExecuteException, PersistentException;
 
     @Override
-    public void cleanup() throws ExecuteException {
+    public void cleanup(ExecuteResult result) throws ExecuteException {
 
     }
 

@@ -74,9 +74,11 @@ public class NSparkUpdateMetaAndCleanupAfterMergeStep extends NSparkExecutable {
     }
 
     @Override
-    public void cleanup() throws ExecuteException {
+    public void cleanup(ExecuteResult result) throws ExecuteException {
         // delete job tmp dir
-        PathManager.deleteJobTempPath(getConfig(), getParam(MetadataConstants.P_PROJECT_NAME),
-                getParam(MetadataConstants.P_JOB_ID));
+        if (result != null && result.state().ordinal() == ExecuteResult.State.SUCCEED.ordinal()) {
+            PathManager.deleteJobTempPath(getConfig(), getParam(MetadataConstants.P_PROJECT_NAME),
+                    getParam(MetadataConstants.P_JOB_ID));
+        }
     }
 }
