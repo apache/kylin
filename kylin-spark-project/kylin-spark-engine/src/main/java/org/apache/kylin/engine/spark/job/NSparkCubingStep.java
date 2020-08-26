@@ -31,6 +31,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
@@ -123,9 +124,11 @@ public class NSparkCubingStep extends NSparkExecutable {
     }
 
     @Override
-    public void cleanup() throws ExecuteException {
+    public void cleanup(ExecuteResult result) throws ExecuteException {
         // delete job tmp dir
-        PathManager.deleteJobTempPath(getConfig(), getParam(MetadataConstants.P_PROJECT_NAME),
-                getParam(MetadataConstants.P_JOB_ID));
+        if (result != null && result.state().ordinal() == ExecuteResult.State.SUCCEED.ordinal()) {
+            PathManager.deleteJobTempPath(getConfig(), getParam(MetadataConstants.P_PROJECT_NAME),
+                    getParam(MetadataConstants.P_JOB_ID));
+        }
     }
 }

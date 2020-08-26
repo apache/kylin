@@ -24,5 +24,5 @@ import org.apache.kylin.job.exception.ExecuteException;
  */
 public interface Idempotent {
 
-    void cleanup() throws ExecuteException;
+    void cleanup(ExecuteResult result) throws ExecuteException;
 }
