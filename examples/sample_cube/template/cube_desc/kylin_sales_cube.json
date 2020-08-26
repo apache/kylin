@@ -192,6 +192,24 @@
         },
         "returntype": "bitmap"
       }
+  }, {
+    "name" : "PRICE_PERCENTILE",
+    "function" : {
+      "expression" : "PERCENTILE_APPROX",
+      "parameter" : {
+        "type" : "column",
+        "value" : "KYLIN_SALES.PRICE"
+      },
+      "returntype" : "percentile(100)"
+    }
+  }
+  ],
+  "dictionaries": [
+    {
+      "column": "KYLIN_SALES.ITEM_ID",
+      "builder": "org.apache.kylin.dict.GlobalDictionaryBuilder",
+      "cube": null,
+      "model": null
     }
   ],
   "rowkey" : {
@@ -200,7 +218,8 @@
       "encoding" : "integer:4"
     }, {
       "column" : "SELLER_ID",
-      "encoding" : "integer:4"
+      "encoding" : "integer:4",
+      "isShardBy" : true
     }, {
       "column" : "TRANS_ID",
       "encoding" : "integer:4"
@@ -262,7 +281,7 @@
       "name" : "F2",
       "columns" : [ {
         "qualifier" : "M",
-        "measure_refs" : [ "SELLER_CNT_HLL", "TOP_SELLER", "ITEM_BITMAP" ]
+        "measure_refs" : [ "SELLER_CNT_HLL", "TOP_SELLER", "ITEM_BITMAP", "PRICE_PERCENTILE" ]
       } ]
     } ]
   },
