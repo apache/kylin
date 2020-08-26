@@ -2686,4 +2686,8 @@ public abstract class KylinConfigBase implements Serializable {
     public Map<String, String> getJobStatusKafkaConfig() {
         return getPropertiesByPrefix("kylin.engine.job-status.kafka.");
     }
+
+    public int getHTableQuota() {
+        return Integer.parseInt(getOptional("kylin.hbase.htable-quota", "-1"));
+    }
 }

@@ -20,6 +20,7 @@ package org.apache.kylin.storage.hbase.steps;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -35,6 +36,10 @@ import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.exceptions.TimeoutIOException;
 import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
+import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
+import org.apache.hadoop.hbase.protobuf.generated.QuotaProtos;
+import org.apache.hadoop.hbase.quotas.QuotaScope;
+import org.apache.hadoop.hbase.quotas.QuotaUtil;
 import org.apache.hadoop.hbase.regionserver.BloomType;
 import org.apache.hadoop.hbase.regionserver.DisabledRegionSplitPolicy;
 import org.apache.hadoop.hbase.security.User;
@@ -163,6 +168,13 @@ public class CubeHTableUtil {
                 }
             }
 
+            int quota = cubeSegment.getConfig().getHTableQuota();
+            if (quota > 0) {
+                QuotaProtos.Quotas quotaTable = QuotaProtos.Quotas.newBuilder()
+                        .setThrottle(QuotaProtos.Throttle.newBuilder().setReadNum(ProtobufUtil.toTimedQuota(quota, TimeUnit.SECONDS, QuotaScope.CLUSTER))).build();
+                QuotaUtil.addTableQuota(conn, tableName, quotaTable);
+            }
+            
             Preconditions.checkArgument(admin.isTableAvailable(tableName), "table " + tableName + " created, but is not available due to some reasons");
             logger.info("create hbase table " + tableName + " done.");
         } finally {
