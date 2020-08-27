@@ -36,21 +36,19 @@ if [[ `uname -a` =~ "Darwin" ]]; then
     alias md5cmd="md5 -q"
 fi
 
-spark_version="2.4.1"
-spark_pkg_name="spark-2.4.1-os-kylin-r3"
-spark_pkg_md5="8fb09dbb61f26f5679be49c2c8713da3"
-spark_pkg_file_name="${spark_pkg_name}.tgz"
+spark_version="2.4.6"
+spark_pkg_md5="82364f8765d03dfb14cb9c606d678058"
 
 if [ ! -f "spark-${spark_version}-bin-hadoop2.7.tgz" ]
 then
     echo "No binary file found, start to download package to ${spark_package_dir}"
-    wget https://download-resource.s3.cn-north-1.amazonaws.com.cn/osspark/${spark_pkg_file_name}|| echo "Download spark failed"
+    wget http://archive.apache.org/dist/spark/spark-${spark_version}/spark-${spark_version}-bin-hadoop2.7.tgz|| echo "Download spark failed"
 else
     if [ `md5cmd spark-${spark_version}-bin-hadoop2.7.tgz | awk '{print $1}'` != "${spark_pkg_md5}" ]
     then
         echo "md5 check failed"
-        rm ${spark_pkg_file_name}
-        wget https://download-resource.s3.cn-north-1.amazonaws.com.cn/osspark/${spark_pkg_file_name}|| echo "Download spark failed"
+        rm spark-${spark_version}-bin-hadoop2.7.tgz
+        wget http://archive.apache.org/dist/spark/spark-${spark_version}/spark-${spark_version}-bin-hadoop2.7.tgz || echo "Download spark failed"
     else
         echo "Spark package found in ${spark_package_dir}"
     fi
@@ -58,8 +56,8 @@ fi
 unalias md5cmd
 
 echo "Start to decompress package"
-tar -zxvf ${spark_pkg_file_name}  || { exit 1; }
-mv ${spark_pkg_name} spark
+tar -zxvf spark-${spark_version}-bin-hadoop2.7.tgz  || { exit 1; }
+mv spark-${spark_version}-bin-hadoop2.7.tgz spark
 
 # Remove unused components in Spark
 rm -rf spark/lib/spark-examples-*
