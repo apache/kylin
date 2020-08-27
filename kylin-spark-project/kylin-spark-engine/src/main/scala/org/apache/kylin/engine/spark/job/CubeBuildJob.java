@@ -75,6 +75,7 @@ public class CubeBuildJob extends SparkApplication {
     protected static String TEMP_DIR_SUFFIX = "_temp";
 
     private CubeManager cubeManager;
+    private CubeInstance cubeInstance;
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
     private Map<Long, Short> cuboidShardNum = Maps.newHashMap();
     public static void main(String[] args) {
@@ -90,6 +91,7 @@ public class CubeBuildJob extends SparkApplication {
         buildLayoutWithUpdate = new BuildLayoutWithUpdate();
         Set<String> segmentIds = Sets.newHashSet(StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS)));
         cubeManager = CubeManager.getInstance(config);
+        cubeInstance = cubeManager.getCubeByUuid(getParam(MetadataConstants.P_CUBE_ID));
         List<String> persistedFlatTable = new ArrayList<>();
         List<String> persistedViewFactTable = new ArrayList<>();
         Path shareDir = config.getJobTmpShareDir(project, jobId);
@@ -353,7 +355,7 @@ public class CubeBuildJob extends SparkApplication {
             layout.setRows(rowCount);
             layout.setSourceRows(metrics.getMetrics(Metrics.SOURCE_ROWS_CNT()));
         }
-        int shardNum = BuildUtils.repartitionIfNeed(layout, storage, path, tempPath, config, ss);
+        int shardNum = BuildUtils.repartitionIfNeed(layout, storage, path, tempPath, cubeInstance.getConfig(), ss);
         layout.setShardNum(shardNum);
         cuboidShardNum.put(layoutId, (short)shardNum);
         ss.sparkContext().setLocalProperty(QueryExecutionCache.N_EXECUTION_ID_KEY(), null);
