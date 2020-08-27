@@ -18,23 +18,16 @@
 
 package org.apache.kylin.rest.init;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.ServerMode;
 import org.apache.spark.sql.SparderContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 
-import java.io.File;
-import java.nio.file.Paths;
+public class InitialSparderContext implements InitializingBean {
 
-/**
- * Created by zhangzc on 8/26/20.
- */
-public class InitialSparkerContext implements InitializingBean {
-
-    private static final Logger logger = LoggerFactory.getLogger(InitialSparkerContext.class);
+    private static final Logger logger = LoggerFactory.getLogger(InitialSparderContext.class);
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -42,18 +35,11 @@ public class InitialSparkerContext implements InitializingBean {
     }
 
     private void runInitialSparder() {
+        if (ServerMode.isJobOnly(KylinConfig.getInstanceFromEnv())) {
+            logger.info("This is job node, do not need to start Spark");
+            return;
+        }
         logger.info("Spark is starting.....");
         SparderContext.init();
-        final String kylinHome = StringUtils.defaultIfBlank(KylinConfig.getKylinHome(), "./");
-        final File appidFile = Paths.get(kylinHome, "sparkappid").toFile();
-        String appid = null;
-        try {
-            appid = SparderContext.getSparkSession().sparkContext().applicationId();
-            FileUtils.writeStringToFile(appidFile, appid);
-            logger.info("Spark application id is {}", appid);
-        } catch (Exception e) {
-            logger.error("Failed to generate spark application id[{}] file",
-                    StringUtils.defaultString(appid), e);
-        }
     }
 }
