@@ -62,6 +62,9 @@ public class QueryContext {
     private AtomicLong scannedBytes = new AtomicLong();
     private AtomicLong sourceScanBytes = new AtomicLong();
     private AtomicLong sourceScanRows = new AtomicLong();
+    private AtomicLong scanFiles = new AtomicLong();
+    private AtomicLong metadataTime = new AtomicLong();
+    private AtomicLong scanTime = new AtomicLong();
     private Object calcitePlan;
     private boolean isHighPriorityQuery = false;
     private boolean isTableIndex = false;
@@ -184,6 +187,31 @@ public class QueryContext {
 
     public long addAndGetSourceScanRows(long rows) {
         return sourceScanRows.addAndGet(rows);
+    }
+
+    public long getScanFiles() {
+        return scanFiles.get();
+    }
+
+    public long addAndGetScanFiles(long number) {
+        return scanFiles.addAndGet(number);
+    }
+
+    public long getMedataTime() {
+        return metadataTime.get();
+    }
+
+    public long addAndGetMetadataTime(long time) {
+        return metadataTime.addAndGet(time);
+    }
+
+    //Scaned time with Spark
+    public long getScanTime() {
+        return scanTime.get();
+    }
+
+    public long addAndGetScanTime(long time) {
+        return scanTime.addAndGet(time);
     }
 
     @Clarification(priority = Clarification.Priority.MAJOR, msg = "remove this")

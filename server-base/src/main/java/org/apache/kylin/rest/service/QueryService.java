@@ -348,6 +348,9 @@ public class QueryService extends BasicService {
         stringBuilder.append("Realization Names: ").append(realizationNames).append(newLine);
         stringBuilder.append("Cuboid Ids: ").append(cuboidIds).append(newLine);
         stringBuilder.append("Total scan count: ").append(response.getTotalScanCount()).append(newLine);
+        stringBuilder.append("Total scan files: ").append(response.getTotalScanFiles()).append(newLine);
+        stringBuilder.append("Total metadata time: ").append(response.getMetadataTime()).append("ms").append(newLine);
+        stringBuilder.append("Total spark scan time: ").append(response.getTotalSparkScanTime()).append("ms").append(newLine);
         stringBuilder.append("Total scan bytes: ").append(response.getTotalScanBytes()).append(newLine);
         stringBuilder.append("Result row count: ").append(resultRowCount).append(newLine);
         stringBuilder.append("Accept Partial: ").append(request.isAcceptPartial()).append(newLine);
@@ -1163,6 +1166,9 @@ public class QueryService extends BasicService {
         SQLResponse response = new SQLResponse(columnMetas, results, cubeSb.toString(), 0, isException,
                 exceptionMessage, isPartialResult, isPushDown);
         response.setTotalScanCount(queryContext.getScannedRows());
+        response.setTotalScanFiles(queryContext.getScanFiles());
+        response.setMetadataTime(queryContext.getMedataTime());
+        response.setTotalSparkScanTime(queryContext.getScanTime());
         response.setTotalScanBytes(queryContext.getScannedBytes());
         response.setCubeSegmentStatisticsList(queryContext.getCubeSegmentStatisticsResultList());
         response.setSparkPool(queryContext.getSparkPool());
