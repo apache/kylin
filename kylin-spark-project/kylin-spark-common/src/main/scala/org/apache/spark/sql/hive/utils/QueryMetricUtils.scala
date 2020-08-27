@@ -25,26 +25,35 @@ import org.apache.spark.sql.hive.execution.HiveTableScanExec
 import scala.collection.JavaConverters._
 
 object QueryMetricUtils extends Logging {
-  def collectScanMetrics(plan: SparkPlan): (java.util.List[java.lang.Long], java.util.List[java.lang.Long]) = {
+  def collectScanMetrics(plan: SparkPlan): (java.util.List[java.lang.Long], java.util.List[java.lang.Long],
+          java.util.List[java.lang.Long], java.util.List[java.lang.Long], java.util.List[java.lang.Long]) = {
     try {
       val metrics = plan.collect {
         case exec: KylinFileSourceScanExec =>
           //(exec.metrics.apply("numOutputRows").value, exec.metrics.apply("readBytes").value)
-          (exec.metrics.apply("numOutputRows").value, 0l)
+          (exec.metrics.apply("numOutputRows").value, exec.metrics.apply("numFiles").value,
+                  exec.metrics.apply("metadataTime").value, exec.metrics.apply("scanTime").value, -1l)
         case exec: FileSourceScanExec =>
           //(exec.metrics.apply("numOutputRows").value, exec.metrics.apply("readBytes").value)
-          (exec.metrics.apply("numOutputRows").value, 0l)
+          (exec.metrics.apply("numOutputRows").value, exec.metrics.apply("numFiles").value,
+                  exec.metrics.apply("metadataTime").value, exec.metrics.apply("scanTime").value, -1l)
         case exec: HiveTableScanExec =>
           //(exec.metrics.apply("numOutputRows").value, exec.metrics.apply("readBytes").value)
-          (exec.metrics.apply("numOutputRows").value, 0l)
+          (exec.metrics.apply("numOutputRows").value, exec.metrics.apply("numFiles").value,
+                  exec.metrics.apply("metadataTime").value, exec.metrics.apply("scanTime").value, -1l)
       }
       val scanRows = metrics.map(metric => java.lang.Long.valueOf(metric._1)).toList.asJava
-      val scanBytes = metrics.map(metric => java.lang.Long.valueOf(metric._2)).toList.asJava
-      (scanRows, scanBytes)
+      val scanFiles = metrics.map(metrics => java.lang.Long.valueOf(metrics._2)).toList.asJava
+      val metadataTime = metrics.map(metrics => java.lang.Long.valueOf(metrics._3)).toList.asJava
+      val scanTime = metrics.map(metrics => java.lang.Long.valueOf(metrics._4)).toList.asJava
+      val scanBytes = metrics.map(metric => java.lang.Long.valueOf(metric._5)).toList.asJava
+
+      (scanRows, scanFiles, metadataTime, scanTime, scanBytes)
     } catch {
       case throwable: Throwable =>
         logWarning("Error occurred when collect query scan metrics.", throwable)
-        (List.empty[java.lang.Long].asJava, List.empty[java.lang.Long].asJava)
+        (List.empty[java.lang.Long].asJava, List.empty[java.lang.Long].asJava, List.empty[java.lang.Long].asJava,
+                List.empty[java.lang.Long].asJava, List.empty[java.lang.Long].asJava)
     }
   }
 }
