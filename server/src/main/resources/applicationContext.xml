@@ -38,7 +38,7 @@
     <aop:aspectj-autoproxy/>
 
     <bean class="org.apache.kylin.rest.init.InitialTaskManager" />
-    <bean class="org.apache.kylin.rest.init.InitialSparkerContext" />
+    <bean class="org.apache.kylin.rest.init.InitialSparderContext" />
 
     <context:component-scan base-package="org.apache.kylin.rest"/>
 

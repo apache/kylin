@@ -19,6 +19,7 @@
 package org.apache.spark.sql
 
 import java.lang.{Boolean => JBoolean, String => JString}
+import java.nio.file.Paths
 
 import org.apache.spark.memory.MonitorEnv
 import org.apache.spark.util.Utils
@@ -30,6 +31,7 @@ import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.KylinSession._
 import java.util.concurrent.atomic.AtomicReference
 
+import org.apache.commons.io.FileUtils
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.spark.classloader.ClassLoaderUtils
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
@@ -146,7 +148,18 @@ object SparderContext extends Logging {
                     .getOrCreateKylinSession()
               }
               spark = sparkSession
-              sparkSession.sparkContext.applicationId
+              val appid = sparkSession.sparkContext.applicationId
+              // write application id to file 'sparkappid'
+              val kylinHomePath = KylinConfig.getKylinHomeAtBestEffort().getCanonicalPath
+              try {
+                val appidFile = Paths.get(kylinHomePath, "sparkappid").toFile
+                FileUtils.writeStringToFile(appidFile, appid)
+                logInfo("Spark application id is " + appid)
+              } catch {
+                case e: Exception =>
+                  logError("Failed to generate spark application id[" + appid + "] file", e)
+              }
+
               logInfo("Spark context started successfully with stack trace:")
               logInfo(Thread.currentThread().getStackTrace.mkString("\n"))
               logInfo(
