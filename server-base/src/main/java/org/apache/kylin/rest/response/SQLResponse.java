@@ -66,6 +66,12 @@ public class SQLResponse implements Serializable {
 
     protected long totalScanBytes;
 
+    protected long totalScanFiles;
+
+    protected long metadataTime;
+
+    protected long totalSparkScanTime;
+
     protected boolean hitExceptionCache = false;
 
     protected boolean storageCacheUsed = false;
@@ -187,6 +193,30 @@ public class SQLResponse implements Serializable {
 
     public void setTotalScanBytes(long totalScanBytes) {
         this.totalScanBytes = totalScanBytes;
+    }
+
+    public long getTotalScanFiles() {
+        return totalScanFiles;
+    }
+
+    public void setTotalScanFiles(long totalScanFiles) {
+        this.totalScanFiles = totalScanFiles;
+    }
+
+    public long getMetadataTime() {
+        return metadataTime;
+    }
+
+    public void setMetadataTime(long metadataTime) {
+        this.metadataTime = metadataTime;
+    }
+
+    public long getTotalSparkScanTime() {
+        return totalSparkScanTime;
+    }
+
+    public void setTotalSparkScanTime(long totalSparkScanTime) {
+        this.totalSparkScanTime = totalSparkScanTime;
     }
 
     public boolean isHitExceptionCache() {

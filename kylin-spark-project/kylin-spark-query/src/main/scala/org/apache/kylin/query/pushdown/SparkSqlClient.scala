@@ -86,7 +86,7 @@ object SparkSqlClient {
 			val frame = tempDF.select(columns: _*)
 			val rowList = frame.collect().map(_.toSeq.map(_.asInstanceOf[String]).asJava).toSeq.asJava
 			val fieldList = df.schema.map(field => SparkTypeUtil.convertSparkFieldToJavaField(field)).asJava
-			val (scanRows, scanBytes) = QueryMetricUtils.collectScanMetrics(frame.queryExecution.executedPlan)
+			val (scanRows, scanFiles, metadataTime, scanTime, scanBytes) = QueryMetricUtils.collectScanMetrics(frame.queryExecution.executedPlan)
 			Pair.newPair(rowList, fieldList)
 		} catch {
 			case e: Throwable =>
