@@ -29,7 +29,7 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
     $scope.active = {}; //reset
     $scope.active[tab] = true;
   }
-  $scope.$on('change.active', function(event, data) {  
+  $scope.$on('change.active', function(event, data) {
     $scope.activateTab(data.activeTab);
     $scope.tabData.groupName = data.groupName
   });
@@ -305,6 +305,11 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
     }
     var downloadUrl = Config.service.url + 'diag/project/'+_project+'/download';
     $window.open(downloadUrl);
+  }
+
+  $scope.openSparderUrl = function(){
+      var sparder_url = Config.service.url + 'admin/sparder_url';
+      $window.open(sparder_url);
   }
 
   $scope.isCuratorScheduler = function() {
