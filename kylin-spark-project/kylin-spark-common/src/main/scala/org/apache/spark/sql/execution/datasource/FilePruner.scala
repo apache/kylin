@@ -186,7 +186,6 @@ class FilePruner(
   }
 
   var cached = new java.util.HashMap[(Seq[Expression], Seq[Expression]), Seq[PartitionDirectory]]()
-  var totalSize = 0L
 
   override def listFiles(partitionFilters: Seq[Expression], dataFilters: Seq[Expression]): Seq[PartitionDirectory] = {
     if (cached.containsKey((partitionFilters, dataFilters))) {
@@ -224,9 +223,6 @@ class FilePruner(
     val totalFileSize = selected.flatMap(partition => partition.files).map(_.getLen).sum
     logInfo(s"totalFileSize is ${totalFileSize}")
     setShufflePartitions(totalFileSize, session)
-    totalSize = totalFileSize
-    //    val sourceRows = selected.map(seg => cubeInstance.getSegment(seg.segmentID).getLayout(layout.getId).getRows).sum
-    //    QueryContextFacade.current().addAndGetSourceScanRows(sourceRows)
     if (selected.isEmpty) {
       val value = Seq.empty[PartitionDirectory]
       cached.put((partitionFilters, dataFilters), value)

@@ -37,7 +37,9 @@ public class SparkEngine implements QueryEngine {
     @Override
     public Enumerable<Object> computeSCALA(DataContext dataContext, RelNode relNode, RelDataType resultType) {
         Dataset<Row> sparkPlan = toSparkPlan(dataContext, relNode);
-        log.trace("SPARK LOGICAL PLAN {}", sparkPlan.queryExecution());
+        if (System.getProperty("calcite.debug") != null) {
+            log.debug("SPARK LOGICAL PLAN {}", sparkPlan.queryExecution());
+        }
         return ResultPlan.getResult(sparkPlan, resultType, ResultType.SCALA()).right().get();
 
     }
@@ -45,7 +47,9 @@ public class SparkEngine implements QueryEngine {
     @Override
     public Enumerable<Object[]> compute(DataContext dataContext, RelNode relNode, RelDataType resultType) {
         Dataset<Row> sparkPlan = toSparkPlan(dataContext, relNode);
-        log.trace("SPARK LOGICAL PLAN {}", sparkPlan.queryExecution());
+        if (System.getProperty("calcite.debug") != null) {
+            log.info("SPARK LOGICAL PLAN {}", sparkPlan.queryExecution());
+        }
         return ResultPlan.getResult(sparkPlan, resultType, ResultType.NORMAL()).left().get();
     }
 
