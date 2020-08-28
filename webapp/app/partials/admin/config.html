@@ -48,6 +48,9 @@
     <div style="padding-top: 10px;width: 260px;" ng-if="false">
       <a class="btn btn-success btn-lg btn-block" tooltip="Clean unused HDFS and HBASE space" ng-click="cleanStorage()">Clean Up Storage</a>
     </div>
+    <div style="padding-top: 10px;width: 260px;">
+      <a ng-click="openSparderUrl();" tooltip="Click to visit Sparder URL." class="btn btn-primary btn-lg btn-block"><i class="fa fa-server"></i>Sparder</a>
+    </div>
     <div style="padding-top: 10px;width: 260px;" ng-if="isCacheEnabled()">
       <a class="btn btn-primary btn-lg btn-block" ng-click="disableCache()">Disable Cache</a>
     </div>

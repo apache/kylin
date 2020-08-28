@@ -107,7 +107,7 @@ public class AdminController extends BasicController {
         return configRes;
     }
 
-    @RequestMapping(value = "/sparder_rul", method = { RequestMethod.GET }, produces = { "application/json" })
+    @RequestMapping(value = "/sparder_url", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public GeneralResponse getSparderUrl() throws IOException {
         GeneralResponse configRes = new GeneralResponse();
