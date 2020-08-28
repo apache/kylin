@@ -1187,10 +1187,14 @@ public class QueryService extends BasicService {
         SQLResponse response = new SQLResponse(columnMetas, results, cubeSb.toString(), 0, isException,
                 exceptionMessage, isPartialResult, isPushDown);
         response.setTotalScanCount(queryContext.getScannedRows());
-        response.setTotalScanFiles(queryContext.getScanFiles());
-        response.setMetadataTime(queryContext.getMedataTime());
-        response.setTotalSparkScanTime(queryContext.getScanTime());
-        response.setTotalScanBytes(queryContext.getScannedBytes());
+        response.setTotalScanFiles((queryContext.getScanFiles() < 0) ? -1 :
+                queryContext.getScanFiles());
+        response.setMetadataTime((queryContext.getMedataTime() < 0) ? -1 :
+                queryContext.getMedataTime());
+        response.setTotalSparkScanTime((queryContext.getScanTime() < 0) ? -1 :
+                queryContext.getScanTime());
+        response.setTotalScanBytes((queryContext.getScannedBytes() < 0) ?
+                (queryContext.getSourceScanBytes() < 1 ? -1 : queryContext.getSourceScanBytes()) : queryContext.getScannedBytes());
         response.setCubeSegmentStatisticsList(queryContext.getCubeSegmentStatisticsResultList());
         response.setSparkPool(queryContext.getSparkPool());
         if (getConfig().isQueryCacheSignatureEnabled()) {

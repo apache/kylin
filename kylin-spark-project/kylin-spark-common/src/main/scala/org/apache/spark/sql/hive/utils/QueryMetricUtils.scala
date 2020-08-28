@@ -39,8 +39,8 @@ object QueryMetricUtils extends Logging {
                   exec.metrics.apply("metadataTime").value, exec.metrics.apply("scanTime").value, -1l)
         case exec: HiveTableScanExec =>
           //(exec.metrics.apply("numOutputRows").value, exec.metrics.apply("readBytes").value)
-          (exec.metrics.apply("numOutputRows").value, exec.metrics.apply("numFiles").value,
-                  exec.metrics.apply("metadataTime").value, exec.metrics.apply("scanTime").value, -1l)
+          // There is only 'numOutputRows' metric in HiveTableScanExec
+          (exec.metrics.apply("numOutputRows").value, -1l, -1l, -1l, -1l)
       }
       val scanRows = metrics.map(metric => java.lang.Long.valueOf(metric._1)).toList.asJava
       val scanFiles = metrics.map(metrics => java.lang.Long.valueOf(metrics._2)).toList.asJava
