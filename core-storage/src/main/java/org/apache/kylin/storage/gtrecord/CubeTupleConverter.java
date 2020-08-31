@@ -299,7 +299,7 @@ public class CubeTupleConverter implements ITupleConverter {
                     for (int i = 0; i < hostTmpIdx.length; i++) {
                         lookupKey.data[i] = CubeTupleConverter.toString(gtValues[hostTmpIdx[i]]);
                         // if the primary key of lookup table is date time type, do this change in case of data type inconsistency
-                        if (deriveInfo.join.getPrimaryKeyColumns()[i].getType().isDateTimeFamily()) {
+                        if (lookupKey.data[i] != null && deriveInfo.join.getPrimaryKeyColumns()[i].getType().isDateTimeFamily()) {
                             lookupKey.data[i] = String.valueOf(DateFormat.stringToMillis(lookupKey.data[i]));
                         }
                     }
