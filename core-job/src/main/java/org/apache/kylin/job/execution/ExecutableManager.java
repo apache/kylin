@@ -24,11 +24,14 @@ import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
 import static org.apache.kylin.job.constant.ExecutableConstants.FLINK_JOB_ID;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.JobProcessContext;
@@ -52,6 +55,9 @@ import com.google.common.collect.Maps;
 public class ExecutableManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ExecutableManager.class);
+
+    private static final int CMD_EXEC_TIMEOUT_SEC = 60;
+    private static final String KILL_PROCESS_TREE = "kill-process-tree.sh";
 
     public static ExecutableManager getInstance(KylinConfig config) {
         return config.getManager(ExecutableManager.class);
@@ -499,12 +505,32 @@ public class ExecutableManager {
     }
 
     public void destroyProcess(String jobId) {
-        // in ut env, there is no process for job, just do nothing
-        if (!config.isUTEnv()) {
-            Process process = JobProcessContext.getProcess(jobId);
-            if (process != null && process.isAlive()) {
-                logger.info("Will destroy process " + process.toString());
-                process.destroyForcibly();
+        Process originProc = JobProcessContext.getProcess(jobId);
+        if (Objects.nonNull(originProc) && originProc.isAlive()) {
+            try {
+                final int ppid = JobProcessContext.getPid(originProc);
+                logger.info("start to destroy process {} of job {}", ppid, jobId);
+                //build cmd template
+                StringBuilder cmdBuilder = new StringBuilder("bash ");
+                cmdBuilder.append(Paths.get(KylinConfig.getKylinHome(), "bin", KILL_PROCESS_TREE));
+                cmdBuilder.append(" ");
+                cmdBuilder.append(ppid);
+                final String killCmd = cmdBuilder.toString();
+                Process killProc = Runtime.getRuntime().exec(killCmd);
+                if (killProc.waitFor(CMD_EXEC_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+                    logger.info("try to destroy process {} of job {}, exec cmd '{}', exitValue : {}", ppid, jobId,
+                            killCmd, killProc.exitValue());
+                    if (!originProc.isAlive()) {
+                        logger.info("destroy process {} of job {} SUCCEED.", ppid, jobId);
+                        return;
+                    }
+                    logger.info("destroy process {} of job {} FAILED.", ppid, jobId);
+                }
+
+                //generally, code executing wouldn't reach here
+                logger.warn("destroy process {} of job {} TIMEOUT exceed {}s.", ppid, jobId, CMD_EXEC_TIMEOUT_SEC);
+            } catch (Exception e) {
+                logger.error("destroy process of job {} FAILED.", jobId, e);
             }
         }
     }
