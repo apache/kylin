@@ -18,8 +18,10 @@
 
 package org.apache.kylin.common;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 
 public class JobProcessContext {
@@ -36,5 +38,13 @@ public class JobProcessContext {
 
     public static void removeProcess(String jobId){
         runningProcess.remove(jobId);
+    }
+
+    public static int getPid(Process process) throws IllegalAccessException, NoSuchFieldException {
+        String className = process.getClass().getName();
+        Preconditions.checkState(className.equals("java.lang.UNIXProcess"));
+        Field f = process.getClass().getDeclaredField("pid");
+        f.setAccessible(true);
+        return f.getInt(process);
     }
 }
