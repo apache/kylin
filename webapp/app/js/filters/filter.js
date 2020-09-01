@@ -87,7 +87,7 @@ KylinApp
   .filter('bytes', function () {
     return function (bytes, precision) {
       if (bytes === 0) {
-        return 'less than 1 MB';
+        return '0 KB';
       }
       if (isNaN(parseFloat(bytes)) || !isFinite(bytes)) {
         return '-';
@@ -97,7 +97,7 @@ KylinApp
         precision = 3;
       }
 
-      var units = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'],
+      var units = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'],
         number = Math.floor(Math.log(bytes) / Math.log(1024));
       switch(number){
         case 0:

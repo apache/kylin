@@ -82,7 +82,7 @@ import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.response.CubeInstanceResponse;
 import org.apache.kylin.rest.response.CuboidTreeResponse;
 import org.apache.kylin.rest.response.CuboidTreeResponse.NodeInfo;
-import org.apache.kylin.rest.response.HBaseResponse;
+import org.apache.kylin.rest.response.StorageResponse;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.ValidateUtil;
@@ -113,7 +113,7 @@ public class CubeService extends BasicService implements InitializingBean {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeService.class);
 
-    protected Cache<String, HBaseResponse> htableInfoCache = CacheBuilder.newBuilder().build();
+    protected Cache<String, StorageResponse> storageInfoCache = CacheBuilder.newBuilder().build();
 
     @Autowired
     @Qualifier("projectService")
@@ -530,18 +530,18 @@ public class CubeService extends BasicService implements InitializingBean {
      * table.
      *
      * @param tableName The table name.
-     * @return The HBaseResponse object contains table size, region count. null
+     * @return The StorageResponse object contains table size, region count. null
      * if error happens
      * @throws IOException Exception when HTable resource is not closed correctly.
      */
-    public HBaseResponse getHTableInfo(String cubeName, String tableName) throws IOException {
+    public StorageResponse getHTableInfo(String cubeName, String tableName) throws IOException {
         String key = cubeName + "/" + tableName;
-        HBaseResponse hr = htableInfoCache.getIfPresent(key);
-        if (null != hr) {
-            return hr;
+        StorageResponse sr = storageInfoCache.getIfPresent(key);
+        if (null != sr) {
+            return sr;
         }
 
-        hr = new HBaseResponse();
+        sr = new StorageResponse();
         CubeInstance cube = CubeManager.getInstance(getConfig()).getCube(cubeName);
         if (cube.getStorageType() == IStorageAware.ID_HBASE || cube.getStorageType() == IStorageAware.ID_SHARDED_HBASE
                 || cube.getStorageType() == IStorageAware.ID_REALTIME_AND_HBASE) {
@@ -549,17 +549,18 @@ public class CubeService extends BasicService implements InitializingBean {
                 logger.debug("Loading HTable info " + cubeName + ", " + tableName);
 
                 // use reflection to isolate NoClassDef errors when HBase is not available
-                hr = (HBaseResponse) Class.forName("org.apache.kylin.rest.service.HBaseInfoUtil")//
-                        .getMethod("getHBaseInfo", new Class[] { String.class, KylinConfig.class })//
+                sr = (StorageResponse)
+                        Class.forName("org.apache.kylin.rest.service.HBaseInfoUtil")
+                        .getMethod("getHBaseInfo", new Class[] { String.class, KylinConfig.class })
                         .invoke(null, tableName, this.getConfig());
-                hr.setStorageType("hbase");
+                sr.setStorageType("hbase");
             } catch (Throwable e) {
                 throw new IOException(e);
             }
         }
 
-        htableInfoCache.put(key, hr);
-        return hr;
+        storageInfoCache.put(key, sr);
+        return sr;
     }
 
     public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException {
@@ -1133,7 +1134,7 @@ public class CubeService extends BasicService implements InitializingBean {
     private class HTableInfoSyncListener extends Broadcaster.Listener {
         @Override
         public void onClearAll(Broadcaster broadcaster) throws IOException {
-            htableInfoCache.invalidateAll();
+            storageInfoCache.invalidateAll();
         }
 
         @Override
@@ -1141,9 +1142,9 @@ public class CubeService extends BasicService implements InitializingBean {
                 throws IOException {
             String cubeName = cacheKey;
             String keyPrefix = cubeName + "/";
-            for (String k : htableInfoCache.asMap().keySet()) {
+            for (String k : storageInfoCache.asMap().keySet()) {
                 if (k.startsWith(keyPrefix))
-                    htableInfoCache.invalidate(k);
+                    storageInfoCache.invalidate(k);
             }
         }
     }

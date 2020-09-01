@@ -81,7 +81,8 @@ object BuildUtils extends Logging {
   @throws[IOException]
   def fillCuboidInfo(cuboid: LayoutEntity, strPath: String): Unit = {
     val fs = HadoopUtil.getWorkingFileSystem
-    if (fs.exists(new Path(strPath))) {
+    // when cuboid.getRows == 0, it means there is no data written, so set byte size to 0
+    if (fs.exists(new Path(strPath)) && (cuboid.getRows > 0)) {
       val cs = HadoopUtil.getContentSummary(fs, new Path(strPath))
       cuboid.setFileCount(cs.getFileCount)
       cuboid.setByteSize(cs.getLength)

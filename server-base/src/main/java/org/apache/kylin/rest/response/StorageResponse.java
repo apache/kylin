@@ -20,7 +20,7 @@ package org.apache.kylin.rest.response;
 
 import java.io.Serializable;
 
-public class HBaseResponse implements Serializable {
+public class StorageResponse implements Serializable {
     private static final long serialVersionUID = 7263557115683263492L;
     private String storageType;
     private String segmentName;
@@ -35,7 +35,7 @@ public class HBaseResponse implements Serializable {
     private long sourceOffsetEnd;
     private long sourceCount;
 
-    public HBaseResponse() {
+    public StorageResponse() {
     }
 
     public String getStorageType() {

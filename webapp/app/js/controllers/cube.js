@@ -88,9 +88,9 @@ KylinApp.controller('CubeCtrl', function ($scope, $rootScope, AccessService, Mes
         });
     };
 
-    $scope.getHbaseInfo = function (cube) {
+    $scope.getStorageInfo = function (cube) {
         if (!cube.hbase) {
-            CubeService.getHbaseInfo({cubeId: cube.name, propValue: null, action: null}, function (hbase) {
+            CubeService.getStorageInfo({cubeId: cube.name, propValue: null, action: null}, function (hbase) {
                 cube.hbase = hbase;
                 TableService.get({pro:cube.model.project, tableName:cube.model.fact_table},function(table) {
                   if (table && table.source_type == 1) {

@@ -72,7 +72,7 @@ import org.apache.kylin.rest.response.CubeInstanceResponse;
 import org.apache.kylin.rest.response.CuboidTreeResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.GeneralResponse;
-import org.apache.kylin.rest.response.HBaseResponse;
+import org.apache.kylin.rest.response.StorageResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
@@ -713,15 +713,16 @@ public class CubeController extends BasicController {
     }
 
     /**
-     * get Hbase Info
+     * get storage Info
      *
      * @return true
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/hbase", method = { RequestMethod.GET }, produces = { "application/json" })
+    @RequestMapping(value = "/{cubeName}/storage", method = { RequestMethod.GET }, produces = {
+            "application/json" })
     @ResponseBody
-    public List<HBaseResponse> getHBaseInfo(@PathVariable String cubeName) {
-        List<HBaseResponse> hbase = new ArrayList<HBaseResponse>();
+    public List<StorageResponse> getStorageInfo(@PathVariable String cubeName) {
+        List<StorageResponse> storage = new ArrayList<StorageResponse>();
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         if (null == cube) {
@@ -733,38 +734,40 @@ public class CubeController extends BasicController {
         for (CubeSegment segment : segments) {
             Map<String, String> addInfo = segment.getAdditionalInfo();
             String tableName = segment.getStorageLocationIdentifier();
-            HBaseResponse hr = null;
+            StorageResponse sr = null;
             if (("" + IStorageAware.ID_PARQUET).equals(addInfo.get("storageType"))) {
-                hr = new HBaseResponse();
-                hr.setStorageType("parquet");
+                sr = new StorageResponse();
+                sr.setStorageType("parquet");
+                // unit: Byte
+                sr.setTableSize(segment.getSizeKB() * 1024);
             } else {
                 // Get info of given table.
                 try {
-                    hr = cubeService.getHTableInfo(cubeName, tableName);
+                    sr = cubeService.getHTableInfo(cubeName, tableName);
                 } catch (IOException e) {
                     logger.error("Failed to calcuate size of HTable \"" + tableName + "\".", e);
                 }
 
-                if (null == hr) {
+                if (null == sr) {
                     logger.info("Failed to calcuate size of HTable \"" + tableName + "\".");
-                    hr = new HBaseResponse();
+                    sr = new StorageResponse();
                 }
             }
 
-            hr.setTableName(tableName);
-            hr.setDateRangeStart(segment.getTSRange().start.v);
-            hr.setDateRangeEnd(segment.getTSRange().end.v);
-            hr.setSegmentName(segment.getName());
-            hr.setSegmentStatus(segment.getStatus().toString());
-            hr.setSourceCount(segment.getInputRecords());
+            sr.setTableName(tableName);
+            sr.setDateRangeStart(segment.getTSRange().start.v);
+            sr.setDateRangeEnd(segment.getTSRange().end.v);
+            sr.setSegmentName(segment.getName());
+            sr.setSegmentStatus(segment.getStatus().toString());
+            sr.setSourceCount(segment.getInputRecords());
             if (segment.isOffsetCube()) {
-                hr.setSourceOffsetStart((Long) segment.getSegRange().start.v);
-                hr.setSourceOffsetEnd((Long) segment.getSegRange().end.v);
+                sr.setSourceOffsetStart((Long) segment.getSegRange().start.v);
+                sr.setSourceOffsetEnd((Long) segment.getSegRange().end.v);
             }
-            hbase.add(hr);
+            storage.add(sr);
         }
 
-        return hbase;
+        return storage;
     }
 
     /**
