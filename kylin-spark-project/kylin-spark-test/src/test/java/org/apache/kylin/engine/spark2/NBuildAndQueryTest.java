@@ -224,7 +224,7 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
         Assert.assertEquals(ExecutableState.SUCCEED, state);
 
         // Round 2: Merge two segments
-        state = mergeSegments(cubeName, dateToLong("2010-01-01"), dateToLong("2015-01-01"), false);
+        state = mergeSegments(cubeName, dateToLong("2010-01-01"), dateToLong("2015-01-01"), true);
         Assert.assertEquals(ExecutableState.SUCCEED, state);
 
         // validate cube segment info

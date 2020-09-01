@@ -842,7 +842,7 @@ public class CubeManager implements IRealizationProvider {
 
             CubeSegment first = mergingSegments.get(0);
             CubeSegment last = mergingSegments.get(mergingSegments.size() - 1);
-            if (force == false) {
+            if (!force) {
                 checkReadyForMerge(mergingSegments);
             }
 

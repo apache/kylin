@@ -147,7 +147,7 @@ public class SparkCubingJobTest extends LocalWithSparkSessionTest {
          * Round2. Merge two segments
          */
         CubeSegment firstMergeSeg = cubeMgr.mergeSegments(cubeInstance, new SegmentRange.TSRange(date1, date3),
-                null, false);
+                null, true);
         NSparkMergingJob firstMergeJob = NSparkMergingJob.merge(firstMergeSeg, "ADMIN");
         jobService.addJob(firstMergeJob);
         // wait job done
