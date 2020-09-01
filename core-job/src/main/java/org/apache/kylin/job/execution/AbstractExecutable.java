@@ -195,8 +195,9 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                 result = null;
                 try {
                     result = doWork(executableContext);
+                } catch (JobStoppedException e) {
+                    //The job be paused, ignore it
                 } catch (Throwable e) {
-                    logger.error("error running Executable: {}", this.toString());
                     catchedException = e;
                 } finally {
                     cleanup(result);
