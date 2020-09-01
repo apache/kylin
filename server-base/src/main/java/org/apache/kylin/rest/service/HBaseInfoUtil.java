@@ -21,12 +21,12 @@ package org.apache.kylin.rest.service;
 public class HBaseInfoUtil {
     
 //    @SuppressWarnings("unused") // used by reflection
-//    public static HBaseResponse getHBaseInfo(String tableName, KylinConfig config) throws IOException {
+//    public static StorageResponse getHBaseInfo(String tableName, KylinConfig config) throws IOException {
 //        if (!config.getStorageUrl().getScheme().equals("hbase"))
 //            return null;
 //
 //        Connection conn = HBaseUnionUtil.getConnection(config, tableName);
-//        HBaseResponse hr = null;
+//        StorageResponse hr = null;
 //        long tableSize = 0;
 //        int regionCount = 0;
 //
@@ -40,7 +40,7 @@ public class HBaseInfoUtil {
 //        regionCount = sizeMap.size();
 //
 //        // Set response.
-//        hr = new HBaseResponse();
+//        hr = new StorageResponse();
 //        hr.setTableSize(tableSize);
 //        hr.setRegionCount(regionCount);
 //        return hr;
