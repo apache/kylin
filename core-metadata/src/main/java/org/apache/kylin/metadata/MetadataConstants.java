@@ -51,11 +51,12 @@ public interface MetadataConstants {
     String P_DATA_RANGE_END = "dataRangeEnd";
     String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
     String P_CUBOID_NUMBER = "cuboidsNum";
+    String SEGMENT_NAME = "segmentName";
 
-    public static final String TABLE_EXD_CARDINALITY = "cardinality";
-    public static final String TABLE_EXD_DELIM = "delim";
-    public static final String TABLE_EXD_DEFAULT_VALUE = "unknown";
+    String TABLE_EXD_CARDINALITY = "cardinality";
+    String TABLE_EXD_DELIM = "delim";
+    String TABLE_EXD_DEFAULT_VALUE = "unknown";
 
-    public static final String SOURCE_RECORD_COUNT = "sourceRecordCount";
+    String SOURCE_RECORD_COUNT = "sourceRecordCount";
 
 }
