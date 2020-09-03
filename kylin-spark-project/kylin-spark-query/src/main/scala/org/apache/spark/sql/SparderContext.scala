@@ -36,6 +36,7 @@ import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.spark.classloader.ClassLoaderUtils
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
 import org.apache.spark.sql.execution.datasource.KylinSourceStrategy
+import org.apache.spark.utils.YarnInfoFetcherUtils
 
 // scalastyle:off
 object SparderContext extends Logging {
@@ -66,7 +67,7 @@ object SparderContext extends Logging {
   }
 
   def appMasterTrackURL(): String = {
-    if (master_app_url == null)
+    if (master_app_url != null)
       master_app_url
     else
       "Not_initialized"
@@ -168,7 +169,7 @@ object SparderContext extends Logging {
                   .getContextClassLoader
                   .toString)
               initMonitorEnv()
-              master_app_url = null
+              master_app_url = YarnInfoFetcherUtils.getTrackingUrl(appid)
             } catch {
               case throwable: Throwable =>
                 logError("Error for initializing spark ", throwable)

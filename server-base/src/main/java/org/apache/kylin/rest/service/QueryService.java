@@ -373,9 +373,9 @@ public class QueryService extends BasicService {
         stringBuilder.append("Total spark scan time: ").append(response.getTotalSparkScanTime()).append("ms").append(newLine);
         stringBuilder.append("Total scan bytes: ").append(response.getTotalScanBytes()).append(newLine);
         stringBuilder.append("Result row count: ").append(resultRowCount).append(newLine);
-        stringBuilder.append("Accept Partial: ").append(request.isAcceptPartial()).append(newLine);
-        stringBuilder.append("Is Partial Result: ").append(response.isPartial()).append(newLine);
-        stringBuilder.append("Hit Exception Cache: ").append(response.isHitExceptionCache()).append(newLine);
+//        stringBuilder.append("Accept Partial: ").append(request.isAcceptPartial()).append(newLine);
+//        stringBuilder.append("Is Partial Result: ").append(response.isPartial()).append(newLine);
+//        stringBuilder.append("Hit Exception Cache: ").append(response.isHitExceptionCache()).append(newLine);
         stringBuilder.append("Storage cache used: ").append(storageCacheUsed).append(newLine);
         stringBuilder.append("Is Query Push-Down: ").append(isPushDown).append(newLine);
         stringBuilder.append("Is Prepare: ").append(BackdoorToggles.getPrepareOnly()).append(newLine);

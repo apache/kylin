@@ -60,7 +60,7 @@ object BuildUtils extends Logging {
       val repartitioner = new Repartitioner(
         config.getParquetStorageShardSizeMB,
         config.getParquetStorageRepartitionThresholdSize,
-        layout.getRows,
+        layout,
         repartitionThresholdSize,
         summary,
         shardByColumns

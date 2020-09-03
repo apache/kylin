@@ -145,7 +145,7 @@ public class BadQueryDetector extends Thread {
     }
 
     private void detectBadQuery() {
-        logger.info("Detect bad query.");
+        logger.debug("Detect bad query.");
         long now = System.currentTimeMillis();
         ArrayList<Entry> entries = new ArrayList<Entry>(runningQueries.values());
         Collections.sort(entries);
