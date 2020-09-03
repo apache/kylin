@@ -57,8 +57,8 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.common.PatternedLogger;
+import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
@@ -245,22 +245,32 @@ public class NSparkExecutable extends AbstractExecutable {
             String kylinJobJar, String appArgs, String jobId) {
         PatternedLogger patternedLogger;
         if (config.isJobLogPrintEnabled()) {
-            patternedLogger = new PatternedLogger(logger);
+            patternedLogger = new PatternedLogger(logger, new PatternedLogger.ILogListener() {
+                @Override
+                public void onLogEvent(String infoKey, Map<String, String> info) {
+                    // only care three properties here
+                    if (ExecutableConstants.SPARK_JOB_ID.equals(infoKey)
+                            || ExecutableConstants.YARN_APP_ID.equals(infoKey)
+                            || ExecutableConstants.YARN_APP_URL.equals(infoKey)) {
+                        getManager().addJobInfo(getId(), info);
+                    }
+                }
+            });
         } else {
             patternedLogger = new PatternedLogger(null);
         }
-
         try {
             String cmd = generateSparkCmd(config, hadoopConf, jars, kylinJobJar, appArgs);
+            patternedLogger.log("cmd: ");
+            patternedLogger.log(cmd);
 
             CliCommandExecutor exec = new CliCommandExecutor();
-            Pair<Integer, String> result = exec.execute(cmd, patternedLogger, jobId);
+            exec.execute(cmd, patternedLogger, jobId);
             updateMetaAfterBuilding(config);
             //Add metrics information to execute result for JobMetricsFacade
-
             getManager().addJobInfo(getId(), getJobMetricsInfo(config));
             Map<String, String> extraInfo = makeExtraInfo(patternedLogger.getInfo());
-            ExecuteResult ret = ExecuteResult.createSucceed(result.getSecond());
+            ExecuteResult ret = ExecuteResult.createSucceed(patternedLogger.getBufferedLog());
             ret.getExtraInfo().putAll(extraInfo);
             return ret;
         } catch (Exception e) {
