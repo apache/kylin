@@ -28,6 +28,7 @@ import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.{DateFormat, HadoopUtil}
 import org.apache.kylin.cube.CubeManager
 import org.apache.kylin.engine.spark.metadata.MetadataConverter
+import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity
 import org.apache.kylin.engine.spark.storage.ParquetStorage
 import org.apache.kylin.engine.spark.utils.{BuildUtils, Repartitioner}
 import org.apache.kylin.metadata.model.SegmentRange.TSRange
@@ -157,7 +158,10 @@ class TestCubeBuildJob extends WordSpec with MockFactory with SharedSparkSession
     val sc = jmock(classOf[ContentSummary])
     when(sc.getFileCount).thenReturn(1L)
     when(sc.getLength).thenReturn(repartitionNum * 1024 * 1024L)
-    val helper = new Repartitioner(1, 1, repartitionNum * 100, 100, sc, isShardByColumn)
+    val layout = new LayoutEntity
+    layout.setRows(repartitionNum * 100)
+    layout.setId(100l)
+    val helper = new Repartitioner(1, 1, layout, 100, sc, isShardByColumn)
     Assert.assertEquals(repartitionNum, helper.getRepartitionNumByStorage)
     helper
   }

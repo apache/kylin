@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.spark.NSparkCubingEngine;
+import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -37,8 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-
-import org.apache.kylin.engine.spark.NSparkCubingEngine;
 
 public class Repartitioner {
     private static String tempDirSuffix = "_temp";
@@ -49,14 +48,16 @@ public class Repartitioner {
     private int fileLengthThreshold;
     private long totalRowCount;
     private long rowCountThreshold;
+    private long cuboid;
     private ContentSummary contentSummary;
     private List<Integer> shardByColumns = new ArrayList<>();
 
-    public Repartitioner(int shardSize, int fileLengthThreshold, long totalRowCount, long rowCountThreshold,
-            ContentSummary contentSummary, List<Integer> shardByColumns) {
+    public Repartitioner(int shardSize, int fileLengthThreshold, LayoutEntity layoutEntity, long rowCountThreshold,
+                         ContentSummary contentSummary, List<Integer> shardByColumns) {
         this.shardSize = shardSize;
         this.fileLengthThreshold = fileLengthThreshold;
-        this.totalRowCount = totalRowCount;
+        this.totalRowCount = layoutEntity.getRows();
+        cuboid = layoutEntity.getId();
         this.rowCountThreshold = rowCountThreshold;
         this.contentSummary = contentSummary;
         if (shardByColumns != null) {
@@ -118,10 +119,9 @@ public class Repartitioner {
     public int getRepartitionNumByStorage() {
         int fileLengthRepartitionNum = getFileLengthRepartitionNum();
         int rowCountRepartitionNum = getRowCountRepartitionNum();
-        logger.info("File length repartition num : {}, Row count Rpartition num: {}", fileLengthRepartitionNum,
-                rowCountRepartitionNum);
         int partitionSize = (int) Math.ceil(1.0 * (fileLengthRepartitionNum + rowCountRepartitionNum) / 2);
-        logger.info("Repartition size is :{}", partitionSize);
+        logger.info("Cuboid[{}] has {} row and {} bytes. Partition count calculated by file size is {}, calculated by row count is {}, final is {}.",
+                cuboid, totalRowCount, contentSummary.getLength(), fileLengthRepartitionNum, rowCountRepartitionNum, partitionSize);
         return partitionSize;
     }
 

@@ -30,16 +30,6 @@
     <artifactId>kylin-spark-test</artifactId>
     <name>Apache Kylin 4.X - Integration Test</name>
 
-    <properties>
-        <hdp.version/>
-        <fastBuildMode/>
-        <kylin.engine/>
-        <kylin.storage/>
-        <sparder.enabled/>
-        <!--<guava.version>20.0</guava.version>-->
-        <beanutils.version>1.9.2</beanutils.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -166,95 +156,5 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>2.16</version>
-                    <executions>
-                        <execution>
-                            <id>integration-tests</id>
-                            <goals>
-                                <goal>integration-test</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>verify</id>
-                            <goals>
-                                <goal>verify</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                    <configuration>
-                        <environmentVariables>
-                            <hdp.version>current</hdp.version>
-                        </environmentVariables>
-                        <excludes>
-                            <exclude>**/*$*</exclude>
-                        </excludes>
-                        <reuseForks>false</reuseForks>
-                        <systemProperties>
-                            <property>
-                                <name>log4j.configuration</name>
-                                <value>
-                                    file:${project.basedir}/../../build/conf/kylin-tools-log4j.properties
-                                </value>
-                            </property>
-                        </systemProperties>
-                        <argLine>-Xms1G -Xmx4G -XX:PermSize=128M -XX:MaxPermSize=512M -Dhdp.version=current</argLine>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>exec-maven-plugin</artifactId>
-                    <version>1.5.0</version>
-                    <executions>
-                        <execution>
-                            <id>build_cube_with_engine</id>
-                            <goals>
-                                <goal>exec</goal>
-                            </goals>
-                            <phase>pre-integration-test</phase>
-                            <configuration>
-                                <environmentVariables>
-                                    <hdp.version>current</hdp.version>
-                                </environmentVariables>
-                                <skip>${skipTests}</skip>
-                                <classpathScope>test</classpathScope>
-                                <executable>java</executable>
-                                <arguments>
-                                    <argument>-Dhdp.version=${hdp.version}</argument>
-                                    <argument>-DfastBuildMode=${fastBuildMode}</argument>
-                                    <argument>-Dkylin.engine=${kylin.engine}</argument>
-                                    <argument>-Dkylin.storage=${kylin.storage}</argument>
-                                    <argument>-Dsparder.enabled=${sparder.enabled}</argument>
-                                    <argument>
-                                        -Dlog4j.configuration=file:${user.dir}/build/conf/kylin-tools-log4j.properties
-                                    </argument>
-                                    <argument>-classpath</argument>
-                                    <classpath/>
-                                    <argument>org.apache.kylin.provision.BuildCubeWithEngine
-                                    </argument>
-                                    <argument>-P</argument>
-                                    <argument>${profile.id}</argument>
-                                </arguments>
-                                <workingDirectory></workingDirectory>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.jacoco</groupId>
-                    <artifactId>jacoco-maven-plugin</artifactId>
-                    <configuration>
-                        <destFile>${sonar.jacoco.itReportPath}</destFile>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
 
 </project>

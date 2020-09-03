@@ -318,7 +318,7 @@ public class QueryContext {
     public void setContextRealization(int ctxId, String realizationName, int realizationType) {
         CubeSegmentStatisticsResult cubeSegmentStatisticsResult = cubeSegmentStatisticsResultMap.get(ctxId);
         if (cubeSegmentStatisticsResult == null) {
-            logger.warn("Cannot find CubeSegmentStatisticsResult for context " + ctxId);
+            logger.debug("Cannot find CubeSegmentStatisticsResult for context " + ctxId);
             return;
         }
         cubeSegmentStatisticsResult.setRealization(realizationName);
