@@ -86,6 +86,7 @@ public class NSparkCubingJob extends CubingJob {
         job.setParam(CubingExecutableUtil.SEGMENT_ID,
                 segments.stream().map(x -> String.valueOf(x.getUuid())).collect(Collectors.joining(" ")));
         job.setParam(MetadataConstants.P_JOB_ID, jobId);
+        job.setParam(MetadataConstants.SEGMENT_NAME, segments.iterator().next().getName());
         job.setParam(MetadataConstants.P_PROJECT_NAME, job.cube.getProject());
         job.setParam(MetadataConstants.P_CUBE_NAME, job.cube.getName());
         job.setParam(MetadataConstants.P_TARGET_MODEL, job.getTargetSubject());

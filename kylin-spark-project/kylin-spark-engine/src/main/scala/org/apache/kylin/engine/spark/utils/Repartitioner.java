@@ -42,7 +42,7 @@ import org.apache.kylin.engine.spark.NSparkCubingEngine;
 
 public class Repartitioner {
     private static String tempDirSuffix = "_temp";
-    protected static final Logger logger = LoggerFactory.getLogger(SparkConfHelper.class);
+    protected static final Logger logger = LoggerFactory.getLogger(Repartitioner.class);
 
     private int MB = 1024 * 1024;
     private int shardSize;
