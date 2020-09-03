@@ -83,7 +83,12 @@ public class KafkaConnector implements IStreamingConnector {
         } else {
             for (TopicPartition topicPartition : topicPartitions) {
                 Long offset = partitionOffsets.get(topicPartition.partition());
-                kafkaConsumer.seek(topicPartition, offset);
+                //if offset is null,use LATEST
+                if(offset != null) {
+                    kafkaConsumer.seek(topicPartition, offset);
+                }else{
+                    kafkaConsumer.seekToEnd(Lists.newArrayList(new TopicPartition[]{topicPartition}));
+                }
             }
         }
     }
