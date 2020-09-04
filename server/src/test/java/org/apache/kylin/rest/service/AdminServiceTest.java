@@ -61,7 +61,7 @@ public class AdminServiceTest extends ServiceTestBase {
                     "kylin.server.external-acl-provider=\n" +
                     "kylin.tool.auto-migrate-cube.enabled=\n" +
                     "kylin.storage.default=4\n" +
-                    "kylin.cube.cubeplanner.enabled=true\n" +
+                    "kylin.cube.cubeplanner.enabled=false\n" +
                     "kylin.web.help=\n" +
                     "kylin.web.export-allow-other=true\n" +
                     "kylin.web.link-hadoop=\n" +
@@ -69,7 +69,7 @@ public class AdminServiceTest extends ServiceTestBase {
                     "kylin.htrace.show-gui-trace-toggle=false\n" +
                     "kylin.security.additional-profiles=\n" +
                     "kylin.web.export-allow-admin=true\n" +
-                    "kylin.env=QA\n" +
+                    "kylin.env=DEV\n" +
                     "kylin.web.hive-limit=20\n" +
                     "kylin.engine.default=6\n" +
                     "kylin.web.help.3=onboard|Cube Design Tutorial|http://kylin.apache.org/docs/howto/howto_optimize_cubes.html\n" +
