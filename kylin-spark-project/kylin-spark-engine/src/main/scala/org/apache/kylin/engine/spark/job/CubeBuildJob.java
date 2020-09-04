@@ -310,7 +310,7 @@ public class CubeBuildJob extends SparkApplication {
             ss.sparkContext().setJobDescription("build " + layoutEntity.getId() + " from parent " + parentName);
             Set<Integer> orderedDims = layoutEntity.getOrderedDimensions().keySet();
             Dataset<Row> afterSort = afterPrj.select(NSparkCubingUtil.getColumns(orderedDims))
-                    .sortWithinPartitions(NSparkCubingUtil.getColumns(orderedDims));
+                    .sortWithinPartitions(NSparkCubingUtil.getFirstColumn(orderedDims));
             saveAndUpdateLayout(afterSort, seg, layoutEntity, parentId);
         } else {
             Dataset<Row> afterAgg = CuboidAggregator.agg(ss, parent, dimIndexes, cuboid.getOrderedMeasures(),
@@ -321,7 +321,7 @@ public class CubeBuildJob extends SparkApplication {
 
             Dataset<Row> afterSort = afterAgg
                     .select(NSparkCubingUtil.getColumns(rowKeys, layoutEntity.getOrderedMeasures().keySet()))
-                    .sortWithinPartitions(NSparkCubingUtil.getColumns(rowKeys));
+                    .sortWithinPartitions(NSparkCubingUtil.getFirstColumn(rowKeys));
 
             saveAndUpdateLayout(afterSort, seg, layoutEntity, parentId);
         }
