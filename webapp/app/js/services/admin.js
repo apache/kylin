@@ -24,5 +24,6 @@ KylinApp.factory('AdminService', ['$resource', function ($resource, config) {
     cleanStorage: {method: 'DELETE', params: {action: 'storage'}, isArray: false},
     updateConfig: {method: 'PUT', params: {action: 'config'}, isArray: false},
     getVersionInfo: {method: 'GET', params: {action: 'version'}, isArray: false},
+    openSparderUrl: {method: 'GET', params: {action: 'sparder_url'}, isArray: false},
   });
 }]);
