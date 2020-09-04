@@ -21,6 +21,7 @@ package org.apache.kylin.engine.spark.job;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.kylin.cube.CubeInstance;
@@ -91,17 +92,19 @@ public class CubeMergeJob extends SparkApplication {
 
             Dataset<Row> afterSort;
             if (layout.isTableIndex()) {
-                afterSort = afterMerge.sortWithinPartitions(NSparkCubingUtil.getColumns(layout.getOrderedDimensions().keySet()));
+                afterSort =
+                        afterMerge.sortWithinPartitions(NSparkCubingUtil.getFirstColumn(layout.getOrderedDimensions().keySet()));
             } else {
-                Column[] dimsCols = NSparkCubingUtil.getColumns(layout.getOrderedDimensions().keySet());
-                Dataset<Row> afterAgg = CuboidAggregator.agg(ss, afterMerge, layout.getOrderedDimensions().keySet(),
+                Set<Integer> dimColumns = layout.getOrderedDimensions().keySet();
+                Dataset<Row> afterAgg = CuboidAggregator.agg(ss, afterMerge, dimColumns,
                         layout.getOrderedMeasures(), spanningTree, false);
-                afterSort = afterAgg.sortWithinPartitions(dimsCols);
+                afterSort = afterAgg.sortWithinPartitions(
+                        NSparkCubingUtil.getFirstColumn(dimColumns));
             }
             buildLayoutWithUpdate.submit(new BuildLayoutWithUpdate.JobEntity() {
                 @Override
                 public String getName() {
-                    return "merge-layout-" + layout.getId();
+                    return "merge-cuboid-" + layout.getId();
                 }
 
                 @Override

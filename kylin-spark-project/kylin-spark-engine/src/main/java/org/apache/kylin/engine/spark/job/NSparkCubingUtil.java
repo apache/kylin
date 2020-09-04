@@ -23,8 +23,8 @@ import org.apache.kylin.metadata.model.Segments;
 import org.apache.spark.sql.Column;
 import org.spark_project.guava.collect.Sets;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,7 +51,7 @@ public class NSparkCubingUtil {
         return getColumns(ret);
     }
 
-    public static Column[] getColumns(Set<Integer> indices) {
+    public static Column[] getColumns(Collection<Integer> indices) {
         Column[] ret = new Column[indices.size()];
         int index = 0;
         for (Integer i : indices) {
@@ -61,14 +61,8 @@ public class NSparkCubingUtil {
         return ret;
     }
 
-    public static Column[] getColumns(List<Integer> indices) {
-        Column[] ret = new Column[indices.size()];
-        int index = 0;
-        for (Integer i : indices) {
-            ret[index] = new Column(String.valueOf(i));
-            index++;
-        }
-        return ret;
+    public static Column getFirstColumn(Collection<Integer> indices) {
+        return getColumns(indices)[0];
     }
 
     private static final Pattern DOT_PATTERN = Pattern.compile("(\\S+)\\.(\\D+)");

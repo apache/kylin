@@ -153,12 +153,12 @@ public class Repartitioner {
                 //ss.sessionState().conf().setLocalProperty("spark.sql.adaptive.enabled", "false");
                 data = storage.getFrom(tempPath, ss).repartition(repartitionNum,
                         NSparkCubingUtil.getColumns(getShardByColumns()))
-                        .sortWithinPartitions(sortCols);
+                        .sortWithinPartitions(sortCols[0]);
             } else {
                 // repartition for single file size is too small
                 logger.info("repartition to {}", repartitionNum);
                 data = storage.getFrom(tempPath, ss).repartition(repartitionNum)
-                        .sortWithinPartitions(sortCols);
+                        .sortWithinPartitions(sortCols[0]);
             }
 
             storage.saveTo(path, data, ss);
