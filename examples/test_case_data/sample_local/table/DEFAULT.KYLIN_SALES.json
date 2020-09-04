@@ -50,6 +50,10 @@
     "id" : "12",
     "name" : "OPS_REGION",
     "datatype" : "string"
+  },{
+    "id" : "13",
+    "name" : "ITEM_ID",
+    "datatype" : "string"
   } ],
   "database" : "DEFAULT",
   "last_modified" : 0,
