@@ -2876,7 +2876,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean isAutoStartSparder() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.auto-sparder-context", "true"));
+        return Boolean.parseBoolean(this.getOptional("kylin.query.auto-sparder-context", "false"));
     }
 
     // ============================================================================

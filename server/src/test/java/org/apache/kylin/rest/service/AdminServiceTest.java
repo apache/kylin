@@ -69,7 +69,7 @@ public class AdminServiceTest extends ServiceTestBase {
                     "kylin.htrace.show-gui-trace-toggle=false\n" +
                     "kylin.security.additional-profiles=\n" +
                     "kylin.web.export-allow-admin=true\n" +
-                    "kylin.env=DEV\n" +
+                    "kylin.env=QA\n" +
                     "kylin.web.hive-limit=20\n" +
                     "kylin.engine.default=6\n" +
                     "kylin.web.help.3=onboard|Cube Design Tutorial|http://kylin.apache.org/docs/howto/howto_optimize_cubes.html\n" +
