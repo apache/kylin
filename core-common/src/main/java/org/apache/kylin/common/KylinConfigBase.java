@@ -2875,6 +2875,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(this.getOptional("kylin.query.pushdown.base-shuffle-partition-size", "48"));
     }
 
+    public boolean isAutoStartSparder() {
+        return Boolean.parseBoolean(this.getOptional("kylin.query.auto-sparder-context", "true"));
+    }
+
     // ============================================================================
     // Spark with Kerberos
     // ============================================================================

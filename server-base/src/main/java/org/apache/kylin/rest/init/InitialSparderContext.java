@@ -35,8 +35,9 @@ public class InitialSparderContext implements InitializingBean {
     }
 
     private void runInitialSparder() {
-        if (ServerMode.isJobOnly(KylinConfig.getInstanceFromEnv())) {
-            logger.info("This is job node, do not need to start Spark");
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        if (ServerMode.isJobOnly(config) || !config.isAutoStartSparder()) {
+            logger.info("Maybe this is job node, or switch is off, do not need to start Spark, {}", config.isAutoStartSparder());
             return;
         }
         logger.info("Spark is starting.....");
