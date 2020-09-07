@@ -611,10 +611,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             dumpList.add(ProjectManager.getInstance(kylinConfig).getProject(prj).getResourcePath());
         }
 
-        if (prj != null) {
-            dumpList.add(ProjectManager.getInstance(kylinConfig).getProject(prj).getResourcePath());
-        }
-
         // write resources
         JobRelatedMetaUtil.dumpResources(kylinConfig, metaDir, dumpList);
 
