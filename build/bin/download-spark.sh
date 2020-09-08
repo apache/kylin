@@ -57,7 +57,7 @@ unalias md5cmd
 
 echo "Start to decompress package"
 tar -zxvf spark-${spark_version}-bin-hadoop2.7.tgz  || { exit 1; }
-mv spark-${spark_version}-bin-hadoop2.7.tgz spark
+mv spark-${spark_version}-bin-hadoop2.7 spark
 
 # Remove unused components in Spark
 rm -rf spark/lib/spark-examples-*
