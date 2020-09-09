@@ -819,7 +819,7 @@ public class CubeService extends BasicService implements InitializingBean {
         final List<CubingJob> jobInstanceList = jobService.listJobsByRealizationName(cubeName, projectName,
                 EnumSet.of(ExecutableState.DISCARDED));
         for (CubingJob cubingJob : jobInstanceList) {
-            if (cubingJob.getSegmentName().equals(segmentName)) {
+            if (segmentName.equals(cubingJob.getSegmentName())) {
                 logger.debug("Merge job {} has been discarded before, will not merge.", segmentName);
                 return true;
             }
