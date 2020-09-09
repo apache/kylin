@@ -62,7 +62,10 @@ public class ServerMode {
     public static final ServerMode SERVER_MODE = getServerMode();
 
     private static ServerMode getServerMode() {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        return getServerMode(KylinConfig.getInstanceFromEnv());
+    }
+
+    public static ServerMode getServerMode(KylinConfig kylinConfig) {
         String serverModeStr = kylinConfig.getServerMode();
         List<String> serverModes = Lists.newArrayList();
         String[] serverModeArray = serverModeStr.split("\\s*,\\s*");

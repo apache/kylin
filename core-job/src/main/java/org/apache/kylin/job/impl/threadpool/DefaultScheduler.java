@@ -18,7 +18,6 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
-import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -26,6 +25,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.kylin.common.util.ServerMode;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -35,10 +35,9 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.Executable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.lock.JobLock;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  */
@@ -134,9 +133,9 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable> {
     public synchronized void init(JobEngineConfig jobEngineConfig, JobLock lock) throws SchedulerException {
         jobLock = lock;
 
-        String serverMode = jobEngineConfig.getConfig().getServerMode();
-        if (!("job".equals(serverMode.toLowerCase(Locale.ROOT)) || "all".equals(serverMode.toLowerCase(Locale.ROOT)))) {
-            logger.info("server mode: " + serverMode + ", no need to run job scheduler");
+        if (!ServerMode.SERVER_MODE.canServeJobBuild()) {
+            logger.info(
+                    "server mode: " + jobEngineConfig.getConfig().getServerMode() + ", no need to run job scheduler");
             return;
         }
         logger.info("Initializing Job Engine ....");
