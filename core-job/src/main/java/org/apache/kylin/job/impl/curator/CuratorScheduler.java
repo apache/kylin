@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.io.IOUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.ServerMode;
+import org.apache.kylin.common.util.ServerMode;
 import org.apache.kylin.common.util.ZKUtil;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -80,7 +80,7 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
 
             String jobEnginePath = JOB_ENGINE_LEADER_PATH;
 
-            if (ServerMode.isJob(jobEngineConfig.getConfig())) {
+            if (ServerMode.getServerMode(kylinConfig).canServeJobBuild()) {
                 jobClient = new CuratorLeaderSelector(curatorClient, jobEnginePath, restAddress, jobEngineConfig);
                 try {
                     logger.info("start Job Engine, lock path is: " + jobEnginePath);
