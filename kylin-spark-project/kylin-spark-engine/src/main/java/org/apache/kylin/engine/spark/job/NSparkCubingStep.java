@@ -90,7 +90,7 @@ public class NSparkCubingStep extends NSparkExecutable {
 
         List<CubeSegment> tobe = currentInstanceCopy.calculateToBeSegments(toUpdateSegs);
 
-        if (tobe.contains(toUpdateSegs) == false)
+        if (!tobe.contains(toUpdateSegs))
             throw new IllegalStateException(
                     String.format(Locale.ROOT, "For cube %s, segment %s is expected but not in the tobe %s",
                             currentInstanceCopy.toString(), toUpdateSegs.toString(), tobe.toString()));
