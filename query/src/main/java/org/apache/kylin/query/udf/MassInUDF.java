@@ -22,7 +22,7 @@ import org.apache.calcite.linq4j.function.Parameter;
 
 public class MassInUDF {
 
-    public boolean eval(@Parameter(name = "col") Object col, @Parameter(name = "filterTable") String filterTable) {
+    public static boolean eval(@Parameter(name = "col") Object col, @Parameter(name = "filterTable") String filterTable) {
         return true;
     }
 }
