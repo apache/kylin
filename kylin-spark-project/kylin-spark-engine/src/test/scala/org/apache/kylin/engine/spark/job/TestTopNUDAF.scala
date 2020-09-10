@@ -27,8 +27,7 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
 class TestTopNUDAF extends SparderBaseFunSuite with SharedSparkSession {
-  //ignore temporary
-  ignore("basic") {
+  test("basic") {
 
     val schema = StructType(Array(
         StructField("rowKey", IntegerType, nullable = true),
