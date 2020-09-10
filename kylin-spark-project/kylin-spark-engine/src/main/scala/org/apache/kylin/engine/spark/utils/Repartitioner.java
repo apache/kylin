@@ -120,8 +120,10 @@ public class Repartitioner {
         int fileLengthRepartitionNum = getFileLengthRepartitionNum();
         int rowCountRepartitionNum = getRowCountRepartitionNum();
         int partitionSize = (int) Math.ceil(1.0 * (fileLengthRepartitionNum + rowCountRepartitionNum) / 2);
-        logger.info("Cuboid[{}] has {} row and {} bytes. Partition count calculated by file size is {}, calculated by row count is {}, final is {}.",
-                cuboid, totalRowCount, contentSummary.getLength(), fileLengthRepartitionNum, rowCountRepartitionNum, partitionSize);
+        logger.info("Before repartition, cuboid[{}] has {} row, {} bytes and {} files. Partition " +
+                        "count calculated by file size is {}, calculated by row count is {}, final is {}.",
+                cuboid, totalRowCount, contentSummary.getLength(), contentSummary.getFileCount(),
+                fileLengthRepartitionNum, rowCountRepartitionNum, partitionSize);
         return partitionSize;
     }
 
@@ -150,21 +152,23 @@ public class Repartitioner {
             Dataset<Row> data;
 
             if (needRepartitionForShardByColumns()) {
+                logger.info("Cuboid[{}] repartition by column {} to {}", cuboid,
+                        NSparkCubingUtil.getColumns(getShardByColumns())[0], repartitionNum);
                 //ss.sessionState().conf().setLocalProperty("spark.sql.adaptive.enabled", "false");
                 data = storage.getFrom(tempPath, ss).repartition(repartitionNum,
                         NSparkCubingUtil.getColumns(getShardByColumns()))
                         .sortWithinPartitions(sortCols[0]);
             } else {
                 // repartition for single file size is too small
-                logger.info("repartition to {}", repartitionNum);
+                logger.info("Cuboid[{}] repartition to {}", cuboid, repartitionNum);
                 data = storage.getFrom(tempPath, ss).repartition(repartitionNum)
                         .sortWithinPartitions(sortCols[0]);
             }
 
             storage.saveTo(path, data, ss);
-            if (needRepartitionForShardByColumns()) {
+            //if (needRepartitionForShardByColumns()) {
                 //ss.sessionState().conf().setLocalProperty("spark.sql.adaptive.enabled", null);
-            }
+            //}
             if (readFileSystem.delete(tempResourcePath, true)) {
                 logger.info("Delete temp cuboid path successful. Temp path: {}.", tempPath);
             } else {

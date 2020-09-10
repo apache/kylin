@@ -30,6 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -102,6 +103,13 @@ public class CubeBuildJob extends SparkApplication {
                 SegmentInfo seg = ManagerHub.getSegmentInfo(config, getParam(MetadataConstants.P_CUBE_ID), segId);
                 SpanningTree spanningTree = new ForestSpanningTree(
                         JavaConversions.asJavaCollection(seg.toBuildLayouts()));
+                logger.debug("There are {} cuboids to be built in segment {}.",
+                        seg.toBuildLayouts().size(), seg.name());
+                for (LayoutEntity cuboid : JavaConversions.asJavaCollection(seg.toBuildLayouts())) {
+                    logger.debug("Cuboid {} has row keys: {}", cuboid.getId(),
+                            Joiner.on(", ").join(cuboid.getOrderedDimensions().keySet()));
+                }
+
                 // choose source
                 ParentSourceChooser sourceChooser = new ParentSourceChooser(spanningTree, seg, jobId, ss, config, true);
                 sourceChooser.decideSources();

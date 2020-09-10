@@ -100,7 +100,7 @@ public class CsvSourceTest extends LocalWithSparkSessionTest {
             NSparkCubingEngine.NSparkCubingSource cubingSource = new CsvSource().adaptToBuildEngine(NSparkCubingEngine.NSparkCubingSource.class);
             Dataset<Row> sourceData = cubingSource.getSourceData(lookup, ss, Maps.newHashMap());
             List<Row> rows = sourceData.collectAsList();
-            Assert.assertTrue(rows != null && rows.size() > 0);
+            Assert.assertTrue(rows != null && !rows.isEmpty());
         }
     }
 
