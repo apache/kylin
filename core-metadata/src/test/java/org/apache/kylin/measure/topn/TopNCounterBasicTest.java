@@ -65,7 +65,7 @@ public class TopNCounterBasicTest {
         TopNCounter<String> vs = new TopNCounter<String>(3);
         String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A" };
         for (String i : stream) {
-            vs.offer(i, 10);
+            vs.offer(i, 10d);
         }
         List<Counter<String>> topK = vs.topK(3);
         for (Counter<String> c : topK) {
@@ -78,7 +78,7 @@ public class TopNCounterBasicTest {
         TopNCounter<String> vs_increment = new TopNCounter<String>(3);
         TopNCounter<String> vs_single = new TopNCounter<String>(3);
         String[] stream = { "A", "B", "C", "D", "A" };
-        Integer[] increments = { 15, 20, 25, 30, 1 };
+        Double[] increments = { 15d, 20d, 25d, 30d, 1d };
 
         for (int i = 0; i < stream.length; i++) {
             vs_increment.offer(stream[i], increments[i]);

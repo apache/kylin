@@ -20,4 +20,4 @@
 
 select seller_id, sum(price) as s from test_kylin_fact
   where lstg_format_name='FP-GTC' 
-  group by seller_id
+  group by seller_id order by s desc limit 10

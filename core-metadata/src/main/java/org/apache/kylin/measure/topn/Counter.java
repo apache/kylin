@@ -18,6 +18,10 @@
 
 package org.apache.kylin.measure.topn;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 
 /**
@@ -25,10 +29,10 @@ import java.io.Serializable;
  * 
  * @param <T>
  */
-public class Counter<T> implements Serializable{
+public class Counter<T> implements Externalizable, Serializable {
 
     protected T item;
-    protected double count;
+    protected Double count;
 
     /**
      * For de-serialization
@@ -37,30 +41,46 @@ public class Counter<T> implements Serializable{
     }
 
     public Counter(T item) {
-        this.count = 0;
+        this.count = 0d;
         this.item = item;
     }
 
-    public Counter(T item, double count) {
+    public Counter(T item, Double count) {
         this.item = item;
         this.count = count;
     }
-
 
     public T getItem() {
         return item;
     }
 
-    public double getCount() {
+    public Double getCount() {
         return count;
     }
 
-    public void setCount(double count) {
+    public void setItem(T item) {
+        this.item = item;
+    }
+
+    public void setCount(Double count) {
         this.count = count;
     }
+
     @Override
     public String toString() {
         return item + ":" + count;
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        item = (T) in.readObject();
+        count = in.readDouble();
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(item);
+        out.writeDouble(count);
+    }
 }

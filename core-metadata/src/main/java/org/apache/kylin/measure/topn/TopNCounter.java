@@ -19,7 +19,6 @@
 package org.apache.kylin.measure.topn;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -46,7 +45,7 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
 
     protected int capacity;
     private HashMap<T, Counter<T>> counterMap;
-    protected LinkedList<Counter<T>> counterList; //a linked list, first the is the toppest element
+    protected LinkedList<Counter<T>> counterList; //a linked list, first one is the toppest element
     private boolean ordered = true;
     private boolean descending = true;
 
@@ -75,17 +74,30 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
      * Algorithm: <i>Space-Saving</i>
      *
      * @param item stream element (<i>e</i>)
-     * @return false if item was already in the stream summary, true otherwise
      */
-    public void offer(T item, double incrementCount) {
+    public void offer(T item, Double incrementCount) {
         Counter<T> counterNode = counterMap.get(item);
+
         if (counterNode == null) {
-            counterNode = new Counter<T>(item, incrementCount);
+            if (size() < capacity) {
+                counterNode = new Counter<>(item, null);
+                if (this.descending) {
+                    counterList.addLast(counterNode);
+                } else {
+                    counterList.addFirst(counterNode);
+                }
+            } else {
+                // the min item should be dropped
+                if (!ordered) {
+                    sort();
+                }
+                counterNode = this.descending ? counterList.getLast() : counterList.getFirst();
+                counterMap.remove(counterNode.getItem());
+                counterNode.setItem(item);
+            }
             counterMap.put(item, counterNode);
-            counterList.add(counterNode);
-        } else {
-            counterNode.setCount(counterNode.getCount() + incrementCount);
         }
+        incrementCounter(counterNode, incrementCount);
         ordered = false;
     }
 
@@ -93,9 +105,8 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
      * Sort and keep the expected size;
      */
     public void sortAndRetain() {
-        Collections.sort(counterList, this.descending ? DESC_COMPARATOR : ASC_COMPARATOR);
+        sort();
         retain(capacity);
-        ordered = true;
     }
 
     public List<Counter<T>> topK(int k) {
@@ -143,7 +154,7 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
      * @param item
      * @param count
      */
-    public void offerToHead(T item, double count) {
+    public void offerToHead(T item, Double count) {
         Counter<T> c = new Counter<T>(item, count);
         counterList.addFirst(c);
         counterMap.put(c.item, c);
@@ -160,26 +171,20 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
         double m1 = thisFull ? this.counterList.getLast().count : 0.0;
         double m2 = anotherFull ? another.counterList.getLast().count : 0.0;
 
-        if (anotherFull == true) {
+        if (anotherFull) {
             for (Counter<T> entry : this.counterMap.values()) {
                 entry.count += m2;
             }
         }
 
         for (Map.Entry<T, Counter<T>> entry : another.counterMap.entrySet()) {
-            Counter<T> counter = this.counterMap.get(entry.getKey());
-            if (counter != null) {
-                //                this.offer(entry.getValue().getItem(), (entry.getValue().count - m2));
-                counter.setCount(counter.getCount() + (entry.getValue().count - m2));
+            if (this.counterMap.containsKey(entry.getKey())) {
+                this.offer(entry.getValue().getItem(), (entry.getValue().count - m2));
             } else {
-                //                this.offer(entry.getValue().getItem(), entry.getValue().count + m1);
-                counter = new Counter<T>(entry.getValue().getItem(), entry.getValue().count + m1);
-                this.counterMap.put(entry.getValue().getItem(), counter);
-                this.counterList.add(counter);
+                this.offer(entry.getValue().getItem(), entry.getValue().count + m1);
             }
         }
         this.ordered = false;
-
         this.sortAndRetain();
         return this;
     }
@@ -226,33 +231,60 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
     public TopNCounter<T> copy() {
         TopNCounter result = new TopNCounter(capacity);
         result.counterMap = Maps.newHashMap(counterMap);
+        result.counterList = Lists.newLinkedList(counterList);
         return result;
     }
 
     @Override
     public Iterator<Counter<T>> iterator() {
-        if (this.descending == true) {
+        if (this.descending) {
             return this.counterList.descendingIterator();
         } else {
             throw new IllegalStateException(); // support in future
         }
     }
 
-    static final Comparator ASC_COMPARATOR = new Comparator<Counter>() {
-        @Override
-        public int compare(Counter o1, Counter o2) {
-            return Double.compare(o1.getCount(), o2.getCount());
+    static final Comparator<Counter> ASC_COMPARATOR = (Counter o1, Counter o2) -> {
+        if (o1.getCount() == null) {
+            if (o2.getCount() == null)
+                return 0;
+            else
+                return -1;
         }
-
+        if (o2.getCount() == null) {
+            return 1;
+        }
+        return Double.compare(o1.getCount(), o2.getCount());
     };
 
-    static final Comparator DESC_COMPARATOR = new Comparator<Counter>() {
-        @Override
-        public int compare(Counter o1, Counter o2) {
-            return Double.compare(o2.getCount(), o1.getCount());
+    static final Comparator<Counter> DESC_COMPARATOR = (Counter o1, Counter o2) -> {
+        if (o1.getCount() == null) {
+            if (o2.getCount() == null)
+                return 0;
+            else
+                return 1;
         }
-
+        if (o2.getCount() == null) {
+            return -1;
+        }
+        return Double.compare(o2.getCount(), o1.getCount());
     };
+
+    private void incrementCounter(Counter<T> counterNode, Double incrementCount) {
+        if (incrementCount == null) {
+            return;
+        }
+        if (counterNode.getCount() == null) {
+            counterNode.setCount(incrementCount);
+        } else {
+            counterNode.setCount(counterNode.getCount() + incrementCount);
+        }
+    }
+
+    private void sort() {
+        counterList.sort(this.descending ? DESC_COMPARATOR : ASC_COMPARATOR);
+        ordered = true;
+    }
 
     public void reset() {
         counterList.clear();
