@@ -16,6 +16,8 @@ This is the document for the latest released version (v3.1.0). Document of other
 * [v2.4 document](/docs24)
 * [Archived](/archive/)
 
+If you are interested in Kylin v4.0.0-alpha, feel free to check detail at [v4.0 Wiki](https://cwiki.apache.org/confluence/display/KYLIN/User+Manual+4.X) .
+
 Installation & Setup
 ------------  
 1. [Installation Guide](install/index.html)
