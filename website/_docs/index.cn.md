@@ -16,6 +16,8 @@ Apache Kylin™是一个开源的、分布式的分析型数据仓库，提供 H
 * [v2.4 document](/cn/docs24/)
 * [归档](/archive/)
 
+如果您对 Kylin v4.0.0-alpha 感兴趣，请通过我们的 [v4.0 Wiki](https://cwiki.apache.org/confluence/display/KYLIN/User+Manual+4.X) 来了解  。
+
 安装
 ------------  
 1. [安装指南](install/index.html)
