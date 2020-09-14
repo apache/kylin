@@ -28,6 +28,7 @@ docker run -d \
 -p 8032:8032 \
 -p 8042:8042 \
 -p 16010:16010 \
+--name apache-kylin-standalone \
 apachekylin/apache-kylin-standalone:3.1.0
 ```
 
@@ -63,7 +64,16 @@ After about 1 to 2 minutes, all the services should be started. At the Kylin log
 
 In the "Model" tab, you can click "Build" to build the two sample cubes. After the cubes be built, try some queries in the "Insight" tab.
 
-If you want to login into the Docker container, run "docker ps" to get the container id:
+If you want to login into the Docker container, run "docker exec -it apache-kylin-standalone bash" to login it with bash:
+
+```
+> docker exec -it apache-kylin-standalone bash
+[root@c15d10ff6bf1 admin]# ls
+apache-hive-1.2.1-bin                  apache-maven-3.6.1  first_run     hbase-1.1.2   kafka_2.11-1.1.1
+apache-kylin-3.0.0-alpha2-bin-hbase1x  entrypoint.sh       hadoop-2.7.0  jdk1.8.0_141  spark-2.3.1-bin-hadoop2.6
+```
+
+Or you can run "docker ps" to get the container id:
 
 ```
 > docker ps
@@ -71,7 +81,7 @@ CONTAINER ID        IMAGE                                              COMMAND  
 c15d10ff6bf1        apachekylin/apache-kylin-standalone:3.1.0 "/home/admin/entrypo…"   55 minutes ago      Up 55 minutes       0.0.0.0:7070->7070/tcp, 0.0.0.0:8032->8032/tcp, 0.0.0.0:8042->8042/tcp, 0.0.0.0:8088->8088/tcp, 0.0.0.0:50070->50070/tcp, 0.0.0.0:16010->16010/tcp   romantic_moser
 ```
 
-Then run "docker -it <container id> bash" to login it with bash:
+Then run "docker exec -it <container id> bash" to login it with bash:
 
 ```
 > docker exec -it c15d10ff6bf1 bash
