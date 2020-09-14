@@ -36,6 +36,7 @@ docker run -d \
     -p 8032:8032 \
     -p 8042:8042 \
     -p 16010:16010 \
+    --name apache-kylin-standalone \
     apachekylin/apache-kylin-standalone:3.1.0
 ```
 You can get more detail about this docker image in [kylin website](http://kylin.apache.org/docs/install/kylin_docker.html)
