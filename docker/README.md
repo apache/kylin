@@ -4,8 +4,7 @@ In order to allow users to easily try Kylin, and to facilitate developers to ver
 - Jdk 1.8
 - Hadoop 2.7.0
 - Hive 1.2.1
-- Hbase 1.1.2
-- Spark 2.3.1
+- Spark 2.4.6
 - Zookeeper 3.4.6
 - Kafka 1.1.1
 - MySQL 5.1.73
@@ -16,7 +15,7 @@ In order to allow users to easily try Kylin, and to facilitate developers to ver
 We have pushed the Kylin images to the [docker hub](https://hub.docker.com/r/apachekylin/apache-kylin-standalone). You do not need to build the image locally, just pull the image from remote (you can browse docker hub to check the available versions):
 
 ```
-docker pull apachekylin/apache-kylin-standalone:3.0.1
+docker pull apachekylin/apache-kylin-standalone:4.0.0-alpha
 ```
 
 After the pull is successful, execute "sh run_container.sh" or the following command to start the container:
@@ -29,16 +28,14 @@ docker run -d \
 -p 50070:50070 \
 -p 8032:8032 \
 -p 8042:8042 \
--p 16010:16010 \
-apache-kylin-standalone
+-p 2181:2181 \
+apachekylin/apache-kylin-standalone:4.0.0-alpha
 ```
 
 The following services are automatically started when the container starts: 
 
 - NameNode, DataNode
 - ResourceManager, NodeManager
-- HBase
-- Kafka
 - Kylin
 
 and run automatically `$KYLIN_HOME/bin/sample.sh `, create a kylin_streaming_topic topic in Kafka and continue to send data to this topic. This is to let the users start the container and then experience the batch and streaming way to build the cube and query.
@@ -48,7 +45,6 @@ After the container is started, we can enter the container through the `docker e
 - Kylin Web UI: [http://127.0.0.1:7070/kylin/login](http://127.0.0.1:7070/kylin/login)
 - HDFS NameNode Web UI: [http://127.0.0.1:50070](http://127.0.0.1:50070/)
 - YARN ResourceManager Web UI: [http://127.0.0.1:8088](http://127.0.0.1:8088/)
-- HBase Web UI: [http://127.0.0.1:16010](http://127.0.0.1:16010/)
 
 In the container, the relevant environment variables are as follows: 
 
@@ -56,8 +52,7 @@ In the container, the relevant environment variables are as follows:
 JAVA_HOME=/home/admin/jdk1.8.0_141
 HADOOP_HOME=/home/admin/hadoop-2.7.0
 KAFKA_HOME=/home/admin/kafka_2.11-1.1.1
-SPARK_HOME=/home/admin/spark-2.3.1-bin-hadoop2.6
-HBASE_HOME=/home/admin/hbase-1.1.2
+SPARK_HOME=/home/admin/spark-2.4.6-bin-hadoop2.7
 HIVE_HOME=/home/admin/apache-hive-1.2.1-bin
 ```
 

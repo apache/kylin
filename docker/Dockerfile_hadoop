@@ -15,16 +15,14 @@
 # limitations under the License.
 #
 
-# Docker image with Hadoop/Hive/HBase/Spark/ZK/Kafka/Livy installed
+# Docker image with Hadoop/Spark/Hive/ZK/Kafka installed
 FROM centos:6.9
 
 ENV HIVE_VERSION 1.2.1
 ENV HADOOP_VERSION 2.7.0
-ENV HBASE_VERSION 1.1.2
-ENV SPARK_VERSION 2.3.1
+ENV SPARK_VERSION 2.4.6
 ENV ZK_VERSION 3.4.6
 ENV KAFKA_VERSION 1.1.1
-ENV LIVY_VERSION 0.6.0
 
 ENV JAVA_HOME /home/admin/jdk1.8.0_141
 ENV MVN_HOME /home/admin/apache-maven-3.6.1
@@ -32,13 +30,11 @@ ENV HADOOP_HOME /home/admin/hadoop-$HADOOP_VERSION
 ENV HIVE_HOME /home/admin/apache-hive-$HIVE_VERSION-bin
 ENV HADOOP_CONF $HADOOP_HOME/etc/hadoop
 ENV HADOOP_CONF_DIR $HADOOP_HOME/etc/hadoop
-ENV HBASE_HOME /home/admin/hbase-$HBASE_VERSION
-ENV SPARK_HOME /home/admin/spark-$SPARK_VERSION-bin-hadoop2.6
-ENV SPARK_CONF_DIR /home/admin/spark-$SPARK_VERSION-bin-hadoop2.6/conf
+ENV SPARK_HOME /home/admin/spark-$SPARK_VERSION-bin-hadoop2.7
+ENV SPARK_CONF_DIR $SPARK_HOME/conf
 ENV ZK_HOME /home/admin/zookeeper-$ZK_VERSION
 ENV KAFKA_HOME /home/admin/kafka_2.11-$KAFKA_VERSION
-ENV LIVY_HOME /home/admin/apache-livy-$LIVY_VERSION-incubating-bin
-ENV PATH $PATH:$JAVA_HOME/bin:$HADOOP_HOME/bin:$HIVE_HOME/bin:$HBASE_HOME/bin:$MVN_HOME/bin:spark-$SPARK_VERSION-bin-hadoop2.6/bin:$KAFKA_HOME/bin
+ENV PATH $PATH:$JAVA_HOME/bin:$ZK_HOME/bin:$HADOOP_HOME/bin:$HIVE_HOME/bin:$MVN_HOME/bin:$KAFKA_HOME/bin
 
 USER root
 
@@ -69,37 +65,32 @@ RUN wget https://archive.apache.org/dist/hadoop/core/hadoop-$HADOOP_VERSION/hado
     && mkdir -p /data/hadoop
 COPY conf/hadoop/* $HADOOP_CONF/
 
-# setup hbase
-RUN wget https://archive.apache.org/dist/hbase/$HBASE_VERSION/hbase-$HBASE_VERSION-bin.tar.gz \
-    && tar -zxvf /home/admin/hbase-$HBASE_VERSION-bin.tar.gz \
-    && rm -f /home/admin/hbase-$HBASE_VERSION-bin.tar.gz \
-    && mkdir -p /data/hbase \
-    && mkdir -p /data/zookeeper
-COPY conf/hbase/hbase-site.xml $HBASE_HOME/conf
-
 # setup hive
 RUN wget https://archive.apache.org/dist/hive/hive-$HIVE_VERSION/apache-hive-$HIVE_VERSION-bin.tar.gz \
     && tar -zxvf /home/admin/apache-hive-$HIVE_VERSION-bin.tar.gz \
     && rm -f /home/admin/apache-hive-$HIVE_VERSION-bin.tar.gz \
     && wget -P $HIVE_HOME/lib https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.24/mysql-connector-java-5.1.24.jar
 COPY conf/hive/hive-site.xml $HIVE_HOME/conf
+COPY conf/hive/hive-site.xml $HADOOP_CONF/
 
 # setup spark
-RUN wget https://archive.apache.org/dist/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop2.6.tgz \
-    && tar -zxvf /home/admin/spark-$SPARK_VERSION-bin-hadoop2.6.tgz \
-    && rm -f /home/admin/spark-$SPARK_VERSION-bin-hadoop2.6.tgz \
+RUN wget https://archive.apache.org/dist/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop2.7.tgz \
+    && tar -zxvf /home/admin/spark-$SPARK_VERSION-bin-hadoop2.7.tgz \
+    && rm -f /home/admin/spark-$SPARK_VERSION-bin-hadoop2.7.tgz \
     && cp $HIVE_HOME/conf/hive-site.xml $SPARK_HOME/conf \
     && cp $SPARK_HOME/yarn/*.jar $HADOOP_HOME/share/hadoop/yarn/lib
 RUN cp $HIVE_HOME/lib/mysql-connector-java-5.1.24.jar $SPARK_HOME/jars
-RUN echo spark.sql.catalogImplementation=hive > $SPARK_HOME/conf/spark-defaults.conf
+RUN cp $HIVE_HOME/hcatalog/share/hcatalog/hive-hcatalog-core-1.2.1.jar $SPARK_HOME/jars/
+COPY conf/spark/* $SPARK_CONF_DIR/
 
 # setup kafka
 RUN wget https://archive.apache.org/dist/kafka/$KAFKA_VERSION/kafka_2.11-$KAFKA_VERSION.tgz \
     && tar -zxvf /home/admin/kafka_2.11-$KAFKA_VERSION.tgz \
     && rm -f /home/admin/kafka_2.11-$KAFKA_VERSION.tgz
 
-# setup livy
-RUN wget https://www.apache.org/dist/incubator/livy/$LIVY_VERSION-incubating/apache-livy-$LIVY_VERSION-incubating-bin.zip \
-    && unzip /home/admin/apache-livy-$LIVY_VERSION-incubating-bin.zip \
-    && rm -f /home/admin/apache-livy-$LIVY_VERSION-incubating-bin.zip
-
+# setup zk
+RUN wget https://archive.apache.org/dist/zookeeper/zookeeper-$ZK_VERSION/zookeeper-$ZK_VERSION.tar.gz \
+    && tar -zxvf /home/admin/zookeeper-$ZK_VERSION.tar.gz \
+    && rm -f /home/admin/zookeeper-$ZK_VERSION.tar.gz \
+    && mkdir -p /data/zookeeper
+COPY conf/zk/zoo.cfg $ZK_HOME/conf
