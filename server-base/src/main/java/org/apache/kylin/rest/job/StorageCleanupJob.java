@@ -98,8 +98,29 @@ public class StorageCleanupJob extends AbstractApplication {
             }
         }
 
-        //clean up no used segments
+        //clean up deleted projects and cubes
         List<CubeInstance> cubes = cubeManager.listAllCubes();
+        Path metadataPath = new Path(config.getHdfsWorkingDirectory());
+        if (fs.exists(metadataPath)) {
+            FileStatus[] projectStatus = fs.listStatus(metadataPath);
+            if (projectStatus != null) {
+                for (FileStatus status : projectStatus) {
+                    String projectName = status.getPath().getName();
+                    if (!projects.contains(projectName)) {
+                        if (delete) {
+                            logger.info("Deleting HDFS path " + status.getPath());
+                            fs.delete(status.getPath(), true);
+                        } else {
+                            logger.info("Dry run, pending delete HDFS path " + status.getPath());
+                        }
+                    } else {
+                        cleanupDeletedCubes(projectName, cubes.stream().map(CubeInstance::getName).collect(Collectors.toList()));
+                    }
+                }
+            }
+        }
+
+        //clean up no used segments
         for (CubeInstance cube : cubes) {
             List<String> segments = cube.getSegments().stream().map(segment -> {
                 return segment.getName() + "_" + segment.getStorageLocationIdentifier();
@@ -109,9 +130,9 @@ public class StorageCleanupJob extends AbstractApplication {
             //list all segment directory
             Path cubePath = new Path(config.getHdfsWorkingDirectory(project) + "/parquet/" + cube.getName());
             if (fs.exists(cubePath)) {
-                FileStatus[] fStatus = fs.listStatus(cubePath);
-                if (fStatus != null) {
-                    for (FileStatus status : fStatus) {
+                FileStatus[] segmentStatus = fs.listStatus(cubePath);
+                if (segmentStatus != null) {
+                    for (FileStatus status : segmentStatus) {
                         String segment = status.getPath().getName();
                         if (!segments.contains(segment)) {
                             if (delete) {
@@ -125,6 +146,29 @@ public class StorageCleanupJob extends AbstractApplication {
                 }
             } else {
                 logger.warn("Cube path doesn't exist! The path is " + cubePath);
+            }
+        }
+    }
+
+    private void cleanupDeletedCubes(String project, List<String> cubes) throws Exception {
+        //clean up deleted cubes
+        Path parquetPath = new Path(config.getHdfsWorkingDirectory(project) + "/parquet");
+        if (fs.exists(parquetPath)) {
+            FileStatus[] cubeStatus = fs.listStatus(parquetPath);
+            if (cubeStatus != null) {
+                for (FileStatus status : cubeStatus) {
+                    if (status.getPath() != null) {
+                        String cubeName = status.getPath().getName();
+                        if (!cubes.contains(cubeName)) {
+                            if (delete) {
+                                logger.info("Deleting HDFS path " + status.getPath());
+                                fs.delete(status.getPath(), true);
+                            } else {
+                                logger.info("Dry run, pending delete HDFS path " + status.getPath());
+                            }
+                        }
+                    }
+                }
             }
         }
     }

@@ -67,10 +67,16 @@ public class StorageCleanupJobTest {
         job.execute(new String[] { "--delete", "true" });
 
         ArgumentCaptor<Path> pathCaptor = ArgumentCaptor.forClass(Path.class);
-        verify(mockFs, times(3)).delete(pathCaptor.capture(), eq(true));
+        verify(mockFs, times(5)).delete(pathCaptor.capture(), eq(true));
         ArrayList<Path> expected = Lists.newArrayList(
                 // Verify clean job temp directory
                 new Path(basePath + "/default/job_tmp"),
+
+                //Verify clean dropped cube
+                new Path(basePath + "/default/parquet/dropped_cube"),
+
+                //Verify clean deleted project
+                new Path(basePath + "/deleted_project"),
 
                 // Verify clean none used segments
                 new Path(basePath + "/default/parquet/ci_left_join_cube/20120101000000_20130101000000_VRC"),
@@ -81,27 +87,57 @@ public class StorageCleanupJobTest {
 
     private void prepareHDFSFiles(Path basePath, FileSystem mockFs) throws IOException {
 
-        FileStatus[] statuses = new FileStatus[2];
-        FileStatus f1 = mock(FileStatus.class);
-        FileStatus f2 = mock(FileStatus.class);
+        FileStatus[] segmentStatuses = new FileStatus[2];
+        FileStatus segment1 = mock(FileStatus.class);
+        FileStatus segment2 = mock(FileStatus.class);
+
+        FileStatus[] cubeStatuses = new FileStatus[3];
+        FileStatus cube1 = mock(FileStatus.class);
+        FileStatus cube2 = mock(FileStatus.class);
+        FileStatus cube3 = mock(FileStatus.class);
+
+        FileStatus[] projectStatuses = new FileStatus[2];
+        FileStatus project1 = mock(FileStatus.class);
+        FileStatus project2 = mock(FileStatus.class);
 
         // Remove job temp directory
-
         Path jobTmpPath = new Path(basePath + "/default/job_tmp");
         when(mockFs.exists(jobTmpPath)).thenReturn(true);
         when(mockFs.delete(jobTmpPath, true)).thenReturn(true);
 
         // remove every segment working dir from deletion list, so this exclude.
-        when(f1.getPath()).thenReturn(new Path(basePath + "/default/parquet/ci_left_join_cube/20120101000000_20130101000000_VRC"));
-        when(f2.getPath()).thenReturn(new Path(basePath + "/default/parquet/ci_left_join_cube/20130101000000_20140101000000_PCN"));
-        statuses[0] = f1;
-        statuses[1] = f2;
+        when(segment1.getPath()).thenReturn(new Path(basePath + "/default/parquet/ci_left_join_cube/20120101000000_20130101000000_VRC"));
+        when(segment2.getPath()).thenReturn(new Path(basePath + "/default/parquet/ci_left_join_cube/20130101000000_20140101000000_PCN"));
+        segmentStatuses[0] = segment1;
+        segmentStatuses[1] = segment2;
 
         Path cubePath1 = new Path(basePath + "/default/parquet/ci_left_join_cube");
         Path cubePath2 = new Path(basePath + "/default/parquet/ci_inner_join_cube");
+        Path cubePath3 = new Path(basePath + "/default/parquet/dropped_cube");
         when(mockFs.exists(cubePath1)).thenReturn(true);
         when(mockFs.exists(cubePath2)).thenReturn(false);
+        when(mockFs.exists(cubePath3)).thenReturn(true);
 
-        when(mockFs.listStatus(new Path(basePath + "/default/parquet/ci_left_join_cube"))).thenReturn(statuses);
+        when(cube1.getPath()).thenReturn(cubePath1);
+        when(cube2.getPath()).thenReturn(cubePath2);
+        when(cube3.getPath()).thenReturn(cubePath3);
+        cubeStatuses[0] = cube1;
+        cubeStatuses[1] = cube2;
+        cubeStatuses[2] = cube3;
+
+        when(project1.getPath()).thenReturn(new Path(basePath + "/default"));
+        when(project2.getPath()).thenReturn(new Path(basePath + "/deleted_project"));
+        projectStatuses[0] = project1;
+        projectStatuses[1] = project2;
+
+        Path defaultProjectParquetPath = new Path(basePath + "/default/parquet");
+        Path deletedProjectParquetPath = new Path(basePath + "/deleted_project/parquet");
+        when(mockFs.exists(defaultProjectParquetPath)).thenReturn(true);
+        when(mockFs.exists(deletedProjectParquetPath)).thenReturn(true);
+
+        when(mockFs.exists(basePath)).thenReturn(true);
+        when(mockFs.listStatus(new Path(basePath + "/default/parquet/ci_left_join_cube"))).thenReturn(segmentStatuses);
+        when(mockFs.listStatus(defaultProjectParquetPath)).thenReturn(cubeStatuses);
+        when(mockFs.listStatus(basePath)).thenReturn(projectStatuses);
     }
 }
