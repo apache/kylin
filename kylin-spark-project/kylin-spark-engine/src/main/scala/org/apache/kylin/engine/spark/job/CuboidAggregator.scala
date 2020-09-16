@@ -98,9 +98,24 @@ object CuboidAggregator {
             new Column(cdAggregate.toAggregateExpression()).as(id.toString)
           }
         case "TOP_N" =>
-          val schema: StructType = constructTopNSchema(measure.pra)
-          val udfName = UdfManager.register(measure.returnType.toKylinDataType, measure.expression, schema, !reuseLayout)
-          callUDF(udfName, columns: _*).as(id.toString)
+          // Uses new TopN aggregate function
+          // located in kylin-spark-project/kylin-spark-common/src/main/scala/org/apache/spark/sql/udaf/TopN.scala
+          val schema = StructType(measure.pra.map { col =>
+            val dateType = col.dataType
+            if (col == measure) {
+              StructField(s"MEASURE_${col.columnName}", dateType)
+            } else {
+              StructField(s"DIMENSION_${col.columnName}", dateType)
+            }
+          })
+
+          if (reuseLayout) {
+            new Column(ReuseTopN(measure.returnType.precision, schema, columns.head.expr)
+              .toAggregateExpression()).as(id.toString)
+          } else {
+            new Column(EncodeTopN(measure.returnType.precision, schema, columns.head.expr, columns.drop(1).map(_.expr))
+              .toAggregateExpression()).as(id.toString)
+          }
         case "PERCENTILE_APPROX" =>
           val udfName = UdfManager.register(measure.returnType.toKylinDataType, measure.expression, null, !reuseLayout)
           if (!reuseLayout) {
