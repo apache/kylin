@@ -1523,7 +1523,7 @@ KylinApp
               $scope.columnList = JSON.parse(response);
             },
             function (errResponse) {
-              SweetAlert.error("Failed to load csv file.")
+              SweetAlert.swal('',JSON.parse(errResponse.data).msg, 'error')
             }
           );
       }
@@ -1542,7 +1542,7 @@ KylinApp
               scope.aceSrcTbLoaded(true);
             },
             function (errResponse) {
-              SweetAlert.error("Failed to load csv file.")
+              SweetAlert.swal('',JSON.parse(errResponse.data).msg, 'error')
             }
           );
       }

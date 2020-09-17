@@ -247,7 +247,7 @@ public class TableController extends BasicController {
 
     @RequestMapping(value = "/saveCsvTable", method = { RequestMethod.POST })
     @ResponseBody
-    public TableDesc salveCsvTable(@RequestParam(value = "file") MultipartFile file,
+    public TableDesc saveCsvTable(@RequestParam(value = "file") MultipartFile file,
             @RequestParam(value = "withHeader", required = false) boolean withHeader,
             @RequestParam(value = "separator", required = true) String separator,
             @RequestParam(value = "tableName", required = true) String tableName,
@@ -255,6 +255,10 @@ public class TableController extends BasicController {
             @RequestParam(value = "columns", required = true) String columnDescList) throws IOException {
         if (file.isEmpty()) {
             throw new IllegalArgumentException("Please select a file");
+        }
+
+        if (tableService.getTableDescByName(tableName, false, project) != null) {
+            throw new InternalErrorException("Table " + tableName + " already exists!");
         }
 
         TableDesc desc = tableService.generateCsvTableDesc(tableName, JsonUtil.readValue(columnDescList, List.class));
