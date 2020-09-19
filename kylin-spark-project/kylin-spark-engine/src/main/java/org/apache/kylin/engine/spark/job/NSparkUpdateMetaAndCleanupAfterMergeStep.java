@@ -21,13 +21,12 @@ package org.apache.kylin.engine.spark.job;
 import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
-import org.apache.kylin.engine.spark.merger.AfterMergeOrRefreshResourceMerger;
 import org.apache.kylin.engine.spark.metadata.cube.PathManager;
+import org.apache.kylin.engine.spark.utils.UpdateMetadataUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecuteResult;
@@ -44,33 +43,29 @@ public class NSparkUpdateMetaAndCleanupAfterMergeStep extends NSparkExecutable {
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         String cubeId = getParam(MetadataConstants.P_CUBE_ID);
         String mergedSegmentUuid = getParam(CubingExecutableUtil.SEGMENT_ID);
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        final KylinConfig config = wrapConfig(context);
         CubeInstance cube = CubeManager.getInstance(config).getCubeByUuid(cubeId);
 
-        updateMetadataAfterMerge(cubeId);
-
-        CubeSegment mergedSegment = cube.getSegmentById(mergedSegmentUuid);
-        Segments<CubeSegment> mergingSegments = cube.getMergingSegments(mergedSegment);
-        // delete segments which were merged
-        for (CubeSegment segment : mergingSegments) {
-            try {
-                PathManager.deleteSegmentParquetStoragePath(cube, segment);
-            } catch (IOException e) {
-                throw new ExecuteException("Can not delete segment: " + segment.getName() + ", in cube: " + cube.getName());
-            }
+        try {
+            // update segments
+            UpdateMetadataUtil.updateMetadataAfterMerge(cubeId, mergedSegmentUuid, config);
+        } catch (IOException e) {
+            throw new ExecuteException("Can not update metadata of cube: " + cube.getName());
         }
 
+        if (config.cleanStorageAfterDelOperation()) {
+            CubeSegment mergedSegment = cube.getSegmentById(mergedSegmentUuid);
+            Segments<CubeSegment> mergingSegments = cube.getMergingSegments(mergedSegment);
+            // delete segments which were merged
+            for (CubeSegment segment : mergingSegments) {
+                try {
+                    PathManager.deleteSegmentParquetStoragePath(cube, segment);
+                } catch (IOException e) {
+                    throw new ExecuteException("Can not delete segment: " + segment.getName() + ", in cube: " + cube.getName());
+                }
+            }
+        }
         return ExecuteResult.createSucceed();
-    }
-
-    private void updateMetadataAfterMerge(String cubeId) {
-        String buildStepUrl = getParam(MetadataConstants.P_OUTPUT_META_URL);
-        KylinConfig buildConfig = KylinConfig.createKylinConfig(this.getConfig());
-        buildConfig.setMetadataUrl(buildStepUrl);
-        ResourceStore resourceStore = ResourceStore.getStore(buildConfig);
-        String mergedSegmentId = getParam(CubingExecutableUtil.SEGMENT_ID);
-        AfterMergeOrRefreshResourceMerger merger = new AfterMergeOrRefreshResourceMerger(buildConfig);
-        merger.merge(cubeId, mergedSegmentId, resourceStore, getParam(MetadataConstants.P_JOB_TYPE));
     }
 
     @Override
