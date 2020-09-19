@@ -266,7 +266,7 @@ public class NSparkExecutable extends AbstractExecutable {
 
             CliCommandExecutor exec = new CliCommandExecutor();
             exec.execute(cmd, patternedLogger, jobId);
-            updateMetaAfterBuilding(config);
+            updateMetaAfterOperation(config);
             //Add metrics information to execute result for JobMetricsFacade
             getManager().addJobInfo(getId(), getJobMetricsInfo(config));
             Map<String, String> extraInfo = makeExtraInfo(patternedLogger.getInfo());
@@ -278,7 +278,7 @@ public class NSparkExecutable extends AbstractExecutable {
         }
     }
 
-    protected void updateMetaAfterBuilding(KylinConfig config) throws IOException {
+    protected void updateMetaAfterOperation(KylinConfig config) throws IOException {
     }
 
     protected Map<String, String> getJobMetricsInfo(KylinConfig config) {
@@ -343,14 +343,14 @@ public class NSparkExecutable extends AbstractExecutable {
 
     protected void appendSparkConf(StringBuilder sb, String key, String value) {
         // Multiple parameters in "--conf" need to be enclosed in single quotes
-        sb.append(" --conf '").append(key).append("=").append(value).append("' ");
+        sb.append(" --conf '").append(key).append("=").append(value.trim()).append("' ");
     }
 
     private ExecuteResult runLocalMode(String appArgs, KylinConfig config) {
         try {
             Class<? extends Object> appClz = ClassUtil.forName(getSparkSubmitClassName(), Object.class);
             appClz.getMethod("main", String[].class).invoke(null, (Object) new String[] { appArgs });
-            updateMetaAfterBuilding(config);
+            updateMetaAfterOperation(config);
 
             //Add metrics information to execute result for JobMetricsFacade
             getManager().addJobInfo(getId(), getJobMetricsInfo(config));

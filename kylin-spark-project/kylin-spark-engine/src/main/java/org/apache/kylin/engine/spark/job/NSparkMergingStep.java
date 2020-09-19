@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -25,6 +26,7 @@ import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.engine.spark.utils.UpdateMetadataUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
@@ -59,4 +61,8 @@ public class NSparkMergingStep extends NSparkExecutable {
         return true;
     }
 
+    @Override
+    protected void updateMetaAfterOperation(KylinConfig config) throws IOException {
+        UpdateMetadataUtil.syncLocalMetadataToRemote(config, this);
+    }
 }

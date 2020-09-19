@@ -27,6 +27,7 @@ import java.util.UUID;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 import org.apache.kylin.engine.spark.metadata.cube.ManagerHub;
 import org.apache.kylin.engine.spark.metadata.cube.PathManager;
@@ -34,8 +35,8 @@ import org.apache.kylin.engine.spark.metadata.cube.model.ForestSpanningTree;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.storage.StorageFactory;
-import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -57,9 +58,12 @@ import scala.collection.JavaConversions;
 
 public class CubeMergeJob extends SparkApplication {
     protected static final Logger logger = LoggerFactory.getLogger(CubeMergeJob.class);
+
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
+    private Map<Long, CubeMergeAssist> mergeCuboidsAssist;
     private List<CubeSegment> mergingSegments = Lists.newArrayList();
     private List<SegmentInfo> mergingSegInfos = Lists.newArrayList();
+    private Map<Long, Short> cuboidShardNum = Maps.newConcurrentMap();
 
     @Override
     protected void doExecute() throws Exception {
@@ -74,8 +78,10 @@ public class CubeMergeJob extends SparkApplication {
             SegmentInfo segInfo = ManagerHub.getSegmentInfo(config, getParam(MetadataConstants.P_CUBE_ID), segment.getUuid());
             mergingSegInfos.add(segInfo);
         }
-        //merge and save segments
+        // merge segments
         mergeSegments(cubeId, newSegmentId);
+        // update segment
+        updateSegmentInfo(cubeId, newSegmentId);
     }
 
     private void mergeSegments(String cubeId, String segmentId) throws IOException {
@@ -84,7 +90,7 @@ public class CubeMergeJob extends SparkApplication {
         CubeSegment mergedSeg = cube.getSegmentById(segmentId);
         SegmentInfo mergedSegInfo = ManagerHub.getSegmentInfo(config, getParam(MetadataConstants.P_CUBE_ID), mergedSeg.getUuid());
 
-        Map<Long, CubeMergeAssist> mergeCuboidsAssist = generateMergeAssist(mergingSegInfos, ss);
+        mergeCuboidsAssist = generateMergeAssist(mergingSegInfos, ss);
         for (CubeMergeAssist assist : mergeCuboidsAssist.values()) {
             SpanningTree spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(mergedSegInfo.toBuildLayouts()));
             Dataset<Row> afterMerge = assist.merge(config, cube.getName());
@@ -178,6 +184,7 @@ public class CubeMergeJob extends SparkApplication {
 
         int partitionNum = BuildUtils.repartitionIfNeed(layout, storage, path, tempPath, config, ss);
         layout.setShardNum(partitionNum);
+        cuboidShardNum.put(layoutId, (short)partitionNum);
         ss.sparkContext().setLocalProperty(QueryExecutionCache.N_EXECUTION_ID_KEY(), null);
         ss.sparkContext().setJobDescription(null);
         QueryExecutionCache.removeQueryExecution(queryExecutionId);
@@ -185,6 +192,37 @@ public class CubeMergeJob extends SparkApplication {
         BuildUtils.fillCuboidInfo(layout, path);
 
         return layout;
+    }
+
+    private void updateSegmentInfo(String cubeId, String segmentId) throws IOException {
+        CubeManager cubeManager = CubeManager.getInstance(config);
+        CubeInstance cubeCopy = cubeManager.getCubeByUuid(cubeId).latestCopyForWrite();
+        CubeUpdate update = new CubeUpdate(cubeCopy);
+
+        List<CubeSegment> cubeSegments = Lists.newArrayList();
+        CubeSegment segment = cubeCopy.getSegmentById(segmentId);
+        long totalSourceSize = 0l;
+        long totalInputRecords = 0l;
+        long totalInputRecordsSize = 0l;
+        for (CubeMergeAssist assist : mergeCuboidsAssist.values()) {
+            totalSourceSize += assist.getLayout().getByteSize();
+        }
+        for (CubeSegment toRemoveSeg : mergingSegments) {
+            totalInputRecords += toRemoveSeg.getInputRecords();
+            totalInputRecordsSize += toRemoveSeg.getInputRecordsSize();
+        }
+        // Unit: KB
+        segment.setSizeKB(totalSourceSize / 1024);
+        segment.setInputRecords(totalInputRecords);
+        segment.setInputRecordsSize(totalInputRecordsSize);
+        segment.setLastBuildJobID(getParam(MetadataConstants.P_JOB_ID));
+        segment.setCuboidShardNums(cuboidShardNum);
+        Map<String, String> additionalInfo = segment.getAdditionalInfo();
+        additionalInfo.put("storageType", "" + IStorageAware.ID_PARQUET);
+        segment.setAdditionalInfo(additionalInfo);
+        cubeSegments.add(segment);
+        update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
+        cubeManager.updateCube(update);
     }
 
     @Override

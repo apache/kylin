@@ -203,11 +203,13 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         NSparkMergingJob mergeJob = NSparkMergingJob.merge(mergeSegment,  "ADMIN");
         execMgr.addJob(mergeJob);
         ExecutableState result = wait(mergeJob);
-        Segments<CubeSegment> mergingSegments = cube.getMergingSegments(mergeSegment);
-        for (CubeSegment segment : mergingSegments) {
-            String path = PathManager.getSegmentParquetStoragePath(cube, segment.getName(),
-                    segment.getStorageLocationIdentifier());
-            Assert.assertFalse(HadoopUtil.getFileSystem(path).exists(new Path(HadoopUtil.makeURI(path))));
+        if (config.cleanStorageAfterDelOperation()) {
+            Segments<CubeSegment> mergingSegments = cube.getMergingSegments(mergeSegment);
+            for (CubeSegment segment : mergingSegments) {
+                String path = PathManager.getSegmentParquetStoragePath(cube, segment.getName(),
+                        segment.getStorageLocationIdentifier());
+                Assert.assertFalse(HadoopUtil.getFileSystem(path).exists(new Path(HadoopUtil.makeURI(path))));
+            }
         }
         checkJobTmpPathDeleted(config, mergeJob);
         return result;
