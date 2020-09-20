@@ -94,6 +94,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
     @Before
     public void setup() throws SchedulerException {
         logger.info("Prepare temporary data.");
+        overwriteSystemProp("spark.local", "true");
         overwriteSystemProp("kylin.job.scheduler.poll-interval-second", "1");
         overwriteSystemProp("calcite.keep-in-clause", "true");
         overwriteSystemProp("kylin.metadata.distributed-lock-impl", "org.apache.kylin.engine.spark.utils.MockedDistributedLock$MockedFactory");

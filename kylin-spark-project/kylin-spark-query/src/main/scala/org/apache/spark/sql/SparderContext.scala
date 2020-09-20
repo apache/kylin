@@ -70,7 +70,7 @@ object SparderContext extends Logging {
     if (master_app_url != null)
       master_app_url
     else
-      "Not_initialized"
+      ""
   }
 
   def isSparkAvailable: Boolean = {
@@ -169,7 +169,13 @@ object SparderContext extends Logging {
                   .getContextClassLoader
                   .toString)
               initMonitorEnv()
-              master_app_url = YarnInfoFetcherUtils.getTrackingUrl(appid)
+              System.getProperty("spark.local") match {
+                case "true" =>
+                  master_app_url = "http://localhost:" + sparkSession.sparkContext.getConf
+                    .get("spark.ui.port", "4040")
+                case _ =>
+                  master_app_url = YarnInfoFetcherUtils.getTrackingUrl(appid)
+              }
             } catch {
               case throwable: Throwable =>
                 logError("Error for initializing spark ", throwable)
