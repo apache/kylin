@@ -62,7 +62,6 @@ public class NManualBuildAndQueryCuboidTest extends NBuildAndQueryTest {
     @Override
     public void setup() throws SchedulerException {
         super.setup();
-        System.setProperty("spark.local", "true");
         System.setProperty("noBuild", "false");
         System.setProperty("isDeveloperMode", "false");
     }
@@ -71,7 +70,6 @@ public class NManualBuildAndQueryCuboidTest extends NBuildAndQueryTest {
     public void after() {
         System.clearProperty("noBuild");
         System.clearProperty("isDeveloperMode");
-        System.clearProperty("spark.local");
         super.after();
     }
 

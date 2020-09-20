@@ -309,7 +309,11 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
 
   $scope.openSparderUrl = function(){
     AdminService.openSparderUrl({}, function (urlString) {
-      $window.open(urlString.url);
+      if (urlString.url != "") {
+        $window.open(urlString.url);
+      } else {
+        SweetAlert.swal('Oops...', 'There is no sparder tracking url.', 'warning');
+      }
     }, function (e) {
       if (e.data && e.data.exception) {
         var message = e.data.exception;
