@@ -553,7 +553,7 @@ public class TableService extends BasicService {
     public TableDesc generateCsvTableDesc(String tableName, List<String> columnDescList) throws IOException {
         String[] strs = tableName.split("\\.");
         if (strs.length != 2) {
-            throw new IllegalArgumentException("Invalid table name + '" + tableName + "'");
+            throw new IllegalArgumentException("Invalid table name '" + tableName + "'");
         }
         TableDesc tableDesc = new TableDesc();
 
@@ -561,7 +561,7 @@ public class TableService extends BasicService {
         tableDesc.setName(strs[1]);
         tableDesc.setUuid(RandomUtil.randomUUID().toString());
         tableDesc.setLastModified(0);
-        tableDesc.setSourceType(ISourceAware.ID_SPARK);
+        tableDesc.setSourceType(ISourceAware.ID_CSV);
         List<ColumnDesc> columnDescs = new ArrayList<>();
         int index = 0;
 

@@ -41,8 +41,8 @@ public class SourceFactory {
         return getSource(KylinConfig.getInstanceFromEnv().getDefaultSource());
     }
 
-    public static ISource getSparkSource() {
-        return getSource(ISourceAware.ID_SPARK);
+    public static ISource getCSVSource() {
+        return getSource(ISourceAware.ID_CSV);
     }
 
     public static ISource getSource(ISourceAware aware) {
