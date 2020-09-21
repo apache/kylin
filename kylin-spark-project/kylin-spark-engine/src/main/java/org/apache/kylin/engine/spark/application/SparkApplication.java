@@ -142,6 +142,9 @@ public abstract class SparkApplication {
                 }
             } else if (!isJobOnCluster(sparkConf)) {
                 sparkConf.set("spark.master", "local");
+                if (!config.getSparkConfigOverride().containsKey("spark.sql.shuffle.partitions")) {
+                    sparkConf.set("spark.sql.shuffle.partitions", "1");
+                }
             }
 
             // for wrapping credential
