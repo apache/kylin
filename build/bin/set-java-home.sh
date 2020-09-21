@@ -28,7 +28,7 @@ then
 fi
 
 # Validate kylin JDK version
-JAVA_VERSION=$(hbase -version 2>&1  | awk -F '"' '/version/ {print $2}' | awk -F "." '{print $1$2}')
+JAVA_VERSION=$(java -version 2>&1  | awk -F '"' '/version/ {print $2}' | awk -F "." '{print $1$2}')
 if [ "$JAVA_VERSION" -lt 18 ]
 then
     quit "Kylin requires JDK 1.8+, please install or upgrade your JDK"
