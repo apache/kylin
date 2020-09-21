@@ -20,7 +20,7 @@
 source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
 
 mkdir -p ${KYLIN_HOME}/logs
-
+version=`cat ${KYLIN_HOME}/VERSION | awk '{print $3}'`
 tomcat_root=${dir}/../tomcat
 export tomcat_root
 
@@ -47,20 +47,22 @@ then
     fi
 
     mkdir -p ${KYLIN_HOME}/ext
-    export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/conf:${KYLIN_HOME}/tool/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH_PREFIX}
-    export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${hive_dependency}
+    # export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/conf:${KYLIN_HOME}/tool/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH_PREFIX}
+    # export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${hive_dependency}
 
     if [ ${#patient} -eq 36 ]; then
-        hbase ${KYLIN_EXTRA_START_OPTS} \
+        java ${KYLIN_EXTRA_START_OPTS} \
         -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties \
         -Dcatalina.home=${tomcat_root} \
+        -cp ${KYLIN_HOME}/ext/*:${KYLIN_HOME}/tool/*:${SPARK_HOME}/jars/*:${KYLIN_HOME}/conf:${hive_dependency} \
         org.apache.kylin.tool.JobDiagnosisInfoCLI \
         -jobId $patient \
         -destDir $destDir || exit 1
     else
-        hbase ${KYLIN_EXTRA_START_OPTS} \
+        java ${KYLIN_EXTRA_START_OPTS} \
         -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties \
         -Dcatalina.home=${tomcat_root} \
+        -cp ${KYLIN_HOME}/ext/*:${KYLIN_HOME}/tool/*:${SPARK_HOME}/jars/*:${KYLIN_HOME}/conf:${hive_dependency} \
         org.apache.kylin.tool.DiagnosisInfoCLI \
         -project -all \
         -destDir $destDir || exit 1
@@ -78,9 +80,10 @@ then
     export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/conf:${KYLIN_HOME}/tool/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH_PREFIX}
     export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${hive_dependency}
 
-    hbase ${KYLIN_EXTRA_START_OPTS} \
+    java ${KYLIN_EXTRA_START_OPTS} \
       -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties \
       -Dcatalina.home=${tomcat_root} \
+      -cp ${KYLIN_HOME}/ext/*:${KYLIN_HOME}/tool/*:${SPARK_HOME}/jars/*:${KYLIN_HOME}/conf:${hive_dependency} \
       "$@"
 
      exit 0
