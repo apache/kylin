@@ -128,7 +128,6 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         sparkConf = new SparkConf().setAppName(UUID.randomUUID().toString()).setMaster("local[4]");
         sparkConf.set("spark.serializer", "org.apache.spark.serializer.JavaSerializer");
         sparkConf.set(StaticSQLConf.CATALOG_IMPLEMENTATION().key(), "in-memory");
-        sparkConf.set("spark.sql.shuffle.partitions", "1");
         sparkConf.set("spark.memory.fraction", "0.1");
         // opt memory
         sparkConf.set("spark.shuffle.detectCorrupt", "false");
