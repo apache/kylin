@@ -24,11 +24,7 @@ sudo crond -i -p
 sleep 60
 
 if [[ $1 == "server" ]]; then
-  $KYLIN_HOME/bin/kylin.sh start
+  $KYLIN_HOME/bin/kylin.sh run > ${KYLIN_HOME}/log/kylin.out 2>&1
 elif [[ $1 == "streaming" ]]; then
-  $KYLIN_HOME/bin/kylin.sh streaming start
-fi
-
-if [[ $2 == "-d" ]]; then
-  while true; do sleep 3000; done
+  $KYLIN_HOME/bin/kylin.sh streaming run > ${KYLIN_HOME}/log/streaming_receiver.out 2>&1
 fi
