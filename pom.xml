@@ -162,7 +162,7 @@
     <dropwizard.version>3.1.2</dropwizard.version>
     <!-- REST Service, ref https://github.com/spring-projects/spring-boot/blob/v1.3.8.RELEASE/spring-boot-dependencies/pom.xml -->
     <spring.boot.version>1.3.8.RELEASE</spring.boot.version>
-    <spring.framework.version>4.3.10.RELEASE</spring.framework.version>
+    <spring.framework.version>4.3.26.RELEASE</spring.framework.version>
     <spring.framework.security.version>4.2.3.RELEASE</spring.framework.security.version>
     <spring.framework.security.extensions.version>1.0.2.RELEASE</spring.framework.security.extensions.version>
     <opensaml.version>2.6.6</opensaml.version>
@@ -2078,7 +2078,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <ignore />
+                        <ignore/>
                       </action>
                     </pluginExecution>
                   </pluginExecutions>
