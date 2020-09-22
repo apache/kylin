@@ -36,8 +36,8 @@ if [[ `uname -a` =~ "Darwin" ]]; then
     alias md5cmd="md5 -q"
 fi
 
-spark_version="2.3.2"
-spark_pkg_md5="01b3e6aef0ef574e066d15e035b9b2dd"
+spark_version="2.4.5"
+spark_pkg_md5="4007fd48841fcc5be31a705f8223620a"
 hdp_version="2.4.0.0-169"
 cdh_version="5.7.5"
 cdh_path="/opt/cloudera/parcels/CDH"
