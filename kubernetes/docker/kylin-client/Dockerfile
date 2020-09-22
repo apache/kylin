@@ -79,4 +79,4 @@ RUN /usr/bin/crontab -u $USER /tmp/crontab.txt \
 EXPOSE 7070
 
 USER $USER
-CMD ["sh", "-c", "$TOOL_HOME/bootstrap.sh server -d"]
+CMD ["sh", "-c", "$TOOL_HOME/bootstrap.sh server"]

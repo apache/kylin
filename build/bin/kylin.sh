@@ -302,6 +302,36 @@ then
         -Dkylin.hbase.dependency=${hbase_dependency} \
         org.apache.kylin.stream.server.StreamingReceiver $@ > ${KYLIN_HOME}/logs/streaming_receiver.out 2>&1 & echo $! > ${KYLIN_HOME}/streaming_receiver_pid &
         exit 0
+    elif [ "$2" == "run" ]
+    then
+        if [ -f "${KYLIN_HOME}/streaming_receiver_pid" ]
+        then
+            PID=`cat $KYLIN_HOME/streaming_receiver_pid`
+            if ps -p $PID > /dev/null
+            then
+              echo "Kylin is running, stop it first"
+            exit 1
+            fi
+        fi
+        #retrive $hbase_dependency
+        source ${dir}/find-hbase-dependency.sh
+        #retrive $KYLIN_EXTRA_START_OPTS
+        if [ -f "${KYLIN_HOME}/conf/setenv.sh" ]
+            then source ${KYLIN_HOME}/conf/setenv.sh
+        fi
+
+        mkdir -p ${KYLIN_HOME}/ext
+        HBASE_CLASSPATH=`hbase classpath`
+        #echo "hbase class path:"$HBASE_CLASSPATH
+        STREAM_CLASSPATH=${KYLIN_HOME}/lib/streaming/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH}
+
+        # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
+        ${JAVA_HOME}/bin/java -cp $STREAM_CLASSPATH ${KYLIN_EXTRA_START_OPTS} \
+        -Dlog4j.configuration=stream-receiver-log4j.properties\
+        -DKYLIN_HOME=${KYLIN_HOME}\
+        -Dkylin.hbase.dependency=${hbase_dependency} \
+        org.apache.kylin.stream.server.StreamingReceiver $@
+        exit 0
     elif [ "$2" == "stop" ]
     then
         if [ ! -f "${KYLIN_HOME}/streaming_receiver_pid" ]
