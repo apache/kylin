@@ -24,8 +24,7 @@ import org.apache.hadoop.fs.{FileStatus, Path}
 import org.apache.kylin.common.util.DateFormat
 import org.apache.kylin.cube.cuboid.Cuboid
 import org.apache.kylin.cube.CubeInstance
-import org.apache.kylin.engine.spark.metadata.cube.model.ForestSpanningTree
-import org.apache.kylin.engine.spark.metadata.cube.{ManagerHub, PathManager}
+import org.apache.kylin.engine.spark.metadata.cube.PathManager
 import org.apache.kylin.engine.spark.metadata.MetadataConverter
 import org.apache.kylin.metadata.model.{PartitionDesc, SegmentStatusEnum}
 import org.apache.spark.internal.Logging
@@ -39,7 +38,6 @@ import org.apache.spark.sql.{AnalysisException, SparkSession}
 import org.apache.spark.sql.utils.SparkTypeUtil
 import org.apache.spark.util.collection.BitSet
 
-import scala.collection.JavaConversions
 import scala.collection.JavaConverters._
 
 case class SegmentDirectory(segmentName: String, identifier: String, files: Seq[FileStatus])
@@ -82,9 +80,6 @@ class FilePruner(
   extends FileIndex with ResetShufflePartition with Logging {
 
   private lazy val segmentDirs: Seq[SegmentDirectory] = {
-    cubeInstance.getSegments.asScala
-      .filter(_.getStatus.equals(SegmentStatusEnum.READY))
-      .map(seg => SegmentDirectory(seg.getName, seg.getStorageLocationIdentifier, null))
     cubeInstance.getSegments.asScala
       .filter(_.getStatus.equals(SegmentStatusEnum.READY)).map(seg => {
       val segName = seg.getName
@@ -290,10 +285,6 @@ class FilePruner(
 
         val pruned = segDirs.map { case SegmentDirectory(segName, segIdentifier, files) =>
           val segment = cubeInstance.getSegment(segName, SegmentStatusEnum.READY);
-          val segID = segment.getUuid
-          val segmentInfo = ManagerHub.getSegmentInfo(cubeInstance.getConfig, cubeInstance.getId, segID)
-          val spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(segmentInfo.toBuildLayouts))
-          //val partitionNumber = spanningTree.getLayoutEntity(layoutEntity.getId).getShardNum
           val partitionNumber = segment.getCuboidShardNum(layoutEntity.getId).toInt
           require(partitionNumber > 0, "Shards num with shard by col should greater than 0.")
 
