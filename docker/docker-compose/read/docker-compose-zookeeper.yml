@@ -1,0 +1,18 @@
+version: "3.3"
+
+services:
+  read-zookeeper:
+    image: ${ZOOKEEPER_IMAGETAG:-zookeeper:3.4.10}
+    container_name: read-zookeeper
+    hostname: read-zookeeper
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=0.0.0.0:2888:3888
+    networks:
+      - write_kylin
+    ports:
+      - 2182:2181
+
+networks:
+  write_kylin:
+    external: true

@@ -1,0 +1,16 @@
+
+version: "3.3"
+
+services:
+  metastore-db:
+    image: mysql:5.6.49
+    container_name: metastore-db
+    hostname: metastore-db
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=kylin
+      - MYSQL_DATABASE=kylin
+      - MYSQL_USER=kylin
+      - MYSQL_PASSWORD=kylin
+
