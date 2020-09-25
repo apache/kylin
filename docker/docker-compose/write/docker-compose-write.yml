@@ -1,0 +1,215 @@
+version: "3.3"
+
+services:
+  write-namenode:
+    image: ${HADOOP_NAMENODE_IMAGETAG:-bde2020/hadoop-namenode:2.0.0-hadoop2.7.4-java8}
+    container_name: write-namenode
+    hostname: write-namenode
+    volumes:
+      - ./data/write_hadoop_namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test-write
+    env_file:
+      - write-hadoop.env
+    expose:
+      - 8020
+    ports:
+      - 50070:50070
+
+  write-datanode1:
+    image: ${HADOOP_DATANODE_IMAGETAG:-bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8}
+    container_name: write-datanode1
+    hostname: write-datanode1
+    volumes:
+      - ./data/write_hadoop_datanode1:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070"
+    env_file:
+      - write-hadoop.env
+    links:
+      - write-namenode
+
+  write-datanode2:
+    image: ${HADOOP_DATANODE_IMAGETAG:-bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8}
+    container_name: write-datanode2
+    hostname: write-datanode2
+    volumes:
+      - ./data/write_hadoop_datanode2:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070"
+    env_file:
+      - write-hadoop.env
+
+  write-datanode3:
+    image: ${HADOOP_DATANODE_IMAGETAG:-bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8}
+    container_name: write-datanode3
+    hostname: write-datanode3
+    volumes:
+      - ./data/write_hadoop_datanode3:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070"
+    env_file:
+      - write-hadoop.env
+
+  write-resourcemanager:
+    image: ${HADOOP_RESOURCEMANAGER_IMAGETAG:-bde2020/hadoop-resourcemanager:2.0.0-hadoop2.7.4-java8}
+    container_name: write-resourcemanager
+    hostname: write-resourcemanager
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075"
+    env_file:
+      - write-hadoop.env
+    ports:
+      - 8088:8088
+
+  write-nodemanager1:
+    image: ${HADOOP_NODEMANAGER_IMAGETAG:-bde2020/hadoop-nodemanager:2.0.0-hadoop2.7.4-java8}
+    container_name: write-nodemanager1
+    hostname: write-nodemanager1
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 write-resourcemanager:8088"
+    env_file:
+      - write-hadoop.env
+
+  write-nodemanager2:
+    image: ${HADOOP_NODEMANAGER_IMAGETAG:-bde2020/hadoop-nodemanager:2.0.0-hadoop2.7.4-java8}
+    container_name: write-nodemanager2
+    hostname: write-nodemanager2
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 write-resourcemanager:8088"
+    env_file:
+      - write-hadoop.env
+
+  write-historyserver:
+    image: ${HADOOP_HISTORYSERVER_IMAGETAG:-bde2020/hadoop-historyserver:2.0.0-hadoop2.7.4-java8}
+    container_name: write-historyserver
+    hostname: write-historyserver
+    volumes:
+      - ./data/write_hadoop_historyserver:/hadoop/yarn/timeline
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 write-resourcemanager:8088"
+    env_file:
+      - write-hadoop.env
+    ports:
+      - 8188:8188
+
+  write-hive-server:
+    image: ${HIVE_IMAGETAG:-apachekylin/kylin-hive:hive_1.2.2_hadoop_2.8.5}
+    container_name: write-hive-server
+    hostname: write-hive-server
+    env_file:
+      - write-hadoop.env
+    environment:
+#      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://write-hive-metastore/metastore"
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:mysql://metastore-db/metastore"
+      SERVICE_PRECONDITION: "write-hive-metastore:9083"
+    ports:
+      - 10000:10000
+
+  write-hive-metastore:
+#    image: ${HIVE_IMAGETAG:-bde2020/hive:2.3.2-postgresql-metastore}
+    image: ${HIVE_IMAGETAG:-apachekylin/kylin-hive:hive_1.2.2_hadoop_2.8.5}
+    container_name: write-hive-metastore
+    hostname: write-hive-metastore
+    env_file:
+      - write-hadoop.env
+    command: /opt/hive/bin/hive --service metastore
+    expose:
+      - 9083
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 metastore-db:3306"
+#       SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 write-hive-metastore-postgresql:5432"
+
+#  write-hive-metastore-postgresql:
+#    image: bde2020/hive-metastore-postgresql:2.3.0
+#    container_name: write-hive-metastore-postgresql
+#    hostname: write-hive-metastore-postgresql
+
+  metastore-db:
+    image: mysql:5.6.49
+    container_name: metastore-db
+    hostname: metastore-db
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=kylin
+      - MYSQL_DATABASE=metastore
+      - MYSQL_USER=kylin
+      - MYSQL_PASSWORD=kylin
+    ports:
+      - 3306:3306
+
+  write-zookeeper:
+    image: ${ZOOKEEPER_IMAGETAG:-zookeeper:3.4.10}
+    container_name: write-zookeeper
+    hostname: write-zookeeper
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=0.0.0.0:2888:3888
+    ports:
+      - 2181:2181
+
+  write-kafka:
+    image: ${KAFKA_IMAGETAG:-bitnami/kafka:2.0.0}
+    container_name: write-kafkabroker
+    hostname: write-kafkabroker
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=write-zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    ports:
+      - 9092:9092
+
+  kerberos-kdc:
+    image: ${KERBEROS_IMAGE}
+    container_name: kerberos-kdc
+    hostname: kerberos-kdc
+
+  write-hbase-master:
+    image: ${HBASE_MASTER_IMAGETAG:-bde2020/hbase-master:1.0.0-hbase1.2.6}
+    container_name: write-hbase-master
+    hostname: write-hbase-master
+    env_file:
+      - write-hbase-distributed-local.env
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 write-zookeeper:2181"
+    ports:
+      - 16010:16010
+
+  write-hbase-regionserver1:
+    image: ${HBASE_REGIONSERVER_IMAGETAG:-bde2020/hbase-regionserver:1.0.0-hbase1.2.6}
+    container_name: write-hbase-regionserver1
+    hostname: write-hbase-regionserver1
+    env_file:
+      - write-hbase-distributed-local.env
+    environment:
+      HBASE_CONF_hbase_regionserver_hostname: write-hbase-regionserver1
+      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 write-zookeeper:2181 write-hbase-master:16010"
+
+  write-hbase-regionserver2:
+    image: ${HBASE_REGIONSERVER_IMAGETAG:-bde2020/hbase-regionserver:1.0.0-hbase1.2.6}
+    container_name: write-hbase-regionserver2
+    hostname: write-hbase-regionserver2
+    env_file:
+      - write-hbase-distributed-local.env
+    environment:
+      HBASE_CONF_hbase_regionserver_hostname: write-hbase-regionserver2
+      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 write-zookeeper:2181 write-hbase-master:16010"
+
+  kylin-all:
+    image: ${CLIENT_IMAGETAG}
+    container_name: kylin-all
+    hostname: kylin-all
+    volumes:
+      - ./conf/hadoop:/etc/hadoop/conf
+      - ./conf/hbase:/etc/hbase/conf
+      - ./conf/hive:/etc/hive/conf
+      - ./kylin:/opt/kylin/
+    env_file:
+      - client.env
+    environment:
+      HADOOP_CONF_DIR: /etc/hadoop/conf
+      HIVE_CONF_DIR: /etc/hive/conf
+      HBASE_CONF_DIR: /etc/hbase/conf
+      KYLIN_HOME: /opt/kylin/kylin
+    ports:
+      - 7070:7070

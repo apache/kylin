@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+<configuration>
+
+<!-- Site specific YARN configuration properties -->
+
+<property><name>yarn.resourcemanager.fs.state-store.uri</name><value>/rmstate</value></property>
+<property><name>yarn.timeline-service.generic-application-history.enabled</name><value>true</value></property>
+<property><name>mapreduce.map.output.compress</name><value>true</value></property>
+<property><name>yarn.resourcemanager.recovery.enabled</name><value>true</value></property>
+<property><name>mapred.map.output.compress.codec</name><value>org.apache.hadoop.io.compress.SnappyCodec</value></property>
+<property><name>yarn.timeline-service.enabled</name><value>true</value></property>
+<property><name>yarn.log-aggregation-enable</name><value>true</value></property>
+<property><name>yarn.resourcemanager.store.class</name><value>org.apache.hadoop.yarn.server.resourcemanager.recovery.FileSystemRMStateStore</value></property>
+<property><name>yarn.resourcemanager.system-metrics-publisher.enabled</name><value>true</value></property>
+<property><name>yarn.nodemanager.remote-app-log-dir</name><value>/app-logs</value></property>
+<property><name>yarn.nodemanager.aux-services</name><value>mapreduce_shuffle</value></property>
+<property><name>yarn.resourcemanager.resource_tracker.address</name><value>read-resourcemanager:8031</value></property>
+<property><name>yarn.resourcemanager.hostname</name><value>read-resourcemanager</value></property>
+<property><name>yarn.scheduler.capacity.root.default.maximum-allocation-vcores</name><value>4</value></property>
+<property><name>yarn.timeline-service.hostname</name><value>read-historyserver</value></property>
+<property><name>yarn.scheduler.capacity.root.default.maximum-allocation-mb</name><value>8192</value></property>
+<property><name>yarn.log.server.url</name><value>http://read-historyserver:8188/applicationhistory/logs/</value></property>
+<property><name>yarn.resourcemanager.scheduler.class</name><value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler</value></property>
+<property><name>yarn.resourcemanager.scheduler.address</name><value>read-resourcemanager:8030</value></property>
+<property><name>yarn.resourcemanager.address</name><value>read-resourcemanager:8032</value></property>
+<property><name>yarn.nodemanager.disk-health-checker.max-disk-utilization-per-disk-percentage</name><value>98.5</value></property>
+<property><name>yarn.nodemanager.resource.memory-mb</name><value>16384</value></property>
+<property><name>yarn.nodemanager.resource.cpu-vcores</name><value>8</value></property>
+<property><name>yarn.resourcemanager.bind-host</name><value>0.0.0.0</value></property>
+<property><name>yarn.nodemanager.bind-host</name><value>0.0.0.0</value></property>
+<property><name>yarn.nodemanager.bind-host</name><value>0.0.0.0</value></property>
+<property><name>yarn.timeline-service.bind-host</name><value>0.0.0.0</value></property>
+</configuration>
