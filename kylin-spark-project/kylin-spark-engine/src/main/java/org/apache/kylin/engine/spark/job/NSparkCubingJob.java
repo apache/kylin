@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -32,8 +33,10 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
+import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spark_project.guava.base.Preconditions;
@@ -138,5 +141,19 @@ public class NSparkCubingJob extends CubingJob {
 
     public void setCube(CubeInstance cube) {
         this.cube = cube;
+    }
+
+    public void cleanupAfterJobDiscard() {
+        try {
+            PathManager.deleteJobTempPath(getConfig(), getParam(MetadataConstants.P_PROJECT_NAME),
+                    getParam(MetadataConstants.P_JOB_ID));
+
+            CubeManager cubeManager = CubeManager.getInstance(getConfig());
+            CubeInstance cube = cubeManager.getCube(getParam(MetadataConstants.P_CUBE_NAME));
+            CubeSegment segment = cube.getSegment(getParam(MetadataConstants.SEGMENT_NAME), SegmentStatusEnum.NEW);
+            PathManager.deleteSegmentParquetStoragePath(cube, segment);
+        } catch (IOException e) {
+            logger.warn("Delete resource file failed after job be discarded, due to", e);
+        }
     }
 }

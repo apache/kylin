@@ -48,6 +48,7 @@ import org.apache.kylin.engine.mr.LookupSnapshotBuildJob;
 import org.apache.kylin.engine.mr.common.CubeJobLockUtil;
 import org.apache.kylin.engine.mr.common.JobInfoConverter;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.engine.spark.metadata.cube.source.SourceFactory;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JobSearchResult;
@@ -644,9 +645,15 @@ public class JobService extends BasicService implements InitializingBean {
                     "The job " + job.getId() + " has already been finished and cannot be discarded.");
         }
 
+        AbstractExecutable executable = getExecutableManager().getJob(job.getId());
+
         if (job.getStatus() != JobStatusEnum.DISCARDED) {
-            AbstractExecutable executable = getExecutableManager().getJob(job.getId());
             if (executable instanceof CubingJob) {
+                //Clean up job tmp and segment storage from hdfs after job be discarded
+                if (executable instanceof NSparkCubingJob) {
+                    ((NSparkCubingJob) executable).cleanupAfterJobDiscard();
+                }
+
                 cancelCubingJobInner((CubingJob) executable);
                 //release global mr hive dict lock if exists
                 if (executable.getStatus().isFinalState()) {
