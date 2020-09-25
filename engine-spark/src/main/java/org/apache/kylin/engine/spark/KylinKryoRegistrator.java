@@ -88,7 +88,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kylinClassByReflection1(kyroClasses);
         kylinClassByReflection2(kyroClasses);
 
-        kyroClasses.add(com.google.common.hash.Hashing.murmur3_128().getClass());
+        kyroClasses.add(org.apache.kylin.shaded.com.google.common.hash.Hashing.murmur3_128().getClass());
         kyroClasses.add(org.roaringbitmap.buffer.MutableRoaringArray.class);
         kyroClasses.add(org.roaringbitmap.buffer.MappeableContainer[].class);
         kyroClasses.add(org.roaringbitmap.buffer.MutableRoaringBitmap.class);
@@ -106,7 +106,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         addClassQuitely(kyroClasses, "org.apache.kylin.job.shaded.org.roaringbitmap.buffer.ImmutableRoaringArray");
         addClassQuitely(kyroClasses, "org.apache.kylin.job.shaded.org.roaringbitmap.buffer.MappeableRunContainer");
 
-        addClassQuitely(kyroClasses, "com.google.common.collect.EmptyImmutableList");
+        addClassQuitely(kyroClasses, "org.apache.kylin.shaded.com.google.common.collect.EmptyImmutableList");
         addClassQuitely(kyroClasses, "java.nio.HeapShortBuffer");
         addClassQuitely(kyroClasses, "java.nio.HeapLongBuffer");
         addClassQuitely(kyroClasses, "scala.collection.immutable.Map$EmptyMap$");

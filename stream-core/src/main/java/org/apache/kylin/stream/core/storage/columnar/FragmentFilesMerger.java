@@ -64,11 +64,11 @@ import org.apache.kylin.stream.core.util.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.CountingOutputStream;
+import org.apache.kylin.shaded.com.google.common.base.Function;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.io.ByteStreams;
+import org.apache.kylin.shaded.com.google.common.io.CountingOutputStream;
 
 public class FragmentFilesMerger {
     private static Logger logger = LoggerFactory.getLogger(FragmentFilesMerger.class);

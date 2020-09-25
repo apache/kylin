@@ -22,7 +22,7 @@ import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.Executors
 
-import com.google.common.collect.Maps
+import org.apache.kylin.shaded.com.google.common.collect.Maps
 import org.apache.kylin.engine.spark.job.KylinBuildEnv
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path, PathFilter}

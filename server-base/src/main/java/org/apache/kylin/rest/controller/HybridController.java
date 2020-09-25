@@ -21,7 +21,7 @@ package org.apache.kylin.rest.controller;
 import java.util.Collection;
 import java.util.List;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.rest.request.HybridRequest;
 import org.apache.kylin.rest.response.HybridRespone;

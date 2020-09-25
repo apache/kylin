@@ -37,9 +37,9 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.support.AbstractCacheManager;
 import org.springframework.cache.support.SimpleValueWrapper;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import net.spy.memcached.MemcachedClientIF;
 

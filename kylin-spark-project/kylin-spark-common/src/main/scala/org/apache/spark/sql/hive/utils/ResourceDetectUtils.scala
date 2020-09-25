@@ -22,7 +22,7 @@ import java.io.IOException
 import java.nio.charset.Charset
 import java.util.{Map => JMap}
 
-import com.google.common.collect.Maps
+import org.apache.kylin.shaded.com.google.common.collect.Maps
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.apache.hadoop.fs._

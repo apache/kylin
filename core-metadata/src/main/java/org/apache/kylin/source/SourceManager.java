@@ -30,10 +30,10 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
+import org.apache.kylin.shaded.com.google.common.cache.Cache;
+import org.apache.kylin.shaded.com.google.common.cache.CacheBuilder;
+import org.apache.kylin.shaded.com.google.common.cache.RemovalListener;
+import org.apache.kylin.shaded.com.google.common.cache.RemovalNotification;
 
 public class SourceManager {
     private static final Logger logger = LoggerFactory.getLogger(SourceManager.class);

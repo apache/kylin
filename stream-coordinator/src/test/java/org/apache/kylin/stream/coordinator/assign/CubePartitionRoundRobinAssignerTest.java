@@ -35,8 +35,8 @@ import org.apache.kylin.stream.core.source.StreamingTableSourceInfo;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class CubePartitionRoundRobinAssignerTest {
     CubePartitionRoundRobinAssigner assigner;

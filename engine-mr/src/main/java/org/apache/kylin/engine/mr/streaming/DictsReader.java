@@ -32,7 +32,7 @@ import org.apache.kylin.stream.core.storage.columnar.protocol.FragmentMetaInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
 
 public class DictsReader extends ColumnarFilesReader {
     private static final Logger logger = LoggerFactory.getLogger(DictsReader.class);

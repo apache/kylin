@@ -18,7 +18,7 @@
 
 package org.apache.kylin.gridtable;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 import java.util.Iterator;

@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class StreamingConsumerChannel implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(StreamingConsumerChannel.class);

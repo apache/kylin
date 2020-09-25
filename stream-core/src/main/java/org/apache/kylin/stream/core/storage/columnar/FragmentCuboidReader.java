@@ -32,7 +32,7 @@ import org.apache.kylin.stream.core.storage.columnar.protocol.CuboidMetaInfo;
 import org.apache.kylin.stream.core.storage.columnar.protocol.DimensionMetaInfo;
 import org.apache.kylin.stream.core.storage.columnar.protocol.MetricMetaInfo;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class FragmentCuboidReader implements Iterable<RawRecord> {
     private long rowCount;

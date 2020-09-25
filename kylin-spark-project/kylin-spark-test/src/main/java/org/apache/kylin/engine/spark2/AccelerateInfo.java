@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark2;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Set;

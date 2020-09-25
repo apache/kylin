@@ -31,7 +31,7 @@ import org.apache.kylin.engine.mr.common.CubeStatsWriter;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.junit.Test;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  */

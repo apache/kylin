@@ -44,8 +44,10 @@ import org.apache.kylin.stream.core.storage.columnar.ParsedStreamingCubeInfo;
 import org.apache.kylin.stream.core.storage.columnar.RawRecord;
 import org.apache.kylin.stream.core.storage.columnar.protocol.FragmentMetaInfo;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class FragmentCuboidReaderPerfTest extends LocalFileMetadataTestCase {
     private static final String cubeName = "test_streaming_v2_cube";
@@ -109,7 +111,7 @@ public class FragmentCuboidReaderPerfTest extends LocalFileMetadataTestCase {
             fragmentCuboidReaders.add(fragmentCuboidReader);
         }
 
-        Stopwatch sw = new Stopwatch();
+        Stopwatch sw = Stopwatch.createUnstarted();
         sw.start();
         int rowNum = 0;
         long scanTime = 0;
@@ -129,7 +131,7 @@ public class FragmentCuboidReaderPerfTest extends LocalFileMetadataTestCase {
             scanTime += System.currentTimeMillis() - scanStartTime;
         }
         sw.stop();
-        long takeTime = sw.elapsedMillis();
+        long takeTime = sw.elapsed(MILLISECONDS);
         System.out.println(time + " scan finished, total rows:" + rowNum);
         System.out.println(time + " scan took:" + takeTime + ", scan time: " + scanTime + ", rowsPerSec:"
                 + (rowNum / takeTime) * 1000);
@@ -164,7 +166,7 @@ public class FragmentCuboidReaderPerfTest extends LocalFileMetadataTestCase {
                 readRows[i][j] = rand.nextInt((int) fragmentMetaInfo.getNumberOfRows());
             }
         }
-        Stopwatch sw = new Stopwatch();
+        Stopwatch sw = Stopwatch.createUnstarted();
         sw.start();
         int rowNum = 0;
 
@@ -174,7 +176,7 @@ public class FragmentCuboidReaderPerfTest extends LocalFileMetadataTestCase {
             }
         }
         sw.stop();
-        long takeTime = sw.elapsedMillis();
+        long takeTime = sw.elapsed(MILLISECONDS);
         System.out.println(time + " scan finished, total rows:" + rowNum);
         System.out.println(time + " scan took:" + takeTime + ",rowsPerSec:" + (rowNum / takeTime) * 1000);
     }

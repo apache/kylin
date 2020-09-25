@@ -46,7 +46,7 @@ import static org.apache.kylin.job.util.FlatTableSqlQuoteUtils.quoteIdentifier;
 import static org.apache.kylin.job.util.FlatTableSqlQuoteUtils.quoteTableIdentity;
 import static org.apache.kylin.job.util.FlatTableSqlQuoteUtils.quoteIdentifierInSqlExpr;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class JoinedFlatTable {
     public static final String TEXTFILE = "TEXTFILE";

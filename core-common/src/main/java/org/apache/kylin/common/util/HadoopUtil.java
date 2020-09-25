@@ -26,7 +26,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ContentSummary;
@@ -47,7 +47,7 @@ import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class HadoopUtil {
 

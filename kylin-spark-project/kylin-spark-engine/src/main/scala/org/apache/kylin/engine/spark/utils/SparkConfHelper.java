@@ -33,8 +33,8 @@ import org.apache.spark.conf.rule.SparkConfRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 import org.apache.kylin.cluster.ClusterInfoFetcher;
 

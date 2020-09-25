@@ -21,7 +21,7 @@ package org.apache.kylin.engine.spark.job
 import java.io.File
 import java.util
 
-import com.google.common.collect.Lists
+import org.apache.kylin.shaded.com.google.common.collect.Lists
 import org.apache.commons.io.FileUtils
 import org.apache.hadoop.fs.{ContentSummary, FSDataOutputStream, Path}
 import org.apache.kylin.common.KylinConfig

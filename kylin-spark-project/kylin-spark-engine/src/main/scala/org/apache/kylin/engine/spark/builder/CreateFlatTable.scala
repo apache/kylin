@@ -20,7 +20,7 @@ package org.apache.kylin.engine.spark.builder
 
 import java.util.Locale
 
-import com.google.common.collect.Sets
+import org.apache.kylin.shaded.com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
 import org.apache.kylin.engine.spark.builder.CubeBuilderHelper.{ENCODE_SUFFIX, _}
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil._

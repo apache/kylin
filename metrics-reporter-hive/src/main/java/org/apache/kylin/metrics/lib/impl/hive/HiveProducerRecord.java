@@ -21,7 +21,7 @@ package org.apache.kylin.metrics.lib.impl.hive;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 
 public class HiveProducerRecord {
 

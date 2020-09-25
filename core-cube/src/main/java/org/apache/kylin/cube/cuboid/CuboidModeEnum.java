@@ -20,7 +20,7 @@ package org.apache.kylin.cube.cuboid;
 
 import java.util.Locale;
 
-import com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 
 public enum CuboidModeEnum {
     CURRENT("CURRENT"), RECOMMEND("RECOMMEND"), RECOMMEND_EXISTING("RECOMMEND_EXISTING"), RECOMMEND_MISSING(

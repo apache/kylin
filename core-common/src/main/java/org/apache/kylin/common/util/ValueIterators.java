@@ -21,7 +21,7 @@ package org.apache.kylin.common.util;
 import java.util.Iterator;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class ValueIterators {
 

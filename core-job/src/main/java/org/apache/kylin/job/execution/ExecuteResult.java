@@ -18,8 +18,8 @@
 
 package org.apache.kylin.job.execution;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 import java.util.Map;
 

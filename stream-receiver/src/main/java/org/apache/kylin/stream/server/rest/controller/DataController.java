@@ -52,8 +52,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 @Controller
 @RequestMapping(value = "/data")
@@ -80,7 +82,7 @@ public class DataController extends BasicController {
         StreamingQueryProfile.set(queryProfile);
         logger.info("receive query request queryId:{}", queryId);
         try {
-            final Stopwatch sw = new Stopwatch();
+            final Stopwatch sw = Stopwatch.createUnstarted();
             sw.start();
             String cubeName = dataRequest.getCubeName();
             long minSegmentTime = dataRequest.getMinSegmentTime();
@@ -121,7 +123,7 @@ public class DataController extends BasicController {
             DataResponse dataResponse = new DataResponse();
             dataResponse.setData(Base64.encodeBase64String(serializedRowsInfo.getFirst()));
             sw.stop();
-            logger.info("query-{}: return response, took {} ms", queryId, sw.elapsedMillis());
+            logger.info("query-{}: return response, took {} ms", queryId, sw.elapsed(MILLISECONDS));
             long finalCnt = serializedRowsInfo.getSecond();
             queryProfile.setFinalRows(finalCnt);
             String profileInfo = queryProfile.toString();

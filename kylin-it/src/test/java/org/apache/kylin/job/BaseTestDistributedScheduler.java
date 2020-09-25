@@ -39,7 +39,7 @@ import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.io.Files;
+import org.apache.kylin.shaded.com.google.common.io.Files;
 
 public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     static ExecutableManager execMgr;

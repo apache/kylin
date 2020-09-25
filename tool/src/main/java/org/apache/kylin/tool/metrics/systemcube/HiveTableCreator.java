@@ -33,8 +33,8 @@ import org.apache.kylin.metrics.property.QueryCubePropertyEnum;
 import org.apache.kylin.metrics.property.QueryPropertyEnum;
 import org.apache.kylin.metrics.property.QueryRPCPropertyEnum;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class HiveTableCreator {
 

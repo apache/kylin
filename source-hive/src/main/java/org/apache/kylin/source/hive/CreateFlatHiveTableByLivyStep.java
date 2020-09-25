@@ -19,7 +19,7 @@
 package org.apache.kylin.source.hive;
 
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.constant.ExecutableConstants;

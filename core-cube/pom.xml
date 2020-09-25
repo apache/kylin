@@ -42,6 +42,10 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-dictionary</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-shaded-guava</artifactId>
+        </dependency>
 
 
         <!-- Provided -->
@@ -56,10 +60,6 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -92,5 +92,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
 </project>

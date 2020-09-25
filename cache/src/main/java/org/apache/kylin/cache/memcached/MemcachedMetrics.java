@@ -25,7 +25,7 @@ import java.util.Map;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 import net.spy.memcached.metrics.AbstractMetricCollector;
 import net.spy.memcached.metrics.DefaultMetricCollector;

@@ -19,6 +19,7 @@
 package org.apache.kylin.storage.stream.rpc;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -61,11 +62,12 @@ import org.apache.kylin.stream.core.util.RestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * TODO use long connection rather than short connection
@@ -75,8 +77,8 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
 
     private static ExecutorService executorService;
     static {
-        executorService = new ThreadPoolExecutor(20, 100, 60L, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("stream-rpc-pool-t"));
+        executorService = new ThreadPoolExecutor(20, 100, 60L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(),
+                new NamedThreadFactory("stream-rpc-pool-t"));
     }
     private AssignmentsCache assignmentsCache;
     private RestService restService;
@@ -180,13 +182,14 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
 
         try {
             String content = JsonUtil.writeValueAsString(dataRequest);
-            Stopwatch sw = new Stopwatch();
+            Stopwatch sw;
+            sw = Stopwatch.createUnstarted();
             sw.start();
             int connTimeout = cube.getConfig().getStreamingRPCHttpConnTimeout();
             int readTimeout = cube.getConfig().getStreamingRPCHttpReadTimeout();
             String msg = restService.postRequest(url, content, connTimeout, readTimeout);
 
-            logger.info("query-{}: receive response from {} take time:{}", queryId, receiver, sw.elapsedMillis());
+            logger.info("query-{}: receive response from {} take time:{}", queryId, receiver, sw.elapsed(MILLISECONDS));
             if (failedReceivers.containsKey(receiver)) {
                 failedReceivers.remove(receiver);
             }
@@ -213,8 +216,8 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
         request.setCubeName(cubeName);
         request.setQueryId(queryId);
         request.setMinSegmentTime(minSegmentTime);
-        request.setTupleFilter(Base64.encodeBase64String(TupleFilterSerializer.serialize(tupleFilter,
-                StringCodeSystem.INSTANCE)));
+        request.setTupleFilter(
+                Base64.encodeBase64String(TupleFilterSerializer.serialize(tupleFilter, StringCodeSystem.INSTANCE)));
         request.setStoragePushDownLimit(storagePushDownLimit);
         request.setAllowStorageAggregation(allowStorageAggregation);
         request.setRequestSendTime(System.currentTimeMillis());
@@ -241,7 +244,7 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
     public static class QueuedStreamingTupleIterator implements ITupleIterator {
         private BlockingQueue<Iterator<ITuple>> queue;
 
-        private Iterator<ITuple> currentBlock = Iterators.emptyIterator();
+        private Iterator<ITuple> currentBlock = Collections.emptyIterator();
 
         private int totalBlockNum;
         private int numConsumeBlocks = 0;
@@ -291,7 +294,7 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
                         }
                         Iterator<ITuple> ret = null;
                         while (ret == null && endpointException == null && timeoutTS > System.currentTimeMillis()) {
-                            ret = queue.poll(1000, TimeUnit.MILLISECONDS);
+                            ret = queue.poll(1000, MILLISECONDS);
                         }
                         currentBlock = ret;
                         if (currentBlock == null) {

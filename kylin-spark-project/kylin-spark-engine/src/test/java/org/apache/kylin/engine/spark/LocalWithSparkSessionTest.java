@@ -18,8 +18,8 @@
 
 package org.apache.kylin.engine.spark;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KylinConfig;

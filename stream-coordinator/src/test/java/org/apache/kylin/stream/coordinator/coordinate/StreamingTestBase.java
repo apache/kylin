@@ -17,7 +17,7 @@
  */
 package org.apache.kylin.stream.coordinator.coordinate;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.curator.test.TestingServer;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;

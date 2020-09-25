@@ -17,7 +17,7 @@
  */
 package org.apache.kylin.engine.spark2;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import java.util.Map;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;

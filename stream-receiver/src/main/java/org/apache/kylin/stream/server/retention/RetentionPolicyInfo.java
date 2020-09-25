@@ -20,7 +20,7 @@ package org.apache.kylin.stream.server.retention;
 
 import java.util.Map;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * Retention policy for local segment cache

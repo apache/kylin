@@ -18,7 +18,7 @@
 
 package org.apache.kylin.storage.spark;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;

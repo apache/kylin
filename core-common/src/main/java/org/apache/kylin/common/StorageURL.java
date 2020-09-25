@@ -23,10 +23,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.cache.CacheBuilder;
+import org.apache.kylin.shaded.com.google.common.cache.CacheLoader;
+import org.apache.kylin.shaded.com.google.common.cache.LoadingCache;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
 
 /**
  * The object form of metadata/storage URL: IDENTIFIER@SCHEME[,PARAM=VALUE,PARAM=VALUE...]

@@ -24,7 +24,7 @@ import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.Range;
+import org.apache.kylin.shaded.com.google.common.collect.Range;
 
 /**
  */

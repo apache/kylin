@@ -25,13 +25,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class CuboidUtilTest {
     @Test
     public void testGetLongestDepth() {
-        Stopwatch sw = new Stopwatch();
+        Stopwatch sw = Stopwatch.createUnstarted();
 
         Set<Long> cuboidSet1 = Sets.newHashSet(7L, 6L, 5L, 4L, 3L, 2L, 1L);
         sw.start();

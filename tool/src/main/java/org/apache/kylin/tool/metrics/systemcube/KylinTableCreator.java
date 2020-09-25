@@ -32,7 +32,7 @@ import org.apache.kylin.metrics.MetricsManager;
 import org.apache.kylin.metrics.lib.ActiveReservoirReporter;
 import org.apache.kylin.tool.metrics.systemcube.def.MetricsSinkDesc;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class KylinTableCreator {
 
