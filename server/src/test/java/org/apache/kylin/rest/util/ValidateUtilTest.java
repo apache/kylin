@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.util;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.service.AccessService;

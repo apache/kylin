@@ -40,7 +40,7 @@ import org.apache.kylin.source.hive.GarbageCollectionStep;
 import org.apache.kylin.source.kafka.hadoop.KafkaFlatTableJob;
 import org.apache.kylin.source.kafka.job.MergeOffsetStep;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 import static org.apache.kylin.job.util.FlatTableSqlQuoteUtils.quoteTableIdentity;
 

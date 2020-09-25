@@ -19,7 +19,7 @@ package org.apache.spark.memory
 
 import java.util
 
-import com.google.common.collect.Maps
+import org.apache.kylin.shaded.com.google.common.collect.Maps
 import org.apache.spark.internal.Logging
 
 import scala.collection.JavaConverters._

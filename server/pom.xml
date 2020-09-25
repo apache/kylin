@@ -52,6 +52,11 @@
             <artifactId>kylin-datasource-sdk</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-shaded-guava</artifactId>
+            <scope>compile</scope>
+        </dependency>
 
         <dependency>
             <groupId>com.thetransactioncompany</groupId>
@@ -250,17 +255,6 @@
                     <groupId>org.apache.calcite</groupId>
                 </exclusion>
             </exclusions>
-        </dependency>
-
-        <!--
-           The Hadoop provided guava could disappoint calcite's demand.
-           E.g. the provided could be: /usr/hdp/2.4.0.0-169/hadoop/lib/guava-11.0.2.jar - com/google/common/collect/ImmutableSortedMap.class
-           While calcite requires guava 14.0 now.
-        -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <scope>compile</scope>
         </dependency>
 
         <!-- Tomcat Env -->

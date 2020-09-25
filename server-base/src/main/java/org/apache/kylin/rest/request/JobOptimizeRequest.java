@@ -18,9 +18,9 @@
 
 package org.apache.kylin.rest.request;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Function;
+import org.apache.kylin.shaded.com.google.common.collect.FluentIterable;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import javax.annotation.Nullable;
 
 import java.util.Set;

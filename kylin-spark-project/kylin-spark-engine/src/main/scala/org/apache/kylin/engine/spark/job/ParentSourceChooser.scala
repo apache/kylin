@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.job
 
-import com.google.common.collect.Maps
+import org.apache.kylin.shaded.com.google.common.collect.Maps
 import org.apache.kylin.engine.spark.builder._
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.engine.spark.builder.NBuildSourceInfo

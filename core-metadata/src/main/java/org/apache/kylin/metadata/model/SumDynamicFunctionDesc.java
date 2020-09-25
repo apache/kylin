@@ -23,7 +23,7 @@ import java.util.Set;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.expression.TupleExpression;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class SumDynamicFunctionDesc extends DynamicFunctionDesc {
 

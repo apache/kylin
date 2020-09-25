@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.spark.dict;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.hadoop.conf.Configuration;

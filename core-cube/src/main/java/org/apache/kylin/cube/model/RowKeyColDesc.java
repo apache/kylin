@@ -27,15 +27,15 @@ import org.apache.kylin.dimension.FixedLenDimEnc;
 import org.apache.kylin.dimension.TimeDimEnc;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.kylin.shaded.com.google.common.base.MoreObjects;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 /**
  * @author yangli9
@@ -166,7 +166,7 @@ public class RowKeyColDesc implements java.io.Serializable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("column", column).add("encoding", encoding).toString();
+        return MoreObjects.toStringHelper(this).add("column", column).add("encoding", encoding).toString();
     }
 
     @Override

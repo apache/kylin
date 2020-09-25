@@ -51,8 +51,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class TrieDictionaryTest {
     @BeforeClass
@@ -242,7 +242,7 @@ public class TrieDictionaryTest {
         TrieDictionary<String> dict = b.build(0);
         System.out.println("Dictionary size for file " + file + " is " + dict.getSize());
 
-        Stopwatch sw = new Stopwatch();
+        Stopwatch sw = Stopwatch.createUnstarted();
         sw.start();
         List<String> values1 = dict.enumeratorValuesByParent();
         System.out.println("By iterating id visit the time cost " + sw.elapsed(TimeUnit.MILLISECONDS) + " ms");

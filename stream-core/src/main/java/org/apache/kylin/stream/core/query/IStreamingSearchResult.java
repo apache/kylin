@@ -20,11 +20,11 @@ package org.apache.kylin.stream.core.query;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 
 import org.apache.kylin.stream.core.storage.Record;
 
-import com.google.common.collect.Iterators;
 
 public interface IStreamingSearchResult extends Iterable<Record>, Closeable {
     IStreamingSearchResult EMPTY_RESULT = new IStreamingSearchResult() {
@@ -35,7 +35,7 @@ public interface IStreamingSearchResult extends Iterable<Record>, Closeable {
 
         @Override
         public Iterator<Record> iterator() {
-            return Iterators.emptyIterator();
+            return Collections.emptyIterator();
         }
 
         @Override

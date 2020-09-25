@@ -33,7 +33,7 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.stream.core.storage.Record;
 import org.apache.kylin.dimension.TimeDerivedColumnType;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

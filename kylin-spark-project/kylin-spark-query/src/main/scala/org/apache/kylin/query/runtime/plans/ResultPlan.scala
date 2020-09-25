@@ -17,8 +17,8 @@
  */
 package org.apache.kylin.query.runtime.plans
 
-import com.google.common.cache.{Cache, CacheBuilder}
-import com.google.common.collect.Lists
+import org.apache.kylin.shaded.com.google.common.cache.{Cache, CacheBuilder}
+import org.apache.kylin.shaded.com.google.common.collect.Lists
 import org.apache.calcite.linq4j.{Enumerable, Linq4j}
 import org.apache.calcite.rel.`type`.RelDataType
 import org.apache.kylin.common.debug.BackdoorToggles

@@ -97,6 +97,7 @@
                                     <exclude>org.apache.parquet:*</exclude>
                                     <exclude>org.slf4j:*</exclude>
                                     <exclude>net.jpountz.lz4:*</exclude>
+                                    <exclude>com.google.guava:guava:*</exclude>
                                 </excludes>
                             </artifactSet>
                             <relocations>

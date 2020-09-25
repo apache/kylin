@@ -24,7 +24,7 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.kylin.sdk.datasource.adaptor.AbstractJdbcAdaptor;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDef;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class DefaultConfigurer implements SqlConverter.IConfigurer{
     private static final Map<String, SqlDialect> sqlDialectMap = Maps.newHashMap();

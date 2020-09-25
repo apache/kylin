@@ -20,7 +20,7 @@ package org.apache.kylin.query.runtime
 
 import java.util
 
-import com.google.common.collect.Lists
+import org.apache.kylin.shaded.com.google.common.collect.Lists
 import org.apache.calcite.DataContext
 import org.apache.calcite.rel.{RelNode, RelVisitor}
 import org.apache.kylin.query.relnode.{OLAPAggregateRel, OLAPFilterRel, OLAPJoinRel, OLAPLimitRel, OLAPProjectRel, OLAPSortRel, OLAPTableScan, OLAPUnionRel, OLAPValuesRel, OLAPWindowRel}

@@ -47,7 +47,9 @@ import org.apache.kylin.stream.core.storage.columnar.StreamingDataSimulator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Stopwatch;
+import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class PerformanceTest extends LocalFileMetadataTestCase {
     private static final String cubeName = "test_streaming_v2_cube";
@@ -79,13 +81,13 @@ public class PerformanceTest extends LocalFileMetadataTestCase {
         long time = System.currentTimeMillis();
         int rowCnt = 10000000;
         Iterator<StreamingMessage> messageItr = simulator.simulate(rowCnt, time);
-        Stopwatch sw = new Stopwatch();
+        Stopwatch sw = Stopwatch.createUnstarted();
         sw.start();
         while (messageItr.hasNext()) {
             StreamingMessage message = messageItr.next();
             cubeDataStore.addEvent(message);
         }
-        long takeTime = sw.elapsedMillis();
+        long takeTime = sw.elapsed(MILLISECONDS);
         System.out.println("Index took:" + takeTime + ",qps:" + rowCnt / (takeTime / 1000));
         sw.reset();
 
@@ -103,7 +105,7 @@ public class PerformanceTest extends LocalFileMetadataTestCase {
                 rowNum++;
             }
 
-            takeTime = sw.elapsedMillis();
+            takeTime = sw.elapsed(MILLISECONDS);
             System.out.println("scan finished, total rows:" + rowNum);
             System.out.println("first scan took:" + takeTime + ",rowsPerSec:" + (rowNum / takeTime) * 1000);
 
@@ -117,7 +119,7 @@ public class PerformanceTest extends LocalFileMetadataTestCase {
                 rowNum++;
             }
 
-            takeTime = sw.elapsedMillis();
+            takeTime = sw.elapsed(MILLISECONDS);
             System.out.println("total rows:" + rowNum);
             System.out.println("second scan took:" + takeTime + ",rowsPerSec:" + (rowNum / takeTime) * 1000);
         } catch (IOException e) {

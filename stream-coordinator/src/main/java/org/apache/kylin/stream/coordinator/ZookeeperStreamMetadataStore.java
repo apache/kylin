@@ -40,9 +40,9 @@ import org.apache.kylin.stream.core.source.Partition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.base.Function;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
     public static final String REPLICA_SET_ROOT = "/replica_sets";

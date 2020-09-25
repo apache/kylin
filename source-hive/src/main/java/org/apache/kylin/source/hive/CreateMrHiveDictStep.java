@@ -17,8 +17,8 @@
  */
 package org.apache.kylin.source.hive;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.HiveCmdBuilder;

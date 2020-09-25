@@ -33,7 +33,7 @@ import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.gridtable.IGTCodeSystem;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * A limited code system which trims DictionaryDimEnc to TrimmedDimEnc (to avoid pushing down the useless dictionary)

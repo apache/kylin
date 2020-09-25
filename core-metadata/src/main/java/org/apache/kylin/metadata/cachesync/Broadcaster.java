@@ -43,9 +43,9 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.base.MoreObjects;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * Broadcast metadata changes across all Kylin servers.
@@ -477,7 +477,7 @@ public class Broadcaster implements Closeable {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("entity", entity).add("event", event).add("cacheKey", cacheKey)
+            return MoreObjects.toStringHelper(this).add("entity", entity).add("event", event).add("cacheKey", cacheKey)
                     .toString();
         }
 

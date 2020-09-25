@@ -28,7 +28,6 @@
     <artifactId>kylin-stream-receiver</artifactId>
     <packaging>jar</packaging>
     <name>Apache Kylin - Stream Receiver</name>
-
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -102,12 +101,6 @@
             <artifactId>slf4j-log4j12</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <scope>compile</scope>
-        </dependency>
-
         <!-- Spring Core -->
         <dependency>
             <groupId>org.springframework</groupId>
@@ -163,6 +156,10 @@
                 <exclusion>
                     <artifactId>avro</artifactId>
                     <groupId>org.apache.avro</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>guava</artifactId>
+                    <groupId>com.google.guava</groupId>
                 </exclusion>
             </exclusions>
         </dependency>

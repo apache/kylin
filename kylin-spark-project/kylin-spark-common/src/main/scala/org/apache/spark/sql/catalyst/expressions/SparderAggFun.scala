@@ -22,7 +22,7 @@ import java.nio.ByteBuffer
 import java.util
 import java.util.Locale
 
-import com.google.common.collect.Maps
+import org.apache.kylin.shaded.com.google.common.collect.Maps
 import org.apache.kylin.measure.MeasureAggregator
 import org.apache.kylin.measure.bitmap.BitmapCounter
 import org.apache.kylin.measure.dim.DimCountDistinctCounter

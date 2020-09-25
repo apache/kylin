@@ -63,8 +63,10 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * Build a cube (many cuboids) in memory. Calculating multiple cuboids at the same time as long as memory permits.
@@ -284,7 +286,7 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
             MemoryBudgetController.MemoryWaterLevel baseCuboidMemTracker) throws IOException {
         logger.info("Calculating base cuboid {}", baseCuboidId);
 
-        Stopwatch sw = new Stopwatch();
+        Stopwatch sw = Stopwatch.createUnstarted();
         sw.start();
         GridTable baseCuboid = newGridTableByCuboidID(baseCuboidId);
         GTBuilder baseBuilder = baseCuboid.rebuild();
@@ -310,13 +312,13 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
             baseBuilder.close();
 
             sw.stop();
-            logger.info("Cuboid {} has {} rows, build takes {}ms", baseCuboidId, count, sw.elapsedMillis());
+            logger.info("Cuboid {} has {} rows, build takes {}ms", baseCuboidId, count, sw.elapsed(MILLISECONDS));
 
             int mbEstimateBaseAggrCache = (int) (aggregationScanner.getEstimateSizeOfAggrCache()
                     / MemoryBudgetController.ONE_MB);
             logger.info("Wild estimate of base aggr cache is {} MB", mbEstimateBaseAggrCache);
 
-            return updateCuboidResult(baseCuboidId, baseCuboid, count, sw.elapsedMillis(), 0,
+            return updateCuboidResult(baseCuboidId, baseCuboid, count, sw.elapsed(MILLISECONDS), 0,
                     input.inputConverterUnit.ifChange());
         }
     }
@@ -376,7 +378,7 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
 
     protected CuboidResult scanAndAggregateGridTable(GridTable gridTable, GridTable newGridTable, long parentId,
             long cuboidId, ImmutableBitSet aggregationColumns, ImmutableBitSet measureColumns) throws IOException {
-        Stopwatch sw = new Stopwatch();
+        Stopwatch sw = Stopwatch.createUnstarted();
         sw.start();
         logger.info("Calculating cuboid {}", cuboidId);
 
@@ -402,8 +404,8 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
             builder.close();
         }
         sw.stop();
-        logger.info("Cuboid {} has {} rows, build takes {}ms", cuboidId, count, sw.elapsedMillis());
+        logger.info("Cuboid {} has {} rows, build takes {}ms", cuboidId, count, sw.elapsed(MILLISECONDS));
 
-        return updateCuboidResult(cuboidId, newGridTable, count, sw.elapsedMillis(), 0);
+        return updateCuboidResult(cuboidId, newGridTable, count, sw.elapsed(MILLISECONDS), 0);
     }
 }

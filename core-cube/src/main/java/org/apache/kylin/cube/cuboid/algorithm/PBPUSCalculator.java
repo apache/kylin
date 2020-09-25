@@ -18,8 +18,8 @@
 
 package org.apache.kylin.cube.cuboid.algorithm;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
 
 /**
  * Calculate the benefit based on Benefit Per Unit Space with query probability distribution.

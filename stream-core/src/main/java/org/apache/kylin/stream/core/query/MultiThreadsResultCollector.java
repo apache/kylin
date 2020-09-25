@@ -34,7 +34,7 @@ import org.apache.kylin.stream.core.util.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class MultiThreadsResultCollector extends ResultCollector {
     private static Logger logger = LoggerFactory.getLogger(MultiThreadsResultCollector.class);

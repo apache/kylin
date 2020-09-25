@@ -22,7 +22,7 @@ import java.lang.management._
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-import com.google.common.collect.Lists
+import org.apache.kylin.shaded.com.google.common.collect.Lists
 import org.apache.spark.internal.Logging
 import org.apache.spark.util.Utils
 

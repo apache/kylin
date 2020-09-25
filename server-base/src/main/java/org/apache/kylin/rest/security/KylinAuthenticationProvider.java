@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.security;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -35,11 +36,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.Assert;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
+import org.apache.kylin.shaded.com.google.common.cache.CacheBuilder;
+import org.apache.kylin.shaded.com.google.common.cache.RemovalListener;
+import org.apache.kylin.shaded.com.google.common.cache.RemovalNotification;
+import org.apache.kylin.shaded.com.google.common.hash.HashFunction;
+import org.apache.kylin.shaded.com.google.common.hash.Hashing;
 
 /**
  * A wrapper class for the authentication provider; Will do something more for Kylin.
@@ -48,7 +49,7 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(KylinAuthenticationProvider.class);
 
-    private final static com.google.common.cache.Cache<String, Authentication> userCache = CacheBuilder.newBuilder()
+    private final static org.apache.kylin.shaded.com.google.common.cache.Cache<String, Authentication> userCache = CacheBuilder.newBuilder()
             .maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
             .expireAfterWrite(KylinConfig.getInstanceFromEnv().getServerUserCacheExpireSeconds(), TimeUnit.SECONDS)
             .removalListener(new RemovalListener<String, Authentication>() {
@@ -78,7 +79,7 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 
-        byte[] hashKey = hf.hashString(authentication.getName() + authentication.getCredentials()).asBytes();
+        byte[] hashKey = hf.hashString(authentication.getName() + authentication.getCredentials(), Charset.defaultCharset()).asBytes();
         String userKey = Arrays.toString(hashKey);
 
         if (userService.isEvictCacheFlag()) {

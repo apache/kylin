@@ -27,10 +27,12 @@ import org.apache.kylin.common.util.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class CuboidStatsUtilTest {
 
@@ -258,14 +260,14 @@ public class CuboidStatsUtilTest {
 
     @Test
     public void createDirectChildrenCacheStressTest() {
-        Stopwatch sw = new Stopwatch();
+        Stopwatch sw = Stopwatch.createUnstarted();
         sw.start();
         Set<Long> cuboidSet = generateMassCuboidSet();
-        System.out.println("Time elapsed for creating sorted cuboid list: " + sw.elapsedMillis());
+        System.out.println("Time elapsed for creating sorted cuboid list: " + sw.elapsed(MILLISECONDS));
         sw.reset();
         sw.start();
         checkDirectChildrenCacheStressTest(CuboidStatsUtil.createDirectChildrenCache(cuboidSet));
-        System.out.println("Time elapsed for creating direct children cache: " + sw.elapsedMillis());
+        System.out.println("Time elapsed for creating direct children cache: " + sw.elapsed(MILLISECONDS));
         sw.stop();
     }
 

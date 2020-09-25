@@ -28,7 +28,7 @@ import org.springframework.cache.ehcache.EhCacheCache;
 import org.springframework.cache.support.AbstractCacheManager;
 import org.springframework.util.Assert;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Status;

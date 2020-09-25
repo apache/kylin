@@ -29,7 +29,7 @@ import org.apache.hadoop.hbase.KeyValue;
 import org.apache.kylin.common.util.Bytes;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * @author yangli9

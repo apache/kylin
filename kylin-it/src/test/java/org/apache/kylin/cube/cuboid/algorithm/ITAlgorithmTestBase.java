@@ -34,8 +34,8 @@ import org.apache.kylin.cube.cuboid.TreeCuboidScheduler.CuboidTree;
 import org.junit.After;
 import org.junit.Before;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class ITAlgorithmTestBase {
 

@@ -18,12 +18,12 @@
 
 package org.apache.kylin.storage.gtrecord;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkState;
 
 import java.util.Iterator;
 
-import com.google.common.collect.PeekingIterator;
+import org.apache.kylin.shaded.com.google.common.collect.PeekingIterator;
 
 /**
  * copied from guava, change iterator access modifier to public

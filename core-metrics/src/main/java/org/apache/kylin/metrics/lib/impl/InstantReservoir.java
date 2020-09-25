@@ -26,7 +26,7 @@ import org.apache.kylin.metrics.lib.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * A Reservoir which don't staged metrics event at all, emit them in no time.

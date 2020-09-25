@@ -40,13 +40,12 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-tool</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-shaded-guava</artifactId>
+        </dependency>
 
         <!-- As KylinConfigCLI will be called before Hbase/Hive/Hadoop dependency loaded, has to define the following as compile in tool -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <scope>compile</scope>
-        </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
@@ -106,7 +105,6 @@
                                     <include>org.apache.commons:commons-compress</include>
                                     <include>org.apache.commons:commons-lang3</include>
                                     <include>org.apache.commons:commons-email</include>
-                                    <include>com.google.guava:guava</include>
                                     <include>org.apache.kylin:*</include>
                                     <include>org.springframework.security:spring-security-core</include>
                                     <include>org.springframework.security:spring-security-acl</include>
@@ -116,10 +114,6 @@
                                 </includes>
                             </artifactSet>
                             <relocations>
-                                <relocation>
-                                    <pattern>com.google.common</pattern>
-                                    <shadedPattern>${shadeBase}.com.google.common</shadedPattern>
-                                </relocation>
                                 <relocation>
                                     <pattern>org.apache.commons.io</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.commons.io</shadedPattern>

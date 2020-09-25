@@ -34,9 +34,9 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.primitives.Primitives;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.primitives.Primitives;
 
 public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
     public static final Logger logger = LoggerFactory.getLogger(BuiltInFunctionTupleFilter.class);

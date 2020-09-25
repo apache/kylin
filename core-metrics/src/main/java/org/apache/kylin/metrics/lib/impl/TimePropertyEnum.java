@@ -20,7 +20,7 @@ package org.apache.kylin.metrics.lib.impl;
 
 import java.util.Locale;
 
-import com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 
 public enum TimePropertyEnum {
     YEAR("KYEAR_BEGIN_DATE"),

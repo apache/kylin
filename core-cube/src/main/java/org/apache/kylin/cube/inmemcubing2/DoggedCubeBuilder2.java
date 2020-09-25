@@ -51,10 +51,12 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Queues;
+import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Queues;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class DoggedCubeBuilder2 extends AbstractInMemCubeBuilder {
     private static Logger logger = LoggerFactory.getLogger(DoggedCubeBuilder2.class);
@@ -90,7 +92,7 @@ public class DoggedCubeBuilder2 extends AbstractInMemCubeBuilder {
             ForkJoinPool builderPool = new ForkJoinPool(taskThreadCount, factory, null, true);
             CuboidResultWatcher resultWatcher = new CuboidResultWatcher(builderList, output);
 
-            Stopwatch sw = new Stopwatch();
+            Stopwatch sw = Stopwatch.createUnstarted();
             sw.start();
             logger.info("Dogged Cube Build2 start");
             try {
@@ -113,7 +115,7 @@ public class DoggedCubeBuilder2 extends AbstractInMemCubeBuilder {
                     });
                 }
                 resultWatcher.start();
-                logger.info("Dogged Cube Build2 splits complete, took " + sw.elapsedMillis() + " ms");
+                logger.info("Dogged Cube Build2 splits complete, took " + sw.elapsed(MILLISECONDS) + " ms");
             } catch (Throwable e) {
                 logger.error("Dogged Cube Build2 error", e);
                 if (e instanceof Error)
@@ -127,7 +129,7 @@ public class DoggedCubeBuilder2 extends AbstractInMemCubeBuilder {
                 closeGirdTables(builderList);
                 sw.stop();
                 builderPool.shutdownNow();
-                logger.info("Dogged Cube Build2 end, totally took " + sw.elapsedMillis() + " ms");
+                logger.info("Dogged Cube Build2 end, totally took " + sw.elapsed(MILLISECONDS) + " ms");
                 logger.info("Dogged Cube Build2 return");
             }
         }
@@ -274,11 +276,11 @@ public class DoggedCubeBuilder2 extends AbstractInMemCubeBuilder {
 
         @Override
         public void finish(CuboidResult result) {
-            Stopwatch stopwatch = new Stopwatch().start();
+            Stopwatch stopwatch = Stopwatch.createUnstarted().start();
             int nRetries = 0;
             while (!outputQueue.offer(result)) {
                 nRetries++;
-                long sleepTime = stopwatch.elapsedMillis();
+                long sleepTime = stopwatch.elapsed(MILLISECONDS);
                 if (sleepTime > 3600000L) {
                     stopwatch.stop();
                     throw new RuntimeException(

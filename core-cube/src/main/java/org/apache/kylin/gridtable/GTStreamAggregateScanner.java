@@ -26,9 +26,9 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregator;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.PeekingIterator;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Iterators;
+import org.apache.kylin.shaded.com.google.common.collect.PeekingIterator;
 
 /**
  * GTStreamAggregateScanner requires input records to be sorted on group fields.

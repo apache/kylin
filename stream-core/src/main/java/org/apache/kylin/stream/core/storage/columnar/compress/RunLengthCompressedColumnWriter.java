@@ -27,7 +27,7 @@ import java.util.List;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.stream.core.storage.columnar.ColumnDataWriter;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.stream.core.storage.columnar.GeneralColumnDataWriter;
 
 public class RunLengthCompressedColumnWriter implements ColumnDataWriter {

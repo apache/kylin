@@ -21,7 +21,7 @@ package org.apache.kylin.engine.spark.builder
 import java.io.File
 import java.util.concurrent._
 
-import com.google.common.collect.{Lists, Sets}
+import org.apache.kylin.shaded.com.google.common.collect.{Lists, Sets}
 import org.apache.hadoop.fs.Path
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.HadoopUtil

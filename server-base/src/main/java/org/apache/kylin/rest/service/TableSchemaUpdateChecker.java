@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 import java.util.List;
@@ -27,7 +27,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.metadata.TableMetadataManager;
@@ -38,11 +38,11 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Predicate;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
+import org.apache.kylin.shaded.com.google.common.collect.Iterables;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class TableSchemaUpdateChecker {
     private final TableMetadataManager metadataManager;

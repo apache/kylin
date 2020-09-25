@@ -19,7 +19,7 @@ package org.apache.kylin.query.runtime
 
 import java.util.concurrent.TimeUnit
 
-import com.google.common.cache.{Cache, CacheBuilder, RemovalListener, RemovalNotification}
+import org.apache.kylin.shaded.com.google.common.cache.{Cache, CacheBuilder, RemovalListener, RemovalNotification}
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.metadata.TableMetadataManager
 import org.apache.kylin.query.DeriveTableColumnInfo
