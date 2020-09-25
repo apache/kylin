@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -16,11 +15,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-cd ${DIR}
-echo "build image in dir "${DIR}
-
-echo "start build Hadoop docker image"
-docker build -f Dockerfile_hadoop -t hadoop2.7-all-in-one .
-docker build -f Dockerfile -t apachekylin/apache-kylin-standalone:3.1.0 .
+/opt/hbase-$HBASE_VERSION/bin/hbase master start
