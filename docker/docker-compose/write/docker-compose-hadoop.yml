@@ -1,0 +1,113 @@
+version: "3.3"
+
+services:
+  write-namenode:
+    image: ${HADOOP_NAMENODE_IMAGETAG:-bde2020/hadoop-namenode:2.0.0-hadoop2.7.4-java8}
+    container_name: write-namenode
+    hostname: write-namenode
+    volumes:
+      - ./data/write_hadoop_namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test-write
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+    expose:
+      - 8020
+    ports:
+      - 50070:50070
+
+  write-datanode1:
+    image: ${HADOOP_DATANODE_IMAGETAG:-bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8}
+    container_name: write-datanode1
+    hostname: write-datanode1
+    volumes:
+      - ./data/write_hadoop_datanode1:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070"
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+    links:
+      - write-namenode
+
+  write-datanode2:
+    image: ${HADOOP_DATANODE_IMAGETAG:-bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8}
+    container_name: write-datanode2
+    hostname: write-datanode2
+    volumes:
+      - ./data/write_hadoop_datanode2:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070"
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+
+  write-datanode3:
+    image: ${HADOOP_DATANODE_IMAGETAG:-bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8}
+    container_name: write-datanode3
+    hostname: write-datanode3
+    volumes:
+      - ./data/write_hadoop_datanode3:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070"
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+
+  write-resourcemanager:
+    image: ${HADOOP_RESOURCEMANAGER_IMAGETAG:-bde2020/hadoop-resourcemanager:2.0.0-hadoop2.7.4-java8}
+    container_name: write-resourcemanager
+    hostname: write-resourcemanager
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075"
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+    ports:
+      - 8088:8088
+
+  write-nodemanager1:
+    image: ${HADOOP_NODEMANAGER_IMAGETAG:-bde2020/hadoop-nodemanager:2.0.0-hadoop2.7.4-java8}
+    container_name: write-nodemanager1
+    hostname: write-nodemanager1
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 write-resourcemanager:8088"
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+
+  write-nodemanager2:
+    image: ${HADOOP_NODEMANAGER_IMAGETAG:-bde2020/hadoop-nodemanager:2.0.0-hadoop2.7.4-java8}
+    container_name: write-nodemanager2
+    hostname: write-nodemanager2
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 write-resourcemanager:8088"
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+
+  write-historyserver:
+    image: ${HADOOP_HISTORYSERVER_IMAGETAG:-bde2020/hadoop-historyserver:2.0.0-hadoop2.7.4-java8}
+    container_name: write-historyserver
+    hostname: write-historyserver
+    volumes:
+      - ./data/write_hadoop_historyserver:/hadoop/yarn/timeline
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 write-resourcemanager:8088"
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+    ports:
+      - 8188:8188
+
+networks:
+  kylin:

@@ -1,0 +1,114 @@
+version: "3.3"
+
+services:
+  read-namenode:
+    image: ${HADOOP_NAMENODE_IMAGETAG:-bde2020/hadoop-namenode:2.0.0-hadoop2.7.4-java8}
+    container_name: read-namenode
+    hostname: read-namenode
+    volumes:
+      - ./data/write_hadoop_namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test-write
+    env_file:
+      - read-hadoop.env
+    networks:
+      - write_kylin
+    expose:
+      - 8020
+    ports:
+      - 50071:50070
+
+  read-datanode1:
+    image: ${HADOOP_DATANODE_IMAGETAG:-bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8}
+    container_name: read-datanode1
+    hostname: read-datanode1
+    volumes:
+      - ./data/write_hadoop_datanode1:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "read-namenode:50070"
+    env_file:
+      - read-hadoop.env
+    networks:
+      - write_kylin
+    links:
+      - read-namenode
+
+  read-datanode2:
+    image: ${HADOOP_DATANODE_IMAGETAG:-bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8}
+    container_name: read-datanode2
+    hostname: read-datanode2
+    volumes:
+      - ./data/write_hadoop_datanode2:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "read-namenode:50070"
+    env_file:
+      - read-hadoop.env
+    networks:
+      - write_kylin
+
+  read-datanode3:
+    image: ${HADOOP_DATANODE_IMAGETAG:-bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8}
+    container_name: read-datanode3
+    hostname: read-datanode3
+    volumes:
+      - ./data/write_hadoop_datanode3:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "read-namenode:50070"
+    env_file:
+      - read-hadoop.env
+    networks:
+      - write_kylin
+
+  read-resourcemanager:
+    image: ${HADOOP_RESOURCEMANAGER_IMAGETAG:-bde2020/hadoop-resourcemanager:2.0.0-hadoop2.7.4-java8}
+    container_name: read-resourcemanager
+    hostname: read-resourcemanager
+    environment:
+      SERVICE_PRECONDITION: "read-namenode:50070 read-datanode1:50075 read-datanode2:50075 read-datanode3:50075"
+    env_file:
+      - read-hadoop.env
+    networks:
+      - write_kylin
+    ports:
+      - 8089:8088
+
+  read-nodemanager1:
+    image: ${HADOOP_NODEMANAGER_IMAGETAG:-bde2020/hadoop-nodemanager:2.0.0-hadoop2.7.4-java8}
+    container_name: read-nodemanager1
+    hostname: read-nodemanager1
+    environment:
+      SERVICE_PRECONDITION: "read-namenode:50070 read-datanode1:50075 read-datanode2:50075 read-datanode3:50075 read-resourcemanager:8088"
+    env_file:
+      - read-hadoop.env
+    networks:
+      - write_kylin
+
+  read-nodemanager2:
+    image: ${HADOOP_NODEMANAGER_IMAGETAG:-bde2020/hadoop-nodemanager:2.0.0-hadoop2.7.4-java8}
+    container_name: read-nodemanager2
+    hostname: read-nodemanager2
+    environment:
+      SERVICE_PRECONDITION: "read-namenode:50070 read-datanode1:50075 read-datanode2:50075 read-datanode3:50075 read-resourcemanager:8088"
+    env_file:
+      - read-hadoop.env
+    networks:
+      - write_kylin
+
+  read-historyserver:
+    image: ${HADOOP_HISTORYSERVER_IMAGETAG:-bde2020/hadoop-historyserver:2.0.0-hadoop2.7.4-java8}
+    container_name: read-historyserver
+    hostname: read-historyserver
+    volumes:
+      - ./data/write_hadoop_historyserver:/hadoop/yarn/timeline
+    environment:
+      SERVICE_PRECONDITION: "read-namenode:50070 read-datanode1:50075 read-datanode2:50075 read-datanode3:50075 read-resourcemanager:8088"
+    env_file:
+      - read-hadoop.env
+    networks:
+      - write_kylin
+    ports:
+      - 8189:8188
+
+networks:
+  write_kylin:
+    external: true

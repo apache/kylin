@@ -205,7 +205,7 @@ services:
       - ./conf/hive:/etc/hive/conf
       - ./kylin:/opt/kylin/
     env_file:
-      - client.env
+      - ../others/client.env
     environment:
       HADOOP_CONF_DIR: /etc/hadoop/conf
       HIVE_CONF_DIR: /etc/hive/conf

@@ -1,4 +1,3 @@
-
 version: "3.3"
 
 services:
@@ -10,7 +9,14 @@ services:
       - ./data/mysql:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=kylin
-      - MYSQL_DATABASE=kylin
+      - MYSQL_DATABASE=metastore
       - MYSQL_USER=kylin
       - MYSQL_PASSWORD=kylin
+    networks:
+      - write_kylin
+    ports:
+      - 3306:3306
 
+networks:
+  write_kylin:
+    external: true

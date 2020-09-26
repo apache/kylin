@@ -1,0 +1,43 @@
+version: "3.3"
+
+services:
+  read-hbase-master:
+    image: ${HBASE_MASTER_IMAGETAG:-bde2020/hbase-master:1.0.0-hbase1.2.6}
+    container_name: read-hbase-master
+    hostname: read-hbase-master
+    env_file:
+      - read-hbase-distributed-local.env
+    environment:
+      SERVICE_PRECONDITION: "read-namenode:50070 read-datanode1:50075 read-datanode2:50075 read-datanode3:50075 read-zookeeper:2181"
+    networks:
+      - write_kylin
+    ports:
+      - 16010:16010
+
+  read-hbase-regionserver1:
+    image: ${HBASE_REGIONSERVER_IMAGETAG:-bde2020/hbase-regionserver:1.0.0-hbase1.2.6}
+    container_name: read-hbase-regionserver1
+    hostname: read-hbase-regionserver1
+    env_file:
+      - read-hbase-distributed-local.env
+    environment:
+      HBASE_CONF_hbase_regionserver_hostname: read-hbase-regionserver1
+      SERVICE_PRECONDITION: "read-namenode:50070 read-datanode1:50075 read-datanode2:50075 read-datanode3:50075 read-zookeeper:2181 read-hbase-master:16010"
+    networks:
+      - write_kylin
+
+  read-hbase-regionserver2:
+    image: ${HBASE_REGIONSERVER_IMAGETAG:-bde2020/hbase-regionserver:1.0.0-hbase1.2.6}
+    container_name: read-hbase-regionserver2
+    hostname: read-hbase-regionserver2
+    env_file:
+      - read-hbase-distributed-local.env
+    environment:
+      HBASE_CONF_hbase_regionserver_hostname: read-hbase-regionserver2
+      SERVICE_PRECONDITION: "read-namenode:50070 read-datanode1:50075 read-datanode2:50075 read-datanode3:50075 read-zookeeper:2181 read-hbase-master:16010"
+    networks:
+      - write_kylin
+
+networks:
+  write_kylin:
+    external: true
