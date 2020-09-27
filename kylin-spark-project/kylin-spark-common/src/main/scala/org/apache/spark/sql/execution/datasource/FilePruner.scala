@@ -176,8 +176,37 @@ class FilePruner(
     isResolved = true
   }
 
+  private var shardSpec: Option[ShardSpec] = None
+
   def getShardSpec: Option[ShardSpec] = {
-    None
+    shardSpec
+  }
+
+  private def genShardSpec(selected: Seq[SegmentDirectory]): Option[ShardSpec] = {
+    if (selected.isEmpty) {
+      None
+    } else {
+      val segments = selected.par.map { segDir =>
+        cubeInstance.getSegment(segDir.segmentName, SegmentStatusEnum.READY);
+      }.toIterator.toSeq
+      val shardNum = segments.head.getCuboidShardNum(layoutEntity.getId).toInt
+
+      // the shard num of all layout in segments must be the same
+      if (layoutEntity.getShardByColumns.isEmpty || segments.exists(
+        _.getCuboidShardNum(layoutEntity.getId).toInt != shardNum)) {
+        logInfo("Shard by column is empty or segments have the different number of shard, skip " +
+          "shard join.")
+        None
+      } else {
+        val sortColumns = if (segments.length == 1) {
+          layoutEntity.getOrderedDimensions.keySet().asScala.map(_.toString).toSeq
+        } else {
+          logInfo("Sort order will lost in multiple segments.")
+          Seq.empty[String]
+        }
+        Some(ShardSpec(shardNum, shardBySchema.fieldNames.toSeq, sortColumns))
+      }
+    }
   }
 
   var cached = new java.util.HashMap[(Seq[Expression], Seq[Expression]), Seq[PartitionDirectory]]()
@@ -214,6 +243,8 @@ class FilePruner(
     selected = afterPruning("shard", dataFilters, selected) {
       pruneShards
     }
+    // generate the ShardSpec
+    shardSpec = genShardSpec(selected)
     //    QueryContextFacade.current().record("shard_pruning")
     val totalFileSize = selected.flatMap(partition => partition.files).map(_.getLen).sum
     logInfo(s"totalFileSize is ${totalFileSize}")
