@@ -255,6 +255,7 @@ public class ModelController extends BasicController {
             } else {
                 DataModelDesc newModelDesc = DataModelDesc.getCopyOf(desc);
                 newModelDesc.setOwner(owner);
+                newModelDesc.setLastModified(desc.getLastModified());
                 modelDesc = modelService.updateModelAndDesc(newModelDesc.getProject(), newModelDesc);
             }
         } catch (AccessDeniedException accessDeniedException) {
