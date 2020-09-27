@@ -48,11 +48,11 @@ CubeMetaExtractor.java is to extract Cube related info for debugging / distribut
 ### How to use
 At least two parameters should be followed. 
 {% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMetaExtractor -<conf_name> <conf_value> -destDir <your_dest_dir>
+./bin/kylin.sh org.apache.kylin.tool.extractor.CubeMetaExtractor -<conf_name> <conf_value> -destDir <your_dest_dir>
 {% endhighlight %}
 For example: 
 {% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMetaExtractor -cube kylin_sales_cube -destDir /tmp/kylin_sales_cube
+./bin/kylin.sh org.apache.kylin.tool.extractor.CubeMetaExtractor -cube kylin_sales_cube -destDir /tmp/kylin_sales_cube
 {% endhighlight %}
 Result:
 After the command is executed, the cube, project or hybrid you want to extract will be dumped in the specified path.
@@ -96,12 +96,13 @@ After the command is successfully executed, the cube you want to ingest will exi
 
 All supported parameters are listed below:
 
-| Parameter                         | Description                                                                                                                                                                                        |
-| --------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| forceIngest <forceIngest>         | Skip the target Cube, model and table check and ingest by force. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false.                      |
-| overwriteTables <overwriteTables> | If table meta conflicts, overwrite the one in metadata store with the one in srcPath. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false. |
-| project <project>                 | (Required) Specify the target project for the new cubes.                                                                                                                                           |
-| srcPath <srcPath>                 | (Required) Specify the path to the extracted Cube metadata zip file.                                                                                                                               |
+| Parameter                                          | Description                                                                                                                                                                                        |
+| -------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| forceIngest <forceIngest>                          | Skip the target Cube, model and table check and ingest by force. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false.                      |
+| overwriteTables <overwriteTables>                  | If table meta conflicts, overwrite the one in metadata store with the one in srcPath. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false. |
+| createProjectIdNotExists <createProjectIdNotExists>| If the specified project is not exists, kylin will create it.                                                                                                                     |
+| project <project>                                  | (Required) Specify the target project for the new cubes.                                                                                                                                           |
+| srcPath <srcPath>                                  | (Required) Specify the path to the extracted Cube metadata zip file.                                                                                                                               |
 
 ## CubeMigrationCheckCLI.java
 
