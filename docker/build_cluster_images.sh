@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ARGS=`getopt -o h:i:b:c:a:l:k:f --long hadoop_version:,hive_version:,hbase_version:,cluster_mode:,hbase:,ldap:,kerberos:,kafka -n 'parameter.bash' -- "$@"`
+ARGS=`getopt -o h:i:b:c:a:l:k:f:p --long hadoop_version:,hive_version:,hbase_version:,cluster_mode:,enable_hbase:,enable_ldap:,enable_kerberos:,enable_kafka,help  -n 'parameter.bash' -- "$@"`
 
 if [ $? != 0 ]; then
     echo "Terminating..."
@@ -16,13 +16,13 @@ HBASE_VERSION="1.1.2"
 # write write-read
 CLUSTER_MODE="write"
 # yes,no
-HBASE="yes"
+ENABLE_HBASE="yes"
 # yes,no
-LDAP="no"
+ENABLE_LDAP="no"
 # yes,no
-KERBEROS="no"
+ENABLE_KERBEROS="no"
 #
-KAFKA="no"
+ENABLE_KAFKA="no"
 
 while true;
 do
@@ -43,21 +43,35 @@ do
             CLUSTER_MODE=$2;
             shift 2;
             ;;
-         --hbase)
-            HBASE=$2;
+         --enable_hbase)
+            ENABLE_HBASE=$2;
             shift 2;
             ;;
-        --ldap)
-            LDAP=$2;
+        --enable_ldap)
+            ENABLE_LDAP=$2;
             shift 2;
             ;;
-        --kerberos)
-            KERBEROS=$2;
+        --enable_kerberos)
+            ENABLE_KERBEROS=$2;
             shift 2;
             ;;
-        --kafka)
-            KAFKA=$2;
+        --enable_kafka)
+            ENABLE_KAFKA=$2;
             shift 2;
+            ;;
+        --help)
+echo << EOF "
+----------------------menu------------------------
+--hadoop_version  hadoop version,default is 2.8.5
+--hive_version  hive version,default is 1.2.2
+--hbase_version hbase version,default is 1.1.2
+--cluster_mode  cluster mode, optional value : [write, write-read],default is write,
+--enable_hbase  whether enable hbase server, optional value : [yes, no], default is yes
+--enable_ldap whether enable ldap server, optional value : [yes, no], default is no
+--enable_kerberos whether enable kerberos server, optional value : [yes, no], default is no
+--enable_kafka whether enable kafka server, optional value : [yes, no], default is no"
+EOF
+            exit 0
             ;;
         --)
             break
@@ -78,9 +92,9 @@ echo "........hadoop version: "$HADOOP_VERSION
 echo "........hive version: "$HIVE_VERSION
 echo "........hbase version: "$HBASE_VERSION
 echo "........cluster_mode: "${CLUSTER_MODE}
-echo "........hbase: "${HBASE}
-echo "........ldap: "${LDAP}
-echo "........kerberos: "${KERBEROS}
+echo "........hbase: "${ENABLE_HBASE}
+echo "........ldap: "${ENABLE_LDAP}
+echo "........kerberos: "${ENABLE_KERBEROS}
 
 
 #docker build -t apachekylin/kylin-metastore:mysql_5.6.49 ./kylin/metastore-db
@@ -106,7 +120,7 @@ export HADOOP_HISTORYSERVER_IMAGETAG=apachekylin/kylin-hadoop-historyserver:hado
 export HIVE_IMAGETAG=apachekylin/kylin-hive:hive_${HIVE_VERSION}_hadoop_${HADOOP_VERSION}
 
 
-if [ $HBASE == "yes" ]; then
+if [ $ENABLE_HBASE == "yes" ]; then
   docker build -t apachekylin/kylin-hbase-base:hbase_${HBASE_VERSION} --build-arg HBASE_VERSION=${HBASE_VERSION} ./dockerfile/cluster/hbase
   docker build -t apachekylin/kylin-hbase-master:hbase_${HBASE_VERSION} --build-arg HBASE_VERSION=${HBASE_VERSION} ./dockerfile/cluster/hmaster
   docker build -t apachekylin/kylin-hbase-regionserver:hbase_${HBASE_VERSION} --build-arg HBASE_VERSION=${HBASE_VERSION} ./dockerfile/cluster/hregionserver
@@ -116,17 +130,17 @@ if [ $HBASE == "yes" ]; then
   export HBASE_REGIONSERVER_IMAGETAG=apachekylin/kylin-hbase-regionserver:hbase_${HBASE_VERSION}
 fi
 
-if [ $KERBEROS == "yes" ]; then
+if [ $ENABLE_KERBEROS == "yes" ]; then
   docker build -t apachekylin/kylin-kerberos:latest ./dockerfile/cluster/kerberos
   export KERBEROS_IMAGE=apachekylin/kylin-kerberos:latest
 fi
 
-if [ $LDAP == "yes" ]; then
+if [ $ENABLE_LDAP == "yes" ]; then
   docker pull osixia/openldap:1.3.0
   export LDAP_IMAGE=osixia/openldap:1.3.0
 fi
 
-if [ $KAFKA == "yes" ]; then
+if [ $ENABLE_KAFKA == "yes" ]; then
   docker pull bitnami/kafka:2.0.0
   export KAFKA_IMAGE=bitnami/kafka:2.0.0
 fi
@@ -138,5 +152,3 @@ docker build -t apachekylin/kylin-client:hadoop_${HADOOP_VERSION}_hive_${HIVE_VE
 ./dockerfile/cluster/client
 
 export CLIENT_IMAGETAG=apachekylin/kylin-client:hadoop_${HADOOP_VERSION}_hive_${HIVE_VERSION}_hbase_${HBASE_VERSION}
-
-
