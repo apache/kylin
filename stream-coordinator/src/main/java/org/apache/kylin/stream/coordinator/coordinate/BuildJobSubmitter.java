@@ -17,6 +17,11 @@
  */
 package org.apache.kylin.stream.coordinator.coordinate;
 
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.kylin.common.lock.DistributedLock;
+import org.apache.kylin.common.util.ZKUtil;
+import org.apache.kylin.engine.mr.common.CubeJobLockUtil;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
@@ -49,6 +54,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.stream.Collectors;
 
 /**
  * <pre>
@@ -140,6 +146,7 @@ public class BuildJobSubmitter implements Runnable {
     void doRun() {
         checkTimes++;
         logger.debug("\n========================================================================= {}", checkTimes);
+        fixLock();
         dumpSegmentBuildJobCheckList();
         coordinator.getStreamMetadataStore().reportStat();
         List<SegmentJobBuildInfo> successJobs = traceEarliestSegmentBuildJob();
@@ -161,6 +168,41 @@ public class BuildJobSubmitter implements Runnable {
                     submitSegmentBuildJob(cubeInfo.getCubeName(), segmentName);
                 }
             }
+        }
+    }
+
+    /**
+     * Purge inconsistent lock if exists
+     */
+    private void fixLock() {
+        boolean takeAction = false;
+        CuratorFramework zk = ZKUtil.getZookeeperClient(KylinConfig.getInstanceFromEnv());
+        DistributedLock lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory()
+                .lockForCurrentThread();
+
+        for (Map.Entry<String, ConcurrentSkipListSet<SegmentJobBuildInfo>> cubeInfo : segmentBuildJobCheckList.entrySet()) {
+            String cubeName = cubeInfo.getKey();
+            Set<String> jobList = cubeInfo.getValue().stream().map(a -> a.jobID).collect(Collectors.toSet());
+
+            try {
+                String lockPath = getCubeJobLockParentPathName(cubeName);
+                List<String> jobs = zk.getChildren().forPath(lockPath);
+                for (String job : jobs) {
+                    if (!jobList.contains(job)) {
+                        logger.warn("Found a broken job lock {} for streaming, will purge them.", job);
+                        lock.purgeLocks(lockPath);
+                        lock.purgeLocks(getEphemeralLockPathName(cubeName));
+                        takeAction = true;
+                    } else {
+                        logger.trace("Job {} own a cube {} lock. ", job, cubeName);
+                    }
+                }
+            } catch (Exception exp) {
+                logger.error("Error", exp);
+            }
+        }
+        if (takeAction) {
+            logger.info("Fixed inconsistent lock.");
         }
     }
 
@@ -529,5 +571,20 @@ public class BuildJobSubmitter implements Runnable {
         if (logger.isTraceEnabled()) {
             logger.trace(sb.toString());
         }
+    }
+
+    private String getEphemeralLockPathName(String cube) {
+        if (Strings.isNullOrEmpty(cube)) {
+            throw new IllegalArgumentException("cube job lock path name is null");
+        }
+
+        return CubeJobLockUtil.getEphemeralLockPath(cube);
+    }
+
+    private String getCubeJobLockParentPathName(String cube) {
+        if (Strings.isNullOrEmpty(cube)) {
+            throw new IllegalArgumentException(" create mr hive dict lock path name is null");
+        }
+        return CubeJobLockUtil.getLockPath(cube, null);
     }
 }
