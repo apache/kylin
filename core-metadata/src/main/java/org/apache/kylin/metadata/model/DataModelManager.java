@@ -90,9 +90,15 @@ public class DataModelManager {
                 getDataModelImplClass(), dataModelDescMap) {
             @Override
             protected DataModelDesc initEntityAfterReload(DataModelDesc model, String resourceName) {
-                String prj = (null == model.getProjectName()
-                        ? ProjectManager.getInstance(config).getProjectOfModel(model.getName()).getName()
-                        : model.getProjectName());
+                String prj;
+                try {
+                    prj = ProjectManager.getInstance(config).getProjectOfModel(model.getName()).getName();
+                } catch (IllegalStateException e) {
+                    prj = model.getProjectName();
+                    if (model.getProjectName() == null) {
+                        throw e;
+                    }
+                }
                 if (!model.isDraft()) {
                     model.init(config, getAllTablesMap(prj));
                 }

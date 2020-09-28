@@ -121,7 +121,7 @@ public class CubeMetaIngester extends AbstractApplication {
         }
         File zipFile = new File(srcPath);
         if (zipFile.isDirectory() || !zipFile.exists()) {
-            throw new IllegalArgumentException(OPTION_SRC.getArgName() + " file does does exist");
+            throw new IllegalArgumentException(OPTION_SRC.getArgName() + " file does not exist");
         }
 
         Path tempPath = Files.createTempDirectory("_unzip");
@@ -158,6 +158,7 @@ public class CubeMetaIngester extends AbstractApplication {
         for (CubeInstance cube : srcCubeManager.listAllCubes()) {
             logger.info("add " + cube + " to " + targetProjectName);
             projectManager.addModelToProject(cube.getModel().getName(), targetProjectName);
+            srcModelManager.reloadDataModel(cube.getModel().getName());
             projectManager.moveRealizationToProject(RealizationType.CUBE, cube.getName(), targetProjectName, null);
         }
 
@@ -192,33 +193,35 @@ public class CubeMetaIngester extends AbstractApplication {
                     logger.warn("Overwriting the old table desc: {}", tableDesc.getIdentity());
                 }
             }
-            tableDesc.setUuid(RandomUtil.randomUUID().toString());
-            tableDesc.setLastModified(0);
-            metadataManager.saveSourceTable(tableDesc, targetProjectName);
+            if (existing == null) {
+                tableDesc.setUuid(RandomUtil.randomUUID().toString());
+                tableDesc.setLastModified(0);
+                metadataManager.saveSourceTable(tableDesc, targetProjectName);
+            }
             requiredResources.add(tableDesc.getResourcePath());
         }
 
         DataModelManager modelManager = DataModelManager.getInstance(kylinConfig);
         for (DataModelDesc dataModelDesc : srcModelManager.listDataModels()) {
-            checkExesting(modelManager.getDataModelDesc(dataModelDesc.getName()), "model", dataModelDesc.getName());
+            checkExisting(modelManager.getDataModelDesc(dataModelDesc.getName()), "model", dataModelDesc.getName());
             requiredResources.add(DataModelDesc.concatResourcePath(dataModelDesc.getName()));
         }
 
         CubeDescManager cubeDescManager = CubeDescManager.getInstance(kylinConfig);
         for (CubeDesc cubeDesc : srcCubeDescManager.listAllDesc()) {
-            checkExesting(cubeDescManager.getCubeDesc(cubeDesc.getName()), "cube desc", cubeDesc.getName());
+            checkExisting(cubeDescManager.getCubeDesc(cubeDesc.getName()), "cube desc", cubeDesc.getName());
             requiredResources.add(CubeDesc.concatResourcePath(cubeDesc.getName()));
         }
 
         CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
         for (CubeInstance cube : srcCubeManager.listAllCubes()) {
-            checkExesting(cubeManager.getCube(cube.getName()), "cube", cube.getName());
+            checkExisting(cubeManager.getCube(cube.getName()), "cube", cube.getName());
             requiredResources.add(CubeInstance.concatResourcePath(cube.getName()));
         }
 
     }
 
-    private void checkExesting(RootPersistentEntity existing, String type, String name) {
+    private void checkExisting(RootPersistentEntity existing, String type, String name) {
         if (existing != null) {
             if (!forceIngest) {
                 throw new IllegalStateException("Already exist a " + type + " called " + name);
