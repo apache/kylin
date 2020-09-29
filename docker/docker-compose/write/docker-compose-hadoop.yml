@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   write-namenode:
-    image: ${HADOOP_NAMENODE_IMAGETAG:-bde2020/hadoop-namenode:2.0.0-hadoop2.7.4-java8}
+    image: ${HADOOP_NAMENODE_IMAGETAG:-apachekylin/kylin-hadoop-namenode:hadoop_2.8.5}
     container_name: write-namenode
     hostname: write-namenode
     volumes:
@@ -19,7 +19,7 @@ services:
       - 50070:50070
 
   write-datanode1:
-    image: ${HADOOP_DATANODE_IMAGETAG:-bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8}
+    image: ${HADOOP_DATANODE_IMAGETAG:-apachekylin/kylin-hadoop-datanode:hadoop_2.8.5}
     container_name: write-datanode1
     hostname: write-datanode1
     volumes:
@@ -34,7 +34,7 @@ services:
       - write-namenode
 
   write-datanode2:
-    image: ${HADOOP_DATANODE_IMAGETAG:-bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8}
+    image: ${HADOOP_DATANODE_IMAGETAG:-apachekylin/kylin-hadoop-datanode:hadoop_2.8.5}
     container_name: write-datanode2
     hostname: write-datanode2
     volumes:
@@ -47,7 +47,7 @@ services:
       - kylin
 
   write-datanode3:
-    image: ${HADOOP_DATANODE_IMAGETAG:-bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8}
+    image: ${HADOOP_DATANODE_IMAGETAG:-apachekylin/kylin-hadoop-datanode:hadoop_2.8.5}
     container_name: write-datanode3
     hostname: write-datanode3
     volumes:
@@ -60,7 +60,7 @@ services:
       - kylin
 
   write-resourcemanager:
-    image: ${HADOOP_RESOURCEMANAGER_IMAGETAG:-bde2020/hadoop-resourcemanager:2.0.0-hadoop2.7.4-java8}
+    image: ${HADOOP_RESOURCEMANAGER_IMAGETAG:-apachekylin/kylin-hadoop-resourcemanager:hadoop_2.8.5}
     container_name: write-resourcemanager
     hostname: write-resourcemanager
     environment:
@@ -73,7 +73,7 @@ services:
       - 8088:8088
 
   write-nodemanager1:
-    image: ${HADOOP_NODEMANAGER_IMAGETAG:-bde2020/hadoop-nodemanager:2.0.0-hadoop2.7.4-java8}
+    image: ${HADOOP_NODEMANAGER_IMAGETAG:-apachekylin/kylin-hadoop-nodemanager:hadoop_2.8.5}
     container_name: write-nodemanager1
     hostname: write-nodemanager1
     environment:
@@ -84,7 +84,7 @@ services:
       - kylin
 
   write-nodemanager2:
-    image: ${HADOOP_NODEMANAGER_IMAGETAG:-bde2020/hadoop-nodemanager:2.0.0-hadoop2.7.4-java8}
+    image: ${HADOOP_NODEMANAGER_IMAGETAG:-apachekylin/kylin-hadoop-nodemanager:hadoop_2.8.5}
     container_name: write-nodemanager2
     hostname: write-nodemanager2
     environment:
@@ -95,7 +95,7 @@ services:
       - kylin
 
   write-historyserver:
-    image: ${HADOOP_HISTORYSERVER_IMAGETAG:-bde2020/hadoop-historyserver:2.0.0-hadoop2.7.4-java8}
+    image: ${HADOOP_HISTORYSERVER_IMAGETAG:-apachekylin/kylin-hadoop-historyserver:hadoop_2.8.5}
     container_name: write-historyserver
     hostname: write-historyserver
     volumes:
