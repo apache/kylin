@@ -22,5 +22,9 @@ hadoop fs -mkdir -p    /user/hive/warehouse
 hadoop fs -chmod g+w   /tmp
 hadoop fs -chmod g+w   /user/hive/warehouse
 
+if [ $HIVE_VERSION \> "2" ]; then
+  schematool -dbType mysql -initSchema
+fi
+
 cd $HIVE_HOME/bin
 ./hiveserver2 --hiveconf hive.server2.enable.doAs=false

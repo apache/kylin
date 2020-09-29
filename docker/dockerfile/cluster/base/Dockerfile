@@ -52,7 +52,7 @@ RUN wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2
 RUN set -x \
     && echo "Fetch URL2 is : ${HADOOP_URL}" \
     && curl -fSL "${HADOOP_URL}" -o /tmp/hadoop.tar.gz \
-    && curl -fSL "${HADOOP_URL}.asc" -o /tmp/hadoop.tar.gz.asc \
+    && curl -fSL "${HADOOP_URL}.asc" -o /tmp/hadoop.tar.gz.asc
 
 RUN set -x \
     && tar -xvf /tmp/hadoop.tar.gz -C /opt/ \
