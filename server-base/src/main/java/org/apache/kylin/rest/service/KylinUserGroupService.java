@@ -154,6 +154,7 @@ public class KylinUserGroupService extends UserGroupService {
         List<ManagedUser> managedUsers = userService.listUsers();
         for (ManagedUser managedUser : managedUsers) {
             if (managedUser.getAuthorities().contains(new SimpleGrantedAuthority(name))) {
+                managedUser = userService.copyForWrite(managedUser);
                 managedUser.removeAuthorities(name);
                 userService.updateUser(managedUser);
             }
@@ -181,12 +182,14 @@ public class KylinUserGroupService extends UserGroupService {
 
         for (String in : moveInUsers) {
             ManagedUser managedUser = (ManagedUser) userService.loadUserByUsername(in);
+            managedUser = userService.copyForWrite(managedUser);
             managedUser.addAuthorities(groupName);
             userService.updateUser(managedUser);
         }
 
         for (String out : moveOutUsers) {
             ManagedUser managedUser = (ManagedUser) userService.loadUserByUsername(out);
+            managedUser = userService.copyForWrite(managedUser);
             managedUser.removeAuthorities(groupName);
             userService.updateUser(managedUser);
         }

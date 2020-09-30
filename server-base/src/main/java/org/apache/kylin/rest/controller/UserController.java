@@ -217,6 +217,7 @@ public class UserController extends BasicController {
                 throw new BadRequestException("pwd update error");
             }
 
+            existing = userService.copyForWrite(existing);
             existing.setPassword(pwdEncode(user.getNewPassword()));
             existing.setDefaultPassword(false);
             logger.info("update password for user {}", user);

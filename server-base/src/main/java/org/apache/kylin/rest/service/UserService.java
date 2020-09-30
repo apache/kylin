@@ -34,6 +34,8 @@ public interface UserService extends UserDetailsManager {
 
     List<String> listAdminUsers() throws IOException;
 
+    ManagedUser copyForWrite(ManagedUser user);
+
     //For performance consideration, list all users may be incomplete(eg. not load user's authorities until authorities has benn used).
     //So it's an extension point that can complete user's information latter.
     //loadUserByUsername() has guarantee that the return user is complete.

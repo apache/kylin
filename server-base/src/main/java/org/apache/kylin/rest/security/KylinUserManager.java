@@ -139,4 +139,8 @@ public class KylinUserManager {
             return userMap.containsKey(username);
         }
     }
+
+    public ManagedUser copyForWrite(ManagedUser user) {
+        return crud.copyForWrite(user);
+    }
 }
