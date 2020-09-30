@@ -26,6 +26,7 @@ import java.util.Arrays;
 import javax.annotation.PostConstruct;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.service.UserService;
 
 import org.slf4j.Logger;
@@ -37,6 +38,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -113,8 +115,8 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
                 logger.debug("User {} authorities : {}", username, user.getAuthorities());
                 if (!userService.userExists(username)) {
                     userService.createUser(user);
-                } else if (needUpdateUser(user, username)) {
-                    userService.updateUser(user);
+                } else {
+                    updateUserIfNeeded(user, username);
                 }
 
                 cacheManager.getCache(USER_CACHE).put(userKey, authed);
@@ -129,10 +131,22 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
         return authed;
     }
 
-    // in case ldap users changing.
-    private boolean needUpdateUser(ManagedUser user, String username) {
-        return KylinConfig.getInstanceFromEnv().getSecurityProfile().equals("ldap")
-                && !userService.loadUserByUsername(username).equals(user);
+    private void updateUserIfNeeded(ManagedUser newUser, String username) {
+        String securityProfile = KylinConfig.getInstanceFromEnv().getSecurityProfile();
+        // in case ldap users changing.
+        if (securityProfile.equals("ldap") || securityProfile.equals("saml")) {
+            UserDetails existingUser = userService.loadUserByUsername(username);
+            SimpleGrantedAuthority groupAllUsersAuthority = new SimpleGrantedAuthority(Constant.GROUP_ALL_USERS);
+            if (existingUser.getAuthorities().contains(groupAllUsersAuthority)) {
+                if (!newUser.getAuthorities().contains(groupAllUsersAuthority)) {
+                    newUser.getAuthorities().add(groupAllUsersAuthority);
+                }
+            }
+            if (!existingUser.equals(newUser)) {
+                logger.info("Going to update user info for {}", username);
+                userService.updateUser(newUser);
+            }
+        }
     }
 
     @Override
