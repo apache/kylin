@@ -30,7 +30,7 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>3.1.0-SNAPSHOT</version>
+    <version>3.1.1-SNAPSHOT</version>
 
     <name>Apache Kylin</name>
     <url>http://kylin.apache.org</url>
@@ -62,7 +62,7 @@
         <puppycrawl.version>8.18</puppycrawl.version>
         <spotbugs.version>3.1.1</spotbugs.version>
 
-        <kylin.version>3.0.0</kylin.version>
+        <kylin.version>3.1.1</kylin.version>
         <!-- Hadoop versions -->
         <hadoop2.version>3.1.0</hadoop2.version>
         <yarn.version>3.1.0</yarn.version>
