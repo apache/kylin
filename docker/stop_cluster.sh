@@ -41,7 +41,7 @@ KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/others/docke
 
 KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/write/docker-compose-hadoop.yml down
 
-# clear data
+# clean data
 rm -rf ${SCRIPT_PATH}/docker-compose/write/data/*
 rm -rf ${SCRIPT_PATH}/docker-compose/read/data/*
 rm -rf ${SCRIPT_PATH}/docker-compose/others/data/*
