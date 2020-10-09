@@ -15,7 +15,7 @@ services:
       - 16010:16010
 
   read-hbase-regionserver1:
-    image: ${HBASE_REGIONSERVER_IMAGETAG:-apachekylin/kylin-hbase-regionserver:hbase_1.1.}
+    image: ${HBASE_REGIONSERVER_IMAGETAG:-apachekylin/kylin-hbase-regionserver:hbase_1.1.2}
     container_name: read-hbase-regionserver1
     hostname: read-hbase-regionserver1
     env_file:

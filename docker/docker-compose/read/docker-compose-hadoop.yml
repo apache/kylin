@@ -95,7 +95,7 @@ services:
       - write_kylin
 
   read-historyserver:
-    image: ${HADOOP_HISTORYSERVER_IMAGETAG:-apachekylin/kylin-hadoop-historyserver:hadoop_2.8.}
+    image: ${HADOOP_HISTORYSERVER_IMAGETAG:-apachekylin/kylin-hadoop-historyserver:hadoop_2.8.5}
     container_name: read-historyserver
     hostname: read-historyserver
     volumes:
