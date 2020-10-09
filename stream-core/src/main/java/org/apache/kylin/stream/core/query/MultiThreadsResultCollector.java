@@ -89,6 +89,7 @@ public class MultiThreadsResultCollector extends ResultCollector {
                         if (System.currentTimeMillis() > deadline) {
                             masterThread.interrupt(); // notify main thread
                             cancelFlag.set(true);
+                            recordCachePool.clear();
                             logger.warn("Beyond the deadline for {}.", queryId);
                             throw new RuntimeException("Timeout when iterate search result");
                         }
@@ -112,6 +113,7 @@ public class MultiThreadsResultCollector extends ResultCollector {
                         if (one == null) {
                             masterThread.interrupt(); // notify main thread
                             cancelFlag.set(true);
+                            recordCachePool.clear();
                             logger.debug("Exceeded the deadline for {}.", queryId);
                             throw new RuntimeException("Timeout when iterate search result");
                         }
@@ -141,10 +143,15 @@ public class MultiThreadsResultCollector extends ResultCollector {
 
         @Override
         public void run() {
+            long offserTimeout = 0L;
             try {
                 result.startRead();
                 for (Record record : result) {
-                    recordCachePool.put(record.copy());
+                    offserTimeout = deadline - System.currentTimeMillis();
+                    if (!recordCachePool.offer(record, offserTimeout, TimeUnit.MILLISECONDS)) {
+                        logger.warn("Timeout when offer to recordCachePool, deadline: {}, offser Timeout: {}", deadline, offserTimeout);
+                        break;
+                    }
                 }
                 result.endRead();
             } catch (InterruptedException inter) {
