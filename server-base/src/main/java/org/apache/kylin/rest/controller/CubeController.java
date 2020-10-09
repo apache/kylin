@@ -783,7 +783,7 @@ public class CubeController extends BasicController {
         return cubeRequest;
     }
 
-    @RequestMapping(value = "/{cubeName}/{engineType}", method = RequestMethod.PUT)
+    @RequestMapping(value = "/{cubeName}/engine/{engineType}", method = RequestMethod.PUT)
     @ResponseBody
     public void updateCubeEngineType(@PathVariable String cubeName, @PathVariable String engineType) throws IOException {
         checkCubeExists(cubeName);
