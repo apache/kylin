@@ -23,3 +23,4 @@ SELECT EXTRACT(YEAR FROM TEST_CAL_DT.WEEK_BEG_DT) AS yr_WEEK_BEG_DT_ok, QUARTER(
  on test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id and test_kylin_fact.lstg_site_id = test_category_groupings.site_id
  GROUP BY EXTRACT(YEAR FROM TEST_CAL_DT.WEEK_BEG_DT), QUARTER(TEST_CAL_DT.WEEK_BEG_DT) 
  
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}

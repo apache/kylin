@@ -30,3 +30,4 @@ SELECT
  group by test_cal_dt.week_beg_dt 
  ,test_category_groupings.meta_categ_name 
  ,test_category_groupings.categ_lvl2_name 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":360448}

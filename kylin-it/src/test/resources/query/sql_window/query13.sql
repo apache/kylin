@@ -19,4 +19,4 @@ select t.first_seller_id as first_seller_id_test, count(*) from (
 select first_value(seller_id) over (partition by buyer_id) as first_seller_id
 from test_kylin_fact inner join test_order on test_kylin_fact.order_id=test_order.order_id
 )
-as t group by t.first_seller_id
+as t group by t.first_seller_id;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":2097151}

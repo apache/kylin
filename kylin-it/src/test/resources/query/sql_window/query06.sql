@@ -21,3 +21,4 @@ when 0.0 then 0 else sum(price)/lag(sum(price), 1, 0.0) over(partition by lstg_f
 from test_kylin_fact
 where cal_dt < '2012-02-01'
 group by cal_dt, lstg_format_name
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}

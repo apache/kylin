@@ -20,3 +20,4 @@
 select test_kylin_fact.lstg_format_name, sum(price) as GMV, count(*) as TRANS_CNT from test_kylin_fact 
 where test_kylin_fact.lstg_format_name > 'GGGG'
  group by test_kylin_fact.lstg_format_name 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}

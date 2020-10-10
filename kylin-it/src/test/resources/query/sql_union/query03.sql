@@ -22,3 +22,4 @@ inner join (
 ) TEST_B
 on TEST_A.seller_id = TEST_B.seller_id
 group by TEST_A.seller_id
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":1310735}

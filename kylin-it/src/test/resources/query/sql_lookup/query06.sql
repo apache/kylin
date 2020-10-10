@@ -1,1 +1,1 @@
-select max(cal_dt) as x from edw.test_cal_dt
+select max(cal_dt) as x from edw.test_cal_dt;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}

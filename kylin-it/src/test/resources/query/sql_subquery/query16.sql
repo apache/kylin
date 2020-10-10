@@ -35,4 +35,4 @@ FROM
         buyer_id > 100) t2 ON t1.leaf_categ_id = t2.leaf_categ_id
 GROUP BY t1.leaf_categ_id
 ORDER BY nums, leaf_categ_id
-limit 100
+limit 100;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}

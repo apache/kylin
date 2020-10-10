@@ -2827,7 +2827,7 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.spark-engine.spark-sql-shuffle-partitions", "-1"));
     }
 
-    public Map<String, String> getSparkConf() {
+    public Map<String, String> getQuerySparkConf() {
         return getPropertiesByPrefix("kylin.query.spark-conf.");
     }
 

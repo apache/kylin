@@ -33,3 +33,4 @@ select test_cal_dt.cal_dt,sum(test_kylin_fact.price) as GMV
  where test_kylin_fact.lstg_format_name='FP-GTC'
  and test_cal_dt.cal_dt between DATE '2013-05-01' and DATE '2013-08-01'
  group by test_cal_dt.cal_dt
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}

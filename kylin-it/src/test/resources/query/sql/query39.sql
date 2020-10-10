@@ -18,3 +18,4 @@
 
 select sum(price) as GMV 
  from test_kylin_fact 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}

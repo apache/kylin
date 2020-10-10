@@ -21,3 +21,4 @@
 select lstg_format_name, avg(price) as GMV
  from test_kylin_fact 
  group by lstg_format_name 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}

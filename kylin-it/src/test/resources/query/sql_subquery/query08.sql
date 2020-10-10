@@ -39,4 +39,4 @@ inner join  (
   ON test_kylin_fact.lstg_site_id = test_sites.site_id
   group by test_cal_dt.week_beg_dt
 ) t2
-on t1.week_beg_dt=t2.week_beg_dt
+on t1.week_beg_dt=t2.week_beg_dt;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}

@@ -42,3 +42,4 @@ ON test_kylin_fact.cal_dt = xxx2.cal_dt
  group by test_kylin_fact.lstg_format_name
 
 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":342016}

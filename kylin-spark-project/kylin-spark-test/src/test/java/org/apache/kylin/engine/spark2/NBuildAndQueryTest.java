@@ -21,6 +21,7 @@ import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import java.util.Map;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.Triple;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
@@ -98,7 +99,7 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
         populateSSWithCSVData(config, getProject(), KylinSparkEnv.getSparkSession());
 
         // 3. Compare Kylin with Spark
-        List<QueryCallable> tasks = prepareAndGenQueryTasks(config);
+        List<QueryCallable> tasks = prepareAndGenQueryTasks();
         List<Pair<String, Throwable>> results = execAndGetResults(tasks);
         Assert.assertEquals(results.size(), tasks.size());
         report(results);
@@ -145,7 +146,7 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
         }
     }
 
-    private List<QueryCallable> prepareAndGenQueryTasks(KylinConfig config) throws Exception {
+    private List<QueryCallable> prepareAndGenQueryTasks() throws Exception {
         String[] joinTypes = new String[] {"left"};
         List<QueryCallable> tasks = new ArrayList<>();
         for (String joinType : joinTypes) {
@@ -292,9 +293,9 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
                             .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + "sql");
                     NExecAndComp.execLimitAndValidate(queries, getProject(), joinType);
                 } else {
-                    List<Pair<String, String>> queries = NExecAndComp
-                            .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);
-                    NExecAndComp.execAndCompare(queries, getProject(), compareLevel, joinType);
+                    List<Triple<String, String, NExecAndComp.ITQueryMetrics>> queries = NExecAndComp
+                            .fetchQueries2(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);
+                    NExecAndComp.execAndCompareNew2(queries, getProject(), compareLevel, joinType, null);
                 }
             } catch (Throwable th) {
                 logger.error("Query fail on: {}", identity);

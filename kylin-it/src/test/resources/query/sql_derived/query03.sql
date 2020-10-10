@@ -19,3 +19,4 @@
 SELECT distinct LSTG_FORMAT_NAME from test_kylin_fact 
  
  
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}

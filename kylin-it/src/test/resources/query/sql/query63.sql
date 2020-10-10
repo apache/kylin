@@ -18,3 +18,4 @@
 
 select min(cal_dt) as min_cal_dt
  from test_kylin_fact
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}

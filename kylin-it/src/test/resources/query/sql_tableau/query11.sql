@@ -24,3 +24,4 @@ SELECT COUNT(1) AS cnt_ITEM_COUNT_ok,
  on test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id and test_kylin_fact.lstg_site_id = test_category_groupings.site_id
  GROUP BY "TEST_CAL_DT"."WEEK_BEG_DT" 
  
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}

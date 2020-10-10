@@ -30,3 +30,4 @@
   
   group by case when '3'='1' then test_cal_dt.week_beg_dt  else   test_kylin_fact.cal_dt end
  
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}

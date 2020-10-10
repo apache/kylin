@@ -29,3 +29,4 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  group by test_cal_dt.week_beg_dt 
  ) "TableauSQL" 
  HAVING COUNT(1)>0 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}

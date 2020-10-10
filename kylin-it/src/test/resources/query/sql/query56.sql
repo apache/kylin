@@ -28,3 +28,4 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  where
  extract(MONTH from test_cal_dt.week_beg_dt) = 12
  group by test_cal_dt.week_beg_dt
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}

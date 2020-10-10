@@ -28,4 +28,4 @@ select concat(meta_categ_name, lstg_format_name) as c1, concat(meta_categ_name, 
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
 
  where not ( meta_categ_name not in ('', 'a','Computers') or meta_categ_name not in ('Crafts','Computers'))
- group by concat(meta_categ_name, lstg_format_name), concat(meta_categ_name, 'CONST'), concat(meta_categ_name, concat(test_sites.site_name, lstg_format_name))
+ group by concat(meta_categ_name, lstg_format_name), concat(meta_categ_name, 'CONST'), concat(meta_categ_name, concat(test_sites.site_name, lstg_format_name));{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":79872}

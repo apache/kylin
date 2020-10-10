@@ -25,3 +25,4 @@ WHEN 'FOO' THEN 'NO' ELSE "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" END)
 
 > 'A')
 GROUP BY "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}

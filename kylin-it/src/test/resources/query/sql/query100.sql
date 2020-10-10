@@ -17,4 +17,4 @@
 --
 
 select count(*) as cnt from test_kylin_fact
-where lstg_format_name>='AAAA' and 'BBBB'>=lstg_format_name
+where lstg_format_name>='AAAA' and 'BBBB'>=lstg_format_name;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}

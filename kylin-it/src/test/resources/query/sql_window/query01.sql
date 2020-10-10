@@ -18,3 +18,4 @@
 select lstg_format_name, sum(price) as GMV, count(lstg_format_name) over(partition by lstg_format_name)
 from test_kylin_fact
 group by cal_dt, lstg_format_name
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}

@@ -23,3 +23,4 @@ sum(price) as GMV,
 count(*) as TRANS_CNT from test_kylin_fact
 where cal_dt between '2012-01-01' and '2012-02-01'
 group by grouping sets((lstg_format_name, cal_dt, slr_segment_cd), (cal_dt, slr_segment_cd), (lstg_format_name, slr_segment_cd))
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}

@@ -34,3 +34,4 @@ SELECT
  ,test_category_groupings.categ_lvl2_name 
  ,test_category_groupings.categ_lvl3_name 
  
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":376832}

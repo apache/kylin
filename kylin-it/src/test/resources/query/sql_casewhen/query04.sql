@@ -33,3 +33,4 @@ group by "TEST_KYLIN_FACT"."ORDER_ID",
            else 'N'
        end
 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":2097151}

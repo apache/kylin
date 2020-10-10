@@ -31,3 +31,4 @@ SELECT SUM(1) AS "COL",
  GROUP BY 2 
  HAVING COUNT(1)>0 
  
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}

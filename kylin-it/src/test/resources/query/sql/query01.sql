@@ -18,3 +18,4 @@
 
 select LSTG_FORMAT_NAME,slr_segment_cd ,sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact 
  group by LSTG_FORMAT_NAME ,slr_segment_cd
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}

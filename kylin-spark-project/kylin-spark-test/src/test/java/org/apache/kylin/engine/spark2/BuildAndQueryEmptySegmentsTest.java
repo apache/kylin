@@ -18,6 +18,7 @@
 package org.apache.kylin.engine.spark2;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
 import org.apache.kylin.job.exception.SchedulerException;
@@ -25,6 +26,7 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.KylinSparkEnv;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.common.SparkQueryTest;
 import org.junit.Assert;
 import org.junit.Test;
@@ -67,23 +69,23 @@ public class BuildAndQueryEmptySegmentsTest extends LocalWithSparkSessionTest {
     }
 
     private void testQuery(String sqlStr) {
-        Dataset dsFromCube = NExecAndComp.sql(getProject(), sqlStr);
-        Assert.assertEquals(1L, dsFromCube.count());
+        Pair<Dataset<Row>, NExecAndComp.ITQueryMetrics> pair = NExecAndComp.sql(getProject(), sqlStr);
+        Assert.assertEquals(1L, pair.getFirst().count());
 
         Dataset dsFromSpark = NExecAndComp.querySparkSql(sqlStr);
         Assert.assertEquals(1L, dsFromSpark.count());
-        String msg = SparkQueryTest.checkAnswer(dsFromCube, dsFromSpark, false);
+        String msg = SparkQueryTest.checkAnswer(pair.getFirst(), dsFromSpark, false);
         Assert.assertNotNull(msg);
     }
 
     private void testQueryUnequal(String sqlStr) {
 
-        Dataset dsFromCube = NExecAndComp.sql(getProject(), sqlStr);
-        Assert.assertEquals(1L, dsFromCube.count());
+        Pair<Dataset<Row>, NExecAndComp.ITQueryMetrics> pair = NExecAndComp.sql(getProject(), sqlStr);
+        Assert.assertEquals(1L, pair.getFirst().count());
 
         Dataset dsFromSpark = NExecAndComp.querySparkSql(sqlStr);
         Assert.assertEquals(1L, dsFromSpark.count());
-        String msg = SparkQueryTest.checkAnswer(dsFromCube, dsFromSpark, false);
+        String msg = SparkQueryTest.checkAnswer(pair.getFirst(), dsFromSpark, false);
         Assert.assertNotNull(msg);
     }
 

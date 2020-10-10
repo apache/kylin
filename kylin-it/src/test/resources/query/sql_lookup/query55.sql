@@ -17,3 +17,4 @@
 --
 
 select count(*) as c from edw.test_cal_dt as test_cal_dt where extract(YEAR from test_cal_dt.cal_dt) = 2012
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}

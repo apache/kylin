@@ -28,4 +28,4 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  
  
 where not(lstg_format_name not like '%BIN%')
-group by lstg_format_name
+group by lstg_format_name;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}

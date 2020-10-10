@@ -24,3 +24,4 @@ select lstg_format_name,
  where lstg_format_name='FP-GTC' 
  group by lstg_format_name 
  having count(distinct seller_id) > 50 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
