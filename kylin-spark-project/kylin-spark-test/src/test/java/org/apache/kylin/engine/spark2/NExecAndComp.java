@@ -17,18 +17,24 @@
  */
 package org.apache.kylin.engine.spark2;
 
-import org.apache.kylin.shaded.com.google.common.base.Preconditions;
-import org.apache.kylin.shaded.com.google.common.collect.Lists;
-import org.apache.kylin.shaded.com.google.common.collect.Sets;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.Triple;
 import org.apache.kylin.engine.spark2.utils.QueryUtil;
 import org.apache.kylin.engine.spark2.utils.RecAndQueryCompareUtil.CompareEntity;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.query.QueryConnection;
 import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.KylinSparkEnv;
 import org.apache.spark.sql.Row;
@@ -42,6 +48,7 @@ import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -64,6 +71,8 @@ public class NExecAndComp {
         NONE, // Do not compare and just return OK
     }
 
+    private static ObjectMapper objectMapper = new ObjectMapper();
+
     static void execLimitAndValidate(List<Pair<String, String>> queries, String prj, String joinType) {
         execLimitAndValidateNew(queries, prj, joinType, null);
     }
@@ -82,8 +91,9 @@ public class NExecAndComp {
                 appendLimitQueries++;
             }
 
-            Dataset<Row> kylinResult = (recAndQueryResult == null) ? queryWithKylin(prj, joinType, sqlAndAddedLimitSql)
+            Pair<Dataset<Row>, ITQueryMetrics> queryResult = (recAndQueryResult == null) ? queryWithKylin(prj, joinType, sqlAndAddedLimitSql)
                     : queryWithKylin(prj, joinType, sqlAndAddedLimitSql, recAndQueryResult);
+            Dataset<Row> kylinResult = queryResult.getFirst();
             addQueryPath(recAndQueryResult, query, sql);
             Dataset<Row> sparkResult = queryWithSpark(prj, sql, query.getFirst());
             List<Row> kylinRows = SparkQueryTest.castDataType(kylinResult, sparkResult).toJavaRDD().collect();
@@ -116,9 +126,63 @@ public class NExecAndComp {
 
             // Query from Cube
             long startTime = System.currentTimeMillis();
-            Dataset<Row> cubeResult = (recAndQueryResult == null) ? queryWithKylin(prj, joinType, Pair.newPair(sql, sql))
+            Pair<Dataset<Row>, ITQueryMetrics> queryResult = (recAndQueryResult == null) ? queryWithKylin(prj, joinType, Pair.newPair(sql, sql))
                     : queryWithKylin(prj, joinType, Pair.newPair(sql, sql), recAndQueryResult);
             addQueryPath(recAndQueryResult, query, sql);
+            Dataset<Row> cubeResult = queryResult.getFirst();
+            if (compareLevel == CompareLevel.SAME) {
+                Dataset<Row> sparkResult = null;
+                String csvDataPathStr = query.getFirst() + ".expected";
+                if(new File(csvDataPathStr).exists()) {
+                    logger.debug("Use expected dataset for {}", sql);
+                    sparkResult = KylinSparkEnv.getSparkSession().read().csv(csvDataPathStr);
+                } else {
+                    sparkResult = queryWithSpark(prj, sql, query.getFirst());
+                }
+                String result = SparkQueryTest.checkAnswer(SparkQueryTest.castDataType(cubeResult, sparkResult), sparkResult, false);
+                if (result != null) {
+                    logger.error("Failed on compare query ({}) :{}", joinType, query);
+                    logger.error(result);
+                    throw new IllegalArgumentException("query (" + joinType + ") :" + query + " result not match");
+                } else {
+                    logger.debug("Passed {}", query.getFirst());
+                }
+            } else if (compareLevel == CompareLevel.NONE) {
+                Dataset<Row> sparkResult = queryWithSpark(prj, sql, query.getFirst());
+                List<Row> sparkRows = sparkResult.toJavaRDD().collect();
+                List<Row> kylinRows = SparkQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
+                if (compareResults(normRows(sparkRows), normRows(kylinRows), compareLevel)) {
+                    logger.error("Failed on compare query ({}) :{}", joinType, query);
+                    throw new IllegalArgumentException("query (" + joinType + ") :" + query + " result not match");
+                }
+            } else {
+                cubeResult.persist();
+                logger.info(
+                        "result comparision is not available for {}, part of the cube results: {},\n {}" , query.getFirst(),
+                        cubeResult.count(), cubeResult.showString(20, 25 , false));
+                cubeResult.unpersist();
+            }
+            logger.trace("The query ({}) : {} cost {} (ms)", query.getFirst(), "", System.currentTimeMillis() - startTime);
+        }
+    }
+
+    public static void execAndCompareNew2(List<Triple<String, String, ITQueryMetrics>> queries, String prj, CompareLevel compareLevel,
+                                         String joinType, Map<String, CompareEntity> recAndQueryResult) throws IOException{
+        for (Triple<String, String, ITQueryMetrics> query : queries) {
+            logger.info("Exec and compare query ({}) :{}", joinType, query.getFirst());
+            String sql = changeJoinType(query.getSecond(), joinType);
+
+            // Query from Cube
+            long startTime = System.currentTimeMillis();
+            Pair<Dataset<Row>, ITQueryMetrics> queryResult = (recAndQueryResult == null) ? queryWithKylin(prj, joinType, Pair.newPair(sql, sql))
+                    : queryWithKylin(prj, joinType, Pair.newPair(sql, sql), recAndQueryResult);
+            ITQueryMetrics collectedMetrics = queryResult.getSecond();
+            Dataset<Row> cubeResult = queryResult.getFirst();
+            if(!checkQueryMetrics(query.getThird(), collectedMetrics)) {
+                logger.error("Query metrics! Please check you SQL:" + sql);
+                throw new IllegalArgumentException("Query metrics not match!");
+            }
+            addQueryPath2(recAndQueryResult, query.getFirst(), sql);
 
             if (compareLevel == CompareLevel.SAME) {
                 Dataset<Row> sparkResult = null;
@@ -156,6 +220,10 @@ public class NExecAndComp {
         }
     }
 
+    public static boolean checkQueryMetrics(ITQueryMetrics comparedMetrics, ITQueryMetrics collectedMetrics) {
+        return comparedMetrics.equals(collectedMetrics);
+    }
+
     public static boolean execAndCompareQueryResult(Pair<String, String> queryForKylin,
                                                     Pair<String, String> queryForSpark, String joinType, String prj,
                                                     Map<String, CompareEntity> recAndQueryResult) {
@@ -165,8 +233,8 @@ public class NExecAndComp {
         List<Row> sparkRows = sparkResult.toJavaRDD().collect();
 
         String sqlForKylin = changeJoinType(queryForKylin.getSecond(), joinType);
-        Dataset<Row> cubeResult = queryWithKylin(prj, joinType, Pair.newPair(sqlForKylin, sqlForKylin));
-        List<Row> kylinRows = SparkQueryTest.castDataType(cubeResult, sparkResult).toJavaRDD().collect();
+        Pair<Dataset<Row>, ITQueryMetrics> pair = queryWithKylin(prj, joinType, Pair.newPair(sqlForKylin, sqlForKylin));
+        List<Row> kylinRows = SparkQueryTest.castDataType(pair.getFirst(), sparkResult).toJavaRDD().collect();
 
         return sparkRows.equals(kylinRows);
     }
@@ -189,25 +257,35 @@ public class NExecAndComp {
         recAndQueryResult.get(modifiedSql).setFilePath(query.getFirst());
     }
 
+    private static void addQueryPath2(Map<String, CompareEntity> recAndQueryResult, String filePath,
+                                     String modifiedSql) {
+        if (recAndQueryResult == null) {
+            return;
+        }
+
+        Preconditions.checkState(recAndQueryResult.containsKey(modifiedSql));
+        recAndQueryResult.get(modifiedSql).setFilePath(filePath);
+    }
+
     @Deprecated
     static void execCompareQueryAndCompare(List<Pair<String, String>> queries, String prj, String joinType) {
         throw new IllegalStateException(
                 "The method has deprecated, please call org.apache.kylin.engine.spark2.NExecAndComp.execAndCompareNew");
     }
 
-    private static Dataset<Row> queryWithKylin(String prj, String joinType, Pair<String, String> pair,
+    private static Pair<Dataset<Row>, ITQueryMetrics> queryWithKylin(String prj, String joinType, Pair<String, String> pair,
                                                Map<String, CompareEntity> compareEntityMap) {
 
         compareEntityMap.putIfAbsent(pair.getFirst(), new CompareEntity());
         final CompareEntity entity = compareEntityMap.get(pair.getFirst());
         entity.setSql(pair.getFirst());
-        Dataset<Row> rowDataset = queryFromCube(prj, changeJoinType(pair.getSecond(), joinType));
+        Pair<Dataset<Row>, ITQueryMetrics> queryResult = queryFromCube(prj, changeJoinType(pair.getSecond(), joinType));
         entity.setOlapContexts(OLAPContext.getThreadLocalContexts());
         OLAPContext.clearThreadLocalContexts();
-        return rowDataset;
+        return queryResult;
     }
 
-    private static Dataset<Row> queryWithKylin(String prj, String joinType, Pair<String, String> sql) {
+    private static Pair<Dataset<Row>, ITQueryMetrics> queryWithKylin(String prj, String joinType, Pair<String, String> sql) {
         return queryFromCube(prj, changeJoinType(sql.getSecond(), joinType));
     }
 
@@ -245,6 +323,11 @@ public class NExecAndComp {
     public static List<Pair<String, String>> fetchQueries(String folder) throws IOException {
         File sqlFolder = new File(folder);
         return retrieveITSqls(sqlFolder);
+    }
+
+    public static List<Triple<String, String, ITQueryMetrics>> fetchQueries2(String folder) throws IOException {
+        File sqlFolder = new File(folder);
+        return retrieveITSqls2(sqlFolder);
     }
 
     public static List<Pair<String, String>> fetchPartialQueries(String folder, int start, int end) throws IOException {
@@ -295,6 +378,40 @@ public class NExecAndComp {
             ret.add(Pair.newPair(sqlFile.getCanonicalPath(), sql + '\n'));
         }
         return ret;
+    }
+
+    private static List<Triple<String, String, ITQueryMetrics>> retrieveITSqls2(File file) throws IOException {
+        File[] sqlFiles = new File[0];
+        if (file != null && file.exists() && file.listFiles() != null) {
+            sqlFiles = file.listFiles((dir, name) -> name.endsWith(".sql"));
+        }
+        List<Triple<String, String, ITQueryMetrics>> ret = Lists.newArrayList();
+        assert sqlFiles != null;
+        Arrays.sort(sqlFiles, (o1, o2) -> {
+            final String idxStr1 = o1.getName().replaceAll("\\D", "");
+            final String idxStr2 = o2.getName().replaceAll("\\D", "");
+            if (idxStr1.isEmpty() || idxStr2.isEmpty()) {
+                return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
+            }
+            return Integer.parseInt(idxStr1) - Integer.parseInt(idxStr2);
+        });
+        for (File sqlFile : sqlFiles) {
+            String sqlStatement = FileUtils.readFileToString(sqlFile, "UTF-8").trim();
+            int semicolonIndex = sqlStatement.lastIndexOf(";");
+            String sql = semicolonIndex != sqlStatement.length() - 1 ? sqlStatement.substring(0, semicolonIndex)
+                    : sqlStatement;
+            String metricsStr = sqlStatement.substring(semicolonIndex + 1);
+            ITQueryMetrics metrics = convertFromJson(metricsStr);
+            ret.add(Triple.create(sqlFile.getCanonicalPath(), sql + '\n', metrics));
+        }
+        return ret;
+    }
+
+    private static ITQueryMetrics convertFromJson(String metricsStr) throws IOException{
+         final ObjectMapper objectMapper = new ObjectMapper()
+                .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+         ITQueryMetrics metrics = objectMapper.readValue(metricsStr, ITQueryMetrics.class);
+         return metrics;
     }
 
     private static boolean compareResults(List<Row> expectedResult, List<Row> actualResult, CompareLevel compareLevel) {
@@ -401,7 +518,7 @@ public class NExecAndComp {
         }).collect(Collectors.toList());
     }
 
-    public static Dataset<Row> queryFromCube(String prj, String sqlText) {
+    public static Pair<Dataset<Row>, ITQueryMetrics> queryFromCube(String prj, String sqlText) {
         sqlText = QueryUtil.massageSql(sqlText, prj, 0, 0, "DEFAULT");
         return sql(prj, sqlText, null);
     }
@@ -414,21 +531,21 @@ public class NExecAndComp {
         return r;
     }
 
-    public static Dataset<Row> sql(String prj, String sqlText) {
+    public static Pair<Dataset<Row>, ITQueryMetrics> sql(String prj, String sqlText) {
         return sql(prj, sqlText, null);
     }
 
-    public static Dataset<Row> sql(String prj, String sqlText, List<String> parameters) {
+    public static Pair<Dataset<Row>, ITQueryMetrics> sql(String prj, String sqlText, List<String> parameters) {
         if (sqlText == null)
             throw new RuntimeException("Sorry your SQL is null...");
 
         try {
             logger.trace("Try to query from cube....");
             long startTs = System.currentTimeMillis();
-            Dataset<Row> dataset = queryCubeAndSkipCompute(prj, sqlText, parameters);
+            Pair<Dataset<Row>, ITQueryMetrics> pair = queryCubeAndSkipCompute(prj, sqlText, parameters);
             logger.trace("Cool! This sql hits cube...");
             logger.trace("Duration(ms): {}", (System.currentTimeMillis() - startTs));
-            return dataset;
+            return pair;
         } catch (Throwable e) {
             logger.error("There is no cube can be used for query [{}]", sqlText);
             logger.error("Reasons:", e);
@@ -436,26 +553,27 @@ public class NExecAndComp {
         }
     }
 
-    static Dataset<Row> queryCubeAndSkipCompute(String prj, String sql, List<String> parameters) throws Exception {
+    static Pair<Dataset<Row>, ITQueryMetrics> queryCubeAndSkipCompute(String prj, String sql, List<String> parameters) throws Exception {
         KylinSparkEnv.skipCompute();
-        Dataset<Row> df = queryCube(prj, sql, parameters);
-        return df;
+        Pair<Dataset<Row>, ITQueryMetrics> pair = queryCube(prj, sql, parameters);
+        return pair;
     }
 
-    static Dataset<Row> queryCubeAndSkipCompute(String prj, String sql) throws Exception {
+    static Pair<Dataset<Row>, ITQueryMetrics> queryCubeAndSkipCompute(String prj, String sql) throws Exception {
         KylinSparkEnv.skipCompute();
-        Dataset<Row> df = queryCube(prj, sql, null);
-        return df;
+        Pair<Dataset<Row>, ITQueryMetrics> pair = queryCube(prj, sql, null);
+        return pair;
     }
 
-    public static Dataset<Row> queryCube(String prj, String sql) throws SQLException {
+    public static Pair<Dataset<Row>, ITQueryMetrics> queryCube(String prj, String sql) throws SQLException {
         return queryCube(prj, sql, null);
     }
 
-    public static Dataset<Row> queryCube(String prj, String sql, List<String> parameters) throws SQLException {
+    public static Pair<Dataset<Row>, ITQueryMetrics> queryCube(String prj, String sql, List<String> parameters) throws SQLException {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
+        ITQueryMetrics metrics = null;
         try {
             conn = QueryConnection.getConnection(prj);
             stmt = conn.prepareStatement(sql);
@@ -463,13 +581,116 @@ public class NExecAndComp {
                 stmt.setString(i, parameters.get(i - 1).trim());
             }
             rs = stmt.executeQuery();
+            metrics = collectQueryMetrics(prj, rs);
         } finally {
             DBUtils.closeQuietly(rs);
             DBUtils.closeQuietly(stmt);
             DBUtils.closeQuietly(conn);
             //KylinSparkEnv.cleanCompute();
         }
-        return (Dataset<Row>) QueryContextFacade.current().getDataset();
+        return new Pair<>((Dataset<Row>) QueryContextFacade.current().getDataset(), metrics);
+    }
+
+    private static ITQueryMetrics collectQueryMetrics(String project, ResultSet resultSet) throws SQLException{
+        Pair<List<List<String>>, List<SelectedColumnMeta>> r = createResponseFromResultSet(resultSet);
+        SQLResponse response = buildSqlResponse(project, false, r.getFirst(), r.getSecond());
+        long scanRowCount = response.getTotalScanCount();
+        long scanFiles = response.getTotalScanFiles();
+        long scanBytes = response.getTotalScanBytes();
+        long hitCuboid = 0;
+        scanRowCount = 0;
+        scanFiles = 0;
+        scanBytes = 0;
+        try {
+            hitCuboid = OLAPContext.getThreadLocalContexts().iterator().next().storageContext.getCuboid().getId();
+        } catch (NullPointerException e) {
+            //e.printStackTrace();
+            logger.error("Query not hit cuboid!");
+        }
+        return new ITQueryMetrics(scanRowCount, scanBytes, scanFiles, hitCuboid);
+    }
+
+    private static Pair<List<List<String>>, List<SelectedColumnMeta>> createResponseFromResultSet(ResultSet resultSet) throws SQLException{
+        List<List<String>> results = Lists.newArrayList();
+        List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
+
+        ResultSetMetaData metaData = resultSet.getMetaData();
+        int columnCount = metaData.getColumnCount();
+
+        // Fill in selected column meta
+        for (int i = 1; i <= columnCount; ++i) {
+            columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData.isCaseSensitive(i),
+                    metaData.isSearchable(i), metaData.isCurrency(i), metaData.isNullable(i), metaData.isSigned(i),
+                    metaData.getColumnDisplaySize(i), metaData.getColumnLabel(i), metaData.getColumnName(i),
+                    metaData.getSchemaName(i), metaData.getCatalogName(i), metaData.getTableName(i),
+                    metaData.getPrecision(i), metaData.getScale(i), metaData.getColumnType(i),
+                    metaData.getColumnTypeName(i), metaData.isReadOnly(i), metaData.isWritable(i),
+                    metaData.isDefinitelyWritable(i)));
+        }
+
+        // fill in results
+        while (resultSet.next()) {
+            List<String> oneRow = Lists.newArrayListWithCapacity(columnCount);
+            for (int i = 0; i < columnCount; i++) {
+                oneRow.add((resultSet.getString(i + 1)));
+            }
+
+            results.add(oneRow);
+        }
+
+        return new Pair<>(results, columnMetas);
+    }
+
+    private static SQLResponse buildSqlResponse(String projectName, Boolean isPushDown, List<List<String>> results,
+                                         List<SelectedColumnMeta> columnMetas) {
+        return buildSqlResponse(projectName, isPushDown, results, columnMetas, false, null);
+    }
+
+    private static SQLResponse buildSqlResponse(String projectName, Boolean isPushDown, List<List<String>> results,
+                                         List<SelectedColumnMeta> columnMetas, boolean isException, String exceptionMessage) {
+
+        boolean isPartialResult = false;
+
+        List<String> realizations = Lists.newLinkedList();
+        StringBuilder cubeSb = new StringBuilder();
+        StringBuilder logSb = new StringBuilder("Processed rows for each storageContext: ");
+        QueryContext queryContext = QueryContextFacade.current();
+        if (OLAPContext.getThreadLocalContexts() != null) { // contexts can be null in case of 'explain plan for'
+            for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
+                String realizationName = "NULL";
+                int realizationType = -1;
+                if (ctx.realization != null) {
+                    isPartialResult |= ctx.storageContext.isPartialResultReturned();
+                    if (cubeSb.length() > 0) {
+                        cubeSb.append(",");
+                    }
+                    cubeSb.append(ctx.realization.getCanonicalName());
+                    logSb.append(ctx.storageContext.getProcessedRowCount()).append(" ");
+
+                    realizationName = ctx.realization.getName();
+                    realizationType = ctx.realization.getStorageType();
+
+                    realizations.add(realizationName);
+                }
+                queryContext.setContextRealization(ctx.id, realizationName, realizationType);
+            }
+        }
+        logger.info(logSb.toString());
+
+        SQLResponse response = new SQLResponse(columnMetas, results, cubeSb.toString(), 0, isException,
+                exceptionMessage, isPartialResult, isPushDown);
+        response.setTotalScanCount(queryContext.getScannedRows());
+        response.setTotalScanFiles((queryContext.getScanFiles() < 0) ? -1 :
+                queryContext.getScanFiles());
+        response.setMetadataTime((queryContext.getMedataTime() < 0) ? -1 :
+                queryContext.getMedataTime());
+        response.setTotalSparkScanTime((queryContext.getScanTime() < 0) ? -1 :
+                queryContext.getScanTime());
+        response.setTotalScanBytes((queryContext.getScannedBytes() < 0) ?
+                (queryContext.getSourceScanBytes() < 1 ? -1 : queryContext.getSourceScanBytes()) : queryContext.getScannedBytes());
+        response.setCubeSegmentStatisticsList(queryContext.getCubeSegmentStatisticsResultList());
+        response.setSparkPool(queryContext.getSparkPool());
+        return response;
     }
 
     private static String getCompareSql(String originSqlPath) {
@@ -537,5 +758,57 @@ public class NExecAndComp {
         logger.trace("The actual sql executed is: " + ret);
 
         return ret;
+    }
+
+    static class ITQueryMetrics {
+        private long scanRowCount;
+        private long scanBytes;
+        private long scanFiles;
+        private long cuboidId;
+
+        public ITQueryMetrics() {}
+
+        public ITQueryMetrics(long scanRowCount, long scanBytes, long scanFiles, long cuboidId) {
+            this.scanRowCount = scanRowCount;
+            this.scanBytes = scanBytes;
+            this.scanFiles = scanFiles;
+            this.cuboidId = cuboidId;
+        }
+
+        public long getScanRowCount() {
+            return scanRowCount;
+        }
+
+        public void setScanRowCount(long scanRowCount) {
+            this.scanRowCount = scanRowCount;
+        }
+
+        public long getScanBytes() {
+            return scanBytes;
+        }
+
+        public void setScanBytes(long scanBytes) {
+            this.scanBytes = scanBytes;
+        }
+
+        public long getScanFiles() {
+            return scanFiles;
+        }
+
+        public void setScanFiles(long scanFiles) {
+            this.scanFiles = scanFiles;
+        }
+
+        public long getCuboidId() {
+            return cuboidId;
+        }
+
+        public void setCuboidId(long cuboidId) {
+            this.cuboidId = cuboidId;
+        }
+
+        public boolean equals(ITQueryMetrics metrics) {
+            return this.cuboidId == metrics.getCuboidId();
+        }
     }
 }

@@ -24,3 +24,4 @@ select fact.lstg_format_name from
  
  order by CASE WHEN fact.lstg_format_name IS NULL THEN 'sdf' ELSE fact.lstg_format_name END 
  
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}

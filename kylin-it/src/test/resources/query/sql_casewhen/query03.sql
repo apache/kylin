@@ -23,3 +23,4 @@ WHERE  (CASE "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME"
 	WHEN 'FP-GTC' THEN '222' 
 	ELSE '999' END) = '111'
 GROUP BY "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}

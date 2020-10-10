@@ -24,3 +24,4 @@ select sum(price) as GMV, count(*) as TRANS_CNT  FROM test_kylin_fact
  AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id
 where test_kylin_fact.cal_dt < DATE '2012-05-01' or test_kylin_fact.cal_dt > DATE '2013-05-01'
  
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}

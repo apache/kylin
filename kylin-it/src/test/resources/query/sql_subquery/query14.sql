@@ -19,4 +19,4 @@ from
 where
     lstg_format_name ='Auction'
 group by
-    lstg_format_name
+    lstg_format_name;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}

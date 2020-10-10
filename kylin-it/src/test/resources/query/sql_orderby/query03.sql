@@ -22,3 +22,4 @@ select lstg_format_name,
  from test_kylin_fact 
  group by lstg_format_name 
  order by sum(price)
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}

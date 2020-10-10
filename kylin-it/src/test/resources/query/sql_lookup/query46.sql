@@ -17,3 +17,4 @@
 --
 
 select count(*) as CNT  from test_category_groupings
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}

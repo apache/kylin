@@ -27,3 +27,4 @@ inner JOIN edw.test_cal_dt as test_cal_dt
 group by test_kylin_fact.cal_dt 
 order by 1 desc 
 limit 4
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}

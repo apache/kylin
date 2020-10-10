@@ -25,4 +25,4 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  inner JOIN edw.test_sites as test_sites
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
  where test_cal_dt.week_beg_dt between DATE '2013-09-01' and DATE '2013-10-01' and (lstg_format_name='FP-GTC' or 'a' = 'b')
- group by test_cal_dt.week_beg_dt, test_kylin_fact.seller_id order by GMV desc limit 10
+ group by test_cal_dt.week_beg_dt, test_kylin_fact.seller_id order by GMV desc limit 10;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}

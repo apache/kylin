@@ -11,3 +11,4 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  
  
 where upper(USER_DEFINED_FIELD3) like '%VIDEO GAME%'
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":2097151}

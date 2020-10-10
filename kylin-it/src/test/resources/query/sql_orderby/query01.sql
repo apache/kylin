@@ -30,3 +30,4 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  order by test_cal_dt.week_beg_dt   
 
  -- optiq 0.8 reports varchar instead of date on week_beg_dt and fail test case
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}

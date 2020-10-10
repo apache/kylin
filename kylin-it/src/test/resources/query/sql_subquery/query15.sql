@@ -26,4 +26,4 @@ WHERE
         FROM
             test_kylin_fact
         WHERE
-            lstg_format_name = 'ABIN')
+            lstg_format_name = 'ABIN');{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}

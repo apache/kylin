@@ -36,3 +36,4 @@ select test_kylin_fact.lstg_format_name, xxx.week_beg_dt , sum(test_kylin_fact.p
  group by test_kylin_fact.lstg_format_name, xxx.week_beg_dt 
 
 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":342016}

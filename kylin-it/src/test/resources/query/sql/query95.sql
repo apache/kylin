@@ -28,3 +28,4 @@ select meta_categ_name, count(1) as cnt, sum(price) as GMV
 
  where meta_categ_name not in ('Unknown', 'ToyHobbies', '', 'a', 'BookMagazines')
  group by meta_categ_name 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":65536}

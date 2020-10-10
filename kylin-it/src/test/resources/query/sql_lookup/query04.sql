@@ -17,3 +17,4 @@
 --
 
 select SITE_NAME, SITE_ID from edw.test_sites
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}

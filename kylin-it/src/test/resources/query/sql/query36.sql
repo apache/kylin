@@ -32,3 +32,4 @@ SELECT
  where test_kylin_fact.seller_id = 10000002 or test_kylin_fact.lstg_format_name = 'FP-non GTC' 
  group by 
  test_category_groupings.meta_categ_name 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":2097151}

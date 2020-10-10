@@ -151,7 +151,7 @@ object KylinSession extends Logging {
         sparkConf.set("hive.metastore.sasl.enabled", "true")
       }
 
-      conf.getSparkConf.asScala.foreach {
+      conf.getQuerySparkConf.asScala.foreach {
         case (k, v) =>
           sparkConf.set(k, v)
       }

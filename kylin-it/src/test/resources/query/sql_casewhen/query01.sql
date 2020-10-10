@@ -24,3 +24,4 @@ WHERE  ( NOT ( ( CASE
                    ELSE NULL 
                  END ) <> 0 ) ) 
 GROUP  BY lstg_format_name 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}

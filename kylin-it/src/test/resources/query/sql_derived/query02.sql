@@ -45,3 +45,4 @@ SELECT
  ,test_sites.site_name 
  ,test_sites.site_id 
  ,test_sites.cre_user 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":2097151}

@@ -30,4 +30,4 @@
  where test_kylin_fact.lstg_format_name='FP-GTC' 
  and test_cal_dt.week_beg_dt between DATE '2013-05-01' and DATE '2013-08-01' 
  and test_cal_dt.cal_dt between DATE '2013-06-01' and DATE '2013-09-01' 
- group by test_cal_dt.week_beg_dt 
+ group by test_cal_dt.week_beg_dt ;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}

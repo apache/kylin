@@ -19,3 +19,4 @@
 select cal_dt,leaf_categ_id as x, sum(price) as GMV 
  from test_kylin_fact 
  group by leaf_categ_id, cal_dt
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":507904}

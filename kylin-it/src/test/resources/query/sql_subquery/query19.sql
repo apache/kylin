@@ -36,3 +36,4 @@ select test_kylin_fact.lstg_format_name,sum(test_kylin_fact.price) as GMV
  group by test_kylin_fact.lstg_format_name
 
 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":342016}

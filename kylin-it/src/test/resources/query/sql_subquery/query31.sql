@@ -35,3 +35,4 @@ on t1.week_beg_dt=test_cal_dt.week_beg_dt
  
   on t1.lstg_site_id = test_sites.site_id
 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}

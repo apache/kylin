@@ -35,3 +35,4 @@ SELECT  SUM("TEST_KYLIN_FACT"."PRICE") AS "sum_PRICE_ok"
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
      GROUP BY "TEST_KYLIN_FACT"."CAL_DT"   ORDER BY 2 DESC   LIMIT 10  ) "t0" ON ("TEST_KYLIN_FACT"."CAL_DT" = "t0"."none_CAL_DT_ok") 
     GROUP BY "TEST_KYLIN_FACT"."CAL_DT"
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}

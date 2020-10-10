@@ -23,3 +23,4 @@ select * from (  select cal_dt, lstg_format_name, sum(price) as GMV,
   group by cal_dt, lstg_format_name,SLR_SEGMENT_CD
 )t
 where cal_dt between '2013-01-06' and '2013-01-15'
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}

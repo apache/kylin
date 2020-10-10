@@ -33,3 +33,4 @@ FROM
       ON test_kylin_fact.lstg_site_id = test_sites.site_id
 ) t
 group by week_beg_dt 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}

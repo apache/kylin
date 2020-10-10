@@ -25,3 +25,4 @@ select  test_kylin_fact.cal_dt, seller_id
  AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id 
  group by 
  test_kylin_fact.cal_dt, test_kylin_fact.seller_id order by sum(test_kylin_fact.price) desc limit 20
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}

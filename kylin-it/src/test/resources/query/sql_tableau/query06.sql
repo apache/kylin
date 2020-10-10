@@ -38,3 +38,4 @@ SELECT SUM("TableauSQL"."GMV") AS "sum_GMV_ok",
  ,test_category_groupings.categ_lvl3_name 
  ) "TableauSQL" 
  HAVING (COUNT(1) > 0) 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":376832}

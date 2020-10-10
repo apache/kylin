@@ -28,4 +28,4 @@ select meta_categ_name, count(1) as cnt, sum(price) as GMV
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
 
  where not ( meta_categ_name not in ('', 'a','Computers') and meta_categ_name not in ('Crafts','Computers'))
- group by meta_categ_name 
+ group by meta_categ_name ;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":65536}

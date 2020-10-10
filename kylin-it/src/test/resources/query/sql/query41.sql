@@ -28,3 +28,4 @@ SELECT
  group by 
  test_category_groupings.meta_categ_name 
  ,test_category_groupings.categ_lvl2_name 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":98304}

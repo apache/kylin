@@ -43,3 +43,4 @@ SELECT
  ,test_sites.site_name 
  ,test_seller_type_dim.seller_type_desc 
  
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":2097151}

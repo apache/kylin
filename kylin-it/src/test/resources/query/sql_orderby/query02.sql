@@ -23,3 +23,4 @@ select lstg_format_name,
  where lstg_format_name='FP-GTC' 
  group by lstg_format_name 
  order by lstg_format_name 
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}

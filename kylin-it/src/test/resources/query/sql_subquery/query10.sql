@@ -26,3 +26,4 @@ join
 (select leaf_categ_id, min(price) as min_price from test_kylin_fact group by leaf_categ_id) t3
 on t1.leaf_categ_id = t3.leaf_categ_id
 order by t1.leaf_categ_id
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}
