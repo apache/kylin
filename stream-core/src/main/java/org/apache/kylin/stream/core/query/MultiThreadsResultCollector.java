@@ -148,7 +148,7 @@ public class MultiThreadsResultCollector extends ResultCollector {
                 result.startRead();
                 for (Record record : result) {
                     offserTimeout = deadline - System.currentTimeMillis();
-                    if (!recordCachePool.offer(record, offserTimeout, TimeUnit.MILLISECONDS)) {
+                    if (!recordCachePool.offer(record.copy(), offserTimeout, TimeUnit.MILLISECONDS)) {
                         logger.warn("Timeout when offer to recordCachePool, deadline: {}, offser Timeout: {}", deadline, offserTimeout);
                         break;
                     }
