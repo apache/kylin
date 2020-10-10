@@ -8,7 +8,7 @@ services:
     env_file:
       - read-hbase-distributed-local.env
     environment:
-      SERVICE_PRECONDITION: "read-namenode:50070 read-datanode1:50075 read-datanode2:50075 read-datanode3:50075 read-zookeeper:2181"
+      SERVICE_PRECONDITION: "read-namenode:${HADOOP_WEBHDFS_PORT:-50070} read-datanode1:${HADOOP_DN_PORT:-50075} read-datanode2:${HADOOP_DN_PORT:-50075} read-datanode3:${HADOOP_DN_PORT:-50075} read-zookeeper:2181"
     networks:
       - write_kylin
     ports:
@@ -22,7 +22,7 @@ services:
       - read-hbase-distributed-local.env
     environment:
       HBASE_CONF_hbase_regionserver_hostname: read-hbase-regionserver1
-      SERVICE_PRECONDITION: "read-namenode:50070 read-datanode1:50075 read-datanode2:50075 read-datanode3:50075 read-zookeeper:2181 read-hbase-master:16010"
+      SERVICE_PRECONDITION: "read-namenode:${HADOOP_WEBHDFS_PORT:-50070} read-datanode1:${HADOOP_DN_PORT:-50075} read-datanode2:${HADOOP_DN_PORT:-50075} read-datanode3:${HADOOP_DN_PORT:-50075} read-zookeeper:2181 read-hbase-master:16010"
     networks:
       - write_kylin
 
@@ -34,7 +34,7 @@ services:
       - read-hbase-distributed-local.env
     environment:
       HBASE_CONF_hbase_regionserver_hostname: read-hbase-regionserver2
-      SERVICE_PRECONDITION: "read-namenode:50070 read-datanode1:50075 read-datanode2:50075 read-datanode3:50075 read-zookeeper:2181 read-hbase-master:16010"
+      SERVICE_PRECONDITION: "read-namenode:${HADOOP_WEBHDFS_PORT:-50070} read-datanode1:${HADOOP_DN_PORT:-50075} read-datanode2:${HADOOP_DN_PORT:-50075} read-datanode3:${HADOOP_DN_PORT:-50075} read-zookeeper:2181 read-hbase-master:16010"
     networks:
       - write_kylin
 

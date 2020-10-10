@@ -8,7 +8,7 @@ services:
     env_file:
       - write-hbase-distributed-local.env
     environment:
-      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 write-zookeeper:2181"
+      SERVICE_PRECONDITION: "write-namenode:${HADOOP_WEBHDFS_PORT:-50070} write-datanode1:${HADOOP_DN_PORT:-50075} write-datanode2:${HADOOP_DN_PORT:-50075} write-datanode3:${HADOOP_DN_PORT:-50075} write-zookeeper:2181"
     networks:
       - write_kylin
     ports:
@@ -22,7 +22,7 @@ services:
       - write-hbase-distributed-local.env
     environment:
       HBASE_CONF_hbase_regionserver_hostname: write-hbase-regionserver1
-      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 write-zookeeper:2181 write-hbase-master:16010"
+      SERVICE_PRECONDITION: "write-namenode:${HADOOP_WEBHDFS_PORT:-50070} write-datanode1:${HADOOP_DN_PORT:-50075} write-datanode2:${HADOOP_DN_PORT:-50075} write-datanode3:${HADOOP_DN_PORT:-50075} write-zookeeper:2181 write-hbase-master:16010"
     networks:
       - write_kylin
 
@@ -34,7 +34,7 @@ services:
       - write-hbase-distributed-local.env
     environment:
       HBASE_CONF_hbase_regionserver_hostname: write-hbase-regionserver2
-      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 write-zookeeper:2181 write-hbase-master:16010"
+      SERVICE_PRECONDITION: "write-namenode:${HADOOP_WEBHDFS_PORT:-50070} write-datanode1:${HADOOP_DN_PORT:-50075} write-datanode2:${HADOOP_DN_PORT:-50075} write-datanode3:${HADOOP_DN_PORT:-50075} write-zookeeper:2181 write-hbase-master:16010"
     networks:
       - write_kylin
 

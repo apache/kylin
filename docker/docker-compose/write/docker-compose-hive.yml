@@ -10,7 +10,7 @@ services:
     environment:
       HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:mysql://metastore-db/metastore"
       SERVICE_PRECONDITION: "write-hive-metastore:9083"
-      HIVE_SITE_CONF_javax_jdo_option_ConnectionDriverName: com.mysql.cj.jdbc.Driver
+      HIVE_SITE_CONF_javax_jdo_option_ConnectionDriverName: com.mysql.jdbc.Driver
     networks:
       - write_kylin
     ports:
@@ -23,8 +23,8 @@ services:
     env_file:
       - write-hadoop.env
     environment:
-      SERVICE_PRECONDITION: "write-namenode:50070 write-datanode1:50075 write-datanode2:50075 write-datanode3:50075 metastore-db:3306"
-      HIVE_SITE_CONF_javax_jdo_option_ConnectionDriverName: com.mysql.cj.jdbc.Driver
+      SERVICE_PRECONDITION: "write-namenode:${HADOOP_WEBHDFS_PORT:-50070} write-datanode1:${HADOOP_DN_PORT:-50075} write-datanode2:${HADOOP_DN_PORT:-50075} write-datanode3:${HADOOP_DN_PORT:-50075} metastore-db:3306"
+      HIVE_SITE_CONF_javax_jdo_option_ConnectionDriverName: com.mysql.jdbc.Driver
     command: /opt/hive/bin/hive --service metastore
     networks:
       - write_kylin

@@ -132,3 +132,10 @@ export KAFKA_IMAGE=bitnami/kafka:2.0.0
 export LDAP_IMAGE=osixia/openldap:1.3.0
 export CLIENT_IMAGETAG=apachekylin/kylin-client:hadoop_${HADOOP_VERSION}_hive_${HIVE_VERSION}_hbase_${HBASE_VERSION}
 
+if [[ $HADOOP_VERSION < "3" ]]; then
+  export HADOOP_WEBHDFS_PORT=50070
+  export HADOOP_DN_PORT=50075
+elif [[ $HADOOP_VERSION > "3" ]]; then
+  export HADOOP_WEBHDFS_PORT=9870
+  export HADOOP_DN_PORT=9864
+fi
