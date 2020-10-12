@@ -22,6 +22,7 @@ import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.ZKUtil;
 import org.apache.kylin.engine.mr.common.CubeJobLockUtil;
 import org.apache.kylin.shaded.com.google.common.base.Strings;
+import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
@@ -400,6 +401,11 @@ public class BuildJobSubmitter implements Runnable {
     @NotAtomicIdempotent
     boolean submitSegmentBuildJob(String cubeName, String segmentName) {
         logger.info("Try submit streaming segment build job, cube:{} segment:{}", cubeName, segmentName);
+        boolean isFull = DefaultScheduler.getInstance().getFetcherRunner().isJobPoolFull();
+        if (isFull) {
+            logger.info("Job engine is full, hold {}.", segmentName);
+            return false;
+        }
         CubeInstance cubeInstance = coordinator.getCubeManager().getCube(cubeName);
         try {
             // Step 1. create a new segment if not exists

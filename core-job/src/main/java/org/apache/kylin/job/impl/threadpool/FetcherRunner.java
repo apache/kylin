@@ -50,7 +50,7 @@ public abstract class FetcherRunner implements Runnable {
         this.jobExecutor = jobExecutor;
     }
 
-    protected boolean isJobPoolFull() {
+    public boolean isJobPoolFull() {
         Map<String, Executable> runningJobs = context.getRunningJobs();
         if (runningJobs.size() >= jobEngineConfig.getMaxConcurrentJobLimit()) {
             logger.warn("There are too many jobs running, Job Fetch will wait until next schedule time");
