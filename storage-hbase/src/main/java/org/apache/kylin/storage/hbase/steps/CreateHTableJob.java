@@ -32,8 +32,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.KeyValueUtil;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
@@ -117,11 +120,22 @@ public class CreateHTableJob extends AbstractHadoopJob {
         splitKeys = getRegionSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment,
                 partitionFilePath.getParent());
 
-        CubeHTableUtil.createHTable(cubeSegment, splitKeys, true);
+        HTableDescriptor tableDesc = CubeHTableUtil.createHTable(cubeSegment, splitKeys, true);
 
         // export configuration in advance to avoid connecting to hbase from spark
         if (cubeDesc.getEngineType() == IEngineAware.ID_SPARK || cubeDesc.getEngineType() == IEngineAware.ID_FLINK) {
             exportHBaseConfiguration(cubeSegment.getStorageLocationIdentifier());
+        }
+
+        if(cube.getConfig().isCubeOnSSD()){
+            TableName tableName = tableDesc.getTableName();
+            Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
+            Path path = new Path(hbaseConf.get("hbase.rootdir") + "/data/" + tableName.getNamespaceAsString() + "/" + tableName.getNameAsString());
+            FileSystem fs = HadoopUtil.getFileSystem(path, hbaseConf);
+            if(fs instanceof DistributedFileSystem){
+                DistributedFileSystem dfs = (DistributedFileSystem) fs;
+                dfs.setStoragePolicy(path, "ALL_SSD");
+            }
         }
         return 0;
     }
