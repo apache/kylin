@@ -25,12 +25,12 @@
     <name>Apache Kylin - kylin External</name>
     <description>Apache Kylin - External</description>
 
-    <parent>
-        <artifactId>kylin</artifactId>
-        <groupId>org.apache.kylin</groupId>
-        <version>3.1.1-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
+<!--    <parent>-->
+<!--        <artifactId>kylin</artifactId>-->
+<!--        <groupId>org.apache.kylin</groupId>-->
+<!--        <version>3.1.1-SNAPSHOT</version>-->
+<!--        <relativePath>../pom.xml</relativePath>-->
+<!--    </parent>-->
 
     <build>
         <plugins>
