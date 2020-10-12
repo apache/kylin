@@ -20,4 +20,4 @@ select sum(PRICE) as GMV, LSTG_FORMAT_NAME as FORMAT_NAME
 from test_kylin_fact
 where (LSTG_FORMAT_NAME in ('ABIN')) or  (LSTG_FORMAT_NAME>='FP-GTC' and LSTG_FORMAT_NAME<='Others')
 group by LSTG_FORMAT_NAME
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}

@@ -22,4 +22,4 @@
   select test_kylin_fact.lstg_format_name, sum(price) as GMV, count(price) as GMV_CNT
  from test_kylin_fact where test_kylin_fact.lstg_format_name > 'AB'
  group by test_kylin_fact.lstg_format_name having count(price) > 2
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}

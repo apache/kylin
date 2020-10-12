@@ -16,6 +16,5 @@
 -- limitations under the License.
 --
 
-SELECT distinct cal_dt from test_kylin_fact 
- 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}
+SELECT distinct cal_dt from test_kylin_fact
+;{"scanRowCount":731,"scanBytes":215217,"scanFiles":1,"cuboidId":262144}

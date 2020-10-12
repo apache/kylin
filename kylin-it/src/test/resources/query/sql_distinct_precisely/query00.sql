@@ -22,4 +22,4 @@ select lstg_format_name, cal_dt,
  count(distinct TEST_COUNT_DISTINCT_BITMAP) as user_count
  from test_kylin_fact
  group by lstg_format_name, cal_dt
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}
+;{"scanRowCount":9287,"scanBytes":384041,"scanFiles":1,"cuboidId":276480}

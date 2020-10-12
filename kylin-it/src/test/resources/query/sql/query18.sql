@@ -30,6 +30,5 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  where test_cal_dt.week_beg_dt between DATE '2013-09-01' and DATE '2013-10-01' 
  and test_category_groupings.categ_lvl2_name='Comics' 
  group by test_cal_dt.week_beg_dt 
- ,test_category_groupings.meta_categ_name 
- 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":360448}
+ ,test_category_groupings.meta_categ_name
+;{"scanRowCount":9960,"scanBytes":391620,"scanFiles":2,"cuboidId":360448}

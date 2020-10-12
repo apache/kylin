@@ -32,5 +32,4 @@ group by "TEST_KYLIN_FACT"."ORDER_ID",
            when ("TEST_KYLIN_FACT"."LSTG_FORMAT_NAME"='ABIN') = (1 = 1) then 'D'
            else 'N'
        end
-
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":2097151}
+;{"scanRowCount":10000,"scanBytes":574990,"scanFiles":1,"cuboidId":2097151}

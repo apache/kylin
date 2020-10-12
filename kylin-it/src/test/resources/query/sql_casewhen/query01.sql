@@ -23,5 +23,5 @@ WHERE  ( NOT ( ( CASE
                    WHEN NOT ( lstg_format_name IS NULL ) THEN 0 
                    ELSE NULL 
                  END ) <> 0 ) ) 
-GROUP  BY lstg_format_name 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+GROUP  BY lstg_format_name
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}

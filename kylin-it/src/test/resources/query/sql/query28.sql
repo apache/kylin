@@ -27,5 +27,5 @@ SELECT
  inner JOIN edw.test_sites as test_sites 
  ON test_kylin_fact.lstg_site_id = test_sites.site_id 
  inner JOIN edw.test_seller_type_dim as test_seller_type_dim 
- ON test_kylin_fact.slr_segment_cd = test_seller_type_dim.seller_type_cd 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}
+ ON test_kylin_fact.slr_segment_cd = test_seller_type_dim.seller_type_cd
+;{"scanRowCount":731,"scanBytes":215217,"scanFiles":1,"cuboidId":262144}

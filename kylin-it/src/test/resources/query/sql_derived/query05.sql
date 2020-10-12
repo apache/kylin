@@ -25,5 +25,5 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  inner JOIN edw.test_sites as test_sites
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
  GROUP BY 
- test_sites.site_name, test_kylin_fact.lstg_format_name 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+ test_sites.site_name, test_kylin_fact.lstg_format_name
+;{"scanRowCount":562,"scanBytes":190822,"scanFiles":2,"cuboidId":14336}

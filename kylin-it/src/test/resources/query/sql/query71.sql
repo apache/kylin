@@ -21,5 +21,5 @@ select lstg_format_name,
  count(1) as TRANS_CNT 
  from test_kylin_fact 
  where "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" in ('Auction', 'ABIN') and (CASE WHEN ("TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" IN ('Auction', 'FP-GTC')) THEN 'Auction' ELSE "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" END) = 'Auction'
- group by lstg_format_name 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+ group by lstg_format_name
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}

@@ -20,4 +20,5 @@ sum(sum(price)) over(partition by lstg_format_name,cal_dt),
 max(sum(price)) over(partition by lstg_format_name,cal_dt),
 min(sum(price)) over(partition by lstg_format_name)
 from test_kylin_fact
-group by cal_dt, lstg_format_name;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}
+group by cal_dt, lstg_format_name
+;{"scanRowCount":9287,"scanBytes":384041,"scanFiles":1,"cuboidId":276480}

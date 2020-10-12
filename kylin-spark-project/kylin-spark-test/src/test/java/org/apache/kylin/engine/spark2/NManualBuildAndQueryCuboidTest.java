@@ -84,6 +84,12 @@ public class NManualBuildAndQueryCuboidTest extends NBuildAndQueryTest {
         compareCuboidParquetWithSparkSql("ci_left_join_cube");
     }
 
+    /**
+     * avoid to run the test case in parent class 'NBuildAndQueryTest'
+     */
+    @Override
+    public void verifySqlStandard() throws Exception {}
+
     private void compareCuboidParquetWithSparkSql(String cubeName) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 

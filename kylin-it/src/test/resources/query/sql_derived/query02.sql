@@ -44,5 +44,5 @@ SELECT
  ,test_kylin_fact.lstg_format_name 
  ,test_sites.site_name 
  ,test_sites.site_id 
- ,test_sites.cre_user 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":2097151}
+ ,test_sites.cre_user
+;{"scanRowCount":10993,"scanBytes":574990,"scanFiles":3,"cuboidId":2097151}

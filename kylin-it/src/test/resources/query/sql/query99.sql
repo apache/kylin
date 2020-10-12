@@ -29,6 +29,5 @@ SELECT
  where test_category_groupings.meta_categ_name='Collectibles' 
  group by  test_kylin_fact.seller_id
  ,test_category_groupings.meta_categ_name 
- ,test_kylin_fact.lstg_format_name 
- 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":2097151}
+ ,test_kylin_fact.lstg_format_name
+;{"scanRowCount":10000,"scanBytes":574990,"scanFiles":1,"cuboidId":2097151}

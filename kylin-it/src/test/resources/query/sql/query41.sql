@@ -27,5 +27,5 @@ SELECT
  AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id 
  group by 
  test_category_groupings.meta_categ_name 
- ,test_category_groupings.categ_lvl2_name 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":98304}
+ ,test_category_groupings.categ_lvl2_name
+;{"scanRowCount":106,"scanBytes":186556,"scanFiles":1,"cuboidId":98304}

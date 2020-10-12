@@ -34,4 +34,4 @@ inner join
  ON test_kylin_fact.lstg_site_id = test_sites.site_id group by test_kylin_fact.cal_dt order by 2 desc limit 7
 ) cal_2 on fact.cal_dt = cal_2.mmm
 group by fact.cal_dt
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}
+;{"scanRowCount":2924,"scanBytes":430434,"scanFiles":4,"cuboidId":262144}

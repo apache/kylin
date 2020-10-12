@@ -19,5 +19,5 @@
 select lstg_format_name, sum(price) as GMV 
  from test_kylin_fact 
  where lstg_format_name='FP-GTC' 
- group by lstg_format_name 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+ group by lstg_format_name
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}

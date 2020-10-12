@@ -32,5 +32,5 @@ FROM
     inner JOIN edw.test_sites as test_sites
       ON test_kylin_fact.lstg_site_id = test_sites.site_id
 ) t
-group by week_beg_dt 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}
+group by week_beg_dt
+;{"scanRowCount":1462,"scanBytes":215217,"scanFiles":2,"cuboidId":262144}

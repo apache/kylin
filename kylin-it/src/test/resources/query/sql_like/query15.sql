@@ -1,4 +1,3 @@
-
 select USER_DEFINED_FIELD3 as abc
  
  from test_kylin_fact 
@@ -11,4 +10,4 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  
  
 where lower(USER_DEFINED_FIELD3) like '%Video Game%'
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":2097151}
+;{"scanRowCount":11137,"scanBytes":574990,"scanFiles":4,"cuboidId":2097151}

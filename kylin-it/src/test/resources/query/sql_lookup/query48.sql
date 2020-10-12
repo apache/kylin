@@ -17,4 +17,4 @@
 --
 
 select count(*) as CNT from edw.test_sites
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}
+;{"scanRowCount":262,"scanBytes":-1,"scanFiles":1,"cuboidId":-1}

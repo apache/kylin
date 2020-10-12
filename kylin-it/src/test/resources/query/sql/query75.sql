@@ -19,5 +19,5 @@
 select lstg_format_name, sum(price) as GMV 
  from test_kylin_fact 
  where (NOT ((CASE WHEN (lstg_format_name IS NULL) THEN 1 WHEN NOT (lstg_format_name IS NULL) THEN 0 ELSE NULL END) <> 0))
- group by lstg_format_name 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+ group by lstg_format_name
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}

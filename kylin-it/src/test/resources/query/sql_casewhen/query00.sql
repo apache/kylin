@@ -24,5 +24,5 @@ WHERE  (
 WHEN 'FOO' THEN 'NO' ELSE "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" END) 
 
 > 'A')
-GROUP BY "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+GROUP BY "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME"
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}

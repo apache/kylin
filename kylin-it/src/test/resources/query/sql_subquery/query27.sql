@@ -33,7 +33,5 @@ select test_kylin_fact.lstg_format_name, xxx.week_beg_dt , sum(test_kylin_fact.p
 
 
  where test_category_groupings.meta_categ_name  <> 'Baby'
- group by test_kylin_fact.lstg_format_name, xxx.week_beg_dt 
-
-
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":342016}
+ group by test_kylin_fact.lstg_format_name, xxx.week_beg_dt
+;{"scanRowCount":10669,"scanBytes":386732,"scanFiles":2,"cuboidId":342016}

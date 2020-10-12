@@ -17,4 +17,4 @@
 --
 
 select SELLER_TYPE_DESC, SELLER_TYPE_CD from edw.test_seller_type_dim
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}
+;{"scanRowCount":8,"scanBytes":-1,"scanFiles":1,"cuboidId":-1}

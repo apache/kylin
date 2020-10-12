@@ -17,4 +17,4 @@
 --
 
 select count(distinct META_CATEG_NAME) as CNT ,max(META_CATEG_NAME) as y from test_category_groupings
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}
+;{"scanRowCount":144,"scanBytes":-1,"scanFiles":1,"cuboidId":-1}

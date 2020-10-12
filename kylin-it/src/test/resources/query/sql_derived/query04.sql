@@ -16,6 +16,5 @@
 -- limitations under the License.
 --
 
-SELECT site_id, site_name, cre_user from edw.test_sites 
- 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}
+SELECT site_id, site_name, cre_user from edw.test_sites
+;{"scanRowCount":262,"scanBytes":-1,"scanFiles":1,"cuboidId":-1}

@@ -19,4 +19,5 @@
 select upper(lstg_format_name) as lstg_format_name, count(*) as cnt from test_kylin_fact
 where lower(lstg_format_name)='auction' and substring(lstg_format_name,1,3) in ('Auc') and upper(lstg_format_name) > 'AAAA' and
 upper(lstg_format_name) like '%UC%' and char_length(lstg_format_name) < 10 and char_length(lstg_format_name) > 3 and lstg_format_name||'a'='Auctiona'
-group by lstg_format_name;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+group by lstg_format_name
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}
