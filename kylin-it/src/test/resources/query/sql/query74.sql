@@ -17,4 +17,4 @@
 --
 
 select min("t"."s") as min_x, max("t"."s") as max_x from (select max(price) as "s" from test_kylin_fact group by lstg_format_name) "t" having ( count(1)  > 0)
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}

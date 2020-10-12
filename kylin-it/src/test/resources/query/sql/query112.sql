@@ -26,4 +26,4 @@ FROM test_kylin_fact
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
 WHERE test_cal_dt.WEEK_BEG_DT >= '2001-09-09'
  AND test_cal_dt.WEEK_BEG_DT <= '2018-05-16'
- ;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}
+;{"scanRowCount":1462,"scanBytes":215217,"scanFiles":2,"cuboidId":262144}

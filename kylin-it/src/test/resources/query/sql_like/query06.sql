@@ -31,4 +31,4 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  
 where META_CATEG_NAME like '%ab%' and META_CATEG_NAME > 'A'
 group by META_CATEG_NAME
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":65536}
+;{"scanRowCount":45,"scanBytes":150634,"scanFiles":1,"cuboidId":65536}

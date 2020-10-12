@@ -44,6 +44,5 @@ SELECT
  ,test_category_groupings.categ_lvl3_name 
  ,test_kylin_fact.lstg_format_name 
  ,test_sites.site_name 
- ,test_seller_type_dim.seller_type_desc 
- 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":2097151}
+ ,test_seller_type_dim.seller_type_desc
+;{"scanRowCount":11001,"scanBytes":574990,"scanFiles":4,"cuboidId":2097151}

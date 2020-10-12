@@ -30,4 +30,5 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  
  
 where lstg_format_name like '%BIN%' and lstg_format_name > 'A'
-group by lstg_format_name;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+group by lstg_format_name
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}

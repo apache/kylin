@@ -18,4 +18,5 @@
 
 select seller_id, lstg_site_id, count(DISTINCT leaf_categ_id) as CategCount
 from test_kylin_fact
-group by seller_id, lstg_site_id;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":2097151}
+group by seller_id, lstg_site_id
+;{"scanRowCount":10000,"scanBytes":574990,"scanFiles":1,"cuboidId":2097151}

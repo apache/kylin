@@ -22,4 +22,4 @@ inner join (
 select count(1) as cnt, min(cal_dt) as "mmm",  cal_dt as dt from test_kylin_fact group by cal_dt order by 2 desc limit 10
 ) t0 on (fact.cal_dt = t0.dt) 
 group by cal_dt
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}
+;{"scanRowCount":1462,"scanBytes":430434,"scanFiles":2,"cuboidId":262144}

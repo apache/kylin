@@ -16,10 +16,5 @@
 -- limitations under the License.
 --
 
-select count(*) as CNT from edw.test_cal_dt 
-
-
-
-
-
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}
+select count(*) as CNT from edw.test_cal_dt
+;{"scanRowCount":731,"scanBytes":-1,"scanFiles":1,"cuboidId":-1}

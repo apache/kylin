@@ -35,4 +35,4 @@ where
   f.slr_segment_cd = min_seg
 group by
   f.lstg_format_name
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+;{"scanRowCount":600,"scanBytes":381644,"scanFiles":2,"cuboidId":14336}

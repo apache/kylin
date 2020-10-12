@@ -25,4 +25,4 @@
  group by test_kylin_fact.lstg_format_name, test_cal_dt.week_beg_dt 
  having sum(price)>500
  limit 1
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}
+;{"scanRowCount":10018,"scanBytes":384041,"scanFiles":2,"cuboidId":276480}

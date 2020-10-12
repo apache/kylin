@@ -16,5 +16,5 @@
 -- limitations under the License.
 --
 
-select distinct leaf_categ_id, site_id from test_category_groupings 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}
+select distinct leaf_categ_id, site_id from test_category_groupings
+;{"scanRowCount":144,"scanBytes":-1,"scanFiles":1,"cuboidId":-1}

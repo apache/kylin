@@ -23,4 +23,5 @@ select test_cal_dt.week_beg_dt, test_kylin_fact.lstg_format_name, test_category_
  inner JOIN test_category_groupings
  ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id
  where test_cal_dt.week_beg_dt is not null
- group by test_cal_dt.week_beg_dt, test_kylin_fact.lstg_format_name, test_category_groupings.meta_categ_name;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":342016}
+ group by test_cal_dt.week_beg_dt, test_kylin_fact.lstg_format_name, test_category_groupings.meta_categ_name
+;{"scanRowCount":10669,"scanBytes":386732,"scanFiles":2,"cuboidId":342016}

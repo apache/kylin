@@ -25,5 +25,5 @@ SELECT
  ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt
  inner JOIN test_category_groupings
  ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id
- AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}
+ AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id
+;{"scanRowCount":1462,"scanBytes":215217,"scanFiles":2,"cuboidId":262144}

@@ -22,4 +22,4 @@ left join EDW.TEST_CAL_DT AS TEST_CAL_DT on test_kylin_fact.cal_dt=test_cal_dt.c
 group by test_kylin_fact.cal_dt 
 order by 2 desc 
 limit 3
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}
+;{"scanRowCount":1462,"scanBytes":215217,"scanFiles":2,"cuboidId":262144}

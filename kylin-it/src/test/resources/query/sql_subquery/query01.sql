@@ -28,5 +28,5 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
  group by test_cal_dt.week_beg_dt 
  ) "TableauSQL" 
- HAVING COUNT(1)>0 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}
+ HAVING COUNT(1)>0
+;{"scanRowCount":1462,"scanBytes":215217,"scanFiles":2,"cuboidId":262144}

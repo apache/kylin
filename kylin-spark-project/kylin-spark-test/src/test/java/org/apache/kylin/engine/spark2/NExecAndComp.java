@@ -53,6 +53,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -120,6 +121,8 @@ public class NExecAndComp {
     public static void execAndCompareNew(List<Pair<String, String>> queries, String prj, CompareLevel compareLevel,
                                          String joinType, Map<String, CompareEntity> recAndQueryResult) {
         for (Pair<String, String> query : queries) {
+            // init QueryContext
+            QueryContextFacade.resetCurrent();
             logger.info("Exec and compare query ({}) :{}", joinType, query.getFirst());
 
             String sql = changeJoinType(query.getSecond(), joinType);
@@ -169,6 +172,8 @@ public class NExecAndComp {
     public static void execAndCompareNew2(List<Triple<String, String, ITQueryMetrics>> queries, String prj, CompareLevel compareLevel,
                                          String joinType, Map<String, CompareEntity> recAndQueryResult) throws IOException{
         for (Triple<String, String, ITQueryMetrics> query : queries) {
+            // init QueryContext
+            QueryContextFacade.resetCurrent();
             logger.info("Exec and compare query ({}) :{}", joinType, query.getFirst());
             String sql = changeJoinType(query.getSecond(), joinType);
 
@@ -179,7 +184,9 @@ public class NExecAndComp {
             ITQueryMetrics collectedMetrics = queryResult.getSecond();
             Dataset<Row> cubeResult = queryResult.getFirst();
             if(!checkQueryMetrics(query.getThird(), collectedMetrics)) {
-                logger.error("Query metrics! Please check you SQL:" + sql);
+                logger.error("Query metrics not match, excepted: {}, results: {} ! Please check " +
+                        "SQL: {} in {}", query.getThird(), collectedMetrics, sql,
+                        query.getFirst());
                 throw new IllegalArgumentException("Query metrics not match!");
             }
             addQueryPath2(recAndQueryResult, query.getFirst(), sql);
@@ -398,10 +405,20 @@ public class NExecAndComp {
         for (File sqlFile : sqlFiles) {
             String sqlStatement = FileUtils.readFileToString(sqlFile, "UTF-8").trim();
             int semicolonIndex = sqlStatement.lastIndexOf(";");
-            String sql = semicolonIndex != sqlStatement.length() - 1 ? sqlStatement.substring(0, semicolonIndex)
-                    : sqlStatement;
-            String metricsStr = sqlStatement.substring(semicolonIndex + 1);
-            ITQueryMetrics metrics = convertFromJson(metricsStr);
+            String sql = null;
+            ITQueryMetrics metrics = null;
+            if (semicolonIndex == -1) {
+                sql = sqlStatement;
+                metrics = new ITQueryMetrics();
+            } else {
+                sql = sqlStatement.substring(0, semicolonIndex);
+                if (semicolonIndex == (sqlStatement.length() - 1)) {
+                    metrics = new ITQueryMetrics();
+                } else {
+                    String metricsStr = sqlStatement.substring(semicolonIndex + 1);
+                    metrics = convertFromJson(metricsStr);
+                }
+            }
             ret.add(Triple.create(sqlFile.getCanonicalPath(), sql + '\n', metrics));
         }
         return ret;
@@ -581,7 +598,7 @@ public class NExecAndComp {
                 stmt.setString(i, parameters.get(i - 1).trim());
             }
             rs = stmt.executeQuery();
-            metrics = collectQueryMetrics(prj, rs);
+            metrics = collectQueryMetrics(prj, rs, sql);
         } finally {
             DBUtils.closeQuietly(rs);
             DBUtils.closeQuietly(stmt);
@@ -591,21 +608,22 @@ public class NExecAndComp {
         return new Pair<>((Dataset<Row>) QueryContextFacade.current().getDataset(), metrics);
     }
 
-    private static ITQueryMetrics collectQueryMetrics(String project, ResultSet resultSet) throws SQLException{
+    private static ITQueryMetrics collectQueryMetrics(String project, ResultSet resultSet,
+                                                      String sql) throws SQLException {
         Pair<List<List<String>>, List<SelectedColumnMeta>> r = createResponseFromResultSet(resultSet);
         SQLResponse response = buildSqlResponse(project, false, r.getFirst(), r.getSecond());
         long scanRowCount = response.getTotalScanCount();
         long scanFiles = response.getTotalScanFiles();
         long scanBytes = response.getTotalScanBytes();
-        long hitCuboid = 0;
-        scanRowCount = 0;
-        scanFiles = 0;
-        scanBytes = 0;
-        try {
-            hitCuboid = OLAPContext.getThreadLocalContexts().iterator().next().storageContext.getCuboid().getId();
-        } catch (NullPointerException e) {
-            //e.printStackTrace();
-            logger.error("Query not hit cuboid!");
+        long hitCuboid = -1;
+        Iterator<OLAPContext> olapContextIterator = OLAPContext.getThreadLocalContexts().iterator();
+        if (olapContextIterator.hasNext()) {
+            OLAPContext olapContext = olapContextIterator.next();
+            if (olapContext.storageContext.getCuboid() != null) {
+                hitCuboid = olapContext.storageContext.getCuboid().getId();
+            } else {
+                logger.warn("Query: ({}) not hit cuboid!", sql);
+            }
         }
         return new ITQueryMetrics(scanRowCount, scanBytes, scanFiles, hitCuboid);
     }
@@ -766,7 +784,12 @@ public class NExecAndComp {
         private long scanFiles;
         private long cuboidId;
 
-        public ITQueryMetrics() {}
+        public ITQueryMetrics() {
+            this.scanRowCount = -1L;
+            this.scanBytes = -1L;
+            this.scanFiles = -1L;
+            this.cuboidId = -1L;
+        }
 
         public ITQueryMetrics(long scanRowCount, long scanBytes, long scanFiles, long cuboidId) {
             this.scanRowCount = scanRowCount;
@@ -808,7 +831,19 @@ public class NExecAndComp {
         }
 
         public boolean equals(ITQueryMetrics metrics) {
-            return this.cuboidId == metrics.getCuboidId();
+            return this.cuboidId == metrics.getCuboidId()
+                    && this.scanFiles == metrics.getScanFiles()
+                    && this.scanRowCount == metrics.getScanRowCount();
+        }
+
+        @Override
+        public String toString() {
+            StringBuffer sb = new StringBuffer("QueryMetrics: ");
+            sb.append("cuboidId=").append(this.getCuboidId()).append(",");
+            sb.append("scanBytes=").append(this.getScanBytes()).append(",");
+            sb.append("scanFiles=").append(this.getScanFiles()).append(",");
+            sb.append("scanRowCount=").append(this.getScanRowCount());
+            return sb.toString();
         }
     }
 }

@@ -17,9 +17,4 @@
 --
 
 select CAL_DT, WEEK_BEG_DT from edw.test_cal_dt
-
-
-
-
-
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}
+;{"scanRowCount":731,"scanBytes":-1,"scanFiles":1,"cuboidId":-1}

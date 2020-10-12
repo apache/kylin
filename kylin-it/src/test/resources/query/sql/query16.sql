@@ -32,5 +32,5 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  group by test_cal_dt.week_beg_dt 
  ,test_category_groupings.meta_categ_name 
  ,test_category_groupings.categ_lvl2_name 
- ,test_category_groupings.categ_lvl3_name 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":376832}
+ ,test_category_groupings.categ_lvl3_name
+;{"scanRowCount":10251,"scanBytes":401062,"scanFiles":2,"cuboidId":376832}

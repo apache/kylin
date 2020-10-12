@@ -37,6 +37,4 @@ select test_kylin_fact.lstg_format_name, sum(test_kylin_fact.price) as GMV
  
  where yyy.meta_categ_name > ''
  group by test_kylin_fact.lstg_format_name
-
-
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":2097151}
+;{"scanRowCount":10875,"scanBytes":574990,"scanFiles":3,"cuboidId":2097151}

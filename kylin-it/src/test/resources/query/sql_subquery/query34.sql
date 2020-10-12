@@ -29,5 +29,4 @@
   where case when '3'='1' then test_kylin_fact.cal_dt < date'2012-04-01' else  test_cal_dt.week_beg_dt  > date'2012-04-01' end and lstg_format_name='FP-GTC' 
   
   group by case when '3'='1' then test_cal_dt.week_beg_dt  else   test_kylin_fact.cal_dt end
- 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}
+;{"scanRowCount":10018,"scanBytes":384041,"scanFiles":2,"cuboidId":276480}

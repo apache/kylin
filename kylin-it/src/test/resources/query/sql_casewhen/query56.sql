@@ -20,4 +20,4 @@
   SUM("TEST_KYLIN_FACT"."PRICE") AS "sum_PRICE_ok"
 FROM "TEST_KYLIN_FACT" "TEST_KYLIN_FACT"
 GROUP BY (CASE WHEN ("TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" =  'Auction') THEN 'Auction2' ELSE "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" END)
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}

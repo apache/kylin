@@ -22,4 +22,4 @@ from test_kylin_fact
 where DATE '2012-09-01' <= test_kylin_fact.cal_dt   and  test_kylin_fact.seller_id = 10000002
  group by test_kylin_fact.cal_dt,
 test_kylin_fact.seller_id
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":1310735}
+;{"scanRowCount":9928,"scanBytes":378744,"scanFiles":1,"cuboidId":1310735}

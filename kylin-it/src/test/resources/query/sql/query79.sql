@@ -17,4 +17,4 @@
 --
 
 select max(cal_dt) as cnt from test_kylin_fact
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}
+;{"scanRowCount":731,"scanBytes":215217,"scanFiles":1,"cuboidId":262144}

@@ -40,4 +40,5 @@ inner join  (
   group by test_cal_dt.week_beg_dt
 ) t2
 on t1.week_beg_dt=t2.week_beg_dt
-order by t1.week_beg_dt;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}
+order by t1.week_beg_dt
+;{"scanRowCount":2924,"scanBytes":430434,"scanFiles":4,"cuboidId":-1}

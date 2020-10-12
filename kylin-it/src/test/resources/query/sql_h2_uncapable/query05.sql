@@ -22,4 +22,4 @@ select cal_dt,
  count(distinct seller_id, lstg_format_name) as DIST_SELLER_FORMAT
  from test_kylin_fact 
  group by cal_dt
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":262144}
+;{"scanRowCount":731,"scanBytes":215217,"scanFiles":1,"cuboidId":262144}

@@ -27,5 +27,5 @@ select meta_categ_name, count(1) as cnt, sum(price) as GMV
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
 
  where meta_categ_name is not null
- group by meta_categ_name 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":65536}
+ group by meta_categ_name
+;{"scanRowCount":45,"scanBytes":150634,"scanFiles":1,"cuboidId":65536}

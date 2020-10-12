@@ -26,5 +26,5 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  inner JOIN edw.test_sites as test_sites
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
  where 1 <> 1
- group by test_kylin_fact.lstg_format_name, test_cal_dt.week_beg_dt 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}
+ group by test_kylin_fact.lstg_format_name, test_cal_dt.week_beg_dt
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":-1}

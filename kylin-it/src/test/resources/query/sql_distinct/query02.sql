@@ -23,5 +23,5 @@ select lstg_format_name,
  from test_kylin_fact 
  where lstg_format_name='FP-GTC' 
  group by lstg_format_name 
- having count(distinct seller_id) > 50 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+ having count(distinct seller_id) > 50
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}

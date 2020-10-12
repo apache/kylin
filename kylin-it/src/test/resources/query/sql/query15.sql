@@ -28,6 +28,5 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  inner JOIN edw.test_sites as test_sites
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
  group by test_cal_dt.week_beg_dt 
- ,test_category_groupings.meta_categ_name 
- 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":327680}
+ ,test_category_groupings.meta_categ_name
+;{"scanRowCount":8422,"scanBytes":380672,"scanFiles":2,"cuboidId":327680}

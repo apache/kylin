@@ -37,5 +37,5 @@ SELECT
  ,test_category_groupings.categ_lvl2_name 
  ,test_category_groupings.categ_lvl3_name 
  ,test_kylin_fact.lstg_format_name 
- ,test_sites.site_name 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":2097151}
+ ,test_sites.site_name
+;{"scanRowCount":10993,"scanBytes":574990,"scanFiles":3,"cuboidId":2097151}

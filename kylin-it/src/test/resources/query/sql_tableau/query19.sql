@@ -23,5 +23,5 @@
  FROM ( select test_kylin_fact.lstg_format_name, sum(price) as GMV, count(price) as GMV_CNT
  from test_kylin_fact 
  group by test_kylin_fact.lstg_format_name ) "TableauSQL" 
- GROUP BY "TableauSQL"."LSTG_FORMAT_NAME" 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+ GROUP BY "TableauSQL"."LSTG_FORMAT_NAME"
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}

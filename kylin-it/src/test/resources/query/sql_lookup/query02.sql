@@ -17,4 +17,4 @@
 --
 
 select CATEG_LVL3_NAME, CATEG_LVL2_NAME, SITE_ID, META_CATEG_NAME, LEAF_CATEG_ID  from test_category_groupings
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":0}
+;{"scanRowCount":144,"scanBytes":-1,"scanFiles":1,"cuboidId":-1}

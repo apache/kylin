@@ -21,5 +21,5 @@ select lstg_format_name,
  count(1) as TRANS_CNT, 
  count(distinct seller_id) as DIST_SELLER 
  from test_kylin_fact 
- group by lstg_format_name 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+ group by lstg_format_name
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}

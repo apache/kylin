@@ -33,5 +33,5 @@ select test_cal_dt.week_beg_dt, sum(test_kylin_fact.price) as GMV
  OR 
  (test_cal_dt.week_beg_dt between DATE '2013-05-20' and DATE '2013-05-21') 
  ) 
- group by test_cal_dt.week_beg_dt 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}
+ group by test_cal_dt.week_beg_dt
+;{"scanRowCount":10018,"scanBytes":384041,"scanFiles":2,"cuboidId":276480}

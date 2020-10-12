@@ -23,4 +23,4 @@ select lstg_format_name,
  where (CASE WHEN ("TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" IN ('Auction', 'FP-GTC')) THEN 'Auction' ELSE "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" END) = 'Auction'
  group by lstg_format_name 
  order by sum(price)
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":14336}
+;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}

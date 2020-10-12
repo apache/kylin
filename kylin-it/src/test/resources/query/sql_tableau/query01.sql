@@ -29,6 +29,5 @@ SELECT SUM(1) AS "COL",
  having sum(price)>500 
  ) "TableauSQL" 
  GROUP BY 2 
- HAVING COUNT(1)>0 
- 
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":276480}
+ HAVING COUNT(1)>0
+;{"scanRowCount":10018,"scanBytes":384041,"scanFiles":2,"cuboidId":276480}

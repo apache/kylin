@@ -43,6 +43,4 @@ ON test_kylin_fact.cal_dt = xxx2.cal_dt
   where test_category_groupings.meta_categ_name <> 'Baby'
 
  group by test_kylin_fact.lstg_format_name
-
-
-;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":342016}
+;{"scanRowCount":11400,"scanBytes":386732,"scanFiles":3,"cuboidId":342016}
