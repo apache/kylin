@@ -186,6 +186,9 @@ public class BuildJobSubmitter implements Runnable {
 
             try {
                 String lockPath = getCubeJobLockParentPathName(cubeName);
+                if (zk.checkExists().forPath(lockPath) == null) {
+                    continue;
+                }
                 List<String> jobs = zk.getChildren().forPath(lockPath);
                 for (String job : jobs) {
                     if (!jobList.contains(job)) {
