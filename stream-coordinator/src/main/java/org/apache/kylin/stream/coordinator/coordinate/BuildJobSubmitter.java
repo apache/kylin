@@ -187,6 +187,9 @@ public class BuildJobSubmitter implements Runnable {
 
             try {
                 String lockPath = getCubeJobLockParentPathName(cubeName);
+                if (zk.checkExists().forPath(lockPath) == null) {
+                    continue;
+                }
                 List<String> jobs = zk.getChildren().forPath(lockPath);
                 for (String job : jobs) {
                     if (!jobList.contains(job)) {
@@ -401,10 +404,12 @@ public class BuildJobSubmitter implements Runnable {
     @NotAtomicIdempotent
     boolean submitSegmentBuildJob(String cubeName, String segmentName) {
         logger.info("Try submit streaming segment build job, cube:{} segment:{}", cubeName, segmentName);
-        boolean isFull = DefaultScheduler.getInstance().getFetcherRunner().isJobPoolFull();
-        if (isFull) {
-            logger.info("Job engine is full, hold {}.", segmentName);
-            return false;
+        if (DefaultScheduler.getInstance().getFetcherRunner() != null) {
+            boolean isFull = DefaultScheduler.getInstance().getFetcherRunner().isJobPoolFull();
+            if (isFull) {
+                logger.info("Job engine is full, hold {}.", segmentName);
+                return false;
+            }
         }
         CubeInstance cubeInstance = coordinator.getCubeManager().getCube(cubeName);
         try {
