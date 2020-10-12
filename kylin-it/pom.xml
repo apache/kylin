@@ -29,13 +29,13 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>3.1.1</version>
+        <version>3.1.2-SNAPSHOT</version>
     </parent>
 
     <properties>
         <hdp.version />
         <fastBuildMode />
-        <simpleBuildMode/>
+        <simpleBuildMode />
         <buildCubeUsingProvidedData />
         <engineType />
     </properties>
@@ -74,6 +74,10 @@
                     <artifactId>jetty-server</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-shaded-guava</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
