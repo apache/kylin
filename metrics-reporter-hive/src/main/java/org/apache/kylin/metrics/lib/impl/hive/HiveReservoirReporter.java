@@ -84,10 +84,6 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
         stop();
     }
 
-    HiveReservoirListener getListener() {
-        return listener;
-    }
-
     /**
      * A builder for {@link HiveReservoirReporter} instances.
      */
@@ -111,19 +107,15 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
         }
     }
 
-    class HiveReservoirListener implements ActiveReservoirListener {
+    private class HiveReservoirListener implements ActiveReservoirListener {
         private Properties props;
         private Map<String, HiveProducer> producerMap = new HashMap<>();
-
-        private long nRecord = 0;
-        private long nRecordSkip = 0;
-        private long nUpdate = 0;
 
         private HiveReservoirListener(Properties props) throws Exception {
             this.props = props;
         }
 
-        synchronized HiveProducer getProducer(String metricType) throws Exception {
+        private synchronized HiveProducer getProducer(String metricType) throws Exception {
             HiveProducer producer = producerMap.get(metricType);
             if (producer == null) {
                 producer = new HiveProducer(metricType, props);
@@ -137,7 +129,6 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
                 return true;
             }
             logger.info("Try to write {} records", records.size());
-            long prevNRecord = nRecord;
             try {
                 Map<String, List<Record>> queues = new HashMap<>();
                 for (Record record : records) {
@@ -151,17 +142,21 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
                 for (Map.Entry<String, List<Record>> entry : queues.entrySet()) {
                     HiveProducer producer = getProducer(entry.getKey());
                     producer.send(entry.getValue());
-                    nRecord += entry.getValue().size();
                 }
                 queues.clear();
-                if (nUpdate++ % 100 == 0) {
-                    logger.info("Has done the update {} times with {} records reported, {} records skipped", nUpdate,
-                            nRecord, nRecordSkip);
-                }
             } catch (Exception e) {
-                nRecordSkip += records.size() - (nRecord - prevNRecord);
                 logger.error(e.getMessage(), e);
-                logger.warn("Has skipped reporting {} records", nRecordSkip);
+                return false;
+            }
+            return true;
+        }
+
+        public boolean onRecordUpdate(final Record record) {
+            try {
+                HiveProducer producer = getProducer(record.getSubject());
+                producer.send(record);
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
                 return false;
             }
             return true;
@@ -172,14 +167,6 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
                 producer.close();
             }
             producerMap.clear();
-        }
-
-        public long getNRecord() {
-            return nRecord;
-        }
-
-        public long getNRecordSkip() {
-            return nRecordSkip;
         }
     }
 }
