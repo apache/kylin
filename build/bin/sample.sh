@@ -65,6 +65,9 @@ then
     beeline ${hive_conf_properties} --hivevar hdfs_tmp_dir=${hdfs_tmp_dir} ${beeline_params} -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
 else
     hive ${hive_conf_properties} -e "CREATE DATABASE IF NOT EXISTS "$sample_database
+    ## Add USE DATABASE; to the beginning of create_sample_tables.sql
+    sed -i "/^USE*/d" ${KYLIN_HOME}/sample_cube/create_sample_tables.sql
+    sed -i "/DROP TABLE IF EXISTS KYLIN_CAL_DT;/i USE $sample_database;" ${KYLIN_HOME}/sample_cube/create_sample_tables.sql
     hive ${hive_conf_properties} --hivevar hdfs_tmp_dir=${hdfs_tmp_dir} --database $sample_database -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
 fi
 
