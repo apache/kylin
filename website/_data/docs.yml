@@ -57,6 +57,7 @@
   - tutorial/hybrid
   - tutorial/mysql_metastore
   - tutorial/lambda_mode_and_timezone_realtime_olap
+  - tutorial/query_pushdown
 
 - title: Integration
   docs:
