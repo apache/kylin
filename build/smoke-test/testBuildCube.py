@@ -47,7 +47,7 @@ class testBuildCube(unittest.TestCase):
                    'cubeName': cube_name}
         response = requests.request("PUT", self._clone_cube_url, json=payload, headers=self._headers)
         self.assertEqual(response.status_code, 200, 'Clone cube : ' + cube_name + ' failed.')
-        update_engine_url = self._base_url + "/cubes/" + cube_name + "/" + engine_type
+        update_engine_url = self._base_url + "/cubes/" + cube_name + "/engine/" + engine_type
         response = requests.request("PUT", update_engine_url, headers=self._headers)
         self.assertEqual(response.status_code, 200, 'Update engine type of cube : ' + cube_name + ' failed.')
 
