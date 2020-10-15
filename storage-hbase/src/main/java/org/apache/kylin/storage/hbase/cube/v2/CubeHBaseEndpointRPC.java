@@ -271,6 +271,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         builder.setSpillEnabled(cubeSeg.getConfig().getQueryCoprocessorSpillEnabled());
         builder.setMaxScanBytes(cubeSeg.getConfig().getPartitionMaxScanBytes());
         builder.setIsExactAggregate(storageContext.isExactAggregation());
+        builder.setSegName(cubeSeg.getCubeInstance().getName() + "[" + cubeSeg.getName() + "]");
 
         final String logHeader = String.format(Locale.ROOT, "<sub-thread for Query %s GTScanRequest %s>",
                 queryContext.getQueryId(), Integer.toHexString(System.identityHashCode(scanRequest)));
