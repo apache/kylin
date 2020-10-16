@@ -68,6 +68,41 @@ function retrieveDependency() {
         verbose "hdp_version is ${hdp_version}"
     fi
 
+    # Replace jars for HDI
+    KYLIN_SPARK_JARS_HOME="${KYLIN_HOME}/spark/jars"
+    if [[ -d "/usr/hdp/current/hdinsight-zookeeper" && $hdp_version == "2"* ]]
+    then
+       echo "The current Hadoop environment is HDI3, will replace some jars package for ${KYLIN_HOME}/spark/jars"
+       if [[ -d "${KYLIN_SPARK_JARS_HOME}" ]]
+       then
+          if [[ -f ${KYLIN_HOME}/hdi3_spark_jars_flag ]]
+          then
+          echo "Required jars have been added to ${KYLIN_HOME}/spark/jars, skip this step."
+          else
+             rm -rf ${KYLIN_HOME}/spark/jars/hadoop-*
+             cp /usr/hdp/current/spark2-client/jars/hadoop-* $KYLIN_SPARK_JARS_HOME
+             cp /usr/hdp/current/spark2-client/jars/azure-* $KYLIN_SPARK_JARS_HOME
+             cp /usr/hdp/current/hadoop-client/lib/microsoft-log4j-etwappender-1.0.jar $KYLIN_SPARK_JARS_HOME
+             cp /usr/hdp/current/hadoop-client/lib/hadoop-lzo-0.6.0.${hdp_version}.jar $KYLIN_SPARK_JARS_HOME
+
+             rm -rf $KYLIN_HOME/spark/jars/guava-14.0.1.jar
+             cp /usr/hdp/current/spark2-client/jars/guava-24.1.1-jre.jar $KYLIN_SPARK_JARS_HOME
+
+             echo "Upload spark jars to HDFS"
+             hdfs dfs -test -d /spark2_jars
+             if [ $? -eq 1 ]
+             then
+                hdfs dfs -mkdir /spark2_jars
+             fi
+             hdfs dfs -put $KYLIN_SPARK_JARS_HOME/* /spark2_jars
+
+             touch ${KYLIN_HOME}/hdi3_spark_jars_flag
+          fi
+       else
+          echo "${KYLIN_HOME}/spark/jars dose not exist. You can run ${KYLIN_HOME}/download-spark.sh to download spark."
+       fi
+    fi
+
     tomcat_root=${dir}/../tomcat
     export tomcat_root
 
