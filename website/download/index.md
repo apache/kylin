@@ -16,29 +16,17 @@ You can verify the download by following these [procedures](https://www.apache.o
 
 - Binary for Hadoop 3 is not currently provided, we plan to support Hadoop3 in Kylin 4.0.0-beta .
   
-#### v3.1.0
-- This is a major release after 3.0.0, with 10 new feature and 142 bug fixes and enhancement. Check the release notes.
+#### v3.1.1
+- This is a bug-fix release after 3.1.0, with 58 bug fixes and enhancement. Check the release notes.
 - [Release notes](/docs/release_notes.html), [installation guide](/docs/install/index.html) and [upgrade guide](/docs/howto/howto_upgrade.html)
-- Source download: [apache-kylin-3.1.0-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-source-release.zip.sha256)\]
+- Source download: [apache-kylin-3.1.1-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-source-release.zip.sha256)\]
 - Binary for Hadoop 2 download:
-  - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-3.1.0-bin-hbase1x.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-hbase1x.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-hbase1x.tar.gz.sha256)\]
-  - for Cloudera CDH 5.7+ - [apache-kylin-3.1.0-bin-cdh57.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-cdh57.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-cdh57.tar.gz.sha256)\]
+  - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-3.1.1-bin-hbase1x.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-bin-hbase1x.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-bin-hbase1x.tar.gz.sha256)\]
+  - for Cloudera CDH 5.7+ - [apache-kylin-3.1.1-bin-cdh57.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-bin-cdh57.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-bin-cdh57.tar.gz.sha256)\]
 
 - Binary for Hadoop 3 download:
-  - for Hadoop 3.1 + HBase 2.0 (includes Hortonworks HDP 3.0) - [apache-kylin-3.1.0-bin-hadoop3.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-hadoop3.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-hadoop3.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-hadoop3.tar.gz.sha256)\]
-  - for Cloudera CDH 6.0/6.1 (check [KYLIN-3564](https://issues.apache.org/jira/browse/KYLIN-3564) first) - [apache-kylin-3.1.0-bin-cdh60.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-cdh60.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-cdh60.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-cdh60.tar.gz.sha256)\]
-
-#### v2.6.6
-- This is a release after 2.6.5, with 20 bug fixes and enhancement. Check the release notes.
-- [Release notes](/docs/release_notes.html), [installation guide](/docs/install/index.html) and [upgrade guide](/docs/howto/howto_upgrade.html)
-- Source download: [apache-kylin-2.6.6-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-source-release.zip.sha256)\]
-- Binary for Hadoop 2 download:
-  - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-2.6.6-bin-hbase1x.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-bin-hbase1x.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-bin-hbase1x.tar.gz.sha256)\]
-  - for Cloudera CDH 5.7+ - [apache-kylin-2.6.6-bin-cdh57.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-bin-cdh57.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-bin-cdh57.tar.gz.sha256)\]
-
-- Binary for Hadoop 3 download:
-  - for Hadoop 3.1 + HBase 2.0 (includes Hortonworks HDP 3.0) - [apache-kylin-2.6.6-bin-hadoop3.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-bin-hadoop3.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-bin-hadoop3.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-bin-hadoop3.tar.gz.sha256)\]
-  - for Cloudera CDH 6.0/6.1 (check [KYLIN-3564](https://issues.apache.org/jira/browse/KYLIN-3564) first) - [apache-kylin-2.6.6-bin-cdh60.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-bin-cdh60.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-bin-cdh60.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.6.6/apache-kylin-2.6.6-bin-cdh60.tar.gz.sha256)\]
+  - for Hadoop 3.1 + HBase 2.0 (includes Hortonworks HDP 3.0) - [apache-kylin-3.1.1-bin-hadoop3.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-bin-hadoop3.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-bin-hadoop3.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-bin-hadoop3.tar.gz.sha256)\]
+  - for Cloudera CDH 6.0/6.1 (check [KYLIN-3564](https://issues.apache.org/jira/browse/KYLIN-3564) first) - [apache-kylin-3.1.1-bin-cdh60.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-bin-cdh60.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-bin-cdh60.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.1.1/apache-kylin-3.1.1-bin-cdh60.tar.gz.sha256)\]
 
 #### JDBC Driver
 

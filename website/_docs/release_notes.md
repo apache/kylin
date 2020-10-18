@@ -15,6 +15,80 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v3.1.1 - 2020-10-18
+_Tag:_ [kylin-3.1.1](https://github.com/apache/kylin/tree/kylin-3.1.1)
+This is a bug-fix release after 3.1.0, with 37 improvements and 21 bug fixes.
+
+__Sub-task__
+
+* [KYLIN-4557] - Refactor JobService to improve code readability
+* [KYLIN-4558] - get all chained executable jobs through job API
+* [KYLIN-4559] - show cardinality and lookup snapshot job on job page
+* [KYLIN-4560] - support to re-run/delete cardinality and lookup snapshot job
+* [KYLIN-4561] - overall job number statistics in monitor page is incorrect after change the job status
+
+__Bug Fix__
+
+* [KYLIN-4515] - could not send mail on ssl port
+* [KYLIN-4578] - Throws TableNotFoundException in step 'Convert Cuboid Data to HFile' when the value of property * 'kylin.storage.hbase.table-name-prefix' or 'kylin.storage.hbase.namespace' is lowercase.
+* [KYLIN-4603] - listjob return NPE
+* [KYLIN-4610] - update kylin.engine.livy.backtick.quote default value
+* [KYLIN-4617] - Check whether project/jobid exists before download diagnosis package
+* [KYLIN-4628] - Fail to use custom measure type when specifying cube to query
+* [KYLIN-4634] - Fail to specify cube in model of low priority to query
+* [KYLIN-4656] - Guava classpath conflict caused by kylin-jdbc 3.1.0 jar
+* [KYLIN-4657] - dead-loop in org.apache.kylin.engine.mr.common.MapReduceExecutable.doWork
+* [KYLIN-4672] - Using Real-time Lambda to refresh the data lead to result not incorrect
+* [KYLIN-4677] - StorageCleanupJob throw NPE
+* [KYLIN-4683] - Fail to consume kafka when partition number get larger
+* [KYLIN-4684] - Streaming Table V2创建 - TSPattern下拉选项前端bug修复
+* [KYLIN-4688] - Too many tmp files in HDFS tmp directory
+* [KYLIN-4697] - User info update logic is not correct
+* [KYLIN-4700] - Wrong engine type for realtime streaming
+* [KYLIN-4731] - Kylin query failing with 'null while executing SQL'
+* [KYLIN-4753] - Merging job stop working after Kylin upgrade
+* [KYLIN-4755] - Error while compiling generated Java code when using Kylin UDF in "case when"
+* [KYLIN-4756] - user/group page has duplicate information between adjacent page numbers
+* [KYLIN-4757] - Impossible precision for decimal datatype in kylin if the source column is numeric in postgres
+
+__Improvement__
+
+* [KYLIN-4527] - Beautify the drop-down list of the cube on query page
+* [KYLIN-4549] - Show column cardinality in rowkeys area of advanced settings
+* [KYLIN-4550] - Provide advanced refresh interface inside the refresh panel
+* [KYLIN-4551] - Provide interfaces to transfer cube/model/project ownership
+* [KYLIN-4576] - Add hint about password length
+* [KYLIN-4581] - Add spark and flink engine test case for release test
+* [KYLIN-4585] - Add cube count column for project table
+* [KYLIN-4606] - throw olap exception when olap query and pushdown both error
+* [KYLIN-4608] - add deletecubefast api for delete 300 cubes fast
+* [KYLIN-4609] - setenv.sh add zgc config for big memory
+* [KYLIN-4611] - modify PATTERN_SPARK_APP_URL to Tracking URL，ignore case
+* [KYLIN-4612] - Support job status write to kafka
+* [KYLIN-4616] - The value of config kylin.source.hive.databasedir can be self detected
+* [KYLIN-4618] - Upgrade kylin docker image for kylin 3.1.0
+* [KYLIN-4619] - Make shrunken dict able to coexist with mr-hive global dict
+* [KYLIN-4626] - add set kylin home sh
+* [KYLIN-4635] - Set Kylin default log level to info
+* [KYLIN-4653] - Make the capacity for the LinkedBlockingQueue of BlockingReservoir configurable
+* [KYLIN-4665] - set flink job name shown in resource manager
+* [KYLIN-4678] - continue execute job when StorageCleanupJob sub step has error
+* [KYLIN-4679] - StorageCleanupJob clean hive table support hive table prefix
+* [KYLIN-4685] - return user friendly msg when stackoverflowerror
+* [KYLIN-4686] - clean metadata support to delete all jobs
+* [KYLIN-4687] - add unify clean sh to excute some clean shells
+* [KYLIN-4709] - Upgrade spring to 4.3.26
+* [KYLIN-4712] - Optimize CubeMetaIngester.java CLI
+* [KYLIN-4714] - Failed to revoke role access of the project
+* [KYLIN-4716] - Optimize the project page
+* [KYLIN-4752] - Refine server mode checking
+* [KYLIN-4770] - Move Kylin service on k8s from background to foreground
+
+__Task__
+
+* [KYLIN-4526] - Enhance get the hive table rows
+* [KYLIN-4648] - Upgrade Spark to latest 2.3 or 2.4 version
+
 ## v4.0.0-alpha - 2020-09-13
 _Tag:_ [kylin-4.0.0-alpha](https://github.com/apache/kylin/tree/kylin-4.0.0-alpha)
 This is a major release after 3.1.0, with 35 new features/improvements and 22 bug fixes.

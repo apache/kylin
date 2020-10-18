@@ -183,7 +183,7 @@
 - name: Chunen Ni (倪春恩)
   apacheId: nic
   githubId: nichunen
-  org: Kyligence Inc.
+  org: pinduoduo.com
   role: PMC
 - name: Jiatao Tao (陶加涛)
   apacheId: tao
@@ -209,7 +209,7 @@
   apacheId: xxyu
   githubId: hit-lacus
   org: Kyligence Inc.
-  role: committer
+  role: PMC
 - name: Kaige Liu (刘凯歌)
   apacheId: kaige
   githubId: etherge
@@ -219,4 +219,9 @@
   apacheId: vinoyang
   githubId: yanghua
   org: t3go.cn
+  role: committer
+- name: Rupeng Wang (王汝鹏)
+  apacheId: wangrupeng
+  githubId: RupengWang
+  org: Kyligence Inc.
   role: committer
