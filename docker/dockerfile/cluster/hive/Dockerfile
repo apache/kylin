@@ -49,6 +49,8 @@ RUN echo "Hive URL is :${HIVE_URL}" \
     && wget https://jdbc.postgresql.org/download/postgresql-9.4.1212.jar -O $HIVE_HOME/lib/postgresql-jdbc.jar \
     && rm hive.tar.gz
 
+RUN if [[ $HADOOP_VERSION > "3" ]]; then rm -rf $HIVE_HOME/lib/guava-* ; cp $HADOOP_HOME/share/hadoop/common/lib/guava-* $HIVE_HOME/lib; fi
+
 #Custom configuration goes here
 ADD conf/hive-site.xml $HIVE_HOME/conf
 ADD conf/beeline-log4j2.properties $HIVE_HOME/conf

@@ -1,0 +1,69 @@
+version: "3.3"
+
+services:
+  kylin-all:
+    image: ${CLIENT_IMAGETAG}
+    container_name: kylin-all
+    hostname: kylin-all
+    volumes:
+      - ./conf/hadoop:/etc/hadoop/conf
+      - ./conf/hbase:/etc/hbase/conf
+      - ./conf/hive:/etc/hive/conf
+      - ./kylin/kylin-all:/opt/kylin/kylin-all
+    env_file:
+      - client-write-read.env
+    environment:
+      HADOOP_CONF_DIR: /etc/hadoop/conf
+      HIVE_CONF_DIR: /etc/hive/conf
+      HBASE_CONF_DIR: /etc/hbase/conf
+      KYLIN_HOME: /opt/kylin/kylin-all
+    networks:
+      - write_kylin
+    ports:
+      - 7070:7070
+
+  kylin-job:
+    image: ${CLIENT_IMAGETAG}
+    container_name: kylin-job
+    hostname: kylin-job
+    volumes:
+      - ./conf/hadoop:/etc/hadoop/conf
+      - ./conf/hbase:/etc/hbase/conf
+      - ./conf/hive:/etc/hive/conf
+      - ./kylin/kylin-job:/opt/kylin/kylin-job
+    env_file:
+      - client-write-read.env
+    environment:
+      HADOOP_CONF_DIR: /etc/hadoop/conf
+      HIVE_CONF_DIR: /etc/hive/conf
+      HBASE_CONF_DIR: /etc/hbase/conf
+      KYLIN_HOME: /opt/kylin/kylin-job
+    networks:
+      - write_kylin
+    ports:
+      - 7071:7070
+
+  kylin-query:
+    image: ${CLIENT_IMAGETAG}
+    container_name: kylin-query
+    hostname: kylin-query
+    volumes:
+      - ./conf/hadoop:/etc/hadoop/conf
+      - ./conf/hbase:/etc/hbase/conf
+      - ./conf/hive:/etc/hive/conf
+      - ./kylin/kylin-query:/opt/kylin/kylin-query
+    env_file:
+      - client-write-read.env
+    environment:
+      HADOOP_CONF_DIR: /etc/hadoop/conf
+      HIVE_CONF_DIR: /etc/hive/conf
+      HBASE_CONF_DIR: /etc/hbase/conf
+      KYLIN_HOME: /opt/kylin/kylin-query
+    networks:
+      - write_kylin
+    ports:
+      - 7072:7070
+
+networks:
+  write_kylin:
+    external: true
