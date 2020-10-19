@@ -96,7 +96,7 @@ RUN chmod a+x /opt/entrypoint/kafka/entrypoint.sh
 
 RUN set -x \
     && ln -s /opt/hadoop-$HADOOP_VERSION/etc/hadoop /etc/hadoop \
-    && cp /etc/hadoop/mapred-site.xml.template /etc/hadoop/mapred-site.xml \
+    && if [ -e "/etc/hadoop/mapred-site.xml.template" ]; then cp /etc/hadoop/mapred-site.xml.template /etc/hadoop/mapred-site.xml ;fi \
     && mkdir -p /opt/hadoop-$HADOOP_VERSION/logs
 
 RUN ln -s /opt/hbase-$HBASE_VERSION/conf /etc/hbase
