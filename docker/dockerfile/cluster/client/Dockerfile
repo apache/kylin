@@ -145,9 +145,11 @@ RUN echo spark.sql.catalogImplementation=hive > $SPARK_HOME/conf/spark-defaults.
 
 ENV PATH=$PATH:$JAVA_HOME/bin:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$HIVE_HOME/bin:$HBASE_HOME/bin:$ZK_HOME/bin
 
-# 设置所有组件的客户端配置
+# Hadoop Client Configuration
 COPY entrypoint.sh /opt/entrypoint/client/entrypoint.sh
 RUN chmod a+x /opt/entrypoint/client/entrypoint.sh
+
+RUN rm -f /opt/hbase-${HBASE_VERSION}/lib/hadoop-*.jar
 
 COPY run_cli.sh /run_cli.sh
 RUN chmod a+x  /run_cli.sh
