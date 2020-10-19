@@ -153,6 +153,7 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_lookup"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_casewhen"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_castprunesegs"));
 
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_like"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_cache"));
