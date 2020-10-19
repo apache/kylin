@@ -1,0 +1,6 @@
+docker-compose/others/data/
+docker-compose/read/data/
+docker-compose/write/data/
+docker-compose/others/kylin/kylin-all/
+docker-compose/others/kylin/kylin-job/
+docker-compose/others/kylin/kylin-query/
