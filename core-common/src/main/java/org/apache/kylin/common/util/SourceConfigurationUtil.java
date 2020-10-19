@@ -71,19 +71,25 @@ public class SourceConfigurationUtil {
 
     private static Map<String, String> loadXmlConfiguration(String filename, boolean checkExist) {
         Map<String, String> confProps = new HashMap<>();
-        File confFile;
+        File confFile = null;
         String xmlFileName = filename + ".xml";
         String path = System.getProperty(KylinConfig.KYLIN_CONF);
 
         if (StringUtils.isNotEmpty(path)) {
             confFile = new File(path, xmlFileName);
-        } else {
+            if (!confFile.exists() && path.contains("meta")) {
+                confFile = null;
+            }
+        }
+
+        if (confFile == null) {
             path = KylinConfig.getKylinHome();
             if (StringUtils.isEmpty(path)) {
                 logger.error("KYLIN_HOME is not set, can not locate conf: {}", xmlFileName);
                 return confProps;
             }
             confFile = new File(path + File.separator + "conf", xmlFileName);
+            System.setProperty(KylinConfig.KYLIN_CONF, path + File.separator + "conf");
         }
 
         if (!confFile.exists()) {
