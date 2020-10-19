@@ -260,47 +260,54 @@ class FilePruner(
     val filteredStatuses = if (filters.isEmpty) {
       segDirs
     } else {
-      val reducedFilter = filters.flatMap(DataSourceStrategy.translateFilter).reduceLeft(And)
-      segDirs.filter {
-        e => {
-          val tsRange = cubeInstance.getSegment(e.segmentName, SegmentStatusEnum.READY).getTSRange
-          SegFilters(tsRange.startValue, tsRange.endValue, pattern).foldFilter(reducedFilter) match {
-            case Trivial(true) => true
-            case Trivial(false) => false
+      val translatedFilter = filters.map(filter => convertCastFilter(filter))
+        .flatMap(DataSourceStrategy.translateFilter)
+      if (translatedFilter.isEmpty) {
+        logInfo("Can not use filters to prune segments.")
+        segDirs
+      } else {
+        val reducedFilter = translatedFilter.reduceLeft(And)
+        val pruned = segDirs.filter {
+          e => {
+            val tsRange = cubeInstance.getSegment(e.segmentName, SegmentStatusEnum.READY).getTSRange
+            SegFilters(tsRange.startValue, tsRange.endValue, pattern).foldFilter(reducedFilter) match {
+              case Trivial(true) => true
+              case Trivial(false) => false
+            }
           }
         }
+        logInfo(s"Selected files after segments pruning:" + pruned.map(_.segmentName))
+        pruned
       }
     }
-    logInfo(s"Selected files after segments pruning:" + filteredStatuses.map(_.segmentName))
     filteredStatuses
   }
 
-    private def pruneShards(
-      filters: Seq[Expression],
-      segDirs: Seq[SegmentDirectory]): Seq[SegmentDirectory] = {
-      val filteredStatuses = if (layoutEntity.getShardByColumns.size() != 1) {
-        segDirs
-      } else {
-        val normalizedFiltersAndExpr = filters.reduce(expressions.And)
+  private def pruneShards(filters: Seq[Expression],
+                           segDirs: Seq[SegmentDirectory]): Seq[SegmentDirectory] = {
+    val filteredStatuses = if (layoutEntity.getShardByColumns.size() != 1) {
+      segDirs
+    } else {
+      val normalizedFiltersAndExpr = filters.reduce(expressions.And)
 
-        val pruned = segDirs.map { case SegmentDirectory(segName, segIdentifier, files) =>
-          val segment = cubeInstance.getSegment(segName, SegmentStatusEnum.READY);
-          val partitionNumber = segment.getCuboidShardNum(layoutEntity.getId).toInt
-          require(partitionNumber > 0, "Shards num with shard by col should greater than 0.")
+      val pruned = segDirs.map { case SegmentDirectory(segName, segIdentifier, files) =>
+        val segment = cubeInstance.getSegment(segName, SegmentStatusEnum.READY);
+        val partitionNumber = segment.getCuboidShardNum(layoutEntity.getId).toInt
+        require(partitionNumber > 0, "Shards num with shard by col should greater than 0.")
 
-          val bitSet = getExpressionShards(normalizedFiltersAndExpr, shardByColumn.name, partitionNumber)
+        val bitSet = getExpressionShards(normalizedFiltersAndExpr, shardByColumn.name, partitionNumber)
 
-          val selected = files.filter(f => {
-            val partitionId = FilePruner.getPartitionId(f.getPath)
-            bitSet.get(partitionId)
-          })
-          SegmentDirectory(segName, segIdentifier, selected)
-        }
-        logInfo(s"Selected files after shards pruning:" + pruned.flatMap(_.files).map(_.getPath.toString).mkString(";"))
-        pruned
+        val selected = files.filter(f => {
+          val partitionId = FilePruner.getPartitionId(f.getPath)
+          bitSet.get(partitionId)
+        })
+        SegmentDirectory(segName, segIdentifier, selected)
       }
-      filteredStatuses
+      logInfo(s"Selected files after shards pruning:" + pruned.flatMap(_.files).map(_.getPath.toString).mkString(";"))
+      pruned
     }
+    filteredStatuses
+  }
 
   override lazy val inputFiles: Array[String] = Array.empty[String]
 
@@ -356,6 +363,39 @@ class FilePruner(
         val matchedShards = new BitSet(numShards)
         matchedShards.setUntil(numShards)
         matchedShards
+    }
+  }
+
+  //  translate for filter type match
+  private def convertCastFilter(filter: Expression): Expression = {
+    filter match {
+      case expressions.EqualTo(expressions.Cast(a: Attribute, _, _), Literal(v, t)) =>
+        expressions.EqualTo(a, Literal(v, t))
+      case expressions.EqualTo(Literal(v, t), expressions.Cast(a: Attribute, _, _)) =>
+        expressions.EqualTo(Literal(v, t), a)
+      case expressions.GreaterThan(expressions.Cast(a: Attribute, _, _), Literal(v, t)) =>
+        expressions.GreaterThan(a, Literal(v, t))
+      case expressions.GreaterThan(Literal(v, t), expressions.Cast(a: Attribute, _, _)) =>
+        expressions.GreaterThan(Literal(v, t), a)
+      case expressions.LessThan(expressions.Cast(a: Attribute, _, _), Literal(v, t)) =>
+        expressions.LessThan(a, Literal(v, t))
+      case expressions.LessThan(Literal(v, t), expressions.Cast(a: Attribute, _, _)) =>
+        expressions.LessThan(Literal(v, t), a)
+      case expressions.GreaterThanOrEqual(expressions.Cast(a: Attribute, _, _), Literal(v, t)) =>
+        expressions.GreaterThanOrEqual(a, Literal(v, t))
+      case expressions.GreaterThanOrEqual(Literal(v, t), expressions.Cast(a: Attribute, _, _)) =>
+        expressions.GreaterThanOrEqual(Literal(v, t), a)
+      case expressions.LessThanOrEqual(expressions.Cast(a: Attribute, _, _), Literal(v, t)) =>
+        expressions.LessThanOrEqual(a, Literal(v, t))
+      case expressions.LessThanOrEqual(Literal(v, t), expressions.Cast(a: Attribute, _, _)) =>
+        expressions.LessThanOrEqual(Literal(v, t), a)
+      case expressions.Or(left, right) =>
+        expressions.Or(convertCastFilter(left), convertCastFilter(right))
+      case expressions.And(left, right) =>
+        expressions.And(convertCastFilter(left), convertCastFilter(right))
+      case expressions.Not(child) =>
+        expressions.Not(convertCastFilter(child))
+      case _ => filter
     }
   }
 }
