@@ -221,9 +221,26 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
         ExecutableState state;
         state = buildCuboid(cubeName, new SegmentRange.TSRange(dateToLong("2010-01-01"), dateToLong("2012-01-01")));
         Assert.assertEquals(ExecutableState.SUCCEED, state);
+        if (cubeName.equals("ci_left_join_cube")) {
+            CubeSegment segment1 = cubeMgr.reloadCube(cubeName).getSegments().get(0);
+
+            Assert.assertEquals(0, segment1.getInputRecords());
+            Assert.assertEquals(2103495, segment1.getInputRecordsSize());
+            Assert.assertEquals(0, segment1.getSizeKB());
+            Assert.assertEquals(17, segment1.getCuboidShardNums().size());
+        }
 
         state = buildCuboid(cubeName, new SegmentRange.TSRange(dateToLong("2012-01-01"), dateToLong("2015-01-01")));
         Assert.assertEquals(ExecutableState.SUCCEED, state);
+        if (cubeName.equals("ci_left_join_cube")) {
+            CubeSegment segment2 = cubeMgr.reloadCube(cubeName).getSegments().get(1);
+            Assert.assertEquals(10000, segment2.getInputRecords());
+            Assert.assertEquals(2103495, segment2.getInputRecordsSize());
+            Assert.assertTrue(segment2.getSizeKB() > 0);
+            Assert.assertEquals(17, segment2.getCuboidShardNums().size());
+            Assert.assertEquals(leftJoinCubeCuboidShardNums(), segment2.getCuboidShardNums());
+        }
+
 
         // Round 2: Merge two segments
         state = mergeSegments(cubeName, dateToLong("2010-01-01"), dateToLong("2015-01-01"), true);
@@ -231,6 +248,13 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
 
         // validate cube segment info
         CubeSegment firstSegment = cubeMgr.reloadCube(cubeName).getSegments().get(0);
+        if (cubeName.equals("ci_left_join_cube")) {
+            Assert.assertEquals(10000, firstSegment.getInputRecords());
+            Assert.assertEquals(4206990, firstSegment.getInputRecordsSize());
+            Assert.assertTrue(firstSegment.getSizeKB() > 0);
+            Assert.assertEquals(17, firstSegment.getCuboidShardNums().size());
+            Assert.assertEquals(leftJoinCubeCuboidShardNums(), firstSegment.getCuboidShardNums());
+        }
 
         Assert.assertEquals(new SegmentRange.TSRange(dateToLong("2010-01-01"), dateToLong("2015-01-01")),
                 firstSegment.getSegRange());

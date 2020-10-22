@@ -221,6 +221,15 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
         cleanupSegments(cubeName);
         ExecutableState state = buildCuboid(cubeName, null);
         Assert.assertEquals(ExecutableState.SUCCEED, state);
+        if (cubeName.equals("ci_left_join_cube")) {
+            CubeManager cubeMgr = CubeManager.getInstance(config);
+            CubeSegment segment = cubeMgr.reloadCube(cubeName).getSegments().get(0);
+            Assert.assertEquals(10000, segment.getInputRecords());
+            Assert.assertEquals(2103495, segment.getInputRecordsSize());
+            Assert.assertTrue(segment.getSizeKB() > 0 );
+            Assert.assertEquals(17, segment.getCuboidShardNums().size());
+            Assert.assertEquals(leftJoinCubeCuboidShardNums(), segment.getCuboidShardNums());
+        }
     }
 
     protected void restoreAllSystemProp() {
@@ -327,5 +336,28 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
             Assert.assertTrue(jobTmpPathArray.length == 0);
         } catch (IOException e) {
         }
+    }
+
+    public Map<Long, Short> leftJoinCubeCuboidShardNums() {
+        Map<Long, Short> cuboidShardNums = Maps.newConcurrentMap();
+        cuboidShardNums.put((long)2097151, (short)1);
+        cuboidShardNums.put((long)14336, (short)1);
+        cuboidShardNums.put((long)112640, (short)1);
+        cuboidShardNums.put((long)79872, (short)1);
+        cuboidShardNums.put((long)114688, (short)1);
+        cuboidShardNums.put((long)98304, (short)1);
+        cuboidShardNums.put((long)65536, (short)1);
+        cuboidShardNums.put((long)245760, (short)1);
+        cuboidShardNums.put((long)276480, (short)1);
+        cuboidShardNums.put((long)262144, (short)1);
+        cuboidShardNums.put((long)342016, (short)1);
+        cuboidShardNums.put((long)376832, (short)1);
+        cuboidShardNums.put((long)360448, (short)1);
+        cuboidShardNums.put((long)327680, (short)1);
+        cuboidShardNums.put((long)507904, (short)1);
+        cuboidShardNums.put((long)1310735, (short)1);
+        cuboidShardNums.put((long)788464, (short)1);
+
+        return cuboidShardNums;
     }
 }
