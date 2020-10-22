@@ -582,6 +582,10 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         this.cuboidShardNums = newCuboidShards;
     }
 
+    public Map<Long, Short> getCuboidShardNums() {
+        return this.cuboidShardNums;
+    }
+
     public int getTotalShards(long cuboidId) {
         if (totalShards > 0) {
             return totalShards;
