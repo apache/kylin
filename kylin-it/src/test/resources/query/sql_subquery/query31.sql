@@ -34,4 +34,4 @@ on t1.week_beg_dt=test_cal_dt.week_beg_dt
  inner JOIN edw.test_sites as test_sites
  
   on t1.lstg_site_id = test_sites.site_id
-;{"scanRowCount":11273,"scanBytes":384041,"scanFiles":5,"cuboidId":-1}
+;{"scanRowCount":11273,"scanBytes":384041,"scanFiles":5,"cuboidId":276480}

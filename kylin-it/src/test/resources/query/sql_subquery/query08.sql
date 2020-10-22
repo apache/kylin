@@ -40,4 +40,4 @@ inner join  (
   group by test_cal_dt.week_beg_dt
 ) t2
 on t1.week_beg_dt=t2.week_beg_dt
-;{"scanRowCount":2924,"scanBytes":430434,"scanFiles":4,"cuboidId":-1}
+;{"scanRowCount":2924,"scanBytes":430434,"scanFiles":4,"cuboidId":[262144, 262144]}

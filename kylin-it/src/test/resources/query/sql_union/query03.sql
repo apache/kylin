@@ -40,4 +40,4 @@ inner join (
 ) TEST_B
 on TEST_A.seller_id = TEST_B.seller_id
 group by TEST_A.seller_id
-;{"scanRowCount":29784,"scanBytes":1136232,"scanFiles":3,"cuboidId":1310735}
+;{"scanRowCount":29784,"scanBytes":1136232,"scanFiles":3,"cuboidId":[1310735, 1310735, 1310735]}

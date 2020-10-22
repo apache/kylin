@@ -226,7 +226,7 @@ public class LocalWithSparkSessionTest extends LocalFileMetadataTestCase impleme
             CubeSegment segment = cubeMgr.reloadCube(cubeName).getSegments().get(0);
             Assert.assertEquals(10000, segment.getInputRecords());
             Assert.assertEquals(2103495, segment.getInputRecordsSize());
-            Assert.assertTrue(segment.getSizeKB() > 0 );
+            Assert.assertTrue(segment.getSizeKB() > 0);
             Assert.assertEquals(17, segment.getCuboidShardNums().size());
             Assert.assertEquals(leftJoinCubeCuboidShardNums(), segment.getCuboidShardNums());
         }
