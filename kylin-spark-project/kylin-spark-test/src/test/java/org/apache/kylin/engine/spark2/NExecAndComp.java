@@ -615,17 +615,19 @@ public class NExecAndComp {
         long scanRowCount = response.getTotalScanCount();
         long scanFiles = response.getTotalScanFiles();
         long scanBytes = response.getTotalScanBytes();
-        long hitCuboid = -1;
+        List<Long> hitCuboids = new ArrayList<>();
         Iterator<OLAPContext> olapContextIterator = OLAPContext.getThreadLocalContexts().iterator();
-        if (olapContextIterator.hasNext()) {
+        while (olapContextIterator.hasNext()) {
             OLAPContext olapContext = olapContextIterator.next();
             if (olapContext.storageContext.getCuboid() != null) {
-                hitCuboid = olapContext.storageContext.getCuboid().getId();
-            } else {
-                logger.warn("Query: ({}) not hit cuboid!", sql);
+                hitCuboids.add(olapContext.storageContext.getCuboid().getId());
             }
         }
-        return new ITQueryMetrics(scanRowCount, scanBytes, scanFiles, hitCuboid);
+        if (hitCuboids.size() == 0) {
+            hitCuboids.add(-1L);
+            logger.warn("Query: ({}) not hit cuboid!", sql);
+        }
+        return new ITQueryMetrics(scanRowCount, scanBytes, scanFiles, hitCuboids);
     }
 
     private static Pair<List<List<String>>, List<SelectedColumnMeta>> createResponseFromResultSet(ResultSet resultSet) throws SQLException{
@@ -782,16 +784,16 @@ public class NExecAndComp {
         private long scanRowCount;
         private long scanBytes;
         private long scanFiles;
-        private long cuboidId;
+        private List<Long> cuboidId;
 
         public ITQueryMetrics() {
             this.scanRowCount = -1L;
             this.scanBytes = -1L;
             this.scanFiles = -1L;
-            this.cuboidId = -1L;
+            this.cuboidId = new ArrayList<>();
         }
 
-        public ITQueryMetrics(long scanRowCount, long scanBytes, long scanFiles, long cuboidId) {
+        public ITQueryMetrics(long scanRowCount, long scanBytes, long scanFiles, List<Long> cuboidId) {
             this.scanRowCount = scanRowCount;
             this.scanBytes = scanBytes;
             this.scanFiles = scanFiles;
@@ -822,16 +824,16 @@ public class NExecAndComp {
             this.scanFiles = scanFiles;
         }
 
-        public long getCuboidId() {
+        public List<Long> getCuboidId() {
             return cuboidId;
         }
 
-        public void setCuboidId(long cuboidId) {
+        public void setCuboidId(List<Long> cuboidId) {
             this.cuboidId = cuboidId;
         }
 
         public boolean equals(ITQueryMetrics metrics) {
-            return this.cuboidId == metrics.getCuboidId()
+            return this.cuboidId.equals(metrics.getCuboidId())
                     && this.scanFiles == metrics.getScanFiles()
                     && this.scanRowCount == metrics.getScanRowCount();
         }

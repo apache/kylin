@@ -30,4 +30,4 @@ on t1.cal_dt=test_cal_dt.cal_dt
 
 inner JOIN edw.test_sites as test_sites
 on t1.lstg_site_id = test_sites.site_id
-;{"scanRowCount":10280,"scanBytes":384041,"scanFiles":3,"cuboidId":-1}
+;{"scanRowCount":10280,"scanBytes":384041,"scanFiles":3,"cuboidId":276480}

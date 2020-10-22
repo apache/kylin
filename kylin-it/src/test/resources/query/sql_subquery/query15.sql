@@ -27,4 +27,4 @@ WHERE
             test_kylin_fact
         WHERE
             lstg_format_name = 'ABIN')
-;{"scanRowCount":10018,"scanBytes":384041,"scanFiles":2,"cuboidId":-1}
+;{"scanRowCount":10018,"scanBytes":384041,"scanFiles":2,"cuboidId":276480}

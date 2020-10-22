@@ -36,4 +36,4 @@ FROM
 GROUP BY t1.leaf_categ_id
 ORDER BY nums, leaf_categ_id
 limit 100
-;{"scanRowCount":20144,"scanBytes":1149980,"scanFiles":3,"cuboidId":-1}
+;{"scanRowCount":20144,"scanBytes":1149980,"scanFiles":3,"cuboidId":[2097151, 2097151]}
