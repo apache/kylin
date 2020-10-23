@@ -17,7 +17,7 @@
 
 ARG HADOOP_VERSION=2.8.5
 ARG HADOOP_DN_PORT=50075
-FROM apachekylin/kylin-hadoop-base:hadoop_${HADOOP_VERSION}
+FROM apachekylin/kylin-ci-hadoop-base:hadoop_${HADOOP_VERSION}
 
 ENV HADOOP_DN_PORT ${HADOOP_DN_PORT}
 

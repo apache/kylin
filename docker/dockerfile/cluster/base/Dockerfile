@@ -38,17 +38,6 @@ RUN wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2
     && tar -zxvf /opt/jdk-8u141-linux-x64.tar.gz -C /opt/ \
     && rm -f /opt/jdk-8u141-linux-x64.tar.gz
 
-# use buildkit
-#IF $INSTALL_FROM=="net"
-#RUN set -x \
-#    && echo "Fetch URL2 is : ${HADOOP_URL}" \
-#    && curl -fSL "${HADOOP_URL}" -o /tmp/hadoop.tar.gz \
-#    && curl -fSL "${HADOOP_URL}.asc" -o /tmp/hadoop.tar.gz.asc \
-#ELSE IF $INSTALL_FROM=="local"
-#COPY ${PACKAGE_PATH}hadoop-${HADOOP_VERSION}.tar.gz /tmp/hadoop.tar.gz
-#COPY ${PACKAGE_PATH}hadoop-${HADOOP_VERSION}.tar.gz.asc /tmp/hadoop.tar.gz.asc
-#DONE
-
 RUN set -x \
     && echo "Fetch URL2 is : ${HADOOP_URL}" \
     && curl -fSL "${HADOOP_URL}" -o /tmp/hadoop.tar.gz \
@@ -57,13 +46,14 @@ RUN set -x \
 RUN set -x \
     && tar -xvf /tmp/hadoop.tar.gz -C /opt/ \
     && rm /tmp/hadoop.tar.gz* \
-    && ln -s /opt/hadoop-$HADOOP_VERSION/etc/hadoop /etc/hadoop \
-    && if [ -e "/etc/hadoop/mapred-site.xml.template" ]; then cp /etc/hadoop/mapred-site.xml.template /etc/hadoop/mapred-site.xml ;fi \
+    && mkdir -p /etc/hadoop/conf \
+    && cp -r /opt/hadoop-$HADOOP_VERSION/etc/hadoop/* /etc/hadoop/conf
+    && if [ -e "/etc/hadoop/conf/mapred-site.xml.template" ]; then cp /etc/hadoop/conf/mapred-site.xml.template /etc/hadoop/conf/mapred-site.xml ;fi \
     && mkdir -p /opt/hadoop-$HADOOP_VERSION/logs \
     && mkdir /hadoop-data
 
 ENV HADOOP_PREFIX=/opt/hadoop-$HADOOP_VERSION
-ENV HADOOP_CONF_DIR=/etc/hadoop
+ENV HADOOP_CONF_DIR=/etc/hadoop/conf
 ENV MULTIHOMED_NETWORK=1
 ENV HADOOP_HOME=${HADOOP_PREFIX}
 ENV HADOOP_INSTALL=${HADOOP_HOME}
@@ -75,4 +65,3 @@ ADD entrypoint.sh /opt/entrypoint/hadoop/entrypoint.sh
 RUN chmod a+x /opt/entrypoint/hadoop/entrypoint.sh
 
 ENTRYPOINT ["/opt/entrypoint/hadoop/entrypoint.sh"]
-

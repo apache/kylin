@@ -1,6 +1,6 @@
 ARG HBASE_VERSION=1.1.2
 
-FROM apachekylin/kylin-hbase-base:hbase_${HBASE_VERSION}
+FROM apachekylin/kylin-ci-hbase-base:hbase_${HBASE_VERSION}
 
 ENV HBASE_VERSION ${HBASE_VERSION}
 

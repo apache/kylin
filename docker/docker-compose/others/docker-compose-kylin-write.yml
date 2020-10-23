@@ -3,20 +3,16 @@ version: "3.3"
 services:
   kylin-all:
     image: ${CLIENT_IMAGETAG}
+    labels:
+      org.apache.kylin.description: "This is the All role in Kylin."
     container_name: kylin-all
     hostname: kylin-all
     volumes:
-      - ./conf/hadoop:/etc/hadoop/conf
-      - ./conf/hbase:/etc/hbase/conf
-      - ./conf/hive:/etc/hive/conf
-      - ./kylin/kylin-all:/opt/kylin/kylin-all
+      - ./kylin/kylin-all:/opt/kylin
     env_file:
       - client-write.env
     environment:
-      HADOOP_CONF_DIR: /etc/hadoop/conf
-      HIVE_CONF_DIR: /etc/hive/conf
-      HBASE_CONF_DIR: /etc/hbase/conf
-      KYLIN_HOME: /opt/kylin/kylin-all
+      KYLIN_HOME: /opt/kylin/
     networks:
       - write_kylin
     ports:
@@ -24,20 +20,16 @@ services:
 
   kylin-job:
     image: ${CLIENT_IMAGETAG}
+    labels:
+      org.apache.kylin.description: "This is the Job role in Kylin."
     container_name: kylin-job
     hostname: kylin-job
     volumes:
-      - ./conf/hadoop:/etc/hadoop/conf
-      - ./conf/hbase:/etc/hbase/conf
-      - ./conf/hive:/etc/hive/conf
-      - ./kylin/kylin-job:/opt/kylin/kylin-job
+      - ./kylin/kylin-job:/opt/kylin/
     env_file:
       - client-write.env
     environment:
-      HADOOP_CONF_DIR: /etc/hadoop/conf
-      HIVE_CONF_DIR: /etc/hive/conf
-      HBASE_CONF_DIR: /etc/hbase/conf
-      KYLIN_HOME: /opt/kylin/kylin-job
+      KYLIN_HOME: /opt/kylin/
     networks:
       - write_kylin
     ports:
@@ -45,20 +37,16 @@ services:
 
   kylin-query:
     image: ${CLIENT_IMAGETAG}
+    labels:
+      org.apache.kylin.description: "This is the Query role in Kylin."
     container_name: kylin-query
     hostname: kylin-query
     volumes:
-      - ./conf/hadoop:/etc/hadoop/conf
-      - ./conf/hbase:/etc/hbase/conf
-      - ./conf/hive:/etc/hive/conf
-      - ./kylin/kylin-query:/opt/kylin/kylin-query
+      - ./kylin/kylin-query:/opt/kylin/
     env_file:
       - client-write.env
     environment:
-      HADOOP_CONF_DIR: /etc/hadoop/conf
-      HIVE_CONF_DIR: /etc/hive/conf
-      HBASE_CONF_DIR: /etc/hbase/conf
-      KYLIN_HOME: /opt/kylin/kylin-query
+      KYLIN_HOME: /opt/kylin/
     networks:
       - write_kylin
     ports:

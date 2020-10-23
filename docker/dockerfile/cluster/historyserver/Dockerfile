@@ -16,7 +16,7 @@
 #
 
 ARG HADOOP_VERSION=2.8.5
-FROM apachekylin/kylin-hadoop-base:hadoop_${HADOOP_VERSION}
+FROM apachekylin/kylin-ci-hadoop-base:hadoop_${HADOOP_VERSION}
 
 ARG HADOOP_HISTORY_PORT=8188
 ENV HADOOP_HISTORY_PORT ${HADOOP_HISTORY_PORT}
