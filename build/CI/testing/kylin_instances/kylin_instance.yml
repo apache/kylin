@@ -1,6 +1,6 @@
 ---
 # All mode
-- host: kylin-all
+- host: localhost
   port: 7070
   version: 3.x
   hadoop_platform: HDP2.4

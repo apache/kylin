@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   write-hbase-master:
-    image: ${HBASE_MASTER_IMAGETAG:-apachekylin/kylin-hbase-master:hbase1.1.2}
+    image: ${HBASE_MASTER_IMAGETAG:-apachekylin/kylin-ci-hbase-master:hbase1.1.2}
     container_name: write-hbase-master
     hostname: write-hbase-master
     env_file:
@@ -15,7 +15,7 @@ services:
       - 16010:16010
 
   write-hbase-regionserver1:
-    image: ${HBASE_REGIONSERVER_IMAGETAG:-apachekylin/kylin-hbase-regionserver:hbase_1.1.2}
+    image: ${HBASE_REGIONSERVER_IMAGETAG:-apachekylin/kylin-ci-hbase-regionserver:hbase_1.1.2}
     container_name: write-hbase-regionserver1
     hostname: write-hbase-regionserver1
     env_file:
@@ -27,7 +27,7 @@ services:
       - write_kylin
 
   write-hbase-regionserver2:
-    image: ${HBASE_REGIONSERVER_IMAGETAG:-apachekylin/kylin-hbase-regionserver:hbase_1.1.2}
+    image: ${HBASE_REGIONSERVER_IMAGETAG:-apachekylin/kylin-ci-hbase-regionserver:hbase_1.1.2}
     container_name: write-hbase-regionserver2
     hostname: write-hbase-regionserver2
     env_file:

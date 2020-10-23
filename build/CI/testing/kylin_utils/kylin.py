@@ -95,7 +95,7 @@ class KylinHttpClient(BasicHttpClient):  # pylint: disable=too-many-public-metho
         resp = self._request('DELETE', url)
         return resp
 
-    def load_table(self, project_name, tables, calculate=True):
+    def load_table(self, project_name, tables, calculate=False):
         """
         load or reload table api
         :param calculate: Default is True

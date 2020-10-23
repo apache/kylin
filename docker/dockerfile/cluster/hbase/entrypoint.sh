@@ -39,7 +39,7 @@ function configure() {
         var="${envPrefix}_${c}"
         value=${!var}
         echo " - Setting $name=$value"
-        addProperty /etc/hbase/$module-site.xml $name "$value"
+        addProperty /etc/hbase/conf/$module-site.xml $name "$value"
     done
 }
 

@@ -4,7 +4,13 @@
 /opt/entrypoint/hive/entrypoint.sh
 /opt/entrypoint/hbase/entrypoint.sh
 
+sleep 180
+
+cd $KYLIN_HOME
+sh bin/sample.sh
+sh bin/kylin.sh start
+
 while :
 do
-    sleep 1000
+    sleep 100
 done

@@ -20,6 +20,6 @@ ARG HIVE_VERSION=1.2.1
 ARG HBASE_VERSION=1.1.2
 ARG SPARK_VERSION=2.3.3
 
-FROM apachekylin/kylin-client:hadoop_${HADOOP_VERSION}_hive_${HIVE_VERSION}_spark_${HBASE_VERSION}_spark_${SPARK_VERSION} AS client
+FROM apachekylin/kylin-ci-client:hadoop_${HADOOP_VERSION}_hive_${HIVE_VERSION}_spark_${HBASE_VERSION}_spark_${SPARK_VERSION} AS client
 
 #CMD ["/bin/bash"]

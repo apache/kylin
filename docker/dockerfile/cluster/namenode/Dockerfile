@@ -16,7 +16,7 @@
 #
 
 ARG HADOOP_VERSION=2.8.5
-FROM apachekylin/kylin-hadoop-base:hadoop_${HADOOP_VERSION}
+FROM apachekylin/kylin-ci-hadoop-base:hadoop_${HADOOP_VERSION}
 
 ENV HADOOP_VERSION ${HADOOP_VERSION}
 
