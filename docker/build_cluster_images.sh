@@ -21,44 +21,38 @@ WS_ROOT=`dirname $SCRIPT_PATH`
 
 source ${SCRIPT_PATH}/header.sh
 
-#docker build -t apachekylin/kylin-metastore:mysql_5.6.49 ./kylin/metastore-db
-#
+docker build -t apachekylin/kylin-ci-hadoop-base:hadoop_${HADOOP_VERSION} --build-arg HADOOP_VERSION=${HADOOP_VERSION} ./dockerfile/cluster/base
+docker build -t apachekylin/kylin-ci-hadoop-namenode:hadoop_${HADOOP_VERSION} --build-arg HADOOP_VERSION=${HADOOP_VERSION} --build-arg HADOOP_WEBHDFS_PORT=${HADOOP_WEBHDFS_PORT} ./dockerfile/cluster/namenode
+docker build -t apachekylin/kylin-ci-hadoop-datanode:hadoop_${HADOOP_VERSION} --build-arg HADOOP_VERSION=${HADOOP_VERSION} --build-arg HADOOP_DN_PORT=${HADOOP_DN_PORT} ./dockerfile/cluster/datanode
+docker build -t apachekylin/kylin-ci-hadoop-resourcemanager:hadoop_${HADOOP_VERSION} --build-arg HADOOP_VERSION=${HADOOP_VERSION} ./dockerfile/cluster/resourcemanager
+docker build -t apachekylin/kylin-ci-hadoop-nodemanager:hadoop_${HADOOP_VERSION} --build-arg HADOOP_VERSION=${HADOOP_VERSION} ./dockerfile/cluster/nodemanager
+docker build -t apachekylin/kylin-ci-hadoop-historyserver:hadoop_${HADOOP_VERSION} --build-arg HADOOP_VERSION=${HADOOP_VERSION} ./dockerfile/cluster/historyserver
 
-docker build -t apachekylin/kylin-hadoop-base:hadoop_${HADOOP_VERSION} --build-arg HADOOP_VERSION=${HADOOP_VERSION} ./dockerfile/cluster/base
-docker build -t apachekylin/kylin-hadoop-namenode:hadoop_${HADOOP_VERSION} --build-arg HADOOP_VERSION=${HADOOP_VERSION} --build-arg HADOOP_WEBHDFS_PORT=${HADOOP_WEBHDFS_PORT} ./dockerfile/cluster/namenode
-docker build -t apachekylin/kylin-hadoop-datanode:hadoop_${HADOOP_VERSION} --build-arg HADOOP_VERSION=${HADOOP_VERSION} --build-arg HADOOP_DN_PORT=${HADOOP_DN_PORT} ./dockerfile/cluster/datanode
-docker build -t apachekylin/kylin-hadoop-resourcemanager:hadoop_${HADOOP_VERSION} --build-arg HADOOP_VERSION=${HADOOP_VERSION} ./dockerfile/cluster/resourcemanager
-docker build -t apachekylin/kylin-hadoop-nodemanager:hadoop_${HADOOP_VERSION} --build-arg HADOOP_VERSION=${HADOOP_VERSION} ./dockerfile/cluster/nodemanager
-docker build -t apachekylin/kylin-hadoop-historyserver:hadoop_${HADOOP_VERSION} --build-arg HADOOP_VERSION=${HADOOP_VERSION} ./dockerfile/cluster/historyserver
-
-docker build -t apachekylin/kylin-hive:hive_${HIVE_VERSION}_hadoop_${HADOOP_VERSION} \
---build-arg HIVE_VERSION=${HIVE_VERSION} \
---build-arg HADOOP_VERSION=${HADOOP_VERSION} \
-./dockerfile/cluster/hive
+docker build -t apachekylin/kylin-ci-hive:hive_${HIVE_VERSION}_hadoop_${HADOOP_VERSION} \
+  --build-arg HIVE_VERSION=${HIVE_VERSION} \
+  --build-arg HADOOP_VERSION=${HADOOP_VERSION} \
+  ./dockerfile/cluster/hive
 
 if [ $ENABLE_HBASE == "yes" ]; then
-  docker build -t apachekylin/kylin-hbase-base:hbase_${HBASE_VERSION} --build-arg HBASE_VERSION=${HBASE_VERSION} ./dockerfile/cluster/hbase
-  docker build -t apachekylin/kylin-hbase-master:hbase_${HBASE_VERSION} --build-arg HBASE_VERSION=${HBASE_VERSION} ./dockerfile/cluster/hmaster
-  docker build -t apachekylin/kylin-hbase-regionserver:hbase_${HBASE_VERSION} --build-arg HBASE_VERSION=${HBASE_VERSION} ./dockerfile/cluster/hregionserver
+  docker build -t apachekylin/kylin-ci-hbase-base:hbase_${HBASE_VERSION} --build-arg HBASE_VERSION=${HBASE_VERSION} ./dockerfile/cluster/hbase
+  docker build -t apachekylin/kylin-ci-hbase-master:hbase_${HBASE_VERSION} --build-arg HBASE_VERSION=${HBASE_VERSION} ./dockerfile/cluster/hmaster
+  docker build -t apachekylin/kylin-ci-hbase-regionserver:hbase_${HBASE_VERSION} --build-arg HBASE_VERSION=${HBASE_VERSION} ./dockerfile/cluster/hregionserver
 fi
 
 if [ $ENABLE_KERBEROS == "yes" ]; then
-  docker build -t apachekylin/kylin-kerberos:latest ./dockerfile/cluster/kerberos
+  docker build -t apachekylin/kylin-ci-kerberos:latest ./dockerfile/cluster/kerberos
 fi
 
 if [ $ENABLE_LDAP == "yes" ]; then
   docker pull osixia/openldap:1.3.0
 fi
 
-#if [ $ENABLE_KAFKA == "yes" ]; then
-#  docker pull bitnami/kafka:2.0.0
-#fi
-docker pull bitnami/kafka:2.0.0
+if [ $ENABLE_KAFKA == "yes" ]; then
+  docker pull bitnami/kafka:2.0.0
+fi
 
-docker pull mysql:5.6.49
-
-docker build -t apachekylin/kylin-client:hadoop_${HADOOP_VERSION}_hive_${HIVE_VERSION}_hbase_${HBASE_VERSION} \
---build-arg HIVE_VERSION=${HIVE_VERSION} \
---build-arg HADOOP_VERSION=${HADOOP_VERSION} \
---build-arg HBASE_VERSION=${HBASE_VERSION} \
-./dockerfile/cluster/client
+docker build -t apachekylin/kylin-ci-client:hadoop_${HADOOP_VERSION}_hive_${HIVE_VERSION}_hbase_${HBASE_VERSION} \
+  --build-arg HIVE_VERSION=${HIVE_VERSION} \
+  --build-arg HADOOP_VERSION=${HADOOP_VERSION} \
+  --build-arg HBASE_VERSION=${HBASE_VERSION} \
+  ./dockerfile/cluster/client

@@ -28,8 +28,7 @@ eval set -- "${ARGS}"
 HADOOP_VERSION="2.8.5"
 HIVE_VERSION="1.2.2"
 HBASE_VERSION="1.1.2"
-
-# write write-read
+# write,write-read
 CLUSTER_MODE="write"
 # yes,no
 ENABLE_HBASE="yes"
@@ -37,7 +36,7 @@ ENABLE_HBASE="yes"
 ENABLE_LDAP="no"
 # yes,no
 ENABLE_KERBEROS="no"
-#
+# yes,no
 ENABLE_KAFKA="no"
 
 while true;
@@ -116,21 +115,21 @@ export HBASE_VERSION=$HBASE_VERSION
 export HADOOP_VERSION=$HADOOP_VERSION
 export HIVE_VERSION=$HIVE_VERSION
 
-export HADOOP_NAMENODE_IMAGETAG=apachekylin/kylin-hadoop-base:hadoop_${HADOOP_VERSION}
-export HADOOP_DATANODE_IMAGETAG=apachekylin/kylin-hadoop-datanode:hadoop_${HADOOP_VERSION}
-export HADOOP_NAMENODE_IMAGETAG=apachekylin/kylin-hadoop-namenode:hadoop_${HADOOP_VERSION}
-export HADOOP_RESOURCEMANAGER_IMAGETAG=apachekylin/kylin-hadoop-resourcemanager:hadoop_${HADOOP_VERSION}
-export HADOOP_NODEMANAGER_IMAGETAG=apachekylin/kylin-hadoop-nodemanager:hadoop_${HADOOP_VERSION}
-export HADOOP_HISTORYSERVER_IMAGETAG=apachekylin/kylin-hadoop-historyserver:hadoop_${HADOOP_VERSION}
-export HIVE_IMAGETAG=apachekylin/kylin-hive:hive_${HIVE_VERSION}_hadoop_${HADOOP_VERSION}
+export HADOOP_NAMENODE_IMAGETAG=apachekylin/kylin-ci-hadoop-base:hadoop_${HADOOP_VERSION}
+export HADOOP_DATANODE_IMAGETAG=apachekylin/kylin-ci-hadoop-datanode:hadoop_${HADOOP_VERSION}
+export HADOOP_NAMENODE_IMAGETAG=apachekylin/kylin-ci-hadoop-namenode:hadoop_${HADOOP_VERSION}
+export HADOOP_RESOURCEMANAGER_IMAGETAG=apachekylin/kylin-ci-hadoop-resourcemanager:hadoop_${HADOOP_VERSION}
+export HADOOP_NODEMANAGER_IMAGETAG=apachekylin/kylin-ci-hadoop-nodemanager:hadoop_${HADOOP_VERSION}
+export HADOOP_HISTORYSERVER_IMAGETAG=apachekylin/kylin-ci-hadoop-historyserver:hadoop_${HADOOP_VERSION}
+export HIVE_IMAGETAG=apachekylin/kylin-ci-hive:hive_${HIVE_VERSION}_hadoop_${HADOOP_VERSION}
 
-export HBASE_MASTER_IMAGETAG=apachekylin/kylin-hbase-base:hbase_${HBASE_VERSION}
-export HBASE_MASTER_IMAGETAG=apachekylin/kylin-hbase-master:hbase_${HBASE_VERSION}
-export HBASE_REGIONSERVER_IMAGETAG=apachekylin/kylin-hbase-regionserver:hbase_${HBASE_VERSION}
+export HBASE_MASTER_IMAGETAG=apachekylin/kylin-ci-hbase-base:hbase_${HBASE_VERSION}
+export HBASE_MASTER_IMAGETAG=apachekylin/kylin-ci-hbase-master:hbase_${HBASE_VERSION}
+export HBASE_REGIONSERVER_IMAGETAG=apachekylin/kylin-ci-hbase-regionserver:hbase_${HBASE_VERSION}
 
 export KAFKA_IMAGE=bitnami/kafka:2.0.0
 export LDAP_IMAGE=osixia/openldap:1.3.0
-export CLIENT_IMAGETAG=apachekylin/kylin-client:hadoop_${HADOOP_VERSION}_hive_${HIVE_VERSION}_hbase_${HBASE_VERSION}
+export CLIENT_IMAGETAG=apachekylin/kylin-ci-client:hadoop_${HADOOP_VERSION}_hive_${HIVE_VERSION}_hbase_${HBASE_VERSION}
 
 if [[ $HADOOP_VERSION < "3" ]]; then
   export HADOOP_WEBHDFS_PORT=50070

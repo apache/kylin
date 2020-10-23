@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   write-hive-server:
-    image: ${HIVE_IMAGETAG:-apachekylin/kylin-hive:hive_1.2.2_hadoop_2.8.5}
+    image: ${HIVE_IMAGETAG:-apachekylin/kylin-ci-hive:hive_1.2.2_hadoop_2.8.5}
     container_name: write-hive-server
     hostname: write-hive-server
     env_file:
@@ -17,7 +17,7 @@ services:
       - 10000:10000
 
   write-hive-metastore:
-    image: ${HIVE_IMAGETAG:-apachekylin/kylin-hive:hive_1.2.2_hadoop_2.8.5}
+    image: ${HIVE_IMAGETAG:-apachekylin/kylin-ci-hive:hive_1.2.2_hadoop_2.8.5}
     container_name: write-hive-metastore
     hostname: write-hive-metastore
     env_file:

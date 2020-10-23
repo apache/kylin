@@ -24,13 +24,13 @@ ARG KAFKA_VERSION=2.0.0
 ARG SPARK_VERSION=2.3.1
 ARG SPARK_HADOOP_VERSION=2.6
 
-FROM apachekylin/kylin-hive:hive_${HIVE_VERSION}_hadoop_${HADOOP_VERSION} AS hive
+FROM apachekylin/kylin-ci-hive:hive_${HIVE_VERSION}_hadoop_${HADOOP_VERSION} AS hive
 ENV JAVA_VERSION ${JAVA_VERSION}
 ENV HADOOP_VERSION ${HADOOP_VERSION}
 ENV HIVE_VERSION ${HIVE_VERSION}
 
 ARG HBASE_VERSION=1.1.2
-FROM apachekylin/kylin-hbase-master:hbase_${HBASE_VERSION} AS hbase
+FROM apachekylin/kylin-ci-hbase-master:hbase_${HBASE_VERSION} AS hbase
 ENV HBASE_VERSION ${HBASE_VERSION}
 
 
@@ -52,8 +52,8 @@ ARG HIVE_VERSION=1.2.1
 ARG HBASE_VERSION=1.1.2
 ARG ZOOKEEPER_VERSION=3.4.10
 ARG KAFKA_VERSION=2.0.0
-ARG SPARK_VERSION=2.3.1
-ARG SPARK_HADOOP_VERSION=2.6
+ARG SPARK_VERSION=2.4.6
+ARG SPARK_HADOOP_VERSION=2.7
 
 ENV JAVA_VERSION ${JAVA_VERSION}
 ENV HADOOP_VERSION ${HADOOP_VERSION}
@@ -95,24 +95,24 @@ RUN chmod a+x /opt/entrypoint/kafka/entrypoint.sh
 
 
 RUN set -x \
-    && ln -s /opt/hadoop-$HADOOP_VERSION/etc/hadoop /etc/hadoop \
-    && if [ -e "/etc/hadoop/mapred-site.xml.template" ]; then cp /etc/hadoop/mapred-site.xml.template /etc/hadoop/mapred-site.xml ;fi \
+    && mkdir -p /etc/hadoop/conf \
+    && mkdir -p /etc/hbase/conf \
+    && cp -r /opt/hadoop-$HADOOP_VERSION/etc/hadoop/* /etc/hadoop/conf \
+    && cp -r /opt/hbase-$HBASE_VERSION/conf/* /etc/hbase/conf \
+    && if [ -e "/etc/hadoop/conf/mapred-site.xml.template" ]; then cp /etc/hadoop/conf/mapred-site.xml.template /etc/hadoop/conf/mapred-site.xml ;fi \
     && mkdir -p /opt/hadoop-$HADOOP_VERSION/logs
-
-RUN ln -s /opt/hbase-$HBASE_VERSION/conf /etc/hbase
-
 
 ENV JAVA_HOME=/opt/${JAVA_VERSION}
 
 ENV HADOOP_PREFIX=/opt/hadoop-$HADOOP_VERSION
-ENV HADOOP_CONF_DIR=/etc/hadoop
+ENV HADOOP_CONF_DIR=/etc/hadoop/conf
 ENV HADOOP_HOME=${HADOOP_PREFIX}
 ENV HADOOP_INSTALL=${HADOOP_HOME}
 
 ENV HIVE_HOME=/opt/hive
 
 ENV HBASE_PREFIX=/opt/hbase-$HBASE_VERSION
-ENV HBASE_CONF_DIR=/etc/hbase
+ENV HBASE_CONF_DIR=/etc/hbase/conf
 ENV HBASE_HOME=${HBASE_PREFIX}
 
 
