@@ -19,34 +19,37 @@
 SCRIPT_PATH=$(cd `dirname $0`; pwd)
 WS_ROOT=`dirname $SCRIPT_PATH`
 
-source ${SCRIPT_PATH}/build_cluster_images.sh
+#source ${SCRIPT_PATH}/build_cluster_images.sh
+source ${SCRIPT_PATH}/header.sh
 
-# restart cluster
-
+echo "Restart main Hadoop cluster ......"
 KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/write/docker-compose-hadoop.yml down
 KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/write/docker-compose-zookeeper.yml down
 KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/others/docker-compose-metastore.yml down
 KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/write/docker-compose-hive.yml down
+
 sleep 5
-# hadoop
+
 KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/write/docker-compose-hadoop.yml up -d
 KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/write/docker-compose-zookeeper.yml up -d
 KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/others/docker-compose-metastore.yml up -d
 KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/write/docker-compose-hive.yml up -d
 
-
+echo "Restart Kerberos service ......"
 if [ $ENABLE_KERBEROS == "yes" ]; then
   KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/others/docker-compose-kerberos.yml down
   sleep 2
   KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/others/docker-compose-kerberos.yml up -d
 fi
 
+echo "Restart LADP service ......"
 if [ $ENABLE_LDAP == "yes" ]; then
   KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/others/docker-compose-ldap.yml down
   sleep 2
   KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/others/docker-compose-ldap.yml up -d
 fi
 
+echo "Restart Kafka service ......"
 if [ $ENABLE_KAFKA == "yes" ]; then
   KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/write/docker-compose-kafka.yml down
   sleep 2
@@ -55,6 +58,7 @@ fi
 
 
 if [ $CLUSTER_MODE == "write" ]; then
+  echo "Restart Kylin cluster & HBase cluster ......"
   KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/others/docker-compose-kylin-write.yml down
   if [ $ENABLE_HBASE == "yes" ]; then
     KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/write/docker-compose-hbase.yml down
@@ -64,8 +68,8 @@ if [ $CLUSTER_MODE == "write" ]; then
   KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/others/docker-compose-kylin-write.yml up -d
 fi
 
-# restart cluster
 if [ $CLUSTER_MODE == "write-read" ]; then
+  echo "Restart Kylin cluster[write-read mode] & Read HBase cluster ......"
   KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/read/docker-compose-zookeeper.yml down
   KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/read/docker-compose-hadoop.yml down
   KYLIN_WS=${WS_ROOT} docker-compose -f ${SCRIPT_PATH}/docker-compose/others/docker-compose-kylin-write-read.yml down

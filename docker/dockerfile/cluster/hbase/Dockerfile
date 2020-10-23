@@ -41,14 +41,15 @@ RUN set -x \
     && tar -xvf /tmp/hbase.tar.gz -C /opt/ \
     && rm /tmp/hbase.tar.gz*
 
-RUN ln -s /opt/hbase-$HBASE_VERSION/conf /etc/hbase
-RUN mkdir /opt/hbase-$HBASE_VERSION/logs
+RUN mkdir -p /etc/hbase/conf \
+    && cp -r /opt/hbase-$HBASE_VERSION/conf/* /etc/hbase/conf \
+    && mkdir /opt/hbase-$HBASE_VERSION/logs
 
 RUN mkdir /hadoop-data
 
 ENV HBASE_PREFIX=/opt/hbase-$HBASE_VERSION
 ENV HBASE_HOME=${HBASE_PREFIX}
-ENV HBASE_CONF_DIR=/etc/hbase
+ENV HBASE_CONF_DIR=/etc/hbase/conf
 
 ENV USER=root
 ENV PATH $JAVA_HOME/bin:$HBASE_PREFIX/bin/:$PATH
