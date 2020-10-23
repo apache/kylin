@@ -225,7 +225,7 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
             CubeSegment segment1 = cubeMgr.reloadCube(cubeName).getSegments().get(0);
 
             Assert.assertEquals(0, segment1.getInputRecords());
-            Assert.assertEquals(2103495, segment1.getInputRecordsSize());
+            Assert.assertEquals(0, segment1.getInputRecordsSize());
             Assert.assertEquals(0, segment1.getSizeKB());
             Assert.assertEquals(17, segment1.getCuboidShardNums().size());
         }
@@ -250,7 +250,7 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
         CubeSegment firstSegment = cubeMgr.reloadCube(cubeName).getSegments().get(0);
         if (cubeName.equals("ci_left_join_cube")) {
             Assert.assertEquals(10000, firstSegment.getInputRecords());
-            Assert.assertEquals(4206990, firstSegment.getInputRecordsSize());
+            Assert.assertEquals(2103495, firstSegment.getInputRecordsSize());
             Assert.assertTrue(firstSegment.getSizeKB() > 0);
             Assert.assertEquals(17, firstSegment.getCuboidShardNums().size());
             Assert.assertEquals(leftJoinCubeCuboidShardNums(), firstSegment.getCuboidShardNums());

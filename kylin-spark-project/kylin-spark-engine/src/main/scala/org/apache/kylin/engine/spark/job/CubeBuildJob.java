@@ -185,12 +185,16 @@ public class CubeBuildJob extends SparkApplication {
         List<CubeSegment> cubeSegments = Lists.newArrayList();
         for (Map.Entry<String, Object> entry : toUpdateSegmentSourceSize.entrySet()) {
             CubeSegment segment = cubeCopy.getSegmentById(entry.getKey());
-            segment.setInputRecordsSize((Long) entry.getValue());
-            segment.setLastBuildTime(System.currentTimeMillis());
-            cubeSegments.add(segment);
+            if (segment.getInputRecords() > 0l) {
+                segment.setInputRecordsSize((Long) entry.getValue());
+                segment.setLastBuildTime(System.currentTimeMillis());
+                cubeSegments.add(segment);
+            }
         }
-        update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
-        cubeManager.updateCube(update);
+        if (!cubeSegments.isEmpty()) {
+            update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
+            cubeManager.updateCube(update);
+        }
     }
 
     private void build(Collection<NBuildSourceInfo> buildSourceInfos, SegmentInfo seg, SpanningTree st) {
