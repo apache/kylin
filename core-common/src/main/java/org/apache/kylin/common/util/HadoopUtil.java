@@ -64,12 +64,14 @@ public class HadoopUtil {
             return conf;
         }
         Configuration conf = hadoopConfig.get();
+        conf.set("fs.hdfs.impl.disable.cache", "true");
         return conf;
     }
 
     public static Configuration healSickConfig(Configuration conf) {
         //  https://issues.apache.org/jira/browse/KYLIN-3064
         conf.set("yarn.timeline-service.enabled", "false");
+        conf.set("fs.hdfs.impl.disable.cache", "true");
         return conf;
     }
 
