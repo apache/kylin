@@ -17,33 +17,32 @@
 # limitations under the License.
 #
 
-### Thank you for https://github.com/apache/spark/tree/master/dev/create-release .
-
+## Refer to https://github.com/apache/spark/tree/master/dev/create-release
 # docker build -f Dockerfile -t apachekylin/release-machine:jdk8-slim .
-# docker run --name machine apachekylin/release-machine:jdk8-slim
 
+ENVFILE="env.list"
 cat > $ENVFILE <<EOF
 DRY_RUN=$DRY_RUN
-SKIP_TAG=$SKIP_TAG
-RUNNING_IN_DOCKER=1
+RUNNING_CI=$RUNNING_CI
 GIT_BRANCH=$GIT_BRANCH
-NEXT_VERSION=$NEXT_VERSION
+GIT_BRANCH_HADOOP3=$GIT_BRANCH_HADOOP3
+NEXT_RELEASE_VERSION=$NEXT_RELEASE_VERSION
 RELEASE_VERSION=$RELEASE_VERSION
 RELEASE_TAG=$RELEASE_TAG
 GIT_REF=$GIT_REF
-ASF_USERNAME=$ASF_USERNAME
+GIT_REPO_URL=$GIT_REPO_URL
 GIT_NAME=$GIT_NAME
 GIT_EMAIL=$GIT_EMAIL
 GPG_KEY=$GPG_KEY
+ASF_USERNAME=$ASF_USERNAME
 ASF_PASSWORD=$ASF_PASSWORD
 GPG_PASSPHRASE=$GPG_PASSPHRASE
-RELEASE_STEP=$RELEASE_STEP
 USER=$USER
 EOF
 
-
 docker run -ti \
   --env-file "$ENVFILE" \
+  --name kylin-release-machine \
   apachekylin/release-machine:jdk8-slim
 
-docker cp machine:/root/kylin/dist/apache-kylin-*-SNAPSHOT-bin.tar.gz .
+docker cp kylin-release-machine:/root/ci/apache-kylin-bin.tar.gz ../../apache-kylin-bin.tar.gz
