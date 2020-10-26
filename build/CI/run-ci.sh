@@ -17,54 +17,59 @@
 # limitations under the License.
 #
 
+# This is a sample script for packaging & running system testing by docker container.
+
 # 1. Packaging for Kylin binary
 # 2. Deploy hadoop cluster
 # 3. Delpoy kylin cluster
 # 4. Run system testing
 # 5. Clean up
 
-INIT_HADOOP=1
+INIT_HADOOP=${INIT_HADOOP:-1}
 
 ###########################################
 ###########################################
 # 0. Prepare
-export JAVA_HOME=/usr/local/java
-export PATH=$JAVA_HOME/bin:$PATH
-export PATH=/root/xiaoxiang.yu/INSTALL/anaconda/bin:$PATH
-binary_file=/root/xiaoxiang.yu/BINARY/apache-kylin-3.1.2-SNAPSHOT-bin.tar.gz
-source ~/.bashrc
+AWAIT_SECOND=${AWAIT_SECOND:-240}
 pwd
 
 ###########################################
 ###########################################
 # 1. Package kylin
+if [[ -z $binary_file ]]; then
+  cd dev-support/build-release
+  bash -x package.sh
+  cd -
+fi
 
-#TODO
+binary_file=${binary_file:-apache-kylin-bin.tar.gz}
+
+# 1.1 Prepare Kylin conf
+cp $binary_file docker/docker-compose/others/kylin
 cd docker/docker-compose/others/kylin
-cp $binary_file .
-tar zxf apache-kylin-3.1.2-SNAPSHOT-bin.tar.gz
+tar zxf apache-kylin-bin.tar.gz
 
 mkdir kylin-all
 mkdir kylin-query
 mkdir kylin-job
 
-cp -r apache-kylin-3.1.2-SNAPSHOT-bin/* kylin-all
+cp -r apache-kylin-bin/* kylin-all
 cat > kylin-all/conf/kylin.properties <<EOL
 kylin.job.scheduler.default=100
 kylin.server.self-discovery-enabled=true
 EOL
 
-cp -r apache-kylin-3.1.2-SNAPSHOT-bin/* kylin-query
-cat > kylin-query/conf/kylin.properties <<EOL
-kylin.job.scheduler.default=100
-kylin.server.self-discovery-enabled=true
-EOL
-
-cp -r apache-kylin-3.1.2-SNAPSHOT-bin/* kylin-job
-cat > kylin-job/conf/kylin.properties <<EOL
-kylin.job.scheduler.default=100
-kylin.server.self-discovery-enabled=true
-EOL
+#cp -r apache-kylin-bin/* kylin-query
+#cat > kylin-query/conf/kylin.properties <<EOL
+#kylin.job.scheduler.default=100
+#kylin.server.self-discovery-enabled=true
+#EOL
+#
+#cp -r apache-kylin-bin/* kylin-job
+#cat > kylin-job/conf/kylin.properties <<EOL
+#kylin.job.scheduler.default=100
+#kylin.server.self-discovery-enabled=true
+#EOL
 
 cd -
 
@@ -72,41 +77,49 @@ cd -
 ###########################################
 # 2. Deploy Hadoop
 
-if [ "$INIT_HADOOP" = "1" ];
+if [ "$INIT_HADOOP" == "1" ];
 then
     echo "Restart Hadoop cluster."
     cd docker
 
     bash stop_cluster.sh
 
-    bash setup_cluster.sh --cluster_mode write --hadoop_version 2.8.5 --hive_version 1.2.2 \
+    bash setup_hadoop_cluster.sh --cluster_mode write --hadoop_version 2.8.5 --hive_version 1.2.2 \
       --enable_hbase yes --hbase_version 1.1.2  --enable_ldap nosh setup_cluster.sh \
       --cluster_mode write --hadoop_version 2.8.5 --hive_version 1.2.2 --enable_hbase yes \
       --hbase_version 1.1.2  --enable_ldap no
     cd ..
+    sleep 100
 else
     echo "Do NOT restart Hadoop cluster."
 fi;
-
-docker ps
 
 ###########################################
 ###########################################
 # 3. Deploy Kylin
 
-# TODO
+echo "Restart Kylin cluster."
+
+cd docker
+bash setup_service.sh --cluster_mode write --hadoop_version 2.8.5 --hive_version 1.2.2 \
+      --enable_hbase yes --hbase_version 1.1.2  --enable_ldap nosh setup_cluster.sh \
+      --cluster_mode write --hadoop_version 2.8.5 --hive_version 1.2.2 --enable_hbase yes \
+      --hbase_version 1.1.2  --enable_ldap no
+docker ps
+cd ..
 
 ###########################################
 ###########################################
 # 4. Run test
 
-echo "Wait about 6 minutes ..."
-sleep 360
+echo "Wait about 4 minutes ..."
+sleep ${AWAIT_SECOND}
 
 cd build/CI/testing
 pip install -r requirements.txt
 gauge run --tags 3.x
-cd ..
+cd -
+echo "Please check build/CI/testing/reports/html-report/index.html for reports."
 
 ###########################################
 ###########################################
