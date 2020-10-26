@@ -259,7 +259,7 @@ class KylinHttpClient(BasicHttpClient):  # pylint: disable=too-many-public-metho
         return resp
 
     def update_cube_engine(self, cube_name, engine_type):
-        url = '/cubes/{cube}/{engine}'.format(cube=cube_name, engine=engine_type)
+        url = '/cubes/{cube}/engine/{engine}'.format(cube=cube_name, engine=engine_type)
         resp = self._request('PUT', url)
         return resp
 
