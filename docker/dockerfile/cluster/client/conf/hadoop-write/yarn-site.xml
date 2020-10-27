@@ -33,6 +33,7 @@
 <property><name>yarn.timeline-service.hostname</name><value>write-historyserver</value></property>
 <property><name>yarn.scheduler.capacity.root.default.maximum-allocation-mb</name><value>8192</value></property>
 <property><name>yarn.log.server.url</name><value>http://write-historyserver:8188/applicationhistory/logs/</value></property>
+<property><name>mapreduce.jobhistory.address</name><value>write-historyserver:10020</value></property>
 <property><name>yarn.resourcemanager.scheduler.class</name><value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler</value></property>
 <property><name>yarn.resourcemanager.scheduler.address</name><value>write-resourcemanager:8030</value></property>
 <property><name>yarn.resourcemanager.address</name><value>write-resourcemanager:8032</value></property>
