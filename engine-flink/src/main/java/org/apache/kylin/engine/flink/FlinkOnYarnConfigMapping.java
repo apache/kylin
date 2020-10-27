@@ -14,13 +14,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 package org.apache.kylin.engine.flink;
 
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.FallbackKey;
 import org.apache.flink.configuration.JobManagerOptions;
 import org.apache.flink.configuration.TaskManagerOptions;
+import org.apache.flink.configuration.MemorySize;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -38,7 +39,7 @@ public class FlinkOnYarnConfigMapping {
         flinkOnYarnConfigMap = new HashMap<>();
 
         //mapping job manager heap size -> -yjm
-        ConfigOption<String> jmHeapSizeOption = JobManagerOptions.JOB_MANAGER_HEAP_MEMORY;
+        ConfigOption<MemorySize> jmHeapSizeOption = JobManagerOptions.TOTAL_PROCESS_MEMORY;
         flinkOnYarnConfigMap.put(jmHeapSizeOption.key(), "-yjm");
         if (jmHeapSizeOption.hasFallbackKeys()) {
             Iterator<FallbackKey> deprecatedKeyIterator = jmHeapSizeOption.fallbackKeys().iterator();
@@ -48,7 +49,7 @@ public class FlinkOnYarnConfigMapping {
         }
 
         //mapping task manager heap size -> -ytm
-        ConfigOption<String> tmHeapSizeOption = TaskManagerOptions.TASK_MANAGER_HEAP_MEMORY;
+        ConfigOption<MemorySize> tmHeapSizeOption = TaskManagerOptions.TOTAL_PROCESS_MEMORY;
         flinkOnYarnConfigMap.put(tmHeapSizeOption.key(), "-ytm");
         if (tmHeapSizeOption.hasFallbackKeys()) {
             Iterator<FallbackKey> deprecatedKeyIterator = tmHeapSizeOption.fallbackKeys().iterator();
@@ -63,15 +64,6 @@ public class FlinkOnYarnConfigMapping {
             Iterator<FallbackKey> deprecatedKeyIterator = taskSlotNumOption.fallbackKeys().iterator();
             while (deprecatedKeyIterator.hasNext()) {
                 flinkOnYarnConfigMap.put(deprecatedKeyIterator.next().getKey(), "-ys");
-            }
-        }
-
-        ConfigOption<Boolean> tmMemoryPreallocate = TaskManagerOptions.MANAGED_MEMORY_PRE_ALLOCATE;
-        flinkOnYarnConfigMap.put(tmMemoryPreallocate.key(), "-yD taskmanager.memory.preallocate");
-        if (taskSlotNumOption.hasFallbackKeys()) {
-            Iterator<FallbackKey> deprecatedKeyIterator = tmMemoryPreallocate.fallbackKeys().iterator();
-            while (deprecatedKeyIterator.hasNext()) {
-                flinkOnYarnConfigMap.put(deprecatedKeyIterator.next().getKey(), "-yD taskmanager.memory.preallocate");
             }
         }
 
