@@ -17,4 +17,9 @@
 # limitations under the License.
 #
 
-$HADOOP_PREFIX/bin/yarn --config $HADOOP_CONF_DIR historyserver
+#$HADOOP_PREFIX/bin/yarn --config $HADOOP_CONF_DIR historyserver
+$HADOOP_PREFIX/sbin/mr-jobhistory-daemon.sh --config $HADOOP_CONF_DIR start historyserver
+while :
+do
+    sleep 100
+done

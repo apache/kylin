@@ -125,6 +125,9 @@ services:
       - kylin
     ports:
       - 8188:8188
+      - 10020:10020
+    expose:
+      - 10020
 
 networks:
   kylin:
