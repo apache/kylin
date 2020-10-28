@@ -2879,6 +2879,27 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.query.auto-sparder-context", "false"));
     }
 
+    /**
+     * Sparder is considered unavailable when the check task is unresponsive for more than this time
+     */
+    public int getSparderCanaryErrorResponseMs() {
+        return Integer.parseInt(this.getOptional("kylin.canary.sparder-context-error-response-ms", "3000"));
+    }
+
+    /**
+     * The maximum number of restart sparder when sparder is not available
+     */
+    public int getThresholdToRestartSparder() {
+        return Integer.parseInt(this.getOptional("kylin.canary.sparder-context-threshold-to-restart-spark", "3"));
+    }
+
+    /**
+     * Time period between two sparder health checks
+     */
+    public int getSparderCanaryPeriodMinutes() {
+        return Integer.parseInt(this.getOptional("kylin.canary.sparder-context-period-min", "3"));
+    }
+
     // ============================================================================
     // Spark with Kerberos
     // ============================================================================
