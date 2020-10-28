@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import org.apache.commons.io.FileUtils
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.query.monitor.SparderContextCanary
 import org.apache.kylin.spark.classloader.ClassLoaderUtils
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
 import org.apache.spark.sql.execution.datasource.KylinSourceStrategy
@@ -193,6 +194,11 @@ object SparderContext extends Logging {
       if (initializingThread != null) {
         logInfo("Initializing Spark, waiting for done.")
         initializingThread.join()
+      }
+
+      if (System.getProperty("spark.local") ne "true") {
+        //monitor sparder
+        SparderContextCanary.init()
       }
     }
   }
