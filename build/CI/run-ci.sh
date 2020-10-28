@@ -57,6 +57,12 @@ cp -r apache-kylin-bin/* kylin-all
 cat > kylin-all/conf/kylin.properties <<EOL
 kylin.job.scheduler.default=100
 kylin.server.self-discovery-enabled=true
+kylin.query.pushdown.runner-class-name=org.apache.kylin.query.adhoc.PushDownRunnerJdbcImpl
+kylin.query.pushdown.update-enabled=false
+kylin.query.pushdown.jdbc.url=jdbc:hive2://write-hive-server:10000/default
+kylin.query.pushdown.jdbc.driver=org.apache.hive.jdbc.HiveDriver
+kylin.query.pushdown.jdbc.username=hive
+kylin.query.pushdown.jdbc.password=
 EOL
 
 #cp -r apache-kylin-bin/* kylin-query
@@ -115,11 +121,11 @@ cd ..
 echo "Wait about 4 minutes ..."
 sleep ${AWAIT_SECOND}
 
-cd build/CI/testing
+cd build/CI/kylin-system-testing
 pip install -r requirements.txt
 gauge run --tags 3.x
 cd -
-echo "Please check build/CI/testing/reports/html-report/index.html for reports."
+echo "Please check build/CI/kylin-system-testing/reports/html-report/index.html for reports."
 
 ###########################################
 ###########################################
