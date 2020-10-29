@@ -6,8 +6,14 @@ In order to provide hadoop cluster(s) (without manual deployment) for system lev
 
 ## Prepare
 
-- Install latest docker & docker-compose, following is what I use.
-
+- Install the latest `docker` & `docker-compose`, following versions are recommended.
+  - docker: 19.03.12+
+  - docker-compose: 1.26.2+
+  
+- Install `python3` and test automation tool `gauge`, following versions are recommended.
+  - python: 3.6+
+  - gauge: 1.1.4+
+ 
 - Check port 
 
     Port       |     Component     |     Comment
@@ -19,7 +25,7 @@ In order to provide hadoop cluster(s) (without manual deployment) for system lev
     16010      |       HBase       |       -    
     50070      |       HDFS        |       -            
 
-- Clone cource code
+- Clone source code
 
 ```shell 
 git clone
@@ -132,12 +138,41 @@ kylin-all            | http://kylin-all:7070/kylin                      |       
 
 
 ## System Testing
+### How to package kylin binary
+
+```shell
+cd dev-support/build-release
+bash -x package.sh
+``` 
+
 ### How to start Kylin
 
 ```shell 
-copy kylin into /root/xiaoxiang.yu/kylin/docker/docker-compose/others/kylin
+## copy kylin into kylin/docker/docker-compose/others/kylin
 
-cp kylin.tar.gz /root/xiaoxiang.yu/kylin/docker/docker-compose/others/kylin
+cp kylin.tar.gz kylin/docker/docker-compose/others/kylin
 tar zxf kylin.tar.gz
 
+cp -r apache-kylin-bin/*  kylin/docker/docker-compose/others/kylin/kylin-all
+cp -r apache-kylin-bin/* kylin/docker/docker-compose/others/kylin/kylin-job
+cp -r apache-kylin-bin/* kylin/docker/docker-compose/others/kylin/kylin-query
+
+## you can modify kylin/docker/docker-compose/others/kylin/kylin-*/kylin.properties before start kylin.
+
+## start kylin
+
+bash setup_service.sh --cluster_mode write --hadoop_version 2.8.5 --hive_version 1.2.2 \
+      --enable_hbase yes --hbase_version 1.1.2  --enable_ldap nosh setup_cluster.sh \
+      --cluster_mode write --hadoop_version 2.8.5 --hive_version 1.2.2 --enable_hbase yes \
+      --hbase_version 1.1.2  --enable_ldap no
 ```
+
+### How to run automated tests
+
+```shell
+cd build/CI/kylin-system-testing
+pip install -r requirements.txt
+gauge run
+```
+
+Wait for the test to complete, then you can check build/CI/kylin-system-testing/reports/html-report/index.html for reports.
