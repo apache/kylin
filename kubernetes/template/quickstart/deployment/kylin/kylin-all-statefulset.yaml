@@ -47,7 +47,7 @@ spec:
             - sh
             - -c
           args:
-            - $TOOL_HOME/bootstrap.sh server -d;
+            - $TOOL_HOME/bootstrap.sh server;
           ports:
             - containerPort: 7070
             - containerPort: 7443
@@ -71,6 +71,19 @@ spec:
             limits:
               memory: 4Gi
               cpu: 2
+          livenessProbe:
+            httpGet:
+              path: /kylin
+              port: 7070
+            initialDelaySeconds: 100
+            periodSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /kylin
+              port: 7070
+            initialDelaySeconds: 30
+            periodSeconds: 5
       volumes:
         - name: kylin-logs
           emptyDir:
