@@ -43,7 +43,7 @@ spec:
         - sh
         - -c
         args:
-        - $TOOL_HOME/bootstrap.sh streaming -d
+        - $TOOL_HOME/bootstrap.sh streaming
         ports:
         - containerPort: 9090
         volumeMounts:
