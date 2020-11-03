@@ -28,10 +28,10 @@ def get_kylin_instance_with_config_file():
     client = util.setup_instance('kylin_instance.yml')
 
 
-@step("prepare data file from <release_test_0001.json>")
-def prepare_data_file_from(file_name):
+@step("prepare data file from release_test_0001.json")
+def prepare_data_file_from_data(file_name):
     global data
-    with open(os.path.join('data', file_name), 'r') as f:
+    with open(os.path.join('meta_data', file_name), 'r') as f:
         data = json.load(f)
 
 
@@ -54,7 +54,7 @@ def create_model_step(model_desc, project):
     assert json.loads(resp['modelDescData'])['name'] == model_name
 
 
-@step("Create cube with <cube_desc> in <prpject>, cube name is <cube_name>")
+@step("Create cube with <cube_desc> in <project>, cube name is <cube_name>")
 def create_cube_step(cube_desc, project, cube_name):
     resp = client.create_cube(project_name=project,
                               cube_name=cube_name,
@@ -113,3 +113,10 @@ def query_pushdown_step(sql, project, result):
     assert resp.get('cube') == ''
     assert resp.get('pushDown') is True
 
+
+@step("Query all SQL file in directory <directory>, compare result with hive pushdown result")
+def query_sql_file_and_compare(directory):
+    sql_directory = os.listdir(directory)
+    for sql_file in sql_directory:
+        sql = open(sql_file, 'r', encoding='utf8')
+        sqltxt = sql.readlines()
