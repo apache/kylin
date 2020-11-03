@@ -197,7 +197,7 @@ def dataset_equals(expect,
     return True
 
 
-def compare_sql_result(sql, project, kylin_client, cube=None):
+def compare_sql_result(sql, project, kylin_client, cube=None, expected_result=None):
     pushdown_project = kylin_client.pushdown_project
     if not util.if_project_exists(kylin_client=kylin_client, project=pushdown_project):
         kylin_client.create_project(project_name=pushdown_project)
@@ -219,3 +219,10 @@ def compare_sql_result(sql, project, kylin_client, cube=None):
     assert pushdown_resp.get('isException') is False
 
     assert query_result_equals(kylin_resp, pushdown_resp)
+
+    if expected_result is not None:
+        print(kylin_resp.get("totalScanCount"))
+        assert expected_result.get("totalScanCount") == kylin_resp.get("totalScanCount")
+        assert expected_result.get("totalScanBytes") == kylin_resp.get("totalScanBytes")
+        assert expected_result.get("totalScanFiles") == kylin_resp.get("totalScanFiles")
+        assert expected_result.get("pushDown") == kylin_resp.get("pushDown")

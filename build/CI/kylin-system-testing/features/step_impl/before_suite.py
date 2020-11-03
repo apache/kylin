@@ -26,10 +26,10 @@ from kylin_utils import util
 def create_generic_model_and_cube():
     client = util.setup_instance('kylin_instance.yml')
     if client.version == '3.x':
-        with open(os.path.join('data/generic_desc_data', 'generic_desc_data_3x.json'), 'r') as f:
+        with open(os.path.join('meta_data/generic_desc_data', 'generic_desc_data_3x.json'), 'r') as f:
             data = json.load(f)
     elif client.version == '4.x':
-        with open(os.path.join('data/generic_desc_data', 'generic_desc_data_4x.json'), 'r') as f:
+        with open(os.path.join('meta_data/generic_desc_data', 'generic_desc_data_4x.json'), 'r') as f:
             data = json.load(f)
 
     project_name = client.generic_project
@@ -56,6 +56,6 @@ def create_generic_model_and_cube():
                                   cube_name=cube_name,
                                   cube_desc_data=cube_desc_data)
         assert json.loads(resp['cubeDescData'])['name'] == cube_name
-    if client.get_cube_instance(cube_name=cube_name).get('status') != 'READY':
-        resp = client.full_build_cube(cube_name=cube_name)
-        assert client.await_job_finished(job_id=resp['uuid'], waiting_time=20)
+    if client.get_cube_instance(cube_name=cube_name).get('status') != 'READY' and len(client.list_jobs(project_name=project_name, job_search_mode='CUBING_ONLY')) == 0:
+        client.full_build_cube(cube_name=cube_name)
+    assert client.await_all_jobs(project_name=project_name)

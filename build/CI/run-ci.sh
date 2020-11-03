@@ -38,7 +38,7 @@ pwd
 # 1. Package kylin
 if [[ -z $binary_file ]]; then
   cd dev-support/build-release
-  bash -x package.sh
+  bash -x packaging.sh
   cd -
 fi
 
@@ -55,14 +55,10 @@ mkdir kylin-job
 
 cp -r apache-kylin-bin/* kylin-all
 cat > kylin-all/conf/kylin.properties <<EOL
+kylin.metadata.url=kylin_metadata@jdbc,url=jdbc:mysql://metastore-db:3306/metastore,username=kylin,password=kylin,maxActive=10,maxIdle=10
+kylin.env.zookeeper-connect-string=write-zookeeper:2181
 kylin.job.scheduler.default=100
-kylin.server.self-discovery-enabled=true
-kylin.query.pushdown.runner-class-name=org.apache.kylin.query.adhoc.PushDownRunnerJdbcImpl
-kylin.query.pushdown.update-enabled=false
-kylin.query.pushdown.jdbc.url=jdbc:hive2://write-hive-server:10000/default
-kylin.query.pushdown.jdbc.driver=org.apache.hive.jdbc.HiveDriver
-kylin.query.pushdown.jdbc.username=hive
-kylin.query.pushdown.jdbc.password=
+kylin.query.pushdown.runner-class-name=org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl
 EOL
 
 #cp -r apache-kylin-bin/* kylin-query
@@ -123,7 +119,7 @@ sleep ${AWAIT_SECOND}
 
 cd build/CI/kylin-system-testing
 pip install -r requirements.txt
-gauge run --tags 3.x
+gauge run --tags 4.x
 cd -
 echo "Please check build/CI/kylin-system-testing/reports/html-report/index.html for reports."
 

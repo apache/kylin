@@ -17,6 +17,6 @@
 # All mode
 - host: localhost
   port: 7070
-  version: 3.x
+  version: 4.x
   hadoop_platform: HDP2.4
   deploy_mode: ALL
