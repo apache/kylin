@@ -1903,6 +1903,7 @@
                 <exclude>**/*.json</exclude>
                 <exclude>**/*.json.bad</exclude>
                 <exclude>**/*.md</exclude>
+                <exclude>**/*.spec</exclude>
 
                 <!-- binary files -->
                 <exclude>**/*.dict</exclude>

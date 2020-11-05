@@ -221,7 +221,8 @@ def compare_sql_result(sql, project, kylin_client, cube=None, expected_result=No
     assert query_result_equals(kylin_resp, pushdown_resp)
 
     if expected_result is not None:
-        print(kylin_resp.get("totalScanCount"))
+        assert expected_result.get("cube") == kylin_resp.get("cube")
+        assert expected_result.get("cuboidIds") == kylin_resp.get("cuboidIds")
         assert expected_result.get("totalScanCount") == kylin_resp.get("totalScanCount")
         assert expected_result.get("totalScanBytes") == kylin_resp.get("totalScanBytes")
         assert expected_result.get("totalScanFiles") == kylin_resp.get("totalScanFiles")

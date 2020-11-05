@@ -46,6 +46,8 @@ public class SQLResponse implements Serializable {
      */
     protected String cube;
 
+    protected String cuboidIds;
+
     // if not select query, only return affected row count
     protected int affectedRowCount;
 
@@ -133,6 +135,14 @@ public class SQLResponse implements Serializable {
 
     public void setCube(String cube) {
         this.cube = cube;
+    }
+
+    public String getCuboidIds() {
+        return cuboidIds;
+    }
+
+    public void setCuboidIds(String cuboidIds) {
+        this.cuboidIds = cuboidIds;
     }
 
     public int getAffectedRowCount() {

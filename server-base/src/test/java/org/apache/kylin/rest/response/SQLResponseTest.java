@@ -32,7 +32,7 @@ public class SQLResponseTest {
 
     @Test
     public void testInterfaceConsistency() throws IOException {
-        String[] attrArray = new String[] { "columnMetas", "results", "cube", "affectedRowCount", "isException",
+        String[] attrArray = new String[] { "columnMetas", "results", "cube", "cuboidIds", "affectedRowCount", "isException",
                 "exceptionMessage", "duration", "partial", "totalScanCount", "hitExceptionCache", "storageCacheUsed",
                 "sparkPool", "pushDown", "traceUrl", "totalScanBytes", "totalScanFiles",
                 "metadataTime", "totalSparkScanTime" };
