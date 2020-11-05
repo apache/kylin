@@ -58,6 +58,7 @@ cat > kylin-all/conf/kylin.properties <<EOL
 kylin.metadata.url=kylin_metadata@jdbc,url=jdbc:mysql://metastore-db:3306/metastore,username=kylin,password=kylin,maxActive=10,maxIdle=10
 kylin.env.zookeeper-connect-string=write-zookeeper:2181
 kylin.job.scheduler.default=100
+kylin.engine.spark-conf.spark.shuffle.service.enabled=false
 kylin.query.pushdown.runner-class-name=org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl
 EOL
 
@@ -87,7 +88,7 @@ then
     bash stop_cluster.sh
 
     bash setup_hadoop_cluster.sh --cluster_mode write --hadoop_version 2.8.5 --hive_version 1.2.2 \
-      --enable_hbase yes --hbase_version 1.1.2  --enable_ldap nosh setup_cluster.sh \
+      --enable_hbase no --hbase_version 1.1.2  --enable_ldap nosh setup_cluster.sh \
       --cluster_mode write --hadoop_version 2.8.5 --hive_version 1.2.2 --enable_hbase yes \
       --hbase_version 1.1.2  --enable_ldap no
     cd ..
@@ -104,7 +105,7 @@ echo "Restart Kylin cluster."
 
 cd docker
 bash setup_service.sh --cluster_mode write --hadoop_version 2.8.5 --hive_version 1.2.2 \
-      --enable_hbase yes --hbase_version 1.1.2  --enable_ldap nosh setup_cluster.sh \
+      --enable_hbase no --hbase_version 1.1.2  --enable_ldap nosh setup_cluster.sh \
       --cluster_mode write --hadoop_version 2.8.5 --hive_version 1.2.2 --enable_hbase yes \
       --hbase_version 1.1.2  --enable_ldap no
 docker ps

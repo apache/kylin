@@ -1160,6 +1160,7 @@ public class QueryService extends BasicService {
 
         List<String> realizations = Lists.newLinkedList();
         StringBuilder cubeSb = new StringBuilder();
+        StringBuilder cuboidIdsSb = new StringBuilder();
         StringBuilder logSb = new StringBuilder("Processed rows for each storageContext: ");
         QueryContext queryContext = QueryContextFacade.current();
         if (OLAPContext.getThreadLocalContexts() != null) { // contexts can be null in case of 'explain plan for'
@@ -1171,6 +1172,14 @@ public class QueryService extends BasicService {
                     if (cubeSb.length() > 0) {
                         cubeSb.append(",");
                     }
+                    Cuboid cuboid = ctx.storageContext.getCuboid();
+                    if (cuboid != null) {
+                        //Some queries do not involve cuboid, e.g. lookup table query
+                        if(cuboidIdsSb.length() >0) {
+                            cuboidIdsSb.append(",");
+                        }
+                        cuboidIdsSb.append(cuboid.getId());
+                    }
                     cubeSb.append(ctx.realization.getCanonicalName());
                     logSb.append(ctx.storageContext.getProcessedRowCount()).append(" ");
 
@@ -1181,11 +1190,14 @@ public class QueryService extends BasicService {
                 }
                 queryContext.setContextRealization(ctx.id, realizationName, realizationType);
             }
+
+
         }
         logger.info(logSb.toString());
 
         SQLResponse response = new SQLResponse(columnMetas, results, cubeSb.toString(), 0, isException,
                 exceptionMessage, isPartialResult, isPushDown);
+        response.setCuboidIds(cuboidIdsSb.toString());
         response.setTotalScanCount(queryContext.getScannedRows());
         response.setTotalScanFiles((queryContext.getScanFiles() < 0) ? -1 :
                 queryContext.getScanFiles());

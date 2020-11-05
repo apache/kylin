@@ -32,8 +32,11 @@ def query_sql_file_and_compare(sql_directory, project_name, sql_result_directory
             sql = sql_file.read()
 
         client = util.setup_instance('kylin_instance.yml')
-        with open(sql_result_directory + sql_file_name.split(".")[0] + '.json', 'r', encoding='utf8') as expected_result_file:
-            expected_result = json.loads(expected_result_file.read())
+        expected_result_file_name = sql_result_directory + sql_file_name.split(".")[0]
+        expected_result = None
+        if os.path.exists(expected_result_file_name):
+            with open(sql_result_directory + sql_file_name.split(".")[0] + '.json', 'r', encoding='utf8') as expected_result_file:
+                expected_result = json.loads(expected_result_file.read())
         equals.compare_sql_result(sql=sql, project=project_name, kylin_client=client, expected_result=expected_result)
 
 
