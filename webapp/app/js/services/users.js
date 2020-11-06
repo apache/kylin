@@ -38,7 +38,7 @@ KylinApp.service('UserService', function ($resource) {
         return hasRole;
     };
     this.isAuthorized = function () {
-        return  curUser.userDetails && curUser.userDetails.authorities && curUser.userDetails.authorities.length > 0;
+        return  curUser.userDetails;
     };
     this.getHomePage = function () {
         return this.isAuthorized()? "/models" : "/login";
