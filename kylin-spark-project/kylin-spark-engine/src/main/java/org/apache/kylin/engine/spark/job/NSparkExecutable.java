@@ -36,6 +36,8 @@ import java.util.Map.Entry;
 
 import java.util.Set;
 
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -103,7 +105,10 @@ public class NSparkExecutable extends AbstractExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         //context.setLogPath(getSparkDriverLogHdfsPath(context.getConfig()));
-        final KylinConfig config = wrapConfig(context);
+        CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+        CubeInstance cube = cubeMgr.getCube(this.getCubeName());
+        KylinConfig config = cube.getConfig();
+        config = wrapConfig(config);
 
         String sparkHome = KylinConfig.getSparkHome();
         if (StringUtils.isEmpty(sparkHome) && !config.isUTEnv()) {
@@ -192,9 +197,12 @@ public class NSparkExecutable extends AbstractExecutable {
         return String.format("%s.%s.log", config.getJobTmpOutputStorePath(getProject(), getId()),
                 System.currentTimeMillis());
     }*/
-
+    
     protected KylinConfig wrapConfig(ExecutableContext context) {
-        KylinConfig originalConfig = context.getConfig();
+        return wrapConfig(context.getConfig());
+    }
+
+    protected KylinConfig wrapConfig(KylinConfig originalConfig) {
         String project = getParam(MetadataConstants.P_PROJECT_NAME);
         Preconditions.checkState(StringUtils.isNotBlank(project), "job " + getId() + " project info is empty");
 
