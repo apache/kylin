@@ -7,13 +7,23 @@ permalink: /docs/tutorial/setup_systemcube.html
 
 > Available since Apache Kylin v2.3.0
 
-## What is System Cube
+Main content of this section:
+
+- [What is System Cube](#What is System Cube)
+- [How to Set Up System Cube](#How to Set Up System Cube)
+- [Automatically create System Cube](#Automatically create System Cube)
+- [Details of System Cube](#Details of System Cube)
+
+## <span id="What is System Cube">What is System Cube</span>
 
 For better supporting self-monitoring, a set of system Cubes are created under the system project, called "KYLIN_SYSTEM". Currently, there are five Cubes. Three are for query metrics, "METRICS_QUERY", "METRICS_QUERY_CUBE", "METRICS_QUERY_RPC". And the other two are for job metrics, "METRICS_JOB", "METRICS_JOB_EXCEPTION".
 
-## How to Set Up System Cube
+## <span id="How to Set Up System Cube">How to Set Up System Cube</span>
 
-### Prepare
+In this section, we will introduce the method of manually enabling the system cube. If you want to automatically enable the system cube through shell scripts, please refer to [Automatically Create System Cube](#What is System Cube).
+
+### 1. Prepare
+
 Create a configuration file SCSinkTools.json in KYLIN_HOME directory.
 
 For example:
@@ -31,7 +41,7 @@ For example:
 ]
 ```
 
-### 1. Generate Metadata
+### 2. Generate Metadata
 Run the following command in KYLIN_HOME folder to generate related metadata:
 
 ```
@@ -44,7 +54,7 @@ By this command, the related metadata will be generated and its location is unde
 
 ![metadata](/images/SystemCube/metadata.png)
 
-### 2. Set Up Datasource
+### 3. Set Up Datasource
 Running the following command to create source hive tables:
 
 ```
@@ -55,26 +65,26 @@ By this command, the related hive table will be created.
 
 ![hive_table](/images/SystemCube/hive_table.png)
 
-### 3. Upload Metadata for System Cubes
+### 4. Upload Metadata for System Cubes
 Then we need to upload metadata to hbase by the following command:
 
 ```
 ./bin/metastore.sh restore <output_folder>
 ```
 
-### 4. Reload Metadata
+### 5. Reload Metadata
 Finally, we need to reload metadata in Kylin web UI.
 
 
 Then, a set of system Cubes will be created under the system project, called "KYLIN_SYSTEM".
 
 
-### 5. System Cube build
+### 6. System Cube build
 When the system Cube is created, we need to build the Cube regularly.
 
-1. Create a shell script that builds the system Cube by calling org.apache.kylin.tool.job.CubeBuildingCLI
-  
-	For example:
+**Step 1**. Create a shell script that builds the system Cube by calling `org.apache.kylin.tool.job.CubeBuildingCLI`
+
+For example:
 
 {% highlight Groff markup %}
 #!/bin/bash
@@ -96,9 +106,7 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
 
 {% endhighlight %}
 
-2. Then run this shell script regularly
-
-	For example, add a cron job as follows:
+**Step 2**. Then run this shell script regularly. For example, add a cron job as follows:
 
 {% highlight Groff markup %}
 0 */2 * * * sh ${KYLIN_HOME}/bin/system_cube_build.sh KYLIN_HIVE_METRICS_QUERY_QA 3600000 1200000
@@ -113,7 +121,7 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
 
 {% endhighlight %}
 
-## Automatically create System Cube
+## <span id="Automatically create System Cube">Automatically create System Cube</span>
 
 Kylin provides system-cube.sh from v2.6.0, users can automatically create system cube by executing this script.
 
@@ -123,7 +131,7 @@ Kylin provides system-cube.sh from v2.6.0, users can automatically create system
 
 - Add crontab job for System Cube：`bin/system.sh cron`
 
-## Details of System Cube
+## <span id="Details of System Cube">Details of System Cube</span>
 
 ### Common Dimension
 For all of these Cube, admins can query at four time granularities. From higher level to lower, it's as follows:
@@ -159,12 +167,16 @@ This Cube is for collecting query metrics at the highest level. The details are 
     <td>the host of server for query engine</td>
   </tr>
   <tr>
+    <td>KUSER</td>
+    <td>the user who executes the query</td>
+  </tr>
+  <tr>
     <td>PROJECT</td>
-    <td></td>
+    <td>the project where the query executes</td>
   </tr>
   <tr>
     <td>REALIZATION</td>
-    <td>in Kylin, there are two OLAP realizations: Cube, or Hybrid of Cubes</td>
+    <td>the cube which the query hits. In Kylin，there are two OLAP realizations: Cube，or Hybrid of Cubes</td>
   </tr>
   <tr>
     <td>REALIZATION_TYPE</td>
@@ -172,11 +184,11 @@ This Cube is for collecting query metrics at the highest level. The details are 
   </tr>
   <tr>
     <td>QUERY_TYPE</td>
-    <td>users can query on different data sources, CACHE, OLAP, LOOKUP_TABLE, HIVE</td>
+    <td>users can query on different data sources，CACHE，OLAP，LOOKUP_TABLE，HIVE</td>
   </tr>
   <tr>
     <td>EXCEPTION</td>
-    <td>when doing query, exceptions may happen. It's for classifying different exception types</td>
+    <td>when doing query，exceptions may happen. It's for classifying different exception types</td>
   </tr>
 </table>
 
@@ -189,19 +201,19 @@ This Cube is for collecting query metrics at the highest level. The details are 
     <td></td>
   </tr>
   <tr>
-    <td>MIN, MAX, SUM of QUERY_TIME_COST</td>
+    <td>MIN，MAX，SUM，PERCENTILE_APPROX of QUERY_TIME_COST</td>
     <td>the time cost for the whole query</td>
   </tr>
   <tr>
-    <td>MAX, SUM of CALCITE_SIZE_RETURN</td>
+    <td>MAX，SUM of CALCITE_SIZE_RETURN</td>
     <td>the row count of the result Calcite returns</td>
   </tr>
   <tr>
-    <td>MAX, SUM of STORAGE_SIZE_RETURN</td>
+    <td>MAX，SUM of STORAGE_SIZE_RETURN</td>
     <td>the row count of the input to Calcite</td>
   </tr>
   <tr>
-    <td>MAX, SUM of CALCITE_SIZE_AGGREGATE_FILTER</td>
+    <td>MAX，SUM of CALCITE_SIZE_AGGREGATE_FILTER</td>
     <td>the row count of Calcite aggregates and filters</td>
   </tr>
   <tr>
@@ -209,6 +221,7 @@ This Cube is for collecting query metrics at the highest level. The details are 
     <td>the number of different queries</td>
   </tr>
 </table>
+
 
 ### METRICS_QUERY_RPC
 This Cube is for collecting query metrics at the lowest level. For a query, the related aggregation and filter can be pushed down to each rpc target server. The robustness of rpc target servers is the foundation for better serving queries. The details are as follows:
@@ -223,11 +236,11 @@ This Cube is for collecting query metrics at the lowest level. For a query, the 
   </tr>
   <tr>
     <td>PROJECT</td>
-    <td></td>
+    <td>the project where the query executes</td>
   </tr>
   <tr>
     <td>REALIZATION</td>
-    <td></td>
+    <td>the cube which the query hits.</td>
   </tr>
   <tr>
     <td>RPC_SERVER</td>
@@ -235,7 +248,7 @@ This Cube is for collecting query metrics at the lowest level. For a query, the 
   </tr>
   <tr>
     <td>EXCEPTION</td>
-    <td>the exception of a rpc call. If no exception, "NULL" is used</td>
+    <td>the exception of a rpc call. If no exception，"NULL" is used</td>
   </tr>
 </table>
 
@@ -248,30 +261,31 @@ This Cube is for collecting query metrics at the lowest level. For a query, the 
     <td></td>
   </tr>
   <tr>
-    <td>MAX, SUM of CALL_TIME</td>
+    <td>MAX，SUM，PERCENTILE_APPROX of CALL_TIME</td>
     <td>the time cost of a rpc all</td>
   </tr>
   <tr>
-    <td>MAX, SUM of COUNT_SKIP</td>
-    <td>based on fuzzy filters or else, a few rows will be skipped. This indicates the skipped row count</td>
+    <td>MAX，SUM of COUNT_SKIP</td>
+    <td>based on fuzzy filters or else，a few rows will be skiped. This indicates the skipped row count</td>
   </tr>
   <tr>
-    <td>MAX, SUM of SIZE_SCAN</td>
+    <td>MAX，SUM of SIZE_SCAN</td>
     <td>the row count actually scanned</td>
   </tr>
   <tr>
-    <td>MAX, SUM of SIZE_RETURN</td>
+    <td>MAX，SUM of SIZE_RETURN</td>
     <td>the row count actually returned</td>
   </tr>
   <tr>
-    <td>MAX, SUM of SIZE_AGGREGATE</td>
+    <td>MAX，SUM of SIZE_AGGREGATE</td>
     <td>the row count actually aggregated</td>
   </tr>
   <tr>
-    <td>MAX, SUM of SIZE_AGGREGATE_FILTER</td>
-    <td>the row count actually aggregated and filtered, = SIZE_SCAN - SIZE_RETURN</td>
+    <td>MAX，SUM of SIZE_AGGREGATE_FILTER</td>
+    <td>the row count actually aggregated and filtered，= SIZE_SCAN - SIZE_RETURN</td>
   </tr>
 </table>
+
 
 ### METRICS_QUERY_CUBE
 This Cube is for collecting query metrics at the Cube level. The most important are cuboids related, which will serve for Cube planner. The details are as follows:
@@ -285,12 +299,16 @@ This Cube is for collecting query metrics at the Cube level. The most important 
     <td></td>
   </tr>
   <tr>
+    <td>SEGMENT_NAME</td>
+    <td></td>
+  </tr>
+  <tr>
     <td>CUBOID_SOURCE</td>
     <td>source cuboid parsed based on query and Cube design</td>
   </tr>
   <tr>
     <td>CUBOID_TARGET</td>
-    <td>target cuboid already pre-calculated and served for source cuboid</td>
+    <td>target cuboid already precalculated and served for source cuboid</td>
   </tr>
   <tr>
     <td>IF_MATCH</td>
@@ -311,38 +329,43 @@ This Cube is for collecting query metrics at the Cube level. The most important 
     <td></td>
   </tr>
   <tr>
-    <td>MAX, SUM of STORAGE_CALL_COUNT</td>
+    <td>WEIGHT_PER_HIT</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>MAX，SUM of STORAGE_CALL_COUNT</td>
     <td>the number of rpc calls for a query hit on this Cube</td>
   </tr>
   <tr>
-    <td>MAX, SUM of STORAGE_CALL_TIME_SUM</td>
+    <td>MAX，SUM of STORAGE_CALL_TIME_SUM</td>
     <td>sum of time cost for the rpc calls of a query</td>
   </tr>
   <tr>
-    <td>MAX, SUM of STORAGE_CALL_TIME_MAX</td>
+    <td>MAX，SUM of STORAGE_CALL_TIME_MAX</td>
     <td>max of time cost among the rpc calls of a query</td>
   </tr>
   <tr>
-    <td>MAX, SUM of STORAGE_COUNT_SKIP</td>
+    <td>MAX，SUM of STORAGE_COUNT_SKIP</td>
     <td>the sum of row count skipped for the related rpc calls</td>
   </tr>
   <tr>
-    <td>MAX, SUM of STORAGE_SIZE_SCAN</td>
+    <td>MAX，SUM of STORAGE_COUNT_SCAN</td>
     <td>the sum of row count scanned for the related rpc calls</td>
   </tr>
   <tr>
-    <td>MAX, SUM of STORAGE_SIZE_RETURN</td>
+    <td>MAX，SUM of STORAGE_COUNT_RETURN</td>
     <td>the sum of row count returned for the related rpc calls</td>
   </tr>
   <tr>
-    <td>MAX, SUM of STORAGE_SIZE_AGGREGATE</td>
+    <td>MAX，SUM of STORAGE_COUNT_AGGREGATE</td>
     <td>the sum of row count aggregated for the related rpc calls</td>
   </tr>
   <tr>
-    <td>MAX, SUM of STORAGE_SIZE_AGGREGATE_FILTER</td>
-    <td>the sum of row count aggregated and filtered for the related rpc calls, = STORAGE_SIZE_SCAN - STORAGE_SIZE_RETURN</td>
+    <td>MAX，SUM of STORAGE_COUNT_AGGREGATE_FILTER</td>
+    <td>the sum of row count aggregated and filtered for the related rpc calls，= STORAGE_SIZE_SCAN - STORAGE_SIZE_RETURN</td>
   </tr>
 </table>
+
 
 ### METRICS_JOB
 In Kylin, there are mainly three types of job:
@@ -357,20 +380,28 @@ This Cube is for collecting job metrics. The details are as follows:
     <th colspan="2">Dimension</th>
   </tr>
   <tr>
+    <td>HOST</td>
+    <td>the host of server for query engine</td>
+  </tr>
+  <tr>
+    <td>KUSER</td>
+    <td>the user who executes the query</td>
+  </tr>
+  <tr>
     <td>PROJECT</td>
-    <td></td>
+    <td>the project where the query executes</td>
   </tr>
   <tr>
     <td>CUBE_NAME</td>
-    <td></td>
+    <td>the cube which the query hits.</td>
   </tr>
   <tr>
     <td>JOB_TYPE</td>
-    <td></td>
+    <td>build, merge or optimize</td>
   </tr>
   <tr>
     <td>CUBING_TYPE</td>
-    <td>in kylin, there are two cubing algorithms, Layered & Fast(InMemory)</td>
+    <td>in kylin，there are two cubing algorithms，Layered & Fast(InMemory)</td>
   </tr>
 </table>
 
@@ -383,26 +414,43 @@ This Cube is for collecting job metrics. The details are as follows:
     <td></td>
   </tr>
   <tr>
-    <td>MIN, MAX, SUM of DURATION</td>
+    <td>MIN，MAX，SUM，PERCENTILE_APPROX of DURATION</td>
     <td>the duration from a job start to finish</td>
   </tr>
   <tr>
-    <td>MIN, MAX, SUM of TABLE_SIZE</td>
+    <td>MIN，MAX，SUM of TABLE_SIZE</td>
     <td>the size of data source in bytes</td>
   </tr>
   <tr>
-    <td>MIN, MAX, SUM of CUBE_SIZE</td>
+    <td>MIN，MAX，SUM of CUBE_SIZE</td>
     <td>the size of created Cube segment in bytes</td>
   </tr>
   <tr>
-    <td>MIN, MAX, SUM of PER_BYTES_TIME_COST</td>
+    <td>MIN，MAX，SUM of PER_BYTES_TIME_COST</td>
     <td>= DURATION / TABLE_SIZE</td>
   </tr>
   <tr>
-    <td>MIN, MAX, SUM of WAIT_RESOURCE_TIME</td>
-    <td>a job may includes several MR(map reduce) jobs. Those MR jobs may wait because of lack of Hadoop resources.</td>
+    <td>MIN，MAX，SUM of WAIT_RESOURCE_TIME</td>
+    <td>a job may includes serveral MR(map reduce) jobs. Those MR jobs may wait because of lack of Hadoop resources.</td>
+  </tr>
+  <tr>
+    <td>MAX，SUM of step_duration_distinct_columns</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>MAX，SUM of step_duration_dictionary</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>MAX，SUM of step_duration_inmem_cubing</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>MAX，SUM of step_duration_hfile_convert</td>
+    <td></td>
   </tr>
 </table>
+
 
 ### METRICS_JOB_EXCEPTION
 This Cube is for collecting job exception metrics. The details are as follows:
@@ -412,26 +460,35 @@ This Cube is for collecting job exception metrics. The details are as follows:
     <th colspan="2">Dimension</th>
   </tr>
   <tr>
+    <td>HOST</td>
+    <td>the host of server for query engine</td>
+  </tr>
+  <tr>
+    <td>KUSER</td>
+    <td>the user who executes the query</td>
+  </tr>
+  <tr>
     <td>PROJECT</td>
-    <td></td>
+    <td>the project where the query executes</td>
   </tr>
   <tr>
     <td>CUBE_NAME</td>
-    <td></td>
+    <td>the cube which the query hits.</td>
   </tr>
   <tr>
     <td>JOB_TYPE</td>
-    <td></td>
+    <td>build, merge or optimize</td>
   </tr>
   <tr>
     <td>CUBING_TYPE</td>
-    <td></td>
+    <td>in kylin，there are two cubing algorithms，Layered & Fast(InMemory)</td>
   </tr>
   <tr>
     <td>EXCEPTION</td>
-    <td>when running a job, exceptions may happen. It's for classifying different exception types</td>
+    <td>when running a job，exceptions may happen. It's for classifying different exception types</td>
   </tr>
 </table>
+
 
 <table>
   <tr>
