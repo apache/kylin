@@ -7,16 +7,24 @@ permalink: /cn/docs/tutorial/setup_systemcube.html
 
 > 自 Apache Kylin v2.3.0 起有效
 
-## 什么是系统 Cube
+本节主要内容：
+
+- [什么是系统 Cube](#什么是系统 Cube)
+- [如何建立系统 Cube](#如何建立系统 Cube)
+- [自动创建系统 Cube](#自动创建系统 Cube)
+- [系统 Cube 的细节](#系统 Cube 的细节)
+
+## <span id="什么是系统 Cube">什么是系统 Cube</span>
 
 为了更好的支持自我监控，在系统 project 下创建一组系统 Cubes，叫做 "KYLIN_SYSTEM"。现在，这里有五个 Cubes。三个用于查询指标，"METRICS_QUERY"，"METRICS_QUERY_CUBE"，"METRICS_QUERY_RPC"。另外两个是 job 指标，"METRICS_JOB"，"METRICS_JOB_EXCEPTION"。
 
-## 如何建立系统 Cube
+## <span id="如何建立系统 Cube">如何建立系统 Cube</span>
 
-### 准备
-在 KYLIN_HOME 目录下创建一个配置文件 SCSinkTools.json。
+本节我们介绍手动启用系统 Cube 的方法，如果您希望通过 shell 脚本自动创建系统 Cube，请参考[自动创建系统 Cube](#什么是系统 Cube)。
 
-例如：
+### 1. 准备
+
+在 KYLIN_HOME 目录下创建一个配置文件 SCSinkTools.json。例如：
 
 ```
 [
@@ -31,8 +39,8 @@ permalink: /cn/docs/tutorial/setup_systemcube.html
 ]
 ```
 
-### 1. 生成 Metadata
-在 KYLIN_HOME 文件夹下运行一下命令生成相关的 metadata：
+### 2. 生成 Metadata
+在 KYLIN_HOME 文件夹下运行以下命令生成相关的 metadata：
 
 ```
 ./bin/kylin.sh org.apache.kylin.tool.metrics.systemcube.SCCreator \
@@ -44,37 +52,32 @@ permalink: /cn/docs/tutorial/setup_systemcube.html
 
 ![metadata](/images/SystemCube/metadata.png)
 
-### 2. 建立数据源
-运行下列命令生成 hive 源表：
+### 3. 建立数据源
+运行下列命令生成 Hive 源表：
 
 ```
 hive -f <output_forder>/create_hive_tables_for_system_cubes.sql
 ```
 
-通过这个命令，相关的 hive 表将会被创建。
+通过这个命令，相关的 hive 表将会被创建。每一个系统 Cube 中的事实表对应了一张 Hive 源表，Hive 源表中记录了查询或任务相关的数据，这些数据将为系统 Cube 服务。
 
 ![hive_table](/images/SystemCube/hive_table.png)
 
-### 3. 为 System Cubes 上传 Metadata 
+### 4. 为系统 Cubes 上传 Metadata 
 然后我们需要通过下列命令上传 metadata 到 hbase：
 
 ```
 ./bin/metastore.sh restore <output_forder>
 ```
 
-### 4. 重载 Metadata
-最终，我们需要在 Kylin web UI 重载 metadata。
+### 5. 重载 Metadata
+最终，我们需要在 Kylin web UI 重载 metadata。然后，一组系统 Cubes 将会被创建在系统 project 下，称为 "KYLIN_SYSTEM"。
 
 
-然后，一组系统 Cubes 将会被创建在系统 project 下，称为 "KYLIN_SYSTEM"。
+### 6. 构建系统 Cube
+当系统 Cube 被创建，我们需要定期构建 Cube。方法如下：
 
-
-### 5. 系统 Cube build
-当系统 Cube 被创建，我们需要定期 build Cube。
-
-1. 创建一个 shell 脚本其通过调用 org.apache.kylin.tool.job.CubeBuildingCLI 来 build 系统 Cube
-  
-	例如:
+**步骤一**：创建一个 shell 脚本，通过调用 org.apache.kylin.tool.job.CubeBuildingCLI 来构建系统 Cube。例如：
 
 {% highlight Groff markup %}
 #!/bin/bash
@@ -96,9 +99,7 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
 
 {% endhighlight %}
 
-2. 然后定期运行这个 shell 脚本
-
-	例如，像接下来这样添加一个 cron job：
+**步骤二**：定期运行这个 shell 脚本。例如，像接下来这样添加一个 cron job：
 
 {% highlight Groff markup %}
 0 */2 * * * sh ${KYLIN_HOME}/bin/system_cube_build.sh KYLIN_HIVE_METRICS_QUERY_QA 3600000 1200000
@@ -113,20 +114,23 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
 
 {% endhighlight %}
 
-## 自动创建系统cube
+## <span id="自动创建系统 Cube">自动创建系统 Cube</span>
 
-从kylin 2.6.0开始提供system-cube.sh脚本，用户可以通过执行此脚本来自动创建系统cube。
+从kylin 2.6.0 开始提供 system-cube.sh 脚本，用户可以通过执行此脚本来自动创建系统 Cube。
 
-- 创建系统cube：`sh system-cube.sh setup`
+- 创建系统 Cube：`sh system-cube.sh setup`
 
-- 构建系统cube：`sh bin/system-cube.sh build`
+- 构建系统 Cube：`sh bin/system-cube.sh build`
 
-- 为系统cube添加定时任务：`bin/system.sh cron`
+- 为系统 Cube 添加定时任务：`bin/system.sh cron`
 
-## 系统 Cube 的细节
+## <span id="系统 Cube 的细节">系统 Cube 的细节</span>
+
+Hive 中有 5 张表记录了 Kylin 系统的相关指标数据，每一个系统 Cube 的事实表对应了一张 Hive 表，共有 5 个系统 Cube。
 
 ### 普通 Dimension
-对于这些 Cube，admins 能够用四个时间粒度查询。从高级别到低级别，如下：
+
+对于这些系统 Cube，admins 能够用四个时间粒度查询，这些维度在 5 个系统 Cube 中均生效。从高级别到低级别，如下：
 
 <table>
   <tr>
@@ -147,6 +151,7 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
   </tr>
 </table>
 
+
 ### METRICS_QUERY
 这个 Cube 用于在最高级别收集查询 metrics。细节如下：
 
@@ -159,12 +164,16 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
     <td>the host of server for query engine</td>
   </tr>
   <tr>
+    <td>KUSER</td>
+    <td>the user who executes the query</td>
+  </tr>
+  <tr>
     <td>PROJECT</td>
-    <td></td>
+    <td>the project where the query executes</td>
   </tr>
   <tr>
     <td>REALIZATION</td>
-    <td>in Kylin，there are two OLAP realizations: Cube，or Hybrid of Cubes</td>
+    <td>the cube which the query hits. In Kylin，there are two OLAP realizations: Cube，or Hybrid of Cubes</td>
   </tr>
   <tr>
     <td>REALIZATION_TYPE</td>
@@ -189,7 +198,7 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
     <td></td>
   </tr>
   <tr>
-    <td>MIN，MAX，SUM of QUERY_TIME_COST</td>
+    <td>MIN，MAX，SUM，PERCENTILE_APPROX of QUERY_TIME_COST</td>
     <td>the time cost for the whole query</td>
   </tr>
   <tr>
@@ -210,6 +219,7 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
   </tr>
 </table>
 
+
 ### METRICS_QUERY_RPC
 这个 Cube 用于在最低级别收集查询 metrics。对于一个查询，相关的 aggregation 和 filter 能够下推到每一个 rpc 目标服务器。Rpc 目标服务器的健壮性是更好查询性能的基础。细节如下：
 
@@ -223,11 +233,11 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
   </tr>
   <tr>
     <td>PROJECT</td>
-    <td></td>
+    <td>the project where the query executes</td>
   </tr>
   <tr>
     <td>REALIZATION</td>
-    <td></td>
+    <td>the cube which the query hits.</td>
   </tr>
   <tr>
     <td>RPC_SERVER</td>
@@ -248,7 +258,7 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
     <td></td>
   </tr>
   <tr>
-    <td>MAX，SUM of CALL_TIME</td>
+    <td>MAX，SUM，PERCENTILE_APPROX of CALL_TIME</td>
     <td>the time cost of a rpc all</td>
   </tr>
   <tr>
@@ -273,6 +283,7 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
   </tr>
 </table>
 
+
 ### METRICS_QUERY_CUBE
 这个 Cube 用于在 Cube 级别收集查询 metrics。最重要的是 cuboids 相关的，其为 Cube planner 提供服务。细节如下：
 
@@ -282,6 +293,10 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
   </tr>
   <tr>
     <td>CUBE_NAME</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>SEGMENT_NAME</td>
     <td></td>
   </tr>
   <tr>
@@ -311,6 +326,10 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
     <td></td>
   </tr>
   <tr>
+    <td>WEIGHT_PER_HIT</td>
+    <td></td>
+  </tr>
+  <tr>
     <td>MAX，SUM of STORAGE_CALL_COUNT</td>
     <td>the number of rpc calls for a query hit on this Cube</td>
   </tr>
@@ -327,22 +346,23 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
     <td>the sum of row count skipped for the related rpc calls</td>
   </tr>
   <tr>
-    <td>MAX，SUM of STORAGE_SIZE_SCAN</td>
+    <td>MAX，SUM of STORAGE_COUNT_SCAN</td>
     <td>the sum of row count scanned for the related rpc calls</td>
   </tr>
   <tr>
-    <td>MAX，SUM of STORAGE_SIZE_RETURN</td>
+    <td>MAX，SUM of STORAGE_COUNT_RETURN</td>
     <td>the sum of row count returned for the related rpc calls</td>
   </tr>
   <tr>
-    <td>MAX，SUM of STORAGE_SIZE_AGGREGATE</td>
+    <td>MAX，SUM of STORAGE_COUNT_AGGREGATE</td>
     <td>the sum of row count aggregated for the related rpc calls</td>
   </tr>
   <tr>
-    <td>MAX，SUM of STORAGE_SIZE_AGGREGATE_FILTER</td>
+    <td>MAX，SUM of STORAGE_COUNT_AGGREGATE_FILTER</td>
     <td>the sum of row count aggregated and filtered for the related rpc calls，= STORAGE_SIZE_SCAN - STORAGE_SIZE_RETURN</td>
   </tr>
 </table>
+
 
 ### METRICS_JOB
 在 Kylin 中，主要有三种类型的 job：
@@ -357,16 +377,24 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
     <th colspan="2">Dimension</th>
   </tr>
   <tr>
+    <td>HOST</td>
+    <td>the host of server for query engine</td>
+  </tr>
+  <tr>
+    <td>KUSER</td>
+    <td>the user who executes the query</td>
+  </tr>
+  <tr>
     <td>PROJECT</td>
-    <td></td>
+    <td>the project where the query executes</td>
   </tr>
   <tr>
     <td>CUBE_NAME</td>
-    <td></td>
+    <td>the cube which the query hits.</td>
   </tr>
   <tr>
     <td>JOB_TYPE</td>
-    <td></td>
+    <td>build, merge or optimize</td>
   </tr>
   <tr>
     <td>CUBING_TYPE</td>
@@ -383,7 +411,7 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
     <td></td>
   </tr>
   <tr>
-    <td>MIN，MAX，SUM of DURATION</td>
+    <td>MIN，MAX，SUM，PERCENTILE_APPROX of DURATION</td>
     <td>the duration from a job start to finish</td>
   </tr>
   <tr>
@@ -402,7 +430,24 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
     <td>MIN，MAX，SUM of WAIT_RESOURCE_TIME</td>
     <td>a job may includes serveral MR(map reduce) jobs. Those MR jobs may wait because of lack of Hadoop resources.</td>
   </tr>
+  <tr>
+    <td>MAX，SUM of step_duration_distinct_columns</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>MAX，SUM of step_duration_dictionary</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>MAX，SUM of step_duration_inmem_cubing</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>MAX，SUM of step_duration_hfile_convert</td>
+    <td></td>
+  </tr>
 </table>
+
 
 ### METRICS_JOB_EXCEPTION
 这个 Cube 是用来收集 job exception 指标。细节如下：
@@ -412,26 +457,35 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
     <th colspan="2">Dimension</th>
   </tr>
   <tr>
+    <td>HOST</td>
+    <td>the host of server for query engine</td>
+  </tr>
+  <tr>
+    <td>KUSER</td>
+    <td>the user who executes the query</td>
+  </tr>
+  <tr>
     <td>PROJECT</td>
-    <td></td>
+    <td>the project where the query executes</td>
   </tr>
   <tr>
     <td>CUBE_NAME</td>
-    <td></td>
+    <td>the cube which the query hits.</td>
   </tr>
   <tr>
     <td>JOB_TYPE</td>
-    <td></td>
+    <td>build, merge or optimize</td>
   </tr>
   <tr>
     <td>CUBING_TYPE</td>
-    <td></td>
+    <td>in kylin，there are two cubing algorithms，Layered & Fast(InMemory)</td>
   </tr>
   <tr>
     <td>EXCEPTION</td>
     <td>when running a job，exceptions may happen. It's for classifying different exception types</td>
   </tr>
 </table>
+
 
 <table>
   <tr>
