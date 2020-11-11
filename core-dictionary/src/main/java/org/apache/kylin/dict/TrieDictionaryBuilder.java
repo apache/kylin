@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -89,10 +89,14 @@ public class TrieDictionaryBuilder<T> {
 
     // add a converted value (given in byte[] format), use with care, for internal only
     void addValue(byte[] value) {
-        addValueR(root, value, 0);
+        addValueR(root, value, 0, false);
     }
 
-    private void addValueR(Node node, byte[] value, int start) {
+    void addValue(byte[] value, boolean isSplitValue) {
+        addValueR(root, value, 0, isSplitValue);
+    }
+
+    private void addValueR(Node node, byte[] value, int start, boolean isSplitValue) {
         hasValue = true;
         // match the value part of current node
         int i = 0, j = start;
@@ -108,11 +112,13 @@ public class TrieDictionaryBuilder<T> {
             // if value fully matched within the current node
             if (i == n) {
                 // if equals to current node, just mark end of value
-                node.isEndOfValue = true;
+                if (!isSplitValue) {
+                    node.isEndOfValue = true;
+                }
             } else {
                 // otherwise, split the current node into two
                 Node c = new Node(BytesUtil.subarray(node.part, i, n), node.isEndOfValue, node.children);
-                node.reset(BytesUtil.subarray(node.part, 0, i), true);
+                node.reset(BytesUtil.subarray(node.part, 0, i), isSplitValue? false : true);
                 node.children.add(c);
             }
             return;
@@ -121,7 +127,7 @@ public class TrieDictionaryBuilder<T> {
         // if partially matched the current, split the current node, add the new value, make a 3-way
         if (i < n) {
             Node c1 = new Node(BytesUtil.subarray(node.part, i, n), node.isEndOfValue, node.children);
-            Node c2 = new Node(BytesUtil.subarray(value, j, nn), true);
+            Node c2 = new Node(BytesUtil.subarray(value, j, nn), isSplitValue? false : true);
             node.reset(BytesUtil.subarray(node.part, 0, i), false);
             if (comp < 0) {
                 node.children.add(c1);
@@ -152,10 +158,10 @@ public class TrieDictionaryBuilder<T> {
         }
         if (found) {
             // found a child node matching the first byte, continue in that child
-            addValueR(node.children.get(mid), value, j);
+            addValueR(node.children.get(mid), value, j, isSplitValue);
         } else {
             // otherwise, make the value a new child
-            Node c = new Node(BytesUtil.subarray(value, j, nn), true);
+            Node c = new Node(BytesUtil.subarray(value, j, nn), isSplitValue ? false : true);
             node.children.add(comp <= 0 ? mid : mid + 1, c);
         }
     }
@@ -389,7 +395,7 @@ public class TrieDictionaryBuilder<T> {
                 completeParts.append(node.part);
                 completeParts.append(first255);
                 byte[] visited = completeParts.retrieve();
-                this.addValue(visited);
+                this.addValue(visited, true);
                 completeParts.withdraw(255);
                 completeParts.withdraw(node.part.length);
             }
