@@ -91,6 +91,7 @@
   - howto/howto_enable_zookeeper_acl
   - howto/howto_use_health_check_cli
   - howto/howto_use_hive_mr_dict
+  - howto/sample_dataset
 
 - title: Security
   docs:
