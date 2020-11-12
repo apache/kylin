@@ -145,8 +145,8 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         job.addTask(task1);
         job.addTask(task2);
         execMgr.addJob(job);
-        ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv()).updateJobOutput(task2.getId(),
-                ExecutableState.RUNNING, null, null);
+        ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv()).updateJobOutput(null, task2.getId(),
+                ExecutableState.RUNNING, null, null, null);
         waitForJobFinish(job.getId(), MAX_WAIT_TIME);
         Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(job.getId()).getState());
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());

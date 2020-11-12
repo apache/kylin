@@ -101,11 +101,11 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     protected void onExecuteStart(ExecutableContext executableContext) {
         final long startTime = getStartTime();
         if (startTime > 0) {
-            getManager().updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
+            getManager().updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), getId(), ExecutableState.RUNNING, null, null, getLogPath());
         } else {
             Map<String, String> info = Maps.newHashMap();
             info.put(START_TIME, Long.toString(System.currentTimeMillis()));
-            getManager().updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
+            getManager().updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), getId(), ExecutableState.RUNNING, info, null, getLogPath());
         }
         getManager().addJobInfo(getId(), BUILD_INSTANCE, DistributedLockFactory.processAndHost());
     }
@@ -137,8 +137,8 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                             "There shouldn't be a running subtask[jobId: {}, jobName: {}], \n"
                                     + "it might cause endless state, will retry to fetch subtask's state.",
                             task.getId(), task.getName());
-                    getManager().updateJobOutput(task.getId(), ExecutableState.ERROR, null,
-                            "killed due to inconsistent state");
+                    getManager().updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), task.getId(), ExecutableState.ERROR, null,
+                            "killed due to inconsistent state", getLogPath());
                     hasError = true;
                 }
 
@@ -156,21 +156,21 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             }
             if (allSucceed) {
                 setEndTime(System.currentTimeMillis());
-                mgr.updateJobOutput(getId(), ExecutableState.SUCCEED, null, null);
+                mgr.updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), getId(), ExecutableState.SUCCEED, null, null, getLogPath());
                 onStatusChange(executableContext, result, ExecutableState.SUCCEED);
             } else if (hasError) {
                 setEndTime(System.currentTimeMillis());
-                mgr.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
+                mgr.updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), getId(), ExecutableState.ERROR, null, null, getLogPath());
                 onStatusChange(executableContext, result, ExecutableState.ERROR);
             } else if (hasDiscarded) {
                 setEndTime(System.currentTimeMillis());
-                mgr.updateJobOutput(getId(), ExecutableState.DISCARDED, null, null);
+                mgr.updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), getId(), ExecutableState.DISCARDED, null, null, getLogPath());
             } else {
-                mgr.updateJobOutput(getId(), ExecutableState.READY, null, null);
+                mgr.updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), getId(), ExecutableState.READY, null, null, getLogPath());
             }
         } else {
             setEndTime(System.currentTimeMillis());
-            mgr.updateJobOutput(getId(), ExecutableState.ERROR, null, result.output());
+            mgr.updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), getId(), ExecutableState.ERROR, null, result.output(), getLogPath());
             onStatusChange(executableContext, result, ExecutableState.ERROR);
         }
     }

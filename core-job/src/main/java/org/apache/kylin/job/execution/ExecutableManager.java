@@ -23,7 +23,12 @@ import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
 import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
 import static org.apache.kylin.job.constant.ExecutableConstants.FLINK_JOB_ID;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.IllegalFormatException;
@@ -31,18 +36,28 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Deque;
+import java.util.ArrayDeque;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.JobProcessContext;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.IllegalStateTranferException;
 import org.apache.kylin.job.exception.PersistentException;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -240,6 +255,197 @@ public class ExecutableManager {
         return result;
     }
 
+    public Output getOutputFromHDFSByJobId(String jobId) {
+        return getOutputFromHDFSByJobId(jobId, jobId);
+    }
+
+    public Output getOutputFromHDFSByJobId(String jobId, String stepId) {
+        return getOutputFromHDFSByJobId(jobId, stepId, 100);
+    }
+
+    /**
+     * get job output from hdfs json file;
+     * if json file contains logPath,
+     * the logPath is spark driver log hdfs path(*.json.log), read sample data from log file.
+     *
+     * @param jobId
+     * @return
+     */
+    public Output getOutputFromHDFSByJobId(String jobId, String stepId, int nLines) {
+        AbstractExecutable jobInstance = getJob(jobId);
+        String outputStorePath = KylinConfig.getInstanceFromEnv().getJobOutputStorePath(jobInstance.getParam(MetadataConstants.P_PROJECT_NAME), stepId);
+        ExecutableOutputPO jobOutput = getJobOutputFromHDFS(outputStorePath);
+        assertOutputNotNull(jobOutput, outputStorePath);
+
+        if (Objects.nonNull(jobOutput.getLogPath())) {
+            if (isHdfsPathExists(jobOutput.getLogPath())) {
+                jobOutput.setContent(getSampleDataFromHDFS(jobOutput.getLogPath(), nLines));
+            } else if (StringUtils.isEmpty(jobOutput.getContent()) && Objects.nonNull(getJob(jobId))
+                    && getJob(jobId).getStatus() == ExecutableState.RUNNING) {
+                jobOutput.setContent("Wait a moment ... ");
+            }
+        }
+
+        return parseOutput(jobOutput);
+    }
+
+    public ExecutableOutputPO getJobOutputFromHDFS(String resPath) {
+        DataInputStream din = null;
+        try {
+            Path path = new Path(resPath);
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
+            if (!fs.exists(path)) {
+                ExecutableOutputPO executableOutputPO = new ExecutableOutputPO();
+                executableOutputPO.setContent("job output not found, please check kylin.log");
+                return executableOutputPO;
+            }
+
+            din = fs.open(path);
+            return JsonUtil.readValue(din, ExecutableOutputPO.class);
+        } catch (Exception e) {
+            // If the output file on hdfs is corrupt, give an empty output
+            logger.error("get job output [{}] from HDFS failed.", resPath, e);
+            ExecutableOutputPO executableOutputPO = new ExecutableOutputPO();
+            executableOutputPO.setContent("job output broken, please check kylin.log");
+            return executableOutputPO;
+        } finally {
+            IOUtils.closeQuietly(din);
+        }
+    }
+
+    private void assertOutputNotNull(ExecutableOutputPO output, String idOrPath) {
+        com.google.common.base.Preconditions.checkArgument(output != null, "there is no related output for job :" + idOrPath);
+    }
+
+    /**
+     * check the hdfs path exists.
+     *
+     * @param hdfsPath
+     * @return
+     */
+    public boolean isHdfsPathExists(String hdfsPath) {
+        if (StringUtils.isBlank(hdfsPath)) {
+            return false;
+        }
+
+        Path path = new Path(hdfsPath);
+        FileSystem fs = HadoopUtil.getWorkingFileSystem();
+        try {
+            return fs.exists(path);
+        } catch (IOException e) {
+            logger.error("check the hdfs path [{}] exists failed, ", hdfsPath, e);
+        }
+
+        return false;
+    }
+
+    /**
+     * get sample data from hdfs log file.
+     * specified the lines, will get the first num lines and last num lines.
+     *
+     * @param resPath
+     * @return
+     */
+    public String getSampleDataFromHDFS(String resPath, final int nLines) {
+        try {
+            Path path = new Path(resPath);
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
+            if (!fs.exists(path)) {
+                return null;
+            }
+
+            FileStatus fileStatus = fs.getFileStatus(path);
+            try (FSDataInputStream din = fs.open(path);
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(din, "UTF-8"))) {
+
+                String line;
+                StringBuilder sampleData = new StringBuilder();
+                for (int i = 0; i < nLines && (line = reader.readLine()) != null; i++) {
+                    if (sampleData.length() > 0) {
+                        sampleData.append('\n');
+                    }
+                    sampleData.append(line);
+                }
+
+                int offset = sampleData.toString().getBytes("UTF-8").length + 1;
+                if (offset < fileStatus.getLen()) {
+                    sampleData.append("\n================================================================\n");
+                    sampleData.append(tailHdfsFileInputStream(din, offset, fileStatus.getLen(), nLines));
+                }
+                return sampleData.toString();
+            }
+        } catch (IOException e) {
+            logger.error("get sample data from hdfs log file [{}] failed!", resPath, e);
+            return null;
+        }
+    }
+
+    /**
+     * get the last N_LINES lines from the end of hdfs file input stream;
+     * reference: https://olapio.atlassian.net/wiki/spaces/PD/pages/1306918958
+     *
+     * @param hdfsDin
+     * @param startPos
+     * @param endPos
+     * @param nLines
+     * @return
+     * @throws IOException
+     */
+    private String tailHdfsFileInputStream(FSDataInputStream hdfsDin, final long startPos, final long endPos,
+                                           final int nLines) throws IOException {
+        com.google.common.base.Preconditions.checkNotNull(hdfsDin);
+        com.google.common.base.Preconditions.checkArgument(startPos < endPos && startPos >= 0);
+        com.google.common.base.Preconditions.checkArgument(nLines >= 0);
+
+        Deque<String> deque = new ArrayDeque<>();
+        int buffSize = 8192;
+        byte[] byteBuf = new byte[buffSize];
+
+        long pos = endPos;
+
+        // cause by log last char is \n
+        hdfsDin.seek(pos - 1);
+        int lastChar = hdfsDin.read();
+        if ('\n' == lastChar) {
+            pos--;
+        }
+
+        int bytesRead = (int) ((pos - startPos) % buffSize);
+        if (bytesRead == 0) {
+            bytesRead = buffSize;
+        }
+
+        pos -= bytesRead;
+        int lines = nLines;
+        while (lines > 0 && pos >= startPos) {
+            bytesRead = hdfsDin.read(pos, byteBuf, 0, bytesRead);
+
+            int last = bytesRead;
+            for (int i = bytesRead - 1; i >= 0 && lines > 0; i--) {
+                if (byteBuf[i] == '\n') {
+                    deque.push(new String(byteBuf, i, last - i, StandardCharsets.UTF_8));
+                    lines--;
+                    last = i;
+                }
+            }
+
+            if (lines > 0 && last > 0) {
+                deque.push(new String(byteBuf, 0, last, StandardCharsets.UTF_8));
+            }
+
+            bytesRead = buffSize;
+            pos -= bytesRead;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        while (!deque.isEmpty()) {
+            sb.append(deque.pop());
+        }
+
+        return sb.length() > 0 && sb.charAt(0) == '\n' ? sb.substring(1) : sb.toString();
+    }
+
+
     public List<AbstractExecutable> getAllExecutables() {
         try {
             List<AbstractExecutable> ret = Lists.newArrayList();
@@ -342,12 +548,12 @@ public class ExecutableManager {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {
                 if (task.getStatus() == ExecutableState.RUNNING) {
-                    updateJobOutput(task.getId(), ExecutableState.READY, null, null);
+                    updateJobOutput(task.getParam(MetadataConstants.P_PROJECT_NAME), task.getId(), ExecutableState.READY, null, null, task.getLogPath());
                     break;
                 }
             }
         }
-        updateJobOutput(jobId, ExecutableState.READY, null, null);
+        updateJobOutput(job.getParam(MetadataConstants.P_PROJECT_NAME), jobId, ExecutableState.READY, null, null, job.getLogPath());
     }
 
     public void resumeJob(String jobId) {
@@ -360,7 +566,7 @@ public class ExecutableManager {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {
                 if (task.getStatus() == ExecutableState.ERROR || task.getStatus() == ExecutableState.STOPPED) {
-                    updateJobOutput(task.getId(), ExecutableState.READY, null, "no output");
+                    updateJobOutput(task.getParam(MetadataConstants.P_PROJECT_NAME), task.getId(), ExecutableState.READY, null, "no output", task.getLogPath());
                     break;
                 }
             }
@@ -372,7 +578,7 @@ public class ExecutableManager {
                 info.remove(AbstractExecutable.END_TIME);
             }
         }
-        updateJobOutput(jobId, ExecutableState.READY, info, null);
+        updateJobOutput(job.getParam(MetadataConstants.P_PROJECT_NAME), jobId, ExecutableState.READY, info, null, job.getLogPath());
     }
 
     public void discardJob(String jobId) {
@@ -394,11 +600,11 @@ public class ExecutableManager {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {
                 if (!task.getStatus().isFinalState()) {
-                    updateJobOutput(task.getId(), ExecutableState.DISCARDED, null, null);
+                    updateJobOutput(task.getParam(MetadataConstants.P_PROJECT_NAME), task.getId(), ExecutableState.DISCARDED, null, null, task.getLogPath());
                 }
             }
         }
-        updateJobOutput(jobId, ExecutableState.DISCARDED, null, null);
+        updateJobOutput(job.getParam(MetadataConstants.P_PROJECT_NAME), jobId, ExecutableState.DISCARDED, null, null, job.getLogPath());
     }
 
     public void rollbackJob(String jobId, String stepId) {
@@ -412,13 +618,13 @@ public class ExecutableManager {
             for (AbstractExecutable task : tasks) {
                 if (task.getId().compareTo(stepId) >= 0) {
                     logger.debug("rollback task : " + task);
-                    updateJobOutput(task.getId(), ExecutableState.READY, Maps.<String, String> newHashMap(), "");
+                    updateJobOutput(task.getParam(MetadataConstants.P_PROJECT_NAME), task.getId(), ExecutableState.READY, Maps.<String, String> newHashMap(), "", task.getLogPath());
                 }
             }
         }
 
         if (job.getStatus() == ExecutableState.SUCCEED) {
-            updateJobOutput(job.getId(), ExecutableState.READY, null, null);
+            updateJobOutput(job.getParam(MetadataConstants.P_PROJECT_NAME), job.getId(), ExecutableState.READY, null, null, job.getLogPath());
         }
     }
 
@@ -439,12 +645,12 @@ public class ExecutableManager {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {
                 if (!task.getStatus().isFinalState()) {
-                    updateJobOutput(task.getId(), ExecutableState.STOPPED, null, null);
+                    updateJobOutput(task.getParam(MetadataConstants.P_PROJECT_NAME), task.getId(), ExecutableState.STOPPED, null, null, task.getLogPath());
                     break;
                 }
             }
         }
-        updateJobOutput(jobId, ExecutableState.STOPPED, null, null);
+        updateJobOutput(job.getParam(MetadataConstants.P_PROJECT_NAME), jobId, ExecutableState.STOPPED, null, null, job.getLogPath());
     }
 
     public ExecutableOutputPO getJobOutput(String jobId) {
@@ -456,7 +662,7 @@ public class ExecutableManager {
         }
     }
 
-    public void updateJobOutput(String jobId, ExecutableState newStatus, Map<String, String> info, String output) {
+    public void updateJobOutput(String project, String jobId, ExecutableState newStatus, Map<String, String> info, String output, String logPath) {
         // when 
         if (Thread.currentThread().isInterrupted()) {
             throw new RuntimeException("Current thread is interruptted, aborting");
@@ -493,6 +699,39 @@ public class ExecutableManager {
         } catch (PersistentException e) {
             logger.error("error change job:" + jobId + " to " + newStatus);
             throw new RuntimeException(e);
+        }
+
+        if (project != null) {
+            //write output to HDFS
+            updateJobOutputToHDFS(project, jobId, output, logPath);
+        }
+    }
+
+    public void updateJobOutputToHDFS(String project, String jobId, String output, String logPath) {
+        ExecutableOutputPO jobOutput = getJobOutput(jobId);
+        if (null != output) {
+            jobOutput.setContent(output);
+        }
+        if (null != logPath) {
+            jobOutput.setLogPath(logPath);
+        }
+        String outputHDFSPath = KylinConfig.getInstanceFromEnv().getJobOutputStorePath(project, jobId);
+
+        updateJobOutputToHDFS(outputHDFSPath, jobOutput);
+    }
+
+    public void updateJobOutputToHDFS(String resPath, ExecutableOutputPO obj) {
+        DataOutputStream dout = null;
+        try {
+            Path path = new Path(resPath);
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
+            dout = fs.create(path, true);
+            JsonUtil.writeValue(dout, obj);
+        } catch (Exception e) {
+            // the operation to update output to hdfs failed, next task should not be interrupted.
+            logger.error("update job output [{}] to HDFS failed.", resPath, e);
+        } finally {
+            IOUtils.closeQuietly(dout);
         }
     }
 
@@ -548,7 +787,7 @@ public class ExecutableManager {
                 if (executableDao.getJobOutput(task.getId()).getStatus().equals("SUCCEED")) {
                     continue;
                 } else if (executableDao.getJobOutput(task.getId()).getStatus().equals("RUNNING")) {
-                    updateJobOutput(task.getId(), ExecutableState.READY, Maps.<String, String> newHashMap(), "");
+                    updateJobOutput(null, task.getId(), ExecutableState.READY, Maps.<String, String> newHashMap(), "", null);
                 }
                 break;
             }

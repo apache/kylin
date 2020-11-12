@@ -75,7 +75,7 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
         AbstractExecutable another = service.getJob(executable.getId());
         assertJobEqual(executable, another);
 
-        service.updateJobOutput(executable.getId(), ExecutableState.RUNNING, null, "test output");
+        service.updateJobOutput(null, executable.getId(), ExecutableState.RUNNING, null, "test output", null);
         assertJobEqual(executable, service.getJob(executable.getId()));
     }
 
@@ -98,21 +98,21 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
         SucceedTestExecutable job = new SucceedTestExecutable();
         String id = job.getId();
         service.addJob(job);
-        service.updateJobOutput(id, ExecutableState.RUNNING, null, null);
-        service.updateJobOutput(id, ExecutableState.ERROR, null, null);
-        service.updateJobOutput(id, ExecutableState.READY, null, null);
-        service.updateJobOutput(id, ExecutableState.RUNNING, null, null);
-        service.updateJobOutput(id, ExecutableState.READY, null, null);
-        service.updateJobOutput(id, ExecutableState.RUNNING, null, null);
-        service.updateJobOutput(id, ExecutableState.SUCCEED, null, null);
+        service.updateJobOutput(null, id, ExecutableState.RUNNING, null, null, null);
+        service.updateJobOutput(null, id, ExecutableState.ERROR, null, null, null);
+        service.updateJobOutput(null, id, ExecutableState.READY, null, null, null);
+        service.updateJobOutput(null, id, ExecutableState.RUNNING, null, null, null);
+        service.updateJobOutput(null, id, ExecutableState.READY, null, null, null);
+        service.updateJobOutput(null, id, ExecutableState.RUNNING, null, null, null);
+        service.updateJobOutput(null, id, ExecutableState.SUCCEED, null, null, null);
     }
 
     @Test(expected = IllegalStateTranferException.class)
     public void testInvalidStateTransfer() {
         SucceedTestExecutable job = new SucceedTestExecutable();
         service.addJob(job);
-        service.updateJobOutput(job.getId(), ExecutableState.ERROR, null, null);
-        service.updateJobOutput(job.getId(), ExecutableState.STOPPED, null, null);
+        service.updateJobOutput(null, job.getId(), ExecutableState.ERROR, null, null, null);
+        service.updateJobOutput(null, job.getId(), ExecutableState.STOPPED, null, null, null);
     }
 
     private static void assertJobEqual(Executable one, Executable another) {

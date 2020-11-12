@@ -82,6 +82,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     private Map<String, String> params = Maps.newHashMap();
     protected Integer priority;
     private CubeBuildTypeEnum jobType;
+    private String logPath;
     protected String project;
     private String targetSubject;
     private List<String> targetSegments = Lists.newArrayList();//uuid of related segments
@@ -93,6 +94,14 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected void initConfig(KylinConfig config) {
         Preconditions.checkState(this.config == null || this.config == config);
         this.config = config;
+    }
+
+    public void setLogPath(String logPath) {
+        this.logPath = logPath;
+    }
+
+    public String getLogPath() {
+        return logPath;
     }
 
     protected KylinConfig getConfig() {
@@ -107,7 +116,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         checkJobPaused();
         Map<String, String> info = Maps.newHashMap();
         info.put(START_TIME, Long.toString(System.currentTimeMillis()));
-        getManager().updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
+        getManager().updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), getId(), ExecutableState.RUNNING, info, null, getLogPath());
     }
 
     public KylinConfig getCubeSpecificConfig() {
@@ -151,9 +160,9 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         setEndTime(System.currentTimeMillis());
         if (!isDiscarded() && !isRunnable()) {
             if (result.succeed()) {
-                getManager().updateJobOutput(getId(), ExecutableState.SUCCEED, null, result.output());
+                getManager().updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), getId(), ExecutableState.SUCCEED, null, result.output(), getLogPath());
             } else {
-                getManager().updateJobOutput(getId(), ExecutableState.ERROR, null, result.output());
+                getManager().updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), getId(), ExecutableState.ERROR, null, result.output(), getLogPath());
             }
         }
     }
@@ -168,7 +177,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                 exception.printStackTrace(new PrintWriter(out));
                 output = out.toString();
             }
-            getManager().updateJobOutput(getId(), ExecutableState.ERROR, null, output);
+            getManager().updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), getId(), ExecutableState.ERROR, null, output, getLogPath());
         }
     }
 
@@ -587,7 +596,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     public final String getProject() {
         if (project == null) {
-            throw new IllegalStateException("project is not set for abstract executable " + getId());
+            logger.error("project is not set for abstract executable " + getId());
         }
         return project;
     }
