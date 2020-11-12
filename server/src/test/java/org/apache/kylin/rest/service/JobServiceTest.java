@@ -28,6 +28,7 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.QueryConnection;
 import org.junit.Assert;
@@ -81,7 +82,7 @@ public class JobServiceTest extends ServiceTestBase {
         }
 
         @Override
-        protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+        protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "");
         }
     }
