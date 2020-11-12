@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.restclient.RestClient;
@@ -40,7 +41,7 @@ public class UpdateSnapshotCacheForQueryServersStep extends AbstractExecutable {
     private static final Logger logger = LoggerFactory.getLogger(UpdateSnapshotCacheForQueryServersStep.class);
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         final String tableName = LookupExecutableUtil.getLookupTableName(this.getParams());
         final String snapshotID = LookupExecutableUtil.getLookupSnapshotID(this.getParams());
         final String projectName = LookupExecutableUtil.getProjectName(this.getParams());

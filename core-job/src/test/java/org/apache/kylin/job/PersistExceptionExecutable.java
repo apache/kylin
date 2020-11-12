@@ -21,6 +21,7 @@ package org.apache.kylin.job;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 
 public class PersistExceptionExecutable extends BaseTestExecutable {
     public PersistExceptionExecutable() {
@@ -28,7 +29,7 @@ public class PersistExceptionExecutable extends BaseTestExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws PersistentException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws PersistentException {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
