@@ -6,42 +6,30 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
-
-package org.apache.kylin.job;
-
-import org.apache.kylin.job.exception.ExecuteException;
-import org.apache.kylin.job.execution.ExecutableContext;
-import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.job.impl.threadpool.IJobRunner;
-
-/**
  */
-public class FiveSecondSucceedTestExecutable extends BaseTestExecutable {
 
-    public FiveSecondSucceedTestExecutable() {
-        super();
-    }
+package org.apache.kylin.job.impl.threadpool;
 
-    public FiveSecondSucceedTestExecutable(int sleepTime) {
-        super();
-    }
+public interface IJobRunner extends Runnable {
 
-    @Override
-    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+    boolean acquireJobLock();
+
+    IJobRunner EMPTY_JOB_RUNNER = new IJobRunner() {
+        @Override
+        public void run() {
         }
-        return ExecuteResult.createSucceed();
-    }
+
+        @Override
+        public boolean acquireJobLock() {
+            return true;
+        }
+    };
 }

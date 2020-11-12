@@ -42,6 +42,7 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.model.IEngineAware;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.apache.kylin.metadata.model.Segments;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,7 +132,7 @@ public class FlinkExecutable extends AbstractExecutable {
 
     @SuppressWarnings("checkstyle:methodlength")
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException, PersistentException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException, PersistentException {
         ExecutableManager manager = getManager();
         Map<String, String> extra = manager.getOutput(getId()).getExtra();
         String flinkJobId = extra.get(ExecutableConstants.FLINK_JOB_ID);
@@ -214,7 +215,7 @@ public class FlinkExecutable extends AbstractExecutable {
 
             //set job name
             sb.append(" -ynm ").append(this.getName().replaceAll(" ", "-")).append(" ");
-            
+
             if (StringUtils.isNotBlank(jars)) {
                 String[] splitJars = jars.split(",\\s*");
                 Set<String> setJars = new HashSet();

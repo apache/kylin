@@ -28,6 +28,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.job.exception.ExecuteException;
 
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
@@ -51,7 +52,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         List<? extends Executable> executables = getTasks();
         final int size = executables.size();
         for (int i = 0; i < size; ++i) {
@@ -68,7 +69,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                         "invalid subtask state, subtask:" + subTask.getName() + ", state:" + subTask.getStatus());
             }
             if (subTask.isRunnable()) {
-                return subTask.execute(context);
+                return subTask.execute(context, jobRunner);
             }
         }
         return new ExecuteResult(ExecuteResult.State.SUCCEED);
