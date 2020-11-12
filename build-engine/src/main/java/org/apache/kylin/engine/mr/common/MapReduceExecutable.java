@@ -57,6 +57,7 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +86,7 @@ public class MapReduceExecutable extends AbstractExecutable {
         if (output.getExtra().containsKey(START_TIME)) {
             final String mrJobId = output.getExtra().get(ExecutableConstants.MR_JOB_ID);
             if (mrJobId == null) {
-                getManager().updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
+                getManager().updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), getId(), ExecutableState.RUNNING, null, null, getLogPath());
                 return;
             }
             try {
@@ -96,7 +97,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                     //remove previous mr job info
                     super.onExecuteStart(executableContext);
                 } else {
-                    getManager().updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
+                    getManager().updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), getId(), ExecutableState.RUNNING, null, null, getLogPath());
                 }
             } catch (IOException | ParseException e) {
                 logger.warn("error get hadoop status");
@@ -180,7 +181,7 @@ public class MapReduceExecutable extends AbstractExecutable {
 
                 JobStepStatusEnum newStatus = HadoopJobStatusChecker.checkStatus(job, output);
                 if (status == JobStepStatusEnum.KILLED) {
-                    mgr.updateJobOutput(getId(), ExecutableState.ERROR, hadoopCmdOutput.getInfo(), "killed by admin");
+                    mgr.updateJobOutput(getParam(MetadataConstants.P_PROJECT_NAME), getId(), ExecutableState.ERROR, hadoopCmdOutput.getInfo(), "killed by admin", null);
                     if (isDiscarded()) {
                         if (getIsNeedLock()) {
                             releaseLock(lock);

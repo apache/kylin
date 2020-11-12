@@ -258,6 +258,8 @@ public abstract class KylinConfigBase implements Serializable {
 
     final protected void reloadKylinConfig(Properties properties) {
         this.properties = BCC.check(properties);
+        setProperty("kylin.metadata.url.identifier", getMetadataUrlPrefix());
+        setProperty("kylin.log.spark-driver-properties-file", getLogSparkDriverPropertiesFile());
     }
 
     private Map<Integer, String> convertKeyToInteger(Map<String, String> map) {
@@ -463,6 +465,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getMetadataUrlPrefix() {
         return getMetadataUrl().getIdentifier();
+    }
+
+    public String getServerPort() {
+        return getOptional("server.port", "7070");
     }
 
     public Map<String, String> getResourceStoreImpls() {
@@ -864,6 +870,14 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getKylinJobLogDir() {
         return getOptional("kylin.job.log-dir", "/tmp/kylin/logs");
+    }
+
+    public String getKylinLogDir() {
+        String kylinHome = getKylinHome();
+        if (kylinHome == null) {
+            kylinHome = System.getProperty("KYLIN_HOME");
+        }
+        return kylinHome + File.separator + "logs";
     }
 
     public boolean getRunAsRemoteCommand() {
@@ -2664,6 +2678,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getHdfsWorkingDirectory() + project + "/job_tmp/";
     }
 
+    public String getSparkLogDir(String project) {
+        return getHdfsWorkingDirectory() + project + "/spark_logs/driver/";
+    }
+
     @ConfigTag(ConfigTag.Tag.NOT_CLEAR)
     public int getPersistFlatTableThreshold() {
         return Integer.parseInt(getOptional("kylin.engine.persist-flattable-threshold", "1"));
@@ -2807,8 +2825,8 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.query.spark-engine.enabled", "true"));
     }
 
-    public String getLogSparkPropertiesFile() {
-        return getLogPropertyFile("kylin-parquet-log4j.properties");
+    public String getLogSparkDriverPropertiesFile() {
+        return getLogPropertyFile("spark-driver-log4j.properties");
     }
 
     private String getLogPropertyFile(String filename) {
@@ -2873,6 +2891,10 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isAutoSetPushDownPartitions() {
         return Boolean
                 .parseBoolean(this.getOptional("kylin.query.pushdown.auto-set-shuffle-partitions-enabled", "true"));
+    }
+
+    public String getJobOutputStorePath(String project, String jobId) {
+        return getSparkLogDir(project) + getNestedPath(jobId) + "execute_output.json";
     }
 
     public int getBaseShufflePartitionSize() {

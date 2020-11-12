@@ -50,6 +50,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import static org.apache.kylin.shaded.com.google.common.net.HttpHeaders.CONTENT_DISPOSITION;
+
 /**
  */
 public class BasicController {
@@ -129,6 +131,20 @@ public class BasicController {
             output.flush();
         } catch (IOException e) {
             throw new InternalErrorException("Failed to download file: " + e.getMessage(), e);
+        }
+    }
+
+    protected void setDownloadResponse(InputStream inputStream, String fileName, String contentType,
+                                       final HttpServletResponse response) throws IOException {
+        try (OutputStream output = response.getOutputStream()) {
+            response.reset();
+            response.setContentType(contentType);
+            response.setHeader(CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"");
+            IOUtils.copyLarge(inputStream, output);
+            output.flush();
+        } catch (IOException e) {
+            logger.error("Failed download log File!");
+            throw e;
         }
     }
 

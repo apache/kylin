@@ -64,6 +64,7 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.apache.kylin.metadata.model.ISourceAware;
@@ -477,6 +478,16 @@ public class JobService extends BasicService implements InitializingBean {
 
     public Output getOutput(String id) {
         return getExecutableManager().getOutput(id);
+    }
+
+    public String getJobOutput(String jobId, String stepId) {
+        ExecutableManager executableManager = getExecutableManager();
+        return executableManager.getOutputFromHDFSByJobId(jobId, stepId).getVerboseMsg();
+    }
+
+    public String getAllJobOutput(String jobId, String stepId) {
+        ExecutableManager executableManager = getExecutableManager();
+        return executableManager.getOutputFromHDFSByJobId(jobId, stepId, Integer.MAX_VALUE).getVerboseMsg();
     }
 
     protected JobInstance getSingleJobInstance(AbstractExecutable job) {

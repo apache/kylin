@@ -18,11 +18,13 @@
 
 package org.apache.kylin.rest.controller;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.constant.JobStatusEnum;
@@ -30,16 +32,22 @@ import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.JobListRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.JobService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.servlet.http.HttpServletResponse;
 
 @Controller
 @RequestMapping(value = "jobs")
@@ -160,6 +168,7 @@ public class JobController extends BasicController {
      * @return
      * @throws IOException
      */
+
     @RequestMapping(value = "/{jobId}/steps/{stepId}/output", method = { RequestMethod.GET }, produces = {
             "application/json" })
     @ResponseBody
@@ -167,8 +176,31 @@ public class JobController extends BasicController {
         Map<String, String> result = new HashMap<String, String>();
         result.put("jobId", jobId);
         result.put("stepId", String.valueOf(stepId));
-        result.put("cmd_output", jobService.getExecutableManager().getOutput(stepId).getVerboseMsg());
+        result.put("cmd_output", jobService.getJobOutput(jobId, stepId));
         return result;
+    }
+
+    /**
+     * Download a job step output from hdfs
+     * @param jobId
+     * @param stepId
+     * @param project
+     * @param response
+     * @return
+     */
+    @RequestMapping(value = "/{job_id:.+}/steps/{step_id:.+}/log", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public EnvelopeResponse<String> downloadLogFile(@PathVariable("job_id") String jobId,
+                                                    @PathVariable("step_id") String stepId, @RequestParam(value = "project") String project,
+                                                    HttpServletResponse response) throws IOException {
+        checkRequiredArg("job_id", jobId);
+        checkRequiredArg("step_id", stepId);
+        checkRequiredArg("project", project);
+        String downloadFilename = String.format(Locale.ROOT, "%s_%s.log", project, stepId);
+
+        String jobOutput = jobService.getAllJobOutput(jobId, stepId);
+        setDownloadResponse(new ByteArrayInputStream(jobOutput.getBytes("UTF-8")), downloadFilename, MediaType.APPLICATION_OCTET_STREAM_VALUE, response);
+        return new EnvelopeResponse<>(ResponseCode.CODE_SUCCESS, "", "");
     }
 
     /**
