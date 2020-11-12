@@ -5,8 +5,6 @@ categories: howto
 permalink: /cn/docs/howto/sample_dataset.html
 ---
 
-# 样例数据集
-
 Kylin 的二进制包中包含了一份样例数据集，共计 5 张表，其中事实表有 10000 条数据。用户可以在 Kylin 部署完成后，利用样例数据集进行测试。用户可通过执行脚本方式，将 Kylin 中自带的样例数据导入至 Hive。
 
 ### 将样例数据集导入至 Hive
@@ -19,7 +17,7 @@ $KYLIN_HOME/bin/sample.sh
 
 脚本执行成功之后，可在服务器终端执行 **hive** 命令行，进入 hive，然后执行查询语句验证导入正常：
 
-```she
+```sh
 hive
 ```
 
