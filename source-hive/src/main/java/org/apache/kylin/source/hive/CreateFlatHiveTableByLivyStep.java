@@ -19,6 +19,7 @@
 package org.apache.kylin.source.hive;
 
 
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.common.PatternedLogger;
@@ -46,7 +47,7 @@ public class CreateFlatHiveTableByLivyStep extends AbstractExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         stepLogger.setILogListener((infoKey, info) -> {
                     // only care two properties here
                     if (ExecutableConstants.YARN_APP_ID.equals(infoKey)

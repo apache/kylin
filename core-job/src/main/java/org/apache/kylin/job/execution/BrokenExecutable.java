@@ -19,6 +19,7 @@
 package org.apache.kylin.job.execution;
 
 import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 
 /**
  * A special Executable used to indicate any executable whose metadata is broken.
@@ -40,7 +41,7 @@ public class BrokenExecutable extends AbstractExecutable {
     }
     
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         throw new UnsupportedOperationException();
     }
 

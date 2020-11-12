@@ -60,6 +60,7 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.metadata.model.IEngineAware;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -200,7 +201,7 @@ public class SparkExecutable extends AbstractExecutable {
 
     @SuppressWarnings("checkstyle:methodlength")
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         ExecutableManager mgr = getManager();
         Map<String, String> extra = mgr.getOutput(getId()).getExtra();
         String sparkJobId = extra.get(ExecutableConstants.SPARK_JOB_ID);
