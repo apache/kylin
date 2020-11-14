@@ -96,6 +96,12 @@ public class TrieDictionaryBuilder<T> {
         addValueR(root, value, 0, isSplitValue);
     }
 
+    /**
+     * @param node
+     * @param value
+     * @param start
+     * @param isSplitValue false: a complete original value, true: a split value (when a tree node is bigger than 255 byte, we will split the tree node)
+     */
     private void addValueR(Node node, byte[] value, int start, boolean isSplitValue) {
         hasValue = true;
         // match the value part of current node
@@ -111,14 +117,15 @@ public class TrieDictionaryBuilder<T> {
         if (j == nn) {
             // if value fully matched within the current node
             if (i == n) {
-                // if equals to current node, just mark end of value
+                // if equals to current node, and the value is not a split tree node value,  mark end of value
                 if (!isSplitValue) {
                     node.isEndOfValue = true;
                 }
             } else {
                 // otherwise, split the current node into two
                 Node c = new Node(BytesUtil.subarray(node.part, i, n), node.isEndOfValue, node.children);
-                node.reset(BytesUtil.subarray(node.part, 0, i), isSplitValue? false : true);
+                // if the value is a split value, not mark as end value. if the value is a complete value, mark as end value
+                node.reset(BytesUtil.subarray(node.part, 0, i), !isSplitValue);
                 node.children.add(c);
             }
             return;
@@ -127,7 +134,8 @@ public class TrieDictionaryBuilder<T> {
         // if partially matched the current, split the current node, add the new value, make a 3-way
         if (i < n) {
             Node c1 = new Node(BytesUtil.subarray(node.part, i, n), node.isEndOfValue, node.children);
-            Node c2 = new Node(BytesUtil.subarray(value, j, nn), isSplitValue? false : true);
+            // if the value is a split value, not mark node as end value. if the value is a complete value, mark node as end value
+            Node c2 = new Node(BytesUtil.subarray(value, j, nn), !isSplitValue);
             node.reset(BytesUtil.subarray(node.part, 0, i), false);
             if (comp < 0) {
                 node.children.add(c1);
@@ -161,7 +169,8 @@ public class TrieDictionaryBuilder<T> {
             addValueR(node.children.get(mid), value, j, isSplitValue);
         } else {
             // otherwise, make the value a new child
-            Node c = new Node(BytesUtil.subarray(value, j, nn), isSplitValue ? false : true);
+            // if the value is a split value, not mark child as end value. if the value is a complete value, mark child as end value
+            Node c = new Node(BytesUtil.subarray(value, j, nn), !isSplitValue);
             node.children.add(comp <= 0 ? mid : mid + 1, c);
         }
     }
