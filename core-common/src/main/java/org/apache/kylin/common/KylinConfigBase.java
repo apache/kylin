@@ -2783,6 +2783,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.engine.base-executor-instance", "5"));
     }
 
+    public String getSparkEngineRequiredTotalCores() {
+        return getOptional("kylin.engine.spark.required-cores", "1");
+    }
+
     public String getSparkEngineExecutorInstanceStrategy() {
         return getOptional("kylin.engine.executor-instance-strategy", "100,2,500,3,1000,4");
     }
