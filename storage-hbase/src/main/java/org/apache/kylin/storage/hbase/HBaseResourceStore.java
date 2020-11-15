@@ -340,11 +340,13 @@ public class HBaseResourceStore extends PushdownResourceStore {
             logger.trace("Update row {} from oldTs: {}, to newTs: {}, operation result: {}", resPath, oldTS, newTS, ok);
             if (!ok) {
                 long real = getResourceTimestampImpl(resPath);
-                throw new WriteConflictException(
+                if (real != newTS) {
+                    throw new WriteConflictException(
                         "Overwriting conflict " + resPath +
-                                ", expect old TS " + oldTS +
-                                ", but it is " + real +
-                                ", the expected new TS: " + newTS);
+                            ", expect old TS " + oldTS +
+                            ", but it is " + real +
+                            ", the expected new TS: " + newTS);
+                }
             }
 
             return newTS;
