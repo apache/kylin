@@ -22,7 +22,6 @@ import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.engine.spark.job.BuildJobInfos;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
 import org.apache.kylin.engine.spark.job.LogJobInfoUtils;
-import org.apache.kylin.engine.spark.job.SparkJobConstants;
 import org.apache.kylin.engine.spark.job.UdfManager;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.engine.spark.utils.SparkConfHelper;
@@ -209,7 +208,7 @@ public abstract class SparkApplication {
     protected abstract void doExecute() throws Exception;
 
     protected String calculateRequiredCores() throws Exception {
-        return SparkJobConstants.DEFAULT_REQUIRED_CORES;
+        return config.getSparkEngineRequiredTotalCores();
     }
 
     private void autoSetSparkConf(SparkConf sparkConf) throws Exception {

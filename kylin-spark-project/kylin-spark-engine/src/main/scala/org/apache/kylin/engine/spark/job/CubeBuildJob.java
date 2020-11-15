@@ -289,13 +289,12 @@ public class CubeBuildJob extends SparkApplication {
             Path shareDir = config.getJobTmpShareDir(project, jobId);
             String maxLeafTasksNums = maxLeafTasksNums(shareDir);
             logger.info("The maximum number of tasks required to run the job is {}", maxLeafTasksNums);
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
             int factor = config.getSparkEngineTaskCoreFactor();
             int i = Double.valueOf(maxLeafTasksNums).intValue() / factor;
             logger.info("require cores: " + i);
             return String.valueOf(i);
         } else {
-            return SparkJobConstants.DEFAULT_REQUIRED_CORES;
+            return config.getSparkEngineRequiredTotalCores();
         }
     }
 

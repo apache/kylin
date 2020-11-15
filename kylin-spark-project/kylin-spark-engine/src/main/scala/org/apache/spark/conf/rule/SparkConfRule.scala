@@ -104,26 +104,30 @@ class ExecutorInstancesRule extends SparkConfRule {
     logInfo(s"RequiredCores is $requiredCores")
     val baseExecutorInstances = KylinConfig.getInstanceFromEnv.getSparkEngineBaseExecutorInstances
     val calculateExecutorInsByLayoutSize = calculateExecutorInstanceSizeByLayoutSize(Integer.parseInt(layoutSize))
-
+    logInfo(s"The number of instances calculated by cuboids " +
+      s"is: $calculateExecutorInsByLayoutSize")
 
     val availableMem = helper.getFetcher.fetchQueueAvailableResource(queue).available.memory
     val availableCore = helper.getFetcher.fetchQueueAvailableResource(queue).available.vCores
-    val executorMem = Utils.byteStringAsMb(helper.getConf(SparkConfHelper.EXECUTOR_MEMORY))
-    +Utils.byteStringAsMb(helper.getConf(SparkConfHelper.EXECUTOR_OVERHEAD))
+    val executorMem = (Utils.byteStringAsMb(helper.getConf(SparkConfHelper.EXECUTOR_MEMORY)) +
+      Utils.byteStringAsMb(helper.getConf(SparkConfHelper.EXECUTOR_OVERHEAD)))
 
     val executorCore: Int = Option(helper.getConf(SparkConfHelper.EXECUTOR_CORES)) match {
       case Some(cores) => cores.toInt
       case None => SparkConfRuleConstants.DEFUALT_EXECUTOR_CORE.toInt
     }
 
-    logInfo(s"Current availableMem is $availableMem, availableCore is $availableCore")
+    logInfo(s"Current availableMem on yarn is $availableMem, " +
+      s"availableCore is $availableCore")
+    logInfo(s"Current instance memory is set to $executorMem, " +
+      s"cores is set to $executorCore")
     val queueAvailableInstance = Math.min(availableMem / executorMem, availableCore / executorCore)
-    logInfo(s"Maximum instance that the current queue can set: $queueAvailableInstance")
 
     val needInstance = Math.max(calculateExecutorInsByLayoutSize.toLong, requiredCores.toInt / executorCore)
     val instance = Math.min(needInstance, queueAvailableInstance)
     val executorInstance = Math.max(instance.toLong, baseExecutorInstances.toLong).toString
-    logInfo(s"queueAvailableInstance is $queueAvailableInstance , needInstance is $needInstance , instance is $instance")
+    logInfo(s"Current queueAvailableInstance is $queueAvailableInstance, " +
+      s"needInstance is $needInstance, instance is $instance")
     helper.setConf(SparkConfHelper.EXECUTOR_INSTANCES, executorInstance)
   }
 
