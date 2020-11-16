@@ -372,6 +372,32 @@ public class CubeController extends BasicController {
     }
 
     /**
+     * Delete a cube segment by UUID
+     *
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/segs2/{segmentID}", method = { RequestMethod.DELETE }, produces = {
+            "application/json" })
+    @ResponseBody
+    public CubeInstance deleteSegmentByUUID(@PathVariable String cubeName, @PathVariable String segmentID) {
+        checkCubeExists(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+
+        CubeSegment segment = cube.getSegmentById(segmentID);
+        if (segment == null) {
+            throw new NotFoundException("Cannot find segment by UUID '" + segmentID + "'");
+        }
+
+        try {
+            return cubeService.deleteSegmentById(cube, segmentID);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
+
+    /**
      * Build/Rebuild a cube segment
      */
     @RequestMapping(value = "/{cubeName}/build", method = { RequestMethod.PUT }, produces = { "application/json" })

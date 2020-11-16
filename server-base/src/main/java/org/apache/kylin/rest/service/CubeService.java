@@ -610,6 +610,31 @@ public class CubeService extends BasicService implements InitializingBean {
         return cube;
     }
 
+    public CubeInstance deleteSegmentById(CubeInstance cube, String uuid) throws IOException {
+        aclEvaluate.checkProjectWritePermission(cube);
+        Message msg = MsgPicker.getMsg();
+
+        CubeSegment toDelete = null;
+
+        toDelete = cube.getSegmentById(uuid);
+
+        if (toDelete == null) {
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getSEG_NOT_FOUND(), uuid));
+        }
+
+        if (cube.getStatus() == RealizationStatusEnum.DISABLED || isOrphonSegment(cube, uuid)) {
+
+            CubeInstance cubeInstance = CubeManager.getInstance(getConfig()).updateCubeDropSegments(cube, toDelete);
+
+            cleanSegmentStorage(Collections.singletonList(toDelete));
+
+            return cubeInstance;
+        } else {
+            throw new BadRequestException(
+                    String.format(Locale.ROOT, msg.getDELETE_READY_SEG_BY_UUID(), uuid, cube.getName()));
+        }
+    }
+
     public CubeInstance deleteSegment(CubeInstance cube, String segmentName) throws IOException {
         aclEvaluate.checkProjectOperationPermission(cube);
         Message msg = MsgPicker.getMsg();
