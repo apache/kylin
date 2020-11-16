@@ -20,10 +20,15 @@ package org.apache.kylin.query.enumerator;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 import org.apache.calcite.linq4j.Enumerator;
+import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.DimensionDesc;
@@ -60,8 +65,22 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
             List<RealizationEntry> realizationEntries = project.getRealizationEntries();
             String lookupTableName = olapContext.firstTableScan.getTableName();
             CubeManager cubeMgr = CubeManager.getInstance(cube.getConfig());
-            cube = cubeMgr.findLatestSnapshot(realizationEntries, lookupTableName, cube);
-            olapContext.realization = cube;
+
+            // Make force hit cube in lookup table
+            String forceHitCubeName = BackdoorToggles.getForceHitCube();
+            if (!StringUtil.isEmpty(forceHitCubeName)) {
+                String forceHitCubeNameLower = forceHitCubeName.toLowerCase(Locale.ROOT);
+                String[] forceHitCubeNames = forceHitCubeNameLower.split(",");
+                final Set<String> forceHitCubeNameSet = new HashSet<String>(Arrays.asList(forceHitCubeNames));
+                cube = cubeMgr.findLatestSnapshot(
+                        (List<RealizationEntry>) realizationEntries.stream()
+                                .filter(x -> forceHitCubeNameSet.contains(x.getRealization().toLowerCase(Locale.ROOT))),
+                        lookupTableName, cube);
+                olapContext.realization = cube;
+            } else {
+                cube = cubeMgr.findLatestSnapshot(realizationEntries, lookupTableName, cube);
+                olapContext.realization = cube;
+            }
         } else if (olapContext.realization instanceof HybridInstance) {
             final HybridInstance hybridInstance = (HybridInstance) olapContext.realization;
             final IRealization latestRealization = hybridInstance.getLatestRealization();

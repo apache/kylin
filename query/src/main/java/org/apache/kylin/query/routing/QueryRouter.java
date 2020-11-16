@@ -18,11 +18,15 @@
 
 package org.apache.kylin.query.routing;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
@@ -50,15 +54,30 @@ public class QueryRouter {
         String projectName = olapContext.olapSchema.getProjectName();
         SQLDigest sqlDigest = olapContext.getSQLDigest();
 
-        List<Candidate> candidates = Lists.newArrayListWithCapacity(realizations.size());
+        String forceHitCubeName = BackdoorToggles.getForceHitCube();
+        Set<String> forceHitCubeNameSet = new HashSet<String>();
+        if (!StringUtil.isEmpty(forceHitCubeName)) {
+            String forceHitCubeNameLower = forceHitCubeName.toLowerCase(Locale.ROOT);
+            String[] forceHitCubeNames = forceHitCubeNameLower.split(",");
+            forceHitCubeNameSet = new HashSet<String>(Arrays.asList(forceHitCubeNames));
+        }
+
+        List<Candidate> candidates = Lists.newArrayList();
         for (IRealization real : realizations) {
-            if (real.isReady())
-                candidates.add(new Candidate(real, sqlDigest));
-            if (BackdoorToggles.getForceHitCube() != null && BackdoorToggles.getForceHitCube().equalsIgnoreCase(real.getName())) {
-                logger.info("Force choose {} as selected cube for specific purpose.", real.getName());
-                candidates = Lists.newArrayListWithCapacity(1);
+            if (!forceHitCubeNameSet.isEmpty()) {
+                if (!forceHitCubeNameSet.contains(real.getName().toLowerCase(Locale.ROOT))) {
+                    continue;
+                }
+                if (!real.isReady()) {
+                    throw new RuntimeException(
+                            "Realization " + real.getName() + " is not ready and should not be force hit");
+                }
                 candidates.add(new Candidate(real, sqlDigest));
                 break;
+            } else {
+                if (real.isReady()) {
+                    candidates.add(new Candidate(real, sqlDigest));
+                }
             }
         }
 
