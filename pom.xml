@@ -1904,6 +1904,7 @@
                 <exclude>**/*.json.bad</exclude>
                 <exclude>**/*.md</exclude>
                 <exclude>**/*.spec</exclude>
+                <exclude>**/*.acl</exclude>
 
                 <!-- binary files -->
                 <exclude>**/*.dict</exclude>

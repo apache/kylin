@@ -75,25 +75,26 @@ function find_hadoop_conf_dir() {
                 verbose "hadoop_conf_dir is $result"
                 export hadoop_conf_dir=$result
 
-                if [ -d "$hadoop_conf_dir" ]
-                then
-                    mkdir -p ${KYLIN_HOME}/hadoop_conf
-
-                    checkAndLinkFile $hadoop_conf_dir/core-site.xml $kylin_hadoop_conf_dir/core-site.xml
-                    checkAndLinkFile $hadoop_conf_dir/hdfs-site.xml $kylin_hadoop_conf_dir/hdfs-site.xml
-                    checkAndLinkFile $hadoop_conf_dir/yarn-site.xml $kylin_hadoop_conf_dir/yarn-site.xml
-                    checkAndLinkFile $hadoop_conf_dir/mapred-site.xml $kylin_hadoop_conf_dir/mapred-site.xml
-
-                    checkAndLinkFile /etc/hadoop/conf/topology.py $kylin_hadoop_conf_dir/topology.py
-                    checkAndLinkFile /etc/hadoop/conf/topology.map $kylin_hadoop_conf_dir/topology.map
-                    checkAndLinkFile /etc/hadoop/conf/ssl-client.xml $kylin_hadoop_conf_dir/ssl-client.xml
-                    checkAndLinkFile /etc/hadoop/conf/hadoop-env.sh $kylin_hadoop_conf_dir/hadoop-env.sh
-
-                    copyHiveSite
-                fi
-                return
+                break
             fi
         done
+        fi
+
+        if [ -d "$hadoop_conf_dir" ]
+        then
+            mkdir -p ${KYLIN_HOME}/hadoop_conf
+
+            checkAndLinkFile $hadoop_conf_dir/core-site.xml $kylin_hadoop_conf_dir/core-site.xml
+            checkAndLinkFile $hadoop_conf_dir/hdfs-site.xml $kylin_hadoop_conf_dir/hdfs-site.xml
+            checkAndLinkFile $hadoop_conf_dir/yarn-site.xml $kylin_hadoop_conf_dir/yarn-site.xml
+            checkAndLinkFile $hadoop_conf_dir/mapred-site.xml $kylin_hadoop_conf_dir/mapred-site.xml
+
+            checkAndLinkFile $hadoop_conf_dir/topology.py $kylin_hadoop_conf_dir/topology.py
+            checkAndLinkFile $hadoop_conf_dir/topology.map $kylin_hadoop_conf_dir/topology.map
+            checkAndLinkFile $hadoop_conf_dir/ssl-client.xml $kylin_hadoop_conf_dir/ssl-client.xml
+            checkAndLinkFile $hadoop_conf_dir/hadoop-env.sh $kylin_hadoop_conf_dir/hadoop-env.sh
+
+            copyHiveSite
         fi
 }
 
