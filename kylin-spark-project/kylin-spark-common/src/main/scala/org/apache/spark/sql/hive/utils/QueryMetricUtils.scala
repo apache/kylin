@@ -42,11 +42,16 @@ object QueryMetricUtils extends Logging {
           // There is only 'numOutputRows' metric in HiveTableScanExec
           (exec.metrics.apply("numOutputRows").value, -1l, -1l, -1l, -1l)
       }
-      val scanRows = metrics.map(metric => java.lang.Long.valueOf(metric._1)).toList.asJava
-      val scanFiles = metrics.map(metrics => java.lang.Long.valueOf(metrics._2)).toList.asJava
-      val metadataTime = metrics.map(metrics => java.lang.Long.valueOf(metrics._3)).toList.asJava
-      val scanTime = metrics.map(metrics => java.lang.Long.valueOf(metrics._4)).toList.asJava
-      val scanBytes = metrics.map(metric => java.lang.Long.valueOf(metric._5)).toList.asJava
+      val scanRows = metrics.map(metric => java.lang.Long.valueOf(metric._1))
+        .filter(_ >= 0L).toList.asJava
+      val scanFiles = metrics.map(metrics => java.lang.Long.valueOf(metrics._2))
+        .filter(_ >= 0L).toList.asJava
+      val metadataTime = metrics.map(metrics => java.lang.Long.valueOf(metrics._3))
+        .filter(_ >= 0L).toList.asJava
+      val scanTime = metrics.map(metrics => java.lang.Long.valueOf(metrics._4))
+        .filter(_ >= 0L).toList.asJava
+      val scanBytes = metrics.map(metric => java.lang.Long.valueOf(metric._5))
+        .filter(_ >= 0L).toList.asJava
 
       (scanRows, scanFiles, metadataTime, scanTime, scanBytes)
     } catch {
