@@ -382,7 +382,6 @@ public class ExecutableManager {
 
     /**
      * get the last N_LINES lines from the end of hdfs file input stream;
-     * reference: https://olapio.atlassian.net/wiki/spaces/PD/pages/1306918958
      *
      * @param hdfsDin
      * @param startPos
