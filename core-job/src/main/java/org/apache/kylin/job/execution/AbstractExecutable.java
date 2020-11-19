@@ -596,7 +596,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     public final String getProject() {
         if (project == null) {
-            logger.error("project is not set for abstract executable " + getId());
+            throw new IllegalStateException("project is not set for abstract executable " + getId());
         }
         return project;
     }

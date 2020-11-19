@@ -260,6 +260,7 @@ public abstract class KylinConfigBase implements Serializable {
         this.properties = BCC.check(properties);
         setProperty("kylin.metadata.url.identifier", getMetadataUrlPrefix());
         setProperty("kylin.log.spark-driver-properties-file", getLogSparkDriverPropertiesFile());
+        setProperty("kylin.log.spark-executor-properties-file", getLogSparkExecutorPropertiesFile());
     }
 
     private Map<Integer, String> convertKeyToInteger(Map<String, String> map) {
@@ -2824,6 +2825,11 @@ public abstract class KylinConfigBase implements Serializable {
     public String getLogSparkDriverPropertiesFile() {
         return getLogPropertyFile("spark-driver-log4j.properties");
     }
+
+    public String getLogSparkExecutorPropertiesFile() {
+        return getLogPropertyFile("spark-executor-log4j.properties");
+    }
+
 
     private String getLogPropertyFile(String filename) {
         if (isDevEnv()) {
