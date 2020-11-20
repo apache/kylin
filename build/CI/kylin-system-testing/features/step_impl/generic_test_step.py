@@ -70,6 +70,11 @@ def build_first_segment_step(start_time, end_time, cube_name):
     assert client.await_job_finished(job_id=resp['uuid'], waiting_time=20)
 
 
+@step("Full build cube <cube_name>")
+def full_build_cube_step(cube_name):
+    resp = client.full_build_cube(cube_name)
+    assert client.await_job_finished(job_id=resp['uuid'], waiting_time=20)
+
 @step("Merge cube <cube_name> segment from <start_name> to <end_time>")
 def merge_segment_step(cube_name, start_time, end_time):
     resp = client.merge_segment(cube_name=cube_name,

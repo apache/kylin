@@ -1,0 +1,57 @@
+--
+-- Licensed to the Apache Software Foundation (ASF) under one
+-- or more contributor license agreements.  See the NOTICE file
+-- distributed with this work for additional information
+-- regarding copyright ownership.  The ASF licenses this file
+-- to you under the Apache License, Version 2.0 (the
+-- "License"); you may not use this file except in compliance
+-- with the License.  You may obtain a copy of the License at
+--
+--     http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+--
+
+SELECT "kylin_category_groupings"."ADULT_CATEG_YN" AS "ADULT_CATEG_YN",
+  "kylin_category_groupings"."BSNS_VRTCL_NAME" AS "BSNS_VRTCL_NAME",
+  "kylin_category_groupings"."CATEG_BUSN_MGR" AS "CATEG_BUSN_MGR",
+  "kylin_category_groupings"."CATEG_BUSN_UNIT" AS "CATEG_BUSN_UNIT",
+  "kylin_category_groupings"."CATEG_FLAGS" AS "CATEG_FLAGS",
+  "kylin_category_groupings"."CATEG_LVL2_ID" AS "CATEG_LVLC_ID",
+  "kylin_category_groupings"."CATEG_LVL2_NAME" AS "CATEG_LVLC_NAME",
+  "kylin_category_groupings"."CATEG_LVL3_ID" AS "CATEG_LVLD_ID",
+  "kylin_category_groupings"."CATEG_LVL3_NAME" AS "CATEG_LVLD_NAME",
+  "kylin_category_groupings"."CATEG_LVL4_ID" AS "CATEG_LVLE_ID",
+  "kylin_category_groupings"."CATEG_LVL4_NAME" AS "CATEG_LVLE_NAME",
+  "kylin_category_groupings"."CATEG_LVL5_ID" AS "CATEG_LVLF_ID",
+  "kylin_category_groupings"."CATEG_LVL5_NAME" AS "CATEG_LVLF_NAME",
+  "kylin_category_groupings"."CATEG_LVL6_ID" AS "CATEG_LVLG_ID",
+  "kylin_category_groupings"."CATEG_LVL6_NAME" AS "CATEG_LVLG_NAME",
+  "kylin_category_groupings"."CATEG_LVL7_ID" AS "CATEG_LVLH_ID",
+  "kylin_category_groupings"."CATEG_LVL7_NAME" AS "CATEG_LVLH_NAME",
+  "kylin_category_groupings"."CRE_DATE" AS "CRE_DATE",
+  "kylin_category_groupings"."CRE_USER" AS "CRE_USER",
+  "kylin_category_groupings"."DOMAIN_ID" AS "DOMAIN_ID",
+  "kylin_category_groupings"."GCS_ID" AS "GCS_ID",
+  "kylin_category_groupings"."LEAF_CATEG_ID" AS "LEAF_CATEG_ID",
+  "kylin_category_groupings"."LEAF_CATEG_NAME" AS "LEAF_CATEG_NAME",
+  "kylin_category_groupings"."META_CATEG_ID" AS "META_CATEG_ID",
+  "kylin_category_groupings"."META_CATEG_NAME" AS "META_CATEG_NAME",
+  "kylin_category_groupings"."MOVE_TO" AS "MOVE_TO",
+  1 AS "Number_of_Records",
+  "kylin_category_groupings"."REGN_CATEG" AS "REGN_CATEG",
+  "kylin_category_groupings"."SAP_CATEGORY_ID" AS "SAP_CATEGORY_ID",
+  "kylin_category_groupings"."SITE_ID" AS "SITE_ID",
+  "kylin_category_groupings"."SRC_ID" AS "SRC_ID",
+  "kylin_category_groupings"."UPD_DATE" AS "UPD_DATE",
+  "kylin_category_groupings"."UPD_USER" AS "UPD_USER",
+  "kylin_category_groupings"."USER_DEFINED_FIELD1" AS "USER_DEFINED_FIELDB",
+  "kylin_category_groupings"."USER_DEFINED_FIELD3" AS "USER_DEFINED_FIELDD",
+  "kylin_category_groupings"."USER_DEFINED_FIELD5" AS "USER_DEFINED_FIELDF",
+  "kylin_category_groupings"."VCS_ID" AS "VCS_ID"
+FROM "olap"."kylin_category_groupings" "kylin_category_groupings"
+LIMIT 10000
