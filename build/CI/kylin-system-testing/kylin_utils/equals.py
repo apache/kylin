@@ -121,6 +121,8 @@ class _Row(tuple):
             ovalue = other[i]
 
             if stype in FRACTION_FAMILY:
+                if svalue is None and ovalue is None:
+                    return True
                 fsvalue = float(svalue)
                 fovalue = float(ovalue)
 
@@ -222,7 +224,8 @@ def compare_sql_result(sql, project, kylin_client, cube=None, expected_result=No
 
     if expected_result is not None:
         assert expected_result.get("cube") == kylin_resp.get("cube")
-        assert expected_result.get("cuboidIds") == kylin_resp.get("cuboidIds")
+        if kylin_resp.get("cuboidIds") is not None:
+            assert expected_result.get("cuboidIds") == kylin_resp.get("cuboidIds")
         assert expected_result.get("totalScanCount") == kylin_resp.get("totalScanCount")
         assert expected_result.get("totalScanBytes") == kylin_resp.get("totalScanBytes")
         assert expected_result.get("totalScanFiles") == kylin_resp.get("totalScanFiles")

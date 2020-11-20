@@ -1,0 +1,8 @@
+{
+  "cube": "CUBE[name=generic_test_cube]",
+  "cuboidIds": "48",
+  "totalScanCount": 19998,
+  "totalScanBytes": 460646,
+  "totalScanFiles": 2,
+  "pushDown": false
+}
