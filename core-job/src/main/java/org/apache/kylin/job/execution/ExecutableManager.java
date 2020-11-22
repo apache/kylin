@@ -6,15 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.execution;
 
@@ -253,10 +253,6 @@ public class ExecutableManager {
             result.put(jobOutput.getId(), jobOutput);
         }
         return result;
-    }
-
-    public Output getOutputFromHDFSByJobId(String jobId) {
-        return getOutputFromHDFSByJobId(jobId, jobId);
     }
 
     public Output getOutputFromHDFSByJobId(String jobId, String stepId) {
@@ -593,7 +589,7 @@ public class ExecutableManager {
                 logger.warn("The job " + jobId + " has been discarded.");
             }
             throw new IllegalStateException(
-                "The job " + job.getId() + " has already been finished and cannot be discarded.");
+                    "The job " + job.getId() + " has already been finished and cannot be discarded.");
         }
         if (job instanceof DefaultChainedExecutable) {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
@@ -617,7 +613,7 @@ public class ExecutableManager {
             for (AbstractExecutable task : tasks) {
                 if (task.getId().compareTo(stepId) >= 0) {
                     logger.debug("rollback task : " + task);
-                    updateJobOutput(task.getParam(MetadataConstants.P_PROJECT_NAME), task.getId(), ExecutableState.READY, Maps.<String, String> newHashMap(), "", task.getLogPath());
+                    updateJobOutput(task.getParam(MetadataConstants.P_PROJECT_NAME), task.getId(), ExecutableState.READY, Maps.<String, String>newHashMap(), "", task.getLogPath());
                 }
             }
         }
@@ -634,11 +630,11 @@ public class ExecutableManager {
         }
 
         if (!(job.getStatus() == ExecutableState.READY
-            || job.getStatus() == ExecutableState.RUNNING)) {
+                || job.getStatus() == ExecutableState.RUNNING)) {
             logger.warn("The status of job " + jobId + " is " + job.getStatus().toString()
-                + ". It's final state and cannot be transfer to be stopped!!!");
+                    + ". It's final state and cannot be transfer to be stopped!!!");
             throw new IllegalStateException(
-                "The job " + job.getId() + " has already been finished and cannot be stopped.");
+                    "The job " + job.getId() + " has already been finished and cannot be stopped.");
         }
         if (job instanceof DefaultChainedExecutable) {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
@@ -662,7 +658,6 @@ public class ExecutableManager {
     }
 
     public void updateJobOutput(String project, String jobId, ExecutableState newStatus, Map<String, String> info, String output, String logPath) {
-        // when 
         if (Thread.currentThread().isInterrupted()) {
             throw new RuntimeException("Current thread is interruptted, aborting");
         }
@@ -701,7 +696,6 @@ public class ExecutableManager {
         }
 
         if (project != null) {
-            //write output to HDFS
             updateJobOutputToHDFS(project, jobId, output, logPath);
         }
     }
@@ -715,7 +709,7 @@ public class ExecutableManager {
             jobOutput.setLogPath(logPath);
         }
         String outputHDFSPath = KylinConfig.getInstanceFromEnv().getJobOutputStorePath(project, jobId);
-
+        logger.debug("Update JobOutput To HDFS for {} to {} [{}]", jobId, outputHDFSPath, jobOutput.getContent() != null ? jobOutput.getContent().length() : -1);
         updateJobOutputToHDFS(outputHDFSPath, jobOutput);
     }
 
@@ -786,7 +780,7 @@ public class ExecutableManager {
                 if (executableDao.getJobOutput(task.getId()).getStatus().equals("SUCCEED")) {
                     continue;
                 } else if (executableDao.getJobOutput(task.getId()).getStatus().equals("RUNNING")) {
-                    updateJobOutput(null, task.getId(), ExecutableState.READY, Maps.<String, String> newHashMap(), "", null);
+                    updateJobOutput(null, task.getId(), ExecutableState.READY, Maps.<String, String>newHashMap(), "", null);
                 }
                 break;
             }

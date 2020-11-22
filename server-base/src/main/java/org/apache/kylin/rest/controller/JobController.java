@@ -20,12 +20,14 @@ package org.apache.kylin.rest.controller;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
 
+import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
@@ -164,29 +166,20 @@ public class JobController extends BasicController {
 
     /**
      * Get a job step output
-     * 
-     * @return
-     * @throws IOException
      */
-
     @RequestMapping(value = "/{jobId}/steps/{stepId}/output", method = { RequestMethod.GET }, produces = {
             "application/json" })
     @ResponseBody
     public Map<String, String> getStepOutput(@PathVariable String jobId, @PathVariable String stepId) {
-        Map<String, String> result = new HashMap<String, String>();
+        Map<String, String> result = new HashMap<>();
         result.put("jobId", jobId);
         result.put("stepId", String.valueOf(stepId));
-        result.put("cmd_output", jobService.getJobOutput(jobId, stepId));
+        result.put("cmd_output", jobService.getJobStepOutput(jobId, stepId));
         return result;
     }
 
     /**
-     * Download a job step output from hdfs
-     * @param jobId
-     * @param stepId
-     * @param project
-     * @param response
-     * @return
+     * Download a step output(Spark driver log) from hdfs
      */
     @RequestMapping(value = "/{job_id:.+}/steps/{step_id:.+}/log", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
@@ -196,10 +189,12 @@ public class JobController extends BasicController {
         checkRequiredArg("job_id", jobId);
         checkRequiredArg("step_id", stepId);
         checkRequiredArg("project", project);
-        String downloadFilename = String.format(Locale.ROOT, "%s_%s.log", project, stepId);
+        String validatedPrj =  CliCommandExecutor.checkParameter(project);
+        String validatedStepId =  CliCommandExecutor.checkParameter(stepId);
+        String downloadFilename = String.format(Locale.ROOT, "%s_%s.log", validatedPrj, validatedStepId);
 
-        String jobOutput = jobService.getAllJobOutput(jobId, stepId);
-        setDownloadResponse(new ByteArrayInputStream(jobOutput.getBytes("UTF-8")), downloadFilename, MediaType.APPLICATION_OCTET_STREAM_VALUE, response);
+        String jobOutput = jobService.getAllJobStepOutput(jobId, stepId);
+        setDownloadResponse(new ByteArrayInputStream(jobOutput.getBytes(StandardCharsets.UTF_8)), downloadFilename, MediaType.APPLICATION_OCTET_STREAM_VALUE, response);
         return new EnvelopeResponse<>(ResponseCode.CODE_SUCCESS, "", "");
     }
 

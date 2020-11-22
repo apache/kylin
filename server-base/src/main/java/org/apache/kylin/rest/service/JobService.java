@@ -480,12 +480,12 @@ public class JobService extends BasicService implements InitializingBean {
         return getExecutableManager().getOutput(id);
     }
 
-    public String getJobOutput(String jobId, String stepId) {
+    public String getJobStepOutput(String jobId, String stepId) {
         ExecutableManager executableManager = getExecutableManager();
         return executableManager.getOutputFromHDFSByJobId(jobId, stepId).getVerboseMsg();
     }
 
-    public String getAllJobOutput(String jobId, String stepId) {
+    public String getAllJobStepOutput(String jobId, String stepId) {
         ExecutableManager executableManager = getExecutableManager();
         return executableManager.getOutputFromHDFSByJobId(jobId, stepId, Integer.MAX_VALUE).getVerboseMsg();
     }

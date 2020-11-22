@@ -174,10 +174,10 @@ object KylinSession extends Logging {
         if (sparkConf.get("spark.master").startsWith("yarn")) {
           sparkConf.set("spark.yarn.dist.jars",
             KylinConfig.getInstanceFromEnv.getKylinParquetJobJarPath)
-          sparkConf.set("spark.yarn.dist.files", conf.sparderFiles())
+          sparkConf.set("spark.yarn.dist.files", conf.sparkUploadFiles())
         } else {
           sparkConf.set("spark.jars", conf.sparderJars)
-          sparkConf.set("spark.files", conf.sparderFiles())
+          sparkConf.set("spark.files", conf.sparkUploadFiles())
         }
 
         val fileName = KylinConfig.getInstanceFromEnv.getKylinParquetJobJarPath
