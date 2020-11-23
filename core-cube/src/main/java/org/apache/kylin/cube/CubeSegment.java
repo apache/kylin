@@ -31,6 +31,7 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
@@ -75,8 +76,10 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     @JsonProperty("date_range_end")
     private long dateRangeEnd;
     @JsonProperty("source_offset_start")
+    @Clarification(deprecated = true)
     private long sourceOffsetStart;
     @JsonProperty("source_offset_end")
+    @Clarification(deprecated = true)
     private long sourceOffsetEnd;
     @JsonProperty("status")
     private SegmentStatusEnum status;
@@ -107,6 +110,7 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     private String binarySignature; // a hash of cube schema and dictionary ID, used for sanity check
 
     @JsonProperty("dictionaries")
+    @Clarification(deprecated = true)
     private ConcurrentHashMap<String, String> dictionaries; // table/column ==> dictionary resource path
     @JsonProperty("snapshots")
     private ConcurrentHashMap<String, String> snapshots; // table name ==> snapshot resource path
@@ -116,13 +120,16 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
 
     @JsonProperty("source_partition_offset_start")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @Clarification(deprecated = true)
     private Map<Integer, Long> sourcePartitionOffsetStart = Maps.newHashMap();
 
     @JsonProperty("source_partition_offset_end")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @Clarification(deprecated = true)
     private Map<Integer, Long> sourcePartitionOffsetEnd = Maps.newHashMap();
 
     @JsonProperty("stream_source_checkpoint")
+    @Clarification(deprecated = true)
     private String streamSourceCheckpoint;
 
     @JsonProperty("additionalInfo")
@@ -530,11 +537,19 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     }
 
     public String getStatisticsResourcePath() {
-        return getStatisticsResourcePath(this.getCubeInstance().getName(), this.getUuid());
+        return getStatisticsResourcePath(this.getCubeInstance().getName(), this.getUuid(), ".seq");
+    }
+
+    public String getPreciseStatisticsResourcePath() {
+        return getStatisticsResourcePath(this.getCubeInstance().getName(), this.getUuid(), ".json");
     }
 
     public static String getStatisticsResourcePath(String cubeName, String cubeSegmentId) {
-        return ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeName + "/" + cubeSegmentId + ".seq";
+        return getStatisticsResourcePath(cubeName, cubeSegmentId, ".seq");
+    }
+
+    public static String getStatisticsResourcePath(String cubeName, String cubeSegmentId, String suffix) {
+        return ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeName + "/" + cubeSegmentId + suffix;
     }
 
     @Override

@@ -47,6 +47,7 @@ object CuboidAggregator {
     aggInternal(ss, dataSet, dimensions, measures, isSparkSql)
   }
 
+  //noinspection ScalaStyle
   def aggInternal(ss: SparkSession,
                   dataSet: DataFrame,
                   dimensions: util.Set[Integer],

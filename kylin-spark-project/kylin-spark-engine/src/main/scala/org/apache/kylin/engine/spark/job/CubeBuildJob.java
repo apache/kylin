@@ -59,6 +59,8 @@ import org.apache.kylin.engine.spark.utils.QueryExecutionCache;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.storage.StorageFactory;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
@@ -69,6 +71,7 @@ import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
+import scala.Tuple2;
 import scala.collection.JavaConversions;
 
 public class CubeBuildJob extends SparkApplication {
@@ -113,6 +116,7 @@ public class CubeBuildJob extends SparkApplication {
                 // choose source
                 ParentSourceChooser sourceChooser = new ParentSourceChooser(spanningTree, seg, jobId, ss, config, true);
                 sourceChooser.decideSources();
+                Tuple2<String, AggInfo>[] aggInfos =  sourceChooser.getAggInfo();
                 NBuildSourceInfo buildFromFlatTable = sourceChooser.flatTableSource();
                 Map<Long, NBuildSourceInfo> buildFromLayouts = sourceChooser.reuseSources();
 
@@ -131,7 +135,8 @@ public class CubeBuildJob extends SparkApplication {
                 infos.recordSpanningTree(segId, spanningTree);
 
                 logger.info("Updating segment info");
-                updateSegmentInfo(getParam(MetadataConstants.P_CUBE_ID), seg, buildFromFlatTable.getFlattableDS().count());
+                assert buildFromFlatTable != null;
+                updateSegmentInfo(getParam(MetadataConstants.P_CUBE_ID), seg, buildFromFlatTable.getFlatTableDS().count());
             }
             updateSegmentSourceBytesSize(getParam(MetadataConstants.P_CUBE_ID),
                     ResourceDetectUtils.getSegmentSourceSize(shareDir));
@@ -157,6 +162,26 @@ public class CubeBuildJob extends SparkApplication {
         List<CubeSegment> cubeSegments = Lists.newArrayList();
         CubeSegment segment = cubeCopy.getSegmentById(segmentInfo.id());
         segment.setSizeKB(segmentInfo.getAllLayoutSize() / 1024);
+        List<String> cuboidStatics = new LinkedList<>();
+
+        String template = "{\"cuboid\":%d, \"rows\": %d, \"size\": %d}";
+        for (LayoutEntity layoutEntity : segmentInfo.getAllLayoutJava()) {
+            cuboidStatics.add(String.format(template, layoutEntity.getId(), layoutEntity.getRows(), layoutEntity.getByteSize()));
+        }
+
+        JavaSparkContext jsc = JavaSparkContext.fromSparkContext(ss.sparkContext());
+        JavaRDD<String> cuboidStatRdd = jsc.parallelize(cuboidStatics);
+        for (String cuboid : cuboidStatics) {
+            logger.info("Statistics \t: {}", cuboid);
+        }
+        String path = config.getHdfsWorkingDirectory() + segment.getPreciseStatisticsResourcePath();
+        logger.info("Saving {} {}", path, segmentInfo);
+        try {
+            cuboidStatRdd.saveAsTextFile(path);
+        } catch (Exception e) {
+            logger.error("Error", e);
+        }
+
         segment.setLastBuildTime(System.currentTimeMillis());
         segment.setLastBuildJobID(getParam(MetadataConstants.P_JOB_ID));
         segment.setInputRecords(sourceRowCount);
