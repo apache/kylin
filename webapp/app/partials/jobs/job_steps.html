@@ -161,6 +161,7 @@
     <div class="modal-header">
         <h4>{{stepAttrToShow == 'cmd' ? 'Parameters' : 'Output'}}
             <i ng-if="stepAttrToShow == 'output' && step.loadingOp" class="fa fa-spinner fa-spin"></i></h4>
+            The output log shows the first and last 100 lines by default. To view all the output, please click to <a ng-click="downloadAllLogs()">download the log file</a >.
     </div>
     <div class="modal-body">
         <pre>{{stepAttrToShow == 'cmd' ? step.exec_cmd : (step.loadingOp ? "Loading..." : !!(step.cmd_output)?step.cmd_output:'No Data Available')}}</pre>
