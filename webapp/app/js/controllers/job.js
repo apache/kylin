@@ -354,6 +354,9 @@ KylinApp
                     },
                     attr: function () {
                         return $scope.state.stepAttrToShow;
+                    },
+                    job: function () {
+                        return $scope.state.selectedJob;
                     }
                 }
             });
@@ -361,10 +364,15 @@ KylinApp
     }
 );
 
-var jobStepDetail = function ($scope, $modalInstance, step, attr) {
+var jobStepDetail = function ($scope, $modalInstance, $window, step, attr, job) {
     $scope.step = step;
     $scope.stepAttrToShow = attr;
+    $scope.job = job;
     $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
+    }
+    $scope.downloadAllLogs =function () {
+        var downloadUrl = Config.service.url + 'jobs/'+ job.uuid +'/steps/'+ step.id +'/log' + '?project=' + job.projectName;
+        $window.open(downloadUrl);
     }
 };
