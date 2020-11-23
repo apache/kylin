@@ -219,7 +219,7 @@ public abstract class SparkApplication {
         jobId = getParam(MetadataConstants.P_JOB_ID);
         project = getParam(MetadataConstants.P_PROJECT_NAME);
         if (getParam(MetadataConstants.P_CUBOID_NUMBER) != null) {
-            layoutSize = Integer.valueOf(getParam(MetadataConstants.P_CUBOID_NUMBER));
+            layoutSize = Integer.parseInt(getParam(MetadataConstants.P_CUBOID_NUMBER));
         }
         try (KylinConfig.SetAndUnsetThreadLocalConfig autoCloseConfig = KylinConfig
                 .setAndUnsetThreadLocalConfig(MetaDumpUtil.loadKylinConfigFromHdfs(hdfsMetalUrl))) {

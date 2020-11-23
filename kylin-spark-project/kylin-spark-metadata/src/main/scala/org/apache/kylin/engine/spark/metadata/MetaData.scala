@@ -31,15 +31,16 @@ class ColumnDesc(val columnName: String,
                  val dataType: DataType,
                  val tableName: String,
                  val tableAliasName: String,
-                 val id: Int) extends Serializable {
+                 val id: Int,
+                 val rowKey: Boolean = false) extends Serializable {
   def identity: String = s"$tableAliasName.$columnName"
 
   def isColumnType: Boolean = true
 }
 
 object ColumnDesc {
-  def apply(columnName: String, dataType: DataType, tableName: String, tableAliasName: String, id: Int):
-  ColumnDesc = new ColumnDesc(columnName, dataType, tableName, tableAliasName, id)
+  def apply(columnName: String, dataType: DataType, tableName: String, tableAliasName: String, id: Int, rowKey: Boolean):
+  ColumnDesc = new ColumnDesc(columnName, dataType, tableName, tableAliasName, id, rowKey)
 }
 
 case class LiteralColumnDesc(override val columnName: String,
@@ -120,11 +121,21 @@ case class SegmentInfo(id: String,
     snapshotInfo = tableInfo
   }
 
-  def getAllLayoutSize(): Long = {
+  def getAllLayoutSize: Long = {
     layouts.map(_.getByteSize).sum
   }
 
-  def getSnapShot2JavaMap(): java.util.Map[String, String] = {
+  def getAllLayout: List[LayoutEntity] = {
+    layouts
+  }
+
+  def getAllLayoutJava: java.util.List[LayoutEntity] = {
+    val l: util.LinkedList[LayoutEntity] = new java.util.LinkedList()
+    layouts.foreach(o => l.add(o))
+    l
+  }
+
+  def getSnapShot2JavaMap: java.util.Map[String, String] = {
     snapshotInfo.asJava
   }
 
