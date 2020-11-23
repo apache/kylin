@@ -1205,7 +1205,7 @@ public class QueryService extends BasicService {
                 queryContext.getMedataTime());
         response.setTotalSparkScanTime((queryContext.getScanTime() < 0) ? -1 :
                 queryContext.getScanTime());
-        response.setTotalScanBytes((queryContext.getScannedBytes() < 0) ?
+        response.setTotalScanBytes((queryContext.getScannedBytes() < 1) ?
                 (queryContext.getSourceScanBytes() < 1 ? -1 : queryContext.getSourceScanBytes()) : queryContext.getScannedBytes());
         response.setCubeSegmentStatisticsList(queryContext.getCubeSegmentStatisticsResultList());
         response.setSparkPool(queryContext.getSparkPool());
