@@ -136,13 +136,8 @@ public abstract class SparkApplication {
                 }
                 if (!config.getSparkConfigOverride().isEmpty()) {
                     for (Map.Entry<String, String> entry : config.getSparkConfigOverride().entrySet()) {
-                        if (entry.getKey().contains("spark.executor.extraJavaOptions")) {
-                            // Just let NSparkExecutable#replaceSparkNodeJavaOpsConfIfNeeded(in JobServer) to determine executor's JVM level configuration
-                            logger.info("Do not override {}={}.", entry.getKey(), entry.getValue());
-                        } else {
-                            logger.info("Override user-defined spark conf, set {}={}.", entry.getKey(), entry.getValue());
-                            sparkConf.set(entry.getKey(), entry.getValue());
-                        }
+                        logger.info("Override user-defined spark conf, set {}={}.", entry.getKey(), entry.getValue());
+                        sparkConf.set(entry.getKey(), entry.getValue());
                     }
                 }
             } else if (!isJobOnCluster(sparkConf)) {
