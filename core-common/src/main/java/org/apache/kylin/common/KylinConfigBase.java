@@ -181,8 +181,8 @@ public abstract class KylinConfigBase implements Serializable {
     protected String getOptional(String prop, String dft) {
 
         final String property = System.getProperty(prop);
-        return property != null ? StrSubstitutor.replace(property, System.getenv())
-                : StrSubstitutor.replace(properties.getProperty(prop, dft), System.getenv());
+        return property != null ? getSubstitutor().replace(property, System.getenv())
+                : getSubstitutor().replace(properties.getProperty(prop, dft), System.getenv());
     }
 
     protected Properties getAllProperties() {
@@ -194,8 +194,7 @@ public abstract class KylinConfigBase implements Serializable {
      * @return properties which contained in propertyKeys
      */
     protected Properties getProperties(Collection<String> propertyKeys) {
-        Map<String, String> envMap = System.getenv();
-        StrSubstitutor sub = new StrSubstitutor(envMap);
+        final StrSubstitutor sub = getSubstitutor();
 
         Properties filteredProperties = new Properties();
         for (Entry<Object, Object> entry : this.properties.entrySet()) {
@@ -206,9 +205,17 @@ public abstract class KylinConfigBase implements Serializable {
         return filteredProperties;
     }
 
+    protected StrSubstitutor getSubstitutor() {
+        // env > properties
+        final Map<String, Object> all = Maps.newHashMap();
+        all.putAll((Map) properties);
+        all.putAll(System.getenv());
+
+        return new StrSubstitutor(all);
+    }
+
     protected Properties getRawAllProperties() {
         return properties;
-
     }
 
     protected final Map<String, String> getPropertiesByPrefix(String prefix) {
@@ -259,7 +266,6 @@ public abstract class KylinConfigBase implements Serializable {
     final protected void reloadKylinConfig(Properties properties) {
         this.properties = BCC.check(properties);
         setProperty("kylin.metadata.url.identifier", getMetadataUrlPrefix());
-        setProperty("kylin.log.spark-driver-properties-file", getLogSparkDriverPropertiesFile());
         setProperty("kylin.log.spark-executor-properties-file", getLogSparkExecutorPropertiesFile());
     }
 

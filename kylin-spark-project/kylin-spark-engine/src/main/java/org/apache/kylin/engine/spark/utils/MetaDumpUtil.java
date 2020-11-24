@@ -29,7 +29,6 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.AutoDeleteDirectory;
 import org.apache.kylin.common.persistence.RawResource;
@@ -64,7 +63,7 @@ public class MetaDumpUtil {
         return dumpList;
     }
 
-    public static void dumpAndUploadKylinPropsAndMetadata(Set<String> dumpList, KylinConfigExt kylinConfig,
+    public static void dumpAndUploadKylinPropsAndMetadata(Set<String> dumpList, KylinConfig kylinConfig,
             String metadataUrl) throws IOException {
 
         try (AutoDeleteDirectory tmpDir = new AutoDeleteDirectory("kylin_job_meta", "");
