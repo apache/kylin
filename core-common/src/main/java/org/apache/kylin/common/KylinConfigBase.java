@@ -716,7 +716,7 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isRowKeyEncodingAutoConvert() {
         return Boolean.parseBoolean(getOptional("kylin.cube.rowkey-encoding-auto-convert", "true"));
     }
-    
+
     public String getSegmentAdvisor() {
         return getOptional("kylin.cube.segment-advisor", "org.apache.kylin.cube.CubeSegmentAdvisor");
     }
@@ -1053,6 +1053,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getHiveDatabaseDir(String databaseName) {
         String dbDir = System.getProperty("kylin.source.hive.warehouse-dir");
+        if (StringUtils.isEmpty(dbDir)) {
+            logger.warn("kylin.source.hive.warehouse-dir is not set on system,now get it from kylin.properties and overwrites configuration.");
+            dbDir = getOptional("kylin.source.hive.warehouse-dir", "");
+        }
         if (!StringUtil.isEmpty(databaseName) && !databaseName.equalsIgnoreCase(DEFAULT)) {
             if (!dbDir.endsWith("/")) {
                 dbDir += "/";
@@ -2327,7 +2331,7 @@ public abstract class KylinConfigBase implements Serializable {
     public String getKylinMetricsEventTimeZone() {
         return getOptional("kylin.metrics.event-time-zone", getTimeZone()).toUpperCase(Locale.ROOT);
     }
-    
+
     public boolean isKylinMetricsMonitorEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.metrics.monitor-enabled", FALSE));
     }
