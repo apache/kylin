@@ -34,6 +34,7 @@ import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.JobListRequest;
+import org.apache.kylin.rest.request.SparkJobUpdateRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.JobService;
@@ -45,9 +46,11 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PutMapping;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -195,6 +198,19 @@ public class JobController extends BasicController {
 
         String jobOutput = jobService.getAllJobStepOutput(jobId, stepId);
         setDownloadResponse(new ByteArrayInputStream(jobOutput.getBytes(StandardCharsets.UTF_8)), downloadFilename, MediaType.APPLICATION_OCTET_STREAM_VALUE, response);
+        return new EnvelopeResponse<>(ResponseCode.CODE_SUCCESS, "", "");
+    }
+
+    /**
+     * RPC Call
+     */
+    @PutMapping(value = "/spark")
+    @ResponseBody
+    public EnvelopeResponse<String> updateSparkJobInfo(@RequestBody SparkJobUpdateRequest sparkJobUpdateRequest) {
+        jobService.updateSparkJobInfo(sparkJobUpdateRequest.getProject(),
+                sparkJobUpdateRequest.getTaskId(),
+                sparkJobUpdateRequest.getYarnAppUrl());
+
         return new EnvelopeResponse<>(ResponseCode.CODE_SUCCESS, "", "");
     }
 

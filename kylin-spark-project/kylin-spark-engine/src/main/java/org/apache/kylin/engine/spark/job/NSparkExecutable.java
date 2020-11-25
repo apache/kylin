@@ -59,7 +59,6 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.job.common.PatternedLogger;
-import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
@@ -254,24 +253,12 @@ public class NSparkExecutable extends AbstractExecutable {
                                          String kylinJobJar, String appArgs, String jobId) {
         PatternedLogger patternedLogger;
         if (config.isJobLogPrintEnabled()) {
-            patternedLogger = new PatternedLogger(logger, new PatternedLogger.ILogListener() {
-                @Override
-                public void onLogEvent(String infoKey, Map<String, String> info) {
-                    // only care three properties here
-                    if (ExecutableConstants.SPARK_JOB_ID.equals(infoKey)
-                            || ExecutableConstants.YARN_APP_ID.equals(infoKey)
-                            || ExecutableConstants.YARN_APP_URL.equals(infoKey)) {
-                        getManager().addJobInfo(getId(), info);
-                    }
-                }
-            });
+            patternedLogger = new PatternedLogger(logger);
         } else {
             patternedLogger = new PatternedLogger(null);
         }
         try {
             String cmd = generateSparkCmd(config, hadoopConf, jars, kylinJobJar, appArgs);
-            patternedLogger.log("cmd: ");
-            patternedLogger.log(cmd);
 
             CliCommandExecutor exec = new CliCommandExecutor();
             exec.execute(cmd, patternedLogger, jobId);

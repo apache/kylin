@@ -672,6 +672,7 @@ public class ExecutableManager {
                             + newStatus + ", job id: " + jobId);
                 }
                 jobOutput.setStatus(newStatus.toString());
+                logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
             }
             if (info != null) {
                 jobOutput.setInfo(info);
@@ -683,7 +684,6 @@ public class ExecutableManager {
                 jobOutput.setContent(output);
             }
             executableDao.updateJobOutput(jobOutput);
-            logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
 
             if (needDestroyProcess(oldStatus, newStatus)) {
                 logger.debug("need kill {}, from {} to {}", jobId, oldStatus, newStatus);
@@ -695,7 +695,7 @@ public class ExecutableManager {
             throw new RuntimeException(e);
         }
 
-        if (project != null) {
+        if (project != null && logPath != null) {
             updateJobOutputToHDFS(project, jobId, output, logPath);
         }
     }
