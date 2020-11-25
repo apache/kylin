@@ -18,6 +18,14 @@
 
 package org.apache.kylin.engine.spark.application;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.engine.spark.job.BuildJobInfos;
 import org.apache.kylin.engine.spark.job.KylinBuildEnv;
@@ -27,8 +35,15 @@ import org.apache.kylin.engine.spark.job.UdfManager;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.engine.spark.utils.SparkConfHelper;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.hadoop.fs.FileSystem;
@@ -112,6 +127,93 @@ public abstract class SparkApplication {
         return YarnInfoFetcherUtils.getTrackingUrl(yarnAppId);
     }
 
+    /**
+     * http request the spark job controller
+     */
+    public Boolean updateSparkJobInfo(String url, String json) {
+        String serverIp = System.getProperty("spark.driver.rest.server.ip", "127.0.0.1");
+        String port = System.getProperty("spark.driver.rest.server.port", "7070");
+        String requestApi = String.format(Locale.ROOT, "http://%s:%s" + url, serverIp, port);
+
+        try {
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            HttpPut httpPut = new HttpPut(requestApi);
+            httpPut.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+            httpPut.setEntity(new StringEntity(json, StandardCharsets.UTF_8));
+
+            HttpResponse response = httpClient.execute(httpPut);
+            int code = response.getStatusLine().getStatusCode();
+            if (code == HttpStatus.SC_OK) {
+                return true;
+            } else {
+                InputStream inputStream = response.getEntity().getContent();
+                String responseContent = IOUtils.toString(inputStream);
+                logger.warn("update spark job failed, info: {}", responseContent);
+            }
+        } catch (IOException e) {
+            logger.error("http request {} failed!", requestApi, e);
+        }
+        return false;
+    }
+
+    /**
+     * update spark job extra info, link yarn_application_tracking_url
+     */
+    public Boolean updateSparkJobExtraInfo(String url, String project, String jobId, Map<String, String> extraInfo) {
+        Map<String, String> payload = new HashMap<>(5);
+        payload.put("project", project);
+        payload.put("taskId", System.getProperty("spark.driver.param.taskId", jobId));
+        payload.putAll(extraInfo);
+
+        try {
+            String payloadJson = JsonUtil.writeValueAsString(payload);
+            int retry = 3;
+            for (int i = 0; i < retry; i++) {
+                if (updateSparkJobInfo(url, payloadJson)) {
+                    return Boolean.TRUE;
+                }
+                Thread.sleep(3000);
+                logger.warn("retry request rest api update spark extra job info");
+            }
+        } catch (Exception e) {
+            logger.error("update spark job extra info failed!", e);
+        }
+
+        return Boolean.FALSE;
+    }
+
+    private String tryReplaceHostAddress(String url) {
+        String originHost = null;
+        try {
+            URI uri = URI.create(url);
+            originHost = uri.getHost();
+            String hostAddress = InetAddress.getByName(originHost).getHostAddress();
+            return url.replace(originHost, hostAddress);
+        } catch (UnknownHostException uhe) {
+            logger.error("failed to get the ip address of " + originHost + ", step back to use the origin tracking url.", uhe);
+            return url;
+        }
+    }
+
+    private Map<String, String> getTrackingInfo(boolean ipAddressPreferred) {
+        String applicationId = ss.sparkContext().applicationId();
+        Map<String, String> extraInfo = new HashMap<>();
+        try {
+            String trackingUrl = getTrackingUrl(applicationId);
+            if (StringUtils.isBlank(trackingUrl)) {
+                logger.warn("Get tracking url of application {}, but empty url found.", applicationId);
+                return extraInfo;
+            }
+            if (ipAddressPreferred) {
+                trackingUrl = tryReplaceHostAddress(trackingUrl);
+            }
+            extraInfo.put("yarnAppUrl", trackingUrl);
+        } catch (Exception e) {
+            logger.error("get tracking url failed!", e);
+        }
+        return extraInfo;
+    }
+
 
     final protected void execute() throws Exception {
         String hdfsMetalUrl = getParam(MetadataConstants.P_DIST_META_URL);
@@ -181,6 +283,10 @@ public abstract class SparkApplication {
             }).enableHiveSupport().config(sparkConf).config("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false")
                     .getOrCreate();
 
+            if (isJobOnCluster(sparkConf)) {
+                updateSparkJobExtraInfo("/kylin/api/jobs/spark", project, jobId,
+                        getTrackingInfo(config.isTrackingUrlIpAddressEnabled()));
+            }
             // for spark metrics
             //JobMetricsUtils.registerListener(ss);
 

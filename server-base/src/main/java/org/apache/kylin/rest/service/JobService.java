@@ -33,6 +33,7 @@ import java.util.TimeZone;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
@@ -54,6 +55,7 @@ import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JobSearchResult;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.SchedulerFactory;
+import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
@@ -465,6 +467,17 @@ public class JobService extends BasicService implements InitializingBean {
             throw new BadRequestException(
                     "The recommend cuboids are the same as the current cuboids. It's no need to do optimization.");
         }
+    }
+
+    /**
+     * update the spark job yarnAppUrl.
+     */
+    public void updateSparkJobInfo(String project, String taskId, String yarnAppUrl) {
+        ExecutableManager executableManager = getExecutableManager();
+        Map<String, String> extraInfo = Maps.newHashMap();
+        extraInfo.put(ExecutableConstants.YARN_APP_URL, yarnAppUrl);
+
+        executableManager.updateJobOutput(project, taskId, null, extraInfo, null, null);
     }
 
     public JobInstance getJobInstance(String uuid) {

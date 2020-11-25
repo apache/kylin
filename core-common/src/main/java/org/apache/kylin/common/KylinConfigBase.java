@@ -2648,6 +2648,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.engine.driver-memory-base", "1024"));
     }
 
+    public boolean isTrackingUrlIpAddressEnabled() {
+        return Boolean.valueOf(this.getOptional("kylin.job.tracking-url-ip-address-enabled", TRUE));
+    }
+
     //Auto adjust the memory of driver
     public int[] getSparkEngineDriverMemoryStrategy() {
         String[] dft = {"2", "20", "100"};
