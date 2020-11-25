@@ -156,7 +156,7 @@ public class SparkMergingDictionary extends AbstractApplication implements Seria
             JavaPairRDD<Text, Text> colToDictPathRDD = indexRDD.mapToPair(new MergeDictAndStatsFunction(cubeName,
                     metaUrl, segmentId, StringUtil.splitByComma(segmentIds), statOutputPath, tblColRefs, sConf));
 
-            colToDictPathRDD.coalesce(1, false).saveAsNewAPIHadoopFile(dictOutputPath, Text.class, Text.class,
+            colToDictPathRDD.coalesce(1, true).saveAsNewAPIHadoopFile(dictOutputPath, Text.class, Text.class,
                     SequenceFileOutputFormat.class);
         }
     }
