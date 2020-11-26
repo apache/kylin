@@ -209,6 +209,7 @@ export hive_dependency
 export hive_conf_path
 export hive_warehouse_dir=`hive -e 'set hive.metastore.warehouse.dir;' | awk '{split($0,a,"="); print a[2]}'`
 echo "export hive_warehouse_dir=$hive_warehouse_dir"
+
 echo "export hive_warehouse_dir=$hive_warehouse_dir
 export hive_dependency=$hive_dependency
 export hive_conf_path=$hive_conf_path" > ${dir}/cached-hive-dependency.sh

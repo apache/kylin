@@ -844,14 +844,16 @@ public abstract class KylinConfigBase implements Serializable {
 
     /**
      * get assigned server array, which a empty string array in default
+     *
      * @return
      */
     public String[] getAssignedServers() {
-        return getOptionalStringArray("kylin.cube.schedule.assigned-servers", new String[] {});
+        return getOptionalStringArray("kylin.cube.schedule.assigned-servers", new String[]{});
     }
 
     /**
      * Determine if the target node is in the assigned node
+     *
      * @param targetServers target task servers
      * @return
      */
@@ -1054,8 +1056,13 @@ public abstract class KylinConfigBase implements Serializable {
     public String getHiveDatabaseDir(String databaseName) {
         String dbDir = System.getProperty("kylin.source.hive.warehouse-dir");
         if (StringUtils.isEmpty(dbDir)) {
-            logger.warn("kylin.source.hive.warehouse-dir is not set on system,now get it from kylin.properties and overwrites configuration.");
+            logger.warn("get kylin.source.hive.warehouse-dir from system properties failed,now get it from overwrite configuration or kylin.properties");
             dbDir = getOptional("kylin.source.hive.warehouse-dir", "");
+        }
+        if (StringUtils.isEmpty(dbDir)) {
+            logger.info("get kylin.source.hive.warehouse-dir success: {}", dbDir)
+        } else {
+            logger.warn("get kylin.source.hive.warehouse-dir failed.")
         }
         if (!StringUtil.isEmpty(databaseName) && !databaseName.equalsIgnoreCase(DEFAULT)) {
             if (!dbDir.endsWith("/")) {
