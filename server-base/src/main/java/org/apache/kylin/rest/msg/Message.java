@@ -173,6 +173,14 @@ public class Message {
         return "Rebuild snapshot of hive view '%s' is not supported, please refresh segment of the cube";
     }
 
+    public String getSNAPSHOT_GLOBAL() {
+        return "snapshot for lookup table '%s' is already global";
+    }
+
+    public String getCUBE_HAS_NOT_READY_SEGS() {
+        return "lookup table '%s' has not ready segment.";
+    }
+
     // Model
     public String getINVALID_MODEL_DEFINITION() {
         return "The data model definition is invalid.";

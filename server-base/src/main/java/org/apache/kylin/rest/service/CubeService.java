@@ -940,6 +940,54 @@ public class CubeService extends BasicService implements InitializingBean {
         return null;
     }
 
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#project, 'MANAGEMENT')")
+    public CubeInstance changeLookupSnapshotBeGlobal(CubeInstance cube, String lookupTable) throws BadRequestException {
+        aclEvaluate.checkProjectWritePermission(cube.getProject());
+        Message msg = MsgPicker.getMsg();
+        CubeDesc cubeDesc = cube.getDescriptor();
+
+        TableDesc tableDesc = getTableManager().getTableDesc(lookupTable, cube.getProject());
+
+        if (tableDesc == null) {
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getTABLE_DESC_NOT_FOUND(), lookupTable));
+        }
+
+        Set<String> inMemLookupTables = cubeDesc.getInMemLookupTables();
+        if (!inMemLookupTables.contains(lookupTable)) {
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getTABLE_DESC_NOT_FOUND(), lookupTable));
+        }
+
+        if (cubeDesc.isGlobalSnapshotTable(lookupTable)) {
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getSNAPSHOT_GLOBAL(), tableDesc.getName()));
+        }
+
+        try {
+            RealizationStatusEnum ostatus = cube.getStatus();
+
+            if (null == ostatus || !cube.getStatus().equals(RealizationStatusEnum.DISABLED)) {
+                throw new BadRequestException(
+                        String.format(Locale.ROOT, msg.getENABLE_NOT_DISABLED_CUBE(), cube.getName(), ostatus));
+            }
+
+            int segmentsCount = cube.getSegments().size();
+            if (segmentsCount == 0) {
+                // change in persistence
+                getCubeDescManager().updatelookupTableSnapshotGlobal(cubeDesc, lookupTable, true);
+            } else if (cube.getSegments(SegmentStatusEnum.READY).size() == segmentsCount) {
+                // change in persistence
+                getCubeManager().updateCubeToBeGlobal(cube, lookupTable);
+                getCubeDescManager().updatelookupTableSnapshotGlobal(cubeDesc, lookupTable, true);
+            } else {
+                throw new BadRequestException(
+                        String.format(Locale.ROOT, msg.getCUBE_HAS_NOT_READY_SEGS(), cube.getName()));
+            }
+        } catch (IOException e) {
+            logger.error("Failed to auto update snapshot be global " + cube.getName() + "@" + lookupTable, e);
+        }
+        return cube;
+    }
+
     public List<Draft> listCubeDrafts(String cubeName, String modelName, String project, boolean exactMatch)
             throws IOException {
         if (null == project) {
