@@ -78,6 +78,9 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             @Override
             public void addStepPhase3_BuildCube(DefaultChainedExecutable jobFlow) {
                 jobFlow.addTask(steps.createConvertCuboidToHfileStep(jobFlow.getId()));
+                if(seg.getConfig().isHFileDistCP()){
+                    jobFlow.addTask(steps.createDistcpHFileStep(jobFlow.getId()));
+                }
                 jobFlow.addTask(steps.createBulkLoadStep(jobFlow.getId()));
             }
 
@@ -143,6 +146,9 @@ public class HBaseMROutput2Transition implements IMROutput2 {
                 jobFlow.addTask(
                         steps.createMergeCuboidDataStep(seg, mergingSegments, jobFlow.getId(), MergeCuboidJob.class));
                 jobFlow.addTask(steps.createConvertCuboidToHfileStep(jobFlow.getId()));
+                if(seg.getConfig().isHFileDistCP()){
+                    jobFlow.addTask(steps.createDistcpHFileStep(jobFlow.getId()));
+                }
                 jobFlow.addTask(steps.createBulkLoadStep(jobFlow.getId()));
             }
 
@@ -198,6 +204,9 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             @Override
             public void addStepPhase3_BuildCube(DefaultChainedExecutable jobFlow) {
                 jobFlow.addTask(steps.createConvertCuboidToHfileStep(jobFlow.getId()));
+                if(seg.getConfig().isHFileDistCP()){
+                    jobFlow.addTask(steps.createDistcpHFileStep(jobFlow.getId()));
+                }
                 jobFlow.addTask(steps.createBulkLoadStep(jobFlow.getId()));
             }
 

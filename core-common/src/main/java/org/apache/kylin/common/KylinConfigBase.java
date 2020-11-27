@@ -2686,4 +2686,17 @@ public abstract class KylinConfigBase implements Serializable {
     public Map<String, String> getJobStatusKafkaConfig() {
         return getPropertiesByPrefix("kylin.engine.job-status.kafka.");
     }
+
+    public boolean isHFileDistCP() {
+        return Boolean.parseBoolean(getOptional("kylin.storage.hfile-distcp-enable", "false"));
+    }
+
+    public int getDistCPMapBandWidth(){
+        return Integer.valueOf(getOptional("kylin.storage.distcp-map-bandwidth", "20"));
+    }
+
+    public int getDistCPMaxMapNum(){
+        return Integer.valueOf(getOptional("kylin.storage.distcp-max-map-num", "50"));
+    }
+
 }

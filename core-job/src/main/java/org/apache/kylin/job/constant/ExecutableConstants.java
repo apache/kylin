@@ -57,6 +57,7 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_GET_CUBOID_KEY_DISTRIBUTION = "Calculate HTable Region Splits";
     public static final String STEP_NAME_CREATE_HBASE_TABLE = "Create HTable";
     public static final String STEP_NAME_CONVERT_CUBOID_TO_HFILE = "Convert Cuboid Data to HFile";
+    public static final String STEP_NAME_HFILE_DISTCP = "HFile Distcp To HBase";
     public static final String STEP_NAME_BULK_LOAD_HFILE = "Load HFile to HBase Table";
     public static final String STEP_NAME_COPY_DICTIONARY = "Copy dictionary from Old Segment";
     public static final String STEP_NAME_MERGE_DICTIONARY = "Merge Cuboid Dictionary";
