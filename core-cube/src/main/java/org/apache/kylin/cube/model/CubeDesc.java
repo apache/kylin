@@ -59,6 +59,7 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.dict.GlobalDictionaryBuilder;
 import org.apache.kylin.dict.global.SegmentAppendTrieDictBuilder;
@@ -621,6 +622,12 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         if (another == null)
             return false;
         return this.calculateSignature().equals(another.calculateSignature());
+    }
+
+    public CubeDesc latestCopyForWrite() {
+        CubeDescManager mgr = CubeDescManager.getInstance(config);
+        CubeDesc lastest = mgr.getCubeDesc(name);
+        return mgr.copyForWrite(lastest);
     }
 
     public String calculateSignature() {
@@ -1556,6 +1563,32 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             return false;
         }
         return desc.isGlobal();
+    }
+
+    public void createAndSetSnapshotTableGlobal(String tableName, boolean global) {
+        SnapshotTableDesc desc = getSnapshotTableDesc(tableName);
+        // if desc not exist create one
+        if (desc == null) {
+            SnapshotTableDesc newDesc = new SnapshotTableDesc();
+            newDesc.setGlobal(global);
+            newDesc.setTableName(tableName);
+            snapshotTableDescList.add(newDesc);
+        } else {
+            desc.setGlobal(global);
+        }
+    }
+
+    public Set<String> getInMemLookupTables() {
+        Set<String> snapshots = Sets.newHashSet();
+        for (DimensionDesc dim : getDimensions()) {
+            TableRef table = dim.getTableRef();
+            if (getModel().isLookupTable(table)) {
+                if (!isExtSnapshotTable(table.getTableIdentity())) {
+                    snapshots.add(table.getTableIdentity());
+                }
+            }
+        }
+        return snapshots;
     }
 
     public boolean isExtSnapshotTable(String tableName) {

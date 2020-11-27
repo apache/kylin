@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -371,6 +372,26 @@ public class CubeManager implements IRealizationProvider {
             Map<String, String> map = Maps.newHashMap();
             map.put(lookupTableName, newSnapshotResPath);
             update.setUpdateTableSnapshotPath(map);
+            return updateCube(update);
+        }
+    }
+
+    public CubeInstance updateCubeToBeGlobal(CubeInstance cube, String lookupTable) throws IOException {
+        try (AutoLock lock = cubeMapLock.lockForWrite()) {
+            cube = cube.latestCopyForWrite();
+            CubeUpdate update = new CubeUpdate(cube);
+            String snapshotResPath = cube.getLastSegment().getSnapshotResPath(lookupTable);
+            Map<String, String> updateResPath = new HashMap<>();
+            updateResPath.put(lookupTable, snapshotResPath);
+            update.setUpdateTableSnapshotPath(updateResPath);
+            List<CubeSegment> updateCubeSegments = new ArrayList<>();
+
+            for (CubeSegment seg : update.getCubeInstance().getSegments()) {
+                seg.removeSnapshots(lookupTable);
+                updateCubeSegments.add(seg);
+            }
+            update.setToUpdateSegs(updateCubeSegments.toArray(new CubeSegment[0]));
+
             return updateCube(update);
         }
     }
