@@ -347,6 +347,35 @@ public class CubeController extends BasicController {
     }
 
     /**
+     * Force change a cube's lookup table to be global
+     *
+     *@throws IOException
+     */
+    @RequestMapping(value = "/{cubeNames}/{tableName}/change_lookup_global", method = {
+            RequestMethod.PUT }, produces = { "application/json" })
+    @ResponseBody
+    public List<CubeInstance> globalLookupSnapshot(@PathVariable String cubeNames, @PathVariable String tableName) {
+
+        List<CubeInstance> result = new ArrayList<>();
+
+        final CubeManager cubeMgr = cubeService.getCubeManager();
+        String[] changeCubes = cubeNames.toUpperCase(Locale.ROOT).split(",");
+        for (String cubeName : changeCubes) {
+            try {
+                checkCubeExists(cubeName);
+                final CubeInstance cube = cubeMgr.getCube(cubeName);
+                CubeInstance cubeInstance = cubeService.changeLookupSnapshotBeGlobal(cube, tableName);
+                logger.info("cube {} change snapshotTable {} global Success", cubeName, tableName);
+                result.add(cubeInstance);
+            } catch (Exception e) {
+                logger.error("cube {} change snapshotTable {} global Fail", cubeName, tableName);
+                logger.error(e.getLocalizedMessage(), e);
+            }
+        }
+        return result;
+    }
+
+    /**
      * Delete a cube segment
      *
      * @throws IOException
