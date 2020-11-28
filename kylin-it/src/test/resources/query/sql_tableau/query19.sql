@@ -24,4 +24,4 @@
  from test_kylin_fact 
  group by test_kylin_fact.lstg_format_name ) "TableauSQL" 
  GROUP BY "TableauSQL"."LSTG_FORMAT_NAME"
-;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}
+;{"scanRowCount":300,"scanBytes":0,"scanFiles":1,"cuboidId":[14336]}

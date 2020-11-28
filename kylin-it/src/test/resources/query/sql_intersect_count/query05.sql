@@ -20,4 +20,4 @@ intersect_count(TEST_COUNT_DISTINCT_BITMAP, CAL_DT, array['2012-01-01']) as firs
 intersect_count(TEST_COUNT_DISTINCT_BITMAP, CAL_DT, array['2012-01-01', '2012-01-02']) as first_and_second_day
 from test_kylin_fact
 where CAL_DT in ('2012-01-01','2012-01-02','2012-01-03')
-
+;{"scanRowCount":731,"scanBytes":0,"scanFiles":1,"cuboidId":[262144]}

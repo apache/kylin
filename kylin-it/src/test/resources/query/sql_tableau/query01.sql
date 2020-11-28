@@ -30,4 +30,4 @@ SELECT SUM(1) AS "COL",
  ) "TableauSQL" 
  GROUP BY 2 
  HAVING COUNT(1)>0
-;{"scanRowCount":10018,"scanBytes":384041,"scanFiles":2,"cuboidId":276480}
+;{"scanRowCount":10018,"scanBytes":0,"scanFiles":2,"cuboidId":[276480]}

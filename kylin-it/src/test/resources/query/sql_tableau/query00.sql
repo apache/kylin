@@ -22,4 +22,4 @@ select test_cal_dt.week_beg_dt, sum(test_kylin_fact.price)
  inner join test_category_groupings AS test_category_groupings
  on test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id and test_kylin_fact.lstg_site_id = test_category_groupings.site_id
  group by test_cal_dt.week_beg_dt
-;{"scanRowCount":1462,"scanBytes":215217,"scanFiles":2,"cuboidId":262144}
+;{"scanRowCount":1462,"scanBytes":0,"scanFiles":2,"cuboidId":[262144]}

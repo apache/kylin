@@ -18,3 +18,4 @@
 
 select count(*) as cnt from test_kylin_fact
 where lstg_format_name>=? and ?>=lstg_format_name
+;{"scanRowCount":300,"scanBytes":0,"scanFiles":1,"cuboidId":[14336]}

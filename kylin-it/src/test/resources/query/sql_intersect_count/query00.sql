@@ -29,4 +29,4 @@ count(*) as cnt
 from test_kylin_fact left join edw.test_cal_dt on test_kylin_fact.cal_dt = edw.test_cal_dt.CAL_DT
 where week_beg_dt in (DATE '2013-12-22', DATE '2012-06-23')
 group by week_beg_dt
-
+;{"scanRowCount":10018,"scanBytes":0,"scanFiles":2,"cuboidId":[276480]}

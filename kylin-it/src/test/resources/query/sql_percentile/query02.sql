@@ -18,4 +18,4 @@
 
 select seller_id, percentile_approx(price, 0.5) from test_kylin_fact
 group by seller_id
-;{"scanRowCount":9928,"scanBytes":378744,"scanFiles":1,"cuboidId":1310735}
+;{"scanRowCount":9928,"scanBytes":0,"scanFiles":1,"cuboidId":[1310735]}

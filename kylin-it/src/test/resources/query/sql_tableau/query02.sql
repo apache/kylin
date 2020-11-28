@@ -28,4 +28,4 @@ SELECT *
  having sum(price)>500 
  ) "TableauSQL" 
  LIMIT 1
-;{"scanRowCount":10018,"scanBytes":384041,"scanFiles":2,"cuboidId":276480}
+;{"scanRowCount":10018,"scanBytes":0,"scanFiles":2,"cuboidId":[276480]}

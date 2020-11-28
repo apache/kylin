@@ -25,4 +25,4 @@ select test_cal_dt.week_beg_dt,sum(test_kylin_fact.price) as GMV
  and test_cal_dt.week_beg_dt between DATE '2013-05-01' and DATE '2013-08-01' 
  group by test_cal_dt.week_beg_dt 
  having count(distinct seller_id) > 2
-;{"scanRowCount":10018,"scanBytes":384041,"scanFiles":2,"cuboidId":276480}
+;{"scanRowCount":10018,"scanBytes":0,"scanFiles":2,"cuboidId":[276480]}

@@ -25,3 +25,4 @@ FROM test_kylin_fact
 	INNER JOIN edw.test_sites test_sites ON test_kylin_fact.lstg_site_id = test_sites.site_id
 WHERE 1 <> 1
 GROUP BY test_kylin_fact.lstg_format_name, test_cal_dt.week_beg_dt
+;{"scanRowCount":0,"scanBytes":0,"scanFiles":0,"cuboidId":[-1]}

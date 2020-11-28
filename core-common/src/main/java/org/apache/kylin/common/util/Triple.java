@@ -63,7 +63,7 @@ public class Triple<A, B, C> {
     }
 
     public String toString() {
-        return "(" + first + ", " + second + "," + third + " )";
+        return "(" + first + ", " + second + ", " + third + ")";
     }
 
     public A getFirst() {

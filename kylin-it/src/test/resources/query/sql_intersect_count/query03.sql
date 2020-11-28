@@ -20,4 +20,4 @@ intersect_count(TEST_COUNT_DISTINCT_BITMAP, CAL_DT, array[date'2012-01-01']) as 
 from test_kylin_fact
 where CAL_DT in ('2012-01-01','2012-01-02','2012-01-03')
 group by LEAF_CATEG_ID
-
+;{"scanRowCount":9562,"scanBytes":0,"scanFiles":1,"cuboidId":[507904]}

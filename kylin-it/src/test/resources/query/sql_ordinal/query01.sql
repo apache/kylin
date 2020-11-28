@@ -30,3 +30,4 @@ FROM test_kylin_fact
 WHERE SLR_SEGMENT_CD < 16 and USER_DEFINED_FIELD1 is not null
 group by 1, 2
 order by 1, 2
+;{"scanRowCount":10144,"scanBytes":0,"scanFiles":2,"cuboidId":[2097151]}

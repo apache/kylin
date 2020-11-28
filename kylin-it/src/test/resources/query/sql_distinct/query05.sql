@@ -23,4 +23,4 @@ select lstg_format_name,
  from test_kylin_fact 
  group by lstg_format_name 
  order by lstg_format_name
-;{"scanRowCount":300,"scanBytes":190822,"scanFiles":1,"cuboidId":14336}
+;{"scanRowCount":300,"scanBytes":0,"scanFiles":1,"cuboidId":[14336]}
