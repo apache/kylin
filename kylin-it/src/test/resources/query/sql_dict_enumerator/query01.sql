@@ -19,3 +19,4 @@
 select SLR_SEGMENT_CD
 from TEST_KYLIN_FACT
 group by SLR_SEGMENT_CD
+;{"scanRowCount":300,"scanBytes":0,"scanFiles":1,"cuboidId":[14336]}

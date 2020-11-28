@@ -24,3 +24,4 @@ union all
 select count(*) as count_a
 from TEST_KYLIN_FACT as TEST_A
 where lstg_format_name='FP-GTC'
+;{"scanRowCount":600,"scanBytes":0,"scanFiles":2,"cuboidId":[14336,14336]}

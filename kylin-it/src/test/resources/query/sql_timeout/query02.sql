@@ -16,4 +16,6 @@
 -- limitations under the License.
 --
 
-select seller_id,cal_dt,lstg_format_name,sum(price) from test_kylin_fact group by seller_id,cal_dt,lstg_format_name
+select seller_id,cal_dt,lstg_format_name,sum(price)
+from test_kylin_fact group by seller_id,cal_dt,lstg_format_name
+;{"scanRowCount":10000,"scanBytes":0,"scanFiles":1,"cuboidId":[2097151]}

@@ -18,3 +18,4 @@
 
 select MAX(SLR_SEGMENT_CD)
 from TEST_KYLIN_FACT
+;{"scanRowCount":300,"scanBytes":0,"scanFiles":1,"cuboidId":[14336]}

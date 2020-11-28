@@ -29,4 +29,4 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  
 where META_CATEG_NAME like '%ab%'
 group by META_CATEG_NAME
-;{"scanRowCount":45,"scanBytes":150634,"scanFiles":1,"cuboidId":65536}
+;{"scanRowCount":45,"scanBytes":0,"scanFiles":1,"cuboidId":[65536]}

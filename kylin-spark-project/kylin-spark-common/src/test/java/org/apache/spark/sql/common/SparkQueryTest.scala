@@ -108,20 +108,21 @@ object SparkQueryTest {
     def sameRows(sparkAnswer: Seq[Row],
                  kylinAnswer: Seq[Row],
                  isSorted: Boolean = false): Option[String] = {
-        if (prepareAnswer(sparkAnswer, isSorted) != prepareAnswer(kylinAnswer,
-            isSorted)) {
+        val sparkResults: Seq[Row] = prepareAnswer(sparkAnswer, isSorted)
+        val kylinResults: Seq[Row] = prepareAnswer(kylinAnswer, isSorted)
+        if (sparkResults != kylinResults) {
             val errorMessage =
                 s"""
                    |== Results ==
                    |${
                     sideBySide(
                         s"== Kylin Answer - ${kylinAnswer.size} ==" +:
-                            prepareAnswer(kylinAnswer, isSorted).map(_.toString()),
+                          kylinResults.map(_.toString()),
                         s"== Spark Answer - ${sparkAnswer.size} ==" +:
-                            prepareAnswer(sparkAnswer, isSorted).map(_.toString())
+                          sparkResults.map(_.toString())
                     ).mkString("\n")
-                }
-        """.stripMargin
+                    }
+                """.stripMargin
             return Some(errorMessage)
         }
         None

@@ -17,11 +17,10 @@
  */
 package org.apache.kylin.engine.spark2;
 
-import org.apache.kylin.shaded.com.google.common.collect.Maps;
-import java.util.Map;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.Triple;
+import org.apache.kylin.common.util.Quadruple;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
@@ -40,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spark_project.guava.collect.Lists;
 
+import java.util.Map;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -151,37 +151,63 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
         List<QueryCallable> tasks = new ArrayList<>();
         for (String joinType : joinTypes) {
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_lookup"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_cache"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_casewhen"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_castprunesegs"));
-
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_like"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_cache"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_derived"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_datetime"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_subquery"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_distinct_dim"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_timestamp"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_orderby"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_topn"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_join"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_union"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_distinct_precisely"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_powerbi"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_value"));
-            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_cross_join"));
-
-            // same row count
-            tasks.add(new QueryCallable(CompareLevel.SAME_ROWCOUNT, joinType, "sql_tableau"));
-
-            // none
-            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_window"));
-            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_h2_uncapable"));
-            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_grouping"));
-            tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_percentile"));
-
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_derived"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_dict_enumerator"));
             // HLL is not precise
-            tasks.add(new QueryCallable(CompareLevel.SAME_ROWCOUNT, joinType, "sql_distinct"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_distinct"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_distinct_dim"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_distinct_precisely"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType,
+                    "sql_distinct_precisely_rollup"));
+            // Supports to use dynamic parameters,
+            // but now only supports string type for querying from SparkSQL
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_dynamic"));
+
+            // Not support yet
+            //tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_expression"));
+            //tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_extended_column"));
+
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_function"));
+
+            // Not support yet
+            //tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_grouping"));
+
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_h2"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_hive"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_intersect_count"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_join"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_like"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_lookup"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_multi_model"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_orderby"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_ordinal"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_percentile"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_plan"));
+
+            // Not support yet
+            //tasks.add(new QueryCallable(CompareLevel.GEN_METRICS, joinType,
+            //        "sql_select_constants"));
+
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_snowflake"));
+
+            // Not support yet
+            //tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_streaming"));
+            //tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_streaming_v2"));
+
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_subquery"));
+            tasks.add(new QueryCallable(CompareLevel.SAME_ROWCOUNT, joinType, "sql_tableau"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_timeout"));
+
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_timestamp"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_topn"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_union"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_unionall"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_values"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_window"));
         }
         logger.info("Total {} tasks.", tasks.size());
         return tasks;
@@ -318,8 +344,8 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
                             .fetchQueries(KYLIN_SQL_BASE_DIR + File.separator + "sql");
                     NExecAndComp.execLimitAndValidate(queries, getProject(), joinType);
                 } else {
-                    List<Triple<String, String, NExecAndComp.ITQueryMetrics>> queries = NExecAndComp
-                            .fetchQueries2(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);
+                    List<Quadruple<String, String, NExecAndComp.ITQueryMetrics, List<String>>> queries =
+                            NExecAndComp.fetchQueries2(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);
                     NExecAndComp.execAndCompareNew2(queries, getProject(), compareLevel, joinType, null);
                 }
             } catch (Throwable th) {

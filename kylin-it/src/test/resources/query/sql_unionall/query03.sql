@@ -26,3 +26,4 @@ join (
 ) TEST_B
 on TEST_A.ORDER_ID = TEST_B.ORDER_ID
 group by TEST_A.SELLER_ID
+;{"scanRowCount":30000,"scanBytes":0,"scanFiles":3,"cuboidId":[2097151,2097151,2097151]}

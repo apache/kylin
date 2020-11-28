@@ -15,6 +15,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+
 SELECT *
 FROM (
 	SELECT leaf_categ_id, SUM(price) AS sum_price
@@ -24,12 +25,12 @@ FROM (
 	SELECT leaf_categ_id, SUM(price) AS sum_price
 	FROM test_kylin_fact
 	GROUP BY leaf_categ_id
-)
+) as t1
 	CROSS JOIN (
 		SELECT SUM(price) AS sum_price_2
 		FROM test_kylin_fact
 		GROUP BY leaf_categ_id
-	)
+	) as t2
 UNION ALL
 SELECT cast(1999 as bigint) AS leaf_categ_id, 11.2 AS sum_price, 21.2 AS sum_price2
 UNION ALL
@@ -42,10 +43,11 @@ FROM (
 	SELECT leaf_categ_id, SUM(price) AS sum_price
 	FROM test_kylin_fact
 	GROUP BY leaf_categ_id
-)
+) as t3
 	CROSS JOIN (
 		SELECT SUM(price) AS sum_price_2
 		FROM test_kylin_fact
 		GROUP BY leaf_categ_id
-	)
+	) as t4
 ORDER BY 1
+;{"scanRowCount":864,"scanBytes":0,"scanFiles":6,"cuboidId":[245760,245760,245760,245760,245760,245760]}

@@ -37,4 +37,4 @@ SELECT "TableauSQL"."META_CATEG_NAME" AS "none_META_CATEG_NAME_nk"
  ,test_category_groupings.categ_lvl3_name 
  ) "TableauSQL" 
  GROUP BY "TableauSQL"."META_CATEG_NAME"
-;{"scanRowCount":10251,"scanBytes":401062,"scanFiles":2,"cuboidId":376832}
+;{"scanRowCount":10251,"scanBytes":0,"scanFiles":2,"cuboidId":[376832]}

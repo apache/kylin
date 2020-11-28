@@ -23,3 +23,4 @@ where ORDER_ID <> 1
 union all
 select max(ORDER_ID) as ORDER_ID_MAX
 from TEST_KYLIN_FACT as TEST_B
+;{"scanRowCount":19974,"scanBytes":0,"scanFiles":2,"cuboidId":[788464,788464]}

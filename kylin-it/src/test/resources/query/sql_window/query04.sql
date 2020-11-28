@@ -20,4 +20,4 @@ rank() over(partition by lstg_format_name order by cal_dt) as "RANK",
 dense_rank() over(partition by lstg_format_name order by cal_dt) as "DENSE_RANK"
 from test_kylin_fact
 group by cal_dt, lstg_format_name
-;{"scanRowCount":9287,"scanBytes":384041,"scanFiles":1,"cuboidId":276480}
+;{"scanRowCount":9287,"scanBytes":0,"scanFiles":1,"cuboidId":[276480]}

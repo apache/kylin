@@ -26,4 +26,4 @@ SELECT "TEST_KYLIN_FACT"."CAL_DT", SUM("TEST_KYLIN_FACT"."PRICE") AS "sum_PRICE_
          INNER JOIN "EDW"."TEST_CAL_DT" AS "TEST_CAL_DT" ON ("TEST_KYLIN_FACT"."CAL_DT" = "TEST_CAL_DT"."CAL_DT")
      GROUP BY "TEST_KYLIN_FACT"."CAL_DT"   ORDER BY 2 DESC   LIMIT 10  ) "t0" ON ("TEST_KYLIN_FACT"."CAL_DT" = "t0"."none_CAL_DT_ok") 
     GROUP BY "TEST_KYLIN_FACT"."CAL_DT"
-;{"scanRowCount":2924,"scanBytes":430434,"scanFiles":4,"cuboidId":[262144, 262144]}
+;{"scanRowCount":2924,"scanBytes":0,"scanFiles":4,"cuboidId":[262144,262144]}

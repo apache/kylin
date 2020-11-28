@@ -19,4 +19,4 @@ SELECT sum(price)  as sum_price
  FROM TEST_KYLIN_FACT 
  WHERE CAL_DT > '2013-06-01'
 GROUP BY CAL_DT
-;{"scanRowCount":731,"scanBytes":215217,"scanFiles":1,"cuboidId":262144}
+;{"scanRowCount":731,"scanBytes":0,"scanFiles":1,"cuboidId":[262144]}

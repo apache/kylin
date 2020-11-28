@@ -31,4 +31,4 @@ inner JOIN edw.test_cal_dt as test_cal_dt
 where lower(meta_categ_name)='baby' and substring(meta_categ_name,1,3) in ('Bab') and upper(meta_categ_name) > 'AAAA' and
 lower(meta_categ_name) like '%b%' and char_length(meta_categ_name) < 10 and char_length(meta_categ_name) > 3 and meta_categ_name||'a'='Babya'
 group by meta_categ_name
-;{"scanRowCount":45,"scanBytes":150634,"scanFiles":1,"cuboidId":65536}
+;{"scanRowCount":45,"scanBytes":0,"scanFiles":1,"cuboidId":[65536]}

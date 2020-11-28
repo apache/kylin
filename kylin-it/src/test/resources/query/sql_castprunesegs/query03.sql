@@ -28,4 +28,4 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  where
  extract(DAY from test_cal_dt.cal_dt) = 12
  group by test_cal_dt.cal_dt
-;{"scanRowCount":1462,"scanBytes":215217,"scanFiles":2,"cuboidId":262144}
+;{"scanRowCount":1462,"scanBytes":0,"scanFiles":2,"cuboidId":[262144]}

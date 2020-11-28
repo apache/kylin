@@ -47,3 +47,4 @@ from
   on l.cal_dt = i.cal_dt
 group by
   l.cal_dt
+;{"scanRowCount":2924,"scanBytes":0,"scanFiles":4,"cuboidId":[262144,262144]}
