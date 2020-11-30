@@ -202,7 +202,7 @@ public class RestClient {
 
     public String getKylinProperties() throws IOException {
         String url = baseUrl + "/admin/config";
-        HttpGet request = new HttpGet(url);
+        HttpGet request = newGet(url);
         HttpResponse response = null;
         try {
             response = client.execute(request);
@@ -380,7 +380,7 @@ public class RestClient {
     }
 
     private HttpGet newGet(String url) {
-        HttpGet get = new HttpGet();
+        HttpGet get = new HttpGet(url);
         addHttpHeaders(get);
         return get;
     }

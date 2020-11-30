@@ -49,6 +49,12 @@ public final class PathManager {
         return hdfsWorkDir + "parquet" + File.separator + cube.getName() + File.separator + segName + "_" + identifier;
     }
 
+    public static String getSegmentParquetStoragePath(String hdfsWorkDir, String cubeName, CubeSegment segment) {
+        String segmentName = segment.getName();
+        String identifier = segment.getStorageLocationIdentifier();
+        return hdfsWorkDir + "parquet" + File.separator + cubeName + File.separator + segmentName + "_" + identifier;
+    }
+
     /**
      * Delete segment path
      */
