@@ -225,3 +225,13 @@
   githubId: RupengWang
   org: Kyligence Inc.
   role: committer
+- name: Xiao Chu (初晓)
+  apacheId: xiaochu
+  githubId: bigxiaochu
+  org: Didi Chuxing
+  role: committer
+- name: Yiming Xu (许益铭)
+  apacheId: liuying
+  githubId: hn5092
+  org: Alibaba
+  role: committer
