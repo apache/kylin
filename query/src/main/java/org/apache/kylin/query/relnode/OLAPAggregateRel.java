@@ -313,7 +313,10 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                     this.context.dynGroupBy.put(groupOutCol, tupleExpression);
                 } else {
                     this.groups.addAll(cols.getFirst());
-                    this.groups.addAll(cols.getSecond());
+                    for (TblColRef col : cols.getSecond()) {
+                        if (!this.groups.contains(col))
+                            this.groups.add(col);
+                    }
                     this.context.dynamicFields.remove(groupOutCol);
                 }
             } else {
