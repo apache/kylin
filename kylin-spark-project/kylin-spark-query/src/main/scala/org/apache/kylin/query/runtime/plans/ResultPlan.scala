@@ -31,6 +31,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SparderContext}
 import org.apache.spark.sql.hive.utils.QueryMetricUtils
 import org.apache.spark.sql.utils.SparkTypeUtil
+import org.apache.spark.utils.SparderUtils
 
 import scala.collection.JavaConverters._
 
@@ -41,7 +42,6 @@ object ResultType extends Enumeration {
 }
 
 object ResultPlan extends Logging {
-  val PARTITION_SPLIT_BYTES: Long = KylinConfig.getInstanceFromEnv.getQueryPartitionSplitSizeMB * 1024 * 1024 // 64MB
 
   def collectEnumerable(
     df: DataFrame,
@@ -70,17 +70,18 @@ object ResultPlan extends Logging {
       kylinConfig = ProjectManager.getInstance(kylinConfig).getProject(projectName).getConfig
     }
     var pool = "heavy_tasks"
+    val sparderTotalCores = SparderUtils.getTotalCore(df.sparkSession.sparkContext.getConf)
+    // this value of partition num only effects when querying from snapshot tables
     val partitionsNum =
       if (kylinConfig.getSparkSqlShufflePartitions != -1) {
         kylinConfig.getSparkSqlShufflePartitions
       } else {
-        Math.min(QueryContextFacade.current().getSourceScanBytes / PARTITION_SPLIT_BYTES + 1,
-          SparderContext.getTotalCore).toInt
+        sparderTotalCores
       }
 
     if (QueryContextFacade.current().isHighPriorityQuery) {
       pool = "vip_tasks"
-    } else if (partitionsNum <= SparderContext.getTotalCore) {
+    } else if (partitionsNum <= sparderTotalCores) {
       pool = "lightweight_tasks"
     }
 
@@ -96,8 +97,8 @@ object ResultPlan extends Logging {
     QueryContextFacade.current().setSparkPool(pool)
     val queryId = QueryContextFacade.current().getQueryId
     sparkContext.setLocalProperty(QueryToExecutionIDCache.KYLIN_QUERY_ID_KEY, queryId)
-    //df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions",
-    //  partitionsNum.toString)
+    df.sparkSession.conf.set("spark.sql.shuffle.partitions", partitionsNum.toString)
+    logInfo(s"Set partition to $partitionsNum")
     QueryContextFacade.current().setDataset(df)
 
     sparkContext.setJobGroup(jobGroup,
@@ -153,7 +154,6 @@ object ResultPlan extends Logging {
     val r = body
     // remember clear local properties.
     df.sparkSession.sparkContext.setLocalProperty("spark.scheduler.pool", null)
-    //df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", null)
     SparderContext.setDF(df)
     TableScanPlan.cacheDf.get().clear()
     HadoopUtil.setCurrentConfiguration(null)
@@ -178,6 +178,7 @@ object ResultPlan extends Logging {
           }
       }
     SparderContext.cleanQueryInfo()
+    SparderContext.closeThreadSparkSession()
     result
   }
 }

@@ -34,6 +34,7 @@ public class SparkSubmitter {
     public static PushdownResponse submitPushDownTask(String sql) {
         SparkSession ss = SparderContext.getSparkSession();
         Pair<List<List<String>>, List<StructField>> pair = SparkSqlClient.executeSql(ss, sql, UUID.randomUUID());
+        SparderContext.closeThreadSparkSession();
         return new PushdownResponse(pair.getSecond(), pair.getFirst());
     }
 

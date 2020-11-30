@@ -21,7 +21,6 @@ package org.apache.kylin.query.monitor;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.spark.api.java.JavaFutureAction;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.KylinSparkEnv;
 import org.apache.spark.sql.SparderContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,7 +86,8 @@ public class SparderContextCanary {
                 errorAccumulated = Math.max(errorAccumulated + 1, THRESHOLD_TO_RESTART_SPARK);
             } else {
                 try {
-                    JavaSparkContext jsc = JavaSparkContext.fromSparkContext(SparderContext.getSparkSession().sparkContext());
+                    JavaSparkContext jsc =
+                            JavaSparkContext.fromSparkContext(SparderContext.getOriginalSparkSession().sparkContext());
                     jsc.setLocalProperty("spark.scheduler.pool", "vip_tasks");
 
                     long t = System.currentTimeMillis();
@@ -118,11 +118,7 @@ public class SparderContextCanary {
                 try {
                     // Take repair action if error accumulated exceeds threshold
                     logger.warn("Repairing sparder context");
-                    if ("true".equals(System.getProperty("spark.local"))) {
-                        SparderContext.setSparkSession(KylinSparkEnv.getSparkSession());
-                    } else {
-                        SparderContext.restartSpark();
-                    }
+                    SparderContext.restartSpark();
                 } catch (Throwable th) {
                     logger.error("Restart sparder context failed.", th);
                 }

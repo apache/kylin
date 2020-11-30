@@ -64,9 +64,9 @@ object SparkSqlClient {
 				val paths = ResourceDetectUtils.getPaths(df.queryExecution.sparkPlan)
 				val sourceTableSize = ResourceDetectUtils.getResourceSize(paths: _*) + "b"
 				val partitions = Math.max(1, JavaUtils.byteStringAsMb(sourceTableSize) / basePartitionSize).toString
-				//df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions",
-				//	partitions)
-				logger.info(s"Auto set spark.sql.shuffle.partitions $partitions")
+				df.sparkSession.conf.set("spark.sql.shuffle.partitions", partitions)
+				logger.info(s"Auto set spark.sql.shuffle.partitions to $partitions, the total sources " +
+					s"size is ${sourceTableSize}")
 			} catch {
 				case e: Throwable =>
 					logger.error("Auto set spark.sql.shuffle.partitions failed.", e)
@@ -103,7 +103,6 @@ object SparkSqlClient {
 				}
 				else throw e
 		} finally {
-			//df.sparkSession.sessionState.conf.setLocalProperty("spark.sql.shuffle.partitions", null)
 			HadoopUtil.setCurrentConfiguration(null)
 		}
 	}
