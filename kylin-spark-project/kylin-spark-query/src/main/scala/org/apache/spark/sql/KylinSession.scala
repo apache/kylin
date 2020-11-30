@@ -23,7 +23,7 @@ import java.nio.file.Paths
 
 import org.apache.hadoop.security.UserGroupInformation
 import org.apache.kylin.common.KylinConfig
-import org.apache.kylin.query.{UdfManager}
+import org.apache.kylin.query.UdfManager
 import org.apache.spark.internal.Logging
 import org.apache.spark.scheduler.{SparkListener, SparkListenerApplicationEnd}
 import org.apache.spark.sql.SparkSession.Builder

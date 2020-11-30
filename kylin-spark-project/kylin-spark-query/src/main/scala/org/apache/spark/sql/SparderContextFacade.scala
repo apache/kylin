@@ -19,34 +19,26 @@
 package org.apache.spark.sql
 
 import org.apache.spark.internal.Logging
-import java.lang.{Boolean => JBoolean}
 
-object KylinSparkEnv extends Logging {
-	@volatile
-	private var spark: SparkSession = _
+import org.apache.kylin.common.threadlocal.InternalThreadLocal
+import org.apache.kylin.common.util.Pair
+import org.apache.kylin.query.UdfManager
 
-	val _needCompute = new ThreadLocal[JBoolean] {
-		override protected def initialValue = false
-	}
+object SparderContextFacade extends Logging {
 
-	def getSparkSession: SparkSession = withClassLoad {
-		spark
-	}
+  final val CURRENT_SPARKSESSION: InternalThreadLocal[Pair[SparkSession, UdfManager]] =
+    new InternalThreadLocal[Pair[SparkSession, UdfManager]]()
 
-	def setSparkSession(sparkSession: SparkSession): Unit = {
-		spark = sparkSession
-	}
+  def current(): Pair[SparkSession, UdfManager] = {
+    if (CURRENT_SPARKSESSION.get() == null) {
+      val spark = SparderContext.getOriginalSparkSession.cloneSession()
+      CURRENT_SPARKSESSION.set(new Pair[SparkSession, UdfManager](spark,
+        UdfManager.createWithoutBuildInFunc(spark)))
+    }
+    CURRENT_SPARKSESSION.get()
+  }
 
-	def withClassLoad[T](body: => T): T = {
-		// val originClassLoad = Thread.currentThread().getContextClassLoader
-		// fixme aron
-		// Thread.currentThread().setContextClassLoader(ClassLoaderUtils.getSparkClassLoader)
-		val t = body
-		// Thread.currentThread().setContextClassLoader(originClassLoad)
-		t
-	}
-
-	def skipCompute(): Unit = {
-		_needCompute.set(true)
-	}
+  def remove(): Unit = {
+    CURRENT_SPARKSESSION.remove()
+  }
 }

@@ -50,12 +50,22 @@ object SparderContext extends Logging {
   @volatile
   var master_app_url: String = _
 
-  def getSparkSession: SparkSession = withClassLoad {
+  def getOriginalSparkSession: SparkSession = withClassLoad {
     if (spark == null || spark.sparkContext.isStopped) {
       logInfo("Init spark.")
       initSpark()
     }
     spark
+  }
+
+  def getSparkSession: SparkSession = {
+    logInfo(s"Current thread ${Thread.currentThread().getId} create a SparkSession.")
+    SparderContextFacade.current().getFirst
+  }
+
+  def closeThreadSparkSession(): Unit = {
+    logInfo(s"Remove SparkSession from thread ${Thread.currentThread().getId}")
+    SparderContextFacade.remove()
   }
 
   def setSparkSession(sparkSession: SparkSession): Unit = {
@@ -93,34 +103,25 @@ object SparderContext extends Logging {
     }
   }
 
+  def stopSpark(): Unit = withClassLoad {
+    this.synchronized {
+      if (spark != null && !spark.sparkContext.isStopped) {
+        Utils.tryWithSafeFinally {
+          spark.stop()
+        } {
+          SparkContext.clearActiveContext
+        }
+      }
+    }
+  }
+
   def init(): Unit = withClassLoad {
-    getSparkSession
+    getOriginalSparkSession
   }
 
   def getSparkConf(key: String): String = {
     getSparkSession.sparkContext.conf.get(key)
   }
-
-  def getTotalCore: Int = {
-    val sparkConf = getSparkSession.sparkContext.getConf
-    if (sparkConf.get("spark.master").startsWith("local")) {
-      return 1
-    }
-    val instances = getExecutorNum(sparkConf)
-    val cores = sparkConf.get("spark.executor.cores").toInt
-    Math.max(instances * cores, 1)
-  }
-
-  def getExecutorNum(sparkConf: SparkConf): Int = {
-    if (sparkConf.get("spark.dynamicAllocation.enabled", "false").toBoolean) {
-      val maxExecutors = sparkConf.get("spark.dynamicAllocation.maxExecutors", Int.MaxValue.toString).toInt
-      logInfo(s"Use spark.dynamicAllocation.maxExecutors:$maxExecutors as num instances of executors.")
-      maxExecutors
-    } else {
-      sparkConf.get("spark.executor.instances").toInt
-    }
-  }
-
 
   def initSpark(): Unit = withClassLoad {
     this.synchronized {
@@ -240,10 +241,10 @@ object SparderContext extends Logging {
    * @return The body return
    */
   def withClassLoad[T](body: => T): T = {
-    //    val originClassLoad = Thread.currentThread().getContextClassLoader
+    // val originClassLoad = Thread.currentThread().getContextClassLoader
     Thread.currentThread().setContextClassLoader(ClassLoaderUtils.getSparkClassLoader)
     val t = body
-    //    Thread.currentThread().setContextClassLoader(originClassLoad)
+    // Thread.currentThread().setContextClassLoader(originClassLoad)
     t
   }
 

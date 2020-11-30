@@ -22,7 +22,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.TempMetadataBuilder;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
 import org.apache.kylin.job.exception.SchedulerException;
-import org.apache.spark.sql.KylinSparkEnv;
 import org.apache.spark.sql.SparderContext;
 import org.junit.After;
 import org.junit.Assert;
@@ -34,11 +33,19 @@ public class SparderContextCanaryTest extends LocalWithSparkSessionTest {
     @Before
     public void setup() throws SchedulerException {
         super.setup();
-        SparderContext.setSparkSession(KylinSparkEnv.getSparkSession());
+        KylinConfig conf = KylinConfig.getInstanceFromEnv();
+        // the default value of kylin.query.spark-conf.spark.master is yarn,
+        // which will read from kylin-defaults.properties
+        conf.setProperty("kylin.query.spark-conf.spark.master", "local");
+        // create a new SparkSession of Sparder
+        SparderContext.initSpark();
     }
 
     @After
     public void after() {
+        SparderContext.stopSpark();
+        KylinConfig.getInstanceFromEnv()
+                .setProperty("kylin.query.spark-conf.spark.master", "yarn");
         super.after();
     }
 
@@ -49,7 +56,7 @@ public class SparderContextCanaryTest extends LocalWithSparkSessionTest {
         Assert.assertTrue(SparderContext.isSparkAvailable());
 
         // stop sparder and check again, the sparder context should auto-restart
-        SparderContext.getSparkSession().stop();
+        SparderContext.getOriginalSparkSession().stop();
         Assert.assertFalse(SparderContext.isSparkAvailable());
 
         SparderContextCanary.monitor();
