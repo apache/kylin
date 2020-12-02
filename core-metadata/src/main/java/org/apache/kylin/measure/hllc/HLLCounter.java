@@ -52,7 +52,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
     private Register register;
 
     public HLLCounter() {
-        this(10, RegisterType.SINGLE_VALUE, Hashing.murmur3_128());
+        this(14, RegisterType.SINGLE_VALUE, Hashing.murmur3_128());
     }
 
     public HLLCounter(int p) {

@@ -41,7 +41,7 @@
             ng-if="userService.hasRole('ROLE_ADMIN')  || hasPermission('cube' ,cube, permissions.ADMINISTRATION.mask) && !newAccess">
             <a href="" ng-click="cube.visiblePage='hbase';getStorageInfo(cube)">Storage</a>
         </li>
-        <li class="{{cube.visiblePage=='planner'? 'active':''}}" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube', cube, permissions.ADMINISTRATION.mask) && !newAccess) && isShowCubeplanner && cube.detail.engine_type != 6">
+        <li class="{{cube.visiblePage=='planner'? 'active':''}}" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube', cube, permissions.ADMINISTRATION.mask) && !newAccess) && isShowCubeplanner && cube.detail.engine_type != 0">
             <a href="" ng-click="cube.visiblePage='planner';getCubePlanner(cube);">Planner</a>
         </li>
         <li class="{{cube.visiblePage=='streaming'? 'active':''}}" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube', cube, permissions.ADMINISTRATION.mask)  && !newAccess) && cube.streamingV2">

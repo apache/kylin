@@ -58,7 +58,6 @@ public class ResourceDetectBeforeCubingJob extends SparkApplication {
             ResourceDetectUtils.write(new Path(config.getJobTmpShareDir(project, jobId), ResourceDetectUtils.countDistinctSuffix()),
                     ResourceDetectUtils.findCountDistinctMeasure(JavaConversions.asJavaCollection(seg.toBuildLayouts())));
             ParentSourceChooser datasetChooser = new ParentSourceChooser(spanningTree, seg, jobId, ss, config, false);
-            datasetChooser.setDetectStep();
             datasetChooser.decideSources();
             NBuildSourceInfo buildFromFlatTable = datasetChooser.flatTableSource();
             if (buildFromFlatTable != null) {

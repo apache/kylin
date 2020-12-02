@@ -86,7 +86,7 @@ public class CubeStatsReader {
     final double mapperOverlapRatioOfFirstBuild; // becomes meaningless after merge
     final Map<Long, HLLCounter> cuboidRowEstimatesHLL;
     final CuboidScheduler cuboidScheduler;
-    final long sourceRowCount;
+    public final long sourceRowCount;
 
     public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig) throws IOException {
         this(cubeSegment, cubeSegment.getCuboidScheduler(), kylinConfig);
@@ -105,7 +105,7 @@ public class CubeStatsReader {
 
         File tmpSeqFile = writeTmpSeqFile(resource.content());
         Path path = new Path(HadoopUtil.fixWindowsPath("file://" + tmpSeqFile.getAbsolutePath()));
-
+        logger.info("Reading statistics from {}", path);
         CubeStatsResult cubeStatsResult = new CubeStatsResult(path, kylinConfig.getCubeStatsHLLPrecision());
         tmpSeqFile.delete();
 
