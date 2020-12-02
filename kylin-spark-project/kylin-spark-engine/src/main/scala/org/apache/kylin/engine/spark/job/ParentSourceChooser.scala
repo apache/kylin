@@ -47,15 +47,15 @@ class ParentSourceChooser(
   // build from flatTable.
   var flatTableSource: NBuildSourceInfo = _
 
-  var detectStep = false
+  private var needStatistics = false
 
   //TODO: MetadataConverter don't have getCubeDesc() now
 
   /*val flatTableDesc = new CubeJoinedFlatTableDesc(
     MetadataConverter.getCubeDesc(seg.getCube),
     ParentSourceChooser.needJoinLookupTables(seg.getModel, toBuildTree))*/
-  def setDetectStep(): Unit =
-    detectStep = true
+  def setNeedStatistics(): Unit =
+    needStatistics = true
 
   def getAggInfo : Array[(String, AggInfo)] = aggInfo
 
@@ -70,7 +70,7 @@ class ParentSourceChooser(
     }
   }
 
-  private def decideFlatTableSource(entity: LayoutEntity): Unit = {
+  def decideFlatTableSource(entity: LayoutEntity): Unit = {
     if (flatTableSource == null) {
       if (needEncoding) {
         // hacked, for some case, you do not want to trigger buildSnapshot
@@ -82,18 +82,20 @@ class ParentSourceChooser(
       flatTableSource = getFlatTable
 
       val rowKeyColumns: Seq[String] = seg.allColumns.filter(c => c.rowKey).map(c => c.id.toString)
-      if (aggInfo == null && !detectStep) {
-        logInfo("Start  sampling ...")
+      if (aggInfo == null && needStatistics) {
+        val startMs = System.currentTimeMillis()
+        logInfo("Sampling start ...")
         val coreDs = flatTableSource.getFlatTableDS.select(rowKeyColumns.head, rowKeyColumns.tail: _*)
-        aggInfo = CuboidStatistics.sample(coreDs, seg)
-        logInfo("Finish sampling ...")
-        val statisticsStr = aggInfo.sortBy(x => x._1).map(x => x._1 + ":" + x._2.cuboid.counter.getCountEstimate).mkString("\n")
-        logInfo(statisticsStr)
+        aggInfo = CuboidStatisticsJob.statistics(coreDs, seg)
+        logInfo("Sampling finished and cost " + (System.currentTimeMillis() - startMs) + " s .")
+        val statisticsStr = aggInfo.sortBy(x => x._1).map(x => x._1 + ":" + x._2.cuboid.counter.getCountEstimate).mkString(", ")
+        logInfo("Cuboid Statistics results : \t" + statisticsStr)
       } else {
         logInfo("Skip sampling ...")
       }
     }
-    flatTableSource.addCuboid(entity)
+    if (entity != null)
+      flatTableSource.addCuboid(entity)
   }
 
   private def decideParentLayoutSource(entity: LayoutEntity, parentLayout: LayoutEntity): Unit = {

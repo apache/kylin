@@ -122,7 +122,7 @@ object MetadataConverter {
 
   def extractEntityAndMeasures(cubeInstance: CubeInstance): (List[LayoutEntity], Map[Integer, FunctionDesc]) = {
     val (columnIndexes, shardByColumnsId, idToColumnMap, measureId) = genIDToColumnMap(cubeInstance)
-    (cubeInstance.getDescriptor.getInitialCuboidScheduler
+    (cubeInstance.getCuboidScheduler
       .getAllCuboidIds
       .asScala
       .map { long =>

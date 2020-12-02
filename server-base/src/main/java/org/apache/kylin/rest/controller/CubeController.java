@@ -47,6 +47,7 @@ import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
+import org.apache.kylin.engine.mr.common.CuboidStatsReaderUtil;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.exception.JobException;
@@ -880,31 +881,31 @@ public class CubeController extends BasicController {
         }
     }
 
-//    @RequestMapping(value = "/{cubeName}/cuboids/current", method = RequestMethod.GET)
-//    @ResponseBody
-//    public CuboidTreeResponse getCurrentCuboids(@PathVariable String cubeName) {
-//        checkCubeExists(cubeName);
-//        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-//        // The cuboid tree displayed should be consistent with the current one
-//        CuboidScheduler cuboidScheduler = cube.getCuboidScheduler();
-//        Map<Long, Long> cuboidStatsMap = cube.getCuboids();
-//        if (cuboidStatsMap == null) {
-//            cuboidStatsMap = CuboidStatsReaderUtil.readCuboidStatsFromCube(cuboidScheduler.getAllCuboidIds(), cube);
-//        }
-//
-//        Map<Long, Long> hitFrequencyMap = null;
-//        Map<Long, Long> queryMatchMap = null;
-//        try {
-//            hitFrequencyMap = getTargetCuboidHitFrequency(cubeName);
-//            queryMatchMap = cubeService.getCuboidQueryMatchCount(cubeName);
-//        } catch (Exception e) {
-//            logger.warn("Fail to query on system cube due to " + e);
-//        }
-//
-//        Set<Long> currentCuboidSet = cube.getCuboidScheduler().getAllCuboidIds();
-//        return cubeService.getCuboidTreeResponse(cuboidScheduler, cuboidStatsMap, hitFrequencyMap, queryMatchMap,
-//                currentCuboidSet);
-//    }
+    @RequestMapping(value = "/{cubeName}/cuboids/current", method = RequestMethod.GET)
+    @ResponseBody
+    public CuboidTreeResponse getCurrentCuboids(@PathVariable String cubeName) {
+        checkCubeExists(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        // The cuboid tree displayed should be consistent with the current one
+        CuboidScheduler cuboidScheduler = cube.getCuboidScheduler();
+        Map<Long, Long> cuboidStatsMap = cube.getCuboids();
+        if (cuboidStatsMap == null) {
+            cuboidStatsMap = CuboidStatsReaderUtil.readCuboidStatsFromCube(cuboidScheduler.getAllCuboidIds(), cube);
+        }
+
+        Map<Long, Long> hitFrequencyMap = null;
+        Map<Long, Long> queryMatchMap = null;
+        try {
+            hitFrequencyMap = getTargetCuboidHitFrequency(cubeName);
+            queryMatchMap = cubeService.getCuboidQueryMatchCount(cubeName);
+        } catch (Exception e) {
+            logger.warn("Fail to query on system cube due to " + e);
+        }
+
+        Set<Long> currentCuboidSet = cube.getCuboidScheduler().getAllCuboidIds();
+        return cubeService.getCuboidTreeResponse(cuboidScheduler, cuboidStatsMap, hitFrequencyMap, queryMatchMap,
+                currentCuboidSet);
+    }
 
     @RequestMapping(value = "/{cubeName}/cuboids/recommend", method = RequestMethod.GET)
     @ResponseBody

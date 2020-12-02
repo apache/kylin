@@ -26,27 +26,35 @@ import org.apache.spark.sql.{Dataset, Row}
 
 import scala.collection.mutable
 
+/**
+ * Calculate HLLCounter for each cuboid, to serve Cube Planner (to calculate cost and benefit of each cuboid).
+ */
+object CuboidStatisticsJob {
 
-object CuboidStatistics {
+  /**
+   * @param inputDs Part of FlatTable which contains all normal dimensions
+   * @return Cuboid level statistics data
+   */
+  def statistics(inputDs: Dataset[Row], seg: SegmentInfo): Array[(String, AggInfo)] = {
 
-  def sample(inputDs: Dataset[Row], seg: SegmentInfo): Array[(String, AggInfo)] = {
-    seg.getAllLayout.map(x => x.getId)
     val rkc = seg.allColumns.count(c => c.rowKey)
-    val res = inputDs.rdd //.sample(withReplacement = false, 0.3)
-      .mapPartitions(new CuboidStatistics(seg.getAllLayout.map(x => x.getId), rkc).statisticsInPartition)
+    // maybe we should use sample operation to reduce cost later
+    val res = inputDs.rdd
+      .mapPartitions(new CuboidStatisticsJob(seg.getAllLayout.map(x => x.getId), rkc).statisticsWithinPartition)
     val l = res.map(a => (a.key, a)).reduceByKey((a, b) => a.merge(b)).collect()
-    l.foreach(x => println(x._1 + " >>><<< " + x._2.cuboid.counter.getCountEstimate))
+    //    l.foreach(x => println(x._1 + " >>><<< " + x._2.cuboid.counter.getCountEstimate))
     l
   }
 }
 
-class CuboidStatistics(ids: List[Long], rkc: Int) extends Serializable {
+class CuboidStatisticsJob(ids: List[Long], rkc: Int) extends Serializable {
   private val info = mutable.Map[String, AggInfo]()
   val allCuboidsBitSet: Array[Array[Integer]] = getCuboidBitSet(ids, rkc)
   private val hf: HashFunction = Hashing.murmur3_128
   private val rowHashCodesLong = new Array[Long](rkc)
+  private var idx = 0
 
-  def statisticsInPartition(rows: Iterator[Row]): Iterator[AggInfo] = {
+  def statisticsWithinPartition(rows: Iterator[Row]): Iterator[AggInfo] = {
     init()
     rows.foreach(update)
     info.valuesIterator
@@ -57,7 +65,9 @@ class CuboidStatistics(ids: List[Long], rkc: Int) extends Serializable {
   }
 
   def update(r: Row): Unit = {
-    println(r)
+    idx += 1
+    if (idx <= 5 || idx % 300 == 0)
+      println(r)
     updateCuboid(r)
   }
 
@@ -122,8 +132,17 @@ case class AggInfo(key: String,
   }
 }
 
-case class CuboidInfo(counter: HLLCounter = new HLLCounter(14))
+/**
+ * @param counter HLLCounter will could get est row count for specific cuboid
+ */
+case class CuboidInfo(counter: HLLCounter = new HLLCounter())
 
+/**
+ * @param data Maybe some sample data
+ */
 case class SampleInfo(data: Array[String] = new Array(3))
 
+/**
+ * @param range Maybe to save min/max of a specific dimension
+ */
 case class DimensionInfo(range: mutable.Map[String, String] = mutable.Map[String, String]())
