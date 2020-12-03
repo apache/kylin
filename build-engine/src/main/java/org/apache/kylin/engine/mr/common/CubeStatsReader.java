@@ -100,9 +100,10 @@ public class CubeStatsReader {
         ResourceStore store = ResourceStore.getStore(kylinConfig);
         String statsKey = cubeSegment.getStatisticsResourcePath();
         RawResource resource = store.getResource(statsKey);
-        if (resource == null)
-            throw new IllegalStateException("Missing resource at " + statsKey);
-
+        if (resource == null) {
+            // throw new IllegalStateException("Missing resource at " + statsKey);
+            logger.warn("{} is not exists.", statsKey);
+        }
         File tmpSeqFile = writeTmpSeqFile(resource.content());
         Path path = new Path(HadoopUtil.fixWindowsPath("file://" + tmpSeqFile.getAbsolutePath()));
         logger.info("Reading statistics from {}", path);

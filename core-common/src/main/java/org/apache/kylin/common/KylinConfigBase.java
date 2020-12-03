@@ -2963,6 +2963,13 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(this.getOptional("kylin.canary.sparder-context-period-min", "3"));
     }
 
+    /**
+     * If we should calculate cuboid statistics for each segment, which is needed for cube planner phase two
+     */
+    public boolean isSegmentStatisticsEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.engine.segment-statistics-enabled", "false"));
+    }
+
     // ============================================================================
     // Spark with Kerberos
     // ============================================================================
