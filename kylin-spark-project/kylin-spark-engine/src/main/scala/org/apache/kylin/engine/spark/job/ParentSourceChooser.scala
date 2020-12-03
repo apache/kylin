@@ -87,7 +87,7 @@ class ParentSourceChooser(
         logInfo("Sampling start ...")
         val coreDs = flatTableSource.getFlatTableDS.select(rowKeyColumns.head, rowKeyColumns.tail: _*)
         aggInfo = CuboidStatisticsJob.statistics(coreDs, seg)
-        logInfo("Sampling finished and cost " + (System.currentTimeMillis() - startMs) + " s .")
+        logInfo("Sampling finished and cost " + (System.currentTimeMillis() - startMs)/1000 + " s .")
         val statisticsStr = aggInfo.sortBy(x => x._1).map(x => x._1 + ":" + x._2.cuboid.counter.getCountEstimate).mkString(", ")
         logInfo("Cuboid Statistics results : \t" + statisticsStr)
       } else {

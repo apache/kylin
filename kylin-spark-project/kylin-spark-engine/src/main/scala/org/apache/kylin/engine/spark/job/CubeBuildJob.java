@@ -94,6 +94,7 @@ public class CubeBuildJob extends SparkApplication {
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
     private Map<Long, Short> cuboidShardNum = Maps.newConcurrentMap();
     private Map<Long, Long> cuboidsRowCount = Maps.newConcurrentMap();
+    private Map<Long, Long> recommendCuboidMap = new HashMap<>();
 
     public static void main(String[] args) {
         CubeBuildJob cubeBuildJob = new CubeBuildJob();
@@ -119,7 +120,9 @@ public class CubeBuildJob extends SparkApplication {
         SpanningTree spanningTree ;
         ParentSourceChooser sourceChooser;
 
-        boolean needStatistics = StatisticsDecisionUtil.isAbleToOptimizeCubingPlan(newSegment); // Cuboid Statistics is served for Cube Planner Phase One
+        // Cuboid Statistics is served for Cube Planner Phase One at the moment
+        boolean needStatistics = StatisticsDecisionUtil.isAbleToOptimizeCubingPlan(newSegment)
+                || config.isSegmentStatisticsEnabled();
 
         if (needStatistics) {
             // 1.1 Call CuboidStatistics#statistics
@@ -136,19 +139,21 @@ public class CubeBuildJob extends SparkApplication {
 
             // 1.2 Save cuboid statistics
             String jobWorkingDirPath = JobBuilderSupport.getJobWorkingDir(cubeInstance.getConfig().getHdfsWorkingDirectory(), jobId);
-            CubeStatsWriter.writeCuboidStatistics(HadoopUtil.getCurrentConfiguration(), new Path(jobWorkingDirPath + "/" + firstSegmentId + "/" + CFG_OUTPUT_STATISTICS), hllMap, 1);
+            Path statisticsDir = new Path(jobWorkingDirPath + "/" + firstSegmentId + "/" + CFG_OUTPUT_STATISTICS);
+            CubeStatsWriter.writeCuboidStatistics(HadoopUtil.getCurrentConfiguration(), statisticsDir, hllMap, 1);
 
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
             ResourceStore rs = ResourceStore.getStore(config);
-            String resPath = newSegment.getStatisticsResourcePath();
-            Path statisticsFile = new Path(jobWorkingDirPath + "/" + firstSegmentId + "/" + CFG_OUTPUT_STATISTICS + "/" + BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+            String metaKey = newSegment.getStatisticsResourcePath();
+            Path statisticsFile = new Path(statisticsDir, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
             FSDataInputStream is = fs.open(statisticsFile);
-            rs.putResource(resPath, is, System.currentTimeMillis());
-            logger.info("{} stats saved to resource {}", newSegment, resPath);
+            rs.putResource(metaKey, is, System.currentTimeMillis()); // write to Job-Local metastore
+            logger.info("{}'s stats saved to resource key({}) with path({})", newSegment, metaKey, statisticsFile);
 
             // 1.3 Trigger cube planner phase one and save optimized cuboid set into CubeInstance
-            logger.info("Trigger cube planner phase one .");
-            StatisticsDecisionUtil.optimizeCubingPlan(newSegment);
+            recommendCuboidMap = StatisticsDecisionUtil.optimizeCubingPlan(newSegment);
+            if (!recommendCuboidMap.isEmpty())
+                logger.info("Triggered cube planner phase one .");
         }
 
         buildLayoutWithUpdate = new BuildLayoutWithUpdate();
@@ -161,7 +166,7 @@ public class CubeBuildJob extends SparkApplication {
                 seg = ManagerHub.getSegmentInfo(config, cubeName, segId);
                 spanningTree = new ForestSpanningTree(
                         JavaConversions.asJavaCollection(seg.toBuildLayouts()));
-                logger.debug("There are {} cuboids to be built in segment {}.",
+                logger.info("There are {} cuboids to be built in segment {}.",
                         seg.toBuildLayouts().size(), seg.name());
                 for (LayoutEntity cuboid : JavaConversions.asJavaCollection(seg.toBuildLayouts())) {
                     logger.debug("Cuboid {} has row keys: {}", cuboid.getId(),
@@ -192,8 +197,8 @@ public class CubeBuildJob extends SparkApplication {
                 assert buildFromFlatTable != null;
                 updateSegmentInfo(getParam(MetadataConstants.P_CUBE_ID), seg, buildFromFlatTable.getFlatTableDS().count());
             }
-            updateSegmentSourceBytesSize(getParam(MetadataConstants.P_CUBE_ID),
-                    ResourceDetectUtils.getSegmentSourceSize(shareDir));
+            updateCubeAndSegmentMeta(getParam(MetadataConstants.P_CUBE_ID),
+                    ResourceDetectUtils.getSegmentSourceSize(shareDir), recommendCuboidMap);
         } finally {
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
             for (String viewPath : persistedViewFactTable) {
@@ -218,22 +223,28 @@ public class CubeBuildJob extends SparkApplication {
         segment.setSizeKB(segmentInfo.getAllLayoutSize() / 1024);
         List<String> cuboidStatics = new LinkedList<>();
 
-        String template = "{\"cuboid\":%d, \"rows\": %d, \"size\": %d}";
+        String template = "{\"cuboid\":%d, \"rows\": %d, \"size\": %d \"deviation\": %7f}";
         for (LayoutEntity layoutEntity : segmentInfo.getAllLayoutJava()) {
-            cuboidStatics.add(String.format(Locale.getDefault(), template, layoutEntity.getId(), layoutEntity.getRows(), layoutEntity.getByteSize()));
+            double deviation = 0.0d;
+            if (layoutEntity.getRows() > 0 && recommendCuboidMap != null && !recommendCuboidMap.isEmpty()) {
+                long diff = (layoutEntity.getRows() - recommendCuboidMap.get(layoutEntity.getId()));
+                deviation = diff / (layoutEntity.getRows() + 0.0d);
+            }
+            cuboidStatics.add(String.format(Locale.getDefault(), template, layoutEntity.getId(),
+                    layoutEntity.getRows(), layoutEntity.getByteSize(), deviation));
         }
 
-        JavaSparkContext jsc = JavaSparkContext.fromSparkContext(ss.sparkContext());
-        JavaRDD<String> cuboidStatRdd = jsc.parallelize(cuboidStatics);
-        for (String cuboid : cuboidStatics) {
-            logger.info("Statistics \t: {}", cuboid);
-        }
-        String path = config.getHdfsWorkingDirectory() + segment.getPreciseStatisticsResourcePath();
-        logger.info("Saving {} {}", path, segmentInfo);
         try {
+            JavaSparkContext jsc = JavaSparkContext.fromSparkContext(ss.sparkContext());
+            JavaRDD<String> cuboidStatRdd = jsc.parallelize(cuboidStatics, 1);
+            for (String cuboid : cuboidStatics) {
+                logger.info("Statistics \t: {}", cuboid);
+            }
+            String path = config.getHdfsWorkingDirectory() + segment.getPreciseStatisticsResourcePath();
+            logger.info("Saving {} {}", path, segmentInfo);
             cuboidStatRdd.saveAsTextFile(path);
         } catch (Exception e) {
-            logger.error("Error", e);
+            logger.error("Write metrics failed.", e);
         }
 
         segment.setLastBuildTime(System.currentTimeMillis());
@@ -256,15 +267,19 @@ public class CubeBuildJob extends SparkApplication {
         }
     }
 
-    private void updateSegmentSourceBytesSize(String cubeId, Map<String, Object> toUpdateSegmentSourceSize)
-            throws IOException {
+    private void updateCubeAndSegmentMeta(String cubeId, Map<String, Object> toUpdateSegmentSourceSize,
+                                          Map<Long, Long> recommendCuboidMap) throws IOException {
         CubeInstance cubeInstance = cubeManager.getCubeByUuid(cubeId);
         CubeInstance cubeCopy = cubeInstance.latestCopyForWrite();
         CubeUpdate update = new CubeUpdate(cubeCopy);
+
+        if (recommendCuboidMap != null && !recommendCuboidMap.isEmpty())
+            update.setCuboids(recommendCuboidMap);
+
         List<CubeSegment> cubeSegments = Lists.newArrayList();
         for (Map.Entry<String, Object> entry : toUpdateSegmentSourceSize.entrySet()) {
             CubeSegment segment = cubeCopy.getSegmentById(entry.getKey());
-            if (segment.getInputRecords() > 0l) {
+            if (segment.getInputRecords() > 0L) {
                 segment.setInputRecordsSize((Long) entry.getValue());
                 segment.setLastBuildTime(System.currentTimeMillis());
                 cubeSegments.add(segment);
