@@ -99,7 +99,7 @@ Please note, this tool will migrate the Kylin metadata, rename the Kylin HDFS fo
 {% endhighlight %}
 For example: 
 {% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI kylin-qa:7070 kylin-prod:7070 kylin_sales_cube learn_kylin true false false true false
+./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI ADMIN:KYLIN@kylin-qa:7070 ADMIN:KYLIN@kylin-prod:7070 kylin_sales_cube learn_kylin true false false true false
 {% endhighlight %}
 After the command is successfully executed, please reload Kylin metadata, the cube you want to migrate will appear in the target environment.
 
@@ -111,7 +111,7 @@ All supported parameters are listed below:
 
 | Parameter           | Description                                                                                |
 | ------------------- | :----------------------------------------------------------------------------------------- |
-| srcKylinConfigUri   | The URL of the source environment's Kylin configuration. It can be `host:7070`, or an absolute file path to the `kylin.properties`.                                                      |
+| srcKylinConfigUri   | The URL of the source environment's Kylin configuration. It can be `username:password@host:port`, or an absolute file path to the `kylin.properties`.  If you use the URL method, you need to change the ADMIN user name and password to username:password@hostname:port format is placed in the URL, because there is a API needs to be called with admin permission during the migration process.                                                    |
 | dstKylinConfigUri   | The URL of the target environment's Kylin configuration.                                                     |
 | cubeName            | the name of cube to be migrated.                                        |
 | projectName         | The target project in the target environment. If it doesn't exist, create it before run this command.                          |
