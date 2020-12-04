@@ -98,7 +98,7 @@ CubeMigrationCLI.java 用于迁移 cubes。例如：将 cube 从测试环境迁�
 {% endhighlight %}
 例如：
 {% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI kylin-qa:7070 kylin-prod:7070 kylin_sales_cube learn_kylin true false false true false
+./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI ADMIN:KYLIN@kylin-qa:7070 ADMIN:KYLIN@kylin-prod:7070 kylin_sales_cube learn_kylin true false false true false
 {% endhighlight %}
 命令执行成功后，请 reload metadata，您想要迁移的 cube 将会存在于迁移后的 project 中。
 
@@ -109,7 +109,7 @@ CubeMigrationCLI.java 用于迁移 cubes。例如：将 cube 从测试环境迁�
 
 | Parameter           | Description                                                                                |
 | ------------------- | :----------------------------------------------------------------------------------------- |
-| srcKylinConfigUri   | The URL of the source environment's Kylin configuration. It can be `host:7070`, or an absolute file path to the `kylin.properties`.                                                     |
+| srcKylinConfigUri   | The URL of the source environment's Kylin configuration. It can be `username:password@host:7070`, or an absolute file path to the `kylin.properties`. If you use the URL method, you need to change the ADMIN user name and password to username:password@hostname:port format is placed in the URL, because there is a API needs to be called with admin permission during the migration process. |
 | dstKylinConfigUri   | The URL of the target environment's Kylin configuration.                                                 |
 | cubeName            | the name of Cube to be migrated.(Make sure it exist)                                       |
 | projectName         | The target project in the target environment.(Make sure it exist)                          |
