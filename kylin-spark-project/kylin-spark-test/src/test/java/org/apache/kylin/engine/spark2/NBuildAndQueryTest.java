@@ -187,11 +187,6 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_ordinal"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_percentile"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_plan"));
-
-            // Not support yet
-            //tasks.add(new QueryCallable(CompareLevel.GEN_METRICS, joinType,
-            //        "sql_select_constants"));
-
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_snowflake"));
 
             // Not support yet
