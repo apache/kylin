@@ -347,7 +347,10 @@ public class NSparkExecutable extends AbstractExecutable {
     protected String generateSparkCmd(KylinConfig config, String hadoopConf, String jars, String kylinJobJar,
                                       String appArgs) {
         StringBuilder sb = new StringBuilder();
-        sb.append("export HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class org.apache.kylin.engine.spark.application.SparkEntry ");
+
+        String sparkSubmitCmd = config.getSparkSubmitCmd() != null ?
+                config.getSparkSubmitCmd() : KylinConfig.getSparkHome() + "/bin/spark-submit";
+        sb.append("export HADOOP_CONF_DIR=%s && %s --class org.apache.kylin.engine.spark.application.SparkEntry ");
 
         Map<String, String> sparkConfs = getSparkConfigOverride(config);
         for (Entry<String, String> entry : sparkConfs.entrySet()) {
@@ -362,7 +365,7 @@ public class NSparkExecutable extends AbstractExecutable {
         sb.append("--files ").append(config.sparkUploadFiles()).append(" ");
         sb.append("--name job_step_%s ");
         sb.append("--jars %s %s %s");
-        String cmd = String.format(Locale.ROOT, sb.toString(), hadoopConf, KylinConfig.getSparkHome(), getId(), jars, kylinJobJar,
+        String cmd = String.format(Locale.ROOT, sb.toString(), hadoopConf, sparkSubmitCmd, getId(), jars, kylinJobJar,
                 appArgs);
         // SparkConf still have a change to be changed in CubeBuildJob.java (Spark Driver)
         logger.info("spark submit cmd: {}", cmd);

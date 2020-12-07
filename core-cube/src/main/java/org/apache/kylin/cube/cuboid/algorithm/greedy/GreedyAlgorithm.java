@@ -92,8 +92,8 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
                     remaining.remove(best.getCuboidId());
                     benefitPolicy.propagateAggregationCost(best.getCuboidId(), selected);
                     round++;
-                    if (logger.isTraceEnabled()) {
-                        logger.trace("Recommend in round {} : {}", round, best);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Recommend in round {} : {}", round, best);
                     }
                 } else {
                     doesRemainSpace = false;
@@ -111,15 +111,15 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
                 "There should be no intersection between excluded list and selected list.");
         logger.info("Greedy Algorithm finished.");
 
-        if (logger.isTraceEnabled()) {
-            logger.trace("Excluded cuboidId size: {}", excluded.size());
-            logger.trace("Excluded cuboidId detail:");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Excluded cuboidId size: {}", excluded.size());
+            logger.debug("Excluded cuboidId detail:");
             for (Long cuboid : excluded) {
-                logger.trace("cuboidId {} and Cost: {} and Space: {}", cuboid,
+                logger.debug("cuboidId {} and Cost: {} and Space: {}", cuboid,
                         cuboidStats.getCuboidQueryCost(cuboid), cuboidStats.getCuboidSize(cuboid));
             }
-            logger.trace("Total Space: {}", spaceLimit - remainingSpace);
-            logger.trace("Space Expansion Rate: {}", (spaceLimit - remainingSpace) / cuboidStats.getBaseCuboidSize());
+            logger.debug("Total Space: {}", spaceLimit - remainingSpace);
+            logger.debug("Space Expansion Rate: {}", (spaceLimit - remainingSpace) / cuboidStats.getBaseCuboidSize());
         }
         return Lists.newArrayList(selected);
     }
