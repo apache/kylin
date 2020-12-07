@@ -93,7 +93,25 @@ Check the log at /usr/local/apache-kylin-2.5.0-bin-hbase1x/logs/kylin.log
 Web UI is at http://<hostname>:7070/kylin
 ```
 
+**注**：如果在启动 kylin 时遇到如下报错(Hadoop3 环境下可能出现)：
 
+```
+Caused by: java.lang.NoSuchMethodError: com.google.common.base.Preconditions.checkArgument(ZLjava/lang/String;Ljava/lang/Object;)V
+	at org.apache.hadoop.conf.Configuration.set(Configuration.java:1358)
+	at org.apache.hadoop.conf.Configuration.set(Configuration.java:1339)
+	at org.apache.kylin.common.util.HadoopUtil.healSickConfig(HadoopUtil.java:77)
+	at org.apache.kylin.common.util.HadoopUtil.getCurrentConfiguration(HadoopUtil.java:63)
+	at org.apache.kylin.storage.hbase.HBaseConnection.newHBaseConfiguration(HBaseConnection.java:170)
+	at org.apache.kylin.storage.hbase.HBaseConnection.get(HBaseConnection.java:259)
+	at org.apache.kylin.storage.hbase.HBaseResourceStore.getConnection(HBaseResourceStore.java:96)
+	at org.apache.kylin.storage.hbase.HBaseResourceStore.createHTableIfNeeded(HBaseResourceStore.java:119)
+	at org.apache.kylin.storage.hbase.HBaseResourceStore.<init>(HBaseResourceStore.java:89)
+	... 8 more
+```
+
+可以尝试如下方法解决：
+
+下载[guava-28.0-jre.jar](https://repo1.maven.org/maven2/com/google/guava/guava/28.0-jre/guava-28.0-jre.jar), 将其放到`$KYLIN_HOME/tool/` 和 `$KYLIN_HOME/tomcat/lib/`目录下，然后重启kylin `bin/kylin.sh restart`。
 
 ### 使用 Kylin
 

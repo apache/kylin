@@ -93,6 +93,24 @@ Check the log at /usr/local/apache-kylin-2.5.0-bin-hbase1x/logs/kylin.log
 Web UI is at http://<hostname>:7070/kylin
 ```
 
+**Note**: If you encounter the following error when starting kylin (possible in Hadoop3 environment)：
+
+```
+Caused by: java.lang.NoSuchMethodError: com.google.common.base.Preconditions.checkArgument(ZLjava/lang/String;Ljava/lang/Object;)V
+	at org.apache.hadoop.conf.Configuration.set(Configuration.java:1358)
+	at org.apache.hadoop.conf.Configuration.set(Configuration.java:1339)
+	at org.apache.kylin.common.util.HadoopUtil.healSickConfig(HadoopUtil.java:77)
+	at org.apache.kylin.common.util.HadoopUtil.getCurrentConfiguration(HadoopUtil.java:63)
+	at org.apache.kylin.storage.hbase.HBaseConnection.newHBaseConfiguration(HBaseConnection.java:170)
+	at org.apache.kylin.storage.hbase.HBaseConnection.get(HBaseConnection.java:259)
+	at org.apache.kylin.storage.hbase.HBaseResourceStore.getConnection(HBaseResourceStore.java:96)
+	at org.apache.kylin.storage.hbase.HBaseResourceStore.createHTableIfNeeded(HBaseResourceStore.java:119)
+	at org.apache.kylin.storage.hbase.HBaseResourceStore.<init>(HBaseResourceStore.java:89)
+	... 8 more
+```
+
+You can try download [guava-28.0-jre.jar](https://repo1.maven.org/maven2/com/google/guava/guava/28.0-jre/guava-28.0-jre.jar), put it into `$KYLIN_HOME/tool/` and `$KYLIN_HOME/tomcat/lib/` and restart kylin `bin/kylin.sh restart`.
+
 ### Using Kylin
 
 Once Kylin is launched, you can access it via the browser `http://<hostname>:7070/kylin` with
