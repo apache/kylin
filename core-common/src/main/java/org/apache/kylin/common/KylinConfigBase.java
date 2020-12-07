@@ -715,11 +715,12 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.cube.size-estimate-enable-optimize", "false"));
     }
 
+    @ConfigTag({ConfigTag.Tag.DEPRECATED, ConfigTag.Tag.NOT_CLEAR})
     public double getJobCuboidSizeRatio() {
         return Double.parseDouble(getOptional("kylin.cube.size-estimate-ratio", "0.25"));
     }
 
-    @Deprecated
+    @ConfigTag({ConfigTag.Tag.DEPRECATED, ConfigTag.Tag.NOT_CLEAR})
     public double getJobCuboidSizeMemHungryRatio() {
         return Double.parseDouble(getOptional("kylin.cube.size-estimate-memhungry-ratio", "0.05"));
     }
@@ -801,7 +802,7 @@ public abstract class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public boolean isCubePlannerEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", TRUE));
+        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", FALSE));
     }
 
     public boolean isCubePlannerEnabledForExistingCube() {
@@ -830,6 +831,14 @@ public abstract class KylinConfigBase implements Serializable {
 
     public int getCubePlannerGeneticAlgorithmAutoThreshold() {
         return Integer.parseInt(getOptional("kylin.cube.cubeplanner.algorithm-threshold-genetic", "23"));
+    }
+
+    /**
+     * Columnar storage, like apache parquet, often use encode and compression to make data smaller,
+     *  and this will affect CuboidRecommendAlgorithm.
+     */
+    public double getStorageCompressionRatio() {
+        return Double.parseDouble(getOptional("kylin.cube.cubeplanner.storage.compression.ratio", "0.2"));
     }
 
     /**
@@ -2624,6 +2633,13 @@ public abstract class KylinConfigBase implements Serializable {
             return "";
         }
         return getFileName(kylinHome + File.separator + "lib", PARQUET_JOB_JAR_NAME_PATTERN);
+    }
+
+    /**
+     * Use https://github.com/spektom/spark-flamegraph for Spark profile
+     */
+    public String getSparkSubmitCmd() {
+        return getOptional("kylin.engine.spark-cmd", null);
     }
 
     public void overrideKylinParquetJobJarPath(String path) {

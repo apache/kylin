@@ -49,41 +49,56 @@ object CuboidStatisticsJob {
 
 class CuboidStatisticsJob(ids: List[Long], rkc: Int) extends Serializable {
   private val info = mutable.Map[String, AggInfo]()
-  val allCuboidsBitSet: Array[Array[Integer]] = getCuboidBitSet(ids, rkc)
+  private var allCuboidsBitSet: Array[Array[Integer]] = Array()
   private val hf: HashFunction = Hashing.murmur3_128
   private val rowHashCodesLong = new Array[Long](rkc)
   private var idx = 0
+  private var meter1 = 0L
+  private var meter2 = 0L
+  private var startMills = 0L
+  private var endMills = 0L
+
 
   def statisticsWithinPartition(rows: Iterator[Row]): Iterator[AggInfo] = {
     init()
+    println("CuboidStatisticsJob-statisticsWithinPartition1-" + System.currentTimeMillis())
     rows.foreach(update)
+    printStat()
+    println("CuboidStatisticsJob-statisticsWithinPartition2-" + System.currentTimeMillis())
     info.valuesIterator
   }
 
   def init(): Unit = {
+    println("CuboidStatisticsJob-Init1-" + System.currentTimeMillis())
+    allCuboidsBitSet = getCuboidBitSet(ids, rkc)
     ids.foreach(i => info.put(i.toString, AggInfo(i.toString)))
+    println("CuboidStatisticsJob-Init2-" + System.currentTimeMillis())
   }
 
   def update(r: Row): Unit = {
     idx += 1
-    if (idx <= 5 || idx % 300 == 0)
+    if (idx <= 5)
       println(r)
     updateCuboid(r)
   }
 
   def updateCuboid(r: Row): Unit = {
     // generate hash for each row key column
-
+    startMills = System.currentTimeMillis()
     var idx = 0
     while (idx < rkc) {
       val hc = hf.newHasher
       var colValue = r.get(idx).toString
       if (colValue == null) colValue = "0"
-      //add column ordinal to the hash value to distinguish between (a,b) and (b,a)
+      // add column ordinal to the hash value to distinguish between (a,b) and (b,a)
       rowHashCodesLong(idx) = hc.putUnencodedChars(colValue).hash().padToLong() + idx
       idx += 1
     }
+    endMills = System.currentTimeMillis()
+    meter1 += (endMills - startMills)
 
+
+    startMills = System.currentTimeMillis()
     // use the row key column hash to get a consolidated hash for each cuboid
     val n = allCuboidsBitSet.length
     idx = 0
@@ -97,6 +112,8 @@ class CuboidStatisticsJob(ids: List[Long], rkc: Int) extends Serializable {
       info(ids(idx).toString).cuboid.counter.addHashDirectly(value)
       idx += 1
     }
+    endMills = System.currentTimeMillis()
+    meter2 += (endMills - startMills)
   }
 
   def getCuboidBitSet(cuboidIds: List[Long], nRowKey: Int): Array[Array[Integer]] = {
@@ -119,6 +136,13 @@ class CuboidStatisticsJob(ids: List[Long], rkc: Int) extends Serializable {
       j += 1
     }
     allCuboidsBitSet
+  }
+
+  def printStat(): Unit = {
+    println("    Stats")
+    println("   i   :" + idx)
+    println("meter1 :" + meter1)
+    println("meter2 :" + meter2)
   }
 }
 

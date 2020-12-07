@@ -171,7 +171,6 @@ public class CubeStatsReader {
         return getCuboidRowCountMapFromSampling(cuboidRowEstimatesHLL, samplingPercentage);
     }
 
-    // return map of Cuboid ID => MB
     public Map<Long, Double> getCuboidSizeMap() {
         return getCuboidSizeMap(false);
     }
@@ -218,7 +217,12 @@ public class CubeStatsReader {
         final Long baseCuboidRowCount = rowCountMap.get(baseCuboid.getId());
 
         for (int i = 0; i < columnList.size(); i++) {
-            rowkeyColumnSize.add(dimEncMap.get(columnList.get(i)).getLengthOfEncoding());
+            /*
+             * A workaround, for the fact kylin do not support self-defined encode in Kylin 4,
+             * it is done by Parquet(https://github.com/apache/parquet-format/blob/master/Encodings.md) for Kylin 4.
+             * It's complex and hard to calculate real size for specific literal value, so I propose to use 4 for a rough estimation.
+             */
+            rowkeyColumnSize.add(4);
         }
 
         Map<Long, Double> sizeMap = Maps.newHashMap();
@@ -360,11 +364,10 @@ public class CubeStatsReader {
             }
         }
 
-        double cuboidSizeRatio = kylinConf.getJobCuboidSizeRatio();
         double cuboidSizeMemHungryRatio = kylinConf.getJobCuboidSizeCountDistinctRatio();
         double cuboidSizeTopNRatio = kylinConf.getJobCuboidSizeTopNRatio();
 
-        double ret = (1.0 * normalSpace * rowCount * cuboidSizeRatio
+        double ret = (1.0 * normalSpace * rowCount
                 + 1.0 * countDistinctSpace * rowCount * cuboidSizeMemHungryRatio + 1.0 * percentileSpace * rowCount
                 + 1.0 * topNSpace * rowCount * cuboidSizeTopNRatio) / (1024L * 1024L);
         return ret;
