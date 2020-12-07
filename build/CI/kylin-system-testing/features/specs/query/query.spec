@@ -37,3 +37,5 @@ Tags:4.x
 * Query all SQL file in directory "query/sql/sql_union/" in project "generic_test_project", compare result with hive pushdown result and compare metrics info with sql_result json file in "query/sql_result/sql_union/"
 ## Query sql_window
 * Query all SQL file in directory "query/sql/sql_window/" in project "generic_test_project", compare result with hive pushdown result and compare metrics info with sql_result json file in "query/sql_result/sql_window/"
+## Query sql_select_constants
+* Query all SQL file in directory "query/sql/sql_select_constants/" in project "generic_test_project", compare result with hive pushdown result and compare metrics info with sql_result json file in "query/sql_result/sql_select_constants/"
