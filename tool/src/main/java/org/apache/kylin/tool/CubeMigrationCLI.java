@@ -442,10 +442,10 @@ public class CubeMigrationCLI extends AbstractApplication {
             String tableName = (String) opt.params[0];
             System.out.println("CHANGE_HTABLE_HOST, table name: " + tableName);
             HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
-            hbaseAdmin.disableTable(tableName);
+//            hbaseAdmin.disableTable(tableName);
             desc.setValue(IRealizationConstants.HTableTag, dstConfig.getMetadataUrlPrefix());
             hbaseAdmin.modifyTable(tableName, desc);
-            hbaseAdmin.enableTable(tableName);
+//            hbaseAdmin.enableTable(tableName);
             logger.info("CHANGE_HTABLE_HOST is completed");
             break;
         }
@@ -537,8 +537,12 @@ public class CubeMigrationCLI extends AbstractApplication {
         case RENAME_FOLDER_IN_HDFS: {
             String srcPath = (String) opt.params[0];
             String dstPath = (String) opt.params[1];
-            renameHDFSPath(srcPath, dstPath);
-            logger.info("HDFS Folder renamed from " + srcPath + " to " + dstPath);
+            if (hdfsFS.exists(new Path(srcPath))) {
+                renameHDFSPath(srcPath, dstPath);
+                logger.info("HDFS Folder renamed from " + srcPath + " to " + dstPath);
+            } else {
+                logger.warn("HDFS Folder is not exist,ignore it. path : " + srcPath);
+            }
             break;
         }
         case ADD_INTO_PROJECT: {
