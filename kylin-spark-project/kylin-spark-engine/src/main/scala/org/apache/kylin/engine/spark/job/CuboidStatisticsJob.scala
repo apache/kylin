@@ -35,7 +35,7 @@ object CuboidStatisticsJob {
    * @param inputDs Part of FlatTable which contains all normal dimensions
    * @return Cuboid level statistics data
    */
-  def statistics(inputDs: Dataset[Row], seg: SegmentInfo): Array[(String, AggInfo)] = {
+  def statistics(inputDs: Dataset[Row], seg: SegmentInfo): Array[(Long, AggInfo)] = {
 
     val rkc = seg.allColumns.count(c => c.rowKey)
     // maybe we should use sample operation to reduce cost later
@@ -48,7 +48,7 @@ object CuboidStatisticsJob {
 }
 
 class CuboidStatisticsJob(ids: List[Long], rkc: Int) extends Serializable {
-  private val info = mutable.Map[String, AggInfo]()
+  private val info = mutable.Map[Long, AggInfo]()
   private var allCuboidsBitSet: Array[Array[Integer]] = Array()
   private val hf: HashFunction = Hashing.murmur3_128
   private val rowHashCodesLong = new Array[Long](rkc)
@@ -71,7 +71,7 @@ class CuboidStatisticsJob(ids: List[Long], rkc: Int) extends Serializable {
   def init(): Unit = {
     println("CuboidStatisticsJob-Init1-" + System.currentTimeMillis())
     allCuboidsBitSet = getCuboidBitSet(ids, rkc)
-    ids.foreach(i => info.put(i.toString, AggInfo(i.toString)))
+    ids.foreach(i => info.put(i, AggInfo(i)))
     println("CuboidStatisticsJob-Init2-" + System.currentTimeMillis())
   }
 
@@ -109,7 +109,7 @@ class CuboidStatisticsJob(ids: List[Long], rkc: Int) extends Serializable {
         value += rowHashCodesLong(allCuboidsBitSet(idx)(position))
         position += 1
       }
-      info(ids(idx).toString).cuboid.counter.addHashDirectly(value)
+      info(ids(idx)).cuboid.counter.addHashDirectly(value)
       idx += 1
     }
     endMills = System.currentTimeMillis()
@@ -146,7 +146,7 @@ class CuboidStatisticsJob(ids: List[Long], rkc: Int) extends Serializable {
   }
 }
 
-case class AggInfo(key: String,
+case class AggInfo(key: Long,
                    cuboid: CuboidInfo = CuboidInfo(new HLLCounter()),
                    sample: SampleInfo = SampleInfo(),
                    dimension: DimensionInfo = DimensionInfo()) {

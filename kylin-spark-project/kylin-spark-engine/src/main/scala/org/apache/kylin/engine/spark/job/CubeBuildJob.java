@@ -134,8 +134,8 @@ public class CubeBuildJob extends SparkApplication {
             sourceChooser.setNeedStatistics();
             sourceChooser.decideFlatTableSource(null);
             Map<Long, HLLCounter> hllMap = new HashMap<>();
-            for (Tuple2<String, AggInfo> cuboidData : sourceChooser.aggInfo()) {
-                hllMap.put(Long.parseLong(cuboidData._1), cuboidData._2.cuboid().counter());
+            for (Tuple2<Object, AggInfo> cuboidData : sourceChooser.aggInfo()) {
+                hllMap.put((Long) cuboidData._1, cuboidData._2.cuboid().counter());
             }
             logger.info("Cuboid statistics return {} records and cost {} ms.", hllMap.size(), (System.currentTimeMillis() - startMills));
 
