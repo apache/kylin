@@ -45,10 +45,10 @@ RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
     && apt-get install -y nodejs npm
 
 
-COPY ./script/entrypoint.sh /root/entrypoint.sh
+COPY script/entrypoint.sh /root/entrypoint.sh
 RUN chmod u+x /root/entrypoint.sh
 
-COPY ./script/build_release.sh /root/build_release.sh
+COPY script/build_release.sh /root/build_release.sh
 RUN chmod u+x /root/build_release.sh
 
 ENTRYPOINT ["/root/entrypoint.sh"]
