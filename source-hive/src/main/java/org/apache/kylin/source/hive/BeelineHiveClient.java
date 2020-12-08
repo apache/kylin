@@ -125,7 +125,7 @@ public class BeelineHiveClient implements IHiveClient {
         String hiveTablePrefix = HiveCmdBuilder.getHiveTablePrefix().get();
         List<String> ret = Lists.newArrayList();
         ResultSet tables = null;
-        if (StringUtils.isNotBlank(hiveTablePrefix)) {
+        if (StringUtils.isBlank(hiveTablePrefix)) {
             tables = metaData.getTables(null, database, null, null);
         } else {
             tables = metaData.getTables(null, database, hiveTablePrefix + "*", null);
