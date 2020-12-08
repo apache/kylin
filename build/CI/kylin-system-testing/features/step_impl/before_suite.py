@@ -18,6 +18,7 @@
 from getgauge.python import before_suite
 import os
 import json
+import time
 
 from kylin_utils import util
 
@@ -58,4 +59,5 @@ def create_generic_model_and_cube():
         assert json.loads(resp['cubeDescData'])['name'] == cube_name
     if client.get_cube_instance(cube_name=cube_name).get('status') != 'READY' and len(client.list_jobs(project_name=project_name, job_search_mode='CUBING_ONLY')) == 0:
         client.full_build_cube(cube_name=cube_name)
-    assert client.await_all_jobs(project_name=project_name)
+    assert client.await_all_jobs(project_name=project_name, waiting_time=50)
+    time.sleep(10)

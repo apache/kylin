@@ -19,3 +19,4 @@ SELECT sum(price)  as sum_price
  FROM KYLIN_SALES
  WHERE PART_DT > '2013-06-01'
 GROUP BY PART_DT
+ORDER BY sum_price

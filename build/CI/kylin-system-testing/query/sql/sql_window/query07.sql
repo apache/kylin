@@ -17,7 +17,7 @@
 --
 select part_dt, lstg_format_name, sum(price) as GMV,
 first_value(sum(price)) over (partition by lstg_format_name order by part_dt rows 2 preceding) as "prev 2 rows",
-last_value(sum(price)) over (partition by lstg_format_name order by part_dt rows 2 following) as "next 2 rows"
+last_value(sum(price)) over (partition by lstg_format_name order by part_dt rows between current row and 2 following) as "next 2 rows"
 from KYLIN_SALES
 where part_dt < '2012-02-01'
 group by part_dt, lstg_format_name

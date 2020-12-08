@@ -16,8 +16,8 @@
 -- limitations under the License.
 --
 select cal_dt, lstg_format_name, sum(price) as GMV,
-first_value(sum(price)) over (partition by lstg_format_name order by cal_dt rows 2 preceding) as "prev 2 rows",
-last_value(sum(price)) over (partition by lstg_format_name order by cal_dt rows 2 following) as "next 2 rows"
+first_value(sum(price)) over (partition by lstg_format_name order by cast(cal_dt as timestamp) range interval '3' day preceding) as "prev 3 days",
+last_value(sum(price)) over (partition by lstg_format_name order by cast(cal_dt as timestamp) range between current row and interval '3' day following) as "next 3 days"
 from test_kylin_fact
 where cal_dt < '2012-02-01'
 group by cal_dt, lstg_format_name

@@ -18,3 +18,4 @@
 select lstg_format_name, sum(price) as GMV, row_number() over(order by lstg_format_name)
 from KYLIN_SALES
 group by lstg_format_name
+order by GMV

@@ -24,8 +24,8 @@ from kylin_utils import util
 from kylin_utils import equals
 
 
-@step("Query all SQL file in directory <sql_directory> in project <project_name>, compare result with hive pushdown result and compare metrics info with sql_result json file in <sql_result_directory>")
-def query_sql_file_and_compare(sql_directory, project_name, sql_result_directory):
+@step("Query all SQL file in directory <sql_directory> in project <project_name>, compare <compare_level> with hive pushdown result and compare metrics info with sql_result json file in <sql_result_directory>")
+def query_sql_file_and_compare(sql_directory, project_name, compare_level, sql_result_directory):
     sql_directory_list = os.listdir(sql_directory)
     for sql_file_name in sql_directory_list:
         if (sql_file_name.split('.')[len(sql_file_name.split('.'))-1]) == 'sql':
@@ -33,12 +33,12 @@ def query_sql_file_and_compare(sql_directory, project_name, sql_result_directory
                 sql = sql_file.read()
 
             client = util.setup_instance('kylin_instance.yml')
-            expected_result_file_name = sql_result_directory + sql_file_name.split(".")[0]
+            expected_result_file_name = sql_result_directory + sql_file_name.split(".")[0] + '.json'
             expected_result = None
             if os.path.exists(expected_result_file_name):
-                with open(sql_result_directory + sql_file_name.split(".")[0] + '.json', 'r', encoding='utf8') as expected_result_file:
+                with open(expected_result_file_name, 'r', encoding='utf8') as expected_result_file:
                     expected_result = json.loads(expected_result_file.read())
-            equals.compare_sql_result(sql=sql, project=project_name, kylin_client=client, expected_result=expected_result)
+            equals.compare_sql_result(sql=sql, project=project_name, kylin_client=client, expected_result=expected_result, compare_level=compare_level)
 
 
 

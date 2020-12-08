@@ -40,6 +40,9 @@ GPG_PASSPHRASE=$GPG_PASSPHRASE
 USER=$USER
 EOF
 
+docker stop kylin-release-machine
+docker rm kylin-release-machine
+
 docker run -i \
   --env-file "$ENVFILE" \
   --name kylin-release-machine \
