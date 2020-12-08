@@ -18,7 +18,7 @@
 #
 
 ## Refer to https://github.com/apache/spark/tree/master/dev/create-release
-# docker build -f Dockerfile -t apachekylin/release-machine:jdk8-slim .
+docker build -f Dockerfile -t apachekylin/release-machine:jdk8-slim .
 
 ENVFILE="env.list"
 cat > $ENVFILE <<EOF

@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-bash -x /root/build_release.sh > /root/build.log
+bash -x /root/build_release.sh package > /root/build.log
 
 while :
 do
