@@ -39,7 +39,7 @@ class ParentSourceChooser(
   config: KylinConfig,
   needEncoding: Boolean) extends Logging {
 
-  var aggInfo : Array[(String, AggInfo)]  = _
+  var aggInfo : Array[(Long, AggInfo)]  = _
 
   // build from built cuboid.
   var reuseSources: java.util.Map[java.lang.Long, NBuildSourceInfo] = Maps.newHashMap()
@@ -57,7 +57,7 @@ class ParentSourceChooser(
   def setNeedStatistics(): Unit =
     needStatistics = true
 
-  def getAggInfo : Array[(String, AggInfo)] = aggInfo
+  def getAggInfo : Array[(Long, AggInfo)] = aggInfo
 
   def decideSources(): Unit = {
     toBuildTree.getRootIndexEntities.asScala.foreach { entity =>
