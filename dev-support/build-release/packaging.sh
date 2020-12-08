@@ -40,7 +40,7 @@ GPG_PASSPHRASE=$GPG_PASSPHRASE
 USER=$USER
 EOF
 
-docker run -ti \
+docker run -i \
   --env-file "$ENVFILE" \
   --name kylin-release-machine \
   apachekylin/release-machine:jdk8-slim
