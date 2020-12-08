@@ -25,7 +25,7 @@ RELEASE_ENABLE=0
 
 function exit_with_usage {
   cat << EOF
-usage: release-build.sh <package|publish-rc>
+usage: build_release.sh <package|publish-rc>
 Creates build deliverables from a Kylin commit.
 
 Top level targets are
