@@ -18,3 +18,4 @@
 select lstg_format_name, sum(price) as GMV, count(lstg_format_name) over(partition by lstg_format_name)
 from KYLIN_SALES
 group by part_dt, lstg_format_name
+order by GMV

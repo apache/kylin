@@ -60,6 +60,7 @@ kylin.env.zookeeper-connect-string=write-zookeeper:2181
 kylin.job.scheduler.default=100
 kylin.engine.spark-conf.spark.shuffle.service.enabled=false
 kylin.query.pushdown.runner-class-name=org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl
+kylin.engine.spark-conf.spark.executor.cores=4
 EOL
 
 #cp -r apache-kylin-bin/* kylin-query

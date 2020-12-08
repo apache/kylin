@@ -541,7 +541,6 @@ class KylinHttpClient(BasicHttpClient):  # pylint: disable=too-many-public-metho
         running_flag = ['PENDING', 'RUNNING']
         try_time = 0
         max_try_time = waiting_time * 2
-        # finish_flags = ['ERROR', 'FINISHED', 'DISCARDED']
         while try_time < max_try_time:
             jobs = self.list_jobs(project_name)
             all_finished = True
@@ -549,6 +548,8 @@ class KylinHttpClient(BasicHttpClient):  # pylint: disable=too-many-public-metho
                 if job['job_status'] in running_flag:
                     all_finished = False
                     break
+                if job['job_status'] == 'ERROR':
+                    return False
             if all_finished:
                 return True
             time.sleep(30)

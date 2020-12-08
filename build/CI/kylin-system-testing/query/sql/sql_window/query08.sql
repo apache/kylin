@@ -17,7 +17,7 @@
 --
 select part_dt, lstg_format_name, sum(price) as GMV,
 first_value(sum(price)) over (partition by lstg_format_name order by cast(part_dt as timestamp) range interval '3' day preceding) as "prev 3 days",
-last_value(sum(price)) over (partition by lstg_format_name order by cast(part_dt as timestamp) range interval '3' day following) as "next 3 days"
+last_value(sum(price)) over (partition by lstg_format_name order by cast(part_dt as timestamp) range between current row and interval '3' day following) as "next 3 days"
 from KYLIN_SALES
 where part_dt < '2012-02-01'
 group by part_dt, lstg_format_name

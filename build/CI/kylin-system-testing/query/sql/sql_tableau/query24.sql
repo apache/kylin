@@ -20,5 +20,5 @@ select KYLIN_SALES.PART_DT, count(1) as cnt_1
 from KYLIN_SALES
 inner join KYLIN_CAL_DT AS KYLIN_CAL_DT on KYLIN_SALES.PART_DT=KYLIN_CAL_DT.cal_dt
 group by KYLIN_SALES.PART_DT
-order by 2 desc 
+order by 1 desc
 limit 3

@@ -25,5 +25,6 @@ SELECT *
  ON KYLIN_SALES.PART_DT = KYLIN_CAL_DT.cal_dt
  where KYLIN_CAL_DT.week_beg_dt between DATE '2013-05-01' and DATE '2013-08-01'
  group by KYLIN_SALES.lstg_format_name, KYLIN_CAL_DT.week_beg_dt
+ order by GMV
  ) "TableauSQL" 
  LIMIT 1

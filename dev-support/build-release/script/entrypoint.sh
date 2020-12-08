@@ -18,8 +18,3 @@
 #
 
 bash -x /root/build_release.sh package > /root/build.log
-
-while :
-do
-    sleep 10
-done
