@@ -56,7 +56,6 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
-import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.cube.kv.RowKeyEncoder;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.measure.hllc.HLLCounter;
@@ -213,7 +212,6 @@ public class CubeStatsReader {
         final List<Integer> rowkeyColumnSize = Lists.newArrayList();
         final Cuboid baseCuboid = Cuboid.getBaseCuboid(cubeDesc);
         final List<TblColRef> columnList = baseCuboid.getColumns();
-        final CubeDimEncMap dimEncMap = cubeSegment.getDimensionEncodingMap();
         final Long baseCuboidRowCount = rowCountMap.get(baseCuboid.getId());
 
         for (int i = 0; i < columnList.size(); i++) {
@@ -231,7 +229,7 @@ public class CubeStatsReader {
                     baseCuboid.getId(), baseCuboidRowCount, rowkeyColumnSize, sourceRowCount));
         }
 
-        if (origin == false && cubeSegment.getConfig().enableJobCuboidSizeOptimize()) {
+        if (!origin && cubeSegment.getConfig().enableJobCuboidSizeOptimize()) {
             optimizeSizeMap(sizeMap, cubeSegment);
         }
 

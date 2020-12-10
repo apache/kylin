@@ -239,14 +239,19 @@ public class CubeBuildJob extends SparkApplication {
         }
 
         try {
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
             JavaSparkContext jsc = JavaSparkContext.fromSparkContext(ss.sparkContext());
             JavaRDD<String> cuboidStatRdd = jsc.parallelize(cuboidStatics, 1);
             for (String cuboid : cuboidStatics) {
                 logger.info("Statistics \t: {}", cuboid);
             }
-            String path = config.getHdfsWorkingDirectory() + segment.getPreciseStatisticsResourcePath();
-            logger.info("Saving {} {}", path, segmentInfo);
-            cuboidStatRdd.saveAsTextFile(path);
+            String pathDir = config.getHdfsWorkingDirectory() + segment.getPreciseStatisticsResourcePath();
+            logger.info("Saving {} {} .", pathDir, segmentInfo);
+            Path path = new Path(pathDir);
+            if (fs.exists(path)) {
+                fs.delete(path, true);
+            }
+            cuboidStatRdd.saveAsTextFile(pathDir);
         } catch (Exception e) {
             logger.error("Write metrics failed.", e);
         }

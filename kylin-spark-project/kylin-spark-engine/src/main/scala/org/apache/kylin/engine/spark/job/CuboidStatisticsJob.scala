@@ -39,21 +39,20 @@ object CuboidStatisticsJob {
 
     val rkc = seg.allColumns.count(c => c.rowKey)
     // maybe we should use sample operation to reduce cost later
-    val res = inputDs.rdd
-      .mapPartitions(new CuboidStatisticsJob(seg.getAllLayout.map(x => x.getId), rkc).statisticsWithinPartition)
+    val res = inputDs.rdd.repartition(inputDs.sparkSession.sparkContext.defaultParallelism)
+      .mapPartitions(new CuboidStatisticsJob(seg.getAllLayout.map(x => x.getId).toArray, rkc).statisticsWithinPartition)
     val l = res.map(a => (a.key, a)).reduceByKey((a, b) => a.merge(b)).collect()
     //    l.foreach(x => println(x._1 + " >>><<< " + x._2.cuboid.counter.getCountEstimate))
     l
   }
 }
 
-class CuboidStatisticsJob(ids: List[Long], rkc: Int) extends Serializable {
-  private val info = mutable.Map[Long, AggInfo]()
+class CuboidStatisticsJob(ids: Array[Long], rkc: Int) extends Serializable {
+  private val info = mutable.LongMap[AggInfo]()
   private var allCuboidsBitSet: Array[Array[Integer]] = Array()
   private val hf: HashFunction = Hashing.murmur3_128
   private val rowHashCodesLong = new Array[Long](rkc)
   private var idx = 0
-  private var meter1 = 0L
   private var meter2 = 0L
   private var startMills = 0L
   private var endMills = 0L
@@ -84,19 +83,14 @@ class CuboidStatisticsJob(ids: List[Long], rkc: Int) extends Serializable {
 
   def updateCuboid(r: Row): Unit = {
     // generate hash for each row key column
-    startMills = System.currentTimeMillis()
     var idx = 0
     while (idx < rkc) {
       val hc = hf.newHasher
-      var colValue = r.get(idx).toString
-      if (colValue == null) colValue = "0"
+      val colValue = if (r.get(idx) == null) "0" else r.get(idx).toString
       // add column ordinal to the hash value to distinguish between (a,b) and (b,a)
       rowHashCodesLong(idx) = hc.putUnencodedChars(colValue).hash().padToLong() + idx
       idx += 1
     }
-    endMills = System.currentTimeMillis()
-    meter1 += (endMills - startMills)
-
 
     startMills = System.currentTimeMillis()
     // use the row key column hash to get a consolidated hash for each cuboid
@@ -105,8 +99,10 @@ class CuboidStatisticsJob(ids: List[Long], rkc: Int) extends Serializable {
     while (idx < n) {
       var value: Long = 0
       var position = 0
-      while (position < allCuboidsBitSet(idx).length) {
-        value += rowHashCodesLong(allCuboidsBitSet(idx)(position))
+      val currCuboidBitSet = allCuboidsBitSet(idx)
+      val currCuboidLength = currCuboidBitSet.length
+      while (position < currCuboidLength) {
+        value += rowHashCodesLong(currCuboidBitSet(position))
         position += 1
       }
       info(ids(idx)).cuboid.counter.addHashDirectly(value)
@@ -116,7 +112,7 @@ class CuboidStatisticsJob(ids: List[Long], rkc: Int) extends Serializable {
     meter2 += (endMills - startMills)
   }
 
-  def getCuboidBitSet(cuboidIds: List[Long], nRowKey: Int): Array[Array[Integer]] = {
+  def getCuboidBitSet(cuboidIds: Array[Long], nRowKey: Int): Array[Array[Integer]] = {
     val allCuboidsBitSet: Array[Array[Integer]] = new Array[Array[Integer]](cuboidIds.length)
     var j: Int = 0
     while (j < cuboidIds.length) {
@@ -140,9 +136,8 @@ class CuboidStatisticsJob(ids: List[Long], rkc: Int) extends Serializable {
 
   def printStat(): Unit = {
     println("    Stats")
-    println("   i   :" + idx)
-    println("meter1 :" + meter1)
-    println("meter2 :" + meter2)
+    println("i      :" + idx)
+    println("meter  :" + meter2)
   }
 }
 
