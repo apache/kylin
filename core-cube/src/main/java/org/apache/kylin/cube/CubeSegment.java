@@ -541,7 +541,7 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     }
 
     public String getPreciseStatisticsResourcePath() {
-        return getStatisticsResourcePath(this.getCubeInstance().getName(), this.getUuid(), ".json");
+        return getStatisticsResourcePath(this.getCubeInstance().getName(), this.getUuid(), "json");
     }
 
     public static String getStatisticsResourcePath(String cubeName, String cubeSegmentId) {
