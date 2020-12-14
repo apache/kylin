@@ -197,11 +197,13 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
             allRDDs[level] = allRDDs[level - 1].flatMapToPair(flatMapFunction).reduceByKey(reducerFunction2, partition)
                     .persist(storageLevel);
-            allRDDs[level - 1].unpersist(false);
             if (envConfig.isSparkSanityCheckEnabled() == true) {
                 sanityCheck(allRDDs[level], totalCount, level, cubeStatsReader, countMeasureIndex);
             }
             saveToHDFS(allRDDs[level], metaUrl, cubeName, cubeSegment, outputPath, level, job, envConfig);
+            // must do 'unpersist' after allRDDs[level] is created,
+            // otherwise the parent RDD 'allRDDs[level - 1]' will be recomputed
+            allRDDs[level - 1].unpersist(false);
         }
         allRDDs[totalLevels].unpersist(false);
         logger.info("Finished on calculating all level cuboids.");
