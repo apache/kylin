@@ -241,14 +241,7 @@ kylin.engine.spark-conf.spark.yarn.queue=YOUR_QUEUE_NAME
   * The cardinality of dimensions is an important measure of cube complexity. The higher the cardinality, the bigger the cube, and thus the longer to build and the slower to query. Cardinality > 1,000 is worth attention and > 1,000,000 should be avoided at best effort. For optimal cube performance, try reduce high cardinality by categorize values or derive features.
 
 #### How to add new user or change the default password?
-  * Kylin web's security is implemented with Spring security framework, where the kylinSecurity.xml is the main configuration file:
-
-   {% highlight Groff markup %}
-   ${KYLIN_HOME}/tomcat/webapps/kylin/WEB-INF/classes/kylinSecurity.xml
-   {% endhighlight %}
-
-  * The password hash for pre-defined test users can be found in the profile "sandbox,testing" part; To change the default password, you need generate a new hash and then update it here, please refer to the code snippet in: [https://stackoverflow.com/questions/25844419/spring-bcryptpasswordencoder-generate-different-password-for-same-input](https://stackoverflow.com/questions/25844419/spring-bcryptpasswordencoder-generate-different-password-for-same-input)
-  * When you deploy Kylin for more users, switch to LDAP authentication is recommended.
+  * Please check the document: [How to add new user or change the default password](https://cwiki.apache.org/confluence/display/KYLIN/How+to+add+new+user+or+change+the+default+password).
 
 #### Using sub-query for un-supported SQL
 
@@ -293,42 +286,6 @@ group by a.slr_sgmt
 #### Kylin JDBC driver returns a different Date/time than the REST API, seems it add the timezone to parse the date.
   * Please check the [post in mailing list](http://apache-kylin.74782.x6.nabble.com/JDBC-query-result-Date-column-get-wrong-value-td5370.html)
 
-
-#### How to update the default password for 'ADMIN'?
-  * By default, Kylin uses a simple, configuration based user registry; The default administrator 'ADMIN' with password 'KYLIN' is hard-coded in `kylinSecurity.xml`. To modify the password, you need firstly get the new password's encrypted value (with BCrypt), and then set it in `kylinSecurity.xml`. Here is a sample with password 'ABCDE'
-  
-{% highlight Groff markup %}
-
-cd $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/lib
-
-java -classpath kylin-server-base-2.3.0.jar:spring-beans-4.3.10.RELEASE.jar:spring-core-4.3.10.RELEASE.jar:spring-security-core-4.2.3.RELEASE.jar:commons-codec-1.7.jar:commons-logging-1.1.3.jar org.apache.kylin.rest.security.PasswordPlaceholderConfigurer BCrypt ABCDE
-
-BCrypt encrypted password is:
-$2a$10$A7.J.GIEOQknHmJhEeXUdOnj2wrdG4jhopBgqShTgDkJDMoKxYHVu
-
-{% endhighlight %}
-
-  * Then you can set it into `kylinSecurity.xml`
-
-{% highlight Groff markup %}
-
-vi ./tomcat/webapps/kylin/WEB-INF/classes/kylinSecurity.xml
-
-{% endhighlight %}
-
-  * Replace the origin encrypted password with the new one: 
-{% highlight Groff markup %}
-
-        <bean class="org.springframework.security.core.userdetails.User" id="adminUser">
-            <constructor-arg value="ADMIN"/>
-            <constructor-arg
-                    value="$2a$10$A7.J.GIEOQknHmJhEeXUdOnj2wrdG4jhopBgqShTgDkJDMoKxYHVu"/>
-            <constructor-arg ref="adminAuthorities"/>
-        </bean>
-        
-{% endhighlight %}
-
-  * Restart Kylin to take effective. If you have multiple Kylin server as a cluster, do the same on each instance. 
 
 #### What kind of data be left in 'kylin.env.hdfs-working-dir' ? We often execute kylin cleanup storage command, but now our working dir folder is about 300 GB size, can we delete old data manually?
 

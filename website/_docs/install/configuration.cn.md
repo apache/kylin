@@ -61,6 +61,7 @@ permalink: /cn/docs/install/configuration.html
 	- [收集查询指标到 JMX](#jmx-metrics)
 	- [收集查询指标到 dropwizard](#dropwizard-metrics)
 - [安全配置](#kylin-security)
+	- [用户名和密码](#user-name-and-password)
 	- [集成 LDAP 实现单点登录](#ldap-sso)
 	- [集成 Apache Ranger](#ranger)
 	- [启用 ZooKeeper ACL](#zookeeper-acl)
@@ -751,6 +752,9 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 
 本小节介绍 Kylin 安全有关的配置。
 
+
+### 用户名和密码 {#user-name-and-password}
+请参考文档：[How to add new user or change the default password](https://cwiki.apache.org/confluence/display/KYLIN/How+to+add+new+user+or+change+the+default+password)
 
 
 ### 集成 LDAP 实现单点登录	{#ldap-sso}

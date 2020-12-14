@@ -53,6 +53,14 @@ Apache Kylin relies on Apache Calcite to parse and optimize the SQL statements. 
 
 [DATA TYPE](#DATATYPE)
 
+## Sql Execution Plan
+You can using `explain plan for` to displays execution plan, such as:
+
+```
+explain plan for select count(*) from KYLIN_SALES
+```
+
+The front-end displays the string of a one line execution plan. It is better to export the execution plan through the result export to view it.
 
 ## QUERY SYNTAX {#QUERYSYNTAX}
 {% highlight Groff markup %}

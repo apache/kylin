@@ -177,15 +177,9 @@ Kylin 使用字典编码方式来编码/解码维度的值；通常一个维度�
 Kylin 使用字典对每列中的值进行编码，这大大减少了 Cube 的存储大小。 而要构建字典，Kylin 需要为每列获取不同的值。
 
 
-### 如何新增用户并修改默认密码
+### 如何新增用户并修改默认用户的密码
 
-Kylin 的网页安全是通过 Spring 安全框架实现的，而 `kylinSecurity.xml` 是主要的配置文件。
-```
-${KYLIN_HOME}/tomcat/webapps/kylin/WEB-INF/classes/kylinSecurity.xml
-```
-预定义用户的密码哈希值可以在配置文件 “sandbox,testing” 中找到；如果要更改默认密码，用户需要生成一个新哈希，然后在此处更新，请参阅以下代码段： [Spring BCryptPasswordEncoder generate different password for same input](https://stackoverflow.com/questions/25844419/spring-bcryptpasswordencoder-generate-different-password-for-same-input)
-
-我们更推荐集成 LDAP 认证方式和 Kylin 来管理多用户。
+请参考: [How to add new user or change the default password](https://cwiki.apache.org/confluence/display/KYLIN/How+to+add+new+user+or+change+the+default+password) 。
 
 ### 构建 Kylin 代码时遇到 NPM 报错 (中国大陆地区用户请特别注意此问题)
 
@@ -203,29 +197,6 @@ npm config set proxy http://YOUR_PROXY_IP
 请参考：[JDBC query result Date column get wrong value](http://apache-kylin.74782.x6.nabble.com/JDBC-query-result-Date-column-get-wrong-value-td5370.html)
 
 
-### 如何修改 ADMIN 用户的默认密码
-
-默认情况下，Kylin 使用简单的、基于配置的用户注册表；默认的系统管理员 ADMIN 的密码为 KYLIN 在 `kylinSecurity.xml` 中进行了硬编码。如果要修改密码，首先需要获取新密码的加密值（使用BCrypt），然后在 `kylinSecurity.xml` 中设置它。以下为密码为 'ABCDE' 的示例：
-```sh
-cd $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/lib
-java -classpath kylin-server-base-2.3.0.jar:spring-beans-4.3.10.RELEASE.jar:spring-core-4.3.10.RELEASE.jar:spring-security-core-4.2.3.RELEASE.jar:commons-codec-1.7.jar:commons-logging-1.1.3.jar org.apache.kylin.rest.security.PasswordPlaceholderConfigurer BCrypt ABCDE
-```
-加密后的密码为：
-```
-$2a$10$A7.J.GIEOQknHmJhEeXUdOnj2wrdG4jhopBgqShTgDkJDMoKxYHVu
-```
-然后将加密后的密码在 `kylinSecurity.xml` 中设置，如下：
-```
-vi $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/classes/kylinSecurity.xml
-```
-使用新的密码代替旧的密码：
-```
-<bean class="org.springframework.security.core.userdetails.User" id="adminUser">
-	<constructor-arg value="ADMIN"/>
-	<constructor-arg value="$2a$10$A7.J.GIEOQknHmJhEeXUdOnj2wrdG4jhopBgqShTgDkJDMoKxYHVu"/>
-    <constructor-arg ref="adminAuthorities"/>
-</bean>
-```
 重启 Kylin 来使得配置生效，如果用户有多个 Kylin 服务器作为一个集群，需要在所有的节点都执行相同操作。
 
 ### HDFS 上的工作目录中文件超过了 300G，可以手动删除吗？

@@ -50,6 +50,15 @@ Apache Kylin 使用 Apache Calcite 做 SQL 解析和优化。作为一款 OLAP �
 [INTERSECT_COUNT](#INTERSECT_COUNT)
 [INTERSECT_VALUE](#INTERSECT_VALUE)
 
+## Sql 执行计划
+你可以通过在 sql 的前面添加`explain plan for`来获取 sql 的执行计划，比如：
+
+```
+explain plan for select count(*) from KYLIN_SALES
+```
+
+前端展示的是一个一行的执行计划的字符串，最好通过结果导出功能将执行计划导出后查看。
+
 ## 数据类型
 [数据类型](#datatype)
 

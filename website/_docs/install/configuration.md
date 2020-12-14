@@ -60,11 +60,11 @@ permalink: /docs/install/configuration.html
 	- [Collect Query Metrics to JMX](#jmx-metrics)
 	- [Collect Query Metrics to dropwizard](#dropwizard-metrics)
 - [Security Configuration](#kylin-security)
+	- [User name and password](#user-name-and-password)
 	- [Integrated LDAP for SSO](#ldap-sso)
 	- [Integrate with Apache Ranger](#ranger)
 	- [Enable ZooKeeper ACL](#zookeeper-acl)
 - [Distributed query cache with Memcached](#distributed-cache)
-
 
 
 ### Configuration Files and Overriding {#kylin-config}
@@ -744,6 +744,10 @@ This section introduces Kylin security-related configuration.
 
 
 
+### User name and password {#user-name-and-password}
+
+Please check the document: [How to add new user or change the default password](https://cwiki.apache.org/confluence/display/KYLIN/How+to+add+new+user+or+change+the+default+password)
+
 ### Integrated LDAP for SSO {#ldap-sso}
 
 - `kylin.security.profile`: specifies the way of security authentication, optional values include `ldap`, `testing`, `saml`, it should be set to `ldap` when integrating LDAP for SSO
@@ -760,8 +764,6 @@ This section introduces Kylin security-related configuration.
 - `kylin.security.acl.admin-role`: map an LDAP group to an admin role (group name case sensitive)
 - `kylin.server.auth-user-cache.expire-seconds`: specifies LDAP user information cache time, default is 300(s)
 - `kylin.server.auth-user-cache.max-entries`: specifies maximum number of LDAP users, default is 100
-
-
 
 ### Integrate with Apache Ranger {#ranger}
 
