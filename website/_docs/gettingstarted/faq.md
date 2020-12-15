@@ -82,7 +82,7 @@ But if you do want, there are some workarounds. 1) Add the primary key as a dime
 
 #### Can I specify a cube to answer my SQL statements?
 
-  * No, you couldn't; Cube is transparent for the end user. If you have multiple Cubes for the same data models, separating them into different projects is a good idea.
+  * Please refer to this wiki: [Specify cube for your query](https://cwiki.apache.org/confluence/display/KYLIN/Specify+cube+for+your+query)
 
 #### Is there a REST API to create the project/model/cube?
 

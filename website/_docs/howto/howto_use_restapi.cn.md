@@ -162,6 +162,7 @@ curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8"
 * limit - `optional` `int` Query limit. If limit is set in sql, perPage will be ignored.
 * acceptPartial - `optional` `bool` Whether accept a partial result or not, default be "false". Set to "false" for production use. 
 * project - `optional` `string` Project to perform query. Default value is 'DEFAULT'.
+如果你想为你的查询指定某个cube回答，请参考 Wiki 文档：[Specify cube for your query](https://cwiki.apache.org/confluence/display/KYLIN/Specify+cube+for+your+query)
 
 #### Request Sample
 
