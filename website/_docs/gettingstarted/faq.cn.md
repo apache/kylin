@@ -61,8 +61,7 @@ Kylin 支持超高基维度，但是在 Cube 设计中额外注意超高基维�
 
 ### 如何指定用于回答查询的 Cube
 
-用户无法指定用于回答查询的 Cube。Cube 对于终端用户来说是透明的，如果您对同一个数据模型有多个不同的 Cube，建议把不同的 Cube 放在不同的项目中。
-
+请参考 Wiki 文档：[Specify cube for your query](https://cwiki.apache.org/confluence/display/KYLIN/Specify+cube+for+your+query)
 
 ### 存在用于创建项目、模型和 Cube 的 REST API 吗？
 
