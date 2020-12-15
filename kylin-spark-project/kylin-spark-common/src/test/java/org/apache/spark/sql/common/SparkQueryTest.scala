@@ -116,9 +116,9 @@ object SparkQueryTest {
                    |== Results ==
                    |${
                     sideBySide(
-                        s"== Kylin Answer - ${kylinAnswer.size} ==" +:
+                        s"== Expected Answer - ${kylinAnswer.size} ==" +:
                           kylinResults.map(_.toString()),
-                        s"== Spark Answer - ${sparkAnswer.size} ==" +:
+                        s"== Kylin Answer - ${sparkAnswer.size} ==" +:
                           sparkResults.map(_.toString())
                     ).mkString("\n")
                     }

@@ -18,8 +18,7 @@
 package org.apache.kylin.query.runtime.plans
 
 import org.apache.kylin.query.relnode.OLAPValuesRel
-import org.apache.kylin.query.runtime.SparkOperation
-import org.apache.spark.sql.{DataFrame, Row}
+import org.apache.spark.sql.{DataFrame, Row, SparkOperation}
 import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.sql.utils.SparkTypeUtil
 

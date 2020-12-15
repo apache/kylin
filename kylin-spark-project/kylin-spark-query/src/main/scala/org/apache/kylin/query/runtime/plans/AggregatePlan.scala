@@ -18,11 +18,12 @@
 package org.apache.kylin.query.runtime.plans
 
 import org.apache.calcite.DataContext
+import org.apache.calcite.rel.core.Aggregate
 import org.apache.calcite.rel.core.AggregateCall
 import org.apache.calcite.sql.SqlKind
 import org.apache.kylin.metadata.model.FunctionDesc
 import org.apache.kylin.query.relnode.{KylinAggregateCall, OLAPAggregateRel}
-import org.apache.kylin.query.runtime.{AggArgc, RuntimeHelper, SparkOperation}
+import org.apache.kylin.query.runtime.RuntimeHelper
 import org.apache.kylin.query.SchemaProcessor
 import org.apache.spark.sql.KylinFunctions._
 import org.apache.spark.sql._
@@ -61,7 +62,11 @@ object AggregatePlan extends LogEx {
     } else {
       dataFrame = genFiltersWhenIntersectCount(rel, dataFrame)
       val aggList = buildAgg(dataFrame.schema, rel)
-      SparkOperation.agg(AggArgc(dataFrame, groupList, aggList))
+      val groupSets = rel.getGroupSets.asScala
+        .map(groupSet => groupSet.asScala.map(groupId => col(schemaNames.apply(groupId))).toList)
+        .toList
+      SparkOperation.agg(AggArgc(dataFrame, groupList, aggList, groupSets,
+        rel.getGroupType() == Aggregate.Group.SIMPLE))
     }
   }
 
@@ -167,11 +172,7 @@ object AggregatePlan extends LogEx {
           case SqlKind.SINGLE_VALUE.sql =>
             first(argNames.head).alias(aggName)
           case FunctionDesc.FUNC_GROUPING =>
-            if (rel.getGroupSet.get(call.getArgList.get(0))) {
-              lit(0).alias(aggName)
-            } else {
-              lit(1).alias(aggName)
-            }
+            grouping(argNames.head).alias(aggName)
           case _ =>
             throw new IllegalArgumentException(
               s"""Unsupported function name $funcName""")
