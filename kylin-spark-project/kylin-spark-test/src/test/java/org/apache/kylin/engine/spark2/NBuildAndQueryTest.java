@@ -172,10 +172,7 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
             //tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_extended_column"));
 
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_function"));
-
-            // Not support yet
-            //tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_grouping"));
-
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_grouping"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_h2"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_hive"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_intersect_count"));
