@@ -526,6 +526,11 @@ public class CubeMigrationCLI extends AbstractApplication {
                             }
                         }
                     }
+                    for (Map.Entry<String, String> entry : cube.getSnapshots().entrySet()) {
+                        if (entry.getValue().equalsIgnoreCase(item)) {
+                            entry.setValue(snapSaved.getResourcePath());
+                        }
+                    }
                     dstStore.checkAndPutResource(cubeResPath, cube, cubeSerializer);
                     logger.info("Item " + item + " is dup, instead " + snapSaved.getResourcePath() + " is reused");
 
