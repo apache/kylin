@@ -2874,6 +2874,13 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     /**
+     * the maximum number of returned values for intersect_value function
+     */
+    public int getBitmapValuesUpperBound() {
+        return Integer.parseInt(getOptional("kylin.query.bitmap-upper-bound", "10000000"));
+    }
+
+    /**
      * Used to upload user-defined log4j configuration
      */
     public String sparkUploadFiles() {

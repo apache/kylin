@@ -21,7 +21,6 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.plans.logical.GroupingSets
 import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.{Column, DataFrame, Row, SparderContext}
 
 object SparkOperation {
 

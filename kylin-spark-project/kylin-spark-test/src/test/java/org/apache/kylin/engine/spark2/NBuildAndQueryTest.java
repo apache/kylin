@@ -169,13 +169,13 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
 
             // Not support yet
             //tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_expression"));
-            //tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_extended_column"));
 
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_function"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_grouping"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_h2"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_hive"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_intersect_count"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_intersect_value"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_join"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_like"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_lookup"));
@@ -338,7 +338,8 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
                 } else {
                     List<Quadruple<String, String, NExecAndComp.ITQueryMetrics, List<String>>> queries =
                             NExecAndComp.fetchQueries2(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);
-                    NExecAndComp.execAndCompareNew2(queries, getProject(), compareLevel, joinType, null);
+                    NExecAndComp.execAndCompareNew2(queries, getProject(), compareLevel, joinType,
+                            null);
                 }
             } catch (Throwable th) {
                 logger.error("Query fail on: {}", identity);

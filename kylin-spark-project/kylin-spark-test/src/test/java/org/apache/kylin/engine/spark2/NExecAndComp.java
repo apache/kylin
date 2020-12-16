@@ -228,8 +228,10 @@ public class NExecAndComp {
                 }
                 // generate results and save them into csv file
                 try {
-                    queryResult.getFirst().repartition(1)
-                            .write().option("header", false).csv(genResultsCSVFile(query.getFirst()));
+                    queryResult.getFirst().repartition(1).write()
+                            .option("header", false)
+                            .option("nullValue", "\"-\"")
+                            .csv(genResultsFiles(query.getFirst()));
                 } catch (JsonProcessingException e) {
                     logger.error("Write results as csv file error: ", e);
                 }
@@ -249,7 +251,8 @@ public class NExecAndComp {
                 String csvDataPathStr = query.getFirst() + ".expected";
                 if(new File(csvDataPathStr).exists()) {
                     logger.debug("Use expected dataset for {}", sql);
-                    sparkResult = KylinSparkEnv.getSparkSession().read().csv(csvDataPathStr);
+                    sparkResult = KylinSparkEnv.getSparkSession().read()
+                            .option("nullValue", "\"-\"").csv(csvDataPathStr);
                 } else {
                     sparkResult = queryWithSpark(prj, sql, query.getFirst(), query.getFourth());
                 }
@@ -512,7 +515,7 @@ public class NExecAndComp {
         return parameters;
     }
 
-    public static String genResultsCSVFile(String sqlFileName) throws IOException {
+    public static String genResultsFiles(String sqlFileName) throws IOException {
         String resultsFielName = sqlFileName + ".expected";
         File resultsFile = new File(resultsFielName);
         if (resultsFile.exists()) {

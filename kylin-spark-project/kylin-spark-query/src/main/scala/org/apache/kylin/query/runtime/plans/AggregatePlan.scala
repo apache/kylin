@@ -21,6 +21,7 @@ import org.apache.calcite.DataContext
 import org.apache.calcite.rel.core.Aggregate
 import org.apache.calcite.rel.core.AggregateCall
 import org.apache.calcite.sql.SqlKind
+import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.metadata.model.FunctionDesc
 import org.apache.kylin.query.relnode.{KylinAggregateCall, OLAPAggregateRel}
 import org.apache.kylin.query.runtime.RuntimeHelper
@@ -112,21 +113,34 @@ object AggregatePlan extends LogEx {
         val columnName = argNames.map(col)
         val registeredFuncName = RuntimeHelper.registerSingleByColName(funcName, dataType)
         val aggName = SchemaProcessor.replaceToAggravateSchemaName(index, funcName, hash, argNames: _*)
-        if (funcName == "COUNT_DISTINCT") {
+        if (funcName == FunctionDesc.FUNC_COUNT_DISTINCT) {
           if (dataType.getName == "hllc") {
             org.apache.spark.sql.KylinFunctions
               .approx_count_distinct(columnName.head, dataType.getPrecision)
               .alias(aggName)
-          } else {
+          } else if (call.getAggregation().getName.equalsIgnoreCase(FunctionDesc.FUNC_COUNT_DISTINCT)) {
+            // execute count distinct precisely
             KylinFunctions.precise_count_distinct(columnName.head).alias(aggName)
+          } else {
+            // for intersect_count and intersect_value function
+            require(columnName.size == 3, s"Input columns size ${columnName.size} don't equal to 3.")
+            val columns = columnName.zipWithIndex.map {
+              case (column: Column, 2) => column.cast(ArrayType.apply(schema.fields.apply(call.getArgList.get(1)).dataType))
+              case (column: Column, _) => column
+            }
+            val upperBound = KylinConfig.getInstanceFromEnv.getBitmapValuesUpperBound
+            if (call.getAggregation().getName.equalsIgnoreCase(FunctionDesc.FUNC_INTERSECT_COUNT)) {
+              KylinFunctions.intersect_count(upperBound, columns.toList: _*)
+                .alias(SchemaProcessor
+                  .replaceToAggravateSchemaName(index, FunctionDesc.FUNC_INTERSECT_COUNT, hash,
+                    argNames: _*))
+            } else {
+              KylinFunctions.intersect_value(upperBound, columns.toList: _*)
+                .alias(SchemaProcessor
+                  .replaceToAggravateSchemaName(index, FunctionDesc.FUNC_INTERSECT_VALUE, hash,
+                    argNames: _*))
+            }
           }
-        } else if (funcName.equalsIgnoreCase(FunctionDesc.FUNC_INTERSECT_COUNT)) {
-          require(columnName.size == 3, s"Input columns size ${columnName.size} don't equal to 3.")
-          val columns = columnName.zipWithIndex.map {
-            case (column: Column, 2) => column.cast(ArrayType.apply(schema.fields.apply(call.getArgList.get(1)).dataType))
-            case (column: Column, _) => column
-          }
-          KylinFunctions.intersect_count(columns.toList: _*).alias(aggName)
         } else {
           callUDF(registeredFuncName, columnName.toList: _*).alias(aggName)
         }
