@@ -20,18 +20,22 @@ package org.apache.spark.sql.udaf
 
 import com.esotericsoftware.kryo.KryoException
 import com.esotericsoftware.kryo.io.{Input, KryoDataInput, KryoDataOutput, Output}
+import org.apache.commons.lang3.StringUtils
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.catalyst.util.GenericArrayData
-import org.apache.spark.sql.types.{DataType, LongType}
+import org.apache.spark.sql.types.{ArrayType, DataType, LongType, StringType}
+import org.apache.spark.unsafe.types.UTF8String
 import org.roaringbitmap.longlong.Roaring64NavigableMap
 
 import scala.collection.JavaConverters._
 
 @SerialVersionUID(1)
-case class IntersectCount(child1: Expression, child2: Expression, child3: Expression, mutableAggBufferOffset: Int = 0,
+case class IntersectCount(child1: Expression, child2: Expression, child3: Expression,
+                          returnDataType: DataType, upperBound: Int = 10000000,
+                          mutableAggBufferOffset: Int = 0,
                           inputAggBufferOffset: Int = 0)
   extends TypedImperativeAggregate[IntersectBitmapCounter] with Serializable with Logging {
 
@@ -41,7 +45,8 @@ case class IntersectCount(child1: Expression, child2: Expression, child3: Expres
 
   override def update(counter: IntersectBitmapCounter, input: InternalRow): IntersectBitmapCounter = {
     if (filters == null) {
-      filters = child3.eval(input).asInstanceOf[GenericArrayData].array.map(filter => filter -> filter.toString).toMap
+      filters = child3.eval(input).asInstanceOf[GenericArrayData]
+        .array.map(filter => filter -> filter.toString).toMap
     }
     val bitmap = child1.eval(input).asInstanceOf[Array[Byte]]
     val key = child2.eval(input)
@@ -59,7 +64,38 @@ case class IntersectCount(child1: Expression, child2: Expression, child3: Expres
   }
 
   override def eval(counter: IntersectBitmapCounter): Any = {
-    counter.result(child3.asInstanceOf[Literal].value.asInstanceOf[GenericArrayData].array.distinct.length)
+    val map = counter.result(
+      child3.asInstanceOf[Literal].value.asInstanceOf[GenericArrayData].array.distinct.length)
+    dataType match {
+      // for intersect_count
+      case LongType => map.getLongCardinality
+      // for intersect_value
+      case StringType =>
+        val intCardinality = map.getIntCardinality
+        if (intCardinality > upperBound) {
+          throw new UnsupportedOperationException(s"Cardinality of the bitmap is greater than " +
+            s"configured upper bound(${upperBound})")
+        }
+        val result = new StringBuffer("")
+        if (intCardinality > 0) {
+          result.append("[").append(StringUtils.join(map.iterator(), ",")).append("]");
+        }
+        UTF8String.fromString(result.toString)
+      case ArrayType(LongType, false) =>
+        val cardinality = map.getIntCardinality
+        if (cardinality > upperBound) {
+          throw new UnsupportedOperationException(s"Cardinality of the bitmap is greater than " +
+            s"configured upper bound(${upperBound})")
+        }
+        val longs = new Array[Long](cardinality)
+        var id = 0
+        val iterator = map.iterator()
+        while (iterator.hasNext) {
+          longs(id) = iterator.next()
+          id += 1
+        }
+        new GenericArrayData(longs)
+    }
   }
 
   var array: Array[Byte] = _
@@ -126,7 +162,7 @@ case class IntersectCount(child1: Expression, child2: Expression, child3: Expres
 
   override def nullable: Boolean = false
 
-  override def dataType: DataType = LongType
+  override def dataType: DataType = returnDataType
 
   override def children: Seq[Expression] = child1 :: child2 :: child3 :: Nil
 }

@@ -21,7 +21,7 @@ import org.apache.kylin.engine.spark.common.util.KylinDateTimeUtils
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
-import org.apache.spark.sql.types.{AbstractDataType, DataType, DateType, IntegerType}
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, DictEncode, Expression, ExpressionInfo, ExpressionUtils, ImplicitCastInputTypes, In, KylinAddMonths, Like, Literal, RoundBase, SplitPart, Sum0, TimestampAdd, TimestampDiff, Truncate, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.aggregate.AggregateFunction
 import org.apache.spark.sql.udaf.{ApproxCountDistinct, IntersectCount, PreciseCountDistinct}
@@ -68,11 +68,18 @@ object KylinFunctions {
   def approx_count_distinct(column: Column, precision: Int): Column =
     Column(ApproxCountDistinct(column.expr, precision).toAggregateExpression())
 
-  def intersect_count(columns: Column*): Column = {
+  def intersect_count(upperBound: Int, columns: Column*): Column = {
     require(columns.size == 3, s"Input columns size ${columns.size} don't equal to 3.")
     val expressions = columns.map(_.expr)
-    Column(IntersectCount(expressions.apply(0), expressions.apply(1), expressions.apply(2))
-      .toAggregateExpression())
+    Column(IntersectCount(expressions.apply(0), expressions.apply(1), expressions.apply(2),
+      LongType, upperBound).toAggregateExpression())
+  }
+
+  def intersect_value(upperBound: Int, columns: Column*): Column = {
+    require(columns.size == 3, s"Input columns size ${columns.size} don't equal to 3.")
+    val expressions = columns.map(_.expr)
+    Column(IntersectCount(expressions.apply(0), expressions.apply(1), expressions.apply(2),
+      StringType, upperBound).toAggregateExpression())
   }
 
   def sum0(e: Column): Column = withAggregateFunction {

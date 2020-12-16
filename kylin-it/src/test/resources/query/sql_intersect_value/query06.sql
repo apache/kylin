@@ -16,4 +16,14 @@
 -- limitations under the License.
 --
 
-select distinct leaf_categ_id, lstg_site_id from test_kylin_fact 
+select
+week_beg_dt as week,
+intersect_count(TEST_COUNT_DISTINCT_BITMAP, lstg_format_name, array['FP-GTC']) as a_cnt,
+intersect_value(TEST_COUNT_DISTINCT_BITMAP, lstg_format_name, array['FP-GTC']) as a_value,
+intersect_value(TEST_COUNT_DISTINCT_BITMAP, lstg_format_name, array['FP-GTC', 'Auction']) as ab,
+intersect_value(TEST_COUNT_DISTINCT_BITMAP, lstg_format_name, array['FP-GTC|Auction', 'Others']) as a_or_b_and_c,
+count(distinct TEST_COUNT_DISTINCT_BITMAP) as sellers
+from test_kylin_fact left join edw.test_cal_dt on test_kylin_fact.cal_dt = edw.test_cal_dt.CAL_DT
+where week_beg_dt in (DATE '2013-12-22', DATE '2012-06-23')
+group by week_beg_dt
+;{"scanRowCount":10018,"scanBytes":0,"scanFiles":2,"cuboidId":[276480]}

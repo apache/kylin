@@ -59,15 +59,15 @@ class IntersectBitmapCounter() {
     }
   }
 
-  def result(filterSize: Int): Long = {
+  def result(filterSize: Int): Roaring64NavigableMap = {
     if (_map.size() != filterSize || _map.size() == 0) {
-      0
+      new Roaring64NavigableMap()
     } else {
       val bitmap = _map.asScala.values.reduce { (a, b) =>
         a.and(b)
         a
       }
-      bitmap.getLongCardinality
+      bitmap
     }
   }
 }
