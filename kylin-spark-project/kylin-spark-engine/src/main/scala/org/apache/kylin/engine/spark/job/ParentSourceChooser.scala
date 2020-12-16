@@ -69,6 +69,7 @@ class ParentSourceChooser(
         // eg: resource detect
         // Move this to a more suitable place
         val builder = new CubeSnapshotBuilder(seg, ss)
+        builder.checkDupKey()
         seg = builder.buildSnapshot
       }
       flatTableSource = getFlatTable()

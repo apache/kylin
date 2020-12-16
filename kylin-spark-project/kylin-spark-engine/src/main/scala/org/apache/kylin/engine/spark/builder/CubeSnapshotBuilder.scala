@@ -31,10 +31,11 @@ import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.engine.spark.metadata.{SegmentInfo, TableDesc}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils
-import org.apache.spark.sql.{SparkSession}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.utils.ProxyThreadUtils
 import org.apache.kylin.engine.spark.utils.SparkDataSource._
 import org.apache.kylin.engine.spark.utils.FileNames
+import org.apache.spark.sql.functions.{count, countDistinct}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -182,6 +183,22 @@ class CubeSnapshotBuilder extends Logging {
     (tableInfo.identity, snapshotTablePath)
   }
   import org.apache.kylin.engine.spark.utils.SparkDataSource._
+
+  def checkDupKey() = {
+    val joinDescs = seg.joindescs
+    joinDescs.foreach {
+      joinDesc =>
+        val tableInfo = joinDesc.lookupTable
+        val lookupTableName = tableInfo.tableName
+        val df = ss.table(tableInfo)
+        val countColumn = df.count()
+        val lookupTablePKS = joinDesc.PKS.map(lookupTablePK => lookupTablePK.columnName)
+        val countDistinctColumn = df.agg(countDistinct(lookupTablePKS.head, lookupTablePKS.tail: _*)).collect().map(_.getLong(0)).head
+        if (countColumn != countDistinctColumn) {
+          throw new IllegalStateException(s"Failed to build lookup table ${lookupTableName} snapshot for Dup key found, key= ${lookupTablePKS}")
+        }
+    }
+  }
 
   def buildSnapshotWithoutMd5(tableInfo: TableDesc, baseDir: String): (String, String) = {
     val sourceData = ss.table(tableInfo)
