@@ -1,6 +1,6 @@
 {
   "uuid" : "330b1839-1baf-5e4f-7f4c-ad173a5217c8",
-  "last_modified" : 1589194835241,
+  "last_modified" : 1589268257682,
   "version" : "3.9.9.1",
   "name" : "file_pruning_cube",
   "is_draft" : false,
@@ -9,29 +9,14 @@
   "null_string" : null,
   "dimensions" : [ {
     "name" : "ORDER_ID",
-    "table" : "TEST_ORDER",
+    "table" : "TEST_KYLIN_FACT",
     "column" : "ORDER_ID",
     "derived" : null
   }, {
-    "name" : "BUYER_ID",
-    "table" : "TEST_ORDER",
-    "column" : "BUYER_ID",
-    "derived" : null
-  }, {
-    "name" : "TEST_DATE_ENC",
-    "table" : "TEST_ORDER",
-    "column" : "TEST_DATE_ENC",
-    "derived" : null
-  }, {
-    "name" : "TEST_TIME_ENC",
-    "table" : "TEST_ORDER",
-    "column" : "TEST_TIME_ENC",
-    "derived" : null
-  }, {
-    "name" : "ORDER_ID",
+    "name" : "CAL_DT",
     "table" : "TEST_KYLIN_FACT",
-    "column" : null,
-    "derived" : [ "ORDER_ID" ]
+    "column" : "CAL_DT",
+    "derived" : null
   }, {
     "name" : "LSTG_FORMAT_NAME",
     "table" : "TEST_KYLIN_FACT",
@@ -52,6 +37,16 @@
     "table" : "TEST_KYLIN_FACT",
     "column" : "PRICE",
     "derived" : null
+  }, {
+    "name" : "ORDER_ID",
+    "table" : "TEST_ORDER",
+    "column" : null,
+    "derived" : [ "ORDER_ID" ]
+  }, {
+    "name" : "TEST_DATE_ENC",
+    "table" : "TEST_ORDER",
+    "column" : null,
+    "derived" : [ "TEST_DATE_ENC" ]
   } ],
   "measures" : [ {
     "name" : "_COUNT_",
@@ -67,20 +62,20 @@
   "dictionaries" : [ ],
   "rowkey" : {
     "rowkey_columns" : [ {
-      "column" : "TEST_ORDER.ORDER_ID",
+      "column" : "TEST_KYLIN_FACT.ORDER_ID",
       "encoding" : "dict",
       "isShardBy" : false
     }, {
-      "column" : "TEST_ORDER.BUYER_ID",
-      "encoding" : "dict",
-      "isShardBy" : false
-    }, {
-      "column" : "TEST_ORDER.TEST_DATE_ENC",
+      "column" : "TEST_KYLIN_FACT.CAL_DT",
       "encoding" : "date",
       "isShardBy" : false
     }, {
-      "column" : "TEST_ORDER.TEST_TIME_ENC",
-      "encoding" : "time",
+      "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
+      "encoding" : "dict",
+      "isShardBy" : false
+    }, {
+      "column" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD",
+      "encoding" : "dict",
       "isShardBy" : false
     }, {
       "column" : "TEST_KYLIN_FACT.SELLER_ID",
@@ -88,14 +83,6 @@
       "isShardBy" : true
     }, {
       "column" : "TEST_KYLIN_FACT.PRICE",
-      "encoding" : "dict",
-      "isShardBy" : false
-    }, {
-      "column" : "TEST_KYLIN_FACT.SLR_SEGMENT_CD",
-      "encoding" : "dict",
-      "isShardBy" : false
-    } , {
-      "column" : "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
       "encoding" : "dict",
       "isShardBy" : false
     } ]
@@ -110,14 +97,14 @@
     } ]
   },
   "aggregation_groups" : [ {
-    "includes" : [ "TEST_ORDER.ORDER_ID", "TEST_ORDER.BUYER_ID", "TEST_ORDER.TEST_DATE_ENC", "TEST_ORDER.TEST_TIME_ENC" ],
+    "includes" : [ "TEST_KYLIN_FACT.ORDER_ID", "TEST_KYLIN_FACT.CAL_DT", "TEST_KYLIN_FACT.LSTG_FORMAT_NAME", "TEST_KYLIN_FACT.SLR_SEGMENT_CD", "TEST_KYLIN_FACT.SELLER_ID", "TEST_KYLIN_FACT.PRICE" ],
     "select_rule" : {
       "hierarchy_dims" : [ ],
       "mandatory_dims" : [ ],
       "joint_dims" : [ ]
     }
   } ],
-  "signature" : "2BsFyXxmB2F+FNlH4RxDwQ==",
+  "signature" : "ioyeFiil5XMOa8G02uVhgQ==",
   "notify_list" : [ ],
   "status_need_notify" : [ "ERROR", "DISCARDED", "SUCCEED" ],
   "partition_date_start" : 0,

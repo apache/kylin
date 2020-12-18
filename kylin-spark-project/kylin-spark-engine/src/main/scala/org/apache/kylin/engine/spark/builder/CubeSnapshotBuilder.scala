@@ -195,7 +195,7 @@ class CubeSnapshotBuilder extends Logging {
         val lookupTablePKS = joinDesc.PKS.map(lookupTablePK => lookupTablePK.columnName)
         val countDistinctColumn = df.agg(countDistinct(lookupTablePKS.head, lookupTablePKS.tail: _*)).collect().map(_.getLong(0)).head
         if (countColumn != countDistinctColumn) {
-          throw new IllegalStateException(s"Failed to build lookup table ${lookupTableName} snapshot for Dup key found, key= ${lookupTablePKS}")
+          throw new IllegalStateException(s"Failed to build lookup table ${lookupTableName} snapshot for Dup key found, key= ${lookupTablePKS.mkString(",")}")
         }
     }
   }

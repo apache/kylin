@@ -63,10 +63,9 @@ import java.util.UUID;
 
 public class NFilePruningTest extends LocalWithSparkSessionTest {
 
-    private String SQL_BASE2 = "SELECT COUNT(*)  FROM TEST_KYLIN_FACT LEFT JOIN TEST_ORDER ON TEST_KYLIN_FACT.ORDER_ID = TEST_ORDER.ORDER_ID ";
-    private final static String CUBE_NAME = "file_pruning_cube2";
-    private String SQL_BASE = "SELECT COUNT(*)  FROM TEST_ORDER LEFT JOIN TEST_KYLIN_FACT ON TEST_KYLIN_FACT.ORDER_ID = TEST_ORDER.ORDER_ID ";
-    private final static String CUBE_NAME2 = "file_pruning_cube";
+    private String SQL_BASE = "SELECT COUNT(*)  FROM TEST_KYLIN_FACT LEFT JOIN TEST_ORDER ON TEST_KYLIN_FACT.ORDER_ID = TEST_ORDER.ORDER_ID ";
+    private final static String CUBE_SHARD_BY_SELLER_ID = "file_pruning_cube";
+    private final static String CUBE_PRUNER_BY_PARTITION = "file_pruning_cube2";
     protected KylinConfig config;
     protected CubeManager cubeMgr;
     protected ExecutableManager execMgr;
@@ -128,11 +127,11 @@ public class NFilePruningTest extends LocalWithSparkSessionTest {
     public void testNonExistTimeRange() throws Exception {
         Long start = DateFormat.stringToMillis("2023-01-01 00:00:00");
         Long end = DateFormat.stringToMillis("2025-01-01 00:00:00");
-        cleanupSegments(CUBE_NAME);
-        buildCuboid(CUBE_NAME, new SegmentRange.TSRange(start, end));
+        cleanupSegments(CUBE_PRUNER_BY_PARTITION);
+        buildCuboid(CUBE_PRUNER_BY_PARTITION, new SegmentRange.TSRange(start, end));
 
         populateSSWithCSVData(config, getProject(), KylinSparkEnv.getSparkSession());
-        assertResultsAndScanFiles(SQL_BASE2, 1);
+        assertResultsAndScanFiles(SQL_BASE, 1);
     }
 
     @Test
@@ -141,7 +140,7 @@ public class NFilePruningTest extends LocalWithSparkSessionTest {
         // [2009-01-01 00:00:00, 2011-01-01 00:00:00)
         // [2011-01-01 00:00:00, 2013-01-01 00:00:00)
         // [2013-01-01 00:00:00, 2015-01-01 00:00:00)
-        buildMultiSegs(CUBE_NAME);
+        buildMultiSegs(CUBE_PRUNER_BY_PARTITION);
         populateSSWithCSVData(getTestConfig(), getProject(), SparderContext.getSparkSession());
         testSegPruningWithStringDate();
         testSegPruningWithStringTimeStamp();
@@ -161,28 +160,28 @@ public class NFilePruningTest extends LocalWithSparkSessionTest {
     }
 
     public void testSegPruningWithStringTimeStamp() throws Exception {
-        String and_pruning0 = SQL_BASE2
+        String and_pruning0 = SQL_BASE
                 + "where CAL_DT > '2011-01-01 00:00:00' and CAL_DT < '2013-01-01 00:00:00'";
-        String and_pruning1 = SQL_BASE2
+        String and_pruning1 = SQL_BASE
                 + "where CAL_DT > '2011-01-01 00:00:00' and CAL_DT = '2016-01-01 00:00:00'";
 
-        String or_pruning0 = SQL_BASE2
+        String or_pruning0 = SQL_BASE
                 + "where CAL_DT > '2011-01-01 00:00:00' or CAL_DT = '2016-01-01 00:00:00'";
-        String or_pruning1 = SQL_BASE2
+        String or_pruning1 = SQL_BASE
                 + "where CAL_DT < '2009-01-01 00:00:00' or CAL_DT > '2015-01-01 00:00:00'";
 
-        String pruning0 = SQL_BASE2 + "where CAL_DT < '2009-01-01 00:00:00'";
-        String pruning1 = SQL_BASE2 + "where CAL_DT <= '2009-01-01 00:00:00'";
-        String pruning2 = SQL_BASE2 + "where CAL_DT >= '2015-01-01 00:00:00'";
+        String pruning0 = SQL_BASE + "where CAL_DT < '2009-01-01 00:00:00'";
+        String pruning1 = SQL_BASE + "where CAL_DT <= '2009-01-01 00:00:00'";
+        String pruning2 = SQL_BASE + "where CAL_DT >= '2015-01-01 00:00:00'";
 
-        String not0 = SQL_BASE2 + "where CAL_DT <> '2012-01-01 00:00:00'";
+        String not0 = SQL_BASE + "where CAL_DT <> '2012-01-01 00:00:00'";
 
-        String in_pruning0 = SQL_BASE2
+        String in_pruning0 = SQL_BASE
                 + "where CAL_DT in ('2009-01-01 00:00:00', '2008-01-01 00:00:00', '2016-01-01 00:00:00')";
-        String in_pruning1 = SQL_BASE2
+        String in_pruning1 = SQL_BASE
                 + "where CAL_DT in ('2008-01-01 00:00:00', '2016-01-01 00:00:00')";
 
-        assertResultsAndScanFiles(SQL_BASE2, 3);
+        assertResultsAndScanFiles(SQL_BASE, 3);
 
         assertResultsAndScanFiles(and_pruning0, 1);
         assertResultsAndScanFiles(and_pruning1, 0);
@@ -254,7 +253,7 @@ public class NFilePruningTest extends LocalWithSparkSessionTest {
     public void testSegShardPruning() throws Exception {
         System.setProperty("kylin.storage.columnar.shard-rowcount", "100");
         try {
-            buildMultiSegs(CUBE_NAME2);
+            buildMultiSegs(CUBE_SHARD_BY_SELLER_ID);
 
             populateSSWithCSVData(getTestConfig(), getProject(), KylinSparkEnv.getSparkSession());
 
@@ -362,17 +361,17 @@ public class NFilePruningTest extends LocalWithSparkSessionTest {
         String in = SQL_BASE + "where SELLER_ID in (10000233,10000234,10000235)";
         String isNull = SQL_BASE + "where SELLER_ID is NULL";
         String and = SQL_BASE + "where SELLER_ID in (10000233,10000234,10000235) and SELLER_ID = 10000233 ";
-        String or = SQL_BASE + "where SELLER_ID = 10000233 or SELLER_ID = 1 ";
+        String or = SQL_BASE + "where SELLER_ID = 10000233 or SELLER_ID = 2 ";
         String notSupported0 = SQL_BASE + "where SELLER_ID <> 10000233";
         String notSupported1 = SQL_BASE + "where SELLER_ID > 10000233";
 
         assertResultsAndScanFiles(equality, 3);
-        assertResultsAndScanFiles(in, 9);
+        assertResultsAndScanFiles(in, 7);
         assertResultsAndScanFiles(isNull, 3);
         assertResultsAndScanFiles(and, 3);
-        assertResultsAndScanFiles(or, 5); //5
-        assertResultsAndScanFiles(notSupported0, 57); //36
-        assertResultsAndScanFiles(notSupported1, 57);  //36
+        assertResultsAndScanFiles(or, 5);
+        assertResultsAndScanFiles(notSupported0, 13);
+        assertResultsAndScanFiles(notSupported1, 13);
 
         List<Pair<String, String>> query = new ArrayList<>();
         query.add(Pair.newPair("", equality));
