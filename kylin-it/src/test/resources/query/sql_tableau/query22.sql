@@ -15,13 +15,14 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-SELECT "TEST_KYLIN_FACT"."CAL_DT", SUM("TEST_KYLIN_FACT"."PRICE") AS "sum_PRICE_ok" FROM "TEST_KYLIN_FACT" "TEST_KYLIN_FACT"
-   RIGHT JOIN (
-             SELECT COUNT(1) AS "XTableau_join_flag",     SUM("TEST_KYLIN_FACT"."PRICE") AS "X__alias__A",     "TEST_KYLIN_FACT"."CAL_DT"  AS "none_CAL_DT_ok"   FROM "TEST_KYLIN_FACT" "TEST_KYLIN_FACT"
-             GROUP BY 3   ORDER BY 2 DESC   LIMIT 7  )
-    "t0" ON
-    CASE WHEN 1 = 1
-    THEN  ("TEST_KYLIN_FACT"."CAL_DT" = "t0"."none_CAL_DT_ok")
-    ELSE "TEST_KYLIN_FACT"."CAL_DT" = "t0"."none_CAL_DT_ok"
-    END
-    GROUP BY 1 ;
+select fact.cal_dt, sum(fact.price) from test_kylin_fact fact
+left join "EDW"."TEST_CAL_DT" cal
+	on fact.cal_dt=cal.cal_dt
+inner join
+(
+	select test_kylin_fact.cal_dt, count(1) from test_kylin_fact left join "EDW"."TEST_CAL_DT"
+	on test_kylin_fact.cal_dt="EDW"."TEST_CAL_DT"."CAL_DT" group by test_kylin_fact.cal_dt order by 2 desc limit 2
+) cal_2 
+	on fact.cal_dt = cal_2.cal_dt 
+group by fact.cal_dt
+;{"scanRowCount":2924,"scanBytes":0,"scanFiles":4,"cuboidId":[262144, 262144]}

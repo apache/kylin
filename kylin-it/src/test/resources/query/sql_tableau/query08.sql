@@ -19,6 +19,7 @@
 -- LEAF_CATEG_ID is a join field on fact table, but no on cuboid. We really support this?
 
 SELECT "TEST_KYLIN_FACT"."LEAF_CATEG_ID" AS "NONE_LEAF_CATEG_ID_OK"
-FROM "olap"."TEST_KYLIN_FACT" "TEST_KYLIN_FACT"
+FROM "TEST_KYLIN_FACT" "TEST_KYLIN_FACT"
 GROUP BY "TEST_KYLIN_FACT"."LEAF_CATEG_ID"
+;{"scanRowCount":144,"scanBytes":0,"scanFiles":1,"cuboidId":[245760]}
 

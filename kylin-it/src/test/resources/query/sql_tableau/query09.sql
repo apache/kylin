@@ -16,13 +16,15 @@
 -- limitations under the License.
 --
 
-select fact.cal_dt, sum(fact.price) from test_kylin_fact fact 
-left join test_cal_dt cal 
-	on fact.cal_dt=cal.cal_dt
-inner join
-(
-	select test_kylin_fact.cal_dt, count(1) from test_kylin_fact left join test_cal_dt 
-	on test_kylin_fact.cal_dt=test_cal_dt.cal_dt group by test_kylin_fact.cal_dt order by 2 desc limit 2
-) cal_2 
-	on fact.cal_dt = cal_2.cal_dt 
-group by fact.cal_dt
+SELECT
+  "TEST_CATEGORY_GROUPINGS"."CATEG_LVL2_NAME" AS "CATEG_LVLC_NAME",
+  "TEST_CATEGORY_GROUPINGS"."CATEG_LVL3_NAME" AS "CATEG_LVLD_NAME",
+  "TEST_CATEGORY_GROUPINGS"."META_CATEG_NAME" AS "META_CATEG_NAME",
+  1 AS "Number_of_Records",
+  "TEST_CATEGORY_GROUPINGS"."UPD_DATE" AS "UPD_DATE",
+  "TEST_CATEGORY_GROUPINGS"."UPD_USER" AS "UPD_USER",
+  "TEST_CATEGORY_GROUPINGS"."USER_DEFINED_FIELD1" AS "USER_DEFINED_FIELDB",
+  "TEST_CATEGORY_GROUPINGS"."USER_DEFINED_FIELD3" AS "USER_DEFINED_FIELDD"
+FROM "TEST_CATEGORY_GROUPINGS" "TEST_CATEGORY_GROUPINGS"
+LIMIT 10000
+;{"scanRowCount":144,"scanBytes":0,"scanFiles":1,"cuboidId":[-1]}
