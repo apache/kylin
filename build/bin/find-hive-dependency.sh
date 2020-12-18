@@ -197,7 +197,7 @@ else
     fi
     hive_lib_dir="$HIVE_LIB"
 fi
-hive_lib=`find -L ${hive_lib_dir} -name '*.jar' ! -name '*druid*' ! -name '*slf4j*' ! -name '*avatica*' ! -name '*calcite*' ! -name '*jackson-datatype-joda*' ! -name '*derby*' -printf '%p:' | sed 's/:$//'`
+hive_lib=`find -L ${hive_lib_dir} -name '*.jar' ! -name '*druid*' ! -name '*slf4j*' ! -name '*avatica*' ! -name '*calcite*' ! -name '*jackson-datatype-joda*' ! -name '*derby*' | awk '{printf "%s:", $1}'  | sed 's/:$//'`
 
 validateDirectory ${hive_conf_path}
 checkFileExist hive_lib ${hive_lib}
