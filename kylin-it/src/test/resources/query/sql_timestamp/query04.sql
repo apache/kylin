@@ -16,12 +16,12 @@
 -- limitations under the License.
 --
 
--- the query is disabled because H2 has trouble dealing with negative diffs
+-- the query is disabled because H2 does not recognize QUARTER
 
 
-SELECT test_kylin_fact.cal_dt,cast(timestampdiff(YEAR,date'2018-01-01',test_kylin_fact.cal_dt) as integer) as x,sum(price) as y
- FROM TEST_KYLIN_FACT 
- 
+SELECT test_kylin_fact.cal_dt,cast(timestampdiff(QUARTER,date'2013-02-12',test_kylin_fact.cal_dt) as integer) as x,sum(price) as y
+ FROM TEST_KYLIN_FACT
+
 inner JOIN edw.test_cal_dt as test_cal_dt
  ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt
  inner JOIN test_category_groupings
@@ -29,3 +29,4 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  inner JOIN edw.test_sites as test_sites
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
  GROUP BY test_kylin_fact.cal_dt
+;{"scanRowCount":1462,"scanBytes":0,"scanFiles":2,"cuboidId":[262144]}

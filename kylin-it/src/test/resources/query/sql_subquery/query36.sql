@@ -15,16 +15,10 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-
--- the query is disabled because H2 does not recognize QUARTER
-
-SELECT test_kylin_fact.cal_dt ,sum(price) as y,cast(timestampadd(QUARTER,-5,test_kylin_fact.cal_dt) as date) as x
- FROM TEST_KYLIN_FACT 
- 
-inner JOIN edw.test_cal_dt as test_cal_dt
- ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt
- inner JOIN test_category_groupings
- ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id
- inner JOIN edw.test_sites as test_sites
- ON test_kylin_fact.lstg_site_id = test_sites.site_id
- GROUP BY test_kylin_fact.cal_dt
+SELECT CAST(SUM("COUNT") as BIGINT) as TOTAL_COUNT
+FROM (
+	SELECT LSTG_FORMAT_NAME, COUNT(*) AS "COUNT"
+	FROM TEST_KYLIN_FACT
+	GROUP BY LSTG_FORMAT_NAME
+	ORDER BY "COUNT" DESC ) t1
+;{"scanRowCount":300,"scanBytes":0,"scanFiles":1,"cuboidId":[14336]}

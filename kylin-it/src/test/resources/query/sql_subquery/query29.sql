@@ -16,16 +16,24 @@
 -- limitations under the License.
 --
 
--- the query is disabled because H2 has trouble dealing with diff years
+
+-- filter or aggregate on columns from subquery will fail!
 
 
-SELECT test_kylin_fact.cal_dt,cast(timestampdiff(YEAR,date'2000-03-01',test_kylin_fact.cal_dt) as integer) as x,sum(price) as y
- FROM TEST_KYLIN_FACT 
- 
-inner JOIN edw.test_cal_dt as test_cal_dt
- ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt
+select test_kylin_fact.lstg_format_name, xxx.cal_dt, sum(test_kylin_fact.price) as GMV
+ , count(*) as TRANS_CNT
+ from
+
+ test_kylin_fact
+
  inner JOIN test_category_groupings
  ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id
- inner JOIN edw.test_sites as test_sites
- ON test_kylin_fact.lstg_site_id = test_sites.site_id
- GROUP BY test_kylin_fact.cal_dt
+
+
+ inner JOIN (select cal_dt,week_beg_dt from edw.test_cal_dt  where week_beg_dt >= DATE '2010-02-10'  ) xxx
+ ON test_kylin_fact.cal_dt = xxx.cal_dt
+
+
+ where test_category_groupings.meta_categ_name  <> 'Baby' and xxx.week_beg_dt > date'2010-02-02'
+ group by test_kylin_fact.lstg_format_name,  xxx.cal_dt
+;{"scanRowCount":10669,"scanBytes":0,"scanFiles":2,"cuboidId":[342016]}

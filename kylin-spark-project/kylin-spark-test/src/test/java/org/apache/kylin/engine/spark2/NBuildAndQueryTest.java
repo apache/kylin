@@ -191,7 +191,7 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
             //tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_streaming_v2"));
 
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_subquery"));
-            tasks.add(new QueryCallable(CompareLevel.SAME_ROWCOUNT, joinType, "sql_tableau"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_tableau"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_timeout"));
 
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_timestamp"));

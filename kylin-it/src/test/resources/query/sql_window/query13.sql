@@ -15,12 +15,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-select * from (  select cal_dt, lstg_format_name, sum(price) as GMV,
-  100*sum(price)/first_value(sum(price)) over (partition by lstg_format_name,SLR_SEGMENT_CD order by cast(cal_dt as timestamp)) as "last_day",
-  first_value(sum(price)) over (partition by lstg_format_name order by cast(cal_dt as timestamp))
-  from test_kylin_fact as "last_year"
-  where cal_dt between '2013-01-08' and '2013-01-15' or cal_dt between '2013-01-07' and '2013-01-15' or cal_dt between '2012-01-01' and '2012-01-15'
-  group by cal_dt, lstg_format_name,SLR_SEGMENT_CD
-)t
-where cal_dt between '2013-01-06' and '2013-01-15'
-;{"scanRowCount":9287,"scanBytes":0,"scanFiles":1,"cuboidId":[276480]}
+select t.first_seller_id as first_seller_id_test, count(*) from (
+select first_value(seller_id) over (partition by buyer_id order by seller_id) as first_seller_id
+from test_kylin_fact inner join test_order on test_kylin_fact.order_id=test_order.order_id
+)
+as t group by t.first_seller_id
+;{"scanRowCount":10000,"scanBytes":0,"scanFiles":1,"cuboidId":[2097151]}

@@ -27,5 +27,5 @@ SELECT *
  group by test_kylin_fact.lstg_format_name, test_cal_dt.week_beg_dt 
  having sum(price)>500 
  ) "TableauSQL" 
- LIMIT 1
+ ORDER BY "TableauSQL".lstg_format_name, "TableauSQL".week_beg_dt LIMIT 1
 ;{"scanRowCount":10018,"scanBytes":0,"scanFiles":2,"cuboidId":[276480]}
