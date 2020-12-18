@@ -15,17 +15,12 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-
--- the query is disabled because H2 does not recognize QUARTER
-
-
-SELECT test_kylin_fact.cal_dt,cast(timestampdiff(QUARTER,date'2013-02-12',test_kylin_fact.cal_dt) as integer) as x,sum(price) as y
- FROM TEST_KYLIN_FACT 
- 
-inner JOIN edw.test_cal_dt as test_cal_dt
- ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt
- inner JOIN test_category_groupings
- ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id
- inner JOIN edw.test_sites as test_sites
- ON test_kylin_fact.lstg_site_id = test_sites.site_id
- GROUP BY test_kylin_fact.cal_dt
+select * from (  select cal_dt, lstg_format_name, sum(price) as GMV,
+  100*sum(price)/first_value(sum(price)) over (partition by lstg_format_name,SLR_SEGMENT_CD order by cast(cal_dt as timestamp)) as "last_day",
+  first_value(sum(price)) over (partition by lstg_format_name,SLR_SEGMENT_CD order by cast(cal_dt as timestamp))
+  from test_kylin_fact as "last_year"
+  where cal_dt between '2013-01-08' and '2013-01-15' or cal_dt between '2013-01-07' and '2013-01-15' or cal_dt between '2012-01-01' and '2012-01-15'
+  group by cal_dt, lstg_format_name,SLR_SEGMENT_CD
+)t
+where cal_dt between '2013-01-06' and '2013-01-15'
+;{"scanRowCount":9287,"scanBytes":0,"scanFiles":1,"cuboidId":[276480]}

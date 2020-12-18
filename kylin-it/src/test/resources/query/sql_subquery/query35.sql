@@ -15,9 +15,12 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-select t.first_seller_id as first_seller_id_test, count(*) from (
-select first_value(seller_id) over (partition by buyer_id) as first_seller_id
-from test_kylin_fact inner join test_order on test_kylin_fact.order_id=test_order.order_id
-)
-as t group by t.first_seller_id
-;{"scanRowCount":10000,"scanBytes":0,"scanFiles":1,"cuboidId":[2097151]}
+
+
+SELECT "TEST_KYLIN_FACT"."CAL_DT", SUM("TEST_KYLIN_FACT"."PRICE") AS "sum_PRICE_ok" FROM "TEST_KYLIN_FACT" "TEST_KYLIN_FACT"
+   RIGHT JOIN (
+             SELECT COUNT(1) AS "XTableau_join_flag",     SUM("TEST_KYLIN_FACT"."PRICE") AS "X__alias__A",     "TEST_KYLIN_FACT"."CAL_DT"  AS "none_CAL_DT_ok"   FROM "TEST_KYLIN_FACT" "TEST_KYLIN_FACT"
+             GROUP BY "TEST_KYLIN_FACT"."CAL_DT"   ORDER BY 2 DESC   LIMIT 7  )
+    "t0" ON "TEST_KYLIN_FACT"."CAL_DT" = "t0"."none_CAL_DT_ok"
+    GROUP BY "TEST_KYLIN_FACT"."CAL_DT"
+;{"scanRowCount":1462,"scanBytes":0,"scanFiles":2,"cuboidId":[262144,262144]}
