@@ -2360,7 +2360,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getKylinMetricsSubjectSuffix() {
-        return getOptional("kylin.metric.subject-suffix", getDeployEnv());
+        return getOptional("kylin.metrics.subject-suffix", getDeployEnv());
     }
 
     public String getKylinMetricsSubjectJob() {
