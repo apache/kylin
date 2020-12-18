@@ -19,7 +19,7 @@
     "type" : "CUBE",
     "realization" : "file_pruning_cube_measure"
   } ],
-  "models" : [ "file_pruning_model","file_pruning_model2","file_pruning_model_measure" ],
+  "models" : [ "file_pruning_model","file_pruning_model_measure" ],
   "ext_filters" : [ ],
   "override_kylin_properties" : { }
 }

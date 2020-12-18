@@ -4,7 +4,7 @@
   "version" : "3.9.9.1",
   "name" : "file_pruning_cube2",
   "is_draft" : false,
-  "model_name" : "file_pruning_model2",
+  "model_name" : "file_pruning_model",
   "description" : "",
   "null_string" : null,
   "dimensions" : [ {
