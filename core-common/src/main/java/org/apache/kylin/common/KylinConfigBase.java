@@ -1653,6 +1653,18 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.env.hadoop-conf-dir", "");
     }
 
+    /**
+     * Get the sparder app name, default value is: 'sparder_on_localhost-7070'
+     */
+    public String getSparderAppName() {
+        String customSparderAppName = getOptional("kylin.query.sparder-context.app-name", "");
+        if (StringUtils.isEmpty(customSparderAppName)) {
+            customSparderAppName =
+                    "sparder_on_" + getServerRestAddress().replaceAll(":", "-");
+        }
+        return customSparderAppName;
+    }
+
     public String getSparkAdditionalJars() {
         return getOptional("kylin.engine.spark.additional-jars", "");
     }

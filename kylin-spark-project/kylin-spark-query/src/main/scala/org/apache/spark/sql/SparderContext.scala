@@ -134,7 +134,7 @@ object SparderContext extends Logging {
                 case "true" =>
                   SparkSession.builder
                     .master("local")
-                    .appName("sparder-test-sql-context")
+                    .appName(kylinConf.getSparderAppName)
                     .withExtensions { ext =>
                       ext.injectPlannerStrategy(_ => KylinSourceStrategy)
                     }
@@ -142,7 +142,7 @@ object SparderContext extends Logging {
                     .getOrCreateKylinSession()
                 case _ =>
                   SparkSession.builder
-                    .appName("sparder-sql-context")
+                    .appName(kylinConf.getSparderAppName)
                     .master("yarn-client")
                     .withExtensions { ext =>
                       ext.injectPlannerStrategy(_ => KylinSourceStrategy)
