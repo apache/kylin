@@ -38,22 +38,18 @@ import scala.collection.JavaConverters._
 object SparkSqlClient {
 	val logger: Logger = LoggerFactory.getLogger(classOf[SparkSqlClient])
 
-	def executeSql(ss: SparkSession, sql: String, uuid: UUID): Pair[JList[JList[String]], JList[StructField]] = {
+	def executeSql(ss: SparkSession, sql: String): Pair[JList[JList[String]], JList[StructField]] = {
 		ss.sparkContext.setLocalProperty("spark.scheduler.pool", "query_pushdown")
 		HadoopUtil.setCurrentConfiguration(ss.sparkContext.hadoopConfiguration)
-		val s = "Start to run sql with SparkSQL..."
 		val queryId = QueryContextFacade.current().getQueryId
 		ss.sparkContext.setLocalProperty(QueryToExecutionIDCache.KYLIN_QUERY_ID_KEY, queryId)
-		logger.info(s)
+		logger.info("Start to run sql with SparkSQL...")
 
 		val df = ss.sql(sql)
 
 		autoSetShufflePartitions(ss, df)
 
-		val msg = "SparkSQL returned result DataFrame"
-		logger.info(msg)
-
-		DFToList(ss, sql, uuid, df)
+		DFToList(ss, sql, df)
 	}
 
 	private def autoSetShufflePartitions(ss: SparkSession, df: DataFrame) = {
@@ -74,9 +70,10 @@ object SparkSqlClient {
 		}
 	}
 
-	private def DFToList(ss: SparkSession, sql: String, uuid: UUID, df: DataFrame): Pair[JList[JList[String]], JList[StructField]] = {
+	private def DFToList(ss: SparkSession, sql: String, df: DataFrame): Pair[JList[JList[String]], JList[StructField]] = {
 		val jobGroup = Thread.currentThread.getName
-		ss.sparkContext.setJobGroup(jobGroup, s"Push down: $sql", interruptOnCancel = true)
+		ss.sparkContext.setJobGroup(jobGroup,
+			"Pushdown Query Id: " + QueryContextFacade.current().getQueryId, interruptOnCancel = true)
 		try {
 			val temporarySchema = df.schema.fields.zipWithIndex.map {
 				case (_, index) => s"temporary_$index"

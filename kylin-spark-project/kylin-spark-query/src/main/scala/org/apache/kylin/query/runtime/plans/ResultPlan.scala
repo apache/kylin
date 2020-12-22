@@ -102,8 +102,7 @@ object ResultPlan extends Logging {
     QueryContextFacade.current().setDataset(df)
 
     sparkContext.setJobGroup(jobGroup,
-      //      QueryContextFacade.current().getSql,
-      "sparder",
+      "Query Id: " + QueryContextFacade.current().getQueryId,
       interruptOnCancel = true)
     try {
       val rows = df.collect()

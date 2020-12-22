@@ -21,19 +21,17 @@ package org.apache.kylin.query.pushdown;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.spark.metadata.cube.StructField;
 import org.apache.spark.sql.SparderContext;
-import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.UUID;
 
 public class SparkSubmitter {
     public static final Logger logger = LoggerFactory.getLogger(SparkSubmitter.class);
 
     public static PushdownResponse submitPushDownTask(String sql) {
-        SparkSession ss = SparderContext.getSparkSession();
-        Pair<List<List<String>>, List<StructField>> pair = SparkSqlClient.executeSql(ss, sql, UUID.randomUUID());
+        Pair<List<List<String>>, List<StructField>> pair =
+                SparkSqlClient.executeSql(SparderContext.getSparkSession(), sql);
         SparderContext.closeThreadSparkSession();
         return new PushdownResponse(pair.getSecond(), pair.getFirst());
     }
