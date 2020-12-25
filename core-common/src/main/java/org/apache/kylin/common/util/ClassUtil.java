@@ -120,7 +120,11 @@ public class ClassUtil {
 
                 url = (URL) e.nextElement();
                 if (!"jar".equals(url.getProtocol()))
-                    break;
+                    continue;
+                if (System.getenv("KYLIN_HOME") != null && url.getPath().contains(System.getenv("KYLIN_HOME"))) {
+                    logger.debug("It's better to use the jar under the hadoop directory.");
+                    continue;
+                }
                 if (preferJarKeyWord != null && url.getPath().indexOf(preferJarKeyWord) != -1)
                     break;
                 if (preferJarKeyWord == null)
