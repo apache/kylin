@@ -105,7 +105,7 @@ public class NSparkExecutable extends AbstractExecutable {
         //context.setLogPath(getSparkDriverLogHdfsPath(context.getConfig()));
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         CubeInstance cube = cubeMgr.getCube(this.getCubeName());
-        KylinConfig config = cube.getConfig();
+        KylinConfig config = KylinConfigExt.createInstance(cube.getConfig(), cube.getDescriptor().getOverrideKylinProps());
         this.setLogPath(getSparkDriverLogHdfsPath(context.getConfig()));
         config = wrapConfig(config);
 
