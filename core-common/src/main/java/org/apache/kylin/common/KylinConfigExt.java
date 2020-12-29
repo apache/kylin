@@ -21,6 +21,7 @@ package org.apache.kylin.common;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -53,7 +54,9 @@ public class KylinConfigExt extends KylinConfig {
     private KylinConfigExt(KylinConfigExt ext, Map<String, String> overrides) {
         super(ext.base.getRawAllProperties(), true);
         this.base = ext.base;
-        this.overrides = BCC.check(overrides);
+        this.overrides = new HashMap<>();
+        this.overrides.putAll(ext.overrides);
+        this.overrides.putAll(BCC.check(overrides));
     }
 
     @Override
