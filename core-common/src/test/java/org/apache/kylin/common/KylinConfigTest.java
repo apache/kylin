@@ -18,10 +18,12 @@
 
 package org.apache.kylin.common;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
@@ -196,6 +198,24 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
       assertTrue(properties.isEmpty());
 
       KylinConfig.createInstanceFromUri("dHy3K~m");
+  }
+
+  @Test
+  public void testKylinConfigExt(){
+      KylinConfig conf = KylinConfig.getInstanceFromEnv();
+      Map<String, String> overrideConf1 = new HashMap<>();
+      overrideConf1.put("foo", "fooValue");
+      overrideConf1.put("bar", "");
+      KylinConfigExt ext1 = KylinConfigExt.createInstance(conf, overrideConf1);
+
+      Map<String, String> overrideConf2 = new HashMap<>();
+      overrideConf2.put("bar", "barValue");
+      KylinConfigExt ext2 = KylinConfigExt.createInstance(ext1, overrideConf2);
+
+      //check previous ext config's override value will not lost
+      Assert.assertEquals(ext2.getOptional("foo"), "fooValue");
+      //check previous exist config will be overwritten by by new one
+      Assert.assertEquals(ext2.getOptional("bar"), "barValue");
   }
 
 }
