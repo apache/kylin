@@ -64,13 +64,13 @@ public abstract class HBaseJobSteps extends JobBuilderSupport {
         appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
         appendExecCmdParameters(cmd, BatchConstants.ARG_PARTITION,
                 getRowkeyDistributionOutputPath(jobId) + "/part-r-00000");
+        String partitionOutputPath = null;
         if(this.seg.getConfig().isHFileDistCP()){
-            String partitionOutputPath = getRealizationRootPath(jobId) + "/rowkey_stats/part-r-00000_hfile";
-            appendExecCmdParameters(cmd, BatchConstants.ARG_PARTITION, partitionOutputPath);
+            partitionOutputPath = getRealizationRootPath(jobId) + "/rowkey_stats/part-r-00000_hfile";
         }else {
-            appendExecCmdParameters(cmd, BatchConstants.ARG_PARTITION,
-                getRowkeyDistributionOutputPath(jobId) + "/part-r-00000");
+            partitionOutputPath = getRowkeyDistributionOutputPath(jobId) + "/part-r-00000";
         }
+        appendExecCmdParameters(cmd, BatchConstants.ARG_PARTITION, partitionOutputPath);
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBOID_MODE, cuboidMode.toString());
         appendExecCmdParameters(cmd, BatchConstants.ARG_HBASE_CONF_PATH, getHBaseConfFilePath(jobId));
 
