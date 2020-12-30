@@ -34,7 +34,7 @@ public class BytesUtil {
     // for there are some extra available code, just like binary {-113, 0}, when using variable-length serialization method to compress a Long number value.
     // as for binary {-113, 0}, it should represents the 0L according to the #org.apache.kylin.common.util.BytesUtil.writeVLong algorithm. However, the 0L value
     // is just use {0} rather than {-113, 0} or {-114, 0, 0}.
-    public static final byte[] VNULL_BYTE_ARRAY = new byte[] { -113, 0 };
+    public static final byte[] VNULL_BYTE_ARRAY = new byte[]{-114, 0, 0};
 
     public static void writeByte(byte num, byte[] bytes, int offset, int size) {
         for (int i = offset + size - 1; i >= offset; i--) {
@@ -233,6 +233,9 @@ public class BytesUtil {
     }
 
     public static Long readVLongObject(ByteBuffer in) {
+        if (isNullDecimal(in)) {
+            return null;
+        }
         byte firstByte = in.get();
         int len = decodeVIntSize(firstByte);
         if (len == 1) {
@@ -245,10 +248,6 @@ public class BytesUtil {
             i = i << 8;
             i = i | (b & 0xFF);
         }
-
-        if (len == 2 && equalsNullByteArray(firstByte, b))
-            return null;
-
         return (isNegativeVInt(firstByte) ? (i ^ -1L) : i);
     }
 
@@ -522,14 +521,16 @@ public class BytesUtil {
         return b;
     }
 
-    private static boolean equalsNullByteArray(Byte... bytes) {
-        if (bytes == null || bytes.length < 2)
-            return false;
-
-        if (VNULL_BYTE_ARRAY[0] == bytes[0] && VNULL_BYTE_ARRAY[1] == bytes[1])
-            return true;
-
-        return false;
+    private static boolean isNullDecimal(ByteBuffer in) {
+        int mark = in.position();
+        boolean ifNull = true;
+        for (byte b : VNULL_BYTE_ARRAY) {
+            if (in.get() != b) {
+                ifNull = false;
+                break;
+            }
+        }
+        in.position(mark);
+        return ifNull;
     }
-
 }
