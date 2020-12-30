@@ -84,6 +84,7 @@ public abstract class KylinConfigBase implements Serializable {
     // backward compatibility check happens when properties is loaded or updated
     static BackwardCompatibilityConfig BCC = new BackwardCompatibilityConfig();
     volatile Properties properties = new Properties();
+    Map<String, Object> propertiesMap = Maps.newHashMap();
 
     // ============================================================================
     private String cachedHdfsWorkingDirectory;
@@ -206,12 +207,15 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     protected StrSubstitutor getSubstitutor() {
-        // env > properties
-        final Map<String, Object> all = Maps.newHashMap();
-        all.putAll((Map) properties);
-        all.putAll(System.getenv());
+        return new StrSubstitutor(getPropertiesMap());
+    }
 
-        return new StrSubstitutor(all);
+    protected Map<String, Object> getPropertiesMap() {
+        if (propertiesMap.isEmpty()) {
+            propertiesMap.putAll((Map) properties);
+            propertiesMap.putAll(System.getenv());
+        }
+        return propertiesMap;
     }
 
     protected Properties getRawAllProperties() {

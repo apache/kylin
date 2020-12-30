@@ -19,7 +19,6 @@
 package org.apache.kylin.common;
 
 import org.apache.commons.lang.text.StrSubstitutor;
-import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -63,7 +62,7 @@ public class KylinConfigExt extends KylinConfig {
     public String getOptional(String prop, String dft) {
         String value = overrides.get(prop);
         if (value != null)
-            return   getSubstitutor().replace(value, System.getenv());
+            return getSubstitutor().replace(value);
         else
             return super.getOptional(prop, dft);
     }
@@ -78,11 +77,8 @@ public class KylinConfigExt extends KylinConfig {
 
     @Override
     protected StrSubstitutor getSubstitutor() {
-        final Map<String, Object> all = Maps.newHashMap();
-        all.putAll((Map) properties);
-        all.putAll(System.getenv());
-        all.putAll(overrides);
-        return new StrSubstitutor(all);
+        getPropertiesMap().putAll(overrides);
+        return new StrSubstitutor(propertiesMap);
     }
 
     public Map<String, String> getExtendedOverrides() {
