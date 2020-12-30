@@ -65,8 +65,8 @@
     <kylin.version>3.0.0</kylin.version>
 
     <!-- Hadoop versions -->
-    <hadoop2.version>2.7.1</hadoop2.version>
-    <yarn.version>2.7.1</yarn.version>
+    <hadoop2.version>2.7.3</hadoop2.version>
+    <yarn.version>2.7.3</yarn.version>
 
     <!-- Hive versions -->
     <hive.version>1.2.1</hive.version>
@@ -124,7 +124,7 @@
     <mrunit.version>1.1.0</mrunit.version>
     <dbunit.version>2.5.4</dbunit.version>
     <h2.version>1.4.196</h2.version>
-    <jetty.version>9.3.22.v20171030</jetty.version>
+    <jetty.version>9.4.32.v20200930</jetty.version>
     <jamm.version>0.3.1</jamm.version>
     <mockito.version>2.7.14</mockito.version>
     <mockito-all.version>1.9.5</mockito-all.version>
@@ -1459,6 +1459,11 @@
         <artifactId>scala-maven-plugin</artifactId>
         <!-- uncomment this on release -->
         <version>3.4.1</version>
+      </plugin>
+      <plugin>
+        <groupId>org.cyclonedx</groupId>
+        <artifactId>cyclonedx-maven-plugin</artifactId>
+        <version>2.1.1</version>
       </plugin>
       <plugin>
         <groupId>org.scalastyle</groupId>
