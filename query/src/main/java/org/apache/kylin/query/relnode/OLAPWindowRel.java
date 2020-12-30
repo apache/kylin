@@ -96,18 +96,27 @@ public class OLAPWindowRel extends Window implements OLAPRel {
 
         // add window aggregate calls column
         for (Group group : groups) {
-            List<TupleExpression> sourceColOuter = Lists.newArrayList();
-            group.keys.asSet().stream().map(inputColumnRowType::getTupleExpressionByIndex).forEach(sourceColOuter::add);
-            group.orderKeys.getFieldCollations().stream().map(RelFieldCollation::getFieldIndex)
-                    .map(inputColumnRowType::getTupleExpressionByIndex).forEach(sourceColOuter::add);
-            for (AggregateCall aggrCall : group.getAggregateCalls(this)) {
-                TblColRef aggrCallCol = TblColRef.newInnerColumn(aggrCall.getName(),
-                        TblColRef.InnerDataTypeEnum.LITERAL);
-                List<TupleExpression> sourceColInner = Lists.newArrayList(sourceColOuter.iterator());
-                aggrCall.getArgList().stream().filter(i -> i < inputColumnRowType.size())
-                        .map(inputColumnRowType::getTupleExpressionByIndex).forEach(sourceColInner::add);
-                aggrCallCol.setSubTupleExps(sourceColInner);
-                columns.add(aggrCallCol);
+            if (olapChild instanceof OLAPUnionRel) {
+                for (AggregateCall aggrCall : group.getAggregateCalls(this)) {
+                    TblColRef aggrCallCol = TblColRef.newInnerColumn(aggrCall.getName(),
+                            TblColRef.InnerDataTypeEnum.LITERAL);
+                    columns.add(aggrCallCol);
+                }
+            } else {
+                List<TupleExpression> sourceColOuter = Lists.newArrayList();
+                group.keys.asSet().stream().map(inputColumnRowType::getTupleExpressionByIndex)
+                        .forEach(sourceColOuter::add);
+                group.orderKeys.getFieldCollations().stream().map(RelFieldCollation::getFieldIndex)
+                        .map(inputColumnRowType::getTupleExpressionByIndex).forEach(sourceColOuter::add);
+                for (AggregateCall aggrCall : group.getAggregateCalls(this)) {
+                    TblColRef aggrCallCol = TblColRef.newInnerColumn(aggrCall.getName(),
+                            TblColRef.InnerDataTypeEnum.LITERAL);
+                    List<TupleExpression> sourceColInner = Lists.newArrayList(sourceColOuter.iterator());
+                    aggrCall.getArgList().stream().filter(i -> i < inputColumnRowType.size())
+                            .map(inputColumnRowType::getTupleExpressionByIndex).forEach(sourceColInner::add);
+                    aggrCallCol.setSubTupleExps(sourceColInner);
+                    columns.add(aggrCallCol);
+                }
             }
         }
         return new ColumnRowType(columns);
