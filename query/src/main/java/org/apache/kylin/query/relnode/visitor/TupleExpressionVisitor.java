@@ -164,7 +164,14 @@ public class TupleExpressionVisitor extends RexVisitorImpl<TupleExpression> {
         // check it for rewrite count
         if (index < inputRowType.size()) {
             TblColRef column = inputRowType.getColumnByIndex(index);
-            TupleExpression tuple = new ColumnTupleExpression(column);
+            TupleExpression tuple;
+            if (column.getSubTupleExps() != null) {
+                DataType dataType = DataType
+                        .getType(OLAPTable.DATATYPE_MAPPING.get(inputRef.getType().getSqlTypeName()));
+                tuple = new RexCallTupleExpression(dataType, column.getSubTupleExps());
+            } else {
+                tuple = new ColumnTupleExpression(column);
+            }
             tuple.setDigest(inputRef.toString());
             return tuple;
         } else {
