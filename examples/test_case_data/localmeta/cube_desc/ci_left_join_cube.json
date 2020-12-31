@@ -363,7 +363,8 @@
     "rowkey_columns": [
       {
         "column": "TEST_KYLIN_FACT.SELLER_ID",
-        "encoding": "int:4"
+        "encoding": "int:4",
+        "isShardBy": true
       },
       {
         "column": "TEST_KYLIN_FACT.ORDER_ID",

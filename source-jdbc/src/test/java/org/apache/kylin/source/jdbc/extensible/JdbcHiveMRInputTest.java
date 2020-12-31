@@ -95,7 +95,7 @@ public class JdbcHiveMRInputTest extends TestBase {
         String cmd = executable.getParam("cmd");
         Assert.assertTrue(cmd.contains("org.h2.Driver"));
         Assert.assertTrue(
-                cmd.contains("--boundary-query \"SELECT MIN(\\\"TEST_KYLIN_FACT\\\".\\\"CAL_DT\\\"), MAX(\\\"TEST_KYLIN_FACT\\\".\\\"CAL_DT\\\")" + System.lineSeparator()
+                cmd.contains("--boundary-query \"SELECT MIN(\\\"TEST_KYLIN_FACT\\\".\\\"SELLER_ID\\\"), MAX(\\\"TEST_KYLIN_FACT\\\".\\\"SELLER_ID\\\")" + System.lineSeparator()
                         + "FROM \\\"DEFAULT\\\".\\\"TEST_KYLIN_FACT\\\" AS \\\"TEST_KYLIN_FACT\\\"\""));
         source.close();
     }
