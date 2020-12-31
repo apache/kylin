@@ -708,6 +708,22 @@ public class QueryService extends BasicService {
                         borrowPrepareContext = false;
                         preparedContext = createPreparedContext(sqlRequest.getProject(), sqlRequest.getSql());
                     }
+
+                    // when SparkEngine enabled, Execution Plan was created from RelNode directly, RelNode should be cached
+                    if (getConfig().isSparkEngineEnabled()) {
+                        // preparedContext initialized by current thread, put relNode into cache
+                        if (preparedContext.olapRel == null) {
+                            preparedContext.olapRel = QueryContextFacade.current().getOlapRel();
+                            preparedContext.resultType = (QueryContextFacade.current().getResultType());
+                        } else if (QueryContextFacade.current().getOlapRel() == null) {
+                            //set cached RelNode and ResultType in current PreparedContext
+                            QueryContextFacade.current().setOlapRel(preparedContext.olapRel);
+                            QueryContextFacade.current().setResultType(preparedContext.resultType);
+                        } else {
+                            throw new RuntimeException("unexpected ");
+                        }
+                    }
+
                     for (OLAPContext olapContext : preparedContext.olapContexts) {
                         resetRealizationInContext(olapContext);
                         OLAPContext.registerContext(olapContext);
@@ -1404,6 +1420,8 @@ public class QueryService extends BasicService {
         private Connection conn;
         private PreparedStatement preparedStatement;
         private Collection<OLAPContext> olapContexts;
+        private Object olapRel;
+        private Object resultType;
 
         public PreparedContext(Connection conn, PreparedStatement preparedStatement,
                 Collection<OLAPContext> olapContexts) {
