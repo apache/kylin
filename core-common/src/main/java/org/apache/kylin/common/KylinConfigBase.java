@@ -2691,4 +2691,8 @@ public abstract class KylinConfigBase implements Serializable {
     public Map<String, String> getJobStatusKafkaConfig() {
         return getPropertiesByPrefix("kylin.engine.job-status.kafka.");
     }
+
+    public Boolean isCubeOnSSD(){
+        return Boolean.parseBoolean(getOptional("kylin.stroage.cube-on-ssd", "false"));
+    }
 }

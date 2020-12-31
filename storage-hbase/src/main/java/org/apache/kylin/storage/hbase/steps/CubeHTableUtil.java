@@ -58,7 +58,7 @@ public class CubeHTableUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeHTableUtil.class);
 
-    public static void createHTable(CubeSegment cubeSegment, byte[][] splitKeys, boolean continueOnExists)
+    public static HTableDescriptor createHTable(CubeSegment cubeSegment, byte[][] splitKeys, boolean continueOnExists)
             throws IOException {
         TableName tableName = TableName.valueOf(cubeSegment.getStorageLocationIdentifier());
         CubeInstance cubeInstance = cubeSegment.getCubeInstance();
@@ -165,10 +165,10 @@ public class CubeHTableUtil {
 
             Preconditions.checkArgument(admin.isTableAvailable(tableName), "table " + tableName + " created, but is not available due to some reasons");
             logger.info("create hbase table " + tableName + " done.");
+            return tableDesc;
         } finally {
             IOUtils.closeQuietly(admin);
         }
-
     }
 
     public static void deleteHTable(TableName tableName) throws IOException {
