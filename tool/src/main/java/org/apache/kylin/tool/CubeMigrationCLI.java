@@ -59,6 +59,7 @@ import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -442,10 +443,10 @@ public class CubeMigrationCLI extends AbstractApplication {
             String tableName = (String) opt.params[0];
             System.out.println("CHANGE_HTABLE_HOST, table name: " + tableName);
             HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
-            hbaseAdmin.disableTable(tableName);
+//            hbaseAdmin.disableTable(tableName);
             desc.setValue(IRealizationConstants.HTableTag, dstConfig.getMetadataUrlPrefix());
             hbaseAdmin.modifyTable(tableName, desc);
-            hbaseAdmin.enableTable(tableName);
+//            hbaseAdmin.enableTable(tableName);
             logger.info("CHANGE_HTABLE_HOST is completed");
             break;
         }
@@ -455,6 +456,16 @@ public class CubeMigrationCLI extends AbstractApplication {
             if (res == null) {
                 logger.info("Item: {} doesn't exist, ignore it.", item);
                 break;
+            }
+            // dataModel`s project maybe be different with new project.
+            if (item.startsWith(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT)) {
+                DataModelDesc dataModelDesc = srcStore.getResource(item, DataModelManager.getInstance(srcConfig).getDataModelSerializer());
+                if (dataModelDesc != null && dataModelDesc.getProjectName() != null && !dataModelDesc.getProjectName().equals(dstProject)) {
+                    dataModelDesc.setProjectName(dstProject);
+                    dstStore.putResource(item, dataModelDesc, res.lastModified(), DataModelManager.getInstance(srcConfig).getDataModelSerializer());
+                    logger.info("Item " + item + " is copied");
+                    break;
+                }
             }
             dstStore.putResource(renameTableWithinProject(item), res.content(), res.lastModified());
             res.content().close();
@@ -522,6 +533,11 @@ public class CubeMigrationCLI extends AbstractApplication {
                             }
                         }
                     }
+                    for (Map.Entry<String, String> entry : cube.getSnapshots().entrySet()) {
+                        if (entry.getValue().equalsIgnoreCase(item)) {
+                            entry.setValue(snapSaved.getResourcePath());
+                        }
+                    }
                     dstStore.checkAndPutResource(cubeResPath, cube, cubeSerializer);
                     logger.info("Item " + item + " is dup, instead " + snapSaved.getResourcePath() + " is reused");
 
@@ -537,8 +553,12 @@ public class CubeMigrationCLI extends AbstractApplication {
         case RENAME_FOLDER_IN_HDFS: {
             String srcPath = (String) opt.params[0];
             String dstPath = (String) opt.params[1];
-            renameHDFSPath(srcPath, dstPath);
-            logger.info("HDFS Folder renamed from " + srcPath + " to " + dstPath);
+            if (hdfsFS.exists(new Path(srcPath))) {
+                renameHDFSPath(srcPath, dstPath);
+                logger.info("HDFS Folder renamed from " + srcPath + " to " + dstPath);
+            } else {
+                logger.warn("HDFS Folder is not exist,ignore it. path : " + srcPath);
+            }
             break;
         }
         case ADD_INTO_PROJECT: {
@@ -651,7 +671,7 @@ public class CubeMigrationCLI extends AbstractApplication {
     }
 
     private String renameTableWithinProject(String srcItem) {
-        if (dstProject != null && srcItem.contains(ResourceStore.TABLE_RESOURCE_ROOT)) {
+        if (dstProject != null && srcItem.startsWith(ResourceStore.TABLE_RESOURCE_ROOT)) {
             String tableIdentity = TableDesc.parseResourcePath(srcItem).getTable();
             if (srcItem.contains(ResourceStore.TABLE_EXD_RESOURCE_ROOT))
                 return TableExtDesc.concatResourcePath(tableIdentity, dstProject);
