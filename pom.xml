@@ -144,11 +144,11 @@
     <ehcache.version>2.10.2.2.21</ehcache.version>
     <memcached.verion>2.12.3</memcached.verion>
     <apache-httpclient.version>4.3.6</apache-httpclient.version>
-    <roaring.version>0.6.18</roaring.version>
+    <roaring.version>0.6.66</roaring.version>
     <cglib.version>3.2.4</cglib.version>
     <supercsv.version>2.4.0</supercsv.version>
     <cors.version>2.5</cors.version>
-    <tomcat.version>7.0.100</tomcat.version>
+    <tomcat.version>7.0.107</tomcat.version>
     <t-digest.version>3.1</t-digest.version>
     <freemarker.version>2.3.23</freemarker.version>
     <rocksdb.version>5.9.2</rocksdb.version>
