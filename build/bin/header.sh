@@ -19,7 +19,8 @@
 
 # source me
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/set-kylin-home.sh $@
+source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/set-kylin-home.sh $@
+
 verbose=${verbose:-""}
 
 while getopts ":v" opt; do
@@ -37,17 +38,17 @@ done
 if [[ "$dir" == "" ]]
 then
 	dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
-	
+
 	# set KYLIN_HOME with consideration for multiple instances that are on the same node
 	KYLIN_HOME=${KYLIN_HOME:-"${dir}/../"}
 	export KYLIN_HOME=`cd "$KYLIN_HOME"; pwd`
 	dir="$KYLIN_HOME/bin"
-	
+
 	function quit {
 		echo "$@"
 		exit 1
 	}
-	
+
 	function verbose {
 		if [[ -n "$verbose" ]]; then
 			echo "$@"
