@@ -49,4 +49,4 @@ hbase_dependency=${hbase_common_path}
 verbose "hbase dependency: $hbase_dependency"
 export hbase_dependency
 echo "export HBASE_ENV_INIT=$HBASE_ENV_INIT
-export hbase_dependency=$hbase_dependency" > ${dir}/cached-hbase-dependency.sh
+export hbase_dependency=$hbase_dependency" > ${dir}/.cached-hbase-dependency.sh

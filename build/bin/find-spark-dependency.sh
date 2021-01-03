@@ -58,7 +58,7 @@ fi
 if [ ! -d "$spark_home/jars" ]
   then
     echo `setColor 33 "Optional dependency spark not found, if you need this; set SPARK_HOME, or run bin/download-spark.sh"`
-    echo "echo 'skip spark_dependency'" > ${dir}/cached-spark-dependency.sh
+    echo "echo 'skip spark_dependency'" > ${dir}/.cached-spark-dependency.sh
   else
     spark_dependency=`find -L $spark_home/jars -name '*.jar' ! -name '*slf4j*' ! -name '*calcite*' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
     if [ -z "$spark_dependency" ]
@@ -68,5 +68,5 @@ if [ ! -d "$spark_home/jars" ]
         verbose "spark dependency: $spark_dependency"
         export spark_dependency
     fi
-    echo "export spark_dependency=$spark_dependency" > ${dir}/cached-spark-dependency.sh
+    echo "export spark_dependency=$spark_dependency" > ${dir}/.cached-spark-dependency.sh
 fi

@@ -49,4 +49,4 @@ else
         export kafka_dependency
     fi
 fi
-echo "export kafka_dependency=$kafka_dependency" > ${dir}/cached-kafka-dependency.sh
+echo "export kafka_dependency=$kafka_dependency" > ${dir}/.cached-kafka-dependency.sh
