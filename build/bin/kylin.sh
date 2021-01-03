@@ -202,7 +202,7 @@ function printDuration() {
     end_time=`date +'%Y-%m-%d %H:%M:%S'`
     start_seconds=$(date --date="$start_time" +%s)
     end_seconds=$(date --date="$end_time" +%s)
-    echo "$1 duration $((end_seconds - start_seconds)) s"
+    echo Kylin "$1" duration $((end_seconds - start_seconds))s
 }
 
 if [ "$2" == "--reload-dependency" ]
@@ -221,7 +221,7 @@ then
     echo "A new Kylin instance is started by $USER. To stop it, run 'kylin.sh stop'"
     echo "Check the log at ${KYLIN_HOME}/logs/kylin.log"
     echo "Web UI is at http://${kylin_rest_address_arr}/kylin"
-    printDuration
+    printDuration $1
     exit 0
 
 # run command
@@ -261,7 +261,7 @@ then
     echo "A new Kylin instance is started by $USER. To stop it, run 'kylin.sh stop'"
     echo "Check the log at ${KYLIN_HOME}/logs/kylin.log"
     echo "Web UI is at http://${kylin_rest_address_arr}/kylin"
-    printDuration
+    printDuration $1
     exit 0
 
 # streaming command
@@ -301,7 +301,7 @@ then
         -DKYLIN_HOME=${KYLIN_HOME}\
         -Dkylin.hbase.dependency=${hbase_dependency} \
         org.apache.kylin.stream.server.StreamingReceiver $@ > ${KYLIN_HOME}/logs/streaming_receiver.out 2>&1 & echo $! > ${KYLIN_HOME}/streaming_receiver_pid &
-        printDuration
+        printDuration $1
         exit 0
     elif [ "$2" == "run" ]
     then
@@ -332,7 +332,7 @@ then
         -DKYLIN_HOME=${KYLIN_HOME}\
         -Dkylin.hbase.dependency=${hbase_dependency} \
         org.apache.kylin.stream.server.StreamingReceiver $@
-        printDuration
+        printDuration $1
         exit 0
     elif [ "$2" == "stop" ]
     then
