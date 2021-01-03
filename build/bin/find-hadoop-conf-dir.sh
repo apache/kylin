@@ -19,8 +19,6 @@
 
 source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
 
-echo Retrieving hadoop conf dir...
-
 function find_hadoop_conf_dir() {
     override_hadoop_conf_dir=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.env.hadoop-conf-dir`
 
@@ -76,5 +74,14 @@ function find_hadoop_conf_dir() {
         fi
     done
 }
-find_hadoop_conf_dir
-echo "export kylin_hadoop_conf_dir=$kylin_hadoop_conf_dir" > ${dir}/.cached-hadoop-conf-dir.sh
+
+if [ -f "${dir}/.cached-hadoop-conf-dir.sh" ] ; then
+   source ${dir}/.cached-hadoop-conf-dir.sh
+   echo Using hadoop conf cached dependency...
+fi
+
+if [ -z "${kylin_hadoop_conf_dir}" ] ; then
+  echo Retrieving hadoop conf dir...
+  find_hadoop_conf_dir
+  echo "export kylin_hadoop_conf_dir=$kylin_hadoop_conf_dir" > ${dir}/.cached-hadoop-conf-dir.sh
+fi
