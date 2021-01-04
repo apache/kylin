@@ -48,7 +48,7 @@ function authorization {
                 sed -i "s/%Auth%/${base64_auth}/g" $build_incremental_cube
                 return 0
             else
-                echo "Unauthorized,password error."
+                echo `setColor 31 "Unauthorized,password error."`
                 authorization
             fi
         fi
@@ -157,7 +157,7 @@ then
     cron_count=$(crontab -l | grep "${KYLIN_METRICS_PREFIX}_HIVE_METRICS" | wc -l)
     if [ $cron_count -eq 5 ]
     then
-        echo "system cube already exists in crontab"
+        echo `setColor 33 "system cube already exists in crontab"`
         exit 0
     else
         #add a crontab job
