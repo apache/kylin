@@ -30,22 +30,22 @@ function printHelp {
     exit 1
 }
 
-function authorization() {
-    authed=`grep "%Auth%" $build_incremental_cube`|wc -l`
-    if [[ $authed -eq 0 ]]
+function authorization {
+    authed=$(grep %Auth% "$build_incremental_cube"|wc -l)
+    if [ $authed -eq 1 ]
     then
-        read -p $'Please Enter the ADMIN\'password or \'N\' to exit ' pwd
-        if [[ "$pwd" == "N"  ]]
+        read -p $'Please Enter the ADMIN\'password or \'N\' to exit: ' pwd
+        if [ $pwd == "N"  ]
         then
-          return 1
+            return 1
         else
-            auth=`echo "ADMIN:$pwd"|base64`
+            base64_auth=$(echo -n "ADMIN:$pwd"|base64)
             tomcat_root=${dir}/../tomcat
             kylin_rest_address=`hostname -f`":"`grep "<Connector port=" ${tomcat_root}/conf/server.xml |grep protocol=\"HTTP/1.1\" | cut -d '=' -f 2 | cut -d \" -f 2`
-            http_code=$(curl -I -m 10 -o /dev/null -s -w %{http_code} -c -X POST -H "Authorization: Basic $auth" -H 'Content-Type: application/json' http://${kylin_rest_address}/kylin/api/user/authentication)
-            if [[ $http_code -eq 200  ]]
+            http_code=$(curl -I -m 10 -o /dev/null -s -w %{http_code} -X POST -H "Authorization: Basic $base64_auth" -H 'Content-Type: application/json' http://${kylin_rest_address}/kylin/api/user/authentication)
+            if [ $http_code -eq 200  ]
             then
-                sed -i "s/%Auth%/${auth}/g" $build_incremental_cube
+                sed -i "s/%Auth%/${base64_auth}/g" $build_incremental_cube
                 return 0
             else
                 echo "Unauthorized,password error."
@@ -90,8 +90,8 @@ then
         sh $build_incremental_cube ${SC_NAME_4} ${BUILD_INTERVAL} ${BUILD_DELAY}
         sh $build_incremental_cube ${SC_NAME_5} ${BUILD_INTERVAL} ${BUILD_DELAY}
     else
-    	  echo "Please setup system cube first."
-		    exit 1
+    	echo "Please setup system cube first."
+		exit 1
     fi
 elif [ "$1" == "setup" ]
 then
@@ -102,18 +102,19 @@ then
 
     rm -rf $SINK_TOOLS_FILE $OUTPUT_FORDER
 
-    cat <<-EOF > ${SINK_TOOLS_FILE}
-    [
-      {
-         "sink": "hive",
-         "storage_type": 2,
-         "cube_desc_override_properties": {
-           "kylin.cube.algorithm": "INMEM",
-           "kylin.cube.max-building-segments": "1"
-         }
-      }
-    ]
-    EOF
+cat <<-EOF > ${SINK_TOOLS_FILE}
+[
+  {
+     "sink": "hive",
+     "storage_type": 2,
+     "cube_desc_override_properties": {
+       "kylin.cube.algorithm": "INMEM",
+       "kylin.cube.max-building-segments": "1"
+     }
+  }
+]
+EOF
+
     $KYLIN_HOME/bin/kylin.sh org.apache.kylin.tool.metrics.systemcube.SCCreator \
     -inputConfig ${SINK_TOOLS_FILE} \
     -output ${OUTPUT_FORDER}
@@ -156,21 +157,23 @@ then
     echo "add to a crontab job"
     authorization
     if [[ $? == 1 ]]
+    then
         echo "add to a crontab job exit."
         exit 0
     else
         CRONTAB_FILE=$KYLIN_HOME/crontabJob
-        crontab -l >> ${CRONTAB_FILE}
-        cat <<-EOF >> ${CRONTAB_FILE}
-        0 */2 * * * sh $build_incremental_cube ${SC_NAME_1} 3600000 1200000
-        20 */2 * * * sh $build_incremental_cube ${SC_NAME_2} 3600000 1200000
-        40 */4 * * * sh $build_incremental_cube ${SC_NAME_3} 3600000 1200000
-        30 */4 * * * sh $build_incremental_cube ${SC_NAME_4} 3600000 1200000
-        50 */12 * * * sh $build_incremental_cube ${SC_NAME_5} 3600000 1200000
-        EOF
+    	  crontab -l >> ${CRONTAB_FILE}
+cat <<-EOF >> ${CRONTAB_FILE}
+0 */2 * * * sh $build_incremental_cube ${SC_NAME_1} 3600000 1200000
+20 */2 * * * sh $build_incremental_cube ${SC_NAME_2} 3600000 1200000
+40 */4 * * * sh $build_incremental_cube ${SC_NAME_3} 3600000 1200000
+30 */4 * * * sh $build_incremental_cube ${SC_NAME_4} 3600000 1200000
+50 */12 * * * sh $build_incremental_cube ${SC_NAME_5} 3600000 1200000
+EOF
         crontab ${CRONTAB_FILE}
         rm ${CRONTAB_FILE}
-    if
+        echo "add to a crontab job successful."
+    fi
 else
     printHelp
 fi
