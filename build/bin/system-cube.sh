@@ -153,16 +153,23 @@ EOF
 
 elif [ "$1" == "cron" ]
 then
-    #add a crontab job
-    echo "add to a crontab job"
-    authorization
-    if [[ $? == 1 ]]
+    #check added
+    cron_count=$(crontab -l | grep "${KYLIN_METRICS_PREFIX}_HIVE_METRICS" | wc -l)
+    if [ $cron_count -eq 5 ]
     then
-        echo "add to a crontab job exit."
+        echo "system cube already exists in crontab"
         exit 0
     else
-        CRONTAB_FILE=$KYLIN_HOME/crontabJob
-    	  crontab -l >> ${CRONTAB_FILE}
+        #add a crontab job
+        echo "add to a crontab job"
+        authorization
+        if [[ $? == 1 ]]
+        then
+            echo "add to a crontab job exit."
+            exit 0
+        else
+            CRONTAB_FILE=$KYLIN_HOME/crontabJob
+            crontab -l >> ${CRONTAB_FILE}
 cat <<-EOF >> ${CRONTAB_FILE}
 0 */2 * * * sh $build_incremental_cube ${SC_NAME_1} 3600000 1200000
 20 */2 * * * sh $build_incremental_cube ${SC_NAME_2} 3600000 1200000
@@ -170,9 +177,10 @@ cat <<-EOF >> ${CRONTAB_FILE}
 30 */4 * * * sh $build_incremental_cube ${SC_NAME_4} 3600000 1200000
 50 */12 * * * sh $build_incremental_cube ${SC_NAME_5} 3600000 1200000
 EOF
-        crontab ${CRONTAB_FILE}
-        rm ${CRONTAB_FILE}
-        echo "add to a crontab job successful."
+          crontab ${CRONTAB_FILE}
+          rm ${CRONTAB_FILE}
+          echo "add to a crontab job successful."
+        fi
     fi
 else
     printHelp
