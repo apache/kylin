@@ -62,6 +62,9 @@ function retrieveDependency() {
         # source ${dir}/find-flink-dependency.sh
     fi
 
+    # Replace jars for different hadoop dist
+    bash replace-jars-under-spark.sh
+
     # get hdp_version
     if [ -z "${hdp_version}" ]; then
         hdp_version=`/bin/bash -x hadoop 2>&1 | sed -n "s/\(.*\)export HDP_VERSION=\(.*\)/\2/"p`
