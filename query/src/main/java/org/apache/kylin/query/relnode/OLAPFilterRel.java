@@ -21,16 +21,19 @@ package org.apache.kylin.query.relnode;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import org.apache.calcite.adapter.enumerable.EnumerableCalc;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
@@ -38,6 +41,8 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexProgram;
 import org.apache.calcite.rex.RexProgramBuilder;
+import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.filter.FilterOptimizeTransformer;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
@@ -88,11 +93,58 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         } else {
             context.afterHavingClauseFilter = true;
 
-            TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType);
-            TupleFilter havingFilter = this.condition.accept(visitor);
-            if (context.havingFilter == null)
-                context.havingFilter = havingFilter;
+            if (context.havingFilter == null) {
+                TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType);
+                RexNode condition = getHavingFilterCondition();
+                if (condition != null) {
+                    context.havingFilter = condition.accept(visitor);
+                }
+            }
         }
+    }
+
+    // In case that there's (is not null) for some dimension in the having filter,
+    //      which may not utilize the FilterAggregateTransposeRule to do filter decomposition,
+    // we need to extract filters on aggregations here which may be used in GTCubeStorageQueryBase.
+    // Otherwise, the logic in GTCubeStorageQueryBase may not be correct and may throw exceptions
+    private RexNode getHavingFilterCondition() {
+        if (!(getInput() instanceof OLAPAggregateRel)) {
+            return this.condition;
+        }
+
+        List<RexNode> remainingConditions = Lists.newArrayList();
+
+        OLAPAggregateRel aggRel = (OLAPAggregateRel) getInput();
+        final List<RexNode> conditions = RelOptUtil.conjunctions(this.condition);
+        for (RexNode condition : conditions) {
+            ImmutableBitSet rCols = RelOptUtil.InputFinder.bits(condition);
+            if (!canPush(aggRel, rCols)) {
+                remainingConditions.add(condition);
+            }
+        }
+
+        return remainingConditions.isEmpty() ? null
+                : RexUtil.composeDisjunction(getCluster().getRexBuilder(), remainingConditions);
+    }
+
+    private boolean canPush(OLAPAggregateRel aggregate, ImmutableBitSet rCols) {
+        // If the filter references columns not in the group key, we cannot push
+        final ImmutableBitSet groupKeys = ImmutableBitSet.range(0, aggregate.getGroupSet().cardinality());
+        if (!groupKeys.contains(rCols)) {
+            return false;
+        }
+
+        if (aggregate.getGroupType() != Aggregate.Group.SIMPLE) {
+            // If grouping sets are used, the filter can be pushed if
+            // the columns referenced in the predicate are present in
+            // all the grouping sets.
+            for (ImmutableBitSet groupingSet : aggregate.getGroupSets()) {
+                if (!groupingSet.contains(rCols)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     ColumnRowType buildColumnRowType() {
