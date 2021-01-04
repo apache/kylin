@@ -57,3 +57,4 @@ if [ -z "${kafka_dependency}" ] ; then
     fi
     echo "export kafka_dependency=$kafka_dependency" > ${dir}/.cached-kafka-dependency.sh
 fi
+

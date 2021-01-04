@@ -219,3 +219,4 @@ if [ -z "${hive_dependency}" ] ; then
     export hive_dependency=$hive_dependency
     export hive_conf_path=$hive_conf_path" > ${dir}/.cached-hive-dependency.sh
 fi
+

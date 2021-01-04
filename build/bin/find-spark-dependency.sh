@@ -78,3 +78,4 @@ if [ -z "${spark_dependency}" ] ; then
         echo "export spark_dependency=$spark_dependency" > ${dir}/.cached-spark-dependency.sh
     fi
 fi
+

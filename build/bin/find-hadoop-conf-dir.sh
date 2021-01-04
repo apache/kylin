@@ -85,3 +85,4 @@ if [ -z "${kylin_hadoop_conf_dir}" ] ; then
     find_hadoop_conf_dir
     echo "export kylin_hadoop_conf_dir=$kylin_hadoop_conf_dir" > ${dir}/.cached-hadoop-conf-dir.sh
 fi
+

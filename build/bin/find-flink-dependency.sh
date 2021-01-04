@@ -58,3 +58,4 @@ if [ -z "${flink_dependency}" ] ; then
         echo "export flink_dependency=$flink_dependency" > ${dir}/.cached-flink-dependency.sh
     fi
 fi
+

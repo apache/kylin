@@ -57,3 +57,4 @@ if [ -z "${hbase_dependency}" ] ; then
     echo "export HBASE_ENV_INIT=$HBASE_ENV_INIT
     export hbase_dependency=$hbase_dependency" > ${dir}/.cached-hbase-dependency.sh
 fi
+
