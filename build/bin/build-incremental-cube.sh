@@ -41,5 +41,5 @@ END=$((END_TIME - END_TIME%INTERVAL))
 ID="$END"
 echo "Building for ${CUBE}_${ID}" | tee ${KYLIN_HOME}/logs/build_trace.log
 echo "Check the log at ${KYLIN_HOME}/logs/incremental_cube_${CUBE}_${END}.log"
-curl -X POST -H "Authorization: Basic %Auth%" -H "Content-Type: application/json;charset=utf-8" -d "{\"endTime\": ${END}, \"buildType\": \"BUILD\"}" http://${kylin_rest_address}/kylin/api/cubes/${CUBE}/rebuild  > ${KYLIN_HOME}/logs/incremental_cube_${CUBE}_${END}.log 2>&1 &
+curl -X PUT -H "Authorization: Basic %Auth%" -H "Content-Type: application/json;charset=utf-8" -d "{\"endTime\": ${END}, \"buildType\": \"BUILD\"}" http://${kylin_rest_address}/kylin/api/cubes/${CUBE}/rebuild  > ${KYLIN_HOME}/logs/incremental_cube_${CUBE}_${END}.log 2>&1 &
 
