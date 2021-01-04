@@ -709,7 +709,7 @@ public class QueryService extends BasicService {
                             preparedContext.olapRel = QueryContextFacade.current().getOlapRel();
                             preparedContext.resultType = (QueryContextFacade.current().getResultType());
                         } else {
-                            //set cached RelNode and ResultType in current QueryContext
+                            //set cached RelNode and ResultType into current QueryContext
                             QueryContextFacade.current().setOlapRel(preparedContext.olapRel);
                             QueryContextFacade.current().setResultType(preparedContext.resultType);
                         }
