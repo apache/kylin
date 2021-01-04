@@ -177,9 +177,9 @@ cat <<-EOF >> ${CRONTAB_FILE}
 30 */4 * * * sh $build_incremental_cube ${SC_NAME_4} 3600000 1200000
 50 */12 * * * sh $build_incremental_cube ${SC_NAME_5} 3600000 1200000
 EOF
-          crontab ${CRONTAB_FILE}
-          rm ${CRONTAB_FILE}
-          echo "add to a crontab job successful."
+            crontab ${CRONTAB_FILE}
+            rm ${CRONTAB_FILE}
+            echo "add to a crontab job successful."
         fi
     fi
 else
