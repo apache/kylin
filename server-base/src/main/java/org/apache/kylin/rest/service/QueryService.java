@@ -703,25 +703,21 @@ public class QueryService extends BasicService {
                 if (getConfig().isQueryPreparedStatementCacheEnable() && prepareSqlRequest.isEnableStatementCache()) {
                     try {
                         preparedContext = preparedContextPool.borrowObject(preparedContextKey);
+
+                        // preparedContext initialized by current thread, put relNode and resultType into cache
+                        if (preparedContext.olapRel == null) {
+                            preparedContext.olapRel = QueryContextFacade.current().getOlapRel();
+                            preparedContext.resultType = (QueryContextFacade.current().getResultType());
+                        } else {
+                            //set cached RelNode and ResultType in current QueryContext
+                            QueryContextFacade.current().setOlapRel(preparedContext.olapRel);
+                            QueryContextFacade.current().setResultType(preparedContext.resultType);
+                        }
+
                         borrowPrepareContext = true;
                     } catch (NoSuchElementException noElementException) {
                         borrowPrepareContext = false;
                         preparedContext = createPreparedContext(sqlRequest.getProject(), sqlRequest.getSql());
-                    }
-
-                    // when SparkEngine enabled, Execution Plan was created from RelNode directly, RelNode should be cached
-                    if (getConfig().isSparkEngineEnabled()) {
-                        // preparedContext initialized by current thread, put relNode into cache
-                        if (preparedContext.olapRel == null) {
-                            preparedContext.olapRel = QueryContextFacade.current().getOlapRel();
-                            preparedContext.resultType = (QueryContextFacade.current().getResultType());
-                        } else if (QueryContextFacade.current().getOlapRel() == null) {
-                            //set cached RelNode and ResultType in current PreparedContext
-                            QueryContextFacade.current().setOlapRel(preparedContext.olapRel);
-                            QueryContextFacade.current().setResultType(preparedContext.resultType);
-                        } else {
-                            throw new RuntimeException("unexpected ");
-                        }
                     }
 
                     for (OLAPContext olapContext : preparedContext.olapContexts) {
