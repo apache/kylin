@@ -90,8 +90,8 @@ then
         sh $build_incremental_cube ${SC_NAME_4} ${BUILD_INTERVAL} ${BUILD_DELAY}
         sh $build_incremental_cube ${SC_NAME_5} ${BUILD_INTERVAL} ${BUILD_DELAY}
     else
-    	echo "Please setup system cube first."
-		exit 1
+    	  echo "Please setup system cube first."
+		    exit 1
     fi
 elif [ "$1" == "setup" ]
 then
@@ -170,6 +170,7 @@ then
         else
             CRONTAB_FILE=$KYLIN_HOME/crontabJob
             crontab -l >> ${CRONTAB_FILE}
+
 cat <<-EOF >> ${CRONTAB_FILE}
 0 */2 * * * sh $build_incremental_cube ${SC_NAME_1} 3600000 1200000
 20 */2 * * * sh $build_incremental_cube ${SC_NAME_2} 3600000 1200000
