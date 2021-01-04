@@ -40,6 +40,14 @@ public class HBaseMRSteps extends HBaseJobSteps {
     public AbstractExecutable createConvertCuboidToHfileStep(String jobId) {
         String cuboidRootPath = getCuboidRootPath(jobId);
         String inputPath = cuboidRootPath + (cuboidRootPath.endsWith("/") ? "" : "/") + "*";
+        String rootPath = getRealizationRootPath(jobId);
+        String outputPath = getHFilePath(jobId);
+        String partitionOutputPath = getRowkeyDistributionOutputPath(jobId) + "/part-r-00000_hfile";
+
+        if(this.seg.getConfig().isHFileDistCP()){
+            partitionOutputPath = rootPath + "/rowkey_stats/part-r-00000_hfile";
+            outputPath = rootPath + "/hfile/";
+        }
 
         MapReduceExecutable createHFilesStep = new MapReduceExecutable();
         createHFilesStep.setName(ExecutableConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE);
@@ -47,9 +55,9 @@ public class HBaseMRSteps extends HBaseJobSteps {
 
         appendMapReduceParameters(cmd);
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getRealization().getName());
-        appendExecCmdParameters(cmd, BatchConstants.ARG_PARTITION, getRowkeyDistributionOutputPath(jobId) + "/part-r-00000_hfile");
+        appendExecCmdParameters(cmd, BatchConstants.ARG_PARTITION, partitionOutputPath);
         appendExecCmdParameters(cmd, BatchConstants.ARG_INPUT, inputPath);
-        appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, getHFilePath(jobId));
+        appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, outputPath);
         appendExecCmdParameters(cmd, BatchConstants.ARG_HTABLE_NAME, seg.getStorageLocationIdentifier());
         appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_HFile_Generator_" + seg.getRealization().getName() + "_Step");
 

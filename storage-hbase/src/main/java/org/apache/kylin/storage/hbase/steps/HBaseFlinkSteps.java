@@ -45,10 +45,18 @@ public class HBaseFlinkSteps extends HBaseJobSteps {
         flinkExecutable.setParam(FlinkCubeHFile.OPTION_SEGMENT_ID.getOpt(), seg.getUuid());
         flinkExecutable.setParam(FlinkCubeHFile.OPTION_META_URL.getOpt(),
                 jobBuilder2.getSegmentMetadataUrl(seg.getConfig(), jobId));
-        flinkExecutable.setParam(FlinkCubeHFile.OPTION_OUTPUT_PATH.getOpt(), getHFilePath(jobId));
         flinkExecutable.setParam(FlinkCubeHFile.OPTION_INPUT_PATH.getOpt(), inputPath);
-        flinkExecutable.setParam(FlinkCubeHFile.OPTION_PARTITION_FILE_PATH.getOpt(),
-                getRowkeyDistributionOutputPath(jobId) + "/part-r-00000_hfile");
+
+        String rootPath = getRealizationRootPath(jobId);
+        String outputPath = getHFilePath(jobId);
+        String partitionOutputPath = getRowkeyDistributionOutputPath(jobId) + "/part-r-00000_hfile";
+        if(this.seg.getConfig().isHFileDistCP()){
+            partitionOutputPath = rootPath + "/rowkey_stats/part-r-00000_hfile";
+            outputPath = rootPath + "/hfile/";
+        }
+
+        flinkExecutable.setParam(FlinkCubeHFile.OPTION_OUTPUT_PATH.getOpt(), outputPath);
+        flinkExecutable.setParam(FlinkCubeHFile.OPTION_PARTITION_FILE_PATH.getOpt(), partitionOutputPath);
         flinkExecutable.setParam(AbstractHadoopJob.OPTION_HBASE_CONF_PATH.getOpt(), getHBaseConfFilePath(jobId));
         flinkExecutable.setJobId(jobId);
 
