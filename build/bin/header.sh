@@ -37,25 +37,25 @@ done
 
 if [[ "$dir" == "" ]]
 then
-	dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+    dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
-	# set KYLIN_HOME with consideration for multiple instances that are on the same node
-	KYLIN_HOME=${KYLIN_HOME:-"${dir}/../"}
-	export KYLIN_HOME=`cd "$KYLIN_HOME"; pwd`
-	dir="$KYLIN_HOME/bin"
+    # set KYLIN_HOME with consideration for multiple instances that are on the same node
+    KYLIN_HOME=${KYLIN_HOME:-"${dir}/../"}
+    export KYLIN_HOME=`cd "$KYLIN_HOME"; pwd`
+    dir="$KYLIN_HOME/bin"
 
-	function quit {
-		echo "$@"
-		exit 1
-	}
+    function quit {
+      echo "$@"
+      exit 1
+    }
 
-	function verbose {
-		if [[ -n "$verbose" ]]; then
-			echo "$@"
-		fi
-	}
+    function verbose {
+      if [[ -n "$verbose" ]]; then
+        echo "$@"
+      fi
+    }
 
-	function setColor() {
-        echo -e "\033[$1m$2\033[0m"
+    function setColor() {
+          echo -e "\033[$1m$2\033[0m"
     }
 fi

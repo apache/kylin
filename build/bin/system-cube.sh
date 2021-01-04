@@ -90,8 +90,8 @@ then
         sh $build_incremental_cube ${SC_NAME_4} ${BUILD_INTERVAL} ${BUILD_DELAY}
         sh $build_incremental_cube ${SC_NAME_5} ${BUILD_INTERVAL} ${BUILD_DELAY}
     else
-    	echo "Please setup system cube first."
-		exit 1
+    	  echo "Please setup system cube first."
+		    exit 1
     fi
 elif [ "$1" == "setup" ]
 then

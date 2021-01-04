@@ -20,8 +20,8 @@
 source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
 
 if [ ! $1 ]; then
-	echo "usage: build-incremental-cube.sh CUBE INTERVAL DELAY"
-	exit 1
+    echo "usage: build-incremental-cube.sh CUBE INTERVAL DELAY"
+    exit 1
 fi
 
 tomcat_root=${dir}/../tomcat
