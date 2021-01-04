@@ -91,7 +91,8 @@ public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
                 }
                 // If hbase was deployed on another cluster, the job dir is empty and should be dropped,
                 // because of rowkey_stats and hfile dirs are both dropped.
-                if (fileSystem.listStatus(oldPath.getParent()).length == 0) {
+                Path parentPath = oldPath.getParent();
+                if (fileSystem.exists(parentPath) && fileSystem.listStatus(parentPath).length == 0) {
                     Path emptyJobPath = new Path(JobBuilderSupport.getJobWorkingDir(config, getJobId()));
                     emptyJobPath = Path.getPathWithoutSchemeAndAuthority(emptyJobPath);
                     if (fileSystem.exists(emptyJobPath)) {

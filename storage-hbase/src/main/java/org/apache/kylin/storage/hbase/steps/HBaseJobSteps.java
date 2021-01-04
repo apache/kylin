@@ -27,6 +27,7 @@ import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidModeEnum;
+import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
@@ -63,6 +64,13 @@ public abstract class HBaseJobSteps extends JobBuilderSupport {
         appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
         appendExecCmdParameters(cmd, BatchConstants.ARG_PARTITION,
                 getRowkeyDistributionOutputPath(jobId) + "/part-r-00000");
+        String partitionOutputPath = null;
+        if(this.seg.getConfig().isHFileDistCP()){
+            partitionOutputPath = getRealizationRootPath(jobId) + "/rowkey_stats/part-r-00000_hfile";
+        }else {
+            partitionOutputPath = getRowkeyDistributionOutputPath(jobId) + "/part-r-00000";
+        }
+        appendExecCmdParameters(cmd, BatchConstants.ARG_PARTITION, partitionOutputPath);
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBOID_MODE, cuboidMode.toString());
         appendExecCmdParameters(cmd, BatchConstants.ARG_HBASE_CONF_PATH, getHBaseConfFilePath(jobId));
 
@@ -70,6 +78,26 @@ public abstract class HBaseJobSteps extends JobBuilderSupport {
         createHtableStep.setJobClass(CreateHTableJob.class);
 
         return createHtableStep;
+    }
+
+    public AbstractExecutable createDistcpHFileStep(String jobId){
+        String inputPath = getRealizationRootPath(jobId) + "/hfile";
+        MapReduceExecutable createHFilesStep = new MapReduceExecutable();
+        createHFilesStep.setName(ExecutableConstants.STEP_NAME_HFILE_DISTCP);
+        StringBuilder cmd = new StringBuilder();
+
+        appendMapReduceParameters(cmd);
+        appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getRealization().getName());
+//        appendExecCmdParameters(cmd, BatchConstants.ARG_PARTITION, getRowkeyDistributionOutputPath(jobId) + "/part-r-00000_hfile");
+        appendExecCmdParameters(cmd, BatchConstants.ARG_INPUT, inputPath);
+        appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, getHFilePath(jobId));
+        appendExecCmdParameters(cmd, BatchConstants.ARG_HTABLE_NAME, seg.getStorageLocationIdentifier());
+        appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_HFile_Distcp_" + seg.getRealization().getName() + "_Step");
+
+        createHFilesStep.setMapReduceParams(cmd.toString());
+        createHFilesStep.setMapReduceJobClass(HFileDistcpJob.class);
+        createHFilesStep.setCounterSaveAs(",," + CubingJob.CUBE_SIZE_BYTES);
+        return createHFilesStep;
     }
 
     // TODO make it abstract

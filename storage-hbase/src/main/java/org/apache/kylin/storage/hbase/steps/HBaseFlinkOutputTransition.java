@@ -55,6 +55,9 @@ public class HBaseFlinkOutputTransition implements IFlinkOutput {
             @Override
             public void addStepPhase3_BuildCube(DefaultChainedExecutable jobFlow) {
                 jobFlow.addTask(steps.createConvertCuboidToHfileStep(jobFlow.getId()));
+                if(seg.getConfig().isHFileDistCP()){
+                    jobFlow.addTask(steps.createDistcpHFileStep(jobFlow.getId()));
+                }
                 jobFlow.addTask(steps.createBulkLoadStep(jobFlow.getId()));
             }
 
@@ -80,6 +83,9 @@ public class HBaseFlinkOutputTransition implements IFlinkOutput {
             public void addStepPhase2_BuildCube(CubeSegment seg, List<CubeSegment> mergingSegments,
                     DefaultChainedExecutable jobFlow) {
                 jobFlow.addTask(steps.createConvertCuboidToHfileStep(jobFlow.getId()));
+                if(seg.getConfig().isHFileDistCP()){
+                    jobFlow.addTask(steps.createDistcpHFileStep(jobFlow.getId()));
+                }
                 jobFlow.addTask(steps.createBulkLoadStep(jobFlow.getId()));
             }
 
