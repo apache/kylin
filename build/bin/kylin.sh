@@ -63,7 +63,7 @@ function retrieveDependency() {
     fi
 
     # Replace jars for different hadoop dist
-    bash replace-jars-under-spark.sh
+    bash ${dir}/replace-jars-under-spark.sh
 
     # get hdp_version
     if [ -z "${hdp_version}" ]; then

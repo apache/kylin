@@ -17,17 +17,17 @@
 # limitations under the License.
 #
 
-BYPASS=${SPARK_HOME}/jars/replace-jars-bypass
+BYPASS=${KYLIN_HOME}/spark/jars/replace-jars-bypass
 cdh_mapreduce_path="/opt/cloudera/parcels/CDH/lib/hadoop-mapreduce"
 hadoop_lib_path="/usr/lib/hadoop"
 
 if [ -f ${BYPASS} ]; then
-  return
+  exit 0
 fi
 
-if [ "$SPARK_HOME" != "$KYLIN_HOME/spark" ]; then
+if [ ! -d "$KYLIN_HOME/spark" ]; then
   echo "Skip spark which not owned by kylin. SPARK_HOME is $SPARK_HOME and KYLIN_HOME is $KYLIN_HOME ."
-  return 0
+  exit 0
 fi
 
 echo "Start replacing hadoop jars under ${SPARK_HOME}/jars."
@@ -81,7 +81,7 @@ mr_jars=
 yarn_jars=
 other_jars=
 
-if [ $is_cdh5 == 1 ] || [ $is_cdh6 == 1 ]; then
+if [ $is_cdh6 == 1 ]; then
   common_jars=$(find $cdh_mapreduce_path/../hadoop -maxdepth 2 \
     -name "hadoop-annotations-*.jar" -not -name "*test*" \
     -o -name "hadoop-auth-*.jar" -not -name "*test*" \
@@ -105,7 +105,7 @@ if [ $is_cdh5 == 1 ] || [ $is_cdh6 == 1 ]; then
 
   other_jars=$(find $cdh_mapreduce_path/../../jars -maxdepth 1 -name "htrace-core4*" || find $cdh_mapreduce_path/../hadoop -maxdepth 2 -name "htrace-core4*")
 
-  if [[ $(is_cdh_6_x) == 1 ]]; then
+  if [[ $is_cdh6 == 1 ]]; then
     cdh6_jars=$(find ${cdh_mapreduce_path}/../../jars -maxdepth 1 \
       -name "woodstox-core-*.jar" -o -name "commons-configuration2-*.jar" -o -name "re2j-*.jar")
   fi
@@ -115,15 +115,16 @@ jar_list="${common_jars} ${hdfs_jars} ${mr_jars} ${yarn_jars} ${other_jars} ${cd
 
 echo "Find platform specific jars:${jar_list}, will replace with these jars under ${SPARK_HOME}/jars."
 
-if [ $is_cdh5 == 1 ] || [ $is_cdh6 == 1 ] ; then
-  find ${SPARK_HOME}/jars -name "hadoop-hdfs-*.jar" -exec rm -f {} \;
-  find ${SPARK_HOME}/jars -name "hive-exec-*.jar" -exec rm -f {} \;
-#  mv ${KYLIN_HOME}/bin/hadoop3_jars/cdh6/*.jar.preupload ${KYLIN_HOME}/bin/hadoop3_jars/cdh6/*.jar
+if [ $is_cdh6 == 1 ]; then
+  find ${KYLIN_HOME}/spark/jars -name "hadoop-hdfs-*.jar" -exec rm -f {} \;
+  find ${KYLIN_HOME}/spark/jars -name "hadoop-yarn-*.jar" -exec rm -f {} \;
+  find ${KYLIN_HOME}/spark/jars -name "hadoop-mapreduce-*.jar" -exec rm -f {} \;
+  find ${KYLIN_HOME}/spark/jars -name "hive-exec-*.jar" -exec rm -f {} \;
 #  cp ${KYLIN_HOME}/bin/hadoop3_jars/cdh6/*.jar ${SPARK_HOME}/jars
 fi
 
 for jar_file in ${jar_list}; do
-  $(cp ${jar_file} ${SPARK_HOME}/jars)
+  $(cp ${jar_file} ${KYLIN_HOME}/spark/jars)
 done
 
 # Remove all spaces
