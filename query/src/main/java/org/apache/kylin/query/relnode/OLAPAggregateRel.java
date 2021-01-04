@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.calcite.adapter.enumerable.EnumerableAggregate;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
@@ -131,7 +132,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     private boolean afterAggregate;
     private Map<Integer, AggregateCall> hackAggCalls;
     private List<AggregateCall> rewriteAggCalls;
-    private List<TblColRef> groups;
+    private List<Set<TblColRef>> groups;
     private List<FunctionDesc> aggregations;
     private boolean rewriting;
 
@@ -199,7 +200,11 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
         // only translate the innermost aggregation
         if (!this.afterAggregate) {
-            addToContextGroupBy(this.groups);
+            List<TblColRef> colRefList = Lists.newArrayList();
+            for (Set<TblColRef> colRefSet : this.groups) {
+                colRefList.addAll(colRefSet);
+            }
+            addToContextGroupBy(colRefList);
             this.context.aggregations.addAll(this.aggregations);
             this.context.aggrOutCols
                     .addAll(columnRowType.getAllColumns().subList(groups.size(), columnRowType.getAllColumns().size()));
@@ -224,14 +229,18 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         buildAggregations();
 
         ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
-        List<TblColRef> columns = new ArrayList<TblColRef>(this.rowType.getFieldCount());
-        columns.addAll(this.groups);
+        List<TblColRef> columns = new ArrayList<>(this.rowType.getFieldCount());
+        for (Set<TblColRef> groupCols : groups) {
+            String name = groupCols.stream().map(TblColRef::getName).collect(Collectors.toList()).toString();
+            TblColRef groupInnerCol = TblColRef.newInnerColumn(name, TblColRef.InnerDataTypeEnum.LITERAL);
+            columns.add(groupInnerCol);
+        }
 
         // Add group column indicators
         if (indicator) {
             final Set<String> containedNames = Sets.newHashSet();
-            for (TblColRef groupCol : groups) {
-                String base = "i$" + groupCol.getName();
+            for (Set<TblColRef> groupCols : groups) {
+                String base = "i$" + groupCols.stream().map(TblColRef::getName).collect(Collectors.toList());
                 String name = base;
                 int i = 0;
                 while (containedNames.contains(name)) {
@@ -286,7 +295,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
             TblColRef groupOutCol = inputColumnRowType.getColumnByIndex(i);
             if (tupleExpression instanceof ColumnTupleExpression) {
-                this.groups.add(((ColumnTupleExpression) tupleExpression).getColumn());
+                this.groups.add(Sets.newHashSet(((ColumnTupleExpression) tupleExpression).getColumn()));
             } else if (this.context.isDynamicColumnEnabled() && tupleExpression.ifForDynamicColumn()) {
                 Pair<Set<TblColRef>, Set<TblColRef>> cols = ExpressionColCollector.collectColumnsPair(tupleExpression);
 
@@ -309,11 +318,13 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 }
 
                 if (ifPushDown) {
-                    this.groups.add(groupOutCol);
+                    this.groups.add(Sets.newHashSet(groupOutCol));
                     this.context.dynGroupBy.put(groupOutCol, tupleExpression);
                 } else {
-                    this.groups.addAll(cols.getFirst());
-                    this.groups.addAll(cols.getSecond());
+                    Set<TblColRef> srcCols = Sets.newHashSet();
+                    srcCols.addAll(cols.getFirst());
+                    srcCols.addAll(cols.getSecond());
+                    this.groups.add(srcCols);
                     this.context.dynamicFields.remove(groupOutCol);
                 }
             } else {
@@ -322,7 +333,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 if (srcCols.isEmpty()) {
                     srcCols.add(groupOutCol);
                 }
-                this.groups.addAll(srcCols);
+                this.groups.add(srcCols);
             }
         }
     }

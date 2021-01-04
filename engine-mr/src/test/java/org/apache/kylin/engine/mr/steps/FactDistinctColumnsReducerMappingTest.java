@@ -52,6 +52,7 @@ public class FactDistinctColumnsReducerMappingTest extends LocalFileMetadataTest
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = mgr.getCube("ci_left_join_cube");
         TblColRef aUHC = cube.getModel().findColumn("TEST_COUNT_DISTINCT_BITMAP");
+        TblColRef shardByCol = cube.getModel().findColumn("SELLER_ID");
 
         FactDistinctColumnsReducerMapping mapping = new FactDistinctColumnsReducerMapping(cube);
         
@@ -73,7 +74,7 @@ public class FactDistinctColumnsReducerMappingTest extends LocalFileMetadataTest
         Assert.assertEquals(2, mapping.getReducerNumForDimCol(aUHC));
         int uhcReducerBegin = -1;
         for (int i = 0; i < dictEnd; i++) {
-            if (mapping.getColForReducer(i).equals(aUHC)) {
+            if (mapping.getColForReducer(i).equals(aUHC) || mapping.getColForReducer(i).equals(shardByCol)) {
                 uhcReducerBegin = i;
                 break;
             }
