@@ -20,40 +20,40 @@
 source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
 
 if [ -f "${dir}/.cached-kafka-dependency.sh" ] ; then
-   source ${dir}/.cached-kafka-dependency.sh
-   echo Using kafka cached dependency...
+    source ${dir}/.cached-kafka-dependency.sh
+    echo Using kafka cached dependency...
 fi
 
 if [ -z "${kafka_dependency}" ] ; then
 
-  echo Retrieving kafka dependency...
+    echo Retrieving kafka dependency...
 
-  kafka_home=
+    kafka_home=
 
-  if [ -z "$KAFKA_HOME" ]
-  then
-      echo "Couldn't find kafka home. If you want to enable streaming processing, Please set KAFKA_HOME to the path which contains kafka dependencies."
-  else
-      verbose "KAFKA_HOME is set to: $KAFKA_HOME, use it to locate kafka dependencies."
-      kafka_home=$KAFKA_HOME
+    if [ -z "$KAFKA_HOME" ]
+    then
+        echo "Couldn't find kafka home. If you want to enable streaming processing, Please set KAFKA_HOME to the path which contains kafka dependencies."
+    else
+        verbose "KAFKA_HOME is set to: $KAFKA_HOME, use it to locate kafka dependencies."
+        kafka_home=$KAFKA_HOME
 
-      # works for kafka 9+
-      kafka_dependency=`find -L $kafka_home -name 'kafka-clients-[a-z0-9A-Z\.-]*.jar' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
-      if [ -z "$kafka_dependency" ]
-      then
-          # works for kafka 8
-          kafka_dependency=`find -L $kafka_home -name 'kafka_[a-z0-9A-Z\.-]*.jar' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
-          if [ -z "$kafka_dependency" ]
-          then
-              quit "kafka client lib not found"
-          else
-              verbose "kafka dependency is $kafka_dependency"
-              export kafka_dependency
-          fi
-      else
-          verbose "kafka dependency is $kafka_dependency"
-          export kafka_dependency
-      fi
-  fi
-  echo "export kafka_dependency=$kafka_dependency" > ${dir}/.cached-kafka-dependency.sh
+        # works for kafka 9+
+        kafka_dependency=`find -L $kafka_home -name 'kafka-clients-[a-z0-9A-Z\.-]*.jar' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
+        if [ -z "$kafka_dependency" ]
+        then
+            # works for kafka 8
+            kafka_dependency=`find -L $kafka_home -name 'kafka_[a-z0-9A-Z\.-]*.jar' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
+            if [ -z "$kafka_dependency" ]
+            then
+                quit "kafka client lib not found"
+            else
+                verbose "kafka dependency is $kafka_dependency"
+                export kafka_dependency
+            fi
+        else
+            verbose "kafka dependency is $kafka_dependency"
+            export kafka_dependency
+        fi
+    fi
+    echo "export kafka_dependency=$kafka_dependency" > ${dir}/.cached-kafka-dependency.sh
 fi

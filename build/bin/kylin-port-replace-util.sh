@@ -36,9 +36,9 @@ trap 'error ${LINENO} ${?}' ERR
 
 #check input parameters
 if [ $# -eq 0 ]; then
-  echo "Usage : kylin-port-replace-util.sh set PORT_OFFSET --> Modify all conflict ports base on a offset"
-  echo "Usage : kylin-port-replace-util.sh reset --> Recover to original setting"
-  exit 0
+    echo "Usage : kylin-port-replace-util.sh set PORT_OFFSET --> Modify all conflict ports base on a offset"
+    echo "Usage : kylin-port-replace-util.sh reset --> Recover to original setting"
+    exit 0
 fi
 
 #check kylin home
