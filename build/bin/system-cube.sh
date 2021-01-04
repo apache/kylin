@@ -153,7 +153,7 @@ EOF
 
 elif [ "$1" == "cron" ]
 then
-    #check added
+    #check exists
     cron_count=$(crontab -l | grep "${KYLIN_METRICS_PREFIX}_HIVE_METRICS" | wc -l)
     if [ $cron_count -eq 5 ]
     then
