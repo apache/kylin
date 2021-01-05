@@ -34,7 +34,7 @@ public class CubeInstanceCreator {
     public static void main(String[] args) throws Exception {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-        CubeInstance cubeInstance = generateKylinCubeInstanceForMetricsQuery("ADMIN", config, new MetricsSinkDesc());
+        CubeInstance cubeInstance = generateKylinCubeInstanceForMetricsQueryExecution("ADMIN", config, new MetricsSinkDesc());
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         DataOutputStream dout = new DataOutputStream(buf);
         CubeManager.CUBE_SERIALIZER.serialize(cubeInstance, dout);
@@ -43,21 +43,21 @@ public class CubeInstanceCreator {
         System.out.println(buf.toString("UTF-8"));
     }
 
-    public static CubeInstance generateKylinCubeInstanceForMetricsQuery(String owner, KylinConfig config,
+    public static CubeInstance generateKylinCubeInstanceForMetricsQueryExecution(String owner, KylinConfig config,
             MetricsSinkDesc sinkDesc) {
-        return generateKylinCubeInstance(owner, sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQuery()));
+        return generateKylinCubeInstance(owner, sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQueryExecution()));
     }
 
-    public static CubeInstance generateKylinCubeInstanceForMetricsQueryCube(String owner, KylinConfig config,
+    public static CubeInstance generateKylinCubeInstanceForMetricsQuerySparkJob(String owner, KylinConfig config,
             MetricsSinkDesc sinkDesc) {
         return generateKylinCubeInstance(owner,
-                sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQueryCube()));
+                sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQuerySparkJob()));
     }
 
-    public static CubeInstance generateKylinCubeInstanceForMetricsQueryRPC(String owner, KylinConfig config,
+    public static CubeInstance generateKylinCubeInstanceForMetricsQuerySparkStage(String owner, KylinConfig config,
             MetricsSinkDesc sinkDesc) {
         return generateKylinCubeInstance(owner,
-                sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQueryRpcCall()));
+                sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQuerySparkStage()));
     }
 
     public static CubeInstance generateKylinCubeInstanceForMetricsJob(String owner, KylinConfig config,

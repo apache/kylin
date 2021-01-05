@@ -71,7 +71,7 @@ public class QueryMetricsTest extends ServiceTestBase {
         sqlResponse.setResults(results);
         sqlResponse.setStorageCacheUsed(true);
 
-        QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse);
+        QueryMetricsFacade.updateMetrics("", sqlRequest, sqlResponse);
 
         Thread.sleep(2000);
 
@@ -100,7 +100,7 @@ public class QueryMetricsTest extends ServiceTestBase {
         sqlResponse2.setCube("test_cube");
         sqlResponse2.setIsException(true);
 
-        QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse2);
+        QueryMetricsFacade.updateMetrics("", sqlRequest, sqlResponse2);
 
         Thread.sleep(2000);
 
@@ -146,7 +146,7 @@ public class QueryMetricsTest extends ServiceTestBase {
 
         sqlResponse.setCubeSegmentStatisticsList(context.getCubeSegmentStatisticsResultList());
 
-        QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse);
+        QueryMetricsFacade.updateMetrics("", sqlRequest, sqlResponse);
 
         Thread.sleep(2000);
 

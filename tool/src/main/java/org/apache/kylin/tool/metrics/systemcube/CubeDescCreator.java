@@ -43,10 +43,9 @@ import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metrics.lib.impl.RecordEvent;
 import org.apache.kylin.metrics.lib.impl.TimePropertyEnum;
 import org.apache.kylin.metrics.property.JobPropertyEnum;
-import org.apache.kylin.metrics.property.QueryCubePropertyEnum;
-import org.apache.kylin.metrics.property.QueryPropertyEnum;
-import org.apache.kylin.metrics.property.QueryRPCPropertyEnum;
-
+import org.apache.kylin.metrics.property.QuerySparkExecutionEnum;
+import org.apache.kylin.metrics.property.QuerySparkJobEnum;
+import org.apache.kylin.metrics.property.QuerySparkStageEnum;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
@@ -54,11 +53,11 @@ import org.apache.kylin.tool.metrics.systemcube.def.MetricsSinkDesc;
 
 public class CubeDescCreator {
 
-    public static CubeDesc generateKylinCubeDescForMetricsQuery(KylinConfig config, MetricsSinkDesc sinkDesc) {
-        String tableName = sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQuery());
+    public static CubeDesc generateKylinCubeDescForMetricsQueryExecution(KylinConfig config, MetricsSinkDesc sinkDesc) {
+        String tableName = sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQueryExecution());
 
         //Set for dimensions
-        List<String> dimensions = ModelCreator.getDimensionsForMetricsQuery();
+        List<String> dimensions = ModelCreator.getDimensionsForMetricsQueryExecution();
         dimensions.remove(TimePropertyEnum.DAY_TIME.toString());
         dimensions.remove(RecordEvent.RecordReserveKeyEnum.TIME.toString());
 
@@ -68,39 +67,49 @@ public class CubeDescCreator {
         }
 
         //Set for measures
-        List<String> measures = ModelCreator.getMeasuresForMetricsQuery();
-        measures.remove(QueryPropertyEnum.ID_CODE.toString());
+        List<String> measures = ModelCreator.getMeasuresForMetricsQueryExecution();
+        measures.remove(QuerySparkExecutionEnum.ID_CODE.toString());
         List<MeasureDesc> measureDescList = Lists.newArrayListWithExpectedSize(measures.size() * 2 + 1 + 1);
 
-        List<Pair<String, String>> measureTypeList = HiveTableCreator.getHiveColumnsForMetricsQuery();
+        List<Pair<String, String>> measureTypeList = HiveTableCreator.getHiveColumnsForMetricsQueryExecution();
         Map<String, String> measureTypeMap = Maps.newHashMapWithExpectedSize(measureTypeList.size());
         for (Pair<String, String> entry : measureTypeList) {
             measureTypeMap.put(entry.getFirst(), entry.getSecond());
         }
         measureDescList.add(getMeasureCount());
-        measureDescList.add(getMeasureMin(QueryPropertyEnum.TIME_COST.toString(),
-                measureTypeMap.get(QueryPropertyEnum.TIME_COST.toString())));
+        measureDescList.add(getMeasureMin(QuerySparkExecutionEnum.TIME_COST.toString(),
+                measureTypeMap.get(QuerySparkExecutionEnum.TIME_COST.toString())));
         for (String measure : measures) {
             measureDescList.add(getMeasureSum(measure, measureTypeMap.get(measure)));
             measureDescList.add(getMeasureMax(measure, measureTypeMap.get(measure)));
         }
-        measureDescList.add(getMeasureHLL(QueryPropertyEnum.ID_CODE.toString()));
-        measureDescList.add(getMeasurePercentile(QueryPropertyEnum.TIME_COST.toString()));
+        measureDescList.add(getMeasureHLL(QuerySparkExecutionEnum.ID_CODE.toString()));
+        measureDescList.add(getMeasurePercentile(QuerySparkExecutionEnum.TIME_COST.toString()));
 
         //Set for row key
         RowKeyColDesc[] rowKeyColDescs = new RowKeyColDesc[dimensionDescList.size()];
         int idx = getTimeRowKeyColDesc(tableName, rowKeyColDescs);
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryPropertyEnum.USER.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkExecutionEnum.USER.toString(), idx + 1);
         idx++;
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryPropertyEnum.PROJECT.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkExecutionEnum.PROJECT.toString(), idx + 1);
         idx++;
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryPropertyEnum.REALIZATION.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkExecutionEnum.REALIZATION.toString(), idx + 1);
         idx++;
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryPropertyEnum.REALIZATION_TYPE.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkExecutionEnum.REALIZATION_TYPE.toString(), idx + 1);
         idx++;
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryPropertyEnum.EXCEPTION.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkExecutionEnum.CUBOID_IDS.toString(), idx + 1);
         idx++;
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryPropertyEnum.TYPE.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkExecutionEnum.EXCEPTION.toString(), idx + 1);
+        idx++;
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkExecutionEnum.TYPE.toString(), idx + 1);
+        idx++;
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkExecutionEnum.SPARDER_NAME.toString(), idx + 1);
+        idx++;
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkExecutionEnum.QUERY_ID.toString(), idx + 1);
+        idx++;
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkExecutionEnum.START_TIME.toString(), idx + 1);
+        idx++;
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkExecutionEnum.END_TIME.toString(), idx + 1);
         idx++;
         rowKeyColDescs[idx] = getRowKeyColDesc(tableName, RecordEvent.RecordReserveKeyEnum.HOST.toString(), idx + 1);
         idx++;
@@ -109,11 +118,18 @@ public class CubeDescCreator {
         rowKeyDesc.setRowkeyColumns(rowKeyColDescs);
 
         //Set for aggregation group
-        String[][] hierarchy_dims = new String[2][];
+        String[][] hierarchy_dims = new String[4][];
         hierarchy_dims[0] = getTimeHierarchy();
-        hierarchy_dims[1] = new String[2];
-        hierarchy_dims[1][0] = QueryPropertyEnum.REALIZATION_TYPE.toString();
-        hierarchy_dims[1][1] = QueryPropertyEnum.REALIZATION.toString();
+        hierarchy_dims[1] = new String[3];
+        hierarchy_dims[1][0] = QuerySparkExecutionEnum.REALIZATION_TYPE.toString();
+        hierarchy_dims[1][1] = QuerySparkExecutionEnum.REALIZATION.toString();
+        hierarchy_dims[1][2] = QuerySparkExecutionEnum.CUBOID_IDS.toString();
+        hierarchy_dims[2] = new String[2];
+        hierarchy_dims[2][0] = QuerySparkExecutionEnum.START_TIME.toString();
+        hierarchy_dims[2][1] = QuerySparkExecutionEnum.END_TIME.toString();
+        hierarchy_dims[3] = new String[2];
+        hierarchy_dims[3][0] = QuerySparkExecutionEnum.SPARDER_NAME.toString();
+        hierarchy_dims[3][1] = RecordEvent.RecordReserveKeyEnum.HOST.toString();
         for (int i = 0; i < hierarchy_dims.length; i++) {
             hierarchy_dims[i] = refineColumnWithTable(tableName, hierarchy_dims[i]);
         }
@@ -135,15 +151,15 @@ public class CubeDescCreator {
                 rowKeyDesc, aggGroup, hBaseMapping, sinkDesc.getCubeDescOverrideProperties());
     }
 
-    public static CubeDesc generateKylinCubeDescForMetricsQueryCube(KylinConfig config, MetricsSinkDesc sinkDesc) {
-        String tableName = sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQueryCube());
+    public static CubeDesc generateKylinCubeDescForMetricsQuerySparkJob(KylinConfig config, MetricsSinkDesc sinkDesc) {
+        String tableName = sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQuerySparkJob());
 
         //Set for dimensions
-        List<String> dimensions = ModelCreator.getDimensionsForMetricsQueryCube();
+        List<String> dimensions = ModelCreator.getDimensionsForMetricsQuerySparkJob();
         dimensions.remove(TimePropertyEnum.DAY_TIME.toString());
         dimensions.remove(RecordEvent.RecordReserveKeyEnum.TIME.toString());
         dimensions.remove(RecordEvent.RecordReserveKeyEnum.HOST.toString());
-        dimensions.remove(QueryCubePropertyEnum.PROJECT.toString());
+        dimensions.remove(QuerySparkJobEnum.PROJECT.toString());
 
         List<DimensionDesc> dimensionDescList = Lists.newArrayListWithExpectedSize(dimensions.size());
         for (String dimensionName : dimensions) {
@@ -151,10 +167,10 @@ public class CubeDescCreator {
         }
 
         //Set for measures
-        List<String> measures = ModelCreator.getMeasuresForMetricsQueryCube();
+        List<String> measures = ModelCreator.getMeasuresForMetricsQuerySparkJob();
         List<MeasureDesc> measureDescList = Lists.newArrayListWithExpectedSize(measures.size() * 2);
 
-        List<Pair<String, String>> measureTypeList = HiveTableCreator.getHiveColumnsForMetricsQueryCube();
+        List<Pair<String, String>> measureTypeList = HiveTableCreator.getHiveColumnsForMetricsQuerySparkJob();
         Map<String, String> measureTypeMap = Maps.newHashMapWithExpectedSize(measureTypeList.size());
         for (Pair<String, String> entry : measureTypeList) {
             measureTypeMap.put(entry.getFirst(), entry.getSecond());
@@ -162,53 +178,43 @@ public class CubeDescCreator {
         measureDescList.add(getMeasureCount());
         for (String measure : measures) {
             measureDescList.add(getMeasureSum(measure, measureTypeMap.get(measure)));
-            if (!measure.equals(QueryCubePropertyEnum.WEIGHT_PER_HIT.toString())) {
-                measureDescList.add(getMeasureMax(measure, measureTypeMap.get(measure)));
-            }
+            measureDescList.add(getMeasureMax(measure, measureTypeMap.get(measure)));
         }
 
         //Set for row key
         RowKeyColDesc[] rowKeyColDescs = new RowKeyColDesc[dimensionDescList.size()];
         int idx = getTimeRowKeyColDesc(tableName, rowKeyColDescs);
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryCubePropertyEnum.CUBE.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkJobEnum.JOB_ID.toString(), idx + 1);
         idx++;
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryCubePropertyEnum.SEGMENT.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkJobEnum.EXECUTION_ID.toString(), idx + 1);
         idx++;
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryCubePropertyEnum.CUBOID_SOURCE.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkJobEnum.QUERY_ID.toString(), idx + 1);
         idx++;
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryCubePropertyEnum.CUBOID_TARGET.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkJobEnum.START_TIME.toString(), idx + 1);
         idx++;
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryCubePropertyEnum.FILTER_MASK.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkJobEnum.END_TIME.toString(), idx + 1);
         idx++;
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryCubePropertyEnum.IF_MATCH.toString(), idx + 1);
-        idx++;
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryCubePropertyEnum.IF_SUCCESS.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkJobEnum.IF_SUCCESS.toString(), idx + 1);
         idx++;
 
         RowKeyDesc rowKeyDesc = new RowKeyDesc();
         rowKeyDesc.setRowkeyColumns(rowKeyColDescs);
 
-        //Set for aggregation group
-        String[] mandatory_dims = new String[] { QueryCubePropertyEnum.CUBE.toString() };
-        mandatory_dims = refineColumnWithTable(tableName, mandatory_dims);
-
-        String[][] hierarchy_dims = new String[1][];
+        String[][] hierarchy_dims = new String[2][];
         hierarchy_dims[0] = getTimeHierarchy();
+        hierarchy_dims[1] = new String[3];
+        hierarchy_dims[1][0] = QuerySparkJobEnum.QUERY_ID.toString();
+        hierarchy_dims[1][1] = QuerySparkJobEnum.EXECUTION_ID.toString();
+        hierarchy_dims[1][2] = QuerySparkJobEnum.JOB_ID.toString();
+
         for (int i = 0; i < hierarchy_dims.length; i++) {
             hierarchy_dims[i] = refineColumnWithTable(tableName, hierarchy_dims[i]);
         }
 
-        String[][] joint_dims = new String[1][];
-        joint_dims[0] = new String[] { QueryCubePropertyEnum.CUBOID_SOURCE.toString(),
-                QueryCubePropertyEnum.CUBOID_TARGET.toString() };
-        for (int i = 0; i < joint_dims.length; i++) {
-            joint_dims[i] = refineColumnWithTable(tableName, joint_dims[i]);
-        }
-
         SelectRule selectRule = new SelectRule();
-        selectRule.mandatoryDims = mandatory_dims;
+        selectRule.mandatoryDims = new String[0];
         selectRule.hierarchyDims = hierarchy_dims;
-        selectRule.jointDims = joint_dims;
+        selectRule.jointDims = new String[0][0];
 
         AggregationGroup aggGroup = new AggregationGroup();
         aggGroup.setIncludes(refineColumnWithTable(tableName, dimensions));
@@ -222,11 +228,11 @@ public class CubeDescCreator {
                 rowKeyDesc, aggGroup, hBaseMapping, sinkDesc.getCubeDescOverrideProperties());
     }
 
-    public static CubeDesc generateKylinCubeDescForMetricsQueryRPC(KylinConfig config, MetricsSinkDesc sinkDesc) {
-        String tableName = sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQueryRpcCall());
+    public static CubeDesc generateKylinCubeDescForMetricsQuerySparkStage(KylinConfig config, MetricsSinkDesc sinkDesc) {
+        String tableName = sinkDesc.getTableNameForMetrics(config.getKylinMetricsSubjectQuerySparkStage());
 
         //Set for dimensions
-        List<String> dimensions = ModelCreator.getDimensionsForMetricsQueryRPC();
+        List<String> dimensions = ModelCreator.getDimensionsForMetricsQuerySparkStage();
         dimensions.remove(TimePropertyEnum.DAY_TIME.toString());
         dimensions.remove(RecordEvent.RecordReserveKeyEnum.TIME.toString());
 
@@ -236,10 +242,10 @@ public class CubeDescCreator {
         }
 
         //Set for measures
-        List<String> measures = ModelCreator.getMeasuresForMetricsQueryRPC();
+        List<String> measures = ModelCreator.getMeasuresForMetricsQuerySparkStage();
         List<MeasureDesc> measureDescList = Lists.newArrayListWithExpectedSize(measures.size() * 2 + 1 + 1);
 
-        List<Pair<String, String>> measureTypeList = HiveTableCreator.getHiveColumnsForMetricsQueryRPC();
+        List<Pair<String, String>> measureTypeList = HiveTableCreator.getHiveColumnsForMetricsQuerySparkStage();
         Map<String, String> measureTypeMap = Maps.newHashMapWithExpectedSize(measureTypeList.size());
         for (Pair<String, String> entry : measureTypeList) {
             measureTypeMap.put(entry.getFirst(), entry.getSecond());
@@ -249,28 +255,42 @@ public class CubeDescCreator {
             measureDescList.add(getMeasureSum(measure, measureTypeMap.get(measure)));
             measureDescList.add(getMeasureMax(measure, measureTypeMap.get(measure)));
         }
-        measureDescList.add(getMeasurePercentile(QueryRPCPropertyEnum.CALL_TIME.toString()));
 
         //Set for row key
         RowKeyColDesc[] rowKeyColDescs = new RowKeyColDesc[dimensionDescList.size()];
         int idx = getTimeRowKeyColDesc(tableName, rowKeyColDescs);
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryRPCPropertyEnum.PROJECT.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkStageEnum.PROJECT.toString(), idx + 1);
         idx++;
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryRPCPropertyEnum.REALIZATION.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkStageEnum.REALIZATION.toString(), idx + 1);
         idx++;
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryRPCPropertyEnum.RPC_SERVER.toString(), idx + 1);
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkStageEnum.CUBOID_ID.toString(), idx + 1);
+        idx++;
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkStageEnum.QUERY_ID.toString(), idx + 1);
+        idx++;
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkStageEnum.EXECUTION_ID.toString(), idx + 1);
+        idx++;
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkStageEnum.JOB_ID.toString(), idx + 1);
+        idx++;
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkStageEnum.STAGE_ID.toString(), idx + 1);
+        idx++;
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkStageEnum.IF_SUCCESS.toString(), idx + 1);
+        idx++;
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkStageEnum.SUBMIT_TIME.toString(), idx + 1);
         idx++;
         rowKeyColDescs[idx] = getRowKeyColDesc(tableName, RecordEvent.RecordReserveKeyEnum.HOST.toString(), idx + 1);
-        idx++;
-        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QueryRPCPropertyEnum.EXCEPTION.toString(), idx + 1);
         idx++;
 
         RowKeyDesc rowKeyDesc = new RowKeyDesc();
         rowKeyDesc.setRowkeyColumns(rowKeyColDescs);
 
         //Set for aggregation group
-        String[][] hierarchy_dims = new String[1][];
+        String[][] hierarchy_dims = new String[2][];
         hierarchy_dims[0] = getTimeHierarchy();
+        hierarchy_dims[1] = new String[4];
+        hierarchy_dims[1][0] = QuerySparkStageEnum.QUERY_ID.toString();
+        hierarchy_dims[1][1] = QuerySparkStageEnum.EXECUTION_ID.toString();
+        hierarchy_dims[1][2] = QuerySparkStageEnum.JOB_ID.toString();
+        hierarchy_dims[1][3] = QuerySparkStageEnum.STAGE_ID.toString();
         for (int i = 0; i < hierarchy_dims.length; i++) {
             hierarchy_dims[i] = refineColumnWithTable(tableName, hierarchy_dims[i]);
         }
@@ -447,7 +467,7 @@ public class CubeDescCreator {
         desc.setDimensions(dimensionDescList);
         desc.setMeasures(measureDescList);
         desc.setRowkey(rowKeyDesc);
-        desc.setHbaseMapping(hBaseMapping);
+        //desc.setHbaseMapping(hBaseMapping);
         desc.setNotifyList(Lists.<String> newArrayList());
         desc.setStatusNeedNotify(Lists.newArrayList(JobStatusEnum.ERROR.toString()));
         desc.setAutoMergeTimeRanges(new long[] { 86400000L, 604800000L, 2419200000L });

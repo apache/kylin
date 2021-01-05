@@ -37,6 +37,7 @@ import org.apache.kylin.query.monitor.SparderContextCanary
 import org.apache.kylin.spark.classloader.ClassLoaderUtils
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
 import org.apache.spark.sql.execution.datasource.KylinSourceStrategy
+import org.apache.spark.sql.metrics.SparderMetricsListener
 import org.apache.spark.utils.YarnInfoFetcherUtils
 
 // scalastyle:off
@@ -149,6 +150,11 @@ object SparderContext extends Logging {
                     }
                     .enableHiveSupport()
                     .getOrCreateKylinSession()
+              }
+              if (kylinConf.isKylinMetricsReporterForQueryEnabled) {
+                val appStatusListener = new SparderMetricsListener()
+                sparkSession.sparkContext.addSparkListener(appStatusListener)
+                logInfo("Query metrics reporter is enabled, sparder metrics listener is added.")
               }
               spark = sparkSession
               val appid = sparkSession.sparkContext.applicationId
