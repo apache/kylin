@@ -2349,18 +2349,26 @@ public abstract class KylinConfigBase implements Serializable {
                 + getKylinMetricsSubjectSuffix();
     }
 
-    public String getKylinMetricsSubjectQuery() {
-        return getOptional("kylin.metrics.subject-query", "METRICS_QUERY") + "_" + getKylinMetricsSubjectSuffix();
+    public String getKylinMetricsSubjectQueryExecution() {
+        return getOptional("kylin.metrics.subject-query", "METRICS_QUERY_EXECUTION") + "_" + getKylinMetricsSubjectSuffix();
     }
 
-    public String getKylinMetricsSubjectQueryCube() {
-        return getOptional("kylin.metrics.subject-query-cube", "METRICS_QUERY_CUBE") + "_"
+    public String getKylinMetricsSubjectQuerySparkJob() {
+        return getOptional("kylin.metrics.subject-query-cube", "METRICS_QUERY_SPARK_JOB") + "_"
                 + getKylinMetricsSubjectSuffix();
     }
 
-    public String getKylinMetricsSubjectQueryRpcCall() {
-        return getOptional("kylin.metrics.subject-query-rpc", "METRICS_QUERY_RPC") + "_"
+    public String getKylinMetricsSubjectQuerySparkStage() {
+        return getOptional("kylin.metrics.subject-query-rpc", "METRICS_QUERY_SPARK_STAGE") + "_"
                 + getKylinMetricsSubjectSuffix();
+    }
+
+    public int getKylinMetricsCacheExpireSeconds() {
+        return Integer.parseInt(this.getOptional("kylin.metrics.query-cache.expire-seconds", "600"));
+    }
+
+    public int getKylinMetricsCacheMaxEntries() {
+        return Integer.parseInt(this.getOptional("kylin.metrics.query-cache.max-entries", "10000"));
     }
 
     public Map<String, String> getKylinMetricsConf() {
