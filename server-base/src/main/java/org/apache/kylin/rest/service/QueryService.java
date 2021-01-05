@@ -703,11 +703,23 @@ public class QueryService extends BasicService {
                 if (getConfig().isQueryPreparedStatementCacheEnable() && prepareSqlRequest.isEnableStatementCache()) {
                     try {
                         preparedContext = preparedContextPool.borrowObject(preparedContextKey);
+
+                        // preparedContext initialized by current thread, put relNode and resultType into cache
+                        if (preparedContext.olapRel == null) {
+                            preparedContext.olapRel = QueryContextFacade.current().getOlapRel();
+                            preparedContext.resultType = (QueryContextFacade.current().getResultType());
+                        } else {
+                            //set cached RelNode and ResultType into current QueryContext
+                            QueryContextFacade.current().setOlapRel(preparedContext.olapRel);
+                            QueryContextFacade.current().setResultType(preparedContext.resultType);
+                        }
+
                         borrowPrepareContext = true;
                     } catch (NoSuchElementException noElementException) {
                         borrowPrepareContext = false;
                         preparedContext = createPreparedContext(sqlRequest.getProject(), sqlRequest.getSql());
                     }
+
                     for (OLAPContext olapContext : preparedContext.olapContexts) {
                         resetRealizationInContext(olapContext);
                         OLAPContext.registerContext(olapContext);
@@ -1404,6 +1416,8 @@ public class QueryService extends BasicService {
         private Connection conn;
         private PreparedStatement preparedStatement;
         private Collection<OLAPContext> olapContexts;
+        private Object olapRel;
+        private Object resultType;
 
         public PreparedContext(Connection conn, PreparedStatement preparedStatement,
                 Collection<OLAPContext> olapContexts) {
