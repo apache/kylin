@@ -40,7 +40,6 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
-import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.spark.job.NSparkExecutable;
@@ -49,8 +48,6 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.kylin.engine.mr.common.BatchConstants.CFG_OUTPUT_STATISTICS;
 
 public class UpdateMetadataUtil {
 
@@ -80,12 +77,12 @@ public class UpdateMetadataUtil {
                             currentInstanceCopy.toString(), toUpdateSeg.toString(), tobeSegments.toString()));
 
         String resKey = toUpdateSeg.getStatisticsResourcePath();
-        String jobWorkingDirPath = JobBuilderSupport.getJobWorkingDir(currentInstanceCopy.getConfig().getHdfsWorkingDirectory(), nsparkExecutable.getParam(MetadataConstants.P_JOB_ID));
-        Path statisticsFile = new Path(jobWorkingDirPath + "/" + segmentId + "/" + CFG_OUTPUT_STATISTICS + "/" + BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+        String jobTmpDir = config.getJobTmpDir(currentInstanceCopy.getProject()) + "/" + nsparkExecutable.getParam(MetadataConstants.P_JOB_ID);
+        Path statisticsFile = new Path(jobTmpDir + "/" + ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeId + "/" + segmentId + "/" + BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         if (fs.exists(statisticsFile)) {
             FSDataInputStream is = fs.open(statisticsFile);
-            ResourceStore.getStore(config).putResource(resKey, is, System.currentTimeMillis());
+            ResourceStore.getStore(config).putBigResource(resKey, is, System.currentTimeMillis());
         }
 
         CubeUpdate update = new CubeUpdate(currentInstanceCopy);

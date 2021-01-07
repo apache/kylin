@@ -6,15 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common.persistence;
 
@@ -138,7 +138,7 @@ abstract public class ResourceStore {
                     StringEntity.serializer);
         }
         StringEntity entity = getResource(ResourceStore.METASTORE_UUID_TAG, StringEntity.serializer);
-        return entity == null ? "":entity.toString();
+        return entity == null ? "" : entity.toString();
     }
 
     /**
@@ -361,6 +361,13 @@ abstract public class ResourceStore {
         return writer.bytesWritten();
     }
 
+    final public void putBigResource(String resPath, InputStream content, long ts) throws IOException {
+        resPath = norm(resPath);
+        ContentWriter writer = ContentWriter.create(content);
+        writer.markBigContent();
+        putResourceCheckpoint(resPath, writer, ts);
+    }
+
     /**
      * Overwrite a resource without write conflict check
      * @return bytes written
@@ -447,7 +454,7 @@ abstract public class ResourceStore {
             throws IOException, WriteConflictException;
 
     private long checkAndPutResourceWithRetry(final String resPath, final byte[] content, final long oldTS,
-            final long newTS) throws IOException, WriteConflictException {
+                                              final long newTS) throws IOException, WriteConflictException {
         ExponentialBackoffRetry retry = new ExponentialBackoffRetry(this);
         return retry.doWithRetry(() -> checkAndPutResourceImpl(resPath, content, oldTS, newTS));
     }
