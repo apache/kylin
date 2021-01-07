@@ -47,7 +47,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.StringUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -85,8 +84,6 @@ import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import scala.Tuple2;
 import scala.collection.JavaConversions;
 
-import static org.apache.kylin.engine.mr.common.BatchConstants.CFG_OUTPUT_STATISTICS;
-
 public class CubeBuildJob extends SparkApplication {
     protected static final Logger logger = LoggerFactory.getLogger(CubeBuildJob.class);
     protected static String TEMP_DIR_SUFFIX = "_temp";
@@ -119,7 +116,7 @@ public class CubeBuildJob extends SparkApplication {
         cubeManager = CubeManager.getInstance(config);
         cubeInstance = cubeManager.getCubeByUuid(cubeName);
         CubeSegment newSegment = cubeInstance.getSegmentById(firstSegmentId);
-        SpanningTree spanningTree ;
+        SpanningTree spanningTree;
         ParentSourceChooser sourceChooser;
 
         // Cuboid Statistics is served for Cube Planner Phase One at the moment
@@ -140,8 +137,8 @@ public class CubeBuildJob extends SparkApplication {
             logger.info("Cuboid statistics return {} records and cost {} ms.", hllMap.size(), (System.currentTimeMillis() - startMills));
 
             // 1.2 Save cuboid statistics
-            String jobWorkingDirPath = JobBuilderSupport.getJobWorkingDir(cubeInstance.getConfig().getHdfsWorkingDirectory(), jobId);
-            Path statisticsDir = new Path(jobWorkingDirPath + "/" + firstSegmentId + "/" + CFG_OUTPUT_STATISTICS);
+            String jobTmpDir = config.getJobTmpDir(project) + "/" + jobId;
+            Path statisticsDir = new Path(jobTmpDir + "/" + ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeName + "/" + firstSegmentId + "/");
             Optional<HLLCounter> hll = hllMap.values().stream().max(Comparator.comparingLong(HLLCounter::getCountEstimate));
             long rc = hll.map(HLLCounter::getCountEstimate).orElse(1L);
             CubeStatsWriter.writeCuboidStatistics(HadoopUtil.getCurrentConfiguration(), statisticsDir, hllMap, 1, rc);
