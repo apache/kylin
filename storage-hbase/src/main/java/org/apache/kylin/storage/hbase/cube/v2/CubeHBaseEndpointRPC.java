@@ -559,7 +559,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             return false;
         }
         try {
-            if (KylinConfig.getInstanceFromEnv().getMemCachedHosts() == null) {
+            if (!KylinConfig.getInstanceFromEnv().isMemcachedEnabled()) {
                 return false;
             }
         } catch (Exception e) {
