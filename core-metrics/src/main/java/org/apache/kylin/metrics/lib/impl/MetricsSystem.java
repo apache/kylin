@@ -26,6 +26,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metrics.QuerySparkMetrics;
 import org.apache.kylin.metrics.lib.ActiveReservoir;
 import org.apache.kylin.metrics.lib.ActiveReservoirRecordFilter;
 import org.slf4j.Logger;
@@ -55,6 +56,7 @@ public class MetricsSystem extends MetricRegistry {
     }
 
     public void shutdown() throws IOException {
+        QuerySparkMetrics.getInstance().getQueryExecutionMetricsMap().invalidateAll();
         for (ActiveReservoir entry : activeReservoirs.values()) {
             entry.close();
         }

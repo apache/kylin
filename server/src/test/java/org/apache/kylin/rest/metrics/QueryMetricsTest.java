@@ -202,25 +202,6 @@ public class QueryMetricsTest extends ServiceTestBase {
         updateSparkMetrics(queryId1);
 
         Assert.assertTrue(QuerySparkMetrics.getInstance().getQueryExecutionMetrics(queryId1) != null);
-        Assert.assertEquals(1L, mBeanServer.getAttribute(objectName, "QueryCount"));
-        Assert.assertEquals(1L, mBeanServer.getAttribute(objectName, "QuerySuccessCount"));
-        Assert.assertEquals(0L, mBeanServer.getAttribute(objectName, "QueryFailCount"));
-        Assert.assertEquals(1L, mBeanServer.getAttribute(objectName, "CacheHitCount"));
-
-        Assert.assertEquals(1L, mBeanServer.getAttribute(objectName, "ScanRowCountNumOps"));
-        Assert.assertEquals(100.0, mBeanServer.getAttribute(objectName, "ScanRowCountAvgTime"));
-        Assert.assertEquals(100.0, mBeanServer.getAttribute(objectName, "ScanRowCountMaxTime"));
-        Assert.assertEquals(100.0, mBeanServer.getAttribute(objectName, "ScanRowCountMinTime"));
-
-        Assert.assertEquals(1L, mBeanServer.getAttribute(objectName, "ResultRowCountNumOps"));
-        Assert.assertEquals(2.0, mBeanServer.getAttribute(objectName, "ResultRowCountMaxTime"));
-        Assert.assertEquals(2.0, mBeanServer.getAttribute(objectName, "ResultRowCountAvgTime"));
-        Assert.assertEquals(2.0, mBeanServer.getAttribute(objectName, "ResultRowCountMinTime"));
-
-        Assert.assertEquals(1L, mBeanServer.getAttribute(objectName, "QueryLatencyNumOps"));
-        Assert.assertEquals(10.0, mBeanServer.getAttribute(objectName, "QueryLatencyMaxTime"));
-        Assert.assertEquals(10.0, mBeanServer.getAttribute(objectName, "QueryLatencyAvgTime"));
-        Assert.assertEquals(10.0, mBeanServer.getAttribute(objectName, "QueryLatencyMinTime"));
 
         String queryId2 = "2";
         generateSparkMetrics(queryId2);
@@ -240,10 +221,6 @@ public class QueryMetricsTest extends ServiceTestBase {
         QueryMetricsFacade.updateMetrics(queryId2, sqlRequest, sqlResponse2);
 
         Thread.sleep(5000);
-
-        Assert.assertEquals(2L, mBeanServer.getAttribute(objectName, "QueryCount"));
-        Assert.assertEquals(1L, mBeanServer.getAttribute(objectName, "QuerySuccessCount"));
-        Assert.assertEquals(1L, mBeanServer.getAttribute(objectName, "QueryFailCount"));
 
         Assert.assertTrue(QuerySparkMetrics.getInstance().getQueryExecutionMetrics(queryId2) == null);
         Assert.assertEquals(2, sparkMetricsReportCnt.get());
