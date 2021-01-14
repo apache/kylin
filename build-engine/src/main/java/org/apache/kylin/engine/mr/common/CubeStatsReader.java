@@ -96,26 +96,32 @@ public class CubeStatsReader {
      */
     public CubeStatsReader(CubeSegment cubeSegment, CuboidScheduler cuboidScheduler, KylinConfig kylinConfig)
             throws IOException {
+        this.seg = cubeSegment;
+        this.cuboidScheduler = cuboidScheduler;
         ResourceStore store = ResourceStore.getStore(kylinConfig);
         String statsKey = cubeSegment.getStatisticsResourcePath();
         RawResource resource = store.getResource(statsKey);
-        if (resource == null) {
+        if (resource != null) {
+            File tmpSeqFile = writeTmpSeqFile(resource.content());
+            Path path = new Path(HadoopUtil.fixWindowsPath("file://" + tmpSeqFile.getAbsolutePath()));
+            logger.info("Reading statistics from {}", path);
+            CubeStatsResult cubeStatsResult = new CubeStatsResult(path, kylinConfig.getCubeStatsHLLPrecision());
+            tmpSeqFile.delete();
+
+            this.samplingPercentage = cubeStatsResult.getPercentage();
+            this.mapperNumberOfFirstBuild = cubeStatsResult.getMapperNumber();
+            this.mapperOverlapRatioOfFirstBuild = cubeStatsResult.getMapperOverlapRatio();
+            this.cuboidRowEstimatesHLL = cubeStatsResult.getCounterMap();
+            this.sourceRowCount = cubeStatsResult.getSourceRecordCount();
+        } else {
             // throw new IllegalStateException("Missing resource at " + statsKey);
             logger.warn("{} is not exists.", statsKey);
+            this.samplingPercentage = -1;
+            this.mapperNumberOfFirstBuild = -1;
+            this.mapperOverlapRatioOfFirstBuild = -1.0;
+            this.cuboidRowEstimatesHLL = null;
+            this.sourceRowCount = -1L;
         }
-        File tmpSeqFile = writeTmpSeqFile(resource.content());
-        Path path = new Path(HadoopUtil.fixWindowsPath("file://" + tmpSeqFile.getAbsolutePath()));
-        logger.info("Reading statistics from {}", path);
-        CubeStatsResult cubeStatsResult = new CubeStatsResult(path, kylinConfig.getCubeStatsHLLPrecision());
-        tmpSeqFile.delete();
-
-        this.seg = cubeSegment;
-        this.cuboidScheduler = cuboidScheduler;
-        this.samplingPercentage = cubeStatsResult.getPercentage();
-        this.mapperNumberOfFirstBuild = cubeStatsResult.getMapperNumber();
-        this.mapperOverlapRatioOfFirstBuild = cubeStatsResult.getMapperOverlapRatio();
-        this.cuboidRowEstimatesHLL = cubeStatsResult.getCounterMap();
-        this.sourceRowCount = cubeStatsResult.getSourceRecordCount();
     }
 
     /**
@@ -167,6 +173,9 @@ public class CubeStatsReader {
     }
 
     public Map<Long, Long> getCuboidRowEstimatesHLL() {
+        if (cuboidRowEstimatesHLL == null) {
+            return null;
+        }
         return getCuboidRowCountMapFromSampling(cuboidRowEstimatesHLL, samplingPercentage);
     }
 

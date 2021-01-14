@@ -239,7 +239,7 @@ KylinApp.controller('CubeCtrl', function ($scope, $rootScope, AccessService, Mes
             };
             $scope.currentOptions.chart.sunburst = getSunburstDispatch();
             $scope.currentOptions.title.text = 'Current Cuboid Distribution';
-            $scope.currentOptions.subtitle.text = '[Cuboid Count: ' + data.nodeInfos.length + '] [Row Count: ' + data.totalRowCount + ']';
+            $scope.currentOptions.subtitle.text = '[Cuboid Count: ' + data.nodeInfos.length + '] [The Row Count of The First Segment: ' + data.totalRowCount + ']';
         } else if ('recommend' === type) {
             $scope.recommendData = [chartData];
             $scope.recommendOptions = angular.copy(cubeConfig.baseChartOptions);
@@ -258,7 +258,7 @@ KylinApp.controller('CubeCtrl', function ($scope, $rootScope, AccessService, Mes
             };
             $scope.recommendOptions.chart.sunburst = getSunburstDispatch();
             $scope.recommendOptions.title.text = 'Recommend Cuboid Distribution';
-            $scope.recommendOptions.subtitle.text = '[Cuboid Count: ' + data.nodeInfos.length + '] [Row Count: ' + data.totalRowCount + ']';
+            $scope.recommendOptions.subtitle.text = '[Cuboid Count: ' + data.nodeInfos.length + '] [The Row Count of The First Segment: ' + data.totalRowCount + ']';
         }
     };
 
