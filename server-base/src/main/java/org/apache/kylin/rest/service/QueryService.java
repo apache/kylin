@@ -1180,6 +1180,7 @@ public class QueryService extends BasicService {
         List<String> realizations = Lists.newLinkedList();
         StringBuilder cubeSb = new StringBuilder();
         StringBuilder cuboidIdsSb = new StringBuilder();
+        StringBuilder realizationTypeSb = new StringBuilder();
         StringBuilder logSb = new StringBuilder("Processed rows for each storageContext: ");
         QueryContext queryContext = QueryContextFacade.current();
         if (OLAPContext.getThreadLocalContexts() != null) { // contexts can be null in case of 'explain plan for'
@@ -1191,6 +1192,7 @@ public class QueryService extends BasicService {
                     if (cubeSb.length() > 0) {
                         cubeSb.append(",");
                     }
+                    cubeSb.append(ctx.realization.getCanonicalName());
                     Cuboid cuboid = ctx.storageContext.getCuboid();
                     if (cuboid != null) {
                         //Some queries do not involve cuboid, e.g. lookup table query
@@ -1199,25 +1201,25 @@ public class QueryService extends BasicService {
                         }
                         cuboidIdsSb.append(cuboid.getId());
                     }
-                    cubeSb.append(ctx.realization.getCanonicalName());
                     logSb.append(ctx.storageContext.getProcessedRowCount()).append(" ");
 
                     realizationName = ctx.realization.getName();
                     realizationType = ctx.realization.getStorageType();
+                    if (realizationTypeSb.length() > 0) {
+                        realizationTypeSb.append(",");
+                    }
+                    realizationTypeSb.append(realizationType);
 
                     realizations.add(realizationName);
                 }
-                QuerySparkMetrics.getInstance().setQueryRealization(queryContext.getQueryId(), realizationName,
-                        realizationType, cuboidIdsSb.toString());
             }
-
-
         }
         logger.info(logSb.toString());
 
         SQLResponse response = new SQLResponse(columnMetas, results, cubeSb.toString(), 0, isException,
                 exceptionMessage, isPartialResult, isPushDown);
         response.setCuboidIds(cuboidIdsSb.toString());
+        response.setRealizationTypes(realizationTypeSb.toString());
         response.setTotalScanCount(queryContext.getScannedRows());
         response.setTotalScanFiles((queryContext.getScanFiles() < 0) ? -1 :
                 queryContext.getScanFiles());

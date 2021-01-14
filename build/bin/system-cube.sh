@@ -74,18 +74,14 @@ then
 	cat <<-EOF > ${SINK_TOOLS_FILE}
 	[
 	  [
-		"org.apache.kylin.tool.metrics.systemcube.util.HiveSinkTool",
-		{
-		  "storage_type": 2,
-		  "cube_desc_override_properties": [
-			"java.util.HashMap",
-			{
-			  "kylin.cube.algorithm": "INMEM",
-			  "kylin.cube.max-building-segments": "1"
-			}
-		  ]
-		}
-	  ]
+    {
+       "sink": "hive",
+       "storage_type": 4,
+       "cube_desc_override_properties": {
+         "kylin.cube.max-building-segments": "1"
+       }
+    }
+    ]
 	]
 	EOF
   $KYLIN_HOME/bin/kylin.sh org.apache.kylin.tool.metrics.systemcube.SCCreator \

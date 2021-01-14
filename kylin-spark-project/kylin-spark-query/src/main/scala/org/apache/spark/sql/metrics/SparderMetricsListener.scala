@@ -98,7 +98,7 @@ class SparderMetricsListener() extends SparkListener with Logging {
       val stageMetrics = stageInfo.taskMetrics
       val sparkStageMetrics = new QuerySparkMetrics.SparkStageMetrics
       sparkStageMetrics.setMetrics(stageMetrics.resultSize, stageMetrics.executorDeserializeCpuTime,
-        stageMetrics.executorDeserializeCpuTime, stageMetrics.executorRunTime, stageMetrics.executorCpuTime,
+        stageMetrics.executorDeserializeTime, stageMetrics.executorRunTime, stageMetrics.executorCpuTime,
         stageMetrics.jvmGCTime, stageMetrics.resultSerializationTime,
         stageMetrics.memoryBytesSpilled, stageMetrics.diskBytesSpilled, stageMetrics.peakExecutionMemory)
       queryExecutionMetrics.updateSparkStageMetrics(jobExecutionMap.apply(stageJobMap.apply(stageInfo.stageId)).queryId,

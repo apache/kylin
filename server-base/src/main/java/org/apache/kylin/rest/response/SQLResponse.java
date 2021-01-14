@@ -48,6 +48,8 @@ public class SQLResponse implements Serializable {
 
     protected String cuboidIds;
 
+    protected String realizationTypes;
+
     // if not select query, only return affected row count
     protected int affectedRowCount;
 
@@ -284,6 +286,14 @@ public class SQLResponse implements Serializable {
 
     public void setLazyQueryStartTime(long lazyQueryStartTime) {
         this.lazyQueryStartTime = lazyQueryStartTime;
+    }
+
+    public String getRealizationTypes() {
+        return realizationTypes;
+    }
+
+    public void setRealizationTypes(String realizationTypes) {
+        this.realizationTypes = realizationTypes;
     }
 
     @JsonIgnore
