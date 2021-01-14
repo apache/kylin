@@ -7,7 +7,7 @@ title: 下载
 
 #### v4.0.0-alpha
 - 这是 3.1.0 版本后的一个主要版本，包含35个新功能和22个问题的修复以及各种改进。关于具体内容请查看发布说明.
-- [发布说明](/docs/release_notes.html), [安装指南](/docs/install/index.html) and [升级指南](https://cwiki.apache.org/confluence/display/KYLIN/How+to+upgrade+for+Kylin+4.0.0-alpha)
+- [发布说明](/docs/release_notes.html), [安装指南](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide) and [升级指南](https://cwiki.apache.org/confluence/display/KYLIN/How+to+upgrade)
 - 源码下载: [apache-kylin-4.0.0-alpha-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-source-release.zip.sha256)\]
 - Hadoop 2 二进制包:
   - for Apache Hadoop 2 (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-4.0.0-alpha-bin-hadoop2.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-bin-hadoop2.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-bin-hadoop2.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-bin-hadoop2.tar.gz.sha256)\]
