@@ -24,6 +24,7 @@ import org.apache.kylin.metrics.lib.impl.TimedRecordEvent;
 import org.apache.kylin.metrics.property.QuerySparkExecutionEnum;
 import org.apache.kylin.metrics.property.QuerySparkJobEnum;
 import org.apache.kylin.metrics.property.QuerySparkStageEnum;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
 import org.apache.kylin.shaded.com.google.common.cache.Cache;
 import org.apache.kylin.shaded.com.google.common.cache.CacheBuilder;
 import org.apache.kylin.shaded.com.google.common.cache.RemovalListener;
@@ -89,7 +90,12 @@ public class QuerySparkMetrics {
                 KylinConfig.getInstanceFromEnv().getKylinMetricsCacheExpireSeconds(), TimeUnit.SECONDS);
     }
 
+    private void shutdown() {
+        queryExecutionMetricsMap.invalidateAll();
+    }
+
     // only for test case
+    @VisibleForTesting
     public static void init(RemovalListener removalListener) {
         instance = new QuerySparkMetrics(removalListener);
     }

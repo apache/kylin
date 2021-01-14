@@ -118,26 +118,44 @@ public class CubeDescCreator {
         rowKeyDesc.setRowkeyColumns(rowKeyColDescs);
 
         //Set for aggregation group
-        String[][] hierarchy_dims = new String[4][];
-        hierarchy_dims[0] = getTimeHierarchy();
-        hierarchy_dims[1] = new String[3];
-        hierarchy_dims[1][0] = QuerySparkExecutionEnum.REALIZATION_TYPE.toString();
-        hierarchy_dims[1][1] = QuerySparkExecutionEnum.REALIZATION.toString();
-        hierarchy_dims[1][2] = QuerySparkExecutionEnum.CUBOID_IDS.toString();
-        hierarchy_dims[2] = new String[2];
-        hierarchy_dims[2][0] = QuerySparkExecutionEnum.START_TIME.toString();
-        hierarchy_dims[2][1] = QuerySparkExecutionEnum.END_TIME.toString();
-        hierarchy_dims[3] = new String[2];
-        hierarchy_dims[3][0] = QuerySparkExecutionEnum.SPARDER_NAME.toString();
-        hierarchy_dims[3][1] = RecordEvent.RecordReserveKeyEnum.HOST.toString();
-        for (int i = 0; i < hierarchy_dims.length; i++) {
-            hierarchy_dims[i] = refineColumnWithTable(tableName, hierarchy_dims[i]);
+        String[][] hierarchyDims = new String[1][];
+        hierarchyDims[0] = getTimeHierarchy();
+        for (int i = 0; i < hierarchyDims.length; i++) {
+            hierarchyDims[i] = refineColumnWithTable(tableName, hierarchyDims[i]);
         }
 
+        String[] mandatoryDims = new String[] {refineColumnWithTable(tableName,
+                QuerySparkExecutionEnum.PROJECT.toString())};
+
+        String[][] jointDims = new String[5][];
+        jointDims[0] = new String[]{
+                refineColumnWithTable(tableName, TimePropertyEnum.TIME_HOUR.toString()),
+                refineColumnWithTable(tableName, TimePropertyEnum.TIME_MINUTE.toString())
+        };
+        jointDims[1] = new String[]{
+                refineColumnWithTable(tableName, QuerySparkExecutionEnum.START_TIME.toString()),
+                refineColumnWithTable(tableName, QuerySparkExecutionEnum.END_TIME.toString())
+        };
+        jointDims[2] = new String[]{
+                refineColumnWithTable(tableName, QuerySparkExecutionEnum.REALIZATION_TYPE.toString()),
+                refineColumnWithTable(tableName, QuerySparkExecutionEnum.REALIZATION.toString()),
+                refineColumnWithTable(tableName, QuerySparkExecutionEnum.CUBOID_IDS.toString())
+        };
+        jointDims[3] = new String[]{
+                refineColumnWithTable(tableName, QuerySparkExecutionEnum.SPARDER_NAME.toString()),
+                refineColumnWithTable(tableName, RecordEvent.RecordReserveKeyEnum.HOST.toString()),
+                refineColumnWithTable(tableName, QuerySparkExecutionEnum.EXCEPTION.toString()),
+                refineColumnWithTable(tableName, QuerySparkExecutionEnum.TYPE.toString())
+        };
+        jointDims[4] = new String[]{
+                refineColumnWithTable(tableName, QuerySparkExecutionEnum.USER.toString()),
+                refineColumnWithTable(tableName, QuerySparkExecutionEnum.QUERY_ID.toString())
+        };
+
         SelectRule selectRule = new SelectRule();
-        selectRule.mandatoryDims = new String[0];
-        selectRule.hierarchyDims = hierarchy_dims;
-        selectRule.jointDims = new String[0][0];
+        selectRule.mandatoryDims = mandatoryDims;
+        selectRule.hierarchyDims = hierarchyDims;
+        selectRule.jointDims = jointDims;
 
         AggregationGroup aggGroup = new AggregationGroup();
         aggGroup.setIncludes(refineColumnWithTable(tableName, dimensions));
@@ -159,7 +177,6 @@ public class CubeDescCreator {
         dimensions.remove(TimePropertyEnum.DAY_TIME.toString());
         dimensions.remove(RecordEvent.RecordReserveKeyEnum.TIME.toString());
         dimensions.remove(RecordEvent.RecordReserveKeyEnum.HOST.toString());
-        dimensions.remove(QuerySparkJobEnum.PROJECT.toString());
 
         List<DimensionDesc> dimensionDescList = Lists.newArrayListWithExpectedSize(dimensions.size());
         for (String dimensionName : dimensions) {
@@ -194,27 +211,44 @@ public class CubeDescCreator {
         idx++;
         rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkJobEnum.END_TIME.toString(), idx + 1);
         idx++;
+        rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkJobEnum.PROJECT.toString(), idx + 1);
+        idx++;
         rowKeyColDescs[idx] = getRowKeyColDesc(tableName, QuerySparkJobEnum.IF_SUCCESS.toString(), idx + 1);
         idx++;
 
         RowKeyDesc rowKeyDesc = new RowKeyDesc();
         rowKeyDesc.setRowkeyColumns(rowKeyColDescs);
 
-        String[][] hierarchy_dims = new String[2][];
-        hierarchy_dims[0] = getTimeHierarchy();
-        hierarchy_dims[1] = new String[3];
-        hierarchy_dims[1][0] = QuerySparkJobEnum.QUERY_ID.toString();
-        hierarchy_dims[1][1] = QuerySparkJobEnum.EXECUTION_ID.toString();
-        hierarchy_dims[1][2] = QuerySparkJobEnum.JOB_ID.toString();
-
-        for (int i = 0; i < hierarchy_dims.length; i++) {
-            hierarchy_dims[i] = refineColumnWithTable(tableName, hierarchy_dims[i]);
+        //Set for aggregation group
+        String[][] hierarchyDims = new String[1][];
+        hierarchyDims[0] = getTimeHierarchy();
+        for (int i = 0; i < hierarchyDims.length; i++) {
+            hierarchyDims[i] = refineColumnWithTable(tableName, hierarchyDims[i]);
         }
 
+        String[] mandatoryDims = new String[] {refineColumnWithTable(tableName,
+                QuerySparkJobEnum.PROJECT.toString())};
+
+        String[][] jointDims = new String[3][];
+        jointDims[0] = new String[]{
+                refineColumnWithTable(tableName, TimePropertyEnum.TIME_HOUR.toString()),
+                refineColumnWithTable(tableName, TimePropertyEnum.TIME_MINUTE.toString())
+        };
+        jointDims[1] = new String[]{
+                refineColumnWithTable(tableName, QuerySparkJobEnum.START_TIME.toString()),
+                refineColumnWithTable(tableName, QuerySparkJobEnum.END_TIME.toString()),
+                refineColumnWithTable(tableName, QuerySparkJobEnum.IF_SUCCESS.toString())
+        };
+        jointDims[2] = new String[]{
+                refineColumnWithTable(tableName, QuerySparkJobEnum.QUERY_ID.toString()),
+                refineColumnWithTable(tableName, QuerySparkJobEnum.EXECUTION_ID.toString()),
+                refineColumnWithTable(tableName, QuerySparkJobEnum.JOB_ID.toString())
+        };
+
         SelectRule selectRule = new SelectRule();
-        selectRule.mandatoryDims = new String[0];
-        selectRule.hierarchyDims = hierarchy_dims;
-        selectRule.jointDims = new String[0][0];
+        selectRule.mandatoryDims = mandatoryDims;
+        selectRule.hierarchyDims = hierarchyDims;
+        selectRule.jointDims = jointDims;
 
         AggregationGroup aggGroup = new AggregationGroup();
         aggGroup.setIncludes(refineColumnWithTable(tableName, dimensions));
@@ -284,21 +318,39 @@ public class CubeDescCreator {
         rowKeyDesc.setRowkeyColumns(rowKeyColDescs);
 
         //Set for aggregation group
-        String[][] hierarchy_dims = new String[2][];
-        hierarchy_dims[0] = getTimeHierarchy();
-        hierarchy_dims[1] = new String[4];
-        hierarchy_dims[1][0] = QuerySparkStageEnum.QUERY_ID.toString();
-        hierarchy_dims[1][1] = QuerySparkStageEnum.EXECUTION_ID.toString();
-        hierarchy_dims[1][2] = QuerySparkStageEnum.JOB_ID.toString();
-        hierarchy_dims[1][3] = QuerySparkStageEnum.STAGE_ID.toString();
-        for (int i = 0; i < hierarchy_dims.length; i++) {
-            hierarchy_dims[i] = refineColumnWithTable(tableName, hierarchy_dims[i]);
+        String[][] hierarchyDims = new String[1][];
+        hierarchyDims[0] = getTimeHierarchy();
+        for (int i = 0; i < hierarchyDims.length; i++) {
+            hierarchyDims[i] = refineColumnWithTable(tableName, hierarchyDims[i]);
         }
 
+        String[] mandatoryDims = new String[] {refineColumnWithTable(tableName,
+                QuerySparkStageEnum.PROJECT.toString())};
+
+        String[][] jointDims = new String[4][];
+        jointDims[0] = new String[]{
+                refineColumnWithTable(tableName, TimePropertyEnum.TIME_HOUR.toString()),
+                refineColumnWithTable(tableName, TimePropertyEnum.TIME_MINUTE.toString())
+        };
+        jointDims[1] = new String[]{
+                refineColumnWithTable(tableName, QuerySparkStageEnum.REALIZATION.toString()),
+                refineColumnWithTable(tableName, QuerySparkStageEnum.CUBOID_ID.toString())
+        };
+        jointDims[2] = new String[]{
+                refineColumnWithTable(tableName, RecordEvent.RecordReserveKeyEnum.HOST.toString()),
+                refineColumnWithTable(tableName, QuerySparkStageEnum.IF_SUCCESS.toString())
+        };
+        jointDims[3] = new String[]{
+                refineColumnWithTable(tableName, QuerySparkStageEnum.QUERY_ID.toString()),
+                refineColumnWithTable(tableName, QuerySparkStageEnum.EXECUTION_ID.toString()),
+                refineColumnWithTable(tableName, QuerySparkStageEnum.JOB_ID.toString()),
+                refineColumnWithTable(tableName, QuerySparkStageEnum.STAGE_ID.toString())
+        };
+
         SelectRule selectRule = new SelectRule();
-        selectRule.mandatoryDims = new String[0];
-        selectRule.hierarchyDims = hierarchy_dims;
-        selectRule.jointDims = new String[0][0];
+        selectRule.mandatoryDims = mandatoryDims;
+        selectRule.hierarchyDims = hierarchyDims;
+        selectRule.jointDims = jointDims;
 
         AggregationGroup aggGroup = new AggregationGroup();
         aggGroup.setIncludes(refineColumnWithTable(tableName, dimensions));
@@ -369,16 +421,33 @@ public class CubeDescCreator {
         rowKeyDesc.setRowkeyColumns(rowKeyColDescs);
 
         //Set for aggregation group
-        String[][] hierarchy_dims = new String[1][];
-        hierarchy_dims[0] = getTimeHierarchy();
-        for (int i = 0; i < hierarchy_dims.length; i++) {
-            hierarchy_dims[i] = refineColumnWithTable(tableName, hierarchy_dims[i]);
+        String[][] hierarchyDims = new String[1][];
+        hierarchyDims[0] = getTimeHierarchy();
+        for (int i = 0; i < hierarchyDims.length; i++) {
+            hierarchyDims[i] = refineColumnWithTable(tableName, hierarchyDims[i]);
         }
 
+        String[] mandatoryDims = new String[] {refineColumnWithTable(tableName,
+                JobPropertyEnum.PROJECT.toString())};
+
+        String[][] jointDims = new String[3][];
+        jointDims[0] = new String[] {
+                refineColumnWithTable(tableName, JobPropertyEnum.CUBE.toString()),
+                refineColumnWithTable(tableName, JobPropertyEnum.ALGORITHM.toString())
+        };
+        jointDims[1] = new String[] {
+                refineColumnWithTable(tableName, TimePropertyEnum.TIME_HOUR.toString()),
+                refineColumnWithTable(tableName, TimePropertyEnum.TIME_MINUTE.toString())
+        };
+        jointDims[2] = new String[] {
+                refineColumnWithTable(tableName, JobPropertyEnum.USER.toString()),
+                refineColumnWithTable(tableName, JobPropertyEnum.TYPE.toString())
+        };
+
         SelectRule selectRule = new SelectRule();
-        selectRule.mandatoryDims = new String[0];
-        selectRule.hierarchyDims = hierarchy_dims;
-        selectRule.jointDims = new String[0][0];
+        selectRule.mandatoryDims = mandatoryDims;
+        selectRule.hierarchyDims = hierarchyDims;
+        selectRule.jointDims = jointDims;
 
         AggregationGroup aggGroup = new AggregationGroup();
         aggGroup.setIncludes(refineColumnWithTable(tableName, dimensions));
@@ -433,16 +502,33 @@ public class CubeDescCreator {
         rowKeyDesc.setRowkeyColumns(rowKeyColDescs);
 
         //Set for aggregation group
-        String[][] hierarchy_dims = new String[1][];
-        hierarchy_dims[0] = getTimeHierarchy();
-        for (int i = 0; i < hierarchy_dims.length; i++) {
-            hierarchy_dims[i] = refineColumnWithTable(tableName, hierarchy_dims[i]);
+        String[][] hierarchyDims = new String[1][];
+        hierarchyDims[0] = getTimeHierarchy();
+        for (int i = 0; i < hierarchyDims.length; i++) {
+            hierarchyDims[i] = refineColumnWithTable(tableName, hierarchyDims[i]);
         }
 
+        String[] mandatoryDims = new String[] {refineColumnWithTable(tableName,
+                JobPropertyEnum.PROJECT.toString())};
+
+        String[][] jointDims = new String[3][];
+        jointDims[0] = new String[] {
+                refineColumnWithTable(tableName, JobPropertyEnum.CUBE.toString()),
+                refineColumnWithTable(tableName, JobPropertyEnum.ALGORITHM.toString())
+        };
+        jointDims[1] = new String[] {
+                refineColumnWithTable(tableName, TimePropertyEnum.TIME_HOUR.toString()),
+                refineColumnWithTable(tableName, TimePropertyEnum.TIME_MINUTE.toString())
+        };
+        jointDims[2] = new String[] {
+                refineColumnWithTable(tableName, JobPropertyEnum.USER.toString()),
+                refineColumnWithTable(tableName, JobPropertyEnum.TYPE.toString())
+        };
+
         SelectRule selectRule = new SelectRule();
-        selectRule.mandatoryDims = new String[0];
-        selectRule.hierarchyDims = hierarchy_dims;
-        selectRule.jointDims = new String[0][0];
+        selectRule.mandatoryDims = mandatoryDims;
+        selectRule.hierarchyDims = hierarchyDims;
+        selectRule.jointDims = jointDims;
 
         AggregationGroup aggGroup = new AggregationGroup();
         aggGroup.setIncludes(refineColumnWithTable(tableName, dimensions));
@@ -525,6 +611,10 @@ public class CubeDescCreator {
         return result;
     }
 
+    public static String refineColumnWithTable(String tableName, String column) {
+        return tableName.substring(tableName.lastIndexOf(".") + 1) + "." + column;
+    }
+
     public static String[] refineColumnWithTable(String tableName, List<String> columns) {
         String[] dimensions = new String[columns.size()];
         for (int i = 0; i < dimensions.length; i++) {
@@ -599,9 +689,7 @@ public class CubeDescCreator {
         FunctionDesc function = new FunctionDesc();
         function.setExpression(FunctionDesc.FUNC_SUM);
         function.setParameter(parameterDesc);
-        function.setReturnType(dataType.equals(HiveTableCreator.HiveTypeEnum.HDOUBLE.toString())
-                ? HiveTableCreator.HiveTypeEnum.HDECIMAL.toString()
-                : dataType);
+        function.setReturnType(dataType);
 
         MeasureDesc result = new MeasureDesc();
         result.setName(column + "_SUM");

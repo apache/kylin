@@ -895,12 +895,13 @@ public class CubeController extends BasicController {
 
         Map<Long, Long> hitFrequencyMap = null;
         Map<Long, Long> queryMatchMap = null;
-        try {
+        // currently not support to collect these metrics
+        /*try {
             hitFrequencyMap = getTargetCuboidHitFrequency(cubeName);
             queryMatchMap = cubeService.getCuboidQueryMatchCount(cubeName);
         } catch (Exception e) {
             logger.warn("Fail to query on system cube due to " + e);
-        }
+        }*/
 
         Set<Long> currentCuboidSet = cube.getCuboidScheduler().getAllCuboidIds();
         return cubeService.getCuboidTreeResponse(cuboidScheduler, cuboidStatsMap, hitFrequencyMap, queryMatchMap,
@@ -912,7 +913,9 @@ public class CubeController extends BasicController {
     public CuboidTreeResponse getRecommendCuboids(@PathVariable String cubeName) throws IOException {
         checkCubeExists(cubeName);
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-        Map<Long, Long> recommendCuboidStatsMap = getRecommendCuboidList(cube);
+        // currently not support to collect these metrics
+        // Map<Long, Long> recommendCuboidStatsMap = getRecommendCuboidList(cube);
+        Map<Long, Long> recommendCuboidStatsMap = null;
         if (recommendCuboidStatsMap == null || recommendCuboidStatsMap.isEmpty()) {
             return new CuboidTreeResponse();
         }
