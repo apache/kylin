@@ -8,7 +8,7 @@ You can verify the download by following these [procedures](https://www.apache.o
 
 #### v4.0.0-alpha
 - This is a major release after 3.1.0, with 35 new features and 22 bug fixes. Check the release notes.
-- [Release notes](/docs/release_notes.html), [installation guide](/docs/install/index.html) and [upgrade guide](https://cwiki.apache.org/confluence/display/KYLIN/How+to+upgrade+for+Kylin+4.0.0-alpha)
+- [Release notes](/docs/release_notes.html), [installation guide](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide) and [upgrade guide](https://cwiki.apache.org/confluence/display/KYLIN/How+to+upgrade)
 - Source download: [apache-kylin-4.0.0-alpha-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-source-release.zip.sha256)\]
 - Binary for Hadoop 2 download:
   - for Apache Hadoop 2 (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-4.0.0-alpha-bin-hadoop2.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-bin-hadoop2.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-bin-hadoop2.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-bin-hadoop2.tar.gz.sha256)\]
