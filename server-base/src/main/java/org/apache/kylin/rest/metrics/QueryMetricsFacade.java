@@ -93,7 +93,9 @@ public class QueryMetricsFacade {
             queryExecutionMetrics.setSqlIdCode(getSqlHashCode(sqlRequest.getSql()));
             queryExecutionMetrics.setProject(norm(sqlRequest.getProject()));
             queryExecutionMetrics.setQueryType(sqlResponse.isStorageCacheUsed() ? "CACHE" : "PARQUET");
-
+            queryExecutionMetrics.setRealization(sqlResponse.getCube());
+            queryExecutionMetrics.setRealizationTypes(sqlResponse.getRealizationTypes());
+            queryExecutionMetrics.setCuboidIds(sqlResponse.getCuboidIds());
             queryExecutionMetrics.setSqlDuration(sqlResponse.getDuration());
             queryExecutionMetrics.setTotalScanCount(sqlResponse.getTotalScanCount());
             queryExecutionMetrics.setTotalScanBytes(sqlResponse.getTotalScanBytes());

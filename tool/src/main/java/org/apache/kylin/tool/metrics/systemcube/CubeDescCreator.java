@@ -467,7 +467,7 @@ public class CubeDescCreator {
         desc.setDimensions(dimensionDescList);
         desc.setMeasures(measureDescList);
         desc.setRowkey(rowKeyDesc);
-        //desc.setHbaseMapping(hBaseMapping);
+        desc.setHbaseMapping(hBaseMapping);
         desc.setNotifyList(Lists.<String> newArrayList());
         desc.setStatusNeedNotify(Lists.newArrayList(JobStatusEnum.ERROR.toString()));
         desc.setAutoMergeTimeRanges(new long[] { 86400000L, 604800000L, 2419200000L });

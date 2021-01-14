@@ -36,42 +36,62 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class QuerySparkMetrics {
     private static final Logger logger = LoggerFactory.getLogger(QuerySparkMetrics.class);
-    private static final QuerySparkMetrics instance = new QuerySparkMetrics();
+    private static ScheduledExecutorService scheduledExecutor = null;
+    private static QuerySparkMetrics instance =
+            new QuerySparkMetrics(new QuerySparkMetricsRemovalListener());
     private static final int sparkMetricsNum = 10;
     private org.apache.kylin.shaded.com.google.common.cache.Cache<String, QueryExecutionMetrics> queryExecutionMetricsMap;
 
-    private QuerySparkMetrics() {
+    // default removal listener
+    private static class QuerySparkMetricsRemovalListener implements RemovalListener<String,
+            QueryExecutionMetrics> {
+        @Override
+        public void onRemoval(RemovalNotification<String, QueryExecutionMetrics> notification) {
+            try {
+                updateMetricsToReservoir(notification.getKey(), notification.getValue());
+                logger.info("Query metrics {} is removed due to {}, update to metrics reservoir successful",
+                        notification.getKey(), notification.getCause());
+            } catch (Exception e) {
+                logger.warn("Query metrics {} is removed due to {}, update to metrics reservoir failed",
+                        notification.getKey(), notification.getCause());
+            }
+        }
+    }
+
+    private QuerySparkMetrics(RemovalListener removalListener) {
+        if (queryExecutionMetricsMap != null) {
+            queryExecutionMetricsMap.cleanUp();
+            queryExecutionMetricsMap = null;
+        }
         queryExecutionMetricsMap = CacheBuilder.newBuilder()
                 .maximumSize(KylinConfig.getInstanceFromEnv().getKylinMetricsCacheMaxEntries())
                 .expireAfterWrite(KylinConfig.getInstanceFromEnv().getKylinMetricsCacheExpireSeconds(),
                         TimeUnit.SECONDS)
-                .removalListener(new RemovalListener<String, QueryExecutionMetrics>() {
-                    @Override
-                    public void onRemoval(RemovalNotification<String, QueryExecutionMetrics> notification) {
-                        try {
-                            updateMetricsToReservoir(notification.getKey(), notification.getValue());
-                            logger.info("Query metrics {} is removed due to {}, update to metrics reservoir successful",
-                                    notification.getKey(), notification.getCause());
-                        } catch(Exception e) {
-                            logger.warn("Query metrics {} is removed due to {}, update to metrics reservoir failed",
-                                    notification.getKey(), notification.getCause());
-                        }
-                    }
-                }).build();
+                .removalListener(removalListener).build();
 
-        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(new Runnable() {
-                                                                                @Override
-                                                                                public void run() {
-                                                                                    queryExecutionMetricsMap.cleanUp();
-                                                                                }
-                                                                            },
+        if (scheduledExecutor != null && !scheduledExecutor.isShutdown()) {
+            scheduledExecutor.shutdown();
+            scheduledExecutor = null;
+        }
+        scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutor.scheduleWithFixedDelay(new Runnable() {
+                                                     @Override
+                                                     public void run() {
+                                                         queryExecutionMetricsMap.cleanUp();
+                                                     }
+                                                 },
                 KylinConfig.getInstanceFromEnv().getKylinMetricsCacheExpireSeconds(),
                 KylinConfig.getInstanceFromEnv().getKylinMetricsCacheExpireSeconds(), TimeUnit.SECONDS);
+    }
 
+    // only for test case
+    public static void init(RemovalListener removalListener) {
+        instance = new QuerySparkMetrics(removalListener);
     }
 
     public static QuerySparkMetrics getInstance() {
@@ -159,19 +179,11 @@ public class QuerySparkMetrics {
         return queryExecutionMetricsMap.getIfPresent(queryId);
     }
 
-    public void setQueryRealization(String queryId, String realizationName, int realizationType, String cuboidIds) {
-        QueryExecutionMetrics queryExecutionMetrics = queryExecutionMetricsMap.getIfPresent(queryId);
-        if (queryExecutionMetrics != null) {
-            queryExecutionMetrics.setRealization(realizationName);
-            queryExecutionMetrics.setRealizationType(realizationType);
-            queryExecutionMetrics.setCuboidIds(cuboidIds);
-        }
-    }
-
     /**
      * report query related metrics
      */
-    public void updateMetricsToReservoir(String queryId, QueryExecutionMetrics queryExecutionMetrics) {
+    public static void updateMetricsToReservoir(String queryId,
+                                                QueryExecutionMetrics queryExecutionMetrics) {
         if (!KylinConfig.getInstanceFromEnv().isKylinMetricsReporterForQueryEnabled()) {
             return;
         }
@@ -186,7 +198,8 @@ public class QuerySparkMetrics {
 
             setSparkExecutionWrapper(queryExecutionMetricsEvent, queryExecutionMetrics.getSparderName(),
                     queryExecutionMetrics.getExecutionId(), queryExecutionMetrics.getRealization(),
-                    queryExecutionMetrics.getRealizationType(), queryExecutionMetrics.getCuboidIds(),
+                    queryExecutionMetrics.getRealizationTypes(),
+                    queryExecutionMetrics.getCuboidIds(),
                     queryExecutionMetrics.getStartTime(), queryExecutionMetrics.getEndTime());
 
             setQueryMetrics(queryExecutionMetricsEvent, queryExecutionMetrics.getSqlDuration(),
@@ -244,7 +257,8 @@ public class QuerySparkMetrics {
                     queryExecutionMetricsList[i] += sparkJobMetricsList[i];
                 }
             }
-            setSparkExecutionMetrics(queryExecutionMetricsEvent, queryExecutionMetrics.getExecutionDuration(),
+            setSparkExecutionMetrics(queryExecutionMetricsEvent,
+                    queryExecutionMetrics.getEndTime() - queryExecutionMetrics.getStartTime(),
                     queryExecutionMetricsList[0], queryExecutionMetricsList[1], queryExecutionMetricsList[2],
                     queryExecutionMetricsList[3], queryExecutionMetricsList[4], queryExecutionMetricsList[5],
                     queryExecutionMetricsList[6], queryExecutionMetricsList[7], queryExecutionMetricsList[8],
@@ -264,8 +278,10 @@ public class QuerySparkMetrics {
         metricsEvent.put(QuerySparkExecutionEnum.EXCEPTION.toString(), exception);
     }
 
-    private static void setSparkExecutionWrapper(RecordEvent metricsEvent, String sparderName, long executionId,
-            String realizationName, int realizationType, String cuboidIds, long startTime, long endTime) {
+    private static void setSparkExecutionWrapper(RecordEvent metricsEvent, String sparderName,
+                                                 long executionId, String realizationName,
+                                                 String realizationType, String cuboidIds,
+                                                 long startTime, long endTime) {
         metricsEvent.put(QuerySparkExecutionEnum.SPARDER_NAME.toString(), sparderName);
         metricsEvent.put(QuerySparkExecutionEnum.EXECUTION_ID.toString(), executionId);
         metricsEvent.put(QuerySparkExecutionEnum.REALIZATION.toString(), realizationName);
@@ -365,7 +381,7 @@ public class QuerySparkMetrics {
         private long executionDuration;
         private String queryId;
         private String realization;
-        private int realizationType;
+        private String realizationTypes;
         private String cuboidIds;
         private long startTime;
         private long endTime;
@@ -512,16 +528,16 @@ public class QuerySparkMetrics {
             return realization;
         }
 
-        public int getRealizationType() {
-            return realizationType;
+        public String getRealizationTypes() {
+            return realizationTypes;
         }
 
         public void setRealization(String realization) {
             this.realization = realization;
         }
 
-        public void setRealizationType(int realizationType) {
-            this.realizationType = realizationType;
+        public void setRealizationTypes(String realizationTypes) {
+            this.realizationTypes = realizationTypes;
         }
 
         public void setSparkJobMetricsMap(ConcurrentMap<Integer, SparkJobMetrics> sparkJobMetricsMap) {

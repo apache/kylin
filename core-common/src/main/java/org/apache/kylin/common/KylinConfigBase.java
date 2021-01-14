@@ -2364,7 +2364,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public int getKylinMetricsCacheExpireSeconds() {
-        return Integer.parseInt(this.getOptional("kylin.metrics.query-cache.expire-seconds", "600"));
+        return Integer.parseInt(this.getOptional("kylin.metrics.query-cache.expire-seconds", "300"));
     }
 
     public int getKylinMetricsCacheMaxEntries() {

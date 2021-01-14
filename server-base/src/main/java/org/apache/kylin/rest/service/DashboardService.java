@@ -32,7 +32,6 @@ import org.apache.kylin.metrics.MetricsManager;
 import org.apache.kylin.metrics.lib.impl.TimePropertyEnum;
 import org.apache.kylin.metrics.property.JobPropertyEnum;
 import org.apache.kylin.metrics.property.QuerySparkExecutionEnum;
-import org.apache.kylin.metrics.property.QuerySparkExecutionEnum;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
