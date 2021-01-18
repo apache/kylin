@@ -54,6 +54,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TableExtDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -403,6 +404,16 @@ public class CubeMigrationCLI extends AbstractApplication {
                     logger.info("Item: {} doesn't exist, ignore it.", item);
                     break;
                 }
+                // dataModel's project maybe be different with new project.
+                if (item.startsWith(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT)) {
+                    DataModelDesc dataModelDesc = srcStore.getResource(item, DataModelManager.getInstance(srcConfig).getDataModelSerializer());
+                    if (dataModelDesc != null && dataModelDesc.getProjectName() != null && !dataModelDesc.getProjectName().equals(dstProject)) {
+                        dataModelDesc.setProjectName(dstProject);
+                        dstStore.putResource(item, dataModelDesc, res.lastModified(), DataModelManager.getInstance(srcConfig).getDataModelSerializer());
+                        logger.info("Item " + item + " is copied.");
+                        break;
+                    }
+                }
                 dstStore.putResource(renameTableWithinProject(item), res.content(), res.lastModified());
                 res.content().close();
                 logger.info("Item " + item + " is copied");
@@ -527,7 +538,7 @@ public class CubeMigrationCLI extends AbstractApplication {
     }
 
     private String renameTableWithinProject(String srcItem) {
-        if (dstProject != null && srcItem.contains(ResourceStore.TABLE_RESOURCE_ROOT)) {
+        if (dstProject != null && srcItem.startsWith(ResourceStore.TABLE_RESOURCE_ROOT)) {
             String tableIdentity = TableDesc.parseResourcePath(srcItem).getTable();
             if (srcItem.contains(ResourceStore.TABLE_EXD_RESOURCE_ROOT))
                 return TableExtDesc.concatResourcePath(tableIdentity, dstProject);

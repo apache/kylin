@@ -2350,16 +2350,16 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getKylinMetricsSubjectQueryExecution() {
-        return getOptional("kylin.metrics.subject-query", "METRICS_QUERY_EXECUTION") + "_" + getKylinMetricsSubjectSuffix();
+        return getOptional("kylin.metrics.subject-query-execution", "METRICS_QUERY_EXECUTION") + "_" + getKylinMetricsSubjectSuffix();
     }
 
     public String getKylinMetricsSubjectQuerySparkJob() {
-        return getOptional("kylin.metrics.subject-query-cube", "METRICS_QUERY_SPARK_JOB") + "_"
+        return getOptional("kylin.metrics.subject-query-spark-job", "METRICS_QUERY_SPARK_JOB") + "_"
                 + getKylinMetricsSubjectSuffix();
     }
 
     public String getKylinMetricsSubjectQuerySparkStage() {
-        return getOptional("kylin.metrics.subject-query-rpc", "METRICS_QUERY_SPARK_STAGE") + "_"
+        return getOptional("kylin.metrics.subject-query-spark-stage", "METRICS_QUERY_SPARK_STAGE") + "_"
                 + getKylinMetricsSubjectSuffix();
     }
 
