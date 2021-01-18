@@ -2918,20 +2918,32 @@ public abstract class KylinConfigBase implements Serializable {
 
     /**
      * Used to upload user-defined log4j configuration
+     *
+     * @param isLocal run spark local mode or not
      */
-    public String sparkUploadFiles() {
+    public String sparkUploadFiles(boolean isLocal) {
         try {
-            File storageFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/conf",
-                    "spark-executor-log4j.properties");
             String path1 = "";
-            if (storageFile != null) {
-                path1 = storageFile.getCanonicalPath();
+            if (!isLocal) {
+                File storageFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/conf",
+                        "spark-executor-log4j.properties");
+                if (storageFile != null) {
+                    path1 = storageFile.getCanonicalPath();
+
+                }
             }
 
             return getOptional("kylin.query.engine.sparder-additional-files", path1);
         } catch (IOException e) {
             return "";
         }
+    }
+
+    /**
+     * Used to upload user-defined log4j configuration
+     */
+    public String sparkUploadFiles() {
+        return sparkUploadFiles(false);
     }
 
     @ConfigTag(ConfigTag.Tag.NOT_CLEAR)

@@ -337,6 +337,7 @@ public class NSparkExecutable extends AbstractExecutable {
         }
         sb.append(String.format(Locale.ROOT, " -Dkylin.hdfs.working.dir=%s ", hdfsWorkingDir));
         sb.append(String.format(Locale.ROOT, " -Dspark.driver.log4j.appender.hdfs.File=%s ", sparkDriverHdfsLogPath));
+        sb.append(String.format(Locale.ROOT, " -Dlog4j.debug=%s ", "true"));
         sb.append(String.format(Locale.ROOT, " -Dspark.driver.rest.server.ip=%s ", serverIp));
         sb.append(String.format(Locale.ROOT, " -Dspark.driver.rest.server.port=%s ", serverPort));
         sb.append(String.format(Locale.ROOT, " -Dspark.driver.param.taskId=%s ", getId()));
@@ -356,13 +357,18 @@ public class NSparkExecutable extends AbstractExecutable {
         for (Entry<String, String> entry : sparkConfs.entrySet()) {
             appendSparkConf(sb, entry.getKey(), entry.getValue());
         }
-        appendSparkConf(sb, "spark.executor.extraClassPath", Paths.get(kylinJobJar).getFileName().toString());
+        if (!isLocalMaster(sparkConfs)) {
+            appendSparkConf(sb, "spark.executor.extraClassPath", Paths.get(kylinJobJar).getFileName().toString());
+        }
         appendSparkConf(sb, "spark.driver.extraClassPath", kylinJobJar);
 
         if (sparkConfs.containsKey("spark.sql.hive.metastore.jars")) {
             jars = jars + "," + sparkConfs.get("spark.sql.hive.metastore.jars");
         }
-        sb.append("--files ").append(config.sparkUploadFiles()).append(" ");
+        String sparkUploadFiles = config.sparkUploadFiles(isLocalMaster(sparkConfs));
+        if (StringUtils.isNotBlank(sparkUploadFiles)) {
+            sb.append("--files ").append(sparkUploadFiles).append(" ");
+        }
         sb.append("--name job_step_%s ");
         sb.append("--jars %s %s %s");
         String cmd = String.format(Locale.ROOT, sb.toString(), hadoopConf, sparkSubmitCmd, getId(), jars, kylinJobJar,
@@ -408,6 +414,12 @@ public class NSparkExecutable extends AbstractExecutable {
         } catch (Exception e) {
             logger.error("delete job tmp in path {} failed.", taskPath, e);
         }
+    }
+
+    protected boolean isLocalMaster(Map<String, String> sparkConfs) {
+        String master = sparkConfs.getOrDefault("spark.master", "yarn");
+        return (master.equalsIgnoreCase("local")) || (master.toLowerCase(Locale.ROOT)
+                .startsWith("local["));
     }
 
     public boolean needMergeMetadata() {
