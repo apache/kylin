@@ -99,13 +99,13 @@ public class CubeMergeJob extends SparkApplication {
             Dataset<Row> afterSort;
             if (layout.isTableIndex()) {
                 afterSort =
-                        afterMerge.sortWithinPartitions(NSparkCubingUtil.getFirstColumn(layout.getOrderedDimensions().keySet()));
+                        afterMerge.sortWithinPartitions(NSparkCubingUtil.getColumns(layout.getOrderedDimensions().keySet()));
             } else {
                 Set<Integer> dimColumns = layout.getOrderedDimensions().keySet();
                 Dataset<Row> afterAgg = CuboidAggregator.agg(ss, afterMerge, dimColumns,
                         layout.getOrderedMeasures(), spanningTree, false);
                 afterSort = afterAgg.sortWithinPartitions(
-                        NSparkCubingUtil.getFirstColumn(dimColumns));
+                        NSparkCubingUtil.getColumns(dimColumns));
             }
             buildLayoutWithUpdate.submit(new BuildLayoutWithUpdate.JobEntity() {
                 @Override
