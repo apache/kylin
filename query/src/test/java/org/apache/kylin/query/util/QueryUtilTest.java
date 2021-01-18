@@ -200,8 +200,8 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
     @Test
     public void testRemoveCommentInSql() {
 
-        String originSql = "select count(*) from test_kylin_fact where price > 10.0";
-        String originSql2 = "select count(*) from test_kylin_fact where TEST_COLUMN != 'not--a comment'";
+        final String originSql = "select count(*) from test_kylin_fact where price > 10.0";
+        final String originSql2 = "select count(*) from test_kylin_fact where TEST_COLUMN != 'not--a comment'";
 
         {
             String sqlWithComment = "-- comment \n" + originSql;
@@ -306,6 +306,35 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
         String expectedContent = "select price as revenue from  v_lineitem;";
         String trimmedContent = QueryUtil.removeCommentInSql(content).replaceAll("\n", "").trim();
         Assert.assertEquals(trimmedContent, expectedContent);
+
+
+        {
+            String sqlWithComment = "select count(*) from test_kylin_fact WHERE column_name = '--this is not comment'\n " +
+                    "LIMIT 100 offset 0";
+            String actualSql = QueryUtil.removeCommentInSql(sqlWithComment);
+            Assert.assertEquals(sqlWithComment, actualSql);
+        }
+
+        {
+            String sqlWithComment = "select count(*) from test_kylin_fact WHERE column_name = '/*--this is not comment*/'";
+            String actualSql = QueryUtil.removeCommentInSql(sqlWithComment);
+            Assert.assertEquals(sqlWithComment, actualSql);
+        }
+
+        {
+            String sqlWithComment = "-- comment \n" + originSql + "/* comment */;" + "-- comment \n" + originSql + "/* comment */";
+            String actualSql = QueryUtil.removeCommentInSql(sqlWithComment);
+            Assert.assertEquals("select count(*) from test_kylin_fact where price > 10.0;\n" +
+                    "select count(*) from test_kylin_fact where price > 10.0", actualSql);
+        }
+
+        {
+            String sqlWithComment = "select count(*) from test_kylin_fact /* this is test*/  where price > 10.0 -- comment \n" +
+                    ";" + "insert into test_kylin_fact(id) values(?); -- comment \n";
+            String actualSql = QueryUtil.removeCommentInSql(sqlWithComment);
+            Assert.assertEquals("select count(*) from test_kylin_fact   where price > 10.0 \n" +
+                    ";insert into test_kylin_fact(id) values(?);", actualSql);
+        }
     }
 
     @Test

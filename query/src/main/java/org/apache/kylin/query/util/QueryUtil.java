@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
@@ -30,7 +31,6 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.Lists;
 
 /**
@@ -219,17 +219,13 @@ public class QueryUtil {
                 || (sql1.startsWith(KEYWORD_EXPLAIN) && sql1.contains(KEYWORD_SELECT));
     }
 
+    private static SqlSimpleParser simpleParser = new SqlSimpleParser("_suggest_", SqlParser.Config.DEFAULT);
+
     public static String removeCommentInSql(String sql1) {
         // match two patterns, one is "-- comment", the other is "/* comment */"
-        final String[] commentPatterns = new String[] { "--(?!.*\\*/).*?[\r\n]", "/\\*(.|\r|\n)*?\\*/" };
-
-        for (int i = 0; i < commentPatterns.length; i++) {
-            sql1 = sql1.replaceAll(commentPatterns[i], "");
-        }
-
-        sql1 = sql1.trim();
-
-        return sql1;
+        // note: this space is for solve the lack of result's string in SQL parsing
+        sql1 += " ";
+        return simpleParser.removeCommentSql(sql1).trim();
     }
 
     public interface IQueryTransformer {
