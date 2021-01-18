@@ -133,7 +133,7 @@ public abstract class AbstractHdfsLogAppender extends AppenderSkeleton {
         logBufferQue = new LinkedBlockingDeque<>(getLogQueueCapacity());
         appendHdfsService = Executors.newSingleThreadExecutor();
         appendHdfsService.execute(this::checkAndFlushLog);
-        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+        Runtime.getRuntime().addShutdownHook(new Thread(this::closing));
 
         LogLog.warn(String.format(Locale.ROOT, "%s started ...", getAppenderName()));
     }
@@ -153,20 +153,45 @@ public abstract class AbstractHdfsLogAppender extends AppenderSkeleton {
         }
     }
 
-    @Override
-    public void close() {
+    /**
+     * flush log when shutdowning
+     */
+    public void closing() {
+        LogLog.warn(String.format(Locale.ROOT, "%s flush log when shutdown ...",
+                getAppenderName()));
         synchronized (closeLock) {
             if (!this.closed) {
-                this.closed = true;
-
                 List<LoggingEvent> transaction = Lists.newArrayList();
                 try {
                     flushLog(getLogBufferQue().size(), transaction);
+                } catch (Exception e) {
+                    transaction.forEach(this::printLoggingEvent);
+                    try {
+                        while (!getLogBufferQue().isEmpty()) {
+                            printLoggingEvent(getLogBufferQue().take());
+                        }
+                    } catch (Exception ie) {
+                        LogLog.error("clear the logging buffer queue failed!", ie);
+                    }
+                }
+            }
+        }
+    }
 
-                    closeWriter();
+    @Override
+    public void close() {
+        LogLog.warn(String.format(Locale.ROOT, "%s attempt to closing ...",
+                getAppenderName()));
+        synchronized (closeLock) {
+            if (!this.closed) {
+                this.closed = true;
+                List<LoggingEvent> transaction = Lists.newArrayList();
+                try {
+                    flushLog(getLogBufferQue().size(), transaction);
                     if (appendHdfsService != null && !appendHdfsService.isShutdown()) {
                         appendHdfsService.shutdownNow();
                     }
+                    closeWriter();
                 } catch (Exception e) {
                     transaction.forEach(this::printLoggingEvent);
                     try {
