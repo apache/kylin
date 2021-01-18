@@ -45,7 +45,8 @@ public class MultiThreadsResultCollector extends ResultCollector {
     static {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         MAX_RUNNING_THREAD_COUNT = config.getStreamingReceiverQueryMaxThreads();
-        scannerThreadPool = new ThreadPoolExecutor(config.getStreamingReceiverQueryCoreThreads(),
+        int coreThreads = config.getStreamingReceiverQueryCoreThreads();
+        scannerThreadPool = new ThreadPoolExecutor(coreThreads,
                 MAX_RUNNING_THREAD_COUNT, 60L, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(), new NamedThreadFactory("query-worker"));
     }
@@ -204,7 +205,7 @@ public class MultiThreadsResultCollector extends ResultCollector {
     public static boolean isFullUp() {
         boolean occupied = scannerThreadPool.getActiveCount() >= MAX_RUNNING_THREAD_COUNT;
         if (occupied) {
-            logger.debug("ThreadPool {}", scannerThreadPool);
+            logger.debug("ThreadPool {} is full .", scannerThreadPool);
         }
         return occupied;
     }
