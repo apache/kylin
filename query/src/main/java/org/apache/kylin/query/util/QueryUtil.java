@@ -23,11 +23,13 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.alibaba.druid.sql.parser.Token;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.query.util.parse.SqlLexer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -221,15 +223,29 @@ public class QueryUtil {
 
     public static String removeCommentInSql(String sql1) {
         // match two patterns, one is "-- comment", the other is "/* comment */"
-        final String[] commentPatterns = new String[] { "--(?!.*\\*/).*?[\r\n]", "/\\*(.|\r|\n)*?\\*/" };
+        // note: this space is for solve the lack of result's string in SQL parsing
+        sql1 += " ";
+        SqlLexer mySqlLexer = new SqlLexer(sql1, false);
+        StringBuilder newSQL = new StringBuilder();
 
-        for (int i = 0; i < commentPatterns.length; i++) {
-            sql1 = sql1.replaceAll(commentPatterns[i], "");
+        int startIndex = 0;
+        for (;;) {
+            mySqlLexer.setKeepComments(false);
+            if (mySqlLexer.token() == Token.LINE_COMMENT) {
+                newSQL.append(sql1, startIndex, mySqlLexer.getMark() - 1);
+                startIndex = mySqlLexer.getPos();
+            }
+            if (mySqlLexer.token() == Token.MULTI_LINE_COMMENT) {
+                newSQL.append(sql1, startIndex, mySqlLexer.getMark() - 2);
+                startIndex = mySqlLexer.getPos();
+            }
+            if (mySqlLexer.token() == Token.EOF) {
+                newSQL.append(sql1, startIndex, sql1.length() - 1);
+                break;
+            }
+            mySqlLexer.nextToken();
         }
-
-        sql1 = sql1.trim();
-
-        return sql1;
+        return newSQL.toString().trim();
     }
 
     public interface IQueryTransformer {

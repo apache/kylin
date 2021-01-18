@@ -306,6 +306,19 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
         String expectedContent = "select price as revenue from  v_lineitem;";
         String trimmedContent = QueryUtil.removeCommentInSql(content).replaceAll("\n", "").trim();
         Assert.assertEquals(trimmedContent, expectedContent);
+
+        {
+            originSql = "select count(*) from test_kylin_fact WHERE column_name = '--this is not comment'\n " +
+                    "LIMIT 100 offset 0";
+            String actualSql = QueryUtil.removeCommentInSql(originSql);
+            Assert.assertEquals(originSql, actualSql);
+        }
+
+        {
+            originSql = "select count(*) from test_kylin_fact WHERE column_name = '/*--this is not comment*/'";
+            String actualSql = QueryUtil.removeCommentInSql(originSql);
+            Assert.assertEquals(originSql, actualSql);
+        }
     }
 
     @Test
