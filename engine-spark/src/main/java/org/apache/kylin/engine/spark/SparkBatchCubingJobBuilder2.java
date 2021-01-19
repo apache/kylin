@@ -201,6 +201,10 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_META_URL.getOpt(),
                 getSegmentMetadataUrl(seg.getConfig(), jobId));
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_OUTPUT_PATH.getOpt(), cuboidRootPath);
+        if (seg.getCubeDesc().isShrunkenDictFromGlobalEnabled()) {
+            sparkExecutable.setParam(SparkCubingByLayer.OPTION_SHRUNK_INPUT_PATH.getOpt(),
+                    getShrunkenDictionaryPath(jobId));
+        }
         sparkExecutable.setJobId(jobId);
 
         StringBuilder jars = new StringBuilder();
