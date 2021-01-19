@@ -18,9 +18,12 @@
 
 package org.apache.kylin.engine.spark;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -30,14 +33,17 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.dict.ShrunkenDictionary;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.spark.SparkContext;
@@ -53,8 +59,12 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.hive.HiveUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SparkUtil {
+
+    private static final Logger logger = LoggerFactory.getLogger(SparkUtil.class);
 
     public static ISparkBatchCubingInputSide getBatchCubingInputSide(CubeSegment seg) {
         IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(seg);
@@ -188,4 +198,34 @@ public class SparkUtil {
         });
     }
 
+    public static Map<TblColRef, Dictionary<String>> getDictionaryMap(CubeSegment cubeSegment, String splitKey,
+                                                                      Configuration configuration) throws IOException {
+        Map<TblColRef, Dictionary<String>> dictionaryMap = cubeSegment.buildDictionaryMap();
+
+        String shrunkenDictPath = configuration.get(BatchConstants.ARG_SHRUNKEN_DICT_PATH);
+        if (shrunkenDictPath == null) {
+            return dictionaryMap;
+        }
+
+        // replace global dictionary with shrunken dictionary if possible
+        FileSystem fs = FileSystem.get(configuration);
+        ShrunkenDictionary.StringValueSerializer valueSerializer = new ShrunkenDictionary.StringValueSerializer();
+        for (TblColRef colRef : cubeSegment.getCubeDesc().getAllGlobalDictColumnsNeedBuilt()) {
+            Path colShrunkenDictDir = new Path(shrunkenDictPath, colRef.getIdentity());
+            Path colShrunkenDictPath = new Path(colShrunkenDictDir, splitKey);
+            if (!fs.exists(colShrunkenDictPath)) {
+                logger.warn("Shrunken dictionary for column " + colRef.getIdentity() + " in split " + splitKey
+                        + " does not exist!!!");
+                continue;
+            }
+            try (DataInputStream dis = fs.open(colShrunkenDictPath)) {
+                Dictionary<String> shrunkenDict = new ShrunkenDictionary(valueSerializer);
+                shrunkenDict.readFields(dis);
+                logger.info("Read Shrunken dictionary from {} success", colShrunkenDictPath);
+                dictionaryMap.put(colRef, shrunkenDict);
+            }
+        }
+
+        return dictionaryMap;
+    }
 }
