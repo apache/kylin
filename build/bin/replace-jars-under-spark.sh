@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+# check https://cwiki.apache.org/confluence/display/KYLIN/Deploy+Kylin+4+on+CDH+6
+
 BYPASS=${KYLIN_HOME}/spark/jars/replace-jars-bypass
 cdh_mapreduce_path="/opt/cloudera/parcels/CDH/lib/hadoop-mapreduce"
 hadoop_lib_path="/usr/lib/hadoop"
@@ -119,8 +121,15 @@ if [ $is_cdh6 == 1 ]; then
   find ${KYLIN_HOME}/spark/jars -name "hadoop-hdfs-*.jar" -exec rm -f {} \;
   find ${KYLIN_HOME}/spark/jars -name "hadoop-yarn-*.jar" -exec rm -f {} \;
   find ${KYLIN_HOME}/spark/jars -name "hadoop-mapreduce-*.jar" -exec rm -f {} \;
+  find ${KYLIN_HOME}/spark/jars -name "hadoop-annotations-*.jar" -exec rm -f {} \;
+  find ${KYLIN_HOME}/spark/jars -name "hadoop-auth-*.jar" -exec rm -f {} \;
+  find ${KYLIN_HOME}/spark/jars -name "hadoop-client-*.jar" -exec rm -f {} \;
+  find ${KYLIN_HOME}/spark/jars -name "hadoop-common-*.jar" -exec rm -f {} \;
   find ${KYLIN_HOME}/spark/jars -name "hive-exec-*.jar" -exec rm -f {} \;
-#  cp ${KYLIN_HOME}/bin/hadoop3_jars/cdh6/*.jar ${SPARK_HOME}/jars
+  if [ -d "${KYLIN_HOME}/bin/hadoop3_jars/cdh6" ]; then
+    echo "Copy jars from ${KYLIN_HOME}/bin/hadoop3_jars/cdh6"
+    cp ${KYLIN_HOME}/bin/hadoop3_jars/cdh6/*.jar ${SPARK_HOME}/jars
+  fi
 fi
 
 for jar_file in ${jar_list}; do
