@@ -37,9 +37,9 @@ kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock
 ```
 然后将所有任务和查询节点的地址注册到 `kylin.server.cluster-servers`。
 
-### 配置`CuratorScheculer`进行任务调度
+### 配置`CuratorScheduler`进行任务调度
 
-从 v3.0.0-alpha 开始，kylin引入基于Curator的主从模式多任务引擎调度器，用户可以修改如下配置来启用CuratorScheculer：
+从 v3.0.0-alpha 开始，kylin引入基于Curator的主从模式多任务引擎调度器，用户可以修改如下配置来启用CuratorScheduler：
 
 ```properties
 kylin.job.scheduler.default=100
