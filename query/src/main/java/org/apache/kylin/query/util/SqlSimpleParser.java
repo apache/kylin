@@ -131,7 +131,7 @@ public class SqlSimpleParser {
             Token token = tokenizer.nextToken();
             if (token == null) {
                 if (startIndex != sql.length()) {
-                    newSQL.append(sql, startIndex, sql.length() - 1);
+                    newSQL.append(sql, startIndex, sql.length());
                 }
                 break;
             }

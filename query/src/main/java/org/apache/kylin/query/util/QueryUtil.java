@@ -223,8 +223,6 @@ public class QueryUtil {
 
     public static String removeCommentInSql(String sql1) {
         // match two patterns, one is "-- comment", the other is "/* comment */"
-        // note: this space is for solve the lack of result's string in SQL parsing
-        sql1 += " ";
         return simpleParser.removeCommentSql(sql1).trim();
     }
 
