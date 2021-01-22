@@ -37,7 +37,7 @@ kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock
 
 Then please add all job servers and query servers to the `kylin.server.cluster-servers`.
 
-### Use `CuratorScheculer`
+### Use `CuratorScheduler`
 
 Since v3.0.0-alpha, kylin introduces the Leader/Follower mode multiple job engines scheduler based on Curator. Users can modify the following configuration to enable CuratorScheduler:
 
@@ -50,7 +50,7 @@ For more details about the kylin job scheduler, please refer to [Apache Kylin Wi
 
 ### Installing a load balancer
 
-To send query requests to a cluster instead of a single node, you can deploy a load balancer such as [Nginx](http://nginx.org/en/), [F5](https://www.f5.com/) or [cloudlb](https://rubygems.org/gems/cloudlb/), etc., so that the client and load balancer communication instead communicate with a specific Kylin instance.
+To send query requests to a cluster instead of a single node, you can deploy a load balancer such as [Nginx](http://nginx.org/en/), [F5](https://www.f5.com/) or [cloudlb](https://rubygems.org/gems/cloudlb/), etc., so that the client communicate with the load balancer instead of a specific Kylin instance.
 
 
 
@@ -58,7 +58,7 @@ To send query requests to a cluster instead of a single node, you can deploy a l
 
 For better stability and optimal performance, it is recommended to perform a read-write separation deployment, deploying Kylin on two clusters as follows:
 
-* A Hadoop cluster used to *Cube build*, which can be a large cluster shared with other applications;
-* An HBase cluster used to *SQL query*. Usually this cluster is configured for Kylin. The number of nodes does not need to be as many as Hadoop clusters. HBase configuration can be optimized for Kylin Cube read-only features.
+* A Hadoop cluster used for *Cube build*, which can be a large cluster shared with other applications;
+* An HBase cluster used for *SQL query*. Usually this cluster is configured for Kylin. The number of nodes does not need to be as many as Hadoop clusters. HBase configuration can be optimized for Kylin Cube read-only features.
 
 This deployment strategy is the best deployment solution for the production environment. For how to perform read-write separation deployment, please refer to [Deploy Apache Kylin with Standalone HBase Cluster](/blog/2016/06/10/standalone-hbase-cluster/) .

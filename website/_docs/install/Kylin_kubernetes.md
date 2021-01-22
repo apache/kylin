@@ -6,9 +6,9 @@ permalink: /docs/install/kylin_on_kubernetes.html
 since: v3.0.2
 ---
 
-Kubernetes is a portable, extensible, open-source platform for managing containerized workloads and services, that facilitates both declarative configuration and automation. It has a large, rapidly growing ecosystem. Kubernetes services, support, and tools are widely available.
+Kubernetes is a portable, extensible, open-source platform for managing containerized workloads and services, it facilitates both declarative configuration and automation. It has a large, rapidly growing ecosystem. Kubernetes services, support and tools are widely available.
 
-Apache Kylin is a open source, distributed analytical data warehouse for big data. Deploy Kylin on Kubernetes cluster, will reduce cost of maintenance and extension.
+Apache Kylin is an open source, distributed analytical data warehouse for big data. Deploy Kylin on Kubernetes cluster will reduce cost of maintenance and extension.
 
 ## Directory
 Visit and download https://github.com/apache/kylin/tree/master/kubernetes and you will find three directory:
@@ -16,11 +16,11 @@ Visit and download https://github.com/apache/kylin/tree/master/kubernetes and yo
 - **config** 
  Please update your configuration file here.
 - **template** 
- This directory provided two deployment templates, one for quick-start purpose, another for production/distributed deployment.
-    - Quick-start template is for one node deployment with an ALL kylin instance.
-    - Production template is for multi-nodes deployment with a few of job/query kylin instances; and some other service like memcached and filebeat(check doc at [ELK stack](https://www.elastic.co/what-is/elk-stack)) will help to satisfy log collection/query cache/session sharing demand.
+ This directory provides two deployment templates, one for quick-start purpose, another for production/distributed deployment.
+    - The quick-start template is for one node deployment with an ALL kylin instance.
+    - The production template is for multi-nodes deployment with a few job/query kylin instances. Moreover, some other services like memcached and filebeat(check doc at [ELK stack](https://www.elastic.co/what-is/elk-stack)) will help to satisfy log collection/query cache/session sharing demand.
 - **docker** 
- Docker image is the pre-requirement of Kylin on Kubernetes, please check this directory if you need build it yourself. For CDH5.x user, you may consider use a provided image on DockerHub.
+ Docker image is the pre-requirement of Kylin on Kubernetes, please check this directory if you need to build it yourself. For CDH5.x user, you may consider using a provided image on DockerHub.
  
 ---
  
@@ -29,45 +29,45 @@ Visit and download https://github.com/apache/kylin/tree/master/kubernetes and yo
 1. A hadoop cluster.
 2. A K8s cluster, with sufficient system resources.
 3. **kylin-client** image.
-4. A Elasticsearch cluster(maybe optional).
+4. An Elasticsearch cluster(maybe optional).
 
 ## How to build docker image
 
 ### Hadoop-client image
 
-What is hadoop-client docker image and why we need this?
+What is a hadoop-client docker image and why do we need this?
 
-As we all know, the node you want to deploy Kylin, should contains Hadoop dependency(jars and configuration files), these dependency let you have access to Hadoop Service, such as HDFS, HBase, Hive, which are needed by Apache Kylin. Unfortunately, each Hadoop distribution(CHD or HDP etc.) has its own specific jars. So, we can build specific image for specific Hadoop distribution, which will make image management task more easier. This will have following two benefits:
+As we all know, the node you want to deploy Kylin should contain Hadoop dependencies(jars and configuration files), these dependencies let you have access to Hadoop Services, such as HDFS, HBase, Hive, which are needed by Apache Kylin. Unfortunately, each Hadoop distribution(CHD or HDP etc.) has its own specific jars. So, we can build specific images for specific Hadoop distributions, which will make image management task easier. This will have the following two benefits:
 
-- Someone who has better knowledge on Hadoop can do this work, and let kylin user build their Kylin image base on provided Hadoop-Client image.
+- Someone who has more knowledge on Hadoop can do this work, and let kylin users build their Kylin image base on provided Hadoop-Client image.
 - Upgrade Kylin will be much easier.
 
 Build Step
-- Prepare and modify Dockerfile(If you are using other hadoop distribution, please consider build image yourself). 
+- Prepare and modify Dockerfile(If you are using other hadoop distribution, please consider build an image yourself). 
 - Place Spark binary(such as `spark-2.3.2-bin-hadoop2.7.tgz`) into dir `provided-binary`.
-- Run `build-image.sh` to build image.
+- Run `build-image.sh` to build the image.
 
 ### Kylin-client image
  
-What is kylin-client docker images? 
+What is a kylin-client docker image? 
 
-**kylin-client** is a docker image which based on **hadoop-client**, it will provided the flexibility of upgrade of Apache Kylin.
+**kylin-client** is a docker image which based on **hadoop-client**, it will provide the flexibility of upgrade of Apache Kylin.
 
 Build Step
 
 - Place Kylin binary(such as `apache-kylin-3.0.1-bin-cdh57.tar.gz`) and uncompress it into current dir.
-- Modify `Dockerfile` , change the value of `KYLIN_VERSION` and name of base image(hadoop-client).
+- Modify `Dockerfile` , change the value of `KYLIN_VERSION` and the name of base image(hadoop-client).
 - Run `build-image.sh` to build image.
 
 ----
 
 ## How to deploy kylin on kubernetes
 
-Here let's take a look of how to deploy a kylin cluster which connect to CDH 5.7.
+Here let's take a look at how to deploy a kylin cluster which connects to CDH 5.7.
 
 1 `kubenetes/template/production/example/deployment` is the working directory.
 
-2 Update hadoop configuration files (`kubenetes/template/production/example/config/hadoop`) and filebeat 's configuration file.
+2 Update hadoop configuration files (`kubenetes/template/production/example/config/hadoop`) and filebeat's configuration file.
 
 3 Create statefulset and service for memcached.
 
@@ -79,7 +79,7 @@ service/cache-svc created
 statefulset.apps/kylin-memcached created
 ```
 
-- Check hostname of cache service.
+- Check the hostname of cache service.
 
 ``` 
 $ kubectl run -it--image=busybox:1.28.4--rm--restart=Never sh -n test-dns
@@ -105,7 +105,7 @@ $ vim ../config/kylin-job/kylin.properties
 $ vim ../config/kylin-query/kylin.properties
 ```
 
-- Create configMap
+- Create the configMap
 
 ``` 
 $ kubectl create configmap -n kylin-example hadoop-config \
@@ -206,8 +206,8 @@ $ kubectl exec -it  kylin-job-0  -n kylin-example-- bash
 $ kubectl get pod kylin-job-0  -n kylin-example -o yaml
 ```
 
-- If you don't have a Elasticsearch cluster or not interested in log collection, please remove filebeat container in both kylin-query-stateful.yaml and kylin-job-stateful.yaml.
+- If you don't have an Elasticsearch cluster or not interested in log collection, please remove filebeat container in both kylin-query-stateful.yaml and kylin-job-stateful.yaml.
 
-- If you want to check detail or want to have a discussion, please read or comment on [KYLIN-4447 Kylin on kubernetes in production env](https://issues.apache.org/jira/browse/KYLIN-4447) .
+- If you want to check the details or want to have a discussion, please read or comment on [KYLIN-4447 Kylin on kubernetes in production env](https://issues.apache.org/jira/browse/KYLIN-4447) .
 
-- Find provided docker image at: DockerHub: : [apachekylin/kylin-client](https://hub.docker.com/r/apachekylin/kylin-client)
+- Find the provided docker image at: DockerHub: : [apachekylin/kylin-client](https://hub.docker.com/r/apachekylin/kylin-client)
