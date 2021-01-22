@@ -67,10 +67,10 @@ public class StorageCleanupJobTest {
         job.execute(new String[] { "--delete", "true" });
 
         ArgumentCaptor<Path> pathCaptor = ArgumentCaptor.forClass(Path.class);
-        verify(mockFs, times(5)).delete(pathCaptor.capture(), eq(true));
+        verify(mockFs, times(4)).delete(pathCaptor.capture(), eq(true));
         ArrayList<Path> expected = Lists.newArrayList(
                 // Verify clean job temp directory
-                new Path(basePath + "/default/job_tmp"),
+                // new Path(basePath + "/default/job_tmp"),
 
                 //Verify clean dropped cube
                 new Path(basePath + "/default/parquet/dropped_cube"),
@@ -99,6 +99,12 @@ public class StorageCleanupJobTest {
         FileStatus[] projectStatuses = new FileStatus[2];
         FileStatus project1 = mock(FileStatus.class);
         FileStatus project2 = mock(FileStatus.class);
+
+        FileStatus[] protectedStatuses = new FileStatus[2];
+        FileStatus cubeStatistics = mock(FileStatus.class);
+        FileStatus resourcesJdbc = mock(FileStatus.class);
+
+        FileStatus[] allStatuses = new FileStatus[4];
 
         // Remove job temp directory
         Path jobTmpPath = new Path(basePath + "/default/job_tmp");
@@ -130,6 +136,20 @@ public class StorageCleanupJobTest {
         projectStatuses[0] = project1;
         projectStatuses[1] = project2;
 
+        Path cubeStatisticsPath = new Path(basePath + "/default/parquet");
+        Path resourcesJdbcPath = new Path(basePath + "/deleted_project/parquet");
+        when(cubeStatistics.getPath()).thenReturn(cubeStatisticsPath);
+        when(resourcesJdbc.getPath()).thenReturn(resourcesJdbcPath);
+        protectedStatuses[0] = cubeStatistics;
+        protectedStatuses[1] = resourcesJdbc;
+        when(mockFs.delete(cubeStatisticsPath, true)).thenReturn(true);
+        when(mockFs.delete(resourcesJdbcPath, true)).thenReturn(true);
+
+        allStatuses[0] = project1;
+        allStatuses[1] = project2;
+        allStatuses[2] = cubeStatistics;
+        allStatuses[3] = resourcesJdbc;
+
         Path defaultProjectParquetPath = new Path(basePath + "/default/parquet");
         Path deletedProjectParquetPath = new Path(basePath + "/deleted_project/parquet");
         when(mockFs.exists(defaultProjectParquetPath)).thenReturn(true);
@@ -138,6 +158,7 @@ public class StorageCleanupJobTest {
         when(mockFs.exists(basePath)).thenReturn(true);
         when(mockFs.listStatus(new Path(basePath + "/default/parquet/ci_left_join_cube"))).thenReturn(segmentStatuses);
         when(mockFs.listStatus(defaultProjectParquetPath)).thenReturn(cubeStatuses);
-        when(mockFs.listStatus(basePath)).thenReturn(projectStatuses);
+        when(mockFs.listStatus(basePath)).thenReturn(allStatuses);
+        when(mockFs.listStatus(basePath, StorageCleanupJob.pathFilter)).thenReturn(projectStatuses);
     }
 }
