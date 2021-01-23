@@ -335,6 +335,18 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
             Assert.assertEquals("select count(*) from test_kylin_fact   where price > 10.0 \n" +
                     ";insert into test_kylin_fact(id) values(?);", actualSql);
         }
+
+        {
+            String sqlWithoutComment = "select * from test_kylin_fact where price='2012--12-14'";
+            String actualSql = QueryUtil.removeCommentInSql(sqlWithoutComment);
+            Assert.assertEquals(sqlWithoutComment, actualSql);
+        }
+
+        {
+            String sqlWithoutComment = "select * from test_kylin_fact where price=\"/* this is not comment */\"";
+            String actualSql = QueryUtil.removeCommentInSql(sqlWithoutComment);
+            Assert.assertEquals(sqlWithoutComment, actualSql);
+        }
     }
 
     @Test

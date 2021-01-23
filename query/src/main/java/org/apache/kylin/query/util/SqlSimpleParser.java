@@ -306,6 +306,7 @@ public class SqlSimpleParser {
                                     case ')':
                                     case '/':
                                     case ',':
+                                    case '\'':
                                         break loop;
                                     case '-':
                                         // possible start of '--' comment
@@ -316,7 +317,7 @@ public class SqlSimpleParser {
                                             return new Token(TokenType.COMMENT, startIndex, endIndex);
                                         }
                                     default:
-                                        if (Character.isWhitespace(c)) {
+                                        if (Character.isWhitespace(c) || c == openQuote) {
                                             break loop;
                                         } else {
                                             ++pos;
