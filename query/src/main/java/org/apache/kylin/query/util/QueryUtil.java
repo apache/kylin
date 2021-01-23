@@ -23,7 +23,6 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
@@ -219,11 +218,10 @@ public class QueryUtil {
                 || (sql1.startsWith(KEYWORD_EXPLAIN) && sql1.contains(KEYWORD_SELECT));
     }
 
-    private static SqlSimpleParser simpleParser = new SqlSimpleParser("_suggest_", SqlParser.Config.DEFAULT);
 
-    public static String removeCommentInSql(String sql1) {
+    public static String removeCommentInSql(String sql) {
         // match two patterns, one is "-- comment", the other is "/* comment */"
-        return simpleParser.removeCommentSql(sql1).trim();
+        return new SqlCommentParser(sql).removeCommentSql().trim();
     }
 
     public interface IQueryTransformer {

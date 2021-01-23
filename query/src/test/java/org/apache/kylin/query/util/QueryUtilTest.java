@@ -347,6 +347,13 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
             String actualSql = QueryUtil.removeCommentInSql(sqlWithoutComment);
             Assert.assertEquals(sqlWithoutComment, actualSql);
         }
+
+        {
+            // a column name is --test
+            String sqlWithoutComment = "SELECT * from App WHERE `--test` is not null";
+            String actualSql = QueryUtil.removeCommentInSql(sqlWithoutComment);
+            Assert.assertEquals(sqlWithoutComment, actualSql);
+        }
     }
 
     @Test
