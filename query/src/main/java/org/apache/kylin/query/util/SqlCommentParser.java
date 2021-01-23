@@ -37,8 +37,7 @@ package org.apache.kylin.query.util;
  *
  * note:
  * (1)SqlCommentParser cannot identify whether the string conforms to the SQL specification,
- * (2)If the original sql does not conform to the sql grammar specification, the result of its analysis may be incorrect
- * (3)If you want quote、comment to support more, you should add more case in the method of nextComment
+ * (2)If you want quote、comment to support more, you should add more case in the method of nextComment
  *
  */
 public class SqlCommentParser {
@@ -152,8 +151,7 @@ public class SqlCommentParser {
                 default:
                     if (isOpenQuote(c)) {
                         break;
-                    }
-                    else {
+                    } else {
                         // parse the type of ID
                         ++pos;
                         loop:
