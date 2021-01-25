@@ -89,8 +89,13 @@ function find_hadoop_conf_dir() {
             checkAndLinkFile $hadoop_conf_dir/yarn-site.xml $kylin_hadoop_conf_dir/yarn-site.xml
             checkAndLinkFile $hadoop_conf_dir/mapred-site.xml $kylin_hadoop_conf_dir/mapred-site.xml
 
+            # For CDH
             checkAndLinkFile $hadoop_conf_dir/topology.py $kylin_hadoop_conf_dir/topology.py
             checkAndLinkFile $hadoop_conf_dir/topology.map $kylin_hadoop_conf_dir/topology.map
+            # For HDP
+            checkAndLinkFile $hadoop_conf_dir/topology_script.py $kylin_hadoop_conf_dir/topology_script.py
+            checkAndLinkFile $hadoop_conf_dir/topology_mappings.data $kylin_hadoop_conf_dir/topology_mappings.data
+
             checkAndLinkFile $hadoop_conf_dir/ssl-client.xml $kylin_hadoop_conf_dir/ssl-client.xml
             checkAndLinkFile $hadoop_conf_dir/hadoop-env.sh $kylin_hadoop_conf_dir/hadoop-env.sh
 
