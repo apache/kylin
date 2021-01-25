@@ -176,7 +176,8 @@ public class HiveProducer {
         Path partitionPath = new Path(sb.toString());
         //for hdfs router-based federation,  authority is different with hive table location path and defaultFs
         if (partitionPath.toUri().getScheme() != null && !partitionPath.toUri().toString().startsWith(fs.getUri().toString())) {
-            fs.close();
+            logger.info("Change HDFS scheme from {} to {}.", fs.getUri().toString(),
+                    partitionPath.toUri().toString());
             fs = partitionPath.getFileSystem(hiveConf);
         }
 
