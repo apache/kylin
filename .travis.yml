@@ -15,11 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-arch:
-  - amd64
-  - arm64
-
 language: java
 
 addons:
@@ -32,10 +27,16 @@ cache:
   directories:
     - $HOME/.m2
 
-jdk:
-  - openjdk8
+matrix:
+  include:
+    - arch: arm64
+      addons:
+        apt:
+          packages: openjdk-8-jdk
+    - arch: amd64
+      jdk: openjdk8
 
-before_script:
+before_install:
   - echo "Downloading Maven 3.5.3"
       && wget https://archive.apache.org/dist/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.zip
       && unzip -qq apache-maven-3.5.3-bin.zip
@@ -45,6 +46,7 @@ before_script:
   - echo "MAVEN_OPTS='-Xms1024m -Xmx3072m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=384m'" > ~/.mavenrc
   - sed -i 's/log4j.logger.org.apache.kylin=INFO/log4j.logger.org.apache.kylin=WARN/g' build/conf/kylin-server-log4j.properties
   - sed -i 's/log4j.logger.org.apache.kylin=INFO/log4j.logger.org.apache.kylin=WARN/g' build/conf/kylin-tools-log4j.properties
+  - if [[ $(uname -m) == 'aarch64' ]];then export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-arm64";fi
 
 script:
   - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent test coveralls:report -e
