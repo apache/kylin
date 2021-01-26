@@ -61,6 +61,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+@Deprecated
 public class HBaseResourceStore extends PushdownResourceStore {
 
     private static Logger logger = LoggerFactory.getLogger(HBaseResourceStore.class);
@@ -147,7 +148,7 @@ public class HBaseResourceStore extends PushdownResourceStore {
 
     @Override
     protected void visitFolderImpl(String folderPath, final boolean recursive, VisitFilter filter,
-            final boolean loadContent, final Visitor visitor) throws IOException {
+                                   final boolean loadContent, final Visitor visitor) throws IOException {
 
         visitFolder(folderPath, filter, loadContent, new FolderVisitor() {
             @Override

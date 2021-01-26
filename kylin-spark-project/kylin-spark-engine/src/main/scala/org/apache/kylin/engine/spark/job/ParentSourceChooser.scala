@@ -39,17 +39,25 @@ class ParentSourceChooser(
   config: KylinConfig,
   needEncoding: Boolean) extends Logging {
 
+  var aggInfo : Array[(Long, AggInfo)]  = _
+
   // build from built cuboid.
   var reuseSources: java.util.Map[java.lang.Long, NBuildSourceInfo] = Maps.newHashMap()
 
-  // build from flattable.
+  // build from flatTable.
   var flatTableSource: NBuildSourceInfo = _
+
+  private var needStatistics = false
 
   //TODO: MetadataConverter don't have getCubeDesc() now
 
   /*val flatTableDesc = new CubeJoinedFlatTableDesc(
     MetadataConverter.getCubeDesc(seg.getCube),
     ParentSourceChooser.needJoinLookupTables(seg.getModel, toBuildTree))*/
+  def setNeedStatistics(): Unit =
+    needStatistics = true
+
+  def getAggInfo : Array[(Long, AggInfo)] = aggInfo
 
   def decideSources(): Unit = {
     toBuildTree.getRootIndexEntities.asScala.foreach { entity =>
@@ -62,7 +70,7 @@ class ParentSourceChooser(
     }
   }
 
-  private def decideFlatTableSource(entity: LayoutEntity): Unit = {
+  def decideFlatTableSource(entity: LayoutEntity): Unit = {
     if (flatTableSource == null) {
       if (needEncoding) {
         // hacked, for some case, you do not want to trigger buildSnapshot
@@ -72,9 +80,23 @@ class ParentSourceChooser(
         builder.checkDupKey()
         seg = builder.buildSnapshot
       }
-      flatTableSource = getFlatTable()
+      flatTableSource = getFlatTable
+
+      val rowKeyColumns: Seq[String] = seg.allColumns.filter(c => c.rowKey).map(c => c.id.toString)
+      if (aggInfo == null && needStatistics) {
+        val startMs = System.currentTimeMillis()
+        logInfo("Sampling start ...")
+        val coreDs = flatTableSource.getFlatTableDS.select(rowKeyColumns.head, rowKeyColumns.tail: _*)
+        aggInfo = CuboidStatisticsJob.statistics(coreDs, seg)
+        logInfo("Sampling finished and cost " + (System.currentTimeMillis() - startMs)/1000 + " s .")
+        val statisticsStr = aggInfo.sortBy(x => x._1).map(x => x._1 + ":" + x._2.cuboid.counter.getCountEstimate).mkString(", ")
+        logInfo("Cuboid Statistics results : \t" + statisticsStr)
+      } else {
+        logInfo("Skip sampling ...")
+      }
     }
-    flatTableSource.addCuboid(entity)
+    if (entity != null)
+      flatTableSource.addCuboid(entity)
   }
 
   private def decideParentLayoutSource(entity: LayoutEntity, parentLayout: LayoutEntity): Unit = {
@@ -91,7 +113,7 @@ class ParentSourceChooser(
     var path = ""
     if (flatTableSource != null && flatTableSource.getToBuildCuboids.size() > config.getPersistFlatTableThreshold) {
 
-      val df = flatTableSource.getFlattableDS
+      val df = flatTableSource.getFlatTableDS
       if (df.schema.nonEmpty) {
         val allUsedCols = flatTableSource.getToBuildCuboids.asScala.flatMap { c =>
           val dims = c.getOrderedDimensions.keySet().asScala.map(_.toString)
@@ -152,7 +174,7 @@ class ParentSourceChooser(
     buildSource
   }
 
-  private def getFlatTable(): NBuildSourceInfo = {
+  private def getFlatTable: NBuildSourceInfo = {
     //    val viewPath = persistFactViewIfNecessary()
     val sourceInfo = new NBuildSourceInfo
     sourceInfo.setSparkSession(ss)
@@ -162,7 +184,7 @@ class ParentSourceChooser(
     //    val needJoin = ParentSourceChooser.needJoinLookupTables(seg.getModel, toBuildTree)
     val flatTable = new CreateFlatTable(seg, toBuildTree, ss, sourceInfo)
     val afterJoin: Dataset[Row] = flatTable.generateDataset(needEncoding, true)
-    sourceInfo.setFlattableDS(afterJoin)
+    sourceInfo.setFlatTableDS(afterJoin)
 
     logInfo("No suitable ready layouts could be reused, generate dataset from flat table.")
     sourceInfo

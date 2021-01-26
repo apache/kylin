@@ -25,9 +25,9 @@ public class KafkaTopicCreator {
     public static String generateCreateCommand(KylinConfig config) {
         StringBuilder sb = new StringBuilder();
         String[] topics = new String[]{
-                config.getKylinMetricsSubjectQuery(),
-                config.getKylinMetricsSubjectQueryCube(),
-                config.getKylinMetricsSubjectQueryRpcCall(),
+                config.getKylinMetricsSubjectQueryExecution(),
+                config.getKylinMetricsSubjectQuerySparkJob(),
+                config.getKylinMetricsSubjectQuerySparkStage(),
                 config.getKylinMetricsSubjectJob(),
                 config.getKylinMetricsSubjectJobException()};
         for (String topic : topics) {

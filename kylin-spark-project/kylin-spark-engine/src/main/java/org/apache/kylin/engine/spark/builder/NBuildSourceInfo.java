@@ -34,7 +34,7 @@ import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 public class NBuildSourceInfo {
     protected static final Logger logger = LoggerFactory.getLogger(NBuildSourceInfo.class);
 
-    private Dataset<Row> flattableDS;
+    private Dataset<Row> flatTableDS;
     private String viewFactTablePath;
     private SparkSession ss;
     private long byteSize;
@@ -52,12 +52,12 @@ public class NBuildSourceInfo {
         this.byteSize = byteSize;
     }
 
-    public void setFlattableDS(Dataset<Row> flattableDS) {
-        this.flattableDS = flattableDS;
+    public void setFlatTableDS(Dataset<Row> flatTableDS) {
+        this.flatTableDS = flatTableDS;
     }
 
-    public Dataset<Row> getFlattableDS() {
-        return flattableDS;
+    public Dataset<Row> getFlatTableDS() {
+        return flatTableDS;
     }
 
     public Dataset<Row> getParentDS() {
@@ -66,9 +66,9 @@ public class NBuildSourceInfo {
             Preconditions.checkNotNull(ss, "SparkSession is null is NBuildSourceInfo.");
             return ss.read().parquet(parentStoragePath);
         } else {
-            Preconditions.checkState(flattableDS != null, "Path and DS can no be empty at the same time.");
-            logger.info("parent storage path not exists, use flattable dataset.");
-            return flattableDS;
+            Preconditions.checkState(flatTableDS != null, "Path and DS can no be empty at the same time.");
+            logger.info("parent storage path not exists, use flatTable dataset.");
+            return flatTableDS;
         }
     }
 

@@ -20,6 +20,7 @@ package org.apache.kylin.cube.kv;
 
 import java.util.Map;
 
+import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
+@Clarification(deprecated = true, msg = "Useless code in Kylin 4")
 public class CubeDimEncMap implements IDimensionEncodingMap, java.io.Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeDimEncMap.class);

@@ -28,6 +28,10 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 public class NResourceDetectStep extends NSparkExecutable {
 
+    private final static String[] excludedSparkConf = new String[] {"spark.executor.cores",
+            "spark.executor.memoryOverhead", "spark.executor.extraJavaOptions",
+            "spark.executor.instances", "spark.executor.memory", "spark.executor.extraClassPath"};
+
     // called by reflection
     public NResourceDetectStep() {
 
@@ -62,6 +66,11 @@ public class NResourceDetectStep extends NSparkExecutable {
         sparkConfigOverride.put("spark.master", "local");
         sparkConfigOverride.put("spark.sql.autoBroadcastJoinThreshold", "-1");
         sparkConfigOverride.put("spark.sql.adaptive.enabled", "false");
+        for (String sparkConf : excludedSparkConf) {
+            if (sparkConfigOverride.containsKey(sparkConf)) {
+                sparkConfigOverride.remove(sparkConf);
+            }
+        }
         return sparkConfigOverride;
     }
 }

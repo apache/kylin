@@ -21,6 +21,7 @@ package org.apache.kylin.rest.init;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.metrics.QuerySparkMetrics;
 import org.apache.kylin.rest.metrics.QueryMetrics2Facade;
 import org.apache.kylin.rest.metrics.QueryMetricsFacade;
 import org.slf4j.Logger;
@@ -44,6 +45,7 @@ public class InitialTaskManager implements InitializingBean {
     private void runInitialTasks() {
 
         // init metrics system for kylin
+        QuerySparkMetrics.getInstance();
         QueryMetricsFacade.init();
         QueryMetrics2Facade.init();
 

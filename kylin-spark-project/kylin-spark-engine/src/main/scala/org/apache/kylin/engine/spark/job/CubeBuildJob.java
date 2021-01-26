@@ -22,21 +22,31 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.engine.mr.JobBuilderSupport;
+import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.engine.mr.common.CubeStatsWriter;
+import org.apache.kylin.engine.mr.common.StatisticsDecisionUtil;
+import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.shaded.com.google.common.base.Joiner;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.StringUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -59,6 +69,8 @@ import org.apache.kylin.engine.spark.utils.QueryExecutionCache;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.storage.StorageFactory;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
@@ -69,6 +81,7 @@ import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
+import scala.Tuple2;
 import scala.collection.JavaConversions;
 
 public class CubeBuildJob extends SparkApplication {
@@ -80,6 +93,8 @@ public class CubeBuildJob extends SparkApplication {
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
     private Map<Long, Short> cuboidShardNum = Maps.newConcurrentMap();
     private Map<Long, Long> cuboidsRowCount = Maps.newConcurrentMap();
+    private Map<Long, Long> recommendCuboidMap = new HashMap<>();
+
     public static void main(String[] args) {
         CubeBuildJob cubeBuildJob = new CubeBuildJob();
         cubeBuildJob.execute(args);
@@ -89,21 +104,70 @@ public class CubeBuildJob extends SparkApplication {
     protected void doExecute() throws Exception {
 
         long start = System.currentTimeMillis();
-        logger.info("Start building cube job...");
-        buildLayoutWithUpdate = new BuildLayoutWithUpdate();
+        logger.info("Start building cube job for {} ...", getParam(MetadataConstants.P_SEGMENT_IDS));
         Set<String> segmentIds = Sets.newHashSet(StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS)));
+
+        // For now, Kylin should only build one segment in one time, cube planner has this restriction (maybe we can remove this limitation later)
+        Preconditions.checkArgument(segmentIds.size() == 1, "Build one segment in one time.");
+
+        String firstSegmentId = segmentIds.iterator().next();
+        String cubeName = getParam(MetadataConstants.P_CUBE_ID);
+        SegmentInfo seg = ManagerHub.getSegmentInfo(config, cubeName, firstSegmentId);
         cubeManager = CubeManager.getInstance(config);
-        cubeInstance = cubeManager.getCubeByUuid(getParam(MetadataConstants.P_CUBE_ID));
+        cubeInstance = cubeManager.getCubeByUuid(cubeName);
+        CubeSegment newSegment = cubeInstance.getSegmentById(firstSegmentId);
+        SpanningTree spanningTree;
+        ParentSourceChooser sourceChooser;
+
+        // Cuboid Statistics is served for Cube Planner Phase One at the moment
+        boolean needStatistics = StatisticsDecisionUtil.isAbleToOptimizeCubingPlan(newSegment)
+                || config.isSegmentStatisticsEnabled();
+
+        if (needStatistics) {
+            // 1.1 Call CuboidStatistics#statistics
+            long startMills = System.currentTimeMillis();
+            spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(seg.toBuildLayouts()));
+            sourceChooser = new ParentSourceChooser(spanningTree, seg, jobId, ss, config, false);
+            sourceChooser.setNeedStatistics();
+            sourceChooser.decideFlatTableSource(null);
+            Map<Long, HLLCounter> hllMap = new HashMap<>();
+            for (Tuple2<Object, AggInfo> cuboidData : sourceChooser.aggInfo()) {
+                hllMap.put((Long) cuboidData._1, cuboidData._2.cuboid().counter());
+            }
+            logger.info("Cuboid statistics return {} records and cost {} ms.", hllMap.size(), (System.currentTimeMillis() - startMills));
+
+            // 1.2 Save cuboid statistics
+            String jobTmpDir = config.getJobTmpDir(project) + "/" + jobId;
+            Path statisticsDir = new Path(jobTmpDir + "/" + ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeName + "/" + firstSegmentId + "/");
+            Optional<HLLCounter> hll = hllMap.values().stream().max(Comparator.comparingLong(HLLCounter::getCountEstimate));
+            long rc = hll.map(HLLCounter::getCountEstimate).orElse(1L);
+            CubeStatsWriter.writeCuboidStatistics(HadoopUtil.getCurrentConfiguration(), statisticsDir, hllMap, 1, rc);
+
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
+            ResourceStore rs = ResourceStore.getStore(config);
+            String metaKey = newSegment.getStatisticsResourcePath();
+            Path statisticsFile = new Path(statisticsDir, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+            FSDataInputStream is = fs.open(statisticsFile);
+            rs.putResource(metaKey, is, System.currentTimeMillis()); // write to Job-Local metastore
+            logger.info("{}'s stats saved to resource key({}) with path({})", newSegment, metaKey, statisticsFile);
+
+            // 1.3 Trigger cube planner phase one and save optimized cuboid set into CubeInstance
+            recommendCuboidMap = StatisticsDecisionUtil.optimizeCubingPlan(newSegment);
+            if (!recommendCuboidMap.isEmpty())
+                logger.info("Triggered cube planner phase one .");
+        }
+
+        buildLayoutWithUpdate = new BuildLayoutWithUpdate();
         List<String> persistedFlatTable = new ArrayList<>();
         List<String> persistedViewFactTable = new ArrayList<>();
         Path shareDir = config.getJobTmpShareDir(project, jobId);
         try {
             //TODO: what if a segment is deleted during building?
             for (String segId : segmentIds) {
-                SegmentInfo seg = ManagerHub.getSegmentInfo(config, getParam(MetadataConstants.P_CUBE_ID), segId);
-                SpanningTree spanningTree = new ForestSpanningTree(
+                seg = ManagerHub.getSegmentInfo(config, cubeName, segId);
+                spanningTree = new ForestSpanningTree(
                         JavaConversions.asJavaCollection(seg.toBuildLayouts()));
-                logger.debug("There are {} cuboids to be built in segment {}.",
+                logger.info("There are {} cuboids to be built in segment {}.",
                         seg.toBuildLayouts().size(), seg.name());
                 for (LayoutEntity cuboid : JavaConversions.asJavaCollection(seg.toBuildLayouts())) {
                     logger.debug("Cuboid {} has row keys: {}", cuboid.getId(),
@@ -111,7 +175,7 @@ public class CubeBuildJob extends SparkApplication {
                 }
 
                 // choose source
-                ParentSourceChooser sourceChooser = new ParentSourceChooser(spanningTree, seg, jobId, ss, config, true);
+                sourceChooser = new ParentSourceChooser(spanningTree, seg, jobId, ss, config, true);
                 sourceChooser.decideSources();
                 NBuildSourceInfo buildFromFlatTable = sourceChooser.flatTableSource();
                 Map<Long, NBuildSourceInfo> buildFromLayouts = sourceChooser.reuseSources();
@@ -131,10 +195,11 @@ public class CubeBuildJob extends SparkApplication {
                 infos.recordSpanningTree(segId, spanningTree);
 
                 logger.info("Updating segment info");
-                updateSegmentInfo(getParam(MetadataConstants.P_CUBE_ID), seg, buildFromFlatTable.getFlattableDS().count());
+                assert buildFromFlatTable != null;
+                updateSegmentInfo(getParam(MetadataConstants.P_CUBE_ID), seg, buildFromFlatTable.getFlatTableDS().count());
             }
-            updateSegmentSourceBytesSize(getParam(MetadataConstants.P_CUBE_ID),
-                    ResourceDetectUtils.getSegmentSourceSize(shareDir));
+            updateCubeAndSegmentMeta(getParam(MetadataConstants.P_CUBE_ID),
+                    ResourceDetectUtils.getSegmentSourceSize(shareDir), recommendCuboidMap);
         } finally {
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
             for (String viewPath : persistedViewFactTable) {
@@ -157,6 +222,37 @@ public class CubeBuildJob extends SparkApplication {
         List<CubeSegment> cubeSegments = Lists.newArrayList();
         CubeSegment segment = cubeCopy.getSegmentById(segmentInfo.id());
         segment.setSizeKB(segmentInfo.getAllLayoutSize() / 1024);
+        List<String> cuboidStatics = new LinkedList<>();
+
+        String template = "{\"cuboid\":%d, \"rows\": %d, \"size\": %d \"deviation\": %7f}";
+        for (LayoutEntity layoutEntity : segmentInfo.getAllLayoutJava()) {
+            double deviation = 0.0d;
+            if (layoutEntity.getRows() > 0 && recommendCuboidMap != null && !recommendCuboidMap.isEmpty()) {
+                long diff = (layoutEntity.getRows() - recommendCuboidMap.get(layoutEntity.getId()));
+                deviation = diff / (layoutEntity.getRows() + 0.0d);
+            }
+            cuboidStatics.add(String.format(Locale.getDefault(), template, layoutEntity.getId(),
+                    layoutEntity.getRows(), layoutEntity.getByteSize(), deviation));
+        }
+
+        try {
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
+            JavaSparkContext jsc = JavaSparkContext.fromSparkContext(ss.sparkContext());
+            JavaRDD<String> cuboidStatRdd = jsc.parallelize(cuboidStatics, 1);
+            for (String cuboid : cuboidStatics) {
+                logger.info("Statistics \t: {}", cuboid);
+            }
+            String pathDir = config.getHdfsWorkingDirectory() + segment.getPreciseStatisticsResourcePath();
+            logger.info("Saving {} {} .", pathDir, segmentInfo);
+            Path path = new Path(pathDir);
+            if (fs.exists(path)) {
+                fs.delete(path, true);
+            }
+            cuboidStatRdd.saveAsTextFile(pathDir);
+        } catch (Exception e) {
+            logger.error("Write metrics failed.", e);
+        }
+
         segment.setLastBuildTime(System.currentTimeMillis());
         segment.setLastBuildJobID(getParam(MetadataConstants.P_JOB_ID));
         segment.setInputRecords(sourceRowCount);
@@ -177,15 +273,19 @@ public class CubeBuildJob extends SparkApplication {
         }
     }
 
-    private void updateSegmentSourceBytesSize(String cubeId, Map<String, Object> toUpdateSegmentSourceSize)
-            throws IOException {
+    private void updateCubeAndSegmentMeta(String cubeId, Map<String, Object> toUpdateSegmentSourceSize,
+                                          Map<Long, Long> recommendCuboidMap) throws IOException {
         CubeInstance cubeInstance = cubeManager.getCubeByUuid(cubeId);
         CubeInstance cubeCopy = cubeInstance.latestCopyForWrite();
         CubeUpdate update = new CubeUpdate(cubeCopy);
+
+        if (recommendCuboidMap != null && !recommendCuboidMap.isEmpty())
+            update.setCuboids(recommendCuboidMap);
+
         List<CubeSegment> cubeSegments = Lists.newArrayList();
         for (Map.Entry<String, Object> entry : toUpdateSegmentSourceSize.entrySet()) {
             CubeSegment segment = cubeCopy.getSegmentById(entry.getKey());
-            if (segment.getInputRecords() > 0l) {
+            if (segment.getInputRecords() > 0L) {
                 segment.setInputRecordsSize((Long) entry.getValue());
                 segment.setLastBuildTime(System.currentTimeMillis());
                 cubeSegments.add(segment);
@@ -306,7 +406,7 @@ public class CubeBuildJob extends SparkApplication {
     }
 
     private LayoutEntity buildCuboid(SegmentInfo seg, LayoutEntity cuboid, Dataset<Row> parent,
-                                    SpanningTree spanningTree, long parentId) throws IOException {
+                                     SpanningTree spanningTree, long parentId) throws IOException {
         String parentName = String.valueOf(parentId);
         if (parentId == ParentSourceChooser.FLAT_TABLE_FLAG()) {
             parentName = "flat table";
@@ -321,7 +421,7 @@ public class CubeBuildJob extends SparkApplication {
             ss.sparkContext().setJobDescription("build " + layoutEntity.getId() + " from parent " + parentName);
             Set<Integer> orderedDims = layoutEntity.getOrderedDimensions().keySet();
             Dataset<Row> afterSort = afterPrj.select(NSparkCubingUtil.getColumns(orderedDims))
-                    .sortWithinPartitions(NSparkCubingUtil.getFirstColumn(orderedDims));
+                    .sortWithinPartitions(NSparkCubingUtil.getColumns(orderedDims));
             saveAndUpdateLayout(afterSort, seg, layoutEntity, parentId);
         } else {
             Dataset<Row> afterAgg = CuboidAggregator.agg(ss, parent, dimIndexes, cuboid.getOrderedMeasures(),
@@ -332,7 +432,7 @@ public class CubeBuildJob extends SparkApplication {
 
             Dataset<Row> afterSort = afterAgg
                     .select(NSparkCubingUtil.getColumns(rowKeys, layoutEntity.getOrderedMeasures().keySet()))
-                    .sortWithinPartitions(NSparkCubingUtil.getFirstColumn(rowKeys));
+                    .sortWithinPartitions(NSparkCubingUtil.getColumns(rowKeys));
 
             saveAndUpdateLayout(afterSort, seg, layoutEntity, parentId);
         }
@@ -374,7 +474,7 @@ public class CubeBuildJob extends SparkApplication {
         }
         int shardNum = BuildUtils.repartitionIfNeed(layout, storage, path, tempPath, cubeInstance.getConfig(), ss);
         layout.setShardNum(shardNum);
-        cuboidShardNum.put(layoutId, (short)shardNum);
+        cuboidShardNum.put(layoutId, (short) shardNum);
         ss.sparkContext().setLocalProperty(QueryExecutionCache.N_EXECUTION_ID_KEY(), null);
         QueryExecutionCache.removeQueryExecution(queryExecutionId);
         BuildUtils.fillCuboidInfo(layout, path);

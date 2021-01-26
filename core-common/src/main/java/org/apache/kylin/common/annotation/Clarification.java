@@ -30,9 +30,11 @@ import java.lang.annotation.Target;
         ElementType.CONSTRUCTOR, ElementType.LOCAL_VARIABLE, ElementType.PACKAGE})
 public @interface Clarification {
 
-    Priority priority();
+    Priority priority() default Priority.MINOR;
 
-    String msg() default "N/A";
+    String msg() default "null";
+
+    boolean deprecated() default false; // Please remove deprecated key when Kylin4 GA
 
     enum Priority {
         MINOR,

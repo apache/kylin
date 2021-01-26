@@ -24,6 +24,7 @@ import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -37,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -54,10 +56,12 @@ public class StorageCleanupJob extends AbstractApplication {
 
     protected boolean delete = false;
 
+    protected static final List<String> protectedDir = Arrays.asList("cube_statistics", "resources-jdbc");
+    protected static PathFilter pathFilter = status -> !protectedDir.contains(status.getName());
+
     public StorageCleanupJob() throws IOException {
         this(KylinConfig.getInstanceFromEnv(), HadoopUtil.getWorkingFileSystem(HadoopUtil.getCurrentConfiguration()));
     }
-
 
     public StorageCleanupJob(KylinConfig config, FileSystem fs) {
         this.config = config;
@@ -83,26 +87,14 @@ public class StorageCleanupJob extends AbstractApplication {
     public void cleanup() throws Exception {
         ProjectManager projectManager = ProjectManager.getInstance(config);
         CubeManager cubeManager = CubeManager.getInstance(config);
-
-        //clean up job temp files
-        List<String> projects = projectManager.listAllProjects().stream().map(ProjectInstance::getName).collect(Collectors.toList());
-        for (String project : projects) {
-            String tmpPath = config.getJobTmpDir(project);
-            if (delete) {
-                logger.info("Deleting HDFS path " + tmpPath);
-                if (fs.exists(new Path(tmpPath))) {
-                    fs.delete(new Path(tmpPath), true);
-                }
-            } else {
-                logger.info("Dry run, pending delete HDFS path " + tmpPath);
-            }
-        }
+        List<String> projects = projectManager.listAllProjects().stream().map(ProjectInstance::getName)
+                .collect(Collectors.toList());
 
         //clean up deleted projects and cubes
         List<CubeInstance> cubes = cubeManager.listAllCubes();
         Path metadataPath = new Path(config.getHdfsWorkingDirectory());
         if (fs.exists(metadataPath)) {
-            FileStatus[] projectStatus = fs.listStatus(metadataPath);
+            FileStatus[] projectStatus = fs.listStatus(metadataPath, pathFilter);
             if (projectStatus != null) {
                 for (FileStatus status : projectStatus) {
                     String projectName = status.getPath().getName();
@@ -114,7 +106,8 @@ public class StorageCleanupJob extends AbstractApplication {
                             logger.info("Dry run, pending delete HDFS path " + status.getPath());
                         }
                     } else {
-                        cleanupDeletedCubes(projectName, cubes.stream().map(CubeInstance::getName).collect(Collectors.toList()));
+                        cleanupDeletedCubes(projectName,
+                                cubes.stream().map(CubeInstance::getName).collect(Collectors.toList()));
                     }
                 }
             }

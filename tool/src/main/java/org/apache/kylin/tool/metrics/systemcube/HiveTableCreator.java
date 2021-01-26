@@ -29,10 +29,9 @@ import org.apache.kylin.metrics.lib.impl.TimePropertyEnum;
 import org.apache.kylin.metrics.lib.impl.hive.HiveProducerRecord;
 import org.apache.kylin.metrics.lib.impl.hive.HiveReservoirReporter;
 import org.apache.kylin.metrics.property.JobPropertyEnum;
-import org.apache.kylin.metrics.property.QueryCubePropertyEnum;
-import org.apache.kylin.metrics.property.QueryPropertyEnum;
-import org.apache.kylin.metrics.property.QueryRPCPropertyEnum;
-
+import org.apache.kylin.metrics.property.QuerySparkExecutionEnum;
+import org.apache.kylin.metrics.property.QuerySparkJobEnum;
+import org.apache.kylin.metrics.property.QuerySparkStageEnum;
 import org.apache.kylin.shaded.com.google.common.base.Strings;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
@@ -97,18 +96,18 @@ public class HiveTableCreator {
     }
 
     public static String generateHiveTableSQLForMetricsQuery(KylinConfig config) {
-        String tableName = HiveReservoirReporter.getTableFromSubject(config.getKylinMetricsSubjectQuery());
-        return generateHiveTableSQL(tableName, getHiveColumnsForMetricsQuery(), getPartitionKVsForHiveTable());
+        String tableName = HiveReservoirReporter.getTableFromSubject(config.getKylinMetricsSubjectQueryExecution());
+        return generateHiveTableSQL(tableName, getHiveColumnsForMetricsQueryExecution(), getPartitionKVsForHiveTable());
     }
 
     public static String generateHiveTableSQLForMetricsQueryCUBE(KylinConfig config) {
-        String tableName = HiveReservoirReporter.getTableFromSubject(config.getKylinMetricsSubjectQueryCube());
-        return generateHiveTableSQL(tableName, getHiveColumnsForMetricsQueryCube(), getPartitionKVsForHiveTable());
+        String tableName = HiveReservoirReporter.getTableFromSubject(config.getKylinMetricsSubjectQuerySparkJob());
+        return generateHiveTableSQL(tableName, getHiveColumnsForMetricsQuerySparkJob(), getPartitionKVsForHiveTable());
     }
 
     public static String generateHiveTableSQLForMetricsQueryRPC(KylinConfig config) {
-        String tableName = HiveReservoirReporter.getTableFromSubject(config.getKylinMetricsSubjectQueryRpcCall());
-        return generateHiveTableSQL(tableName, getHiveColumnsForMetricsQueryRPC(), getPartitionKVsForHiveTable());
+        String tableName = HiveReservoirReporter.getTableFromSubject(config.getKylinMetricsSubjectQuerySparkStage());
+        return generateHiveTableSQL(tableName, getHiveColumnsForMetricsQuerySparkStage(), getPartitionKVsForHiveTable());
     }
 
     public static String generateHiveTableSQLForMetricsJob(KylinConfig config) {
@@ -121,67 +120,94 @@ public class HiveTableCreator {
         return generateHiveTableSQL(tableName, getHiveColumnsForMetricsJobException(), getPartitionKVsForHiveTable());
     }
 
-    public static List<Pair<String, String>> getHiveColumnsForMetricsQuery() {
+    public static List<Pair<String, String>> getHiveColumnsForMetricsQueryExecution() {
         List<Pair<String, String>> columns = Lists.newLinkedList();
-        columns.add(new Pair<>(QueryPropertyEnum.ID_CODE.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.ID_CODE.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.QUERY_ID.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.EXECUTION_ID.toString(), HiveTypeEnum.HBIGINT.toString()));
         columns.add(new Pair<>(RecordEvent.RecordReserveKeyEnum.HOST.toString(), HiveTypeEnum.HSTRING.toString()));
-        columns.add(new Pair<>(QueryPropertyEnum.USER.toString(), HiveTypeEnum.HSTRING.toString()));
-        columns.add(new Pair<>(QueryPropertyEnum.PROJECT.toString(), HiveTypeEnum.HSTRING.toString()));
-        columns.add(new Pair<>(QueryPropertyEnum.REALIZATION.toString(), HiveTypeEnum.HSTRING.toString()));
-        columns.add(new Pair<>(QueryPropertyEnum.REALIZATION_TYPE.toString(), HiveTypeEnum.HINT.toString()));
-        columns.add(new Pair<>(QueryPropertyEnum.TYPE.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.USER.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.SPARDER_NAME.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.PROJECT.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.REALIZATION.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.REALIZATION_TYPE.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.CUBOID_IDS.toString(), HiveTypeEnum.HSTRING.toString()));
 
-        columns.add(new Pair<>(QueryPropertyEnum.EXCEPTION.toString(), HiveTypeEnum.HSTRING.toString()));
-        columns.add(new Pair<>(QueryPropertyEnum.TIME_COST.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryPropertyEnum.CALCITE_RETURN_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryPropertyEnum.STORAGE_RETURN_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryPropertyEnum.AGGR_FILTER_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.TYPE.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.START_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.END_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+
+        columns.add(new Pair<>(QuerySparkExecutionEnum.EXCEPTION.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.TIME_COST.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.TOTAL_SCAN_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.TOTAL_SCAN_BYTES.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.RESULT_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
+
+        columns.add(new Pair<>(QuerySparkExecutionEnum.EXECUTION_DURATION.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.RESULT_SIZE.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.EXECUTOR_DESERIALIZE_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.EXECUTOR_DESERIALIZE_CPU_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.EXECUTOR_RUN_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.EXECUTOR_CPU_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.JVM_GC_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.RESULT_SERIALIZATION_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.MEMORY_BYTE_SPILLED.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.DISK_BYTES_SPILLED.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkExecutionEnum.PEAK_EXECUTION_MEMORY.toString(), HiveTypeEnum.HBIGINT.toString()));
 
         columns.addAll(getTimeColumnsForMetrics());
         return columns;
     }
 
-    public static List<Pair<String, String>> getHiveColumnsForMetricsQueryCube() {
+    public static List<Pair<String, String>> getHiveColumnsForMetricsQuerySparkJob() {
         List<Pair<String, String>> columns = Lists.newLinkedList();
+        columns.add(new Pair<>(QuerySparkJobEnum.QUERY_ID.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.PROJECT.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.EXECUTION_ID.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.JOB_ID.toString(), HiveTypeEnum.HINT.toString()));
         columns.add(new Pair<>(RecordEvent.RecordReserveKeyEnum.HOST.toString(), HiveTypeEnum.HSTRING.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.PROJECT.toString(), HiveTypeEnum.HSTRING.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.CUBE.toString(), HiveTypeEnum.HSTRING.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.SEGMENT.toString(), HiveTypeEnum.HSTRING.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.CUBOID_SOURCE.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.CUBOID_TARGET.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.IF_MATCH.toString(), HiveTypeEnum.HBOOLEAN.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.FILTER_MASK.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.IF_SUCCESS.toString(), HiveTypeEnum.HBOOLEAN.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.START_TIME.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.END_TIME.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.IF_SUCCESS.toString(), HiveTypeEnum.HBOOLEAN.toString()));
 
-        columns.add(new Pair<>(QueryCubePropertyEnum.WEIGHT_PER_HIT.toString(), HiveTypeEnum.HDOUBLE.toString()));
-
-        columns.add(new Pair<>(QueryCubePropertyEnum.CALL_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.TIME_SUM.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.TIME_MAX.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.SKIP_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.SCAN_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.RETURN_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.AGGR_FILTER_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryCubePropertyEnum.AGGR_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.RESULT_SIZE.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.EXECUTOR_DESERIALIZE_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.EXECUTOR_DESERIALIZE_CPU_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.EXECUTOR_RUN_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.EXECUTOR_CPU_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.JVM_GC_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.RESULT_SERIALIZATION_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.MEMORY_BYTE_SPILLED.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.DISK_BYTES_SPILLED.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkJobEnum.PEAK_EXECUTION_MEMORY.toString(), HiveTypeEnum.HBIGINT.toString()));
 
         columns.addAll(getTimeColumnsForMetrics());
         return columns;
     }
 
-    public static List<Pair<String, String>> getHiveColumnsForMetricsQueryRPC() {
+    public static List<Pair<String, String>> getHiveColumnsForMetricsQuerySparkStage() {
         List<Pair<String, String>> columns = Lists.newLinkedList();
         columns.add(new Pair<>(RecordEvent.RecordReserveKeyEnum.HOST.toString(), HiveTypeEnum.HSTRING.toString()));
-        columns.add(new Pair<>(QueryRPCPropertyEnum.PROJECT.toString(), HiveTypeEnum.HSTRING.toString()));
-        columns.add(new Pair<>(QueryRPCPropertyEnum.REALIZATION.toString(), HiveTypeEnum.HSTRING.toString()));
-        columns.add(new Pair<>(QueryRPCPropertyEnum.RPC_SERVER.toString(), HiveTypeEnum.HSTRING.toString()));
-        columns.add(new Pair<>(QueryRPCPropertyEnum.EXCEPTION.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.QUERY_ID.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.EXECUTION_ID.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.JOB_ID.toString(), HiveTypeEnum.HINT.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.STAGE_ID.toString(), HiveTypeEnum.HINT.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.SUBMIT_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.PROJECT.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.REALIZATION.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.CUBOID_ID.toString(), HiveTypeEnum.HSTRING.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.IF_SUCCESS.toString(), HiveTypeEnum.HBOOLEAN.toString()));
 
-        columns.add(new Pair<>(QueryRPCPropertyEnum.CALL_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryRPCPropertyEnum.RETURN_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryRPCPropertyEnum.SCAN_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryRPCPropertyEnum.SKIP_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryRPCPropertyEnum.AGGR_FILTER_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
-        columns.add(new Pair<>(QueryRPCPropertyEnum.AGGR_COUNT.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.RESULT_SIZE.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.EXECUTOR_DESERIALIZE_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.EXECUTOR_DESERIALIZE_CPU_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.EXECUTOR_RUN_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.EXECUTOR_CPU_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.JVM_GC_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.RESULT_SERIALIZATION_TIME.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.MEMORY_BYTE_SPILLED.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.DISK_BYTES_SPILLED.toString(), HiveTypeEnum.HBIGINT.toString()));
+        columns.add(new Pair<>(QuerySparkStageEnum.PEAK_EXECUTION_MEMORY.toString(), HiveTypeEnum.HBIGINT.toString()));
 
         columns.addAll(getTimeColumnsForMetrics());
         return columns;

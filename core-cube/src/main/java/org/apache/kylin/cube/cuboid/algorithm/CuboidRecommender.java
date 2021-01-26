@@ -143,7 +143,8 @@ public class CuboidRecommender {
 
         long startTime = System.currentTimeMillis();
         logger.info("Cube Planner Algorithm started at {}", startTime);
-        List<Long> recommendCuboidList = algorithm.recommend(kylinConf.getCubePlannerExpansionRateThreshold());
+        List<Long> recommendCuboidList = algorithm.recommend(
+                kylinConf.getCubePlannerExpansionRateThreshold() / kylinConf.getStorageCompressionRatio());
         logger.info("Cube Planner Algorithm ended at {}", System.currentTimeMillis() - startTime);
 
         if (recommendCuboidList.size() < allCuboidCount) {

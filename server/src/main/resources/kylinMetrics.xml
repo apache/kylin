@@ -34,9 +34,15 @@
             <value>500</value>
         </constructor-arg>
 
-        <!-- minReportTime, min duration(in minute) between two report action-->
+        <!-- maxReportTime, max duration(in minute) between two report action-->
         <constructor-arg index="2">
             <value>10</value>
+        </constructor-arg>
+
+        <!-- maxQueueSize, max queue size of records in BlockingReservoir;
+            set zero or a negative number if you prefer a unbounded LinkedBlockingQueue -->
+        <constructor-arg index="3">
+            <value>500000</value>
         </constructor-arg>
     </bean>
 
@@ -73,6 +79,7 @@
                                           value="org.apache.kylin.metrics.lib.impl.hive.HiveReservoirReporter"/>
                                 <property name="second">
                                     <props>
+                                        <prop key="kylin.hive.producer.close-file-every-append">true</prop>
                                     </props>
                                 </property>
                             </bean>

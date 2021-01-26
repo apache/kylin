@@ -186,9 +186,9 @@ public class SCCreator extends AbstractApplication {
 
     private List<TableDesc> generateKylinTableForSystemCube(MetricsSinkDesc sinkDesc) {
         List<TableDesc> result = Lists.newLinkedList();
-        result.add(KylinTableCreator.generateKylinTableForMetricsQuery(config, sinkDesc));
-        result.add(KylinTableCreator.generateKylinTableForMetricsQueryCube(config, sinkDesc));
-        result.add(KylinTableCreator.generateKylinTableForMetricsQueryRPC(config, sinkDesc));
+        result.add(KylinTableCreator.generateKylinTableForMetricsQueryExecution(config, sinkDesc));
+        result.add(KylinTableCreator.generateKylinTableForMetricsQuerySparkJob(config, sinkDesc));
+        result.add(KylinTableCreator.generateKylinTableForMetricsQuerySparkStage(config, sinkDesc));
         result.add(KylinTableCreator.generateKylinTableForMetricsJob(config, sinkDesc));
         result.add(KylinTableCreator.generateKylinTableForMetricsJobException(config, sinkDesc));
 
@@ -208,9 +208,9 @@ public class SCCreator extends AbstractApplication {
 
     private List<CubeDesc> generateKylinCubeDescForSystemCube(MetricsSinkDesc sinkDesc) {
         List<CubeDesc> result = Lists.newLinkedList();
-        result.add(CubeDescCreator.generateKylinCubeDescForMetricsQuery(config, sinkDesc));
-        result.add(CubeDescCreator.generateKylinCubeDescForMetricsQueryCube(config, sinkDesc));
-        result.add(CubeDescCreator.generateKylinCubeDescForMetricsQueryRPC(config, sinkDesc));
+        result.add(CubeDescCreator.generateKylinCubeDescForMetricsQueryExecution(config, sinkDesc));
+        result.add(CubeDescCreator.generateKylinCubeDescForMetricsQuerySparkJob(config, sinkDesc));
+        result.add(CubeDescCreator.generateKylinCubeDescForMetricsQuerySparkStage(config, sinkDesc));
         result.add(CubeDescCreator.generateKylinCubeDescForMetricsJob(config, sinkDesc));
         result.add(CubeDescCreator.generateKylinCubeDescForMetricsJobException(config, sinkDesc));
 
@@ -219,9 +219,9 @@ public class SCCreator extends AbstractApplication {
 
     private List<CubeInstance> generateKylinCubeInstanceForSystemCube(String owner, MetricsSinkDesc sinkDesc) {
         List<CubeInstance> result = Lists.newLinkedList();
-        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsQuery(owner, config, sinkDesc));
-        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsQueryCube(owner, config, sinkDesc));
-        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsQueryRPC(owner, config, sinkDesc));
+        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsQueryExecution(owner, config, sinkDesc));
+        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsQuerySparkJob(owner, config, sinkDesc));
+        result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsQuerySparkStage(owner, config, sinkDesc));
         result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsJob(owner, config, sinkDesc));
         result.add(CubeInstanceCreator.generateKylinCubeInstanceForMetricsJobException(owner, config, sinkDesc));
 

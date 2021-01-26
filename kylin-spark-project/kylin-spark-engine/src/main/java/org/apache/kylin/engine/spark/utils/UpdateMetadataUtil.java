@@ -29,12 +29,18 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
+import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.spark.job.NSparkExecutable;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -48,7 +54,7 @@ public class UpdateMetadataUtil {
     protected static final Logger logger = LoggerFactory.getLogger(UpdateMetadataUtil.class);
 
     public static void syncLocalMetadataToRemote(KylinConfig config,
-                                         NSparkExecutable nsparkExecutable) throws IOException {
+                                                 NSparkExecutable nsparkExecutable) throws IOException {
         String cubeId = nsparkExecutable.getParam(MetadataConstants.P_CUBE_ID);
         Set<String> segmentIds = Sets.newHashSet(StringUtils.split(
                 nsparkExecutable.getParam(CubingExecutableUtil.SEGMENT_ID), " "));
@@ -62,26 +68,36 @@ public class UpdateMetadataUtil {
         // load the meta from local meta path of this job
         KylinConfig kylinDistConfig = MetaDumpUtil.loadKylinConfigFromHdfs(remoteResourceStore);
         CubeInstance distCube = CubeManager.getInstance(kylinDistConfig).getCubeByUuid(cubeId);
-        CubeSegment toUpdateSegs = distCube.getSegmentById(segmentId);
+        CubeSegment toUpdateSeg = distCube.getSegmentById(segmentId);
 
-        List<CubeSegment> tobeSegments = currentInstanceCopy.calculateToBeSegments(toUpdateSegs);
-        if (!tobeSegments.contains(toUpdateSegs))
+        List<CubeSegment> tobeSegments = currentInstanceCopy.calculateToBeSegments(toUpdateSeg);
+        if (!tobeSegments.contains(toUpdateSeg))
             throw new IllegalStateException(
                     String.format(Locale.ROOT, "For cube %s, segment %s is expected but not in the tobe %s",
-                            currentInstanceCopy.toString(), toUpdateSegs.toString(), tobeSegments.toString()));
+                            currentInstanceCopy.toString(), toUpdateSeg.toString(), tobeSegments.toString()));
+
+        String resKey = toUpdateSeg.getStatisticsResourcePath();
+        String jobTmpDir = config.getJobTmpDir(currentInstanceCopy.getProject()) + "/" + nsparkExecutable.getParam(MetadataConstants.P_JOB_ID);
+        Path statisticsFile = new Path(jobTmpDir + "/" + ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeId + "/" + segmentId + "/" + BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+        FileSystem fs = HadoopUtil.getWorkingFileSystem();
+        if (fs.exists(statisticsFile)) {
+            FSDataInputStream is = fs.open(statisticsFile);
+            ResourceStore.getStore(config).putBigResource(resKey, is, System.currentTimeMillis());
+        }
 
         CubeUpdate update = new CubeUpdate(currentInstanceCopy);
+        update.setCuboids(distCube.getCuboids());
         List<CubeSegment> toRemoveSegs = Lists.newArrayList();
 
         if (String.valueOf(CubeBuildTypeEnum.MERGE).equals(jobType)) {
-            toUpdateSegs.getSnapshots().clear();
+            toUpdateSeg.getSnapshots().clear();
             // update the snapshot table path
             for (Map.Entry<String, String> entry :
                     currentInstanceCopy.getLatestReadySegment().getSnapshots().entrySet()) {
-                toUpdateSegs.putSnapshotResPath(entry.getKey(), entry.getValue());
+                toUpdateSeg.putSnapshotResPath(entry.getKey(), entry.getValue());
             }
         } else {
-            toUpdateSegs.setStatus(SegmentStatusEnum.READY);
+            toUpdateSeg.setStatus(SegmentStatusEnum.READY);
             for (CubeSegment segment : currentInstanceCopy.getSegments()) {
                 if (!tobeSegments.contains(segment))
                     toRemoveSegs.add(segment);
@@ -92,11 +108,11 @@ public class UpdateMetadataUtil {
             }
         }
 
-        logger.info("Promoting cube {}, new segment {}, to remove segments {}", currentInstanceCopy, toUpdateSegs, toRemoveSegs);
+        logger.info("Promoting cube {}, new segment {}, to remove segments {}", currentInstanceCopy, toUpdateSeg, toRemoveSegs);
 
-        toUpdateSegs.setLastBuildTime(System.currentTimeMillis());
+        toUpdateSeg.setLastBuildTime(System.currentTimeMillis());
         update.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[0]))
-                .setToUpdateSegs(toUpdateSegs);
+                .setToUpdateSegs(toUpdateSeg);
         cubeManager.updateCube(update);
     }
 

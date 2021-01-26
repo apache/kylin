@@ -32,9 +32,9 @@ import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metrics.lib.impl.RecordEvent;
 import org.apache.kylin.metrics.lib.impl.TimePropertyEnum;
 import org.apache.kylin.metrics.property.JobPropertyEnum;
-import org.apache.kylin.metrics.property.QueryCubePropertyEnum;
-import org.apache.kylin.metrics.property.QueryPropertyEnum;
-import org.apache.kylin.metrics.property.QueryRPCPropertyEnum;
+import org.apache.kylin.metrics.property.QuerySparkExecutionEnum;
+import org.apache.kylin.metrics.property.QuerySparkJobEnum;
+import org.apache.kylin.metrics.property.QuerySparkStageEnum;
 import org.apache.kylin.tool.metrics.systemcube.def.MetricsSinkDesc;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
@@ -65,23 +65,23 @@ public class ModelCreator {
 
     public static DataModelDesc generateKylinModelForMetricsQuery(String owner, KylinConfig kylinConfig,
             MetricsSinkDesc sinkDesc) {
-        String tableName = sinkDesc.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectQuery());
-        return generateKylinModel(owner, tableName, getDimensionsForMetricsQuery(), getMeasuresForMetricsQuery(),
-                getPartitionDesc(tableName));
+        String tableName = sinkDesc.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectQueryExecution());
+        return generateKylinModel(owner, tableName, getDimensionsForMetricsQueryExecution(),
+                getMeasuresForMetricsQueryExecution(), getPartitionDesc(tableName));
     }
 
     public static DataModelDesc generateKylinModelForMetricsQueryCube(String owner, KylinConfig kylinConfig,
             MetricsSinkDesc sinkDesc) {
-        String tableName = sinkDesc.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectQueryCube());
-        return generateKylinModel(owner, tableName, getDimensionsForMetricsQueryCube(),
-                getMeasuresForMetricsQueryCube(), getPartitionDesc(tableName));
+        String tableName = sinkDesc.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectQuerySparkJob());
+        return generateKylinModel(owner, tableName, getDimensionsForMetricsQuerySparkJob(),
+                getMeasuresForMetricsQuerySparkJob(), getPartitionDesc(tableName));
     }
 
     public static DataModelDesc generateKylinModelForMetricsQueryRPC(String owner, KylinConfig kylinConfig,
             MetricsSinkDesc sinkDesc) {
-        String tableName = sinkDesc.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectQueryRpcCall());
-        return generateKylinModel(owner, tableName, getDimensionsForMetricsQueryRPC(), getMeasuresForMetricsQueryRPC(),
-                getPartitionDesc(tableName));
+        String tableName = sinkDesc.getTableNameForMetrics(kylinConfig.getKylinMetricsSubjectQuerySparkStage());
+        return generateKylinModel(owner, tableName, getDimensionsForMetricsQuerySparkStage(),
+                getMeasuresForMetricsQuerySparkStage(), getPartitionDesc(tableName));
     }
 
     public static DataModelDesc generateKylinModelForMetricsJob(String owner, KylinConfig kylinConfig,
@@ -98,82 +98,106 @@ public class ModelCreator {
                 getMeasuresForMetricsJobException(), getPartitionDesc(tableName));
     }
 
-    public static List<String> getDimensionsForMetricsQuery() {
+    public static List<String> getDimensionsForMetricsQueryExecution() {
         List<String> result = Lists.newLinkedList();
         result.add(RecordEvent.RecordReserveKeyEnum.HOST.toString());
-        result.add(QueryPropertyEnum.USER.toString());
-        result.add(QueryPropertyEnum.PROJECT.toString());
-        result.add(QueryPropertyEnum.REALIZATION.toString());
-        result.add(QueryPropertyEnum.REALIZATION_TYPE.toString());
-        result.add(QueryPropertyEnum.TYPE.toString());
-        result.add(QueryPropertyEnum.EXCEPTION.toString());
+        result.add(QuerySparkExecutionEnum.USER.toString());
+        result.add(QuerySparkExecutionEnum.PROJECT.toString());
+        result.add(QuerySparkExecutionEnum.REALIZATION.toString());
+        result.add(QuerySparkExecutionEnum.REALIZATION_TYPE.toString());
+        result.add(QuerySparkExecutionEnum.CUBOID_IDS.toString());
+        result.add(QuerySparkExecutionEnum.TYPE.toString());
+        result.add(QuerySparkExecutionEnum.EXCEPTION.toString());
+        result.add(QuerySparkExecutionEnum.SPARDER_NAME.toString());
+        result.add(QuerySparkExecutionEnum.QUERY_ID.toString());
+        result.add(QuerySparkExecutionEnum.START_TIME.toString());
+        result.add(QuerySparkExecutionEnum.END_TIME.toString());
 
         result.addAll(getTimeDimensionsForMetrics());
         return result;
     }
 
-    public static List<String> getMeasuresForMetricsQuery() {
+    public static List<String> getMeasuresForMetricsQueryExecution() {
         List<String> result = Lists.newLinkedList();
-        result.add(QueryPropertyEnum.ID_CODE.toString());
-        result.add(QueryPropertyEnum.TIME_COST.toString());
-        result.add(QueryPropertyEnum.CALCITE_RETURN_COUNT.toString());
-        result.add(QueryPropertyEnum.STORAGE_RETURN_COUNT.toString());
-        result.add(QueryPropertyEnum.AGGR_FILTER_COUNT.toString());
-
+        result.add(QuerySparkExecutionEnum.ID_CODE.toString());
+        result.add(QuerySparkExecutionEnum.TIME_COST.toString());
+        result.add(QuerySparkExecutionEnum.TOTAL_SCAN_COUNT.toString());
+        result.add(QuerySparkExecutionEnum.TOTAL_SCAN_BYTES.toString());
+        result.add(QuerySparkExecutionEnum.RESULT_COUNT.toString());
+        result.add(QuerySparkExecutionEnum.EXECUTION_DURATION.toString());
+        result.add(QuerySparkExecutionEnum.RESULT_SIZE.toString());
+        result.add(QuerySparkExecutionEnum.EXECUTOR_DESERIALIZE_TIME.toString());
+        result.add(QuerySparkExecutionEnum.EXECUTOR_DESERIALIZE_CPU_TIME.toString());
+        result.add(QuerySparkExecutionEnum.EXECUTOR_RUN_TIME.toString());
+        result.add(QuerySparkExecutionEnum.EXECUTOR_CPU_TIME.toString());
+        result.add(QuerySparkExecutionEnum.JVM_GC_TIME.toString());
+        result.add(QuerySparkExecutionEnum.RESULT_SERIALIZATION_TIME.toString());
+        result.add(QuerySparkExecutionEnum.MEMORY_BYTE_SPILLED.toString());
+        result.add(QuerySparkExecutionEnum.DISK_BYTES_SPILLED.toString());
+        result.add(QuerySparkExecutionEnum.PEAK_EXECUTION_MEMORY.toString());
         return result;
     }
 
-    public static List<String> getDimensionsForMetricsQueryCube() {
+    public static List<String> getDimensionsForMetricsQuerySparkJob() {
         List<String> result = Lists.newLinkedList();
         result.add(RecordEvent.RecordReserveKeyEnum.HOST.toString());
-        result.add(QueryCubePropertyEnum.PROJECT.toString());
-        result.add(QueryCubePropertyEnum.CUBE.toString());
-        result.add(QueryCubePropertyEnum.SEGMENT.toString());
-        result.add(QueryCubePropertyEnum.CUBOID_SOURCE.toString());
-        result.add(QueryCubePropertyEnum.CUBOID_TARGET.toString());
-        result.add(QueryCubePropertyEnum.FILTER_MASK.toString());
-        result.add(QueryCubePropertyEnum.IF_MATCH.toString());
-        result.add(QueryCubePropertyEnum.IF_SUCCESS.toString());
+        result.add(QuerySparkJobEnum.QUERY_ID.toString());
+        result.add(QuerySparkJobEnum.EXECUTION_ID.toString());
+        result.add(QuerySparkJobEnum.JOB_ID.toString());
+        result.add(QuerySparkJobEnum.PROJECT.toString());
+        result.add(QuerySparkJobEnum.START_TIME.toString());
+        result.add(QuerySparkJobEnum.END_TIME.toString());
+        result.add(QuerySparkJobEnum.IF_SUCCESS.toString());
 
         result.addAll(getTimeDimensionsForMetrics());
         return result;
     }
 
-    public static List<String> getMeasuresForMetricsQueryCube() {
+    public static List<String> getMeasuresForMetricsQuerySparkJob() {
         List<String> result = Lists.newLinkedList();
-        result.add(QueryCubePropertyEnum.WEIGHT_PER_HIT.toString());
-        result.add(QueryCubePropertyEnum.CALL_COUNT.toString());
-        result.add(QueryCubePropertyEnum.TIME_SUM.toString());
-        result.add(QueryCubePropertyEnum.TIME_MAX.toString());
-        result.add(QueryCubePropertyEnum.SKIP_COUNT.toString());
-        result.add(QueryCubePropertyEnum.SCAN_COUNT.toString());
-        result.add(QueryCubePropertyEnum.RETURN_COUNT.toString());
-        result.add(QueryCubePropertyEnum.AGGR_FILTER_COUNT.toString());
-        result.add(QueryCubePropertyEnum.AGGR_COUNT.toString());
+        result.add(QuerySparkJobEnum.RESULT_SIZE.toString());
+        result.add(QuerySparkJobEnum.EXECUTOR_DESERIALIZE_TIME.toString());
+        result.add(QuerySparkJobEnum.EXECUTOR_DESERIALIZE_CPU_TIME.toString());
+        result.add(QuerySparkJobEnum.EXECUTOR_RUN_TIME.toString());
+        result.add(QuerySparkJobEnum.EXECUTOR_CPU_TIME.toString());
+        result.add(QuerySparkJobEnum.JVM_GC_TIME.toString());
+        result.add(QuerySparkJobEnum.RESULT_SERIALIZATION_TIME.toString());
+        result.add(QuerySparkJobEnum.MEMORY_BYTE_SPILLED.toString());
+        result.add(QuerySparkJobEnum.DISK_BYTES_SPILLED.toString());
+        result.add(QuerySparkJobEnum.PEAK_EXECUTION_MEMORY.toString());
 
         return result;
     }
 
-    public static List<String> getDimensionsForMetricsQueryRPC() {
+    public static List<String> getDimensionsForMetricsQuerySparkStage() {
         List<String> result = Lists.newLinkedList();
         result.add(RecordEvent.RecordReserveKeyEnum.HOST.toString());
-        result.add(QueryRPCPropertyEnum.PROJECT.toString());
-        result.add(QueryRPCPropertyEnum.REALIZATION.toString());
-        result.add(QueryRPCPropertyEnum.RPC_SERVER.toString());
-        result.add(QueryRPCPropertyEnum.EXCEPTION.toString());
+        result.add(QuerySparkStageEnum.QUERY_ID.toString());
+        result.add(QuerySparkStageEnum.EXECUTION_ID.toString());
+        result.add(QuerySparkStageEnum.JOB_ID.toString());
+        result.add(QuerySparkStageEnum.STAGE_ID.toString());
+        result.add(QuerySparkStageEnum.SUBMIT_TIME.toString());
+        result.add(QuerySparkStageEnum.PROJECT.toString());
+        result.add(QuerySparkStageEnum.REALIZATION.toString());
+        result.add(QuerySparkStageEnum.CUBOID_ID.toString());
+        result.add(QuerySparkStageEnum.IF_SUCCESS.toString());
 
         result.addAll(getTimeDimensionsForMetrics());
         return result;
     }
 
-    public static List<String> getMeasuresForMetricsQueryRPC() {
+    public static List<String> getMeasuresForMetricsQuerySparkStage() {
         List<String> result = Lists.newLinkedList();
-        result.add(QueryRPCPropertyEnum.CALL_TIME.toString());
-        result.add(QueryRPCPropertyEnum.RETURN_COUNT.toString());
-        result.add(QueryRPCPropertyEnum.SCAN_COUNT.toString());
-        result.add(QueryRPCPropertyEnum.SKIP_COUNT.toString());
-        result.add(QueryRPCPropertyEnum.AGGR_FILTER_COUNT.toString());
-        result.add(QueryRPCPropertyEnum.AGGR_COUNT.toString());
+        result.add(QuerySparkStageEnum.RESULT_SIZE.toString());
+        result.add(QuerySparkStageEnum.EXECUTOR_DESERIALIZE_TIME.toString());
+        result.add(QuerySparkStageEnum.EXECUTOR_DESERIALIZE_CPU_TIME.toString());
+        result.add(QuerySparkStageEnum.EXECUTOR_RUN_TIME.toString());
+        result.add(QuerySparkStageEnum.EXECUTOR_CPU_TIME.toString());
+        result.add(QuerySparkStageEnum.JVM_GC_TIME.toString());
+        result.add(QuerySparkStageEnum.RESULT_SERIALIZATION_TIME.toString());
+        result.add(QuerySparkStageEnum.MEMORY_BYTE_SPILLED.toString());
+        result.add(QuerySparkStageEnum.DISK_BYTES_SPILLED.toString());
+        result.add(QuerySparkStageEnum.PEAK_EXECUTION_MEMORY.toString());
 
         return result;
     }

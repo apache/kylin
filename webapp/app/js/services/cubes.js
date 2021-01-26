@@ -33,7 +33,9 @@ KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
         });
       }
     };
-    iterator(data.root, data.root.row_count);
+    if (data.root) {
+      iterator(data.root, data.root.row_count);
+    }
     return cuboids;
   };
   return $resource(Config.service.url + 'cubes/:cubeId/:propName/:propValue/:action', {}, {

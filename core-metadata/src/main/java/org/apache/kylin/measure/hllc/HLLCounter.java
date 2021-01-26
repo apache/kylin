@@ -52,7 +52,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
     private Register register;
 
     public HLLCounter() {
-        this(10, RegisterType.SINGLE_VALUE, Hashing.murmur3_128());
+        this(14, RegisterType.SINGLE_VALUE, Hashing.murmur3_128());
     }
 
     public HLLCounter(int p) {
@@ -151,7 +151,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
 
     public void merge(HLLCounter another) {
         assert this.p == another.p;
-        assert this.hashFunc == another.hashFunc;
+        assert this.hashFunc.equals(another.hashFunc);
         switch (register.getRegisterType()) {
             case SINGLE_VALUE:
                 switch (another.getRegisterType()) {

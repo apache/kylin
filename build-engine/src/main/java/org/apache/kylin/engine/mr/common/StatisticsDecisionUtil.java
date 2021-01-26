@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.mr.common;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -93,22 +94,23 @@ public class StatisticsDecisionUtil {
     }
 
     // For triggering cube planner phase one
-    public static void optimizeCubingPlan(CubeSegment segment) throws IOException {
+    public static Map<Long, Long> optimizeCubingPlan(CubeSegment segment) throws IOException {
         if (isAbleToOptimizeCubingPlan(segment)) {
             logger.info("It's able to trigger cuboid planner algorithm.");
         } else {
-            return;
+            return new HashMap<>();
         }
 
         Map<Long, Long> recommendCuboidsWithStats = CuboidRecommenderUtil.getRecommendCuboidList(segment);
         if (recommendCuboidsWithStats == null || recommendCuboidsWithStats.isEmpty()) {
-            return;
+            return new HashMap<>();
         }
 
         CubeInstance cube = segment.getCubeInstance();
         CubeUpdate update = new CubeUpdate(cube.latestCopyForWrite());
         update.setCuboids(recommendCuboidsWithStats);
         CubeManager.getInstance(cube.getConfig()).updateCube(update);
+        return recommendCuboidsWithStats;
     }
 
     public static boolean isAbleToOptimizeCubingPlan(CubeSegment segment) {

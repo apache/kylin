@@ -56,7 +56,6 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
-import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.cube.kv.RowKeyEncoder;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.measure.hllc.HLLCounter;
@@ -86,7 +85,7 @@ public class CubeStatsReader {
     final double mapperOverlapRatioOfFirstBuild; // becomes meaningless after merge
     final Map<Long, HLLCounter> cuboidRowEstimatesHLL;
     final CuboidScheduler cuboidScheduler;
-    final long sourceRowCount;
+    public final long sourceRowCount;
 
     public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig) throws IOException {
         this(cubeSegment, cubeSegment.getCuboidScheduler(), kylinConfig);
@@ -97,25 +96,32 @@ public class CubeStatsReader {
      */
     public CubeStatsReader(CubeSegment cubeSegment, CuboidScheduler cuboidScheduler, KylinConfig kylinConfig)
             throws IOException {
+        this.seg = cubeSegment;
+        this.cuboidScheduler = cuboidScheduler;
         ResourceStore store = ResourceStore.getStore(kylinConfig);
         String statsKey = cubeSegment.getStatisticsResourcePath();
         RawResource resource = store.getResource(statsKey);
-        if (resource == null)
-            throw new IllegalStateException("Missing resource at " + statsKey);
+        if (resource != null) {
+            File tmpSeqFile = writeTmpSeqFile(resource.content());
+            Path path = new Path(HadoopUtil.fixWindowsPath("file://" + tmpSeqFile.getAbsolutePath()));
+            logger.info("Reading statistics from {}", path);
+            CubeStatsResult cubeStatsResult = new CubeStatsResult(path, kylinConfig.getCubeStatsHLLPrecision());
+            tmpSeqFile.delete();
 
-        File tmpSeqFile = writeTmpSeqFile(resource.content());
-        Path path = new Path(HadoopUtil.fixWindowsPath("file://" + tmpSeqFile.getAbsolutePath()));
-
-        CubeStatsResult cubeStatsResult = new CubeStatsResult(path, kylinConfig.getCubeStatsHLLPrecision());
-        tmpSeqFile.delete();
-
-        this.seg = cubeSegment;
-        this.cuboidScheduler = cuboidScheduler;
-        this.samplingPercentage = cubeStatsResult.getPercentage();
-        this.mapperNumberOfFirstBuild = cubeStatsResult.getMapperNumber();
-        this.mapperOverlapRatioOfFirstBuild = cubeStatsResult.getMapperOverlapRatio();
-        this.cuboidRowEstimatesHLL = cubeStatsResult.getCounterMap();
-        this.sourceRowCount = cubeStatsResult.getSourceRecordCount();
+            this.samplingPercentage = cubeStatsResult.getPercentage();
+            this.mapperNumberOfFirstBuild = cubeStatsResult.getMapperNumber();
+            this.mapperOverlapRatioOfFirstBuild = cubeStatsResult.getMapperOverlapRatio();
+            this.cuboidRowEstimatesHLL = cubeStatsResult.getCounterMap();
+            this.sourceRowCount = cubeStatsResult.getSourceRecordCount();
+        } else {
+            // throw new IllegalStateException("Missing resource at " + statsKey);
+            logger.warn("{} is not exists.", statsKey);
+            this.samplingPercentage = -1;
+            this.mapperNumberOfFirstBuild = -1;
+            this.mapperOverlapRatioOfFirstBuild = -1.0;
+            this.cuboidRowEstimatesHLL = null;
+            this.sourceRowCount = -1L;
+        }
     }
 
     /**
@@ -167,10 +173,12 @@ public class CubeStatsReader {
     }
 
     public Map<Long, Long> getCuboidRowEstimatesHLL() {
+        if (cuboidRowEstimatesHLL == null) {
+            return null;
+        }
         return getCuboidRowCountMapFromSampling(cuboidRowEstimatesHLL, samplingPercentage);
     }
 
-    // return map of Cuboid ID => MB
     public Map<Long, Double> getCuboidSizeMap() {
         return getCuboidSizeMap(false);
     }
@@ -213,11 +221,15 @@ public class CubeStatsReader {
         final List<Integer> rowkeyColumnSize = Lists.newArrayList();
         final Cuboid baseCuboid = Cuboid.getBaseCuboid(cubeDesc);
         final List<TblColRef> columnList = baseCuboid.getColumns();
-        final CubeDimEncMap dimEncMap = cubeSegment.getDimensionEncodingMap();
         final Long baseCuboidRowCount = rowCountMap.get(baseCuboid.getId());
 
         for (int i = 0; i < columnList.size(); i++) {
-            rowkeyColumnSize.add(dimEncMap.get(columnList.get(i)).getLengthOfEncoding());
+            /*
+             * A workaround, for the fact kylin do not support self-defined encode in Kylin 4,
+             * it is done by Parquet(https://github.com/apache/parquet-format/blob/master/Encodings.md) for Kylin 4.
+             * It's complex and hard to calculate real size for specific literal value, so I propose to use 4 for a rough estimation.
+             */
+            rowkeyColumnSize.add(4);
         }
 
         Map<Long, Double> sizeMap = Maps.newHashMap();
@@ -226,7 +238,7 @@ public class CubeStatsReader {
                     baseCuboid.getId(), baseCuboidRowCount, rowkeyColumnSize, sourceRowCount));
         }
 
-        if (origin == false && cubeSegment.getConfig().enableJobCuboidSizeOptimize()) {
+        if (!origin && cubeSegment.getConfig().enableJobCuboidSizeOptimize()) {
             optimizeSizeMap(sizeMap, cubeSegment);
         }
 
@@ -359,11 +371,10 @@ public class CubeStatsReader {
             }
         }
 
-        double cuboidSizeRatio = kylinConf.getJobCuboidSizeRatio();
         double cuboidSizeMemHungryRatio = kylinConf.getJobCuboidSizeCountDistinctRatio();
         double cuboidSizeTopNRatio = kylinConf.getJobCuboidSizeTopNRatio();
 
-        double ret = (1.0 * normalSpace * rowCount * cuboidSizeRatio
+        double ret = (1.0 * normalSpace * rowCount
                 + 1.0 * countDistinctSpace * rowCount * cuboidSizeMemHungryRatio + 1.0 * percentileSpace * rowCount
                 + 1.0 * topNSpace * rowCount * cuboidSizeTopNRatio) / (1024L * 1024L);
         return ret;

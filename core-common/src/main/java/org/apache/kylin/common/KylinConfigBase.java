@@ -715,11 +715,12 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.cube.size-estimate-enable-optimize", "false"));
     }
 
+    @ConfigTag({ConfigTag.Tag.DEPRECATED, ConfigTag.Tag.NOT_CLEAR})
     public double getJobCuboidSizeRatio() {
         return Double.parseDouble(getOptional("kylin.cube.size-estimate-ratio", "0.25"));
     }
 
-    @Deprecated
+    @ConfigTag({ConfigTag.Tag.DEPRECATED, ConfigTag.Tag.NOT_CLEAR})
     public double getJobCuboidSizeMemHungryRatio() {
         return Double.parseDouble(getOptional("kylin.cube.size-estimate-memhungry-ratio", "0.05"));
     }
@@ -801,7 +802,7 @@ public abstract class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public boolean isCubePlannerEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", TRUE));
+        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", FALSE));
     }
 
     public boolean isCubePlannerEnabledForExistingCube() {
@@ -830,6 +831,14 @@ public abstract class KylinConfigBase implements Serializable {
 
     public int getCubePlannerGeneticAlgorithmAutoThreshold() {
         return Integer.parseInt(getOptional("kylin.cube.cubeplanner.algorithm-threshold-genetic", "23"));
+    }
+
+    /**
+     * Columnar storage, like apache parquet, often use encode and compression to make data smaller,
+     *  and this will affect CuboidRecommendAlgorithm.
+     */
+    public double getStorageCompressionRatio() {
+        return Double.parseDouble(getOptional("kylin.cube.cubeplanner.storage.compression.ratio", "0.2"));
     }
 
     /**
@@ -2340,18 +2349,26 @@ public abstract class KylinConfigBase implements Serializable {
                 + getKylinMetricsSubjectSuffix();
     }
 
-    public String getKylinMetricsSubjectQuery() {
-        return getOptional("kylin.metrics.subject-query", "METRICS_QUERY") + "_" + getKylinMetricsSubjectSuffix();
+    public String getKylinMetricsSubjectQueryExecution() {
+        return getOptional("kylin.metrics.subject-query-execution", "METRICS_QUERY_EXECUTION") + "_" + getKylinMetricsSubjectSuffix();
     }
 
-    public String getKylinMetricsSubjectQueryCube() {
-        return getOptional("kylin.metrics.subject-query-cube", "METRICS_QUERY_CUBE") + "_"
+    public String getKylinMetricsSubjectQuerySparkJob() {
+        return getOptional("kylin.metrics.subject-query-spark-job", "METRICS_QUERY_SPARK_JOB") + "_"
                 + getKylinMetricsSubjectSuffix();
     }
 
-    public String getKylinMetricsSubjectQueryRpcCall() {
-        return getOptional("kylin.metrics.subject-query-rpc", "METRICS_QUERY_RPC") + "_"
+    public String getKylinMetricsSubjectQuerySparkStage() {
+        return getOptional("kylin.metrics.subject-query-spark-stage", "METRICS_QUERY_SPARK_STAGE") + "_"
                 + getKylinMetricsSubjectSuffix();
+    }
+
+    public int getKylinMetricsCacheExpireSeconds() {
+        return Integer.parseInt(this.getOptional("kylin.metrics.query-cache.expire-seconds", "300"));
+    }
+
+    public int getKylinMetricsCacheMaxEntries() {
+        return Integer.parseInt(this.getOptional("kylin.metrics.query-cache.max-entries", "10000"));
     }
 
     public Map<String, String> getKylinMetricsConf() {
@@ -2638,6 +2655,13 @@ public abstract class KylinConfigBase implements Serializable {
         return getFileName(kylinHome + File.separator + "lib", PARQUET_JOB_JAR_NAME_PATTERN);
     }
 
+    /**
+     * Use https://github.com/spektom/spark-flamegraph for Spark profile
+     */
+    public String getSparkSubmitCmd() {
+        return getOptional("kylin.engine.spark-cmd", null);
+    }
+
     public void overrideKylinParquetJobJarPath(String path) {
         logger.info("override {} to {}", KYLIN_ENGINE_PARQUET_JOB_JAR, path);
         System.setProperty(KYLIN_ENGINE_PARQUET_JOB_JAR, path);
@@ -2894,20 +2918,32 @@ public abstract class KylinConfigBase implements Serializable {
 
     /**
      * Used to upload user-defined log4j configuration
+     *
+     * @param isLocal run spark local mode or not
      */
-    public String sparkUploadFiles() {
+    public String sparkUploadFiles(boolean isLocal) {
         try {
-            File storageFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/conf",
-                    "spark-executor-log4j.properties");
             String path1 = "";
-            if (storageFile != null) {
-                path1 = storageFile.getCanonicalPath();
+            if (!isLocal) {
+                File storageFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/conf",
+                        "spark-executor-log4j.properties");
+                if (storageFile != null) {
+                    path1 = storageFile.getCanonicalPath();
+
+                }
             }
 
             return getOptional("kylin.query.engine.sparder-additional-files", path1);
         } catch (IOException e) {
             return "";
         }
+    }
+
+    /**
+     * Used to upload user-defined log4j configuration
+     */
+    public String sparkUploadFiles() {
+        return sparkUploadFiles(false);
     }
 
     @ConfigTag(ConfigTag.Tag.NOT_CLEAR)
@@ -2961,6 +2997,13 @@ public abstract class KylinConfigBase implements Serializable {
      */
     public int getSparderCanaryPeriodMinutes() {
         return Integer.parseInt(this.getOptional("kylin.canary.sparder-context-period-min", "3"));
+    }
+
+    /**
+     * If we should calculate cuboid statistics for each segment, which is needed for cube planner phase two
+     */
+    public boolean isSegmentStatisticsEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.engine.segment-statistics-enabled", "false"));
     }
 
     // ============================================================================

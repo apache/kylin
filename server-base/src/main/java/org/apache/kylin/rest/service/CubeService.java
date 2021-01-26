@@ -1042,7 +1042,7 @@ public class CubeService extends BasicService implements InitializingBean {
         String cuboidColumn = isCuboidSource ? QueryCubePropertyEnum.CUBOID_SOURCE.toString()
                 : QueryCubePropertyEnum.CUBOID_TARGET.toString();
         String hitMeasure = QueryCubePropertyEnum.WEIGHT_PER_HIT.toString();
-        String table = getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQueryCube());
+        String table = getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQuerySparkJob());
         String sql = "select " + cuboidColumn + ", sum(" + hitMeasure + ")" //
                 + " from " + table//
                 + " where " + QueryCubePropertyEnum.CUBE.toString() + " = ?" //
@@ -1057,7 +1057,7 @@ public class CubeService extends BasicService implements InitializingBean {
         String cuboidTgt = QueryCubePropertyEnum.CUBOID_TARGET.toString();
         String aggCount = QueryCubePropertyEnum.AGGR_COUNT.toString();
         String returnCount = QueryCubePropertyEnum.RETURN_COUNT.toString();
-        String table = getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQueryCube());
+        String table = getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQuerySparkJob());
         String sql = "select " + cuboidSource + ", " + cuboidTgt + ", avg(" + aggCount + "), avg(" + returnCount + ")"//
                 + " from " + table //
                 + " where " + QueryCubePropertyEnum.CUBE.toString() + " = ?" //
@@ -1070,7 +1070,7 @@ public class CubeService extends BasicService implements InitializingBean {
     public Map<Long, Long> getCuboidQueryMatchCount(String cubeName) {
         String cuboidSource = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
         String hitMeasure = QueryCubePropertyEnum.WEIGHT_PER_HIT.toString();
-        String table = getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQueryCube());
+        String table = getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQuerySparkJob());
         String sql = "select " + cuboidSource + ", sum(" + hitMeasure + ")" //
                 + " from " + table //
                 + " where " + QueryCubePropertyEnum.CUBE.toString() + " = ?" //

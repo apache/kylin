@@ -110,7 +110,7 @@ object MetadataConverter {
     val colToIndex = columnIDTuples.toMap
     columnIDTuples
       .foreach { co =>
-        dimensionIndex.put(co._2, toColumnDesc(co._1, co._2))
+        dimensionIndex.put(co._2, toColumnDesc(co._1, co._2, set.contains(co._1)))
       }
     dimensionIndex
   }
@@ -122,7 +122,7 @@ object MetadataConverter {
 
   def extractEntityAndMeasures(cubeInstance: CubeInstance): (List[LayoutEntity], Map[Integer, FunctionDesc]) = {
     val (columnIndexes, shardByColumnsId, idToColumnMap, measureId) = genIDToColumnMap(cubeInstance)
-    (cubeInstance.getDescriptor.getInitialCuboidScheduler
+    (cubeInstance.getCuboidScheduler
       .getAllCuboidIds
       .asScala
       .map { long =>
@@ -159,9 +159,9 @@ object MetadataConverter {
 
     val dimensionMap = dimensionMapping.toMap
     val shardByColumnsId = shardByColumns.asScala.toList
-            .map(column => dimensionMap.get(column))
-            .filter(v => v != null)
-            .map(column => Integer.valueOf(column.get))
+      .map(column => dimensionMap.get(column))
+      .filter(v => v != null)
+      .map(column => Integer.valueOf(column.get))
 
     val set = dimensionMapping.map(_._1).toSet
     val refs = cubeInstance.getAllColumns.asScala.diff(set)
@@ -204,13 +204,13 @@ object MetadataConverter {
     extractEntityAndMeasures(cubeInstance)._1.asJava
   }
 
-  private def toColumnDesc(ref: TblColRef, index: Int = -1) = {
+  private def toColumnDesc(ref: TblColRef, index: Int = -1, rowKey: Boolean = false) = {
     val dataType = SparkTypeUtil.toSparkType(KyDataType.getType(ref.getDatatype))
     val columnDesc = if (ref.getColumnDesc.isComputedColumn) {
       ComputedColumnDesc(ref.getName, dataType, ref.getTableRef.getTableName, ref.getTableRef.getAlias,
         index, ref.getExpressionInSourceDB)
     } else {
-      ColumnDesc(ref.getName, dataType, ref.getTableRef.getTableName, ref.getTableRef.getAlias, index)
+      ColumnDesc(ref.getName, dataType, ref.getTableRef.getTableName, ref.getTableRef.getAlias, index, rowKey)
     }
     columnDesc
   }

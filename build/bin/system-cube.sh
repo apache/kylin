@@ -38,9 +38,9 @@ OUTPUT_FORDER=$KYLIN_HOME/system_cube
 KYLIN_ENV=`grep "^kylin.env=" $KYLIN_HOME/conf/kylin.properties | cut -d "=" -f 2`
 KYLIN_ENV=${KYLIN_ENV:-"QA"}
 
-SC_NAME_1="KYLIN_HIVE_METRICS_QUERY_${KYLIN_ENV}"
-SC_NAME_2="KYLIN_HIVE_METRICS_QUERY_CUBE_${KYLIN_ENV}"
-SC_NAME_3="KYLIN_HIVE_METRICS_QUERY_RPC_${KYLIN_ENV}"
+SC_NAME_1="KYLIN_HIVE_METRICS_QUERY_EXECUTION_${KYLIN_ENV}"
+SC_NAME_2="KYLIN_HIVE_METRICS_QUERY_SPARK_JOB_${KYLIN_ENV}"
+SC_NAME_3="KYLIN_HIVE_METRICS_QUERY_SPARK_STAGE_${KYLIN_ENV}"
 SC_NAME_4="KYLIN_HIVE_METRICS_JOB_${KYLIN_ENV}"
 SC_NAME_5="KYLIN_HIVE_METRICS_JOB_EXCEPTION_${KYLIN_ENV}"
 
@@ -73,19 +73,13 @@ then
 
 	cat <<-EOF > ${SINK_TOOLS_FILE}
 	[
-	  [
-		"org.apache.kylin.tool.metrics.systemcube.util.HiveSinkTool",
-		{
-		  "storage_type": 2,
-		  "cube_desc_override_properties": [
-			"java.util.HashMap",
-			{
-			  "kylin.cube.algorithm": "INMEM",
-			  "kylin.cube.max-building-segments": "1"
-			}
-		  ]
-		}
-	  ]
+    {
+       "sink": "hive",
+       "storage_type": 4,
+       "cube_desc_override_properties": {
+         "kylin.cube.max-building-segments": "1"
+       }
+    }
 	]
 	EOF
   $KYLIN_HOME/bin/kylin.sh org.apache.kylin.tool.metrics.systemcube.SCCreator \
@@ -95,10 +89,12 @@ then
   hive_client_mode=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.client`
 
   # Get Database
-  system_database=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.database-for-flat-table | tr [a-z] [A-Z]`
+  system_database_tmp=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.metrics.prefix`
+  system_database=${system_database_tmp:-"KYLIN"}
+  system_database=`echo ${system_database} | tr [a-z] [A-Z]`
 
   # 'create database' failed will not exit when donot have permission to create database;
-  sed -i -e 's/CREATE DATABASE /#CREATE DATABASE /g' ${OUTPUT_FORDER}/create_hive_tables_for_system_cubes.sql
+  sed -i -e 's/CREATE DATABASE /-- CREATE DATABASE /g' ${OUTPUT_FORDER}/create_hive_tables_for_system_cubes.sql
 
   if [ "${hive_client_mode}" == "beeline" ]
   then
@@ -108,15 +104,15 @@ then
       hive2_url=`expr match "${beeline_params}" '.*\(hive2:.*:[0-9]\{4,6\}\/\)'`
       if [ -z ${hive2_url} ]; then
           hive2_url=`expr match "${beeline_params}" '.*\(hive2:.*:[0-9]\{4,6\}\)'`
-          beeline_params=${beeline_params/${hive2_url}/${hive2_url}/${sample_database}}
+          beeline_params=${beeline_params/${hive2_url}/${hive2_url}/${system_database}}
       else
-          beeline_params=${beeline_params/${hive2_url}/${hive2_url}${sample_database}}
+          beeline_params=${beeline_params/${hive2_url}/${hive2_url}${system_database}}
       fi
 
       beeline ${beeline_params} -f ${OUTPUT_FORDER}/create_hive_tables_for_system_cubes.sql  || { exit 1; }
   else
       hive -e "CREATE DATABASE IF NOT EXISTS "$system_database
-      hive --database $sample_database -f ${OUTPUT_FORDER}/create_hive_tables_for_system_cubes.sql  || { exit 1; }
+      hive --database $system_database -f ${OUTPUT_FORDER}/create_hive_tables_for_system_cubes.sql  || { exit 1; }
   fi
 
   $KYLIN_HOME/bin/metastore.sh restore ${OUTPUT_FORDER}
