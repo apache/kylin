@@ -23,7 +23,7 @@ import java.sql.{Date, Timestamp}
 import org.apache.hadoop.fs.{FileStatus, Path}
 import org.apache.kylin.common.util.DateFormat
 import org.apache.kylin.cube.cuboid.Cuboid
-import org.apache.kylin.cube.CubeInstance
+import org.apache.kylin.cube.{CubeInstance, CubeSegment}
 import org.apache.kylin.engine.spark.metadata.cube.PathManager
 import org.apache.kylin.engine.spark.metadata.MetadataConverter
 import org.apache.kylin.metadata.model.{PartitionDesc, SegmentStatusEnum}
@@ -75,6 +75,7 @@ case class ShardSpec(
 class FilePruner(
                   cubeInstance: CubeInstance,
                   cuboid: Cuboid,
+                  segments: List[CubeSegment],
                   val session: SparkSession,
                   val options: Map[String, String])
   extends FileIndex with ResetShufflePartition with Logging {
