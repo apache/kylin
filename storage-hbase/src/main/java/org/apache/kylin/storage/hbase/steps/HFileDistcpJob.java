@@ -23,7 +23,6 @@ import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.JobContext;
 import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.apache.hadoop.util.ToolRunner;
@@ -80,7 +79,7 @@ public class HFileDistcpJob extends AbstractHadoopJob {
             distCpOptions.setOverwrite(true);
             distCpOptions.setBlocking(true);
 
-            configuration.set(JobContext.JOB_NAME, getOptionValue(OPTION_JOB_NAME));
+            configuration.set("mapreduce.job.name", getOptionValue(OPTION_JOB_NAME));
             DistCp distCp = new DistCp(configuration, distCpOptions);
 
             job = distCp.execute();
