@@ -31,14 +31,11 @@ object UnionPlan {
     dataContext: DataContext): DataFrame = {
     var df = inputs.get(0)
     val drop = inputs.asScala.drop(1)
-    if (rel.all) {
-      for (other <- drop) {
-        df = df.union(other)
-      }
-    } else {
-      for (other <- drop) {
-        df = df.union(other).distinct()
-      }
+    for (other <- drop) {
+      df = df.union(other)
+    }
+    if (!rel.all) {
+      df = df.distinct()
     }
     df
   }
