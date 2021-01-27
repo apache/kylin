@@ -132,11 +132,8 @@ class FilePruner(
         // we can only get col ID in layout cuz data schema is all ids.
         val id = layoutEntity.getOrderedDimensions.asScala.values.find(column => column.columnName.equals(ref.getName))
         if (id.isDefined && (ref.getType.isDateTimeFamily || ref.getType.isStringFamily)) {
-          if (ref.getType.isDateTimeFamily) {
-            pattern = desc.getPartitionDateFormat
-          }
+          pattern = desc.getPartitionDateFormat
           dataSchema.filter(_.name == String.valueOf(id.get.id))
-
         } else {
           Seq.empty
         }
