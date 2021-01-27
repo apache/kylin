@@ -25,12 +25,8 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.query.relnode.OLAPRel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class SparkExec {
-
-    private static final Logger logger = LoggerFactory.getLogger(SparkExec.class);
 
     public static Enumerable<Object[]> collectToEnumerable(DataContext dataContext) {
         if (BackdoorToggles.getPrepareOnly()) {

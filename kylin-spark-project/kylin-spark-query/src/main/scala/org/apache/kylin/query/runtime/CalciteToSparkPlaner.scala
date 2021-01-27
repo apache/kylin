@@ -23,8 +23,8 @@ import java.util
 import org.apache.kylin.shaded.com.google.common.collect.Lists
 import org.apache.calcite.DataContext
 import org.apache.calcite.rel.{RelNode, RelVisitor}
-import org.apache.kylin.query.relnode.{OLAPAggregateRel, OLAPFilterRel, OLAPJoinRel, OLAPLimitRel, OLAPProjectRel, OLAPSortRel, OLAPTableScan, OLAPUnionRel, OLAPValuesRel, OLAPWindowRel}
-import org.apache.kylin.query.runtime.plans.{AggregatePlan, FilterPlan, LimitPlan, ProjectPlan, SortPlan, TableScanPlan, ValuesPlan, WindowPlan}
+import org.apache.kylin.query.relnode._
+import org.apache.kylin.query.runtime.plans._
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.DataFrame
 
@@ -95,14 +95,14 @@ class CalciteToSparkPlaner(dataContext: DataContext) extends RelVisitor with Log
           val right = stack.pop()
           val left = stack.pop()
           logTime("join") {
-            plans.JoinPlan.join(Lists.newArrayList(left, right), rel)
+            JoinPlan.join(Lists.newArrayList(left, right), rel)
           }
         }
       case rel: OLAPUnionRel =>
         val size = unionStack.pop()
         val java = Range(0, stack.size() - size).map(a => stack.pop()).asJava
         logTime("union") {
-          plans.UnionPlan.union(Lists.newArrayList(java), rel, dataContext)
+          UnionPlan.union(Lists.newArrayList(java), rel, dataContext)
         }
       case rel: OLAPValuesRel =>
         logTime("values") {
