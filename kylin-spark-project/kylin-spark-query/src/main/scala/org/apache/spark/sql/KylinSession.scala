@@ -199,6 +199,9 @@ object KylinSession extends Logging {
         }
         sparkConf.set("spark.yarn.am.extraJavaOptions",
           s"$yarnAMJavaOptions $amKerberosConf")
+      } else {
+        // in case spark conf is overridden by kylinconfig
+        sparkConf.setMaster("local")
       }
 
       sparkConf

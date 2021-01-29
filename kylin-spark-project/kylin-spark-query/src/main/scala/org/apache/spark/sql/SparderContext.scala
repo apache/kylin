@@ -131,26 +131,21 @@ object SparderContext extends Logging {
           override def run(): Unit = {
             try {
               val kylinConf: KylinConfig = KylinConfig.getInstanceFromEnv
-              val sparkSession = System.getProperty("spark.local") match {
+              val master = System.getProperty("spark.local") match {
                 case "true" =>
-                  SparkSession.builder
-                    .master("local")
-                    .appName(kylinConf.getSparderAppName)
-                    .withExtensions { ext =>
-                      ext.injectPlannerStrategy(_ => KylinSourceStrategy)
-                    }
-                    .enableHiveSupport()
-                    .getOrCreateKylinSession()
+                  "local"
                 case _ =>
-                  SparkSession.builder
-                    .appName(kylinConf.getSparderAppName)
-                    .master("yarn-client")
-                    .withExtensions { ext =>
-                      ext.injectPlannerStrategy(_ => KylinSourceStrategy)
-                    }
-                    .enableHiveSupport()
-                    .getOrCreateKylinSession()
+                  "yarn-client"
               }
+              val sparkSession = SparkSession.builder
+                .master(master)
+                .appName(kylinConf.getSparderAppName)
+                .withExtensions { ext =>
+                  ext.injectPlannerStrategy(_ => KylinSourceStrategy)
+                }
+                .enableHiveSupport()
+                .getOrCreateKylinSession()
+
               if (kylinConf.isKylinMetricsReporterForQueryEnabled) {
                 val appStatusListener = new SparderMetricsListener()
                 sparkSession.sparkContext.addSparkListener(appStatusListener)
@@ -177,7 +172,7 @@ object SparderContext extends Logging {
                   .getContextClassLoader
                   .toString)
               initMonitorEnv()
-              System.getProperty("spark.local") match {
+              master match {
                 case "true" =>
                   master_app_url = "http://localhost:" + sparkSession.sparkContext.getConf
                     .get("spark.ui.port", "4040")
