@@ -135,8 +135,3 @@ def exec(script):  # pylint: disable=redefined-builtin
 
 def shell():
     return Bash()
-
-
-if __name__ == '__main__':
-    sh = sshshell('10.1.3.94', username='root', password='hadoop')
-    print(sh.command('pwd'))

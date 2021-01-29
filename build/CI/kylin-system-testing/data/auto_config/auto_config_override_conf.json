@@ -1,0 +1,423 @@
+{
+  "cube_desc_data":
+  {
+    "uuid": "788f16f4-94b2-f7f4-0a62-5dc8a02ceee8",
+    "last_modified": 0,
+    "version": "4.0.0.0",
+    "name": "kylin_sales_cube_override_conf",
+    "is_draft": false,
+    "model_name": "kylin_sales_model",
+    "description": "",
+    "null_string": null,
+    "dimensions": [
+      {
+        "name": "TRANS_ID",
+        "table": "KYLIN_SALES",
+        "column": "TRANS_ID",
+        "derived": null
+      },
+      {
+        "name": "YEAR_BEG_DT",
+        "table": "KYLIN_CAL_DT",
+        "column": null,
+        "derived": [
+          "YEAR_BEG_DT"
+        ]
+      },
+      {
+        "name": "MONTH_BEG_DT",
+        "table": "KYLIN_CAL_DT",
+        "column": null,
+        "derived": [
+          "MONTH_BEG_DT"
+        ]
+      },
+      {
+        "name": "WEEK_BEG_DT",
+        "table": "KYLIN_CAL_DT",
+        "column": null,
+        "derived": [
+          "WEEK_BEG_DT"
+        ]
+      },
+      {
+        "name": "USER_DEFINED_FIELD1",
+        "table": "KYLIN_CATEGORY_GROUPINGS",
+        "column": null,
+        "derived": [
+          "USER_DEFINED_FIELD1"
+        ]
+      },
+      {
+        "name": "USER_DEFINED_FIELD3",
+        "table": "KYLIN_CATEGORY_GROUPINGS",
+        "column": null,
+        "derived": [
+          "USER_DEFINED_FIELD3"
+        ]
+      },
+      {
+        "name": "META_CATEG_NAME",
+        "table": "KYLIN_CATEGORY_GROUPINGS",
+        "column": "META_CATEG_NAME",
+        "derived": null
+      },
+      {
+        "name": "CATEG_LVL2_NAME",
+        "table": "KYLIN_CATEGORY_GROUPINGS",
+        "column": "CATEG_LVL2_NAME",
+        "derived": null
+      },
+      {
+        "name": "CATEG_LVL3_NAME",
+        "table": "KYLIN_CATEGORY_GROUPINGS",
+        "column": "CATEG_LVL3_NAME",
+        "derived": null
+      },
+      {
+        "name": "LSTG_FORMAT_NAME",
+        "table": "KYLIN_SALES",
+        "column": "LSTG_FORMAT_NAME",
+        "derived": null
+      },
+      {
+        "name": "SELLER_ID",
+        "table": "KYLIN_SALES",
+        "column": "SELLER_ID",
+        "derived": null
+      },
+      {
+        "name": "BUYER_ID",
+        "table": "KYLIN_SALES",
+        "column": "BUYER_ID",
+        "derived": null
+      },
+      {
+        "name": "ACCOUNT_BUYER_LEVEL",
+        "table": "BUYER_ACCOUNT",
+        "column": "ACCOUNT_BUYER_LEVEL",
+        "derived": null
+      },
+      {
+        "name": "ACCOUNT_SELLER_LEVEL",
+        "table": "SELLER_ACCOUNT",
+        "column": "ACCOUNT_SELLER_LEVEL",
+        "derived": null
+      },
+      {
+        "name": "BUYER_COUNTRY",
+        "table": "BUYER_ACCOUNT",
+        "column": "ACCOUNT_COUNTRY",
+        "derived": null
+      },
+      {
+        "name": "SELLER_COUNTRY",
+        "table": "SELLER_ACCOUNT",
+        "column": "ACCOUNT_COUNTRY",
+        "derived": null
+      },
+      {
+        "name": "BUYER_COUNTRY_NAME",
+        "table": "BUYER_COUNTRY",
+        "column": "NAME",
+        "derived": null
+      },
+      {
+        "name": "SELLER_COUNTRY_NAME",
+        "table": "SELLER_COUNTRY",
+        "column": "NAME",
+        "derived": null
+      },
+      {
+        "name": "OPS_USER_ID",
+        "table": "KYLIN_SALES",
+        "column": "OPS_USER_ID",
+        "derived": null
+      },
+      {
+        "name": "OPS_REGION",
+        "table": "KYLIN_SALES",
+        "column": "OPS_REGION",
+        "derived": null
+      }
+    ],
+    "measures": [
+      {
+        "name": "GMV_SUM",
+        "function": {
+          "expression": "SUM",
+          "parameter": {
+            "type": "column",
+            "value": "KYLIN_SALES.PRICE"
+          },
+          "returntype": "decimal(19,4)"
+        }
+      },
+      {
+        "name": "BUYER_LEVEL_SUM",
+        "function": {
+          "expression": "SUM",
+          "parameter": {
+            "type": "column",
+            "value": "BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL"
+          },
+          "returntype": "bigint"
+        }
+      },
+      {
+        "name": "SELLER_LEVEL_SUM",
+        "function": {
+          "expression": "SUM",
+          "parameter": {
+            "type": "column",
+            "value": "SELLER_ACCOUNT.ACCOUNT_SELLER_LEVEL"
+          },
+          "returntype": "bigint"
+        }
+      },
+      {
+        "name": "TRANS_CNT",
+        "function": {
+          "expression": "COUNT",
+          "parameter": {
+            "type": "constant",
+            "value": "1"
+          },
+          "returntype": "bigint"
+        }
+      },
+      {
+        "name": "TOP_SELLER",
+        "function": {
+          "expression": "TOP_N",
+          "parameter": {
+            "type": "column",
+            "value": "KYLIN_SALES.PRICE",
+            "next_parameter": {
+              "type": "column",
+              "value": "KYLIN_SALES.SELLER_ID"
+            }
+          },
+          "returntype": "topn(100,4)",
+          "configuration": {
+            "topn.encoding.KYLIN_SALES.SELLER_ID": "dict",
+            "topn.encoding_version.KYLIN_SALES.SELLER_ID": "1"
+          }
+        }
+      },
+      {
+        "name": "PRICE_PERCENTILE",
+        "function": {
+          "expression": "PERCENTILE_APPROX",
+          "parameter": {
+            "type": "column",
+            "value": "KYLIN_SALES.PRICE"
+          },
+          "returntype": "percentile(100)"
+        }
+      }
+    ],
+    "dictionaries": [],
+    "rowkey": {
+      "rowkey_columns": [
+        {
+          "column": "KYLIN_SALES.BUYER_ID",
+          "encoding": "integer:4",
+          "isShardBy": false
+        },
+        {
+          "column": "KYLIN_SALES.SELLER_ID",
+          "encoding": "integer:4",
+          "isShardBy": true
+        },
+        {
+          "column": "KYLIN_SALES.TRANS_ID",
+          "encoding": "integer:4",
+          "isShardBy": false
+        },
+        {
+          "column": "KYLIN_SALES.PART_DT",
+          "encoding": "date",
+          "isShardBy": false
+        },
+        {
+          "column": "KYLIN_SALES.LEAF_CATEG_ID",
+          "encoding": "dict",
+          "isShardBy": false
+        },
+        {
+          "column": "KYLIN_CATEGORY_GROUPINGS.META_CATEG_NAME",
+          "encoding": "dict",
+          "isShardBy": false
+        },
+        {
+          "column": "KYLIN_CATEGORY_GROUPINGS.CATEG_LVL2_NAME",
+          "encoding": "dict",
+          "isShardBy": false
+        },
+        {
+          "column": "KYLIN_CATEGORY_GROUPINGS.CATEG_LVL3_NAME",
+          "encoding": "dict",
+          "isShardBy": false
+        },
+        {
+          "column": "BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL",
+          "encoding": "dict",
+          "isShardBy": false
+        },
+        {
+          "column": "SELLER_ACCOUNT.ACCOUNT_SELLER_LEVEL",
+          "encoding": "dict",
+          "isShardBy": false
+        },
+        {
+          "column": "BUYER_ACCOUNT.ACCOUNT_COUNTRY",
+          "encoding": "dict",
+          "isShardBy": false
+        },
+        {
+          "column": "SELLER_ACCOUNT.ACCOUNT_COUNTRY",
+          "encoding": "dict",
+          "isShardBy": false
+        },
+        {
+          "column": "BUYER_COUNTRY.NAME",
+          "encoding": "dict",
+          "isShardBy": false
+        },
+        {
+          "column": "SELLER_COUNTRY.NAME",
+          "encoding": "dict",
+          "isShardBy": false
+        },
+        {
+          "column": "KYLIN_SALES.LSTG_FORMAT_NAME",
+          "encoding": "dict",
+          "isShardBy": false
+        },
+        {
+          "column": "KYLIN_SALES.LSTG_SITE_ID",
+          "encoding": "dict",
+          "isShardBy": false
+        },
+        {
+          "column": "KYLIN_SALES.OPS_USER_ID",
+          "encoding": "dict",
+          "isShardBy": false
+        },
+        {
+          "column": "KYLIN_SALES.OPS_REGION",
+          "encoding": "dict",
+          "isShardBy": false
+        }
+      ]
+    },
+    "hbase_mapping": {
+      "column_family": [
+        {
+          "name": "F1",
+          "columns": [
+            {
+              "qualifier": "M",
+              "measure_refs": [
+                "GMV_SUM",
+                "BUYER_LEVEL_SUM",
+                "SELLER_LEVEL_SUM",
+                "TRANS_CNT"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "F2",
+          "columns": [
+            {
+              "qualifier": "M",
+              "measure_refs": [
+                "TOP_SELLER",
+                "PRICE_PERCENTILE"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "aggregation_groups": [
+      {
+        "includes": [
+          "KYLIN_SALES.PART_DT",
+          "KYLIN_CATEGORY_GROUPINGS.META_CATEG_NAME",
+          "KYLIN_CATEGORY_GROUPINGS.CATEG_LVL2_NAME",
+          "KYLIN_CATEGORY_GROUPINGS.CATEG_LVL3_NAME",
+          "KYLIN_SALES.LEAF_CATEG_ID",
+          "KYLIN_SALES.LSTG_FORMAT_NAME",
+          "KYLIN_SALES.LSTG_SITE_ID",
+          "KYLIN_SALES.OPS_USER_ID",
+          "KYLIN_SALES.OPS_REGION",
+          "BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL",
+          "SELLER_ACCOUNT.ACCOUNT_SELLER_LEVEL",
+          "BUYER_ACCOUNT.ACCOUNT_COUNTRY",
+          "SELLER_ACCOUNT.ACCOUNT_COUNTRY",
+          "BUYER_COUNTRY.NAME",
+          "SELLER_COUNTRY.NAME"
+        ],
+        "select_rule": {
+          "hierarchy_dims": [
+            [
+              "KYLIN_CATEGORY_GROUPINGS.META_CATEG_NAME",
+              "KYLIN_CATEGORY_GROUPINGS.CATEG_LVL2_NAME",
+              "KYLIN_CATEGORY_GROUPINGS.CATEG_LVL3_NAME",
+              "KYLIN_SALES.LEAF_CATEG_ID"
+            ]
+          ],
+          "mandatory_dims": [
+            "KYLIN_SALES.PART_DT"
+          ],
+          "joint_dims": [
+            [
+              "BUYER_ACCOUNT.ACCOUNT_COUNTRY",
+              "BUYER_COUNTRY.NAME"
+            ],
+            [
+              "SELLER_ACCOUNT.ACCOUNT_COUNTRY",
+              "SELLER_COUNTRY.NAME"
+            ],
+            [
+              "BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL",
+              "SELLER_ACCOUNT.ACCOUNT_SELLER_LEVEL"
+            ],
+            [
+              "KYLIN_SALES.LSTG_FORMAT_NAME",
+              "KYLIN_SALES.LSTG_SITE_ID"
+            ],
+            [
+              "KYLIN_SALES.OPS_USER_ID",
+              "KYLIN_SALES.OPS_REGION"
+            ]
+          ]
+        }
+      }
+    ],
+    "signature": "tADjcemRs3OW+O5Qdhf0gQ==",
+    "notify_list": [],
+    "status_need_notify": [],
+    "partition_date_start": 1325376000000,
+    "partition_date_end": 3153600000000,
+    "auto_merge_time_ranges": [],
+    "volatile_range": 0,
+    "retention_range": 0,
+    "engine_type": 6,
+    "storage_type": 4,
+    "override_kylin_properties": {
+      "kylin.engine.spark-conf.spark.executor.memory": "2G",
+      "kylin.engine.spark-conf.spark.executor.cores": "2",
+      "kylin.engine.spark-conf.spark.executor.memoryOverhead": "256M",
+      "kylin.engine.spark-conf.spark.executor.instances": "3",
+      "kylin.engine.spark-conf.spark.sql.shuffle.partitions": "3"
+    },
+    "cuboid_black_list": [],
+    "parent_forward": 3,
+    "mandatory_dimension_set_list": [],
+    "snapshot_table_desc_list": []
+  }
+}
