@@ -92,7 +92,7 @@ public class NBadQueryAndPushDownTest extends LocalWithSparkSessionTest {
 
     @Test
     public void testPushDownForFileNotExist() throws Exception {
-        final String sql = "select max(price) from test_kylin_fact";
+        final String sql = "select max(ITEM_COUNT) from test_kylin_fact";
         KylinConfig.getInstanceFromEnv().setProperty(PUSHDOWN_RUNNER_KEY,
                 "org.apache.kylin.query.pushdown.PushDownRunnerSparkImpl");
         try {
