@@ -132,10 +132,11 @@ public class SparderContextCanary {
     // for canary
     private static JavaFutureAction<Long> numberCount(JavaSparkContext jsc) {
         List<Integer> list = new ArrayList<>();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
             list.add(i);
         }
 
-        return jsc.parallelize(list).countAsync();
+        // use numSlices = 1 to reduce task num
+        return jsc.parallelize(list, 1).countAsync();
     }
 }
