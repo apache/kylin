@@ -36,7 +36,7 @@ import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.query.monitor.SparderContextCanary
 import org.apache.kylin.spark.classloader.ClassLoaderUtils
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
-import org.apache.spark.sql.execution.datasource.KylinSourceStrategy
+import org.apache.spark.sql.execution.datasource.{KylinSourceStrategy, ShardFileStatusCache}
 import org.apache.spark.sql.metrics.SparderMetricsListener
 import org.apache.spark.utils.YarnInfoFetcherUtils
 
@@ -207,6 +207,9 @@ object SparderContext extends Logging {
         //monitor sparder
         SparderContextCanary.init()
       }
+
+      // init FileStatusCache
+      ShardFileStatusCache.getFileStatusCache(getOriginalSparkSession)
     }
   }
 
