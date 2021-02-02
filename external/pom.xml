@@ -31,6 +31,10 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
+    <modules>
+        <module>shaded-guava</module>
+    </modules>
+
     <build>
         <plugins>
             <plugin>
