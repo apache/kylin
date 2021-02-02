@@ -235,3 +235,8 @@
   githubId: hn5092
   org: Alibaba
   role: committer
+- name: Yaqian Zhang (张亚倩)
+  apacheId: yaqian
+  githubId: zhangayqian
+  org: Kyligence Inc.
+  role: committer
