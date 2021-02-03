@@ -2883,22 +2883,36 @@ public abstract class KylinConfigBase implements Serializable {
 
     private String getLogPropertyFile(String filename) {
         if (isDevEnv()) {
-            return Paths.get(getKylinHomeWithoutWarn(), "build", "conf").toString() + File.separator + filename;
+            return Paths.get(getKylinHomeWithoutWarn(),
+                    "build", "conf").toString() + File.separator + filename;
         } else {
-            return Paths.get(getKylinHomeWithoutWarn(), "conf").toString() + File.separator + filename;
+            return Paths.get(getKylinHomeWithoutWarn(),
+                    "conf").toString() + File.separator + filename;
         }
     }
 
     public int getQueryPartitionSplitSizeMB() {
-        return Integer.parseInt(getOptional("kylin.query.spark-engine.partition-split-size-mb", "64"));
+        return Integer.parseInt(getOptional("kylin.query.spark-engine.partition-split-size-mb",
+                "64"));
+    }
+
+    /**
+     * The max size in mb handled per task when using shard by column,
+     * if the sharding size exceeds this value, it will fall back to non-sharding read RDD
+     */
+    public int getMaxShardingSizeMBPerTask() {
+        return Integer.parseInt(getOptional("kylin.query.spark-engine.max-sharding-size-mb",
+                "64"));
     }
 
     public boolean isShardingJoinOptEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.spark-engine.expose-sharding-trait", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.query.spark-engine.expose-sharding-trait",
+                "true"));
     }
 
     public int getSparkSqlShufflePartitions() {
-        return Integer.parseInt(getOptional("kylin.query.spark-engine.spark-sql-shuffle-partitions", "-1"));
+        return Integer.parseInt(getOptional("kylin.query.spark-engine.spark-sql-shuffle-partitions",
+                "-1"));
     }
 
     public Map<String, String> getQuerySparkConf() {
