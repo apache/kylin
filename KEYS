@@ -478,6 +478,11 @@ mUdVyu44Yf7c3XnrZL0F7mwzFmpgeTWGOTzqfO5YSeHr5x8gizsBVADaoB1uPjPz
 kzyYjjy3XzKvLlVIHuqksvDyibrlU1StUmNS64lfugMY1RfLERUpRdV3
 =DvSV
 -----END PGP PUBLIC KEY BLOCK-----
+pub   4096R/AFA73C1C 2020-09-06 [expires: 2020-12-05]
+uid                  Xiaoxiang Yu (Key for Kylin4.0 release.) <xxyu@apache.org>
+sig 3        AFA73C1C 2020-09-06  Xiaoxiang Yu (Key for Kylin4.0 release.) <xxyu@apache.org>
+sub   4096R/32EC2659 2020-09-06 [expires: 2020-12-05]
+sig          AFA73C1C 2020-09-06  Xiaoxiang Yu (Key for Kylin4.0 release.) <xxyu@apache.org>
 
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: GnuPG v2.0.14 (GNU/Linux)
@@ -531,8 +536,61 @@ cSW7baYjWBs6p2Ia/8+EP05iCt3dYp8csrGkvURv9MwvfkLOIpEjMzkViTzndABI
 pDYU6GR1+p3hEgOwTYhd7oMrKb7zWQUX5gzcnKjKRqtHDQO1Gg==
 =wSHj
 -----END PGP PUBLIC KEY BLOCK-----
-pub   4096R/AFA73C1C 2020-09-06 [expires: 2020-12-05]
-uid                  Xiaoxiang Yu (Key for Kylin4.0 release.) <xxyu@apache.org>
-sig 3        AFA73C1C 2020-09-06  Xiaoxiang Yu (Key for Kylin4.0 release.) <xxyu@apache.org>
-sub   4096R/32EC2659 2020-09-06 [expires: 2020-12-05]
-sig          AFA73C1C 2020-09-06  Xiaoxiang Yu (Key for Kylin4.0 release.) <xxyu@apache.org>
+pub   4096R/FE51C3EF 2021-02-02 [expires: 2024-02-02]
+uid                  Xiaoxiang Yu (Signing key for Kylin project) <xxyu@apache.org>
+sig 3        FE51C3EF 2021-02-02  Xiaoxiang Yu (Signing key for Kylin project) <xxyu@apache.org>
+sub   4096R/26D55168 2021-02-02 [expires: 2024-02-02]
+sig          FE51C3EF 2021-02-02  Xiaoxiang Yu (Signing key for Kylin project) <xxyu@apache.org>
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v2.0.14 (GNU/Linux)
+
+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
+=VW57
+-----END PGP PUBLIC KEY BLOCK-----
