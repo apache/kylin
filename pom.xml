@@ -79,7 +79,7 @@
     <kafka.version>1.0.0</kafka.version>
 
     <!-- Spark versions -->
-    <spark.version>2.4.6</spark.version>
+    <spark.version>2.4.7</spark.version>
     <janino.version>3.0.16</janino.version>
 
     <kryo.version>4.0.0</kryo.version>
