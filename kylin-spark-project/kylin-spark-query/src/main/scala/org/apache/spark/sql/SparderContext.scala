@@ -173,7 +173,7 @@ object SparderContext extends Logging {
                   .toString)
               initMonitorEnv()
               master match {
-                case "true" =>
+                case mode: String if mode.startsWith("local") =>
                   master_app_url = "http://localhost:" + sparkSession.sparkContext.getConf
                     .get("spark.ui.port", "4040")
                 case _ =>
