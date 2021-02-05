@@ -15,6 +15,62 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v4.0.0-beta - 2021-02-07
+_Tag:_ [kylin-4.0.0-beta](https://github.com/apache/kylin/tree/kylin-4.0.0-beta)
+This is a major release after 4.0.0-alpha, with 25 new features/improvements and 14 bug fixes.
+
+__New Feature__
+
+* [KYLIN-4842] - Supports grouping sets function for Kylin 4
+* [KYLIN-4843] - Support INTERSECT_COUNT/INTERSECT_VALUE function for Kylin 4
+
+__Improvement__
+
+* [KYLIN-4712] - Optimize CubeMetaIngester.java CLI
+* [KYLIN-4754] - The Cleanup tool cannot clean the the parquet file of the deleted cube and project
+* [KYLIN-4760] - Optimize TopN measure
+* [KYLIN-4763] - Rename ISourceAware.ID_SPARK to ISourceAware.ID_CSV
+* [KYLIN-4766] - After the job is discarded, the temporary file and segment file are not deleted
+* [KYLIN-4782] - Verify if the query hit the true cuboid in IT
+* [KYLIN-4790] - Automaticly copy required jars to SPARK_HOME/jars for HDI3.6
+* [KYLIN-4792] - Verify several attribute values of segment in the build/merge test
+* [KYLIN-4800] - Add canary tool for sparder-context
+* [KYLIN-4808] - Auto copy hive-site.xml to hadoop_conf_dir in kylin4
+* [KYLIN-4811] - Support cube level configuration for BuildingJob
+* [KYLIN-4813] - Refine spark logger for Kylin 4 build engine
+* [KYLIN-4814] - Support Kylin4 delopyment on EMR 5.X
+* [KYLIN-4815] - Support Kylin4 delopyment on EMR 6.x
+* [KYLIN-4817] - Refine Cube Migration Tool for Kylin4
+* [KYLIN-4825] - Add spark job tracking url in step details page
+* [KYLIN-4828] - Add more sql test cases into NBuildAndQueryTest
+* [KYLIN-4829] - Support to use thread-level SparkSession to execute query
+* [KYLIN-4844] - Add lookup table duplicate key check when building job
+* [KYLIN-4850] - Cube's override kylin_properties were ignored in building jobs
+* [KYLIN-4857] - Refactor system cube for kylin4
+* [KYLIN-4875] - Remove executor configurations when execute resource detect step (local mode)
+* [KYLIN-4877] - Use all dimension columns as sort columns when saving cuboid data
+
+__Bug Fix__
+
+* [KYLIN-4737] - The precision in the returned result is different from the one by Spark SQL
+* [KYLIN-4738] - The order in the returned result is wrong when use window function to query in kylin
+* [KYLIN-4751] - Throws NPE when run test case TestTopNUDAF
+* [KYLIN-4761] - Update some missing values of new segment when merge segments
+* [KYLIN-4764] - Throws NoClassDefFoundError when run query test cases
+* [KYLIN-4791] - Throws exception 'UnsupportedOperationException: empty.reduceLeft' when there are cast expressions in the filters of FilePruner
+* [KYLIN-4793] - In some Hadoop versions, kylin calcite reported error because there is no guava14
+* [KYLIN-4820] - Can not auto set spark resources configurations when building cube
+* [KYLIN-4822] - The metrics 'Total spark scan time' of query log is negative in some cases
+* [KYLIN-4824] - The metric 'Total scan bytes' of 'Query Log' is always 0 when querying
+* [KYLIN-4853] - QueryPreparedStatementCache invalid in Spark Query Engine
+* [KYLIN-4858] - Support Kylin4 deployment on CDH 6.X
+* [KYLIN-4872] - Fix NPE when there are more than one segment if cube planner is open
+* [KYLIN-4874] - Fix CubeMigrationCLI bug for kylin4
+
+__Sub-task__
+
+* [KYLIN-4818] - Calculate cuboid statistics in Kylin 4
+
 ## v3.1.1 - 2020-10-18
 _Tag:_ [kylin-3.1.1](https://github.com/apache/kylin/tree/kylin-3.1.1)
 This is a bug-fix release after 3.1.0, with 37 improvements and 21 bug fixes.

@@ -6,15 +6,12 @@ permalink: /download/index.html
 
 You can verify the download by following these [procedures](https://www.apache.org/info/verification.html) and using these [KEYS](https://www.apache.org/dist/kylin/KEYS).
 
-#### v4.0.0-alpha
-- This is a major release after 3.1.0, with 35 new features and 22 bug fixes. Check the release notes.
+#### v4.0.0-beta
+- This is a major release after 3.1.0, with 25 new features/improvements and 14 bug fixes. Check the release notes.
 - [Release notes](/docs/release_notes.html), [installation guide](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide) and [upgrade guide](https://cwiki.apache.org/confluence/display/KYLIN/How+to+upgrade)
-- Source download: [apache-kylin-4.0.0-alpha-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-source-release.zip.sha256)\]
-- Binary for Hadoop 2 download:
-  - for Apache Hadoop 2 (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-4.0.0-alpha-bin-hadoop2.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-bin-hadoop2.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-bin-hadoop2.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-bin-hadoop2.tar.gz.sha256)\]
-  - for Cloudera CDH 5.7+ - [apache-kylin-4.0.0-alpha-bin-cdh57.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-bin-cdh57.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-alpha/apache-kylin-4.0.0-alpha-bin-cdh57.tar.gz.sha256)\]
-
-- Binary for Hadoop 3 is not currently provided, we plan to support Hadoop3 in Kylin 4.0.0-beta .
+- Source download: [apache-kylin-4.0.0-beta-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-source-release.zip.sha256)\]
+- Binary for Apache Hadoop 2 and Hadoop 3 download:
+  - Verified on CDH 5.7, CDH 6.2, EMR 5.31, EMR 6.0.0, HDP2.4 (Hadoop 3 and EMR environments require additional configuration, please check the [installation guide](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide)) - [apache-kylin-4.0.0-beta-bin.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz.sha256)\]
   
 #### v3.1.1
 - This is a bug-fix release after 3.1.0, with 58 bug fixes and enhancement. Check the release notes.
