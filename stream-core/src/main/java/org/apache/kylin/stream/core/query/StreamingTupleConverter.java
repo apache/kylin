@@ -51,7 +51,7 @@ public class StreamingTupleConverter {
     final int dimCnt;
     final int metricsCnt;
     final MeasureType<?>[] measureTypes;
-    final Set<Integer> timestampColumn = new HashSet<>();
+    final Set<Integer> needAdjustTimeColumns = new HashSet<>();
 
     final List<MeasureType.IAdvMeasureFiller> advMeasureFillers;
     final List<Integer> advMeasureIndexInGTValues;
@@ -76,8 +76,12 @@ public class StreamingTupleConverter {
         // pre-calculate dimension index mapping to tuple
         for (TblColRef dim : schema.getDimensions()) {
             dimTupleIdx[idx] = tupleInfo.hasColumn(dim) ? tupleInfo.getColumnIndex(dim) : -1;
-            if (dim.getType().isDateTimeFamily() && TimeDerivedColumnType.isTimeDerivedColumn(dim.getName()))
-                timestampColumn.add(dimTupleIdx[idx]);
+            // all time columns should be adjusted using timezone offset except derived column above day,
+            // such as DAY_START, WEEK_STAR, YEAR_START.
+            if (dim.getType().isDateTimeFamily() &&
+                !TimeDerivedColumnType.isTimeDerivedColumnAboveDayLevel(dim.getName())) {
+                needAdjustTimeColumns.add(dimTupleIdx[idx]);
+            }
             idx++;
         }
 
@@ -109,7 +113,7 @@ public class StreamingTupleConverter {
         for (int i = 0; i < dimCnt; i++) {
             int ti = dimTupleIdx[i];
             if (ti >= 0) {
-                if (autoTimezone && timestampColumn.contains(ti)) {
+                if (autoTimezone && needAdjustTimeColumns.contains(ti)) {
                     try {
                         tuple.setDimensionValue(ti, Long.toString(Long.parseLong(dimValues[i]) + TIME_ZONE_OFFSET));
                     } catch (NumberFormatException nfe) {
