@@ -149,9 +149,16 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
                 String columnName = column.getName();
                 TimeDerivedColumnType columnType = TimeDerivedColumnType.getTimeDerivedColumnType(columnName);
                 if (columnType != null) {
-                    if (timeZoneOffset > 0 && TimeDerivedColumnType.isTimeDerivedColumnAboveDayLevel(columnName)) {
+                    // For example: timezone is GMT+8
+                    // t = 1612506748660 and it represent 2021-02-05 14:32:28 GMT+8 or 2021-02-05 5:32:28 GMT-0.
+                    // The day_start of 2021-02-05 14:32:28 GMT+8 is 2021-02-05 00:00:00 GMT+8
+                    // t + timeZoneOffset represent 2021-02-05 14:32:28 GMT-0, and normalized result is 2021-02-05 00:00:00 GMT-0.
+                    // In the query convert, just convert the long to time string using GMT+0 timezone.
+                    if (TimeDerivedColumnType.isTimeDerivedColumnAboveDayLevel(columnName)) {
                         result.add(String.valueOf(columnType.normalize(t + timeZoneOffset)));
                     } else {
+                        // Before conversion in query convert, the long should add timezone offset and then use GMT+0 to 
+                        // convert to time string.
                         result.add(String.valueOf(columnType.normalize(t)));
                     }
                 } else {
