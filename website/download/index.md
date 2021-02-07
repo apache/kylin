@@ -7,11 +7,11 @@ permalink: /download/index.html
 You can verify the download by following these [procedures](https://www.apache.org/info/verification.html) and using these [KEYS](https://www.apache.org/dist/kylin/KEYS).
 
 #### v4.0.0-beta
-- This is a major release after 3.1.0, with 25 new features/improvements and 14 bug fixes. Check the release notes.
+- This is a major release after 4.0.0-alpha, with 25 new features/improvements and 14 bug fixes. Check the release notes.
 - [Release notes](/docs/release_notes.html), [installation guide](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide) and [upgrade guide](https://cwiki.apache.org/confluence/display/KYLIN/How+to+upgrade)
 - Source download: [apache-kylin-4.0.0-beta-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-source-release.zip.sha256)\]
 - Binary for Apache Hadoop 2 and Hadoop 3 download:
-  - Verified on CDH 5.7, CDH 6.2, EMR 5.31, EMR 6.0.0, HDP2.4 (Hadoop 3 and EMR environments require additional configuration, please check the [installation guide](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide)) - [apache-kylin-4.0.0-beta-bin.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz.sha256)\]
+  - [apache-kylin-4.0.0-beta-bin.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz.sha256)\] (Verified on CDH 5.7, CDH 6.2, EMR 5.31, EMR 6.0.0, HDP2.4, Hadoop 3 and EMR environments require additional configuration, please check the [installation guide](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide))
   
 #### v3.1.1
 - This is a bug-fix release after 3.1.0, with 58 bug fixes and enhancement. Check the release notes.

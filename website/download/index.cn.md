@@ -6,11 +6,11 @@ title: 下载
 您可以按照这些[步骤](https://www.apache.org/info/verification.html) 并使用这些[KEYS](https://www.apache.org/dist/kylin/KEYS)来验证下载文件的有效性.
 
 #### v4.0.0-beta
-- 这是 4.0.0-beta 版本后的一个主要版本，包含25个新功能以及改进和14个问题的修复。关于具体内容请查看发布说明。
+- 这是 4.0.0-alpha 版本后的一个主要版本，包含25个新功能以及改进和14个问题的修复。关于具体内容请查看发布说明。
 - [发布说明](/docs/release_notes.html), [安装指南](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide) and [升级指南](https://cwiki.apache.org/confluence/display/KYLIN/How+to+upgrade)
 - 源码下载: [apache-kylin-4.0.0-beta-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-source-release.zip.sha256)\]
 - Hadoop 2 和 Hadoop 3 二进制包:
-  - Verified on CDH 5.7, CDH 6.2, EMR 5.31, EMR 6.0.0, HDP2.4 (Hadoop3 和 EMR 环境需做额外配置，请[查看安装指南](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide)) - [apache-kylin-4.0.0-beta-bin.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz.sha256)\]
+  - [apache-kylin-4.0.0-beta-bin.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz.sha256)\] (已经在 CDH 5.7, CDH 6.2, EMR 5.31, EMR 6.0.0, HDP2.4 环境下验证, Hadoop3 和 EMR 环境需做额外配置，请[查看安装指南](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide))
 
 #### v3.1.1
 - 这是 3.1.0 版本后的一个bug-fix版本，包含58个问题的修复以及各种改进。关于具体内容请查看发布说明。
