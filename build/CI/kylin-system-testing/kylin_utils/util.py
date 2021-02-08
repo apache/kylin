@@ -18,7 +18,7 @@
 from selenium import webdriver
 from yaml import load, loader
 import os
-
+from kylin_utils import shell
 from kylin_utils import kylin
 
 
@@ -79,3 +79,12 @@ def if_model_exists(kylin_client, model_name, project):
     if len(resp) == 1:
         exists = 1
     return exists
+
+def ssh_shell(config_file='kylin_host.yml'):
+    instances_file = os.path.join('kylin_instances/', config_file)
+    stream = open(instances_file, 'r')
+    for item in load(stream, Loader=loader.SafeLoader):
+        host = item['host']
+        username = item['username']
+        password = item['password']
+    return shell.SSHShell(host=host, username=username, password=password)

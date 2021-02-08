@@ -241,7 +241,7 @@ def compare_sql_result(sql, project, kylin_client, compare_level="data_set", cub
     kylin_resp = kylin_client.execute_query(cube_name=cube,
                                             project_name=project,
                                             sql=sql)
-    assert kylin_resp.get('isException') is False, 'Thown Exception when execute ' + sql
+    assert kylin_resp.get('isException') is False, 'Thrown Exception when execute ' + sql
 
     pushdown_resp = kylin_client.execute_query(project_name=pushdown_project, sql=sql)
     assert pushdown_resp.get('isException') is False

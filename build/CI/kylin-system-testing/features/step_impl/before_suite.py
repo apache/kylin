@@ -43,12 +43,20 @@ def create_generic_model_and_cube():
 
     model_desc_data = data.get('model_desc_data')
     model_name = model_desc_data.get('name')
+    snowflake_left_incre_model = data.get('snowflake_left_incre_model')
+    left_model_name = snowflake_left_incre_model.get('name')
 
     if not util.if_model_exists(kylin_client=client, model_name=model_name, project=project_name):
         resp = client.create_model(project_name=project_name, 
                                    model_name=model_name, 
                                    model_desc_data=model_desc_data)
         assert json.loads(resp['modelDescData'])['name'] == model_name
+
+    if not util.if_model_exists(kylin_client=client, model_name=left_model_name, project=project_name):
+        resp = client.create_model(project_name=project_name,
+                                   model_name=left_model_name,
+                                   model_desc_data=snowflake_left_incre_model)
+        assert json.loads(resp['modelDescData'])['name'] == left_model_name
 
     cube_desc_data = data.get('cube_desc_data')
     cube_name = cube_desc_data.get('name')

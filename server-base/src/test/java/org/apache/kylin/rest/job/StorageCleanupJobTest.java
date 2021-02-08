@@ -67,15 +67,20 @@ public class StorageCleanupJobTest {
         job.execute(new String[] { "--delete", "true" });
 
         ArgumentCaptor<Path> pathCaptor = ArgumentCaptor.forClass(Path.class);
-        verify(mockFs, times(4)).delete(pathCaptor.capture(), eq(true));
+        verify(mockFs, times(6)).delete(pathCaptor.capture(), eq(true));
         ArrayList<Path> expected = Lists.newArrayList(
                 // Verify clean job temp directory
                 // new Path(basePath + "/default/job_tmp"),
+                // Verify clean unused global dictionary before 12 hour
+                new Path(basePath + "/default/dict/global_dict/TEST_KYLIN_FACT/BUYER_ID"),
 
-                //Verify clean dropped cube
+                // Verify clean unused table snapshot before 12 hour
+                new Path(basePath + "/default/table_snapshot/DEFAULT.TEST_COUNTRY/1f2fd967-af50-41c1-a990-8554206b5513"),
+
+                // Verify clean dropped cube
                 new Path(basePath + "/default/parquet/dropped_cube"),
 
-                //Verify clean deleted project
+                // Verify clean deleted project
                 new Path(basePath + "/deleted_project"),
 
                 // Verify clean none used segments
@@ -99,6 +104,22 @@ public class StorageCleanupJobTest {
         FileStatus[] projectStatuses = new FileStatus[2];
         FileStatus project1 = mock(FileStatus.class);
         FileStatus project2 = mock(FileStatus.class);
+
+        FileStatus[] dictTableStatuses = new FileStatus[1];
+        FileStatus dictTable1 = mock(FileStatus.class);
+
+        FileStatus[] dictCloumnStatuses = new FileStatus[3];
+        FileStatus dictCloumnStatuses1 = mock(FileStatus.class);
+        FileStatus dictCloumnStatuses2 = mock(FileStatus.class);
+        FileStatus dictCloumnStatuses3 = mock(FileStatus.class);
+
+        FileStatus[] snapshotTableStatuses = new FileStatus[1];
+        FileStatus snapshotTableStatuses1 = mock(FileStatus.class);
+
+        FileStatus[] snapshotStatuses = new FileStatus[3];
+        FileStatus snapshotStatuses1 = mock(FileStatus.class);
+        FileStatus snapshotStatuses2 = mock(FileStatus.class);
+        FileStatus snapshotStatuses3 = mock(FileStatus.class);
 
         FileStatus[] protectedStatuses = new FileStatus[2];
         FileStatus cubeStatistics = mock(FileStatus.class);
@@ -136,6 +157,54 @@ public class StorageCleanupJobTest {
         projectStatuses[0] = project1;
         projectStatuses[1] = project2;
 
+        Path dictTablePath = new Path(basePath + "/default/dict/global_dict/TEST_KYLIN_FACT");
+        when(dictTable1.getPath()).thenReturn(dictTablePath);
+        dictTableStatuses[0] = dictTable1;
+        when(mockFs.delete(dictTablePath, true)).thenReturn(true);
+
+        Path dictCloumnPath1 = new Path(basePath + "/default/dict/global_dict/TEST_KYLIN_FACT/TEST_COUNT_DISTINCT_BITMAP");
+        Path dictCloumnPath2 = new Path(basePath + "/default/dict/global_dict/TEST_KYLIN_FACT/BUYER_ID");
+        Path dictCloumnPath3 = new Path(basePath + "/default/dict/global_dict/TEST_KYLIN_FACT/SELLER_ID");
+        when(dictCloumnStatuses1.getPath()).thenReturn(dictCloumnPath1);
+        when(dictCloumnStatuses2.getPath()).thenReturn(dictCloumnPath2);
+        when(dictCloumnStatuses3.getPath()).thenReturn(dictCloumnPath3);
+        // It has not been modified for more than 12 hours, but it is still in use, will be not deleted
+        when(dictCloumnStatuses1.getModificationTime()).thenReturn(System.currentTimeMillis() - 13 * 3600 * 1000L);
+        // It has not been modified for less than 12 hours and unused, will be deleted
+        when(dictCloumnStatuses2.getModificationTime()).thenReturn(System.currentTimeMillis() - 13 * 3600 * 1000L);
+        // It has not been modified for more than 12 hours and unused, will be not deleted
+        when(dictCloumnStatuses3.getModificationTime()).thenReturn(System.currentTimeMillis() - 11 * 3600 * 1000L);
+        when(mockFs.delete(dictCloumnPath1, true)).thenReturn(true);
+        when(mockFs.delete(dictCloumnPath2, true)).thenReturn(true);
+        when(mockFs.delete(dictCloumnPath3, true)).thenReturn(true);
+        dictCloumnStatuses[0] = dictCloumnStatuses1;
+        dictCloumnStatuses[1] = dictCloumnStatuses2;
+        dictCloumnStatuses[2] = dictCloumnStatuses3;
+
+        Path snapshotTablePath = new Path(basePath + "/default/table_snapshot/DEFAULT.TEST_COUNTRY");
+        when(snapshotTableStatuses1.getPath()).thenReturn(snapshotTablePath);
+        snapshotTableStatuses[0] = snapshotTableStatuses1;
+        when(mockFs.delete(snapshotTablePath, true)).thenReturn(true);
+
+        Path snapshotPath1 = new Path(basePath + "/default/table_snapshot/DEFAULT.TEST_COUNTRY/1cb74ab4-0637-407c-8fa9-dbf68eaf9e57");
+        Path snapshotPath2 = new Path(basePath + "/default/table_snapshot/DEFAULT.TEST_COUNTRY/1f2fd967-af50-41c1-a990-8554206b5513");
+        Path snapshotPath3 = new Path(basePath + "/default/table_snapshot/DEFAULT.TEST_COUNTRY/e137d29b-9231-4305-8c9d-71fcf54bc836");
+        when(snapshotStatuses1.getPath()).thenReturn(snapshotPath1);
+        when(snapshotStatuses2.getPath()).thenReturn(snapshotPath2);
+        when(snapshotStatuses3.getPath()).thenReturn(snapshotPath3);
+        // It has not been modified for less than 12 hours and unused, will not be deleted
+        when(snapshotStatuses1.getModificationTime()).thenReturn(System.currentTimeMillis() - 11 * 3600 * 1000L);
+        // It has not been modified for more than 12 hours and unused, will be deleted
+        when(snapshotStatuses2.getModificationTime()).thenReturn(System.currentTimeMillis() - 13 * 3600 * 1000L);
+        // It has not been modified for more than 12 hours, but it is still in use, will be not deleted
+        when(snapshotStatuses3.getModificationTime()).thenReturn(System.currentTimeMillis() - 13 * 3600 * 1000L);
+        snapshotStatuses[0] = snapshotStatuses1;
+        snapshotStatuses[1] = snapshotStatuses2;
+        snapshotStatuses[2] = snapshotStatuses3;
+        when(mockFs.delete(snapshotPath1, true)).thenReturn(true);
+        when(mockFs.delete(snapshotPath2, true)).thenReturn(true);
+        when(mockFs.delete(snapshotPath3, true)).thenReturn(true);
+
         Path cubeStatisticsPath = new Path(basePath + "/default/parquet");
         Path resourcesJdbcPath = new Path(basePath + "/deleted_project/parquet");
         when(cubeStatistics.getPath()).thenReturn(cubeStatisticsPath);
@@ -160,5 +229,13 @@ public class StorageCleanupJobTest {
         when(mockFs.listStatus(defaultProjectParquetPath)).thenReturn(cubeStatuses);
         when(mockFs.listStatus(basePath)).thenReturn(allStatuses);
         when(mockFs.listStatus(basePath, StorageCleanupJob.pathFilter)).thenReturn(projectStatuses);
+        Path dictPath = new Path(basePath + "/default/dict/global_dict");
+        when(mockFs.exists(dictPath)).thenReturn(true);
+        when(mockFs.listStatus(dictPath)).thenReturn(dictTableStatuses);
+        when(mockFs.listStatus(new Path(dictPath + "/TEST_KYLIN_FACT"))).thenReturn(dictCloumnStatuses);
+        Path snapshotPath = new Path(basePath + "/default/table_snapshot");
+        when(mockFs.exists(snapshotPath)).thenReturn(true);
+        when(mockFs.listStatus(snapshotPath)).thenReturn(snapshotTableStatuses);
+        when(mockFs.listStatus(new Path(snapshotPath + "/DEFAULT.TEST_COUNTRY"))).thenReturn(snapshotStatuses);
     }
 }

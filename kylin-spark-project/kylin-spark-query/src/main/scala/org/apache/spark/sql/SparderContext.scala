@@ -36,7 +36,7 @@ import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.query.monitor.SparderContextCanary
 import org.apache.kylin.spark.classloader.ClassLoaderUtils
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
-import org.apache.spark.sql.execution.datasource.KylinSourceStrategy
+import org.apache.spark.sql.execution.datasource.{KylinSourceStrategy, ShardFileStatusCache}
 import org.apache.spark.sql.metrics.SparderMetricsListener
 import org.apache.spark.utils.YarnInfoFetcherUtils
 
@@ -131,26 +131,21 @@ object SparderContext extends Logging {
           override def run(): Unit = {
             try {
               val kylinConf: KylinConfig = KylinConfig.getInstanceFromEnv
-              val sparkSession = System.getProperty("spark.local") match {
+              val master = System.getProperty("spark.local") match {
                 case "true" =>
-                  SparkSession.builder
-                    .master("local")
-                    .appName(kylinConf.getSparderAppName)
-                    .withExtensions { ext =>
-                      ext.injectPlannerStrategy(_ => KylinSourceStrategy)
-                    }
-                    .enableHiveSupport()
-                    .getOrCreateKylinSession()
+                  "local"
                 case _ =>
-                  SparkSession.builder
-                    .appName(kylinConf.getSparderAppName)
-                    .master("yarn-client")
-                    .withExtensions { ext =>
-                      ext.injectPlannerStrategy(_ => KylinSourceStrategy)
-                    }
-                    .enableHiveSupport()
-                    .getOrCreateKylinSession()
+                  "yarn-client"
               }
+              val sparkSession = SparkSession.builder
+                .master(master)
+                .appName(kylinConf.getSparderAppName)
+                .withExtensions { ext =>
+                  ext.injectPlannerStrategy(_ => KylinSourceStrategy)
+                }
+                .enableHiveSupport()
+                .getOrCreateKylinSession()
+
               if (kylinConf.isKylinMetricsReporterForQueryEnabled) {
                 val appStatusListener = new SparderMetricsListener()
                 sparkSession.sparkContext.addSparkListener(appStatusListener)
@@ -177,8 +172,8 @@ object SparderContext extends Logging {
                   .getContextClassLoader
                   .toString)
               initMonitorEnv()
-              System.getProperty("spark.local") match {
-                case "true" =>
+              master match {
+                case mode: String if mode.startsWith("local") =>
                   master_app_url = "http://localhost:" + sparkSession.sparkContext.getConf
                     .get("spark.ui.port", "4040")
                 case _ =>
@@ -207,6 +202,9 @@ object SparderContext extends Logging {
         //monitor sparder
         SparderContextCanary.init()
       }
+
+      // init FileStatusCache
+      ShardFileStatusCache.getFileStatusCache(getOriginalSparkSession)
     }
   }
 
