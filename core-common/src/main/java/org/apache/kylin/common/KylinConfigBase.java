@@ -3084,4 +3084,8 @@ public abstract class KylinConfigBase implements Serializable {
     public String getKerberosPrincipal() {
         return getOptional("kylin.kerberos.principal");
     }
+
+    public boolean isReuseParentDataSource() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark.reuse.parent.rdd", FALSE));
+    }
 }

@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.CubeStatsWriter;
 import org.apache.kylin.engine.mr.common.StatisticsDecisionUtil;
@@ -91,6 +90,7 @@ public class CubeBuildJob extends SparkApplication {
     private CubeManager cubeManager;
     private CubeInstance cubeInstance;
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
+    private BuildLayerWithUpdate buildLayerWithUpdate;
     private Map<Long, Short> cuboidShardNum = Maps.newConcurrentMap();
     private Map<Long, Long> cuboidsRowCount = Maps.newConcurrentMap();
     private Map<Long, Long> recommendCuboidMap = new HashMap<>();
@@ -157,7 +157,12 @@ public class CubeBuildJob extends SparkApplication {
                 logger.info("Triggered cube planner phase one .");
         }
 
-        buildLayoutWithUpdate = new BuildLayoutWithUpdate();
+        if (config.isReuseParentDataSource()) {
+            buildLayerWithUpdate = new BuildLayerWithUpdate();
+        } else {
+            buildLayoutWithUpdate = new BuildLayoutWithUpdate();
+        }
+
         List<String> persistedFlatTable = new ArrayList<>();
         List<String> persistedViewFactTable = new ArrayList<>();
         Path shareDir = config.getJobTmpShareDir(project, jobId);
@@ -319,45 +324,61 @@ public class CubeBuildJob extends SparkApplication {
     // build current layer and return the next layer to be built.
     private List<NBuildSourceInfo> buildLayer(Collection<NBuildSourceInfo> buildSourceInfos, SegmentInfo seg,
                                               SpanningTree st) {
-        int cuboidsNumInLayer = 0;
 
-        // build current layer
+        int cuboidsNumInLayer = 0;
         List<LayoutEntity> allIndexesInCurrentLayer = new ArrayList<>();
+
+        //record build infos before building
         for (NBuildSourceInfo info : buildSourceInfos) {
             Collection<LayoutEntity> toBuildCuboids = info.getToBuildCuboids();
             infos.recordParent2Children(info.getLayout(),
                     toBuildCuboids.stream().map(LayoutEntity::getId).collect(Collectors.toList()));
             cuboidsNumInLayer += toBuildCuboids.size();
             Preconditions.checkState(!toBuildCuboids.isEmpty(), "To be built cuboids is empty.");
-            Dataset<Row> parentDS = info.getParentDS();
-            // record the source count of flat table
-            if (info.getLayoutId() == ParentSourceChooser.FLAT_TABLE_FLAG()) {
-                cuboidsRowCount.putIfAbsent(info.getLayoutId(), parentDS.count());
-            }
-
-            for (LayoutEntity index : toBuildCuboids) {
-                Preconditions.checkNotNull(parentDS, "Parent dataset is null when building.");
-                buildLayoutWithUpdate.submit(new BuildLayoutWithUpdate.JobEntity() {
-                    @Override
-                    public String getName() {
-                        return "build-cuboid-" + index.getId();
-                    }
-
-                    @Override
-                    public LayoutEntity build() throws IOException {
-                        return buildCuboid(seg, index, parentDS, st, info.getLayoutId());
-                    }
-                }, config);
-                allIndexesInCurrentLayer.add(index);
-            }
+            info.getToBuildCuboids().stream().forEach(allIndexesInCurrentLayer::add);
+            infos.recordCuboidsNumPerLayer(seg.id(), cuboidsNumInLayer);
         }
 
-        infos.recordCuboidsNumPerLayer(seg.id(), cuboidsNumInLayer);
-        buildLayoutWithUpdate.updateLayout(seg, config);
+        if (config.isReuseParentDataSource()) {
+            logger.info("will cache parent dataset to build next layer");
+            for (NBuildSourceInfo info : buildSourceInfos) {
+                buildLayerWithUpdate.submit(new BuildLayerWithUpdate.LayerJobEntity(info,
+                        st, config, this, seg, cuboidsRowCount));
+            }
+            //wait until finished and remove LayoutEntity from toBuildLayouts
+            buildLayerWithUpdate.updateLayer();
+        } else {
+            logger.info("will not cache parent dataset to build next layer");
+            // build current layer
+            for (NBuildSourceInfo info : buildSourceInfos) {
+                Collection<LayoutEntity> toBuildCuboids = info.getToBuildCuboids();
+                Dataset<Row> parentDS = info.getParentDS();
+                // record the source count of flat table
+                if (info.getLayoutId() == ParentSourceChooser.FLAT_TABLE_FLAG()) {
+                    cuboidsRowCount.putIfAbsent(info.getLayoutId(), parentDS.count());
+                }
+                for (LayoutEntity index : toBuildCuboids) {
+                    Preconditions.checkNotNull(parentDS, "Parent dataset is null when building.");
+                    buildLayoutWithUpdate.submit(new BuildLayoutWithUpdate.JobEntity() {
+                        @Override
+                        public String getName() {
+                            return "build-cuboid-" + index.getId();
+                        }
+
+                        @Override
+                        public LayoutEntity build() throws IOException {
+                            return buildCuboid(seg, index, parentDS, st, info.getLayoutId());
+                        }
+                    }, config);
+                }
+            }
+            buildLayoutWithUpdate.updateLayout(seg, config);
+        }
 
         // decided the next layer by current layer's all indexes.
         st.decideTheNextLayer(allIndexesInCurrentLayer, seg);
         return constructTheNextLayerBuildInfos(st, seg, allIndexesInCurrentLayer);
+
     }
 
     // decided and construct the next layer.
@@ -405,7 +426,7 @@ public class CubeBuildJob extends SparkApplication {
         return ResourceDetectUtils.selectMaxValueInFiles(fileStatuses);
     }
 
-    private LayoutEntity buildCuboid(SegmentInfo seg, LayoutEntity cuboid, Dataset<Row> parent,
+    public LayoutEntity buildCuboid(SegmentInfo seg, LayoutEntity cuboid, Dataset<Row> parent,
                                      SpanningTree spanningTree, long parentId) throws IOException {
         String parentName = String.valueOf(parentId);
         if (parentId == ParentSourceChooser.FLAT_TABLE_FLAG()) {
