@@ -2163,6 +2163,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.server.host-address", "localhost:7070");
     }
 
+    public boolean getServerSelfDiscoveryEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.server.self-discovery-enabled", FALSE));
+    }
+
     public String getClusterName() {
         String key = "kylin.server.cluster-name";
         String clusterName = this.getOptional(key, getMetadataUrlPrefix());
