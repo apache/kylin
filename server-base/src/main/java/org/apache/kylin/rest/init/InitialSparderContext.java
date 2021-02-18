@@ -19,7 +19,7 @@
 package org.apache.kylin.rest.init;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.ServerMode;
+import org.apache.kylin.common.util.ServerMode;
 import org.apache.spark.sql.SparderContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class InitialSparderContext implements InitializingBean {
 
     private void runInitialSparder() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        if (ServerMode.isJobOnly(config) || !config.isAutoStartSparder()) {
+        if (!ServerMode.SERVER_MODE.canServeQuery() || !config.isAutoStartSparder()) {
             logger.info("Maybe this is job node, or switch is off, do not need to start Spark, {}", config.isAutoStartSparder());
             return;
         }

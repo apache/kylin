@@ -18,7 +18,6 @@
 
 package org.apache.kylin.common;
 
-import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.restclient.RestClient;
@@ -47,6 +46,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 /**
  */
@@ -531,7 +533,15 @@ public class KylinConfig extends KylinConfigBase {
             String value = entry.getValue().toString();
             orderedProperties.setProperty(key, value);
         }
-
+        // Reset some properties which might be overriden by system properties
+        String[] systemProps = { "kylin.server.cluster-servers", "kylin.server.cluster-servers-with-mode" };
+        for (String sysProp : systemProps) {
+            String sysPropValue = System.getProperty(sysProp);
+            if (!Strings.isNullOrEmpty(sysPropValue)) {
+                orderedProperties.setProperty(sysProp, sysPropValue);
+            }
+        }
+        
         final StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
             sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');

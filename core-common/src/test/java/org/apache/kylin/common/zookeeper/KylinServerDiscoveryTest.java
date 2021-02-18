@@ -15,13 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.job.impl.curator;
+package org.apache.kylin.common.zookeeper;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
-
-import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.retry.ExponentialBackoffRetry;
@@ -32,7 +31,6 @@ import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.ZKUtil;
-import org.apache.kylin.job.execution.ExecutableManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,18 +38,15 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.shaded.com.google.common.base.Function;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  */
-public class CuratorSchedulerTest extends LocalFileMetadataTestCase {
+public class KylinServerDiscoveryTest extends LocalFileMetadataTestCase {
 
-    private static final Logger logger = LoggerFactory.getLogger(CuratorSchedulerTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(KylinServerDiscoveryTest.class);
 
     private TestingServer zkTestServer;
-
-    protected ExecutableManager jobService;
 
     @Before
     public void setup() throws Exception {
@@ -80,10 +75,9 @@ public class CuratorSchedulerTest extends LocalFileMetadataTestCase {
         ServiceDiscovery<LinkedHashMap> serviceDiscovery = null;
         CuratorFramework curatorClient = null;
         try {
-
-            final CuratorScheduler.JsonInstanceSerializer<LinkedHashMap> serializer = new CuratorScheduler.JsonInstanceSerializer<>(
-                    LinkedHashMap.class);
-            String servicePath = CuratorScheduler.KYLIN_SERVICE_PATH;
+            String servicePath = KylinServerDiscovery.SERVICE_PATH;
+            final KylinServerDiscovery.JsonInstanceSerializer<LinkedHashMap> serializer =
+                    new KylinServerDiscovery.JsonInstanceSerializer<>(LinkedHashMap.class);
             curatorClient = ZKUtil.newZookeeperClient(zkString, new ExponentialBackoffRetry(3000, 3));
             serviceDiscovery = ServiceDiscoveryBuilder.builder(LinkedHashMap.class).client(curatorClient)
                     .basePath(servicePath).serializer(serializer).build();
@@ -94,36 +88,32 @@ public class CuratorSchedulerTest extends LocalFileMetadataTestCase {
 
             Collection<String> serviceNames = serviceDiscovery.queryForNames();
             Assert.assertTrue(serviceNames.size() == 1);
-            Assert.assertTrue(CuratorScheduler.SERVICE_NAME.equals(serviceNames.iterator().next()));
+            Assert.assertTrue(KylinServerDiscovery.SERVICE_NAME.equals(serviceNames.iterator().next()));
             Collection<ServiceInstance<LinkedHashMap>> instances = serviceDiscovery
-                    .queryForInstances(CuratorScheduler.SERVICE_NAME);
+                    .queryForInstances(KylinServerDiscovery.SERVICE_NAME);
             Assert.assertTrue(instances.size() == 2);
             List<ServiceInstance<LinkedHashMap>> instancesList = Lists.newArrayList(instances);
 
-            final List<String> instanceNodes = Lists.transform(instancesList,
-                    new Function<ServiceInstance<LinkedHashMap>, String>() {
-
-                        @Nullable
-                        @Override
-                        public String apply(@Nullable ServiceInstance<LinkedHashMap> stringServiceInstance) {
-                            return (String) stringServiceInstance.getPayload()
-                                    .get(CuratorScheduler.SERVICE_PAYLOAD_DESCRIPTION);
-                        }
-                    });
+            final List<String> instanceNodes = instancesList.stream()
+                    .map(input -> input.getAddress() + ":" + input.getPort() + ":"
+                            + input.getPayload().get(KylinServerDiscovery.SERVICE_PAYLOAD_DESCRIPTION))
+                    .collect(Collectors.toList());
 
             Assert.assertTrue(instanceNodes.contains(server1.getAddress() + ":query"));
             Assert.assertTrue(instanceNodes.contains(server2.getAddress() + ":query"));
 
             // stop one server
             server1.close();
-            instances = serviceDiscovery.queryForInstances(CuratorScheduler.SERVICE_NAME);
+            instances = serviceDiscovery.queryForInstances(KylinServerDiscovery.SERVICE_NAME);
+            ServiceInstance<LinkedHashMap> existingInstance = instances.iterator().next();
             Assert.assertTrue(instances.size() == 1);
             Assert.assertEquals(server2.getAddress() + ":query",
-                    instances.iterator().next().getPayload().get(CuratorScheduler.SERVICE_PAYLOAD_DESCRIPTION));
+                    existingInstance.getAddress() + ":" + existingInstance.getPort() + ":"
+                            + existingInstance.getPayload().get(KylinServerDiscovery.SERVICE_PAYLOAD_DESCRIPTION));
 
             // all stop
             server2.close();
-            instances = serviceDiscovery.queryForInstances(CuratorScheduler.SERVICE_NAME);
+            instances = serviceDiscovery.queryForInstances(KylinServerDiscovery.SERVICE_NAME);
             Assert.assertTrue(instances.size() == 0);
 
         } finally {

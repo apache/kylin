@@ -39,6 +39,7 @@ import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.ServerMode;
 import org.apache.kylin.rest.security.AclConstant;
 import org.apache.kylin.rest.security.ManagedUser;
 import org.apache.kylin.rest.security.springacl.AclRecord;
@@ -75,7 +76,7 @@ public class AclTableMigrationTool {
             logger.info("Do not need to migrate acl table data");
             return;
         } else {
-            if (!kylinConfig.getServerMode().equals("all")) {
+            if (!ServerMode.SERVER_MODE.canServeAll()) {
                 throw new IllegalStateException(
                         "Please make sure that you have config kylin.server.mode=all before migrating data");
             }

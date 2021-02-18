@@ -38,6 +38,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.zookeeper.KylinServerDiscovery;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -134,6 +135,11 @@ public class JobService extends BasicService implements InitializingBean {
         final Scheduler<AbstractExecutable> scheduler = (Scheduler<AbstractExecutable>) SchedulerFactory
                 .scheduler(kylinConfig.getSchedulerType());
 
+        if (kylinConfig.getServerSelfDiscoveryEnabled()) {
+            KylinServerDiscovery.getInstance();
+        }
+        logger.info("Cluster servers: {}", Lists.newArrayList(kylinConfig.getRestServers()));
+        
         scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
 
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
