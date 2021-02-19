@@ -62,6 +62,7 @@ import org.apache.calcite.rel.rules.ReduceExpressionsRule;
 import org.apache.calcite.rel.rules.SemiJoinRule;
 import org.apache.calcite.rel.rules.SortJoinTransposeRule;
 import org.apache.calcite.rel.rules.SortUnionTransposeRule;
+import org.apache.calcite.rel.rules.SortProjectTransposeRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -211,6 +212,30 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
         // see Dec 26th email @ http://mail-archives.apache.org/mod_mbox/calcite-dev/201412.mbox/browser
         planner.removeRule(ExpandConversionRule.INSTANCE);
+
+        /*** TODO KYLIN-4905
+         * Spark doesn't support limit...offset.., we implement this in KYLIN query server.
+         * The key is to keep OLAPLimitRel always the root RelNode, then take result indexed from (offset) to (offset + limit).
+         * But SortProjectTransposeRule will break the key, which transpose sort and project.
+         * eg: select sum(price), seller_id from kylin_sales  group by seller_id order by sum(price) limit 10 offset 3
+
+            1. Calcite optimized plan with SortProjectTransposeRule enabled:
+                OLAPProjectRel
+                 |_OLAPLimitRel (offset=3,fetch=10)
+                   |_OLAPSortRel
+                     |_OLAPAggregateRel
+                       |_OLAPProjectRel
+                         |_OLAPTableScan
+
+            2. Calcite optimized plan with SortProjectTransposeRule removed:
+                OLAPLimitRel  (offset=3,fetch=10)
+                  |_OLAPSortRel
+                    |_ OLAPAggregateRel
+                      |_ OLAPProjectRel
+                        |_OLAPTableScan
+
+         * ***/
+        planner.removeRule(SortProjectTransposeRule.INSTANCE);
     }
 
     protected void addRules(final RelOptPlanner planner, List<String> rules) {

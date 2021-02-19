@@ -200,6 +200,7 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_unionall"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_values"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_window"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_limit"));
         }
         logger.info("Total {} tasks.", tasks.size());
         return tasks;
