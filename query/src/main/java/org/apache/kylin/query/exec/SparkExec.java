@@ -22,8 +22,10 @@ import org.apache.calcite.DataContext;
 import org.apache.calcite.linq4j.Enumerable;
 import org.apache.calcite.linq4j.Linq4j;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.query.relnode.OLAPLimitRel;
 import org.apache.kylin.query.relnode.OLAPRel;
 
 public class SparkExec {
@@ -37,7 +39,13 @@ public class SparkExec {
         RelDataType rowType = (RelDataType) QueryContextFacade.current().getResultType();
         try {
             Enumerable<Object[]> computer = QueryEngineFactory.compute(dataContext, olapRel, rowType);
-            return computer;
+            //TODO KYLIN-4905 currently spark doesn't support limit...offset.., support this in kylin server side
+            if (olapRel instanceof OLAPLimitRel && ((OLAPLimitRel) olapRel).localOffset != null) {
+                RexLiteral literal = (RexLiteral) ((OLAPLimitRel) olapRel).localOffset;
+                return computer.skip(Integer.valueOf(literal.getValue().toString()));
+            } else {
+                return computer;
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -52,7 +60,13 @@ public class SparkExec {
         RelDataType rowType = (RelDataType) QueryContextFacade.current().getResultType();
         try {
             Enumerable<Object> objects = QueryEngineFactory.computeSCALA(dataContext, olapRel, rowType);
-            return objects;
+            //TODO KYLIN-4905 currently spark doesn't support limit...offset.., support this in kylin server side
+            if (olapRel instanceof OLAPLimitRel && ((OLAPLimitRel) olapRel).localOffset != null) {
+                RexLiteral literal = (RexLiteral) ((OLAPLimitRel) olapRel).localOffset;
+                return objects.skip(Integer.valueOf(literal.getValue().toString()));
+            } else {
+                return objects;
+            }
 
         } catch (Exception e) {
             throw new RuntimeException(e);

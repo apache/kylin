@@ -41,6 +41,8 @@ object LimitPlan {
       val offset = BigDecimal(rel.localOffset.accept(visitor).toString).toInt
       inputs
         .get(0)
+        //TODO KYLIN-4905 currently spark doesn't support limit...offset, support this in kylin server side
+        .limit(offset + limit)
         //.limitRange(offset, offset + limit)
     }
   }
