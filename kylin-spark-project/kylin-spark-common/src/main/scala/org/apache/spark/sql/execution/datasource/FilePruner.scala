@@ -121,7 +121,7 @@ class FilePruner(cubeInstance: CubeInstance,
         // we can only get col ID in layout cuz data schema is all ids.
         val id = layoutEntity.getOrderedDimensions.asScala.values.find(
           column => column.columnName.equals(ref.getName))
-        if (id.isDefined && (ref.getType.isDateTimeFamily || ref.getType.isStringFamily)) {
+        if (id.isDefined && (ref.getType.isDateTimeFamily || ref.getType.isStringFamily || ref.getType.isIntegerFamily)) {
           pattern = desc.getPartitionDateFormat
           dataSchema.filter(_.name == String.valueOf(id.get.id))
         } else {
@@ -467,7 +467,7 @@ case class SegFilters(start: Long, end: Long, pattern: String) extends Logging {
         // see SPARK-27546
         val ts = DateFormat.stringToMillis(v.toString)
         func(ts)
-      case v: String if pattern != null =>
+      case v @ (_:String | _: Int | _: Long) if pattern != null =>
         val format = DateFormat.getDateFormat(pattern)
         val time = format.parse(v.toString).getTime
         func(time)
