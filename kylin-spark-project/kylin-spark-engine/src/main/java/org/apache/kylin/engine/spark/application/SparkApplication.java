@@ -20,6 +20,7 @@ package org.apache.kylin.engine.spark.application;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -33,14 +34,15 @@ import org.apache.kylin.engine.spark.job.LogJobInfoUtils;
 import org.apache.kylin.engine.spark.job.UdfManager;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.engine.spark.utils.SparkConfHelper;
+
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -79,8 +81,14 @@ public abstract class SparkApplication {
     protected BuildJobInfos infos;
 
     public void execute(String[] args) {
-        try {
-            String argsLine = Files.readAllLines(Paths.get(args[0])).get(0);
+        Path path = new Path(args[0]);
+        try (
+                FileSystem fileSystem = FileSystem.get(path.toUri(), HadoopUtil.getCurrentConfiguration());
+                FSDataInputStream inputStream = fileSystem.open(path);
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+        ) {
+            String argsLine = bufferedReader.readLine();
             if (argsLine.isEmpty()) {
                 throw new RuntimeException("Args file is empty");
             }
@@ -311,10 +319,6 @@ public abstract class SparkApplication {
         } finally {
             if (infos != null) {
                 infos.jobEnd();
-            }
-            if (ss != null && !ss.conf().get("spark.master").startsWith("local")) {
-                //JobMetricsUtils.unRegisterListener(ss);
-                ss.stop();
             }
         }
     }

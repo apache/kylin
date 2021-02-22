@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 
@@ -38,8 +39,8 @@ import java.util.Map.Entry;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
 import org.apache.hadoop.conf.Configuration;
@@ -169,11 +170,15 @@ public class NSparkExecutable extends AbstractExecutable {
     String dumpArgs() throws ExecuteException {
         File tmpDir = null;
         try {
-            tmpDir = File.createTempFile(MetadataConstants.P_SEGMENT_IDS, "");
-            FileUtils.writeByteArrayToFile(tmpDir, JsonUtil.writeValueAsBytes(getParams()));
+            String pathName = getId() + "_" + MetadataConstants.P_JOB_ID;
+            Path tgtPath = new Path(getConfig().getJobTmpDir(getParams().get("project")), pathName);
+            FileSystem fileSystem = FileSystem.get(tgtPath.toUri(), HadoopUtil.getCurrentConfiguration());
+            try (BufferedOutputStream outputStream = new BufferedOutputStream(fileSystem.create(tgtPath, false))) {
+                outputStream.write(JsonUtil.writeValueAsBytes(getParams()));
+            }
 
             logger.info("Spark job args json is : {}.", JsonUtil.writeValueAsString(getParams()));
-            return tmpDir.getCanonicalPath();
+            return tgtPath.toUri().toString();
         } catch (IOException e) {
             if (tmpDir != null && tmpDir.exists()) {
                 try {
@@ -382,6 +387,8 @@ public class NSparkExecutable extends AbstractExecutable {
         if (StringUtils.isNotBlank(sparkUploadFiles)) {
             sb.append("--files ").append(sparkUploadFiles).append(" ");
         }
+        sb.append("--principal ").append(config.getKerberosPrincipal()).append(" ");
+        sb.append("--keytab ").append(config.getKerberosKeytabPath()).append(" ");
         sb.append("--name job_step_%s ");
         sb.append("--jars %s %s %s");
         String cmd = String.format(Locale.ROOT, sb.toString(), hadoopConf, sparkSubmitCmd, getId(), jars, kylinJobJar,
