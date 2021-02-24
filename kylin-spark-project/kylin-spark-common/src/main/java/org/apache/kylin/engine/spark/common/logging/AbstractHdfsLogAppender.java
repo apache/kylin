@@ -336,7 +336,9 @@ public abstract class AbstractHdfsLogAppender extends AppenderSkeleton {
      * @throws IOException
      */
     protected void write(String message) throws IOException {
-        bufferedWriter.write(message);
+        if (isWriterInited()) {
+            bufferedWriter.write(message);
+        }
     }
 
     /**
@@ -373,8 +375,10 @@ public abstract class AbstractHdfsLogAppender extends AppenderSkeleton {
      * @throws IOException
      */
     private void flush() throws IOException {
-        bufferedWriter.flush();
-        outStream.hsync();
+        if (isWriterInited()) {
+            bufferedWriter.flush();
+            outStream.hsync();
+        }
     }
 
     /**
