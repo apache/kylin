@@ -16,17 +16,20 @@
 #
 
 # Docker image for apache kylin, based on the Hadoop image
-FROM hadoop2.7-all-in-one-for-kylin4
+FROM hadoop2.7-all-in-one-for-kylin4-beta
 
-ENV KYLIN_VERSION 4.0.0-alpha
-ENV KYLIN_HOME /home/admin/apache-kylin-$KYLIN_VERSION-bin-hadoop2
+ENV KYLIN_VERSION 4.0.0-beta
+ENV KYLIN_HOME /home/admin/apache-kylin-$KYLIN_VERSION-bin
 
 # Download Kylin
-RUN wget https://archive.apache.org/dist/kylin/apache-kylin-$KYLIN_VERSION/apache-kylin-$KYLIN_VERSION-bin-hadoop2.tar.gz \
-    && tar -zxvf /home/admin/apache-kylin-$KYLIN_VERSION-bin-hadoop2.tar.gz \
-    && rm -f /home/admin/apache-kylin-$KYLIN_VERSION-bin-hadoop2.tar.gz
+RUN wget https://archive.apache.org/dist/kylin/apache-kylin-$KYLIN_VERSION/apache-kylin-$KYLIN_VERSION-bin.tar.gz \
+    && tar -zxvf /home/admin/apache-kylin-$KYLIN_VERSION-bin.tar.gz \
+    && rm -f /home/admin/apache-kylin-$KYLIN_VERSION-bin.tar.gz
 RUN rm -f $KYLIN_HOME/conf/kylin.properties
 COPY conf/kylin/* $KYLIN_HOME/conf/
+RUN rm -f $KYLIN_HOME/bin/kylin.sh
+COPY conf/bin/kylin.sh $KYLIN_HOME/bin/
+RUN chmod +x $KYLIN_HOME/bin/kylin.sh
 RUN cp $HIVE_HOME/lib/mysql-connector-java-5.1.24.jar $KYLIN_HOME/lib/
 RUN sed -i "s/hbase/java/g" $KYLIN_HOME/bin/set-java-home.sh
 

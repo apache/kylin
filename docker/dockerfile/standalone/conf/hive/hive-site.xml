@@ -37,4 +37,8 @@
         <value>123456</value>
         <description>password to use against metastore database</description>
     </property>
+    <property>
+        <name>hive.metastore.schema.verification</name>
+        <value>false</value>
+    </property>
 </configuration>

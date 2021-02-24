@@ -23,4 +23,4 @@ docker run -d \
 -p 8032:8032 \
 -p 8042:8042 \
 -p 2181:2181 \
-apachekylin/apache-kylin-standalone:4.0.0-alpha
+apachekylin/apache-kylin-standalone:4.0.0-beta
