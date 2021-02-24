@@ -25,10 +25,13 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.spark.SparkEnv;
+import org.apache.spark.deploy.SparkHadoopUtil;
 import org.apache.spark.deploy.yarn.YarnSparkHadoopUtil;
+import scala.runtime.BoxedUnit;
 
 import java.io.File;
 import java.io.IOException;
@@ -160,12 +163,21 @@ public class SparkExecutorHdfsAppender extends AbstractHdfsLogAppender {
                 String user = System.getenv("USER");
                 LogLog.warn("login user is " + UserGroupInformation.getLoginUser() + " SPARK_USER is " + sparkuser
                         + " USER is " + user);
-                if (!initHdfsWriter(file, new Configuration())) {
-                    LogLog.error("Failed to init the hdfs writer!");
-                }
-                doRollingClean(loggingEvent);
+                SparkHadoopUtil.get().runAsSparkUser(new scala.runtime.AbstractFunction0<scala.runtime.BoxedUnit>() {
+                    @Override
+                    public BoxedUnit apply() {
+                        if (!initHdfsWriter(file, new Configuration())) {
+                            LogLog.error("Failed to init the hdfs writer!");
+                        }
+                        try {
+                            doRollingClean(loggingEvent);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+                });
             }
-
             transaction.add(loggingEvent);
             writeLogEvent(loggingEvent);
             size--;
@@ -229,9 +241,9 @@ public class SparkExecutorHdfsAppender extends AbstractHdfsLogAppender {
     @VisibleForTesting
     String getRootPathName() {
         if ("job".equals(getCategory())) {
-            return parseHdfsWordingDir() + "/" + getProject() + "/spark_logs/executor/";
+            return getHdfsWorkingDir() + "/" + getProject() + "/spark_logs/executor/";
         } else if ("sparder".equals(getCategory())) {
-            return parseHdfsWordingDir() + "/_sparder_logs";
+            return parseHdfsWorkingDir() + "/_sparder_logs";
         } else {
             throw new IllegalArgumentException("illegal category: " + getCategory());
         }
@@ -254,8 +266,32 @@ public class SparkExecutorHdfsAppender extends AbstractHdfsLogAppender {
         return false;
     }
 
-    private String parseHdfsWordingDir() {
-        return StringUtils.appendIfMissing(getHdfsWorkingDir(), "/");
+    private String parseHdfsWorkingDir() {
+        String root = getHdfsWorkingDir();
+        Path path = new Path(root);
+        if (!path.isAbsolute())
+            throw new IllegalArgumentException("kylin.env.hdfs-working-dir must be absolute, but got " + root);
+
+        try {
+            FileSystem fs = path.getFileSystem(HadoopUtil.getCurrentConfiguration());
+            path = fs.makeQualified(path);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // append metadata-url prefix
+        String metaId = getMetadataIdentifier().replace(':', '-');
+        //transform relative path for local metadata
+        if (metaId.startsWith("../")) {
+            metaId = metaId.replace("../", "");
+            metaId = metaId.replace('/', '-');
+        }
+
+        root = new Path(path, metaId).toString();
+
+        if (!root.endsWith("/"))
+            root += "/";
+        return root;
     }
 }
 

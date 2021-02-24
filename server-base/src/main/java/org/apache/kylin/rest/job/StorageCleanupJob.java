@@ -82,7 +82,7 @@ public class StorageCleanupJob extends AbstractApplication {
 
     protected long storageTimeCut;
 
-    protected static final List<String> protectedDir = Arrays.asList("cube_statistics", "resources-jdbc");
+    protected static final List<String> protectedDir = Arrays.asList("cube_statistics", "resources-jdbc", "_sparder_logs");
     protected static PathFilter pathFilter = status -> !protectedDir.contains(status.getName());
 
     public StorageCleanupJob() throws IOException {
