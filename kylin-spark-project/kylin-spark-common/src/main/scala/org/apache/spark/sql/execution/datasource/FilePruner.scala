@@ -28,6 +28,7 @@ import org.apache.kylin.cube.CubeInstance
 import org.apache.kylin.engine.spark.metadata.cube.PathManager
 import org.apache.kylin.engine.spark.metadata.MetadataConverter
 import org.apache.kylin.metadata.model.{PartitionDesc, SegmentStatusEnum}
+import org.apache.kylin.query.relnode.OLAPContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.analysis.Resolver
 import org.apache.spark.sql.catalyst.expressions.{Attribute, AttributeSet, EmptyRow, Expression, Literal}
@@ -39,6 +40,7 @@ import org.apache.spark.sql.{AnalysisException, SparkSession}
 import org.apache.spark.sql.utils.SparkTypeUtil
 import org.apache.spark.util.collection.BitSet
 
+import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
 
 case class SegmentDirectory(segmentName: String, identifier: String, files: Seq[FileStatus])
@@ -170,7 +172,8 @@ class FilePruner(cubeInstance: CubeInstance,
   }
 
   private def genShardSpec(selected: Seq[SegmentDirectory]): Option[ShardSpec] = {
-    if (!KylinConfig.getInstanceFromEnv.isShardingJoinOptEnabled || selected.isEmpty) {
+    val isJoinQuery = OLAPContext.getThreadLocalContexts.map(_.allOlapJoins).exists(_.nonEmpty);
+    if (!isJoinQuery || !KylinConfig.getInstanceFromEnv.isShardingJoinOptEnabled || selected.isEmpty) {
       None
     } else {
       val segments = selected.par.map { segDir =>
