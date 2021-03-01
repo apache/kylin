@@ -1,0 +1,115 @@
+{
+  "uuid" : "5c44df30-daec-486e-af90-927bf7851057",
+  "last_modified" : 1491925122527,
+  "version" : "1.5.3",
+  "name" : "ssb",
+  "model_name" : "ssb",
+  "description" : "",
+  "null_string" : null,
+  "dimensions" : [ {
+    "name" : "LO_QUANTITY",
+    "table" : "P_LINEORDER",
+    "column" : "LO_QUANTITY",
+    "derived" : null
+  }, {
+    "name" : "LO_DISCOUNT",
+    "table" : "P_LINEORDER",
+    "column" : "LO_DISCOUNT",
+    "derived" : null
+  }, {
+    "name" : "LO_ORDERDATE",
+    "table" : "P_LINEORDER",
+    "column" : "LO_ORDERDATE",
+    "derived" : null
+  } ],
+  "measures" : [ {
+    "name" : "_COUNT_",
+    "function" : {
+      "expression" : "COUNT",
+      "parameter" : {
+        "type" : "constant",
+        "value" : "1"
+      },
+      "returntype" : "bigint"
+    }
+  }, {
+    "name" : "P_LINEORDER.V_REVENUE_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameter" : {
+        "type" : "column",
+        "value" : "P_LINEORDER.V_REVENUE"
+      },
+      "returntype" : "bigint"
+    }
+  }, {
+    "name" : "P_LINEORDER.LO_SUPPLYCOST_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameter" : {
+        "type" : "column",
+        "value" : "P_LINEORDER.LO_SUPPLYCOST"
+      },
+      "returntype" : "bigint"
+    }
+  }, {
+    "name" : "P_LINEORDER.LO_REVENUE_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameter" : {
+        "type" : "column",
+        "value" : "P_LINEORDER.LO_REVENUE"
+      },
+      "returntype" : "bigint"
+    }
+  } ],
+  "rowkey" : {
+    "rowkey_columns" : [ {
+      "column" : "P_LINEORDER.LO_ORDERDATE",
+      "encoding" : "integer:8",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "P_LINEORDER.LO_QUANTITY",
+      "encoding" : "integer:8",
+      "isShardBy" : false,
+      "index" : "eq"
+    }, {
+      "column" : "P_LINEORDER.LO_DISCOUNT",
+      "encoding" : "integer:8",
+      "isShardBy" : false,
+      "index" : "eq"
+    } ]
+  },
+  "hbase_mapping" : {
+    "column_family" : [ {
+      "name" : "F1",
+      "columns" : [ {
+        "qualifier" : "M",
+        "measure_refs" : [ "_COUNT_", "P_LINEORDER.V_REVENUE_SUM", "P_LINEORDER.LO_SUPPLYCOST_SUM", "P_LINEORDER.LO_REVENUE_SUM" ]
+      } ]
+    } ]
+  },
+  "aggregation_groups" : [ {
+    "includes" : [ "P_LINEORDER.LO_QUANTITY", "P_LINEORDER.LO_DISCOUNT" ],
+    "select_rule" : {
+      "hierarchy_dims" : [ ],
+      "mandatory_dims" : [ ],
+      "joint_dims" : [
+        [ "P_LINEORDER.LO_QUANTITY", "P_LINEORDER.LO_DISCOUNT" ]
+      ]
+    }
+  } ],
+  "notify_list" : [ ],
+  "status_need_notify" : [ ],
+  "partition_date_start" : 694224000000,
+  "partition_date_end" : 3153600000000,
+  "auto_merge_time_ranges" : [ ],
+  "retention_range" : 0,
+  "engine_type" : 6,
+  "storage_type" : 4,
+  "override_kylin_properties" : {
+    "kylin.cube.aggrgroup.is-mandatory-only-valid" : "true",
+    "kylin.storage.hbase.min-region-count" : "4"
+  }
+}

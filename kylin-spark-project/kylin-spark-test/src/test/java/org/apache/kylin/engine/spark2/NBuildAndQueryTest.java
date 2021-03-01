@@ -200,7 +200,9 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_unionall"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_values"));
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_window"));
+
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_limit"));
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_prune_segment"));
         }
         logger.info("Total {} tasks.", tasks.size());
         return tasks;
@@ -213,6 +215,10 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
         } else if (Boolean.parseBoolean(System.getProperty("isDeveloperMode", "false"))) {
             //fullBuildCube("ci_inner_join_cube");
             fullBuildCube("ci_left_join_cube");
+            buildSegments("ssb", new SegmentRange.TSRange(dateToLong("1992-09-04"), dateToLong("1992-09-05")),
+                    new SegmentRange.TSRange(dateToLong("1992-09-05"), dateToLong("1992-09-06")),
+                    new SegmentRange.TSRange(dateToLong("1992-09-06"), dateToLong("1992-09-07")),
+                    new SegmentRange.TSRange(dateToLong("1992-09-07"), dateToLong("1992-09-08")));
         } else {
             //buildAndMergeCube("ci_inner_join_cube");
             buildAndMergeCube("ci_left_join_cube");
@@ -222,6 +228,9 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
     private void buildAndMergeCube(String cubeName) throws Exception {
         if (cubeName.equals("ci_inner_join_cube")) {
             buildFourSegmentAndMerge(cubeName);
+        }
+        if (cubeName.equals("ssb")) {
+            buildSegments(cubeName, new SegmentRange.TSRange(dateToLong("1992-0-01"), dateToLong("2015-01-01")));
         }
         if (cubeName.equals("ci_left_join_cube")) {
             buildTwoSegmentAndMerge(cubeName);
@@ -287,17 +296,10 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
 
         // Round 1: Build 4 segment
         ExecutableState state;
-        state = buildCuboid(cubeName, new SegmentRange.TSRange(dateToLong("2010-01-01"), dateToLong("2012-06-01")));
-        Assert.assertEquals(ExecutableState.SUCCEED, state);
-
-        state = buildCuboid(cubeName, new SegmentRange.TSRange(dateToLong("2012-06-01"), dateToLong("2013-01-01")));
-        Assert.assertEquals(ExecutableState.SUCCEED, state);
-
-        state = buildCuboid(cubeName, new SegmentRange.TSRange(dateToLong("2013-01-01"), dateToLong("2013-06-01")));
-        Assert.assertEquals(ExecutableState.SUCCEED, state);
-
-        state = buildCuboid(cubeName, new SegmentRange.TSRange(dateToLong("2013-06-01"), dateToLong("2015-01-01")));
-        Assert.assertEquals(ExecutableState.SUCCEED, state);
+        buildSegments(cubeName, new SegmentRange.TSRange(dateToLong("2010-01-01"), dateToLong("2012-06-01")),
+                new SegmentRange.TSRange(dateToLong("2012-06-01"), dateToLong("2013-01-01")),
+                new SegmentRange.TSRange(dateToLong("2013-01-01"), dateToLong("2013-06-01")),
+                new SegmentRange.TSRange(dateToLong("2013-06-01"), dateToLong("2015-01-01")));
 
         // Round 2: Merge two segments
         state = mergeSegments(cubeName, dateToLong("2010-01-01"), dateToLong("2013-01-01"), false);
@@ -314,6 +316,19 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
                 firstSegment.getSegRange());
         Assert.assertEquals(new SegmentRange.TSRange(dateToLong("2013-01-01"), dateToLong("2015-01-01")),
                 secondSegment.getSegRange());
+    }
+
+    public void buildSegments(String cubeName, SegmentRange.TSRange ... toBuildRanges) throws Exception{
+        Assert.assertTrue(config.getHdfsWorkingDirectory().startsWith("file:"));
+
+        // cleanup all segments first
+        cleanupSegments(cubeName);
+
+        ExecutableState state;
+        for (SegmentRange.TSRange toBuildRange : toBuildRanges) {
+            state = buildCuboid(cubeName, toBuildRange);
+            Assert.assertEquals(ExecutableState.SUCCEED, state);
+        }
     }
 
     class QueryCallable implements Callable<Pair<String, Throwable>> {
