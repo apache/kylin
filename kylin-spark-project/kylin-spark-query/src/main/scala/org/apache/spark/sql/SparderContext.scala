@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import org.apache.commons.io.FileUtils
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.common.util.ToolUtil
 import org.apache.kylin.query.monitor.SparderContextCanary
 import org.apache.kylin.spark.classloader.ClassLoaderUtils
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
@@ -174,7 +175,11 @@ object SparderContext extends Logging {
               initMonitorEnv()
               master match {
                 case mode: String if mode.startsWith("local") =>
-                  master_app_url = "http://localhost:" + sparkSession.sparkContext.getConf
+                  var hostName = ToolUtil.getHostName
+                  if (hostName.equals("Unknown")) {
+                    hostName = "localhost"
+                  }
+                  master_app_url = "http://" + hostName + ":" + sparkSession.sparkContext.getConf
                     .get("spark.ui.port", "4040")
                 case _ =>
                   master_app_url = YarnInfoFetcherUtils.getTrackingUrl(appid)
