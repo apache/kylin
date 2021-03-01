@@ -395,7 +395,10 @@ public class NExecAndComp {
                 .replaceAll("`TDVT`\\.", "") //
                 .replaceAll("\"POPHEALTH_ANALYTICS\"\\.", "") //
                 .replaceAll("`POPHEALTH_ANALYTICS`\\.", "") //
-                .replaceAll("(?i)ISSUES\\.", "");
+                .replaceAll("(?i)ISSUES\\.", "")
+                .replaceAll("SSB\\.", "")
+                .replaceAll("\"SSB\"\\.", "")
+                .replaceAll("`SSB`\\.", "");
     }
 
     public static List<Pair<String, String>> fetchQueries(String folder) throws IOException {
