@@ -29,6 +29,7 @@ import org.apache.kylin.common.notify.util.Notify;
 import org.apache.kylin.common.notify.util.SecretKeyUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
@@ -101,9 +102,9 @@ public class DingTalkService extends NotifyServiceBase {
                 String formartUrl = url;
                 if (null != secretKey) {
                     formartUrl += secretParam;
-                    formartUrl = String.format(formartUrl, token, secretKey.getFirst(), secretKey.getSecond());
+                    formartUrl = Strings.lenientFormat(formartUrl, token, secretKey.getFirst(), secretKey.getSecond());
                 } else {
-                    formartUrl = String.format(formartUrl, token);
+                    formartUrl = Strings.lenientFormat(formartUrl, token);
                 }
 
                 try {

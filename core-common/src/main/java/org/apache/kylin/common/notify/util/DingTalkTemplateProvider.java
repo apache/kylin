@@ -18,6 +18,8 @@
 
 package org.apache.kylin.common.notify.util;
 
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+
 import java.util.Map;
 
 public class DingTalkTemplateProvider {
@@ -31,7 +33,7 @@ public class DingTalkTemplateProvider {
     public String buildDingTalkContent(String state, String title, Map<String, Object> data) {
         String titleStart = "<font color=%s size=3>";
         String titleEnd = "</font>";
-        StringBuilder sb = new StringBuilder(String.format(titleStart, titleColor(state)))
+        StringBuilder sb = new StringBuilder(Strings.lenientFormat(titleStart, titleColor(state)))
                 .append(title)
                 .append(titleEnd)
                 .append("  \n");
