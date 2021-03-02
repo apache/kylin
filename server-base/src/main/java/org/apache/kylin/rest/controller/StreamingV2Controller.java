@@ -105,10 +105,11 @@ public class StreamingV2Controller extends BasicController {
     @RequestMapping(value = "/getConfig", method = { RequestMethod.GET })
     @ResponseBody
     public List<StreamingSourceConfig> getStreamings(@RequestParam(value = "table", required = false) String table,
+            @RequestParam(value = "project", required = false) String project,
             @RequestParam(value = "limit", required = false) Integer limit,
             @RequestParam(value = "offset", required = false) Integer offset) {
         try {
-            return streamingService.getStreamingConfigs(table, limit, offset);
+            return streamingService.getStreamingConfigs(table, project, limit, offset);
         } catch (IOException e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
@@ -281,7 +282,7 @@ public class StreamingV2Controller extends BasicController {
         final String user = SecurityContextHolder.getContext().getAuthentication().getName();
         logger.info("{} try to updateStreamingConfig.", user);
         try {
-            streamingSourceConfig = streamingService.updateStreamingConfig(streamingSourceConfig);
+            streamingService.updateStreamingConfig(streamingSourceConfig);
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this StreamingSourceConfig.");
         } catch (Exception e) {
@@ -293,10 +294,13 @@ public class StreamingV2Controller extends BasicController {
         return streamingRequest;
     }
 
-    @RequestMapping(value = "/{configName}", method = { RequestMethod.DELETE })
+    @Deprecated
+    @RequestMapping(value = "/{project}/{configName}", method = { RequestMethod.DELETE }, produces = {
+            "application/json" })
     @ResponseBody
-    public void deleteConfig(@PathVariable String configName) throws IOException {
-        StreamingSourceConfig config = streamingService.getStreamingManagerV2().getConfig(configName);
+    public void deleteConfig(@PathVariable String project, @PathVariable String configName) throws IOException {
+        // This method will never be called by the frontend.
+        StreamingSourceConfig config = streamingService.getStreamingManagerV2().getConfig(configName, project);
         if (null == config) {
             throw new NotFoundException("StreamingSourceConfig with name " + configName + " not found..");
         }

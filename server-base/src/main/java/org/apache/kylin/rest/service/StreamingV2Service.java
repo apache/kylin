@@ -105,12 +105,12 @@ public class StreamingV2Service extends BasicService {
         receiverAdminClient = adminClient;
     }
 
-    public List<StreamingSourceConfig> listAllStreamingConfigs(final String table) throws IOException {
+    public List<StreamingSourceConfig> listAllStreamingConfigs(final String table, final String projectName) throws IOException {
         List<StreamingSourceConfig> streamingSourceConfigs = Lists.newArrayList();
-        if (StringUtils.isEmpty(table)) {
+        if (StringUtils.isEmpty(table) || StringUtils.isEmpty(projectName)) {
             streamingSourceConfigs = getStreamingManagerV2().listAllStreaming();
         } else {
-            StreamingSourceConfig config = getStreamingManagerV2().getConfig(table);
+            StreamingSourceConfig config = getStreamingManagerV2().getConfig(table, projectName);
             if (config != null) {
                 streamingSourceConfigs.add(config);
             }
@@ -119,10 +119,10 @@ public class StreamingV2Service extends BasicService {
         return streamingSourceConfigs;
     }
 
-    public List<StreamingSourceConfig> getStreamingConfigs(final String table, final Integer limit, final Integer offset)
+    public List<StreamingSourceConfig> getStreamingConfigs(final String table, final String projectName, final Integer limit, final Integer offset)
             throws IOException {
         List<StreamingSourceConfig> streamingSourceConfigs;
-        streamingSourceConfigs = listAllStreamingConfigs(table);
+        streamingSourceConfigs = listAllStreamingConfigs(table, projectName);
 
         if (limit == null || offset == null) {
             return streamingSourceConfigs;
@@ -138,7 +138,7 @@ public class StreamingV2Service extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
             + " or hasPermission(#project, 'ADMINISTRATION')")
     public StreamingSourceConfig createStreamingConfig(StreamingSourceConfig config, ProjectInstance project) throws IOException {
-        if (getStreamingManagerV2().getConfig(config.getName()) != null) {
+        if (getStreamingManagerV2().getConfig(config.getName(), config.getProjectName()) != null) {
             throw new InternalErrorException("The streamingSourceConfig named " + config.getName() + " already exists");
         }
         StreamingSourceConfig streamingSourceConfig = getStreamingManagerV2().saveStreamingConfig(config);

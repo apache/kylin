@@ -1,0 +1,10 @@
+diff a/webapp/app/js/controllers/sourceMeta.js b/webapp/app/js/controllers/sourceMeta.js	(rejected hunks)
+@@ -1146,7 +1146,8 @@ KylinApp
+       $scope.streamingConfig = {
+         name: '',
+         properties: {},
+-        parser_info: {}
++        parser_info: {},
+       };
+ 
+       $scope.rheosConfig ={
