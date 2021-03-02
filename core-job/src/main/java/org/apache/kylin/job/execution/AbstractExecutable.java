@@ -29,7 +29,10 @@ import java.util.regex.Matcher;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.MailService;
+import org.apache.kylin.common.notify.NotifyService;
+import org.apache.kylin.common.notify.util.MailNotificationUtil;
+import org.apache.kylin.common.notify.util.Notify;
+import org.apache.kylin.common.notify.MailService;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.StringUtil;
@@ -38,7 +41,6 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
-import org.apache.kylin.job.util.MailNotificationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.kylin.shaded.com.google.common.base.MoreObjects;
@@ -54,12 +56,12 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     public static final String CUBE_NAME = "cubeName";
     protected static final String SUBMITTER = "submitter";
-    protected static final String NOTIFY_LIST = "notify_list";
     protected static final String START_TIME = "startTime";
     protected static final String END_TIME = "endTime";
     protected static final String INTERRUPT_TIME = "interruptTime";
     protected static final String BUILD_INSTANCE = "buildInstance";
     protected static final String PROJECT_INSTANCE_NAME = "projectName";
+    public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
     public static final String NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY = "no need to send email, user list is empty";
@@ -219,7 +221,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         dataMap.put("error_log",
                 Matcher.quoteReplacement(StringUtil.noBlank(exception.getMessage(), "no error message")));
 
-        String content = MailNotificationUtil.getMailContent(MailNotificationUtil.METADATA_PERSIST_FAIL, dataMap);
+        String content = MailNotificationUtil.getMailContent(Notify.METADATA_PERSIST_FAIL, dataMap);
         String title = MailNotificationUtil.getMailTitle("METADATA PERSIST", "FAIL",
                 context.getConfig().getDeployEnv());
 
@@ -304,8 +306,8 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         setParam(SUBMITTER, submitter);
     }
 
-    public final List<String> getNotifyList() {
-        final String str = getParam(NOTIFY_LIST);
+    public final List<String> getNotifyList(String key) {
+        final String str = getParam(key);
         if (str != null) {
             return Lists.newArrayList(StringUtils.split(str, ","));
         } else {
@@ -313,64 +315,60 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         }
     }
 
-    public final void setNotifyList(String notifications) {
-        setParam(NOTIFY_LIST, notifications);
+    public final void setNotifyList(String key, String notifications) {
+        setParam(key, notifications);
     }
 
-    public final void setNotifyList(List<String> notifications) {
-        setNotifyList(StringUtils.join(notifications, ","));
+    public final void setNotifyList(String key, List<String> notifications) {
+        setNotifyList(key, StringUtils.join(notifications, ","));
     }
 
-    protected Pair<String, String> formatNotifications(ExecutableContext executableContext, ExecutableState state) {
+    protected Pair<String[], Map<String, Object>>  formatNotifications(ExecutableContext executableContext, ExecutableState state) {
         return null;
     }
 
     protected final void notifyUserStatusChange(ExecutableContext context, ExecutableState state) {
         try {
-            List<String> users = getAllNofifyUsers(config);
+            Map<String, List<String>> users = getAllNofifyUsers(config);
             if (users.isEmpty()) {
                 logger.debug(NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY);
                 return;
             }
-            final Pair<String, String> email = formatNotifications(context, state);
-            doSendMail(config, users, email);
+            final Pair<String[], Map<String, Object>> email = formatNotifications(context, state);
+            doSendNotify(config, users, state.name(), email);
         } catch (Exception e) {
             logger.error("error send email", e);
         }
     }
 
-    private List<String> getAllNofifyUsers(KylinConfig kylinConfig) {
-        List<String> users = Lists.newArrayList();
-        users.addAll(getNotifyList());
+    private Map<String, List<String>> getAllNofifyUsers(KylinConfig kylinConfig) {
+        Map<String, List<String>> users = Maps.newHashMap();
+        users.put(Notify.NOTIFY_EMAIL_LIST, getNotifyList(Notify.NOTIFY_EMAIL_LIST));
+        users.put(Notify.NOTIFY_DINGTALK_LIST, getNotifyList(Notify.NOTIFY_DINGTALK_LIST));
         final String[] adminDls = kylinConfig.getAdminDls();
         if (null != adminDls) {
             for (String adminDl : adminDls) {
-                users.add(adminDl);
+                users.get(Notify.NOTIFY_EMAIL_LIST).add(adminDl);
             }
         }
         return users;
     }
 
-    private void doSendMail(KylinConfig kylinConfig, List<String> users, Pair<String, String> email) {
-        if (email == null) {
-            logger.warn("no need to send email, content is null");
-            return;
-        }
-        logger.info("prepare to send email to:{}", users);
+    private void doSendNotify(KylinConfig kylinConfig, Map<String, List<String>> receivers, String state, Pair<String[], Map<String, Object>> content) {
+        logger.info("prepare to send notify to:{}", receivers);
         logger.info("job name:{}", getName());
         logger.info("submitter:{}", getSubmitter());
-        logger.info("notify list:{}", users);
-        new MailService(kylinConfig).sendMail(users, email.getFirst(), email.getSecond());
+        new NotifyService(kylinConfig).sendNotify(receivers, state, content);
     }
 
-    protected void sendMail(Pair<String, String> email) {
+    protected void sendMail(Pair<String[], Map<String, Object>> email) {
         try {
-            List<String> users = getAllNofifyUsers(config);
+            Map<String, List<String>> users = getAllNofifyUsers(config);
             if (users.isEmpty()) {
                 logger.debug(NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY);
                 return;
             }
-            doSendMail(config, users, email);
+            doSendNotify(config, users, "",  email);
         } catch (Exception e) {
             logger.error("error send email", e);
         }
@@ -387,6 +385,14 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     @Override
     public final Output getOutput() {
         return getManager().getOutput(getId());
+    }
+
+    public long getMapReduceWaitTime() {
+        return getExtraInfoAsLong(MAP_REDUCE_WAIT_TIME, 0L);
+    }
+
+    public void setMapReduceWaitTime(long t) {
+        addExtraInfo(MAP_REDUCE_WAIT_TIME, t + "");
     }
 
     protected long getExtraInfoAsLong(String key, long defaultValue) {

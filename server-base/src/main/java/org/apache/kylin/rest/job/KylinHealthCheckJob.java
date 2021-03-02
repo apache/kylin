@@ -35,7 +35,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.BufferedLogger;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.MailService;
+import org.apache.kylin.common.notify.MailService;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -266,8 +266,8 @@ public class KylinHealthCheckJob extends AbstractApplication {
         long outdatedCubeTimeCut = System.currentTimeMillis() - 1L * staleCubeThresholdInDays * 24 * 60 * 60 * 1000;
         for (CubeInstance cube : cubes) {
             long lastTime = cube.getLastModified();
-            logger.info("Cube {} last modified time: {}, {}", cube.getName(), new Date(lastTime),
-                    cube.getDescriptor().getNotifyList());
+            logger.info("Cube {} last modified time: {}, email {}, dingtalk {}", cube.getName(), new Date(lastTime),
+                    cube.getDescriptor().getNotifyEmailList(), cube.getDescriptor().getNotifyDingTalkList());
             if (lastTime < outdatedCubeTimeCut) {
                 if (cube.isReady()) {
                     reporter.log(

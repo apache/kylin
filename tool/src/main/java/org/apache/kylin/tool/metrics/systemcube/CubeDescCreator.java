@@ -448,7 +448,8 @@ public class CubeDescCreator {
         desc.setMeasures(measureDescList);
         desc.setRowkey(rowKeyDesc);
         desc.setHbaseMapping(hBaseMapping);
-        desc.setNotifyList(Lists.<String> newArrayList());
+        desc.setNotifyEmailList(Lists.<String> newArrayList());
+        desc.setNotifyDingTalkList(Lists.<String> newArrayList());
         desc.setStatusNeedNotify(Lists.newArrayList(JobStatusEnum.ERROR.toString()));
         desc.setAutoMergeTimeRanges(new long[] { 86400000L, 604800000L, 2419200000L, 7776000000L, 31104000000L });
         desc.setEngineType(IEngineAware.ID_MR_V2);

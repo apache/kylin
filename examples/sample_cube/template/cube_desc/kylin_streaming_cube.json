@@ -141,7 +141,8 @@
     "kylin.cube.algorithm": "inmem",
     "kylin.cube.max-building-segments": "5"
   },
-  "notify_list" : [ ],
+  "notify_email_list" : [ ],
+  "notify_dingtalk_list" : [ ],
   "status_need_notify" : [ ],
   "auto_merge_time_ranges" : [ ],
   "retention_range" : 0,

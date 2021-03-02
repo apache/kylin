@@ -243,7 +243,8 @@
     }
   } ],
   "parent_forward" : 3,
-  "notify_list" : [ ],
+  "notify_email_list" : [ ],
+  "notify_dingtalk_list" : [ ],
   "status_need_notify" : [ ],
   "partition_date_start" : 694224000000,
   "partition_date_end" : 3153600000000,

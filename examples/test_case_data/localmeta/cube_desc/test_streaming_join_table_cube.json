@@ -131,7 +131,8 @@
     }
   } ],
   "signature" : "ZZ9DIaVI8jmu7n08S1M7Eg==",
-  "notify_list" : [ ],
+  "notify_email_list" : [ ],
+  "notify_dingtalk_list" : [ ],
   "status_need_notify" : [ "ERROR", "DISCARDED", "SUCCEED" ],
   "partition_date_start" : 0,
   "partition_date_end" : 3153600000000,

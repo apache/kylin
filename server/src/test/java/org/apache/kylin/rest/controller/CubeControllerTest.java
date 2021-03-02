@@ -126,9 +126,13 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeRequest.setCubeName(newCube.getName());
         cubeRequest = cubeController.saveCubeDesc(cubeRequest);
 
-        List<String> notifyList = Lists.newArrayList();
-        notifyList.add("john@example.com");
-        cubeController.updateNotifyList(newCubeName, notifyList);
+        List<String> notifyEmailList = Lists.newArrayList();
+        notifyEmailList.add("john@example.com");
+        cubeController.updateNotifyEmailList(newCubeName, notifyEmailList);
+
+        List<String> notifyDingTalkList = Lists.newArrayList();
+        notifyDingTalkList.add("token");
+        cubeController.updateNotifyDingTalkList(newCubeName, notifyDingTalkList);
         try {
             cubeController.updateCubeOwner(newCubeName, "new_user");
         } catch (InternalErrorException e) {
@@ -140,7 +144,8 @@ public class CubeControllerTest extends ServiceTestBase {
                 1, 0);
 
         CubeInstance cubeInstance = cubeController.getCube(cubeInstances.get(0).getName());
-        Assert.assertTrue(cubeInstance.getDescriptor().getNotifyList().contains("john@example.com"));
+        Assert.assertTrue(cubeInstance.getDescriptor().getNotifyEmailList().contains("john@example.com"));
+        Assert.assertTrue(cubeInstance.getDescriptor().getNotifyDingTalkList().contains("token"));
         Assert.assertEquals("MODELER", cubeInstance.getOwner());
         Assert.assertEquals(495, cubeInstance.getCost());
         cubeController.deleteCube(newCubeName);

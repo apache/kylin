@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 
+import org.apache.kylin.common.notify.util.MailNotificationUtil;
+import org.apache.kylin.common.notify.util.Notify;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
@@ -39,7 +41,6 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
-import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -50,7 +51,6 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.metrics.JobMetricsFacade;
-import org.apache.kylin.job.util.MailNotificationUtil;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
@@ -112,6 +112,9 @@ public class CubingJob extends DefaultChainedExecutable {
     private static final String DEPLOY_ENV_NAME = "envName";
     private static final String JOB_TYPE = "jobType";
     private static final String SEGMENT_NAME = "segmentName";
+    private static final String ENGINE_MR = "MapReduceExecutable";
+    private static final String ENGINE_SPARK = "SparkExecutable";
+    private static final String ENGINE_FLINK = "FlinkExecutable";
 
     public static CubingJob createBuildJob(CubeSegment seg, String submitter, JobEngineConfig config) {
         return initCubingJob(seg, CubingJobTypeEnum.BUILD.toString(), submitter, config);
@@ -158,7 +161,8 @@ public class CubingJob extends DefaultChainedExecutable {
         result.setName(jobType + " CUBE - " + seg.getCubeInstance().getDisplayName() + " - " + seg.getName() + " - "
                 + format.format(new Date(System.currentTimeMillis())));
         result.setSubmitter(submitter);
-        result.setNotifyList(seg.getCubeInstance().getDescriptor().getNotifyList());
+        result.setNotifyList(Notify.NOTIFY_EMAIL_LIST, seg.getCubeInstance().getDescriptor().getNotifyEmailList());
+        result.setNotifyList(Notify.NOTIFY_DINGTALK_LIST, seg.getCubeInstance().getDescriptor().getNotifyDingTalkList());
         return result;
     }
 
@@ -196,7 +200,7 @@ public class CubingJob extends DefaultChainedExecutable {
     }
 
     @Override
-    protected Pair<String, String> formatNotifications(ExecutableContext context, ExecutableState state) {
+    protected Pair<String[], Map<String, Object>> formatNotifications(ExecutableContext context, ExecutableState state) {
         CubeInstance cubeInstance = CubeManager.getInstance(context.getConfig())
                 .getCube(CubingExecutableUtil.getCubeName(this.getParams()));
         final Output output = getManager().getOutput(getId());
@@ -206,9 +210,8 @@ public class CubingJob extends DefaultChainedExecutable {
             return null;
         }
 
-        if (!MailNotificationUtil.hasMailNotification(state)) {
-            logger.info("Cannot find email template for job state: {}", state);
-            return null;
+        if (!MailNotificationUtil.hasMailNotification(state.name())) {
+            logger.warn("Cannot find email template for job state: {}", state);
         }
 
         Map<String, Object> dataMap = Maps.newHashMap();
@@ -223,7 +226,6 @@ public class CubingJob extends DefaultChainedExecutable {
         dataMap.put("duration", getDuration() / 60000 + "mins");
         dataMap.put("mr_waiting", getMapReduceWaitTime() / 60000 + "mins");
         dataMap.put("last_update_time", new Date(getLastModified()).toString());
-
         if (state == ExecutableState.ERROR) {
             AbstractExecutable errorTask = null;
             Output errorOutput = null;
@@ -238,24 +240,37 @@ public class CubingJob extends DefaultChainedExecutable {
                     "None of the sub tasks of cubing job " + getId() + " is error and this job should become success.");
 
             dataMap.put("error_step", errorTask.getName());
-            if (errorTask instanceof MapReduceExecutable) {
-                final String mrJobId = errorOutput.getExtra().get(ExecutableConstants.MR_JOB_ID);
-                dataMap.put("mr_job_id", StringUtil.noBlank(mrJobId, "Not initialized"));
+            String classSimpleName = errorTask.getClass().getSimpleName();
+            if (classSimpleName.equals(ENGINE_MR)) {
+                final String jobId = errorOutput.getExtra().get(ExecutableConstants.MR_JOB_ID);
+                dataMap.put("job_type", "MR Job");
+                dataMap.put("job_id", StringUtil.noBlank(jobId, "Not initialized"));
+            } else if (classSimpleName.equals(ENGINE_FLINK)){
+                final String jobId = errorOutput.getExtra().get(ExecutableConstants.FLINK_JOB_ID);
+                dataMap.put("job_type", "Flink Job");
+                dataMap.put("job_id", StringUtil.noBlank(jobId, "Not initialized"));
+            } else if (classSimpleName.equals(ENGINE_SPARK)){
+                final String jobId = errorOutput.getExtra().get(ExecutableConstants.SPARK_JOB_ID);
+                dataMap.put("job_type", "Spark Job");
+                dataMap.put("job_id", StringUtil.noBlank(jobId, "Not initialized"));
             } else {
-                dataMap.put("mr_job_id", MailNotificationUtil.NA);
+                dataMap.put("job_type", Notify.NA);
+                dataMap.put("job_id", Notify.NA);
             }
             dataMap.put("error_log",
                     Matcher.quoteReplacement(StringUtil.noBlank(output.getVerboseMsg(), "no error message")));
         }
 
-        String content = MailNotificationUtil.getMailContent(state, dataMap);
-        String title = MailNotificationUtil.getMailTitle("JOB",
+        String[] subject = new String[]{
+                "JOB",
                 state.toString(),
                 context.getConfig().getClusterName(),
                 getDeployEnvName(),
                 getProjectName(),
-                cubeInstance.getName());
-        return Pair.newPair(title, content);
+                cubeInstance.getName()
+        };
+
+        return Pair.newPair(subject, dataMap);
     }
 
     @Override
@@ -272,8 +287,9 @@ public class CubingJob extends DefaultChainedExecutable {
             if (status != ExecutableState.SUCCEED) {
                 break;
             }
-            if (task instanceof MapReduceExecutable) {
-                time += ((MapReduceExecutable) task).getMapReduceWaitTime();
+            String classSimpleName = task.getClass().getSimpleName();
+            if (classSimpleName.equals(ENGINE_MR)) {
+                time += task.getMapReduceWaitTime();
             }
         }
         setMapReduceWaitTime(time);

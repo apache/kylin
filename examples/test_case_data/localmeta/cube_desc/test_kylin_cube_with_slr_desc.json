@@ -162,7 +162,8 @@
       "joint_dims" : [ [ "lstg_format_name", "lstg_site_id", "slr_segment_cd" ] ]
     }
   } ],
-  "notify_list" : null,
+  "notify_email_list" : null,
+  "notify_dingtalk_list" : null,
   "status_need_notify" : [ ],
   "auto_merge_time_ranges" : null,
   "retention_range" : 0,

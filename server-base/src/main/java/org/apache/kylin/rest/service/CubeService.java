@@ -576,10 +576,17 @@ public class CubeService extends BasicService implements InitializingBean {
         return hr;
     }
 
-    public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException {
+    public void updateCubeNotifyEmailList(CubeInstance cube, List<String> notifyList) throws IOException {
         aclEvaluate.checkProjectOperationPermission(cube);
         CubeDesc desc = cube.getDescriptor();
-        desc.setNotifyList(notifyList);
+        desc.setNotifyEmailList(notifyList);
+        getCubeDescManager().updateCubeDesc(desc);
+    }
+
+    public void updateCubeNotifyDingTalkList(CubeInstance cube, List<String> notifyList) throws IOException {
+        aclEvaluate.checkProjectOperationPermission(cube);
+        CubeDesc desc = cube.getDescriptor();
+        desc.setNotifyDingTalkList(notifyList);
         getCubeDescManager().updateCubeDesc(desc);
     }
 

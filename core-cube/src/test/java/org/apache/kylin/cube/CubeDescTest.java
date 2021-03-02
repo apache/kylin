@@ -397,9 +397,13 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         thrown.expectMessage("Email [test] is not validation.");
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
-        List<String> notify = Lists.newArrayList();
-        notify.add("test");
-        cubeDesc.setNotifyList(notify);
+        List<String> emailNotify = Lists.newArrayList();
+        emailNotify.add("test");
+        cubeDesc.setNotifyEmailList(emailNotify);
+
+        List<String> dingTalkNotify = Lists.newArrayList();
+        dingTalkNotify.add("token");
+        cubeDesc.setNotifyDingTalkList(dingTalkNotify);
         cubeDesc.validateNotifyList();
         cubeDesc.init(getTestConfig());
     }

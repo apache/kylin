@@ -129,7 +129,8 @@
     "kylin.stream.cube.window": "3600",
     "kylin.stream.cube.duration": "3600"
   },
-  "notify_list" : [ ],
+  "notify_email_list" : [ ],
+  "notify_dingtalk_list" : [ ],
   "status_need_notify" : [ ],
   "auto_merge_time_ranges" : null,
   "retention_range" : 0,

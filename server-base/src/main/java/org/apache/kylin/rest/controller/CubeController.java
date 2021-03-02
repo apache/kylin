@@ -59,6 +59,7 @@ import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.rest.constant.NotifyType;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -246,20 +247,48 @@ public class CubeController extends BasicController {
     }
 
     /**
-     * Update cube notify list
+     * Update cube notify email list
      *
      * @param cubeName
      * @param notifyList
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/notify_list", method = { RequestMethod.PUT }, produces = {
+    @RequestMapping(value = "/{cubeName}/notify_email_list", method = { RequestMethod.PUT }, produces = {
             "application/json" })
     @ResponseBody
-    public void updateNotifyList(@PathVariable String cubeName, @RequestBody List<String> notifyList) {
+    public void updateNotifyEmailList(@PathVariable String cubeName, @RequestBody List<String> notifyList) {
+        updateNotifyList(cubeName, notifyList, NotifyType.EMAIL);
+    }
+
+    /**
+     * Update cube notify dingtalk list
+     *
+     * @param cubeName
+     * @param notifyList
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/notify_dingtalk_list", method = { RequestMethod.PUT }, produces = {
+            "application/json" })
+    @ResponseBody
+    public void updateNotifyDingTalkList(@PathVariable String cubeName, @RequestBody List<String> notifyList) {
+        updateNotifyList(cubeName, notifyList, NotifyType.DINGTALK);
+    }
+
+    private void updateNotifyList(String cubeName, List<String> notifyList, NotifyType notifyType) {
+
         checkCubeExists(cubeName);
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         try {
-            cubeService.updateCubeNotifyList(cube, notifyList);
+            switch (notifyType) {
+                case EMAIL:
+                    cubeService.updateCubeNotifyEmailList(cube, notifyList);
+                    break;
+                case DINGTALK:
+                    cubeService.updateCubeNotifyDingTalkList(cube, notifyList);
+                    break;
+                default:
+                    logger.warn("This form of notification is not supported for the time being");
+            }
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);

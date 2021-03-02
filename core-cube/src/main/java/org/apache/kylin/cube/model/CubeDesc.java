@@ -168,8 +168,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     private List<AggregationGroup> aggregationGroups;
     @JsonProperty("signature")
     private String signature;
-    @JsonProperty("notify_list")
-    private List<String> notifyList;
+    @JsonProperty("notify_email_list")
+    private List<String> notifyEmailList;
+    @JsonProperty("notify_dingtalk_list")
+    private List<String> notifyDingTalkList;
     @JsonProperty("status_need_notify")
     private List<String> statusNeedNotify = Collections.emptyList();
 
@@ -450,12 +452,20 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.signature = signature;
     }
 
-    public List<String> getNotifyList() {
-        return notifyList == null ? null : Collections.unmodifiableList(notifyList);
+    public List<String> getNotifyEmailList() {
+        return notifyEmailList == null ? null : Collections.unmodifiableList(notifyEmailList);
     }
 
-    public void setNotifyList(List<String> notifyList) {
-        this.notifyList = notifyList;
+    public void setNotifyEmailList(List<String> notifyList) {
+        this.notifyEmailList = notifyList;
+    }
+
+    public List<String> getNotifyDingTalkList() {
+        return notifyDingTalkList == null ? null : Collections.unmodifiableList(notifyDingTalkList);
+    }
+
+    public void setNotifyDingTalkList(List<String> notifyList) {
+        this.notifyDingTalkList = notifyList;
     }
 
     public List<String> getStatusNeedNotify() {
@@ -523,7 +533,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 return false;
             }
         }
-        if (!Objects.equals(notifyList, that.notifyList))
+        if (!Objects.equals(notifyEmailList, that.notifyEmailList))
+            return false;
+        if (!Objects.equals(notifyDingTalkList, that.notifyDingTalkList))
             return false;
         if (!Objects.equals(statusNeedNotify, that.statusNeedNotify))
             return false;
@@ -907,10 +919,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public void validateNotifyList() {
-        List<String> notifyList = getNotifyList();
-        if (notifyList != null && !notifyList.isEmpty()) {
+        List<String> emailNotifyList = getNotifyEmailList();
+        if (emailNotifyList != null && !emailNotifyList.isEmpty()) {
             EmailValidator emailValidator = EmailValidator.getInstance();
-            for (String email : notifyList) {
+            for (String email : emailNotifyList) {
                 if (!emailValidator.isValid(email)) {
                     throw new IllegalArgumentException("Email [" + email + "] is not validation.");
                 }
@@ -1682,7 +1694,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         newCubeDesc.setRowkey(cubeDesc.getRowkey());
         newCubeDesc.setHbaseMapping(cubeDesc.getHbaseMapping());
         newCubeDesc.setSignature(cubeDesc.getSignature());
-        newCubeDesc.setNotifyList(cubeDesc.getNotifyList());
+        newCubeDesc.setNotifyEmailList(cubeDesc.getNotifyEmailList());
+        newCubeDesc.setNotifyDingTalkList(cubeDesc.getNotifyDingTalkList());
         newCubeDesc.setStatusNeedNotify(cubeDesc.getStatusNeedNotify());
         newCubeDesc.setAutoMergeTimeRanges(cubeDesc.getAutoMergeTimeRanges());
         newCubeDesc.setPartitionDateStart(cubeDesc.getPartitionDateStart());

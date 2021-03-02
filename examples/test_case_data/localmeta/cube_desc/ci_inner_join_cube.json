@@ -586,7 +586,8 @@
       }
     }
   ],
-  "notify_list": null,
+  "notify_email_list": null,
+  "notify_dingtalk_list": null,
   "status_need_notify": [],
   "auto_merge_time_ranges": null,
   "retention_range": 0,

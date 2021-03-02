@@ -33,9 +33,13 @@
             <!--ng-if="!kylinConfig.isExternalAclEnabled()">-->
             <!--<a href="" ng-click="cube.visiblePage='access';listAccess(cube, 'CubeInstance');">Access</a>-->
         <!--</li>-->
-        <li class="{{cube.visiblePage=='notification'? 'active':''}}"
+        <li class="{{cube.visiblePage=='emailNotification'? 'active':''}}"
             ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask) && !newAccess">
-            <a href="" ng-click="cube.visiblePage='notification';getNotifyListString(cube);">Notification</a>
+          <a href="" ng-click="cube.visiblePage='emailNotification';getNotifyEmailListString(cube);">Email Notification</a>
+        </li>
+        <li class="{{cube.visiblePage=='dingTalkNotification'? 'active':''}}"
+            ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask) && !newAccess">
+          <a href="" ng-click="cube.visiblePage='dingTalkNotification';getNotifyDingTalkListString(cube);">DingTalk Notification</a>
         </li>
         <li class="{{cube.visiblePage=='owner'? 'active':''}}"
             ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask) && !newAccess">
@@ -89,19 +93,34 @@
         <!--</div>-->
     <!--</div>-->
 
-    <div class="cube-detail" ng-show="cube.visiblePage=='notification'">
-        <div style="margin: 15px;">
-            <form>
-                <h5>Notification List(Comma Separated)</h5>
-                <div class="form-group">
-                    <input ng-model="cube.notifyListString" class="form-control" placeholder="Notification List..." />
-                </div>
-                <div class="form-group">
-                    <button class="btn btn-primary btn-sm" ng-click="updateNotifyList(cube)">Save</button>
-                </div>
-                <div class="space-4"></div>
-            </form>
-        </div>
+    <div class="cube-detail" ng-show="cube.visiblePage=='emailNotification'">
+      <div style="margin: 15px;">
+        <form>
+          <h5>Notification Email List(Comma Separated)</h5>
+          <div class="form-group">
+            <input ng-model="cube.notifyEmailListString" class="form-control" placeholder="Notification Email List..." />
+          </div>
+          <div class="form-group">
+            <button class="btn btn-primary btn-sm" ng-click="updateNotifyEmailList(cube)">Save</button>
+          </div>
+          <div class="space-4"></div>
+        </form>
+      </div>
+    </div>
+
+    <div class="cube-detail" ng-show="cube.visiblePage=='dingTalkNotification'">
+      <div style="margin: 15px;">
+        <form>
+          <h5>Notification DingTalk List(Comma Separated)</h5>
+          <div class="form-group">
+            <input ng-model="cube.notifyDingTalkListString" class="form-control" placeholder="Notification DingTalk List..." />
+          </div>
+          <div class="form-group">
+            <button class="btn btn-primary btn-sm" ng-click="updateNotifyDingTalkList(cube)">Save</button>
+          </div>
+          <div class="space-4"></div>
+        </form>
+      </div>
     </div>
 
     <div class="cube-detail" ng-show="cube.visiblePage=='owner'">
