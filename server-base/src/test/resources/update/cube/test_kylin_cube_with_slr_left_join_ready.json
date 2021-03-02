@@ -40,6 +40,6 @@
   } ],
   "status" : "READY",
   "create_time" : null,
-  "notify_email_list" : [ ],
-  "notify_dingtalk_list" : [ ]
+  "notify_email_list" : null,
+  "notify_dingtalk_list" : null
 }
