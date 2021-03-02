@@ -500,7 +500,6 @@ public class StreamingV2Controller extends BasicController {
 
     private TableDesc deserializeTableDesc(StreamingRequestV2 streamingRequest) {
         TableDesc desc = null;
-        String db = KylinConfig.getInstanceFromEnv().getHiveDatabaseLambdaCube();
         try {
             logger.debug("Saving TableDesc " + streamingRequest.getTableData());
             desc = JsonUtil.readValue(streamingRequest.getTableData(), TableDesc.class);
@@ -518,7 +517,7 @@ public class StreamingV2Controller extends BasicController {
         Preconditions.checkNotNull(desc, "Failed to deserialize from TableDesc definition");
         String[] dbTable = HadoopUtil.parseHiveTableName(desc.getName());
         desc.setName(dbTable[1]);
-        desc.setDatabase(db);
+        desc.setDatabase(dbTable[0]);
         desc.getIdentity();
         return desc;
     }
