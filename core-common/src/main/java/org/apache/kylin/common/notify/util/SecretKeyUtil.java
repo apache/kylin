@@ -38,7 +38,7 @@ public class SecretKeyUtil {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
             byte[] signData = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
-            String sign = URLEncoder.encode(new String(Base64.encodeBase64(signData)), StandardCharsets.UTF_8.name());
+            String sign = URLEncoder.encode(new String(Base64.encodeBase64(signData), StandardCharsets.UTF_8), "UTF-8");
             return Pair.newPair(timestamp, sign);
         } catch (Exception e) {
             logger.error("create mac of dingtalk occurred error, please check.");
