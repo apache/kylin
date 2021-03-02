@@ -118,11 +118,13 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
 
 从kylin 2.6.0 开始提供 system-cube.sh 脚本，用户可以通过执行此脚本来自动创建系统 Cube。
 
-- 创建系统 Cube：`sh system-cube.sh setup`
+- 创建系统 Cube：`sh bin/system-cube.sh setup`
 
 - 构建系统 Cube：`sh bin/system-cube.sh build`
 
-- 为系统 Cube 添加定时任务：`bin/system.sh cron`
+- 为系统 Cube 添加定时任务：`sh bin/system-cube.sh cron`
+
+**注意**：System-cube.sh 会调用 ${KYLIN_HOME}/bin/build-incremental-cube.sh 脚本来提交构建任务，build-incremental-cube.sh 中默认使用 ADMIN:KYLIN 的用户名和密码作为 authtication 来调用 kylin 的 rebuild API，如果您修改了 ADMIN 用户的密码或者想使用 ADMIN 以外的用户来提交构建任务，请找到 build-incremental-cube.sh 中的 ADMIN:KYLIN，将其替换为正确的用户名和密码。
 
 ## <span id="系统 Cube 的细节">系统 Cube 的细节</span>
 

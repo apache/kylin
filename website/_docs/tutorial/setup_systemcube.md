@@ -125,11 +125,13 @@ sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube $
 
 Kylin provides system-cube.sh from v2.6.0, users can automatically create system cube by executing this script.
 
-- Create System Cube：`sh system-cube.sh setup`
+- Create System Cube：`sh bin/system-cube.sh setup`
 
 - Build System Cube：`sh bin/system-cube.sh build`
 
-- Add crontab job for System Cube：`bin/system.sh cron`
+- Add crontab job for System Cube：`sh bin/system-cube.sh cron`
+
+**Note**: System-cube.sh will call ${KYLIN_HOME}/bin/build-incremental-cube.sh to submit build job. In build-incremental-cube.sh, the user name and password of ADMIN:KYLIN are used by default as authentication to call kylin's rebuild API. If you have changed the password of the ADMIN user or want to use a user other than ADMIN to submit the build job, please find the ADMIN:KYLIN in build-incremental-cube.sh and replace it with the correct user name and password.
 
 ## <span id="Details of System Cube">Details of System Cube</span>
 
