@@ -33,9 +33,6 @@ import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.SetOp;
 import org.apache.calcite.rel.core.Union;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.kylin.metadata.expression.ColumnTupleExpression;
-import org.apache.kylin.metadata.expression.RexCallTupleExpression;
-import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Preconditions;
@@ -96,23 +93,12 @@ public class OLAPUnionRel extends Union implements OLAPRel {
     private ColumnRowType buildColumnRowType() {
         ColumnRowType inputColumnRowType = ((OLAPRel) getInput(0)).getColumnRowType();
         List<TblColRef> columns = Lists.newArrayList();
-        List<TupleExpression> sourceColumns = Lists.newArrayList();
 
         for (TblColRef tblColRef : inputColumnRowType.getAllColumns()) {
             columns.add(TblColRef.newInnerColumn(tblColRef.getName(), TblColRef.InnerDataTypeEnum.LITERAL));
         }
 
-        for (RelNode child : getInputs()) {
-            OLAPRel olapChild = (OLAPRel) child;
-            List<TblColRef> innerCols = olapChild.getColumnRowType().getAllColumns();
-            List<TupleExpression> children = Lists.newArrayListWithExpectedSize(innerCols.size());
-            for (TblColRef innerCol : innerCols) {
-                children.add(new ColumnTupleExpression(innerCol));
-            }
-            sourceColumns.add(new RexCallTupleExpression(children));
-        }
-
-        ColumnRowType fackColumnRowType = new ColumnRowType(columns, sourceColumns);
+        ColumnRowType fackColumnRowType = new ColumnRowType(columns, inputColumnRowType.getSourceColumns());
         return fackColumnRowType;
     }
 
