@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/set-kylin-home.sh $@
+source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/set-kylin-home.sh $@
 
 today=`date +"%Y-%m-%d"`
 before7day=`date -d "-7 day" +"%Y-%m-%d"`
@@ -30,5 +30,5 @@ ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.StorageCleanupJob --delete true
 #clean before 7 day log
 before7dayfile=${KYLIN_HOME}/logs/clean-kylin-dirty-data.log.$before7day
 if [ -f "$before7dayfile" ]; then
-  rm $before7dayfile
+    rm $before7dayfile
 fi
