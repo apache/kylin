@@ -28,6 +28,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
+import org.apache.kylin.engine.spark.builder.NBuildSourceInfo;
 import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 import org.apache.kylin.engine.spark.metadata.cube.ManagerHub;
 import org.apache.kylin.engine.spark.metadata.cube.PathManager;
@@ -67,7 +68,7 @@ public class CubeMergeJob extends SparkApplication {
 
     @Override
     protected void doExecute() throws Exception {
-        buildLayoutWithUpdate = new BuildLayoutWithUpdate();
+        buildLayoutWithUpdate = new BuildLayoutWithUpdate(config);
         String cubeId = getParam(MetadataConstants.P_CUBE_ID);
         String newSegmentId = getParam(MetadataConstants.P_SEGMENT_IDS);
         final CubeManager cubeManager = CubeManager.getInstance(config);
@@ -116,6 +117,11 @@ public class CubeMergeJob extends SparkApplication {
                 @Override
                 public LayoutEntity build() throws IOException {
                     return saveAndUpdateCuboid(afterSort, mergedSegInfo, layout, assist);
+                }
+
+                @Override
+                public NBuildSourceInfo getBuildSourceInfo() {
+                    return null;
                 }
             }, config);
 

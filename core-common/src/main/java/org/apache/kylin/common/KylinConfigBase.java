@@ -3092,4 +3092,12 @@ public abstract class KylinConfigBase implements Serializable {
     public String getKerberosPrincipal() {
         return getOptional("kylin.kerberos.principal");
     }
+
+    public String getParentDatasetStorageLevel() {
+        return getOptional("kylin.engine.spark.parent-dataset.storage.level", "NONE");
+    }
+
+    public int getMaxParentDatasetPersistCount() {
+        return Integer.parseInt(getOptional("kylin.engine.spark.parent-dataset.max.persist.count", "1"));
+    }
 }

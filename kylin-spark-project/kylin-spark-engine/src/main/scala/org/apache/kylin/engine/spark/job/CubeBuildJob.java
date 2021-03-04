@@ -157,7 +157,7 @@ public class CubeBuildJob extends SparkApplication {
                 logger.info("Triggered cube planner phase one .");
         }
 
-        buildLayoutWithUpdate = new BuildLayoutWithUpdate();
+        buildLayoutWithUpdate = new BuildLayoutWithUpdate(config);
         List<String> persistedFlatTable = new ArrayList<>();
         List<String> persistedViewFactTable = new ArrayList<>();
         Path shareDir = config.getJobTmpShareDir(project, jobId);
@@ -297,7 +297,7 @@ public class CubeBuildJob extends SparkApplication {
         }
     }
 
-    private void build(Collection<NBuildSourceInfo> buildSourceInfos, SegmentInfo seg, SpanningTree st) {
+    private void build(Collection<NBuildSourceInfo> buildSourceInfos, SegmentInfo seg, SpanningTree st) throws InterruptedException{
 
         List<NBuildSourceInfo> theFirstLevelBuildInfos = buildLayer(buildSourceInfos, seg, st);
         LinkedList<List<NBuildSourceInfo>> queue = new LinkedList<>();
@@ -318,7 +318,7 @@ public class CubeBuildJob extends SparkApplication {
 
     // build current layer and return the next layer to be built.
     private List<NBuildSourceInfo> buildLayer(Collection<NBuildSourceInfo> buildSourceInfos, SegmentInfo seg,
-                                              SpanningTree st) {
+                                              SpanningTree st) throws InterruptedException{
         int cuboidsNumInLayer = 0;
 
         // build current layer
@@ -330,6 +330,11 @@ public class CubeBuildJob extends SparkApplication {
             cuboidsNumInLayer += toBuildCuboids.size();
             Preconditions.checkState(!toBuildCuboids.isEmpty(), "To be built cuboids is empty.");
             Dataset<Row> parentDS = info.getParentDS();
+
+            if (toBuildCuboids.size() > 1) {
+                buildLayoutWithUpdate.cacheAndRegister(info.getLayoutId(), parentDS);
+            }
+
             // record the source count of flat table
             if (info.getLayoutId() == ParentSourceChooser.FLAT_TABLE_FLAG()) {
                 cuboidsRowCount.putIfAbsent(info.getLayoutId(), parentDS.count());
@@ -346,6 +351,11 @@ public class CubeBuildJob extends SparkApplication {
                     @Override
                     public LayoutEntity build() throws IOException {
                         return buildCuboid(seg, index, parentDS, st, info.getLayoutId());
+                    }
+
+                    @Override
+                    public NBuildSourceInfo getBuildSourceInfo() {
+                        return info;
                     }
                 }, config);
                 allIndexesInCurrentLayer.add(index);
