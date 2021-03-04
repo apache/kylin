@@ -33,54 +33,13 @@ mkdir -p ${KYLIN_HOME}/ext
 source ${dir}/set-java-home.sh
 
 function retrieveDependency() {
-    #retrive $hive_dependency and $hbase_dependency
-    if [[ -z $reload_dependency && `ls -1 ${dir}/cached-* 2>/dev/null | wc -l` -eq 6 ]]
-    then
-        echo "Using cached dependency..."
 
-        source ${dir}/cached-hive-dependency.sh
-        if [ -z "${hive_warehouse_dir}" ] || [ -z "${hive_dependency}" ] || [ -z "${hive_conf_path}" ]; then
-          echo "WARNING: Using ${dir}/cached-hive-dependency.sh failed,will be use ${dir}/find-hive-dependency.sh"
-          source ${dir}/find-hive-dependency.sh
-        fi
-
-        source ${dir}/cached-hbase-dependency.sh
-        if [ -z "${hbase_dependency}" ]; then
-          echo "WARNING: Using ${dir}/cached-hbase-dependency.sh failed,will be use ${dir}/find-hbase-dependency.sh"
-          source ${dir}/find-hbase-dependency.sh
-        fi
-
-        source ${dir}/cached-hadoop-conf-dir.sh
-        if [ -z "${kylin_hadoop_conf_dir}" ]; then
-          echo "WARNING: Using ${dir}/cached-hadoop-conf-dir.sh failed,will be use ${dir}/find-hadoop-conf-dir.sh"
-          source ${dir}/find-hadoop-conf-dir.sh
-        fi
-
-        source ${dir}/cached-kafka-dependency.sh
-        if [ -z "${kafka_dependency}" ]; then
-          echo "WARNING: Using ${dir}/cached-kafka-dependency.sh failed,will be use ${dir}/find-kafka-dependency.sh"
-          source ${dir}/find-kafka-dependency.sh
-        fi
-
-        source ${dir}/cached-spark-dependency.sh
-        if [ -z "${spark_dependency}" ]; then
-          echo "WARNING: Using ${dir}/cached-spark-dependency.sh failed,will be use ${dir}/find-spark-dependency.sh"
-          source ${dir}/find-spark-dependency.sh
-        fi
-
-        source ${dir}/cached-flink-dependency.sh
-        if [ -z "${flink_dependency}" ]; then
-          echo "WARNING: Using ${dir}/cached-flink-dependency.sh failed,will be use ${dir}/find-flink-dependency.sh"
-          source ${dir}/find-flink-dependency.sh
-        fi
-    else
-        source ${dir}/find-hive-dependency.sh
-        source ${dir}/find-hbase-dependency.sh
-        source ${dir}/find-hadoop-conf-dir.sh
-        source ${dir}/find-kafka-dependency.sh
-        source ${dir}/find-spark-dependency.sh
-        source ${dir}/find-flink-dependency.sh
-    fi
+    source ${dir}/find-hive-dependency.sh
+    source ${dir}/find-hbase-dependency.sh
+    source ${dir}/find-hadoop-conf-dir.sh
+    source ${dir}/find-kafka-dependency.sh
+    source ${dir}/find-spark-dependency.sh
+    source ${dir}/find-flink-dependency.sh
 
     #retrive $KYLIN_EXTRA_START_OPTS
     if [ -f "${dir}/setenv.sh" ]; then
@@ -104,7 +63,7 @@ function retrieveStartCommand() {
         PID=`cat $KYLIN_HOME/pid`
         if ps -p $PID > /dev/null
         then
-          quit "Kylin is running, stop it first"
+            quit "Kylin is running, stop it first"
         fi
     fi
 
@@ -220,7 +179,7 @@ function retrieveStopCommand() {
                 sleep 1 #give kill -9  sometime to "kill"
                 if ps -p $PID > /dev/null
                 then
-                   quit "Warning, even kill -9 failed, giving up! Sorry..."
+                    quit "Warning, even kill -9 failed, giving up! Sorry..."
                 fi
             fi
 
@@ -279,12 +238,14 @@ then
     echo "Restarting kylin..."
     echo "--> Stopping kylin first if it's running..."
     retrieveStopCommand
+
     if [[ $? != 0 ]]
     then
         echo "Kylin is not running, now start it"
     fi
     echo "--> Start kylin..."
     retrieveStartCommand
+
     ${start_command} >> ${KYLIN_HOME}/logs/kylin.out 2>&1 & echo $! > ${KYLIN_HOME}/pid &
     rm -f $lockfile
 
@@ -402,7 +363,7 @@ then
                     sleep 1 #give kill -9  sometime to "kill"
                     if ps -p $PID > /dev/null
                     then
-                       quit "Warning, even kill -9 failed, giving up! Sorry..."
+                        quit "Warning, even kill -9 failed, giving up! Sorry..."
                     fi
                 fi
 

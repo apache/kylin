@@ -17,13 +17,13 @@
 # limitations under the License.
 #
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
 
 if [ -d "${KYLIN_HOME}/flink" ]; then
-  echo "Flink binary exists"
-  exit 0;
+    echo "Flink binary exists"
+    exit 0;
 else
-  echo "Downloading flink package..."
+    echo "Downloading flink package..."
 fi
 
 flink_package_dir=/tmp/flink_package
@@ -56,14 +56,14 @@ flink_shaded_hadoop_jar="flink-shaded-hadoop-3-uber-${flink_shaded_hadoop_versio
 flink_shaded_hadoop_path="https://repository.cloudera.com/artifactory/libs-release-local/org/apache/flink/flink-shaded-hadoop-3-uber/${flink_shaded_hadoop_version}/${flink_shaded_hadoop_jar}"
 
 if [ ! -f $flink_shaded_hadoop_jar ]; then
-  echo "Start to download $flink_shaded_hadoop_jar"
-  wget $flink_shaded_hadoop_path || echo "Download flink shaded hadoop jar failed"
-else
-  if [ `md5cmd $flink_shaded_hadoop_jar | awk '{print $1}'` != $flink_shaded_hadoop_md5 ]; then
-    echo "md5 check failed"
-    rm $flink_shaded_hadoop_jar
+    echo "Start to download $flink_shaded_hadoop_jar"
     wget $flink_shaded_hadoop_path || echo "Download flink shaded hadoop jar failed"
-  fi
+else
+    if [ `md5cmd $flink_shaded_hadoop_jar | awk '{print $1}'` != $flink_shaded_hadoop_md5 ]; then
+        echo "md5 check failed"
+        rm $flink_shaded_hadoop_jar
+        wget $flink_shaded_hadoop_path || echo "Download flink shaded hadoop jar failed"
+    fi
 fi
 unalias md5cmd
 
