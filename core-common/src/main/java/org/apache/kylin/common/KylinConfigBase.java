@@ -2561,7 +2561,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public int getStreamingReceiverQueryCoreThreads() {
-        int def = getStreamingReceiverQueryMaxThreads() - 1;
+        int def = Math.max(2, AVAILABLE_PROCESSORS - 1);
         return Integer.parseInt(getOptional("kylin.stream.receiver.query-core-threads", def + ""));
     }
 

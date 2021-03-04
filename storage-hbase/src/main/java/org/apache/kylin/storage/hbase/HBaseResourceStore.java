@@ -88,8 +88,10 @@ public class HBaseResourceStore extends PushdownResourceStore {
         tableName = metadataUrl.getIdentifier();
         createHTableIfNeeded(tableName);
 
-        kvSizeLimit = Integer
+        int kvSizeLimitActual = Integer
                 .parseInt(getConnection().getConfiguration().get("hbase.client.keyvalue.maxsize", "10485760"));
+        kvSizeLimit = kvSizeLimitActual > 10485760 ? kvSizeLimitActual : 10485760;
+        logger.debug("hbase.client.keyvalue.maxsize is {}, kvSizeLimit is set to {}", kvSizeLimitActual, kvSizeLimit);
     }
 
     protected Connection getConnection() throws IOException {
@@ -328,6 +330,7 @@ public class HBaseResourceStore extends PushdownResourceStore {
             byte[] bOldTS = oldTS == 0 ? null : Bytes.toBytes(oldTS);
 
             if (content.length > kvSizeLimit) {
+                logger.info("Length of content exceeds the limit of {} bytes, push down {} to HDFS", kvSizeLimit, resPath);
                 pushdown = writePushdown(resPath, ContentWriter.create(content));
                 content = BytesUtil.EMPTY_BYTE_ARRAY;
             }
