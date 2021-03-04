@@ -79,9 +79,9 @@ then
     export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${hive_dependency}
 
     hbase ${KYLIN_EXTRA_START_OPTS} \
-      -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties \
-      -Dcatalina.home=${tomcat_root} \
-      "$@"
+    -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties \
+    -Dcatalina.home=${tomcat_root} \
+    "$@"
 
      exit 0
 else

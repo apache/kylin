@@ -20,24 +20,24 @@
 #exit if find error
 # ============================================================================
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/set-kylin-home.sh $@
+source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/set-kylin-home.sh $@
 set -o pipefail  # trace ERR through pipes
 set -o errtrace  # trace ERR through 'time command' and other functions
 function error() {
-   SCRIPT="$0"           # script name
-   LASTLINE="$1"         # line of error occurrence
-   LASTERR="$2"          # error code
-   echo "ERROR exit from ${SCRIPT} : line ${LASTLINE} with exit code ${LASTERR}"
-   exit 1
+    SCRIPT="$0"           # script name
+    LASTLINE="$1"         # line of error occurrence
+    LASTERR="$2"          # error code
+    echo "ERROR exit from ${SCRIPT} : line ${LASTLINE} with exit code ${LASTERR}"
+    exit 1
 }
 trap 'error ${LINENO} ${?}' ERR
 
 
 #check input parameters
 if [ $# -eq 0 ]; then
-  echo "Usage : kylin-port-replace-util.sh set PORT_OFFSET --> Modify all conflict ports base on a offset"
-  echo "Usage : kylin-port-replace-util.sh reset --> Recover to original setting"
-  exit 0
+    echo "Usage : kylin-port-replace-util.sh set PORT_OFFSET --> Modify all conflict ports base on a offset"
+    echo "Usage : kylin-port-replace-util.sh reset --> Recover to original setting"
+    exit 0
 fi
 
 #check kylin home
@@ -59,7 +59,7 @@ BUILD_CUBE_FILE="${KYLIN_HOME}/bin/build-incremental-cube.sh"
 TOMCAT_PORT_LIST=(9005 7070 9443 7443 9009)
 KYLIN_DEFAULT_PORT=7070
 
-if [ "$1" == "set" ] 
+if [ "$1" == "set" ]
 then
     OFFSET=$2
     echo "Port offset is : ${OFFSET}"
@@ -104,9 +104,9 @@ then
 
     for port in ${TOMCAT_PORT_LIST[@]}
     do
-      new_port=`expr ${port} + ${OFFSET} `
-      #echo "Replace old port : ${port} to new port : ${new_port}"
-      sed -i "s/$port/${new_port}/g" ${TOMCAT_CONFIG_FILE}
+        new_port=`expr ${port} + ${OFFSET} `
+        #echo "Replace old port : ${port} to new port : ${new_port}"
+        sed -i "s/$port/${new_port}/g" ${TOMCAT_CONFIG_FILE}
 
     done
 
