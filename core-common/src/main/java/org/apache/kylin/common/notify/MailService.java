@@ -6,15 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
 
 package org.apache.kylin.common.notify;
 
@@ -42,9 +42,8 @@ public class MailService extends NotifyServiceBase {
     private String password;
     private String sender;
 
-
     public MailService(KylinConfig config) {
-        this(config.isNotifyEnabled(), config.isStarttlsEnabled(), config.getMailHost(), config.getSmtpPort(), config.getMailUsername(), config.getMailPassword(), config.getMailSender());
+        this(config.isNotificationEnabled(), config.isStarttlsEnabled(), config.getMailHost(), config.getSmtpPort(), config.getMailUsername(), config.getMailPassword(), config.getMailSender());
     }
 
     private MailService(boolean enabled, boolean starttlsEnabled, String host, String port, String username, String password, String sender) {
@@ -97,7 +96,7 @@ public class MailService extends NotifyServiceBase {
         } else {
             email.setSmtpPort(Integer.parseInt(port));
         }
-
+        
         if (username != null && !username.trim().isEmpty()) {
             email.setAuthentication(username, password);
         }

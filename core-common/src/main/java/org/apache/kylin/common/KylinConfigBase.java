@@ -933,7 +933,7 @@ public abstract class KylinConfigBase implements Serializable {
                 + "[^,]*hive-metastore[^,]*?\\.jar" + "|" + "[^,]*hive-hcatalog-core[^,]*?\\.jar");
     }
 
-    public boolean isNotifyEnabled() {
+    public boolean isNotificationEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.job.notification-enabled", FALSE));
     }
 

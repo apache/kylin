@@ -231,7 +231,7 @@ public class CubingJob extends DefaultChainedExecutable {
             Output errorOutput = null;
             for (AbstractExecutable task : getTasks()) {
                 errorOutput = getManager().getOutput(task.getId());
-                if (errorOutput.getState() == ExecutableState.ERROR) {
+                if (null != errorOutput && errorOutput.getState() == ExecutableState.ERROR) {
                     errorTask = task;
                     break;
                 }

@@ -31,7 +31,7 @@ public class SecretKeyUtil {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SecretKeyUtil.class);
 
     public static Pair<Long, String> createSecretKey(String secret) {
-        Long timestamp = System.currentTimeMillis();
+        long timestamp = System.currentTimeMillis();
 
         String stringToSign = timestamp + "\n" + secret;
         try {

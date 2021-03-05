@@ -49,7 +49,7 @@ public class DingTalkService extends NotifyServiceBase {
     private String secretParam = "&timestamp=%s&sign=%s";
 
     public DingTalkService(KylinConfig config) {
-        this(config.isNotifyEnabled());
+        this(config.isNotificationEnabled());
     }
 
     private DingTalkService(boolean enabled) {
