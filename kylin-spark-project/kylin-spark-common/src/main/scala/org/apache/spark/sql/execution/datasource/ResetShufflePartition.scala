@@ -23,17 +23,15 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.utils.SparderUtils
 
 trait ResetShufflePartition extends Logging {
-  val PARTITION_SPLIT_BYTES: Long =
-    KylinConfig.getInstanceFromEnv.getQueryPartitionSplitSizeMB * 1024 * 1024 // 64MB
 
-  def setShufflePartitions(bytes: Long, sparkSession: SparkSession): Unit = {
+  def setShufflePartitions(bytes: Long, sparkSession: SparkSession, conf: KylinConfig): Unit = {
     QueryContextFacade.current().addAndGetSourceScanBytes(bytes)
     val defaultParallelism = SparderUtils.getTotalCore(sparkSession.sparkContext.getConf)
-    val kylinConfig = KylinConfig.getInstanceFromEnv
-    val partitionsNum = if (kylinConfig.getSparkSqlShufflePartitions != -1) {
-      kylinConfig.getSparkSqlShufflePartitions
+    val partitionsNum = if (conf.getSparkSqlShufflePartitions != -1) {
+      conf.getSparkSqlShufflePartitions
     } else {
-      Math.min(QueryContextFacade.current().getSourceScanBytes / PARTITION_SPLIT_BYTES + 1,
+      Math.min(QueryContextFacade.current().getSourceScanBytes /
+        (conf.getQueryPartitionSplitSizeMB * 1024 * 1024) + 1,
         defaultParallelism).toInt
     }
     // when hitting cube, this will override the value of 'spark.sql.shuffle.partitions'
