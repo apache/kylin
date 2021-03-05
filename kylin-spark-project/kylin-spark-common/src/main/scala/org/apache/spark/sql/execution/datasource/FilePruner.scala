@@ -21,7 +21,6 @@ package org.apache.spark.sql.execution.datasource
 import java.sql.{Date, Timestamp}
 
 import org.apache.hadoop.fs.{FileStatus, Path}
-import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.DateFormat
 import org.apache.kylin.cube.cuboid.Cuboid
 import org.apache.kylin.cube.CubeInstance
@@ -77,6 +76,9 @@ class FilePruner(cubeInstance: CubeInstance,
                  val session: SparkSession,
                  val options: Map[String, String])
   extends FileIndex with ResetShufflePartition with Logging {
+
+  val MAX_SHARDING_SIZE_PER_TASK: Long =
+    cubeInstance.getConfig.getMaxShardingSizeMBPerTask * 1024 * 1024
 
   private lazy val segmentDirs: Seq[SegmentDirectory] = {
     cubeInstance.getSegments.asScala
@@ -170,7 +172,7 @@ class FilePruner(cubeInstance: CubeInstance,
   }
 
   private def genShardSpec(selected: Seq[SegmentDirectory]): Option[ShardSpec] = {
-    if (!KylinConfig.getInstanceFromEnv.isShardingJoinOptEnabled || selected.isEmpty) {
+    if (!cubeInstance.getConfig.isShardingJoinOptEnabled || selected.isEmpty) {
       None
     } else {
       val segments = selected.par.map { segDir =>
@@ -190,9 +192,9 @@ class FilePruner(cubeInstance: CubeInstance,
           (FilePruner.getPartitionId(f.getPath), f.getLen)
         ).groupBy(_._1).mapValues(_.map(_._2).sum)
         // if there are some partition ids which the file size exceeds the threshold
-        if (partitionSizePerId.exists(_._2 > FilePruner.MAX_SHARDING_SIZE_PER_TASK)) {
+        if (partitionSizePerId.exists(_._2 > MAX_SHARDING_SIZE_PER_TASK)) {
           logInfo(s"There are some partition ids which the file size exceeds the " +
-            s"threshold size ${FilePruner.MAX_SHARDING_SIZE_PER_TASK}, skip shard join.")
+            s"threshold size ${MAX_SHARDING_SIZE_PER_TASK}, skip shard join.")
           None
         } else {
           val sortColumns = if (segments.length == 1) {
@@ -259,7 +261,7 @@ class FilePruner(cubeInstance: CubeInstance,
     //    QueryContextFacade.current().record("shard_pruning")
     val totalFileSize = selected.flatMap(_.files).map(_.getLen).sum
     logInfo(s"After files pruning, total file size is ${totalFileSize}")
-    setShufflePartitions(totalFileSize, session)
+    setShufflePartitions(totalFileSize, session, cubeInstance.getConfig)
     logInfo(s"Files pruning in ${(System.nanoTime() - startTime).toDouble / 1000000} ms")
     if (selected.isEmpty) {
       val value = Seq.empty[PartitionDirectory]
@@ -446,9 +448,6 @@ class FilePruner(cubeInstance: CubeInstance,
 }
 
 object FilePruner {
-
-  val MAX_SHARDING_SIZE_PER_TASK: Long = KylinConfig.getInstanceFromEnv
-    .getMaxShardingSizeMBPerTask * 1024 * 1024
 
   def getPartitionId(p: Path): Int = {
     // path like: part-00001-91f13932-3d5e-4f85-9a56-d1e2b47d0ccb-c000.snappy.parquet
