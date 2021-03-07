@@ -40,7 +40,7 @@ if [ ! -d "$flink_home/lib" ]
     echo `setColor 33 "Optional dependency flink not found, if you need this; set FLINK_HOME, or run bin/download-flink.sh"`
     echo "echo 'skip flink_dependency'" > ${dir}/cached-flink-dependency.sh
   else
-    flink_dependency=`find -L $flink_home/lib -name '*.jar' ! -name '*shaded-hadoop*' ! -name 'kafka*' ! -name '*log4j*' ! -name '*slf4j*' ! -name '*calcite*' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
+    flink_dependency=`find -L $flink_home/lib -name '*.jar' ! -name '*shaded-hadoop*' ! -name 'kafka*' ! -name '*log4j*' ! -name '*slf4j*' ! -name '*calcite*' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' | awk '{printf "%s:", $1}' | sed 's/:$//'`
     if [ -z "$flink_dependency" ]
     then
         quit "flink jars not found"
