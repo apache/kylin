@@ -159,7 +159,7 @@ public class TableController extends BasicController {
         try {
             for (String tableName : StringUtil.splitByComma(tables)) {
                 tableACLService.deleteFromTableACLByTbl(project, tableName);
-                if (tableService.unloadHiveTable(tableName, project)) {
+                if (tableService.unloadHiveTable(tableName, project, true)) {
                     unLoadSuccess.add(tableName);
                 } else {
                     unLoadFail.add(tableName);

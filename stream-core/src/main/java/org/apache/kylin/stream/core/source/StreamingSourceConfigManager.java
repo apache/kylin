@@ -146,8 +146,7 @@ public class StreamingSourceConfigManager {
         if (loadStreamingConfigAt(path) != null) {
             getStore().deleteResource(path);
         } else {
-            // if the source is stored in the old path which is prefix + tablename + suffix
-            // path without project name
+            // The source is stored in the old path which is prefix + table name + suffix
             path = streamingSourceConfig.getResourcePath();
             getStore().deleteResource(path);
         }
@@ -157,6 +156,22 @@ public class StreamingSourceConfigManager {
         name = name.toUpperCase(Locale.ROOT);
         try {
             return reloadStreamingConfigLocal(name, projectName);
+        } catch (IOException e) {
+            throw new StreamingException(e);
+        }
+    }
+
+    public StreamingSourceConfig getConfigMustWithProject(String name, String projectName) {
+        name = name.toUpperCase(Locale.ROOT);
+        if (Strings.isEmpty(name) || Strings.isEmpty(projectName)) {
+            throw new StreamingException(String.format(Locale.ROOT,
+                    "the table name %s or project name %s is null", name, projectName));
+        }
+        // path with project name
+        String path = StreamingSourceConfig.concatResourcePathWithProjName(name, projectName);
+        // Reload the StreamingSourceConfig
+        try {
+            return loadStreamingConfigAt(path);
         } catch (IOException e) {
             throw new StreamingException(e);
         }
@@ -191,7 +206,7 @@ public class StreamingSourceConfigManager {
         if (streamingSourceConfig == null || StringUtils.isEmpty(streamingSourceConfig.getName())) {
             throw new IllegalArgumentException();
         }
-        // path = prefix + /tableanme---projectname + suffix
+        // path = prefix + /table name---project name + suffix
         String path = streamingSourceConfig.getResourcePathWithProjName();
         getStore().putResource(path, streamingSourceConfig, System.currentTimeMillis(),
                 StreamingSourceConfig.SERIALIZER);

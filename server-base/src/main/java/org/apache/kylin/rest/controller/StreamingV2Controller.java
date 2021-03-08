@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.directory.api.util.Strings;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -109,6 +110,16 @@ public class StreamingV2Controller extends BasicController {
             @RequestParam(value = "limit", required = false) Integer limit,
             @RequestParam(value = "offset", required = false) Integer offset) {
         try {
+            // query all streaming config or query one streaming config
+            if (!Strings.isEmpty(table) && !Strings.isEmpty(project)) {
+                // check the table metadata
+                if (tableService.getTableDescByName(table, false, project) == null) {
+                    // the table metadata doesn't exist
+                    throw new InternalErrorException(String.format(Locale.ROOT,
+                            "The table %s of project %s doesn't exist, please make the stream table exists",
+                            table, project));
+                }
+            }
             return streamingService.getStreamingConfigs(table, project, limit, offset);
         } catch (IOException e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
@@ -142,10 +153,15 @@ public class StreamingV2Controller extends BasicController {
         try {
             try {
                 tableDesc.setUuid(UUID.randomUUID().toString());
+                if (tableService.getTableDescByName(tableDesc.getIdentity(), false, project) != null) {
+                    throw new IOException(String.format(Locale.ROOT,
+                            "The table %s of project %s exists",
+                            tableDesc.getIdentity(), project));
+                }
                 tableService.loadTableToProject(tableDesc, null, project);
                 saveTableSuccess = true;
             } catch (IOException e) {
-                throw new BadRequestException("Failed to add streaming table.");
+                throw new BadRequestException("Failed to add streaming table, because of " + e.getMessage());
             }
             try {
                 streamingSourceConfig.setName(tableDesc.getIdentity());
@@ -161,7 +177,8 @@ public class StreamingV2Controller extends BasicController {
             if (!saveTableSuccess || !saveStreamingSuccess) {
                 if (saveTableSuccess) {
                     try {
-                        tableService.unloadHiveTable(tableDesc.getIdentity(), project);
+                        // just drop the table metadata and don't drop the stream source config info
+                        tableService.unloadHiveTable(tableDesc.getIdentity(), project, false);
                     } catch (IOException e) {
                         shouldThrow = new InternalErrorException(
                                 "Action failed and failed to rollback the create table " + e.getLocalizedMessage(), e);

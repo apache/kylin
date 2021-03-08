@@ -138,7 +138,7 @@ public class StreamingV2Service extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
             + " or hasPermission(#project, 'ADMINISTRATION')")
     public StreamingSourceConfig createStreamingConfig(StreamingSourceConfig config, ProjectInstance project) throws IOException {
-        if (getStreamingManagerV2().getConfig(config.getName(), config.getProjectName()) != null) {
+        if (getStreamingManagerV2().getConfigMustWithProject(config.getName(), config.getProjectName()) != null) {
             throw new InternalErrorException("The streamingSourceConfig named " + config.getName() + " already exists");
         }
         StreamingSourceConfig streamingSourceConfig = getStreamingManagerV2().saveStreamingConfig(config);
