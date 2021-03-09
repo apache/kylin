@@ -22,7 +22,7 @@ import org.apache.commons.mail.Email;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.notify.util.MailNotificationUtil;
-import org.apache.kylin.common.notify.util.Notify;
+import org.apache.kylin.common.notify.util.NotificationConstant;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -136,15 +136,15 @@ public class MailService extends NotifyServiceBase {
         }
     }
 
-    public boolean sendNotify() {
-        if (receivers.get(Notify.NOTIFY_EMAIL_LIST) == null) {
+    public boolean sendNotification() {
+        if (receivers.get(NotificationConstant.NOTIFY_EMAIL_LIST) == null) {
             logger.warn("no need to send email, content is null");
             return false;
         } else {
-            logger.info("prepare to send email to:{}", receivers.get(Notify.NOTIFY_EMAIL_LIST));
+            logger.info("prepare to send email to:{}", receivers.get(NotificationConstant.NOTIFY_EMAIL_LIST));
             String contentEmail = MailNotificationUtil.getMailContent(state, content.getSecond());
             String title = MailNotificationUtil.getMailTitle(content.getFirst());
-            return sendMail(receivers.get(Notify.NOTIFY_EMAIL_LIST), title, contentEmail);
+            return sendMail(receivers.get(NotificationConstant.NOTIFY_EMAIL_LIST), title, contentEmail);
         }
 
     }

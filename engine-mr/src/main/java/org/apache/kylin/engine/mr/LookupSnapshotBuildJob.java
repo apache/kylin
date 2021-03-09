@@ -25,7 +25,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.notify.util.Notify;
+import org.apache.kylin.common.notify.util.NotificationConstant;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
@@ -66,8 +66,8 @@ public class LookupSnapshotBuildJob extends DefaultChainedExecutable {
         result.setName(JOB_TYPE + " CUBE - " + cube.getName() + " - " + " TABLE - " + tableName + " - "
                 + format.format(new Date(System.currentTimeMillis())));
         result.setSubmitter(submitter);
-        result.setNotifyList(Notify.NOTIFY_EMAIL_LIST, cube.getDescriptor().getNotifyEmailList());
-        result.setNotifyList(Notify.NOTIFY_DINGTALK_LIST, cube.getDescriptor().getNotifyDingTalkList());
+        result.setNotifyList(NotificationConstant.NOTIFY_EMAIL_LIST, cube.getDescriptor().getNotifyEmailList());
+        result.setNotifyList(NotificationConstant.NOTIFY_DINGTALK_LIST, cube.getDescriptor().getNotifyDingTalkList());
         return result;
     }
 

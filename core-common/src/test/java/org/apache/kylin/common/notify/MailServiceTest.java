@@ -18,16 +18,16 @@
 
 package org.apache.kylin.common.notify;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 @Ignore("convenient trial tool for dev")
 public class MailServiceTest extends LocalFileMetadataTestCase {

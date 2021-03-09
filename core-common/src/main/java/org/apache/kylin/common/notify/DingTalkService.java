@@ -25,7 +25,7 @@ import com.dingtalk.api.response.OapiRobotSendResponse;
 import com.taobao.api.ApiException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.notify.util.DingTalkNotificationUtil;
-import org.apache.kylin.common.notify.util.Notify;
+import org.apache.kylin.common.notify.util.NotificationConstant;
 import org.apache.kylin.common.notify.util.SecretKeyUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
@@ -56,21 +56,21 @@ public class DingTalkService extends NotifyServiceBase {
         this.enabled = enabled;
     }
 
-    public boolean sendNotify() {
+    public boolean sendNotification() {
         if (!enabled) {
             logger.info("DingTalk service is disabled; this DingTalk will not be delivered");
             logger.info("To enable notify service, set 'kylin.job.notification-enabled=true' in kylin.properties");
             return false;
         }
 
-        if (receivers.get(Notify.NOTIFY_DINGTALK_LIST) == null) {
+        if (receivers.get(NotificationConstant.NOTIFY_DINGTALK_LIST) == null) {
             logger.warn("no need to send dingtalk, content is null");
             return false;
         } else {
-            logger.info("prepare to send dingtalk to:{}", receivers.get(Notify.NOTIFY_DINGTALK_LIST));
+            logger.info("prepare to send dingtalk to:{}", receivers.get(NotificationConstant.NOTIFY_DINGTALK_LIST));
             String title = DingTalkNotificationUtil.getTitle(content.getFirst());
             String contentDingTalk = DingTalkNotificationUtil.getContent(state, title, content.getSecond());
-            return sendContent(receivers.get(Notify.NOTIFY_DINGTALK_LIST), title, contentDingTalk);
+            return sendContent(receivers.get(NotificationConstant.NOTIFY_DINGTALK_LIST), title, contentDingTalk);
         }
     }
 

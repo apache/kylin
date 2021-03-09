@@ -51,14 +51,14 @@ public class NotifyService {
         };
     }
 
-    public boolean sendNotify(Map<String, List<String>> receivers, String state, Pair<String[], Map<String, Object>> content) {
+    public boolean sendNotification(Map<String, List<String>> receivers, String state, Pair<String[], Map<String, Object>> content) {
         boolean res = Boolean.TRUE;
 
         Consumer<NotifyServiceBase> action = new Consumer<NotifyServiceBase>() {
 
             @Override
             public void accept(NotifyServiceBase notifyServiceBase) {
-                notifyServiceBase.sendNotify(receivers, state, content);
+                notifyServiceBase.sendNotificationInfo(receivers, state, content);
             }
         };
         Arrays.stream(notifyServices).forEach(action);

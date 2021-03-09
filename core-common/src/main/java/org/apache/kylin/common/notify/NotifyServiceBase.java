@@ -30,9 +30,9 @@ public abstract class NotifyServiceBase implements Callable<Boolean> {
     public String state;
     public Pair<String[], Map<String, Object>> content;
 
-    public abstract boolean sendNotify();
+    public abstract boolean sendNotification();
 
-    public void sendNotify(Map<String, List<String>> receivers, String state, Pair<String[], Map<String, Object>> content){
+    public void sendNotificationInfo(Map<String, List<String>> receivers, String state, Pair<String[], Map<String, Object>> content){
         this.receivers = receivers;
         this.state = state;
         this.content = content;
@@ -40,6 +40,6 @@ public abstract class NotifyServiceBase implements Callable<Boolean> {
 
     @Override
     public Boolean call() throws Exception {
-        return sendNotify();
+        return sendNotification();
     }
 }

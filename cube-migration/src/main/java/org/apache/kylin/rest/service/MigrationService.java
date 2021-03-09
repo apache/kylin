@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.notify.NotifyService;
-import org.apache.kylin.common.notify.util.Notify;
+import org.apache.kylin.common.notify.util.NotificationConstant;
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
@@ -73,7 +73,7 @@ public class MigrationService extends BasicService {
         root.put("cubename", ctx.getCubeInstance().getName());
         root.put("status", "NEED APPROVE");
         root.put("envname", envName);
-        sendMigrationNotify(Notify.MIGRATION_REQUEST, getRecipients(cube), root);
+        sendMigrationNotify(NotificationConstant.MIGRATION_REQUEST, getRecipients(cube), root);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
@@ -85,7 +85,7 @@ public class MigrationService extends BasicService {
             root.put("status", "REJECTED");
             root.put("envname", envName);
 
-            sendMigrationNotify(Notify.MIGRATION_REJECTED, getRecipients(cubeName), root);
+            sendMigrationNotify(NotificationConstant.MIGRATION_REJECTED, getRecipients(cubeName), root);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
@@ -122,7 +122,7 @@ public class MigrationService extends BasicService {
             root.put("status", "APPROVED");
             root.put("envname", envName);
 
-            sendMigrationNotify(Notify.MIGRATION_APPROVED, getRecipients(cubeName), root);
+            sendMigrationNotify(NotificationConstant.MIGRATION_APPROVED, getRecipients(cubeName), root);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
@@ -138,7 +138,7 @@ public class MigrationService extends BasicService {
             root.put("status", "COMPLETED");
             root.put("envname", envName);
 
-            sendMigrationNotify(Notify.MIGRATION_COMPLETED, getRecipients(cubeName), root);
+            sendMigrationNotify(NotificationConstant.MIGRATION_COMPLETED, getRecipients(cubeName), root);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
@@ -155,7 +155,7 @@ public class MigrationService extends BasicService {
             root.put("failedReason", reason);
             root.put("envname", envName);
 
-            sendMigrationNotify(Notify.MIGRATION_FAILED, getRecipients(cubeName), root);
+            sendMigrationNotify(NotificationConstant.MIGRATION_FAILED, getRecipients(cubeName), root);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
@@ -200,8 +200,8 @@ public class MigrationService extends BasicService {
         if (adminDls != null) {
             emailRecipients.addAll(Lists.newArrayList(adminDls));
         }
-        receivers.put(Notify.NOTIFY_EMAIL_LIST, emailRecipients);
-        receivers.put(Notify.NOTIFY_DINGTALK_LIST, cubeInstance.getDescriptor().getNotifyDingTalkList());
+        receivers.put(NotificationConstant.NOTIFY_EMAIL_LIST, emailRecipients);
+        receivers.put(NotificationConstant.NOTIFY_DINGTALK_LIST, cubeInstance.getDescriptor().getNotifyDingTalkList());
         return receivers;
     }
 
@@ -212,7 +212,7 @@ public class MigrationService extends BasicService {
         String[] titles;
 
         // No project name for rejected title
-        if (state == Notify.MIGRATION_REJECTED) {
+        if (state == NotificationConstant.MIGRATION_REJECTED) {
             titles = new String[]{
                     "MIGRATION",
                     root.get("status"),
@@ -230,6 +230,6 @@ public class MigrationService extends BasicService {
         }
 
         Pair<String[], Map<String, Object>> hashMapPair = Pair.newPair(titles, Maps.<String, Object>newHashMap(root));
-        new NotifyService(KylinConfig.getInstanceFromEnv()).sendNotify(recipients, state, hashMapPair);
+        new NotifyService(KylinConfig.getInstanceFromEnv()).sendNotification(recipients, state, hashMapPair);
     }
 }

@@ -31,7 +31,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.notify.NotifyService;
 import org.apache.kylin.common.notify.util.MailNotificationUtil;
-import org.apache.kylin.common.notify.util.Notify;
+import org.apache.kylin.common.notify.util.NotificationConstant;
 import org.apache.kylin.common.notify.MailService;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
@@ -221,7 +221,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         dataMap.put("error_log",
                 Matcher.quoteReplacement(StringUtil.noBlank(exception.getMessage(), "no error message")));
 
-        String content = MailNotificationUtil.getMailContent(Notify.METADATA_PERSIST_FAIL, dataMap);
+        String content = MailNotificationUtil.getMailContent(NotificationConstant.METADATA_PERSIST_FAIL, dataMap);
         String title = MailNotificationUtil.getMailTitle("METADATA PERSIST", "FAIL",
                 context.getConfig().getDeployEnv());
 
@@ -343,12 +343,12 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     private Map<String, List<String>> getAllNofifyUsers(KylinConfig kylinConfig) {
         Map<String, List<String>> users = Maps.newHashMap();
-        users.put(Notify.NOTIFY_EMAIL_LIST, getNotifyList(Notify.NOTIFY_EMAIL_LIST));
-        users.put(Notify.NOTIFY_DINGTALK_LIST, getNotifyList(Notify.NOTIFY_DINGTALK_LIST));
+        users.put(NotificationConstant.NOTIFY_EMAIL_LIST, getNotifyList(NotificationConstant.NOTIFY_EMAIL_LIST));
+        users.put(NotificationConstant.NOTIFY_DINGTALK_LIST, getNotifyList(NotificationConstant.NOTIFY_DINGTALK_LIST));
         final String[] adminDls = kylinConfig.getAdminDls();
         if (null != adminDls) {
             for (String adminDl : adminDls) {
-                users.get(Notify.NOTIFY_EMAIL_LIST).add(adminDl);
+                users.get(NotificationConstant.NOTIFY_EMAIL_LIST).add(adminDl);
             }
         }
         return users;
@@ -358,7 +358,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         logger.info("prepare to send notify to:{}", receivers);
         logger.info("job name:{}", getName());
         logger.info("submitter:{}", getSubmitter());
-        new NotifyService(kylinConfig).sendNotify(receivers, state, content);
+        new NotifyService(kylinConfig).sendNotification(receivers, state, content);
     }
 
     protected void sendMail(Pair<String[], Map<String, Object>> email) {
