@@ -14,16 +14,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
 
 package org.apache.kylin.common.notify.util;
-
-import org.apache.kylin.shaded.com.google.common.base.Joiner;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Map;
+
+import org.apache.kylin.shaded.com.google.common.base.Joiner;
 
 public class MailNotificationUtil {
 

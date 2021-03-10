@@ -18,13 +18,14 @@
 
 package org.apache.kylin.common.notify.util;
 
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import org.apache.commons.lang.StringUtils;
-
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 
 /**
  * Use a key to find a template for email.

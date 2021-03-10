@@ -18,15 +18,15 @@
 
 package org.apache.kylin.common.notify;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.notify.util.MailNotificationUtil;
 import org.apache.kylin.common.notify.util.NotificationConstant;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  * @author xduo

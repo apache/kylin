@@ -226,6 +226,7 @@ public class CubingJob extends DefaultChainedExecutable {
         dataMap.put("duration", getDuration() / 60000 + "mins");
         dataMap.put("mr_waiting", getMapReduceWaitTime() / 60000 + "mins");
         dataMap.put("last_update_time", new Date(getLastModified()).toString());
+
         if (state == ExecutableState.ERROR) {
             AbstractExecutable errorTask = null;
             Output errorOutput = null;

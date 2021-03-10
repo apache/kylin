@@ -18,9 +18,10 @@
 
 package org.apache.kylin.common.notify.util;
 
-import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.junit.Assert;
 import org.junit.Test;
+
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class MailNotificationUtilTest {
 
