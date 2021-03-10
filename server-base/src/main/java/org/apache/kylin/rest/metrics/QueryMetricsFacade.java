@@ -84,6 +84,9 @@ public class QueryMetricsFacade {
         update(getQueryMetrics(projectName), sqlResponse);
 
         String cube = sqlResponse.getCube();
+        if (cube == null) {
+            return;
+        }
         String cubeName = cube.replace("=", "->");
         String cubeMetricName = projectName + ",sub=" + cubeName;
         update(getQueryMetrics(cubeMetricName), sqlResponse);
