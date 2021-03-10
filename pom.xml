@@ -1618,6 +1618,12 @@
                 <bundledSignature>jdk-deprecated</bundledSignature>
                 <!--<bundledSignature>jdk-non-portable</bundledSignature>-->
               </bundledSignatures>
+              <excludes>
+                <exclude>**/ParseException.class</exclude>
+                <exclude>**/SimpleCharStream.class</exclude>
+                <exclude>**/*TokenManager.class</exclude>
+                <exclude>**/TokenMgrError.class</exclude>
+              </excludes>
               <signaturesFiles>
                 <signaturesFile>
                   ${user.dir}/dev-support/signatures.txt
