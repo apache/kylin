@@ -200,8 +200,8 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
     @Test
     public void testRemoveCommentInSql() {
 
-        String originSql = "select count(*) from test_kylin_fact where price > 10.0";
-        String originSql2 = "select count(*) from test_kylin_fact where TEST_COLUMN != 'not--a comment'";
+        final String originSql = "select count(*) from test_kylin_fact where price > 10.0";
+        final String originSql2 = "select count(*) from test_kylin_fact where TEST_COLUMN != 'not--a comment'";
 
         {
             String sqlWithComment = "-- comment \n" + originSql;
@@ -294,18 +294,63 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
             Assert.assertEquals(originSql2, QueryUtil.removeCommentInSql(sqlWithComment2));
         }
 
-        String content = "        --  One-line comment and /**range\n" +
-                "/*\n" +
-                "Multi-line comment\r\n" +
-                "--  Multi-line comment*/\n" +
-                "select price as " +
-                "/*\n" +
-                "Multi-line comment\r\n" +
-                "--  Multi-line comment*/\n" +
-                "revenue from /*One-line comment-- One-line comment*/ v_lineitem;";
-        String expectedContent = "select price as revenue from  v_lineitem;";
-        String trimmedContent = QueryUtil.removeCommentInSql(content).replaceAll("\n", "").trim();
-        Assert.assertEquals(trimmedContent, expectedContent);
+        {
+            String content = "        --  One-line comment and /**range\n" +
+                    "/*\n" +
+                    "Multi-line comment\r\n" +
+                    "--  Multi-line comment*/\n" +
+                    "select price as " +
+                    "/*\n" +
+                    "Multi-line comment\r\n" +
+                    "--  Multi-line comment*/\n" +
+                    "revenue from /*One-line comment-- One-line comment*/ v_lineitem;";
+            String expectedContent = "select price as revenue from  v_lineitem;";
+            String trimmedContent = QueryUtil.removeCommentInSql(content).replaceAll("\n", "").trim();
+            Assert.assertEquals(trimmedContent, expectedContent);
+        }
+
+        {
+            String sqlWithComment = "select count(*) from test_kylin_fact WHERE column_name = '--this is not comment'\n " +
+                    "LIMIT 100 offset 0";
+            Assert.assertEquals(sqlWithComment, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+            String sqlWithComment = "select count(*) from test_kylin_fact WHERE column_name = '--this is not comment'";
+            Assert.assertEquals(sqlWithComment, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+            String sqlWithComment = "select count(*) from test_kylin_fact WHERE column_name = '/*--this is not comment*/'";
+            Assert.assertEquals(sqlWithComment, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+            String sqlWithComment = "-- comment \n" + originSql + "/* comment */;" + "-- comment \n" + originSql + "/* comment */";
+            Assert.assertEquals("select count(*) from test_kylin_fact where price > 10.0;\n" +
+                    "select count(*) from test_kylin_fact where price > 10.0", QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+            String sqlWithComment = "select count(*) from test_kylin_fact /* this is test*/  where price > 10.0 -- comment \n" +
+                    ";" + "insert into test_kylin_fact(id) values(?); -- comment \n";
+            Assert.assertEquals("select count(*) from test_kylin_fact   where price > 10.0 \n" +
+                    ";insert into test_kylin_fact(id) values(?);", QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+            String sqlWithoutComment = "select * from test_kylin_fact where price=\"/* this is not comment */\"";
+            Assert.assertEquals(sqlWithoutComment, QueryUtil.removeCommentInSql(sqlWithoutComment));
+        }
+
+        {
+            String sqlWithoutComment = "select count(*) from test_kylin_fact -- 'comment'\n";
+            Assert.assertEquals("select count(*) from test_kylin_fact", QueryUtil.removeCommentInSql(sqlWithoutComment));
+        }
+        {
+            Assert.assertEquals("select count(*)",
+                    QueryUtil.removeCommentInSql("select count(*) -- , --\t --/ --"));
+        }
     }
 
     @Test
