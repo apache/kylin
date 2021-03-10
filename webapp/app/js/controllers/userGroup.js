@@ -121,15 +121,19 @@ KylinApp
       });
     };
     $scope.listUsers = function (offset, limit) {
+      $scope.page.curpage = kylinConfig.page.offset
       $scope.getUserList(offset, limit, $scope.page);
     };
     $scope.listGroups = function (offset, limit) {
+      $scope.page.curpage = kylinConfig.page.offset
       $scope.getGroupList(offset, limit, $scope.page);
     };
     $scope.listEditUsers = function (offset, limit) {
+      $scope.editPage.curpage = kylinConfig.page.offset
       $scope.getUserList(offset, limit, $scope.editPage);
     };
     $scope.listEditGroups = function (offset, limit) {
+      $scope.editPage.curpage = kylinConfig.page.offset
       $scope.getGroupList(offset, limit, $scope.editPage);
     };
 
