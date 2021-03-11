@@ -25,7 +25,6 @@ import org.apache.kylin.engine.spark.metadata.{SegmentInfo, ColumnDesc}
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.StringType
 
@@ -55,7 +54,7 @@ object NGlobalDictBuilderAssist extends Logging {
     ss.sparkContext.setJobDescription("Resize dict " + ref.identity)
     existsDictDs
       .repartition(bucketPartitionSize, col(existsDictDs.schema.head.name).cast(StringType))
-      .mapPartitions {
+      .foreachPartition {
         iter =>
           val partitionID = TaskContext.get().partitionId()
           logInfo(s"Rebuild partition dict col: ${ref.identity}, partitionId: $partitionID")
@@ -66,9 +65,7 @@ object NGlobalDictBuilderAssist extends Logging {
             bucketDict.addAbsoluteValue(dictTuple._1, dictTuple._2)
           }
           bucketDict.saveBucketDict(partitionID)
-          Iterator.empty
-      }(RowEncoder.apply(existsDictDs.schema))
-      .count()
+      }
 
     globalDict.writeMetaDict(bucketPartitionSize,
       desc.kylinconf.getGlobalDictV2MaxVersions, desc.kylinconf.getGlobalDictV2VersionTTL)
