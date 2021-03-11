@@ -24,17 +24,15 @@ import org.apache.spark.TaskContext
 import org.apache.spark.dict.NGlobalDictionary
 import org.apache.spark.internal.Logging
 
-import scala.collection.mutable.ListBuffer
-
 object DictHelper extends Logging{
   
-  def genDict(columnName: String, broadcastDict: Broadcast[NGlobalDictionary], iter: Iterator[Row]) = {
+  def genDict(columnName: String, broadcastDict: Broadcast[NGlobalDictionary],
+              iter: Iterator[Row]): Unit = {
     val partitionID = TaskContext.get().partitionId()
     logInfo(s"Build partition dict col: ${columnName}, partitionId: $partitionID")
     val broadcastGlobalDict = broadcastDict.value
     val bucketDict = broadcastGlobalDict.loadBucketDictionary(partitionID)
     iter.foreach(dic => bucketDict.addRelativeValue(dic.getString(0)))
     bucketDict.saveBucketDict(partitionID)
-    ListBuffer.empty.iterator
   }
 }

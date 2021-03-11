@@ -28,8 +28,8 @@ import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
 import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.spark.DebugFilesystem;
 import org.apache.spark.HashPartitioner;
-import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
+import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.dict.NBucketDictionary;
 import org.apache.spark.dict.NGlobalDictHDFSStore;
 import org.apache.spark.dict.NGlobalDictMetaInfo;
@@ -41,6 +41,7 @@ import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import org.apache.spark.TaskContext;
 import org.junit.Assert;
 import org.junit.Test;
 import scala.Tuple2;
@@ -115,17 +116,16 @@ public class NGlobalDictionaryTest extends LocalWithSparkSessionTest {
             if (row.get(0) == null)
                 return new Tuple2<>(null, null);
             return new Tuple2<>(row.get(0).toString(), null);
-        }).sortByKey().partitionBy(new HashPartitioner(BUCKET_SIZE)).mapPartitionsWithIndex(
-                (Function2<Integer, Iterator<Tuple2<String, String>>, Iterator<Object>>) (bucketId, tuple2Iterator) -> {
+        }).sortByKey().partitionBy(new HashPartitioner(BUCKET_SIZE)).foreachPartition(
+                (VoidFunction<Iterator<Tuple2<String, String>>>) (tuple2Iterator) -> {
+                    int bucketId = TaskContext.get().partitionId();
                     NBucketDictionary bucketDict = dict.loadBucketDictionary(bucketId);
                     while (tuple2Iterator.hasNext()) {
                         Tuple2<String, String> tuple2 = tuple2Iterator.next();
                         bucketDict.addRelativeValue(tuple2._1);
                     }
                     bucketDict.saveBucketDict(bucketId);
-                    return Lists.newArrayList().iterator();
-                }, true).count();
-
+                });
         dict.writeMetaDict(BUCKET_SIZE, config.getGlobalDictV2MaxVersions(), config.getGlobalDictV2VersionTTL());
     }
 

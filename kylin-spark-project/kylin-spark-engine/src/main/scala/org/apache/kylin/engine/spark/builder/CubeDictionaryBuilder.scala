@@ -28,7 +28,6 @@ import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.kylin.engine.spark.metadata.{ColumnDesc, SegmentInfo}
 import org.apache.spark.dict.NGlobalDictionary
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{Column, Dataset, Row, SparkSession}
@@ -79,11 +78,10 @@ class CubeDictionaryBuilder(val dataset: Dataset[Row],
     afterDistinct
       .filter(dictCol.isNotNull)
       .repartition(bucketPartitionSize, dictCol)
-      .mapPartitions {
+      .foreachPartition {
         iter =>
           DictHelper.genDict(columnName, broadcastDict, iter)
-      }(RowEncoder.apply(schema = afterDistinct.schema))
-      .count()
+      }
 
     globalDict.writeMetaDict(bucketPartitionSize, seg.kylinconf.getGlobalDictV2MaxVersions, seg.kylinconf.getGlobalDictV2VersionTTL)
   }
