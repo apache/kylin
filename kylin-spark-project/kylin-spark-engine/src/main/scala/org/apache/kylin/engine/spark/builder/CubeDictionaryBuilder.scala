@@ -45,9 +45,18 @@ class CubeDictionaryBuilder(val dataset: Dataset[Row],
 
   @throws[IOException]
   def buildDictSet(): Unit = {
+    // Set 'spark.sql.adaptive.enabled' to false if the value of it is true.
+    // Because when 'spark.sql.adaptive.enabled' is true, it will change the partition number
+    // dynamically and lead to wrong Global Dictionary results.
+    val aeOriginalValue = ss.conf.get("spark.sql.adaptive.enabled", "false").toBoolean
+    if (aeOriginalValue) {
+      ss.conf.set("spark.sql.adaptive.enabled", false);
+    }
     logInfo(s"Start building global dictionaries V2 for seg $seg")
     val m = s"Build global dictionaries V2 for seg $seg succeeded"
     time(m, colRefSet.asScala.foreach(col => safeBuild(col)))
+    // set the original value to 'spark.sql.adaptive.enabled'
+    ss.conf.set("spark.sql.adaptive.enabled", aeOriginalValue);
   }
 
   @throws[IOException]
@@ -56,7 +65,7 @@ class CubeDictionaryBuilder(val dataset: Dataset[Row],
     lock.lock(getLockPath(sourceColumn), Long.MaxValue)
     try
       if (lock.lock(getLockPath(sourceColumn))) {
-        val dictColDistinct = dataset.select(wrapCol(ref)).distinct
+        val dictColDistinct = dataset.select(CubeDictionaryBuilder.wrapCol(ref)).distinct
         ss.sparkContext.setJobDescription("Calculate bucket size " + ref.identity)
         val bucketPartitionSize = DictionaryBuilderHelper.calculateBucketSize(seg, ref, dictColDistinct)
         val m = s"Build global dictionaries V2 for column $sourceColumn succeeded"
@@ -67,6 +76,8 @@ class CubeDictionaryBuilder(val dataset: Dataset[Row],
 
   @throws[IOException]
   private[builder] def build(ref: ColumnDesc, bucketPartitionSize: Int, afterDistinct: Dataset[Row]): Unit = {
+    assert(!ss.conf.get("spark.sql.adaptive.enabled", "false").toBoolean,
+      "Parameter 'spark.sql.adaptive.enabled' must be false when building global dictionary.")
     val columnName = ref.identity
     logInfo(s"Start building global dictionaries V2 for column $columnName.")
 
@@ -90,9 +101,12 @@ class CubeDictionaryBuilder(val dataset: Dataset[Row],
 
   private def getLockPath(pathName: String) = s"/${seg.project}${HadoopUtil.GLOBAL_DICT_STORAGE_ROOT}/$pathName/lock"
 
+}
+
+object CubeDictionaryBuilder {
+
   def wrapCol(ref: ColumnDesc): Column = {
     val colName = NSparkCubingUtil.convertFromDot(ref.identity)
     expr(colName).cast(StringType)
   }
-
 }
