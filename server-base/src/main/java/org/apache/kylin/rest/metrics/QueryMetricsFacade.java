@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.concurrent.ThreadSafe;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.metrics2.MetricsException;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.kylin.common.KylinConfig;
@@ -84,6 +85,9 @@ public class QueryMetricsFacade {
         update(getQueryMetrics(projectName), sqlResponse);
 
         String cube = sqlResponse.getCube();
+        if (StringUtils.isEmpty(cube)) {
+            return;
+        }
         String cubeName = cube.replace("=", "->");
         String cubeMetricName = projectName + ",sub=" + cubeName;
         update(getQueryMetrics(cubeMetricName), sqlResponse);
