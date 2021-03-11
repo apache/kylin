@@ -49,14 +49,6 @@ trait LocalMetadata extends BeforeAndAfterAll with BeforeAndAfterEach {
   }
 
   def cleanAfterClass(): Unit = {
-    val directory = new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA)
-    try
-      FileUtils.deleteDirectory(directory)
-    catch {
-      case e: IOException =>
-        if (directory.exists && directory.list.length > 0) throw new IllegalStateException("Can't delete directory " + directory, e)
-    }
-    System.clearProperty(KylinConfig.KYLIN_CONF)
-    KylinConfig.destroyInstance()
+    LocalFileMetadataTestCase.cleanAfterClass();
   }
 }

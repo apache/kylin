@@ -26,6 +26,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.DateFormat
 import org.apache.kylin.cube.{CubeInstance, CubeManager, CubeSegment}
+import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.kylin.engine.spark.metadata.{ColumnDesc, MetadataConverter, SegmentInfo}
 import org.apache.kylin.job.engine.JobEngineConfig
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler
@@ -36,8 +37,8 @@ import org.apache.spark.dict.{NGlobalDictMetaInfo, NGlobalDictionary}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.types.{StringType, StructType}
 import org.apache.spark.sql.{Dataset, Row}
+import org.apache.spark.sql.types.StructType
 import org.junit.Assert
 
 import scala.collection.JavaConverters.setAsJavaSetConverter
@@ -69,63 +70,67 @@ class TestGlobalDictBuild extends SparderBaseFunSuite with SharedSparkSession wi
 
     // When to resize the dictionary, please refer to the description of DictionaryBuilderHelper.calculateBucketSize
 
+    val dictCol = dictColSet.iterator().next()
     // First build dictionary, no dictionary file exists
-    var randomDataSet = generateOriginData(1000, 21)
+    var randomDataSet = generateOriginData(dictCol, 1000, 21)
     val meta1 = buildDict(segInfo, seg, randomDataSet, dictColSet)
     Assert.assertEquals(20, meta1.getBucketSize)
     Assert.assertEquals(1000, meta1.getDictCount)
 
     // apply rule #1
-    randomDataSet = generateOriginData(3000, 22)
+    randomDataSet = generateOriginData(dictCol, 3000, 22)
     val meta2 = buildDict(segInfo, seg, randomDataSet, dictColSet)
     Assert.assertEquals(60, meta2.getBucketSize)
     Assert.assertEquals(4000, meta2.getDictCount)
 
-    randomDataSet = generateOriginData(3000, 23)
+    randomDataSet = generateOriginData(dictCol, 3000, 23)
     val meta3 = buildDict(segInfo, seg, randomDataSet, dictColSet)
     Assert.assertEquals(60, meta3.getBucketSize)
     Assert.assertEquals(7000, meta3.getDictCount)
 
     // apply rule #2
-    randomDataSet = generateOriginData(200, 24)
+    randomDataSet = generateOriginData(dictCol, 200, 24)
     val meta4 = buildDict(segInfo, seg, randomDataSet, dictColSet)
     Assert.assertEquals(140, meta4.getBucketSize)
     Assert.assertEquals(7200, meta4.getDictCount)
 
     // apply rule #3
-    randomDataSet = generateHotOriginData(200, 140)
+    randomDataSet = generateHotOriginData(dictCol, 200, 140)
     val meta5 = buildDict(segInfo, seg, randomDataSet, dictColSet)
     Assert.assertEquals(140, meta5.getBucketSize)
     Assert.assertEquals(7400, meta5.getDictCount)
 
     // apply rule #3
-    randomDataSet = generateOriginData(200, 25)
+    spark.conf.set("spark.sql.adaptive.enabled", false)
+    randomDataSet = generateOriginData(dictCol, 200, 25)
     val meta6 = buildDict(segInfo, seg, randomDataSet, dictColSet)
     Assert.assertEquals(280, meta6.getBucketSize)
     Assert.assertEquals(7600, meta6.getDictCount)
+    Assert.assertFalse(spark.conf.get("spark.sql.adaptive.enabled").toBoolean)
 
-    randomDataSet = generateOriginData(2000, 26)
+    spark.conf.set("spark.sql.adaptive.enabled", true)
+    randomDataSet = generateOriginData(dictCol, 2000, 26)
     val meta7 = buildDict(segInfo, seg, randomDataSet, dictColSet)
     Assert.assertEquals(280, meta7.getBucketSize)
     Assert.assertEquals(9600, meta7.getDictCount)
+    Assert.assertTrue(spark.conf.get("spark.sql.adaptive.enabled").toBoolean)
     DefaultScheduler.destroyInstance()
   }
 
-  def buildDict(segInfo: SegmentInfo, seg: CubeSegment, randomDataSet: Dataset[Row], dictColSet: Set[ColumnDesc]): NGlobalDictMetaInfo = {
+  def buildDict(segInfo: SegmentInfo, seg: CubeSegment, randomDataSet: Dataset[Row],
+                dictColSet: Set[ColumnDesc]): NGlobalDictMetaInfo = {
     val dictionaryBuilder = new CubeDictionaryBuilder(randomDataSet, segInfo, randomDataSet.sparkSession, dictColSet)
-    val col = dictColSet.iterator().next()
-    val ds = randomDataSet.select("26").distinct()
-    val bucketPartitionSize = DictionaryBuilderHelper.calculateBucketSize(segInfo, col, ds)
-    dictionaryBuilder.build(col, bucketPartitionSize, ds)
-    val dict = new NGlobalDictionary(seg.getProject, col.tableName, col.columnName,
-      seg.getConfig.getHdfsWorkingDirectory)
+    dictionaryBuilder.buildDictSet()
+    val columnDesc = dictColSet.iterator().next()
+    val dict = new NGlobalDictionary(seg.getProject, columnDesc.tableName,
+      columnDesc.columnName, seg.getConfig.getHdfsWorkingDirectory)
     dict.getMetaInfo
   }
 
-  def generateOriginData(count: Int, length: Int): Dataset[Row] = {
+  def generateOriginData(colDesc: ColumnDesc, count: Int, length: Int): Dataset[Row] = {
     var schema = new StructType
-
-    schema = schema.add("26", StringType)
+    val colName = NSparkCubingUtil.convertFromDot(colDesc.identity)
+    schema = schema.add(colName, colDesc.dataType)
     var set = new mutable.LinkedHashSet[Row]
     while (set.size != count) {
       val objects = new Array[String](1)
@@ -136,11 +141,12 @@ class TestGlobalDictBuild extends SparderBaseFunSuite with SharedSparkSession wi
     spark.createDataFrame(spark.sparkContext.parallelize(set.toSeq), schema)
   }
 
-  def generateHotOriginData(threshold: Int, bucketSize: Int): Dataset[Row] = {
+  def generateHotOriginData(colDesc: ColumnDesc, threshold: Int, bucketSize: Int): Dataset[Row] = {
     var schema = new StructType
-    schema = schema.add("26", StringType)
-    var ds = generateOriginData(threshold * bucketSize * 2, 30)
-    ds = ds.repartition(bucketSize, col("26"))
+    val colName = NSparkCubingUtil.convertFromDot(colDesc.identity)
+    schema = schema.add(colName, colDesc.dataType)
+    var ds = generateOriginData(colDesc, threshold * bucketSize * 2, 30)
+    ds = ds.repartition(bucketSize, col(colName))
       .mapPartitions {
         iter =>
           val partitionID = TaskContext.get().partitionId()
