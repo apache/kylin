@@ -2709,4 +2709,7 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.valueOf(getOptional("kylin.storage.distcp-max-map-num", "50"));
     }
 
+    public String getKylinDictCacheStrength(){
+        return getOptional("kylin.dict.cache.strength", "soft");
+    };
 }
