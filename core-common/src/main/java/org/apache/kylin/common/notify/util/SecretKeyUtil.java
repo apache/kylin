@@ -41,7 +41,7 @@ public class SecretKeyUtil {
             String sign = URLEncoder.encode(new String(Base64.encodeBase64(signData), StandardCharsets.UTF_8), "UTF-8");
             return Pair.newPair(timestamp, sign);
         } catch (Exception e) {
-            logger.error("create mac of dingtalk occurred error, please check.");
+            logger.error("create mac of dingtalk occurred error, please check.", e);
         }
 
         return null;

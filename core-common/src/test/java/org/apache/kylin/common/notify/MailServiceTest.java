@@ -20,10 +20,14 @@ package org.apache.kylin.common.notify;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.notify.util.NotificationConstants;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -47,23 +51,29 @@ public class MailServiceTest extends LocalFileMetadataTestCase {
     public void testSendEmail() throws IOException {
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
+        List<String> receivers = new ArrayList<String>(1);
+        receivers.add("foobar@foobar.com");
+        Map<String, List<String>> receiversMap = new HashMap();
+        receiversMap.put(NotificationConstants.NOTIFY_EMAIL_LIST, receivers);
 
-        MailService mailservice = new MailService(config);
+        Map<String, Object> content = new HashMap();
+        content.put("info", "email notification");
+
+        NotificationContext notificationInfo = new NotificationContext(config, receiversMap, NotificationConstants.JOB_ERROR, Pair.newPair(new String[]{"test"}, content));
+
+        MailService mailservice = new MailService(notificationInfo);
         boolean sent = sendTestEmail(mailservice);
         assert !sent;
 
         System.setProperty("kylin.job.notification-enabled", "false");
         // set kylin.job.notification-enabled=false, and run again, this time should be no mail delivered
-        mailservice = new MailService(config);
+        mailservice = new MailService(notificationInfo);
         sent = sendTestEmail(mailservice);
         assert !sent;
 
     }
 
     private boolean sendTestEmail(MailService mailservice) {
-
-        List<String> receivers = new ArrayList<String>(1);
-        receivers.add("foobar@foobar.com");
-        return mailservice.sendMail(receivers, "A test email from Kylin", "Hello!");
+        return mailservice.sendNotification();
     }
 }

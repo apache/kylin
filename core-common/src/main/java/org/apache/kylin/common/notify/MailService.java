@@ -21,11 +21,11 @@ package org.apache.kylin.common.notify;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.HtmlEmail;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.notify.util.MailNotificationUtil;
-import org.apache.kylin.common.notify.util.NotificationConstant;
+import org.apache.kylin.common.notify.util.NotificationConstants;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -42,18 +42,15 @@ public class MailService extends NotifyServiceBase {
     private String password;
     private String sender;
 
-    public MailService(KylinConfig config) {
-        this(config.isNotificationEnabled(), config.isStarttlsEnabled(), config.getMailHost(), config.getSmtpPort(), config.getMailUsername(), config.getMailPassword(), config.getMailSender());
-    }
-
-    private MailService(boolean enabled, boolean starttlsEnabled, String host, String port, String username, String password, String sender) {
-        this.enabled = enabled;
-        this.starttlsEnabled = starttlsEnabled;
-        this.host = host;
-        this.port = port;
-        this.username = username;
-        this.password = password;
-        this.sender = sender;
+    public MailService(NotificationContext notificationContext) {
+        super(notificationContext);
+        this.enabled = getConfig().isNotificationEnabled();
+        this.starttlsEnabled = getConfig().isStarttlsEnabled();
+        this.host = getConfig().getMailHost();
+        this.port = getConfig().getSmtpPort();
+        this.username = getConfig().getMailUsername();
+        this.password = getConfig().getMailPassword();
+        this.sender = getConfig().getMailSender();
     }
 
     /**
@@ -63,8 +60,8 @@ public class MailService extends NotifyServiceBase {
      * @return true or false indicating whether the email was delivered successfully
      * @throws IOException
      */
-    public boolean sendMail(List<String> receivers, String subject, String content) {
-        return sendMail(receivers, subject, content, true);
+    private boolean sendMail(List<String> receivers, String subject, String content) {
+        return sendMail(receivers, subject, content, getNotificationContext().isHtmlMsg());
     }
 
     /**
@@ -74,7 +71,7 @@ public class MailService extends NotifyServiceBase {
      * @return true or false indicating whether the email was delivered successfully
      * @throws IOException
      */
-    public boolean sendMail(List<String> receivers, String subject, String content, boolean isHtmlMsg) {
+    private boolean sendMail(List<String> receivers, String subject, String content, boolean isHtmlMsg) {
 
         if (!enabled) {
             logger.info("Email service is disabled; this mail will not be delivered: " + subject);
@@ -137,15 +134,18 @@ public class MailService extends NotifyServiceBase {
     }
 
     public boolean sendNotification() {
-        if (receivers.get(NotificationConstant.NOTIFY_EMAIL_LIST) == null) {
-            logger.warn("no need to send email, content is null");
+        if (CollectionUtils.isEmpty(getReceivers().get(NotificationConstants.NOTIFY_EMAIL_LIST))) {
+            logger.warn("no need to send email, receivers is empty");
             return false;
         } else {
-            logger.info("prepare to send email to:{}", receivers.get(NotificationConstant.NOTIFY_EMAIL_LIST));
-            String contentEmail = MailNotificationUtil.getMailContent(state, content.getSecond());
-            String title = MailNotificationUtil.getMailTitle(content.getFirst());
-            return sendMail(receivers.get(NotificationConstant.NOTIFY_EMAIL_LIST), title, contentEmail);
+            logger.info("prepare to send email to:{}", getReceivers().get(NotificationConstants.NOTIFY_EMAIL_LIST));
+            if (getNotificationContext().isHtmlMsg()) {
+                String contentEmail = MailNotificationUtil.getMailContent(getState(), getContent().getSecond());
+                String title = MailNotificationUtil.getMailTitle(getContent().getFirst());
+                return sendMail(getReceivers().get(NotificationConstants.NOTIFY_EMAIL_LIST), title, contentEmail);
+            } else {
+                return sendMail(getReceivers().get(NotificationConstants.NOTIFY_EMAIL_LIST), getSubject(), getInfo());
+            }
         }
-
     }
 }

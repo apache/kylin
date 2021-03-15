@@ -18,25 +18,22 @@
 
 package org.apache.kylin.common.notify;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
-
-public class NotifyService {
-    private static final Logger logger = LoggerFactory.getLogger(NotifyService.class);
+/**
+ * Entity class for notification sending.
+ */
+public class NotificationTransmitter {
+    private static final Logger logger = LoggerFactory.getLogger(NotificationTransmitter.class);
 
     private NotifyServiceBase[] notifyServices;
 
@@ -44,24 +41,15 @@ public class NotifyService {
 
     private List<Future> futureList = new ArrayList<>();
 
-    public NotifyService(KylinConfig config) {
+    public NotificationTransmitter(NotificationContext notificationInfo) {
         notifyServices = new NotifyServiceBase[]{
-                new MailService(config),
-                new DingTalkService(config)
+                new MailService(notificationInfo),
+                new DingTalkService(notificationInfo)
         };
     }
 
-    public boolean sendNotification(Map<String, List<String>> receivers, String state, Pair<String[], Map<String, Object>> content) {
+    public boolean sendNotification() {
         boolean res = Boolean.TRUE;
-
-        Consumer<NotifyServiceBase> action = new Consumer<NotifyServiceBase>() {
-
-            @Override
-            public void accept(NotifyServiceBase notifyServiceBase) {
-                notifyServiceBase.sendNotificationInfo(receivers, state, content);
-            }
-        };
-        Arrays.stream(notifyServices).forEach(action);
 
         for (Callable callable : notifyServices) {
             Future f = pool.submit(callable);
@@ -75,7 +63,7 @@ public class NotifyService {
                 }
             } catch (Exception e) {
                 res = false;
-                logger.error("push notification for email or dingtalk occurred exception");
+                logger.error("push notification for email or dingtalk occurred exception", e);
             }
         }
 

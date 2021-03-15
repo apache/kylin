@@ -35,15 +35,15 @@ public class MailNotificationUtil {
         try {
             localHostName = InetAddress.getLocalHost().getCanonicalHostName();
             emailTemps = new String[]{
-                    NotificationConstant.ERROR,
-                    NotificationConstant.DISCARDED,
-                    NotificationConstant.SUCCEED,
-                    NotificationConstant.MIGRATION_REQUEST,
-                    NotificationConstant.MIGRATION_REJECTED,
-                    NotificationConstant.MIGRATION_APPROVED,
-                    NotificationConstant.MIGRATION_COMPLETED,
-                    NotificationConstant.MIGRATION_FAILED,
-                    NotificationConstant.METADATA_PERSIST_FAIL
+                    NotificationConstants.JOB_ERROR,
+                    NotificationConstants.JOB_DISCARDED,
+                    NotificationConstants.JOB_SUCCEED,
+                    NotificationConstants.JOB_MIGRATION_REQUEST,
+                    NotificationConstants.JOB_MIGRATION_REJECTED,
+                    NotificationConstants.JOB_MIGRATION_APPROVED,
+                    NotificationConstants.JOB_MIGRATION_COMPLETED,
+                    NotificationConstants.JOB_MIGRATION_FAILED,
+                    NotificationConstants.JOB_METADATA_PERSIST_FAIL
             };
         } catch (UnknownHostException e) {
             localHostName = "UNKNOWN";
@@ -52,24 +52,24 @@ public class MailNotificationUtil {
 
     private static String getMailTemplateKey(String state) {
         switch (state) {
-            case NotificationConstant.ERROR:
-                return NotificationConstant.JOB_ERROR;
-            case NotificationConstant.DISCARDED:
-                return NotificationConstant.JOB_DISCARD;
-            case NotificationConstant.SUCCEED:
-                return NotificationConstant.JOB_SUCCEED;
-            case NotificationConstant.MIGRATION_REQUEST:
-                return NotificationConstant.MIGRATION_REQUEST;
-            case NotificationConstant.MIGRATION_REJECTED:
-                return NotificationConstant.MIGRATION_REJECTED;
-            case NotificationConstant.MIGRATION_APPROVED:
-                return NotificationConstant.MIGRATION_APPROVED;
-            case NotificationConstant.MIGRATION_COMPLETED:
-                return NotificationConstant.MIGRATION_COMPLETED;
-            case NotificationConstant.MIGRATION_FAILED:
-                return NotificationConstant.MIGRATION_FAILED;
-            case NotificationConstant.METADATA_PERSIST_FAIL:
-                return NotificationConstant.METADATA_PERSIST_FAIL;
+            case NotificationConstants.JOB_ERROR:
+                return NotificationConstants.JOB_ERROR_NOTIFICATION_TEMP;
+            case NotificationConstants.JOB_DISCARDED:
+                return NotificationConstants.JOB_DISCARD_NOTIFICATION_TEMP;
+            case NotificationConstants.JOB_SUCCEED:
+                return NotificationConstants.JOB_SUCCEED_NOTIFICATION_TEMP;
+            case NotificationConstants.JOB_MIGRATION_REQUEST:
+                return NotificationConstants.JOB_MIGRATION_REQUEST_TEMP;
+            case NotificationConstants.JOB_MIGRATION_REJECTED:
+                return NotificationConstants.JOB_MIGRATION_REJECTED_TEMP;
+            case NotificationConstants.JOB_MIGRATION_APPROVED:
+                return NotificationConstants.JOB_MIGRATION_APPROVED_TEMP;
+            case NotificationConstants.JOB_MIGRATION_COMPLETED:
+                return NotificationConstants.JOB_MIGRATION_COMPLETED_TEMP;
+            case NotificationConstants.JOB_MIGRATION_FAILED:
+                return NotificationConstants.JOB_MIGRATION_FAILED_TEMP;
+            case NotificationConstants.JOB_METADATA_PERSIST_FAIL:
+                return NotificationConstants.JOB_METADATA_PERSIST_FAIL_TEMP;
             default:
                 return null;
         }

@@ -20,6 +20,7 @@ package org.apache.kylin.rest.job;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -32,10 +33,12 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.notify.NotificationContext;
+import org.apache.kylin.common.notify.NotificationTransmitter;
+import org.apache.kylin.common.notify.util.NotificationConstants;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.BufferedLogger;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.notify.MailService;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -49,6 +52,7 @@ import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,7 +138,10 @@ public class KylinHealthCheckJob extends AbstractApplication {
         String subject = "Kylin Cluster Health Report of " + config.getClusterName() + " on "
                 + new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(new Date());
         List<String> users = Lists.newArrayList(config.getAdminDls());
-        new MailService(config).sendMail(users, subject, content, false);
+        new NotificationTransmitter(new NotificationContext(config, ImmutableMap.<String, List<String>>builder()
+                .put(NotificationConstants.NOTIFY_EMAIL_LIST, users)
+                .put(NotificationConstants.NOTIFY_DINGTALK_LIST, Collections.emptyList())
+                .build(), subject, content, false)).sendNotification();
     }
 
     private void checkErrorMeta() {

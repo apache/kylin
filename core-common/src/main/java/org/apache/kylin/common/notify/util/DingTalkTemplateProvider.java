@@ -50,18 +50,18 @@ public class DingTalkTemplateProvider {
 
     private String titleColor(String state) {
         switch (state) {
-            case NotificationConstant.SUCCEED:
-            case NotificationConstant.MIGRATION_COMPLETED:
+            case NotificationConstants.JOB_SUCCEED:
+            case NotificationConstants.JOB_MIGRATION_COMPLETED:
                 return "#5cb85c";
-            case NotificationConstant.DISCARDED:
+            case NotificationConstants.JOB_DISCARDED:
                 return "#607D8B";
-            case NotificationConstant.ERROR:
-            case NotificationConstant.METADATA_PERSIST_FAIL:
-            case NotificationConstant.MIGRATION_FAILED:
-            case NotificationConstant.MIGRATION_REJECTED:
+            case NotificationConstants.JOB_ERROR:
+            case NotificationConstants.JOB_METADATA_PERSIST_FAIL:
+            case NotificationConstants.JOB_MIGRATION_FAILED:
+            case NotificationConstants.JOB_MIGRATION_REJECTED:
                 return "#d9534f";
-            case NotificationConstant.MIGRATION_APPROVED:
-            case NotificationConstant.MIGRATION_REQUEST:
+            case NotificationConstants.JOB_MIGRATION_APPROVED:
+            case NotificationConstants.JOB_MIGRATION_REQUEST:
                 return "#337ab7";
             default:
                 return "#000000";

@@ -23,9 +23,9 @@ import com.dingtalk.api.DingTalkClient;
 import com.dingtalk.api.request.OapiRobotSendRequest;
 import com.dingtalk.api.response.OapiRobotSendResponse;
 import com.taobao.api.ApiException;
-import org.apache.kylin.common.KylinConfig;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.notify.util.DingTalkNotificationUtil;
-import org.apache.kylin.common.notify.util.NotificationConstant;
+import org.apache.kylin.common.notify.util.NotificationConstants;
 import org.apache.kylin.common.notify.util.SecretKeyUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
@@ -48,14 +48,11 @@ public class DingTalkService extends NotifyServiceBase {
     private String url = "https://oapi.dingtalk.com/robot/send?access_token=%s";
     private String secretParam = "&timestamp=%s&sign=%s";
 
-    public DingTalkService(KylinConfig config) {
-        this(config.isNotificationEnabled());
+    public DingTalkService(NotificationContext notificationContext) {
+        super(notificationContext);
+        this.enabled = getConfig().isNotificationEnabled();
     }
-
-    private DingTalkService(boolean enabled) {
-        this.enabled = enabled;
-    }
-
+    
     public boolean sendNotification() {
         if (!enabled) {
             logger.info("DingTalk service is disabled; this DingTalk will not be delivered");
@@ -63,18 +60,18 @@ public class DingTalkService extends NotifyServiceBase {
             return false;
         }
 
-        if (receivers.get(NotificationConstant.NOTIFY_DINGTALK_LIST) == null) {
-            logger.warn("no need to send dingtalk, content is null");
+        if (CollectionUtils.isEmpty(getReceivers().get(NotificationConstants.NOTIFY_DINGTALK_LIST))) {
+            logger.warn("no need to send dingtalk, receivers is empty");
             return false;
         } else {
-            logger.info("prepare to send dingtalk to:{}", receivers.get(NotificationConstant.NOTIFY_DINGTALK_LIST));
-            String title = DingTalkNotificationUtil.getTitle(content.getFirst());
-            String contentDingTalk = DingTalkNotificationUtil.getContent(state, title, content.getSecond());
-            return sendContent(receivers.get(NotificationConstant.NOTIFY_DINGTALK_LIST), title, contentDingTalk);
+            logger.info("prepare to send dingtalk to:{}", getReceivers().get(NotificationConstants.NOTIFY_DINGTALK_LIST));
+            String title = DingTalkNotificationUtil.getTitle(getContent().getFirst());
+            String contentDingTalk = DingTalkNotificationUtil.getContent(getState(), title, getContent().getSecond());
+            return sendContent(getReceivers().get(NotificationConstants.NOTIFY_DINGTALK_LIST), title, contentDingTalk);
         }
     }
 
-    public boolean sendContent(List<String> infos, String title, String contentDingTalk) {
+    private boolean sendContent(List<String> infos, String title, String contentDingTalk) {
         boolean res = false;
         for (String dingTalkInfo : infos) {
             if (StringUtil.isEmpty(dingTalkInfo)) {
@@ -124,7 +121,7 @@ public class DingTalkService extends NotifyServiceBase {
                     res = null != response && response.isSuccess();
                     logger.info("send dingtalk notify is {}", res);
                 } catch (ApiException e) {
-                    logger.error("dingtalk notify fail in send !");
+                    logger.error("dingtalk notify fail in send !", e);
                 }
 
             }

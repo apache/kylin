@@ -28,7 +28,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 
 import org.apache.kylin.common.notify.util.MailNotificationUtil;
-import org.apache.kylin.common.notify.util.NotificationConstant;
+import org.apache.kylin.common.notify.util.NotificationConstants;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
@@ -161,8 +161,8 @@ public class CubingJob extends DefaultChainedExecutable {
         result.setName(jobType + " CUBE - " + seg.getCubeInstance().getDisplayName() + " - " + seg.getName() + " - "
                 + format.format(new Date(System.currentTimeMillis())));
         result.setSubmitter(submitter);
-        result.setNotifyList(NotificationConstant.NOTIFY_EMAIL_LIST, seg.getCubeInstance().getDescriptor().getNotifyEmailList());
-        result.setNotifyList(NotificationConstant.NOTIFY_DINGTALK_LIST, seg.getCubeInstance().getDescriptor().getNotifyDingTalkList());
+        result.setNotificationList(NotificationConstants.NOTIFY_EMAIL_LIST, seg.getCubeInstance().getDescriptor().getNotifyEmailList());
+        result.setNotificationList(NotificationConstants.NOTIFY_DINGTALK_LIST, seg.getCubeInstance().getDescriptor().getNotifyDingTalkList());
         return result;
     }
 
@@ -255,8 +255,8 @@ public class CubingJob extends DefaultChainedExecutable {
                 dataMap.put("job_type", "Spark Job");
                 dataMap.put("job_id", StringUtil.noBlank(jobId, "Not initialized"));
             } else {
-                dataMap.put("job_type", NotificationConstant.NA);
-                dataMap.put("job_id", NotificationConstant.NA);
+                dataMap.put("job_type", NotificationConstants.NA);
+                dataMap.put("job_id", NotificationConstants.NA);
             }
             dataMap.put("error_log",
                     Matcher.quoteReplacement(StringUtil.noBlank(output.getVerboseMsg(), "no error message")));

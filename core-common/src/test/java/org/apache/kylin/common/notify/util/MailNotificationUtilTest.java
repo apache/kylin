@@ -34,20 +34,20 @@ public class MailNotificationUtilTest {
 
     @Test
     public void testHasMailNotification() {
-        Assert.assertTrue(MailNotificationUtil.hasMailNotification(NotificationConstant.DISCARDED));
-        Assert.assertTrue(MailNotificationUtil.hasMailNotification(NotificationConstant.ERROR));
-        Assert.assertTrue(MailNotificationUtil.hasMailNotification(NotificationConstant.SUCCEED));
+        Assert.assertTrue(MailNotificationUtil.hasMailNotification(NotificationConstants.JOB_DISCARDED));
+        Assert.assertTrue(MailNotificationUtil.hasMailNotification(NotificationConstants.JOB_ERROR));
+        Assert.assertTrue(MailNotificationUtil.hasMailNotification(NotificationConstants.JOB_SUCCEED));
     }
 
     @Test
     public void testGetMailContent() {
         Assert.assertFalse(
-                MailNotificationUtil.getMailContent(NotificationConstant.DISCARDED, Maps.<String, Object>newHashMap())
+                MailNotificationUtil.getMailContent(NotificationConstants.JOB_DISCARDED, Maps.<String, Object>newHashMap())
                         .startsWith("Cannot find email template for"));
-        Assert.assertFalse(MailNotificationUtil.getMailContent(NotificationConstant.ERROR, Maps.<String, Object>newHashMap())
+        Assert.assertFalse(MailNotificationUtil.getMailContent(NotificationConstants.JOB_ERROR, Maps.<String, Object>newHashMap())
                 .startsWith("Cannot find email template for"));
         Assert.assertFalse(
-                MailNotificationUtil.getMailContent(NotificationConstant.SUCCEED, Maps.<String, Object>newHashMap())
+                MailNotificationUtil.getMailContent(NotificationConstants.JOB_SUCCEED, Maps.<String, Object>newHashMap())
                         .startsWith("Cannot find email template for"));
     }
 }

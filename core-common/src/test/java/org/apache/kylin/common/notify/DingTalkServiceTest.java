@@ -19,7 +19,9 @@
 package org.apache.kylin.common.notify;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.notify.util.NotificationConstants;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -27,7 +29,9 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Ignore("convenient trial tool for dev")
 public class DingTalkServiceTest extends LocalFileMetadataTestCase {
@@ -35,7 +39,6 @@ public class DingTalkServiceTest extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
-
     }
 
     @After
@@ -44,26 +47,32 @@ public class DingTalkServiceTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testSendEmail() throws IOException {
+    public void testSendDingTalk() throws IOException {
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
+        List<String> receivers = new ArrayList<String>(1);
+        receivers.add("xxxx");
+        Map<String, List<String>> receiversMap = new HashMap();
+        receiversMap.put(NotificationConstants.NOTIFY_DINGTALK_LIST, receivers);
 
-        DingTalkService dingTalkservice = new DingTalkService(config);
-        boolean sent = sendTestEmail(dingTalkservice);
+        Map<String, Object> content = new HashMap();
+        content.put("info", "dingtalk notification");
+
+        NotificationContext notificationInfo = new NotificationContext(config, receiversMap, NotificationConstants.JOB_ERROR, Pair.newPair(new String[]{"test"}, content));
+
+        DingTalkService dingTalkservice = new DingTalkService(notificationInfo);
+        boolean sent = sendTestDingTalk(dingTalkservice);
         assert !sent;
 
         System.setProperty("kylin.job.notification-enabled", "false");
         // set kylin.job.notification-enabled=false, and run again, this time should be no mail delivered
-        dingTalkservice = new DingTalkService(config);
-        sent = sendTestEmail(dingTalkservice);
+        dingTalkservice = new DingTalkService(notificationInfo);
+        sent = sendTestDingTalk(dingTalkservice);
         assert !sent;
 
     }
 
-    private boolean sendTestEmail(DingTalkService dingTalkService) {
-
-        List<String> receivers = new ArrayList<String>(1);
-        receivers.add("xxxx");
-        return dingTalkService.sendContent(receivers, "A test dingtalk from Kylin", "Hello!");
+    private boolean sendTestDingTalk(DingTalkService dingTalkService) {
+        return dingTalkService.sendNotification();
     }
 }

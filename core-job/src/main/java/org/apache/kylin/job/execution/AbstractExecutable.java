@@ -21,6 +21,7 @@ package org.apache.kylin.job.execution;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -29,10 +30,10 @@ import java.util.regex.Matcher;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.notify.NotifyService;
+import org.apache.kylin.common.notify.NotificationContext;
+import org.apache.kylin.common.notify.NotificationTransmitter;
 import org.apache.kylin.common.notify.util.MailNotificationUtil;
-import org.apache.kylin.common.notify.util.NotificationConstant;
-import org.apache.kylin.common.notify.MailService;
+import org.apache.kylin.common.notify.util.NotificationConstants;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.StringUtil;
@@ -221,11 +222,16 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         dataMap.put("error_log",
                 Matcher.quoteReplacement(StringUtil.noBlank(exception.getMessage(), "no error message")));
 
-        String content = MailNotificationUtil.getMailContent(NotificationConstant.METADATA_PERSIST_FAIL, dataMap);
-        String title = MailNotificationUtil.getMailTitle("METADATA PERSIST", "FAIL",
-                context.getConfig().getDeployEnv());
+        Pair<String[], Map<String, Object>> mapPair = Pair.newPair(new String[]{
+                "METADATA PERSIST",
+                "FAIL",
+                context.getConfig().getDeployEnv()
+        }, dataMap);
 
-        new MailService(context.getConfig()).sendMail(users, title, content);
+        Map<String, List<String>> receivers = new HashMap<>();
+        receivers.put(NotificationConstants.NOTIFY_DINGTALK_LIST, Collections.EMPTY_LIST);
+        receivers.put(NotificationConstants.NOTIFY_EMAIL_LIST, users);
+        new NotificationTransmitter(new NotificationContext(context.getConfig(), receivers, NotificationConstants.JOB_METADATA_PERSIST_FAIL, mapPair)).sendNotification();
     }
 
     protected abstract ExecuteResult doWork(ExecutableContext context) throws ExecuteException, PersistentException;
@@ -306,7 +312,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         setParam(SUBMITTER, submitter);
     }
 
-    public final List<String> getNotifyList(String key) {
+    public final List<String> getNotificationList(String key) {
         final String str = getParam(key);
         if (str != null) {
             return Lists.newArrayList(StringUtils.split(str, ","));
@@ -315,12 +321,12 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         }
     }
 
-    public final void setNotifyList(String key, String notifications) {
+    public final void setNotificationList(String key, String notifications) {
         setParam(key, notifications);
     }
 
-    public final void setNotifyList(String key, List<String> notifications) {
-        setNotifyList(key, StringUtils.join(notifications, ","));
+    public final void setNotificationList(String key, List<String> notifications) {
+        setNotificationList(key, StringUtils.join(notifications, ","));
     }
 
     protected Pair<String[], Map<String, Object>>  formatNotifications(ExecutableContext executableContext, ExecutableState state) {
@@ -329,46 +335,46 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     protected final void notifyUserStatusChange(ExecutableContext context, ExecutableState state) {
         try {
-            Map<String, List<String>> users = getAllNofifyUsers(config);
+            Map<String, List<String>> users = getAllNofificationUsers(config);
             if (users.isEmpty()) {
                 logger.debug(NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY);
                 return;
             }
             final Pair<String[], Map<String, Object>> email = formatNotifications(context, state);
-            doSendNotify(config, users, state.name(), email);
+            doSendNotification(config, users, state.name(), email);
         } catch (Exception e) {
             logger.error("error send email", e);
         }
     }
 
-    private Map<String, List<String>> getAllNofifyUsers(KylinConfig kylinConfig) {
+    private Map<String, List<String>> getAllNofificationUsers(KylinConfig kylinConfig) {
         Map<String, List<String>> users = Maps.newHashMap();
-        users.put(NotificationConstant.NOTIFY_EMAIL_LIST, getNotifyList(NotificationConstant.NOTIFY_EMAIL_LIST));
-        users.put(NotificationConstant.NOTIFY_DINGTALK_LIST, getNotifyList(NotificationConstant.NOTIFY_DINGTALK_LIST));
+        users.put(NotificationConstants.NOTIFY_EMAIL_LIST, getNotificationList(NotificationConstants.NOTIFY_EMAIL_LIST));
+        users.put(NotificationConstants.NOTIFY_DINGTALK_LIST, getNotificationList(NotificationConstants.NOTIFY_DINGTALK_LIST));
         final String[] adminDls = kylinConfig.getAdminDls();
         if (null != adminDls) {
             for (String adminDl : adminDls) {
-                users.get(NotificationConstant.NOTIFY_EMAIL_LIST).add(adminDl);
+                users.get(NotificationConstants.NOTIFY_EMAIL_LIST).add(adminDl);
             }
         }
         return users;
     }
 
-    private void doSendNotify(KylinConfig kylinConfig, Map<String, List<String>> receivers, String state, Pair<String[], Map<String, Object>> content) {
+    private void doSendNotification(KylinConfig kylinConfig, Map<String, List<String>> receivers, String state, Pair<String[], Map<String, Object>> content) {
         logger.info("prepare to send notify to:{}", receivers);
         logger.info("job name:{}", getName());
         logger.info("submitter:{}", getSubmitter());
-        new NotifyService(kylinConfig).sendNotification(receivers, state, content);
+        new NotificationTransmitter(new NotificationContext(kylinConfig, receivers, state, content)).sendNotification();
     }
 
     protected void sendMail(Pair<String[], Map<String, Object>> email) {
         try {
-            Map<String, List<String>> users = getAllNofifyUsers(config);
+            Map<String, List<String>> users = getAllNofificationUsers(config);
             if (users.isEmpty()) {
                 logger.debug(NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY);
                 return;
             }
-            doSendNotify(config, users, "",  email);
+            doSendNotification(config, users, "",  email);
         } catch (Exception e) {
             logger.error("error send email", e);
         }

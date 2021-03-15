@@ -23,12 +23,11 @@ import org.apache.kylin.common.util.Pair;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
-public abstract class NotifyServiceBase implements Callable<Boolean> {
-    
-    private NotificationContext notificationContext;
-
+/**
+ * All basic information of the notification.
+ */
+public class NotificationContext {
     private KylinConfig config;
 
     /**
@@ -47,54 +46,85 @@ public abstract class NotifyServiceBase implements Callable<Boolean> {
     private Pair<String[], Map<String, Object>> content;
 
     /**
-     * only when send email and isHtmlMsg is false, subject and info will be used
+     * Send in HTML
      */
-    private String subject;
+    private boolean isHtmlMsg = true;
 
-    private String info;
+    /**
+     * when isHtmlMsg is false, subject and info will be sended as text 
+     */
+    private String subject = "";
+    
+    private String info = "";
 
-    public abstract boolean sendNotification();
-
-    public NotifyServiceBase(NotificationContext notificationContext) {
-        this.notificationContext = notificationContext;
-        this.config = notificationContext.getConfig();
-        this.receivers = notificationContext.getReceivers();
-        this.state = notificationContext.getState();
-        this.content = notificationContext.getContent();
-        this.subject = notificationContext.getSubject();
-        this.info = notificationContext.getInfo();
+    public NotificationContext(KylinConfig config, Map<String, List<String>> receivers, String state, Pair<String[], Map<String, Object>> content) {
+        this.config = config;
+        this.receivers = receivers;
+        this.state = state;
+        this.content = content;
     }
 
-    @Override
-    public Boolean call() throws Exception {
-        return sendNotification();
+    public NotificationContext(KylinConfig config, Map<String, List<String>> receivers, String subject, String info, boolean isHtmlMsg) {
+        this.config = config;
+        this.receivers = receivers;
+        this.subject = subject;
+        this.info = info;
+        this.isHtmlMsg = isHtmlMsg;
     }
 
     public KylinConfig getConfig() {
         return config;
     }
 
+    public void setConfig(KylinConfig config) {
+        this.config = config;
+    }
+
     public Map<String, List<String>> getReceivers() {
         return receivers;
+    }
+
+    public void setReceivers(Map<String, List<String>> receivers) {
+        this.receivers = receivers;
     }
 
     public String getState() {
         return state;
     }
 
+    public void setState(String state) {
+        this.state = state;
+    }
+
     public Pair<String[], Map<String, Object>> getContent() {
         return content;
     }
 
-    public NotificationContext getNotificationContext() {
-        return notificationContext;
+    public void setContent(Pair<String[], Map<String, Object>> content) {
+        this.content = content;
+    }
+
+    public boolean isHtmlMsg() {
+        return isHtmlMsg;
+    }
+
+    public void setHtmlMsg(boolean htmlMsg) {
+        isHtmlMsg = htmlMsg;
     }
 
     public String getSubject() {
         return subject;
     }
 
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
     public String getInfo() {
         return info;
+    }
+
+    public void setInfo(String info) {
+        this.info = info;
     }
 }
