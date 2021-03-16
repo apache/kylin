@@ -42,7 +42,7 @@ public abstract class NotifyServiceBase implements Callable<Boolean> {
     private String state;
 
     /**
-     * content of notifytion, include title and detail
+     * content of notification, include title and detail
      */
     private Pair<String[], Map<String, Object>> content;
 

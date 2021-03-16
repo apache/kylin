@@ -18,6 +18,8 @@
 
 package org.apache.kylin.common.notify;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.kylin.common.notify.util.NotificationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,17 +37,22 @@ import java.util.concurrent.TimeUnit;
 public class NotificationTransmitter {
     private static final Logger logger = LoggerFactory.getLogger(NotificationTransmitter.class);
 
-    private NotifyServiceBase[] notifyServices;
+    private List<NotifyServiceBase> notifyServices = new ArrayList<>();
 
     private ExecutorService pool = Executors.newCachedThreadPool();
 
     private List<Future> futureList = new ArrayList<>();
 
     public NotificationTransmitter(NotificationContext notificationInfo) {
-        notifyServices = new NotifyServiceBase[]{
-                new MailService(notificationInfo),
-                new DingTalkService(notificationInfo)
-        };
+        if (!CollectionUtils.isEmpty(notificationInfo.getReceivers().get(NotificationConstants.NOTIFY_EMAIL_LIST))) {
+            logger.info("email notification add to NotificationTransmitter");
+            notifyServices.add(new MailService(notificationInfo));
+        }
+
+        if (!CollectionUtils.isEmpty(notificationInfo.getReceivers().get(NotificationConstants.NOTIFY_DINGTALK_LIST))) {
+            logger.info("dingTalk notification add to NotificationTransmitter");
+            notifyServices.add(new DingTalkService(notificationInfo));
+        }
     }
 
     public boolean sendNotification() {

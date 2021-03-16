@@ -140,7 +140,6 @@ public class KylinHealthCheckJob extends AbstractApplication {
         List<String> users = Lists.newArrayList(config.getAdminDls());
         new NotificationTransmitter(new NotificationContext(config, ImmutableMap.<String, List<String>>builder()
                 .put(NotificationConstants.NOTIFY_EMAIL_LIST, users)
-                .put(NotificationConstants.NOTIFY_DINGTALK_LIST, Collections.emptyList())
                 .build(), subject, content, false)).sendNotification();
     }
 

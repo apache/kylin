@@ -39,7 +39,6 @@ public class MailServiceTest extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
-
     }
 
     @After

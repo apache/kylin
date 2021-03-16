@@ -229,7 +229,6 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         }, dataMap);
 
         Map<String, List<String>> receivers = new HashMap<>();
-        receivers.put(NotificationConstants.NOTIFY_DINGTALK_LIST, Collections.EMPTY_LIST);
         receivers.put(NotificationConstants.NOTIFY_EMAIL_LIST, users);
         new NotificationTransmitter(new NotificationContext(context.getConfig(), receivers, NotificationConstants.JOB_METADATA_PERSIST_FAIL, mapPair)).sendNotification();
     }
