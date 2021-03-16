@@ -74,7 +74,7 @@ public class MigrationService extends BasicService {
         root.put("cubename", ctx.getCubeInstance().getName());
         root.put("status", "NEED APPROVE");
         root.put("envname", envName);
-        sendMigrationNotify(NotificationConstants.JOB_MIGRATION_REQUEST, getRecipients(cube), root);
+        sendMigrationNotification(NotificationConstants.JOB_MIGRATION_REQUEST, getRecipients(cube), root);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
@@ -86,7 +86,7 @@ public class MigrationService extends BasicService {
             root.put("status", "REJECTED");
             root.put("envname", envName);
 
-            sendMigrationNotify(NotificationConstants.JOB_MIGRATION_REJECTED, getRecipients(cubeName), root);
+            sendMigrationNotification(NotificationConstants.JOB_MIGRATION_REJECTED, getRecipients(cubeName), root);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
@@ -123,7 +123,7 @@ public class MigrationService extends BasicService {
             root.put("status", "APPROVED");
             root.put("envname", envName);
 
-            sendMigrationNotify(NotificationConstants.JOB_MIGRATION_APPROVED, getRecipients(cubeName), root);
+            sendMigrationNotification(NotificationConstants.JOB_MIGRATION_APPROVED, getRecipients(cubeName), root);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
@@ -139,7 +139,7 @@ public class MigrationService extends BasicService {
             root.put("status", "COMPLETED");
             root.put("envname", envName);
 
-            sendMigrationNotify(NotificationConstants.JOB_MIGRATION_COMPLETED, getRecipients(cubeName), root);
+            sendMigrationNotification(NotificationConstants.JOB_MIGRATION_COMPLETED, getRecipients(cubeName), root);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
@@ -156,7 +156,7 @@ public class MigrationService extends BasicService {
             root.put("failedReason", reason);
             root.put("envname", envName);
 
-            sendMigrationNotify(NotificationConstants.JOB_MIGRATION_FAILED, getRecipients(cubeName), root);
+            sendMigrationNotification(NotificationConstants.JOB_MIGRATION_FAILED, getRecipients(cubeName), root);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
@@ -206,7 +206,7 @@ public class MigrationService extends BasicService {
         return receivers;
     }
 
-    public void sendMigrationNotify(String state, Map<String, List<String>> recipients, Map<String, String> root) {
+    public void sendMigrationNotification(String state, Map<String, List<String>> recipients, Map<String, String> root) {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         root.put("requester", submitter);
 
