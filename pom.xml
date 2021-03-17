@@ -1980,6 +1980,8 @@
                 <exclude>**/*.isproj</exclude>
                 <exclude>**/*.bmp</exclude>
 
+                <exclude>src/main/codegen/javacc/org/apache/kylin/query/util/CommentParser.jj</exclude>
+
                 <!-- protobuf generated -->
                 <exclude>
                   src/main/java/org/apache/kylin/storage/hbase/ii/coprocessor/endpoint/generated/IIProtos.java
