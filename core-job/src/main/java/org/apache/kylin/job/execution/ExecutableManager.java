@@ -675,7 +675,11 @@ public class ExecutableManager {
                 logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
             }
             if (info != null) {
-                jobOutput.setInfo(info);
+                if (null != jobOutput.getInfo()) {
+                    jobOutput.getInfo().putAll(info);
+                } else {
+                    jobOutput.setInfo(info);
+                }
             }
             if (output != null) {
                 if (output.length() > config.getJobOutputMaxSize()) {
