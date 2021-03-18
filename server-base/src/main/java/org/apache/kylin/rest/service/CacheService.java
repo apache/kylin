@@ -27,11 +27,11 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.cache.CacheManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import net.sf.ehcache.CacheManager;
 
 /**
  */
@@ -121,7 +121,7 @@ public class CacheService extends BasicService implements InitializingBean {
                 logger.info("cleaning cache for project " + project + " (currently remove nothing)");
             } else {
                 logger.info("cleaning cache for project " + project + " (currently remove all entries)");
-                cacheManager.getCache(QueryService.QUERY_CACHE).removeAll();
+                cacheManager.getCache(QueryService.QUERY_CACHE).clear();
             }
         } else {
             logger.warn("skip cleaning cache for project " + project);
@@ -131,7 +131,10 @@ public class CacheService extends BasicService implements InitializingBean {
     protected void cleanAllDataCache() {
         if (cacheManager != null) {
             logger.warn("cleaning all storage cache");
-            cacheManager.clearAll();
+            for (String cacheName : cacheManager.getCacheNames()) {
+                logger.warn("cleaning storage cache for {}", cacheName);
+                cacheManager.getCache(cacheName).clear();
+            }
         } else {
             logger.warn("skip cleaning all storage cache");
         }
