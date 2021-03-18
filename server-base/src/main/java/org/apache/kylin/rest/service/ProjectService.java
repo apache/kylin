@@ -152,7 +152,7 @@ public class ProjectService extends BasicService {
     public void deleteProject(String projectName, ProjectInstance project) throws IOException {
         Set<String> tables = project.getTables();
         for (String table : Sets.newTreeSet(tables)) {
-            tableService.unloadHiveTable(table, projectName);
+            tableService.unloadHiveTable(table, projectName, true);
             getTableManager().removeTableExt(table, projectName);
             getTableACLManager().deleteTableACLByTbl(projectName, table);
         }

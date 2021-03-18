@@ -1105,7 +1105,8 @@ KylinApp
       $scope.streamingConfig = {
         name: '',
         properties: {},
-        parser_info: {}
+        parser_info: {},
+        project_name: ''
       };
 
       $scope.tableData = {
@@ -1399,6 +1400,7 @@ KylinApp
         $scope.streamingConfig.parser_info.ts_parser = $scope.streaming.TSParser;
         $scope.streamingConfig.parser_info.ts_pattern = $scope.streaming.TSPattern;
         $scope.streamingConfig.parser_info.field_mapping = {};
+        $scope.streamingConfig.project_name = projectName;
         $scope.tableData.columns.forEach(function(col) {
           if (col.comment) {
             $scope.streamingConfig.parser_info.field_mapping[col.name] = col.comment.replace(/\|/g, '.') || ''
@@ -1530,7 +1532,8 @@ KylinApp
       if (_.values(tableConfig.streamingSourceType).indexOf($scope.tableModel.selectedSrcTable.source_type) > -1) {
         var table = $scope.tableModel.selectedSrcTable;
         var streamingName = table.database+"."+table.name;
-        StreamingServiceV2.getConfig({table:streamingName}, function (configs) {
+        var projectName = $scope.projectModel.getSelectedProject();
+        StreamingServiceV2.getConfig({table:streamingName, project: projectName}, function (configs) {
           $scope.currentStreamingConfig = configs[0];
         });
       }

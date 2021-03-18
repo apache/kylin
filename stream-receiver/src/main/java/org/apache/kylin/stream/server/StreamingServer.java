@@ -703,7 +703,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
         CubeDescManager.getInstance(kylinConfig).reloadCubeDescLocal(cubeName);
         CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).reloadCubeQuietly(cubeName);
         StreamingSourceConfigManager.getInstance(kylinConfig).reloadStreamingConfigLocal(
-                cubeInstance.getRootFactTable());
+                cubeInstance.getRootFactTable(), cubeInstance.getProject());
     }
 
     private String calLocalSegmentCacheDir() {

@@ -25,6 +25,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -32,6 +33,7 @@ import org.apache.kylin.common.persistence.Serializer;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
@@ -53,10 +55,28 @@ public class StreamingSourceConfig extends RootPersistentEntity {
     @JsonProperty("properties")
     private Map<String, String> properties = Maps.newLinkedHashMap();
 
-    public static String concatResourcePath(String name) {
-        return ResourceStore.STREAMING_V2_RESOURCE_ROOT + "/" + name + ".json";
+    @JsonProperty("project_name")
+    private String projectName;
+
+    @Deprecated
+    static String concatResourcePath(String name) {
+        return ResourceStore.STREAMING_V2_RESOURCE_ROOT + "/" + name + MetadataConstants.FILE_SURFIX;
     }
 
+    public static String concatResourcePathWithProjName(String name, String projectName) {
+        if (Strings.isEmpty(projectName)) {
+            return concatResourcePath(name);
+        } else {
+            // like table desc
+            return ResourceStore.STREAMING_V2_RESOURCE_ROOT + "/" + name + "--" + projectName + MetadataConstants.FILE_SURFIX;
+        }
+    }
+
+    public String getResourcePathWithProjName() {
+        return concatResourcePathWithProjName(name, projectName);
+    }
+
+    @Deprecated
     public String getResourcePath() {
         return concatResourcePath(name);
     }
@@ -83,6 +103,14 @@ public class StreamingSourceConfig extends RootPersistentEntity {
 
     public void setParserInfo(MessageParserInfo parserInfo) {
         this.parserInfo = parserInfo;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
+    }
+
+    public String getProjectName() {
+        return projectName;
     }
 
     @Override

@@ -284,9 +284,10 @@ public class TableService extends BasicService {
      * that's why we have two if statement here.
      * @param tableName
      * @param project
+     * @param  needRemoveStreamInfo
      * @return
      */
-    public boolean unloadHiveTable(String tableName, String project) throws IOException {
+    public boolean unloadHiveTable(String tableName, String project, boolean needRemoveStreamInfo) throws IOException {
         aclEvaluate.checkProjectAdminPermission(project);
         Message msg = MsgPicker.getMsg();
 
@@ -319,7 +320,9 @@ public class TableService extends BasicService {
         // remove streaming info
         SourceManager sourceManager = SourceManager.getInstance(KylinConfig.getInstanceFromEnv());
         ISource source = sourceManager.getCachedSource(desc);
-        source.unloadTable(tableName, project);
+        if (!desc.isStreamingTable() || needRemoveStreamInfo) {
+            source.unloadTable(tableName, project);
+        }
         return rtn;
     }
 
