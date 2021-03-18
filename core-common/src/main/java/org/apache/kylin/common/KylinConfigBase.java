@@ -1973,8 +1973,12 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.query.ignore-unknown-function", FALSE));
     }
 
+    public boolean isMemcachedEnabled() {
+        return !StringUtil.isEmpty(getMemCachedHosts());
+    }
+
     public String getMemCachedHosts() {
-        return getRequired("kylin.cache.memcached.hosts");
+        return getOptional("kylin.cache.memcached.hosts", null);
     }
 
     public boolean isQuerySegmentCacheEnabled() {
@@ -2152,7 +2156,8 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean isQueryCacheSignatureEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.cache-signature-enabled", FALSE));
+        return Boolean.parseBoolean(
+                this.getOptional("kylin.query.cache-signature-enabled", String.valueOf(isMemcachedEnabled())));
     }
 
     public int getFlatFilterMaxChildrenSize() {
