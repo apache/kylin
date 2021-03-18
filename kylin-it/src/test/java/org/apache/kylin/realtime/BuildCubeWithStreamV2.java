@@ -160,7 +160,8 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
 
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(CUBE_NAME);
         final String streamingTableName = cubeInstance.getRootFactTable();
-        final StreamingSourceConfig sourceConfig = StreamingSourceConfigManager.getInstance(kylinConfig).getConfig(streamingTableName);
+        final String projectName = cubeInstance.getProject();
+        final StreamingSourceConfig sourceConfig = StreamingSourceConfigManager.getInstance(kylinConfig).getConfig(streamingTableName, projectName);
 
         topicName = KafkaSource.getTopicName(sourceConfig.getProperties());
         String bootstrapServers = KafkaSource.getBootstrapServers(sourceConfig.getProperties());
