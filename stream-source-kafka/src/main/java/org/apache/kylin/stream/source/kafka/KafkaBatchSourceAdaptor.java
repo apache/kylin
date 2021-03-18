@@ -34,7 +34,7 @@ public class KafkaBatchSourceAdaptor extends HiveSource {
     public void unloadTable(String tableName, String project) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         StreamingSourceConfigManager sourceConfigManager = StreamingSourceConfigManager.getInstance(kylinConfig);
-        StreamingSourceConfig config = sourceConfigManager.getConfig(tableName);
+        StreamingSourceConfig config = sourceConfigManager.getConfig(tableName, project);
         if (config == null) {
             return;
         }

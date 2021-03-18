@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -83,7 +84,6 @@ public class StreamingSourceConfigManager {
         ResourceStore store = getStore();
         logger.info("Load all streaming metadata from folder "
                 + store.getReadableResourcePath(ResourceStore.STREAMING_V2_RESOURCE_ROOT));
-
         List<String> paths = store.collectResourceRecursively(ResourceStore.STREAMING_V2_RESOURCE_ROOT,
                 MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
@@ -94,7 +94,10 @@ public class StreamingSourceConfigManager {
                 logger.error("Error loading streaming desc " + path, e);
                 continue;
             }
-            if (path.equals(streamingSourceConfig.getResourcePath()) == false) {
+            // check path without project name
+            // check path with project name
+            if (path.equals(streamingSourceConfig.getResourcePath()) == false &&
+                    path.equals(streamingSourceConfig.getResourcePathWithProjName()) == false) {
                 logger.error("Skip suspicious desc at " + path + ", " + streamingSourceConfig + " should be at "
                         + streamingSourceConfig.getResourcePath());
                 continue;
@@ -113,26 +116,62 @@ public class StreamingSourceConfigManager {
      * @param name
      * @throws IOException
      */
-    public StreamingSourceConfig reloadStreamingConfigLocal(String name) throws IOException {
-
-        // Save Source
-        String path = StreamingSourceConfig.concatResourcePath(name);
-
+    public StreamingSourceConfig reloadStreamingConfigLocal(String name, String projectName) throws IOException {
+        if (Strings.isEmpty(name) || Strings.isEmpty(projectName)) {
+            throw new StreamingException(String.format(Locale.ROOT,
+                    "the table name %s or project name %s is null", name, projectName));
+        }
+        // path with project name
+        String path = StreamingSourceConfig.concatResourcePathWithProjName(name, projectName);
         // Reload the StreamingSourceConfig
-        StreamingSourceConfig ndesc = loadStreamingConfigAt(path);
-        return ndesc;
+        StreamingSourceConfig config = loadStreamingConfigAt(path);
+        if (config == null) {
+            // the path with project name doesn't contain the source config, and check the old path without project name.
+            path = StreamingSourceConfig.concatResourcePath(name);
+            config = loadStreamingConfigAt(path);
+            if (config != null) {
+                config.setProjectName(projectName);
+                // remove from the old path, and save the source config to the new path
+                removeStreamingConfig(config);
+                saveStreamingConfig(config);
+            }
+        }
+        return config;
     }
 
     // remove streamingSourceConfig
     public void removeStreamingConfig(StreamingSourceConfig streamingSourceConfig) throws IOException {
-        String path = streamingSourceConfig.getResourcePath();
-        getStore().deleteResource(path);
+        // path with project name
+        String path = streamingSourceConfig.getResourcePathWithProjName();
+        if (loadStreamingConfigAt(path) != null) {
+            getStore().deleteResource(path);
+        } else {
+            // The source is stored in the old path which is prefix + table name + suffix
+            path = streamingSourceConfig.getResourcePath();
+            getStore().deleteResource(path);
+        }
     }
 
-    public StreamingSourceConfig getConfig(String name) {
+    public StreamingSourceConfig getConfig(String name, String projectName) {
         name = name.toUpperCase(Locale.ROOT);
         try {
-            return reloadStreamingConfigLocal(name);
+            return reloadStreamingConfigLocal(name, projectName);
+        } catch (IOException e) {
+            throw new StreamingException(e);
+        }
+    }
+
+    public StreamingSourceConfig getConfigMustWithProject(String name, String projectName) {
+        name = name.toUpperCase(Locale.ROOT);
+        if (Strings.isEmpty(name) || Strings.isEmpty(projectName)) {
+            throw new StreamingException(String.format(Locale.ROOT,
+                    "the table name %s or project name %s is null", name, projectName));
+        }
+        // path with project name
+        String path = StreamingSourceConfig.concatResourcePathWithProjName(name, projectName);
+        // Reload the StreamingSourceConfig
+        try {
+            return loadStreamingConfigAt(path);
         } catch (IOException e) {
             throw new StreamingException(e);
         }
@@ -140,32 +179,35 @@ public class StreamingSourceConfigManager {
 
     /**
      *
-     * @param desc
+     * @param streamingSourceConfig
      * @return
      * @throws IOException
      */
-    public StreamingSourceConfig updateStreamingConfig(StreamingSourceConfig desc) throws IOException {
+    public StreamingSourceConfig updateStreamingConfig(StreamingSourceConfig streamingSourceConfig) throws IOException {
         // Validate CubeDesc
-        if (desc.getUuid() == null || desc.getName() == null) {
+        if (streamingSourceConfig.getUuid() == null || streamingSourceConfig.getName() == null) {
             throw new IllegalArgumentException("SteamingConfig Illegal.");
         }
 
-        // Save Source
-        String path = desc.getResourcePath();
-        getStore().putResource(path, desc, System.currentTimeMillis(), STREAMING_SERIALIZER);
+        // remove Source
+        removeStreamingConfig(streamingSourceConfig);
+
+        // Save Source, the path with project name
+        String path = streamingSourceConfig.getResourcePathWithProjName();
+        getStore().putResource(path, streamingSourceConfig, System.currentTimeMillis(), STREAMING_SERIALIZER);
 
         // Reload the StreamingSourceConfig
-        StreamingSourceConfig ndesc = loadStreamingConfigAt(path);
+        StreamingSourceConfig newStreamingSourceConfig = loadStreamingConfigAt(path);
 
-        return ndesc;
+        return newStreamingSourceConfig;
     }
 
     public StreamingSourceConfig saveStreamingConfig(StreamingSourceConfig streamingSourceConfig) throws IOException {
         if (streamingSourceConfig == null || StringUtils.isEmpty(streamingSourceConfig.getName())) {
             throw new IllegalArgumentException();
         }
-
-        String path = StreamingSourceConfig.concatResourcePath(streamingSourceConfig.getName());
+        // path = prefix + /table name---project name + suffix
+        String path = streamingSourceConfig.getResourcePathWithProjName();
         getStore().putResource(path, streamingSourceConfig, System.currentTimeMillis(),
                 StreamingSourceConfig.SERIALIZER);
         return streamingSourceConfig;

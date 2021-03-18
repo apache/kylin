@@ -19,6 +19,7 @@
 package org.apache.kylin.tool;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -72,6 +73,7 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.stream.core.source.StreamingSourceConfig;
+import org.apache.kylin.stream.core.source.StreamingSourceConfigManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -362,7 +364,18 @@ public class CubeMigrationCLI extends AbstractApplication {
 
         if (cubeDesc.isStreamingCube()) {
             // add streaming source config info for streaming cube
-            metaResource.add(StreamingSourceConfig.concatResourcePath(cubeDesc.getModel().getRootFactTableName()));
+            String tableName = cubeDesc.getModel().getRootFactTableName();
+            String projectName = cubeDesc.getProject();
+            KylinConfig kylinConf = KylinConfig.getInstanceFromEnv();
+            StreamingSourceConfigManager manager = StreamingSourceConfigManager.getInstance(kylinConf);
+            StreamingSourceConfig sourceConfig = manager.getConfig(tableName, projectName);
+            if (sourceConfig != null) {
+                metaResource.add(sourceConfig.getResourcePathWithProjName());
+            } else {
+                throw new InterruptedIOException(String.format(Locale.ROOT,
+                        "The stream source config doesn't exist, the table name: %s, the project name: %s",
+                        tableName, projectName));
+            }
         }
     }
 

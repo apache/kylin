@@ -20,7 +20,6 @@ package org.apache.kylin.tool.extractor;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -444,18 +443,10 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     }
 
     private void addStreamingV2Config(CubeInstance cube) {
-        Collection<StreamingSourceConfig> streamingConfigs;
-        try {
-            streamingConfigs = streamingSourceConfigManager.listAllStreaming();
-        } catch (IOException ioe) {
-            logger.error("", ioe);
-            return;
-        }
-        for (StreamingSourceConfig streamingConfig : streamingConfigs) {
-            if (streamingConfig.getName() != null
-                    && streamingConfig.getName().equalsIgnoreCase(cube.getRootFactTable())) {
-                addRequired(StreamingSourceConfig.concatResourcePath(streamingConfig.getName()));
-            }
+        StreamingSourceConfig streamingSourceConfig =
+                streamingSourceConfigManager.getConfig(cube.getRootFactTable(), cube.getProject());
+        if (streamingSourceConfig != null) {
+            addRequired(streamingSourceConfig.getResourcePathWithProjName());
         }
     }
 
