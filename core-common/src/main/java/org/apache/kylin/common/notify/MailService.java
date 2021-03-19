@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.HtmlEmail;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.notify.util.MailNotificationUtil;
 import org.apache.kylin.common.notify.util.NotificationConstants;
 import org.slf4j.LoggerFactory;
@@ -44,13 +45,14 @@ public class MailService extends NotifyServiceBase {
 
     public MailService(NotificationContext notificationContext) {
         super(notificationContext);
-        this.enabled = getConfig().isNotificationEnabled();
-        this.starttlsEnabled = getConfig().isStarttlsEnabled();
-        this.host = getConfig().getMailHost();
-        this.port = getConfig().getSmtpPort();
-        this.username = getConfig().getMailUsername();
-        this.password = getConfig().getMailPassword();
-        this.sender = getConfig().getMailSender();
+        KylinConfig kylinConfig = getNotificationContext().getConfig();
+        this.enabled = kylinConfig.isNotificationEnabled();
+        this.starttlsEnabled = kylinConfig.isStarttlsEnabled();
+        this.host = kylinConfig.getMailHost();
+        this.port = kylinConfig.getSmtpPort();
+        this.username = kylinConfig.getMailUsername();
+        this.password = kylinConfig.getMailPassword();
+        this.sender = kylinConfig.getMailSender();
     }
 
     /**
@@ -134,17 +136,17 @@ public class MailService extends NotifyServiceBase {
     }
 
     public boolean sendNotification() {
-        if (CollectionUtils.isEmpty(getReceivers().get(NotificationConstants.NOTIFY_EMAIL_LIST))) {
+        if (CollectionUtils.isEmpty(getNotificationContext().getReceivers().get(NotificationConstants.NOTIFY_EMAIL_LIST))) {
             logger.warn("no need to send email, receivers is empty");
             return false;
         } else {
-            logger.info("prepare to send email to:{}", getReceivers().get(NotificationConstants.NOTIFY_EMAIL_LIST));
+            logger.info("prepare to send email to:{}", getNotificationContext().getReceivers().get(NotificationConstants.NOTIFY_EMAIL_LIST));
             if (getNotificationContext().isHtmlMsg()) {
-                String contentEmail = MailNotificationUtil.getMailContent(getState(), getContent().getSecond());
-                String title = MailNotificationUtil.getMailTitle(getContent().getFirst());
-                return sendMail(getReceivers().get(NotificationConstants.NOTIFY_EMAIL_LIST), title, contentEmail);
+                String contentEmail = MailNotificationUtil.getMailContent(getNotificationContext().getState(), getNotificationContext().getContent().getSecond());
+                String title = MailNotificationUtil.getMailTitle(getNotificationContext().getContent().getFirst());
+                return sendMail(getNotificationContext().getReceivers().get(NotificationConstants.NOTIFY_EMAIL_LIST), title, contentEmail);
             } else {
-                return sendMail(getReceivers().get(NotificationConstants.NOTIFY_EMAIL_LIST), getSubject(), getInfo());
+                return sendMail(getNotificationContext().getReceivers().get(NotificationConstants.NOTIFY_EMAIL_LIST), getNotificationContext().getSubject(), getNotificationContext().getInfo());
             }
         }
     }

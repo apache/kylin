@@ -50,7 +50,7 @@ public class DingTalkService extends NotifyServiceBase {
 
     public DingTalkService(NotificationContext notificationContext) {
         super(notificationContext);
-        this.enabled = getConfig().isNotificationEnabled();
+        this.enabled = getNotificationContext().getConfig().isNotificationEnabled();
     }
     
     public boolean sendNotification() {
@@ -60,14 +60,14 @@ public class DingTalkService extends NotifyServiceBase {
             return false;
         }
 
-        if (CollectionUtils.isEmpty(getReceivers().get(NotificationConstants.NOTIFY_DINGTALK_LIST))) {
+        if (CollectionUtils.isEmpty(getNotificationContext().getReceivers().get(NotificationConstants.NOTIFY_DINGTALK_LIST))) {
             logger.warn("no need to send dingtalk, receivers is empty");
             return false;
         } else {
-            logger.info("prepare to send dingtalk to:{}", getReceivers().get(NotificationConstants.NOTIFY_DINGTALK_LIST));
-            String title = DingTalkNotificationUtil.getTitle(getContent().getFirst());
-            String contentDingTalk = DingTalkNotificationUtil.getContent(getState(), title, getContent().getSecond());
-            return sendContent(getReceivers().get(NotificationConstants.NOTIFY_DINGTALK_LIST), title, contentDingTalk);
+            logger.info("prepare to send dingtalk to:{}", getNotificationContext().getReceivers().get(NotificationConstants.NOTIFY_DINGTALK_LIST));
+            String title = DingTalkNotificationUtil.getTitle(getNotificationContext().getContent().getFirst());
+            String contentDingTalk = DingTalkNotificationUtil.getContent(getNotificationContext().getState(), title, getNotificationContext().getContent().getSecond());
+            return sendContent(getNotificationContext().getReceivers().get(NotificationConstants.NOTIFY_DINGTALK_LIST), title, contentDingTalk);
         }
     }
 

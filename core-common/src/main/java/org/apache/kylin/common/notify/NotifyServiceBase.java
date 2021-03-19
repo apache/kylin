@@ -18,83 +18,25 @@
 
 package org.apache.kylin.common.notify;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.Pair;
-
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 public abstract class NotifyServiceBase implements Callable<Boolean> {
     
     private NotificationContext notificationContext;
 
-    private KylinConfig config;
-
-    /**
-     * Notification recipient，include email and dingTalk
-     */
-    private Map<String, List<String>> receivers;
-
-    /**
-     * state of job
-     */
-    private String state;
-
-    /**
-     * content of notification, include title and detail
-     */
-    private Pair<String[], Map<String, Object>> content;
-
-    /**
-     * only when send email and isHtmlMsg is false, subject and info will be used
-     */
-    private String subject;
-
-    private String info;
-
     public abstract boolean sendNotification();
-
-    public NotifyServiceBase(NotificationContext notificationContext) {
-        this.notificationContext = notificationContext;
-        this.config = notificationContext.getConfig();
-        this.receivers = notificationContext.getReceivers();
-        this.state = notificationContext.getState();
-        this.content = notificationContext.getContent();
-        this.subject = notificationContext.getSubject();
-        this.info = notificationContext.getInfo();
-    }
 
     @Override
     public Boolean call() throws Exception {
         return sendNotification();
     }
 
-    public KylinConfig getConfig() {
-        return config;
-    }
-
-    public Map<String, List<String>> getReceivers() {
-        return receivers;
-    }
-
-    public String getState() {
-        return state;
-    }
-
-    public Pair<String[], Map<String, Object>> getContent() {
-        return content;
+    public NotifyServiceBase(NotificationContext notificationContext) {
+        this.notificationContext = notificationContext;
     }
 
     public NotificationContext getNotificationContext() {
         return notificationContext;
     }
-
-    public String getSubject() {
-        return subject;
-    }
-
-    public String getInfo() {
-        return info;
-    }
+    
 }
