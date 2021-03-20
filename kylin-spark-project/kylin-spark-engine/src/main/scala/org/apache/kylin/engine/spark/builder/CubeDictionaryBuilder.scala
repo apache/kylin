@@ -19,14 +19,13 @@ package org.apache.kylin.engine.spark.builder
 
 import java.io.IOException
 import java.util
-
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.lock.DistributedLock
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.engine.spark.builder.CubeBuilderHelper._
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.kylin.engine.spark.metadata.{ColumnDesc, SegmentInfo}
-import org.apache.spark.dict.NGlobalDictionary
+import org.apache.spark.dict.{NGlobalDictBuilderAssist, NGlobalDictionary}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions.{col, expr}
@@ -55,8 +54,10 @@ class CubeDictionaryBuilder(val dataset: Dataset[Row],
     logInfo(s"Start building global dictionaries V2 for seg $seg")
     val m = s"Build global dictionaries V2 for seg $seg succeeded"
     time(m, colRefSet.asScala.foreach(col => safeBuild(col)))
-    // set the original value to 'spark.sql.adaptive.enabled'
-    ss.conf.set("spark.sql.adaptive.enabled", aeOriginalValue);
+    if (aeOriginalValue) {
+      // set the original value to 'spark.sql.adaptive.enabled'
+      ss.conf.set("spark.sql.adaptive.enabled", aeOriginalValue);
+    }
   }
 
   @throws[IOException]
@@ -97,6 +98,9 @@ class CubeDictionaryBuilder(val dataset: Dataset[Row],
       .count()
 
     globalDict.writeMetaDict(bucketPartitionSize, seg.kylinconf.getGlobalDictV2MaxVersions, seg.kylinconf.getGlobalDictV2VersionTTL)
+
+    // after writing global dict, check the uniqueness for global dict
+    NGlobalDictBuilderAssist.checkGlobalDict(ref, seg, bucketPartitionSize, ss)
   }
 
   private def getLockPath(pathName: String) = s"/${seg.project}${HadoopUtil.GLOBAL_DICT_STORAGE_ROOT}/$pathName/lock"

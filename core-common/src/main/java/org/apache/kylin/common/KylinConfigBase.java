@@ -699,6 +699,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Long.parseLong(getOptional("kylin.dictionary.globalV2-version-ttl", "259200000"));
     }
 
+    public boolean isCheckGlobalDictV2() {
+        return Boolean.parseBoolean(getOptional("kylin.dictionary.globalV2-check", "true"));
+    }
+
     // ============================================================================
     // CUBE
     // ============================================================================
