@@ -97,7 +97,7 @@ class TestCreateFlatTable extends SparderBaseFunSuite with SharedSparkSession wi
     afterJoin1.collect()
 
     val jobs = helper.getJobsByGroupId(groupId)
-    Assert.assertEquals(jobs.length, 13)
+    Assert.assertEquals(jobs.length, 15)
     DefaultScheduler.destroyInstance()
   }
 

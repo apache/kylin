@@ -71,4 +71,34 @@ object NGlobalDictBuilderAssist extends Logging {
       desc.kylinconf.getGlobalDictV2MaxVersions, desc.kylinconf.getGlobalDictV2VersionTTL)
   }
 
+  /**
+   * check the global dict
+   */
+  @throws[IOException]
+  def checkGlobalDict(ref: ColumnDesc, desc: SegmentInfo, bucketPartitionSize: Int,
+                      ss: SparkSession): Unit = {
+    if (desc.kylinconf.isCheckGlobalDictV2) {
+      val globalDict = new NGlobalDictionary(desc.project, ref.tableAliasName, ref.columnName, desc.kylinconf.getHdfsWorkingDirectory)
+      val broadcastDict = ss.sparkContext.broadcast(globalDict)
+      import ss.implicits._
+      val existsDictDs = ss.createDataset(0 to bucketPartitionSize)
+        .flatMap {
+          bucketId =>
+            val gDict: NGlobalDictionary = broadcastDict.value
+            val bucketDict: NBucketDictionary = gDict.loadBucketDictionary(bucketId)
+            val tupleList = new util.ArrayList[(String, Long)](bucketDict.getAbsoluteDictMap.size)
+            bucketDict.getAbsoluteDictMap.object2LongEntrySet.asScala
+              .foreach(dictTuple => tupleList.add((dictTuple.getKey, dictTuple.getLongValue)))
+            tupleList.asScala.iterator
+        }
+      val valueCount = existsDictDs.dropDuplicates("_1").count()
+      val keyCount = existsDictDs.dropDuplicates("_2").count()
+      if (valueCount != keyCount) {
+        logError(s"Global dict build error on column ${ref.columnName}, " +
+          s"key distinct count is ${keyCount}, and value distinct count is ${valueCount}.")
+        throw new RuntimeException(s"Global dict build error on column ${ref.columnName}, " +
+          s"key distinct count is ${keyCount}, and value distinct count is ${valueCount}.")
+      }
+    }
+  }
 }
