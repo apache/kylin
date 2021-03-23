@@ -2938,6 +2938,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.bitmap-upper-bound", "10000000"));
     }
 
+    public boolean needReplaceAggWhenExactlyMatched() {
+        return Boolean.parseBoolean(getOptional("kylin.query.need-replace-exactly-agg", "true"));
+    }
+
     /**
      * Used to upload user-defined log4j configuration
      *

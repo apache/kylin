@@ -18,6 +18,7 @@
 
 package org.apache.kylin.storage.spark;
 
+import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -36,7 +37,6 @@ import org.apache.kylin.storage.gtrecord.GTCubeStorageQueryRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class HadoopFileStorageQuery extends GTCubeStorageQueryBase {
     private static final Logger log = LoggerFactory.getLogger(HadoopFileStorageQuery.class);
 
@@ -49,9 +49,10 @@ public class HadoopFileStorageQuery extends GTCubeStorageQueryBase {
         throw new UnsupportedOperationException("Unsupported getGTStorage.");
     }
 
-
-    public GTCubeStorageQueryRequest getStorageQueryRequest(StorageContext context, SQLDigest sqlDigest,
+    public GTCubeStorageQueryRequest getStorageQueryRequest(OLAPContext olapContext,
                                                             TupleInfo returnTupleInfo) {
+        StorageContext context = olapContext.storageContext;
+        SQLDigest sqlDigest = olapContext.getSQLDigest();
         context.setStorageQuery(this);
 
         //cope with queries with no aggregations

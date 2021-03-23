@@ -19,6 +19,8 @@
 package org.apache.kylin.query.relnode;
 
 import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.kylin.measure.bitmap.BitmapMeasureType;
+import org.apache.kylin.measure.hllc.HLLCMeasureType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 
 public class KylinAggregateCall extends AggregateCall {
@@ -36,5 +38,39 @@ public class KylinAggregateCall extends AggregateCall {
 
     public FunctionDesc getFunc() {
         return func;
+    }
+
+    public boolean isHllCountDistinctFunc() {
+        return (this.getFunc().getExpression()
+                .equalsIgnoreCase(FunctionDesc.FUNC_COUNT_DISTINCT) &&
+          this.getFunc().getReturnDataType().getName()
+                  .equalsIgnoreCase(HLLCMeasureType.DATATYPE_HLLC));
+    }
+
+    public boolean isBitmapCountDistinctFunc() {
+        return (this.getFunc().getExpression()
+                        .equalsIgnoreCase(FunctionDesc.FUNC_COUNT_DISTINCT) &&
+                this.getFunc().getReturnDataType().getName()
+                        .equalsIgnoreCase(BitmapMeasureType.DATATYPE_BITMAP) &&
+                this.getAggregation().getName()
+                        .equalsIgnoreCase(FunctionDesc.FUNC_COUNT_DISTINCT));
+    }
+
+    public boolean isIntersectCountFunc() {
+        return (this.getFunc().getExpression()
+                        .equalsIgnoreCase(FunctionDesc.FUNC_COUNT_DISTINCT) &&
+                this.getFunc().getReturnDataType().getName()
+                        .equalsIgnoreCase(BitmapMeasureType.DATATYPE_BITMAP) &&
+                this.getAggregation().getName()
+                        .equalsIgnoreCase(FunctionDesc.FUNC_INTERSECT_COUNT));
+    }
+
+    public boolean isIntersectValueFunc() {
+        return (this.getFunc().getExpression()
+                        .equalsIgnoreCase(FunctionDesc.FUNC_COUNT_DISTINCT) &&
+                this.getFunc().getReturnDataType().getName()
+                        .equalsIgnoreCase(BitmapMeasureType.DATATYPE_BITMAP) &&
+                this.getAggregation().getName()
+                        .equalsIgnoreCase(FunctionDesc.FUNC_INTERSECT_VALUE));
     }
 }

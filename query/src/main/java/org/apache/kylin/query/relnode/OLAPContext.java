@@ -139,7 +139,7 @@ public class OLAPContext {
     public boolean groupByExpression = false; // checkout if group by column has operator
     public boolean afterOuterAggregate = false;
     public boolean disableLimitPushdown = !KylinConfig.getInstanceFromEnv().isLimitPushDownEnabled();
-    public boolean isExactlyAggregate;
+    public boolean isExactlyAggregate = false;
 
     // cube metadata
     public IRealization realization;

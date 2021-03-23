@@ -37,14 +37,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
@@ -309,7 +307,8 @@ public class QueryService extends BasicService {
     public void logQuery(final String queryId, final SQLRequest request, final SQLResponse response) {
         final String user = aclEvaluate.getCurrentUserName();
         final List<String> realizationNames = new LinkedList<>();
-        final Set<Long> cuboidIds = new HashSet<Long>();
+        final List<Long> cuboidIds = new LinkedList<>();
+        final List<Boolean> isExactlyMatchSet = new LinkedList<>();
         float duration = response.getDuration() / (float) 1000;
         boolean storageCacheUsed = response.isStorageCacheUsed();
         boolean isPushDown = response.isPushDown();
@@ -321,6 +320,7 @@ public class QueryService extends BasicService {
                     //Some queries do not involve cuboid, e.g. lookup table query
                     cuboidIds.add(cuboid.getId());
                 }
+                isExactlyMatchSet.add(ctx.isExactlyAggregate);
 
                 if (ctx.realization != null) {
                     realizationNames.add(ctx.realization.getCanonicalName());
@@ -370,6 +370,7 @@ public class QueryService extends BasicService {
         stringBuilder.append("Project: ").append(request.getProject()).append(newLine);
         stringBuilder.append("Realization Names: ").append(realizationNames).append(newLine);
         stringBuilder.append("Cuboid Ids: ").append(cuboidIds).append(newLine);
+        stringBuilder.append("Is Exactly Matched: ").append(isExactlyMatchSet).append(newLine);
         stringBuilder.append("Total scan count: ").append(response.getTotalScanCount()).append(newLine);
         stringBuilder.append("Total scan files: ").append(response.getTotalScanFiles()).append(newLine);
         stringBuilder.append("Total metadata time: ").append(response.getMetadataTime()).append("ms").append(newLine);

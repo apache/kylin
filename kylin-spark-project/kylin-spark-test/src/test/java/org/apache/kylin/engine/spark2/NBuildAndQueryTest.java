@@ -167,6 +167,8 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
             // but now only supports string type for querying from SparkSQL
             tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_dynamic"));
 
+            tasks.add(new QueryCallable(CompareLevel.SAME, joinType, "sql_exactly_agg"));
+
             // Not support yet
             //tasks.add(new QueryCallable(CompareLevel.NONE, joinType, "sql_expression"));
 
@@ -355,7 +357,7 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
                     List<Quadruple<String, String, NExecAndComp.ITQueryMetrics, List<String>>> queries =
                             NExecAndComp.fetchQueries2(KYLIN_SQL_BASE_DIR + File.separator + sqlFolder);
                     NExecAndComp.execAndCompareNew2(queries, getProject(), compareLevel, joinType,
-                            null);
+                            null, sqlFolder);
                 }
             } catch (Throwable th) {
                 logger.error("Query fail on: {}", identity);

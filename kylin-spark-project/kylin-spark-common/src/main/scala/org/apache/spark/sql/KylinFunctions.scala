@@ -22,7 +22,10 @@ import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, DictEncode, Expression, ExpressionInfo, ExpressionUtils, ImplicitCastInputTypes, In, KylinAddMonths, Like, Literal, RoundBase, SplitPart, Sum0, TimestampAdd, TimestampDiff, Truncate, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{ApproxCountDistinctDecode, BinaryExpression,
+  DictEncode, Expression, ExpressionInfo, ExpressionUtils, ImplicitCastInputTypes, In,
+  KylinAddMonths, Like, Literal, PreciseCountDistinctDecode, RoundBase, SplitPart, Sum0,
+  TimestampAdd, TimestampDiff, Truncate, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.aggregate.AggregateFunction
 import org.apache.spark.sql.udaf.{ApproxCountDistinct, IntersectCount, PreciseCountDistinct}
 
@@ -62,6 +65,12 @@ object KylinFunctions {
     Column(KylinSubtractMonths(date0.expr, date1.expr))
   }
 
+  def precise_count_distinct_decode(column: Column): Column =
+    Column(PreciseCountDistinctDecode(column.expr))
+
+  def approx_count_distinct_decode(column: Column, precision: Int): Column =
+    Column(ApproxCountDistinctDecode(column.expr, Literal(precision)))
+
   def precise_count_distinct(column: Column): Column =
     Column(PreciseCountDistinct(column.expr).toAggregateExpression())
 
@@ -91,7 +100,12 @@ object KylinFunctions {
     FunctionEntity(ExpressionUtils.expression[TimestampDiff]("TIMESTAMPDIFF")),
     FunctionEntity(ExpressionUtils.expression[Truncate]("TRUNCATE")),
     FunctionEntity(ExpressionUtils.expression[DictEncode]("DICTENCODE")),
-    FunctionEntity(ExpressionUtils.expression[SplitPart]("split_part")))
+    FunctionEntity(ExpressionUtils.expression[SplitPart]("split_part")),
+    FunctionEntity(ExpressionUtils.expression[PreciseCountDistinctDecode]
+      ("precise_count_distinct_decode")),
+    FunctionEntity(ExpressionUtils.expression[ApproxCountDistinctDecode]
+      ("approx_count_distinct_decode"))
+  )
 }
 
 case class FunctionEntity(
