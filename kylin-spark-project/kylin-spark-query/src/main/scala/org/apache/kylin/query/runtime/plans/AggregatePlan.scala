@@ -53,10 +53,32 @@ object AggregatePlan extends LogEx {
       .map(groupId => col(schemaNames.apply(groupId)))
       .toList
 
-    if (rel.getContext != null && rel.getContext.isExactlyAggregate) {
+    rel.getContext.isExactlyAggregate = isExactlyCuboidMatched(rel, groupList)
+    if (rel.getContext.isExactlyAggregate) {
       // exactly match, skip agg, direct project.
-      val aggCols = rel.getRewriteAggCalls.asScala
-        .map(call => col(schemaNames.apply(call.getArgList.get(0)))).toList
+      val hash = System.identityHashCode(rel).toString
+      val aggCols = rel.getRewriteAggCalls.asScala.zipWithIndex.map {
+        case (call: KylinAggregateCall, index: Int)
+          if OLAPAggregateRel.getAggrFuncName(call).equals("COUNT_DISTINCT") =>
+          val dataType = call.getFunc.getReturnDataType
+          val funcName = OLAPAggregateRel.getAggrFuncName(call)
+          val argNames = call.getArgList.asScala.map(dataFrame.schema.names.apply(_))
+          val columnName = argNames.map(col)
+          val aggName = SchemaProcessor.replaceToAggravateSchemaName(index, funcName, hash, argNames: _*)
+          if (call.isHllCountDistinctFunc) {
+            KylinFunctions
+              .approx_count_distinct_decode(columnName.head, dataType.getPrecision)
+              .alias(aggName)
+          } else if (call.isBitmapCountDistinctFunc) {
+            // execute count distinct precisely
+            KylinFunctions.precise_count_distinct_decode(columnName.head).alias(aggName)
+          } else {
+            throw new IllegalArgumentException(
+              s"""Unsupported function name $funcName""")
+          }
+        case (call: Any, index: Int) =>
+          col(schemaNames.apply(call.getArgList.get(0)))
+      }.toList
       val prjList = groupList ++ aggCols
       logInfo(s"Query exactly match index, skip agg, project $prjList.")
       dataFrame.select(prjList: _*)
@@ -114,11 +136,11 @@ object AggregatePlan extends LogEx {
         val registeredFuncName = RuntimeHelper.registerSingleByColName(funcName, dataType)
         val aggName = SchemaProcessor.replaceToAggravateSchemaName(index, funcName, hash, argNames: _*)
         if (funcName == FunctionDesc.FUNC_COUNT_DISTINCT) {
-          if (dataType.getName == "hllc") {
-            org.apache.spark.sql.KylinFunctions
+          if (call.isHllCountDistinctFunc) {
+            KylinFunctions
               .approx_count_distinct(columnName.head, dataType.getPrecision)
               .alias(aggName)
-          } else if (call.getAggregation().getName.equalsIgnoreCase(FunctionDesc.FUNC_COUNT_DISTINCT)) {
+          } else if (call.isBitmapCountDistinctFunc) {
             // execute count distinct precisely
             KylinFunctions.precise_count_distinct(columnName.head).alias(aggName)
           } else {
@@ -129,7 +151,7 @@ object AggregatePlan extends LogEx {
               case (column: Column, _) => column
             }
             val upperBound = KylinConfig.getInstanceFromEnv.getBitmapValuesUpperBound
-            if (call.getAggregation().getName.equalsIgnoreCase(FunctionDesc.FUNC_INTERSECT_COUNT)) {
+            if (call.isIntersectCountFunc) {
               KylinFunctions.intersect_count(upperBound, columns.toList: _*)
                 .alias(SchemaProcessor
                   .replaceToAggravateSchemaName(index, FunctionDesc.FUNC_INTERSECT_COUNT, hash,
@@ -198,5 +220,31 @@ object AggregatePlan extends LogEx {
     call.isInstanceOf[KylinAggregateCall] && call
       .asInstanceOf[KylinAggregateCall]
       .isSum0
+  }
+
+  val exactlyMatchSupportedFunctions = List("SUM", "MIN", "MAX", "COUNT_DISTINCT")
+
+  def isExactlyCuboidMatched(rel: OLAPAggregateRel, groupByList: List[Column]): Boolean = {
+    val olapContext = rel.getContext
+    if (olapContext == null || olapContext.realization == null) return false
+    if (!olapContext.realization.getConfig.needReplaceAggWhenExactlyMatched) return false
+
+    val cuboid = olapContext.storageContext.getCuboid
+    if (cuboid == null) return false
+    if (olapContext.hasJoin) return false
+    // when querying with group by grouping sets, cube, rollup
+    if (rel.getGroupType() != Aggregate.Group.SIMPLE) return false
+
+    for (call <- rel.getRewriteAggCalls.asScala) {
+      if (!exactlyMatchSupportedFunctions.contains(OLAPAggregateRel.getAggrFuncName(call))) {
+        return false
+      }
+      // when using intersect_count and intersect_value
+      if (call.getArgList.size() > 1) return false
+    }
+    val groupByCols = rel.getGroups.asScala.map(_.getIdentity).toSet
+    if (groupByCols.isEmpty) return false
+    val cuboidDims = cuboid.getColumns.asScala.map(_.getIdentity).toSet
+    groupByCols.equals(cuboidDims)
   }
 }

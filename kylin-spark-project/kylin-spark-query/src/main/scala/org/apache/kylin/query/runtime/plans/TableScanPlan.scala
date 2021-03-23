@@ -65,10 +65,8 @@ object TableScanPlan extends LogEx {
     val query = new HadoopFileStorageQuery(cubeInstance)
     val returnTupleInfo = olapContext.returnTupleInfo
     val request = query.getStorageQueryRequest(
-      olapContext.storageContext,
-      olapContext.getSQLDigest,
+      olapContext,
       returnTupleInfo)
-    request.getGroups
     val cuboid = request.getCuboid
     val gridTableMapping = cuboid.getCuboidToGridTableMapping
 

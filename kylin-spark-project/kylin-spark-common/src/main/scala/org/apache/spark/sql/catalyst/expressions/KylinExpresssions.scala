@@ -17,12 +17,18 @@
  */
 package org.apache.spark.sql.catalyst.expressions
 
+import com.esotericsoftware.kryo.io.{Input, KryoDataInput}
 import org.apache.kylin.engine.spark.common.util.KylinDateTimeUtils
+import org.apache.kylin.measure.hllc.HLLCounter
 import org.apache.spark.dict.{NBucketDictionary, NGlobalDictionary}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.DeclarativeAggregate
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
+import org.apache.spark.sql.catalyst.expressions.codegen.Block._
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
+import org.roaringbitmap.longlong.Roaring64NavigableMap
+
+import java.nio.ByteBuffer
 
 // Returns the date that is num_months after start_date.
 // scalastyle:off line.size.limit
@@ -360,4 +366,122 @@ case class SplitPart(left: Expression, mid: Expression, right: Expression) exten
   }
 
   override def children: Seq[Expression] = Seq(left, mid, right)
+}
+
+case class PreciseCountDistinctDecode(_child: Expression)
+  extends UnaryExpression with ExpectsInputTypes {
+
+  override def child: Expression = _child
+
+  override def inputTypes: Seq[AbstractDataType] = Seq(BinaryType)
+
+  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
+    val childEval = child.genCode(ctx)
+    ev.copy(code = code"""
+         | ${childEval.code}
+         | boolean ${ev.isNull} = ${childEval.isNull};
+         | ${CodeGenerator.javaType(dataType)} ${ev.value} = 0l;
+         | if (!${ev.isNull} && (${childEval.value}.length > 0)) {
+         |   try {
+         |     org.roaringbitmap.longlong.Roaring64NavigableMap roaringMap =
+         |       new org.roaringbitmap.longlong.Roaring64NavigableMap();
+         |     roaringMap.deserialize(
+         |       new com.esotericsoftware.kryo.io.KryoDataInput(
+         |         new com.esotericsoftware.kryo.io.Input(${childEval.value})));
+         |     ${ev.value} = roaringMap.getLongCardinality();
+         |   } catch (java.lang.Exception e) {
+         |     throw new RuntimeException(e);
+         |   }
+         | }
+         |""".stripMargin
+    )
+  }
+
+  override protected def nullSafeEval(bytes: Any): Any = {
+    val storageBytes = bytes.asInstanceOf[Array[Byte]]
+    if (storageBytes.nonEmpty) {
+      try {
+        val roaringMap = new Roaring64NavigableMap()
+        roaringMap.deserialize(new KryoDataInput(new Input(storageBytes)))
+        roaringMap.getLongCardinality
+      } catch {
+        case other: Throwable =>
+          throw new RuntimeException(other)
+      }
+    } else {
+      0L
+    }
+  }
+
+  override def eval(input: InternalRow): Any = {
+    if (input != null) {
+      super.eval(input)
+    } else {
+      0L
+    }
+  }
+
+  override def dataType: DataType = LongType
+
+  override def prettyName: String = "precise_count_distinct_decode"
+}
+
+case class ApproxCountDistinctDecode(_left: Expression, _right: Expression)
+  extends BinaryExpression with ExpectsInputTypes {
+
+  def left: Expression = _left
+  def right: Expression = _right
+
+  override def inputTypes: Seq[AbstractDataType] = Seq(BinaryType, IntegerType)
+
+  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
+    val leftGen = left.genCode(ctx)
+    val rightGen = right.genCode(ctx)
+    ev.copy(code = code"""
+         | ${leftGen.code}
+         | ${rightGen.code}
+         | boolean ${ev.isNull} = ${leftGen.isNull} || ${rightGen.isNull};
+         | ${CodeGenerator.javaType(dataType)} ${ev.value} = 0l;
+         | if (!${ev.isNull} && (${leftGen.value}.length > 0)) {
+         |   try {
+         |     org.apache.kylin.measure.hllc.HLLCounter counter =
+         |       new org.apache.kylin.measure.hllc.HLLCounter(${rightGen.value});
+         |     counter.readRegisters(java.nio.ByteBuffer.wrap(${leftGen.value}));
+         |     ${ev.value} = counter.getCountEstimate();
+         |   } catch (java.lang.Exception e) {
+         |     throw new RuntimeException(e);
+         |   }
+         | }
+         |""".stripMargin
+    )
+  }
+
+  override protected def nullSafeEval(bytes: Any, precision: Any): Any = {
+    try {
+      val storageFormat = bytes.asInstanceOf[Array[Byte]]
+      val preciseValue = precision.asInstanceOf[Int]
+      if (storageFormat.nonEmpty) {
+        val counter = new HLLCounter(preciseValue)
+        counter.readRegisters(ByteBuffer.wrap(storageFormat))
+        counter.getCountEstimate
+      } else {
+        0L
+      }
+    } catch {
+      case other: Throwable =>
+        throw new RuntimeException(other)
+    }
+  }
+
+  override def eval(input: InternalRow): Any = {
+    if (input != null) {
+      super.eval(input)
+    } else {
+      0L
+    }
+  }
+
+  override def dataType: DataType = LongType
+
+  override def prettyName: String = "approx_count_distinct_decode"
 }

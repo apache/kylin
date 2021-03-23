@@ -186,7 +186,8 @@ public class NExecAndComp {
 
     public static void execAndCompareNew2(List<Quadruple<String, String, ITQueryMetrics, List<String>>> queries,
                                           String prj, CompareLevel compareLevel, String joinType,
-                                          Map<String, CompareEntity> recAndQueryResult) throws IOException{
+                                          Map<String, CompareEntity> recAndQueryResult,
+                                          String sqlFolder) throws IOException{
         for (Quadruple<String, String, ITQueryMetrics, List<String>> query : queries) {
             // init QueryContext
             QueryContextFacade.resetCurrent();
@@ -241,6 +242,15 @@ public class NExecAndComp {
                                     "SQL: {} in {}", query.getThird(), collectedMetrics, sql,
                             query.getFirst());
                     throw new IllegalArgumentException("Query metrics not match!");
+                }
+                if (sqlFolder.equalsIgnoreCase("sql_exactly_agg")) {
+                    if (!query.getThird().getExactlyMatched()
+                            .equals(collectedMetrics.getExactlyMatched())) {
+                        logger.error("Query metrics not match, excepted: {}, results: {} ! Please check " +
+                                        "SQL: {} in {}", query.getThird(), collectedMetrics, sql,
+                                query.getFirst());
+                        throw new IllegalArgumentException("Query metrics not match!");
+                    }
                 }
             }
 
@@ -712,6 +722,7 @@ public class NExecAndComp {
         long scanFiles = response.getTotalScanFiles();
         long scanBytes = response.getTotalScanBytes();
         List<Long> hitCuboids = new ArrayList<>();
+        List<Boolean> exactlyMatcheds = new ArrayList<>();
         Collection<OLAPContext> olapContexts = OLAPContext.getThreadLocalContexts();
         if (olapContexts != null) {
             Iterator<OLAPContext> olapContextIterator = olapContexts.iterator();
@@ -720,13 +731,14 @@ public class NExecAndComp {
                 if (olapContext.storageContext.getCuboid() != null) {
                     hitCuboids.add(olapContext.storageContext.getCuboid().getId());
                 }
+                exactlyMatcheds.add(olapContext.isExactlyAggregate);
             }
         }
         if (hitCuboids.size() == 0) {
             hitCuboids.add(-1L);
             logger.warn("Query: ({}) not hit cuboid!", sql);
         }
-        return new ITQueryMetrics(scanRowCount, scanBytes, scanFiles, hitCuboids);
+        return new ITQueryMetrics(scanRowCount, scanBytes, scanFiles, hitCuboids, exactlyMatcheds);
     }
 
     private static Pair<List<List<String>>, List<SelectedColumnMeta>> createResponseFromResultSet(ResultSet resultSet) throws SQLException{
@@ -884,19 +896,23 @@ public class NExecAndComp {
         private long scanBytes;
         private long scanFiles;
         private List<Long> cuboidId;
+        private List<Boolean> exactlyMatched;
 
         public ITQueryMetrics() {
             this.scanRowCount = -1L;
             this.scanBytes = -1L;
             this.scanFiles = -1L;
             this.cuboidId = new ArrayList<>();
+            this.exactlyMatched = new ArrayList<>();
         }
 
-        public ITQueryMetrics(long scanRowCount, long scanBytes, long scanFiles, List<Long> cuboidId) {
+        public ITQueryMetrics(long scanRowCount, long scanBytes, long scanFiles,
+                              List<Long> cuboidId, List<Boolean> exactlyMatched) {
             this.scanRowCount = scanRowCount;
             this.scanBytes = scanBytes;
             this.scanFiles = scanFiles;
             this.cuboidId = cuboidId;
+            this.exactlyMatched = exactlyMatched;
         }
 
         public long getScanRowCount() {
@@ -931,6 +947,14 @@ public class NExecAndComp {
             this.cuboidId = cuboidId;
         }
 
+        public List<Boolean> getExactlyMatched() {
+            return exactlyMatched;
+        }
+
+        public void setExactlyMatched(List<Boolean> exactlyMatched) {
+            this.exactlyMatched = exactlyMatched;
+        }
+
         public boolean equals(ITQueryMetrics metrics) {
             return this.cuboidId.equals(metrics.getCuboidId())
                     && this.scanFiles == metrics.getScanFiles()
@@ -941,6 +965,7 @@ public class NExecAndComp {
         public String toString() {
             StringBuffer sb = new StringBuffer("QueryMetrics: ");
             sb.append("cuboidId=").append(this.getCuboidId()).append(",");
+            sb.append("exactlyMatched=").append(this.getExactlyMatched()).append(",");
             sb.append("scanBytes=").append(this.getScanBytes()).append(",");
             sb.append("scanFiles=").append(this.getScanFiles()).append(",");
             sb.append("scanRowCount=").append(this.getScanRowCount());

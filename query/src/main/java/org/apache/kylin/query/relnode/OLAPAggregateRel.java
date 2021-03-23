@@ -687,4 +687,12 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         ret.setDigest("_KY_COUNT(" + colRef.getName() + ")");
         return ret;
     }
+
+    public List<TblColRef> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(List<TblColRef> groups) {
+        this.groups = groups;
+    }
 }
