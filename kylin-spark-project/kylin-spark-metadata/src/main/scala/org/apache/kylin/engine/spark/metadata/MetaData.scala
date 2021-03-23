@@ -118,6 +118,10 @@ case class SegmentInfo(id: String,
     toBuildLayouts.remove(layoutEntity)
   }
 
+  def removeLayout(layoutId: Long): Unit = {
+    toBuildLayouts = toBuildLayouts.filter(layout => !layout.getId.equals(layoutId))
+  }
+
   def updateSnapshot(tableInfo: Map[String, String]): Unit = {
     snapshotInfo = tableInfo
   }

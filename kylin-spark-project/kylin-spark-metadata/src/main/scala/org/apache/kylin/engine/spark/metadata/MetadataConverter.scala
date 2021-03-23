@@ -23,7 +23,7 @@ import java.util.regex.Pattern
 import java.{lang, util}
 
 import org.apache.commons.lang.StringUtils
-import org.apache.kylin.cube.cuboid.Cuboid
+import org.apache.kylin.cube.cuboid.{Cuboid, CuboidModeEnum}
 import org.apache.kylin.cube.{CubeInstance, CubeSegment, CubeUpdate}
 import org.apache.kylin.engine.spark.metadata.cube.BitUtils
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity
@@ -37,8 +37,12 @@ import scala.collection.mutable
 
 object MetadataConverter {
   def getSegmentInfo(cubeInstance: CubeInstance, segmentId: String, segmentName: String, identifier: String): SegmentInfo = {
+    getSegmentInfo(cubeInstance, segmentId, segmentName, identifier, CuboidModeEnum.CURRENT)
+  }
+
+  def getSegmentInfo(cubeInstance: CubeInstance, segmentId: String, segmentName: String, identifier: String, cuboidMode: CuboidModeEnum): SegmentInfo = {
     val (allColumnDesc, allRowKeyCols) = extractAllColumnDesc(cubeInstance)
-    val (layoutEntities, measure) = extractEntityAndMeasures(cubeInstance)
+    val (layoutEntities, measure) = extractEntityAndMeasures(cubeInstance, cuboidMode)
     val dictColumn = measure.values.filter(_.returnType.dataType.equals("bitmap"))
       .map(_.pra.head).toSet
     SegmentInfo(segmentId, segmentName, identifier, cubeInstance.getProject, cubeInstance.getConfig, extractFactTable(cubeInstance),
@@ -122,9 +126,12 @@ object MetadataConverter {
   }
 
   def extractEntityAndMeasures(cubeInstance: CubeInstance): (List[LayoutEntity], Map[Integer, FunctionDesc]) = {
+    extractEntityAndMeasures(cubeInstance, CuboidModeEnum.CURRENT)
+  }
+
+  def extractEntityAndMeasures(cubeInstance: CubeInstance, cuboidMode: CuboidModeEnum): (List[LayoutEntity], Map[Integer, FunctionDesc]) = {
     val (columnIndexes, shardByColumnsId, idToColumnMap, measureId) = genIDToColumnMap(cubeInstance)
-    (cubeInstance.getCuboidScheduler
-      .getAllCuboidIds
+    (cubeInstance.getCuboidsByMode(cuboidMode)
       .asScala
       .map { long =>
         genLayoutEntity(columnIndexes, shardByColumnsId, idToColumnMap, measureId, long)
@@ -202,7 +209,11 @@ object MetadataConverter {
   }
 
   def extractEntityList2JavaList(cubeInstance: CubeInstance): java.util.List[LayoutEntity] = {
-    extractEntityAndMeasures(cubeInstance)._1.asJava
+    extractEntityList2JavaList(cubeInstance, CuboidModeEnum.CURRENT)
+  }
+
+  def extractEntityList2JavaList(cubeInstance: CubeInstance, cuboidMode: CuboidModeEnum): java.util.List[LayoutEntity] = {
+    extractEntityAndMeasures(cubeInstance, cuboidMode)._1.asJava
   }
 
   private def toColumnDesc(ref: TblColRef, index: Int = -1, rowKey: Boolean = false) = {

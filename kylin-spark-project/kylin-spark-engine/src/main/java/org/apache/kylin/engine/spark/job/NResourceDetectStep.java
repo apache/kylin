@@ -18,19 +18,10 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
-public class NResourceDetectStep extends NSparkExecutable {
-
-    private final static String[] excludedSparkConf = new String[] {"spark.executor.cores",
-            "spark.executor.memoryOverhead", "spark.executor.extraJavaOptions",
-            "spark.executor.instances", "spark.executor.memory", "spark.executor.extraClassPath"};
+public class NResourceDetectStep extends NSparkLocalStep {
 
     // called by reflection
     public NResourceDetectStep() {
@@ -44,33 +35,12 @@ public class NResourceDetectStep extends NSparkExecutable {
             this.setSparkSubmitClassName(ResourceDetectBeforeMergingJob.class.getName());
         /*} else if (parent instanceof NTableSamplingJob) {
             this.setSparkSubmitClassName(ResourceDetectBeforeSampling.class.getName());
-        */} else {
+        */
+        } else if (parent instanceof NSparkOptimizingJob) {
+            this.setSparkSubmitClassName(ResourceDetectBeforeOptimizingJob.class.getName());
+        } else {
             throw new IllegalArgumentException("Unsupported resource detect for " + parent.getName() + " job");
         }
         this.setName(ExecutableConstants.STEP_NAME_DETECT_RESOURCE);
-    }
-
-    @Override
-    protected Set<String> getMetadataDumpList(KylinConfig config) {
-        AbstractExecutable parent = getParentExecutable();
-        if (parent instanceof DefaultChainedExecutable) {
-            return ((DefaultChainedExecutable) parent).getMetadataDumpList(config);
-        }
-        throw new IllegalStateException("Unsupported resource detect for non chained executable!");
-    }
-
-    @Override
-    protected Map<String, String> getSparkConfigOverride(KylinConfig config) {
-        Map<String, String> sparkConfigOverride = super.getSparkConfigOverride(config);
-        //run resource detect job on local not cluster
-        sparkConfigOverride.put("spark.master", "local");
-        sparkConfigOverride.put("spark.sql.autoBroadcastJoinThreshold", "-1");
-        sparkConfigOverride.put("spark.sql.adaptive.enabled", "false");
-        for (String sparkConf : excludedSparkConf) {
-            if (sparkConfigOverride.containsKey(sparkConf)) {
-                sparkConfigOverride.remove(sparkConf);
-            }
-        }
-        return sparkConfigOverride;
     }
 }

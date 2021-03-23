@@ -22,6 +22,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.CuboidModeEnum;
 import org.apache.kylin.engine.spark.metadata.MetadataConverter;
 import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 
@@ -32,11 +33,15 @@ public class ManagerHub {
     private ManagerHub() {
     }
 
-    public static SegmentInfo getSegmentInfo(KylinConfig kylinConfig, String cubeName, String segmentId) {
-        CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCubeByUuid(cubeName);
+    public static SegmentInfo getSegmentInfo(KylinConfig kylinConfig, String cubeId, String segmentId) {
+        return getSegmentInfo(kylinConfig, cubeId, segmentId, CuboidModeEnum.CURRENT);
+    }
+
+    public static SegmentInfo getSegmentInfo(KylinConfig kylinConfig, String cubeId, String segmentId, CuboidModeEnum cuboidMode) {
+        CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCubeByUuid(cubeId);
         CubeSegment segment = cubeInstance.getSegmentById(segmentId);
-        return MetadataConverter.getSegmentInfo(CubeManager.getInstance(kylinConfig).getCubeByUuid(cubeName),
-                segment.getUuid(), segment.getName(), segment.getStorageLocationIdentifier());
+        return MetadataConverter.getSegmentInfo(CubeManager.getInstance(kylinConfig).getCubeByUuid(cubeId),
+                segment.getUuid(), segment.getName(), segment.getStorageLocationIdentifier(), cuboidMode);
     }
 
     public static CubeInstance updateSegment(KylinConfig kylinConfig, SegmentInfo segmentInfo) throws IOException {

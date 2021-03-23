@@ -45,6 +45,15 @@ object CuboidStatisticsJob {
     //    l.foreach(x => println(x._1 + " >>><<< " + x._2.cuboid.counter.getCountEstimate))
     l
   }
+
+  def statistics(inputDs: Dataset[Row], seg: SegmentInfo, layoutIds: Array[Long]): Array[(Long, AggInfo)] = {
+    val res = inputDs.rdd.repartition(inputDs.sparkSession.sparkContext.defaultParallelism)
+      .mapPartitions(new CuboidStatisticsJob(layoutIds, seg.allColumns.count(c => c.rowKey)).statisticsWithinPartition)
+    val l = res.map(a => (a.key, a)).reduceByKey((a, b) => a.merge(b)).collect()
+    l
+  }
+
+
 }
 
 class CuboidStatisticsJob(ids: Array[Long], rkc: Int) extends Serializable {

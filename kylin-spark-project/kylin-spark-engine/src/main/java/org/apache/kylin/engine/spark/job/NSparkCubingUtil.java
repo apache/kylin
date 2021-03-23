@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.spark.job;
 
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.spark.sql.Column;
 import org.spark_project.guava.collect.Sets;
@@ -79,10 +80,8 @@ public class NSparkCubingUtil {
         return withoutDot;
     }
 
-    public static String getStoragePath(CubeSegment nDataSegment, Long layoutId) {
-        String hdfsWorkingDir = nDataSegment.getConfig().getReadHdfsWorkingDirectory();
-        return hdfsWorkingDir + getStoragePathWithoutPrefix(nDataSegment.getProject(),
-                nDataSegment.getCubeInstance().getId(), nDataSegment.getUuid(), layoutId);
+    public static String getStoragePath(CubeSegment segment, Long layoutId) {
+        return PathManager.getParquetStoragePath(segment.getCubeInstance(), segment.getName(), segment.getStorageLocationIdentifier(), layoutId);
     }
 
     static Set<String> toSegmentNames(Segments<CubeSegment> segments) {
