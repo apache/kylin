@@ -18,6 +18,9 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.kylin.engine.spark.application.SparkApplication;
@@ -52,12 +55,15 @@ public class ResourceDetectBeforeCubingJob extends SparkApplication {
     protected void doExecute() throws Exception {
         logger.info("Start detect resource before cube.");
         Set<String> segmentIds = Sets.newHashSet(StringUtils.split(getParam(MetadataConstants.P_SEGMENT_IDS)));
+        CubeManager cubeManager = CubeManager.getInstance(config);
+        CubeInstance cubeInstance = cubeManager.getCubeByUuid(getParam(MetadataConstants.P_CUBE_ID));
         for (String segId : segmentIds) {
             SegmentInfo seg = ManagerHub.getSegmentInfo(config, getParam(MetadataConstants.P_CUBE_ID), segId);
+            CubeSegment segment = cubeInstance.getSegmentById(segId);
             spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(seg.toBuildLayouts()));
             ResourceDetectUtils.write(new Path(config.getJobTmpShareDir(project, jobId), ResourceDetectUtils.countDistinctSuffix()),
                     ResourceDetectUtils.findCountDistinctMeasure(JavaConversions.asJavaCollection(seg.toBuildLayouts())));
-            ParentSourceChooser datasetChooser = new ParentSourceChooser(spanningTree, seg, jobId, ss, config, false);
+            ParentSourceChooser datasetChooser = new ParentSourceChooser(spanningTree, seg, segment, jobId, ss, config, false);
             datasetChooser.decideSources();
             NBuildSourceInfo buildFromFlatTable = datasetChooser.flatTableSource();
             if (buildFromFlatTable != null) {

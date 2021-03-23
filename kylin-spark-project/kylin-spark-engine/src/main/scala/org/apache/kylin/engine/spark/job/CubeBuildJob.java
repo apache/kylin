@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.CubeStatsWriter;
 import org.apache.kylin.engine.mr.common.StatisticsDecisionUtil;
@@ -111,10 +110,10 @@ public class CubeBuildJob extends SparkApplication {
         Preconditions.checkArgument(segmentIds.size() == 1, "Build one segment in one time.");
 
         String firstSegmentId = segmentIds.iterator().next();
-        String cubeName = getParam(MetadataConstants.P_CUBE_ID);
-        SegmentInfo seg = ManagerHub.getSegmentInfo(config, cubeName, firstSegmentId);
+        String cubeId = getParam(MetadataConstants.P_CUBE_ID);
+        SegmentInfo seg = ManagerHub.getSegmentInfo(config, cubeId, firstSegmentId);
         cubeManager = CubeManager.getInstance(config);
-        cubeInstance = cubeManager.getCubeByUuid(cubeName);
+        cubeInstance = cubeManager.getCubeByUuid(cubeId);
         CubeSegment newSegment = cubeInstance.getSegmentById(firstSegmentId);
         SpanningTree spanningTree;
         ParentSourceChooser sourceChooser;
@@ -127,7 +126,7 @@ public class CubeBuildJob extends SparkApplication {
             // 1.1 Call CuboidStatistics#statistics
             long startMills = System.currentTimeMillis();
             spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(seg.toBuildLayouts()));
-            sourceChooser = new ParentSourceChooser(spanningTree, seg, jobId, ss, config, false);
+            sourceChooser = new ParentSourceChooser(spanningTree, seg, newSegment, jobId, ss, config, false);
             sourceChooser.setNeedStatistics();
             sourceChooser.decideFlatTableSource(null);
             Map<Long, HLLCounter> hllMap = new HashMap<>();
@@ -138,7 +137,7 @@ public class CubeBuildJob extends SparkApplication {
 
             // 1.2 Save cuboid statistics
             String jobTmpDir = config.getJobTmpDir(project) + "/" + jobId;
-            Path statisticsDir = new Path(jobTmpDir + "/" + ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeName + "/" + firstSegmentId + "/");
+            Path statisticsDir = new Path(jobTmpDir + "/" + ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeId + "/" + firstSegmentId + "/");
             Optional<HLLCounter> hll = hllMap.values().stream().max(Comparator.comparingLong(HLLCounter::getCountEstimate));
             long rc = hll.map(HLLCounter::getCountEstimate).orElse(1L);
             CubeStatsWriter.writeCuboidStatistics(HadoopUtil.getCurrentConfiguration(), statisticsDir, hllMap, 1, rc);
@@ -164,7 +163,7 @@ public class CubeBuildJob extends SparkApplication {
         try {
             //TODO: what if a segment is deleted during building?
             for (String segId : segmentIds) {
-                seg = ManagerHub.getSegmentInfo(config, cubeName, segId);
+                seg = ManagerHub.getSegmentInfo(config, cubeId, segId);
                 spanningTree = new ForestSpanningTree(
                         JavaConversions.asJavaCollection(seg.toBuildLayouts()));
                 logger.info("There are {} cuboids to be built in segment {}.",
@@ -175,7 +174,7 @@ public class CubeBuildJob extends SparkApplication {
                 }
 
                 // choose source
-                sourceChooser = new ParentSourceChooser(spanningTree, seg, jobId, ss, config, true);
+                sourceChooser = new ParentSourceChooser(spanningTree, seg, newSegment, jobId, ss, config, true);
                 sourceChooser.decideSources();
                 NBuildSourceInfo buildFromFlatTable = sourceChooser.flatTableSource();
                 Map<Long, NBuildSourceInfo> buildFromLayouts = sourceChooser.reuseSources();
@@ -313,7 +312,6 @@ public class CubeBuildJob extends SparkApplication {
                 queue.offer(theNextLayer);
             }
         }
-
     }
 
     // build current layer and return the next layer to be built.

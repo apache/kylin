@@ -44,12 +44,12 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.EngineFactory;
-import org.apache.kylin.engine.mr.BatchOptimizeJobCheckpointBuilder;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.LookupSnapshotBuildJob;
 import org.apache.kylin.engine.mr.common.CubeJobLockUtil;
 import org.apache.kylin.engine.mr.common.JobInfoConverter;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
+import org.apache.kylin.engine.spark.job.NSparkBatchOptimizeJobCheckpointBuilder;
 import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.engine.spark.metadata.cube.source.SourceFactory;
 import org.apache.kylin.job.JobInstance;
@@ -331,7 +331,7 @@ public class JobService extends BasicService implements InitializingBean {
             }
 
             /** Add checkpoint job for batch jobs */
-            CheckpointExecutable checkpointJob = new BatchOptimizeJobCheckpointBuilder(cube, submitter).build();
+            CheckpointExecutable checkpointJob = new NSparkBatchOptimizeJobCheckpointBuilder(cube, submitter).build();
             checkpointJob.addTaskListForCheck(optimizeJobList);
 
             getExecutableManager().addJob(checkpointJob);
@@ -501,11 +501,19 @@ public class JobService extends BasicService implements InitializingBean {
 
     public String getJobStepOutput(String jobId, String stepId) {
         ExecutableManager executableManager = getExecutableManager();
+        AbstractExecutable job = executableManager.getJob(jobId);
+        if (job instanceof CheckpointExecutable) {
+            return executableManager.getOutput(stepId).getVerboseMsg();
+        }
         return executableManager.getOutputFromHDFSByJobId(jobId, stepId).getVerboseMsg();
     }
 
     public String getAllJobStepOutput(String jobId, String stepId) {
         ExecutableManager executableManager = getExecutableManager();
+        AbstractExecutable job = executableManager.getJob(jobId);
+        if (job instanceof CheckpointExecutable) {
+            return executableManager.getOutput(stepId).getVerboseMsg();
+        }
         return executableManager.getOutputFromHDFSByJobId(jobId, stepId, Integer.MAX_VALUE).getVerboseMsg();
     }
 
@@ -666,6 +674,7 @@ public class JobService extends BasicService implements InitializingBean {
         if (null == job.getRelatedCube() || null == getCubeManager().getCube(job.getRelatedCube())
                 || null == job.getRelatedSegment()) {
             getExecutableManager().discardJob(job.getId());
+            return;
         }
 
         logger.info("Cancel job [" + job.getId() + "] trigger by "

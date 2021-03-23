@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.spark;
 
+import org.apache.kylin.engine.spark.job.NSparkOptimizingJob;
 import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -50,7 +51,7 @@ public class SparkBatchCubingEngineParquet implements IBatchCubingEngine {
 
     @Override
     public DefaultChainedExecutable createBatchOptimizeJob(CubeSegment optimizeSegment, String submitter) {
-        return null;
+        return NSparkOptimizingJob.optimize(optimizeSegment, submitter);
     }
 
     @Override

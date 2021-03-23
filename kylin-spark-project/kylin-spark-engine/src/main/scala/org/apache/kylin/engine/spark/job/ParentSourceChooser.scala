@@ -21,9 +21,11 @@ package org.apache.kylin.engine.spark.job
 import org.apache.kylin.shaded.com.google.common.collect.Maps
 import org.apache.kylin.engine.spark.builder._
 import org.apache.kylin.common.KylinConfig
+import org.apache.kylin.cube.CubeSegment
 import org.apache.kylin.engine.spark.builder.NBuildSourceInfo
 import org.apache.kylin.engine.spark.metadata.cube.model.{LayoutEntity, SpanningTree}
 import org.apache.kylin.engine.spark.metadata.SegmentInfo
+import org.apache.kylin.engine.spark.metadata.cube.PathManager
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{Dataset, Row, SaveMode, SparkSession}
@@ -33,7 +35,8 @@ import scala.collection.JavaConverters._
 
 class ParentSourceChooser(
   toBuildTree: SpanningTree,
-  var seg: SegmentInfo,
+  var segInfo: SegmentInfo,
+  var segment: CubeSegment,
   jobId: String,
   ss: SparkSession,
   config: KylinConfig,
@@ -52,8 +55,8 @@ class ParentSourceChooser(
   //TODO: MetadataConverter don't have getCubeDesc() now
 
   /*val flatTableDesc = new CubeJoinedFlatTableDesc(
-    MetadataConverter.getCubeDesc(seg.getCube),
-    ParentSourceChooser.needJoinLookupTables(seg.getModel, toBuildTree))*/
+    MetadataConverter.getCubeDesc(segInfo.getCube),
+    ParentSourceChooser.needJoinLookupTables(segInfo.getModel, toBuildTree))*/
   def setNeedStatistics(): Unit =
     needStatistics = true
 
@@ -61,7 +64,7 @@ class ParentSourceChooser(
 
   def decideSources(): Unit = {
     toBuildTree.getRootIndexEntities.asScala.foreach { entity =>
-      val parentLayout = CuboidLayoutChooser.selectLayoutForBuild(seg, entity)
+      val parentLayout = CuboidLayoutChooser.selectLayoutForBuild(segInfo, entity)
       if (parentLayout != null) {
         decideParentLayoutSource(entity, parentLayout)
       } else {
@@ -76,18 +79,18 @@ class ParentSourceChooser(
         // hacked, for some case, you do not want to trigger buildSnapshot
         // eg: resource detect
         // Move this to a more suitable place
-        val builder = new CubeSnapshotBuilder(seg, ss)
+        val builder = new CubeSnapshotBuilder(segInfo, ss)
         builder.checkDupKey()
-        seg = builder.buildSnapshot
+        segInfo = builder.buildSnapshot
       }
       flatTableSource = getFlatTable
 
-      val rowKeyColumns: Seq[String] = seg.allColumns.filter(c => c.rowKey).map(c => c.id.toString)
+      val rowKeyColumns: Seq[String] = segInfo.allColumns.filter(c => c.rowKey).map(c => c.id.toString)
       if (aggInfo == null && needStatistics) {
         val startMs = System.currentTimeMillis()
         logInfo("Sampling start ...")
         val coreDs = flatTableSource.getFlatTableDS.select(rowKeyColumns.head, rowKeyColumns.tail: _*)
-        aggInfo = CuboidStatisticsJob.statistics(coreDs, seg)
+        aggInfo = CuboidStatisticsJob.statistics(coreDs, segInfo)
         logInfo("Sampling finished and cost " + (System.currentTimeMillis() - startMs)/1000 + " s .")
         val statisticsStr = aggInfo.sortBy(x => x._1).map(x => x._1 + ":" + x._2.cuboid.counter.getCountEstimate).mkString(", ")
         logInfo("Cuboid Statistics results : \t" + statisticsStr)
@@ -131,7 +134,7 @@ class ParentSourceChooser(
         }.toSeq
 
         df.select(allUsedCols.map(col): _*)
-        path = s"${config.getJobTmpFlatTableDir(seg.project, jobId)}"
+        path = s"${config.getJobTmpFlatTableDir(segInfo.project, jobId)}"
         ss.sparkContext.setJobDescription("Persist flat table.")
         df.write.mode(SaveMode.Overwrite).parquet(path)
         logInfo(s"Persist flat table into:$path. Selected cols in table are $allUsedCols.")
@@ -146,14 +149,14 @@ class ParentSourceChooser(
   //  private def persistFactViewIfNecessary(): String = {
   //    var path = ""
   //    if (needEncoding) {
-  //      logInfo(s"Check project:${seg.getProject} seg:${seg.getName} persist view fact table.")
+  //      logInfo(s"Check project:${segInfo.getProject} segInfo:${segInfo.getName} persist view fact table.")
   //      val fact = flatTableDesc.getDataModel.getRootFactTable
-  //      val globalDicts = DictionaryBuilderHelper.extractTreeRelatedGlobalDicts(seg, toBuildTree)
+  //      val globalDicts = DictionaryBuilderHelper.extractTreeRelatedGlobalDicts(segInfo, toBuildTree)
   //      val existsFactDictCol = globalDicts.asScala.exists(_.tableName.equals(buildDesc.factTable.tableName))
   //
   //      if (fact.getTableDesc.isView && existsFactDictCol) {
   //        val viewDS = ss.table(fact.getTableDesc).alias(fact.getAlias)
-  //        path = s"${config.getJobTmpViewFactTableDir(seg.getProject, jobId)}"
+  //        path = s"${config.getJobTmpViewFactTableDir(segInfo.getProject, jobId)}"
   //        ss.sparkContext.setJobDescription("Persist view fact table.")
   //        viewDS.write.mode(SaveMode.Overwrite).parquet(path)
   //        logInfo(s"Persist view fact table into:$path.")
@@ -164,7 +167,7 @@ class ParentSourceChooser(
 
   private def getSourceFromLayout(layout: LayoutEntity): NBuildSourceInfo = {
     val buildSource = new NBuildSourceInfo
-    buildSource.setParentStoragePath("NSparkCubingUtil.getStoragePath(dataCuboid)")
+    buildSource.setParentStoragePath(NSparkCubingUtil.getStoragePath(segment, layout.getId))
     buildSource.setSparkSession(ss)
     buildSource.setLayoutId(layout.getId)
     buildSource.setLayout(layout)
@@ -181,8 +184,8 @@ class ParentSourceChooser(
     sourceInfo.setLayoutId(ParentSourceChooser.FLAT_TABLE_FLAG)
     //    sourceInfo.setViewFactTablePath(viewPath)
 
-    //    val needJoin = ParentSourceChooser.needJoinLookupTables(seg.getModel, toBuildTree)
-    val flatTable = new CreateFlatTable(seg, toBuildTree, ss, sourceInfo)
+    //    val needJoin = ParentSourceChooser.needJoinLookupTables(segInfo.getModel, toBuildTree)
+    val flatTable = new CreateFlatTable(segInfo, toBuildTree, ss, sourceInfo)
     val afterJoin: Dataset[Row] = flatTable.generateDataset(needEncoding, true)
     sourceInfo.setFlatTableDS(afterJoin)
 
