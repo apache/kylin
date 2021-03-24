@@ -43,11 +43,15 @@ object CubeTableEncoder extends Logging {
     val bucketThreshold = seg.kylinconf.getGlobalDictV2ThresholdBucketSize
     val minBucketSize: Long = sourceCnt / bucketThreshold
 
+    var repartitionSizeAfterEncode = 0;
     cols.asScala.foreach(
       ref => {
         val globalDict = new NGlobalDictionary(seg.project, ref.tableAliasName, ref.columnName, seg.kylinconf.getHdfsWorkingDirectory)
         val bucketSize = globalDict.getBucketSizeOrDefault(seg.kylinconf.getGlobalDictV2MinHashPartitions)
         val enlargedBucketSize = (((minBucketSize / bucketSize) + 1) * bucketSize).toInt
+        if (enlargedBucketSize > repartitionSizeAfterEncode) {
+          repartitionSizeAfterEncode = enlargedBucketSize;
+        }
 
         val encodeColRef = convertFromDot(ref.identity)
         val columnIndex = structType.fieldIndex(encodeColRef)
@@ -63,7 +67,20 @@ object CubeTableEncoder extends Logging {
           .select(columns: _*)
       }
     )
+
     ds.sparkSession.sparkContext.setJobDescription(null)
+
+    //repartition by a single column during dict encode step before is more easily to cause data skew, add step to void such case.
+    if (!cols.isEmpty && seg.kylinconf.rePartitionEncodedDatasetWithRowKey) {
+      val colsInDS = partitionedDs.schema.map(_.name)
+      val rowKeyColRefs = seg.allRowKeyCols.map(colDesc => convertFromDot(colDesc.identity)).filter(colsInDS.contains).map(col)
+      //if not set in config, use the largest partition num during dict encode step
+      if (seg.kylinconf.getRepartitionNumAfterEncode > 0) {
+        repartitionSizeAfterEncode = seg.kylinconf.getRepartitionNumAfterEncode;
+      }
+      logInfo(s"repartition encoded dataset to $repartitionSizeAfterEncode partitions to avoid data skew")
+      partitionedDs = partitionedDs.repartition(repartitionSizeAfterEncode, rowKeyColRefs.toArray: _*)
+    }
     partitionedDs
   }
 }

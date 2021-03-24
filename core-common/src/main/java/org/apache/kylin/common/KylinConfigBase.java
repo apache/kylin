@@ -3104,4 +3104,25 @@ public abstract class KylinConfigBase implements Serializable {
     public int getMaxParentDatasetPersistCount() {
         return Integer.parseInt(getOptional("kylin.engine.spark.parent-dataset.max.persist.count", "1"));
     }
+
+    public int getRepartitionNumAfterEncode() {
+        return Integer.valueOf(getOptional("kylin.engine.spark.dataset.repartition.num.after.encoding", "0"));
+    }
+
+    /***
+     * Global dictionary will be split into several buckets. To encode a column to int value more
+     * efficiently, source dataset will be repartitioned by the to-be encoded column to the same
+     * amount of partitions as the dictionary's bucket size.
+     *
+     * It sometimes bring side effect, because repartitioning by a single column is more likely to cause
+     * serious data skew, causing one task takes the majority of time in first layer's cuboid building.
+     *
+     * When faced with this case, you can try repartitioning encoded dataset by all
+     * RowKey columns to avoid data skew. The repartition size is default to max bucket
+     * size of all dictionaries, but you can also set to other flexible value by this option:
+     * 'kylin.engine.spark.dataset.repartition.num.after.encoding'
+     ***/
+    public boolean rePartitionEncodedDatasetWithRowKey() {
+        return Boolean.valueOf(getOptional("kylin.engine.spark.repartition.encoded.dataset", "false"));
+    }
 }

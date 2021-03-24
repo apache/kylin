@@ -37,7 +37,7 @@ import scala.collection.mutable
 
 object MetadataConverter {
   def getSegmentInfo(cubeInstance: CubeInstance, segmentId: String, segmentName: String, identifier: String): SegmentInfo = {
-    val allColumnDesc = extractAllColumnDesc(cubeInstance)
+    val (allColumnDesc, allRowKeyCols) = extractAllColumnDesc(cubeInstance)
     val (layoutEntities, measure) = extractEntityAndMeasures(cubeInstance)
     val dictColumn = measure.values.filter(_.returnType.dataType.equals("bitmap"))
       .map(_.pra.head).toSet
@@ -47,7 +47,8 @@ object MetadataConverter {
       dictColumn,
       dictColumn,
       extractPartitionExp(cubeInstance.getSegmentById(segmentId)),
-      extractFilterCondition(cubeInstance.getSegmentById(segmentId)))
+      extractFilterCondition(cubeInstance.getSegmentById(segmentId)),
+      allRowKeyCols.asScala.values.toList)
   }
 
   def getCubeUpdate(segmentInfo: SegmentInfo): CubeUpdate = {
@@ -94,25 +95,25 @@ object MetadataConverter {
       tb.getColumns.asScala.map(ref => toColumnDesc(ref = ref)).toList, tb.getAlias, tb.getTableDesc.getSourceType, addInfo)
   }
 
-  def extractAllColumnDesc(cubeInstance: CubeInstance): java.util.LinkedHashMap[Integer, ColumnDesc] = {
-    val dimensionIndex = new util.LinkedHashMap[Integer, ColumnDesc]()
+  def extractAllColumnDesc(cubeInstance: CubeInstance): (java.util.LinkedHashMap[Integer, ColumnDesc],
+    java.util.LinkedHashMap[Integer, ColumnDesc]) = {
+    //use LinkedHashMap to keep RowKey column the same order as its bit index
+    val dimensions = new util.LinkedHashMap[Integer, ColumnDesc]()
     val columns = cubeInstance.getDescriptor
       .getRowkey
       .getRowKeyColumns
     val dimensionMapping = columns
       .map(co => (co.getColRef, co.getBitIndex))
     val set = dimensionMapping.map(_._1).toSet
-    val refs = cubeInstance.getAllColumns.asScala.diff(set)
+    val measureCols = cubeInstance.getAllColumns.asScala.diff(set)
       .zipWithIndex
       .map(tp => (tp._1, tp._2 + dimensionMapping.length))
-
-    val columnIDTuples = dimensionMapping ++ refs
-    val colToIndex = columnIDTuples.toMap
-    columnIDTuples
-      .foreach { co =>
-        dimensionIndex.put(co._2, toColumnDesc(co._1, co._2, set.contains(co._1)))
-      }
-    dimensionIndex
+    dimensionMapping.foreach(co => dimensions.put(co._2, toColumnDesc(co._1, co._2, true)))
+    val allColumns = new util.LinkedHashMap[Integer, ColumnDesc]()
+    //keep RowKey columns before measure columns in LinkedHashMap
+    allColumns.putAll(dimensions)
+    measureCols.foreach(co =>  allColumns.put(co._2, toColumnDesc(co._1, co._2, false)))
+    (allColumns, dimensions)
   }
 
   def toLayoutEntity(cubeInstance: CubeInstance, cuboid: Cuboid): LayoutEntity = {
