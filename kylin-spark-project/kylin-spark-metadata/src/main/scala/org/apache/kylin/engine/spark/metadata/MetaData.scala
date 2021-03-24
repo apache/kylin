@@ -111,6 +111,7 @@ case class SegmentInfo(id: String,
                        allDictColumns: Set[ColumnDesc],
                        partitionExp: String,
                        filterCondition: String,
+                       allRowKeyCols: List[ColumnDesc],
                        var snapshotInfo: Map[String, String] = Map.empty[String, String]) {
 
   def updateLayout(layoutEntity: LayoutEntity): Unit = {
