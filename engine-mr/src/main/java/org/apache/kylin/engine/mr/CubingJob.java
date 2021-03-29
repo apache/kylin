@@ -41,6 +41,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
+import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -288,9 +289,8 @@ public class CubingJob extends DefaultChainedExecutable {
             if (status != ExecutableState.SUCCEED) {
                 break;
             }
-            String classSimpleName = task.getClass().getSimpleName();
-            if (classSimpleName.equals(ENGINE_MR)) {
-                time += task.getMapReduceWaitTime();
+            if (task instanceof MapReduceExecutable) {
+                time += ((MapReduceExecutable) task).getMapReduceWaitTime();
             }
         }
         setMapReduceWaitTime(time);

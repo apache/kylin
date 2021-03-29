@@ -25,30 +25,25 @@ import java.util.Map;
 public class DingTalkTemplateProvider {
 
     private static DingTalkTemplateProvider DEFAULT_INSTANCE = new DingTalkTemplateProvider();
-
+    
+    public static String TITLEFORMAT = "<font color=%s size=3>%s</font>  \n";
+    
+    public static String CONTENTFORMAT = " **%s :** %s  \n";
+    
     public static DingTalkTemplateProvider getInstance() {
         return DEFAULT_INSTANCE;
     }
-
+    
     public String buildDingTalkContent(String state, String title, Map<String, Object> data) {
-        String titleStart = "<font color=%s size=3>";
-        String titleEnd = "</font>";
-        StringBuilder sb = new StringBuilder(Strings.lenientFormat(titleStart, titleColor(state)))
-                .append(title)
-                .append(titleEnd)
-                .append("  \n");
+        StringBuilder sb = new StringBuilder(Strings.lenientFormat(TITLEFORMAT, titleColor(state), title));
         for (Map.Entry<String, Object> entry : data.entrySet()) {
-            sb.append(" **")
-                    .append(entry.getKey())
-                    .append(" :** ")
-                    .append(entry.getValue())
-                    .append("  \n");
+            sb.append(Strings.lenientFormat(CONTENTFORMAT, entry.getKey(), entry.getValue()));
         }
 
         return sb.toString();
     }
 
-    private String titleColor(String state) {
+    private static String titleColor(String state) {
         switch (state) {
             case NotificationConstants.JOB_SUCCEED:
             case NotificationConstants.JOB_MIGRATION_COMPLETED:

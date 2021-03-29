@@ -48,7 +48,6 @@ public class MailServiceTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testSendEmail() throws IOException {
-
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         List<String> receivers = new ArrayList<String>(1);
         receivers.add("foobar@foobar.com");
@@ -57,8 +56,9 @@ public class MailServiceTest extends LocalFileMetadataTestCase {
 
         Map<String, Object> content = new HashMap();
         content.put("info", "email notification");
+        Pair<String[], Map<String, Object>> mapPair = Pair.newPair(new String[]{"test"}, content);
 
-        NotificationContext notificationInfo = new NotificationContext(config, receiversMap, NotificationConstants.JOB_ERROR, Pair.newPair(new String[]{"test"}, content));
+        NotificationContext notificationInfo = new NotificationContext(config, receiversMap, NotificationConstants.JOB_ERROR, mapPair);
 
         MailService mailservice = new MailService(notificationInfo);
         boolean sent = sendTestEmail(mailservice);
@@ -69,7 +69,6 @@ public class MailServiceTest extends LocalFileMetadataTestCase {
         mailservice = new MailService(notificationInfo);
         sent = sendTestEmail(mailservice);
         assert !sent;
-
     }
 
     private boolean sendTestEmail(MailService mailservice) {

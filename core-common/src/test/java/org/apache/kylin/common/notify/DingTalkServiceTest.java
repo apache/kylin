@@ -48,17 +48,17 @@ public class DingTalkServiceTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testSendDingTalk() throws IOException {
-
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         List<String> receivers = new ArrayList<String>(1);
-        receivers.add("xxxx");
+        receivers.add("98a3994aecc22763b135b91e953fd32eec60e1bf10190f7af4eca77049c433e@13675555555");
         Map<String, List<String>> receiversMap = new HashMap();
         receiversMap.put(NotificationConstants.NOTIFY_DINGTALK_LIST, receivers);
 
         Map<String, Object> content = new HashMap();
         content.put("info", "dingtalk notification");
 
-        NotificationContext notificationInfo = new NotificationContext(config, receiversMap, NotificationConstants.JOB_ERROR, Pair.newPair(new String[]{"test"}, content));
+        Pair<String[], Map<String, Object>> mapPair = Pair.newPair(new String[]{"test"}, content);
+        NotificationContext notificationInfo = new NotificationContext(config, receiversMap, NotificationConstants.JOB_ERROR, mapPair);
 
         DingTalkService dingTalkservice = new DingTalkService(notificationInfo);
         boolean sent = sendTestDingTalk(dingTalkservice);
@@ -69,7 +69,6 @@ public class DingTalkServiceTest extends LocalFileMetadataTestCase {
         dingTalkservice = new DingTalkService(notificationInfo);
         sent = sendTestDingTalk(dingTalkservice);
         assert !sent;
-
     }
 
     private boolean sendTestDingTalk(DingTalkService dingTalkService) {

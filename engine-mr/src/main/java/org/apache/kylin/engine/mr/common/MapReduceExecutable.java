@@ -67,6 +67,7 @@ import org.apache.kylin.shaded.com.google.common.collect.Lists;
  */
 public class MapReduceExecutable extends AbstractExecutable {
 
+    public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
     private static final String KEY_MR_JOB = "MR_JOB_CLASS";
     private static final String KEY_PARAMS = "MR_JOB_PARAMS";
     private static final String KEY_COUNTER_SAVEAS = "MR_COUNTER_SAVEAS";
@@ -297,6 +298,14 @@ public class MapReduceExecutable extends AbstractExecutable {
         if (saveAsNames.length > i && StringUtils.isBlank(saveAsNames[i]) == false) {
             info.put(saveAsNames[i].trim(), counter);
         }
+    }
+
+    public long getMapReduceWaitTime() {
+        return getExtraInfoAsLong(MAP_REDUCE_WAIT_TIME, 0L);
+    }
+
+    public void setMapReduceWaitTime(long t) {
+        addExtraInfo(MAP_REDUCE_WAIT_TIME, t + "");
     }
 
     public String getMapReduceJobClass() throws ExecuteException {

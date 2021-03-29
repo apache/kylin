@@ -62,7 +62,6 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected static final String INTERRUPT_TIME = "interruptTime";
     protected static final String BUILD_INSTANCE = "buildInstance";
     protected static final String PROJECT_INSTANCE_NAME = "projectName";
-    public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
     public static final String NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY = "no need to send email, user list is empty";
@@ -339,10 +338,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                 logger.debug(NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY);
                 return;
             }
-            final Pair<String[], Map<String, Object>> email = formatNotifications(context, state);
-            doSendNotification(config, users, state.name(), email);
+            final Pair<String[], Map<String, Object>> notification = formatNotifications(context, state);
+            doSendNotification(config, users, state.name(), notification);
         } catch (Exception e) {
-            logger.error("error send email", e);
+            logger.error("error send notification", e);
         }
     }
 
@@ -366,19 +365,6 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         new NotificationTransmitter(new NotificationContext(kylinConfig, receivers, state, content)).sendNotification();
     }
 
-    protected void sendMail(Pair<String[], Map<String, Object>> email) {
-        try {
-            Map<String, List<String>> users = getAllNofificationUsers(config);
-            if (users.isEmpty()) {
-                logger.debug(NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY);
-                return;
-            }
-            doSendNotification(config, users, "",  email);
-        } catch (Exception e) {
-            logger.error("error send email", e);
-        }
-    }
-
     public final String getSubmitter() {
         return getParam(SUBMITTER);
     }
@@ -390,14 +376,6 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     @Override
     public final Output getOutput() {
         return getManager().getOutput(getId());
-    }
-
-    public long getMapReduceWaitTime() {
-        return getExtraInfoAsLong(MAP_REDUCE_WAIT_TIME, 0L);
-    }
-
-    public void setMapReduceWaitTime(long t) {
-        addExtraInfo(MAP_REDUCE_WAIT_TIME, t + "");
     }
 
     protected long getExtraInfoAsLong(String key, long defaultValue) {

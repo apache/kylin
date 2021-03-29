@@ -231,6 +231,7 @@ public class MigrationService extends BasicService {
         }
 
         Pair<String[], Map<String, Object>> hashMapPair = Pair.newPair(titles, Maps.<String, Object>newHashMap(root));
-        new NotificationTransmitter(new NotificationContext(KylinConfig.getInstanceFromEnv(), recipients, state, hashMapPair)).sendNotification();
+        NotificationContext notificationContext = new NotificationContext(KylinConfig.getInstanceFromEnv(), recipients, state, hashMapPair);
+        new NotificationTransmitter(notificationContext).sendNotification();
     }
 }
