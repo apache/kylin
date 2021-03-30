@@ -19,9 +19,16 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinVersion;
+import org.apache.kylin.common.util.VersionUtil;
+import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
@@ -41,12 +48,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 /**
  * Admin Controller is defined as Restful API entrance for UI.
  * 
- * @author jianliu
- * 
  */
 @Controller
 @RequestMapping(value = "/admin")
 public class AdminController extends BasicController {
+
+    private Set<String> propertiesWhiteList = new HashSet<>();
 
     @Autowired
     @Qualifier("adminService")
@@ -67,15 +74,59 @@ public class AdminController extends BasicController {
             envRes.put("env", env);
 
             return envRes;
-        } catch (ConfigurationException e) {
+        } catch (ConfigurationException | UnsupportedEncodingException e) {
             throw new RuntimeException(msg.getGET_ENV_CONFIG_FAIL(), e);
+        }
+    }
+
+    @RequestMapping(value = "/version", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public GeneralResponse getKylinVersions() {
+        try {
+            GeneralResponse versionRes = new GeneralResponse();
+            String commitId = KylinVersion.getGitCommitInfo();
+            versionRes.put("kylin.version", VersionUtil.getKylinVersion());
+            versionRes.put("kylin.version.commitId", commitId.replace(";", ""));
+            return versionRes;
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 
     @RequestMapping(value = "/config", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public GeneralResponse getConfig() throws IOException {
-        String config = adminService.exportToString();
+        String config = KylinConfig.getInstanceFromEnv().exportAllToString();
+        GeneralResponse configRes = new GeneralResponse();
+        configRes.put("config", config);
+
+        return configRes;
+    }
+
+    @RequestMapping(value = "/public_config", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public GeneralResponse getPublicConfig() throws IOException {
+        final String config = adminService.getPublicConfig();
+        GeneralResponse configRes = new GeneralResponse();
+        configRes.put("config", config);
+        return configRes;
+    }
+
+    @RequestMapping(value = "/config/hdfs", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public GeneralResponse getHDFSConfig() throws IOException {
+        String config = adminService.getHadoopConfigAsString();
+
+        GeneralResponse configRes = new GeneralResponse();
+        configRes.put("config", config);
+
+        return configRes;
+    }
+
+    @RequestMapping(value = "/config/hbase", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public GeneralResponse getHBaseConfig() throws IOException {
+        String config = adminService.getHBaseConfigAsString();
 
         GeneralResponse configRes = new GeneralResponse();
         configRes.put("config", config);
@@ -95,9 +146,15 @@ public class AdminController extends BasicController {
         adminService.cleanupStorage();
     }
 
-    @RequestMapping(value = "/config", method = { RequestMethod.PUT }, produces = { "application/json" })
+    @RequestMapping(value = "/config", method = {RequestMethod.PUT}, produces = {"application/json"})
     public void updateKylinConfig(@RequestBody UpdateConfigRequest updateConfigRequest) {
-        KylinConfig.getInstanceFromEnv().setProperty(updateConfigRequest.getKey(), updateConfigRequest.getValue());
+        if (propertiesWhiteList.isEmpty()) {
+            propertiesWhiteList.addAll(Arrays.asList(KylinConfig.getInstanceFromEnv().getPropertiesWhiteListForModification().split(",")));
+        }
+        if (!adminService.configWritableStatus() && !propertiesWhiteList.contains(updateConfigRequest.getKey())) {
+            throw new BadRequestException("Update configuration from API is not allowed.");
+        }
+        adminService.updateConfig(updateConfigRequest.getKey(), updateConfigRequest.getValue());
     }
 
     public void setAdminService(AdminService adminService) {

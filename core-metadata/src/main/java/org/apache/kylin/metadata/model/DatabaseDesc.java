@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * @author xjiang
@@ -35,7 +36,7 @@ public class DatabaseDesc implements Serializable {
      * @return the name
      */
     public String getName() {
-        return name == null ? "null" : name.toUpperCase();
+        return name == null ? "null" : name.toUpperCase(Locale.ROOT);
     }
 
     /**

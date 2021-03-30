@@ -43,9 +43,9 @@ abstract public class MeasureIngester<V> implements java.io.Serializable {
 
     abstract public V valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap);
 
-    public void reset() {
-
-    }
+    // Be attention with this, do remember resetting objects if you init in your implementation.
+    // See more details in KYLIN-3635.
+    abstract public void reset();
 
     public V reEncodeDictionary(V value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
         throw new UnsupportedOperationException();

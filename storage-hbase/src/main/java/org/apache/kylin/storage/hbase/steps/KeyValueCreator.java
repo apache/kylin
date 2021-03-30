@@ -18,6 +18,7 @@
 
 package org.apache.kylin.storage.hbase.steps;
 
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -32,7 +33,7 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 /**
  * @author George Song (ysong1)
  */
-public class KeyValueCreator {
+public class KeyValueCreator implements Serializable {
     byte[] cfBytes;
     byte[] qBytes;
     long timestamp;

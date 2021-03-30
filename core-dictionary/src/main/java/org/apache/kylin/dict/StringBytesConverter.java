@@ -32,4 +32,11 @@ public class StringBytesConverter implements BytesConverter<String>, java.io.Ser
         return Bytes.toString(b, offset, length);
     }
 
+    @Override
+    public byte[] convertBytesValueFromBytes(byte[] b, int offset, int length) {
+        byte[] bytes = new byte[length];
+        System.arraycopy(b, 0, bytes, 0, length);
+        return bytes;
+    }
+
 }

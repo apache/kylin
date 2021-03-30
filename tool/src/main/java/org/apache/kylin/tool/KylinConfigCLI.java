@@ -24,7 +24,7 @@ import java.util.Properties;
 import org.apache.kylin.common.BackwardCompatibilityConfig;
 import org.apache.kylin.common.KylinConfig;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class KylinConfigCLI {
     public static void main(String[] args) {
@@ -52,7 +52,7 @@ public class KylinConfigCLI {
         }
     }
 
-    static private Map<String, String> getPropertiesByPrefix(Properties props, String prefix) {
+    private static Map<String, String> getPropertiesByPrefix(Properties props, String prefix) {
         Map<String, String> result = Maps.newLinkedHashMap();
         for (Map.Entry<Object, Object> entry : props.entrySet()) {
             String entryKey = (String) entry.getKey();

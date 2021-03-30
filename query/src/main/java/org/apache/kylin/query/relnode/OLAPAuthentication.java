@@ -17,17 +17,19 @@
 */
 package org.apache.kylin.query.relnode;
 
+import org.apache.kylin.common.util.StringUtil;
+
 import java.util.ArrayList;
 
 /**
  * Created by wangcheng on 7/8/16.
  */
 public class OLAPAuthentication {
-    private String username;
-    private ArrayList<String> roles = new ArrayList<>();
+    String username;
+    ArrayList<String> roles = new ArrayList<>();
 
     public void parseUserInfo(String userInfo) {
-        String[] info = userInfo.split(",");
+        String[] info = StringUtil.splitByComma(userInfo);
         if (info.length > 0) //first element is username
             this.username = info[0];
         for (int i = 1; i < info.length; i++) //the remains should be roles which starts from index 1

@@ -6,37 +6,37 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.engine.mr;
 
-import org.apache.kylin.cube.CubeManager;
+import java.util.List;
+import java.util.Objects;
+
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.CuboidUtil;
 import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
 import org.apache.kylin.engine.mr.IMROutput2.IMRBatchCubingOutputSide2;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.mr.steps.BaseCuboidJob;
-import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.mr.steps.InMemCuboidJob;
 import org.apache.kylin.engine.mr.steps.NDCuboidJob;
-import org.apache.kylin.engine.mr.steps.SaveStatisticsStep;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 public class BatchCubingJobBuilder2 extends JobBuilderSupport {
     private static final Logger logger = LoggerFactory.getLogger(BatchCubingJobBuilder2.class);
@@ -44,14 +44,14 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
     private final IMRBatchCubingInputSide inputSide;
     private final IMRBatchCubingOutputSide2 outputSide;
 
-    public BatchCubingJobBuilder2(CubeSegment newSegment, String submitter) {
-        super(newSegment, submitter);
+    public BatchCubingJobBuilder2(CubeSegment newSegment, String submitter, Integer priorityOffset) {
+        super(newSegment, submitter, priorityOffset);
         this.inputSide = MRUtil.getBatchCubingInputSide(seg);
         this.outputSide = MRUtil.getBatchCubingOutputSide2(seg);
     }
 
     public CubingJob build() {
-        logger.info("MR_V2 new job to BUILD segment " + seg);
+        logger.info("MR_V2 new job to BUILD segment {}", seg);
 
         final CubingJob result = CubingJob.createBuildJob(seg, submitter, config);
         final String jobId = result.getId();
@@ -60,8 +60,11 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         // Phase 1: Create Flat Table & Materialize Hive View in Lookup Tables
         inputSide.addStepPhase1_CreateFlatTable(result);
 
+        // Build global dictionary in distributed way
+        buildHiveGlobalDictionaryByMR(result, jobId);
+
         // Phase 2: Build Dictionary
-        result.addTask(createFactDistinctColumnsStepWithStats(jobId));
+        result.addTask(createFactDistinctColumnsStep(jobId));
 
         if (isEnableUHCDictStep()) {
             result.addTask(createBuildUHCDictStep(jobId));
@@ -69,7 +72,15 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
 
         result.addTask(createBuildDictionaryStep(jobId));
         result.addTask(createSaveStatisticsStep(jobId));
+
+        // add materialize lookup tables if needed
+        LookupMaterializeContext lookupMaterializeContext = addMaterializeLookupTableSteps(result);
+
         outputSide.addStepPhase2_BuildDictionary(result);
+
+        if (seg.getCubeDesc().isShrunkenDictFromGlobalEnabled()) {
+            result.addTask(createExtractDictionaryFromGlobalJob(jobId));
+        }
 
         // Phase 3: Build Cube
         addLayerCubingSteps(result, jobId, cuboidRootPath); // layer cubing, only selected algorithm will execute
@@ -77,19 +88,23 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         outputSide.addStepPhase3_BuildCube(result);
 
         // Phase 4: Update Metadata & Cleanup
-        result.addTask(createUpdateCubeInfoAfterBuildStep(jobId));
+        result.addTask(createUpdateCubeInfoAfterBuildStep(jobId, lookupMaterializeContext));
         inputSide.addStepPhase4_Cleanup(result);
         outputSide.addStepPhase4_Cleanup(result);
+
+        // Set the task priority if specified
+        result.setPriorityBasedOnPriorityOffset(priorityOffset);
+        result.getTasks().forEach(task -> task.setPriorityBasedOnPriorityOffset(priorityOffset));
 
         return result;
     }
 
-    private boolean isEnableUHCDictStep() {
+    public boolean isEnableUHCDictStep() {
         if (!config.getConfig().isBuildUHCDictWithMREnabled()) {
             return false;
         }
 
-        List<TblColRef> uhcColumns = CubeManager.getInstance(config.getConfig()).getAllUHCColumns(seg.getCubeDesc());
+        List<TblColRef> uhcColumns = seg.getCubeDesc().getAllUHCColumns();
         if (uhcColumns.size() == 0) {
             return false;
         }
@@ -98,23 +113,14 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
     }
 
     protected void addLayerCubingSteps(final CubingJob result, final String jobId, final String cuboidRootPath) {
-        final int maxLevel = seg.getCuboidScheduler().getBuildLevel();
+        // Don't know statistics so that tree cuboid scheduler is not determined. Determine the maxLevel at runtime
+        final int maxLevel = CuboidUtil.getLongestDepth(seg.getCuboidScheduler().getAllCuboidIds());
         // base cuboid step
         result.addTask(createBaseCuboidStep(getCuboidOutputPathsByLevel(cuboidRootPath, 0), jobId));
         // n dim cuboid steps
         for (int i = 1; i <= maxLevel; i++) {
             result.addTask(createNDimensionCuboidStep(getCuboidOutputPathsByLevel(cuboidRootPath, i - 1), getCuboidOutputPathsByLevel(cuboidRootPath, i), i, jobId));
         }
-    }
-
-    private SaveStatisticsStep createSaveStatisticsStep(String jobId) {
-        SaveStatisticsStep result = new SaveStatisticsStep();
-        result.setName(ExecutableConstants.STEP_NAME_SAVE_STATISTICS);
-        CubingExecutableUtil.setCubeName(seg.getRealization().getName(), result.getParams());
-        CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
-        CubingExecutableUtil.setStatisticsPath(getStatisticsPath(jobId), result.getParams());
-        CubingExecutableUtil.setCubingJobId(jobId, result.getParams());
-        return result;
     }
 
     protected void addInMemCubingSteps(final CubingJob result, String jobId, String cuboidRootPath) {
@@ -131,6 +137,9 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, cuboidRootPath);
         appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_Cube_Builder_" + seg.getRealization().getName());
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBING_JOB_ID, jobId);
+        if (seg.getCubeDesc().isShrunkenDictFromGlobalEnabled()) {
+            appendExecCmdParameters(cmd, BatchConstants.ARG_SHRUNKEN_DICT_PATH, getShrunkenDictionaryPath(jobId));
+        }
 
         cubeStep.setMapReduceParams(cmd.toString());
         cubeStep.setMapReduceJobClass(getInMemCuboidJob());
@@ -157,6 +166,9 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_Base_Cuboid_Builder_" + seg.getRealization().getName());
         appendExecCmdParameters(cmd, BatchConstants.ARG_LEVEL, "0");
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBING_JOB_ID, jobId);
+        if (seg.getCubeDesc().isShrunkenDictFromGlobalEnabled()) {
+            appendExecCmdParameters(cmd, BatchConstants.ARG_SHRUNKEN_DICT_PATH, getShrunkenDictionaryPath(jobId));
+        }
 
         baseCuboidStep.setMapReduceParams(cmd.toString());
         baseCuboidStep.setMapReduceJobClass(getBaseCuboidJob());
@@ -187,6 +199,30 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         ndCuboidStep.setMapReduceParams(cmd.toString());
         ndCuboidStep.setMapReduceJobClass(getNDCuboidJob());
         return ndCuboidStep;
+    }
+
+    /**
+     * Build hive global dictionary by MR and encode corresponding column into integer for flat table
+     */
+    protected void buildHiveGlobalDictionaryByMR(final CubingJob result, String jobId) {
+        KylinConfig dictConfig = seg.getConfig();
+        String[] mrHiveDictColumnExcludeRef = dictConfig.getMrHiveDictColumnsExcludeRefColumns();
+        String[] mrHiveDictColumns = dictConfig.getMrHiveDictColumns();
+
+        if (Objects.nonNull(mrHiveDictColumnExcludeRef) && mrHiveDictColumnExcludeRef.length > 0
+                && !"".equals(mrHiveDictColumnExcludeRef[0])) {
+
+            // 1. parallel part build
+            result.addTask(createBuildGlobalHiveDictPartBuildJob(jobId));
+
+            // 2. parallel total build
+            result.addTask(createBuildGlobalHiveDictTotalBuildJob(jobId));
+        }
+
+        // Merge new dictionary entry into global dictionary and replace/encode flat table
+        if (Objects.nonNull(mrHiveDictColumns) && mrHiveDictColumns.length > 0 && !"".equals(mrHiveDictColumns[0])) {
+            inputSide.addStepPhase_ReplaceFlatTableGlobalColumnValue(result);
+        }
     }
 
     protected Class<? extends AbstractHadoopJob> getNDCuboidJob() {

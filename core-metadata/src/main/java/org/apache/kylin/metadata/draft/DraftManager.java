@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NavigableSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -41,35 +39,13 @@ public class DraftManager {
 
     public static final Serializer<Draft> DRAFT_SERIALIZER = new JsonSerializer<Draft>(Draft.class);
 
-    private static final ConcurrentMap<KylinConfig, DraftManager> CACHE = new ConcurrentHashMap<KylinConfig, DraftManager>();
-
     public static DraftManager getInstance(KylinConfig config) {
-        DraftManager r = CACHE.get(config);
-        if (r != null) {
-            return r;
-        }
-
-        synchronized (DraftManager.class) {
-            r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-            try {
-                r = new DraftManager(config);
-                CACHE.put(config, r);
-                if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton exist");
-                }
-
-                return r;
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to init DraftManager from " + config, e);
-            }
-        }
+        return config.getManager(DraftManager.class);
     }
 
-    public static void clearCache() {
-        CACHE.clear();
+    // called by reflection
+    static DraftManager newInstance(KylinConfig config) throws IOException {
+        return new DraftManager(config);
     }
 
     // ============================================================================
@@ -96,7 +72,7 @@ public class DraftManager {
             return result;
         
         for (String path : listPath) {
-            Draft draft = store.getResource(path, Draft.class, DRAFT_SERIALIZER);
+            Draft draft = store.getResource(path, DRAFT_SERIALIZER);
             
             if (draft == null)
                 continue;
@@ -126,14 +102,14 @@ public class DraftManager {
         }
 
         ResourceStore store = getStore();
-        store.putResource(draft.getResourcePath(), draft, DRAFT_SERIALIZER);
+        store.checkAndPutResource(draft.getResourcePath(), draft, DRAFT_SERIALIZER);
         
         logger.trace("Saved " + draft);
     }
 
     public Draft load(String uuid) throws IOException {
         ResourceStore store = getStore();
-        Draft draft = store.getResource(Draft.concatResourcePath(uuid), Draft.class, DRAFT_SERIALIZER);
+        Draft draft = store.getResource(Draft.concatResourcePath(uuid), DRAFT_SERIALIZER);
         return draft;
     }
 

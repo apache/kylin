@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
+import java.util.Locale;
 import org.apache.calcite.linq4j.Enumerator;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.query.relnode.OLAPContext;
@@ -61,7 +62,7 @@ public class HiveEnumerator implements Enumerator<Object[]> {
         String url = olapContext.olapSchema.getStarSchemaUrl();
         String user = olapContext.olapSchema.getStarSchemaUser();
         String pwd = olapContext.olapSchema.getStarSchemaPassword();
-        String sql = olapContext.sql;
+        String sql = olapContext.sql.toString();
         Statement stmt = null;
         try {
             conn = DriverManager.getConnection(url, user, pwd);
@@ -81,7 +82,7 @@ public class HiveEnumerator implements Enumerator<Object[]> {
             if (hasNext) {
                 List<String> allFields = olapContext.returnTupleInfo.getAllFields();
                 for (int i = 0; i < allFields.size(); i++) {
-                    Object value = rs.getObject(allFields.get(i).toLowerCase());
+                    Object value = rs.getObject(allFields.get(i).toLowerCase(Locale.ROOT));
                     current[i] = value;
                 }
             }

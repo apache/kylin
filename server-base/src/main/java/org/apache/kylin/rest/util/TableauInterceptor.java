@@ -32,6 +32,10 @@ public class TableauInterceptor {
 
     protected static final Logger logger = LoggerFactory.getLogger(TableauInterceptor.class);
 
+    private TableauInterceptor() {
+        throw new IllegalStateException("Class TableauInterceptor is an utility class !");
+    }
+
     private static String[] tableauTestQueries = new String[] { "SELECT 1", //
             "CREATE LOCAL TEMPORARY TABLE \"XTableau_B_Connect\" ( \"COL\" INTEGER ) ON COMMIT PRESERVE ROWS", //
             "DROP TABLE \"XTableau_B_Connect\"", //

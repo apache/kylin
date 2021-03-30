@@ -20,6 +20,7 @@ package org.apache.kylin.dict.lookup;
 
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.Iterator;
 
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.datatype.DataType;
@@ -31,7 +32,7 @@ import org.apache.kylin.source.IReadableTable;
  * @author yangli9
  * 
  */
-public class LookupStringTable extends LookupTable<String> {
+public class LookupStringTable extends LookupTable<String> implements ILookupTable{
 
     private static final Comparator<String> dateStrComparator = new Comparator<String>() {
         @Override
@@ -83,8 +84,12 @@ public class LookupStringTable extends LookupTable<String> {
     protected String[] convertRow(String[] cols) {
         for (int i = 0; i < cols.length; i++) {
             if (colIsDateTime[i]) {
-                if (cols[i] != null)
-                    cols[i] = String.valueOf(DateFormat.stringToMillis(cols[i]));
+                if (cols[i] != null) {
+                    if (cols[i].isEmpty())
+                        cols[i] = null;
+                    else
+                        cols[i] = String.valueOf(DateFormat.stringToMillis(cols[i]));
+                }
             }
         }
         return cols;
@@ -109,4 +114,13 @@ public class LookupStringTable extends LookupTable<String> {
         return String.class;
     }
 
+    @Override
+    public Iterator<String[]> iterator() {
+        return data.values().iterator();
+    }
+
+    @Override
+    public void close() throws IOException {
+        // do nothing
+    }
 }

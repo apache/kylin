@@ -19,21 +19,19 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
+import java.util.Map;
 
-import javax.sql.DataSource;
-
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
-import org.apache.kylin.query.QueryDataSource;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.cache.CacheManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import net.sf.ehcache.CacheManager;
 
 /**
  */
@@ -41,7 +39,6 @@ import net.sf.ehcache.CacheManager;
 public class CacheService extends BasicService implements InitializingBean {
 
     private static final Logger logger = LoggerFactory.getLogger(CacheService.class);
-    private static QueryDataSource queryDataSource = new QueryDataSource();
 
     @Autowired
     @Qualifier("cubeMgmtService")
@@ -53,19 +50,17 @@ public class CacheService extends BasicService implements InitializingBean {
     private Broadcaster.Listener cacheSyncListener = new Broadcaster.Listener() {
         @Override
         public void onClearAll(Broadcaster broadcaster) throws IOException {
-            removeAllOLAPDataSources();
             cleanAllDataCache();
+            HBaseConnection.clearConnCache(); // take the chance to clear HBase connection cache as well
         }
 
         @Override
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {
-            removeOLAPDataSource(project);
             cleanDataCache(project);
         }
 
         @Override
         public void onProjectDataChange(Broadcaster broadcaster, String project) throws IOException {
-            removeOLAPDataSource(project); // data availability (cube enabled/disabled) affects exposed schema to SQL
             cleanDataCache(project);
         }
 
@@ -75,7 +70,8 @@ public class CacheService extends BasicService implements InitializingBean {
         }
 
         @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
+                throws IOException {
             if ("cube".equals(entity) && event == Event.UPDATE) {
                 final String cubeName = cacheKey;
                 new Thread() { // do not block the event broadcast thread
@@ -111,7 +107,7 @@ public class CacheService extends BasicService implements InitializingBean {
 
     public void annouceWipeCache(String entity, String event, String cacheKey) {
         Broadcaster broadcaster = Broadcaster.getInstance(getConfig());
-        broadcaster.queue(entity, event, cacheKey);
+        broadcaster.announce(entity, event, cacheKey);
     }
 
     public void notifyMetadataChange(String entity, Event event, String cacheKey) throws IOException {
@@ -119,11 +115,14 @@ public class CacheService extends BasicService implements InitializingBean {
         broadcaster.notifyListener(entity, event, cacheKey);
     }
 
-    protected void cleanDataCache(String project) {
+    public void cleanDataCache(String project) {
         if (cacheManager != null) {
-            logger.info("cleaning cache for project " + project + " (currently remove all entries)");
-            cacheManager.getCache(QueryService.SUCCESS_QUERY_CACHE).removeAll();
-            cacheManager.getCache(QueryService.EXCEPTION_QUERY_CACHE).removeAll();
+            if (getConfig().isQueryCacheSignatureEnabled()) {
+                logger.info("cleaning cache for project " + project + " (currently remove nothing)");
+            } else {
+                logger.info("cleaning cache for project " + project + " (currently remove all entries)");
+                cacheManager.getCache(QueryService.QUERY_CACHE).clear();
+            }
         } else {
             logger.warn("skip cleaning cache for project " + project);
         }
@@ -132,30 +131,44 @@ public class CacheService extends BasicService implements InitializingBean {
     protected void cleanAllDataCache() {
         if (cacheManager != null) {
             logger.warn("cleaning all storage cache");
-            cacheManager.clearAll();
+            for (String cacheName : cacheManager.getCacheNames()) {
+                logger.warn("cleaning storage cache for {}", cacheName);
+                cacheManager.getCache(cacheName).clear();
+            }
         } else {
             logger.warn("skip cleaning all storage cache");
         }
     }
 
-    private void removeOLAPDataSource(String project) {
-        logger.info("removeOLAPDataSource is called for project " + project);
-        if (StringUtils.isEmpty(project))
-            throw new IllegalArgumentException("removeOLAPDataSource: project name not given");
+    public void clearCacheForCubeMigration(String cube, String project, String model, Map<String, String> tableToProjects) throws IOException {
+        //the metadata reloading must be in order
 
-        queryDataSource.removeCache(project);
-    }
+        //table must before model
+        for (Map.Entry<String, String> entry : tableToProjects.entrySet()) {
+            //For KYLIN-2717 compatibility, use tableProject not project
+            getTableManager().reloadSourceTableQuietly(entry.getKey(), entry.getValue());
+            getTableManager().reloadTableExtQuietly(entry.getKey(), entry.getValue());
+        }
+        logger.info("reload table cache done");
 
-    public void removeAllOLAPDataSources() {
-        // brutal, yet simplest way
-        logger.info("removeAllOLAPDataSources is called.");
-        queryDataSource.clearCache();
-    }
+        //ProjectInstance cache must before cube and model cache, as the new cubeDesc init and model reloading relays on latest ProjectInstance cache
+        getProjectManager().reloadProjectQuietly(project);
+        logger.info("reload project cache done");
 
-    @Deprecated
-    public DataSource getOLAPDataSource(String project) {
-        DataSource ret = queryDataSource.get(project, getConfig());
-        return ret;
+        //model must before cube desc
+        getDataModelManager().reloadDataModel(model);
+        logger.info("reload model cache done");
+
+        //cube desc must before cube instance
+        getCubeDescManager().reloadCubeDescLocal(cube);
+        logger.info("reload cubeDesc cache done");
+
+        getCubeManager().reloadCubeQuietly(cube);
+        logger.info("reload cube cache done");
+
+        //reload project l2cache again after cube cache, because the project L2 cache relay on latest cube cache
+        getProjectManager().reloadProjectL2Cache(project);
+        logger.info("reload project l2cache done");
     }
 
 }

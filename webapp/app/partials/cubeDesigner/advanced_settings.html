@@ -33,7 +33,15 @@
                  class="table table-hover list">
             <tr class="row">
               <th class="col-xs-1">ID</th>
-              <th class="col-xs-11">Aggregation Groups</th>
+              <th class="col-xs-3">
+                <span>Aggregation Groups</span>
+                <span style="margin-left:42px">
+                  <i kylinpopover placement="left" title="Max Dimension Combination" template="dimCapTip.html" class="fa fa-info-circle"></i>
+                  Max Dimension Combination:
+                  <input onInput="this.value=this.value.replace(/[^0-9]/g, '')" type="text" ng-model="dim_cap" ng-change="changeDimCap(dim_cap)" ng-disabled="state.mode !== 'edit'" style="margin-left:5px; width:20px;">
+                </span>
+              </th>
+              <th></th>
               <th ng-if="state.mode=='edit'" class="col-xs-1"></th>
             </tr>
 
@@ -190,10 +198,12 @@
         </div>
         <div class="form-group large-popover" >
           <h3 style="margin-left:42px">Rowkeys  <i kylinpopover placement="right" title="Rowkey" template="rowkeyTip.html" class="fa fa-info-circle"></i></h3>
-
+          <div style="padding: 0 42px; word-break: normal;">
+            <b>Important: </b>Dimension's position on HBase rowkey is critical for performance. You can drag and drop to adjust the sequence. In short, put filtering dimension before non-filtering dimension, and  put high cardinality dimension before low cardinality dimension.
+          </div>
           <div style="margin-left:42px">
               <div class="box-body">
-                <table style="margin-left:42px; width:92%;position:relative"
+                <table style="width:92%;position:relative"
                        ng-if="cubeMetaFrame.rowkey.rowkey_columns.length > 0"
                        class="table table-hover table-bordered list">
                   <thead>
@@ -203,6 +213,7 @@
                     <th>Encoding</th>
                     <th>Length</th>
                     <th>Shard By</th>
+                    <th>Cardinality</th>
                   </tr>
                   </thead>
 
@@ -230,6 +241,10 @@
 
                   <td>
                    <span>{{rowkey_column.isShardBy}}</span>
+                  </td>
+
+                  <td>
+                    <span>{{rowkey_column.cardinality | number}}</span>
                   </td>
                 </tr>
                 </tbody>
@@ -284,9 +299,82 @@
                       <small class="help-block red" ng-show="state.mode=='edit' && rule.shardColumnAvailable==false && rowkey_column.isShardBy == true">at most one 'shard by' column is allowed.</small>
                     </td>
                   </tr>
+
+                  <td>
+                    <span>{{rowkey_column.cardinality | number}}</span>
+                  </td>
                   </tbody>
                 </table>
               </div>
+          </div>
+        </div>
+        <!--Edit Mandatory Cuboids-->
+        <div class="form-group large-popover" ng-if="state.mode=='edit' || (cubeMetaFrame.mandatory_dimension_set_list.length > 0 && state.mode!=='edit')">
+          <h3 style="margin-left:42px">Mandatory Cuboids</h3>
+          <div style="margin-left:42px;">
+            <div class="box-body">
+              <!-- view mode-->
+              <table ng-if="cubeMetaFrame.mandatory_dimension_set_list.length > 0 && state.mode!=='edit'" class="table table-hover table-bordered list" style="table-layout: fixed;width:92%;">
+                <thead>
+                  <tr>
+                    <th>Cuboids</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="dimensionSet in cubeMetaFrame.mandatory_dimension_set_list">
+                    <td>
+                      <p>{{dimensionSet}}</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <!-- edit mode-->
+              <table ng-if="state.mode=='edit'" class="table table-hover table-bordered list" style="table-layout: fixed;width:92%;">
+                <thead>
+                  <tr>
+                    <th>Cuboids</th>
+                    <th style="width:5%"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="dimensionSet in cubeMetaFrame.mandatory_dimension_set_list">
+                    <td>
+                      <ui-select multiple ng-model="dimensionSet" theme="bootstrap" sortable="true" close-on-select="false" class="form-control">
+                        <ui-select-match placeholder="Select Dimension...">{{$item.column}}</ui-select-match>
+                        <ui-select-choices repeat="dimension.column as dimension in cubeMetaFrame.rowkey.rowkey_columns | filter:$select.search">
+                          <div ng-bind-html="dimension.column | highlight: $select.search"></div>
+                        </ui-select-choices>
+                      </ui-select>
+                    </td>
+                    <td>
+                      <button class="btn btn-xs btn-info" ng-click="removeDimensionSet($index)"><i class="fa fa-minus"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <ui-select multiple ng-model="mandatoryDimensionSet.select" theme="bootstrap" sortable="true" close-on-select="false" class="form-control">
+                        <ui-select-match placeholder="Select Dimension...">{{$item.column}}</ui-select-match>
+                        <ui-select-choices repeat="dimension.column as dimension in cubeMetaFrame.rowkey.rowkey_columns | filter:$select.search">
+                          <div ng-bind-html="dimension.column | highlight: $select.search"></div>
+                        </ui-select-choices>
+                      </ui-select>
+                    </td>
+                    <td>
+                      <button class="btn btn-xs btn-info" ng-click="addDimensionSet()"><i class="fa fa-plus"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="2">
+                      <label>Import cuboids from file:</label>
+                      <input type="file" name="cuboids" id="cuboids" style="display: inline;"/>
+                      <button class="btn btn-xs btn-info" ng-click="uploadMandatoryDimensionSetList()">Upload</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
         <!--Cube Engine-->
@@ -297,12 +385,13 @@
             <div class="col-xs-12 col-sm-6">
               <select style="width: 100%" chosen
                       ng-model="cubeMetaFrame.engine_type"
-                      ng-if="state.mode=='edit'"  ng-disabled="instance.segments.length>0"
-                      ng-options="et.value as et.name for et in cubeConfig.engineType">
+                      ng-if="state.mode=='edit'"
+                      ng-options="et.value as et.name for et in cubeConfig.engineType | filter: isAvailableEngine">
                 <option value="">--Select Engine Type--</option>
               </select>
               <span ng-if="state.mode=='view'&&cubeMetaFrame.engine_type==2">MapReduce</span>
               <span ng-if="state.mode=='view'&&cubeMetaFrame.engine_type==4">Spark</span>
+              <span ng-if="state.mode=='view'&&cubeMetaFrame.engine_type==5">Flink</span>
             </div>
           </div>
         </div>
@@ -332,7 +421,7 @@
                     </td>
                     <td>
                       <!--Reuse-->
-                      <span>{{dictionaries.reuse}}</span>
+                      <span>{{dictionaries.model}}.{{dictionaries.cube}}.{{dictionaries.reuse}}</span>
                     </td>
                     <td ng-if="state.mode=='edit'">
                       <!--Edit Button -->
@@ -356,7 +445,7 @@
             <i class="fa fa-plus"></i> Dictionaries
           </button>
        </div>
-       <!--Edit Dictionsry-->
+       <!--Edit Dictionary-->
        <ng-form name="edit_mes_form" style="margin-left:42px;">
          <div class="box box-solid"  ng-if="addNew" style="margin-left:42px;">
            <div class="box-header">
@@ -364,7 +453,7 @@
            </div>
            <div class="box-body">
              <div class="row">
-               <div class="col-xs-8">
+               <div class="col-xs-12">
                  <!--Column-->
                  <div class="form-group middle-popover">
                    <div class="row">
@@ -382,15 +471,20 @@
                  <div class="form-group">
                    <div class="row" style="margin-left:5px;">
                      <label class="radio-inline ng-binding ng-scope">
-                       <input type="radio" name="reuse" ng-value=false ng-model="isReuse"  ng-change="change()"/><b>Builder Class</b>
+                       <input type="radio" name="reuse" ng-value=1 ng-model="isReuse"  ng-change="change('builder')"/><b>Builder Class</b>
                      </label>
                      <label class="radio-inline ng-binding ng-scope">
-                       <input type="radio" name="reuse"  ng-value=true ng-model="isReuse" ng-change="change()"/><b>Reuse</b>
+                       <input type="radio" name="reuse"  ng-value=2 ng-model="isReuse" ng-change="change('reuse')"/><b>Reuse Self</b>
                      </label>
+                     <!-- tiretree add-->
+                     <label class="radio-inline ng-binding ng-scope">
+                       <input type="radio" name="reuse"  ng-value=3 ng-model="isReuse" ng-change="change('domain')"/><b>Reuse Global Domain</b>
+                     </label>
+                     <!-- tiretree end-->
                    </div>
                  </div>
                  <!--Builder-->
-                 <div class="form-group" ng-if="!isReuse" >
+                 <div class="form-group" ng-if="isReuse==1" >
                    <div class="row">
                      <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Builder Class</b></label>
                      <div class="col-xs-12 col-sm-6">
@@ -404,7 +498,7 @@
                    </div>
                  </div>
                  <!--Reuse-->
-                 <div class="form-group middle-popover" ng-if="isReuse" >
+                 <div class="form-group middle-popover" ng-if="isReuse==2" >
                    <div class="row">
                      <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Reuse</b></label>
                      <div class="col-xs-12 col-sm-6">
@@ -417,6 +511,27 @@
                      </div>
                    </div>
                  </div>
+                 <!-- Tiretree global dic model cube table.colname start-->
+                 <div class="form-group middle-popover" ng-if="isReuse==3" >
+                   <div class="row">
+                     <label class="col-xs-6 col-sm-4 control-label no-padding-right" ng-class="{'has-error':newDictionaries.model==''}">
+                       <b ng-if="state.mode=='view'">{{dictionaries.model}}</b>
+                       <input ng-model="newDictionaries.model" placeholder="Reuse Model Name"  required class="form-control" ng-if="state.mode=='edit'"/>
+                       <small style="font-weight: normal !important;" class="help-block" ng-show="newDictionaries.model==''">Reuse Model Name is required.</small>
+                     </label>
+                     <div class="col-xs-6 col-sm-4" ng-class="{'has-error':newDictionaries.cube==''}">
+                       <input ng-model="newDictionaries.cube" placeholder="Reuse Cube Name" class="form-control" ng-if="state.mode=='edit'" required/>
+                       <small class="help-block" ng-show="newDictionaries.cube==''">Reuse Cube Name is required.</small>
+                       <span ng-if="state.mode=='view'">{{dictionaries.cube}}</span>
+                     </div>
+                     <div class="col-xs-12 col-sm-4" ng-class="{'has-error':newDictionaries.reuse==''}">
+                       <input ng-model="newDictionaries.reuse" placeholder="Reuse table.column" class="form-control" ng-if="state.mode=='edit'" required/>
+                       <small class="help-block" ng-show="newDictionaries.reuse==''">Reuse table.column is required.</small>
+                       <span ng-if="state.mode=='view'">{{dictionaries.reuse}}</span>
+                     </div>
+                   </div>
+                 </div>
+                 <!--end -->
                </div>
              </div>
            </div>
@@ -424,6 +539,102 @@
              <button class="btn btn-sm btn-info" ng-disabled="edit_mes_form.$invalid"
                      ng-click="saveNewDictionaries()" ng-show="state.mode=='edit'">OK</button>
              <button class="btn btn-link" ng-click="clearNewDictionaries()">Cancel</button>
+           </div>
+         </div>
+         <!-- Advanced Lookup Table-->
+         <div class="form-group large-popover" style="margin-bottom:30px;">
+           <h3 style="margin-left:42px;margin-bottom:30px;">Advanced Snapshot Table  <i kylinpopover placement="right" title="Advanced Snapshot Table" template="AdvanceSnapshotTableTip.html" class="fa fa-info-circle"></i></h3>
+           <div style="margin-left:42px">
+             <div class="box-body">
+               <br/>
+               <table class="table table-striped table-hover">
+                 <thead>
+                 <tr>
+                   <th>Snapshot Table</th>
+                   <th>Type</th>
+                   <th>Global</th>
+                   <th ng-if="state.mode=='edit'">Actions</th>
+                 </tr>
+                 </thead>
+                 <tbody>
+                   <tr ng-repeat="snapshotTable in cubeMetaFrame.snapshot_table_desc_list track by $index">
+                     <td>
+                       <p>{{snapshotTable.table_name}}</p>
+                     </td>
+                     <td>
+                       <p>{{snapshotTable.storage_type}}</p>
+                     </td>
+                     <td>
+                       <input type="checkbox" ng-model="snapshotTable.global" disabled="true">
+                     </td>
+                     <td ng-if="state.mode=='edit'">
+                       <button class="btn btn-xs btn-info" ng-click="addNewSnapshot(snapshotTable, $index)" ng-disabled="instance.status=='READY'">
+                         <i class="fa fa-pencil"></i>
+                       </button>
+                       <button class="btn btn-xs  btn-danger" ng-click="removeSnapshotTable($index)" ng-disabled="instance.status=='READY'">
+                         <i class="fa fa-trash-o"></i>
+                       </button>
+                     </td>
+                   </tr>
+                 </tbody>
+               </table>
+             </div>
+           </div>
+           <!-- Add  Snapshot-->
+           <div class="form-group" style="margin-left:42px;">
+             <button class="btn btn-sm btn-info" ng-click="addNewSnapshot()" ng-show="state.mode=='edit' && !addNewSanpshot" ng-disabled="instance.status=='READY'">
+               <i class="fa fa-plus"></i> Snapshot Table
+             </button>
+           </div>
+           <!--Edit Snapshot-->
+           <div class="box box-solid"  ng-if="addNewSanpshot" style="margin-left:42px;">
+             <div class="box-header">
+               <h4 class="box-title text-info">Edit Snapshot</h4>
+             </div>
+             <div class="box-body">
+               <div class="row">
+                 <div class="col-xs-8">
+                   <!--Column-->
+                   <div class="form-group middle-popover">
+                     <div class="row">
+                       <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Snapshot Table</b></label>
+                       <div class="col-xs-12 col-sm-6">
+                         <select style="width:95%" chosen ng-model="newSnapshot.select.table_name"
+                              ng-options="tableName as tableName for tableName in cubeLookups">
+                         <option value=""></option>
+                       </select>
+                       </div>
+                     </div>
+                   </div>
+                   <div class="form-group">
+                     <div class="row">
+                       <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Type</b></label>
+                       <div class="col-xs-12 col-sm-6">
+                         <select style="width:95%" chosen ng-model="newSnapshot.select.storage_type"
+                              ng-change="changeSnapshotStorage(newSnapshot.select)"
+                              ng-options="storageType.value as storageType.name for storageType in cubeConfig.snapshotStorageTypes">
+                           <option value=""></option>
+                         </select>
+                       </div>
+                     </div>
+                   </div>
+                   <!--Builder-->
+                   <div class="form-group" ng-if="!isReuse" >
+                     <div class="row">
+                       <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Global</b></label>
+                       <div class="col-xs-12 col-sm-6">
+                         <input type="checkbox" ng-model="newSnapshot.select.global" ng-disabled="(newSnapshot.select.storage_type == 'hbase')">
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+             <div class="box-footer">
+               <button class="btn btn-sm btn-info"
+                     ng-click="addSnapshot(newSnapshot.select)" ng-show="state.mode=='edit'">OK</button>
+               <button class="btn btn-link" ng-click="cancelEditSnapshot()">Cancel</button>
+             </div>
            </div>
          </div>
          <!--Edit ColumnFamily-->
@@ -511,6 +722,14 @@
    </ng-form>
  </div>
 
+<script type="text/ng-template" id="dimCapTip.html">
+  <div>
+    <ol style="font-size:12px;">
+      <li>Dimension limitations mean max dimensions may be contained within a group of SQL queries.</li>
+      <li>In a set of queries, if each query required the number of dimensions is not more than five, you can set 5 here.</li>
+    </ol>
+  </div>
+</script>
 <script type="text/ng-template" id="rowkeyTip.html">
   <div>
     <h4>Shard By this column?</h4>
@@ -560,5 +779,11 @@
     <h4>
        Select cube engine for building cube.
     </h4>
+  </div>
+</script>
+
+<script type="text/ng-template" id="AdvanceSnapshotTableTip.html">
+  <div>
+    <h4>Advance snapshot design for global lookup table and provide different storage type.</h4>
   </div>
 </script>

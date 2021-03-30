@@ -165,6 +165,17 @@
       }
     },
     {
+      "name": "GMV_CNT",
+      "function": {
+        "expression": "COUNT",
+        "parameter": {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.PRICE"
+        },
+        "returntype": "bigint"
+      }
+    },
+    {
       "name": "GMV_MIN",
       "function": {
         "expression": "MIN",
@@ -322,12 +333,23 @@
     {
       "name": "GVM_PERCENTILE",
       "function": {
-        "expression": "PERCENTILE",
+        "expression": "PERCENTILE_APPROX",
         "parameter": {
           "type": "column",
           "value": "TEST_KYLIN_FACT.PRICE"
         },
         "returntype": "percentile(100)"
+      }
+    },
+    {
+      "name": "TEST_COUNT_COLUMN_CNT",
+      "function": {
+        "expression": "COUNT",
+        "parameter": {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.TEST_COUNT_COLUMN"
+        },
+        "returntype": "bigint"
       }
     }
   ],
@@ -341,7 +363,8 @@
     "rowkey_columns": [
       {
         "column": "TEST_KYLIN_FACT.SELLER_ID",
-        "encoding": "int:4"
+        "encoding": "int:4",
+        "isShardBy": true
       },
       {
         "column": "TEST_KYLIN_FACT.ORDER_ID",
@@ -439,8 +462,10 @@
               "TRANS_CNT",
               "ITEM_COUNT_SUM",
               "GMV_SUM",
+              "GMV_CNT",
               "GMV_MIN",
-              "GMV_MAX"
+              "GMV_MAX",
+              "TEST_COUNT_COLUMN_CNT"
             ]
           }
         ]
@@ -580,7 +605,16 @@
   "engine_type": 2,
   "storage_type": 2,
   "override_kylin_properties": {
-    "kylin.cube.algorithm": "INMEM"
+    "kylin.cube.algorithm": "INMEM",
+    "kylin.dictionary.shrunken-from-global-enabled": "true"
   },
+  "snapshot_table_desc_list": [
+    {
+      "table_name": "DEFAULT.TEST_CATEGORY_GROUPINGS",
+      "storage_type": "hbase",
+      "local_cache_enable": true,
+      "global": true
+    }
+  ],
   "partition_date_start": 0
 }

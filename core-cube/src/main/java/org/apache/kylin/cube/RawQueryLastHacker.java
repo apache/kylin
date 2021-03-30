@@ -18,6 +18,7 @@
 
 package org.apache.kylin.cube;
 
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -33,20 +34,20 @@ public class RawQueryLastHacker {
     private static final Logger logger = LoggerFactory.getLogger(RawQueryLastHacker.class);
 
     public static void hackNoAggregations(SQLDigest sqlDigest, CubeDesc cubeDesc, TupleInfo tupleInfo) {
-        if (!sqlDigest.isRawQuery) {
+        if (!sqlDigest.isRawQuery || BackdoorToggles.getDisabledRawQueryLastHacker()) {
             return;
         }
 
         // If no group by and metric found, then it's simple query like select ... from ... where ...,
         // But we have no raw data stored, in order to return better results, we hack to output sum of metric column
-        logger.info("No group by and aggregation found in this query, will hack some result for better look of output...");
+        logger.info(
+                "No group by and aggregation found in this query, will hack some result for better look of output...");
 
         // If it's select * from ...,
         // We need to retrieve cube to manually add columns into sqlDigest, so that we have full-columns results as output.
         boolean isSelectAll = sqlDigest.allColumns.isEmpty() || sqlDigest.allColumns.equals(sqlDigest.filterColumns);
         for (TblColRef col : cubeDesc.listAllColumns()) {
-            if (cubeDesc.listDimensionColumnsIncludingDerived().contains(col) || isSelectAll) {
-                //if (tupleInfo.hasColumn(col))
+            if (cubeDesc.listDimensionColumnsExcludingDerived(true).contains(col) || isSelectAll) {
                 sqlDigest.allColumns.add(col);
             }
         }

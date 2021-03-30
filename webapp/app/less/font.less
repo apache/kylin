@@ -1,0 +1,53 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@font-face {
+  font-family: 'kylin';
+  src: url('../fonts/kylin.eot?pdayeh');
+  src: url('fonts/kylin.eot?pdayeh#iefix') format('embedded-opentype'),
+    url('../fonts/kylin.ttf?pdayeh') format('truetype'),
+    url('../fonts/kylin.woff?pdayeh') format('woff'),
+    url('../fonts/kylin.svg?pdayeh#kylin') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^='kylin-icon-'],
+[class*=' kylin-icon-'] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'kylin' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.kylin-icon-hybrid:before {
+  content: '\e900';
+}
+.kylin-icon-arrows_right:before {
+  content: '\e901';
+}
+.kylin-icon-arrows_left:before {
+  content: '\e902';
+}

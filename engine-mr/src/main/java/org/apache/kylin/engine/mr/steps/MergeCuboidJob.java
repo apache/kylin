@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.util.Locale;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -28,6 +29,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.metadata.model.Segments;
 
 public class MergeCuboidJob extends CuboidJob {
 
@@ -45,7 +47,7 @@ public class MergeCuboidJob extends CuboidJob {
 
             String input = getOptionValue(OPTION_INPUT_PATH);
             String output = getOptionValue(OPTION_OUTPUT_PATH);
-            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
+            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase(Locale.ROOT);
             String segmentID = getOptionValue(OPTION_SEGMENT_ID);
 
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -60,8 +62,9 @@ public class MergeCuboidJob extends CuboidJob {
             setJobClasspath(job, cube.getConfig());
 
             // add metadata to distributed cache
-            // TODO actually only dictionaries from merging segments are needed
-            attachCubeMetadataWithDict(cube, job.getConfiguration());
+            Segments<CubeSegment> allSegs = cube.getMergingSegments(cubeSeg);
+            allSegs.add(cubeSeg);
+            attachSegmentsMetadataWithDict(allSegs, job.getConfiguration());
 
             // Mapper
             job.setMapperClass(MergeCuboidMapper.class);
@@ -73,8 +76,11 @@ public class MergeCuboidJob extends CuboidJob {
             job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(Text.class);
 
+            //set dfs.replication
+            job.getConfiguration().set("dfs.replication", KylinConfig.getInstanceFromEnv().getCuboidDfsReplication());
+
             // set inputs
-            IMROutput2.IMRMergeOutputFormat outputFormat = MRUtil.getBatchMergeOutputSide2(cubeSeg).getOuputFormat();
+            IMROutput2.IMRMergeOutputFormat outputFormat = MRUtil.getBatchMergeOutputSide2(cubeSeg).getOutputFormat();
             outputFormat.configureJobInput(job, input);
             addInputDirs(input, job);
 

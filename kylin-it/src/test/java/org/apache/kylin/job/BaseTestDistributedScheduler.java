@@ -20,30 +20,26 @@ package org.apache.kylin.job;
 
 import java.io.File;
 import java.nio.charset.Charset;
-import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
-import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.common.util.ZKUtil;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DistributedScheduler;
-import org.apache.kylin.storage.hbase.util.ZookeeperDistributedLock;
-import org.apache.kylin.storage.hbase.util.ZookeeperUtil;
+import org.apache.kylin.job.lock.zookeeper.ZookeeperDistributedLock;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.io.Files;
+import org.apache.kylin.shaded.com.google.common.io.Files;
 
 public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     static ExecutableManager execMgr;
@@ -57,9 +53,8 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     static File localMetaDir;
     static String backup;
 
-    static final String SEGMENT_ID = "segmentId";
-    static final String segmentId1 = "seg1" + UUID.randomUUID();
-    static final String segmentId2 = "seg2" + UUID.randomUUID();
+    static final String jobId1 = RandomUtil.randomUUID().toString();
+    static final String jobId2 = RandomUtil.randomUUID().toString();
     static final String serverName1 = "serverName1";
     static final String serverName2 = "serverName2";
     static final String confDstPath1 = "target/kylin_metadata_dist_lock_test1/kylin.properties";
@@ -70,7 +65,6 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     @BeforeClass
     public static void setup() throws Exception {
         staticCreateTestMetadata();
-        System.setProperty("kylin.job.lock", "org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock");
 
         new File(confDstPath1).getParentFile().mkdirs();
         new File(confDstPath2).getParentFile().mkdirs();
@@ -113,7 +107,7 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
 
     @AfterClass
     public static void after() throws Exception {
-        jobLock1.purgeLocks("");
+        jobLock1.purgeLocks(DistributedScheduler.ZOOKEEPER_LOCK_PATH);
         
         if (scheduler1 != null) {
             scheduler1.shutdown();
@@ -129,7 +123,6 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         }
 
         FileUtils.deleteDirectory(localMetaDir);
-        System.clearProperty("kylin.job.lock");
         System.clearProperty("kylin.metadata.url");
         staticCleanupTestMetadata();
     }
@@ -170,17 +163,11 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     }
 
     private static void initZk() {
-        String zkConnectString = ZookeeperUtil.getZKConnectString();
-        if (StringUtils.isEmpty(zkConnectString)) {
-            throw new IllegalArgumentException("ZOOKEEPER_QUORUM is empty!");
-        }
-        RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-        zkClient = CuratorFrameworkFactory.newClient(zkConnectString, retryPolicy);
-        zkClient.start();
+        zkClient = ZKUtil.newZookeeperClient();
     }
 
     String getServerName(String segName) {
-        String lockPath = getFullLockPath(segName);
+        String lockPath = DistributedScheduler.getLockPath(segName);
         String serverName = null;
         if (zkClient.getState().equals(CuratorFrameworkState.STARTED)) {
             try {
@@ -193,9 +180,5 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
             }
         }
         return serverName;
-    }
-
-    private String getFullLockPath(String segName) {
-        return DistributedScheduler.dropDoubleSlash("/kylin/" + kylinConfig1.getMetadataUrlPrefix() + DistributedScheduler.getLockPath(segName));
     }
 }

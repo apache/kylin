@@ -36,7 +36,7 @@
     </div>
 
     <div ng-if="!loading && cubeList.cubes.length == 0">
-        <div no-result text="No Cube."></div>
+        <div no-result text="No Cubes."></div>
     </div>
     <table ng-if="cubeList.cubes.length > 0" class="table table-striped table-bordered table-hover dataTable no-footer">
         <!--Header-->
@@ -53,12 +53,12 @@
                    class="fa fa-sort-desc"></i>
             </th>
             <th>Actions</th>
-            <th ng-if="userService.hasRole('ROLE_ADMIN')">Admins</th>
+            <th>Admins</th>
         </tr>
         </thead>
         <!--Body-->
         <tbody ng-repeat="cube in cubeList.cubes | orderObjectBy:state.filterAttr:state.filterReverse ">
-        <tr ng-class="{accordion:true}" style="cursor: pointer"  ng-click="cube.showDetail=!cube.showDetail;loadDetail(cube)">
+        <tr ng-class="{accordion:true}" style="cursor: pointer"  ng-click="cube.showDetail=!cube.showDetail;loadDetailWithStreamingV2Info(cube);">
             <td>
                 <i ng-show="!cube.showDetail" class="fa fa-chevron-circle-right blue"></i>
                 <i ng-show="cube.showDetail" class="fa fa-chevron-circle-down blue"></i>
@@ -70,6 +70,7 @@
                     {{ cube.status}}
                 </span>
             </td>
+            <td>{{ cube.project}}</td>
             <td><span tooltip-html-unsafe="<div style='text-align:left'>
                 Source Table Size: {{dataSize(cube.input_records_size)}}<br/>
                 Expansion Rate: {{(cube.input_records_size>0? cube.size_kb*1024/cube.input_records_size : 0) * 100 | number:2}}%
@@ -84,36 +85,55 @@
             <td>
                 <div ng-click="$event.stopPropagation();" class="btn-group">
                     <button type="button" class="btn btn-default btn-xs dropdown-toggle"
-                            data-toggle="dropdown" ng-click="listAccess(cube, 'CubeInstance')">
+                            data-toggle="dropdown" ng-click="$event.stopPropagation(); listCubeAccess(cube, 'CubeInstance'); listCubeAction(cube)">
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>
-                    <ul ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)" class="dropdown-menu" role="menu">
-                        <li ng-if="cube.status!='READY' && userService.hasRole('ROLE_ADMIN') ">
+                    <ul ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask,permissions.OPERATION.mask)) && !cube.streamingV2 && actionLoaded" class="dropdown-menu" role="menu" style="right:0;left:auto;">
+                        <li ng-if="cube.status!='READY' && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
                             <a ng-click="dropCube(cube)" tooltip="Drop the cube, related jobs and data permanently.">Drop</a></li>
-                        <li ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
+                        <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)">
                             <a ng-click="cubeEdit(cube);">Edit</a></li>
                         <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startJobSubmit(cube);">Build</a></li>
                         <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startRefresh(cube)">Refresh</a></li>
                         <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startMerge(cube)">Merge</a></li>
-                        <li ng-if="cube.status=='READY'"><a ng-click="disable(cube)">Disable</a></li>
-                        <li ng-if="cube.status=='DISABLED'"><a ng-click="enable(cube)">Enable</a></li>
-                        <li ng-if="cube.status=='DISABLED'"><a ng-click="purge(cube)">Purge</a></li>
-                        <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="cloneCube(cube)">Clone</a></li>
+                        <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startLookupRefresh(cube);">Lookup Refresh</a></li>
+                        <li ng-if="cube.status=='READY' && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"><a ng-click="disable(cube)">Disable</a></li>
+                        <li ng-if="cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"><a ng-click="enable(cube)">Enable</a></li>
+                        <li ng-if="cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"><a ng-click="startDeleteSegment(cube)">Delete Segment</a></li>
+                        <li ng-if="cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"><a ng-click="purge(cube)">Purge</a></li>
+                        <li ng-if="cube.status!='DESCBROKEN' && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"><a ng-click="cloneCube(cube)">Clone</a></li>
+                        <li ng-if="cube.status=='READY' && kylinConfig.isCubeMigrationEnabled() && (userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask) || hasPermission(cubeProjectEntity, permissions.ADMINISTRATION.mask))"><a ng-click="startMigrateCube(cube, 0);">Migrate</a></li>
 
                     </ul>
-                    <ul ng-if="!(userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))" class="dropdown-menu" role="menu">
-                        <li><a>N/A</a></li>
+                    <ul ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube', cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)) && cube.streamingV2 && actionLoaded" class="dropdown-menu" role="menu" style="right:0;left:auto;">
+                        <li ng-if="cube.status!='DISABLED' && cube.consumeState=='RUNNING'"><a ng-click="pauseCube(cube, $index);">Pause</a></li>
+                        <li ng-if="cube.status!='DISABLED' && cube.consumeState=='PAUSED'"><a ng-click="resumeCube(cube, $index);">Resume</a></li>
+                        <li ng-if="cube.status!='DISABLED'"><a ng-click="disable(cube, $index)">Disable</a></li>
+                        <li ng-if="cube.status!='DISABLED' && userService.hasRole('ROLE_ADMIN')"><a ng-click="viewAssignment(cube, $index);">Assignment</a></li>
+                        <li ng-if="cube.status!='DESCBROKEN' && cube.lambda"><a ng-click="startRefresh(cube, $index)">Refresh</a></li>
+                        <li ng-if="cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)) "><a ng-click="dropCube(cube, $index)" tooltip="Drop the cube, related jobs and data permanently.">Drop</a></li>
+                        <li ng-if="cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"><a ng-click="cubeEdit(cube);">Edit</a></li>
+                        <li><a ng-click="startMerge(cube, $index)">Merge</a></li>
+                        <li ng-if="cube.status=='DISABLED'"><a ng-click="enable(cube, $index)">Enable</a></li>
+                        <li ng-if="cube.status=='DISABLED'"><a ng-click="purge(cube, $index)">Purge</a></li>
+                        <li><a ng-click="cloneCube(cube)">Clone</a></li>
+                        <li ng-if="cube.status=='READY' && (userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask))"><a ng-click="startMigrateCube(cube, 0);">Migrate</a></li>
                     </ul>
+                    <span ng-if="!(userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))" class="dropdown-menu" role="menu">
+                      N/A
+                    </span>
                 </div>
             </td>
-            <td ng-if="userService.hasRole('ROLE_ADMIN')">
-                <div ng-click="$event.stopPropagation();" class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" ng-click="listAccess(cube, 'CubeInstance')">
+            <td >
+                <div ng-click="$event.stopPropagation();" class="btn-group" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)">
+                    <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>
-                    <ul class="dropdown-menu" role="menu">
+                    <ul class="dropdown-menu" role="menu" style="right:0;left:auto;">
                         <li ng-if="cube.status!='READY'"><a href="cubes/edit/{{cube.name}}/descriptionjson">Edit CubeDesc</a></li>
                         <li><a href="cubes/view/{{cube.name}}/instancejson">View Cube</a></li>
+                        <li ng-if="cube.status=='READY' && kylinConfig.isCubeMigrationEnabled()"><a ng-click="startMigrateCube(cube, 1)">Approve Migration</a></li>
+                        <li ng-if="cube.status=='READY' && kylinConfig.isCubeMigrationEnabled()"><a ng-click="startMigrateCube(cube, -1)">Reject Migration</a></li>
                     </ul>
                 </div>
             </td>
@@ -143,5 +163,8 @@
 <div ng-include="'partials/projects/project_create.html'"></div>
 <div ng-include="'partials/models/model_detail.html'"></div>
 <div ng-include="'partials/cubes/cube_clone.html'"></div>
-
+<div ng-include="'partials/cubes/cube_delete_segment.html'"></div>
+<div ng-include="'partials/cubes/cube_migrate.html'"></div>
+<div ng-include="'partials/jobs/lookup_refresh.html'"></div>
+<div ng-include="'partials/streaming/cubeAssignment.html'"></div>
 </div>

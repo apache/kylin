@@ -21,30 +21,46 @@ package org.apache.kylin.engine.mr.steps;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.DimensionRangeInfo;
+import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.mr.LookupMaterializeContext;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.metadata.datatype.DataTypeOrder;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
+
 /**
  */
 public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
     private static final Logger logger = LoggerFactory.getLogger(UpdateCubeInfoAfterBuildStep.class);
+
+    private long timeMaxValue = Long.MIN_VALUE;
+    private long timeMinValue = Long.MAX_VALUE;
 
     public UpdateCubeInfoAfterBuildStep() {
         super();
@@ -53,7 +69,8 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final CubeManager cubeManager = CubeManager.getInstance(context.getConfig());
-        final CubeInstance cube = cubeManager.getCube(CubingExecutableUtil.getCubeName(this.getParams()));
+        final CubeInstance cube = cubeManager.getCube(CubingExecutableUtil.getCubeName(this.getParams()))
+                .latestCopyForWrite();
         final CubeSegment segment = cube.getSegmentById(CubingExecutableUtil.getSegmentId(this.getParams()));
 
         CubingJob cubingJob = (CubingJob) getManager().getJob(CubingExecutableUtil.getCubingJobId(this.getParams()));
@@ -61,56 +78,121 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         long sourceSizeBytes = cubingJob.findSourceSizeBytes();
         long cubeSizeBytes = cubingJob.findCubeSizeBytes();
 
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        List<Double> cuboidEstimateRatio = cubingJob.findEstimateRatio(segment, config);
+
         segment.setLastBuildJobID(CubingExecutableUtil.getCubingJobId(this.getParams()));
         segment.setLastBuildTime(System.currentTimeMillis());
         segment.setSizeKB(cubeSizeBytes / 1024);
         segment.setInputRecords(sourceCount);
         segment.setInputRecordsSize(sourceSizeBytes);
+        segment.setEstimateRatio(cuboidEstimateRatio);
 
         try {
-            if (segment.isOffsetCube()) {
-                updateTimeRange(segment);
-            }
+            deleteDictionaryIfNeeded(segment);
+            saveExtSnapshotIfNeeded(cubeManager, cube, segment);
+            updateSegment(segment);
 
             cubeManager.promoteNewlyBuiltSegments(cube, segment);
-            return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
+            return new ExecuteResult();
         } catch (IOException e) {
             logger.error("fail to update cube after build", e);
             return ExecuteResult.createError(e);
         }
     }
 
-    private void updateTimeRange(CubeSegment segment) throws IOException {
-        final TblColRef partitionCol = segment.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
+    // Don't delete the dicts in metadata store, let it done regularly by the metadata cleanup tool
+    private Set<String> deleteDictionaryIfNeeded(CubeSegment segment) {
+        Set<TblColRef> dictColToDelete = segment.getCubeDesc().getAllColumnsNeedDictionaryForBuildingOnly();
+        Set<String> dictResPathToDelete = Sets.newHashSetWithExpectedSize(dictColToDelete.size());
+        for (TblColRef dictCol : dictColToDelete) {
+            String pathToDelete = segment.removeDictResPath(dictCol);
+            if (!Strings.isNullOrEmpty(pathToDelete)) {
+                dictResPathToDelete.add(pathToDelete);
+            }
+        }
+        return dictResPathToDelete;
+    }
 
-        if (partitionCol == null) {
+    private void saveExtSnapshotIfNeeded(CubeManager cubeManager, CubeInstance cube, CubeSegment segment)
+            throws IOException {
+        String extLookupSnapshotStr = this.getParam(BatchConstants.ARG_EXT_LOOKUP_SNAPSHOTS_INFO);
+        if (extLookupSnapshotStr == null || extLookupSnapshotStr.isEmpty()) {
             return;
         }
-        final String factColumnsInputPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
-        Path colDir = new Path(factColumnsInputPath, partitionCol.getIdentity());
-        FileSystem fs = HadoopUtil.getWorkingFileSystem();
-        Path outputFile = HadoopUtil.getFilterOnlyPath(fs, colDir, partitionCol.getName() + FactDistinctColumnsReducer.PARTITION_COL_INFO_FILE_POSTFIX);
-        if (outputFile == null) {
-            throw new IOException("fail to find the partition file in base dir: " + colDir);
-        }
+        Map<String, String> extLookupSnapshotMap = LookupMaterializeContext.parseLookupSnapshots(extLookupSnapshotStr);
+        logger.info("update ext lookup snapshots:{}", extLookupSnapshotMap);
+        List<SnapshotTableDesc> snapshotTableDescList = cube.getDescriptor().getSnapshotTableDescList();
+        for (SnapshotTableDesc snapshotTableDesc : snapshotTableDescList) {
+            String tableName = snapshotTableDesc.getTableName();
+            if (snapshotTableDesc.isExtSnapshotTable()) {
+                String newSnapshotResPath = extLookupSnapshotMap.get(tableName);
+                if (newSnapshotResPath == null || newSnapshotResPath.isEmpty()) {
+                    continue;
+                }
 
-        FSDataInputStream is = null;
-        BufferedReader bufferedReader = null;
-        InputStreamReader isr = null;
-        long minValue, maxValue;
-        try {
-            is = fs.open(outputFile);
-            isr = new InputStreamReader(is);
-            bufferedReader = new BufferedReader(isr);
-            minValue = Long.parseLong(bufferedReader.readLine());
-            maxValue = Long.parseLong(bufferedReader.readLine());
-        } finally {
-            IOUtils.closeQuietly(is);
-            IOUtils.closeQuietly(isr);
-            IOUtils.closeQuietly(bufferedReader);
+                if (snapshotTableDesc.isGlobal()) {
+                    if (!newSnapshotResPath.equals(cube.getSnapshotResPath(tableName))) {
+                        cubeManager.updateCubeLookupSnapshot(cube, tableName, newSnapshotResPath);
+                    }
+                } else {
+                    segment.putSnapshotResPath(tableName, newSnapshotResPath);
+                }
+            }
         }
-        
-        logger.info("updateTimeRange step. minValue:" + minValue + " maxValue:" + maxValue);
-        segment.setTSRange(new TSRange(minValue, maxValue));
+    }
+
+    private void updateSegment(CubeSegment segment) throws IOException {
+        final TblColRef partitionCol = segment.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
+
+        for (TblColRef dimColRef : segment.getCubeDesc().listDimensionColumnsExcludingDerived(true)) {
+            if (!dimColRef.getType().needCompare())
+                continue;
+
+            final String factColumnsInputPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
+            Path colDir = new Path(factColumnsInputPath, dimColRef.getIdentity());
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
+
+            //handle multiple reducers
+            Path[] outputFiles = HadoopUtil.getFilteredPath(fs, colDir,
+                    dimColRef.getName() + FactDistinctColumnsReducer.DIMENSION_COL_INFO_FILE_POSTFIX);
+            if (outputFiles == null || outputFiles.length == 0) {
+                segment.getDimensionRangeInfoMap().put(dimColRef.getIdentity(), new DimensionRangeInfo(null, null));
+                continue;
+            }
+
+            FSDataInputStream is = null;
+            BufferedReader bufferedReader = null;
+            InputStreamReader isr = null;
+            Set<String> minValues = Sets.newHashSet(), maxValues = Sets.newHashSet();
+            for (Path outputFile : outputFiles) {
+                try {
+                    is = fs.open(outputFile);
+                    isr = new InputStreamReader(is, StandardCharsets.UTF_8);
+                    bufferedReader = new BufferedReader(isr);
+                    minValues.add(bufferedReader.readLine());
+                    maxValues.add(bufferedReader.readLine());
+                } finally {
+                    IOUtils.closeQuietly(is);
+                    IOUtils.closeQuietly(isr);
+                    IOUtils.closeQuietly(bufferedReader);
+                }
+            }
+            DataTypeOrder order = dimColRef.getType().getOrder();
+            String minValue = order.min(minValues);
+            String maxValue = order.max(maxValues);
+
+            if (segment.isOffsetCube() && partitionCol != null
+                    && partitionCol.getIdentity().equals(dimColRef.getIdentity())) {
+                logger.debug("update partition. {} timeMinValue:" + minValue + " timeMaxValue:" + maxValue,
+                        dimColRef.getName());
+                if (DateFormat.stringToMillis(minValue) != timeMinValue
+                        && DateFormat.stringToMillis(maxValue) != timeMaxValue) {
+                    segment.setTSRange(
+                            new TSRange(DateFormat.stringToMillis(minValue), DateFormat.stringToMillis(maxValue) + 1));
+                }
+            }
+            segment.getDimensionRangeInfoMap().put(dimColRef.getIdentity(), new DimensionRangeInfo(minValue, maxValue));
+        }
     }
 }

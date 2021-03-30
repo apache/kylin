@@ -28,9 +28,9 @@ import org.apache.kylin.common.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.base.Predicate;
+import org.apache.kylin.shaded.com.google.common.collect.Iterables;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public abstract class DimensionEncodingFactory {
 
@@ -97,7 +97,19 @@ public abstract class DimensionEncodingFactory {
                 });
     }
 
-    private synchronized static void initFactoryMap() {
+    public static boolean isValidEncoding(final String encodingName, String[] args, int version) {
+        if (factoryMap == null)
+            initFactoryMap();
+
+        DimensionEncodingFactory factory = factoryMap.get(Pair.newPair(encodingName, version));
+        if (factory == null) {
+            return true;
+        }
+
+        return factory.isValidDimensionEncoding(encodingName, args);
+    }
+
+    private static synchronized void initFactoryMap() {
         if (factoryMap == null) {
             Map<Pair<String, Integer>, DimensionEncodingFactory> map = Maps.newConcurrentMap();
 
@@ -155,4 +167,9 @@ public abstract class DimensionEncodingFactory {
      * Create a DimensionEncoding instance, with inputs corresponding to RowKeyColDesc.encodingName and RowKeyColDesc.encodingArgs
      */
     abstract public DimensionEncoding createDimensionEncoding(String encodingName, String[] args);
+
+    /**
+     * Validate the inputs of RowKeyColDesc.encodingName and RowKeyColDesc.encodingArgs for a DimensionEncoding instance
+     */
+    abstract public boolean isValidDimensionEncoding(String encodingName, String[] args);
 }

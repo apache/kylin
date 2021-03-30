@@ -24,5 +24,7 @@
   "models": [
     "kylin_sales_model",
     "kylin_streaming_model"
-  ]
+  ],
+  "ext_filters": [],
+  "override_kylin_properties": {}
 }

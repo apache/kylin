@@ -25,11 +25,11 @@ import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 
 public class CubeSegmentAdvisor implements ISegmentAdvisor {
 
-    private final CubeSegment seg;
+    protected final CubeSegment seg;
 
     // these are just cache of segment attributes, all changes must write through to 'seg'
-    private TSRange tsRange;
-    private SegmentRange segRange;
+    protected TSRange tsRange;
+    protected SegmentRange segRange;
 
     public CubeSegmentAdvisor(ISegment segment) {
         this.seg = (CubeSegment) segment;

@@ -34,7 +34,7 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public abstract class CubeMetadataUpgrade {
     private static final Logger logger = LoggerFactory.getLogger(CubeMetadataUpgrade.class);
@@ -63,23 +63,17 @@ public abstract class CubeMetadataUpgrade {
     }
 
     public void clear() {
-        DataModelManager.clearCache();
-        CubeDescManager.clearCache();
-        CubeManager.clearCache();
-        ProjectManager.clearCache();
+        config.clearManagers();
     }
 
     public void verify() {
         logger.info("=================================================================");
         logger.info("The changes are applied, now it's time to verify the new metadata store by reloading all metadata:");
         logger.info("=================================================================");
-        DataModelManager.clearCache();
+        config.clearManagers();
         DataModelManager.getInstance(config);
-        CubeDescManager.clearCache();
         CubeDescManager.getInstance(config);
-        CubeManager.clearCache();
         CubeManager.getInstance(config);
-        ProjectManager.clearCache();
         ProjectManager.getInstance(config);
         //cleanup();
     }

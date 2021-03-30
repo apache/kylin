@@ -21,13 +21,15 @@ package org.apache.kylin.cube.model;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Locale;
+
+import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**
  */
@@ -78,10 +80,10 @@ public class HBaseMappingDesc implements java.io.Serializable {
         cubeRef = cubeDesc;
 
         for (HBaseColumnFamilyDesc cf : columnFamily) {
-            cf.setName(cf.getName().toUpperCase());
+            cf.setName(cf.getName().toUpperCase(Locale.ROOT));
 
             for (HBaseColumnDesc c : cf.getColumns()) {
-                c.setQualifier(c.getQualifier().toUpperCase());
+                c.setQualifier(c.getQualifier().toUpperCase(Locale.ROOT));
                 StringUtil.toUpperCaseArray(c.getMeasureRefs(), c.getMeasureRefs());
             }
         }

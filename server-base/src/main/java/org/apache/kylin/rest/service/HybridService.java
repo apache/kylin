@@ -43,7 +43,8 @@ public class HybridService extends BasicService {
     @Autowired
     private AclEvaluate aclEvaluate;
 
-    public HybridInstance createHybridCube(String hybridName, String projectName, String modelName, String[] cubeNames) {
+    public HybridInstance createHybridInstance(String hybridName, String projectName, String modelName,
+            String[] cubeNames) {
         aclEvaluate.checkProjectWritePermission(projectName);
         List<String> args = new ArrayList<String>();
         args.add("-name");
@@ -65,7 +66,8 @@ public class HybridService extends BasicService {
         return getHybridInstance(hybridName);
     }
 
-    public HybridInstance updateHybridCube(String hybridName, String projectName, String modelName, String[] cubeNames) {
+    public HybridInstance updateHybridInstance(String hybridName, String projectName, String modelName,
+            String[] cubeNames) {
         aclEvaluate.checkProjectWritePermission(projectName);
         List<String> args = new ArrayList<String>();
         args.add("-name");
@@ -87,8 +89,8 @@ public class HybridService extends BasicService {
         return getHybridInstance(hybridName);
     }
 
-    public void deleteHybridCube(String hybridName, String projectName, String modelName) {
-        aclEvaluate.checkProjectWritePermission(projectName);
+    public void updateHybridCubeNoCheck(String hybridName, String projectName, String modelName,
+                                           String[] cubeNames) {
         List<String> args = new ArrayList<String>();
         args.add("-name");
         args.add(hybridName);
@@ -96,6 +98,25 @@ public class HybridService extends BasicService {
         args.add(projectName);
         args.add("-model");
         args.add(modelName);
+        args.add("-cubes");
+        args.add(StringUtils.join(cubeNames, ","));
+        args.add("-check");
+        args.add("false");
+        args.add("-action");
+        args.add("update");
+        try {
+            HybridCubeCLI.main(args.toArray(new String[args.size()]));
+        } catch (Exception e) {
+            logger.warn("Update Hybrid Failed", e);
+            throw e;
+        }
+    }
+
+    public void deleteHybridInstance(String hybridName, String projectName) {
+        aclEvaluate.checkProjectWritePermission(projectName);
+        List<String> args = new ArrayList<String>();
+        args.add("-name");
+        args.add(hybridName);
         args.add("-action");
         args.add("delete");
         try {
@@ -112,32 +133,50 @@ public class HybridService extends BasicService {
     }
 
     public List<HybridInstance> listHybrids(final String projectName, final String modelName) {
-        aclEvaluate.checkProjectReadPermission(projectName);
-        ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
-        List<HybridInstance> hybridsInProject = new ArrayList<HybridInstance>();
-
+        List<HybridInstance> allHybrids = new ArrayList<HybridInstance>();
         if (StringUtils.isEmpty(projectName)) {
-            hybridsInProject = new ArrayList(getHybridManager().listHybridInstances());
-        } else if (project == null) {
-            return new ArrayList<>();
+            List<ProjectInstance> allProjectInstances = getProjectManager().listAllProjects();
+            List<ProjectInstance> readableProjects = new ArrayList<ProjectInstance>();
+            for (ProjectInstance projectInstance : allProjectInstances) {
+                if (projectInstance == null) {
+                    continue;
+                }
+                boolean hasProjectReadAccess = aclEvaluate.hasProjectReadPermission(projectInstance);
+                if (hasProjectReadAccess) {
+                    readableProjects.add(projectInstance);
+                }
+            }
+            for (ProjectInstance projectInstance : readableProjects) {
+                List<RealizationEntry> realizationEntries = projectInstance
+                        .getRealizationEntries(RealizationType.HYBRID);
+                if (realizationEntries != null) {
+                    for (RealizationEntry entry : realizationEntries) {
+                        HybridInstance instance = getHybridManager().getHybridInstance(entry.getRealization());
+                        allHybrids.add(instance);
+                    }
+                }
+            }
         } else {
-            List<RealizationEntry> realizationEntries = project.getRealizationEntries(RealizationType.HYBRID);
+            aclEvaluate.checkProjectReadPermission(projectName);
+            ProjectInstance projectInstance = getProjectManager().getProject(projectName);
+            List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries(RealizationType.HYBRID);
             if (realizationEntries != null) {
                 for (RealizationEntry entry : realizationEntries) {
                     HybridInstance instance = getHybridManager().getHybridInstance(entry.getRealization());
-                    hybridsInProject.add(instance);
+                    allHybrids.add(instance);
                 }
             }
         }
 
-        DataModelDesc model = (null != modelName) ? getDataModelManager().getDataModelDesc(modelName) : null;
         if (StringUtils.isEmpty(modelName)) {
-            return hybridsInProject;
-        } else if (model == null) {
-            return new ArrayList<>();
+            return allHybrids;
         } else {
+            DataModelDesc model = getDataModelManager().getDataModelDesc(modelName);
             List<HybridInstance> hybridsInModel = new ArrayList<HybridInstance>();
-            for (HybridInstance hybridInstance : hybridsInProject) {
+            if (model == null)
+                return hybridsInModel;
+
+            for (HybridInstance hybridInstance : allHybrids) {
                 boolean hybridInModel = false;
                 for (RealizationEntry entry : hybridInstance.getRealizationEntries()) {
                     CubeDesc cubeDesc = getCubeDescManager().getCubeDesc(entry.getRealization());

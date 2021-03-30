@@ -31,7 +31,7 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
 
 public class HLLCMeasureType extends MeasureType<HLLCounter> {
     private static final long serialVersionUID = 1L;
@@ -43,7 +43,7 @@ public class HLLCMeasureType extends MeasureType<HLLCounter> {
 
         @Override
         public MeasureType<HLLCounter> createMeasureType(String funcName, DataType dataType) {
-            return new HLLCMeasureType(funcName, dataType);
+            return new HLLCMeasureType(dataType);
         }
 
         @Override
@@ -66,12 +66,12 @@ public class HLLCMeasureType extends MeasureType<HLLCounter> {
 
     private final DataType dataType;
 
-    public HLLCMeasureType(String funcName, DataType dataType) {
+    public HLLCMeasureType(DataType dataType) {
         // note at query parsing phase, the data type may be null, because only function and parameters are known
         this.dataType = dataType;
     }
 
-    public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
+    public void validate(FunctionDesc functionDesc) {
         validate(functionDesc.getExpression(), functionDesc.getReturnDataType(), true);
     }
 

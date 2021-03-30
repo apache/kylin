@@ -19,6 +19,7 @@
 package org.apache.kylin.measure;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
@@ -28,8 +29,10 @@ import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.measure.dim.DimCountDistinctMeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.measure.hllc.HLLCMeasureType;
+import org.apache.kylin.measure.map.bitmap.BitmapMapMeasureType;
 import org.apache.kylin.measure.percentile.PercentileMeasureType;
 import org.apache.kylin.measure.raw.RawMeasureType;
+import org.apache.kylin.measure.stddev.StdDevSumMeasureType;
 import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
@@ -37,8 +40,8 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * Factory for MeasureType.
@@ -111,6 +114,9 @@ abstract public class MeasureTypeFactory<T> {
         factoryInsts.add(new RawMeasureType.Factory());
         factoryInsts.add(new ExtendedColumnMeasureType.Factory());
         factoryInsts.add(new PercentileMeasureType.Factory());
+        factoryInsts.add(new DimCountDistinctMeasureType.Factory());
+        factoryInsts.add(new StdDevSumMeasureType.Factory());
+        factoryInsts.add(new BitmapMapMeasureType.Factory());
 
         logger.info("Checking custom measure types from kylin config");
 
@@ -132,11 +138,11 @@ abstract public class MeasureTypeFactory<T> {
         // register factories & data type serializers
         for (MeasureTypeFactory<?> factory : factoryInsts) {
             String funcName = factory.getAggrFunctionName();
-            if (funcName.equals(funcName.toUpperCase()) == false)
+            if (!funcName.equals(funcName.toUpperCase(Locale.ROOT)))
                 throw new IllegalArgumentException(
                         "Aggregation function name '" + funcName + "' must be in upper case");
             String dataTypeName = factory.getAggrDataTypeName();
-            if (dataTypeName.equals(dataTypeName.toLowerCase()) == false)
+            if (!dataTypeName.equals(dataTypeName.toLowerCase(Locale.ROOT)))
                 throw new IllegalArgumentException(
                         "Aggregation data type name '" + dataTypeName + "' must be in lower case");
             Class<? extends DataTypeSerializer<?>> serializer = factory.getAggrDataTypeSerializer();
@@ -163,7 +169,7 @@ abstract public class MeasureTypeFactory<T> {
             return;
 
         for (String udaf : udafs.keySet()) {
-            udaf = udaf.toUpperCase();
+            udaf = udaf.toUpperCase(Locale.ROOT);
             if (udaf.equals(FunctionDesc.FUNC_COUNT_DISTINCT))
                 continue; // skip built-in function
 
@@ -191,7 +197,7 @@ abstract public class MeasureTypeFactory<T> {
     public static MeasureType<?> createNoRewriteFieldsMeasureType(String funcName, DataType dataType) {
         // currently only has DimCountDistinctAgg
         if (funcName.equalsIgnoreCase(FunctionDesc.FUNC_COUNT_DISTINCT)) {
-            return new DimCountDistinctMeasureType.DimCountDistinctMeasureTypeFactory().createMeasureType(funcName,
+            return new DimCountDistinctMeasureType.Factory().createMeasureType(funcName,
                     dataType);
         }
 
@@ -199,7 +205,7 @@ abstract public class MeasureTypeFactory<T> {
     }
 
     public static MeasureType<?> create(String funcName, DataType dataType) {
-        funcName = funcName.toUpperCase();
+        funcName = funcName.toUpperCase(Locale.ROOT);
 
         List<MeasureTypeFactory<?>> factory = factories.get(funcName);
         if (factory == null)

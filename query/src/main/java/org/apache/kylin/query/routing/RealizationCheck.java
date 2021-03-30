@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -38,7 +39,7 @@ public class RealizationCheck {
     private Map<DataModelDesc, List<IncapableReason>> modelIncapableReasons = Maps.newHashMap();
     private Map<CubeDesc, IncapableReason> cubeIncapableReasons = Maps.newHashMap();
     private Map<CubeDesc, Boolean> cubeCapabilities = Maps.newHashMap();
-    private List<DataModelDesc> capableModels = Lists.newArrayList();
+    private Map<DataModelDesc, Map<String, String>> capableModels = Maps.newHashMap();
 
     public Map<DataModelDesc, List<IncapableReason>> getModelIncapableReasons() {
         return modelIncapableReasons;
@@ -77,7 +78,7 @@ public class RealizationCheck {
         }
     }
 
-    public List<DataModelDesc> getCapableModels() {
+    public Map<DataModelDesc, Map<String, String>> getCapableModels() {
         return capableModels;
     }
 
@@ -92,13 +93,31 @@ public class RealizationCheck {
         }
     }
 
-    public void addCapableModel(DataModelDesc modelDesc) {
-        if (!this.capableModels.contains(modelDesc))
-            this.capableModels.add(modelDesc);
+    public void addCapableModel(DataModelDesc modelDesc, Map<String, String> aliasMap) {
+        if (!this.capableModels.containsKey(modelDesc))
+            this.capableModels.put(modelDesc, aliasMap);
     }
 
     public void addModelIncapableReason(DataModelDesc modelDesc, List<IncapableReason> reasons) {
         modelIncapableReasons.put(modelDesc, reasons);
+    }
+
+    public boolean isModelCapable() {
+        return (!capableModels.isEmpty()) || modelIncapableReasons.isEmpty();
+    }
+
+    public boolean isCubeCapable() {
+        for (Boolean capability : cubeCapabilities.values()) {
+            if (capability) {
+                return true;
+            }
+        }
+        
+        return cubeIncapableReasons.isEmpty();
+    }
+
+    public boolean isCapable() {
+        return isModelCapable() && isCubeCapable();
     }
 
     public static enum IncapableType {
@@ -280,6 +299,74 @@ public class RealizationCheck {
             result = 31 * result + (unmatchedAggregations != null ? unmatchedAggregations.hashCode() : 0);
             result = 31 * result + (notFoundTables != null ? notFoundTables.hashCode() : 0);
             return result;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder(incapableType.toString());
+
+            switch (incapableType) {
+                case CUBE_NOT_CONTAIN_TABLE:
+                    if (notFoundTables != null) {
+                        sb.append('[');
+                        sb.append(StringUtils.join(notFoundTables.toArray(), ", "));
+                        sb.append(']');
+                    }
+                    break;
+                case CUBE_NOT_CONTAIN_ALL_COLUMN:
+                    if (notFoundColumns != null) {
+                        sb.append('[');
+                        sb.append(StringUtils.join(notFoundColumns.toArray(), ", "));
+                        sb.append(']');
+                    }
+                    break;
+                case CUBE_NOT_CONTAIN_ALL_DIMENSION:
+                    if (notFoundDimensions != null) {
+                        sb.append('[');
+                        sb.append(StringUtils.join(notFoundDimensions.toArray(), ", "));
+                        sb.append(']');
+                    }
+                    break;
+                case CUBE_NOT_CONTAIN_ALL_MEASURE:
+                    if (notFoundMeasures != null) {
+                        sb.append('[');
+                        sb.append(StringUtils.join(notFoundMeasures.toArray(), ", "));
+                        sb.append(']');
+                    }
+                    break;
+                case CUBE_UNMATCHED_DIMENSION:
+                    if (unmatchedDimensions != null) {
+                        sb.append('[');
+                        sb.append(StringUtils.join(unmatchedDimensions.toArray(), ", "));
+                        sb.append(']');
+                    }
+                    break;
+                case CUBE_UNMATCHED_AGGREGATION:
+                    if (unmatchedAggregations != null) {
+                        sb.append('[');
+                        sb.append(StringUtils.join(unmatchedAggregations.toArray(), ", "));
+                        sb.append(']');
+                    }
+                    break;
+                case CUBE_NOT_READY:
+                case CUBE_BLACK_OUT_REALIZATION:
+                case CUBE_UN_SUPPORT_MASSIN:
+                case CUBE_UN_SUPPORT_RAWQUERY:
+                case CUBE_LIMIT_PRECEDE_AGGR:
+                case CUBE_OTHER_CUBE_INCAPABLE:
+                    break;
+                case MODEL_UNMATCHED_JOIN:
+                case MODEL_JOIN_TYPE_UNMATCHED:
+                case MODEL_JOIN_CONDITION_UNMATCHED:
+                case MODEL_JOIN_NOT_FOUND:
+                case MODEL_BAD_JOIN_SEQUENCE:
+                case MODEL_FACT_TABLE_NOT_FOUND:
+                case MODEL_OTHER_MODEL_INCAPABLE:
+                    break;
+                default:
+                    break;
+            }
+            return sb.toString();
         }
     }
 }

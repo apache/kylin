@@ -53,6 +53,7 @@ cd ${dir}/../..
 version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version |  grep -E '^[0-9]+\.[0-9]+\.[0-9]+' `
 echo "kylin version: ${version}"
 export version
+echo "Apache kylin ${version}" > build/VERSION
 
 #commit id
 cat << EOF > build/commit_SHA1
@@ -76,6 +77,5 @@ git rev-parse HEAD >> build/commit_SHA1
 
 sh build/script/build.sh $@         || { exit 1; }
 sh build/script/download-tomcat.sh  || { exit 1; }
-sh build/script/download-spark.sh   || { exit 1; }
 sh build/script/prepare.sh          || { exit 1; }
 sh build/script/compress.sh         || { exit 1; }

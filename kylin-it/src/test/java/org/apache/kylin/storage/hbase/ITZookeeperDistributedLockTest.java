@@ -31,7 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.lock.DistributedLock.Watcher;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.storage.hbase.util.ZookeeperDistributedLock;
+import org.apache.kylin.job.lock.zookeeper.ZookeeperDistributedLock;
+import org.apache.kylin.job.lock.zookeeper.exception.ZkReleaseLockException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -89,7 +90,7 @@ public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         try {
             d.unlock(path);
             fail();
-        } catch (IllegalStateException ex) {
+        } catch (ZkReleaseLockException ex) {
             // expected
         }
 
@@ -176,7 +177,7 @@ public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         for (int i = 0; i < nClients; i++) {
             threads[i].join();
         }
-        
+
         Thread.sleep(3000);
 
         // verify counters
@@ -239,7 +240,7 @@ public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
                 try {
                     lockIdx = rand.nextInt(nLocks);
                     client.unlock(lockPaths[lockIdx]);
-                } catch (IllegalStateException e) {
+                } catch (ZkReleaseLockException e) {
                     // ignore
                 }
             }
@@ -248,7 +249,7 @@ public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
             for (String lockPath : lockPaths) {
                 try {
                     client.unlock(lockPath);
-                } catch (IllegalStateException e) {
+                } catch (ZkReleaseLockException e) {
                     // ignore
                 }
             }

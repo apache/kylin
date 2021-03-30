@@ -1,0 +1,177 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
+<div ng-controller="CubesCtrl">
+  <div class="page-header" style="height: 50px;">
+    <!--Project-->
+    <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
+      <div class="form-group">
+        <a class="btn btn-xs btn-info" href="projects" tooltip="Manage Project">
+          <i class="fa fa-gears"></i>
+        </a>
+        <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
+          <i class="fa fa-plus"></i>
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <div class="row" ng-controller="HybridInstanceSchema">
+    <div class="col-xs-12">
+      <ng-form role="form" name="$validator" novalidate>
+
+        <h1 class="form-title">Hybrid Designer</h1>
+
+        <div class="row">
+          <div class="col-xs-5 form-group">
+            <div class="row">
+              <label class="col-xs-3 control-label no-padding-right font-color-default" for="hybridName">Hybrid Name</label>
+              <div class="col-xs-9" ng-class="{ 'has-error': $validator.name.$invalid && $validator.name.$dirty }">
+                <input type="text" name="name" class="form-control" id="hybridName" placeholder="Hybrid Name" ng-disabled="isFormDisabled || isEdit" ng-model="form.name" ng-pattern="/^\w+$/">
+                <small class="help-block" ng-show="!$validator.name.$error.required && $validator.name.$invalid && $validator.name.$dirty">Hybrid name is invalid.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="split-line"></div>
+
+        <div class="row edit-operator">
+          <div class="col-xs-5">
+            <div class="dataTables_wrapper no-footer">
+              <div class="row table-header">
+                <label class="col-xs-2 control-label no-padding-right font-color-default" for="modelName">Model</label>
+                <div class="col-xs-10">
+                  <div ng-show="!isModelSelectDisabled()">
+                      <select width="'100%'" chosen ng-model="form.model" ng-change="toggleAll(LEFT, false)" ng-options="model.name as model.name for model in modelsManager.models" ng-disabled="isModelSelectDisabled()"></select>
+                  </div>
+                  <div tooltip="If you want to switch model, remove the selected cubes." ng-show="isModelSelectDisabled()">
+                      <select width="'100%'" chosen ng-model="form.model" ng-change="toggleAll(LEFT, false)" ng-options="model.name as model.name for model in modelsManager.models" ng-disabled="isModelSelectDisabled()"></select>
+                  </div>
+                </div>
+              </div>
+              <div class="row fix-height-table">
+                <table class="table table-striped table-bordered table-hover dataTable no-footer ng-scope" ng-if="getFiltedModelCubeCount(LEFT)">
+                  <thead>
+                    <tr>
+                      <th class="table-checkbox">
+                        <img ng-if="!isCheckAll(LEFT)" src="image/checkbox-.svg" ng-click="toggleAll(LEFT)" />
+                        <img ng-if="isCheckAll(LEFT)" src="image/checkbox+.svg" ng-click="toggleAll(LEFT)" />
+                      </th>
+                      <th>Name</th>
+                      <th class="status-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr ng-repeat="cube in table[LEFT].dataRows" ng-if="cube.model === form.model" ng-click="toggleCube(cube)" style="cursor: pointer;">
+                      <td class="table-checkbox">
+                        <img ng-if="!cube.isChecked" src="image/checkbox-.svg" />
+                        <img ng-if="cube.isChecked" src="image/checkbox+.svg" />
+                      </td>
+                      <td>{{ cube.name }}</td>
+                      <td class="status-center">
+                        <span class="label" ng-class="{'label-success': cube.status=='READY', 'label-default': cube.status=='DISABLED', 'label-warning': cube.status=='DESCBROKEN'}">
+                          {{ cube.status }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="data-empty" ng-if="!getFiltedModelCubeCount(LEFT)">
+                Empty
+              </div>
+
+              <div class="row">
+                <div class="col-xs-12">
+                  <kylin-pagination data="cubeList.cubes" load-func="list" action="action" is-hide-total="true" limit="999999" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xs-2 col-lg-1"></div>
+
+          <div style="position: absolute; height: 100%; width: 100%;">
+            <div class="col-xs-offset-5 col-xs-2 col-lg-1 transter-actions">
+              <div class="transter-action-item">
+                <i class="kylin-icon-arrows_right" ng-click="transferTo(RIGHT)"></i>
+              </div>
+              <div class="transter-action-item">
+                <i class="kylin-icon-arrows_left" ng-click="transferTo(LEFT)"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xs-5">
+            <div class="dataTables_wrapper no-footer">
+              <div class="row table-header">
+                <label class="col-xs-12 control-label no-padding-right">Selected Cubes: {{table[RIGHT].dataRows.length}}</label>
+              </div>
+              <div class="row fix-height-table">
+                <table class="table table-striped table-bordered table-hover dataTable no-footer ng-scope" ng-if="table[RIGHT].dataRows.length">
+                  <thead>
+                    <tr>
+                      <th class="table-checkbox">
+                        <img ng-if="!isCheckAll(RIGHT)" src="image/checkbox-.svg" ng-click="toggleAll(RIGHT)" />
+                        <img ng-if="isCheckAll(RIGHT)" src="image/checkbox+.svg" ng-click="toggleAll(RIGHT)" />
+                      </th>
+                      <th>Name</th>
+                      <th class="status-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr ng-repeat="cube in table[RIGHT].dataRows" ng-click="toggleCube(cube)" style="cursor: pointer;">
+                      <td class="table-checkbox">
+                        <img ng-if="!cube.isChecked" src="image/checkbox-.svg" />
+                        <img ng-if="cube.isChecked" src="image/checkbox+.svg" />
+                      </td>
+                      <td>{{ cube.name }}</td>
+                      <td class="status-center">
+                        <span class="label" ng-class="{'label-success': cube.status=='READY', 'label-default': cube.status=='DISABLED', 'label-warning': cube.status=='DESCBROKEN'}">
+                          {{ cube.status }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="data-empty" ng-if="!table[RIGHT].dataRows.length">
+                Empty
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="split-line"></div>
+
+        <div class="row">
+          <div class="col-xs-12">
+            <div class="pull-right">
+                <button class="btn btn-sm btn-default" ng-click="cancel()">Cancel</button>
+                <button class="btn btn-sm btn-primary" ng-click="submit()" ng-disabled="!isFormValid()">Submit</button>
+            </div>
+          </div>
+        </div>
+
+      </ng-form>
+    </div>
+  </div>
+</div>

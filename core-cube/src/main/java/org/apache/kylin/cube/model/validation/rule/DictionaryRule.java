@@ -26,11 +26,14 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DictionaryDesc;
+import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ResultLevel;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.dict.GlobalDictionaryBuilder;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Validate Dictionary Settings:
@@ -42,16 +45,19 @@ import org.apache.kylin.metadata.model.TblColRef;
  * </ul>
  */
 public class DictionaryRule implements IValidatorRule<CubeDesc> {
+    private static final Logger logger = LoggerFactory.getLogger(DictionaryRule.class);
+
     static final String ERROR_DUPLICATE_DICTIONARY_COLUMN = "Duplicated dictionary specification for column: ";
     static final String ERROR_REUSE_BUILDER_BOTH_SET = "REUSE and BUILDER both set on dictionary for column: ";
     static final String ERROR_REUSE_BUILDER_BOTH_EMPTY = "REUSE and BUILDER both empty on dictionary for column: ";
     static final String ERROR_TRANSITIVE_REUSE = "Transitive REUSE is not allowed for dictionary: ";
-    static final String ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE = "Global dictionary couldn't be used for dimension column: ";
+    static final String ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE = "If one column is used for both dimension and precisely count distinct measure, its dimension encoding should not be dict: ";
 
     @Override
     public void validate(CubeDesc cubeDesc, ValidateContext context) {
         List<DictionaryDesc> dictDescs = cubeDesc.getDictionaries();
         Set<TblColRef> dimensionColumns = cubeDesc.listDimensionColumnsIncludingDerived();
+        RowKeyDesc rowKeyDesc = cubeDesc.getRowkey();
 
         if (dictDescs == null || dictDescs.isEmpty()) {
             return;
@@ -78,11 +84,15 @@ public class DictionaryRule implements IValidatorRule<CubeDesc> {
             }
 
             if (reuseCol == null && StringUtils.isEmpty(builderClass)) {
-                context.addResult(ResultLevel.ERROR, ERROR_REUSE_BUILDER_BOTH_EMPTY + dictCol);
-                return;
+                if(dictDesc.isDomain()) {
+                    logger.info("() is tiretree global domain dic", dictCol);
+                }else{
+                    context.addResult(ResultLevel.ERROR, ERROR_REUSE_BUILDER_BOTH_EMPTY + dictCol);
+                    return;
+                }
             }
 
-            if (StringUtils.isNotEmpty(builderClass) && builderClass.equalsIgnoreCase(GlobalDictionaryBuilder.class.getName()) && dimensionColumns.contains(dictCol)) {
+            if (StringUtils.isNotEmpty(builderClass) && builderClass.equalsIgnoreCase(GlobalDictionaryBuilder.class.getName()) && dimensionColumns.contains(dictCol) && rowKeyDesc.isUseDictionary(dictCol)) {
                 context.addResult(ResultLevel.ERROR, ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE + dictCol);
                 return;
             }

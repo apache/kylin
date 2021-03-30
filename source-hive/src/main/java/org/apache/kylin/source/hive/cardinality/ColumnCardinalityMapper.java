@@ -64,7 +64,7 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, Object, IntWritab
         String project = conf.get(BatchConstants.CFG_PROJECT_NAME);
         String tableName = conf.get(BatchConstants.CFG_TABLE_NAME);
         tableDesc = TableMetadataManager.getInstance(config).getTableDesc(tableName, project);
-        tableInputFormat = MRUtil.getTableInputFormat(tableDesc);
+        tableInputFormat = MRUtil.getTableInputFormat(tableDesc, conf.get(BatchConstants.ARG_CUBING_JOB_ID));
     }
 
     @Override

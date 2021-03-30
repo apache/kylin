@@ -18,9 +18,6 @@
 
 package org.apache.kylin.dict.global;
 
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.BytesUtil;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
@@ -29,8 +26,13 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import java.util.Locale;
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.BytesUtil;
+
 public class AppendDictSlice {
-    static final byte[] HEAD_MAGIC = new byte[] { 0x41, 0x70, 0x70, 0x65, 0x63, 0x64, 0x54, 0x72, 0x69, 0x65, 0x44, 0x69, 0x63, 0x74 }; // "AppendTrieDict"
+    static final byte[] HEAD_MAGIC = new byte[] { 0x41, 0x70, 0x70, 0x65, 0x63, 0x64, 0x54, 0x72, 0x69, 0x65, 0x44,
+            0x69, 0x63, 0x74 }; // "AppendTrieDict"
     static final int HEAD_SIZE_I = HEAD_MAGIC.length;
     static final int BIT_IS_LAST_CHILD = 0x80;
     static final int BIT_IS_END_OF_VALUE = 0x40;
@@ -58,7 +60,8 @@ public class AppendDictSlice {
             throw new IllegalArgumentException("Wrong file type (magic does not match)");
 
         try {
-            DataInputStream headIn = new DataInputStream(new ByteArrayInputStream(trieBytes, HEAD_SIZE_I, trieBytes.length - HEAD_SIZE_I));
+            DataInputStream headIn = new DataInputStream(
+                    new ByteArrayInputStream(trieBytes, HEAD_SIZE_I, trieBytes.length - HEAD_SIZE_I));
             this.headSize = headIn.readShort();
             this.bodyLen = headIn.readInt();
             this.nValues = headIn.readInt();
@@ -104,7 +107,8 @@ public class AppendDictSlice {
             if (checkFlag(nodeOffset, BIT_IS_END_OF_VALUE)) {
                 break;
             }
-            nodeOffset = headSize + (int) (BytesUtil.readLong(trieBytes, nodeOffset, sizeChildOffset) & childOffsetMask);
+            nodeOffset = headSize
+                    + (int) (BytesUtil.readLong(trieBytes, nodeOffset, sizeChildOffset) & childOffsetMask);
             if (nodeOffset == headSize) {
                 break;
             }
@@ -155,7 +159,8 @@ public class AppendDictSlice {
                 } else if (comp < 0) { // try next child
                     if (checkFlag(c, BIT_IS_LAST_CHILD))
                         return -1;
-                    c = p + BytesUtil.readUnsigned(trieBytes, p - 1, 1) + (checkFlag(c, BIT_IS_END_OF_VALUE) ? sizeOfId : 0);
+                    c = p + BytesUtil.readUnsigned(trieBytes, p - 1, 1)
+                            + (checkFlag(c, BIT_IS_END_OF_VALUE) ? sizeOfId : 0);
                 } else { // children are ordered by their first value byte
                     return -1;
                 }
@@ -261,7 +266,8 @@ public class AppendDictSlice {
 
     @Override
     public String toString() {
-        return String.format("DictSlice[firstValue=%s, values=%d, bytes=%d]", Bytes.toStringBinary(getFirstValue()), nValues, bodyLen);
+        return String.format(Locale.ROOT, "DictSlice[firstValue=%s, values=%d, bytes=%d]",
+                Bytes.toStringBinary(getFirstValue()), nValues, bodyLen);
     }
 
     @Override

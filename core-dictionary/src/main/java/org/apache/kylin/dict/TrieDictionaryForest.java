@@ -189,8 +189,8 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
         //write tree size
         headOut.writeInt(trees.size());
         headOut.close();
-        byte[] head = byteBuf.toByteArray();
         //output
+        byte[] head = byteBuf.toByteArray();
         out.writeInt(head.length);
         out.write(head);
     }
@@ -211,7 +211,7 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
             String converterName = in.readUTF();
             BytesConverter<T> bytesConverter = null;
             if (converterName.isEmpty() == false)
-                bytesConverter = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+                bytesConverter = ClassUtil.forName(converterName, BytesConverter.class).getDeclaredConstructor().newInstance();
             //init accuOffset
             int accuSize = in.readInt();
             ArrayList<Integer> accuOffset = new ArrayList<>();

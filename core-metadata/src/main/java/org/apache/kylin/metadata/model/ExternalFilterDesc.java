@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.util.Locale;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.metadata.filter.function.Functions;
@@ -58,6 +60,11 @@ public class ExternalFilterDesc extends RootPersistentEntity implements ISourceA
 
     // ============================================================================
 
+    @Override
+    public String resourceName() {
+        return name;
+    }
+
     public String getFilterResourceIdentifier() {
         return filterResourceIdentifier;
     }
@@ -84,12 +91,13 @@ public class ExternalFilterDesc extends RootPersistentEntity implements ISourceA
 
     public void init() {
         if (name != null)
-            name = name.toUpperCase();
+            name = name.toUpperCase(Locale.ROOT);
     }
 
     @Override
     public String toString() {
-        return "ExternalFilterDesc [ name=" + name + " filter table resource identifier " + this.filterResourceIdentifier + "]";
+        return "ExternalFilterDesc [ name=" + name + " filter table resource identifier "
+                + this.filterResourceIdentifier + "]";
     }
 
     /** create a mockup table for unit test */
@@ -97,11 +105,6 @@ public class ExternalFilterDesc extends RootPersistentEntity implements ISourceA
         ExternalFilterDesc mockup = new ExternalFilterDesc();
         mockup.setName(tableName);
         return mockup;
-    }
-
-    @Override
-    public int getSourceType() {
-        return sourceType;
     }
 
     public void setSourceType(int sourceType) {
@@ -114,5 +117,15 @@ public class ExternalFilterDesc extends RootPersistentEntity implements ISourceA
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @Override
+    public int getSourceType() {
+        return sourceType;
+    }
+
+    @Override
+    public KylinConfig getConfig() {
+        return null;
     }
 }

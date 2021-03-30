@@ -148,9 +148,9 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
 
         List<Pair<Text, Text>> result = reduceDriver.run();
 
-        Pair<Text, Text> p1 = new Pair<Text, Text>(new Text("72010ustech"), newValueText(codec, "0", "10", "20.34", 3, 600));
-        Pair<Text, Text> p2 = new Pair<Text, Text>(new Text("1tech"), newValueText(codec, "0", "15.09", "20.34", 2, 1500));
-        Pair<Text, Text> p3 = new Pair<Text, Text>(new Text("0"), newValueText(codec, "0", "146.52", "146.52", 0, 0));
+        Pair<Text, Text> p1 = new Pair<>(new Text("72010ustech"), newValueText(codec, null, "10", "20.34", 3, 600));
+        Pair<Text, Text> p2 = new Pair<>(new Text("1tech"), newValueText(codec, null, "15.09", "20.34", 2, 1500));
+        Pair<Text, Text> p3 = new Pair<>(new Text("0"), newValueText(codec, null, "146.52", "146.52", 0, 0));
 
         assertEquals(3, result.size());
 
@@ -160,7 +160,8 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
     }
 
     private Text newValueText(BufferedMeasureCodec codec, String sum, String min, String max, int count, int item_count) {
-        Object[] values = new Object[] { new BigDecimal(sum), new BigDecimal(min), new BigDecimal(max), new Long(count), new Long(item_count) };
+        Object[] values = new Object[] { sum == null ? null : new BigDecimal(sum), //
+                new BigDecimal(min), new BigDecimal(max), new Long(count), new Long(item_count) };
 
         ByteBuffer buf = codec.encode(values);
 

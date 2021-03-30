@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.kylin.common.exceptions.KylinTimeoutException;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -37,9 +38,9 @@ import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Iterators;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class SequentialCubeTupleIterator implements ITupleIterator {
 
@@ -53,14 +54,18 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     private int scanCount;
     private int scanCountDelta;
 
-    public SequentialCubeTupleIterator(List<CubeSegmentScanner> scanners, Cuboid cuboid, Set<TblColRef> selectedDimensions, //
-            Set<TblColRef> groups, Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo, StorageContext context, SQLDigest sqlDigest) {
+    public SequentialCubeTupleIterator(List<CubeSegmentScanner> scanners, Cuboid cuboid,
+            Set<TblColRef> selectedDimensions, List<TblColRef> rtGroups, Set<TblColRef> groups, //
+            Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo, StorageContext context, SQLDigest sqlDigest) {
         this.context = context;
         this.scanners = scanners;
 
+        Set<TblColRef> selectedDims = Sets.newHashSet(selectedDimensions);
+        selectedDims.addAll(rtGroups);
+
         segmentCubeTupleIterators = Lists.newArrayList();
         for (CubeSegmentScanner scanner : scanners) {
-            segmentCubeTupleIterators.add(new SegmentCubeTupleIterator(scanner, cuboid, selectedDimensions, selectedMetrics, returnTupleInfo, context));
+            segmentCubeTupleIterators.add(new SegmentCubeTupleIterator(scanner, cuboid, selectedDims, selectedMetrics, returnTupleInfo, context));
         }
 
         if (context.mergeSortPartitionResults() && !sqlDigest.isRawQuery) {
@@ -141,13 +146,12 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
 
     @Override
     public ITuple next() {
-        if (scanCount++ % 100 == 1 && System.currentTimeMillis() > context.getDeadline()) {
-            throw new KylinTimeoutException("Query timeout after \"kylin.query.timeout-seconds\" seconds");
+        if (scanCount++ % 100 == 1) {
+            QueryContextFacade.current().checkMillisBeforeDeadline();
         }
-
-        if (++scanCountDelta >= 1000)
+        if (++scanCountDelta >= 1000) {
             flushScanCountDelta();
-
+        }
         return tupleIterator.next();
     }
 

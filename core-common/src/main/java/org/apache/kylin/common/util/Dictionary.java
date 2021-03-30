@@ -24,8 +24,13 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * A bi-way dictionary that maps from dimension/column values to IDs and vice
@@ -43,10 +48,12 @@ import org.apache.kylin.common.KylinConfig;
  * @author yangli9
  */
 abstract public class Dictionary<T> implements Serializable {
+    private static final Logger logger = LoggerFactory.getLogger(Dictionary.class);
+
     private static final long serialVersionUID = 1L;
 
     // ID with all bit-1 (0xff e.g.) reserved for NULL value
-    public static final int[] NULL_ID = new int[] { 0, 0xff, 0xffff, 0xffffff, 0xffffffff };
+    protected static final int[] NULL_ID = new int[] { 0, 0xff, 0xffff, 0xffffff, 0xffffffff };
 
     abstract public int getMinId();
 
@@ -134,9 +141,45 @@ abstract public class Dictionary<T> implements Serializable {
             return getValueFromIdImpl(id);
     }
 
+    /**
+     * @return the value bytes corresponds to the given ID
+     * @throws IllegalArgumentException
+     *             if ID is not found in dictionary
+     */
+    final public byte[] getValueByteFromId(int id) throws IllegalArgumentException {
+        if (isNullId(id))
+            return null;
+        else
+            return getValueBytesFromIdImpl(id);
+    }
+
+    protected int cacheHitCount = 0;
+    protected int cacheMissCount = 0;
+
+    protected byte[] getValueBytesFromIdImpl(int id) {
+        throw new  UnsupportedOperationException() ;
+
+    }
+
+    public void printlnStatistics() {
+        logger.info("cache hit count: " + cacheHitCount);
+        logger.info("cache miss count: " + cacheMissCount);
+        logger.info("cache hit percent: " + cacheHitCount * 1.0 / (cacheMissCount + cacheHitCount));
+        cacheHitCount = 0;
+        cacheMissCount = 0;
+    }
+
     abstract protected T getValueFromIdImpl(int id);
 
     abstract public void dump(PrintStream out);
+
+    public List<T> enumeratorValues() {
+        List<T> ret = Lists.newArrayListWithExpectedSize(getSize());
+        for (int i = getMinId(); i <= getMaxId(); i++) {
+            ret.add(getValueFromId(i));
+        }
+        return ret;
+    }
 
     public int nullId() {
         return NULL_ID[getSizeOfId()];

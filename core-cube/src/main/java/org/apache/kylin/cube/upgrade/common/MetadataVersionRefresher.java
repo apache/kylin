@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * After upgrade a metadata store to current version,
@@ -61,7 +61,7 @@ public class MetadataVersionRefresher {
         for (String path : all) {
             if (path.endsWith(MetadataConstants.FILE_SURFIX) && !(path.startsWith(ResourceStore.DICT_RESOURCE_ROOT) || path.startsWith(ResourceStore.SNAPSHOT_RESOURCE_ROOT))) {
                 logger.info("Updating metadata version of path {}", path);
-                ObjectNode objectNode = (ObjectNode) mapper.readTree(this.store.getResource(path).inputStream);
+                ObjectNode objectNode = (ObjectNode) mapper.readTree(this.store.getResource(path).content());
                 objectNode.put("version", version);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 mapper.writeValue(baos, objectNode);

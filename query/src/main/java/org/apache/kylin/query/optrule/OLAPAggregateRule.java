@@ -52,7 +52,7 @@ public class OLAPAggregateRule extends ConverterRule {
 
         RelTraitSet traitSet = agg.getTraitSet().replace(OLAPRel.CONVENTION);
         try {
-            return new OLAPAggregateRel(agg.getCluster(), traitSet, convert(agg.getInput(), traitSet), agg.indicator, agg.getGroupSet(), agg.getGroupSets(), agg.getAggCallList());
+            return new OLAPAggregateRel(agg.getCluster(), traitSet, convert(agg.getInput(), OLAPRel.CONVENTION), agg.indicator, agg.getGroupSet(), agg.getGroupSets(), agg.getAggCallList());
         } catch (InvalidRelException e) {
             throw new IllegalStateException("Can't create OLAPAggregateRel!", e);
         }

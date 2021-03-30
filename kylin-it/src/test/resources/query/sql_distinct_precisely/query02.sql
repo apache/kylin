@@ -23,4 +23,4 @@ select lstg_format_name,
  from test_kylin_fact
  where lstg_format_name='FP-GTC'
  group by lstg_format_name
- having count(distinct seller_id) > 50
+ having user_count > 50

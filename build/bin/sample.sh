@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
 
 ## ${dir} assigned to $KYLIN_HOME/bin in header.sh
 source ${dir}/find-hadoop-conf-dir.sh
@@ -65,6 +65,9 @@ then
     beeline ${hive_conf_properties} --hivevar hdfs_tmp_dir=${hdfs_tmp_dir} ${beeline_params} -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
 else
     hive ${hive_conf_properties} -e "CREATE DATABASE IF NOT EXISTS "$sample_database
+    ## Add USE DATABASE; to the beginning of create_sample_tables.sql
+    sed -i "/^USE*/d" ${KYLIN_HOME}/sample_cube/create_sample_tables.sql
+    sed -i "/DROP TABLE IF EXISTS KYLIN_CAL_DT;/i USE $sample_database;" ${KYLIN_HOME}/sample_cube/create_sample_tables.sql
     hive ${hive_conf_properties} --hivevar hdfs_tmp_dir=${hdfs_tmp_dir} --database $sample_database -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
 fi
 
@@ -87,6 +90,8 @@ cp -rf ${KYLIN_HOME}/sample_cube/template/* ${KYLIN_HOME}/sample_cube/metadata
 
 sed -i "s/%default_storage_type%/${default_storage_type}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube.json
 sed -i "s/%default_engine_type%/${default_engine_type}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube.json
+sed -i "s/%default_storage_type%/${default_storage_type}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_streaming_cube.json
+sed -i "s/%default_engine_type%/${default_engine_type}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_streaming_cube.json
 
 #### Add version info into cubes
 kylin_version_str=`bash ${KYLIN_HOME}/bin/kylin.sh version | grep kylin.version`
@@ -97,11 +102,22 @@ sed -i "s/%default_version%/${kylin_version}/g" ${KYLIN_HOME}/sample_cube/metada
 
 #### Replace the 'DEFAULT' with kylin.source.hive.database-for-flat-table
 sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube.json
+sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_streaming_cube.json
 sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/model_desc/kylin_sales_model.json
+sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/model_desc/kylin_streaming_model.json
 sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/project/learn_kylin.json
 sed -i "s/DEFAULT/$sample_database/g" ${KYLIN_HOME}/sample_cube/metadata/table/*.json
-cd ${KYLIN_HOME}/sample_cube/metadata/table
-ls -1 DEFAULT.KYLIN_*.json|sed "s/\(DEFAULT\)\(.*\)\.json/mv & $sample_database\2.json/"|sh -v
+sed -i "s/DEFAULT/$sample_database/g" ${KYLIN_HOME}/sample_cube/metadata/kafka/*.json
+sed -i "s/DEFAULT/$sample_database/g" ${KYLIN_HOME}/sample_cube/metadata/streaming/*.json
+strings=(
+    table
+    streaming
+    kafka
+)
+for i in "${strings[@]}"; do
+    cd "${KYLIN_HOME}/sample_cube/metadata/${i}"
+    ls -1 DEFAULT.KYLIN_*.json|sed "s/\(DEFAULT\)\(.*\)\.json/mv & $sample_database\2.json/"|sh -v
+done
 
 cd ${KYLIN_HOME}
 ${dir}/kylin.sh org.apache.kylin.common.persistence.ResourceTool upload ${KYLIN_HOME}/sample_cube/metadata  || { exit 1; }

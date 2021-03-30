@@ -38,11 +38,14 @@ import org.apache.kylin.metrics.lib.impl.StubSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
+/**
+ * A metric system using a system cube to store/analyze metric information.
+ */
 public class MetricsManager {
 
     public static final String SYSTEM_PROJECT = "KYLIN_SYSTEM";
@@ -62,6 +65,9 @@ public class MetricsManager {
         return instance;
     }
 
+    /**
+     * This method is called by Spring Framework at kylinMetrics.xml
+     */
     public static void initMetricsManager(Sink systemCubeSink,
             Map<ActiveReservoir, List<Pair<String, Properties>>> sourceReporterBindProperties) {
         setSystemCubeSink(systemCubeSink);
@@ -88,20 +94,23 @@ public class MetricsManager {
     private static void setSourceReporterBindProps(
             Map<ActiveReservoir, List<Pair<String, Properties>>> sourceReporterBindProperties) {
         sourceReporterBindProps = Maps.newHashMapWithExpectedSize(sourceReporterBindProperties.size());
-        for (ActiveReservoir activeReservoir : sourceReporterBindProperties.keySet()) {
+        for (Map.Entry<ActiveReservoir, List<Pair<String, Properties>>> entry1 : sourceReporterBindProperties
+                .entrySet()) {
+
+            ActiveReservoir activeReservoir = entry1.getKey();
             List<Pair<Class<? extends ActiveReservoirReporter>, Properties>> values = Lists
-                    .newArrayListWithExpectedSize(sourceReporterBindProperties.get(activeReservoir).size());
+                    .newArrayListWithExpectedSize(entry1.getValue().size());
             sourceReporterBindProps.put(activeReservoir, values);
-            for (Pair<String, Properties> entry : sourceReporterBindProperties.get(activeReservoir)) {
+            for (Pair<String, Properties> entry : entry1.getValue()) {
                 try {
-                    Class clz = Class.forName(entry.getKey());
+                    Class clz = Class.forName(entry.getFirst());
                     if (ActiveReservoirReporter.class.isAssignableFrom(clz)) {
-                        values.add(new Pair(clz, entry.getValue()));
+                        values.add(new Pair(clz, entry.getSecond()));
                     } else {
-                        logger.warn("The class " + clz + " is not a sub class of " + ActiveReservoir.class);
+                        logger.warn("The class {} is not a sub class of {}.", clz, ActiveReservoir.class);
                     }
                 } catch (ClassNotFoundException e) {
-                    logger.warn("Cannot find class " + entry.getKey());
+                    logger.warn("Cannot find class {}", entry.getFirst());
                 }
             }
         }
@@ -111,20 +120,22 @@ public class MetricsManager {
         if (KylinConfig.getInstanceFromEnv().isKylinMetricsMonitorEnabled()) {
             logger.info("Kylin metrics monitor is enabled.");
             int nameIdx = 0;
-            for (ActiveReservoir activeReservoir : sourceReporterBindProps.keySet()) {
+            for (Map.Entry<ActiveReservoir, List<Pair<Class<? extends ActiveReservoirReporter>, Properties>>> entry1 : sourceReporterBindProps
+                    .entrySet()) {
+                ActiveReservoir activeReservoir = entry1.getKey();
+
                 String registerName = MetricsSystem.name(MetricsManager.class,
                         "-" + nameIdx + "-" + activeReservoir.toString());
                 activeReservoirPointers.add(registerName);
-                List<Pair<Class<? extends ActiveReservoirReporter>, Properties>> reportProps = sourceReporterBindProps
-                        .get(activeReservoir);
+                List<Pair<Class<? extends ActiveReservoirReporter>, Properties>> reportProps = entry1.getValue();
                 for (Pair<Class<? extends ActiveReservoirReporter>, Properties> subEntry : reportProps) {
                     try {
-                        Method method = subEntry.getKey().getMethod(METHOD_FOR_REGISTRY, ActiveReservoir.class);
-                        ((ReporterBuilder) method.invoke(null, activeReservoir)).setConfig(subEntry.getValue()).build()
+                        Method method = subEntry.getFirst().getMethod(METHOD_FOR_REGISTRY, ActiveReservoir.class);
+                        ((ReporterBuilder) method.invoke(null, activeReservoir)).setConfig(subEntry.getSecond()).build()
                                 .start();
                     } catch (Exception e) {
-                        logger.warn("Cannot initialize ActiveReservoirReporter: Builder class - " + subEntry.getKey()
-                                + ", Properties - " + subEntry.getValue());
+                        logger.warn("Cannot initialize ActiveReservoirReporter: Builder class - " + subEntry.getFirst()
+                                + ", Properties - " + subEntry.getSecond(), e);
                     }
                 }
                 Metrics.register(registerName, activeReservoir);
@@ -132,7 +143,7 @@ public class MetricsManager {
             Preconditions.checkArgument(activeReservoirPointers.size() == sourceReporterBindProps.keySet().size(),
                     "Duplicate register names exist!!!");
         } else {
-            logger.info("Kylin metrics monitor is not enabled!!!");
+            logger.info("Kylin metrics monitor is not enabled");
         }
     }
 

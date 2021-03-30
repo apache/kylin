@@ -18,24 +18,34 @@
 
 package org.apache.kylin.source.hive;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.TableMetadataManager;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISourceMetadataExplorer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDataDeployer {
 
+    private static final Logger logger = LoggerFactory.getLogger(HiveClientFactory.class);
+
     IHiveClient hiveClient = HiveClientFactory.getHiveClient();
-    
+
     @Override
     public List<String> listDatabases() throws Exception {
         return hiveClient.getHiveDbNames();
@@ -59,53 +69,37 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
         }
 
         TableDesc tableDesc = metaMgr.getTableDesc(database + "." + tableName, prj);
-        
+
         // make a new TableDesc instance, don't modify the one in use
         if (tableDesc == null) {
             tableDesc = new TableDesc();
-            tableDesc.setDatabase(database.toUpperCase());
-            tableDesc.setName(tableName.toUpperCase());
-            tableDesc.setUuid(UUID.randomUUID().toString());
+            tableDesc.setDatabase(database.toUpperCase(Locale.ROOT));
+            tableDesc.setName(tableName.toUpperCase(Locale.ROOT));
+            tableDesc.setUuid(RandomUtil.randomUUID().toString());
             tableDesc.setLastModified(0);
         } else {
             tableDesc = new TableDesc(tableDesc);
         }
-        
+
         if (hiveTableMeta.tableType != null) {
             tableDesc.setTableType(hiveTableMeta.tableType);
         }
 
-        int columnNumber = hiveTableMeta.allColumns.size();
-        List<ColumnDesc> columns = new ArrayList<ColumnDesc>(columnNumber);
-        for (int i = 0; i < columnNumber; i++) {
-            HiveTableMeta.HiveTableColumnMeta field = hiveTableMeta.allColumns.get(i);
-            ColumnDesc cdesc = new ColumnDesc();
-            cdesc.setName(field.name.toUpperCase());
-            // use "double" in kylin for "float"
-            if ("float".equalsIgnoreCase(field.dataType)) {
-                cdesc.setDatatype("double");
-            } else {
-                cdesc.setDatatype(field.dataType);
-            }
-            cdesc.setId(String.valueOf(i + 1));
-            cdesc.setComment(field.comment);
-            columns.add(cdesc);
-        }
-        tableDesc.setColumns(columns.toArray(new ColumnDesc[columnNumber]));
+        tableDesc.setColumns(extractColumnFromMeta(hiveTableMeta));
 
         StringBuffer partitionColumnString = new StringBuffer();
         for (int i = 0, n = hiveTableMeta.partitionColumns.size(); i < n; i++) {
             if (i > 0)
                 partitionColumnString.append(", ");
-            partitionColumnString.append(hiveTableMeta.partitionColumns.get(i).name.toUpperCase());
+            partitionColumnString.append(hiveTableMeta.partitionColumns.get(i).name.toUpperCase(Locale.ROOT));
         }
 
         TableExtDesc tableExtDesc = new TableExtDesc();
         tableExtDesc.setIdentity(tableDesc.getIdentity());
-        tableExtDesc.setUuid(UUID.randomUUID().toString());
+        tableExtDesc.setUuid(RandomUtil.randomUUID().toString());
         tableExtDesc.setLastModified(0);
         tableExtDesc.init(prj);
-        
+
         tableExtDesc.addDataSourceProp("location", hiveTableMeta.sdLocation);
         tableExtDesc.addDataSourceProp("owner", hiveTableMeta.owner);
         tableExtDesc.addDataSourceProp("last_access_time", String.valueOf(hiveTableMeta.lastAccessTime));
@@ -129,10 +123,10 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
         hiveClient.executeHQL(generateCreateSchemaSql(database));
     }
 
-    private String generateCreateSchemaSql(String schemaName){
-        return String.format("CREATE DATABASE IF NOT EXISTS %s", schemaName);
+    private String generateCreateSchemaSql(String schemaName) {
+        return String.format(Locale.ROOT, "CREATE DATABASE IF NOT EXISTS %s", schemaName);
     }
-    
+
     @Override
     public void createSampleTable(TableDesc table) throws Exception {
         hiveClient.executeHQL(generateCreateTableSql(table));
@@ -161,7 +155,7 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
 
         return new String[] { dropsql, dropsql2, ddl.toString() };
     }
-    
+
     @Override
     public void loadSampleData(String tableName, String tmpDataDir) throws Exception {
         hiveClient.executeHQL(generateLoadDataSql(tableName, tmpDataDir));
@@ -170,12 +164,12 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
     private String generateLoadDataSql(String tableName, String tableFileDir) {
         return "LOAD DATA LOCAL INPATH '" + tableFileDir + "/" + tableName + ".csv' OVERWRITE INTO TABLE " + tableName;
     }
-    
+
     @Override
     public void createWrapperView(String origTableName, String viewName) throws Exception {
         hiveClient.executeHQL(generateCreateViewSql(viewName, origTableName));
     }
-    
+
     private String[] generateCreateViewSql(String viewName, String tableName) {
 
         String dropView = "DROP VIEW IF EXISTS " + viewName;
@@ -185,12 +179,87 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
 
         return new String[] { dropView, dropTable, createSql };
     }
-    
-    private static String getHiveDataType(String javaDataType) {
-        String hiveDataType = javaDataType.toLowerCase().startsWith("varchar") ? "string" : javaDataType;
-        hiveDataType = javaDataType.toLowerCase().startsWith("integer") ? "int" : hiveDataType;
 
-        return hiveDataType.toLowerCase();
+    private static String getHiveDataType(String javaDataType) {
+        String hiveDataType = javaDataType.toLowerCase(Locale.ROOT).startsWith("varchar") ? "string" : javaDataType;
+        hiveDataType = javaDataType.toLowerCase(Locale.ROOT).startsWith("integer") ? "int" : hiveDataType;
+
+        return hiveDataType.toLowerCase(Locale.ROOT);
     }
 
+    @Override
+    public ColumnDesc[] evalQueryMetadata(String query) {
+        if (StringUtils.isEmpty(query)) {
+            throw new RuntimeException("Evaluate query shall not be empty.");
+        }
+
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        String tmpDatabase = config.getHiveDatabaseForIntermediateTable();
+        String tmpView = "kylin_eval_query_"
+                + UUID.nameUUIDFromBytes(query.getBytes(StandardCharsets.UTF_8)).toString().replace("-", "");
+
+        String dropViewSql = "DROP VIEW IF EXISTS " + tmpDatabase + "." + tmpView;
+        String evalViewSql = "CREATE VIEW " + tmpDatabase + "." + tmpView + " as " + query;
+
+        try {
+            logger.debug("Removing duplicate view {}", tmpView);
+            hiveClient.executeHQL(dropViewSql);
+            logger.debug("Creating view {} for query: {}", tmpView, query);
+            hiveClient.executeHQL(evalViewSql);
+            logger.debug("Evaluating query columns' metadata");
+            HiveTableMeta hiveTableMeta = hiveClient.getHiveTableMeta(tmpDatabase, tmpView);
+            return extractColumnFromMeta(hiveTableMeta);
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot evaluate metadata of query: " + query, e);
+        } finally {
+            try {
+                logger.debug("Cleaning up.");
+                hiveClient.executeHQL(dropViewSql);
+            } catch (Exception e) {
+                logger.warn("Cannot drop temp view of query: {}", query, e);
+            }
+        }
+    }
+
+    @Override
+    public void validateSQL(String query) throws Exception {
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        hiveCmdBuilder.addStatement(query);
+
+        Pair<Integer, String> response = KylinConfig.getInstanceFromEnv().getCliCommandExecutor()
+                .execute(hiveCmdBuilder.toString());
+        if (response.getFirst() != 0) {
+            throw new IllegalArgumentException(response.getSecond());
+        }
+    }
+
+    private ColumnDesc[] extractColumnFromMeta(HiveTableMeta hiveTableMeta) {
+        int columnNumber = hiveTableMeta.allColumns.size();
+        List<ColumnDesc> columns = new ArrayList<ColumnDesc>(columnNumber);
+
+        for (int i = 0; i < columnNumber; i++) {
+            HiveTableMeta.HiveTableColumnMeta field = hiveTableMeta.allColumns.get(i);
+
+            // skip unsupported fields, e.g. map<string, int>
+            if (DataType.isKylinSupported(field.dataType)) {
+                ColumnDesc cdesc = new ColumnDesc();
+                cdesc.setName(field.name.toUpperCase(Locale.ROOT));
+
+                // use "double" in kylin for "float"
+                if ("float".equalsIgnoreCase(field.dataType)) {
+                    cdesc.setDatatype("double");
+                } else {
+                    cdesc.setDatatype(field.dataType);
+                }
+
+                cdesc.setId(String.valueOf(i + 1));
+                cdesc.setComment(field.comment);
+                columns.add(cdesc);
+            } else {
+                logger.warn("Unsupported data type {}, excluding the field '{}'.", field.dataType, field.name);
+            }
+        }
+
+        return  columns.toArray(new ColumnDesc[0]);
+    }
 }

@@ -24,7 +24,7 @@ package org.apache.kylin.rest.request;
  */
 public class AccessRequest {
 
-    private Long accessEntryId;
+    private int accessEntryId;
     private String permission;
     private String sid;
     private boolean principal;
@@ -32,11 +32,11 @@ public class AccessRequest {
     public AccessRequest() {
     }
 
-    public Long getAccessEntryId() {
+    public int getAccessEntryId() {
         return accessEntryId;
     }
 
-    public void setAccessEntryId(Long accessEntryId) {
+    public void setAccessEntryId(int accessEntryId) {
         this.accessEntryId = accessEntryId;
     }
 

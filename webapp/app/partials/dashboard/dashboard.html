@@ -1,0 +1,151 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+<div class="container" style="min-width: 1140px;">
+  <div class="row" style="margin-top:22px">
+    <div class="col-sm-12">
+      <ol class="breadcrumb" style="display: inline-block; padding: 7px 0px; background-color: #ffffff;" ng-if="projectModel.selectedProject">
+        <li ng-if="selectedCube" ><a href="javascript:void(0)" ng-click="cleanSelectedCube()"><i class="fa fa-dashboard"></i> {{projectModel.selectedProject}}</a></li>
+        <li ng-if="!selectedCube"><i class="fa fa-dashboard"></i> {{projectModel.selectedProject}}</li>
+        <li class="active" ng-if="selectedCube">{{selectedCube}}</li>
+      </ol>
+      <div class="input-group pull-right" style="margin-bottom: 20px;">
+        <kylin-daterangepicker start-date="dateRange.startDate" end-date="dateRange.endDate" callback="changeDateRange"></kylin-daterangepicker>
+      </div>
+    </div>
+  </div>
+  <!-- metric boxes-->
+  <div class="row">
+    <div class="col-sm-2">
+      <div class="square-big" tooltip-placement="bottom" tooltip="As of {{cubeMetricsRefreshTime}}">
+        <div class="title">
+          TOTAL CUBE COUNT
+        </div>
+        <div class="metric" ng-if="cubeMetrics.totalCubes || (cubeMetrics.totalCubes === 0)">
+          {{cubeMetrics.totalCubes | number:0}}
+        </div>
+        <div class="metric" ng-if="!cubeMetrics.totalCubes && (cubeMetrics.totalCubes !== 0)">
+          --
+        </div>
+        <a class="description" ng-href="model">
+          More Details
+        </a>
+      </div>
+      <div class="square-big" tooltip-placement="bottom" tooltip-html-unsafe="Max: {{cubeMetrics.expansionRate.max | number:2}} | Min: {{cubeMetrics.expansionRate.min | number:2}}</br> As of {{cubeMetricsRefreshTime}}">
+        <div class="title">
+          AVG CUBE EXPANSION
+        </div>
+        <div class="metric" ng-if="cubeMetrics.expansionRate.avg || (cubeMetrics.expansionRate.avg === 0)">
+          {{cubeMetrics.expansionRate.avg | number:2}}
+        </div>
+        <div class="metric" ng-if="!cubeMetrics.expansionRate.avg && (cubeMetrics.expansionRate.avg !== 0)">
+          --
+        </div>
+        <a class="description" ng-href="model">
+          More Details
+        </a>
+      </div>
+    </div>
+    <div class="col-sm-10">
+      <div class="row">
+        <div class="col-sm-3">
+          <div class="square" ng-class="{'square-active': currentSquare ==='queryCount'}"  ng-click="queryCountChart()">
+            <div class="title">
+              QUERY<br/>COUNT
+            </div>
+            <div class="metric" ng-if="queryMetrics.queryCount || (queryMetrics.queryCount === 0)">
+              {{queryMetrics.queryCount | number:0}}
+            </div>
+            <div class="metric" ng-if="!queryMetrics.queryCount && (queryMetrics.queryCount !== 0)">
+              --
+            </div>
+            <a class="description" ng-href="query?queryPanel=cached" ng-click="$event.stopPropagation();">
+              More Details
+            </a>
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="square" ng-class="{'square-active': currentSquare ==='queryAvg'}"  tooltip-placement="bottom" tooltip="Max: {{queryMetrics.queryLatency.max ? (queryMetrics.queryLatency.max | number:2) : '--'}} sec | Min: {{queryMetrics.queryLatency.min ? (queryMetrics.queryLatency.min| number:2) : '--'}} sec" ng-click="queryAvgChart()">
+            <div class="title">
+              AVG QUERY LATENCY
+            </div>
+            <div class="metric" ng-if="queryMetrics.queryLatency.avg || (queryMetrics.queryLatency.avg === 0)">
+              {{queryMetrics.queryLatency.avg | number:2}}<span class="unit"> sec</span>
+            </div>
+            <div class="metric" ng-if="!queryMetrics.queryLatency.avg && (queryMetrics.queryLatency.avg !== 0)">
+              --
+            </div>
+            <a class="description" ng-href="query?queryPanel=cached" ng-click="$event.stopPropagation();">
+              More Details
+            </a>
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="square" ng-class="{'square-active': currentSquare ==='jobCount'}"  ng-click="jobCountChart()">
+            <div class="title">
+              JOB<br/>COUNT
+            </div>
+            <div class="metric" ng-if="jobMetrics.jobCount || (jobMetrics.jobCount === 0)">
+              {{jobMetrics.jobCount | number:0}}
+            </div>
+            <div class="metric" ng-if="!jobMetrics.jobCount && (jobMetrics.jobCount !== 0)">
+              --
+            </div>
+            <a class="description" ng-href="jobs" ng-click="$event.stopPropagation();">
+              More Details
+            </a>
+          </div>
+        </div>
+        <div class="col-sm-3" >
+          <div class="square" ng-class="{'square-active': currentSquare ==='jobBuildTime'}" tooltip-placement="bottom" tooltip="Max: {{jobMetrics.buildingTime.max ? (jobMetrics.buildingTime.max | number:2) : '--'}} sec | Min: {{jobMetrics.buildingTime.min ? ( jobMetrics.buildingTime.min | number:2) : '--'}} sec" ng-click="jobBuildTimeChart()">
+            <div class="title">
+              AVG BUILD TIME PER MB
+            </div>
+            <div class="metric" ng-if="jobMetrics.buildingTime.avg || jobMetrics.buildingTime.avg === 0">
+              {{jobMetrics.buildingTime.avg | number:2}}<span class="unit"> sec</span>
+            </div>
+            <div class="metric" ng-if="!jobMetrics.buildingTime.avg && (jobMetrics.buildingTime.avg !== 0)">
+               --
+            </div>
+            <a class="description" ng-href="jobs" ng-click="$event.stopPropagation();">
+              More Details
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="row charts">
+        <div class="col-sm-6" ng-if="barChart">
+          <div style="border: 2px solid #ddd; margin-top:15px;">
+            <div class="form-group" style="width: 96px; position: absolute; right: 15px; bottom: 265px;">
+              Show Value: <input type="checkbox" ng-model="barChart.options.chart.showValues">
+            </div>
+            <nvd3 options="barChart.options" data="barChart.data"></nvd3>
+          </div>
+        </div>
+        <div class="col-sm-6" ng-if="lineChart">
+          <div style="border: 2px solid #ddd; margin-top:15px;">
+            <div class="form-group">
+              <select class="form-control" style="padding: 4px;width: 80px; position: absolute; right: 20px; bottom: 270px;" ng-options="option.name for option in lineChart.dimension.options track by option.value" ng-model="lineChart.dimension.selected" ng-change="changeDimensionFilter('line')">
+              </select>
+            </div>
+            <nvd3 options="lineChart.options" data="lineChart.data"></nvd3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

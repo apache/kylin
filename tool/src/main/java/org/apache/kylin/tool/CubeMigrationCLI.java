@@ -19,12 +19,16 @@
 package org.apache.kylin.tool;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -38,19 +42,25 @@ import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.RestClient;
+import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
+import org.apache.kylin.dict.lookup.ExtTableSnapshotInfo;
+import org.apache.kylin.dict.lookup.ExtTableSnapshotInfoManager;
 import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
-import org.apache.kylin.metadata.cachesync.Broadcaster;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -61,6 +71,8 @@ import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.kylin.stream.core.source.StreamingSourceConfig;
+import org.apache.kylin.stream.core.source.StreamingSourceConfigManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,96 +84,51 @@ import org.slf4j.LoggerFactory;
  * Note that different envs are assumed to share the same hadoop cluster,
  * including hdfs, hbase and hive.
  */
-public class CubeMigrationCLI {
+public class CubeMigrationCLI extends AbstractApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeMigrationCLI.class);
 
-    private List<Opt> operations;
+    protected List<Opt> operations;
     protected KylinConfig srcConfig;
     protected KylinConfig dstConfig;
-    private ResourceStore srcStore;
-    private ResourceStore dstStore;
-    private FileSystem hdfsFS;
+    protected ResourceStore srcStore;
+    protected ResourceStore dstStore;
+    protected FileSystem hdfsFS;
     private HBaseAdmin hbaseAdmin;
-    private boolean doAclCopy = false;
+    protected boolean doAclCopy = false;
+    protected boolean doOverwrite = false;
+    protected boolean doMigrateSegment = true;
+    protected String dstProject;
 
     private static final String ACL_PREFIX = "/acl/";
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
         CubeMigrationCLI cli = new CubeMigrationCLI();
-        if (args.length != 8) {
+        if (args.length != 8 && args.length != 9) {
             cli.usage();
             System.exit(1);
         }
-        cli.moveCube(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
+        if (args.length == 8) {
+            cli.moveCube(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
+        } else if (args.length == 9) {
+            cli.moveCube(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]);
+        }
     }
 
     protected void usage() {
         System.out.println(
-                "Usage: CubeMigrationCLI srcKylinConfigUri dstKylinConfigUri cubeName projectName copyAclOrNot purgeOrNot overwriteIfExists realExecute");
-        System.out.println(" srcKylinConfigUri: The KylinConfig of the cube’s source \n"
+                "Usage: CubeMigrationCLI srcKylinConfigUri dstKylinConfigUri cubeName projectName copyAclOrNot purgeOrNot overwriteIfExists realExecute migrateSegmentOrNot");
+        System.out.println("srcKylinConfigUri: The KylinConfig of the cube’s source \n"
                 + "dstKylinConfigUri: The KylinConfig of the cube’s new home \n"
                 + "cubeName: the name of cube to be migrated. \n"
                 + "projectName: The target project in the target environment.(Make sure it exist) \n"
                 + "copyAclOrNot: true or false: whether copy cube ACL to target environment. \n"
                 + "purgeOrNot: true or false: whether purge the cube from src server after the migration. \n"
                 + "overwriteIfExists: overwrite cube if it already exists in the target environment. \n"
-                + "realExecute: if false, just print the operations to take, if true, do the real migration. \n");
+                + "realExecute: if false, just print the operations to take, if true, do the real migration. \n"
+                + "migrateSegmentOrNot:(optional) true or false: whether copy segment data to target environment. \n");
 
-    }
-
-    public void moveCube(KylinConfig srcCfg, KylinConfig dstCfg, String cubeName, String projectName, String copyAcl,
-            String purgeAndDisable, String overwriteIfExists, String realExecute)
-            throws IOException, InterruptedException {
-
-        srcConfig = srcCfg;
-        srcStore = ResourceStore.getStore(srcConfig);
-        dstConfig = dstCfg;
-        dstStore = ResourceStore.getStore(dstConfig);
-
-        CubeManager cubeManager = CubeManager.getInstance(srcConfig);
-        CubeInstance cube = cubeManager.getCube(cubeName);
-        logger.info("cube to be moved is : " + cubeName);
-
-        if (cube.getStatus() != RealizationStatusEnum.READY)
-            throw new IllegalStateException("Cannot migrate cube that is not in READY state.");
-
-        for (CubeSegment segment : cube.getSegments()) {
-            if (segment.getStatus() != SegmentStatusEnum.READY) {
-                throw new IllegalStateException("At least one segment is not in READY state");
-            }
-        }
-
-        checkAndGetHbaseUrl();
-
-        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-        hbaseAdmin = new HBaseAdmin(conf);
-
-        hdfsFS = HadoopUtil.getWorkingFileSystem();
-
-        operations = new ArrayList<Opt>();
-
-        if (Boolean.parseBoolean(copyAcl) == true) {
-            doAclCopy = true;
-        }
-
-        copyFilesInMetaStore(cube, overwriteIfExists, doAclCopy);
-        renameFoldersInHdfs(cube);
-        changeHtableHost(cube);
-        addCubeAndModelIntoProject(cube, cubeName, projectName);
-
-        if (Boolean.parseBoolean(purgeAndDisable) == true) {
-            purgeAndDisable(cubeName); // this should be the last action
-        }
-
-        if (realExecute.equalsIgnoreCase("true")) {
-            doOpts();
-            checkMigrationSuccess(dstConfig, cubeName, true);
-            updateMeta(dstConfig);
-        } else {
-            showOpts();
-        }
     }
 
     public void moveCube(String srcCfgUri, String dstCfgUri, String cubeName, String projectName, String copyAcl,
@@ -172,12 +139,93 @@ public class CubeMigrationCLI {
                 projectName, copyAcl, purgeAndDisable, overwriteIfExists, realExecute);
     }
 
+    public void moveCube(KylinConfig srcCfg, KylinConfig dstCfg, String cubeName, String projectName, String copyAcl,
+            String purgeAndDisable, String overwriteIfExists, String realExecute)
+            throws IOException, InterruptedException {
+
+        moveCube(srcCfg, dstCfg, cubeName, projectName, Boolean.parseBoolean(copyAcl),
+                Boolean.parseBoolean(purgeAndDisable), Boolean.parseBoolean(overwriteIfExists),
+                Boolean.parseBoolean(realExecute), true);
+    }
+
+    public void moveCube(String srcCfgUri, String dstCfgUri, String cubeName, String projectName, String copyAcl,
+            String purgeAndDisable, String overwriteIfExists, String realExecute, String migrateSegment)
+            throws IOException, InterruptedException {
+
+        moveCube(KylinConfig.createInstanceFromUri(srcCfgUri), KylinConfig.createInstanceFromUri(dstCfgUri), cubeName,
+                projectName, Boolean.parseBoolean(copyAcl), Boolean.parseBoolean(purgeAndDisable),
+                Boolean.parseBoolean(overwriteIfExists), Boolean.parseBoolean(realExecute),
+                Boolean.parseBoolean(migrateSegment));
+    }
+
+    public void moveCube(KylinConfig srcCfg, KylinConfig dstCfg, String cubeName, String projectName, boolean copyAcl,
+            boolean purgeAndDisable, boolean overwriteIfExists, boolean realExecute, boolean migrateSegment)
+            throws IOException, InterruptedException {
+        doAclCopy = copyAcl;
+        doOverwrite = overwriteIfExists;
+        doMigrateSegment = migrateSegment;
+        srcConfig = srcCfg;
+        srcStore = ResourceStore.getStore(srcConfig);
+        dstConfig = dstCfg;
+        dstStore = ResourceStore.getStore(dstConfig);
+        dstProject = projectName;
+
+        CubeManager cubeManager = CubeManager.getInstance(srcConfig);
+        CubeInstance cube = cubeManager.getCube(cubeName);
+        logger.info("cube to be moved is : " + cubeName);
+
+        if (migrateSegment) {
+            checkCubeState(cube);
+        }
+
+        checkAndGetHbaseUrl();
+
+        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
+        hbaseAdmin = new HBaseAdmin(conf);
+        hdfsFS = HadoopUtil.getWorkingFileSystem();
+        operations = new ArrayList<Opt>();
+        copyFilesInMetaStore(cube);
+        if (migrateSegment) {
+            renameFoldersInHdfs(cube);
+            changeHtableHost(cube);
+        } else {
+            clearSegments(cubeName); // this should be after copyFilesInMetaStore
+        }
+        addCubeAndModelIntoProject(cube, cubeName);
+
+        if (migrateSegment && purgeAndDisable) {
+            purgeAndDisable(cubeName); // this should be the last action
+        }
+
+        if (realExecute) {
+            doOpts();
+            if (migrateSegment) {
+                checkMigrationSuccess(dstConfig, cubeName, true);
+            }
+            updateMeta(dstConfig, projectName, cubeName, cube.getModel());
+            updateMeta(srcConfig, cube.getProject(), cubeName, cube.getModel());
+        } else {
+            showOpts();
+        }
+    }
+
     public void checkMigrationSuccess(KylinConfig kylinConfig, String cubeName, Boolean ifFix) throws IOException {
         CubeMigrationCheckCLI checkCLI = new CubeMigrationCheckCLI(kylinConfig, ifFix);
         checkCLI.execute(cubeName);
     }
 
-    private void checkAndGetHbaseUrl() {
+    protected void checkCubeState(CubeInstance cube) {
+        if (cube.getStatus() != RealizationStatusEnum.READY)
+            throw new IllegalStateException("Cannot migrate cube that is not in READY state.");
+
+        for (CubeSegment segment : cube.getSegments()) {
+            if (segment.getStatus() != SegmentStatusEnum.READY) {
+                throw new IllegalStateException("At least one segment is not in READY state");
+            }
+        }
+    }
+
+    protected void checkAndGetHbaseUrl() {
         StorageURL srcMetadataUrl = srcConfig.getMetadataUrl();
         StorageURL dstMetadataUrl = dstConfig.getMetadataUrl();
 
@@ -207,42 +255,84 @@ public class CubeMigrationCLI {
             operations
                     .add(new Opt(OptType.CHANGE_HTABLE_HOST, new Object[] { segment.getStorageLocationIdentifier() }));
         }
+        ExtTableSnapshotInfoManager srcExtSnapshotManager = ExtTableSnapshotInfoManager.getInstance(srcConfig);
+        List<SnapshotTableDesc> globalSnapshotDescList = cube.getDescriptor().getSnapshotTableDescList();
+        for (SnapshotTableDesc snapshotDesc : globalSnapshotDescList) {
+            if (snapshotDesc.isGlobal()
+                    && ExtTableSnapshotInfo.STORAGE_TYPE_HBASE.equals(snapshotDesc.getStorageType())) {
+                String tableName = snapshotDesc.getTableName();
+                String snapshotResPath = cube.getSnapshotResPath(tableName);
+                ExtTableSnapshotInfo extTableSnapshotInfo = srcExtSnapshotManager.getSnapshot(snapshotResPath);
+                operations.add(new Opt(OptType.CHANGE_HTABLE_HOST,
+                        new Object[] { extTableSnapshotInfo.getStorageLocationIdentifier() }));
+            }
+        }
     }
 
-    private void copyFilesInMetaStore(CubeInstance cube, String overwriteIfExists, boolean copyAcl) throws IOException {
+    protected void clearSegments(String cubeName) throws IOException {
+        operations.add(new Opt(OptType.CLEAR_SEGMENTS, new Object[] { cubeName }));
+    }
+
+    protected void copyFilesInMetaStore(CubeInstance cube) throws IOException {
+
+        if (dstStore.exists(cube.getResourcePath()) && !doOverwrite)
+            throw new IllegalStateException("The cube named " + cube.getName()
+                    + " already exists on target metadata store. Use overwriteIfExists to overwrite it");
 
         List<String> metaItems = new ArrayList<String>();
         Set<String> dictAndSnapshot = new HashSet<String>();
-        listCubeRelatedResources(cube, metaItems, dictAndSnapshot, copyAcl);
-
-        if (dstStore.exists(cube.getResourcePath()) && !overwriteIfExists.equalsIgnoreCase("true"))
-            throw new IllegalStateException("The cube named " + cube.getName()
-                    + " already exists on target metadata store. Use overwriteIfExists to overwrite it");
+        listCubeRelatedResources(cube, metaItems, dictAndSnapshot);
 
         for (String item : metaItems) {
             operations.add(new Opt(OptType.COPY_FILE_IN_META, new Object[] { item }));
         }
 
-        for (String item : dictAndSnapshot) {
-            operations.add(new Opt(OptType.COPY_DICT_OR_SNAPSHOT, new Object[] { item, cube.getName() }));
+        if (doMigrateSegment) {
+            for (String item : dictAndSnapshot) {
+                operations.add(new Opt(OptType.COPY_DICT_OR_SNAPSHOT, new Object[] { item, cube.getName() }));
+            }
         }
     }
 
-    private void addCubeAndModelIntoProject(CubeInstance srcCube, String cubeName, String projectName)
-            throws IOException {
-        String projectResPath = ProjectInstance.concatResourcePath(projectName);
+    protected void addCubeAndModelIntoProject(CubeInstance srcCube, String cubeName) throws IOException {
+        String projectResPath = ProjectInstance.concatResourcePath(dstProject);
         if (!dstStore.exists(projectResPath))
-            throw new IllegalStateException("The target project " + projectName + " does not exist");
+            throw new IllegalStateException("The target project " + dstProject + " does not exist");
 
-        operations.add(new Opt(OptType.ADD_INTO_PROJECT, new Object[] { srcCube, cubeName, projectName }));
+        operations.add(new Opt(OptType.ADD_INTO_PROJECT, new Object[] { srcCube, cubeName, dstProject }));
     }
 
     private void purgeAndDisable(String cubeName) throws IOException {
         operations.add(new Opt(OptType.PURGE_AND_DISABLE, new Object[] { cubeName }));
     }
 
-    protected void listCubeRelatedResources(CubeInstance cube, List<String> metaResource, Set<String> dictAndSnapshot,
-            boolean copyAcl) throws IOException {
+    private List<String> getCompatibleTablePath(Set<TableRef> tableRefs, String project, String rootPath)
+            throws IOException {
+        List<String> toResource = new ArrayList<>();
+        List<String> paths = srcStore.collectResourceRecursively(rootPath, MetadataConstants.FILE_SURFIX);
+        Map<String, String> tableMap = new HashMap<>();
+        for (String path : paths)
+            for (TableRef tableRef : tableRefs) {
+                String tableId = tableRef.getTableIdentity();
+                if (path.contains(tableId)) {
+                    String prj = TableDesc.parseResourcePath(path).getProject();
+                    if (prj == null && tableMap.get(tableId) == null)
+                        tableMap.put(tableRef.getTableIdentity(), path);
+
+                    if (prj != null && prj.contains(project)) {
+                        tableMap.put(tableRef.getTableIdentity(), path);
+                    }
+                }
+            }
+
+        for (Map.Entry<String, String> e : tableMap.entrySet()) {
+            toResource.add(e.getValue());
+        }
+        return toResource;
+    }
+
+    protected void listCubeRelatedResources(CubeInstance cube, List<String> metaResource, Set<String> dictAndSnapshot)
+            throws IOException {
 
         CubeDesc cubeDesc = cube.getDescriptor();
         String prj = cubeDesc.getProject();
@@ -251,25 +341,53 @@ public class CubeMigrationCLI {
         metaResource.add(cubeDesc.getResourcePath());
         metaResource.add(DataModelDesc.concatResourcePath(cubeDesc.getModelName()));
 
-        for (TableRef tableRef : cubeDesc.getModel().getAllTables()) {
-            metaResource.add(TableDesc.concatResourcePath(tableRef.getTableIdentity(), prj));
-            metaResource.add(TableExtDesc.concatResourcePath(tableRef.getTableIdentity(), prj));
+        Set<TableRef> tblRefs = cubeDesc.getModel().getAllTables();
+        metaResource.addAll(getCompatibleTablePath(tblRefs, prj, ResourceStore.TABLE_RESOURCE_ROOT));
+        metaResource.addAll(getCompatibleTablePath(tblRefs, prj, ResourceStore.TABLE_EXD_RESOURCE_ROOT));
+
+        if (doMigrateSegment) {
+            for (CubeSegment segment : cube.getSegments()) {
+                metaResource.add(segment.getStatisticsResourcePath());
+                dictAndSnapshot.addAll(segment.getSnapshotPaths());
+                dictAndSnapshot.addAll(segment.getDictionaryPaths());
+            }
+            dictAndSnapshot.addAll(cube.getSnapshotPaths());
         }
 
-        for (CubeSegment segment : cube.getSegments()) {
-            metaResource.add(segment.getStatisticsResourcePath());
-            dictAndSnapshot.addAll(segment.getSnapshotPaths());
-            dictAndSnapshot.addAll(segment.getDictionaryPaths());
-        }
-
-        if (copyAcl) {
+        if (doAclCopy) {
             metaResource.add(ACL_PREFIX + cube.getUuid());
             metaResource.add(ACL_PREFIX + cube.getModel().getUuid());
         }
+
+        if (cubeDesc.isStreamingCube()) {
+            // add streaming source config info for streaming cube
+            String tableName = cubeDesc.getModel().getRootFactTableName();
+            String projectName = cubeDesc.getProject();
+            KylinConfig kylinConf = KylinConfig.getInstanceFromEnv();
+            StreamingSourceConfigManager manager = StreamingSourceConfigManager.getInstance(kylinConf);
+            StreamingSourceConfig sourceConfig = manager.getConfig(tableName, projectName);
+            if (sourceConfig != null) {
+                metaResource.add(sourceConfig.getResourcePathWithProjName());
+            } else {
+                throw new InterruptedIOException(String.format(Locale.ROOT,
+                        "The stream source config doesn't exist, the table name: %s, the project name: %s",
+                        tableName, projectName));
+            }
+        }
+    }
+
+    @Override
+    protected Options getOptions() {
+        Options options = new Options();
+        return options;
+    }
+
+    @Override
+    protected void execute(OptionsHelper optionsHelper) throws Exception {
     }
 
     protected enum OptType {
-        COPY_FILE_IN_META, COPY_DICT_OR_SNAPSHOT, RENAME_FOLDER_IN_HDFS, ADD_INTO_PROJECT, CHANGE_HTABLE_HOST, PURGE_AND_DISABLE
+        COPY_FILE_IN_META, COPY_DICT_OR_SNAPSHOT, RENAME_FOLDER_IN_HDFS, ADD_INTO_PROJECT, CHANGE_HTABLE_HOST, PURGE_AND_DISABLE, CLEAR_SEGMENTS
     }
 
     protected void addOpt(OptType type, Object[] params) {
@@ -305,7 +423,7 @@ public class CubeMigrationCLI {
         logger.info("Operation: " + opt.toString());
     }
 
-    private void doOpts() throws IOException, InterruptedException {
+    protected void doOpts() throws IOException, InterruptedException {
         int index = 0;
         try {
             for (; index < operations.size(); ++index) {
@@ -338,25 +456,39 @@ public class CubeMigrationCLI {
             String tableName = (String) opt.params[0];
             System.out.println("CHANGE_HTABLE_HOST, table name: " + tableName);
             HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
-            hbaseAdmin.disableTable(tableName);
+//            hbaseAdmin.disableTable(tableName);
             desc.setValue(IRealizationConstants.HTableTag, dstConfig.getMetadataUrlPrefix());
             hbaseAdmin.modifyTable(tableName, desc);
-            hbaseAdmin.enableTable(tableName);
+//            hbaseAdmin.enableTable(tableName);
             logger.info("CHANGE_HTABLE_HOST is completed");
             break;
         }
         case COPY_FILE_IN_META: {
             String item = (String) opt.params[0];
             RawResource res = srcStore.getResource(item);
-            dstStore.putResource(item, res.inputStream, res.timestamp);
-            res.inputStream.close();
+            if (res == null) {
+                logger.info("Item: {} doesn't exist, ignore it.", item);
+                break;
+            }
+            // dataModel`s project maybe be different with new project.
+            if (item.startsWith(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT)) {
+                DataModelDesc dataModelDesc = srcStore.getResource(item, DataModelManager.getInstance(srcConfig).getDataModelSerializer());
+                if (dataModelDesc != null && dataModelDesc.getProjectName() != null && !dataModelDesc.getProjectName().equals(dstProject)) {
+                    dataModelDesc.setProjectName(dstProject);
+                    dstStore.putResource(item, dataModelDesc, res.lastModified(), DataModelManager.getInstance(srcConfig).getDataModelSerializer());
+                    logger.info("Item " + item + " is copied");
+                    break;
+                }
+            }
+            dstStore.putResource(renameTableWithinProject(item), res.content(), res.lastModified());
+            res.content().close();
             logger.info("Item " + item + " is copied");
             break;
         }
         case COPY_DICT_OR_SNAPSHOT: {
             String item = (String) opt.params[0];
 
-            if (item.toLowerCase().endsWith(".dict")) {
+            if (item.toLowerCase(Locale.ROOT).endsWith(".dict")) {
                 DictionaryManager dstDictMgr = DictionaryManager.getInstance(dstConfig);
                 DictionaryManager srcDicMgr = DictionaryManager.getInstance(srcConfig);
                 DictionaryInfo dictSrc = srcDicMgr.getDictionaryInfo(item);
@@ -376,7 +508,7 @@ public class CubeMigrationCLI {
                     String cubeName = (String) opt.params[1];
                     String cubeResPath = CubeInstance.concatResourcePath(cubeName);
                     Serializer<CubeInstance> cubeSerializer = new JsonSerializer<CubeInstance>(CubeInstance.class);
-                    CubeInstance cube = dstStore.getResource(cubeResPath, CubeInstance.class, cubeSerializer);
+                    CubeInstance cube = dstStore.getResource(cubeResPath, cubeSerializer);
                     for (CubeSegment segment : cube.getSegments()) {
                         for (Map.Entry<String, String> entry : segment.getDictionaries().entrySet()) {
                             if (entry.getValue().equalsIgnoreCase(item)) {
@@ -384,11 +516,11 @@ public class CubeMigrationCLI {
                             }
                         }
                     }
-                    dstStore.putResource(cubeResPath, cube, cubeSerializer);
+                    dstStore.checkAndPutResource(cubeResPath, cube, cubeSerializer);
                     logger.info("Item " + item + " is dup, instead " + dictSaved.getResourcePath() + " is reused");
                 }
 
-            } else if (item.toLowerCase().endsWith(".snapshot")) {
+            } else if (item.toLowerCase(Locale.ROOT).endsWith(".snapshot")) {
                 SnapshotManager dstSnapMgr = SnapshotManager.getInstance(dstConfig);
                 SnapshotManager srcSnapMgr = SnapshotManager.getInstance(srcConfig);
                 SnapshotTable snapSrc = srcSnapMgr.getSnapshotTable(item);
@@ -406,7 +538,7 @@ public class CubeMigrationCLI {
                     String cubeName = (String) opt.params[1];
                     String cubeResPath = CubeInstance.concatResourcePath(cubeName);
                     Serializer<CubeInstance> cubeSerializer = new JsonSerializer<CubeInstance>(CubeInstance.class);
-                    CubeInstance cube = dstStore.getResource(cubeResPath, CubeInstance.class, cubeSerializer);
+                    CubeInstance cube = dstStore.getResource(cubeResPath, cubeSerializer);
                     for (CubeSegment segment : cube.getSegments()) {
                         for (Map.Entry<String, String> entry : segment.getSnapshots().entrySet()) {
                             if (entry.getValue().equalsIgnoreCase(item)) {
@@ -414,7 +546,12 @@ public class CubeMigrationCLI {
                             }
                         }
                     }
-                    dstStore.putResource(cubeResPath, cube, cubeSerializer);
+                    for (Map.Entry<String, String> entry : cube.getSnapshots().entrySet()) {
+                        if (entry.getValue().equalsIgnoreCase(item)) {
+                            entry.setValue(snapSaved.getResourcePath());
+                        }
+                    }
+                    dstStore.checkAndPutResource(cubeResPath, cube, cubeSerializer);
                     logger.info("Item " + item + " is dup, instead " + snapSaved.getResourcePath() + " is reused");
 
                 }
@@ -429,8 +566,12 @@ public class CubeMigrationCLI {
         case RENAME_FOLDER_IN_HDFS: {
             String srcPath = (String) opt.params[0];
             String dstPath = (String) opt.params[1];
-            renameHDFSPath(srcPath, dstPath);
-            logger.info("HDFS Folder renamed from " + srcPath + " to " + dstPath);
+            if (hdfsFS.exists(new Path(srcPath))) {
+                renameHDFSPath(srcPath, dstPath);
+                logger.info("HDFS Folder renamed from " + srcPath + " to " + dstPath);
+            } else {
+                logger.warn("HDFS Folder is not exist,ignore it. path : " + srcPath);
+            }
             break;
         }
         case ADD_INTO_PROJECT: {
@@ -441,28 +582,42 @@ public class CubeMigrationCLI {
 
             String projectResPath = ProjectInstance.concatResourcePath(projectName);
             Serializer<ProjectInstance> projectSerializer = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
-            ProjectInstance project = dstStore.getResource(projectResPath, ProjectInstance.class, projectSerializer);
+            ProjectInstance project = dstStore.getResource(projectResPath, projectSerializer);
 
             for (TableRef tableRef : srcCube.getModel().getAllTables()) {
                 project.addTable(tableRef.getTableIdentity());
             }
 
-            project.addModel(modelName);
+            if (!project.getModels().contains(modelName))
+                project.addModel(modelName);
             project.removeRealization(RealizationType.CUBE, cubeName);
             project.addRealizationEntry(RealizationType.CUBE, cubeName);
 
-            dstStore.putResource(projectResPath, project, projectSerializer);
+            dstStore.checkAndPutResource(projectResPath, project, projectSerializer);
             logger.info("Project instance for " + projectName + " is corrected");
+            break;
+        }
+        case CLEAR_SEGMENTS: {
+            String cubeName = (String) opt.params[0];
+            String cubeInstancePath = CubeInstance.concatResourcePath(cubeName);
+            Serializer<CubeInstance> cubeInstanceSerializer = new JsonSerializer<CubeInstance>(CubeInstance.class);
+            CubeInstance cubeInstance = dstStore.getResource(cubeInstancePath, cubeInstanceSerializer);
+            cubeInstance.getSegments().clear();
+            cubeInstance.clearCuboids();
+            cubeInstance.setCreateTimeUTC(System.currentTimeMillis());
+            cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
+            dstStore.checkAndPutResource(cubeInstancePath, cubeInstance, cubeInstanceSerializer);
+            logger.info("Cleared segments for " + cubeName + ", since segments has not been copied");
             break;
         }
         case PURGE_AND_DISABLE: {
             String cubeName = (String) opt.params[0];
             String cubeResPath = CubeInstance.concatResourcePath(cubeName);
             Serializer<CubeInstance> cubeSerializer = new JsonSerializer<CubeInstance>(CubeInstance.class);
-            CubeInstance cube = srcStore.getResource(cubeResPath, CubeInstance.class, cubeSerializer);
+            CubeInstance cube = srcStore.getResource(cubeResPath, cubeSerializer);
             cube.getSegments().clear();
             cube.setStatus(RealizationStatusEnum.DISABLED);
-            srcStore.putResource(cubeResPath, cube, cubeSerializer);
+            srcStore.checkAndPutResource(cubeResPath, cube, cubeSerializer);
             logger.info("Cube " + cubeName + " is purged and disabled in " + srcConfig.getMetadataUrl());
 
             break;
@@ -528,13 +683,29 @@ public class CubeMigrationCLI {
         }
     }
 
-    private void updateMeta(KylinConfig config) {
-        String[] nodes = config.getRestServers();
+    private String renameTableWithinProject(String srcItem) {
+        if (dstProject != null && srcItem.startsWith(ResourceStore.TABLE_RESOURCE_ROOT)) {
+            String tableIdentity = TableDesc.parseResourcePath(srcItem).getTable();
+            if (srcItem.contains(ResourceStore.TABLE_EXD_RESOURCE_ROOT))
+                return TableExtDesc.concatResourcePath(tableIdentity, dstProject);
+            else
+                return ResourceStore.TABLE_RESOURCE_ROOT + "/" + tableIdentity + "--" + dstProject + ".json";
+        }
+        return srcItem;
+    }
+
+    private void updateMeta(KylinConfig config, String projectName, String cubeName, DataModelDesc model) {
+        String[] nodes = config.getRawRestServers();
+        Map<String, String> tableToProjects = new HashMap<>();
+        for (TableRef tableRef : model.getAllTables()) {
+            tableToProjects.put(tableRef.getTableIdentity(), projectName);
+        }
+
         for (String node : nodes) {
             RestClient restClient = new RestClient(node);
             try {
                 logger.info("update meta cache for " + node);
-                restClient.wipeCache(Broadcaster.SYNC_ALL, Broadcaster.Event.UPDATE.getType(), Broadcaster.SYNC_ALL);
+                restClient.clearCacheForCubeMigration(cubeName, projectName, model.getName(), tableToProjects);
             } catch (IOException e) {
                 logger.error(e.getMessage());
             }
@@ -549,7 +720,7 @@ public class CubeMigrationCLI {
             if (nRetry > 3) {
                 throw new InterruptedException("Cannot rename folder " + srcPath + " to folder " + dstPath);
             } else {
-                Thread.sleep(sleepTime * nRetry * nRetry);
+                Thread.sleep((long) sleepTime * nRetry * nRetry);
             }
         }
     }

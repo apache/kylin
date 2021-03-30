@@ -22,11 +22,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.CapabilityResult.DimensionAsMeasure;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.slf4j.Logger;
@@ -52,6 +54,12 @@ public class QueryRouter {
         for (IRealization real : realizations) {
             if (real.isReady())
                 candidates.add(new Candidate(real, sqlDigest));
+            if (BackdoorToggles.getForceHitCube() != null && BackdoorToggles.getForceHitCube().equalsIgnoreCase(real.getName())) {
+                logger.info("Force choose {} as selected cube for specific purpose.", real.getName());
+                candidates = Lists.newArrayListWithCapacity(1);
+                candidates.add(new Candidate(real, sqlDigest));
+                break;
+            }
         }
 
         logger.info("Find candidates by table " + factTableName + " and project=" + projectName + " : "
@@ -72,7 +80,8 @@ public class QueryRouter {
         adjustForDimensionAsMeasure(chosen, olapContext);
 
         logger.info("The realizations remaining: " + RoutingRule.getPrintableText(candidates)
-                + " And the final chosen one is the first one");
+                + ",and the final chosen one for current olap context " + olapContext.id + " is "
+                + chosen.realization.getCanonicalName());
 
         for (CapabilityInfluence influence : chosen.getCapability().influences) {
             if (influence.getInvolvedMeasure() != null) {

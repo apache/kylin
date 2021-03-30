@@ -22,13 +22,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
-import java.util.UUID;
 
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
 import org.I0Itec.zkclient.exception.ZkMarshallingError;
 import org.I0Itec.zkclient.serialize.ZkSerializer;
 import org.apache.kafka.common.requests.MetadataResponse;
+import org.apache.kylin.common.util.RandomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,18 +38,16 @@ import kafka.server.KafkaServerStartable;
 import kafka.utils.ZkUtils;
 
 public class MockKafka {
-    private static Properties createProperties(ZkConnection zkServerConnection, String logDir, String port, String brokerId) {
+    private static Properties createProperties(ZkConnection zkServerConnection, String logDir, String server,
+            String brokerId) {
         Properties properties = new Properties();
-        properties.put("port", port);
         properties.put("broker.id", brokerId);
         properties.put("log.dirs", logDir);
-        properties.put("host.name", "localhost");
         properties.put("offsets.topic.replication.factor", "1");
         properties.put("delete.topic.enable", "true");
         properties.put("zookeeper.connect", zkServerConnection.getServers());
-        String ip = NetworkUtils.getLocalIp();
-        properties.put("listeners", "PLAINTEXT://" + ip + ":" + port);
-        properties.put("advertised.listeners", "PLAINTEXT://" + ip + ":" + port);
+        properties.put("listeners", "PLAINTEXT://" + server);
+        properties.put("advertised.listeners", "PLAINTEXT://" + server);
         return properties;
     }
 
@@ -59,7 +57,8 @@ public class MockKafka {
     private ZkConnection zkConnection;
 
     public MockKafka(ZkConnection zkServerConnection) {
-        this(zkServerConnection, System.getProperty("java.io.tmpdir") + "/" + UUID.randomUUID().toString(), "9092", "1");
+        this(zkServerConnection, System.getProperty("java.io.tmpdir") + "/" + RandomUtil.randomUUID().toString(),
+                "localhost:9092", "1");
         start();
     }
 
@@ -68,15 +67,15 @@ public class MockKafka {
         kafkaServer = new KafkaServerStartable(kafkaConfig);
     }
 
-    public MockKafka(ZkConnection zkServerConnection, int port, int brokerId) {
-        this(zkServerConnection, System.getProperty("java.io.tmpdir") + "/" + UUID.randomUUID().toString(), String.valueOf(port), String.valueOf(brokerId));
+    public MockKafka(ZkConnection zkServerConnection, String server, int brokerId) {
+        this(zkServerConnection, System.getProperty("java.io.tmpdir") + "/" + RandomUtil.randomUUID().toString(),
+                server, String.valueOf(brokerId));
         //start();
     }
 
-    private MockKafka(ZkConnection zkServerConnection, String logDir, String port, String brokerId) {
-        this(createProperties(zkServerConnection, logDir, port, brokerId));
+    private MockKafka(ZkConnection zkServerConnection, String logDir, String server, String brokerId) {
+        this(createProperties(zkServerConnection, logDir, server, brokerId));
         this.zkConnection = zkServerConnection;
-        System.out.println(String.format("Kafka %s:%s dir:%s", kafkaServer.serverConfig().brokerId(), kafkaServer.serverConfig().port(), kafkaServer.serverConfig().logDirs()));
     }
 
     public void createTopic(String topic, int partition, int replication) {

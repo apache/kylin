@@ -17,6 +17,9 @@
 */
 package org.apache.kylin.common.util;
 
+import org.slf4j.helpers.FormattingTuple;
+import org.slf4j.helpers.MessageFormatter;
+
 /**
  */
 public class SoutLogger implements Logger {
@@ -24,5 +27,11 @@ public class SoutLogger implements Logger {
     @Override
     public void log(String message) {
         System.out.println(message);
+    }
+
+    @Override
+    public void log(String message, Object... arguments) {
+        FormattingTuple ft = MessageFormatter.arrayFormat(message, arguments);
+        log(ft.getMessage());
     }
 }

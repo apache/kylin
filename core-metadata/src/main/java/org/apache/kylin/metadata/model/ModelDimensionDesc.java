@@ -19,7 +19,11 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
+
+import java.util.Locale;
+import java.util.Objects;
 
 import org.apache.kylin.common.util.StringUtil;
 
@@ -54,7 +58,7 @@ public class ModelDimensionDesc implements Serializable {
     }
 
     void init(DataModelDesc model) {
-        table = table.toUpperCase();
+        table = table.toUpperCase(Locale.ROOT);
         if (columns != null) {
             StringUtil.toUpperCaseArray(columns, columns);
         }
@@ -65,7 +69,7 @@ public class ModelDimensionDesc implements Serializable {
                 for (int i = 0; i < columns.length; i++) {
                     TblColRef column = model.findColumn(table, columns[i]);
 
-                    if (column.getColumnDesc().isComputedColumnn() && !model.isFactTable(column.getTableRef())) {
+                    if (column.getColumnDesc().isComputedColumn() && !model.isFactTable(column.getTableRef())) {
                         throw new RuntimeException("Computed Column on lookup table is not allowed");
                     }
 
@@ -93,4 +97,19 @@ public class ModelDimensionDesc implements Serializable {
         return count;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ModelDimensionDesc that = (ModelDimensionDesc) o;
+        return Objects.equals(table, that.table) &&
+                Arrays.equals(columns, that.columns);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(table);
+        result = 31 * result + Arrays.hashCode(columns);
+        return result;
+    }
 }

@@ -38,7 +38,7 @@ public class StatisticsDecisionUtil {
     protected static final Logger logger = LoggerFactory.getLogger(StatisticsDecisionUtil.class);
 
     public static void decideCubingAlgorithm(CubingJob cubingJob, CubeSegment seg) throws IOException {
-        CubeStatsReader cubeStats = new CubeStatsReader(seg, seg.getConfig());
+        CubeStatsReader cubeStats = new CubeStatsReader(seg, null, seg.getConfig());
         decideCubingAlgorithm(cubingJob, seg, cubeStats.getMapperOverlapRatioOfFirstBuild(),
                 cubeStats.getMapperNumberOfFirstBuild());
     }
@@ -48,10 +48,14 @@ public class StatisticsDecisionUtil {
         KylinConfig kylinConf = seg.getConfig();
         String algPref = kylinConf.getCubeAlgorithm();
         CubingJob.AlgorithmEnum alg;
-        if (mapperOverlapRatio == 0) { // no source records
+        if (mapperOverlapRatio == 0 && kylinConf.isAutoInmemToOptimize()) { // no source records
             alg = CubingJob.AlgorithmEnum.INMEM;
         } else if (CubingJob.AlgorithmEnum.INMEM.name().equalsIgnoreCase(algPref)) {
             alg = CubingJob.AlgorithmEnum.INMEM;
+            if (seg.getCubeDesc().isStreamingCube() && CubingJob.CubingJobTypeEnum
+                    .getByName(cubingJob.getJobType()) == CubingJob.CubingJobTypeEnum.BUILD) {
+                alg = CubingJob.AlgorithmEnum.LAYER;
+            }
         } else if (CubingJob.AlgorithmEnum.LAYER.name().equalsIgnoreCase(algPref)) {
             alg = CubingJob.AlgorithmEnum.LAYER;
         } else {
@@ -88,15 +92,9 @@ public class StatisticsDecisionUtil {
         cubingJob.setAlgorithm(alg);
     }
 
+    // For triggering cube planner phase one
     public static void optimizeCubingPlan(CubeSegment segment) throws IOException {
-        CubeInstance cube = segment.getCubeInstance();
-        
-        if (cube.getConfig().isCubePlannerEnabled() == false)
-            return;
-        
-        List<CubeSegment> readySegments = cube.getSegments(SegmentStatusEnum.READY);
-        if (readySegments.size() == 0 || (cube.getConfig().isCubePlannerEnabledForExistingCube()
-                && readySegments.size() == 1 && (readySegments.get(0).getSegRange().equals(segment.getSegRange())))) {
+        if (isAbleToOptimizeCubingPlan(segment)) {
             logger.info("It's able to trigger cuboid planner algorithm.");
         } else {
             return;
@@ -107,8 +105,30 @@ public class StatisticsDecisionUtil {
             return;
         }
 
-        CubeUpdate cubeBuilder = new CubeUpdate(cube);
-        cubeBuilder.setCuboids(recommendCuboidsWithStats);
-        CubeManager.getInstance(cube.getConfig()).updateCube(cubeBuilder);
+        CubeInstance cube = segment.getCubeInstance();
+        CubeUpdate update = new CubeUpdate(cube.latestCopyForWrite());
+        update.setCuboids(recommendCuboidsWithStats);
+        CubeManager.getInstance(cube.getConfig()).updateCube(update);
+    }
+
+    public static boolean isAbleToOptimizeCubingPlan(CubeSegment segment) {
+        CubeInstance cube = segment.getCubeInstance();
+        if (!cube.getConfig().isCubePlannerEnabled())
+            return false;
+
+        if (cube.getSegments(SegmentStatusEnum.READY_PENDING).size() > 0) {
+            logger.info("Has read pending segments and will not enable cube planner.");
+            return false;
+        }
+        List<CubeSegment> readySegments = cube.getSegments(SegmentStatusEnum.READY);
+        List<CubeSegment> newSegments = cube.getSegments(SegmentStatusEnum.NEW);
+        if (newSegments.size() <= 1 && //
+                (readySegments.size() == 0 || //
+                        (cube.getConfig().isCubePlannerEnabledForExistingCube() && readySegments.size() == 1
+                                && readySegments.get(0).getSegRange().equals(segment.getSegRange())))) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

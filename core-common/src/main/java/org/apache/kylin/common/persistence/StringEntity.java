@@ -18,13 +18,14 @@
 
 package org.apache.kylin.common.persistence;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class StringEntity extends RootPersistentEntity {
+import org.apache.commons.lang.StringUtils;
+
+@SuppressWarnings("serial")
+public class StringEntity extends RootPersistentEntity implements Comparable<StringEntity> {
 
     public static final Serializer<StringEntity> serializer = new Serializer<StringEntity>() {
         @Override
@@ -65,5 +66,15 @@ public class StringEntity extends RootPersistentEntity {
     @Override
     public String toString() {
         return str;
+    }
+
+    @Override
+    public int compareTo(StringEntity o) {
+        if (this.str == null)
+            return o.str == null ? 0 : -1;
+        if (o.str == null)
+            return 1;
+
+        return this.str.compareTo(o.str);
     }
 }

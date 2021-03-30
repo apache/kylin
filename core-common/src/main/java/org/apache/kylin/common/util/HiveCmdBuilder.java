@@ -18,98 +18,104 @@
 
 package org.apache.kylin.common.util;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class HiveCmdBuilder {
-    private static final Logger logger = LoggerFactory.getLogger(HiveCmdBuilder.class);
+    public static final Logger logger = LoggerFactory.getLogger(HiveCmdBuilder.class);
 
-    public static final String HIVE_CONF_FILENAME = "kylin_hive_conf";
+    static final String CREATE_HQL_TMP_FILE_TEMPLATE = "cat >%s<<EOL\n%sEOL";
+
+    public static ThreadLocal<String> getHiveTablePrefix() {
+        return hiveTablePrefix;
+    }
 
     public enum HiveClientMode {
         CLI, BEELINE
     }
 
-    private HiveClientMode clientMode;
     private KylinConfig kylinConfig;
-    final private Map<String, String> hiveConfProps = new HashMap<>();
-    final private ArrayList<String> statements = Lists.newArrayList();
+    private final Map<String, String> hiveConfProps;
+    private final List<String> statements = Lists.newArrayList();
+    private static ThreadLocal<String> hiveTablePrefix = new ThreadLocal<String>();
 
     public HiveCmdBuilder() {
+        this("");
+    }
+
+    public HiveCmdBuilder(String jobName) {
         kylinConfig = KylinConfig.getInstanceFromEnv();
-        clientMode = HiveClientMode.valueOf(kylinConfig.getHiveClientMode().toUpperCase());
-        loadHiveConfiguration();
+        hiveConfProps = SourceConfigurationUtil.loadHiveConfiguration();
+        hiveConfProps.putAll(kylinConfig.getHiveConfigOverride());
+        if (StringUtils.isNotEmpty(jobName)) {
+            addStatement("set mapreduce.job.name=" + jobName + ";");
+        }
     }
 
     public String build() {
-        StringBuffer buf = new StringBuffer();
+        HiveClientMode clientMode = HiveClientMode.valueOf(kylinConfig.getHiveClientMode().toUpperCase(Locale.ROOT));
+        String beelineShell = kylinConfig.getHiveBeelineShell();
+        String beelineParams = kylinConfig.getHiveBeelineParams();
+        if (kylinConfig.getEnableSparkSqlForTableOps()) {
+            clientMode = HiveClientMode.BEELINE;
+            beelineShell = kylinConfig.getSparkSqlBeelineShell();
+            beelineParams = kylinConfig.getSparkSqlBeelineParams();
+            if (StringUtils.isBlank(beelineShell)) {
+                throw new IllegalStateException(
+                        "Missing config 'kylin.source.hive.sparksql-beeline-shell', please check kylin.properties");
+            }
+        }
+
+        StringBuilder buf = new StringBuilder();
 
         switch (clientMode) {
         case CLI:
             buf.append("hive -e \"");
             for (String statement : statements) {
-                buf.append(statement).append("\n");
+                //in bash need escape " and ` by using \
+                buf.append(statement.replaceAll("`", "\\\\`")).append("\n");
             }
             buf.append("\"");
             buf.append(parseProps());
             break;
         case BEELINE:
-            BufferedWriter bw = null;
-            File tmpHql = null;
+            String tmpHqlPath = null;
+            StringBuilder hql = new StringBuilder();
             try {
-                tmpHql = File.createTempFile("beeline_", ".hql");
-                bw = new BufferedWriter(new FileWriter(tmpHql));
+                tmpHqlPath = "/tmp/" + UUID.randomUUID().toString() + ".hql";
                 for (String statement : statements) {
-                    bw.write(statement);
-                    bw.newLine();
+                    hql.append(statement.replaceAll("`", "\\\\`"));
+                    hql.append("\n");
                 }
-                buf.append("beeline ");
-                buf.append(kylinConfig.getHiveBeelineParams());
+                String createFileCmd = String.format(Locale.ROOT, CREATE_HQL_TMP_FILE_TEMPLATE, tmpHqlPath, hql);
+                buf.append(createFileCmd);
+                buf.append("\n");
+                buf.append(beelineShell);
+                buf.append(" ");
+                buf.append(beelineParams);
                 buf.append(parseProps());
                 buf.append(" -f ");
-                buf.append(tmpHql.getAbsolutePath());
+                buf.append(tmpHqlPath);
                 buf.append(";ret_code=$?;rm -f ");
-                buf.append(tmpHql.getAbsolutePath());
+                buf.append(tmpHqlPath);
                 buf.append(";exit $ret_code");
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             } finally {
-                IOUtils.closeQuietly(bw);
-
-                if (tmpHql != null && logger.isDebugEnabled()) {
-                    String hql = null;
-                    try {
-                        hql = FileUtils.readFileToString(tmpHql, Charset.defaultCharset());
-                    } catch (IOException e) {
-                        // ignore
-                    }
-                    logger.debug("The SQL to execute in beeline: \n" + hql);
+                if (tmpHqlPath != null && logger.isDebugEnabled()) {
+                    logger.debug("The SQL to execute in beeline: {} \n", hql);
                 }
             }
             break;
         default:
-            throw new RuntimeException("Hive client cannot be recognized: " + clientMode);
+            throw new IllegalArgumentException("Hive client cannot be recognized: " + clientMode);
         }
 
         return buf.toString();
@@ -144,6 +150,10 @@ public class HiveCmdBuilder {
         statements.add(statement);
     }
 
+    public List<String> getStatements() {
+        return statements;
+    }
+
     public void addStatements(String[] stats) {
         for (String s : stats) {
             statements.add(s);
@@ -155,47 +165,4 @@ public class HiveCmdBuilder {
         return build();
     }
 
-    private void loadHiveConfiguration() {
-
-        File hiveConfFile;
-        String hiveConfFileName = (HIVE_CONF_FILENAME + ".xml");
-        String path = System.getProperty(KylinConfig.KYLIN_CONF);
-
-        if (StringUtils.isNotEmpty(path)) {
-            hiveConfFile = new File(path, hiveConfFileName);
-        } else {
-            path = KylinConfig.getKylinHome();
-            if (StringUtils.isEmpty(path)) {
-                logger.error("KYLIN_HOME is not set, can not locate hive conf: {}.xml", HIVE_CONF_FILENAME);
-                return;
-            }
-            hiveConfFile = new File(path + File.separator + "conf", hiveConfFileName);
-        }
-
-        if (hiveConfFile == null || !hiveConfFile.exists()) {
-            throw new RuntimeException("Failed to read " + HIVE_CONF_FILENAME + ".xml");
-        }
-
-        String fileUrl = OptionsHelper.convertToFileURL(hiveConfFile.getAbsolutePath());
-
-        try {
-            File file = new File(fileUrl);
-            if (file.exists()) {
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder builder = factory.newDocumentBuilder();
-                Document doc = builder.parse(file);
-                NodeList nl = doc.getElementsByTagName("property");
-                hiveConfProps.clear();
-                for (int i = 0; i < nl.getLength(); i++) {
-                    String key = doc.getElementsByTagName("name").item(i).getFirstChild().getNodeValue();
-                    String value = doc.getElementsByTagName("value").item(i).getFirstChild().getNodeValue();
-                    if (!key.equals("tmpjars")) {
-                        hiveConfProps.put(key, value);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to parse hive conf file ", e);
-        }
-    }
 }

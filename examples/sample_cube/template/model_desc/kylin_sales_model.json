@@ -1,20 +1,26 @@
 {
   "uuid" : "0928468a-9fab-4185-9a14-6f2e7c74823f",
   "name" : "kylin_sales_model",
+  "is_draft" : false,
+  "description" : "",
   "fact_table" : "DEFAULT.KYLIN_SALES",
   "lookups" : [ {
     "table" : "DEFAULT.KYLIN_CAL_DT",
+    "kind" : "LOOKUP",
+    "alias" : "KYLIN_CAL_DT",
     "join" : {
       "type" : "inner",
-      "primary_key" : [ "CAL_DT" ],
-      "foreign_key" : [ "PART_DT" ]
+      "primary_key" : [ "KYLIN_CAL_DT.CAL_DT" ],
+      "foreign_key" : [ "KYLIN_SALES.PART_DT" ]
     }
   }, {
     "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
+    "kind" : "LOOKUP",
+    "alias" : "KYLIN_CATEGORY_GROUPINGS",
     "join" : {
       "type" : "inner",
-      "primary_key" : [ "LEAF_CATEG_ID", "SITE_ID" ],
-      "foreign_key" : [ "LEAF_CATEG_ID", "LSTG_SITE_ID" ]
+      "primary_key" : [ "KYLIN_CATEGORY_GROUPINGS.LEAF_CATEG_ID", "KYLIN_CATEGORY_GROUPINGS.SITE_ID" ],
+      "foreign_key" : [ "KYLIN_SALES.LEAF_CATEG_ID", "KYLIN_SALES.LSTG_SITE_ID" ]
     }
   }, {
     "table" : "DEFAULT.KYLIN_ACCOUNT",
@@ -22,8 +28,8 @@
     "kind" : "LOOKUP",
     "join" : {
       "type" : "inner",
-      "primary_key" : [ "ACCOUNT_ID" ],
-      "foreign_key" : [ "BUYER_ID" ]
+      "primary_key" : [ "BUYER_ACCOUNT.ACCOUNT_ID" ],
+      "foreign_key" : [ "KYLIN_SALES.BUYER_ID" ]
     }
   }, {
     "table" : "DEFAULT.KYLIN_ACCOUNT",
@@ -31,8 +37,8 @@
     "kind" : "LOOKUP",
     "join" : {
       "type" : "inner",
-      "primary_key" : [ "ACCOUNT_ID" ],
-      "foreign_key" : [ "SELLER_ID" ]
+      "primary_key" : [ "SELLER_ACCOUNT.ACCOUNT_ID" ],
+      "foreign_key" : [ "KYLIN_SALES.SELLER_ID" ]
     }
   }, {
     "table" : "DEFAULT.KYLIN_COUNTRY",
@@ -40,7 +46,7 @@
     "kind" : "LOOKUP",
     "join" : {
       "type" : "inner",
-      "primary_key" : [ "COUNTRY" ],
+      "primary_key" : [ "BUYER_COUNTRY.COUNTRY" ],
       "foreign_key" : [ "BUYER_ACCOUNT.ACCOUNT_COUNTRY" ]
     }
   }, {
@@ -49,7 +55,7 @@
     "kind" : "LOOKUP",
     "join" : {
       "type" : "inner",
-      "primary_key" : [ "COUNTRY" ],
+      "primary_key" : [ "SELLER_COUNTRY.COUNTRY" ],
       "foreign_key" : [ "SELLER_ACCOUNT.ACCOUNT_COUNTRY" ]
     }
   }],
@@ -76,14 +82,19 @@
     "columns" : [ "COUNTRY", "NAME" ]
   } ],
   "metrics": [
-    "PRICE",
-    "ITEM_COUNT"
+    "KYLIN_SALES.PRICE",
+    "KYLIN_SALES.ITEM_COUNT"
   ],
   "last_modified" : 1422435345362,
-  "filter_condition" : null,
+  "filter_condition" : "",
   "partition_desc" : {
     "partition_date_column" : "KYLIN_SALES.PART_DT",
+    "partition_time_column" : null,
     "partition_date_start" : 1325376000000,
-    "partition_type" : "APPEND"
-  }
+    "partition_date_format" : "yyyy-MM-dd",
+    "partition_time_format" : "HH:mm:ss",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM"
 }

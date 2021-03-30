@@ -105,6 +105,11 @@ public class CubeJoinedFlatTableEnrich implements IJoinedFlatTableDesc, Serializ
     }
 
     @Override
+    public List<TblColRef> getFactColumns() {
+        return flatDesc.getFactColumns();
+    }
+
+    @Override
     public DataModelDesc getDataModel() {
         return flatDesc.getDataModel();
     }
@@ -127,6 +132,11 @@ public class CubeJoinedFlatTableEnrich implements IJoinedFlatTableDesc, Serializ
     @Override
     public ISegment getSegment() {
         return flatDesc.getSegment();
+    }
+
+    @Override
+    public boolean useAlias() {
+        return flatDesc.useAlias();
     }
 
     @Override

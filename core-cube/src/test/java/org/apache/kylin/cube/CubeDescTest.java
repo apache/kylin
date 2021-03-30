@@ -18,6 +18,8 @@
 
 package org.apache.kylin.cube;
 
+import static org.apache.kylin.measure.bitmap.BitmapMeasureType.DATATYPE_BITMAP;
+import static org.apache.kylin.measure.map.bitmap.BitmapMapMeasureType.DATATYPE_BITMAP_MAP;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -29,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -55,7 +58,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * @author yangli9
@@ -94,7 +98,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
 
     private String getColInAggrGroup(AggregationGroup g, String name) {
         for (String c : g.getIncludes()) {
-            if (c.toLowerCase().contains(name.toLowerCase()))
+            if (c.toLowerCase(Locale.ROOT).contains(name.toLowerCase(Locale.ROOT)))
                 return c;
         }
         throw new IllegalStateException();
@@ -133,6 +137,10 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
             MeasureDesc im = icMeasures.get(i);
             assertEquals(lm.getName(), im.getName());
             assertEquals(lm.getFunction().getFullExpression(), im.getFunction().getFullExpression());
+            if (DATATYPE_BITMAP_MAP.equals(im.getFunction().getReturnType())
+                    && DATATYPE_BITMAP.equals(lm.getFunction().getReturnType())) {
+                continue;
+            }
             assertEquals(lm.getFunction().getReturnType(), im.getFunction().getReturnType());
         }
 
@@ -157,7 +165,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     private List<MeasureDesc> dropPercentile(List<MeasureDesc> measures) {
         ArrayList<MeasureDesc> result = new ArrayList<>();
         for (MeasureDesc m : measures) {
-            if (!m.getFunction().getExpression().toUpperCase().contains("PERCENTILE"))
+            if (!m.getFunction().getExpression().toUpperCase(Locale.ROOT).contains("PERCENTILE"))
                 result.add(m);
         }
         return result;
@@ -196,7 +204,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     @Test
     public void testBadInit3() throws Exception {
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Aggregation group 0 'includes' dimensions not include all the dimensions:");
+        thrown.expectMessage("Aggregation group 1 'includes' dimensions not include all the dimensions:");
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         String[] temp = Arrays.asList(cubeDesc.getAggregationGroups().get(0).getIncludes()).subList(0, 3)
                 .toArray(new String[3]);
@@ -209,7 +217,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     public void testBadInit4() throws Exception {
         thrown.expect(TooManyCuboidException.class);
         thrown.expectMessage(
-                "Aggregation group 0 of Cube Desc test_kylin_cube_with_slr_desc has too many combinations: 31. Use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.");
+                "Aggregation group 1 of Cube Desc test_kylin_cube_with_slr_desc has too many combinations: 31. Use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.");
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         try {
@@ -242,7 +250,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     @Test
     public void testBadInit7() throws Exception {
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Aggregation group 0 require at least 2 dimensions in a joint");
+        thrown.expectMessage("Aggregation group 1 require at least 2 dimensions in a joint");
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         cubeDesc.getAggregationGroups().get(0).getSelectRule().jointDims = new String[][] {
@@ -256,7 +264,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         String[] strs = new String[] { CATEG_LVL2_NAME, META_CATEG_NAME };
         thrown.expect(IllegalStateException.class);
         thrown.expectMessage(
-                "Aggregation group 0 hierarchy dimensions overlap with joint dimensions: " + sortStrs(strs));
+                "Aggregation group 1 hierarchy dimensions overlap with joint dimensions: " + sortStrs(strs));
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         cubeDesc.getAggregationGroups().get(0).getSelectRule().jointDims = new String[][] {
@@ -270,7 +278,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         String[] strs = new String[] { LSTG_FORMAT_NAME, META_CATEG_NAME };
         thrown.expect(IllegalStateException.class);
         thrown.expectMessage(
-                "Aggregation group 0 hierarchy dimensions overlap with joint dimensions: " + sortStrs(strs));
+                "Aggregation group 1 hierarchy dimensions overlap with joint dimensions: " + sortStrs(strs));
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         cubeDesc.getAggregationGroups().get(0).getSelectRule().hierarchyDims = new String[][] {
                 new String[] { META_CATEG_NAME, CATEG_LVL2_NAME, CATEG_LVL3_NAME },
@@ -285,7 +293,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     public void testBadInit10() throws Exception {
         String[] strs = new String[] { LSTG_FORMAT_NAME, LSTG_SITE_ID };
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Aggregation group 0 a dimension exist in more than one joint: " + sortStrs(strs));
+        thrown.expectMessage("Aggregation group 1 a dimension exist in more than one joint: " + sortStrs(strs));
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         cubeDesc.getAggregationGroups().get(0).getSelectRule().jointDims = new String[][] {
@@ -298,7 +306,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     @Test
     public void testBadInit11() throws Exception {
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Aggregation group 0 require at least 2 dimensions in a hierarchy.");
+        thrown.expectMessage("Aggregation group 1 require at least 2 dimensions in a hierarchy.");
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         cubeDesc.getAggregationGroups().get(0).getSelectRule().hierarchyDims = new String[][] {
@@ -311,7 +319,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     public void testBadInit12() throws Exception {
         String[] strs = new String[] { CATEG_LVL2_NAME, META_CATEG_NAME };
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Aggregation group 0 a dimension exist in more than one hierarchy: " + sortStrs(strs));
+        thrown.expectMessage("Aggregation group 1 a dimension exist in more than one hierarchy: " + sortStrs(strs));
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         cubeDesc.getAggregationGroups().get(0).getSelectRule().hierarchyDims = new String[][] {
@@ -319,20 +327,6 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
                 new String[] { META_CATEG_NAME, CATEG_LVL2_NAME } };
 
         cubeDesc.init(getTestConfig());
-    }
-
-    @Test
-    public void testBadInit13() throws Exception {
-        thrown.expect(IllegalStateException.class);
-        CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
-        MeasureDesc measureForTransCnt = cubeDesc.getMeasures().get(3);
-        Assert.assertEquals(measureForTransCnt.getName(), "TRANS_CNT");
-        thrown.expectMessage("measure (" + measureForTransCnt.getName() + ") is not in order");
-        HBaseColumnDesc colDesc = new HBaseColumnDesc();
-        colDesc.setQualifier("M");
-        colDesc.setMeasureRefs(new String[] { "GMV_SUM", "GMV_MIN", "GMV_MAX", "ITEM_COUNT_SUM", "TRANS_CNT" });
-        cubeDesc.getHbaseMapping().getColumnFamily()[0].getColumns()[0] = colDesc;
-        cubeDesc.initMeasureReferenceToColumnFamily();
     }
 
     @Test
@@ -376,7 +370,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         }
 
         thrown.expect(TooManyCuboidException.class);
-        CubeDescManager.clearCache();
+        getTestConfig().clearManagers();
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig())
                 .getCubeDesc("ut_cube_desc_combination_int_overflow");
         cubeDesc.init(getTestConfig());
@@ -390,9 +384,23 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         metaFile.renameTo(new File(path.substring(0, path.length() - 4)));
 
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Too many rowkeys (78) in CubeDesc, please try to reduce dimension number or adopt derived dimensions");
-        CubeDescManager.clearCache();
+        thrown.expectMessage(
+                "Too many rowkeys (78) in CubeDesc, please try to reduce dimension number or adopt derived dimensions");
+        getTestConfig().clearManagers();
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("ut_78_rowkeys");
+        cubeDesc.init(getTestConfig());
+    }
+
+    @Test
+    public void testValidateNotifyList() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Email [test] is not validation.");
+
+        CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
+        List<String> notify = Lists.newArrayList();
+        notify.add("test");
+        cubeDesc.setNotifyList(notify);
+        cubeDesc.validateNotifyList();
         cubeDesc.init(getTestConfig());
     }
 
@@ -493,4 +501,5 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         Assert.assertNotNull(lc);
         Assert.assertTrue(lc.getAllCuboids().size() > 0);
     }
+
 }

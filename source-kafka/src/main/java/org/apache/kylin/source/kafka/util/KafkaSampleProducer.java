@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
-import java.util.UUID;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -36,6 +35,7 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.common.util.RandomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,22 +52,22 @@ public class KafkaSampleProducer {
     private static final Option OPTION_BROKER = OptionBuilder.withArgName("broker").hasArg().isRequired(true).withDescription("Kafka broker").create("broker");
     private static final Option OPTION_INTERVAL = OptionBuilder.withArgName("interval").hasArg().isRequired(false).withDescription("Simulated message interval in mili-seconds, default 1000").create("interval");
 
+    protected static final String OTHER = "Other";
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public static void main(String[] args) throws Exception {
-        logger.info("args: " + Arrays.toString(args));
+        if(logger.isInfoEnabled()) logger.info("args: {}", Arrays.toString(args));
         OptionsHelper optionsHelper = new OptionsHelper();
         Options options = new Options();
-        String topic, broker;
         options.addOption(OPTION_TOPIC);
         options.addOption(OPTION_BROKER);
         options.addOption(OPTION_INTERVAL);
         optionsHelper.parseOptions(options, args);
 
-        logger.info("options: '" + optionsHelper.getOptionsAsString() + "'");
+        logger.info("options: '{}'", optionsHelper.getOptionsAsString());
 
-        topic = optionsHelper.getOptionValue(OPTION_TOPIC);
-        broker = optionsHelper.getOptionValue(OPTION_BROKER);
+        final String topic = optionsHelper.getOptionValue(OPTION_TOPIC);
+        final String broker = optionsHelper.getOptionValue(OPTION_BROKER);
 
         long interval = 10;
         String intervalString = optionsHelper.getOptionValue(OPTION_INTERVAL);
@@ -75,7 +75,7 @@ public class KafkaSampleProducer {
             interval = Long.parseLong(intervalString);
         }
 
-        List<String> countries = new ArrayList();
+        List<String> countries = new ArrayList<>();
         countries.add("AUSTRALIA");
         countries.add("CANADA");
         countries.add("CHINA");
@@ -83,20 +83,20 @@ public class KafkaSampleProducer {
         countries.add("JAPAN");
         countries.add("KOREA");
         countries.add("US");
-        countries.add("Other");
-        List<String> category = new ArrayList();
+        countries.add(OTHER);
+        List<String> category = new ArrayList<>();
         category.add("BOOK");
         category.add("TOY");
         category.add("CLOTH");
         category.add("ELECTRONIC");
-        category.add("Other");
-        List<String> devices = new ArrayList();
+        category.add(OTHER);
+        List<String> devices = new ArrayList<>();
         devices.add("iOS");
         devices.add("Windows");
         devices.add("Andriod");
-        devices.add("Other");
+        devices.add(OTHER);
 
-        List<String> genders = new ArrayList();
+        List<String> genders = new ArrayList<>();
         genders.add("Male");
         genders.add("Female");
 
@@ -109,34 +109,37 @@ public class KafkaSampleProducer {
         props.put("buffer.memory", 33554432);
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-
-        Producer<String, String> producer = new KafkaProducer<>(props);
-
-        boolean alive = true;
-        Random rnd = new Random();
-        Map<String, Object> record = new HashMap();
-        while (alive == true) {
-            //add normal record
-            record.put("order_time", (new Date().getTime()));
-            record.put("country", countries.get(rnd.nextInt(countries.size())));
-            record.put("category", category.get(rnd.nextInt(category.size())));
-            record.put("device", devices.get(rnd.nextInt(devices.size())));
-            record.put("qty", rnd.nextInt(10));
-            record.put("currency", "USD");
-            record.put("amount", rnd.nextDouble() * 100);
-            //add embedded record
-            Map<String, Object> user = new HashMap();
-            user.put("id", UUID.randomUUID().toString());
-            user.put("gender", genders.get(rnd.nextInt(2)));
-            user.put("age", rnd.nextInt(20) + 10);
-            record.put("user", user);
-            //send message
-            ProducerRecord<String, String> data = new ProducerRecord<>(topic, System.currentTimeMillis() + "", mapper.writeValueAsString(record));
-            System.out.println("Sending 1 message: " + JsonUtil.writeValueAsString(record));
-            producer.send(data);
-            Thread.sleep(interval);
+        long startTime = System.currentTimeMillis();
+        try (Producer<String, String> producer = new KafkaProducer<>(props)) {
+            boolean alive = true;
+            Random rnd = new Random();
+            Map<String, Object> record = new HashMap<>();
+            while (alive) {
+                //add normal record
+                record.put("order_time", (new Date().getTime()));
+                record.put("country", countries.get(rnd.nextInt(countries.size())));
+                record.put("category", category.get(rnd.nextInt(category.size())));
+                record.put("device", devices.get(rnd.nextInt(devices.size())));
+                record.put("qty", rnd.nextInt(10));
+                record.put("currency", "USD");
+                record.put("amount", rnd.nextDouble() * 100);
+                //add embedded record
+                Map<String, Object> user = new HashMap<>();
+                user.put("id", RandomUtil.randomUUID().toString());
+                user.put("gender", genders.get(rnd.nextInt(2)));
+                user.put("age", rnd.nextInt(20) + 10);
+                user.put("first_name", "unknown");
+                record.put("user", user);
+                //send message
+                ProducerRecord<String, String> data = new ProducerRecord<>(topic, System.currentTimeMillis() + "", mapper.writeValueAsString(record));
+                if (logger.isInfoEnabled())
+                    logger.info("Sending 1 message: {}", JsonUtil.writeValueAsString(record));
+                producer.send(data);
+                Thread.sleep(interval);
+                if (System.currentTimeMillis() - startTime >= 7 * 24 * 3600 * 1000) {
+                    alive = false;
+                }
+            }
         }
-        producer.close();
     }
-
 }

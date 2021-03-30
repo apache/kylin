@@ -79,7 +79,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
 
         CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
         CubeInstance createdCube = cubeMgr.createCube("cube_in_alien_project", "alien", desc, null);
-        assertTrue(createdCube == cubeMgr.getCube("cube_in_alien_project"));
+        assertTrue(createdCube.equals(cubeMgr.getCube("cube_in_alien_project")));
         ProjectManager proMgr = ProjectManager.getInstance(getTestConfig());
         Set<IRealization> realizations = proMgr.listAllRealizations("alien");
         assertTrue(realizations.contains(createdCube));
@@ -102,7 +102,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
 
         CubeInstance droppedCube = cubeMgr.dropCube("cube_in_alien_project", true);
 
-        assertTrue(createdCube == droppedCube);
+        assertTrue(createdCube.equals(droppedCube));
         assertNull(cubeMgr.getCube("cube_in_alien_project"));
         assertTrue(prjMgr.listAllProjects().size() == originalProjectCount + 1);
         assertTrue(cubeMgr.listAllCubes().size() == originalCubeCount);
@@ -126,7 +126,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
 
         CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
         CubeInstance createdCube = cubeMgr.createCube("new_cube_in_default", ProjectInstance.DEFAULT_PROJECT_NAME, desc, null);
-        assertTrue(createdCube == cubeMgr.getCube("new_cube_in_default"));
+        assertTrue(createdCube.equals(cubeMgr.getCube("new_cube_in_default")));
 
         //System.out.println(JsonUtil.writeValueAsIndentString(createdCube));
 
@@ -135,7 +135,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
 
         CubeInstance droppedCube = cubeMgr.dropCube("new_cube_in_default", true);
 
-        assertTrue(createdCube == droppedCube);
+        assertTrue(createdCube.equals(droppedCube));
         assertNull(cubeMgr.getCube("new_cube_in_default"));
         assertTrue(prjMgr.listAllProjects().size() == originalProjectCount);
         assertTrue(cubeMgr.listAllCubes().size() == originalCubeCount);

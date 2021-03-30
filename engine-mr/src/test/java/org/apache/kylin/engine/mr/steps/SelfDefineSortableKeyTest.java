@@ -32,6 +32,7 @@ import java.util.UUID;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.RandomUtil;
 import org.junit.Test;
 
 /**
@@ -114,7 +115,7 @@ public class SelfDefineSortableKeyTest {
         int count = 10;
         ArrayList<String> strList = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            UUID uuid = UUID.randomUUID();
+            UUID uuid = RandomUtil.randomUUID();
             strList.add(uuid.toString());
         }
         strList.add("hello");

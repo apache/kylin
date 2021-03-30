@@ -31,6 +31,7 @@
 package org.apache.kylin.rest.security;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -51,7 +52,6 @@ import org.apache.hadoop.hbase.client.Append;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Durability;
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.client.Increment;
 import org.apache.hadoop.hbase.client.Mutation;
 import org.apache.hadoop.hbase.client.Put;
@@ -60,7 +60,9 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Row;
 import org.apache.hadoop.hbase.client.RowMutations;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
+import org.apache.hadoop.hbase.client.metrics.ScanMetrics;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.ipc.CoprocessorRpcChannel;
@@ -95,9 +97,11 @@ public class MockHTable implements Table {
     private final String tableName;
     private final List<String> columnFamilies = new ArrayList<>();
 
-    private NavigableMap<byte[], NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>>> data = new TreeMap<>(Bytes.BYTES_COMPARATOR);
+    private NavigableMap<byte[], NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>>> data = new TreeMap<>(
+            Bytes.BYTES_COMPARATOR);
 
-    private static List<KeyValue> toKeyValue(byte[] row, NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> rowdata, int maxVersions) {
+    private static List<KeyValue> toKeyValue(byte[] row,
+            NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> rowdata, int maxVersions) {
         return toKeyValue(row, rowdata, 0, Long.MAX_VALUE, maxVersions);
     }
 
@@ -162,7 +166,9 @@ public class MockHTable implements Table {
         throw new RuntimeException(this.getClass() + " does NOT implement this method.");
     }
 
-    private static List<KeyValue> toKeyValue(byte[] row, NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> rowdata, long timestampStart, long timestampEnd, int maxVersions) {
+    private static List<KeyValue> toKeyValue(byte[] row,
+            NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> rowdata, long timestampStart,
+            long timestampEnd, int maxVersions) {
         List<KeyValue> ret = new ArrayList<KeyValue>();
         for (byte[] family : rowdata.keySet())
             for (byte[] qualifier : rowdata.get(family).keySet()) {
@@ -237,12 +243,14 @@ public class MockHTable implements Table {
     }
 
     @Override
-    public <R> void batchCallback(List<? extends Row> actions, Object[] results, Batch.Callback<R> callback) throws IOException, InterruptedException {
+    public <R> void batchCallback(List<? extends Row> actions, Object[] results, Batch.Callback<R> callback)
+            throws IOException, InterruptedException {
 
     }
 
     @Override
-    public <R> Object[] batchCallback(List<? extends Row> actions, Batch.Callback<R> callback) throws IOException, InterruptedException {
+    public <R> Object[] batchCallback(List<? extends Row> actions, Batch.Callback<R> callback)
+            throws IOException, InterruptedException {
         return new Object[0];
     }
 
@@ -266,11 +274,13 @@ public class MockHTable implements Table {
                     qualifiers = data.get(row).get(family).navigableKeySet();
                 for (byte[] qualifier : qualifiers) {
                     if (qualifier == null)
-                        qualifier = "".getBytes();
-                    if (!data.get(row).containsKey(family) || !data.get(row).get(family).containsKey(qualifier) || data.get(row).get(family).get(qualifier).isEmpty())
+                        qualifier = "".getBytes(StandardCharsets.UTF_8);
+                    if (!data.get(row).containsKey(family) || !data.get(row).get(family).containsKey(qualifier)
+                            || data.get(row).get(family).get(qualifier).isEmpty())
                         continue;
                     Map.Entry<Long, byte[]> timestampAndValue = data.get(row).get(family).get(qualifier).lastEntry();
-                    kvs.add(new KeyValue(row, family, qualifier, timestampAndValue.getKey(), timestampAndValue.getValue()));
+                    kvs.add(new KeyValue(row, family, qualifier, timestampAndValue.getKey(),
+                            timestampAndValue.getValue()));
                 }
             }
         }
@@ -319,7 +329,8 @@ public class MockHTable implements Table {
 
             List<KeyValue> kvs = null;
             if (!scan.hasFamilies()) {
-                kvs = toKeyValue(row, data.get(row), scan.getTimeRange().getMin(), scan.getTimeRange().getMax(), scan.getMaxVersions());
+                kvs = toKeyValue(row, data.get(row), scan.getTimeRange().getMin(), scan.getTimeRange().getMax(),
+                        scan.getMaxVersions());
             } else {
                 kvs = new ArrayList<KeyValue>();
                 for (byte[] family : scan.getFamilyMap().keySet()) {
@@ -386,6 +397,14 @@ public class MockHTable implements Table {
             }
 
             public void close() {
+            }
+
+            public boolean renewLease() {
+                throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+            }
+
+            public ScanMetrics getScanMetrics() {
+                throw new RuntimeException(this.getClass() + " does NOT implement this method.");
             }
         };
     }
@@ -473,16 +492,19 @@ public class MockHTable implements Table {
     @Override
     public void put(Put put) throws IOException {
         byte[] row = put.getRow();
-        NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> rowData = forceFind(data, row, new TreeMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>>(Bytes.BYTES_COMPARATOR));
+        NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> rowData = forceFind(data, row,
+                new TreeMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>>(Bytes.BYTES_COMPARATOR));
         for (byte[] family : put.getFamilyMap().keySet()) {
-            if (columnFamilies.contains(new String(family)) == false) {
-                throw new RuntimeException("Not Exists columnFamily : " + new String(family));
+            if (columnFamilies.contains(new String(family, StandardCharsets.UTF_8)) == false) {
+                throw new RuntimeException("Not Exists columnFamily : " + new String(family, StandardCharsets.UTF_8));
             }
-            NavigableMap<byte[], NavigableMap<Long, byte[]>> familyData = forceFind(rowData, family, new TreeMap<byte[], NavigableMap<Long, byte[]>>(Bytes.BYTES_COMPARATOR));
+            NavigableMap<byte[], NavigableMap<Long, byte[]>> familyData = forceFind(rowData, family,
+                    new TreeMap<byte[], NavigableMap<Long, byte[]>>(Bytes.BYTES_COMPARATOR));
             for (KeyValue kv : put.getFamilyMap().get(family)) {
                 kv.updateLatestStamp(Bytes.toBytes(System.currentTimeMillis()));
                 byte[] qualifier = kv.getQualifier();
-                NavigableMap<Long, byte[]> qualifierData = forceFind(familyData, qualifier, new TreeMap<Long, byte[]>());
+                NavigableMap<Long, byte[]> qualifierData = forceFind(familyData, qualifier,
+                        new TreeMap<Long, byte[]>());
                 qualifierData.put(kv.getTimestamp(), kv.getValue());
             }
         }
@@ -501,9 +523,13 @@ public class MockHTable implements Table {
 
     private boolean check(byte[] row, byte[] family, byte[] qualifier, byte[] value) {
         if (value == null || value.length == 0)
-            return !data.containsKey(row) || !data.get(row).containsKey(family) || !data.get(row).get(family).containsKey(qualifier);
+            return !data.containsKey(row) || !data.get(row).containsKey(family)
+                    || !data.get(row).get(family).containsKey(qualifier);
         else
-            return data.containsKey(row) && data.get(row).containsKey(family) && data.get(row).get(family).containsKey(qualifier) && !data.get(row).get(family).get(qualifier).isEmpty() && Arrays.equals(data.get(row).get(family).get(qualifier).lastEntry().getValue(), value);
+            return data.containsKey(row) && data.get(row).containsKey(family)
+                    && data.get(row).get(family).containsKey(qualifier)
+                    && !data.get(row).get(family).get(qualifier).isEmpty()
+                    && Arrays.equals(data.get(row).get(family).get(qualifier).lastEntry().getValue(), value);
     }
 
     /**
@@ -519,7 +545,8 @@ public class MockHTable implements Table {
     }
 
     @Override
-    public boolean checkAndPut(byte[] bytes, byte[] bytes1, byte[] bytes2, CompareFilter.CompareOp compareOp, byte[] bytes3, Put put) throws IOException {
+    public boolean checkAndPut(byte[] bytes, byte[] bytes1, byte[] bytes2, CompareFilter.CompareOp compareOp,
+            byte[] bytes3, Put put) throws IOException {
         return false;
     }
 
@@ -572,7 +599,8 @@ public class MockHTable implements Table {
      * {@inheritDoc}
      */
     @Override
-    public boolean checkAndDelete(byte[] row, byte[] family, byte[] qualifier, byte[] value, Delete delete) throws IOException {
+    public boolean checkAndDelete(byte[] row, byte[] family, byte[] qualifier, byte[] value, Delete delete)
+            throws IOException {
         if (check(row, family, qualifier, value)) {
             delete(delete);
             return true;
@@ -581,7 +609,8 @@ public class MockHTable implements Table {
     }
 
     @Override
-    public boolean checkAndDelete(byte[] bytes, byte[] bytes1, byte[] bytes2, CompareFilter.CompareOp compareOp, byte[] bytes3, Delete delete) throws IOException {
+    public boolean checkAndDelete(byte[] bytes, byte[] bytes1, byte[] bytes2, CompareFilter.CompareOp compareOp,
+            byte[] bytes3, Delete delete) throws IOException {
         return false;
     }
 
@@ -602,7 +631,8 @@ public class MockHTable implements Table {
     }
 
     @Override
-    public long incrementColumnValue(byte[] row, byte[] family, byte[] qualifier, long amount, Durability durability) throws IOException {
+    public long incrementColumnValue(byte[] row, byte[] family, byte[] qualifier, long amount, Durability durability)
+            throws IOException {
         return 0;
     }
 
@@ -620,13 +650,15 @@ public class MockHTable implements Table {
     }
 
     @Override
-    public <T extends Service, R> Map<byte[], R> coprocessorService(Class<T> service, byte[] startKey, byte[] endKey, Batch.Call<T, R> callable) throws ServiceException, Throwable {
+    public <T extends Service, R> Map<byte[], R> coprocessorService(Class<T> service, byte[] startKey, byte[] endKey,
+            Batch.Call<T, R> callable) throws ServiceException, Throwable {
         throw new NotImplementedException();
 
     }
 
     @Override
-    public <T extends Service, R> void coprocessorService(Class<T> service, byte[] startKey, byte[] endKey, Batch.Call<T, R> callable, Batch.Callback<R> callback) throws ServiceException, Throwable {
+    public <T extends Service, R> void coprocessorService(Class<T> service, byte[] startKey, byte[] endKey,
+            Batch.Call<T, R> callable, Batch.Callback<R> callback) throws ServiceException, Throwable {
         throw new NotImplementedException();
 
     }
@@ -649,20 +681,61 @@ public class MockHTable implements Table {
     }
 
     @Override
-    public <R extends Message> Map<byte[], R> batchCoprocessorService(Descriptors.MethodDescriptor methodDescriptor, Message request, byte[] startKey, byte[] endKey, R responsePrototype) throws ServiceException, Throwable {
+    public <R extends Message> Map<byte[], R> batchCoprocessorService(Descriptors.MethodDescriptor methodDescriptor,
+            Message request, byte[] startKey, byte[] endKey, R responsePrototype) throws ServiceException, Throwable {
         throw new NotImplementedException();
 
     }
 
     @Override
-    public <R extends Message> void batchCoprocessorService(Descriptors.MethodDescriptor methodDescriptor, Message request, byte[] startKey, byte[] endKey, R responsePrototype, Batch.Callback<R> callback) throws ServiceException, Throwable {
+    public <R extends Message> void batchCoprocessorService(Descriptors.MethodDescriptor methodDescriptor,
+            Message request, byte[] startKey, byte[] endKey, R responsePrototype, Batch.Callback<R> callback)
+            throws ServiceException, Throwable {
         throw new NotImplementedException();
 
     }
 
     //@Override  (only since 0.98.8)
-    public boolean checkAndMutate(byte[] row, byte[] family, byte[] qualifier, CompareFilter.CompareOp compareOp, byte[] value, RowMutations mutation) throws IOException {
+    public boolean checkAndMutate(byte[] row, byte[] family, byte[] qualifier, CompareFilter.CompareOp compareOp,
+            byte[] value, RowMutations mutation) throws IOException {
         throw new NotImplementedException();
 
     }
+
+    public void setOperationTimeout(int operationTimeout) {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
+    public int getOperationTimeout() {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
+    /** @deprecated */
+    @Deprecated
+    public int getRpcTimeout() {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
+    /** @deprecated */
+    @Deprecated
+    public void setRpcTimeout(int rpcTimeout) {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
+    public int getWriteRpcTimeout() {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
+    public void setWriteRpcTimeout(int writeRpcTimeout) {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
+    public int getReadRpcTimeout() {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
+    public void setReadRpcTimeout(int readRpcTimeout) {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
 }

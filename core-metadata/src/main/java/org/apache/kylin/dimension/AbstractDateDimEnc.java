@@ -41,6 +41,10 @@ public class AbstractDateDimEnc extends DimensionEncoding {
     private int fixedLen;
     private IValueCodec codec;
 
+    //Externalizable classes should have no-arguments constructors
+    public AbstractDateDimEnc() {
+    }
+
     protected AbstractDateDimEnc(int fixedLen, IValueCodec codec) {
         this.fixedLen = fixedLen;
         this.codec = codec;

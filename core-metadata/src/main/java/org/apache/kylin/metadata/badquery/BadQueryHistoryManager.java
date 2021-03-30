@@ -20,8 +20,6 @@ package org.apache.kylin.metadata.badquery;
 
 import java.io.IOException;
 import java.util.NavigableSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -35,8 +33,18 @@ import org.slf4j.LoggerFactory;
 public class BadQueryHistoryManager {
     public static final Serializer<BadQueryHistory> BAD_QUERY_INSTANCE_SERIALIZER = new JsonSerializer<>(BadQueryHistory.class);
     private static final Logger logger = LoggerFactory.getLogger(BadQueryHistoryManager.class);
+    
+    public static BadQueryHistoryManager getInstance(KylinConfig config) {
+        return config.getManager(BadQueryHistoryManager.class);
+    }
 
-    private static final ConcurrentMap<KylinConfig, BadQueryHistoryManager> CACHE = new ConcurrentHashMap<>();
+    // called by reflection
+    static BadQueryHistoryManager newInstance(KylinConfig config) throws IOException {
+        return new BadQueryHistoryManager(config);
+    }
+    
+    // ============================================================================
+
     private KylinConfig kylinConfig;
 
     private BadQueryHistoryManager(KylinConfig config) throws IOException {
@@ -44,40 +52,12 @@ public class BadQueryHistoryManager {
         this.kylinConfig = config;
     }
 
-    public static BadQueryHistoryManager getInstance(KylinConfig config) {
-        BadQueryHistoryManager r = CACHE.get(config);
-        if (r != null) {
-            return r;
-        }
-
-        synchronized (BadQueryHistoryManager.class) {
-            r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-            try {
-                r = new BadQueryHistoryManager(config);
-                CACHE.put(config, r);
-                if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton exist");
-                }
-                return r;
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to init BadQueryHistoryManager from " + config, e);
-            }
-        }
-    }
-
-    public static void clearCache() {
-        CACHE.clear();
-    }
-
     private ResourceStore getStore() {
         return ResourceStore.getStore(this.kylinConfig);
     }
 
     public BadQueryHistory getBadQueriesForProject(String project) throws IOException {
-        BadQueryHistory badQueryHistory = getStore().getResource(getResourcePathForProject(project), BadQueryHistory.class, BAD_QUERY_INSTANCE_SERIALIZER);
+        BadQueryHistory badQueryHistory = getStore().getResource(getResourcePathForProject(project), BAD_QUERY_INSTANCE_SERIALIZER);
         if (badQueryHistory == null) {
             badQueryHistory = new BadQueryHistory(project);
         }
@@ -102,15 +82,17 @@ public class BadQueryHistoryManager {
             entries.pollFirst();
         }
 
-        getStore().putResource(badQueryHistory.getResourcePath(), badQueryHistory, BAD_QUERY_INSTANCE_SERIALIZER);
+        getStore().checkAndPutResource(badQueryHistory.getResourcePath(), badQueryHistory, BAD_QUERY_INSTANCE_SERIALIZER);
         return badQueryHistory;
     }
 
     public void removeBadQueryHistory(String project) throws IOException {
+        project = project.replaceAll("[./]", "");
         getStore().deleteResource(getResourcePathForProject(project));
     }
 
     public String getResourcePathForProject(String project) {
+        project = project.replaceAll("[./]", "");
         return ResourceStore.BAD_QUERY_RESOURCE_ROOT + "/" + project + MetadataConstants.FILE_SURFIX;
     }
 }

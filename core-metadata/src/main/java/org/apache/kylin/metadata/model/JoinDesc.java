@@ -24,7 +24,7 @@ import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 /**
  */
@@ -184,34 +184,6 @@ public class JoinDesc implements Serializable {
 
         if (!this.type.equalsIgnoreCase(other.getType()))
             return false;
-        return true;
-    }
-
-    // equals() without alias
-    public boolean matches(JoinDesc other) {
-        if (other == null)
-            return false;
-        
-        if (!this.type.equalsIgnoreCase(other.getType()))
-            return false;
-        
-        // note pk/fk are sorted, sortByFK()
-        if (!this.columnDescEquals(foreignKeyColumns, other.foreignKeyColumns))
-            return false;
-        if (!this.columnDescEquals(primaryKeyColumns, other.primaryKeyColumns))
-            return false;
-        
-        return true;
-    }
-
-    private boolean columnDescEquals(TblColRef[] a, TblColRef[] b) {
-        if (a.length != b.length)
-            return false;
-        
-        for (int i = 0; i < a.length; i++) {
-            if (a[i].getColumnDesc().equals(b[i].getColumnDesc()) == false)
-                return false;
-        }
         return true;
     }
 

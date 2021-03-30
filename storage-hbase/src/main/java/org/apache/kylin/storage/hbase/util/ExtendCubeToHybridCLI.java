@@ -42,9 +42,9 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IStorageAware;
-import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -57,7 +57,7 @@ import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * Created by dongli on 12/29/15.
@@ -192,7 +192,7 @@ public class ExtendCubeToHybridCLI {
         // clear segments for old cube
         cubeInstance.setSegments(new Segments<CubeSegment>());
         cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
-        store.putResource(cubeInstance.getResourcePath(), cubeInstance, CubeManager.CUBE_SERIALIZER);
+        store.checkAndPutResource(cubeInstance.getResourcePath(), cubeInstance, CubeManager.CUBE_SERIALIZER);
         logger.info("CubeInstance was saved at: " + cubeInstance.getResourcePath());
 
         // create hybrid model for these two cubes
@@ -200,7 +200,7 @@ public class ExtendCubeToHybridCLI {
         realizationEntries.add(RealizationEntry.create(RealizationType.CUBE, cubeInstance.getName()));
         realizationEntries.add(RealizationEntry.create(RealizationType.CUBE, newCubeInstance.getName()));
         HybridInstance hybridInstance = HybridInstance.create(kylinConfig, renameHybrid(cubeInstance.getName()), realizationEntries);
-        store.putResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
+        store.checkAndPutResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
         ProjectManager.getInstance(kylinConfig).moveRealizationToProject(RealizationType.HYBRID, hybridInstance.getName(), projectName, owner);
         logger.info("HybridInstance was saved at: " + hybridInstance.getResourcePath());
 
@@ -210,16 +210,11 @@ public class ExtendCubeToHybridCLI {
     }
 
     private void verify() {
-        CubeDescManager.clearCache();
+        kylinConfig.clearManagers();
+        
         CubeDescManager.getInstance(kylinConfig);
-
-        CubeManager.clearCache();
         CubeManager.getInstance(kylinConfig);
-
-        ProjectManager.clearCache();
         ProjectManager.getInstance(kylinConfig);
-
-        HybridManager.clearCache();
         HybridManager.getInstance(kylinConfig);
     }
 
@@ -234,7 +229,7 @@ public class ExtendCubeToHybridCLI {
     private void copyAcl(String origCubeId, String newCubeId, String projectName) throws Exception {
         String projectResPath = ProjectInstance.concatResourcePath(projectName);
         Serializer<ProjectInstance> projectSerializer = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
-        ProjectInstance project = store.getResource(projectResPath, ProjectInstance.class, projectSerializer);
+        ProjectInstance project = store.getResource(projectResPath, projectSerializer);
         String projUUID = project.getUuid();
         Table aclHtable = null;
         try {

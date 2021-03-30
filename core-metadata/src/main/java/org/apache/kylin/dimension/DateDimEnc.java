@@ -44,6 +44,22 @@ public class DateDimEnc extends AbstractDateDimEnc implements Serializable {
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
             return new DateDimEnc(args);
         }
+
+        @Override
+        public boolean isValidDimensionEncoding(String encodingName, String[] args) {
+            try {
+                if (args != null && args.length == 1) {
+                    DataType datatype = DataType.getType(args[0]);
+                    if (datatype == null) {
+                        return false;
+                    }
+                }
+            } catch (Exception e) {
+                return false;
+            }
+
+            return true;
+        }
     };
 
     private static class DateDimValueCodec implements IValueCodec {

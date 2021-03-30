@@ -57,7 +57,7 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
 
         @Override
         public MeasureType<List<ByteArray>> createMeasureType(String funcName, DataType dataType) {
-            return new RawMeasureType(funcName, dataType);
+            return new RawMeasureType();
         }
 
         @Override
@@ -76,14 +76,11 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
         }
     }
 
-    @SuppressWarnings("unused")
-    private final DataType dataType;
-
-    public RawMeasureType(String funcName, DataType dataType) {
-        this.dataType = dataType;
+    public RawMeasureType() {
     }
 
-    public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
+    @Override
+    public void validate(FunctionDesc functionDesc) {
         validate(functionDesc.getExpression(), functionDesc.getReturnDataType(), true);
     }
 
@@ -125,6 +122,11 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
                 List<ByteArray> valueList = new ArrayList<ByteArray>(1);
                 valueList.add(key);
                 return valueList;
+            }
+
+            @Override
+            public void reset() {
+
             }
 
             //merge measure dictionary

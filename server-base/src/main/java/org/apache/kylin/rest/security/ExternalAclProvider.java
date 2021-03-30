@@ -19,6 +19,7 @@ package org.apache.kylin.rest.security;
 
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Pair;
@@ -28,46 +29,41 @@ import org.springframework.security.acls.model.Permission;
  */
 abstract public class ExternalAclProvider {
 
-    private static boolean inited = false;
-    private static ExternalAclProvider singleton = null;
+    private volatile static ExternalAclProvider singleton = null;
 
     public static ExternalAclProvider getInstance() {
-        if (inited)
-            return singleton;
-
-        synchronized (ExternalAclProvider.class) {
-            if (inited)
-                return singleton;
-
-            String cls = KylinConfig.getInstanceFromEnv().getExternalAclProvider();
-            if (cls != null && cls.length() > 0) {
-                singleton = (ExternalAclProvider) ClassUtil.newInstance(cls);
-                singleton.init();
+        if (singleton == null) {
+            synchronized (ExternalAclProvider.class) {
+                if (singleton == null) {
+                    String cls = KylinConfig.getInstanceFromEnv().getExternalAclProvider();
+                    if (!StringUtils.isBlank(cls)) {
+                        singleton = (ExternalAclProvider) ClassUtil.newInstance(cls);
+                        singleton.init();
+                    }
+                }
             }
-
-            inited = true;
-            return singleton;
         }
+        return singleton;
     }
 
     // ============================================================================
 
-    public final static String CUBE_ADMIN = "CUBE ADMIN";
-    public final static String CUBE_EDIT = "CUBE EDIT";
-    public final static String CUBE_OPERATION = "CUBE OPERATION";
-    public final static String CUBE_QUERY = "CUBE QUERY";
+    public final static String ADMINISTRATION = "ADMIN";
+    public final static String MANAGEMENT = "MANAGEMENT";
+    public final static String OPERATION = "OPERATION";
+    public final static String READ = "QUERY";
     
     // used by ranger ExternalAclProvider
     public static String transformPermission(Permission p) {
         String permString = null;
         if (AclPermission.ADMINISTRATION.equals(p)) {
-            permString = CUBE_ADMIN;
+            permString = ADMINISTRATION;
         } else if (AclPermission.MANAGEMENT.equals(p)) {
-            permString = CUBE_EDIT;
+            permString = MANAGEMENT;
         } else if (AclPermission.OPERATION.equals(p)) {
-            permString = CUBE_OPERATION;
+            permString = OPERATION;
         } else if (AclPermission.READ.equals(p)) {
-            permString = CUBE_QUERY;
+            permString = READ;
         } else {
             permString = p.getPattern();
         }

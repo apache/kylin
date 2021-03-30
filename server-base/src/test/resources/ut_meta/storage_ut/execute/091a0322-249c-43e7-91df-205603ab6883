@@ -1,0 +1,28 @@
+{
+  "uuid" : "091a0322-249c-43e7-91df-205603ab6883",
+  "last_modified" : 1508913805780,
+  "version" : "2.3.0.20500",
+  "name" : "BUILD CUBE - sample_cube - FULL_BUILD - GMT+08:00 2017-10-25 14:43:25",
+  "tasks" : [ {
+    "uuid" : "091a0322-249c-43e7-91df-205603ab6883-00",
+    "last_modified" : 0,
+    "version" : "2.3.0.20500",
+    "name" : "Create Intermediate Flat Hive Table",
+    "tasks" : null,
+    "type" : "org.apache.kylin.source.hive.CreateFlatHiveTableStep",
+    "params" : {
+      "HiveInit" : "USE default;\n",
+      "HiveRedistributeData" : "DROP TABLE IF EXISTS kylin_intermediate_sample_cube_2838c7fc_722a_48fa_9d1a_8ab37837a952;\nCREATE EXTERNAL TABLE IF NOT EXISTS kylin_intermediate_sample_cube_2838c7fc_722a_48fa_9d1a_8ab37837a952\n(\nSAMPLE_07_DESCRIPTION string\n,SAMPLE_07_TOTAL_EMP int\n,SAMPLE_07_SALARY int\n)\nSTORED AS SEQUENCEFILE\nLOCATION 'hdfs://sandbox.hortonworks.com:8020/kylin/g-dev_kylinmaster_ci_instance/kylin-091a0322-249c-43e7-91df-205603ab6883/kylin_intermediate_sample_cube_2838c7fc_722a_48fa_9d1a_8ab37837a952';\nINSERT OVERWRITE TABLE kylin_intermediate_sample_cube_2838c7fc_722a_48fa_9d1a_8ab37837a952 SELECT\nSAMPLE_07.DESCRIPTION as SAMPLE_07_DESCRIPTION\n,SAMPLE_07.TOTAL_EMP as SAMPLE_07_TOTAL_EMP\n,SAMPLE_07.SALARY as SAMPLE_07_SALARY\nFROM DEFAULT.SAMPLE_07 as SAMPLE_07 \n;\n",
+      "cubeName" : "sample_cube"
+    }
+  } ],
+  "type" : "org.apache.kylin.engine.mr.CubingJob",
+  "params" : {
+    "submitter" : "ADMIN",
+    "envName" : "DEV",
+    "segmentId" : "2838c7fc-722a-48fa-9d1a-8ab37837a123",
+    "notify_list" : "",
+    "projectName" : "default",
+    "cubeName" : "sample_cube"
+  }
+}

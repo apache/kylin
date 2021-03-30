@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.rest.service.UserGrantedAuthority;
@@ -40,7 +41,8 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
@@ -112,6 +114,11 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
         caterLegacy();
     }
 
+    @Override
+    public String resourceName() {
+        return username;
+    }
+
     public String getUsername() {
         return username;
     }
@@ -147,6 +154,24 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
         for (GrantedAuthority grantedAuthority : grantedAuthorities) {
             this.authorities.add(new SimpleGrantedAuthority(grantedAuthority.getAuthority()));
         }
+    }
+
+    public void addAuthorities(String auth) {
+        if (this.authorities == null) {
+            this.authorities = Lists.newArrayList();
+        }
+        authorities.add(new SimpleGrantedAuthority(auth));
+    }
+
+    public void removeAuthorities(String auth) {
+        Preconditions.checkNotNull(this.authorities);
+        authorities.remove(new SimpleGrantedAuthority(auth));
+    }
+
+    public void clearAuthenticateFailedRecord() {
+        this.wrongTime = 0;
+        this.locked = false;
+        this.lockedTime = 0;
     }
 
     public boolean isDisabled() {
@@ -213,28 +238,22 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((username == null) ? 0 : username.hashCode());
-        return result;
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        ManagedUser that = (ManagedUser) o;
+        return disabled == that.disabled && defaultPassword == that.defaultPassword && locked == that.locked
+                && lockedTime == that.lockedTime && wrongTime == that.wrongTime
+                && username.equalsIgnoreCase(that.username) && Objects.equals(password, that.password)
+                && Objects.equals(authorities, that.authorities);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ManagedUser other = (ManagedUser) obj;
-        if (username == null) {
-            if (other.username != null)
-                return false;
-        } else if (!username.equals(other.username))
-            return false;
-        return true;
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), username, password, authorities, disabled, defaultPassword, locked,
+                lockedTime, wrongTime);
     }
 
     @Override

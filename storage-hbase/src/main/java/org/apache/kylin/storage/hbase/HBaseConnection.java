@@ -20,8 +20,10 @@ package org.apache.kylin.storage.hbase;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -47,12 +49,12 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.lock.DistributedLock;
-import org.apache.kylin.common.persistence.StorageException;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  * @author yangli9
@@ -66,7 +68,7 @@ public class HBaseConnection {
 
     private static final Map<StorageURL, Configuration> configCache = new ConcurrentHashMap<StorageURL, Configuration>();
     private static final Map<StorageURL, Connection> connPool = new ConcurrentHashMap<StorageURL, Connection>();
-    private static final ThreadLocal<Configuration> configThreadLocal = new ThreadLocal<>();
+    private static final InternalThreadLocal<Configuration> configThreadLocal = new InternalThreadLocal<>();
 
     private static ExecutorService coprocessorPool = null;
 
@@ -74,14 +76,11 @@ public class HBaseConnection {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                closeCoprocessorPool();
-
-                for (Connection conn : connPool.values()) {
-                    try {
-                        conn.close();
-                    } catch (IOException e) {
-                        logger.error("error closing hbase connection " + conn, e);
-                    }
+                try {
+                    closeCoprocessorPool();
+                    closeAndRestConnPool().join();
+                } catch (InterruptedException e) {
+                    logger.error("", e);
                 }
             }
         });
@@ -128,9 +127,30 @@ public class HBaseConnection {
             coprocessorPool.shutdownNow();
         }
     }
+    
+    private static Thread closeAndRestConnPool() {
+        final List<Connection> copy = new ArrayList<>(connPool.values());
+        connPool.clear();
+        
+        Thread t = new Thread() {
+            public void run() {
+                logger.info("Closing HBase connections...");
+                for (Connection conn : copy) {
+                    try {
+                        conn.close();
+                    } catch (Exception e) {
+                        logger.error("error closing hbase connection " + conn, e);
+                    }
+                }
+            }
+        };
+        t.setName("close-hbase-conn");
+        t.start();
+        return t;
+    }
 
     public static void clearConnCache() {
-        connPool.clear();
+        closeAndRestConnPool();
     }
 
     public static Configuration getCurrentHBaseConfiguration() {
@@ -154,6 +174,14 @@ public class HBaseConnection {
         String hbaseClusterFs = kylinConf.getHBaseClusterFs();
         if (StringUtils.isNotEmpty(hbaseClusterFs)) {
             conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
+        } else {
+            try {
+                FileSystem fs = HadoopUtil.getWorkingFileSystem(HadoopUtil.getCurrentConfiguration());
+                conf.set(FileSystem.FS_DEFAULT_NAME_KEY, fs.getUri().toString());
+                logger.debug("Using the working dir FS for HBase: " + fs.getUri().toString());
+            } catch (IOException e) {
+                logger.error("Fail to set working dir to HBase configuration", e);
+            }
         }
 
         // https://issues.apache.org/jira/browse/KYLIN-953
@@ -210,6 +238,15 @@ public class HBaseConnection {
         return fs.makeQualified(path).toString();
     }
 
+    public static FileSystem getFileSystemInHBaseCluster(String inPath) {
+        Path path = new Path(inPath);
+        path = Path.getPathWithoutSchemeAndAuthority(path);
+
+        FileSystem fs = HadoopUtil.getFileSystem(path, getCurrentHBaseConfiguration()); // Must be HBase's FS, not working FS
+        return fs;
+    }
+
+
     // ============================================================================
 
     // returned Connection can be shared by multiple threads and does not require close()
@@ -241,7 +278,7 @@ public class HBaseConnection {
 
         } catch (Throwable t) {
             logger.error("Error when open connection " + url, t);
-            throw new StorageException("Error when open connection " + url, t);
+            throw new RuntimeException("Error when open connection " + url, t);
         }
 
         return connection;

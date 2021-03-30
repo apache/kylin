@@ -23,8 +23,11 @@ import static org.junit.Assert.assertTrue;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -32,6 +35,7 @@ import java.util.Random;
 import java.util.UUID;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.dict.ByteComparator;
 import org.apache.kylin.dict.BytesConverter;
 import org.apache.kylin.dict.IDictionaryValueEnumerator;
@@ -84,7 +88,7 @@ public class SortedColumnReaderTest extends LocalFileMetadataTestCase {
         ArrayList<String> data = new ArrayList<>();
         int num = 10000;
         for (int i = 0; i < num; i++) {
-            UUID uuid = UUID.randomUUID();
+            UUID uuid = RandomUtil.randomUUID();
             data.add(uuid.toString());
         }
         Collections.sort(data, new ByteComparator<String>(new StringBytesConverter()));
@@ -99,7 +103,7 @@ public class SortedColumnReaderTest extends LocalFileMetadataTestCase {
         }
         ArrayList<BufferedWriter> bws = new ArrayList<>();
         for (File f : allFiles) {
-            bws.add(new BufferedWriter(new FileWriter(f)));
+            bws.add(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8)));
         }
         System.out.println(data.size());
         for (String str : data) {
@@ -204,7 +208,7 @@ public class SortedColumnReaderTest extends LocalFileMetadataTestCase {
         }
         ArrayList<BufferedWriter> bws = new ArrayList<>();
         for (File f : allFiles) {
-            bws.add(new BufferedWriter(new FileWriter(f)));
+            bws.add(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8)));
         }
         System.out.println(data.size());
         for (String str : data) {
@@ -277,7 +281,7 @@ public class SortedColumnReaderTest extends LocalFileMetadataTestCase {
         }
         ArrayList<BufferedWriter> bws = new ArrayList<>();
         for (File f : allFiles) {
-            bws.add(new BufferedWriter(new FileWriter(f)));
+            bws.add(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8)));
         }
         System.out.println(data.size());
         for (String str : data) {
@@ -301,7 +305,8 @@ public class SortedColumnReaderTest extends LocalFileMetadataTestCase {
         ArrayList<String> result = new ArrayList<>();
         File dir = new File(dirPath);
         for (File f : dir.listFiles()) {
-            BufferedReader br = new BufferedReader(new FileReader(f));
+            BufferedReader br = new BufferedReader(
+                    new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8));
             String str = br.readLine();
             while (str != null) {
                 result.add(str);

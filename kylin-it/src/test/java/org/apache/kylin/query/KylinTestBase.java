@@ -18,6 +18,8 @@
 
 package org.apache.kylin.query;
 
+import static org.apache.calcite.sql.SqlDialect.CALCITE;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,20 +40,27 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.LogManager;
 
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
 import org.apache.kylin.query.util.PushDownUtil;
+import org.apache.parquet.Strings;
 import org.dbunit.DatabaseUnitException;
 import org.dbunit.database.DatabaseConfig;
 import org.dbunit.database.DatabaseConnection;
@@ -69,12 +78,16 @@ import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Files;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableSet;
+import org.apache.kylin.shaded.com.google.common.io.Files;
 
 /**
  */
 public class KylinTestBase {
+
+    static {
+        System.setProperty("needCheckCC", "true");
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(KylinTestBase.class);
     public static boolean PRINT_RESULT = false;
@@ -157,7 +170,7 @@ public class KylinTestBase {
         System.out.println(folder.getAbsolutePath());
         Set<File> set = new TreeSet<>(new FileByNameComparator());
         for (final File fileEntry : folder.listFiles()) {
-            if (fileEntry.getName().toLowerCase().endsWith(fileType.toLowerCase())) {
+            if (fileEntry.getName().toLowerCase(Locale.ROOT).endsWith(fileType.toLowerCase(Locale.ROOT))) {
                 set.add(fileEntry);
             }
         }
@@ -226,6 +239,8 @@ public class KylinTestBase {
 
     protected ITable executeQuery(IDatabaseConnection dbConn, String queryName, String sql, boolean needSort)
             throws Exception {
+        QueryContextFacade.resetCurrent();
+        QueryContextFacade.current().setProject(ProjectInstance.DEFAULT_PROJECT_NAME);
 
         // change join type to match current setting
         sql = changeJoinType(sql, joinType);
@@ -246,6 +261,8 @@ public class KylinTestBase {
     }
 
     protected int executeQuery(String sql, boolean needDisplay) throws Exception {
+        QueryContextFacade.resetCurrent();
+        QueryContextFacade.current().setProject(ProjectInstance.DEFAULT_PROJECT_NAME);
 
         // change join type to match current setting
         sql = changeJoinType(sql, joinType);
@@ -260,8 +277,9 @@ public class KylinTestBase {
 
             return output(resultSet, needDisplay);
         } catch (SQLException sqlException) {
-            Pair<List<List<String>>, List<SelectedColumnMeta>> result = PushDownUtil
-                    .tryPushDownSelectQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", sqlException);
+            Pair<List<List<String>>, List<SelectedColumnMeta>> result = PushDownUtil.tryPushDownSelectQuery(
+                    ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", sqlException,
+                    BackdoorToggles.getPrepareOnly(), null);
             if (result == null) {
                 throw sqlException;
             }
@@ -284,8 +302,22 @@ public class KylinTestBase {
         }
     }
 
+    protected Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownSelectQuery(String sql) throws Exception {
+        SQLException mockException = new SQLException("", new NoRealizationFoundException(""));
+
+        return PushDownUtil.tryPushDownSelectQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", mockException,
+                BackdoorToggles.getPrepareOnly(), null);
+    }
+
+    protected Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownNonSelectQuery(String sql,
+            boolean isPrepare) throws Exception {
+        return PushDownUtil.tryPushDownNonSelectQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", isPrepare);
+    }
+
     protected ITable executeDynamicQuery(IDatabaseConnection dbConn, String queryName, String sql,
             List<String> parameters, boolean needSort) throws Exception {
+        QueryContextFacade.resetCurrent();
+        QueryContextFacade.current().setProject(ProjectInstance.DEFAULT_PROJECT_NAME);
 
         // change join type to match current setting
         sql = changeJoinType(sql, joinType);
@@ -323,7 +355,7 @@ public class KylinTestBase {
         for (int i = 0; i < tokens.length - 1; ++i) {
             if ((tokens[i].equalsIgnoreCase("inner") || tokens[i].equalsIgnoreCase("left"))
                     && tokens[i + 1].equalsIgnoreCase("join")) {
-                tokens[i] = targetType.toLowerCase();
+                tokens[i] = targetType.toLowerCase(Locale.ROOT);
             }
         }
 
@@ -482,7 +514,7 @@ public class KylinTestBase {
             String sql = getTextFromFile(sqlFile);
 
             String sqlWithLimit;
-            if (sql.toLowerCase().contains("limit ")) {
+            if (sql.toLowerCase(Locale.ROOT).contains("limit ")) {
                 sqlWithLimit = sql;
             } else {
                 sqlWithLimit = sql + " limit 5";
@@ -524,6 +556,70 @@ public class KylinTestBase {
                 }
             }
         });
+    }
+
+
+    protected void execAndCompPlan(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
+        execAndCompPlan(queryFolder, exclusiveQuerys, needSort, new ICompareQueryTranslator() {
+            @Override
+            public String transform(File f) {
+                try {
+                    return KylinTestBase.getTextFromFile(f);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+    }
+
+    protected void execAndCompPlan(String queryFolder, String[] exclusiveQuerys, boolean needSort,
+            ICompareQueryTranslator translator) throws Exception {
+        logger.info("---------- test folder: " + new File(queryFolder).getAbsolutePath());
+        Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
+
+        List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
+        for (File sqlFile : sqlFiles) {
+            String queryName = StringUtils.split(sqlFile.getName(), '.')[0];
+            if (exclusiveSet.contains(queryName)) {
+                continue;
+            }
+            String sql1 = getTextFromFile(sqlFile);
+            String sql2 = translator.transform(sqlFile);
+
+            // execute Kylin
+            logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
+            IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
+            ITable kylinTable = executeQuery(kylinConn, queryName, sql1, needSort);
+            RelNode calcitePlan = (RelNode) QueryContextFacade.current().getCalcitePlan();
+            if (calcitePlan == null)
+                throw new NullPointerException();
+
+            // execute H2
+            logger.info("Query Result from H2 - " + queryName);
+            long currentTime = System.currentTimeMillis();
+            ITable h2Table = executeQuery(newH2Connection(), queryName, sql2, needSort);
+            logger.info("H2 spent " + (System.currentTimeMillis() - currentTime) + " mili-seconds.");
+
+            try {
+                // compare the result
+                assertTableEquals(h2Table, kylinTable);
+            } catch (Throwable t) {
+                logger.info("execAndCompQuery failed on: " + sqlFile.getAbsolutePath());
+                throw t;
+            }
+
+            RelToSqlConverter converter = new RelToSqlConverter(CALCITE);
+            SqlNode sqlNode = converter.visitChild(0, calcitePlan.getInput(0)).asStatement();
+            String optimizedSQL = sqlNode.toSqlString(CALCITE).getSql();
+            String expectedSQL = Strings.join(Files.readLines(
+                    new File(sqlFile.getParent(), sqlFile.getName() + ".expected"), Charset.forName("utf-8")), "\n");
+            Assert.assertEquals(expectedSQL, optimizedSQL);
+            compQueryCount++;
+            if (kylinTable.getRowCount() == 0) {
+                zeroResultQueries.add(sql1);
+            }
+        }
     }
 
     protected void execAndCompQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort,
@@ -691,7 +787,7 @@ public class KylinTestBase {
 
         //setup cube conn
         String project = ProjectInstance.DEFAULT_PROJECT_NAME;
-        cubeConnection = QueryDataSource.create(project, config).getConnection();
+        cubeConnection = QueryConnection.getConnection(project);
 
         //setup h2
         h2Connection = DriverManager.getConnection("jdbc:h2:mem:db" + (h2InstanceCount++) + ";CACHE_SIZE=32072", "sa",

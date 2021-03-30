@@ -122,7 +122,6 @@ KylinApp
     }
   }).filter('utcToConfigTimeZone', function ($filter, kylinConfig) {
 
-    var gmttimezone;
     //convert GMT+0 time to specified Timezone
     return function (item, timezone, format) {
 
@@ -132,39 +131,24 @@ KylinApp
       }
 
       if (angular.isUndefined(timezone) || timezone === '') {
-        timezone = kylinConfig.getTimeZone() == "" ? 'PST' : kylinConfig.getTimeZone();
+        timezone = kylinConfig.getTimeZone() == "" ? 'UTC' : kylinConfig.getTimeZone();
       }
+
       if (angular.isUndefined(format) || format === '') {
-        format = "yyyy-MM-dd HH:mm:ss";
+        format = "YYYY-MM-DD HH:mm:ss z";
       }
 
-      //convert short name timezone to GMT
-      switch (timezone) {
-        //convert PST to GMT
-        case "PST":
-          gmttimezone = "GMT-8";
-          break;
-        default:
-          gmttimezone = timezone;
+      var time = "";
+      if(timezone.indexOf("GMT")!=-1){
+          var zone = timezone;
+          var offset = parseInt(timezone.substr(3, 2));
+          time = moment(item).utc().zone(-offset).format("YYYY-MM-DD HH:mm:ss ") + zone;
+      }else if(moment.tz.zone(timezone) != null){
+          time = moment(item).tz(timezone).format(format);
+      }else{
+          time = moment(item).utc().format(format);
       }
-
-      var localOffset = new Date().getTimezoneOffset();
-      var convertedMillis = item;
-      if (gmttimezone.indexOf("GMT+") != -1) {
-        var offset = gmttimezone.substr(4, 1);
-        convertedMillis = new Date(item).getTime() + offset * 60 * 60000 + localOffset * 60000;
-      }
-      else if (gmttimezone.indexOf("GMT-") != -1) {
-        var offset = gmttimezone.substr(4, 1);
-        convertedMillis = new Date(item).getTime() - offset * 60 * 60000 + localOffset * 60000;
-      }
-      else {
-        // return PST by default
-        timezone = "PST";
-        convertedMillis = new Date(item).getTime() - 8 * 60 * 60000 + localOffset * 60000;
-      }
-      return $filter('date')(convertedMillis, format) + " " + timezone;
-
+      return time;
     }
   }).filter('reverseToGMT0', function ($filter) {
     //backend store GMT+0 timezone ,by default front will show local,so convert to GMT+0 Date String format
@@ -241,6 +225,27 @@ KylinApp
         }
       });
       return out;
+    }
+  }).filter('startCase', function($filter) {
+    return function (item) {
+      var words = item.split(' ');
+      var formatWord = '';
+      angular.forEach(words, function(word, ind) {
+        formatWord += ' ' + word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      return formatWord.slice(1);
+    };
+  }).filter('formatCubeName', function($filter) {
+    return function(item) {
+      var cubeArr = item.split(',');
+      var formatCubeName = '';
+      angular.forEach(cubeArr, function(cubeName, ind) {
+        if (ind != 0) {
+          formatCubeName += ' ';
+        }
+        formatCubeName += cubeName.split('[name=')[1].match(/[^&]*.(?=])/);
+      });
+      return formatCubeName;
     }
   });
 

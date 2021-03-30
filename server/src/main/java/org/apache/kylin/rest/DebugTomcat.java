@@ -18,10 +18,6 @@
 
 package org.apache.kylin.rest;
 
-import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-
 import org.apache.catalina.Context;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.catalina.core.StandardServer;
@@ -29,17 +25,28 @@ import org.apache.catalina.deploy.ErrorPage;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KylinConfig;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 public class DebugTomcat {
 
     public static void setupDebugEnv() {
         try {
+            System.setProperty("HADOOP_USER_NAME", "root");
             System.setProperty("log4j.configuration", "file:../build/conf/kylin-tools-log4j.properties");
 
             // test_case_data/sandbox/ contains HDP 2.2 site xmls which is dev sandbox
             KylinConfig.setSandboxEnvIfPossible();
+            // Must set SandboxEnv before checking the Kerberos status
+            if (UserGroupInformation.isSecurityEnabled()) {
+                authKrb5();
+            }
             overrideDevJobJarLocations();
 
             System.setProperty("spring.profiles.active", "testing");
@@ -97,6 +104,17 @@ public class DebugTomcat {
             }
         }
         return null;
+    }
+
+    public static void authKrb5() {
+        // The system property "java.security.krb5.conf" should be set
+        try {
+            UserGroupInformation.loginUserFromKeytab(
+                    System.getProperty("java.security.krb5.principal"),
+                    System.getProperty("java.security.krb5.keytab"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) throws Exception {

@@ -56,7 +56,7 @@ public class HadoopJobStatusChecker {
             }
         } catch (Exception e) {
             logger.error("error check status", e);
-            output.append("Exception: " + e.getLocalizedMessage() + "\n");
+            output.append("Exception: ").append(e.getLocalizedMessage()).append("\n");
             status = JobStepStatusEnum.ERROR;
         }
 

@@ -21,33 +21,63 @@ package org.apache.kylin.metadata.project;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.realization.RealizationType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Predicate;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
+import org.apache.kylin.shaded.com.google.common.collect.Iterables;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * Project is a concept in Kylin similar to schema in DBMS
  */
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class ProjectInstance extends RootPersistentEntity {
+public class ProjectInstance extends RootPersistentEntity implements ISourceAware {
 
     public static final String DEFAULT_PROJECT_NAME = "default";
+
+    public static ProjectInstance create(String name, String owner, String description, LinkedHashMap<String, String> overrideProps, List<RealizationEntry> realizationEntries, List<String> models) {
+        ProjectInstance projectInstance = new ProjectInstance();
+
+        projectInstance.updateRandomUuid();
+        projectInstance.setName(name);
+        projectInstance.setOwner(owner);
+        projectInstance.setDescription(description);
+        projectInstance.setStatus(ProjectStatusEnum.ENABLED);
+        projectInstance.setCreateTimeUTC(System.currentTimeMillis());
+        projectInstance.setOverrideKylinProps(overrideProps);
+
+        if (realizationEntries != null)
+            projectInstance.setRealizationEntries(realizationEntries);
+        else
+            projectInstance.setRealizationEntries(Lists.<RealizationEntry> newArrayList());
+        if (models != null)
+            projectInstance.setModels(models);
+        else
+            projectInstance.setModels(new ArrayList<String>());
+        return projectInstance;
+    }
+
+    // ============================================================================
+
+    private KylinConfigExt config;
 
     @JsonProperty("name")
     private String name;
@@ -84,51 +114,44 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private LinkedHashMap<String, String> overrideKylinProps;
 
+    public void init() {
+        if (name == null)
+            name = ProjectInstance.DEFAULT_PROJECT_NAME;
+
+        if (realizationEntries == null) {
+            realizationEntries = new ArrayList<RealizationEntry>();
+        }
+
+        if (tables == null)
+            tables = new TreeSet<String>();
+
+        if (overrideKylinProps == null) {
+            overrideKylinProps = new LinkedHashMap<>();
+        }
+
+        initConfig();
+
+        if (StringUtils.isBlank(this.name))
+            throw new IllegalStateException("Project name must not be blank");
+    }
+
+    private void initConfig() {
+        this.config = KylinConfigExt.createInstance(KylinConfig.getInstanceFromEnv(), this.overrideKylinProps);
+    }
+
     public String getResourcePath() {
-        return concatResourcePath(name);
+        return concatResourcePath(resourceName());
     }
 
     public static String concatResourcePath(String projectName) {
         return ResourceStore.PROJECT_RESOURCE_ROOT + "/" + projectName + ".json";
     }
 
-    public static String getNormalizedProjectName(String project) {
-        if (project == null)
-            throw new IllegalStateException("Trying to normalized a project name which is null");
-
-        return project.toUpperCase();
+    @Override
+    public String resourceName() {
+        return this.name;
     }
-
-    public static ProjectInstance create(String name, String owner, String description, LinkedHashMap<String, String> overrideProps, List<RealizationEntry> realizationEntries, List<String> models) {
-        ProjectInstance projectInstance = new ProjectInstance();
-
-        projectInstance.updateRandomUuid();
-        projectInstance.setName(name);
-        projectInstance.setOwner(owner);
-        projectInstance.setDescription(description);
-        projectInstance.setStatus(ProjectStatusEnum.ENABLED);
-        projectInstance.setCreateTimeUTC(System.currentTimeMillis());
-        if (overrideProps != null) {
-            projectInstance.setOverrideKylinProps(overrideProps);
-        } else {
-            projectInstance.setOverrideKylinProps(new LinkedHashMap<String, String>());
-        }
-        if (realizationEntries != null)
-            projectInstance.setRealizationEntries(realizationEntries);
-        else
-            projectInstance.setRealizationEntries(Lists.<RealizationEntry> newArrayList());
-        if (models != null)
-            projectInstance.setModels(models);
-        else
-            projectInstance.setModels(new ArrayList<String>());
-        return projectInstance;
-    }
-
-    // ============================================================================
-
-    public ProjectInstance() {
-    }
-
+    
     public String getDescription() {
         return description;
     }
@@ -220,11 +243,11 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     public boolean containsTable(String tableName) {
-        return tables.contains(tableName.toUpperCase());
+        return tables.contains(tableName.toUpperCase(Locale.ROOT));
     }
 
     public void removeTable(String tableName) {
-        tables.remove(tableName.toUpperCase());
+        tables.remove(tableName.toUpperCase(Locale.ROOT));
     }
 
     public void addExtFilter(String extFilterName) {
@@ -235,12 +258,8 @@ public class ProjectInstance extends RootPersistentEntity {
         extFilters.remove(filterName);
     }
 
-    public int getTablesCount() {
-        return this.getTables().size();
-    }
-
     public void addTable(String tableName) {
-        this.getTables().add(tableName.toUpperCase());
+        tables.add(tableName.toUpperCase(Locale.ROOT));
     }
 
     public Set<String> getTables() {
@@ -301,26 +320,19 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     void setOverrideKylinProps(LinkedHashMap<String, String> overrideKylinProps) {
-        this.overrideKylinProps = overrideKylinProps;
-    }
-
-    public void init() {
-        if (name == null)
-            name = ProjectInstance.DEFAULT_PROJECT_NAME;
-
-        if (realizationEntries == null) {
-            realizationEntries = new ArrayList<RealizationEntry>();
-        }
-
-        if (tables == null)
-            tables = new TreeSet<String>();
-
         if (overrideKylinProps == null) {
             overrideKylinProps = new LinkedHashMap<>();
         }
+        this.overrideKylinProps = overrideKylinProps;
+        initConfig();
+    }
 
-        if (StringUtils.isBlank(this.name))
-            throw new IllegalStateException("Project name must not be blank");
+    public KylinConfig getConfig() {
+        return config;
+    }
+
+    public void setConfig(KylinConfigExt config) {
+        this.config = config;
     }
 
     @Override
@@ -328,4 +340,8 @@ public class ProjectInstance extends RootPersistentEntity {
         return "ProjectDesc [name=" + name + "]";
     }
 
+    @Override
+    public int getSourceType() {
+        return getConfig().getDefaultSource();
+    }
 }

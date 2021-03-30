@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,8 +39,13 @@ import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.ServerMode;
 import org.apache.kylin.rest.security.AclConstant;
 import org.apache.kylin.rest.security.ManagedUser;
+import org.apache.kylin.rest.security.springacl.AclRecord;
+import org.apache.kylin.rest.security.springacl.LegacyAceInfo;
+import org.apache.kylin.rest.security.springacl.ObjectIdentityImpl;
+import org.apache.kylin.rest.security.springacl.SidInfo;
 import org.apache.kylin.rest.util.Serializer;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.HBaseResourceStore;
@@ -53,10 +59,10 @@ public class AclTableMigrationTool {
 
     private static final Serializer<SidInfo> sidSerializer = new Serializer<SidInfo>(SidInfo.class);
 
-    private static final Serializer<DomainObjectInfo> domainObjSerializer = new Serializer<DomainObjectInfo>(
-            DomainObjectInfo.class);
+    private static final Serializer<ObjectIdentityImpl> domainObjSerializer = new Serializer<ObjectIdentityImpl>(
+            ObjectIdentityImpl.class);
 
-    private static final Serializer<AceInfo> aceSerializer = new Serializer<AceInfo>(AceInfo.class);
+    private static final Serializer<LegacyAceInfo> aceSerializer = new Serializer<LegacyAceInfo>(LegacyAceInfo.class);
 
     private static final Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(
             UserGrantedAuthority[].class);
@@ -70,7 +76,7 @@ public class AclTableMigrationTool {
             logger.info("Do not need to migrate acl table data");
             return;
         } else {
-            if (!kylinConfig.getServerMode().equals("all")) {
+            if (!ServerMode.SERVER_MODE.canServeAll()) {
                 throw new IllegalStateException(
                         "Please make sure that you have config kylin.server.mode=all before migrating data");
             }
@@ -124,13 +130,13 @@ public class AclTableMigrationTool {
                     Result result = rs.next();
                     while (result != null) {
                         AclRecord record = new AclRecord();
-                        DomainObjectInfo object = getDomainObjectInfoFromRs(result);
+                        ObjectIdentityImpl object = getDomainObjectInfoFromRs(result);
                         record.setDomainObjectInfo(object);
                         record.setParentDomainObjectInfo(getParentDomainObjectInfoFromRs(result));
                         record.setOwnerInfo(getOwnerSidInfo(result));
                         record.setEntriesInheriting(getInheriting(result));
                         record.setAllAceInfo(getAllAceInfo(result));
-                        store.putResourceWithoutCheck(AclService.getQueryKeyById(object.getId()), record,
+                        store.putResource(AclService.resourceKey(object.getId()), record,
                                 System.currentTimeMillis(), AclService.SERIALIZER);
                         result = rs.next();
                     }
@@ -148,8 +154,8 @@ public class AclTableMigrationTool {
                     Result result = rs.next();
                     while (result != null) {
                         ManagedUser user = hbaseRowToUser(result);
-                        store.putResourceWithoutCheck(UserService.getId(user.getUsername()), user,
-                                System.currentTimeMillis(), UserService.SERIALIZER);
+                        store.putResource(KylinUserService.getId(user.getUsername()), user,
+                                System.currentTimeMillis(), KylinUserService.SERIALIZER);
                         result = rs.next();
                     }
                 }
@@ -183,7 +189,7 @@ public class AclTableMigrationTool {
             table = HBaseConnection.get(kylinConfig.getStorageUrl()).getTable(TableName.valueOf(tableName));
             rs = table.getScanner(scan);
             converter.convertResult(rs, store);
-            store.putResource(MIGRATE_OK_PREFIX + tableName, new StringEntity(tableName + " migrated"),
+            store.checkAndPutResource(MIGRATE_OK_PREFIX + tableName, new StringEntity(tableName + " migrated"),
                     StringEntity.serializer);
         } finally {
             IOUtils.closeQuietly(rs);
@@ -192,18 +198,16 @@ public class AclTableMigrationTool {
 
     }
 
-    private DomainObjectInfo getDomainObjectInfoFromRs(Result result) {
+    private ObjectIdentityImpl getDomainObjectInfoFromRs(Result result) {
         String type = new String(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY),
-                Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_TYPE_COLUMN)));
-        String id = new String(result.getRow());
-        DomainObjectInfo newInfo = new DomainObjectInfo();
-        newInfo.setId(id);
-        newInfo.setType(type);
+                Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_TYPE_COLUMN)), StandardCharsets.UTF_8);
+        String id = new String(result.getRow(), StandardCharsets.UTF_8);
+        ObjectIdentityImpl newInfo = new ObjectIdentityImpl(type, id);
         return newInfo;
     }
 
-    private DomainObjectInfo getParentDomainObjectInfoFromRs(Result result) throws IOException {
-        DomainObjectInfo parentInfo = domainObjSerializer.deserialize(result.getValue(
+    private ObjectIdentityImpl getParentDomainObjectInfoFromRs(Result result) throws IOException {
+        ObjectIdentityImpl parentInfo = domainObjSerializer.deserialize(result.getValue(
                 Bytes.toBytes(AclConstant.ACL_INFO_FAMILY), Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_PARENT_COLUMN)));
         return parentInfo;
     }
@@ -220,14 +224,14 @@ public class AclTableMigrationTool {
         return owner;
     }
 
-    private Map<String, AceInfo> getAllAceInfo(Result result) throws IOException {
-        Map<String, AceInfo> allAceInfoMap = new HashMap<>();
+    private Map<String, LegacyAceInfo> getAllAceInfo(Result result) throws IOException {
+        Map<String, LegacyAceInfo> allAceInfoMap = new HashMap<>();
         NavigableMap<byte[], byte[]> familyMap = result.getFamilyMap(Bytes.toBytes(AclConstant.ACL_ACES_FAMILY));
 
         if (familyMap != null && !familyMap.isEmpty()) {
             for (Map.Entry<byte[], byte[]> entry : familyMap.entrySet()) {
-                String sid = new String(entry.getKey());
-                AceInfo aceInfo = aceSerializer.deserialize(entry.getValue());
+                String sid = new String(entry.getKey(), StandardCharsets.UTF_8);
+                LegacyAceInfo aceInfo = aceSerializer.deserialize(entry.getValue());
                 if (null != aceInfo) {
                     allAceInfoMap.put(sid, aceInfo);
                 }

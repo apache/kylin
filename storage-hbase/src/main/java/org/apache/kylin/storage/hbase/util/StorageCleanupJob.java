@@ -251,13 +251,13 @@ public class StorageCleanupJob extends AbstractApplication {
         final KylinConfig config = KylinConfig.getInstanceFromEnv();
         final CliCommandExecutor cmdExec = config.getCliCommandExecutor();
         final int uuidLength = 36;
-        final String preFix = "kylin_intermediate_";
+        final String preFix = config.getHiveIntermediateTablePrefix();
         final String uuidPattern = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
         final String useDatabaseHql = "USE " + config.getHiveDatabaseForIntermediateTable() + ";";
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         hiveCmdBuilder.addStatement(useDatabaseHql);
-        hiveCmdBuilder.addStatement("show tables " + "\'kylin_intermediate_*\'" + "; ");
+        hiveCmdBuilder.addStatement("show tables " + "\'" + preFix + "*\'" + "; ");
 
         Pair<Integer, String> result = cmdExec.execute(hiveCmdBuilder.build());
 

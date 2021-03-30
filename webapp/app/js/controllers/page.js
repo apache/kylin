@@ -18,15 +18,41 @@
 
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $location, $rootScope, $routeParams, $http, UserService, ProjectService, SweetAlert, $cookieStore, $log, kylinConfig, ProjectModel, TableModel) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $location, $rootScope, $routeParams, $http, UserService, ProjectService, SweetAlert, $cookieStore, $log, kylinConfig, ProjectModel, TableModel, JobList) {
 
   //init kylinConfig to get kylin.Propeties
   kylinConfig.init().$promise.then(function (data) {
     $log.debug(data);
     kylinConfig.initWebConfigInfo();
+    $rootScope.isShowCubeplanner = kylinConfig.getProperty('kylin.cube.cubeplanner.enabled') === 'true';
+    $rootScope.isShowDashboard = kylinConfig.getProperty('kylin.web.dashboard-enabled') === 'true';
+    JobList.jobFilter.timeFilterId = kylinConfig.getJobTimeFilterId();
   });
   $rootScope.userAction = {
     'islogout': false
+  }
+
+  $scope.showHelpInfo = function (helpName) {
+    if (helpName === 'aboutKylin') {
+      $scope.showAboutKylinDialog()
+    }
+  }
+  var aboutKylinCtr = function ($scope, AdminService, $modalInstance) {
+    $scope.cancel = function () {
+      $modalInstance.dismiss('cancel');
+    }
+    AdminService.getVersionInfo({}, function(versionInfo){
+      $scope.versionInfo = versionInfo || {}
+    })
+  }
+  $scope.showAboutKylinDialog = function () {
+    $modal.open({
+      templateUrl: 'aboutKylin.html',
+      controller: aboutKylinCtr,
+      windowClass: 'modal-about-kylin',
+      resolve: {
+      }
+    });
   }
   $scope.kylinConfig = kylinConfig;
 
@@ -49,9 +75,16 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
   // Set up common methods
   $scope.logout = function () {
     ProjectModel.clear();
+    JobList.clearJobFilter();
     $rootScope.userAction.islogout = true;
+    var logoutURL = Config.service.base;
+    if(kylinConfig.getProperty('kylin.security.profile') === 'saml') {
+      logoutURL += 'saml/logout';
+    } else {
+      logoutURL += 'j_spring_security_logout';
+    }
     $scope.$emit('event:logoutRequest');
-    $http.get(Config.service.base + 'j_spring_security_logout').success(function () {
+    $http.get(logoutURL).success(function () {
       UserService.setCurUser({});
       $scope.username = $scope.password = null;
       $location.path('/login');
@@ -88,20 +121,33 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
   };
 
   // common acl methods
-  $scope.hasPermission = function (entity) {
+  $scope.hasPermission = function (accessType, entity) {
     var curUser = UserService.getCurUser();
     if (!curUser.userDetails) {
       return curUser;
     }
-
     var hasPermission = false;
     var masks = [];
-    for (var i = 1; i < arguments.length; i++) {
+    for (var i = 2; i < arguments.length; i++) {
       if (arguments[i]) {
         masks.push(arguments[i]);
       }
     }
-
+    var project = ''
+    var projectAccesses = ProjectModel.projects || []
+    if (accessType === 'cube') {
+      project = entity.project
+    } else if (accessType === 'project') {
+      project = entity && entity.name || entity.selectedProject
+    } else if (accessType === 'model') {
+      project =  ProjectModel.getProjectByCubeModel(entity.name)
+    }
+    for(var i = 0;i<projectAccesses.length;i++){
+      if(projectAccesses[i].name === project) {
+        entity = projectAccesses[i]
+        break;
+      }
+    }
     if (entity) {
       angular.forEach(entity.accessEntities, function (acessEntity, index) {
         if (masks.indexOf(acessEntity.permission.mask) != -1) {
@@ -130,6 +176,9 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
 
   // Compute data size so as to auto convert to KB/MB/GB/TB)
   $scope.dataSize = function (data) {
+    if(!data){
+      return '0 KB';
+    }
     var size;
     if (data / 1024 / 1024 / 1024 / 1024 >= 1) {
       size = (data / 1024 / 1024 / 1024 / 1024).toFixed(2) + ' TB';
@@ -188,7 +237,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
 
 });
 
-var projCtrl = function ($scope, $location, $modalInstance, ProjectService, MessageService, projects, project, SweetAlert, ProjectModel, $cookieStore, $route, $timeout) {
+var projCtrl = function ($scope, $location, $modalInstance, ProjectService, MessageService, projects, project, SweetAlert, ProjectModel, $cookieStore, $route, $timeout, MessageBox) {
   $scope.state = {
     isEdit: false,
     oldProjName: null,
@@ -224,7 +273,7 @@ var projCtrl = function ($scope, $location, $modalInstance, ProjectService, Mess
 	delete $scope.proj.override_kylin_properties[""];
     if ($scope.state.isEdit) {
       ProjectService.update({}, {formerProjectName: $scope.state.oldProjName, projectDescData: angular.toJson($scope.proj)}, function (newProj) {
-        SweetAlert.swal('Success!', 'Project update successfully!', 'success');
+        MessageBox.successNotify('Project update successfully!');
 
         //update project in project model
         ProjectModel.updateProject($scope.proj.name, $scope.state.oldProjName);
@@ -245,12 +294,7 @@ var projCtrl = function ($scope, $location, $modalInstance, ProjectService, Mess
       ProjectService.save({}, {projectDescData: angular.toJson($scope.proj)}, function (newProj) {
         $modalInstance.dismiss('cancel');
         $cookieStore.put("project", newProj.name);
-        SweetAlert.swal({
-          title: "Success!",
-          text: "New project created successfully!",
-          confirmButtonClass: 'btn-primary',
-          type: "success"
-        },function(){
+        MessageBox.successAlert("New project created successfully!", function(){
           location.reload();
         });
 

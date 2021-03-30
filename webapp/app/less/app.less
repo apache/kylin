@@ -238,6 +238,25 @@ table .radio {
 
 .cube-detail {
   background-color: white;
+  .cube-segment-list {
+    margin-bottom:10px;
+    padding: 4px 8px;
+    border:solid 1px #ddd;
+    ul {
+      li {
+        font-weight: 500;
+        span {
+          font-weight: normal;
+        }
+      }
+    }
+    &.cube-broken-segment {
+      color:#808080;
+      opacity: 0.6;
+      border-color: #808080;
+      border-style: dashed;
+    }
+  }
 }
 
 .model-detail {
@@ -322,6 +341,19 @@ body .modal-dialog {
   /* place center */
   margin-left: auto;
   margin-right: auto;
+  .fa {
+    &.fa-close {
+      float: left;
+      position: absolute;
+      right: 20px;
+      top: 0;
+      /* font-weight: 200; */
+      line-height: 70px;
+      color: grey;
+      cursor: pointer;
+      font-weight: lighter;
+    }
+  }
 }
 
 pre {
@@ -841,4 +873,316 @@ pre {
   white-space: -pre-wrap;
   white-space: -o-pre-wrap;
   word-wrap: break-word;
+}
+/* dashboard page style*/
+.square {
+  border: 2px solid #ddd;
+  text-align: center;
+  width: 215px;
+  height: 170px;
+  cursor: zoom-in;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  .title {
+    font-size: 22px;
+    height: 60px;
+  }
+  .metric {
+    font-size: 35px ;
+    font-weight: bolder;
+    color: #8b1;
+    display: inline-block;
+    white-space: nowrap;
+    .unit {
+      font-size: 16px;
+    }
+  }
+  .description {
+    font-size: 15px;
+    color: #6a6a6a;
+    display: block;
+  }
+}
+.square-active {
+  border: 2px solid #6a6a6a;
+}
+.square-big {
+  border: 5px solid #ddd;
+  text-align: center;
+  width: 165px;
+  height: 240px;
+  padding: 20px 0;
+  margin-bottom: 20px;
+  .title {
+    font-size: 24px;
+    height: 55px;
+  }
+  .metric {
+    padding: 15px 0;
+    font-size: 50px ;
+    font-weight: bolder;
+    height: 100px;
+    color: #06d;
+    .unit {
+      font-size: 35px;
+    }
+  }
+  .description {
+    font-size: 18px;
+    color: #6a6a6a;
+  }
+}
+/* cube planner*/
+.cube-planner-column {
+  margin: 0 60px;
+  table {
+    border: 0;
+    tr {
+      font-weight: bolder;
+      color: #EEEEEE;
+      th {
+        text-align: center;
+        vertical-align: middle;
+        width: 20%;
+        padding: 2px;
+      }
+      .column-in-cuobid {
+        color: #9E9E9E;
+        font-weight: bolder;
+      }
+      .column-not-in-cuboid {
+        color: #EEEEEE;
+        font-weight: bolder;
+      }
+    }
+  }
+}
+/*query page cube popover*/
+div[title="Cube Info Detail"].popover {
+  max-width: 1024px;
+  with: min-content;
+}
+/*snapshot usage info tooltip*/
+td.snapshot-usage .tooltip {
+  font-size: 16px;
+}
+td.snapshot-usage .tooltip-inner {
+  max-width: 1024px;
+}
+
+div[ng-controller="ModelConditionsSettingsCtrl"] {
+  .format-input {
+    margin-top: 15px;
+  }
+  select.col-5 + .chosen-container {
+    width: 49% !important;
+  }
+  .format-input.col-5 {
+    display: inline-block;
+    width: 49%;
+    margin-top: 0;
+  }
+}
+
+.form-title {
+  font-size: 24px;
+  color: #3A87AD;
+  line-height: 1;
+  margin: 0;
+}
+
+#main {
+  min-height: 100vh;
+}
+
+div[ng-controller="HybridInstanceSchema"],
+div.hybrid-detail {
+  .form-title {
+    margin-bottom: 43px;
+  }
+  .control-label {
+    margin-top: 7px;
+  }
+  .split-line {
+    margin: 5px 0 20px 0;
+  }
+  .table {
+    margin-bottom: 0;
+  }
+  .table-header {
+    box-sizing: border-box;
+    border: 1px solid #DDDDDD;
+    border-bottom: none;
+  }
+  .transter-actions {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .transter-action-item {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .transter-action-item i {
+    width: 32px;
+    height: 32px;
+    display: inline-block;
+    cursor: pointer;
+    background: #FFFFFF;
+    border: 1px solid #DDDDDD;
+    border-radius: 2px;
+    padding-top: 7px;
+    color: #808080;
+    font-size: 16px;
+    &:hover {
+      border-color: #3A87AD;
+      color: #3A87AD;
+    }
+  }
+  .data-empty {
+    text-align: center;
+    font-size: 14px;
+    color: #808080;
+    line-height: 22px;
+    padding: 8px 0;
+    border: 1px solid #DDDDDD;
+  }
+  .col-xs-5 {
+    z-index: 1;
+  }
+  .fix-height-table {
+    max-height: 408px;
+    overflow: auto;
+  }
+  .edit-operator {
+    position: relative;
+    margin-bottom: 30px;
+  }
+  div[tooltip] + .tooltip {
+    white-space: nowrap;
+    .tooltip-inner {
+      max-width: 1000px;
+    }
+  }
+  .table-checkbox {
+    text-align: center;
+    width: 38px;
+    height: 38px;
+    img {
+      cursor: pointer;
+    }
+  }
+  .status-center {
+    text-align: center;
+    width: 150px;
+  }
+}
+
+.kylin-icon-hybrid {
+  margin-right: 10px;
+}
+.col-xs-offset-5 {
+  margin-left: 41.66666667%;
+}
+
+.text-info {
+  font-size: 18px;
+  color: #263238;
+}
+
+div.hybrid-detail {
+  .modal-dialog {
+    width: 600px;
+  }
+}
+
+/* customize tag input style*/
+tags-input.bootstrap .tags .tag-item{
+  background: #3c8dbc !important;
+  display: inline;
+  padding: .2em .6em .3em;
+  font-size: 75%;
+  font-weight: bold;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+  border: none;
+  margin: 3px;
+  height: inherit;
+}
+tags-input .tags .tag-item {
+  .remove-button {
+    color: #fff;
+  }
+  .remove-button:active {
+    color: #585858;
+  }
+}
+/* cube streaming style*/
+.cube-receiver-stats {
+  text-align: center;
+  border: 1px solid #ffffff;
+  cursor: pointer;
+  background-color: #fafafa;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  height: 100px;
+  .node-info {
+    font-size: 18px;
+    height: 25px;
+    text-overflow: ellipsis;
+    color: #455A64;
+  }
+  .rate-metric {
+    font-size: 22px;
+    font-weight: bold;
+    height: 30px;
+  }
+  .fast {
+    color: #00a65a !important;
+  }
+  .slow {
+    color: #dd4b39 !important;
+  }
+  .unit {
+    font-size: 16px;
+  }
+  .detail-metric {
+    font-size: 12px;
+    font-weight: bold;
+    color: #BDBDBD;
+    padding: 0;
+  }
+}
+.segment .active{
+  color: #3c8dbc !important;
+}
+.cube-streaming-stats-modal .modal-dialog{
+  margin-top: 150px;
+  max-width: 800px;
+}
+.receiver-stats-modal .modal-dialog{
+  margin-top: 100px;
+  max-width: 600px;
+}
+.pagination{
+  cursor: pointer;
+}
+/* adv refresh for cube action*/
+.adv-refresh-customized-on {
+  position: relative;
+  bottom: 10px;
+  color:#438eb9;
+  cursor:pointer;
+  font-size:18px;
+}
+.adv-refresh-customized-off {
+  position: relative;
+  top: 2px;
+  color:#438eb9;
+  cursor:pointer;
+  font-size:18px;
 }

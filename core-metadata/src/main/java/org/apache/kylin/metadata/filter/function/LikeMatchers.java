@@ -17,11 +17,12 @@
  */
 package org.apache.kylin.metadata.filter.function;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 public class LikeMatchers {
 
@@ -36,7 +37,7 @@ public class LikeMatchers {
         private Pattern p;
 
         private DefaultLikeMatcher(String patternStr) {
-            patternStr = patternStr.toLowerCase();
+            patternStr = patternStr.toLowerCase(Locale.ROOT);
             final String regex = Like.sqlToRegexLike(patternStr, null);
             p = Pattern.compile(regex);
         }

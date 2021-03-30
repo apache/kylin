@@ -24,11 +24,11 @@ import org.apache.kylin.gridtable.GridTable;
  */
 public class CuboidResult {
 
-    public long cuboidId;
-    public GridTable table;
-    public int nRows;
-    public long timeSpent;
-    public int aggrCacheMB;
+    public final long cuboidId;
+    public final GridTable table;
+    public final int nRows;
+    public final long timeSpent;
+    private int aggrCacheMB;
 
     public CuboidResult(long cuboidId, GridTable table, int nRows, long timeSpent, int aggrCacheMB) {
         this.cuboidId = cuboidId;
@@ -38,4 +38,11 @@ public class CuboidResult {
         this.aggrCacheMB = aggrCacheMB;
     }
 
+    public int getAggrCacheMB() {
+        return aggrCacheMB;
+    }
+
+    public void setAggrCacheMB(int aggrCacheMB) {
+        this.aggrCacheMB = aggrCacheMB;
+    }
 }

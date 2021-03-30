@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -66,6 +67,88 @@ public class HLLCounterTest {
         }
         System.out.println(hllc.getCountEstimate());
         assertTrue(hllc.getCountEstimate() > 10 * 0.9);
+    }
+
+    /**
+     * evaluation getCountEstimate of HLLCounter
+     * cost time : 1341[old] -> 206[new]
+     */
+    @Test
+    public void countPerformanceWithLargeCardinality(){
+        int cardinality = 10_000_000;
+        HLLCounter hllc = generateTestCounter(2009, cardinality);
+        final int testCount = 5000;
+        countEstimatePerformance(hllc, cardinality, testCount);
+    }
+
+    /**
+     * evaluation getCountEstimate of HLLCounter
+     * cost time : 1396[old] -> 274[new]
+     */
+    @Test
+    public void countPerformanceSmallCardinality(){
+        int cardinality = 300_000;
+        HLLCounter hllc = generateTestCounter(2009, cardinality);
+        final int testCount = 5000;
+        countEstimatePerformance(hllc, cardinality, testCount);
+    }
+
+    /**
+     * evaluation constructor of HLLCounter
+     * cost time : 1577[old] -> 490[new]
+     */
+    @Test
+    public void createHLLCPerformance(){
+        int cardinality = 3_000_000;
+        HLLCounter hllc = generateTestCounter(2009, cardinality);
+        final int testCount = 30000;
+
+        HLLCounter hllc2 = null;
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < testCount; i++){
+            hllc2 = new HLLCounter(hllc);
+        }
+        long totalTime = System.currentTimeMillis() - start;
+        System.out.println("constructor of HLLCounter cost time : " + totalTime);
+
+        long estimate = hllc2.getCountEstimate();
+        assertTrue(estimate > 0.9 * cardinality && estimate < 1.1 * cardinality);
+        System.out.println("estimate is " + estimate);
+    }
+
+    /**
+     * Simulate mutli call to method [getCountEstimate of HLLCounter] and get
+     * duration for method getCountEstimate of HLLCounter
+     */
+    private void countEstimatePerformance(HLLCounter hllc, int realCount, int callTimes) {
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < callTimes; i++)
+            hllc.getCountEstimate();
+        long totalTime = System.currentTimeMillis() - start;
+        System.out.println("getCountEstimate of HLLCounter cost time : " + totalTime);
+
+        long estimate = hllc.getCountEstimate();
+        assertTrue(estimate > realCount * 0.9 && estimate < realCount * 1.1);
+        System.out.println("estimate is " + estimate);
+    }
+
+    private HLLCounter generateTestCounter(int seed, int maxDistinctCounts) {
+        long start = System.currentTimeMillis();
+        Random rand1 = new Random(seed);
+        Set<Integer> rawData = new HashSet<>();
+        while (rawData.size() < maxDistinctCounts)
+            rawData.add(rand1.nextInt());
+        ArrayList<Integer> testData = new ArrayList<>(rawData);
+        assertEquals(maxDistinctCounts, testData.size());
+
+        HLLCounter hllc = new HLLCounter(16, RegisterType.DENSE);
+
+        for (int j = 0; j < testData.size(); j++) {
+            hllc.add(testData.get(j));
+        }
+        long totalTime = System.currentTimeMillis() - start;
+        System.out.println("generate data cost time : " + totalTime);
+        return hllc;
     }
 
     @Test

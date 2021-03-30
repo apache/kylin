@@ -126,7 +126,7 @@ public class HiveTableReader implements TableReader {
         String[] arr = new String[record.size()];
         for (int i = 0; i < arr.length; i++) {
             Object o = record.get(i);
-            arr[i] = (o == null) ? null : o.toString();
+            arr[i] = (o == null || "\\N".equals(o)) ? null : o.toString();
         }
         return arr;
     }

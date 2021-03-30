@@ -49,9 +49,9 @@ public abstract class SingleValueCache<K, V> extends AbstractCache<K, V> {
         innerCache.put(key, value);
 
         if (!exists) {
-            getBroadcaster().queue(syncEntity, Broadcaster.Event.CREATE.getType(), key.toString());
+            getBroadcaster().announce(syncEntity, Broadcaster.Event.CREATE.getType(), key.toString());
         } else {
-            getBroadcaster().queue(syncEntity, Broadcaster.Event.UPDATE.getType(), key.toString());
+            getBroadcaster().announce(syncEntity, Broadcaster.Event.UPDATE.getType(), key.toString());
         }
     }
 
@@ -65,7 +65,7 @@ public abstract class SingleValueCache<K, V> extends AbstractCache<K, V> {
         innerCache.remove(key);
 
         if (exists) {
-            getBroadcaster().queue(syncEntity, Broadcaster.Event.DROP.getType(), key.toString());
+            getBroadcaster().announce(syncEntity, Broadcaster.Event.DROP.getType(), key.toString());
         }
     }
 

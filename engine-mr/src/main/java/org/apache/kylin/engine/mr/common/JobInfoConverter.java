@@ -20,14 +20,21 @@ package org.apache.kylin.engine.mr.common;
 
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.JobInstance;
+import org.apache.kylin.job.JobSearchResult;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
+import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.CheckpointExecutable;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
 import org.slf4j.Logger;
@@ -38,43 +45,100 @@ public class JobInfoConverter {
 
     public static JobInstance parseToJobInstanceQuietly(AbstractExecutable job, Map<String, Output> outputs) {
         try {
-            return parseToJobInstance(job, outputs);
+            if (job instanceof CheckpointExecutable) {
+                return parseToJobInstance((CheckpointExecutable)job, outputs);
+            } else if (job instanceof CubingJob) {
+                return parseToJobInstance((CubingJob)job, outputs);
+            } else {
+                return null;
+            }
         } catch (Exception e) {
             logger.error("Failed to parse job instance: uuid={}", job, e);
             return null;
         }
     }
 
-    public static JobInstance parseToJobInstance(AbstractExecutable job, Map<String, Output> outputs) {
+    public static JobInstance parseToJobInstance(CubingJob job, Map<String, Output> outputs) {
         if (job == null) {
             logger.warn("job is null.");
             return null;
         }
 
-        if (!(job instanceof CubingJob)) {
-            logger.warn("illegal job type, id:" + job.getId());
+        Output output = outputs.get(job.getId());
+        if (output == null) {
+            logger.warn("job output is null.");
             return null;
         }
 
-        CubingJob cubeJob = (CubingJob) job;
-        Output output = outputs.get(job.getId());
+        CubingJob cubeJob = job;
+        String cubeName = CubingExecutableUtil.getCubeName(cubeJob.getParams());
+        String displayCubeName = cubeName;
+        try {
+            CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
+            if (cube != null) {
+                cubeName = cube.getName();
+                displayCubeName = cube.getDisplayName();
+            }
+        } catch (Exception e) {
+            logger.warn("Fail to get cube instance for {}.", cubeName);
+        }
+
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
-        result.setRelatedCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+        result.setProjectName(cubeJob.getProjectName());
+        result.setRelatedCube(cubeName);
+        result.setDisplayCubeName(displayCubeName);
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
+        result.setRelatedSegmentName(CubingExecutableUtil.getSegmentName(cubeJob.getParams()));
         result.setLastModified(output.getLastModified());
-        result.setSubmitter(cubeJob.getSubmitter());
-        result.setUuid(cubeJob.getId());
+        result.setSubmitter(job.getSubmitter());
+        result.setUuid(job.getId());
         result.setType(CubeBuildTypeEnum.BUILD);
         result.setStatus(parseToJobStatus(output.getState()));
+        result.setBuildInstance(AbstractExecutable.getBuildInstance(output));
         result.setMrWaiting(AbstractExecutable.getExtraInfoAsLong(output, CubingJob.MAP_REDUCE_WAIT_TIME, 0L) / 1000);
         result.setExecStartTime(AbstractExecutable.getStartTime(output));
         result.setExecEndTime(AbstractExecutable.getEndTime(output));
         result.setExecInterruptTime(AbstractExecutable.getInterruptTime(output));
         result.setDuration(AbstractExecutable.getDuration(result.getExecStartTime(), result.getExecEndTime(),
                 result.getExecInterruptTime()) / 1000);
-        for (int i = 0; i < cubeJob.getTasks().size(); ++i) {
-            AbstractExecutable task = cubeJob.getTasks().get(i);
+        for (int i = 0; i < job.getTasks().size(); ++i) {
+            AbstractExecutable task = job.getTasks().get(i);
+            result.addStep(parseToJobStep(task, i, outputs.get(task.getId())));
+        }
+        return result;
+    }
+
+    public static JobInstance parseToJobInstance(CheckpointExecutable job, Map<String, Output> outputs) {
+        if (job == null) {
+            logger.warn("job is null.");
+            return null;
+        }
+
+        Output output = outputs.get(job.getId());
+        if (output == null) {
+            logger.warn("job output is null.");
+            return null;
+        }
+
+        final JobInstance result = new JobInstance();
+        result.setName(job.getName());
+        result.setProjectName(job.getProjectName());
+        result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
+        result.setDisplayCubeName(CubingExecutableUtil.getCubeName(job.getParams()));
+        result.setLastModified(output.getLastModified());
+        result.setSubmitter(job.getSubmitter());
+        result.setUuid(job.getId());
+        result.setType(CubeBuildTypeEnum.CHECKPOINT);
+        result.setStatus(parseToJobStatus(output.getState()));
+        result.setBuildInstance(AbstractExecutable.getBuildInstance(output));
+        result.setExecStartTime(AbstractExecutable.getStartTime(output));
+        result.setExecEndTime(AbstractExecutable.getEndTime(output));
+        result.setExecInterruptTime(AbstractExecutable.getInterruptTime(output));
+        result.setDuration(AbstractExecutable.getDuration(result.getExecStartTime(), result.getExecEndTime(),
+                result.getExecInterruptTime()) / 1000);
+        for (int i = 0; i < job.getTasks().size(); ++i) {
+            AbstractExecutable task = job.getTasks().get(i);
             result.addStep(parseToJobStep(task, i, outputs.get(task.getId())));
         }
         return result;
@@ -150,5 +214,37 @@ public class JobInfoConverter {
         default:
             throw new RuntimeException("invalid state:" + state);
         }
+    }
+
+    public static JobSearchResult parseToJobSearchResult(DefaultChainedExecutable job, Map<String, ExecutableOutputPO> outputs) {
+        if (job == null) {
+            logger.warn("job is null.");
+            return null;
+        }
+
+        ExecutableOutputPO output = outputs.get(job.getId());
+        if (output == null) {
+            logger.warn("job output is null.");
+            return null;
+        }
+
+        final JobSearchResult result = new JobSearchResult();
+
+        String cubeName = CubingExecutableUtil.getCubeName(job.getParams());
+
+        if (cubeName == null) {
+            cubeName = job.getParam("model_name");
+        } else {
+            CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
+            if (cube != null) {
+                cubeName = cube.getDisplayName();
+            }
+        }
+        result.setCubeName(cubeName);
+        result.setId(job.getId());
+        result.setJobName(job.getName());
+        result.setLastModified(output.getLastModified());
+        result.setJobStatus(JobInfoConverter.parseToJobStatus(job.getStatus()));
+        return result;
     }
 }

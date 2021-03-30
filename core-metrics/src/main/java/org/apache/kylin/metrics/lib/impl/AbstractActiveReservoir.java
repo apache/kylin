@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.kylin.metrics.lib.ActiveReservoir;
 import org.apache.kylin.metrics.lib.ActiveReservoirListener;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public abstract class AbstractActiveReservoir implements ActiveReservoir {
 
@@ -61,6 +61,9 @@ public abstract class AbstractActiveReservoir implements ActiveReservoir {
         isReady = false;
     }
 
+    /**
+     * closed by shutdown hook at MetricsSystem
+     */
     public void close() {
         stop();
         removeAllListener();

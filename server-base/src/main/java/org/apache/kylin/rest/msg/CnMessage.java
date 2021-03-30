@@ -69,6 +69,10 @@ public class CnMessage extends Message {
         return "非 READY 状态 segment '%s' 不能被删除, 请先抛弃它正在运行的任务";
     }
 
+    public String getDELETE_SEG_FROM_READY_CUBE() {
+        return "segment '%s' 不能从 READY 状态的 cube '%s' 中删除, 请先disable cube";
+    }
+
     public String getINVALID_BUILD_TYPE() {
         return "非法构建类型: '%s'";
     }
@@ -165,6 +169,10 @@ public class CnMessage extends Message {
         return "Cube 不能被重命名";
     }
 
+    public String getREBUILD_SNAPSHOT_OF_VIEW() {
+        return "不支持重新构建 Hive view '%s' 的 snapshot, 请刷新 Cube 的 segment";
+    }
+
     // Model
     public String getINVALID_MODEL_DEFINITION() {
         return "非法模型定义";
@@ -178,6 +186,9 @@ public class CnMessage extends Message {
         return "非法模型名称 '%s', 仅支持字母, 数字和下划线";
     }
 
+    public String getDUPLICATE_MODEL_NAME() {
+        return "模型名称 '%s' 已存在, 不能被创建";
+    }
 
     public String getDROP_REFERENCED_MODEL() {
         return "模型被 Cube '%s' 引用, 不能被删除";
@@ -391,6 +402,14 @@ public class CnMessage extends Message {
 
     public String getDIAG_PACKAGE_NOT_FOUND() {
         return "找不到诊断包, 路径: %s";
+    }
+
+    public String getDIAG_PROJECT_NOT_FOUND() {
+        return "找不到项目: %s.";
+    }
+
+    public String getDIAG_JOBID_NOT_FOUND() {
+        return "找不到任务ID: %s.";
     }
 
     // Encoding

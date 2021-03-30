@@ -1,0 +1,133 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+<div ng-controller="AclCtrl">
+  <br/>
+  <button type="button" class="btn btn-success" ng-click="addTableAcl()"><span class="fa fa-plus"></span> Grant</button>
+  <table class="table table-hover table-striped list">
+    <thead>
+    <tr style="cursor: pointer">
+      <th>
+       Id
+      </th>
+      <th>
+        User / Group name
+      </th>
+      <th>
+        Actions
+      </th>
+    </tr>
+    </thead>
+    <tr
+      ng-repeat="groupAcl in tableGroupAclList">
+      <td>
+        {{ $index +1}}
+      </td>
+      <td>
+        <span class="fa fa-group"></span> {{ groupAcl}}
+      </td>
+      <td>
+        <div class="dropdown">
+          <button class="btn btn-default btn-xs dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+            Action
+            <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+            <li><a ng-click="delTableAcl('group', groupAcl)">Delete</a></li>
+          </ul>
+        </div>
+      </td>
+    </tr>
+    <tr
+      ng-repeat="userAcl in tableUserAclList">
+      <td>
+        {{ $index +tableGroupAclList.length +1}}
+      </td>
+      <td>
+        <span class="fa fa-user"></span> {{ userAcl}}
+      </td>
+      <td>
+        <div class="dropdown">
+          <button class="btn btn-default btn-xs dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+            Action
+            <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+            <li><a ng-click="delTableAcl('user', userAcl)">Delete</a></li>
+          </ul>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <script type="text/ng-template" id="addTableAcl.html">
+    <div class="modal-header">
+      <h4 tooltip="submit">Add Grant</h4>
+    </div>
+    <ng-form name="forms.tableAclForm" novalidate="novalidate" class="modal-body" style="background-color: white">
+
+      <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+          <div class="row">
+            <div class="form-group">
+              <b>Type</b>
+              <br/>
+              <select ng-required="true" chosen ng-model="newTableAcl.type"
+                      style="width: 100% !important;"
+                      ng-options="user.value as user.name for user in userType"
+                      class="chosen-select">
+                <option value="user">User</option>
+                <option value="group">Group</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="form-group" ng-show="newTableAcl.type == 'user'">
+              <b>User / Group name</b>
+              <br/>
+              <select ng-required="true" chosen ng-model="newTableAcl.name"
+                      ng-options="black as black for black in tableUserAclBlackList"
+                      style="width: 100% !important;"
+                      data-placeholder="select a user"
+                      class="chosen-select">
+              </select>
+            </div>
+
+            <div class="form-group" ng-show="newTableAcl.type == 'group'">
+              <b>User / Group name</b>
+              <br/>
+              <select ng-required="true" chosen ng-model="newTableAcl.name"
+                      ng-options="black as black for black in tableGroupAclBlackList"
+                      style="width: 100% !important;"
+                      data-placeholder="select a group"
+                      class="chosen-select">
+                <option value=""></option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+        <div class="col-md-2"></div>
+      </div>
+    </ng-form>
+    <div class="modal-footer">
+      <button class="btn btn-primary" ng-click="cancel()">Close</button>
+      <button class="btn btn-success" ng-click="addAcl()" ng-disabled="forms.tableAclForm.$invalid">Submit</button>
+    </div>
+  </script>
+</div>

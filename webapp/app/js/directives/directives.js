@@ -27,13 +27,13 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
     templateUrl: 'partials/directives/pagination.html',
     link: function (scope, element, attrs) {
       var _this = this;
-      scope.limit = 15;
       scope.hasMore = false;
       scope.data = $parse(attrs.data)(scope.$parent);
       scope.action = $parse(attrs.action)(scope.$parent);
       scope.loadFunc = $parse(attrs.loadFunc)(scope.$parent);
+      scope.isHideTotal = $parse(attrs.isHideTotal)();
+      scope.limit = $parse(attrs.limit)() || 15;
       scope.autoLoad = true;
-
 
       scope.$watch("action.reload", function (newValue, oldValue) {
         if (newValue != oldValue) {
@@ -99,7 +99,7 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
     }
   };
 })
-  .directive('loading', function ($parse, $q) {
+.directive('loading', function ($parse, $q) {
     return {
       restrict: 'E',
       scope: {},
@@ -395,7 +395,7 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
       var dOptions = {
         placement : 'right'
       }
-      popOverContent = $templateCache.get(attrs.template);
+      popOverContent = $templateCache.get(attrs.template)? $templateCache.get(attrs.template) : attrs.content;
 
       var placement = attrs.placement? attrs.placement : dOptions.placement;
       var title = attrs.title;
@@ -430,4 +430,101 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
       });
     }
   }
+}).directive('kylinDaterangepicker', function() {
+  return {
+    restrict: 'E',
+    scope: {
+      startDate:'=',
+      endDate:'=',
+      minDate:'=',
+      maxDate:'=',
+      timezone: '=',
+      ranges: '=',
+      callbackHandler:'&callback',
+    },
+    template: '<button class="btn btn-default" style="background-color:#ffffff">' +
+                '<i class="fa fa-calendar"></i> ' +
+                ' <span></span> ' +
+                '<b class="caret"></b>' +
+              '</button>',
+    link: function(scope, element, attrs) {
+      // Init
+      var timezone = scope.timezone || 'GMT';
+      var format = attrs.format || 'YYYY-MM-DD';
+      var separator = ' - ';
+      var callback = scope.callbackHandler ? scope.callbackHandler() : function() {};
+
+      function startOfToday() {
+        return moment().tz(timezone).startOf('day');
+      }
+      function endOfToday() {
+        return moment().tz(timezone).endOf('day');
+      }
+
+      function getOption() {
+        var ranges = {
+          'Last 7 Days': [
+            startOfToday().subtract(1, 'weeks'),
+            endOfToday().subtract(1, 'days')
+          ],
+          'This Month': [
+            startOfToday().startOf('month'),
+            endOfToday()
+          ],
+          'Last Month': [
+            startOfToday().subtract(1, 'month').startOf('month'),
+            endOfToday().subtract(1, 'month').endOf('month')
+          ]
+        };
+
+        // Create datepicker, full list of options at https://github.com/dangrossman/bootstrap-daterangepicker
+        var maxDate = moment.tz(moment().tz(timezone).format(format), timezone);
+        var minDate = maxDate.clone().subtract(18, 'month');
+        return {
+          maxDate: scope.maxDate || maxDate,
+          minDate: scope.minDate || minDate,
+          format: format,
+          showDropdowns: true,
+          opens: attrs.opens || 'left',
+          ranges: scope.ranges || ranges
+        };
+      }
+
+      function _refresh() {
+        element.daterangepicker(getOption(), function(start, end, label) {
+          scope.startDate = moment.tz(start.startOf('day').format('YYYY-MM-DD HH:mm:ss'), timezone).format('x');
+          scope.endDate = moment.tz(end.endOf('day').format('YYYY-MM-DD HH:mm:ss'), timezone).format('x');
+          callback(scope.startDate, scope.endDate);
+          scope.$apply();
+        });
+      }
+
+      if (timezone) {
+        _refresh();
+      }
+
+      // Use $watch, update the view if either start or end change. (angular version 1.2 not support $watchGroup)
+      scope.$watch('startDate + "~" + endDate + "~" + timezone', function(newValues) {
+        var valueArr = newValues.split('~');
+
+        if (valueArr[2]) {
+          timezone = scope.timezone;
+          _refresh();
+        }
+
+        if (timezone) {
+          var startDate = valueArr[0] ? moment(valueArr[0], 'x').tz(timezone).format(format) : null;
+          var endDate = valueArr[1]  ? moment(valueArr[1], 'x').tz(timezone).format(format) : null;
+        }
+
+        if (startDate && endDate) {
+          var val = startDate + separator + endDate;
+          element.find('span').html(val);
+          element.data('daterangepicker').setStartDate(startDate);
+          element.data('daterangepicker').setEndDate(endDate);
+        }
+      });
+
+    }
+  };
 });

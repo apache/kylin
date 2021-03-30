@@ -18,14 +18,19 @@
 package org.apache.kylin.source.hive;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.ContentSummary;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.common.PatternedLogger;
+import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
@@ -39,9 +44,10 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
 
     private static final Logger logger = LoggerFactory.getLogger(CreateFlatHiveTableStep.class);
     protected final PatternedLogger stepLogger = new PatternedLogger(logger);
+    private static final Pattern HDFS_LOCATION = Pattern.compile("LOCATION \'(.*)\';");
 
     protected void createFlatHiveTable(KylinConfig config) throws IOException {
-        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(getName() + " " + getCubeName() + " " + getId());
         hiveCmdBuilder.overwriteHiveProps(config.getHiveConfigOverride());
         hiveCmdBuilder.addStatement(getInitStatement());
         hiveCmdBuilder.addStatement(getCreateTableStatement());
@@ -51,21 +57,41 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
         stepLogger.log(cmd);
 
         Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger);
-        getManager().addJobInfo(getId(), stepLogger.getInfo());
+        Map<String, String> info = stepLogger.getInfo();
+
+        //get the flat Hive table size
+        Matcher matcher = HDFS_LOCATION.matcher(cmd);
+        if (matcher.find()) {
+            String hiveFlatTableHdfsUrl = matcher.group(1);
+            long size = getFileSize(hiveFlatTableHdfsUrl);
+            info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, "" + size);
+            logger.info("HDFS_Bytes_Writen: " + size);
+        }
+        getManager().addJobInfo(getId(), info);
         if (response.getFirst() != 0) {
             throw new RuntimeException("Failed to create flat hive table, error code " + response.getFirst());
         }
     }
 
-    private KylinConfig getCubeSpecificConfig() {
-        String cubeName = CubingExecutableUtil.getCubeName(getParams());
-        CubeManager manager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-        CubeInstance cube = manager.getCube(cubeName);
-        return cube.getConfig();
+    private long getFileSize(String hdfsUrl) throws IOException {
+        Configuration configuration = new Configuration();
+        Path path = new Path(hdfsUrl);
+        FileSystem fs = path.getFileSystem(configuration);
+        ContentSummary contentSummary = fs.getContentSummary(path);
+        long length = contentSummary.getLength();
+        return length;
     }
 
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+        stepLogger.setILogListener((infoKey, info) -> {
+                    // only care two properties here
+                    if (ExecutableConstants.YARN_APP_ID.equals(infoKey)
+                            || ExecutableConstants.YARN_APP_URL.equals(infoKey)) {
+                        getManager().addJobInfo(getId(), info);
+                    }
+                }
+        );
         KylinConfig config = getCubeSpecificConfig();
         try {
             createFlatHiveTable(config);

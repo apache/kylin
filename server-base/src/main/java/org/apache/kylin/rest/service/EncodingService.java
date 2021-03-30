@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.service;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.kylin.dimension.BooleanDimEnc;
 import org.apache.kylin.dimension.DateDimEnc;
@@ -33,7 +34,7 @@ import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 @Component("encodingService")
 public class EncodingService extends BasicService {
@@ -42,16 +43,19 @@ public class EncodingService extends BasicService {
         Message msg = MsgPicker.getMsg();
 
         if (dataType.isIntegerFamily()) {
-            return Lists.newArrayList(BooleanDimEnc.ENCODING_NAME, DateDimEnc.ENCODING_NAME, TimeDimEnc.ENCODING_NAME, DictionaryDimEnc.ENCODING_NAME, IntegerDimEnc.ENCODING_NAME);
+            return Lists.newArrayList(BooleanDimEnc.ENCODING_NAME, DateDimEnc.ENCODING_NAME, TimeDimEnc.ENCODING_NAME,
+                    DictionaryDimEnc.ENCODING_NAME, IntegerDimEnc.ENCODING_NAME);
         } else if (dataType.isNumberFamily()) { //numbers include integers
             return Lists.newArrayList(DictionaryDimEnc.ENCODING_NAME);
         } else if (dataType.isDateTimeFamily()) {
-            return Lists.newArrayList(DateDimEnc.ENCODING_NAME, TimeDimEnc.ENCODING_NAME, DictionaryDimEnc.ENCODING_NAME);
+            return Lists.newArrayList(DateDimEnc.ENCODING_NAME, TimeDimEnc.ENCODING_NAME,
+                    DictionaryDimEnc.ENCODING_NAME);
         } else if (dataType.isStringFamily()) {
-            return Lists.newArrayList(BooleanDimEnc.ENCODING_NAME, DictionaryDimEnc.ENCODING_NAME, FixedLenDimEnc.ENCODING_NAME, //
+            return Lists.newArrayList(BooleanDimEnc.ENCODING_NAME, DictionaryDimEnc.ENCODING_NAME,
+                    FixedLenDimEnc.ENCODING_NAME, //
                     FixedLenHexDimEnc.ENCODING_NAME, IntegerDimEnc.ENCODING_NAME);
         } else {
-            throw new BadRequestException(String.format(msg.getVALID_ENCODING_NOT_AVAILABLE(), dataType));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getVALID_ENCODING_NOT_AVAILABLE(), dataType));
         }
     }
 

@@ -64,6 +64,16 @@ public class IntegerDimEnc extends DimensionEncoding implements Serializable{
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
             return new IntegerDimEnc(Integer.parseInt(args[0]));
         }
+
+        @Override
+        public boolean isValidDimensionEncoding(String encodingName, String[] args) {
+            try {
+                int length = Integer.parseInt(args[0]);
+                return length >= 1 && length < CAP.length;
+            } catch (Exception e) {
+                return false;
+            }
+        }
     };
 
     // ============================================================================

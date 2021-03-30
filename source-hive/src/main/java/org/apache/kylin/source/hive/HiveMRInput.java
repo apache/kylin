@@ -21,73 +21,41 @@ package org.apache.kylin.source.hive;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
-import org.apache.kylin.common.KylinConfig;
+import org.apache.hive.hcatalog.mapreduce.HCatSplit;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.HiveCmdBuilder;
-import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.IMRInput;
-import org.apache.kylin.engine.mr.JobBuilderSupport;
-import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
-import org.apache.kylin.job.JoinedFlatTable;
-import org.apache.kylin.job.common.PatternedLogger;
-import org.apache.kylin.job.common.ShellExecutable;
-import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.exception.ExecuteException;
-import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.job.execution.ExecutableContext;
-import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.metadata.TableMetadataManager;
+import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
-import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
+public class HiveMRInput extends HiveInputBase implements IMRInput {
 
-public class HiveMRInput implements IMRInput {
-
-    @SuppressWarnings("unused")
-    private static final Logger logger = LoggerFactory.getLogger(HiveMRInput.class);
-
-    public static String getTableNameForHCat(TableDesc table) {
-        String tableName = (table.isView()) ? table.getMaterializedName() : table.getName();
-        String database = (table.isView()) ? KylinConfig.getInstanceFromEnv().getHiveDatabaseForIntermediateTable()
-                : table.getDatabase();
-        return String.format("%s.%s", database, tableName).toUpperCase();
+    @Override
+    public IBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
+        return new HiveMRBatchCubingInputSide(flatDesc);
     }
 
     @Override
-    public IMRBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
-        return new BatchCubingInputSide(flatDesc);
-    }
-
-    @Override
-    public IMRTableInputFormat getTableInputFormat(TableDesc table) {
-        return new HiveTableInputFormat(getTableNameForHCat(table));
-    }
-
-    @Override
-    public IMRBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
+    public IBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
         return new IMRBatchMergeInputSide() {
             @Override
             public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow) {
                 // doing nothing
             }
         };
+    }
+
+    @Override
+    public IMRTableInputFormat getTableInputFormat(TableDesc table, String uuid) {
+        return new HiveTableInputFormat(getTableNameForHCat(table, uuid));
     }
 
     public static class HiveTableInputFormat implements IMRTableInputFormat {
@@ -121,327 +89,48 @@ public class HiveMRInput implements IMRInput {
             return Collections.singletonList(HiveTableReader.getRowAsStringArray((HCatRecord) mapperInput));
         }
 
+        @Override
+        public String getInputSplitSignature(InputSplit inputSplit) {
+            FileSplit baseSplit = (FileSplit) ((HCatSplit) inputSplit).getBaseSplit();
+            //file name(for intermediate table) + start pos + length
+            return baseSplit.getPath().getName() + "_" + baseSplit.getStart() + "_" + baseSplit.getLength();
+        }
     }
 
-    public static class BatchCubingInputSide implements IMRBatchCubingInputSide {
+    public static class HiveMRBatchCubingInputSide extends BaseBatchCubingInputSide implements IMRBatchCubingInputSide {
 
-        final protected IJoinedFlatTableDesc flatDesc;
-        final protected String flatTableDatabase;
-        final protected String hdfsWorkingDir;
-
-        String hiveViewIntermediateTables = "";
-
-        public BatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
-            this.flatDesc = flatDesc;
-            this.flatTableDatabase = config.getHiveDatabaseForIntermediateTable();
-            this.hdfsWorkingDir = config.getHdfsWorkingDirectory();
-        }
-
-        @Override
-        public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow) {
-            final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
-            final KylinConfig cubeConfig = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName)
-                    .getConfig();
-            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
-
-            // create flat table first
-            addStepPhase1_DoCreateFlatTable(jobFlow);
-
-            // then count and redistribute
-            if (cubeConfig.isHiveRedistributeEnabled()) {
-                jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName));
-            }
-
-            // special for hive
-            addStepPhase1_DoMaterializeLookupTable(jobFlow);
-        }
-
-        protected void addStepPhase1_DoCreateFlatTable(DefaultChainedExecutable jobFlow) {
-            final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
-            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
-            final String jobWorkingDir = getJobWorkingDir(jobFlow);
-
-            jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName));
-        }
-
-        protected void addStepPhase1_DoMaterializeLookupTable(DefaultChainedExecutable jobFlow) {
-            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
-            final String jobWorkingDir = getJobWorkingDir(jobFlow);
-
-            AbstractExecutable task = createLookupHiveViewMaterializationStep(hiveInitStatements, jobWorkingDir);
-            if (task != null) {
-                jobFlow.addTask(task);
-            }
-        }
-
-        protected String getJobWorkingDir(DefaultChainedExecutable jobFlow) {
-            return JobBuilderSupport.getJobWorkingDir(hdfsWorkingDir, jobFlow.getId());
-        }
-
-        private AbstractExecutable createRedistributeFlatHiveTableStep(String hiveInitStatements, String cubeName) {
-            RedistributeFlatHiveTableStep step = new RedistributeFlatHiveTableStep();
-            step.setInitStatement(hiveInitStatements);
-            step.setIntermediateTable(flatDesc.getTableName());
-            step.setRedistributeDataStatement(JoinedFlatTable.generateRedistributeFlatTableStatement(flatDesc));
-            CubingExecutableUtil.setCubeName(cubeName, step.getParams());
-            step.setName(ExecutableConstants.STEP_NAME_REDISTRIBUTE_FLAT_HIVE_TABLE);
-            return step;
-        }
-
-        private ShellExecutable createLookupHiveViewMaterializationStep(String hiveInitStatements,
-                String jobWorkingDir) {
-            ShellExecutable step = new ShellExecutable();
-            step.setName(ExecutableConstants.STEP_NAME_MATERIALIZE_HIVE_VIEW_IN_LOOKUP);
-
-            KylinConfig kylinConfig = ((CubeSegment) flatDesc.getSegment()).getConfig();
-            TableMetadataManager metadataManager = TableMetadataManager.getInstance(kylinConfig);
-            final Set<TableDesc> lookupViewsTables = Sets.newHashSet();
-
-            String prj = flatDesc.getDataModel().getProject();
-            for (JoinTableDesc lookupDesc : flatDesc.getDataModel().getJoinTables()) {
-                TableDesc tableDesc = metadataManager.getTableDesc(lookupDesc.getTable(), prj);
-                if (tableDesc.isView()) {
-                    lookupViewsTables.add(tableDesc);
-                }
-            }
-
-            if (lookupViewsTables.size() == 0) {
-                return null;
-            }
-
-            HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
-            hiveCmdBuilder.overwriteHiveProps(kylinConfig.getHiveConfigOverride());
-            hiveCmdBuilder.addStatement(hiveInitStatements);
-            for (TableDesc lookUpTableDesc : lookupViewsTables) {
-                String identity = lookUpTableDesc.getIdentity();
-                String intermediate = lookUpTableDesc.getMaterializedName();
-                if (lookUpTableDesc.isView()) {
-                    StringBuilder createIntermediateTableHql = new StringBuilder();
-                    createIntermediateTableHql.append("DROP TABLE IF EXISTS " + intermediate + ";\n");
-                    createIntermediateTableHql
-                            .append("CREATE EXTERNAL TABLE IF NOT EXISTS " + intermediate + " LIKE " + identity + "\n");
-                    createIntermediateTableHql.append("LOCATION '" + jobWorkingDir + "/" + intermediate + "';\n");
-                    createIntermediateTableHql
-                            .append("ALTER TABLE " + intermediate + " SET TBLPROPERTIES('auto.purge'='true');\n");
-                    createIntermediateTableHql
-                            .append("INSERT OVERWRITE TABLE " + intermediate + " SELECT * FROM " + identity + ";\n");
-                    hiveCmdBuilder.addStatement(createIntermediateTableHql.toString());
-                    hiveViewIntermediateTables = hiveViewIntermediateTables + intermediate + ";";
-                }
-            }
-
-            hiveViewIntermediateTables = hiveViewIntermediateTables.substring(0,
-                    hiveViewIntermediateTables.length() - 1);
-
-            step.setCmd(hiveCmdBuilder.build());
-            return step;
-        }
-
-        private AbstractExecutable createFlatHiveTableStep(String hiveInitStatements, String jobWorkingDir,
-                String cubeName) {
-            //from hive to hive
-            final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);
-            final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatDesc, jobWorkingDir);
-            String insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatDesc);
-
-            CreateFlatHiveTableStep step = new CreateFlatHiveTableStep();
-            step.setInitStatement(hiveInitStatements);
-            step.setCreateTableStatement(dropTableHql + createTableHql + insertDataHqls);
-            CubingExecutableUtil.setCubeName(cubeName, step.getParams());
-            step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
-            return step;
-        }
-
-        @Override
-        public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
-            final String jobWorkingDir = getJobWorkingDir(jobFlow);
-
-            GarbageCollectionStep step = new GarbageCollectionStep();
-            step.setName(ExecutableConstants.STEP_NAME_HIVE_CLEANUP);
-            step.setIntermediateTableIdentity(getIntermediateTableIdentity());
-            step.setExternalDataPath(JoinedFlatTable.getTableDir(flatDesc, jobWorkingDir));
-            step.setHiveViewIntermediateTableIdentities(hiveViewIntermediateTables);
-            jobFlow.addTask(step);
+        public HiveMRBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
+            super(flatDesc);
         }
 
         @Override
         public IMRTableInputFormat getFlatTableInputFormat() {
-            return new HiveTableInputFormat(getIntermediateTableIdentity());
-        }
-
-        private String getIntermediateTableIdentity() {
-            return flatTableDatabase + "." + flatDesc.getTableName();
+            return new HiveMRInput.HiveTableInputFormat(getIntermediateTableIdentity());
         }
     }
 
-    public static class RedistributeFlatHiveTableStep extends AbstractExecutable {
-        private final PatternedLogger stepLogger = new PatternedLogger(logger);
+    /**
+     * When build job is created by kylin version 2.4.x or below, the step class name is an inner class of {@link HiveMRInput},
+     * to avoid the ClassNotFoundException in {@link ExecutableManager#newExecutable(java.lang.String)} , delegate the OLD class to the new one
+     *
+     * @since 2.5.0
+     * @deprecated For backwards compatibility.
+     */
+    @Deprecated
+    public static class RedistributeFlatHiveTableStep
+            extends org.apache.kylin.source.hive.RedistributeFlatHiveTableStep {
 
-        private long computeRowCount(String database, String table) throws Exception {
-            IHiveClient hiveClient = HiveClientFactory.getHiveClient();
-            return hiveClient.getHiveTableRows(database, table);
-        }
-
-        private void redistributeTable(KylinConfig config, int numReducers) throws IOException {
-            final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
-            hiveCmdBuilder.overwriteHiveProps(config.getHiveConfigOverride());
-            hiveCmdBuilder.addStatement(getInitStatement());
-            hiveCmdBuilder.addStatement("set mapreduce.job.reduces=" + numReducers + ";\n");
-            hiveCmdBuilder.addStatement("set hive.merge.mapredfiles=false;\n");
-            hiveCmdBuilder.addStatement(getRedistributeDataStatement());
-            final String cmd = hiveCmdBuilder.toString();
-
-            stepLogger.log("Redistribute table, cmd: ");
-            stepLogger.log(cmd);
-
-            Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger);
-            getManager().addJobInfo(getId(), stepLogger.getInfo());
-
-            if (response.getFirst() != 0) {
-                throw new RuntimeException("Failed to redistribute flat hive table");
-            }
-        }
-
-        private KylinConfig getCubeSpecificConfig() {
-            String cubeName = CubingExecutableUtil.getCubeName(getParams());
-            CubeManager manager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-            CubeInstance cube = manager.getCube(cubeName);
-            return cube.getConfig();
-        }
-
-        @Override
-        protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-            KylinConfig config = getCubeSpecificConfig();
-            String intermediateTable = getIntermediateTable();
-            String database, tableName;
-            if (intermediateTable.indexOf(".") > 0) {
-                database = intermediateTable.substring(0, intermediateTable.indexOf("."));
-                tableName = intermediateTable.substring(intermediateTable.indexOf(".") + 1);
-            } else {
-                database = config.getHiveDatabaseForIntermediateTable();
-                tableName = intermediateTable;
-            }
-
-            try {
-                long rowCount = computeRowCount(database, tableName);
-                logger.debug("Row count of table '" + intermediateTable + "' is " + rowCount);
-                if (rowCount == 0) {
-                    if (!config.isEmptySegmentAllowed()) {
-                        stepLogger.log("Detect upstream hive table is empty, "
-                                + "fail the job because \"kylin.job.allow-empty-segment\" = \"false\"");
-                        return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog());
-                    } else {
-                        return new ExecuteResult(ExecuteResult.State.SUCCEED,
-                                "Row count is 0, no need to redistribute");
-                    }
-                }
-
-                int mapperInputRows = config.getHadoopJobMapperInputRows();
-
-                int numReducers = Math.round(rowCount / ((float) mapperInputRows));
-                numReducers = Math.max(1, numReducers);
-                numReducers = Math.min(numReducers, config.getHadoopJobMaxReducerNumber());
-
-                stepLogger.log("total input rows = " + rowCount);
-                stepLogger.log("expected input rows per mapper = " + mapperInputRows);
-                stepLogger.log("num reducers for RedistributeFlatHiveTableStep = " + numReducers);
-
-                redistributeTable(config, numReducers);
-                return new ExecuteResult(ExecuteResult.State.SUCCEED, stepLogger.getBufferedLog());
-
-            } catch (Exception e) {
-                logger.error("job:" + getId() + " execute finished with exception", e);
-                return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog(), e);
-            }
-        }
-
-        public void setInitStatement(String sql) {
-            setParam("HiveInit", sql);
-        }
-
-        public String getInitStatement() {
-            return getParam("HiveInit");
-        }
-
-        public void setRedistributeDataStatement(String sql) {
-            setParam("HiveRedistributeData", sql);
-        }
-
-        public String getRedistributeDataStatement() {
-            return getParam("HiveRedistributeData");
-        }
-
-        public String getIntermediateTable() {
-            return getParam("intermediateTable");
-        }
-
-        public void setIntermediateTable(String intermediateTable) {
-            setParam("intermediateTable", intermediateTable);
-        }
     }
 
-    public static class GarbageCollectionStep extends AbstractExecutable {
-        private static final Logger logger = LoggerFactory.getLogger(GarbageCollectionStep.class);
+    /**
+     * When build job is created by kylin version 2.4.x or below, the step class name is an inner class of {@link HiveMRInput},
+     * to avoid the ClassNotFoundException in {@link ExecutableManager#newExecutable(java.lang.String)} , delegate the OLD class to the new one
+     *
+     * @since 2.5.0
+     * @deprecated For backwards compatibility.
+     */
+    @Deprecated
+    public static class GarbageCollectionStep extends org.apache.kylin.source.hive.GarbageCollectionStep {
 
-        @Override
-        protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-            KylinConfig config = context.getConfig();
-            StringBuffer output = new StringBuffer();
-            try {
-                output.append(cleanUpIntermediateFlatTable(config));
-                // don't drop view to avoid concurrent issue
-                //output.append(cleanUpHiveViewIntermediateTable(config));
-            } catch (IOException e) {
-                logger.error("job:" + getId() + " execute finished with exception", e);
-                return ExecuteResult.createError(e);
-            }
-
-            return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());
-        }
-
-        private String cleanUpIntermediateFlatTable(KylinConfig config) throws IOException {
-            StringBuffer output = new StringBuffer();
-            final String hiveTable = this.getIntermediateTableIdentity();
-            if (config.isHiveKeepFlatTable() == false && StringUtils.isNotEmpty(hiveTable)) {
-                final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
-                hiveCmdBuilder.addStatement("USE " + config.getHiveDatabaseForIntermediateTable() + ";");
-                hiveCmdBuilder.addStatement("DROP TABLE IF EXISTS  " + hiveTable + ";");
-                config.getCliCommandExecutor().execute(hiveCmdBuilder.build());
-                output.append("Hive table " + hiveTable + " is dropped. \n");
-                rmdirOnHDFS(getExternalDataPath());
-                output.append(
-                        "Hive table " + hiveTable + " external data path " + getExternalDataPath() + " is deleted. \n");
-            }
-            return output.toString();
-        }
-
-        private void rmdirOnHDFS(String path) throws IOException {
-            Path externalDataPath = new Path(path);
-            FileSystem fs = HadoopUtil.getWorkingFileSystem();
-            if (fs.exists(externalDataPath)) {
-                fs.delete(externalDataPath, true);
-            }
-        }
-
-        public void setIntermediateTableIdentity(String tableIdentity) {
-            setParam("oldHiveTable", tableIdentity);
-        }
-
-        private String getIntermediateTableIdentity() {
-            return getParam("oldHiveTable");
-        }
-
-        public void setExternalDataPath(String externalDataPath) {
-            setParam("externalDataPath", externalDataPath);
-        }
-
-        private String getExternalDataPath() {
-            return getParam("externalDataPath");
-        }
-
-        public void setHiveViewIntermediateTableIdentities(String tableIdentities) {
-            setParam("oldHiveViewIntermediateTables", tableIdentities);
-        }
     }
 }

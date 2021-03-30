@@ -1,0 +1,41 @@
+{
+  "uuid" : "d861b8b7-c773-47ab-bb1e-c8782ae8d930",
+  "last_modified" : 0,
+  "version" : "2.3.0.20500",
+  "name" : "BUILD CUBE - ss - FULL_BUILD - GMT+08:00 2017-10-13 10:57:22",
+  "tasks" : [ {
+"uuid" : "d861b8b7-c773-47ab-bb1e-c8782ae8d930-00",
+    "last_modified" : 0,
+    "version" : "2.3.0.20500",
+    "name" : "Create Intermediate Flat Hive Table",
+    "tasks" : null,
+    "type" : "org.apache.kylin.source.hive.CreateFlatHiveTableStep",
+    "params" : {
+      "HiveInit" : "USE default;\n",
+      "HiveRedistributeData" : "DROP TABLE IF EXISTS kylin_intermediate_ss_a110ac52_9a91_49fe_944a_346d61e54115;\nCREATE EXTERNAL TABLE IF NOT EXISTS kylin_intermediate_ss_a110ac52_9a91_49fe_944a_346d61e54115\n(\nKYLIN_SALES_LSTG_FORMAT_NAME string\n,KYLIN_SALES_PRICE decimal(19,4)\n)\nSTORED AS SEQUENCEFILE\nLOCATION 'hdfs://sandbox.hortonworks.com:8020/Users/jiatao.tao/Documents/meta5/kylin-d861b8b7-c773-47ab-bb1e-c8782ae8d930/kylin_intermediate_ss_a110ac52_9a91_49fe_944a_346d61e54115';\nINSERT OVERWRITE TABLE kylin_intermediate_ss_a110ac52_9a91_49fe_944a_346d61e54115 SELECT\nKYLIN_SALES.LSTG_FORMAT_NAME as KYLIN_SALES_LSTG_FORMAT_NAME\n,KYLIN_SALES.PRICE as KYLIN_SALES_PRICE\nFROM DEFAULT.KYLIN_SALES as KYLIN_SALES \n;\n",
+      "cubeName" : "ss"
+    }
+  }, {
+    "uuid" : "d861b8b7-c773-47ab-bb1e-c8782ae8d930-01",
+    "last_modified" : 0,
+    "version" : "2.3.0.20500",
+    "name" : "Redistribute Flat Hive Table",
+    "tasks" : null,
+    "type" : "org.apache.kylin.source.hive.HiveMRInput$RedistributeFlatHiveTableStep",
+    "params" : {
+      "HiveInit" : "USE default;\n",
+      "HiveRedistributeData" : "INSERT OVERWRITE TABLE kylin_intermediate_ss_a110ac52_9a91_49fe_944a_346d61e54115 SELECT * FROM kylin_intermediate_ss_a110ac52_9a91_49fe_944a_346d61e54115 DISTRIBUTE BY RAND();\n",
+      "cubeName" : "ss",
+      "intermediateTable" : "kylin_intermediate_ss_a110ac52_9a91_49fe_944a_346d61e54115"
+    }
+  }],
+  "type" : "org.apache.kylin.engine.mr.CubingJob",
+  "params" : {
+    "submitter" : "ADMIN",
+    "envName" : "DEV",
+    "segmentId" : "a110ac52-9a91-49fe-944a-346d61e54115",
+    "notify_list" : "",
+    "projectName" : "learn_kylin",
+    "cubeName" : "ss"
+  }
+}

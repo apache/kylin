@@ -6,35 +6,34 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.source.hive;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.hadoop.hive.cli.CliSessionState;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.hadoop.hive.common.StatsSetupConst;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.hive.ql.CommandNeedRetryException;
-import org.apache.hadoop.hive.ql.Driver;
-import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
-import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HiveCmdBuilder;
+import org.apache.kylin.common.util.Pair;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Hive meta API client for Kylin
@@ -43,8 +42,7 @@ import com.google.common.collect.Lists;
  */
 public class CLIHiveClient implements IHiveClient {
     protected HiveConf hiveConf = null;
-    protected Driver driver = null;
-    protected HiveMetaStoreClient metaStoreClient = null;
+    protected IMetaStoreClient metaStoreClient = null;
 
     public CLIHiveClient() {
         hiveConf = new HiveConf(CLIHiveClient.class);
@@ -52,22 +50,25 @@ public class CLIHiveClient implements IHiveClient {
 
     /**
      * only used by Deploy Util
+     * @throws IOException 
      */
     @Override
-    public void executeHQL(String hql) throws CommandNeedRetryException, IOException {
-        CommandProcessorResponse response = getDriver().run(hql);
-        int retCode = response.getResponseCode();
-        if (retCode != 0) {
-            String err = response.getErrorMessage();
-            throw new IOException("Failed to execute hql [" + hql + "], error message is: " + err);
+    public void executeHQL(String hql) throws IOException {
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        hiveCmdBuilder.addStatement(hql);
+        Pair<Integer, String> response = KylinConfig.getInstanceFromEnv().getCliCommandExecutor()
+                .execute(hiveCmdBuilder.toString());
+        if (response.getFirst() != 0) {
+            throw new IllegalArgumentException("Failed to execute hql [" + hql + "], error message is: " + response.getSecond());
         }
+
     }
 
     /**
      * only used by Deploy Util
      */
     @Override
-    public void executeHQL(String[] hqls) throws CommandNeedRetryException, IOException {
+    public void executeHQL(String[] hqls) throws IOException {
         for (String sql : hqls)
             executeHQL(sql);
     }
@@ -101,6 +102,7 @@ public class CLIHiveClient implements IHiveClient {
         builder.setSdLocation(table.getSd().getLocation());
         builder.setFileSize(getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.TOTAL_SIZE));
         builder.setFileNum(getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.NUM_FILES));
+        builder.setRowNum(getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.ROW_COUNT));
         builder.setIsNative(!MetaStoreUtils.isNonNativeTable(table));
         builder.setTableName(tableName);
         builder.setSdInputFormat(table.getSd().getInputFormat());
@@ -125,25 +127,70 @@ public class CLIHiveClient implements IHiveClient {
 
     @Override
     public long getHiveTableRows(String database, String tableName) throws Exception {
+        long count = 0;
         Table table = getMetaStoreClient().getTable(database, tableName);
-        return getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.ROW_COUNT);
+        count = getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.ROW_COUNT);
+        if (count <= 0) {
+            String querySQL = "select count(*) from ".concat(database + "." + tableName);
+            List<Object[]> datas = null;
+            try {
+                datas = getHiveResult(querySQL);
+                if (Objects.nonNull(datas) && !datas.isEmpty()) {
+                    count = Integer.parseInt(datas.get(0)[0] + "");
+                } else {
+                    throw new IOException("execute get hive table rows result fail : " + querySQL);
+                }
+            } catch (Exception e) {
+                throw new IOException("execute get hive table rows result fail : " + querySQL, e);
+            }
+        }
+        return count;
     }
 
-    private HiveMetaStoreClient getMetaStoreClient() throws Exception {
+    @Override
+    public List<Object[]> getHiveResult(String hql) throws Exception {
+        List<Object[]> data = new ArrayList<>();
+
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        hiveCmdBuilder.addStatement(hql);
+        Pair<Integer, String> response = KylinConfig.getInstanceFromEnv().getCliCommandExecutor().execute(hiveCmdBuilder.toString());
+
+        String[] respData = response.getSecond().split("\n");
+
+        boolean isData = false;
+
+        for (String item : respData) {
+            if (item.trim().equalsIgnoreCase("OK")) {
+                isData = true;
+                continue;
+            }
+            if (item.trim().startsWith("Time taken")) {
+                isData = false;
+            }
+            if (isData) {
+                Object[] arr = item.split("\t");
+                data.add(arr);
+            }
+
+        }
+
+        return data;
+    }
+
+    private IMetaStoreClient getMetaStoreClient() throws Exception {
         if (metaStoreClient == null) {
-            metaStoreClient = new HiveMetaStoreClient(hiveConf);
+            metaStoreClient = HiveMetaStoreClientFactory.getHiveMetaStoreClient(hiveConf);
         }
         return metaStoreClient;
     }
 
     /**
      * COPIED FROM org.apache.hadoop.hive.ql.stats.StatsUtil for backward compatibility
-     * 
+     * <p>
      * Get basic stats of table
-     * @param table
-     *          - table
-     * @param statType
-     *          - type of stats
+     *
+     * @param table    - table
+     * @param statType - type of stats
      * @return value of stats
      */
     private long getBasicStatForTable(org.apache.hadoop.hive.ql.metadata.Table table, String statType) {
@@ -158,18 +205,5 @@ public class CLIHiveClient implements IHiveClient {
             }
         }
         return result;
-    }
-
-    /**
-     * Get the hive ql driver to execute ddl or dml
-     * @return
-     */
-    private Driver getDriver() {
-        if (driver == null) {
-            driver = new Driver(hiveConf);
-            SessionState.start(new CliSessionState(hiveConf));
-        }
-
-        return driver;
     }
 }

@@ -18,15 +18,33 @@
 
 package org.apache.kylin.metrics.property;
 
-import com.google.common.base.Strings;
+import java.util.Locale;
 
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+
+/**
+ * Definition of Metrics dimension and measure for Query Advanced
+ */
 public enum QueryCubePropertyEnum {
-    PROJECT("PROJECT"), CUBE("CUBE_NAME"), SEGMENT("SEGMENT_NAME"), CUBOID_SOURCE("CUBOID_SOURCE"), CUBOID_TARGET(
-            "CUBOID_TARGET"), IF_MATCH("IF_MATCH"), FILTER_MASK("FILTER_MASK"), IF_SUCCESS("IF_SUCCESS"), //
-    TIME_SUM("STORAGE_CALL_TIME_SUM"), TIME_MAX("STORAGE_CALL_TIME_MAX"), WEIGHT_PER_HIT("WEIGHT_PER_HIT"), CALL_COUNT(
-            "STORAGE_CALL_COUNT"), SKIP_COUNT("STORAGE_COUNT_SKIP"), SCAN_COUNT("STORAGE_COUNT_SCAN"), RETURN_COUNT(
-                    "STORAGE_COUNT_RETURN"), AGGR_FILTER_COUNT(
-                            "STORAGE_COUNT_AGGREGATE_FILTER"), AGGR_COUNT("STORAGE_COUNT_AGGREGATE");
+
+    PROJECT("PROJECT"),
+    CUBE("CUBE_NAME"),
+    SEGMENT("SEGMENT_NAME"),
+    CUBOID_SOURCE("CUBOID_SOURCE"),
+    CUBOID_TARGET("CUBOID_TARGET"),
+    IF_MATCH("IF_MATCH"),
+    FILTER_MASK("FILTER_MASK"),
+    IF_SUCCESS("IF_SUCCESS"),
+
+    TIME_SUM("STORAGE_CALL_TIME_SUM"),
+    TIME_MAX("STORAGE_CALL_TIME_MAX"),
+    WEIGHT_PER_HIT("WEIGHT_PER_HIT"),
+    CALL_COUNT("STORAGE_CALL_COUNT"),
+    SKIP_COUNT("STORAGE_COUNT_SKIP"),
+    SCAN_COUNT("STORAGE_COUNT_SCAN"),
+    RETURN_COUNT("STORAGE_COUNT_RETURN"),
+    AGGR_FILTER_COUNT("STORAGE_COUNT_AGGREGATE_FILTER"),
+    AGGR_COUNT("STORAGE_COUNT_AGGREGATE");
 
     private final String propertyName;
 
@@ -39,7 +57,7 @@ public enum QueryCubePropertyEnum {
             return null;
         }
         for (QueryCubePropertyEnum property : QueryCubePropertyEnum.values()) {
-            if (property.propertyName.equals(name.toUpperCase())) {
+            if (property.propertyName.equals(name.toUpperCase(Locale.ROOT))) {
                 return property;
             }
         }

@@ -22,7 +22,7 @@ SELECT
  ,count(DISTINCT test_kylin_fact.leaf_categ_id) as CNT_CATE_LEAF
  ,count(DISTINCT test_kylin_fact.lstg_format_name) as CNT_LSTG
  ,count(DISTINCT test_category_groupings.meta_categ_name) as CNT_CATE
- ,count(test_cal_dt.cal_dt) as TRANS_CNT
+ ,count(test_kylin_fact.price) as GMV_CNT
  FROM test_kylin_fact
  inner JOIN edw.test_cal_dt as test_cal_dt
  ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt

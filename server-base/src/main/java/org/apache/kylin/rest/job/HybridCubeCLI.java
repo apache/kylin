@@ -20,11 +20,15 @@ package org.apache.kylin.rest.job;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -35,6 +39,8 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DataModelManager;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -42,6 +48,8 @@ import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * 1. Create new HybridCube
@@ -59,11 +67,13 @@ public class HybridCubeCLI extends AbstractApplication {
 
     private static final Option OPTION_HYBRID_NAME = OptionBuilder.withArgName("name").hasArg().isRequired(true).withDescription("HybridCube name").create("name");
 
-    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(true).withDescription("the target project for the hybrid cube").create("project");
+    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("the target project for the hybrid cube").create("project");
 
-    private static final Option OPTION_MODEL = OptionBuilder.withArgName("model").hasArg().isRequired(true).withDescription("the target model for the hybrid cube").create("model");
+    private static final Option OPTION_MODEL = OptionBuilder.withArgName("model").hasArg().isRequired(false).withDescription("the target model for the hybrid cube").create("model");
 
     private static final Option OPTION_CUBES = OptionBuilder.withArgName("cubes").hasArg().isRequired(false).withDescription("the cubes used in HybridCube, seperated by comma, empty if to delete HybridCube").create("cubes");
+
+    private static final Option OPTION_CHECK = OptionBuilder.withArgName("check").hasArg().isRequired(false).withDescription("whether to check cube size, default true.").create("check");
 
     private final Options options;
 
@@ -80,6 +90,7 @@ public class HybridCubeCLI extends AbstractApplication {
         options.addOption(OPTION_PROJECT);
         options.addOption(OPTION_MODEL);
         options.addOption(OPTION_CUBES);
+        options.addOption(OPTION_CHECK);
 
         this.kylinConfig = KylinConfig.getInstanceFromEnv();
         this.store = ResourceStore.getStore(kylinConfig);
@@ -105,6 +116,19 @@ public class HybridCubeCLI extends AbstractApplication {
         String projectName = optionsHelper.getOptionValue(OPTION_PROJECT);
         String modelName = optionsHelper.getOptionValue(OPTION_MODEL);
         String cubeNamesStr = optionsHelper.getOptionValue(OPTION_CUBES);
+        boolean checkCubeSize = optionsHelper.hasOption(OPTION_CHECK) ? Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_CHECK)) : true;
+
+        HybridInstance hybridInstance = hybridManager.getHybridInstance(hybridName);
+
+        if ("delete".equals(action)) {
+            if (hybridInstance == null) {
+                throw new IllegalArgumentException("The Hybrid Cube doesn't exist, could not delete: " + hybridName);
+            }
+            // Delete the Hybrid
+            delete(hybridInstance);
+            return;
+        }
+
         String[] cubeNames = new String[] {};
         if (cubeNamesStr != null)
             cubeNames = cubeNamesStr.split(",");
@@ -112,7 +136,7 @@ public class HybridCubeCLI extends AbstractApplication {
 
         DataModelDesc modelDesc = metadataManager.getDataModelDesc(modelName);
         if (modelDesc == null) {
-            throw new RuntimeException("Could not find model: " + modelName);
+            throw new IllegalArgumentException("Could not find model: " + modelName);
         }
 
         List<RealizationEntry> realizationEntries = new ArrayList<RealizationEntry>();
@@ -121,7 +145,7 @@ public class HybridCubeCLI extends AbstractApplication {
                 continue;
             CubeInstance cube = cubeManager.getCube(cubeName);
             if (cube == null) {
-                throw new RuntimeException("Could not find cube: " + cubeName);
+                throw new IllegalArgumentException("Could not find cube: " + cubeName);
             }
             if (owner == null) {
                 owner = cube.getOwner();
@@ -129,43 +153,47 @@ public class HybridCubeCLI extends AbstractApplication {
             realizationEntries.add(RealizationEntry.create(RealizationType.CUBE, cube.getName()));
         }
 
-        HybridInstance hybridInstance = hybridManager.getHybridInstance(hybridName);
+        int realizationEntriesLen = realizationEntries.size();
+        HashSet<RealizationEntry> hashSet = new HashSet<>();
+        for (int i = 0; i < realizationEntriesLen; i++) {
+            hashSet.add(realizationEntries.get(i));
+        }
+        int hashSetLen = hashSet.size();
+        if (realizationEntriesLen != hashSetLen) {
+            Collection<RealizationEntry> duplicateCubes = CollectionUtils.subtract(realizationEntries, hashSet);
+            throw new IllegalArgumentException("The Cubes name does duplicate, could not create: " + duplicateCubes);
+        }
+
         if ("create".equals(action)) {
             if (hybridInstance != null) {
-                throw new RuntimeException("The Hybrid Cube does exist, could not create: " + hybridName);
+                throw new IllegalArgumentException("The Hybrid Cube does exist, could not create: " + hybridName);
             }
             //Create new Hybrid
             create(hybridName, realizationEntries, projectName, owner);
         } else if ("update".equals(action)) {
             if (hybridInstance == null) {
-                throw new RuntimeException("The Hybrid Cube doesn't exist, could not update: " + hybridName);
+                throw new IllegalArgumentException("The Hybrid Cube doesn't exist, could not update: " + hybridName);
             }
             // Update the Hybrid
-            update(hybridInstance, realizationEntries, projectName, owner);
-        } else if ("delete".equals(action)) {
-            if (hybridInstance == null) {
-                throw new RuntimeException("The Hybrid Cube doesn't exist, could not delete: " + hybridName);
-            }
-            // Delete the Hybrid
-            delete(hybridInstance);
+            update(hybridInstance, realizationEntries, projectName, owner, checkCubeSize);
         }
-
     }
 
     private HybridInstance create(String hybridName, List<RealizationEntry> realizationEntries, String projectName, String owner) throws IOException {
         checkSegmentOffset(realizationEntries);
         HybridInstance hybridInstance = HybridInstance.create(kylinConfig, hybridName, realizationEntries);
-        store.putResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
+        store.checkAndPutResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
         ProjectManager.getInstance(kylinConfig).moveRealizationToProject(RealizationType.HYBRID, hybridInstance.getName(), projectName, owner);
         hybridManager.reloadHybridInstance(hybridName);
         logger.info("HybridInstance was created at: " + hybridInstance.getResourcePath());
         return hybridInstance;
     }
 
-    private void update(HybridInstance hybridInstance, List<RealizationEntry> realizationEntries, String projectName, String owner) throws IOException {
-        checkSegmentOffset(realizationEntries);
+    private void update(HybridInstance hybridInstance, List<RealizationEntry> realizationEntries, String projectName, String owner, boolean checkCubeSize) throws IOException {
+        if (checkCubeSize)
+            checkSegmentOffset(realizationEntries);
         hybridInstance.setRealizationEntries(realizationEntries);
-        store.putResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
+        store.checkAndPutResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
         ProjectManager.getInstance(kylinConfig).moveRealizationToProject(RealizationType.HYBRID, hybridInstance.getName(), projectName, owner);
         hybridManager.reloadHybridInstance(hybridInstance.getName());
         logger.info("HybridInstance was updated at: " + hybridInstance.getResourcePath());
@@ -179,27 +207,28 @@ public class HybridCubeCLI extends AbstractApplication {
     }
 
     private void checkSegmentOffset(List<RealizationEntry> realizationEntries) {
-        if (realizationEntries == null || realizationEntries.size() == 0)
-            throw new RuntimeException("No realization found");
-        if (realizationEntries.size() == 1)
-            throw new RuntimeException("Hybrid needs at least 2 cubes");
-        long lastOffset = -1;
+        List<SegmentRange> segmentRanges = Lists.newArrayList();
+
         for (RealizationEntry entry : realizationEntries) {
             if (entry.getType() != RealizationType.CUBE) {
-                throw new RuntimeException("Wrong realization type: " + entry.getType() + ", only cube supported. ");
+                throw new IllegalArgumentException("Wrong realization type: " + entry.getType() + ", only cube supported. ");
             }
 
             CubeInstance cubeInstance = cubeManager.getCube(entry.getRealization());
-            CubeSegment segment = cubeInstance.getLastSegment();
-            if (segment == null)
-                continue;
-            if (lastOffset == -1) {
-                lastOffset = (Long) segment.getSegRange().end.v;
-            } else {
-                if (lastOffset > (Long) segment.getSegRange().start.v) {
-                    throw new RuntimeException("Segments has overlap, could not hybrid. Last Segment End: " + lastOffset + ", Next Segment Start: " + segment.getSegRange().start.v);
+            Segments<CubeSegment> segments = cubeInstance.getSegments();
+
+            for (CubeSegment segment : segments) {
+                segmentRanges.add(segment.getSegRange());
+            }
+        }
+
+        if (segmentRanges.size() >= 2) {
+            Collections.sort(segmentRanges);
+
+            for (int i = 0; i < segmentRanges.size() - 1; i++) {
+                if (segmentRanges.get(i).overlaps(segmentRanges.get(i + 1))) {
+                    throw new IllegalArgumentException("Segments has overlap, could not hybrid. First Segment Range: [" + segmentRanges.get(i).start.v + "," + segmentRanges.get(i).end.v + "], Second Segment Range: [" + segmentRanges.get(i + 1).start.v + "," + segmentRanges.get(i + 1).end.v + "]");
                 }
-                lastOffset = (Long) segment.getSegRange().end.v;
             }
         }
     }

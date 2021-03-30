@@ -19,10 +19,12 @@
 package org.apache.kylin.cube;
 
 import java.io.Serializable;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
@@ -31,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.kv.CubeDimEncMap;
@@ -52,8 +55,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
@@ -79,6 +82,10 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     private SegmentStatusEnum status;
     @JsonProperty("size_kb")
     private long sizeKB;
+    @JsonProperty("is_merged")
+    private boolean isMerged;
+    @JsonProperty("estimate_ratio")
+    private List<Double> estimateRatio;
     @JsonProperty("input_records")
     private long inputRecords;
     @JsonProperty("input_records_size")
@@ -115,12 +122,19 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<Integer, Long> sourcePartitionOffsetEnd = Maps.newHashMap();
 
+    @JsonProperty("stream_source_checkpoint")
+    private String streamSourceCheckpoint;
+
     @JsonProperty("additionalInfo")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, String> additionalInfo = new LinkedHashMap<String, String>();
 
+    @JsonProperty("dimension_range_info_map")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<String, DimensionRangeInfo> dimensionRangeInfoMap = Maps.newHashMap();
+
     private Map<Long, Short> cuboidBaseShards = Maps.newConcurrentMap(); // cuboid id ==> base(starting) shard for this cuboid
-    
+
     // lazy init
     transient volatile ISegmentAdvisor advisor = null;
 
@@ -132,7 +146,7 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         return getCubeInstance().getCuboidScheduler();
     }
 
-    public static String makeSegmentName(TSRange tsRange, SegmentRange segRange) {
+    public static String makeSegmentName(TSRange tsRange, SegmentRange segRange, DataModelDesc modelDesc) {
         if (tsRange == null && segRange == null) {
             return "FULL_BUILD";
         }
@@ -141,10 +155,34 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
             return segRange.start.v + "_" + segRange.end.v;
         }
 
+        if (!modelDesc.isStandardPartitionedDateColumn()) {
+            return tsRange.start.v + "_" + tsRange.end.v;
+        }
+
         // using time
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.ROOT);
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
         return dateFormat.format(tsRange.start.v) + "_" + dateFormat.format(tsRange.end.v);
+    }
+
+    public static Pair<Long, Long> parseSegmentName(String segmentName) {
+        if ("FULL".equals(segmentName)) {
+            return new Pair<>(0L, 0L);
+        }
+        String[] startEnd = segmentName.split("_");
+        if (startEnd.length != 2) {
+            throw new IllegalArgumentException("the segmentName is illegal: " + segmentName);
+        }
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.ROOT);
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+        try {
+            long dateRangeStart = dateFormat.parse(startEnd[0]).getTime();
+            long dateRangeEnd = dateFormat.parse(startEnd[1]).getTime();
+            return new Pair<>(dateRangeStart, dateRangeEnd);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Invalid segmentName for CubeSegment, segmentName = " + segmentName);
+        }
     }
 
     // ============================================================================
@@ -188,6 +226,22 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
 
     public void setSizeKB(long sizeKB) {
         this.sizeKB = sizeKB;
+    }
+
+    public boolean isMerged() {
+        return isMerged;
+    }
+
+    public void setMerged(boolean isMerged) {
+        this.isMerged = isMerged;
+    }
+
+    public List<Double> getEstimateRatio() {
+        return estimateRatio;
+    }
+
+    public void setEstimateRatio(List<Double> estimateRatio) {
+        this.estimateRatio = estimateRatio;
     }
 
     public long getInputRecords() {
@@ -243,7 +297,7 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         return cubeInstance;
     }
 
-    void setCubeInstance(CubeInstance cubeInstance) {
+    public void setCubeInstance(CubeInstance cubeInstance) {
         this.cubeInstance = cubeInstance;
     }
 
@@ -265,6 +319,10 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         if (snapshots == null)
             snapshots = new ConcurrentHashMap<String, String>();
         return snapshots;
+    }
+
+    public void resetSnapshots() {
+        snapshots = new ConcurrentHashMap<String, String>();
     }
 
     public String getSnapshotResPath(String table) {
@@ -302,6 +360,11 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         getDictionaries().put(dictKey, dictResPath);
     }
 
+    public String removeDictResPath(TblColRef col) {
+        String dictKey = col.getIdentity();
+        return getDictionaries().remove(dictKey);
+    }
+    
     public void setStorageLocationIdentifier(String storageLocationIdentifier) {
         this.storageLocationIdentifier = storageLocationIdentifier;
     }
@@ -310,6 +373,14 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         Map<TblColRef, Dictionary<String>> result = Maps.newHashMap();
         for (TblColRef col : getCubeDesc().getAllColumnsHaveDictionary()) {
             result.put(col, (Dictionary<String>) getDictionary(col));
+        }
+        return result;
+    }
+
+    public Map<TblColRef, Dictionary<String>> buildGlobalDictionaryMap(int globalColumnsSize) {
+        Map<TblColRef, Dictionary<String>> result = Maps.newHashMapWithExpectedSize(globalColumnsSize);
+        for (TblColRef col : getCubeDesc().getAllGlobalDictColumnsNeedBuilt()) {
+            result.put(col, getDictionary(col));
         }
         return result;
     }
@@ -357,12 +428,12 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     void _setSourceOffsetEnd(long sourceOffsetEnd) {
         this.sourceOffsetEnd = sourceOffsetEnd;
     }
-    
+
     @Override
     public SegmentRange getSegRange() {
         return getAdvisor().getSegRange();
     }
-    
+
     public void setSegRange(SegmentRange range) {
         getAdvisor().setSegRange(range);
     }
@@ -371,19 +442,19 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     public TSRange getTSRange() {
         return getAdvisor().getTSRange();
     }
-    
+
     public void setTSRange(TSRange range) {
         getAdvisor().setTSRange(range);
     }
-    
+
     public boolean isOffsetCube() {
         return getAdvisor().isOffsetCube();
     }
-    
+
     private ISegmentAdvisor getAdvisor() {
         if (advisor != null)
             return advisor;
-        
+
         synchronized (this) {
             if (advisor == null) {
                 advisor = Segments.newSegmentAdvisor(this);
@@ -391,11 +462,17 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
             return advisor;
         }
     }
-    
+
     @Override
     public void validate() throws IllegalStateException {
+        if (cubeInstance.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
+            if (!isOffsetCube() && dateRangeStart >= dateRangeEnd)
+                throw new IllegalStateException("Invalid segment, dateRangeStart(" + dateRangeStart + ") must be smaller than dateRangeEnd(" + dateRangeEnd + ") in segment " + this);
+            if (isOffsetCube() && sourceOffsetStart >= sourceOffsetEnd)
+                throw new IllegalStateException("Invalid segment, sourceOffsetStart(" + sourceOffsetStart + ") must be smaller than sourceOffsetEnd(" + sourceOffsetEnd + ") in segment " + this);
+        }
     }
-    
+
     public String getProject() {
         return getCubeDesc().getProject();
     }
@@ -570,5 +647,58 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
 
     public void setSourcePartitionOffsetStart(Map<Integer, Long> sourcePartitionOffsetStart) {
         this.sourcePartitionOffsetStart = sourcePartitionOffsetStart;
+    }
+
+    public Map<String, DimensionRangeInfo> getDimensionRangeInfoMap() {
+        return dimensionRangeInfoMap;
+    }
+
+    public void setDimensionRangeInfoMap(Map<String, DimensionRangeInfo> dimensionRangeInfoMap) {
+        this.dimensionRangeInfoMap = dimensionRangeInfoMap;
+    }
+
+    public String getStreamSourceCheckpoint() {
+        return streamSourceCheckpoint;
+    }
+
+    public void setStreamSourceCheckpoint(String streamSourceCheckpoint) {
+        this.streamSourceCheckpoint = streamSourceCheckpoint;
+    }
+
+    public static CubeSegment getCopyOf(CubeSegment other) {
+        CubeSegment copy = new CubeSegment();
+        copy.cubeInstance = other.cubeInstance;
+        copy.uuid = other.uuid;
+        copy.name = other.name;
+        copy.storageLocationIdentifier = other.storageLocationIdentifier;
+        copy.dateRangeStart = other.dateRangeStart;
+        copy.dateRangeEnd = other.dateRangeEnd;
+        copy.sourceOffsetStart = other.sourceOffsetStart;
+        copy.sourceOffsetEnd = other.sourceOffsetEnd;
+        copy.status = other.status;
+        copy.sizeKB = other.sizeKB;
+        copy.isMerged = other.isMerged;
+        copy.estimateRatio = other.estimateRatio == null ? null : Lists.newArrayList(other.estimateRatio);
+        copy.inputRecords = other.inputRecords;
+        copy.inputRecordsSize = other.inputRecordsSize;
+        copy.lastBuildTime = other.lastBuildTime;
+        copy.lastBuildJobID = other.lastBuildJobID;
+        copy.createTimeUTC = other.createTimeUTC;
+        copy.cuboidShardNums.putAll(other.cuboidShardNums);
+        copy.totalShards = other.totalShards;
+        copy.blackoutCuboids.addAll(other.blackoutCuboids);
+        copy.getDictionaries().putAll(other.getDictionaries());
+        copy.getSnapshots().putAll(other.getSnapshots());
+        copy.rowkeyStats.addAll(other.rowkeyStats);
+        copy.sourcePartitionOffsetStart.putAll(other.sourcePartitionOffsetStart);
+        copy.sourcePartitionOffsetEnd.putAll(other.sourcePartitionOffsetEnd);
+        if (other.streamSourceCheckpoint != null) {
+            copy.streamSourceCheckpoint = other.streamSourceCheckpoint;
+        }
+        copy.additionalInfo.putAll(other.additionalInfo);
+        copy.dimensionRangeInfoMap = other.dimensionRangeInfoMap == null ? null
+                : Maps.newHashMap(other.dimensionRangeInfoMap);
+        copy.binarySignature = other.binarySignature;
+        return copy;
     }
 }

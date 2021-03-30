@@ -74,4 +74,14 @@ public class BigDecimalSerializerTest extends LocalFileMetadataTestCase {
         bigDecimalSerializer.serialize(input, buffer);
     }
 
+    @Test
+    public void testNull() {
+        BigDecimal input = null;
+        ByteBuffer buffer = ByteBuffer.allocate(256);
+        buffer.mark();
+        bigDecimalSerializer.serialize(input, buffer);
+        buffer.reset();
+        BigDecimal output = bigDecimalSerializer.deserialize(buffer);
+        assertEquals(input, output);
+    }
 }

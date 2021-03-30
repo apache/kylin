@@ -30,7 +30,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+import org.apache.kylin.shaded.com.google.common.base.MoreObjects;
 
 /**
  */
@@ -67,6 +67,10 @@ public class RowKeyDesc implements java.io.Serializable {
         return desc;
     }
 
+    public RowKeyColDesc getColDescUncheck(TblColRef col) {
+        return columnMap.get(col);
+    }
+
     public boolean isUseDictionary(TblColRef col) {
         return getColDesc(col).isUsingDictionary();
     }
@@ -100,7 +104,7 @@ public class RowKeyDesc implements java.io.Serializable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("RowKeyColumns", Arrays.toString(rowkeyColumns)).toString();
+        return MoreObjects.toStringHelper(this).add("RowKeyColumns", Arrays.toString(rowkeyColumns)).toString();
     }
 
     private void buildRowKey() {

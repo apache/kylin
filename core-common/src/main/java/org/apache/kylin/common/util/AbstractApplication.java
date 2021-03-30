@@ -31,7 +31,7 @@ public abstract class AbstractApplication {
 
     public final void execute(String[] args) {
         OptionsHelper optionsHelper = new OptionsHelper();
-        System.out.println("Abstract Application args:" + StringUtils.join(args, " "));
+        System.out.println("Running " + this.getClass().getName() + " " + StringUtils.join(args, " "));
         try {
             optionsHelper.parseOptions(getOptions(), args);
             execute(optionsHelper);
@@ -39,7 +39,7 @@ public abstract class AbstractApplication {
             optionsHelper.printUsage(this.getClass().getName(), getOptions());
             throw new RuntimeException("error parsing args", e);
         } catch (Exception e) {
-            throw new RuntimeException("error execute " + this.getClass().getName(), e);
+            throw new RuntimeException("error execute " + this.getClass().getName() + ". Root cause: " + e.getMessage(), e);
         }
     }
 }

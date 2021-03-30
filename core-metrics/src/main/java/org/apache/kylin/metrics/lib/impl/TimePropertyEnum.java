@@ -18,12 +18,19 @@
 
 package org.apache.kylin.metrics.lib.impl;
 
-import com.google.common.base.Strings;
+import java.util.Locale;
+
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 
 public enum TimePropertyEnum {
-    YEAR("KYEAR_BEGIN_DATE"), MONTH("KMONTH_BEGIN_DATE"), WEEK_BEGIN_DATE("KWEEK_BEGIN_DATE"), DAY_DATE(
-            "KDAY_DATE"), DAY_TIME(
-                    "KDAY_TIME"), TIME_HOUR("KTIME_HOUR"), TIME_MINUTE("KTIME_MINUTE"), TIME_SECOND("KTIME_SECOND");
+    YEAR("KYEAR_BEGIN_DATE"),
+    MONTH("KMONTH_BEGIN_DATE"),
+    WEEK_BEGIN_DATE("KWEEK_BEGIN_DATE"),
+    DAY_DATE("KDAY_DATE"),
+    DAY_TIME("KDAY_TIME"),
+    TIME_HOUR("KTIME_HOUR"),
+    TIME_MINUTE("KTIME_MINUTE"),
+    TIME_SECOND("KTIME_SECOND");
 
     private final String propertyName;
 
@@ -31,12 +38,12 @@ public enum TimePropertyEnum {
         this.propertyName = propertyName;
     }
 
-    public static TimePropertyEnum getByPropertyName(String propertyName) {
+    public static TimePropertyEnum getByKey(String propertyName) {
         if (Strings.isNullOrEmpty(propertyName)) {
             return null;
         }
         for (TimePropertyEnum property : TimePropertyEnum.values()) {
-            if (property.propertyName.equals(propertyName.toUpperCase())) {
+            if (property.propertyName.equals(propertyName.toUpperCase(Locale.ROOT))) {
                 return property;
             }
         }

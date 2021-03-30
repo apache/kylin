@@ -22,15 +22,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  * @author yangli9
@@ -45,18 +48,11 @@ public class DictionaryGenerator {
 
         // build dict, case by data type
         IDictionaryBuilder builder;
-        if (dataType.isDateTimeFamily()) {
-            if (dataType.isDate())
-                builder = new DateDictBuilder();
-            else
-                builder = new TimeDictBuilder();
-        } else {
-            boolean useForest = KylinConfig.getInstanceFromEnv().isUseForestTrieDictionary();
-            if (dataType.isNumberFamily())
-                builder = useForest ? new NumberTrieDictForestBuilder() : new NumberTrieDictBuilder();
-            else
-                builder = useForest ? new StringTrieDictForestBuilder() : new StringTrieDictBuilder();
-        }
+        boolean useForest = KylinConfig.getInstanceFromEnv().isUseForestTrieDictionary();
+        if (dataType.isNumberFamily())
+            builder = useForest ? new NumberTrieDictForestBuilder() : new NumberTrieDictBuilder();
+        else
+            builder = useForest ? new StringTrieDictForestBuilder() : new StringTrieDictBuilder();
         return builder;
     }
 
@@ -75,18 +71,26 @@ public class DictionaryGenerator {
         builder.init(dictInfo, baseId, null);
 
         // add values
-        while (valueEnumerator.moveNext()) {
-            String value = valueEnumerator.current();
+        try {
+            while (valueEnumerator.moveNext()) {
+                String value = valueEnumerator.current();
 
-            boolean accept = builder.addValue(value);
+                boolean accept = builder.addValue(value);
 
-            if (accept && samples.size() < nSamples && samples.contains(value) == false)
-                samples.add(value);
+                if (accept && samples.size() < nSamples && samples.contains(value) == false)
+                    samples.add(value);
+            }
+        } catch (IOException e) {
+            logger.error("Error during adding dict value.", e);
+            builder.clear();
+            throw e;
         }
 
         // build
         Dictionary<String> dict = builder.build();
-
+        logger.debug("Dictionary cardinality: " + dict.getSize());
+        logger.debug("Dictionary builder class: " + builder.getClass().getName());
+        logger.debug("Dictionary class: " + dict.getClass().getName());
         // log a few samples
         StringBuilder buf = new StringBuilder();
         for (String s : samples) {
@@ -96,81 +100,20 @@ public class DictionaryGenerator {
             buf.append(s.toString()).append("=>").append(dict.getIdFromValue(s));
         }
         logger.debug("Dictionary value samples: " + buf.toString());
-        logger.debug("Dictionary cardinality: " + dict.getSize());
-        logger.debug("Dictionary builder class: " + builder.getClass().getName());
-        logger.debug("Dictionary class: " + dict.getClass().getName());
+
         return dict;
     }
 
     public static Dictionary mergeDictionaries(DataType dataType, List<DictionaryInfo> sourceDicts) throws IOException {
-        return buildDictionary(dataType, new MultipleDictionaryValueEnumerator(dataType, sourceDicts));
-    }
-
-    private static class DateDictBuilder implements IDictionaryBuilder {
-        private static final String[] DATE_PATTERNS = new String[] { "yyyy-MM-dd", "yyyyMMdd" };
-
-        private int baseId;
-        private String datePattern;
-
-        @Override
-        public void init(DictionaryInfo info, int baseId, String hdfsDir) throws IOException {
-            this.baseId = baseId;
-        }
-
-        @Override
-        public boolean addValue(String value) {
-            if (StringUtils.isBlank(value)) // empty string is treated as null
-                return false;
-
-            // detect date pattern on the first value
-            if (datePattern == null) {
-                for (String p : DATE_PATTERNS) {
-                    try {
-                        DateFormat.stringToDate(value, p);
-                        datePattern = p;
-                        break;
-                    } catch (Exception e) {
-                        // continue;
-                    }
-                }
-                if (datePattern == null)
-                    throw new IllegalArgumentException("Unknown date pattern for input value: " + value);
+        List<Dictionary<String>> dictList = Lists.transform(sourceDicts, new Function<DictionaryInfo, Dictionary<String>>() {
+            @Nullable
+            @Override
+            public Dictionary<String> apply(@Nullable DictionaryInfo input) {
+                Preconditions.checkNotNull(input);
+                return input.dictionaryObject;
             }
-
-            // check the date format
-            DateFormat.stringToDate(value, datePattern);
-            return true;
-        }
-
-        @Override
-        public Dictionary<String> build() throws IOException {
-            if (datePattern == null)
-                datePattern = DATE_PATTERNS[0];
-
-            return new DateStrDictionary(datePattern, baseId);
-        }
-    }
-
-    private static class TimeDictBuilder implements IDictionaryBuilder {
-
-        @Override
-        public void init(DictionaryInfo info, int baseId, String hdfsDir) throws IOException {
-        }
-
-        @Override
-        public boolean addValue(String value) {
-            if (StringUtils.isBlank(value)) // empty string is treated as null
-                return false;
-
-            // check the time format
-            DateFormat.stringToMillis(value);
-            return true;
-        }
-
-        @Override
-        public Dictionary<String> build() throws IOException {
-            return new TimeStrDictionary(); // base ID is always 0
-        }
+        });
+        return buildDictionary(dataType, new MultipleDictionaryValueEnumerator(dataType, dictList));
     }
 
     private static class StringTrieDictBuilder implements IDictionaryBuilder {
@@ -196,6 +139,11 @@ public class DictionaryGenerator {
         public Dictionary<String> build() throws IOException {
             return builder.build(baseId);
         }
+
+        @Override
+        public void clear() {
+
+        }
     }
 
     private static class StringTrieDictForestBuilder implements IDictionaryBuilder {
@@ -218,6 +166,11 @@ public class DictionaryGenerator {
         @Override
         public Dictionary<String> build() throws IOException {
             return builder.build();
+        }
+
+        @Override
+        public void clear() {
+
         }
     }
 
@@ -245,6 +198,11 @@ public class DictionaryGenerator {
         public Dictionary<String> build() throws IOException {
             return builder.build(baseId);
         }
+
+        @Override
+        public void clear() {
+
+        }
     }
 
     private static class NumberTrieDictForestBuilder implements IDictionaryBuilder {
@@ -267,6 +225,11 @@ public class DictionaryGenerator {
         @Override
         public Dictionary<String> build() throws IOException {
             return builder.build();
+        }
+
+        @Override
+        public void clear() {
+
         }
     }
 

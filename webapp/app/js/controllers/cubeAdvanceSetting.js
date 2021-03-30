@@ -18,38 +18,54 @@
 
 'use strict';
 
-KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfig,MetaModel,cubesManager,CubeDescModel,SweetAlert,VdmUtil,modelsManager) {
+KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfig,MetaModel,TableService,cubesManager,CubeDescModel,SweetAlert,VdmUtil,modelsManager) {
   $scope.cubesManager = cubesManager;
 
   var needLengthKeyList=cubeConfig.needSetLengthEncodingList;
   $scope.convertedRowkeys = [];
-  angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(item){
-    item.encoding=$scope.removeVersion(item.encoding);
-    var _valueLength;
-    var tableName=VdmUtil.getNameSpaceTopName(item.column);
-    var databaseName=modelsManager.getDatabaseByColumnName(item.column);
-    var baseKey=item.encoding.replace(/:\d+/,'');
-    if(needLengthKeyList.indexOf(baseKey)>-1){
-      var result=/:(\d+)/.exec(item.encoding);
-      _valueLength=result?result[1]:0;
-    }
-    var _encoding=baseKey;
-    var rowkeyObj = {
-      column:item.column,
-      encoding:_encoding+(item.encoding_version?"[v"+item.encoding_version+"]":"[v1]"),
-      encodingName:_encoding,
-      valueLength:_valueLength,
-      isShardBy:item.isShardBy,
-      encoding_version:item.encoding_version||1,
-      table:tableName,
-      database:databaseName
-    }
-    if(item.index){
-      rowkeyObj.index=item.index;
-    }
-    $scope.convertedRowkeys.push(rowkeyObj);
+  $scope.dim_cap = $scope.cubeMetaFrame.aggregation_groups.length > 0 && $scope.cubeMetaFrame.aggregation_groups[0].select_rule.dim_cap ? $scope.cubeMetaFrame.aggregation_groups[0].select_rule.dim_cap : 0;
 
-  })
+  TableService.list({ext: true, project:$scope.projectModel.selectedProject}, function(tables) {
+    $scope.initRowKey(tables);
+  }, function (error) {
+    $scope.initRowKey([]);
+  });
+
+  $scope.initRowKey = function(tables) {
+    angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(item){
+      item.encoding=$scope.removeVersion(item.encoding);
+      var _valueLength;
+      var tableName=VdmUtil.getNameSpaceTopName(item.column);
+      var databaseName=modelsManager.getDatabaseByColumnName(item.column);
+      var baseKey=item.encoding.replace(/:\d+/,'');
+      if(needLengthKeyList.indexOf(baseKey)>-1){
+        var result=/:(\d+)/.exec(item.encoding);
+        _valueLength=result?result[1]:0;
+      }$scope.cubeMetaFrame
+      var _encoding=baseKey;
+      var rowkeyTable = _.find(tables, function(table) {
+        var modelDesc = modelsManager.getModel($scope.cubeMetaFrame.model_name);
+        var lookupTable = modelDesc ? _.find(modelDesc.lookups, function(lookup){ return lookup.alias === tableName; }) : undefined;
+        return ((modelDesc && modelDesc.fact_table === (table.database + '.' + table.name) && table.name === tableName) || (lookupTable && lookupTable.table === (table.name + table.database)));
+      });
+      var cardinality = rowkeyTable ? rowkeyTable.cardinality[VdmUtil.removeNameSpace(item.column)] : undefined;
+      var rowkeyObj = {
+        column:item.column,
+        encoding:_encoding+(item.encoding_version?"[v"+item.encoding_version+"]":"[v1]"),
+        encodingName:_encoding,
+        valueLength:_valueLength,
+        isShardBy:item.isShardBy,
+        encoding_version:item.encoding_version||1,
+        table:tableName,
+        database:databaseName,
+        cardinality: cardinality || 'N/A'
+      }
+      if(item.index){
+        rowkeyObj.index=item.index;
+      }
+      $scope.convertedRowkeys.push(rowkeyObj);
+    })
+  }
 
 
   $scope.rule={
@@ -65,6 +81,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     var isShardBy = item.isShardBy;
     var version=$scope.getTypeVersion(item.encoding);
     var encodingType=$scope.removeVersion(item.encoding);
+    var cardinality = item.cardinality;
 
     if(needLengthKeyList.indexOf(encodingType)!=-1){
       encoding = encodingType+":"+item.valueLength;
@@ -76,6 +93,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     $scope.cubeMetaFrame.rowkey.rowkey_columns[index].encoding = encoding;
     $scope.cubeMetaFrame.rowkey.rowkey_columns[index].encoding_version =version;
     $scope.cubeMetaFrame.rowkey.rowkey_columns[index].isShardBy = isShardBy;
+    $scope.cubeMetaFrame.rowkey.rowkey_columns[index].cardinality = cardinality;
     if(checkShard == true){
       $scope.checkShardByColumn();
     }
@@ -104,6 +122,11 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   $scope.sortableOptions = {
     stop:$scope.resortRowkey
   };
+  $scope.changeDimCap  = function (dim_cap) {
+    angular.forEach($scope.cubeMetaFrame.aggregation_groups, function (agg) {
+      agg.select_rule.dim_cap = dim_cap
+    })
+  }
 
   $scope.addNewHierarchy = function(grp){
     grp.select_rule.hierarchy_dims.push([]);
@@ -171,12 +194,20 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
 
   }
 
-  $scope.isReuse=false;
+  var ReuseEnum = {
+    BUILD: 1,
+    SELF: 2,
+    DOMAIN: 3
+  };
+
+  $scope.isReuse=1;
   $scope.addNew=false;
   $scope.newDictionaries = {
     "column":null,
     "builder": null,
-    "reuse": null
+    "reuse": null,
+    "model": null,
+    "cube": null
   }
 
   $scope.initUpdateDictionariesStatus = function(){
@@ -192,11 +223,13 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
       $scope.updateDictionariesStatus.isEdit = true;
       $scope.addNew=true;
       $scope.updateDictionariesStatus.editIndex = index;
-      if(dictionaries.builder==null){
-        $scope.isReuse=true;
+      if(dictionaries.builder==null && dictionaries.model==null){
+        $scope.isReuse = ReuseEnum.SELF;
+      } else if (dictionaries.model!=null){
+        $scope.isReuse = ReuseEnum.DOMAIN;
       }
       else{
-        $scope.isReuse=false;
+        $scope.isReuse = ReuseEnum.BUILD;
       }
     }
     else{
@@ -212,9 +245,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
           return false;
         }
       }
-      else {
-        $scope.cubeMetaFrame.dictionaries[$scope.updateDictionariesStatus.editIndex] = $scope.newDictionaries;
-      }
+      $scope.cubeMetaFrame.dictionaries[$scope.updateDictionariesStatus.editIndex] = $scope.newDictionaries;
     }
     else
       {
@@ -227,7 +258,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
       $scope.initUpdateDictionariesStatus();
       $scope.nextDictionariesInit();
       $scope.addNew = !$scope.addNew;
-      $scope.isReuse = false;
+      $scope.isReuse = ReuseEnum.BUILD;
       return true;
 
   };
@@ -236,7 +267,9 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     $scope.nextDic = {
       "coiumn":null,
       "builder":null,
-      "reuse":null
+      "reuse":null,
+      "model":null,
+      "cube":null
     }
   }
 
@@ -257,16 +290,25 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
 
   $scope.clearNewDictionaries = function (){
     $scope.newDictionaries = null;
-    $scope.isReuse=false;
+    $scope.isReuse = ReuseEnum.BUILD;
     $scope.initUpdateDictionariesStatus();
     $scope.nextDictionariesInit();
     $scope.addNew=!$scope.addNew;
   }
 
-  $scope.change = function (){
+  $scope.change = function (type){
     $scope.newDictionaries.builder=null;
     $scope.newDictionaries.reuse=null;
-    $scope.isReuse=!$scope.isReuse;
+    $scope.newDictionaries.domain=null;
+    $scope.newDictionaries.model=null;
+    $scope.newDictionaries.cube=null;
+    if(type == 'domain'){
+      $scope.isReuse = ReuseEnum.DOMAIN;
+    }else if (type == 'builder'){
+      $scope.isReuse = ReuseEnum.BUILD;
+    }else if (type == 'reuse'){
+      $scope.isReuse = ReuseEnum.SELF;
+    }
   }
 
   $scope.removeElement =  function(arr,element){
@@ -382,4 +424,146 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     }
   };
 
+  $scope.mandatoryDimensionSet = {
+    select: []
+  };
+
+  $scope.uploadMandatoryDimensionSetList = function() {
+    var file = document.getElementById('cuboids').files[0];
+    if (file) {
+      var reader = new FileReader();
+      reader.onload = function(event) {
+        var dimensionSetList = JSON.parse(event.target.result);
+        $scope.cubeMetaFrame.mandatory_dimension_set_list = dimensionSetList;
+        $scope.$apply();
+        // TODO add verify dimension set
+      };
+      reader.readAsText(file);
+    } else {
+      swal('Oops...', 'Please choose your file first.', 'warning');
+    }
+  };
+
+  $scope.removeDimensionSet = function(index) {
+    $scope.cubeMetaFrame.mandatory_dimension_set_list.splice(index, 1);
+  };
+
+  $scope.addDimensionSet = function() {
+    if ($scope.mandatoryDimensionSet.select.length) {
+      // validate the dimension set existed
+      var existed = false;
+      var selectedDimension = _.clone($scope.mandatoryDimensionSet.select).sort(function (dimensionA, dimensionB) {
+        if (dimensionA < dimensionB) return 1;
+        if (dimensionB < dimensionA) return -1;
+        return 0;
+      });
+      angular.forEach($scope.cubeMetaFrame.mandatory_dimension_set_list, function(dimensionSet, index) {
+        var dimensionSetSorted = _.clone(dimensionSet).sort(function (dimensionA, dimensionB) {
+          if (dimensionA < dimensionB) return 1;
+          if (dimensionB < dimensionA) return -1;
+          return 0;
+        });
+        if (angular.equals(dimensionSet, selectedDimension)) {
+          existed = true;
+        };
+      });
+      if (!existed) {
+        $scope.cubeMetaFrame.mandatory_dimension_set_list.push($scope.mandatoryDimensionSet.select);
+        $scope.mandatoryDimensionSet.select = [];
+      } else {
+        swal('Oops...', 'Dimension set already existed', 'warning');
+      }
+    } else {
+      swal('Oops...', 'Dimension set should not be empty', 'warning');
+    }
+  };
+
+  if ($scope.state.mode == 'edit') {
+    $scope.$on('$destroy', function () {
+      $scope.$emit('AdvancedSettingEdited');
+    });
+  }
+
+  $scope.newSnapshot = {
+    select: {}
+  };
+
+  $scope.removeSnapshotTable = function(index) {
+    $scope.cubeMetaFrame.snapshot_table_desc_list.splice(index, 1);
+  };
+
+  $scope.addSnapshot = function(newSnapshot) {
+    if (!$scope.cubeMetaFrame.snapshot_table_desc_list) {
+       $scope.cubeMetaFrame.snapshot_table_desc_list = [];
+    }
+    if (!newSnapshot.table_name || !newSnapshot.storage_type) {
+      swal('Oops...', 'Snapshot table name or storage should not be empty', 'warning');
+      return;
+    } else if ($scope.cubeMetaFrame.snapshot_table_desc_list.length && newSnapshot.editIndex == null){
+      var existSnapshot = _.find($scope.cubeMetaFrame.snapshot_table_desc_list, function(snapshot){ return snapshot.table_name === newSnapshot.table_name;});
+      if (!!existSnapshot) {
+        swal('Oops...', 'Snapshot table already existed', 'warning');
+        return;
+      }
+    }
+    if (newSnapshot.editIndex != null) {
+      $scope.cubeMetaFrame.snapshot_table_desc_list[newSnapshot.editIndex] = angular.copy(newSnapshot);
+    } else {
+      $scope.cubeMetaFrame.snapshot_table_desc_list.push(angular.copy(newSnapshot));
+    }
+    $scope.newSnapshot.select = {};
+    $scope.addNewSanpshot = !$scope.addNewSanpshot;
+  };
+
+  $scope.changeSnapshotStorage = function(snapshot) {
+    if (snapshot.storage_type == 'hbase') {
+      snapshot.global = true;
+    }
+  };
+
+  $scope.changeSnapshotTable = function(changeSnapshot, beforeTableName, snapshotTableDescList) {
+    var existSnapshot = _.find(snapshotTableDescList, function(snapshot) {
+      return snapshot.table_name === changeSnapshot.table_name;
+    });
+    if (!!existSnapshot) {
+      changeSnapshot.table_name = beforeTableName;
+      swal('Oops...', 'Snapshot table already existed', 'warning');
+    }
+  };
+
+  $scope.addNewSnapshot = function(sanpshot, index) {
+    if (sanpshot && index >=0) {
+      $scope.newSnapshot.select = sanpshot;
+      $scope.addNewSanpshot = true;
+      $scope.newSnapshot.select.editIndex = index;
+    } else {
+      $scope.addNewSanpshot = !$scope.addNewSanpshot;
+    }
+  };
+
+  $scope.cancelEditSnapshot = function() {
+    $scope.newSnapshot.select = {};
+    $scope.addNewSanpshot = !$scope.addNewSanpshot;
+  };
+
+  $scope.getCubeLookups = function() {
+    var modelDesc = modelsManager.getModel($scope.cubeMetaFrame.model_name);
+    var modelLookups = modelDesc ? modelDesc.lookups : [];
+    var cubeLookups = [];
+    angular.forEach(modelLookups, function(modelLookup, index) {
+      var dimensionLookup = _.find($scope.cubeMetaFrame.dimensions, function(dimension){ return dimension.table === modelLookup.alias;});
+      if (!!dimensionLookup) {
+        if (cubeLookups.indexOf(modelLookup.table) === -1) {
+          cubeLookups.push(modelLookup.table);
+        }
+      }
+    });
+    return cubeLookups;
+  };
+
+  $scope.isAvailableEngine = function(engine_type) {
+    return !($scope.cubeMetaFrame.storage_type === 3 && engine_type.value !== 2 );
+  }
+
+  $scope.cubeLookups = $scope.getCubeLookups();
 });

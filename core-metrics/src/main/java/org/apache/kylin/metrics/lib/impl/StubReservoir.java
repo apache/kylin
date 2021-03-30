@@ -22,6 +22,9 @@ import org.apache.kylin.metrics.lib.ActiveReservoir;
 import org.apache.kylin.metrics.lib.ActiveReservoirListener;
 import org.apache.kylin.metrics.lib.Record;
 
+/**
+ * A Reservoir will drop message.
+ */
 public class StubReservoir implements ActiveReservoir {
 
     public void addListener(ActiveReservoirListener listener) {

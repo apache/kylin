@@ -35,6 +35,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -44,6 +45,7 @@ import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -54,8 +56,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  */
@@ -83,13 +85,17 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
     @Test
     public void testSSBCubeMore() throws Exception {
         testBuild("ssb", //
-                LOCALMETA_TEST_DATA + "/data/kylin_intermediate_ssb_19920101000000_19920201000000.csv", 7000, 4);
+                LOCALMETA_TEST_DATA + "/data/" + KylinConfig.getInstanceFromEnv().getHiveIntermediateTablePrefix()
+                        + "ssb_19920101000000_19920201000000.csv",
+                7000, 4);
     }
 
     @Test
     public void testSSBCube() throws Exception {
         testBuild("ssb", //
-                LOCALMETA_TEST_DATA + "/data/kylin_intermediate_ssb_19920101000000_19920201000000.csv", 1000, 1);
+                LOCALMETA_TEST_DATA + "/data/" + KylinConfig.getInstanceFromEnv().getHiveIntermediateTablePrefix()
+                        + "ssb_19920101000000_19920201000000.csv",
+                1000, 1);
     }
 
     public void testBuild(String cubeName, String flatTable, int nInpRows, int nThreads) throws Exception {
@@ -113,7 +119,7 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
         //DoggedCubeBuilder cubeBuilder = new DoggedCubeBuilder(cube.getDescriptor(), dictionaryMap);
         cubeBuilder.setConcurrentThreads(nThreads);
 
-        ArrayBlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(1000);
+        ArrayBlockingQueue<String[]> queue = new ArrayBlockingQueue<String[]>(1000);
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         try {
@@ -144,11 +150,18 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
         }
     }
 
-    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue, int count) throws IOException, InterruptedException {
+    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<String[]> queue, int count)
+            throws IOException, InterruptedException {
         feedData(cube, flatTable, queue, count, 0);
     }
 
-    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue, int count, long randSeed) throws IOException, InterruptedException {
+    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<String[]> queue, int count,
+            long randSeed) throws IOException, InterruptedException {
+        feedData(cube, flatTable, queue, count, randSeed, Integer.MAX_VALUE);
+    }
+
+    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<String[]> queue, int count,
+            long randSeed, int splitRowThreshold) throws IOException, InterruptedException {
         IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(cube.getDescriptor());
         int nColumns = flatDesc.getAllColumns().size();
 
@@ -160,7 +173,7 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
         // get distinct values on each column
         List<String> lines = FileUtils.readLines(new File(flatTable), "UTF-8");
         for (String line : lines) {
-            String[] row = line.trim().split(",");
+            String[] row = StringUtil.splitByComma(line.trim());
             assert row.length == nColumns;
             for (int i = 0; i < nColumns; i++)
                 distinctSets[i].add(row[i]);
@@ -176,15 +189,23 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
             rand.setSeed(randSeed);
 
         // output with random data
+        int countOfLastSplit = 0;
         for (; count > 0; count--) {
-            ArrayList<String> row = new ArrayList<String>(nColumns);
+            String[] row = new String[nColumns];
             for (int i = 0; i < nColumns; i++) {
                 String[] candidates = distincts.get(i);
-                row.add(candidates[rand.nextInt(candidates.length)]);
+                row[i] = candidates[rand.nextInt(candidates.length)];
             }
             queue.put(row);
+
+            // put cut row if possible
+            countOfLastSplit++;
+            if (countOfLastSplit >= splitRowThreshold) {
+                queue.put(InputConverterUnitForRawData.CUT_ROW);
+                countOfLastSplit = 0;
+            }
         }
-        queue.put(new ArrayList<String>(0));
+        queue.put(InputConverterUnitForRawData.END_ROW);
     }
 
     static Map<TblColRef, Dictionary<String>> getDictionaryMap(CubeInstance cube, String flatTable) throws IOException {
@@ -233,7 +254,7 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
         List<String> result = Lists.newArrayList();
         List<String> lines = FileUtils.readLines(new File(flatTable), "UTF-8");
         for (String line : lines) {
-            String[] row = line.trim().split(",");
+            String[] row = StringUtil.splitByComma(line.trim());
             if (row.length != nColumns) {
                 throw new IllegalStateException();
             }
@@ -252,6 +273,12 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
         public void write(long cuboidId, GTRecord record) throws IOException {
             if (verbose)
                 System.out.println(record.toString());
+        }
+
+        @Override
+        public void write(long cuboidId, GridTable table) throws IOException {
+            if (verbose)
+                System.out.println(table.toString());
         }
 
         @Override

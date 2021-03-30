@@ -61,19 +61,19 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
 
     @Override
     public int maxLength() {
-        return Math.max(precision * TopNCounter.EXTRA_SPACE_RATE * (scale + 8), 1024 * 1024); // use at least 1M
+        return Math.max(precision * TopNCounter.EXTRA_SPACE_RATE * storageBytesEstimatePerCounter(), 1024 * 1024); // use at least 1M
     }
 
     @Override
     public int getStorageBytesEstimate() {
-        return precision * TopNCounter.EXTRA_SPACE_RATE * (scale + 8);
+        return precision * TopNCounter.EXTRA_SPACE_RATE * storageBytesEstimatePerCounter();
     }
 
     @Override
     public void serialize(TopNCounter<ByteArray> value, ByteBuffer out) {
         double[] counters = value.getCounters();
         List<Counter<ByteArray>> peek = value.topK(1);
-        int keyLength = peek.size() > 0 ? peek.get(0).getItem().length() : 0;
+        int keyLength = !peek.isEmpty() ? peek.get(0).getItem().length() : 0;
         out.putInt(value.getCapacity());
         out.putInt(value.size());
         out.putInt(keyLength);
@@ -93,7 +93,7 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
         int keyLength = in.getInt();
         double[] counters = dds.deserialize(in);
 
-        TopNCounter<ByteArray> counter = new TopNCounter<ByteArray>(capacity);
+        TopNCounter<ByteArray> counter = new TopNCounter<>(capacity);
         ByteArray byteArray;
         byte[] keyArray = new byte[size * keyLength];
         int offset = 0;
@@ -105,6 +105,19 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
         }
 
         return counter;
+    }
+
+    @Override
+    protected double getStorageBytesEstimate(double averageNumOfElementsInCounter) {
+        if (averageNumOfElementsInCounter < precision * TopNCounter.EXTRA_SPACE_RATE) {
+            return averageNumOfElementsInCounter * storageBytesEstimatePerCounter() + 12;
+        } else {
+            return getStorageBytesEstimate();
+        }
+    }
+
+    private int storageBytesEstimatePerCounter() {
+        return (scale + 8);
     }
 
 }

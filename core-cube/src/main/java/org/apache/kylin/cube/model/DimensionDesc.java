@@ -19,6 +19,7 @@
 package org.apache.kylin.cube.model;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
@@ -29,7 +30,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+import org.apache.kylin.shaded.com.google.common.base.MoreObjects;
 
 /**
  */
@@ -56,7 +57,7 @@ public class DimensionDesc implements java.io.Serializable {
         DataModelDesc model = cubeDesc.getModel();
 
         if (name != null)
-            name = name.toUpperCase();
+            name = name.toUpperCase(Locale.ROOT);
 
         tableRef = model.findTable(table);
         table = tableRef.getAlias();
@@ -81,7 +82,8 @@ public class DimensionDesc implements java.io.Serializable {
             }
         }
         if (derived != null && join == null) {
-            throw new IllegalStateException("Derived can only be defined on lookup table, cube " + cubeDesc + ", " + this);
+            throw new IllegalStateException(
+                    "Derived can only be defined on lookup table, cube " + cubeDesc + ", " + this);
         }
 
     }
@@ -140,7 +142,8 @@ public class DimensionDesc implements java.io.Serializable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("name", name).add("table", table).add("column", column).add("derived", Arrays.toString(derived)).add("join", join).toString();
+        return MoreObjects.toStringHelper(this).add("name", name).add("table", table).add("column", column)
+                .add("derived", Arrays.toString(derived)).add("join", join).toString();
     }
 
     @Override
@@ -167,7 +170,7 @@ public class DimensionDesc implements java.io.Serializable {
             return false;
         }
 
-        if (derived != null ? !derived.equals(that.derived) : that.derived != null) {
+        if (derived != null ? !Arrays.equals(derived, that.derived) : that.derived != null) {
             return false;
         }
 
@@ -181,7 +184,7 @@ public class DimensionDesc implements java.io.Serializable {
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((column == null) ? 0 : column.hashCode());
         result = prime * result + ((table == null) ? 0 : table.hashCode());
-        result = prime * result + ((derived == null) ? 0 : derived.hashCode());
+        result = prime * result + ((derived == null) ? 0 : Arrays.hashCode(derived));
         return result;
     }
 }

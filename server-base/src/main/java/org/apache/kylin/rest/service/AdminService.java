@@ -20,23 +20,31 @@ package org.apache.kylin.rest.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OrderedProperties;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.job.StorageCleanupJob;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+
 /**
- * @author jianliu
  */
 @Component("adminService")
 public class AdminService extends BasicService {
@@ -46,7 +54,7 @@ public class AdminService extends BasicService {
      * Get Java Env info as string
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public String getEnv() throws ConfigurationException {
+    public String getEnv() throws ConfigurationException, UnsupportedEncodingException {
         PropertiesConfiguration tempConfig = new PropertiesConfiguration();
         OrderedProperties orderedProperties = new OrderedProperties(new TreeMap<String, String>());
         // Add Java Env
@@ -73,25 +81,54 @@ public class AdminService extends BasicService {
 
         // do save
         tempConfig.save(baos);
-        content = baos.toString();
+        content = baos.toString("UTF-8");
         return content;
     }
 
-    /**
-     * Get Java config info as String
-     */
-    // @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)  // this is a critical security issue, see KYLIN-1664
-    public String exportToString() throws IOException {
-        logger.debug("Get Kylin Runtime Config");
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    public void updateConfig(String key, String value) {
+        logger.debug("Update Kylin Runtime Config, key=" + key + ", value=" + value);
 
-        return KylinConfig.getInstanceFromEnv().exportToString();
+        KylinConfig.getInstanceFromEnv().setProperty(key, value);
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    public boolean configWritableStatus() {
+        return KylinConfig.getInstanceFromEnv().isWebConfigEnabled();
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void cleanupStorage() {
-        StorageCleanupJob job = new StorageCleanupJob();
+        StorageCleanupJob job = null;
+        try {
+            job = new StorageCleanupJob();
+        } catch (IOException e) {
+            throw new RuntimeException("Can not init StorageCleanupJob", e);
+        }
         String[] args = new String[] { "-delete", "true" };
         job.execute(args);
     }
 
+    public String getPublicConfig() throws IOException {
+        final String whiteListProperties = KylinConfig.getInstanceFromEnv().getPropertiesWhiteList();
+
+        Collection<String> propertyKeys = Lists.newArrayList();
+        if (StringUtils.isNotEmpty(whiteListProperties)) {
+            propertyKeys.addAll(Arrays.asList(StringUtil.splitByComma(whiteListProperties)));
+        }
+
+        return KylinConfig.getInstanceFromEnv().exportToString(propertyKeys);
+    }
+
+    public String getHadoopConfigAsString() throws IOException {
+        logger.debug("Get Kylin Hadoop Config");
+
+        return KylinConfig.getConfigAsString(HadoopUtil.getCurrentConfiguration());
+    }
+
+    public String getHBaseConfigAsString() throws IOException {
+        logger.debug("Get Kylin HBase Config");
+
+        return KylinConfig.getConfigAsString(HBaseConnection.getCurrentHBaseConfiguration());
+    }
 }

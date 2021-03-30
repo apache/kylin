@@ -33,9 +33,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-/**
- * 
- */
 public class UserServiceTest extends ServiceTestBase {
 
     @Autowired
@@ -59,12 +56,9 @@ public class UserServiceTest extends ServiceTestBase {
         Assert.assertEquals("MODELER", ud.getUsername());
         Assert.assertEquals("PWD", ud.getPassword());
         Assert.assertEquals(Constant.ROLE_ADMIN, ud.getAuthorities().iterator().next().getAuthority());
-        Assert.assertEquals(1, ud.getAuthorities().size());
+        Assert.assertEquals(2, ud.getAuthorities().size());
 
-        List<String> strings = userService.listUserAuthorities();
-        Assert.assertTrue(strings.contains(Constant.ROLE_ADMIN));
     }
-
 
     @Test
     public void testDeleteAdmin() throws IOException {

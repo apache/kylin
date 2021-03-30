@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel,SweetAlert,VdmUtil,TableModel,cubeConfig,modelsManager) {
+KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel,SweetAlert,VdmUtil,TableModel,cubeConfig,modelsManager,kylinConfig) {
   $scope.num=0;
   $scope.convertedColumns=[];
   $scope.groupby=[];
@@ -58,7 +58,6 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     $scope.nextParameters = [];
     $scope.measureParamValueColumn=$scope.getCommonMetricColumns();
     $scope.newMeasure = (!!measure)? jQuery.extend(true, {},measure):CubeDescModel.createMeasure();
-    $scope.newMeasure.function.returntype=$scope.newMeasure.function.returntype.replace(/\,\d+/,'');
     if(!!measure && measure.function.parameter.next_parameter){
       $scope.nextPara.value = measure.function.parameter.next_parameter.value;
     }
@@ -77,7 +76,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       if($scope.newMeasure.function.configuration==null){
         var GroupBy = {
             name:$scope.newMeasure.function.parameter.next_parameter.value,
-            encoding:"dict  (v1)",
+            encoding:"dict[v1]",
             valueLength:0,
             }
         $scope.convertedColumns.push(GroupBy);
@@ -285,7 +284,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   $scope.addNewGroupByColumn = function () {
     $scope.nextGroupBy = {
       name:null,
-      encoding:"dict  (v1)",
+      encoding:"dict[v1]",
       valueLength:0,
     }
     $scope.convertedColumns.push($scope.nextGroupBy);
@@ -367,10 +366,6 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       $scope.nextParameterInit();
     }
 
-    if($scope.newMeasure.function.expression == 'COUNT'){
-      $scope.newMeasure.function.parameter.type= 'constant';
-    }
-
     if($scope.newMeasure.function.parameter.type=="constant"&&$scope.newMeasure.function.expression!=="COUNT_DISTINCT"){
       switch($scope.newMeasure.function.expression){
         case "SUM":
@@ -383,54 +378,130 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       }
     }
     if($scope.newMeasure.function.parameter.type=="column"&&$scope.newMeasure.function.expression!=="COUNT_DISTINCT"){
-
-      var column = $scope.newMeasure.function.parameter.value;
-      if(column&&(typeof column=="string")){
-        var colType = $scope.getColumnType(VdmUtil.removeNameSpace(column), VdmUtil.getNameSpaceAliasName(column)); // $scope.getColumnType defined in cubeEdit.js
-      }
-      if(colType==""||!colType){
-        $scope.newMeasure.function.returntype = "";
-        return;
-      }
-
-
-      switch($scope.newMeasure.function.expression){
-        case "SUM":
-          if(colType==="tinyint"||colType==="smallint"||colType==="int"||colType==="bigint"||colType==="integer"){
-            $scope.newMeasure.function.returntype= 'bigint';
-          }else{
-           if(colType.indexOf('decimal')!=-1||colType==="double"||colType==="float"){
-              $scope.newMeasure.function.returntype= 'decimal(19,4)';
-            }else{
-              $scope.newMeasure.function.returntype= 'decimal(14,0)';
-            }
-          }
-          break;
-        case "MIN":
-        case "MAX":
-          $scope.newMeasure.function.returntype = colType;
-          break;
-        case "RAW":
-          $scope.newMeasure.function.returntype = "raw";
-          break;
-        case "COUNT":
-          $scope.newMeasure.function.returntype = "bigint";
-          break;
-        case "PERCENTILE":
-          $scope.newMeasure.function.returntype = "percentile(100)";
-          break;
-        default:
-          $scope.newMeasure.function.returntype = "";
-          break;
-      }
+      $scope.newMeasure.function.returntype = $scope.getReturnType($scope.newMeasure.function.parameter.value, $scope.newMeasure.function.expression);
     }
   }
+
+  // Open bulk add modal.
+  $scope.openBulkAddModal = function () {
+
+    $scope.initBulkAddMeasures();
+
+    var modalInstance = $modal.open({
+        templateUrl: 'bulkAddMeasures.html',
+        controller: cubeBulkAddMeasureModalCtrl,
+        backdrop: 'static',
+        scope: $scope
+    });
+  };
+
+    $scope.initBulkAddMeasures = function() {
+    // init bulk add measure view model
+    $scope.bulkMeasuresView = {
+      SUM: [],
+      MAX: [],
+      MIN: [],
+      RAW: [],
+      PERCENTILE: []
+    };
+    angular.forEach($scope.getCommonMetricColumns(), function(paramValue) {
+      var measures = _.filter($scope.cubeMetaFrame.measures, function(measure){ return measure.function.parameter.value == paramValue});
+      for (var expression in $scope.bulkMeasuresView) {
+        var bulkMeasure = {
+          name: expression + '_' + paramValue.split('.')[1],
+          parameter: paramValue,
+          returntype: $scope.getReturnType(paramValue, expression),
+          select: false,
+          force: false
+        };
+
+        if (measures.length) {
+          var measure = _.find(measures, function(measure){ return measure.function.expression == expression});
+          if (!!measure) {
+            bulkMeasure.name = measure.name;
+            bulkMeasure.force = true;
+            bulkMeasure.select = true;
+          }
+        }
+        $scope.bulkMeasuresView[expression].push(bulkMeasure);
+      }
+    });
+
+    // init expression selector
+    $scope.bulkMeasureOptions = {
+      expressionList: []
+    };
+
+    for (var expression in $scope.bulkMeasuresView) {
+      var selectArr = _.filter($scope.bulkMeasuresView[expression], function(measure){ return measure.select && measure.force});
+      var selectAll = $scope.getCommonMetricColumns().length == selectArr.length;
+      var expressionSelect = {
+        expression: expression,
+        selectAll: selectAll,
+        force: selectAll
+      }
+      $scope.bulkMeasureOptions.expressionList.push(expressionSelect);
+    }
+
+    $scope.bulkMeasureOptions.currentExpression = $scope.bulkMeasureOptions.expressionList[0];
+  };
+
+   $scope.getReturnType = function(parameter, expression) {
+    if(parameter && (typeof parameter=="string")){
+      var colType = $scope.getColumnType(VdmUtil.removeNameSpace(parameter), VdmUtil.getNameSpaceAliasName(parameter)); // $scope.getColumnType defined in cubeEdit.js
+    }
+    if(colType == '' || !colType) {
+      return '';
+    }
+
+    switch(expression) {
+      case 'SUM':
+        if(colType === 'tinyint' || colType === 'smallint' || colType === 'int' || colType === 'bigint' || colType === 'integer') {
+          return 'bigint';
+        } else {
+         if(colType.indexOf('decimal') != -1) {
+            var returnRegex = new RegExp('(\\w+)(?:\\((\\w+?)(?:\\,(\\w+?))?\\))?');
+            var returnValue = returnRegex.exec(colType);
+            var precision = returnValue[2] || 0;
+            var scale = returnValue[3] || 0;
+            return 'decimal(' + precision + ',' + scale + ')';
+          }else{
+            return colType;
+          }
+        }
+        break;
+      case 'MIN':
+      case 'MAX':
+        return colType;
+        break;
+      case 'RAW':
+        return 'raw';
+        break;
+      case 'COUNT':
+        return 'bigint';
+        break;
+      case 'PERCENTILE':
+        return 'percentile(100)';
+        break;
+      default:
+        return '';
+        break;
+    }
+  };
 
   if ($scope.state.mode == 'edit') {
     $scope.$on('$destroy', function () {
       // emit measures edit event in order to re-generate advanced dict.
       $scope.$emit('MeasuresEdited');
     });
+  }
+
+  $scope.isMeasureUnHidden = function(measure) {
+    if (kylinConfig.getHiddenMeasures().indexOf(measure) == -1) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
 });
@@ -473,4 +544,73 @@ var NextParameterModalCtrl = function ($scope, scope,para,$modalInstance,cubeCon
     $modalInstance.dismiss('cancel');
   }
 
+}
+
+var cubeBulkAddMeasureModalCtrl = function($scope, $modalInstance, SweetAlert) {
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
+
+  $scope.saveBulkMeasures = function () {
+    $scope.bulkMeasures = [];
+    // validation
+    loopExp:
+      for (var expression in $scope.bulkMeasuresView) {
+        loopMeasureView:
+          for (var measureView of $scope.bulkMeasuresView[expression]) {
+            if (!measureView.force) {
+              // validation
+              var measureExisted = _.find($scope.cubeMetaFrame.measures, function(measure){ return measure.function.parameter.value == measureView.parameter && measure.function.expression == measureView.expression});
+              if (!!measureExisted) {
+                $scope.bulkMeasures = [];
+                var errMsg = 'Duplicate measure for ' + measureView.name + ' and ' + measureExisted.name + '.';
+                break loopExp;
+              }
+              if (measureView.select) {
+                var measure = {
+                  name: measureView.name,
+                  function: {
+                    expression: expression,
+                    returntype: measureView.returntype,
+                    parameter: {
+                      type: 'column',
+                      value: measureView.parameter
+                    }
+                  }
+                };
+                $scope.bulkMeasures.push(measure);
+              }
+            }
+          }
+      }
+    if (!!errMsg) {
+      SweetAlert.swal('', errMsg, 'warning');
+    } else {
+      $scope.cubeMetaFrame.measures = $scope.cubeMetaFrame.measures.concat($scope.bulkMeasures);
+      $modalInstance.close();
+    }
+  };
+
+  $scope.selectAll = function() {
+    angular.forEach($scope.bulkMeasuresView[$scope.bulkMeasureOptions.currentExpression.expression], function(measure) {
+      if (!measure.force) {
+        measure.select = $scope.bulkMeasureOptions.currentExpression.selectAll;
+      }
+    });
+  };
+
+  $scope.measureChange = function(measureSelect) {
+    if ($scope.bulkMeasureOptions.currentExpression.selectAll) {
+      if (!measureSelect) {
+        $scope.bulkMeasureOptions.currentExpression.selectAll = false;
+      }
+    } else {
+      for(var measureView of $scope.bulkMeasuresView[$scope.bulkMeasureOptions.currentExpression.expression]) {
+        if (!measureView.select) {
+          return;
+        }
+      }
+      $scope.bulkMeasureOptions.currentExpression.selectAll = true;
+    }
+  }
 }

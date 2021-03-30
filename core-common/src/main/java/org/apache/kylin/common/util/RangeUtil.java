@@ -25,14 +25,18 @@ import java.util.List;
 import java.util.NavigableMap;
 import java.util.SortedSet;
 
-import com.google.common.collect.BoundType;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
+import org.apache.kylin.shaded.com.google.common.collect.BoundType;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Range;
 
 /**
  */
 public class RangeUtil {
+
+    private RangeUtil() {
+        throw new IllegalStateException("Class RangeUtil is an utility class !");
+    }
 
     /**
      * for NavigableMap sorted by C, given a range of C, return the sub map whose key falls in the range

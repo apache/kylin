@@ -18,8 +18,12 @@
 
 package org.apache.kylin.source.hive;
 
+import java.io.IOException;
+
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.engine.flink.IFlinkInput;
 import org.apache.kylin.engine.mr.IMRInput;
+import org.apache.kylin.engine.spark.ISparkInput;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.IReadableTable;
@@ -28,8 +32,10 @@ import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourcePartition;
 
-//used by reflection
 public class HiveSource implements ISource {
+    //used by reflection
+    public HiveSource(KylinConfig config) {
+    }
 
     @Override
     public ISourceMetadataExplorer getSourceMetadataExplorer() {
@@ -41,19 +47,23 @@ public class HiveSource implements ISource {
     public <I> I adaptToBuildEngine(Class<I> engineInterface) {
         if (engineInterface == IMRInput.class) {
             return (I) new HiveMRInput();
+        } else if (engineInterface == ISparkInput.class) {
+            return (I) new HiveSparkInput();
+        } else if (engineInterface == IFlinkInput.class) {
+            return (I) new HiveFlinkInput();
         } else {
             throw new RuntimeException("Cannot adapt to " + engineInterface);
         }
     }
 
     @Override
-    public IReadableTable createReadableTable(TableDesc tableDesc) {
+    public IReadableTable createReadableTable(TableDesc tableDesc, String uuid) {
         // hive view must have been materialized already
         // ref HiveMRInput.createLookupHiveViewMaterializationStep()
         if (tableDesc.isView()) {
             KylinConfig config = KylinConfig.getInstanceFromEnv();
-            String tableName = tableDesc.getMaterializedName();
-            
+            String tableName = tableDesc.getMaterializedName(uuid);
+
             tableDesc = new TableDesc();
             tableDesc.setDatabase(config.getHiveDatabaseForIntermediateTable());
             tableDesc.setName(tableName);
@@ -64,7 +74,9 @@ public class HiveSource implements ISource {
     @Override
     public SourcePartition enrichSourcePartitionBeforeBuild(IBuildable buildable, SourcePartition srcPartition) {
         SourcePartition result = SourcePartition.getCopyOf(srcPartition);
-        result.setSegRange(null);
+        if (srcPartition.getTSRange() != null) {
+            result.setSegRange(null);
+        }
         return result;
     }
 
@@ -73,4 +85,13 @@ public class HiveSource implements ISource {
         return new HiveMetadataExplorer();
     }
 
+    @Override
+    public void unloadTable(String tableName, String project) throws IOException {
+
+    }
+
+    @Override
+    public void close() throws IOException {
+        // not needed
+    }
 }

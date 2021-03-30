@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metrics.lib.impl;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.kylin.metrics.lib.ActiveReservoirListener;
@@ -25,8 +26,11 @@ import org.apache.kylin.metrics.lib.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
+/**
+ * A Reservoir which don't staged metrics event at all, emit them in no time.
+ */
 public class InstantReservoir extends AbstractActiveReservoir {
 
     private static final Logger logger = LoggerFactory.getLogger(InstantReservoir.class);
@@ -48,8 +52,7 @@ public class InstantReservoir extends AbstractActiveReservoir {
         for (ActiveReservoirListener listener : listeners) {
             if (!notifyListenerOfUpdatedRecord(listener, record)) {
                 ifSucceed = false;
-                logger.warn(
-                        "It fails to notify listener " + listener.toString() + " of updated record " + record.getKey());
+                logger.info("Fails to notify {} of record {}", listener, Arrays.toString(record.getKey()));
             }
         }
         if (!ifSucceed) {
@@ -64,8 +67,7 @@ public class InstantReservoir extends AbstractActiveReservoir {
     }
 
     private boolean notifyListenerHAOfUpdatedRecord(Record record) {
-        logger.info("The HA listener " + listenerHA.toString() + " for updated record " + record.getKey()
-                + " will be started");
+        logger.info("Use HA Listener {} to notify record {}", listenerHA, Arrays.toString(record.getKey()));
         if (!notifyListenerOfUpdatedRecord(listenerHA, record)) {
             logger.error("The HA listener also fails!!!");
             return false;

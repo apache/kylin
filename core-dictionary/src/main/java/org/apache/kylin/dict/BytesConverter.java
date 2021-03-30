@@ -23,4 +23,7 @@ public interface BytesConverter<T> {
     public byte[] convertToBytes(T v);
 
     public T convertFromBytes(byte[] b, int offset, int length);
+
+    public byte[] convertBytesValueFromBytes(byte[] b, int offset, int length);
+
 }

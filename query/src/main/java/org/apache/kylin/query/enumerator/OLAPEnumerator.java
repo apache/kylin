@@ -19,13 +19,9 @@
 package org.apache.kylin.query.enumerator;
 
 import java.util.Arrays;
-import java.util.Map;
 
 import org.apache.calcite.DataContext;
 import org.apache.calcite.linq4j.Enumerator;
-import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.metadata.filter.CompareTupleFilter;
-import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
@@ -86,11 +82,10 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         }
     }
 
-    private Object[] convertCurrentRow(ITuple tuple) {
+    private void convertCurrentRow(ITuple tuple) {
         // give calcite a new array every time, see details in KYLIN-2134
         Object[] values = tuple.getAllValues();
         current = Arrays.copyOf(values, values.length);
-        return current;
     }
 
     @Override
@@ -106,17 +101,21 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
     }
 
     private ITupleIterator queryStorage() {
+
         logger.debug("query storage...");
-
         // bind dynamic variables
-        bindVariable(olapContext.filter);
+        olapContext.bindVariable(optiqContext);
 
-        olapContext.resetSQLDigest();
+        // If olapContext is cached, then inherit it.
+        if (!olapContext.isBorrowedContext) {
+            olapContext.resetSQLDigest();
+        }
         SQLDigest sqlDigest = olapContext.getSQLDigest();
 
         // query storage engine
         IStorageQuery storageEngine = StorageFactory.createQuery(olapContext.realization);
-        ITupleIterator iterator = storageEngine.search(olapContext.storageContext, sqlDigest, olapContext.returnTupleInfo);
+        ITupleIterator iterator = storageEngine.search(olapContext.storageContext, sqlDigest,
+                olapContext.returnTupleInfo);
         if (logger.isDebugEnabled()) {
             logger.debug("return TupleIterator...");
         }
@@ -124,29 +123,4 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         return iterator;
     }
 
-    private void bindVariable(TupleFilter filter) {
-        if (filter == null) {
-            return;
-        }
-
-        for (TupleFilter childFilter : filter.getChildren()) {
-            bindVariable(childFilter);
-        }
-
-        if (filter instanceof CompareTupleFilter && optiqContext != null) {
-            CompareTupleFilter compFilter = (CompareTupleFilter) filter;
-            for (Map.Entry<String, Object> entry : compFilter.getVariables().entrySet()) {
-                String variable = entry.getKey();
-                Object value = optiqContext.get(variable);
-                if (value != null) {
-                    String str = value.toString();
-                    if (compFilter.getColumn().getType().isDateTimeFamily())
-                        str = String.valueOf(DateFormat.stringToMillis(str));
-
-                    compFilter.bindVariable(variable, str);
-                }
-
-            }
-        }
-    }
 }

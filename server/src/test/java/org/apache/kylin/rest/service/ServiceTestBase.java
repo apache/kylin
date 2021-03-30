@@ -18,8 +18,11 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
+import org.apache.curator.test.TestingServer;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
@@ -50,27 +53,51 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ActiveProfiles("testing")
 public class ServiceTestBase extends LocalFileMetadataTestCase {
 
+    private static TestingServer server;
+
     @Autowired
     @Qualifier("userService")
     UserService userService;
+
+    @Autowired
+    @Qualifier("userGroupService")
+    UserGroupService userGroupService;
 
     @BeforeClass
     public static void setupResource() throws Exception {
         staticCreateTestMetadata();
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        server = new TestingServer(12181, true);
+        server.start();
     }
 
     @AfterClass
-    public static void tearDownResource() {
+    public static void tearDownResource() throws IOException {
+        server.stop();
     }
 
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
-
+        Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         Broadcaster.getInstance(config).notifyClearAll();
+        List<String> userGroups = userGroupService.getAllUserGroups();
+        if (!userGroups.contains(Constant.GROUP_ALL_USERS)) {
+            userGroupService.addGroup(Constant.GROUP_ALL_USERS);
+        }
+        if (!userGroups.contains(Constant.ROLE_ADMIN)) {
+            userGroupService.addGroup(Constant.ROLE_ADMIN);
+        }
+        if (!userGroups.contains(Constant.ROLE_MODELER)) {
+            userGroupService.addGroup(Constant.ROLE_MODELER);
+        }
+        if (!userGroups.contains(Constant.ROLE_ANALYST)) {
+            userGroupService.addGroup(Constant.ROLE_ANALYST);
+        }
 
         if (!userService.userExists("ADMIN")) {
             userService.createUser(new ManagedUser("ADMIN", "KYLIN", false, Arrays.asList(//
@@ -80,14 +107,15 @@ public class ServiceTestBase extends LocalFileMetadataTestCase {
 
         if (!userService.userExists("MODELER")) {
             userService.createUser(new ManagedUser("MODELER", "MODELER", false, Arrays.asList(//
-                            new SimpleGrantedAuthority(Constant.ROLE_ANALYST),
-                            new SimpleGrantedAuthority(Constant.ROLE_MODELER))));
+                    new SimpleGrantedAuthority(Constant.ROLE_ANALYST),
+                    new SimpleGrantedAuthority(Constant.ROLE_MODELER))));
         }
 
         if (!userService.userExists("ANALYST")) {
             userService.createUser(new ManagedUser("ANALYST", "ANALYST", false, Arrays.asList(//
                     new SimpleGrantedAuthority(Constant.ROLE_ANALYST))));
         }
+
     }
 
     @After

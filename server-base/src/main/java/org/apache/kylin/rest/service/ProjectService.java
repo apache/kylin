@@ -23,13 +23,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import org.apache.directory.api.util.Strings;
-import org.apache.kylin.metadata.draft.Draft;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -41,15 +43,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Predicate;
+import org.apache.kylin.shaded.com.google.common.collect.Iterators;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * @author xduo
@@ -71,6 +72,9 @@ public class ProjectService extends BasicService {
     @Autowired
     private AclEvaluate aclEvaluate;
 
+    @Autowired
+    private TableService tableService;
+
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public ProjectInstance createProject(ProjectInstance newProject) throws IOException {
         Message msg = MsgPicker.getMsg();
@@ -82,10 +86,11 @@ public class ProjectService extends BasicService {
         ProjectInstance currentProject = getProjectManager().getProject(projectName);
 
         if (currentProject != null) {
-            throw new BadRequestException(String.format(msg.getPROJECT_ALREADY_EXIST(), projectName));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getPROJECT_ALREADY_EXIST(), projectName));
         }
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-        ProjectInstance createdProject = getProjectManager().createProject(projectName, owner, description, overrideProps);
+        ProjectInstance createdProject = getProjectManager().createProject(projectName, owner, description,
+                overrideProps);
         accessService.init(createdProject, AclPermission.ADMINISTRATION);
         logger.debug("New project created.");
 
@@ -93,38 +98,30 @@ public class ProjectService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION')")
-    public ProjectInstance updateProject(ProjectInstance newProject, ProjectInstance currentProject) throws IOException {
-        if (!newProject.getName().equals(currentProject.getName())) {
-            return renameProject(newProject, currentProject);
-        }
+    public ProjectInstance updateProject(ProjectInstance newProject, ProjectInstance currentProject)
+            throws IOException {
 
         String newProjectName = newProject.getName();
         String newDescription = newProject.getDescription();
         LinkedHashMap<String, String> overrideProps = newProject.getOverrideKylinProps();
 
-        ProjectInstance updatedProject = getProjectManager().updateProject(currentProject, newProjectName, newDescription, overrideProps);
+        ProjectInstance updatedProject = getProjectManager().updateProject(currentProject, newProjectName,
+                newDescription, overrideProps);
 
         logger.debug("Project updated.");
         return updatedProject;
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION')")
-    public ProjectInstance renameProject(ProjectInstance newProject, ProjectInstance currentProject) throws IOException {
-        String newProjectName = newProject.getName();
-        String newDescription = newProject.getDescription();
-        LinkedHashMap<String, String> overrideProps = newProject.getOverrideKylinProps();
-
-        // rename project but keep UUID, acl keeps the same
-        ProjectInstance renamedProject = getProjectManager().renameProject(currentProject, newProjectName, newDescription, overrideProps);
-
-        // rebind draft and project
-        for (Draft draft : getDraftManager().list(currentProject.getName())) {
-            draft.setProject(newProjectName);
-            getDraftManager().save(draft);
+    public ProjectInstance updateProjectOwner(ProjectInstance currentProject, String newOwner)
+        throws IOException {
+        if (Objects.equals(currentProject.getOwner(), newOwner)) {
+            // Do nothing
+            return currentProject;
         }
-
-        logger.debug("Project rename.");
-        return renamedProject;
+        ProjectInstance updatedProject = getProjectManager().updateProjectOwner(currentProject, newOwner);
+        logger.debug("Project owner updated.");
+        return updatedProject;
     }
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
@@ -153,28 +150,14 @@ public class ProjectService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void deleteProject(String projectName, ProjectInstance project) throws IOException {
+        Set<String> tables = project.getTables();
+        for (String table : Sets.newTreeSet(tables)) {
+            tableService.unloadHiveTable(table, projectName, true);
+            getTableManager().removeTableExt(table, projectName);
+            getTableACLManager().deleteTableACLByTbl(projectName, table);
+        }
         getProjectManager().dropProject(projectName);
-
         accessService.clean(project, true);
-    }
-
-    public boolean isTableInAnyProject(String tableName) {
-        for (ProjectInstance projectInstance : ProjectManager.getInstance(getConfig()).listAllProjects()) {
-            if (projectInstance.containsTable(tableName.toUpperCase())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean isTableInProject(String tableName, String projectName) {
-        ProjectInstance projectInstance = ProjectManager.getInstance(getConfig()).getProject(projectName);
-        if (projectInstance != null) {
-            if (projectInstance.containsTable(tableName.toUpperCase())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public String getProjectOfCube(String cubeName) {
@@ -208,14 +191,7 @@ public class ProjectService extends BasicService {
             if (projectInstance == null) {
                 continue;
             }
-
-            boolean hasProjectPermission = false;
-            try {
-                hasProjectPermission = aclEvaluate.hasProjectReadPermission(projectInstance);
-            } catch (AccessDeniedException e) {
-                //ignore to continue
-            }
-
+            boolean hasProjectPermission = aclEvaluate.hasProjectReadPermission(projectInstance);
             if (hasProjectPermission) {
                 readableProjects.add(projectInstance);
             }
@@ -223,7 +199,7 @@ public class ProjectService extends BasicService {
         }
 
         // listAll method may not need a single param.But almost all listAll method pass
-        if (!Strings.isEmpty(projectName)) {
+        if (!StringUtils.isEmpty(projectName)) {
             readableProjects = Lists
                     .newArrayList(Iterators.filter(readableProjects.iterator(), new Predicate<ProjectInstance>() {
                         @Override

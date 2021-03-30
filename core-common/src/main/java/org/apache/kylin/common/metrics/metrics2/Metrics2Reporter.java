@@ -24,7 +24,6 @@ import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.kylin.common.KylinConfig;
 
 import com.codahale.metrics.MetricRegistry;
-import com.github.joshelser.dropwizard.metrics.hadoop.HadoopMetrics2Reporter;
 
 /**
  * A wrapper around Codahale HadoopMetrics2Reporter to make it a pluggable/configurable Kylin Metrics reporter.

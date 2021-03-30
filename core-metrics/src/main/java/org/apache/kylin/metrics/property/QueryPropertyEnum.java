@@ -18,13 +18,28 @@
 
 package org.apache.kylin.metrics.property;
 
-import com.google.common.base.Strings;
+import java.util.Locale;
 
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+
+/**
+ * Definition of Metrics dimension and measure for Query Basic
+ */
 public enum QueryPropertyEnum {
-    ID_CODE("QUERY_HASH_CODE"), TYPE("QUERY_TYPE"), USER("KUSER"), PROJECT("PROJECT"), REALIZATION(
-            "REALIZATION"), REALIZATION_TYPE("REALIZATION_TYPE"), EXCEPTION("EXCEPTION"), //
-    TIME_COST("QUERY_TIME_COST"), CALCITE_RETURN_COUNT("CALCITE_COUNT_RETURN"), STORAGE_RETURN_COUNT(
-            "STORAGE_COUNT_RETURN"), AGGR_FILTER_COUNT("CALCITE_COUNT_AGGREGATE_FILTER");
+
+    ID_CODE("QUERY_HASH_CODE"),
+    SQL("QUERY_SQL"),
+    TYPE("QUERY_TYPE"),
+    USER("KUSER"),
+    PROJECT("PROJECT"),
+    REALIZATION("REALIZATION"),
+    REALIZATION_TYPE("REALIZATION_TYPE"),
+    EXCEPTION("EXCEPTION"),
+
+    TIME_COST("QUERY_TIME_COST"),
+    CALCITE_RETURN_COUNT("CALCITE_COUNT_RETURN"),
+    STORAGE_RETURN_COUNT("STORAGE_COUNT_RETURN"),
+    AGGR_FILTER_COUNT("CALCITE_COUNT_AGGREGATE_FILTER");
 
     private final String propertyName;
 
@@ -37,7 +52,7 @@ public enum QueryPropertyEnum {
             return null;
         }
         for (QueryPropertyEnum property : QueryPropertyEnum.values()) {
-            if (property.propertyName.equals(name.toUpperCase())) {
+            if (property.propertyName.equals(name.toUpperCase(Locale.ROOT))) {
                 return property;
             }
         }

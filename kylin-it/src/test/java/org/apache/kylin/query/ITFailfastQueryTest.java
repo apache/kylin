@@ -21,7 +21,7 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.Candidate;
@@ -34,7 +34,7 @@ import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class ITFailfastQueryTest extends KylinTestBase {
 
@@ -57,7 +57,7 @@ public class ITFailfastQueryTest extends KylinTestBase {
 
     @After
     public void cleanUp() {
-        QueryContext.reset();
+        QueryContextFacade.resetCurrent();
     }
 
     @AfterClass

@@ -18,9 +18,7 @@
 -->
 
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-it</artifactId>
@@ -31,25 +29,37 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>2.3.0-SNAPSHOT</version>
+        <version>3.1.2-SNAPSHOT</version>
     </parent>
 
     <properties>
-        <hdp.version/>
-        <fastBuildMode/>
-        <buildCubeUsingProvidedData/>
-        <engineType/>
+        <hdp.version />
+        <fastBuildMode />
+        <simpleBuildMode />
+        <buildCubeUsingProvidedData />
+        <engineType />
     </properties>
 
     <!-- Dependencies. -->
     <dependencies>
         <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>atopcalcite</artifactId>
+            <groupId>org.apache.calcite</groupId>
+            <artifactId>calcite-core</artifactId>
             <exclusions>
                 <exclusion>
-                    <artifactId>avatica-core</artifactId>
                     <groupId>org.apache.calcite.avatica</groupId>
+                    <artifactId>avatica-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- It should be avatica(the shaded one), not avatica-core, since the inconsistency protobuf dependency with Hadoop -->
+        <dependency>
+            <groupId>org.apache.calcite.avatica</groupId>
+            <artifactId>avatica</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.calcite.avatica</groupId>
+                    <artifactId>avatica-core</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -58,6 +68,16 @@
             <artifactId>kylin-server</artifactId>
             <classifier>classes</classifier>
             <version>${project.parent.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-server</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-shaded-guava</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -66,6 +86,10 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-source-hive</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-source-jdbc</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -133,6 +157,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
             <scope>test</scope>
@@ -150,6 +179,12 @@
         <dependency>
             <groupId>org.dbunit</groupId>
             <artifactId>dbunit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.mrunit</groupId>
+            <artifactId>mrunit</artifactId>
+            <classifier>hadoop2</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -305,8 +340,46 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-compiler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+        </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>scala-compile-first</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>scala-test-compile</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
     <profiles>
         <profile>
@@ -316,6 +389,55 @@
             </activation>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy</id>
+                                <phase>generate-test-resources</phase>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>org.jacoco</groupId>
+                                            <artifactId>org.jacoco.agent</artifactId>
+                                            <classifier>runtime</classifier>
+                                            <version>${jacoco.version}</version>
+                                            <type>jar</type>
+                                            <overWrite>true</overWrite>
+                                            <outputDirectory>${project.basedir}/..//dev-support</outputDirectory>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>merge</id>
+                                <goals>
+                                    <goal>merge</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${project.basedir}</directory>
+                                    <includes>
+                                        <include>jacoco-it*.exec</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                            <destFile>${project.basedir}/..//target/jacoco-it-merged.exec</destFile>
+                        </configuration>
+                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-failsafe-plugin</artifactId>
@@ -347,6 +469,7 @@
                             </systemProperties>
                             <argLine>-Xms1G -Xmx2G -XX:PermSize=128M -XX:MaxPermSize=512M
                                 -Dkylin.server.cluster-servers=localhost:7070
+                                -javaagent:${project.basedir}/..//dev-support/org.jacoco.agent-${jacoco.version}-runtime.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it.exec
                             </argLine>
                         </configuration>
                     </plugin>
@@ -367,15 +490,22 @@
                                     <arguments>
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
+                                        <argument>-DsimpleBuildMode=${simpleBuildMode}</argument>
                                         <argument>
-                                            -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
+                                              -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
                                         </argument>
                                         <argument>-DengineType=${engineType}</argument>
                                         <argument>
-                                            -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                              -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                        </argument>
+                                        <argument>
+                                            -Dkylin.source.hive.warehouse-dir=/apps/hive/warehouse
+                                        </argument>
+                                        <argument>
+                                            -javaagent:${project.basedir}/..//dev-support/org.jacoco.agent-${jacoco.version}-runtime.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-engine.exec
                                         </argument>
                                         <argument>-classpath</argument>
-                                        <classpath/>
+                                        <classpath />
                                         <argument>org.apache.kylin.provision.BuildCubeWithEngine
                                         </argument>
                                     </arguments>
@@ -401,9 +531,44 @@
                                         <argument>
                                             -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
                                         </argument>
+                                        <argument>
+                                            -javaagent:${project.basedir}/..//dev-support/org.jacoco.agent-${jacoco.version}-runtime.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-stream.exec
+                                        </argument>
                                         <argument>-classpath</argument>
-                                        <classpath/>
+                                        <classpath />
                                         <argument>org.apache.kylin.provision.BuildCubeWithStream
+                                        </argument>
+                                    </arguments>
+                                    <workingDirectory>${project.basedir}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>build_cube_with_stream_v2</id>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <phase>pre-integration-test</phase>
+                                <configuration>
+                                    <skip>${skipTests}</skip>
+                                    <classpathScope>test</classpathScope>
+                                    <executable>java</executable>
+                                    <arguments>
+                                        <argument>-Dhdp.version=${hdp.version}</argument>
+                                        <argument>
+                                            -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
+                                        </argument>
+                                        <argument>
+                                            -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                        </argument>
+                                        <argument>
+                                            -Djava.library.path=/usr/hdp/current/hadoop-client/lib/native
+                                        </argument>
+                                        <argument>
+                                            -javaagent:${project.basedir}/..//dev-support/org.jacoco.agent-${jacoco.version}-runtime.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-streamv2.exec
+                                        </argument>
+                                        <argument>-classpath</argument>
+                                        <classpath />
+                                        <argument>org.apache.kylin.realtime.BuildCubeWithStreamV2
                                         </argument>
                                     </arguments>
                                     <workingDirectory>${project.basedir}</workingDirectory>

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import java.util.Locale;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -39,7 +40,7 @@ import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * Created by dongli on 1/18/16.
@@ -58,9 +59,10 @@ public class UpdateHTableHostCLI {
     public UpdateHTableHostCLI(List<String> htables, String oldHostValue) throws IOException {
         this.htables = htables;
         this.oldHostValue = oldHostValue;
-        Connection conn = ConnectionFactory.createConnection(HBaseConfiguration.create());
-        hbaseAdmin = conn.getAdmin();
-        this.kylinConfig = KylinConfig.getInstanceFromEnv();
+        try (Connection conn = ConnectionFactory.createConnection(HBaseConfiguration.create());) {
+            hbaseAdmin = conn.getAdmin();
+            this.kylinConfig = KylinConfig.getInstanceFromEnv();
+        }
     }
 
     public static void main(String[] args) throws Exception {
@@ -69,11 +71,11 @@ public class UpdateHTableHostCLI {
         }
 
         List<String> tableNames = getHTableNames(KylinConfig.getInstanceFromEnv());
-        if (!args[0].toLowerCase().equals("-from")) {
+        if (!args[0].toLowerCase(Locale.ROOT).equals("-from")) {
             printUsageAndExit();
         }
-        String oldHostValue = args[1].toLowerCase();
-        String filterType = args[2].toLowerCase();
+        String oldHostValue = args[1].toLowerCase(Locale.ROOT);
+        String filterType = args[2].toLowerCase(Locale.ROOT);
         if (filterType.equals("-table")) {
             tableNames = filterByTables(tableNames, Arrays.asList(args).subList(3, args.length));
         } else if (filterType.equals("-cube")) {
@@ -81,7 +83,7 @@ public class UpdateHTableHostCLI {
         } else if (!filterType.equals("-all")) {
             printUsageAndExit();
         }
-        logger.info("These htables are needed to be updated: " + StringUtils.join(tableNames, ","));
+        logger.info("These htables are needed to be updated: {}", StringUtils.join(tableNames, ","));
 
         UpdateHTableHostCLI updateHTableHostCLI = new UpdateHTableHostCLI(tableNames, oldHostValue);
         updateHTableHostCLI.execute();
@@ -118,13 +120,13 @@ public class UpdateHTableHostCLI {
     private static List<String> getHTableNames(KylinConfig config) {
         CubeManager cubeMgr = CubeManager.getInstance(config);
 
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result = new ArrayList<>();
         for (CubeInstance cube : cubeMgr.listAllCubes()) {
             for (CubeSegment seg : cube.getSegments(SegmentStatusEnum.READY)) {
                 String tableName = seg.getStorageLocationIdentifier();
                 if (!StringUtils.isBlank(tableName)) {
                     result.add(tableName);
-                    System.out.println("added new table: " + tableName);
+                    logger.info("added new table: {}", tableName);
                 }
             }
         }

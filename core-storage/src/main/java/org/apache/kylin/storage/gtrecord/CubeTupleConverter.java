@@ -19,35 +19,37 @@
 package org.apache.kylin.storage.gtrecord;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TimeZone;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Array;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
-import org.apache.kylin.dict.lookup.LookupStringTable;
-import org.apache.kylin.dict.lookup.SnapshotManager;
-import org.apache.kylin.dict.lookup.SnapshotTable;
+import org.apache.kylin.cube.model.RowKeyColDesc;
+import org.apache.kylin.cube.model.RowKeyDesc;
+import org.apache.kylin.dict.lookup.ILookupTable;
+import org.apache.kylin.dimension.TimeDerivedColumnType;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureType.IAdvMeasureFiller;
-import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
-import org.apache.kylin.source.IReadableTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * Convert Object[] (decoded GTRecord) to tuple
@@ -59,16 +61,24 @@ public class CubeTupleConverter implements ITupleConverter {
     final CubeSegment cubeSeg;
     final Cuboid cuboid;
     final TupleInfo tupleInfo;
-    private final List<IDerivedColumnFiller> derivedColFillers;
+    public final List<IDerivedColumnFiller> derivedColFillers;
 
-    private final int[] gtColIdx;
-    private final int[] tupleIdx;
-    private final MeasureType<?>[] measureTypes;
+    public final int[] gtColIdx;
+    public final int[] tupleIdx;
+    public final MeasureType<?>[] measureTypes;
 
-    private final List<IAdvMeasureFiller> advMeasureFillers;
-    private final List<Integer> advMeasureIndexInGTValues;
+    public final List<IAdvMeasureFiller> advMeasureFillers;
+    public final List<Integer> advMeasureIndexInGTValues;
+    private List<ILookupTable> usedLookupTables;
 
-    private final int nSelectedDims;
+    final Set<Integer> needAdjustTimeColumns = new HashSet<>();
+    String eventTimezone;
+    boolean autoJustByTimezone;
+    private final long timeZoneOffset;
+
+    public final int nSelectedDims;
+
+    private final RowKeyDesc rowKeyDesc;
 
     public CubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, //
             Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, int[] gtColIdx, TupleInfo returnTupleInfo) {
@@ -86,7 +96,16 @@ public class CubeTupleConverter implements ITupleConverter {
 
         advMeasureFillers = Lists.newArrayListWithCapacity(1);
         advMeasureIndexInGTValues = Lists.newArrayListWithCapacity(1);
-
+        usedLookupTables = Lists.newArrayList();
+        eventTimezone = cubeSeg.getConfig().getStreamingDerivedTimeTimezone();
+        autoJustByTimezone = eventTimezone.length() > 0
+                && cubeSeg.getCubeDesc().getModel().getRootFactTable().getTableDesc().isStreamingTable();
+        if (autoJustByTimezone) {
+            logger.debug("Will ajust dimsension for Time Derived Column.");
+            timeZoneOffset = TimeZone.getTimeZone(eventTimezone).getRawOffset();
+        } else {
+            timeZoneOffset = 0;
+        }
         ////////////
 
         int i = 0;
@@ -94,11 +113,17 @@ public class CubeTupleConverter implements ITupleConverter {
         // pre-calculate dimension index mapping to tuple
         for (TblColRef dim : selectedDimensions) {
             tupleIdx[i] = tupleInfo.hasColumn(dim) ? tupleInfo.getColumnIndex(dim) : -1;
+            // all time columns should be adjusted using timezone offset except derived column above day,
+            // such as DAY_START, WEEK_STAR, YEAR_START.
+            if (dim.getType().isDateTimeFamily() &&
+                !TimeDerivedColumnType.isTimeDerivedColumnAboveDayLevel(dim.getName())) {
+                needAdjustTimeColumns.add(tupleIdx[i]);
+            }
             i++;
         }
 
         for (FunctionDesc metric : selectedMetrics) {
-            if (metric.needRewrite()) {
+            if (metric.needRewriteField()) {
                 String rewriteFieldName = metric.getRewriteFieldName();
                 tupleIdx[i] = tupleInfo.hasField(rewriteFieldName) ? tupleInfo.getFieldIndex(rewriteFieldName) : -1;
             } else {
@@ -122,7 +147,7 @@ public class CubeTupleConverter implements ITupleConverter {
         // prepare derived columns and filler
         Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo = cuboid.getCubeDesc().getHostToDerivedInfo(cuboid.getColumns(), null);
         for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedInfo.entrySet()) {
-            TblColRef[] hostCols = entry.getKey().data;
+            TblColRef[] hostCols = entry.getKey().getData();
             for (DeriveInfo deriveInfo : entry.getValue()) {
                 IDerivedColumnFiller filler = newDerivedColumnFiller(hostCols, deriveInfo);
                 if (filler != null) {
@@ -130,6 +155,8 @@ public class CubeTupleConverter implements ITupleConverter {
                 }
             }
         }
+
+        rowKeyDesc = cubeSeg.getCubeDesc().getRowkey();
     }
 
     // load only needed dictionaries
@@ -149,7 +176,22 @@ public class CubeTupleConverter implements ITupleConverter {
         for (int i = 0; i < nSelectedDims; i++) {
             int ti = tupleIdx[i];
             if (ti >= 0) {
-                tuple.setDimensionValue(ti, toString(gtValues[i]));
+                // add offset to return result according to timezone
+                if (autoJustByTimezone && needAdjustTimeColumns.contains(ti)) {
+                    // For streaming
+                    try {
+                        String v = toString(gtValues[i]);
+                        if (v != null) {
+                            tuple.setDimensionValue(ti, Long.toString(Long.parseLong(v) + timeZoneOffset));
+                        }
+                    } catch (NumberFormatException nfe) {
+                        logger.warn("{} is not a long value.", gtValues[i]);
+                        tuple.setDimensionValue(ti, toString(gtValues[i]));
+                    }
+                } else {
+                    // For batch
+                    setDimensionValue(tuple, ti, toString(gtValues[i]));
+                }
             }
         }
 
@@ -178,11 +220,49 @@ public class CubeTupleConverter implements ITupleConverter {
         }
     }
 
-    private interface IDerivedColumnFiller {
+    private void setDimensionValue(Tuple tuple, int idx, String valueStr) {
+        if (valueStr == null) {
+            tuple.setDimensionValueDirectly(idx, valueStr);
+            return;
+        }
+
+        Object valueConvert = null;
+        TblColRef col = tupleInfo.getColumn(idx);
+        RowKeyColDesc rowKeyColDesc = rowKeyDesc.getColDescUncheck(col);
+        if (rowKeyColDesc != null) {
+            // convert value if inconsistency exists between rowkey col encoding & col data type
+            if (col.getType().isDate() && !RowKeyColDesc.isDateDimEnc(rowKeyColDesc)) {
+                long tmpValue = (Long) Tuple.convertOptiqCellValue(valueStr, "timestamp");
+                valueConvert = Tuple.millisToEpicDays(tmpValue);
+            } else if (col.getType().isDatetime() && !RowKeyColDesc.isTimeDimEnc(rowKeyColDesc)) {
+                int tmpValue = (Integer) Tuple.convertOptiqCellValue(valueStr, "date");
+                valueConvert = Tuple.epicDaysToMillis(tmpValue);
+            }
+        }
+
+        if (valueConvert != null) {
+            tuple.setDimensionValueDirectly(idx, valueConvert);
+        } else {
+            tuple.setDimensionValue(idx, valueStr);
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        for (ILookupTable usedLookupTable : usedLookupTables) {
+            try {
+                usedLookupTable.close();
+            } catch (Exception e) {
+                logger.error("error when close lookup table:" + usedLookupTable);
+            }
+        }
+    }
+
+    protected interface IDerivedColumnFiller {
         public void fillDerivedColumns(Object[] gtValues, Tuple tuple);
     }
 
-    private IDerivedColumnFiller newDerivedColumnFiller(TblColRef[] hostCols, final DeriveInfo deriveInfo) {
+    protected IDerivedColumnFiller newDerivedColumnFiller(TblColRef[] hostCols, final DeriveInfo deriveInfo) {
         boolean allHostsPresent = true;
         final int[] hostTmpIdx = new int[hostCols.length];
         for (int i = 0; i < hostCols.length; i++) {
@@ -204,7 +284,7 @@ public class CubeTupleConverter implements ITupleConverter {
         switch (deriveInfo.type) {
         case LOOKUP:
             return new IDerivedColumnFiller() {
-                LookupStringTable lookupTable = getLookupTable(cubeSeg, deriveInfo.join);
+                ILookupTable lookupTable = getAndAddLookupTable(cubeSeg, deriveInfo.join);
                 int[] derivedColIdx = initDerivedColIdx();
                 Array<String> lookupKey = new Array<String>(new String[hostTmpIdx.length]);
 
@@ -219,7 +299,11 @@ public class CubeTupleConverter implements ITupleConverter {
                 @Override
                 public void fillDerivedColumns(Object[] gtValues, Tuple tuple) {
                     for (int i = 0; i < hostTmpIdx.length; i++) {
-                        lookupKey.data[i] = CubeTupleConverter.toString(gtValues[hostTmpIdx[i]]);
+                        lookupKey.getData()[i] = CubeTupleConverter.toString(gtValues[hostTmpIdx[i]]);
+                        // if the primary key of lookup table is date time type, do this change in case of data type inconsistency
+                        if (lookupKey.getData()[i] != null && deriveInfo.join.getPrimaryKeyColumns()[i].getType().isDateTimeFamily()) {
+                            lookupKey.getData()[i] = String.valueOf(DateFormat.stringToMillis(lookupKey.getData()[i]));
+                        }
                     }
 
                     String[] lookupRow = lookupTable.getRow(lookupKey);
@@ -253,7 +337,7 @@ public class CubeTupleConverter implements ITupleConverter {
         }
     }
 
-    private int indexOnTheGTValues(TblColRef col) {
+    public int indexOnTheGTValues(TblColRef col) {
         List<TblColRef> cuboidDims = cuboid.getColumns();
         int cuboidIdx = cuboidDims.indexOf(col);
         for (int i = 0; i < gtColIdx.length; i++) {
@@ -263,40 +347,10 @@ public class CubeTupleConverter implements ITupleConverter {
         return -1;
     }
 
-    public LookupStringTable getLookupTable(CubeSegment cubeSegment, JoinDesc join) {
-        long ts = System.currentTimeMillis();
-
-        TableMetadataManager metaMgr = TableMetadataManager.getInstance(cubeSeg.getCubeInstance().getConfig());
-        SnapshotManager snapshotMgr = SnapshotManager.getInstance(cubeSeg.getCubeInstance().getConfig());
-
-        String tableName = join.getPKSide().getTableIdentity();
-        String[] pkCols = join.getPrimaryKey();
-        String snapshotResPath = cubeSegment.getSnapshotResPath(tableName);
-        if (snapshotResPath == null)
-            throw new IllegalStateException("No snaphot for table '" + tableName + "' found on cube segment" + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment);
-
-        try {
-            SnapshotTable snapshot = snapshotMgr.getSnapshotTable(snapshotResPath);
-            TableDesc tableDesc = metaMgr.getTableDesc(tableName, cubeSegment.getProject());
-            EnhancedStringLookupTable enhancedStringLookupTable = new EnhancedStringLookupTable(tableDesc, pkCols, snapshot);
-            logger.info("Time to get lookup up table for {} is {} ", join.getPKSide().getTableName(), (System.currentTimeMillis() - ts));
-            return enhancedStringLookupTable;
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to load lookup table " + tableName + " from snapshot " + snapshotResPath, e);
-        }
-    }
-
-    private static class EnhancedStringLookupTable extends LookupStringTable {
-
-        public EnhancedStringLookupTable(TableDesc tableDesc, String[] keyColumns, IReadableTable table) throws IOException {
-            super(tableDesc, keyColumns, table);
-        }
-
-        @Override
-        protected void init() throws IOException {
-            this.data = new HashMap<>();
-            super.init();
-        }
+    public ILookupTable getAndAddLookupTable(CubeSegment cubeSegment, JoinDesc join) {
+        ILookupTable lookupTable = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getLookupTable(cubeSegment, join);
+        usedLookupTables.add(lookupTable);
+        return lookupTable;
     }
 
     private static String toString(Object o) {

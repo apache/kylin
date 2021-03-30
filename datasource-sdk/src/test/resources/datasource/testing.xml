@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<DATASOURCE_DEF NAME="Testing" ID="testing" DIALECT="postgresql">
+    <PROPERTY NAME="sql.default-converted-enabled" VALUE="true"/>
+    <PROPERTY NAME="sql.allow-no-offset" VALUE="true"/>
+    <PROPERTY NAME="sql.allow-fetch-no-rows" VALUE="true"/>
+    <PROPERTY NAME="sql.allow-no-orderby-with-fetch" VALUE="true"/>
+    <PROPERTY NAME="sql.keyword-default-escape" VALUE="true"/>
+    <PROPERTY NAME="sql.keyword-default-uppercase" VALUE="false"/>
+    <PROPERTY NAME="schema.database.black-list-pattern" VALUE="publi.*, edw"/>
+	<PROPERTY NAME="sql.case-sensitive" VALUE="false"/>
+    <PROPERTY NAME="metadata.enable-cache" VALUE="false"/>
+
+    <FUNCTION_DEF ID="31" EXPRESSION="ABS($0)"/>
+    <FUNCTION_DEF ID="32" EXPRESSION="ACOS($0)"/>
+    <FUNCTION_DEF ID="33" EXPRESSION="LN($0+SQRT($0-1)*SQRT($0+1))"/>
+    <FUNCTION_DEF ID="34" EXPRESSION="ASIN($0)"/>
+    <FUNCTION_DEF ID="36" EXPRESSION="ATAN($0)"/>
+    <FUNCTION_DEF ID="35" EXPRESSION="LN($0+SQRT(POWER($0,2)+1))"/>
+    <FUNCTION_DEF ID="37" EXPRESSION="ATAN2($1, $0)"/>
+    <FUNCTION_DEF ID="38" EXPRESSION="((LN(1+$0)-LN(1- $0))/2)"/>
+    <FUNCTION_DEF ID="39" EXPRESSION="CEIL($0)"/>
+    <FUNCTION_DEF ID="40" EXPRESSION="COS($0)"/>
+    <FUNCTION_DEF ID="5" EXPRESSION="CURRENT_DATE"/>
+    <FUNCTION_DEF ID="6" EXPRESSION="CURRENT_TIMESTAMP"/>
+    <FUNCTION_DEF ID="67" EXPRESSION="TEST_CURR_TIME()"/>
+    <FUNCTION_DEF ID="8" EXPRESSION="EXTRACT(DAY FROM $0)"/>
+    <FUNCTION_DEF ID="68" EXPRESSION="(EXTRACT(DOW FROM $0) + 1)"/>
+    <FUNCTION_DEF ID="9" EXPRESSION="EXTRACT(DOY FROM $0)"/>
+    <FUNCTION_DEF ID="70" EXPRESSION="EXTRACT(WEEK FROM $0)"/>
+    <FUNCTION_DEF ID="42" EXPRESSION="DEGREES($0)"/>
+    <FUNCTION_DEF ID="43" EXPRESSION="EXP($0)"/>
+    <FUNCTION_DEF ID="44" EXPRESSION="FLOOR($0)"/>
+    <FUNCTION_DEF ID="2" EXPRESSION="EXP(AVG(LN($0)))"/>
+    <FUNCTION_DEF ID="24" EXPRESSION="SUBSTR($0, 1, CAST($1 AS INTEGER))"/>
+    <FUNCTION_DEF ID="25" EXPRESSION="LENGTH($0)"/>
+    <FUNCTION_DEF ID="47" EXPRESSION="LN($0)"/>
+    <FUNCTION_DEF ID="48" EXPRESSION="LOG($1, $0)"/>
+    <FUNCTION_DEF ID="49" EXPRESSION="LOG($0)"/>
+    <FUNCTION_DEF ID="26" EXPRESSION="LOWER($0)"/>
+    <FUNCTION_DEF ID="76" EXPRESSION="LTRIM($0)"/>
+    <FUNCTION_DEF ID="50" EXPRESSION="($0-TRUNC(($0)/NULLIF($1,0))*($1))"/>
+    <FUNCTION_DEF ID="10" EXPRESSION="EXTRACT(MONTH FROM $0)"/>
+    <FUNCTION_DEF ID="15" EXPRESSION="COALESCE($0, 0)"/>
+    <FUNCTION_DEF ID="77" EXPRESSION="POSITION($0 IN $1)"/>
+    <FUNCTION_DEF ID="51" EXPRESSION="POWER($0, $1)"/>
+    <FUNCTION_DEF ID="11" EXPRESSION="EXTRACT(QUARTER FROM $0)"/>
+    <FUNCTION_DEF ID="53" EXPRESSION="RADIANS($0)"/>
+    <FUNCTION_DEF ID="54" EXPRESSION="(($1- $0)*RANDOM()+$0)"/>
+    <FUNCTION_DEF ID="79"
+                  EXPRESSION="SUBSTR($0, (LENGTH($0) - CAST($1 AS INTEGER) + 1))"/>
+    <FUNCTION_DEF ID="55" EXPRESSION="ROUND($0)"/>
+    <FUNCTION_DEF ID="81" EXPRESSION="ROUND($0, $1)"/>
+    <FUNCTION_DEF ID="80" EXPRESSION="RTRIM($0)"/>
+    <FUNCTION_DEF ID="56" EXPRESSION="SIN($0)"/>
+    <FUNCTION_DEF ID="23" EXPRESSION="STDDEVP($0) OVER($1)"/>
+    <FUNCTION_DEF ID="58" EXPRESSION="SQRT($0)"/>
+    <FUNCTION_DEF ID="27"
+                  EXPRESSION="SUBSTRING($0 FROM CAST($1 AS INTEGER) FOR CAST($2 AS INTEGER))"/>
+    <FUNCTION_DEF ID="59" EXPRESSION="TAN($0)"/>
+    <FUNCTION_DEF ID="29" EXPRESSION="TRIM(BOTH ' ' FROM $0)"/>
+    <FUNCTION_DEF ID="61" EXPRESSION="TRUNC($0)"/>
+    <FUNCTION_DEF ID="12" EXPRESSION="EXTRACT(YEAR FROM $0)"/>
+    <FUNCTION_DEF ID="16" EXPRESSION="NULLIF($0, 0)"/>
+    <FUNCTION_DEF ID="30" EXPRESSION="UPPER($0)"/>
+    <FUNCTION_DEF ID="45" EXPRESSION="FLOOR($0)"/>
+    <FUNCTION_DEF ID="52" EXPRESSION="TRUNC($0/$1, 0)"/>
+    <FUNCTION_DEF ID="46" EXPRESSION="FLOOR($0)"/>
+    <FUNCTION_DEF ID="7" EXPRESSION="CAST($0 AS DATE)"/>
+    <FUNCTION_DEF ID="64" EXPRESSION="(CAST($1 AS DATE) - CAST($0 AS DATE))"/>
+    <FUNCTION_DEF ID="69"
+                  EXPRESSION="(12 * (EXTRACT(YEAR FROM $1) - EXTRACT(YEAR FROM $0)) + EXTRACT(MONTH FROM $1) - EXTRACT(MONTH FROM $0) - (CASE WHEN EXTRACT(DAY FROM $0) > EXTRACT (DAY FROM $1) THEN 1 ELSE 0 END))"/>
+    <FUNCTION_DEF ID="82" EXPRESSION="corr($0, $1)"/>
+
+    <TYPE_DEF ID="Any" EXPRESSION="ANY"/>
+
+    <TYPE_DEF ID="Integer" EXPRESSION="INTEGER"/>
+    <TYPE_DEF ID="Int" EXPRESSION="INTEGER"/>
+    <TYPE_DEF ID="BigInt" EXPRESSION="BIGINT"/>
+    <TYPE_DEF ID="TinyInt" EXPRESSION="TINYINT"/>
+    <TYPE_DEF ID="SmallInt" EXPRESSION="SMALLINT"/>
+    <TYPE_DEF ID="Short" EXPRESSION="SMALLINT"/>
+    <TYPE_DEF ID="Long" EXPRESSION="BIGINT"/>
+
+    <TYPE_DEF ID="Numeric" EXPRESSION="NUMERIC($p, $s)"/>
+    <TYPE_DEF ID="Decimal" EXPRESSION="DECIMAL($p, $s)"/>
+    <TYPE_DEF ID="Real" EXPRESSION="REAL"/>
+    <TYPE_DEF ID="Double" EXPRESSION="DOUBLE PRECISION"/>
+    <TYPE_DEF ID="Float" EXPRESSION="REAL"/>
+
+    <TYPE_DEF ID="Char" EXPRESSION="CHAR($p)"/>
+    <TYPE_DEF ID="VarChar" EXPRESSION="VARCHAR($p)"/>
+    <TYPE_DEF ID="String" EXPRESSION="VARCHAR"/>
+
+    <TYPE_DEF ID="Binary" EXPRESSION="BIT"/>
+    <TYPE_DEF ID="Byte" EXPRESSION="BIT(8)"/>
+    <TYPE_DEF ID="Boolean" EXPRESSION="BOOLEAN"/>
+
+    <TYPE_DEF ID="Date" EXPRESSION="DATE"/>
+    <TYPE_DEF ID="Time" EXPRESSION="TIME"/>
+    <TYPE_DEF ID="DateTime" EXPRESSION="DATETIME"/>
+    <TYPE_DEF ID="TimeStamp" EXPRESSION="TIMESTAMP"/>
+
+    <TYPE_MAPPING SOURCE_TYPE="DOUBLE PRECISION" TARGET_TYPE="DOUBLE"/>
+    <TYPE_MAPPING SOURCE_TYPE="CHARACTER VARYING" TARGET_TYPE="VARCHAR"/>
+</DATASOURCE_DEF>

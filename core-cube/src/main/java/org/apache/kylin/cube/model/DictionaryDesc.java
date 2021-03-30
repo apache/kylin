@@ -18,6 +18,9 @@
 
 package org.apache.kylin.cube.model;
 
+import java.util.Locale;
+import java.util.Objects;
+
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -38,6 +41,15 @@ public class DictionaryDesc implements java.io.Serializable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String builderClass;
 
+    //for tiretree global domain dic
+    @JsonProperty("cube")
+    private String cube;
+
+    //for tiretree global domain dic
+    @JsonProperty("model")
+    private String model;
+
+
     // computed content
     private TblColRef colRef;
     private TblColRef reuseColRef;
@@ -45,11 +57,11 @@ public class DictionaryDesc implements java.io.Serializable {
     void init(CubeDesc cubeDesc) {
         DataModelDesc model = cubeDesc.getModel();
 
-        column = column.toUpperCase();
+        column = column.toUpperCase(Locale.ROOT);
         colRef = model.findColumn(column);
 
         if (reuseColumn != null) {
-            reuseColumn = reuseColumn.toUpperCase();
+            reuseColumn = reuseColumn.toUpperCase(Locale.ROOT);
             reuseColRef = model.findColumn(reuseColumn);
         }
     }
@@ -66,6 +78,38 @@ public class DictionaryDesc implements java.io.Serializable {
         return builderClass;
     }
 
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public String getCube() {
+        return cube;
+    }
+
+    public void setCube(String cube) {
+        this.cube = cube;
+    }
+
+    public String getReuseColumn() {
+        return reuseColumn;
+    }
+
+    /**
+     * check if the col is tiretree global domain dic
+     * @return
+     */
+    public boolean isDomain() {
+        if (Objects.isNull(reuseColRef) && Objects.nonNull(reuseColumn)) {
+            return true;
+        }
+        return false;
+    }
+
+
     // for test
     public static DictionaryDesc create(String column, String reuseColumn, String builderClass) {
         DictionaryDesc desc = new DictionaryDesc();
@@ -73,5 +117,22 @@ public class DictionaryDesc implements java.io.Serializable {
         desc.reuseColumn = reuseColumn;
         desc.builderClass = builderClass;
         return desc;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DictionaryDesc that = (DictionaryDesc) o;
+        return Objects.equals(column, that.column) &&
+                Objects.equals(reuseColumn, that.reuseColumn) &&
+                Objects.equals(builderClass, that.builderClass) &&
+                Objects.equals(cube, that.cube) &&
+                Objects.equals(model, that.model);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(column, reuseColumn, builderClass, cube, model);
     }
 }

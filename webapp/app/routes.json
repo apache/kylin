@@ -3,8 +3,7 @@
     "url": "/jobs",
     "params": {
       "templateUrl": "partials/jobs/jobs.html",
-      "tab": "jobs",
-      "controller": "JobCtrl"
+      "tab": "jobs"
     }
   },
   {
@@ -111,6 +110,44 @@
       "templateUrl": "partials/models/model_json_edit.html",
       "tab": "models",
       "controller": "ModelEditCtrl"
+    }
+  },
+  {
+    "url": "/dashboard",
+    "params": {
+      "templateUrl": "partials/dashboard/dashboard.html",
+      "tab": "dashboard",
+      "controller": "DashboardCtrl"
+    }
+  },
+  {
+    "url": "/hybrid/add",
+    "params": {
+      "templateUrl": "partials/cubes/hybrid_edit.html",
+      "tab": "models"
+    }
+  },
+  {
+    "url": "/hybrid/edit/:hybridName",
+    "params": {
+      "templateUrl": "partials/cubes/hybrid_edit.html",
+      "tab": "models"
+    }
+  },
+  {
+    "url": "/streaming/receiver/:receiverId",
+    "params": {
+      "templateUrl": "partials/admin/streamingReceiver.html",
+      "tab": "admin",
+      "controller": "StreamingReceiverCtrl"
+    }
+  },
+  {
+    "url": "/user/profile",
+    "params": {
+      "templateUrl": "partials/user/profile.html",
+      "tab": "user",
+      "controller": "UserProfileCtrl"
     }
   }
 ]

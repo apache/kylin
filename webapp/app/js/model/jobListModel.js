@@ -20,12 +20,29 @@
  *jobListModel will manage data in list job page
  */
 
-KylinApp.service('JobList',function(JobService,$q){
+KylinApp.service('JobList',function(JobService, $q, kylinConfig, jobConfig){
     var _this = this;
     this.jobs={};
+    this.jobsOverview={};
+    this.jobFilter = {
+        cubeName : null,
+        timeFilterId : kylinConfig.getJobTimeFilterId(),
+        searchModeId: 4,
+        statusIds: []
+    };
+
+    this.clearJobFilter = function(){
+        this.jobFilter = {
+          cubeName : null,
+          timeFilterId : kylinConfig.getJobTimeFilterId(),
+          searchModeId: 4,
+          statusIds: []
+        };
+    };
 
     this.list = function(jobRequest){
         var defer = $q.defer();
+        console.log();
         JobService.list(jobRequest, function (jobs) {
             angular.forEach(jobs, function (job) {
                 var id = job.uuid;
@@ -39,15 +56,43 @@ KylinApp.service('JobList',function(JobService,$q){
                 }
                 _this.jobs[id].dropped = false;
             });
-
             defer.resolve(jobs.length);
-          },function(){
-            defer.reject("failed to load jobs");
+        },function(e){
+          var msg = 'failed to load jobs';
+          if (e.data && e.data.exception) {
+            var message = e.data.exception;
+            msg = !!(message) ? message : msg;
+          }
+          defer.reject(msg);
         });
         return defer.promise;
     };
 
+    this.overview = function(jobRequest){
+      var defer = $q.defer();
+      JobService.overview(jobRequest, function (jobsOverview) {
+        angular.forEach(jobConfig.allStatus, function (key) {
+          if (angular.isDefined(jobsOverview[key.name])) {
+            key.count = "(" + jobsOverview[key.name] + ")";
+            _this.jobsOverview[key.name] = jobsOverview[key.name];
+          } else {
+            key.count = "";
+          }
+        });
+        defer.resolve(jobsOverview);
+      },function(e){
+        var msg = 'failed to load job overview';
+        if (e.data && e.data.exception) {
+          var message = e.data.exception;
+          msg = !!(message) ? message : msg;
+        }
+        defer.reject(msg);
+      });
+      return defer.promise;
+    };
+
     this.removeAll = function(){
         _this.jobs={};
+        _this.jobsOverview={};
     };
 });

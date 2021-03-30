@@ -19,7 +19,7 @@
 'use strict';
 
 
-KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert, $log, cubeConfig, CubeDescModel, MetaModel, TableModel, ModelDescService, modelsManager, cubesManager, ProjectModel, StreamingModel, StreamingService,VdmUtil) {
+KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert, $log, cubeConfig, CubeDescModel, MetaModel, TableModel, ModelDescService, modelsManager, cubesManager, ProjectModel, StreamingModel, StreamingService,VdmUtil, MessageBox) {
   $scope.cubeConfig = cubeConfig;
   $scope.metaModel = {};
   $scope.modelsManager = modelsManager;
@@ -200,6 +200,16 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     return type;
   };
 
+  $scope.isIntMeasure = function (measure) {
+    var column = measure.function.parameter.value;
+    if(column && (typeof column=="string")){
+      var colType = $scope.getColumnType(VdmUtil.removeNameSpace(column), VdmUtil.getNameSpaceAliasName(column));
+      if(colType==="tinyint"||colType==="smallint"||colType==="int"||colType==="integer"){
+        return true;
+      }
+    }
+    return false;
+  };
 
   // ~ Define data
   $scope.state = {
@@ -282,6 +292,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
       $scope.cubeMetaFrame.model_name = $scope.cubeMetaFrame.name;
     }
 
+    VdmUtil.removeElementInArrayByValue($scope.cubeMetaFrame.auto_merge_time_ranges, 0);
     $scope.state.project = ProjectModel.getSelectedProject();
 //        delete $scope.cubeMetaFrame.project;
 
@@ -325,7 +336,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
           }, function (request) {
             if (request.successful) {
               $scope.state.cubeSchema = request.cubeDescData;
-              SweetAlert.swal('', 'Updated the cube successfully.', 'success');
+              MessageBox.successNotify('Updated the cube successfully.');
               $location.path("/models");
             } else {
               $scope.saveCubeRollBack();
@@ -364,7 +375,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
           }, function (request) {
             if (request.successful) {
               $scope.state.cubeSchema = request.cubeDescData;
-              SweetAlert.swal('', 'Created the cube successfully.', 'success');
+              MessageBox.successNotify('Created the cube successfully.');
               $location.path("/models");
               //location.reload();
 
@@ -729,7 +740,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     var distinctMeasures = [];
 
     angular.forEach($scope.cubeMetaFrame.measures, function (measure, index) {
-      if (measure.function.expression === 'COUNT_DISTINCT' && measure.function.returntype === 'bitmap') {
+      if (measure.function.expression === 'COUNT_DISTINCT' && measure.function.returntype === 'bitmap' && !$scope.isIntMeasure(measure)) {
         var measureColumn = measure.function.parameter.value;
         distinctMeasures.push(measureColumn);
         //keep backward compatibility
@@ -762,14 +773,21 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     });
 
     //remove deprecated distinct measures
-    angular.forEach($scope.cubeMetaFrame.dictionaries, function (dict, index) {
-      if (distinctMeasures.indexOf(dict.column) === -1 && reuseColumns.indexOf(dict.column) === -1) {
-        $scope.cubeMetaFrame.dictionaries.splice(index, 1);
+    for (var i = $scope.cubeMetaFrame.dictionaries.length - 1; i >= 0; i--) {
+      var dictColumn = $scope.cubeMetaFrame.dictionaries[i].column;
+      if (distinctMeasures.indexOf(dictColumn) === -1 && reuseColumns.indexOf(dictColumn) === -1) {
+        $scope.cubeMetaFrame.dictionaries.splice(i, 1);
       }
-    });
+    }
   }
 
   $scope.$on('MeasuresEdited', function (event) {
+    if ($scope.cubeMetaFrame) {
+      reGenerateAdvancedDict();
+    }
+  });
+
+  $scope.$on('AdvancedSettingEdited', function (event) {
     if ($scope.cubeMetaFrame) {
       reGenerateAdvancedDict();
     }

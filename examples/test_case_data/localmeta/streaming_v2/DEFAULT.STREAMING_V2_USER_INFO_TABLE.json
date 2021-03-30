@@ -1,0 +1,15 @@
+{
+  "uuid" : "9e91d85a-4443-4115-8145-5d7e1d02648e",
+  "last_modified" : 1548385562253,
+  "version" : "2.6.0.20500",
+  "name" : "DEFAULT.STREAMING_V2_USER_INFO_TABLE",
+  "parser_info" : {
+    "ts_col_name" : "dt",
+    "format_ts" : false,
+    "field_mapping" : null
+  },
+  "properties" : {
+    "topic" : "user_info",
+    "bootstrap.servers" : "localhost:12909"
+  }
+}

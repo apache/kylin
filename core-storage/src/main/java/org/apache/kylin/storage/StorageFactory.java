@@ -19,6 +19,8 @@
 package org.apache.kylin.storage;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.ImplementationSwitch;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -28,15 +30,31 @@ import org.apache.kylin.metadata.realization.IRealization;
 public class StorageFactory {
 
     // Use thread-local because KylinConfig can be thread-local and implementation might be different among multiple threads.
-    private static ThreadLocal<ImplementationSwitch<IStorage>> storages = new ThreadLocal<>();
+    private static InternalThreadLocal<ImplementationSwitch<IStorage>> storages = new InternalThreadLocal<>();
+
+    private static IStorage configuredUseLocalStorage;
+
+    static {
+        String localStorageImpl = KylinConfig.getInstanceFromEnv().getLocalStorageImpl();
+        if (localStorageImpl != null){
+            configuredUseLocalStorage = (IStorage) ClassUtil.newInstance(localStorageImpl);
+        }
+    }
 
     public static IStorage storage(IStorageAware aware) {
+        if (configuredUseLocalStorage != null) {
+            return configuredUseLocalStorage;
+        }
         ImplementationSwitch<IStorage> current = storages.get();
         if (storages.get() == null) {
             current = new ImplementationSwitch<>(KylinConfig.getInstanceFromEnv().getStorageEngines(), IStorage.class);
             storages.set(current);
         }
         return current.get(aware.getStorageType());
+    }
+
+    public static void clearCache() {
+        storages.remove();
     }
 
     public static IStorageQuery createQuery(IRealization realization) {

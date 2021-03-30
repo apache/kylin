@@ -31,18 +31,19 @@ import org.junit.Test;
 public class IntDimEncTest {
 
     @Test
-    public void testConstructor() {
+    public void testBadConstructor() {
         try {
             new IntDimEnc(0);
             Assert.fail();
         } catch (IllegalArgumentException e) {
             // expect
+            Assert.assertEquals("the length of IntDimEnc is 0, which should be 1-8", e.getMessage());
         }
         try {
             new IntDimEnc(9);
             Assert.fail();
         } catch (IllegalArgumentException e) {
-            // expect
+            Assert.assertEquals("the length of IntDimEnc is 9, which should be 1-8", e.getMessage());
         }
         new IntDimEnc(8);
     }

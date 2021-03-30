@@ -27,7 +27,7 @@ public class DummyJdbcFactory extends KylinJdbcFactory {
     }
 
     @Override
-    public IRemoteClient newRemoteClient(KylinConnection conn) {
+    public IRemoteClient newRemoteClient(KylinConnectionInfo conn) {
         return new DummyClient(conn);
     }
 

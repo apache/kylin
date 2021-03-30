@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class SQLResponse implements Serializable {
     protected static final long serialVersionUID = 1L;
@@ -73,6 +73,15 @@ public class SQLResponse implements Serializable {
     protected boolean queryPushDown = false;
 
     protected byte[] queryStatistics;
+    
+    protected String traceUrl = null;
+
+    // it's sql response signature for cache checking, no need to return and should be JsonIgnore
+    protected String signature;
+
+    // it's a temporary flag, no need to return and should be JsonIgnore
+    // indicating the lazy query start time, -1 indicating not enabled
+    protected long lazyQueryStartTime = -1L;
 
     public SQLResponse() {
     }
@@ -81,16 +90,6 @@ public class SQLResponse implements Serializable {
             boolean isException, String exceptionMessage) {
         this.columnMetas = columnMetas;
         this.results = results;
-        this.affectedRowCount = affectedRowCount;
-        this.isException = isException;
-        this.exceptionMessage = exceptionMessage;
-    }
-
-    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube,
-            int affectedRowCount, boolean isException, String exceptionMessage) {
-        this.columnMetas = columnMetas;
-        this.results = results;
-        this.cube = cube;
         this.affectedRowCount = affectedRowCount;
         this.isException = isException;
         this.exceptionMessage = exceptionMessage;
@@ -204,6 +203,37 @@ public class SQLResponse implements Serializable {
 
     public void setStorageCacheUsed(boolean storageCacheUsed) {
         this.storageCacheUsed = storageCacheUsed;
+    }
+
+    public String getTraceUrl() {
+        return traceUrl;
+    }
+
+    public void setTraceUrl(String traceUrl) {
+        this.traceUrl = traceUrl;
+    }
+
+    @JsonIgnore
+    public String getSignature() {
+        return signature;
+    }
+
+    public void setSignature(String signature) {
+        this.signature = signature;
+    }
+
+    @JsonIgnore
+    public boolean isRunning() {
+        return this.lazyQueryStartTime >= 0;
+    }
+
+    @JsonIgnore
+    public long getLazyQueryStartTime() {
+        return lazyQueryStartTime;
+    }
+
+    public void setLazyQueryStartTime(long lazyQueryStartTime) {
+        this.lazyQueryStartTime = lazyQueryStartTime;
     }
 
     @JsonIgnore

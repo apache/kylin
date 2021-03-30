@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.job.constant.JobStatusEnum;
@@ -34,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
@@ -45,15 +46,20 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
     @JsonProperty("name")
     private String name;
-
+    @JsonProperty("projectName")
+    private String projectName;
     @JsonProperty("type")
     private CubeBuildTypeEnum type; // java implementation
     @JsonProperty("duration")
     private long duration;
     @JsonProperty("related_cube")
     private String relatedCube;
+    @JsonProperty("display_cube_name")
+    private String displayCubeName;
     @JsonProperty("related_segment")
     private String relatedSegment;
+    @JsonProperty("related_segment_name")
+    private String relatedSegmentName;
     @JsonProperty("exec_start_time")
     private long execStartTime;
     @JsonProperty("exec_end_time")
@@ -69,6 +75,8 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
     private String submitter;
     @JsonProperty("job_status")
     private JobStatusEnum status;
+    @JsonProperty("build_instance")
+    private String buildInstance;
 
     public JobStep getRunningStep() {
         for (JobStep step : this.getSteps()) {
@@ -152,6 +160,14 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         this.name = name;
     }
 
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
+    }
+
     public CubeBuildTypeEnum getType() {
         return type;
     }
@@ -176,12 +192,32 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         this.relatedCube = relatedCube;
     }
 
+    public String getDisplayCubeName() {
+        if (StringUtils.isBlank(displayCubeName)) {
+            return relatedCube;
+        } else {
+            return displayCubeName;
+        }
+    }
+
+    public void setDisplayCubeName(String displayCubeName) {
+        this.displayCubeName = displayCubeName;
+    }
+
     public String getRelatedSegment() {
         return relatedSegment;
     }
 
     public void setRelatedSegment(String relatedSegment) {
         this.relatedSegment = relatedSegment;
+    }
+
+    public String getRelatedSegmentName() {
+        return relatedSegmentName;
+    }
+
+    public void setRelatedSegmentName(String relatedSegmentName) {
+        this.relatedSegmentName = relatedSegmentName;
     }
 
     /**
@@ -272,6 +308,14 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
     public void setSubmitter(String submitter) {
         this.submitter = submitter;
+    }
+
+    public String getBuildInstance() {
+        return buildInstance;
+    }
+
+    public void setBuildInstance(String buildInstance) {
+        this.buildInstance = buildInstance;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -435,6 +479,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         public void setRunAsync(boolean runAsync) {
             this.runAsync = runAsync;
         }
+
 
         /**
          * @return the jobInstance

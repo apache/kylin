@@ -19,7 +19,7 @@
 'use strict';
 
 KylinApp
-    .controller('ProjectCtrl', function ($scope, $modal, $q, ProjectService, MessageService,SweetAlert,$log,kylinConfig,projectConfig,ProjectModel) {
+    .controller('ProjectCtrl', function ($scope, $modal, $q, ProjectService, MessageService,SweetAlert,$log,kylinConfig,projectConfig,ProjectModel, MessageBox) {
 
         $scope.projects = [];
         $scope.loading = false;
@@ -78,7 +78,7 @@ KylinApp
                             $scope.projects.splice(pIndex, 1);
                         }
                         ProjectModel.removeProject(project.name);
-                        SweetAlert.swal('Success!',"Project [" + project.name + "] has been deleted successfully!", 'success');
+                        MessageBox.successNotify("Project [" + project.name + "] has been deleted successfully!");
                     },function(e){
                         if(e.data&& e.data.exception){
                             var message =e.data.exception;
@@ -91,10 +91,29 @@ KylinApp
                 }
             });
         }
-        
+
         $scope.getMapLength = function(map) {
-        	return Object.keys(map).length;
+        	  return Object.keys(map).length;
         }
+
+        $scope.getOwnerString = function (project) {
+            project.newOwner = project.owner;
+        };
+
+        $scope.updateOwner = function (project) {
+            ProjectService.updateOwner({projecId: project.name}, project.newOwner, function () {
+                project.owner = project.newOwner;
+                MessageBox.successNotify('Owner updated successfully!');
+            },function(e){
+                if(e.data&& e.data.exception){
+                    var message =e.data.exception;
+                    var msg = !!(message) ? message : 'Failed to take action.';
+                    SweetAlert.swal('Oops...', msg, 'error');
+                } else{
+                    SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                }
+            });
+        };
     }
 );
 

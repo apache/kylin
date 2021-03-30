@@ -19,6 +19,7 @@
 package org.apache.kylin.common.util;
 
 import java.io.Closeable;
+import java.util.Locale;
 
 /**
  *
@@ -39,7 +40,7 @@ public class SetThreadName implements Closeable {
 
     public SetThreadName(String format, Object... args) {
         originThreadName = Thread.currentThread().getName();
-        Thread.currentThread().setName(String.format(format, args) + "-" + Thread.currentThread().getId());
+        Thread.currentThread().setName(String.format(Locale.ROOT, format, args) + "-" + Thread.currentThread().getId());
     }
 
     @Override

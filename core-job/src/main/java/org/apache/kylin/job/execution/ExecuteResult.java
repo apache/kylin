@@ -18,7 +18,7 @@
 
 package org.apache.kylin.job.execution;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 /**
  */
@@ -31,6 +31,13 @@ public final class ExecuteResult {
     private final State state;
     private final String output;
     private final Throwable throwable;
+
+    /**
+     * Default constructor to indicate a success ExecuteResult.
+     */
+    public ExecuteResult() {
+        this(State.SUCCEED, "succeed");
+    }
 
     public ExecuteResult(State state) {
         this(state, "");

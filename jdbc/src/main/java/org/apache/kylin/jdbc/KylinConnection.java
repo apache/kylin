@@ -27,7 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.kylin.shaded.com.google.common.base.Splitter;
+import org.apache.kylin.shaded.com.google.common.collect.Iterables;
 import org.apache.calcite.avatica.AvaticaConnection;
+import org.apache.calcite.avatica.AvaticaFactory;
 import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.ColumnMetaData;
@@ -39,7 +42,7 @@ import org.apache.calcite.avatica.UnregisteredDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class KylinConnection extends AvaticaConnection {
+public class KylinConnection extends AvaticaConnection implements KylinConnectionInfo {
 
     private static final Logger logger = LoggerFactory.getLogger(KylinConnection.class);
 
@@ -47,17 +50,17 @@ public class KylinConnection extends AvaticaConnection {
     private final String project;
     private final IRemoteClient remoteClient;
 
-    protected KylinConnection(UnregisteredDriver driver, KylinJdbcFactory factory, String url, Properties info) throws SQLException {
+    protected KylinConnection(UnregisteredDriver driver, JdbcFactory factory, String url, Properties info) throws SQLException {
         super(driver, factory, url, info);
 
         String odbcUrl = url;
         odbcUrl = odbcUrl.replaceAll((Driver.CONNECT_STRING_PREFIX + "[[A-Za-z0-9]*=[A-Za-z0-9]*;]*//").toString(), "");
-        
-        String[] temps = odbcUrl.split("/");
-        assert temps.length == 2;
 
-        this.baseUrl = temps[0];
-        this.project = temps[1];
+        String[] temps = Iterables.toArray(Splitter.on("/").split(odbcUrl), String.class);
+        assert temps.length >= 2;
+
+        this.project = temps[temps.length - 1];
+        this.baseUrl = odbcUrl.substring(0, odbcUrl.lastIndexOf(project) - 1);
 
         logger.debug("Kylin base url " + this.baseUrl + ", project name " + this.project);
 
@@ -70,15 +73,15 @@ public class KylinConnection extends AvaticaConnection {
         }
     }
 
-    String getBaseUrl() {
+    public String getBaseUrl() {
         return baseUrl;
     }
 
-    String getProject() {
+    public String getProject() {
         return project;
     }
 
-    Properties getConnectionProperties() {
+    public Properties getConnectionProperties() {
         return info;
     }
 
@@ -121,8 +124,8 @@ public class KylinConnection extends AvaticaConnection {
         return new Meta.Signature(columns, sql, params, internalParams, CursorFactory.ARRAY, Meta.StatementType.SELECT);
     }
 
-    private KylinJdbcFactory factory() {
-        return (KylinJdbcFactory) factory;
+    private AvaticaFactory factory() {
+        return factory;
     }
 
     public IRemoteClient getRemoteClient() {

@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.kylin.common.util.SplittedBytes;
+import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.common.RowKeySplitter;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -36,7 +36,6 @@ import org.apache.kylin.metadata.model.TblColRef;
  */
 public class RowKeyDecoder {
 
-    private final CubeSegment cubeSegment;
     private final CubeDesc cubeDesc;
     private final RowKeyColumnIO colIO;
     private final RowKeySplitter rowKeySplitter;
@@ -45,9 +44,8 @@ public class RowKeyDecoder {
     private List<String> values;
 
     public RowKeyDecoder(CubeSegment cubeSegment) {
-        this.cubeSegment = cubeSegment;
         this.cubeDesc = cubeSegment.getCubeDesc();
-        this.rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 255);
+        this.rowKeySplitter = new RowKeySplitter(cubeSegment);
         this.colIO = new RowKeyColumnIO(cubeSegment.getDimensionEncodingMap());
         this.values = new ArrayList<String>();
     }
@@ -58,13 +56,13 @@ public class RowKeyDecoder {
         long cuboidId = rowKeySplitter.split(bytes);
         initCuboid(cuboidId);
 
-        SplittedBytes[] splits = rowKeySplitter.getSplitBuffers();
+        ByteArray[] splits = rowKeySplitter.getSplitBuffers();
 
         int offset = rowKeySplitter.getBodySplitOffset(); // skip shard and cuboid id part
 
         for (int i = 0; i < this.cuboid.getColumns().size(); i++) {
             TblColRef col = this.cuboid.getColumns().get(i);
-            collectValue(col, splits[offset].value, splits[offset].length);
+            collectValue(col, splits[offset].array(), splits[offset].offset(), splits[offset].length());
             offset++;
         }
 
@@ -75,11 +73,11 @@ public class RowKeyDecoder {
         if (this.cuboid != null && this.cuboid.getId() == cuboidID) {
             return;
         }
-        this.cuboid = Cuboid.findById(cubeSegment, cuboidID);
+        this.cuboid = Cuboid.findForMandatory(cubeDesc, cuboidID);
     }
 
-    private void collectValue(TblColRef col, byte[] valueBytes, int length) throws IOException {
-        String strValue = colIO.readColumnString(col, valueBytes, 0, length);
+    private void collectValue(TblColRef col, byte[] valueBytes, int offset, int length) throws IOException {
+        String strValue = colIO.readColumnString(col, valueBytes, offset, length);
         values.add(strValue);
     }
 

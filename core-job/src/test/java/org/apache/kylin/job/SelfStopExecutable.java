@@ -36,14 +36,14 @@ public class SelfStopExecutable extends BaseTestExecutable {
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         doingWork = true;
         try {
-            for (int i = 0; i < 20; i++) {
+            for (int i = 0; i < 60; i++) {
                 sleepOneSecond();
                 
                 if (isDiscarded())
                     return new ExecuteResult(ExecuteResult.State.STOPPED, "stopped");
             }
                 
-            return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
+            return new ExecuteResult();
         } finally {
             doingWork = false;
         }

@@ -27,8 +27,8 @@ import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class TimeConditionLiteralsReplacer implements TupleFilterSerializer.Decorator {
 
@@ -82,7 +82,7 @@ public class TimeConditionLiteralsReplacer implements TupleFilterSerializer.Deco
             return dateStr;
         }
 
-        long millis = Long.valueOf(dateStr);
+        long millis = Long.parseLong(dateStr);
         if (dataType.isTimestamp()) {
             return DateFormat.formatToTimeStr(millis);
         } else if (dataType.isDate()) {

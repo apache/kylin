@@ -32,10 +32,13 @@ public interface IBatchCubingEngine {
     public IJoinedFlatTableDesc getJoinedFlatTableDesc(CubeSegment newSegment);
 
     /** Build a new cube segment, typically its time range appends to the end of current cube. */
-    public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter);
+    public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter, Integer priorityOffset);
 
     /** Merge multiple small segments into a big one. */
     public DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter);
+
+    /** Optimize a segment based on the cuboid recommend list produced by the cube planner. */
+    public DefaultChainedExecutable createBatchOptimizeJob(CubeSegment optimizeSegment, String submitter);
 
     public Class<?> getSourceInterface();
 

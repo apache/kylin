@@ -18,6 +18,10 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.List;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -33,10 +37,6 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.List;
 
 public class UHCDictionaryMapper extends KylinMapper<NullWritable, Text, SelfDefineSortableKey, NullWritable> {
     private static final Logger logger = LoggerFactory.getLogger(UHCDictionaryMapper.class);
@@ -57,7 +57,7 @@ public class UHCDictionaryMapper extends KylinMapper<NullWritable, Text, SelfDef
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         CubeInstance cube = CubeManager.getInstance(config).getCube(conf.get(BatchConstants.CFG_CUBE_NAME));
-        List<TblColRef> uhcColumns = CubeManager.getInstance(config).getAllUHCColumns(cube.getDescriptor());
+        List<TblColRef> uhcColumns = cube.getDescriptor().getAllUHCColumns();
 
         FileSplit fileSplit = (FileSplit) context.getInputSplit();
         String colName = fileSplit.getPath().getParent().getName();

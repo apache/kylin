@@ -43,9 +43,11 @@ import com.fasterxml.jackson.databind.type.SimpleType;
 public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
 
     private static String[] userNeedColNames;
+    private static String[] userNeedColNamesComment;
     private static final String jsonFilePath = "src/test/resources/message.json";
     private static ObjectMapper mapper;
-    private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(Object.class));
+    private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class),
+            SimpleType.construct(Object.class));
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -75,8 +77,11 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testEmbeddedValue() throws Exception {
-        userNeedColNames = new String[] { "user_id", "user_description", "user_isProtected" };
-        List<TblColRef> allCol = mockupTblColRefList();
+        userNeedColNames = new String[] { "user_id", "user_description", "user_isProtected",
+                "user_is_Default_Profile_Image" };
+        userNeedColNamesComment = new String[] { "", "", "",
+                "user" + TimedJsonStreamParser.EMBEDDED_PROPERTY_SEPARATOR + "is_Default_Profile_Image" };
+        List<TblColRef> allCol = mockupTblColRefListWithComment(userNeedColNamesComment);
         TimedJsonStreamParser parser = new TimedJsonStreamParser(allCol, null);
         Object msg = mapper.readValue(new File(jsonFilePath), mapType);
         ByteBuffer buffer = getJsonByteBuffer(msg);
@@ -85,6 +90,21 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
         assertEquals("4853763947", result.get(0));
         assertEquals("Noticias", result.get(1));
         assertEquals("false", result.get(2));
+        assertEquals("false", result.get(3));
+    }
+
+    @Test
+    public void testEmbeddedValueFaultTolerant() throws Exception {
+        userNeedColNames = new String[] { "user_id", "nonexisted_description" };
+        userNeedColNamesComment = new String[] { "", "" };
+        List<TblColRef> allCol = mockupTblColRefList();
+        TimedJsonStreamParser parser = new TimedJsonStreamParser(allCol, null);
+        Object msg = mapper.readValue(new File(jsonFilePath), mapType);
+        ByteBuffer buffer = getJsonByteBuffer(msg);
+        List<StreamingMessageRow> msgList = parser.parse(buffer);
+        List<String> result = msgList.get(0).getData();
+        assertEquals("4853763947", result.get(0));
+        assertEquals(StringUtils.EMPTY, result.get(1));
     }
 
     @Test
@@ -139,6 +159,16 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
         List<TblColRef> list = new ArrayList<>();
         for (int i = 0; i < userNeedColNames.length; i++) {
             TblColRef c = TblColRef.mockup(t, i, userNeedColNames[i], "string");
+            list.add(c);
+        }
+        return list;
+    }
+
+    private static List<TblColRef> mockupTblColRefListWithComment(String[] comments) {
+        TableDesc t = TableDesc.mockup("table_a");
+        List<TblColRef> list = new ArrayList<>();
+        for (int i = 0; i < userNeedColNames.length; i++) {
+            TblColRef c = TblColRef.mockup(t, i, userNeedColNames[i], "string", comments[i]);
             list.add(c);
         }
         return list;

@@ -103,6 +103,10 @@ public class Tuple implements ITuple {
         values[idx] = objectValue;
     }
 
+    public void setDimensionValueDirectly(int idx, Object objectValue) {
+        values[idx] = objectValue;
+    }
+
     public void setMeasureValue(String fieldName, Object fieldValue) {
         setMeasureValue(info.getFieldIndex(fieldName), fieldValue);
     }
@@ -115,25 +119,27 @@ public class Tuple implements ITuple {
         // BigDecimal during cube build for best precision
         if ("double".equals(dataType) && fieldValue instanceof BigDecimal) {
             fieldValue = ((BigDecimal) fieldValue).doubleValue();
-        } else if ("decimal".equals(dataType) && fieldValue instanceof BigDecimal) {
-            fieldValue = normalizeDecimal((BigDecimal) fieldValue);
-        } else if ("integer".equals(dataType) && fieldValue instanceof Number) {
-            fieldValue = ((Number) fieldValue).intValue();
-        } else if ("smallint".equals(dataType) && fieldValue instanceof Number) {
-            fieldValue = ((Number) fieldValue).shortValue();
-        } else if ("tinyint".equals(dataType)) {
-            fieldValue = ((Number) fieldValue).byteValue();
+        } else if ("decimal".equals(dataType)) {
+            if (fieldValue instanceof BigDecimal) {
+                fieldValue = normalizeDecimal((BigDecimal) fieldValue);
+            } else if (fieldValue instanceof Number) {
+                fieldValue = BigDecimal.valueOf(((Number) fieldValue).doubleValue());
+            }
         } else if ("float".equals(dataType) && fieldValue instanceof BigDecimal) {
             fieldValue = ((BigDecimal) fieldValue).floatValue();
+        } else if ("integer".equals(dataType) && fieldValue instanceof Number) {
+            fieldValue = ((Number) fieldValue).intValue();
+        } else if ("bigint".equals(dataType) && fieldValue instanceof Number) {
+            fieldValue = ((Number) fieldValue).longValue();
+        } else if ("smallint".equals(dataType) && fieldValue instanceof Number) {
+            fieldValue = ((Number) fieldValue).shortValue();
+        } else if ("tinyint".equals(dataType) && fieldValue instanceof Number) {
+            fieldValue = ((Number) fieldValue).byteValue();
         } else if ("date".equals(dataType) && fieldValue instanceof Long) {
-            long millis = ((Long) fieldValue).longValue();
+            long millis = (Long) fieldValue;
             fieldValue = (int) (millis / (1000 * 3600 * 24));
-        } else if ("smallint".equals(dataType) && fieldValue instanceof Long) {
-            fieldValue = ((Long) fieldValue).shortValue();
         } else if ((!"varchar".equals(dataType) || !"char".equals(dataType)) && fieldValue instanceof String) {
             fieldValue = convertOptiqCellValue((String) fieldValue, dataType);
-        } else if ("bigint".equals(dataType) && fieldValue instanceof Double) {
-            fieldValue = ((Double) fieldValue).longValue();
         }
 
         values[idx] = fieldValue;
@@ -174,30 +180,35 @@ public class Tuple implements ITuple {
     public static long getTs(ITuple row, TblColRef partitionCol) {
         //ts column type differentiate
         if (partitionCol.getDatatype().equals("date")) {
-            return epicDaysToMillis(Integer.valueOf(row.getValue(partitionCol).toString()));
+            return epicDaysToMillis(Integer.parseInt(row.getValue(partitionCol).toString()));
         } else {
-            return Long.valueOf(row.getValue(partitionCol).toString());
+            return Long.parseLong(row.getValue(partitionCol).toString());
         }
     }
 
-    private static long epicDaysToMillis(int days) {
+    public static long epicDaysToMillis(int days) {
         return 1L * days * (1000 * 3600 * 24);
+    }
+
+    public static int millisToEpicDays(long millis) {
+        return (int) (millis / (1000 * 3600 * 24));
     }
 
     public static Object convertOptiqCellValue(String strValue, String dataTypeName) {
         if (strValue == null)
             return null;
 
-        if ((strValue.equals("") || strValue.equals("\\N")) && !dataTypeName.equals("string") && !dataTypeName.startsWith("varchar"))
+        if ((strValue.equals("") || strValue.equals("\\N")) && !dataTypeName.equals("string")
+                && !dataTypeName.startsWith("varchar"))
             return null;
 
         switch (dataTypeName) {
         case "date":
             // convert epoch time
-            return Integer.valueOf(dateToEpicDays(strValue));// Optiq expects Integer instead of Long. by honma
+            return millisToEpicDays(DateFormat.stringToMillis(strValue));// Optiq expects Integer instead of Long. by honma
         case "datetime":
         case "timestamp":
-            return Long.valueOf(DateFormat.stringToMillis(strValue));
+            return DateFormat.stringToMillis(strValue);
         case "tinyint":
             return Byte.valueOf(strValue);
         case "smallint":
@@ -217,11 +228,6 @@ public class Tuple implements ITuple {
         default:
             return strValue;
         }
-    }
-
-    private static int dateToEpicDays(String strValue) {
-        long millis = DateFormat.stringToMillis(strValue);
-        return (int) (millis / (1000 * 3600 * 24));
     }
 
 }

@@ -33,7 +33,7 @@ import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.gridtable.IGTCodeSystem;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * A limited code system which trims DictionaryDimEnc to TrimmedDimEnc (to avoid pushing down the useless dictionary)
@@ -51,7 +51,7 @@ public class TrimmedCubeCodeSystem extends CubeCodeSystem {
         serializer.serialize(value, buf);
     }
 
-    private static void writeDimensionEncoding(DimensionEncoding encoding, ByteBuffer out) {
+    public static void writeDimensionEncoding(DimensionEncoding encoding, ByteBuffer out) {
         try {
             if (encoding == null) {
                 BytesUtil.writeVInt(1, out);
@@ -71,7 +71,7 @@ public class TrimmedCubeCodeSystem extends CubeCodeSystem {
         }
     }
 
-    private static DimensionEncoding readDimensionEncoding(ByteBuffer in) {
+    public static DimensionEncoding readDimensionEncoding(ByteBuffer in) {
         try {
             int isNull = BytesUtil.readVInt(in);
             if (isNull == 1) {

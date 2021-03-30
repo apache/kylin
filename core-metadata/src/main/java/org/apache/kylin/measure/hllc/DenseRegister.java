@@ -35,6 +35,11 @@ public class DenseRegister implements Register, java.io.Serializable {
         this.register = new byte[m];
     }
 
+    public void  copyFrom(DenseRegister r){
+        assert m == r.m;
+        System.arraycopy(r.register, 0, register, 0 , register.length);
+    }
+
     public void set(int pos, byte value) {
         register[pos] = value;
     }
@@ -110,7 +115,7 @@ public class DenseRegister implements Register, java.io.Serializable {
         return true;
     }
 
-    byte[] getRawRegister() {
+    public  byte[] getRawRegister() {
         return this.register;
     }
 

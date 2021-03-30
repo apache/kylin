@@ -26,7 +26,7 @@ import java.util.List;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.ArrayPrimitiveWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.util.ToolRunner;
@@ -59,16 +59,18 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
         options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_INPUT_PATH);
         options.addOption(OPTION_DICT_PATH);
+        options.addOption(OPTION_CUBING_JOB_ID);
         parseOptions(options, args);
 
         final String cubeName = getOptionValue(OPTION_CUBE_NAME);
         final String segmentID = getOptionValue(OPTION_SEGMENT_ID);
+        final String jobId = getOptionValue(OPTION_CUBING_JOB_ID);
         final String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
         final String dictPath = getOptionValue(OPTION_DICT_PATH);
 
         final KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-        DictionaryGeneratorCLI.processSegment(config, cubeName, segmentID, new DistinctColumnValuesProvider() {
+        DictionaryGeneratorCLI.processSegment(config, cubeName, segmentID, jobId, new DistinctColumnValuesProvider() {
             @Override
             public IReadableTable getDistinctValuesFor(TblColRef col) {
                 return new SortedColumnDFSFile(factColumnsInputPath + "/" + col.getIdentity(), col.getType());
@@ -79,33 +81,35 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
             public Dictionary<String> getDictionary(TblColRef col) throws IOException {
                 CubeManager cubeManager = CubeManager.getInstance(config);
                 CubeInstance cube = cubeManager.getCube(cubeName);
-                List<TblColRef> uhcColumns = CubeManager.getInstance(config).getAllUHCColumns(cube.getDescriptor());
-
+                List<TblColRef> uhcColumns = cube.getDescriptor().getAllUHCColumns();
+                KylinConfig cubeConfig = cube.getConfig();
                 Path colDir;
-                if (uhcColumns.contains(col)) {
+                if (cubeConfig.isBuildUHCDictWithMREnabled() && uhcColumns.contains(col)) {
                     colDir = new Path(dictPath, col.getIdentity());
                 } else {
                     colDir = new Path(factColumnsInputPath, col.getIdentity());
                 }
                 FileSystem fs = HadoopUtil.getWorkingFileSystem();
 
-                Path dictFile = HadoopUtil.getFilterOnlyPath(fs, colDir, col.getName() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);
+                Path dictFile = HadoopUtil.getFilterOnlyPath(fs, colDir,
+                        col.getName() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);
                 if (dictFile == null) {
-                    logger.info("Dict for '" + col.getName() + "' not pre-built.");
+                    logger.info("Dict for '{}' not pre-built.", col.getName());
                     return null;
                 }
 
-                try (SequenceFile.Reader reader = new SequenceFile.Reader(HadoopUtil.getCurrentConfiguration(), SequenceFile.Reader.file(dictFile))) {
+                try (SequenceFile.Reader reader = new SequenceFile.Reader(HadoopUtil.getCurrentConfiguration(),
+                        SequenceFile.Reader.file(dictFile))) {
                     NullWritable key = NullWritable.get();
-                    BytesWritable value = new BytesWritable();
+                    ArrayPrimitiveWritable value = new ArrayPrimitiveWritable();
                     reader.next(key, value);
 
-                    ByteBuffer buffer = new ByteArray(value.getBytes()).asBuffer();
+                    ByteBuffer buffer = new ByteArray((byte[]) value.get()).asBuffer();
                     try (DataInputStream is = new DataInputStream(new ByteBufferBackedInputStream(buffer))) {
                         String dictClassName = is.readUTF();
                         Dictionary<String> dict = (Dictionary<String>) ClassUtil.newInstance(dictClassName);
                         dict.readFields(is);
-                        logger.info("DictionaryProvider read dict from file: " + dictFile);
+                        logger.info("DictionaryProvider read dict from file: {}", dictFile);
                         return dict;
                     }
                 }

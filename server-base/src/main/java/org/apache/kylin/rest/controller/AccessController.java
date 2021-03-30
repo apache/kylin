@@ -20,10 +20,14 @@ package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.security.AclEntityType;
@@ -35,6 +39,8 @@ import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.TableACLService;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.AclPermissionUtil;
+import org.apache.kylin.rest.util.ValidateUtil;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.acls.domain.PrincipalSid;
@@ -55,7 +61,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
  */
 @Controller
 @RequestMapping(value = "/access")
-public class AccessController extends BasicController {
+public class AccessController extends BasicController implements InitializingBean {
 
     @Autowired
     @Qualifier("accessService")
@@ -72,6 +78,25 @@ public class AccessController extends BasicController {
     @Autowired
     @Qualifier("userService")
     private UserService userService;
+
+    @Autowired
+    @Qualifier("validateUtil")
+    private ValidateUtil validateUtil;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        // init ExternalAclProvider
+        ExternalAclProvider.getInstance();
+    }
+    
+    /**
+     * Get current user's permission in the project
+     */
+    @RequestMapping(value = "/user/permission/{project}", method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public String getUserPermissionInPrj(@PathVariable("project") String project) {
+        return accessService.getUserPermissionInPrj(project);
+    }
 
     /**
      * Get access entry list of a domain object
@@ -120,13 +145,39 @@ public class AccessController extends BasicController {
      */
     @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.POST }, produces = { "application/json" })
     @ResponseBody
-    public List<AccessEntryResponse> grant(@PathVariable String type, @PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
+    public List<AccessEntryResponse> grant(@PathVariable String type, @PathVariable String uuid, @RequestBody AccessRequest accessRequest) throws IOException {
+        boolean isPrincipal = accessRequest.isPrincipal();
+        String name = accessRequest.getSid();
+        validateUtil.checkIdentifiersExists(name, isPrincipal);
+
         AclEntity ae = accessService.getAclEntity(type, uuid);
-        Sid sid = accessService.getSid(accessRequest.getSid(), accessRequest.isPrincipal());
+        Sid sid = accessService.getSid(name, isPrincipal);
         Permission permission = AclPermissionFactory.getPermission(accessRequest.getPermission());
         Acl acl = accessService.grant(ae, permission, sid);
 
         return accessService.generateAceResponses(acl);
+    }
+
+    /**
+     * Batch API.Grant a new access on a domain object to a user/role
+     */
+    @RequestMapping(value = "batch/{type}/{uuid}", method = { RequestMethod.POST }, produces = { "application/json" })
+    @ResponseBody
+    public void batchGrant(@PathVariable String type, @PathVariable String uuid,
+            @RequestBody List<Object[]> reqs) throws IOException {
+        Map<Sid, Permission> sidToPerm = new HashMap<>();
+        AclEntity ae = accessService.getAclEntity(type, uuid);
+        for (Object[] req : reqs) {
+            Preconditions.checkArgument(req.length == 3, "error access requests.");
+            String name = (String) req[0];
+            boolean isPrincipal = (boolean) req[1];
+            validateUtil.checkIdentifiersExists(name, isPrincipal);
+
+            Sid sid = accessService.getSid(name, isPrincipal);
+            Permission permission = AclPermissionFactory.getPermission((String) req[2]);
+            sidToPerm.put(sid, permission);
+        }
+        accessService.batchGrant(ae, sidToPerm);
     }
 
     /**
@@ -153,14 +204,23 @@ public class AccessController extends BasicController {
     public List<AccessEntryResponse> revoke(@PathVariable String type, @PathVariable String uuid, AccessRequest accessRequest) throws IOException {
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Acl acl = accessService.revoke(ae, accessRequest.getAccessEntryId());
-        if (AclEntityType.PROJECT_INSTANCE.equals(type)) {
+
+        if (accessRequest.isPrincipal()) {
+            revokeTableACL(type, uuid, accessRequest.getSid(), MetadataConstants.TYPE_USER);
+        } else {
+            revokeTableACL(type, uuid, accessRequest.getSid(), MetadataConstants.TYPE_GROUP);
+        }
+
+        return accessService.generateAceResponses(acl);
+    }
+
+    private void revokeTableACL(String entityType, String uuid, String name, String identityType) throws IOException {
+        if (AclEntityType.PROJECT_INSTANCE.equals(entityType)) {
             String prj = projectService.getProjectManager().getPrjByUuid(uuid).getName();
-            String username = accessRequest.getSid();
-            if (tableACLService.exists(prj, username)) {
-                tableACLService.deleteFromTableBlackList(prj, username);
+            if (tableACLService.exists(prj, name, identityType)) {
+                tableACLService.deleteFromTableACL(prj, name, identityType);
             }
         }
-        return accessService.generateAceResponses(acl);
     }
 
     /**

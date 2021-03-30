@@ -19,6 +19,7 @@
 package org.apache.kylin.common.lock;
 
 import java.lang.management.ManagementFactory;
+import java.nio.charset.StandardCharsets;
 
 public abstract class DistributedLockFactory {
 
@@ -35,9 +36,9 @@ public abstract class DistributedLockFactory {
     private static String threadProcessAndHost() {
         return Thread.currentThread().getId() + "-" + processAndHost();
     }
-    
-    private static String processAndHost() {
-        byte[] bytes = ManagementFactory.getRuntimeMXBean().getName().getBytes();
-        return new String(bytes);
+
+    public static String processAndHost() {
+        byte[] bytes = ManagementFactory.getRuntimeMXBean().getName().getBytes(StandardCharsets.UTF_8);
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 }

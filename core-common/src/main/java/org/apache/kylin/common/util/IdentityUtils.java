@@ -23,6 +23,11 @@ import java.util.IdentityHashMap;
 /**
  */
 public class IdentityUtils {
+
+    private IdentityUtils() {
+        throw new IllegalStateException("Class IdentityUtils is an utility class !");
+    }
+
     public static <K> boolean collectionReferenceEquals(Collection<K> collectionA, Collection<K> collectionB) {
         if (collectionA == null || collectionB == null) {
             throw new RuntimeException("input must be not null");

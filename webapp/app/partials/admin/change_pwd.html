@@ -1,0 +1,88 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
+<script type="text/ng-template" id="changePwd.html">
+  <ng-form name="change_pwd_form">
+    <div class="modal-header">
+      <h4>Change Password</h4>
+    </div>
+    <input name="username" type="text" style="display:none"/>
+    <input name="password" type="password" style="width:1px;height:0;border:none"/>
+    <div class="modal-body" style="background-color: white">
+      <div class="form-group">
+        <label><b>User Name</b></label>
+        <div class="clearfix">
+          <input name="name_input" type="text" class="form-control" readonly ng-model="changePwdUser.username" required
+                 placeholder="You can use letters, numbers, and underscore characters '_'"
+                 ng-maxlength=100 ng-pattern="userPattern"/>
+                    <span class="text-warning"
+                          ng-if="change_pwd_form.name_input.$error.required  && change_pwd_form.name_input.$dirty"
+                    >&nbsp;The user name is required</span>
+                    <span class="text-warning"
+                          ng-if="change_pwd_form.name_input.$invalid && change_pwd_form.name_input.$dirty && !change_pwd_form.name_input.$error.required"
+                    >&nbsp;The user name is invalid</span>
+        </div>
+      </div>
+      <div class="form-group" ng-if="currentPwdNeeded">
+        <label><b>User Current Password</b></label>
+        <div class="clearfix">
+          <input required name="curr_pwd_input" type="password" class="form-control" ng-model="changePwdUser.password"
+                 placeholder="Your current password"/>
+          <span class="text-warning"
+                ng-if="change_pwd_form.curr_pwd_input.$error.required && change_pwd_form.curr_pwd_input.$dirty"
+          >&nbsp;The password is required</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label><b>User New Password</b></label>
+        <div class="clearfix">
+          <input required ng-pattern="pwdPattern" name="pwd_input" type="password" class="form-control"
+                 placeholder="The password should have at least 8 characters, and contain at least one number, letter and special character（~!@#$%^&*(){}|:&quot;\<\>?[];\',./`)."
+                 ng-model="changePwdUser.newPassword"/>
+          <span class="text-warning"
+                          ng-if="change_pwd_form.pwd_input.$error.required  && change_pwd_form.pwd_input.$dirty"
+                    >&nbsp;The password is required</span>
+                    <span class="text-warning"
+                          ng-if="change_pwd_form.pwd_input.$invalid && change_pwd_form.pwd_input.$dirty && !change_pwd_form.pwd_input.$error.required"
+                    >&nbsp;The password is invalid</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label><b>Confirm New Password</b></label>
+        <div class="clearfix">
+          <input required name="pwd_new_input" type="password" class="form-control"
+                 placeholder="The password should have at least 8 characters, and contain at least one number, letter and special character（~!@#$%^&*(){}|:&quot;\<\>?[];\',./`)."
+                 ng-model="changePwdUser.repeatPassword"/>
+            <span class="text-warning"
+                 ng-if="user_create_form.pwd_new_input.$error.required  && user_create_form.pwd_new_input.$dirty"
+                    >&nbsp;The password is required</span>
+                    <span class="text-warning"
+                    ng-if="changePwdUser.repeatPassword && changePwdUser.newPassword !== changePwdUser.repeatPassword"
+              >&nbsp;Password and confirm password are not the same.</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" ng-click="cancel()">Close</button>
+      <button class="btn btn-success" ng-click="saveNewPassword()" ng-disabled="(changePwdUser.newPassword !== changePwdUser.repeatPassword) || change_pwd_form.$invalid  || dialogActionLoading">
+        Submit
+      </button>
+    </div>
+  </ng-form>
+</script>
+

@@ -25,30 +25,34 @@
       <div class="row">
 
         <!--Cube Name: -->
-        <div class="col-xs-3">
+        <div class="job-search-box">
           <form class="" ng-submit="jobList.removeAll();reload()" style="display: inline" >
-              <span class="input-icon input-icon-right nav-search" style="font-size:14px;"><b>Cube Name:</b>
+            <span><b>Cube Name:</b>
+              <span class="input-icon input-icon-right nav-search" style="font-size:14px;">
                   <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="cubeName" />
                   <i class="ace-icon fa fa-search blue" ng-click="jobList.removeAll();reload()"></i>
               </span>
+            </span>
           </form>
         </div>
-
         <!--<div class="col-xs-2"><label class="table-header-text">Jobs</label></div>-->
-        <div class="col-xs-9">
+        <div class="col-xs-12">
           <!--STATUS-->
-          <div class="pull-right">
+          <div style="text-align:right;margin-top:4px;">
             <!--Job History Time Filter-->
             <label>Jobs in:
               <select data-ng-model="timeFilter"
                       data-ng-options="s.name for s in jobConfig.timeFilter">
+              </select>
+              <select data-ng-model="searchMode"
+                      data-ng-options="s.name for s in jobConfig.searchMode">
               </select>
             </label>
             <label ng-repeat="s in jobConfig.allStatus" class="checkbox-inline" >
               <input  type="checkbox"
                       value="{{s.name}}"
                       ng-checked="status.indexOf(s) > -1"
-                      ng-click="toggleSelection(s);" />{{s.name}}
+                      ng-click="toggleSelection(s);" />{{s.name}}{{s.count}}
             </label>
             <!--Refresh Jobs-->
             <button class="btn btn-success btn-xs" style="margin-left: 10px" ng-click="jobList.removeAll();reload();"><i class="fa fa-refresh"></i></button>
@@ -143,8 +147,11 @@
                 <li ng-if="job.job_status=='RUNNING' || job.job_status=='NEW' || job.job_status=='PENDING' || job.job_status=='ERROR' || job.job_status=='STOPPED'">
                   <a ng-click="cancel(job)">Discard</a>
                 </li>
-                <li ng-if="job.job_status=='FINISHED' || job.job_status=='DISCARDED' || job.job_status=='ERROR' || job.job_status=='STOPPED'">
+                <li ng-if="job.job_status=='FINISHED' || job.job_status=='DISCARDED'">
                   <a ng-click="drop(job)">Drop</a>
+                </li>
+                <li ng-if="job.job_status=='DISCARDED' && job.name.startsWith('STREAM CUBE')">
+                  <a ng-click="resubmit(job)">Resubmit</a>
                 </li>
                 <li>
                   <a ng-click="diagnosisJob(job)" tooltip="Download Diagnosis Info For This Job">Diagnosis</a>

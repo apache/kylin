@@ -37,8 +37,8 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class MassInTupleFilter extends FunctionTupleFilter {
     public static final Logger logger = LoggerFactory.getLogger(MassInTupleFilter.class);
@@ -150,7 +150,7 @@ public class MassInTupleFilter extends FunctionTupleFilter {
         filterTableName = BytesUtil.readUTFString(buffer);
         filterTableResourceIdentifier = BytesUtil.readUTFString(buffer);
         filterTableType = Functions.FilterTableType.valueOf(BytesUtil.readUTFString(buffer));
-        reverse = Boolean.valueOf(BytesUtil.readUTFString(buffer));
+        reverse = Boolean.parseBoolean(BytesUtil.readUTFString(buffer));
     }
 
     public static boolean containsMassInTupleFilter(TupleFilter filter) {

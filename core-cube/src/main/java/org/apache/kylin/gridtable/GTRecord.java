@@ -25,7 +25,7 @@ import java.util.Comparator;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 public class GTRecord implements Comparable<GTRecord> {
 
@@ -67,6 +67,14 @@ public class GTRecord implements Comparable<GTRecord> {
 
     public void set(int i, ByteArray data) {
         cols[i].reset(data.array(), data.offset(), data.length());
+    }
+
+    public void setValue(int i, Object value) {
+        ByteArray space = new ByteArray(info.codeSystem.maxCodeLength(i));
+        ByteBuffer buf = space.asBuffer();
+        info.codeSystem.encodeColumnValue(i, value, buf);
+        set(i, space);
+        cols[i].reset(buf.array(), buf.arrayOffset(), buf.position());
     }
 
     /** set record to the codes of specified values, new space allocated to hold the codes */
@@ -249,6 +257,11 @@ public class GTRecord implements Comparable<GTRecord> {
     /** change pointers to point to data in given buffer, UNLIKE deserialize */
     public void loadCellBlock(int c, ByteBuffer buf) {
         loadColumns(info.colBlocks[c], buf);
+    }
+
+    /** change pointers to point to data in given buffer, UNLIKE deserialize */
+    public void loadColumns(ByteBuffer buf) {
+        loadColumns(info.colAll, buf);
     }
 
     /**

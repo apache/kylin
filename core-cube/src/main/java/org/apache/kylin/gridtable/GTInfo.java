@@ -57,6 +57,9 @@ public class GTInfo {
     int rowBlockSize; // 0: disable row block
     ImmutableBitSet colBlocksAll;
 
+    // not included during serialization, only used for loadColumns
+    ImmutableBitSet dynamicDims;
+
     // must create from builder
     private GTInfo() {
     }
@@ -81,12 +84,20 @@ public class GTInfo {
         return colBlocks[i];
     }
 
+    public ImmutableBitSet[] getColumnBlocks() {
+        return colBlocks;
+    }
+
     public ImmutableBitSet getPrimaryKey() {
         return primaryKey;
     }
 
     public ImmutableBitSet getAllColumns() {
         return colAll;
+    }
+
+    public ImmutableBitSet getDynamicDims() {
+        return dynamicDims;
     }
 
     public boolean isRowBlockEnabled() {
@@ -210,6 +221,10 @@ public class GTInfo {
                 it.remove();
         }
         colBlocks = list.toArray(new ImmutableBitSet[list.size()]);
+
+        // for dynamic dimensions
+        if (dynamicDims == null)
+            dynamicDims = ImmutableBitSet.EMPTY;
     }
 
     public static class Builder {
@@ -262,6 +277,12 @@ public class GTInfo {
         /** optional */
         public Builder setColumnPreferIndex(ImmutableBitSet colPreferIndex) {
             info.colPreferIndex = colPreferIndex;
+            return this;
+        }
+
+        /** optional */
+        public Builder enableDynamicDims(ImmutableBitSet dynamicDims) {
+            info.dynamicDims = dynamicDims;
             return this;
         }
 

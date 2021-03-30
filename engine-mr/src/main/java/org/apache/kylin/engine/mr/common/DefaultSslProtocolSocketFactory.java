@@ -130,7 +130,7 @@ public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFact
 
     private static SSLContext createEasySSLContext() {
         try {
-            SSLContext context = SSLContext.getInstance("TLS");
+            SSLContext context = SSLContext.getInstance("TLSv1.3");
             context.init(null, new TrustManager[] { new DefaultX509TrustManager(null) }, null);
 
             return context;

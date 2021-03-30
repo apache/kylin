@@ -18,16 +18,17 @@
 
 package org.apache.kylin.cube.cuboid.algorithm;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class AbstractRecommendAlgorithm implements CuboidRecommendAlgorithm {
     private static final Logger logger = LoggerFactory.getLogger(AbstractRecommendAlgorithm.class);
 
-    private CuboidStats cuboidStats;
-    private BenefitPolicy benefitPolicy;
+    protected final CuboidStats cuboidStats;
+    protected final BenefitPolicy benefitPolicy;
 
     private AtomicBoolean cancelRequested = new AtomicBoolean(false);
     private AtomicBoolean canceled = new AtomicBoolean(false);
@@ -45,13 +46,18 @@ public abstract class AbstractRecommendAlgorithm implements CuboidRecommendAlgor
     }
 
     @Override
+    public List<Long> recommend(double expansionRate) {
+        double spaceLimit = cuboidStats.getBaseCuboidSize() * expansionRate;
+        return start(spaceLimit);
+    }
+
+    @Override
     public void cancel() {
         cancelRequested.set(true);
     }
 
     /**
      * Checks whether the algorithm has been canceled or timed out.
-     * 
      */
     protected boolean shouldCancel() {
         if (canceled.get()) {
@@ -70,13 +76,5 @@ public abstract class AbstractRecommendAlgorithm implements CuboidRecommendAlgor
             return true;
         }
         return false;
-    }
-
-    public CuboidStats getCuboidStats() {
-        return cuboidStats;
-    }
-
-    public BenefitPolicy getBenefitPolicy() {
-        return benefitPolicy;
     }
 }

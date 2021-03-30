@@ -17,8 +17,7 @@
  limitations under the License.
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-assembly</artifactId>
@@ -27,7 +26,7 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>2.3.0-SNAPSHOT</version>
+        <version>3.1.2-SNAPSHOT</version>
     </parent>
 
     <properties>
@@ -41,6 +40,10 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-source-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-source-kafka</artifactId>
         </dependency>
         <dependency>
@@ -49,11 +52,20 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-storage-stream</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-engine-mr</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-engine-spark</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-stream-source-kafka</artifactId>
         </dependency>
 
         <!-- Env & Test -->
@@ -193,10 +205,6 @@
                                     <shadedPattern>${shadeBase}.com.tdunning</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>com.fasterxml.jackson</pattern>
-                                    <shadedPattern>${shadeBase}.com.fasterxml.jackson</shadedPattern>
-                                </relocation>
-                                <relocation>
                                     <pattern>org.apache.commons.codec</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.commons.codec</shadedPattern>
                                 </relocation>
@@ -211,6 +219,22 @@
                                 <relocation>
                                     <pattern>org.roaringbitmap</pattern>
                                     <shadedPattern>${shadeBase}.org.roaringbitmap</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons.dbcp</pattern>
+                                    <shadedPattern>${shadeBase}.org.apache.commons.dbcp</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons.pool</pattern>
+                                    <shadedPattern>${shadeBase}.org.apache.commons.pool</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons.jocl</pattern>
+                                    <shadedPattern>${shadeBase}.org.apache.commons.jocl</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.codahale.metrics</pattern>
+                                    <shadedPattern>${shadeBase}.com.codahale.metrics</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>

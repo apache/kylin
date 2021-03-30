@@ -1,0 +1,130 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
+<div class="container" style="padding-top: 80px">
+  <div class="col-md-5">
+    <div>
+      <h3>Server Config <button class="btn btn-xs btn-success" ng-click="getConfig()"><i class="fa fa-refresh"></i></button></h3>
+    </div>
+    <div style="padding-top: 10px">
+      <pre>{{configStr}}</pre>
+    </div>
+  </div>
+
+  <div class="col-md-5">
+    <div>
+      <h3>Server Environment <button class="btn btn-xs btn-success" ng-click="getEnv()"><i class="fa fa-refresh"></i></button></h3>
+    </div>
+    <div style="padding-top: 10px">
+      <pre>{{envStr}}</pre>
+    </div>
+  </div>
+
+  <div class="col-md-2">
+    <div>
+      <h3>Actions</h3>
+    </div>
+    <div style="padding-top: 10px;width: 260px;">
+      <a  class="btn btn-primary btn-lg btn-block" tooltip="Reload all metadata and clear cache" ng-click="reloadMeta()">Reload Metadata</a>
+    </div>
+    <div style="padding-top: 10px;width: 260px;">
+      <a ng-click="calCardinality();" tooltip="Calculate cardinality of tables" class="btn btn-primary btn-lg btn-block">Calculate Cardinality</a>
+    </div>
+    <div style="padding-top: 10px;width: 260px;" ng-if="false">
+      <a class="btn btn-success btn-lg btn-block" tooltip="Clean unused HDFS and HBASE space" ng-click="cleanStorage()">Clean Up Storage</a>
+    </div>
+    <div style="padding-top: 10px;width: 260px;" ng-if="isCacheEnabled()">
+      <a class="btn btn-primary btn-lg btn-block" ng-click="disableCache()">Disable Cache</a>
+    </div>
+    <div style="padding-top: 10px;width: 260px;" ng-if="!isCacheEnabled()">
+      <a  class="btn btn-primary btn-lg btn-block" tooltip="Enable Query Cache" ng-click="enableCache()">Enable Cache</a>
+    </div>
+    <div style="padding-top: 10px;width: 260px;">
+      <a class="btn btn-primary btn-lg btn-block" tooltip="Update Server Config"  class="btn btn-primary btn-lg"  ng-click="toSetConfig()">Set Config</a>
+    </div>
+    <div style="padding-top: 10px;width: 260px;">
+      <a class="btn btn-primary btn-lg btn-block" tooltip="Reload Server Config"  class="btn btn-primary btn-lg"  ng-click="reloadConfig()">Reload Config</a>
+    </div>
+    <div style="padding-top: 10px;width: 260px;">
+      <a ng-click="downloadBadQueryFiles();" tooltip="Download Diagnosis Info For Current Project" class="btn btn-primary btn-lg btn-block"><i class="fa fa-ambulance"></i> Diagnosis</a>
+    </div>
+
+    <!--<div>-->
+      <!--<h3>Links</h3>-->
+    <!--</div>-->
+    <!--<div style="padding-top: 10px" ng-if="config.reference_links['hadoop']">-->
+      <!--<a class="label-lg label-yellow arrowed-right"style="font-size:18px;" tooltip="Cluster Resource Monitoring" href="{{config.reference_links['hadoop'].link}}" >-->
+        <!--Hadoop Monitor-->
+      <!--</a>-->
+    <!--</div>-->
+  </div>
+</div>
+
+<script type="text/ng-template" id="calCardinality.html">
+  <div class="modal-header">
+    <h4>Load Hive Table Metadata</h4>
+  </div>
+  <div class="modal-body load-hive-metawrapper">
+    <label for="table">Table Names: (Separate with comma)</label>
+    <input ng-model="$parent.tableName" class="form-control" id="table" placeholder="table1,table2  By default, system will choose 'Default' as the database, you can specify database like 'database.table'"/>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click="calculate()">Sync</button>
+    <button class="btn btn-primary" ng-click="cancel()">Cancel</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="updateConfig.html">
+  <ng-form name="config_update_form">
+    <div class="modal-header">
+      <h4>Update Config</h4>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label><b>Key</b></label>
+
+        <div class="clearfix">
+          <input name="key_input" type="text" class="form-control" placeholder="Config Key.."
+                 ng-model="state.key"
+                 required/>
+
+          <p class="text-warning"
+             ng-show="config_update_form.key_input.$invalid && !config_update_form.key_input.$pristine">&nbsp;&nbsp;Key
+            is required.</p>
+        </div>
+      </div>
+      <div class="form-group">
+        <label><b>Value</b></label>
+
+        <div class="clearfix">
+          <input name="value_input" type="text" class="form-control" placeholder="Config Value.."
+                 ng-model="state.value"
+                 required/>
+
+          <p class="text-warning"
+             ng-show="config_update_form.value_input.$invalid && !config_update_form.value_input.$pristine">&nbsp;&nbsp;Value
+            is required.</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" ng-click="update()" ng-disabled="config_update_form.key_input.$invalid || config_update_form.value_input.$invalid">Update</button>
+      <button class="btn btn-primary" ng-click="cancel()">Cancel</button>
+    </div>
+  </ng-form>
+</script>

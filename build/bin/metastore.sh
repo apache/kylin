@@ -24,7 +24,7 @@
 # take a look at SandboxMetastoreCLI
 
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/header.sh
 
 if [ "$1" == "backup" ]
 then
@@ -36,7 +36,8 @@ then
     echo "Starting backup to ${_file}"
     mkdir -p ${_file}
 
-    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool download ${_file}
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool download ${_file} "${@:2}"
+
     echo "metadata store backed up to ${_file}"
 
 elif [ "$1" == "fetch" ]
@@ -57,7 +58,7 @@ then
 
     _file=$2
     echo "Starting restoring $_file"
-    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool upload $_file
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool upload $_file "${@:3}"
 
 elif [ "$1" == "list" ]
 then
@@ -83,7 +84,7 @@ then
 elif [ "$1" == "reset" ]
 then
 
-    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool  reset
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool reset
     
 elif [ "$1" == "refresh-cube-signature" ]
 then
@@ -96,11 +97,11 @@ then
     ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MetadataCleanupJob  "${@:2}"
 
 else
-    echo "usage: metastore.sh backup"
+    echo "usage: metastore.sh backup [RESOURCE_PATH_PREFIX]"
     echo "       metastore.sh fetch DATA"
     echo "       metastore.sh reset"
     echo "       metastore.sh refresh-cube-signature"
-    echo "       metastore.sh restore PATH_TO_LOCAL_META"
+    echo "       metastore.sh restore PATH_TO_LOCAL_META [RESOURCE_PATH_PREFIX]"
     echo "       metastore.sh list RESOURCE_PATH"
     echo "       metastore.sh cat RESOURCE_PATH"
     echo "       metastore.sh remove RESOURCE_PATH"

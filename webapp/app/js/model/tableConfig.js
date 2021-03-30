@@ -121,7 +121,19 @@ KylinApp.constant('tableConfig', {
       "fixed_length_hex",
       "integer"
     ]
-  }
+  },
+  snapshotTheaditems: [
+    {attr: 'snapshotID', name: 'ID'},
+    {attr: 'storageType', name: 'Storage Type'},
+    {attr: 'lastBuildTime', name: 'Last Build Time'},
+    {attr: 'sourceTableLastModifyTime', name: 'Source Table Last Modify Time'},
+    {attr: 'sourceTableSize', name: 'Size'},
+    {attr: 'usageInfo', name: 'Useage Info'}
+  ],
+ streamingSourceType: {
+   kafka: 20,
+   kafka_hive: 21
+ }
 
 
 });

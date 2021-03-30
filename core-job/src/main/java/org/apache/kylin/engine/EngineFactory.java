@@ -19,6 +19,7 @@
 package org.apache.kylin.engine;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.ImplementationSwitch;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -29,7 +30,7 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 public class EngineFactory {
 
     // Use thread-local because KylinConfig can be thread-local and implementation might be different among multiple threads.
-    private static ThreadLocal<ImplementationSwitch<IBatchCubingEngine>> engines = new ThreadLocal<>();
+    private static InternalThreadLocal<ImplementationSwitch<IBatchCubingEngine>> engines = new InternalThreadLocal<>();
 
     public static IBatchCubingEngine batchEngine(IEngineAware aware) {
         ImplementationSwitch<IBatchCubingEngine> current = engines.get();
@@ -53,7 +54,11 @@ public class EngineFactory {
 
     /** Build a new cube segment, typically its time range appends to the end of current cube. */
     public static DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
-        return batchEngine(newSegment).createBatchCubingJob(newSegment, submitter);
+        return createBatchCubingJob(newSegment, submitter, 0);
+    }
+
+    public static DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter, Integer priorityOffset) {
+        return batchEngine(newSegment).createBatchCubingJob(newSegment, submitter, priorityOffset);
     }
 
     /** Merge multiple small segments into a big one. */
@@ -61,4 +66,8 @@ public class EngineFactory {
         return batchEngine(mergeSegment).createBatchMergeJob(mergeSegment, submitter);
     }
 
+    /** Optimize a segment based on the cuboid recommend list produced by the cube planner. */
+    public static DefaultChainedExecutable createBatchOptimizeJob(CubeSegment optimizeSegment, String submitter) {
+        return batchEngine(optimizeSegment).createBatchOptimizeJob(optimizeSegment, submitter);
+    }
 }

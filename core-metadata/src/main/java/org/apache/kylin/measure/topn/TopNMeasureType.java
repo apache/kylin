@@ -23,7 +23,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Dictionary;
@@ -49,7 +51,9 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+
+import static org.apache.kylin.metadata.realization.SQLDigest.OrderEnum.DESCENDING;
 
 public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
@@ -63,11 +67,13 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
     public static final String CONFIG_AGG = "topn.aggregation";
     public static final String CONFIG_ORDER = "topn.order";
 
+    private boolean cuboidCanAnswer;
+
     public static class Factory extends MeasureTypeFactory<TopNCounter<ByteArray>> {
 
         @Override
         public MeasureType<TopNCounter<ByteArray>> createMeasureType(String funcName, DataType dataType) {
-            return new TopNMeasureType(funcName, dataType);
+            return new TopNMeasureType(dataType);
         }
 
         @Override
@@ -90,12 +96,13 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     private final DataType dataType;
 
-    public TopNMeasureType(String funcName, DataType dataType) {
+    public TopNMeasureType(DataType dataType) {
         // note at query parsing phase, the data type may be null, because only function and parameters are known
         this.dataType = dataType;
     }
 
-    public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
+    @Override
+    public void validate(FunctionDesc functionDesc) {
         validate(functionDesc.getExpression(), functionDesc.getReturnDataType(), true);
     }
 
@@ -128,7 +135,8 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             private boolean needReEncode = true;
 
             @Override
-            public TopNCounter<ByteArray> valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+            public TopNCounter<ByteArray> valueOf(String[] values, MeasureDesc measureDesc,
+                    Map<TblColRef, Dictionary<String>> dictionaryMap) {
                 double counter = values[0] == null ? 0 : Double.parseDouble(values[0]);
 
                 if (dimensionEncodings == null) {
@@ -147,41 +155,36 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                 int offset = 0;
                 for (int i = 0; i < dimensionEncodings.length; i++) {
                     if (values[i + 1] == null) {
-                        Arrays.fill(key.array(), offset, offset + dimensionEncodings[i].getLengthOfEncoding(), DimensionEncoding.NULL);
+                        Arrays.fill(key.array(), offset, offset + dimensionEncodings[i].getLengthOfEncoding(),
+                                DimensionEncoding.NULL);
                     } else {
                         dimensionEncodings[i].encode(values[i + 1], key.array(), offset);
                     }
                     offset += dimensionEncodings[i].getLengthOfEncoding();
                 }
 
-                TopNCounter<ByteArray> topNCounter = new TopNCounter<ByteArray>(dataType.getPrecision() * TopNCounter.EXTRA_SPACE_RATE);
+                TopNCounter<ByteArray> topNCounter = new TopNCounter<>(
+                        dataType.getPrecision() * TopNCounter.EXTRA_SPACE_RATE);
                 topNCounter.offer(key, counter);
                 return topNCounter;
             }
 
             @Override
-            public TopNCounter<ByteArray> reEncodeDictionary(TopNCounter<ByteArray> value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
+            public void reset() {
+
+            }
+
+            @Override
+            public TopNCounter<ByteArray> reEncodeDictionary(TopNCounter<ByteArray> value, MeasureDesc measureDesc,
+                    Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
                 TopNCounter<ByteArray> topNCounter = value;
 
                 if (newDimensionEncodings == null) {
-                    literalCols = getTopNLiteralColumn(measureDesc.getFunction());
-                    dimensionEncodings = getDimensionEncodings(measureDesc.getFunction(), literalCols, oldDicts);
-                    keyLength = 0;
-                    boolean hasDictEncoding = false;
-                    for (DimensionEncoding encoding : dimensionEncodings) {
-                        keyLength += encoding.getLengthOfEncoding();
-                        if (encoding instanceof DictionaryDimEnc) {
-                            hasDictEncoding = true;
+                    synchronized (MeasureIngester.class) {
+                        if (newDimensionEncodings == null) {
+                            initialize(measureDesc, oldDicts, newDicts);
                         }
                     }
-
-                    newDimensionEncodings = getDimensionEncodings(measureDesc.getFunction(), literalCols, newDicts);
-                    newKeyLength = 0;
-                    for (DimensionEncoding encoding : newDimensionEncodings) {
-                        newKeyLength += encoding.getLengthOfEncoding();
-                    }
-
-                    needReEncode = hasDictEncoding;
                 }
 
                 if (needReEncode == false) {
@@ -197,7 +200,8 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                     int offset = c.getItem().offset();
                     int innerBuffOffset = 0;
                     for (int i = 0; i < dimensionEncodings.length; i++) {
-                        String dimValue = dimensionEncodings[i].decode(c.getItem().array(), offset, dimensionEncodings[i].getLengthOfEncoding());
+                        String dimValue = dimensionEncodings[i].decode(c.getItem().array(), offset,
+                                dimensionEncodings[i].getLengthOfEncoding());
                         newDimensionEncodings[i].encode(dimValue, newIdBuf, bufOffset + innerBuffOffset);
                         innerBuffOffset += newDimensionEncodings[i].getLengthOfEncoding();
                         offset += dimensionEncodings[i].getLengthOfEncoding();
@@ -207,6 +211,28 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                     bufOffset += newKeyLength;
                 }
                 return topNCounter;
+            }
+
+            private void initialize(MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts,
+                    Map<TblColRef, Dictionary<String>> newDicts) {
+                literalCols = getTopNLiteralColumn(measureDesc.getFunction());
+                dimensionEncodings = getDimensionEncodings(measureDesc.getFunction(), literalCols, oldDicts);
+                keyLength = 0;
+                boolean hasDictEncoding = false;
+                for (DimensionEncoding encoding : dimensionEncodings) {
+                    keyLength += encoding.getLengthOfEncoding();
+                    if (encoding instanceof DictionaryDimEnc) {
+                        hasDictEncoding = true;
+                    }
+                }
+
+                newDimensionEncodings = getDimensionEncodings(measureDesc.getFunction(), literalCols, newDicts);
+                newKeyLength = 0;
+                for (DimensionEncoding encoding : newDimensionEncodings) {
+                    newKeyLength += encoding.getLengthOfEncoding();
+                }
+
+                needReEncode = hasDictEncoding;
             }
         };
     }
@@ -220,7 +246,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
     public List<TblColRef> getColumnsNeedDictionary(FunctionDesc functionDesc) {
         List<TblColRef> columnsNeedDict = Lists.newArrayList();
         List<TblColRef> allCols = functionDesc.getParameter().getColRefs();
-        int start = (functionDesc.getParameter().isColumnType() == true) ? 1 : 0;
+        int start = functionDesc.getParameter().isColumnType() ? 1 : 0;
         for (int i = start; i < allCols.size(); i++) {
             TblColRef tblColRef = allCols.get(i);
             String encoding = getEncoding(functionDesc, tblColRef).getFirst();
@@ -233,9 +259,12 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
     }
 
     @Override
-    public CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, final MeasureDesc topN) {
+    public CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions,
+            Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, final MeasureDesc topN) {
         // TopN measure can (and only can) provide one numeric measure and one literal dimension
         // e.g. select seller, sum(gmv) from ... group by seller order by 2 desc limit 100
+
+        cuboidCanAnswer = true; // true: have cuboid can answer query， false: no cuboid can answer query
 
         List<TblColRef> literalCol = getTopNLiteralColumn(topN.getFunction());
         for (TblColRef colRef : literalCol) {
@@ -245,23 +274,36 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             }
         }
 
-        if (digest.groupbyColumns.containsAll(literalCol) == false)
+        if (!digest.groupbyColumns.containsAll(literalCol))
             return null;
+
+        List retainList = unmatchedDimensions.stream().filter(colRef -> literalCol.contains(colRef)).collect(Collectors.toList());
+
+        if (!retainList.isEmpty()){
+            cuboidCanAnswer = false;
+        }
 
         // check digest requires only one measure
         if (digest.aggregations.size() == 1) {
 
             // the measure function must be SUM
             FunctionDesc onlyFunction = digest.aggregations.iterator().next();
-            if (isTopNCompatibleSum(topN.getFunction(), onlyFunction) == false)
+            if (!isTopNCompatibleSum(topN.getFunction(), onlyFunction))
                 return null;
 
             unmatchedDimensions.removeAll(literalCol);
             unmatchedAggregations.remove(onlyFunction);
+
             return new CapabilityInfluence() {
                 @Override
                 public double suggestCostMultiplier() {
-                    return 0.3; // make sure TopN get ahead of other matched realizations
+                    if (totallyMatchTopN(digest)) {
+                        return 0.3; // make sure TopN get ahead of other matched realizations
+                    } else if (cuboidCanAnswer) {
+                        return 1.3; // fuzzy topN match, but have cuboid can answer query
+                    } else {
+                        return 2;
+                    }
                 }
 
                 @Override
@@ -271,23 +313,53 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             };
         }
 
-        if (digest.aggregations.size() == 0) {
+        if (digest.aggregations.isEmpty()) {
             // directly query the UHC column without sorting
-            unmatchedDimensions.removeAll(literalCol);
-            return new CapabilityInfluence() {
-                @Override
-                public double suggestCostMultiplier() {
-                    return 2.0; // topn can answer but with a higher cost
-                }
+            boolean b = unmatchedDimensions.removeAll(literalCol);
+            if (b) {
+                return new CapabilityInfluence() {
+                    @Override
+                    public double suggestCostMultiplier() {
+                        return 2.0; // topn can answer but with a higher cost
+                    }
 
-                @Override
-                public MeasureDesc getInvolvedMeasure() {
-                    return topN;
-                }
-            };
+                    @Override
+                    public MeasureDesc getInvolvedMeasure() {
+                        return topN;
+                    }
+                };
+            }
         }
 
         return null;
+    }
+
+    private boolean checkSortAndOrder(List<TblColRef> sort, List<SQLDigest.OrderEnum> order) {
+        return CollectionUtils.isNotEmpty(sort) && CollectionUtils.isNotEmpty(order) && sort.size() == order.size();
+    }
+
+    private boolean totallyMatchTopN(SQLDigest digest) {
+        if (!checkSortAndOrder(digest.sortColumns, digest.sortOrders)) {
+            return false;
+        }
+
+        TblColRef sortColumn = digest.sortColumns.get(0);
+
+        // first sort column must be sum()
+        if (digest.groupbyColumns.contains(sortColumn)) {
+            return false;
+        }
+
+        // first order must be desc
+        if (!DESCENDING.equals(digest.sortOrders.get(0))) {
+            return false;
+        }
+
+        if (!digest.hasLimit) {
+            return false;
+        }
+
+        return true;
     }
 
     private boolean isTopNCompatibleSum(FunctionDesc topN, FunctionDesc sum) {
@@ -300,16 +372,14 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         TblColRef topnNumCol = getTopNNumericColumn(topN);
 
         if (topnNumCol == null) {
-            if (sum.isCount())
-                return true;
-
-            return false;
+            return sum.isCount();
         }
 
-        if (sum.isSum() == false)
+        if (!sum.isSum())
             return false;
 
-        if (sum.getParameter() == null || sum.getParameter().getColRefs() == null || sum.getParameter().getColRefs().size() == 0)
+        if (sum.getParameter() == null || sum.getParameter().getColRefs() == null
+                || sum.getParameter().getColRefs().isEmpty())
             return false;
 
         TblColRef sumCol = sum.getParameter().getColRefs().get(0);
@@ -323,6 +393,11 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     @Override
     public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
+        // If sqlDiegest is already adjusted, then not to adjust it again.
+        if (sqlDigest.isBorrowedContext) {
+            return;
+        }
+
         if (sqlDigest.aggregations.size() > 1) {
             return;
         }
@@ -338,9 +413,9 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                 continue;
             }
 
-            if (sqlDigest.aggregations.size() > 0) {
+            if (!sqlDigest.aggregations.isEmpty()) {
                 FunctionDesc origFunc = sqlDigest.aggregations.iterator().next();
-                if (origFunc.isSum() == false && origFunc.isCount() == false) {
+                if (!origFunc.isSum() && !origFunc.isCount()) {
                     logger.warn("When query with topN, only SUM/Count function is allowed.");
                     return;
                 }
@@ -349,8 +424,15 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                     continue;
                 }
 
-                logger.info("Rewrite function " + origFunc + " to " + topnFunc);
+                // topN not totally match, but have cuboid can answer, not use topN to adjust
+                // topN totally match or (topN fuzzy match, but no cuboid can answer), use topN to adjust
+                if (!totallyMatchTopN(sqlDigest) && cuboidCanAnswer) {
+                    continue;
+                }
+
+                logger.info("Rewrite function {} to {}", origFunc, topnFunc);
             }
+
 
             sqlDigest.aggregations = Lists.newArrayList(topnFunc);
             sqlDigest.groupbyColumns.removeAll(topnLiteralCol);
@@ -370,7 +452,8 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
     }
 
     @Override
-    public IAdvMeasureFiller getAdvancedTupleFiller(FunctionDesc function, TupleInfo tupleInfo, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+    public IAdvMeasureFiller getAdvancedTupleFiller(FunctionDesc function, TupleInfo tupleInfo,
+            Map<TblColRef, Dictionary<String>> dictionaryMap) {
         final List<TblColRef> literalCols = getTopNLiteralColumn(function);
         final TblColRef numericCol = getTopNNumericColumn(function);
         final int[] literalTupleIdx = new int[literalCols.size()];
@@ -383,11 +466,13 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         // for TopN, the aggr must be SUM
         final int numericTupleIdx;
         if (numericCol != null) {
-            FunctionDesc sumFunc = FunctionDesc.newInstance(FunctionDesc.FUNC_SUM, ParameterDesc.newInstance(numericCol), numericCol.getType().toString());
+            FunctionDesc sumFunc = FunctionDesc.newInstance(FunctionDesc.FUNC_SUM,
+                    ParameterDesc.newInstance(numericCol), numericCol.getType().toString());
             String sumFieldName = sumFunc.getRewriteFieldName();
             numericTupleIdx = tupleInfo.hasField(sumFieldName) ? tupleInfo.getFieldIndex(sumFieldName) : -1;
         } else {
-            FunctionDesc countFunction = FunctionDesc.newInstance(FunctionDesc.FUNC_COUNT, ParameterDesc.newInstance("1"), "bigint");
+            FunctionDesc countFunction = FunctionDesc.newInstance(FunctionDesc.FUNC_COUNT,
+                    ParameterDesc.newInstance("1"), "bigint");
             numericTupleIdx = tupleInfo.getFieldIndex(countFunction.getRewriteFieldName());
         }
         return new IAdvMeasureFiller() {
@@ -416,7 +501,8 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                 Counter<ByteArray> counter = topNCounterIterator.next();
                 int offset = counter.getItem().offset();
                 for (int i = 0; i < dimensionEncodings.length; i++) {
-                    String colValue = dimensionEncodings[i].decode(counter.getItem().array(), offset, dimensionEncodings[i].getLengthOfEncoding());
+                    String colValue = dimensionEncodings[i].decode(counter.getItem().array(), offset,
+                            dimensionEncodings[i].getLengthOfEncoding());
                     tuple.setDimensionValue(literalTupleIdx[i], colValue);
                     offset += dimensionEncodings[i].getLengthOfEncoding();
                 }
@@ -425,7 +511,8 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         };
     }
 
-    private static DimensionEncoding[] getDimensionEncodings(FunctionDesc function, List<TblColRef> literalCols, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+    private static DimensionEncoding[] getDimensionEncodings(FunctionDesc function, List<TblColRef> literalCols,
+            Map<TblColRef, Dictionary<String>> dictionaryMap) {
         final DimensionEncoding[] dimensionEncodings = new DimensionEncoding[literalCols.size()];
         for (int i = 0; i < literalCols.size(); i++) {
             TblColRef colRef = literalCols.get(i);
@@ -441,15 +528,17 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                     try {
                         encodingVersion = Integer.parseInt(encodingVersionStr);
                     } catch (NumberFormatException e) {
-                        throw new RuntimeException(TopNMeasureType.CONFIG_ENCODING_VERSION_PREFIX + colRef.getName() + " has to be an integer");
+                        throw new IllegalArgumentException(TopNMeasureType.CONFIG_ENCODING_VERSION_PREFIX + colRef.getName()
+                                + " has to be an integer");
                     }
                 }
                 Object[] encodingConf = DimensionEncoding.parseEncodingConf(encoding);
                 String encodingName = (String) encodingConf[0];
                 String[] encodingArgs = (String[]) encodingConf[1];
 
-                encodingArgs = DateDimEnc.replaceEncodingArgs(encoding, encodingArgs, encodingName, literalCols.get(i).getType());
-                
+                encodingArgs = DateDimEnc.replaceEncodingArgs(encoding, encodingArgs, encodingName,
+                        literalCols.get(i).getType());
+
                 dimensionEncodings[i] = DimensionEncodingFactory.create(encodingName, encodingArgs, encodingVersion);
             }
         }
@@ -476,7 +565,6 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         return FUNC_TOP_N.equalsIgnoreCase(functionDesc.getExpression());
     }
 
-
     /**
      * Get the encoding name and version for the given col from Measure FunctionDesc
      * @param functionDesc
@@ -485,11 +573,12 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
      */
     public static final Pair<String, String> getEncoding(FunctionDesc functionDesc, TblColRef tblColRef) {
         String encoding = functionDesc.getConfiguration().get(CONFIG_ENCODING_PREFIX + tblColRef.getIdentity());
-        String encodingVersion =functionDesc.getConfiguration().get(CONFIG_ENCODING_VERSION_PREFIX + tblColRef.getIdentity());
+        String encodingVersion = functionDesc.getConfiguration()
+                .get(CONFIG_ENCODING_VERSION_PREFIX + tblColRef.getIdentity());
         if (StringUtils.isEmpty(encoding)) {
             // for backward compatibility
             encoding = functionDesc.getConfiguration().get(CONFIG_ENCODING_PREFIX + tblColRef.getName());
-            encodingVersion =functionDesc.getConfiguration().get(CONFIG_ENCODING_VERSION_PREFIX + tblColRef.getName());
+            encodingVersion = functionDesc.getConfiguration().get(CONFIG_ENCODING_VERSION_PREFIX + tblColRef.getName());
         }
 
         return new Pair<>(encoding, encodingVersion);

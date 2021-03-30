@@ -23,7 +23,7 @@ import java.io.IOException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.source.SourceFactory;
+import org.apache.kylin.source.SourceManager;
 
 public class SnapshotCLI {
 
@@ -42,7 +42,10 @@ public class SnapshotCLI {
         if (tableDesc == null)
             throw new IllegalArgumentException("Not table found by " + table);
 
-        SnapshotTable snapshot = snapshotMgr.rebuildSnapshot(SourceFactory.createReadableTable(tableDesc), tableDesc, overwriteUUID);
+        if (tableDesc.isView())
+            throw new IllegalArgumentException("Build snapshot of hive view \'" + table + "\' not supported.");
+
+        SnapshotTable snapshot = snapshotMgr.rebuildSnapshot(SourceManager.createReadableTable(tableDesc, null), tableDesc, overwriteUUID);
         System.out.println("resource path updated: " + snapshot.getResourcePath());
     }
 }

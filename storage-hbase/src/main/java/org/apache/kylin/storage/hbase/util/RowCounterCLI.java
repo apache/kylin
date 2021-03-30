@@ -42,24 +42,27 @@ public class RowCounterCLI {
     public static void main(String[] args) throws IOException {
 
         if (args == null || args.length != 3) {
-            System.out.println("Usage: hbase org.apache.hadoop.util.RunJar kylin-job-latest.jar org.apache.kylin.job.tools.RowCounterCLI [HTABLE_NAME] [STARTKEY] [ENDKEY]");
+            logger.info(
+                    "Usage: hbase org.apache.hadoop.util.RunJar kylin-job-latest.jar org.apache.kylin.job.tools.RowCounterCLI [HTABLE_NAME] [STARTKEY] [ENDKEY]");
+            return; // if no enough arguments provided, return with above message
         }
 
-        System.out.println(args[0]);
+        logger.info(args[0]);
         String htableName = args[0];
-        System.out.println(args[1]);
+        logger.info(args[1]);
         byte[] startKey = BytesUtil.fromReadableText(args[1]);
-        System.out.println(args[2]);
+        logger.info(args[2]);
         byte[] endKey = BytesUtil.fromReadableText(args[2]);
 
         if (startKey == null) {
-            System.out.println("startkey is null ");
+            logger.info("startkey is null ");
         } else {
-            System.out.println("startkey lenght: " + startKey.length);
+            logger.info("startkey lenght: {}", startKey.length);
         }
-
-        System.out.println("start key in binary: " + Bytes.toStringBinary(startKey));
-        System.out.println("end key in binary: " + Bytes.toStringBinary(endKey));
+        if(logger.isInfoEnabled()){
+            logger.info("start key in binary: {}", Bytes.toStringBinary(startKey));
+            logger.info("end key in binary: {}", Bytes.toStringBinary(endKey));
+        }
 
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
 
@@ -69,22 +72,19 @@ public class RowCounterCLI {
         scan.setStartRow(startKey);
         scan.setStopRow(endKey);
 
-        logger.info("My Scan " + scan.toString());
-
-        Connection conn = ConnectionFactory.createConnection(conf);
-        Table tableInterface = conn.getTable(TableName.valueOf(htableName));
-
-        Iterator<Result> iterator = tableInterface.getScanner(scan).iterator();
-        int counter = 0;
-        while (iterator.hasNext()) {
-            iterator.next();
-            counter++;
-            if (counter % 1000 == 1) {
-                System.out.println("number of rows: " + counter);
+        logger.info("My Scan {}", scan);
+        try (Connection conn = ConnectionFactory.createConnection(conf);
+                Table tableInterface = conn.getTable(TableName.valueOf(htableName))) {
+            Iterator<Result> iterator = tableInterface.getScanner(scan).iterator();
+            int counter = 0;
+            while (iterator.hasNext()) {
+                iterator.next();
+                counter++;
+                if (counter % 1000 == 1) {
+                    logger.info("number of rows: {}", counter);
+                }
             }
+            logger.info("number of rows: {}", counter);
         }
-        System.out.println("number of rows: " + counter);
-        tableInterface.close();
-        conn.close();
     }
 }

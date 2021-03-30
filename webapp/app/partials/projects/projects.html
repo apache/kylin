@@ -17,7 +17,7 @@
 -->
 
 <div class="page-header">
-    <button class="btn btn-primary btn-sm" ng-if="userService.hasRole('ROLE_MODELER')" ng-click="toCreateProj()"><i class="fa fa-plus"></i> Project</button>
+    <button class="btn btn-primary btn-sm" ng-if="userService.hasRole('ROLE_ADMIN')" ng-click="toCreateProj()"><i class="fa fa-plus"></i> Project</button>
 </div>
 
 <div ng-if="!loading && projects.length == 0">
@@ -47,21 +47,22 @@
         </thead>
 
         <tbody ng-repeat="project in projects | orderObjectBy:state.filterAttr:state.filterReverse">
-            <tr ng-class="{accordion:true}" style="cursor: pointer">
-                <td  ng-click="project.showDetail=!project.showDetail;">
+            <tr ng-class="{accordion:true}" style="cursor: pointer" ng-click="project.showDetail=!project.showDetail;">
+                <td>
                     <i ng-show="!project.showDetail" class="fa fa-chevron-circle-right blue"></i>
                     <i ng-show="project.showDetail" class="fa fa-chevron-circle-down blue"></i>
                     {{ project.name}}
                 </td>
                 <td>{{ project.owner}}</td>
                 <td>{{ project.description}}</td>
+                <td>{{ project.realizations.length}}</td>
                 <td>{{ project.create_time_utc | utcToConfigTimeZone}}</td>
                 <td>
                     <button class="btn btn-xs btn-info" ng-click="toEdit(project)" tooltip="Edit"
-                            ng-disabled="!(userService.hasRole('ROLE_ADMIN') || hasPermission(project, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))">
+                            ng-disabled="!(userService.hasRole('ROLE_ADMIN') || hasPermission('project',project, permissions.ADMINISTRATION.mask))">
                         <i class="fa fa-pencil"></i></button>
                     <button class="btn btn-xs btn-danger" ng-click="delete(project)" tooltip="Delete"
-                            ng-disabled="!(userService.hasRole('ROLE_ADMIN') || hasPermission(project, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"
+                            ng-disabled="!userService.hasRole('ROLE_ADMIN')"
                             ><i class="fa fa-trash-o"></i></button>
                 </td>
             </tr>

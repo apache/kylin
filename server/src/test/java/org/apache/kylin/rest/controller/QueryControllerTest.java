@@ -31,7 +31,9 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import net.sf.ehcache.CacheManager;
+import org.springframework.cache.CacheManager;
+
+import java.io.IOException;
 
 /**
  * @author xduo
@@ -77,7 +79,7 @@ public class QueryControllerTest extends ServiceTestBase {
     }
 
     @Test
-    public void testGetMetadata() {
+    public void testGetMetadata() throws IOException {
         queryController.getMetadata(new MetaRequest(ProjectInstance.DEFAULT_PROJECT_NAME));
     }
 

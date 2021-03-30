@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.controller;
 
-import static org.junit.Assert.assertNotNull;
-
 import java.io.IOException;
 import java.util.Date;
 
@@ -29,6 +27,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.JobInstance;
+import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.rest.request.JobBuildRequest;
@@ -91,10 +90,19 @@ public class JobControllerTest extends ServiceTestBase {
     public void testBasics() throws IOException, PersistentException {
         CubeDesc cubeDesc = cubeDescManager.getCubeDesc("test_kylin_cube_with_slr_left_join_desc");
         CubeInstance cube = cubeManager.createCube(CUBE_NAME, "DEFAULT", cubeDesc, "test");
-        assertNotNull(cube);
+        Assert.assertNotNull(cube);
 
         JobListRequest jobRequest = new JobListRequest();
         jobRequest.setTimeFilter(4);
+        Assert.assertNotNull(jobSchedulerController.list(jobRequest));
+
+        jobRequest.setJobSearchMode("ALL");
+        Assert.assertNotNull(jobSchedulerController.list(jobRequest));
+
+        jobRequest.setJobSearchMode("");
+        Assert.assertNotNull(jobSchedulerController.list(jobRequest));
+
+        jobRequest.setJobSearchMode("wrong-input");
         Assert.assertNotNull(jobSchedulerController.list(jobRequest));
 
         JobBuildRequest jobBuildRequest = new JobBuildRequest();
@@ -104,24 +112,14 @@ public class JobControllerTest extends ServiceTestBase {
         JobInstance job = cubeController.rebuild(CUBE_NAME, jobBuildRequest);
 
         Assert.assertNotNull(jobSchedulerController.get(job.getId()));
+
+        job = jobSchedulerController.cancel(job.getId());
+        Assert.assertEquals(JobStatusEnum.DISCARDED, job.getStatus());
+
         executableDAO.deleteJob(job.getId());
         if (cubeManager.getCube(CUBE_NAME) != null) {
             cubeManager.dropCube(CUBE_NAME, false);
         }
-
-        // jobSchedulerController.cancel(job.getId());
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testResume() throws IOException {
-        JobBuildRequest jobBuildRequest = new JobBuildRequest();
-        jobBuildRequest.setBuildType("BUILD");
-        jobBuildRequest.setStartTime(20130331080000L);
-        jobBuildRequest.setEndTime(20131212080000L);
-
-        // Yang: how to rebuild a cube does not exists?!
-        JobInstance job = cubeController.rebuild(CUBE_NAME, jobBuildRequest);
-
-        jobSchedulerController.resume(job.getId());
-    }
 }

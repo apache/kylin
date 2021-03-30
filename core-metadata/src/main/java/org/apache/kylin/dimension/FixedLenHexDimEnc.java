@@ -30,7 +30,7 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 /**
  * used to store hex values like "1A2BFF"
@@ -40,7 +40,7 @@ import com.google.common.base.Preconditions;
  * <p>
  * 1. "FFFF" will become null encode and decode
  * 2. "AB" will become "AB00"
- * 
+ *
  * <p>
  * Due to these limitations hex representation of hash values(with no padding, better with even characters) is more suitable
  */
@@ -112,6 +112,16 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
             return new FixedLenHexDimEnc(Integer.parseInt(args[0]));
         }
+
+        @Override
+        public boolean isValidDimensionEncoding(String encodingName, String[] args) {
+            try {
+                int length = Integer.parseInt(args[0]);
+                return length >= 1;
+            } catch (Exception e) {
+                return false;
+            }
+        }
     }
 
     // ============================================================================
@@ -166,7 +176,7 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
         byte[] value = Bytes.toBytes(valueStr);
         int valueLen = value.length;
         int endOffset = outputOffset + bytelen;
-        
+
         if (valueLen > hexLength) {
             if (avoidVerbose++ % 10000 == 0) {
                 logger.warn("Expect at most " + hexLength + " bytes, but got " + valueLen + ", will truncate, value string: " + Bytes.toString(value, 0, valueLen) + " times:" + avoidVerbose);
@@ -274,11 +284,13 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeShort(hexLength);
+        out.writeShort(bytelen);
     }
 
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         hexLength = in.readShort();
+        bytelen = in.readShort();
     }
 
     private boolean isF(byte[] value, int offset, int length) {

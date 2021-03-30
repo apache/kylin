@@ -22,18 +22,20 @@ import static org.apache.kylin.metadata.filter.function.LikeMatchers.LikeMatcher
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 
 public enum BuiltInMethod {
     UPPER(BuiltInMethod.class, "upper", String.class), LOWER(BuiltInMethod.class, "lower", String.class), SUBSTRING(BuiltInMethod.class, "substring", String.class, int.class, int.class), CHAR_LENGTH(BuiltInMethod.class, "charLength", String.class), LIKE(BuiltInMethod.class, "like", String.class, String.class), INITCAP(BuiltInMethod.class, "initcap", String.class), CONCAT(BuiltInMethod.class, "concat", String.class, String.class);
     public final Method method;
     public static final ImmutableMap<String, BuiltInMethod> MAP;
 
-    private static ThreadLocal<Map<String, LikeMatcher>> likePatterns = new ThreadLocal<Map<String, LikeMatcher>>() {
+    private static InternalThreadLocal<Map<String, LikeMatcher>> likePatterns = new InternalThreadLocal<Map<String, LikeMatcher>>() {
         @Override
         public Map<String, LikeMatcher> initialValue() {
             return new HashMap<>();
@@ -130,14 +132,14 @@ public enum BuiltInMethod {
     public static String upper(String s) {
         if (s == null)
             return null;
-        return s.toUpperCase();
+        return s.toUpperCase(Locale.ROOT);
     }
 
     /** SQL LOWER(string) function. */
     public static String lower(String s) {
         if (s == null)
             return null;
-        return s.toLowerCase();
+        return s.toLowerCase(Locale.ROOT);
     }
 
     /** SQL left || right */

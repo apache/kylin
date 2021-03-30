@@ -17,7 +17,7 @@
 */
 package org.apache.kylin.source.kafka.util;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
@@ -29,6 +29,7 @@ import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.source.kafka.config.BrokerConfig;
 import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
+import org.apache.kylin.source.kafka.config.KafkaConsumerProperties;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,6 +40,15 @@ import java.util.Properties;
  */
 public class KafkaClient {
 
+    private KafkaClient() {
+        throw new IllegalStateException("Class KafkaClient is an utility class !");
+    }
+
+    public static KafkaConsumer getKafkaConsumer(String brokers, String consumerGroup) {
+        Properties properties = KafkaConsumerProperties.getInstanceFromEnv().extractKafkaConfigToProperties();
+        return getKafkaConsumer(brokers, consumerGroup, properties);
+    }
+
     public static KafkaConsumer getKafkaConsumer(String brokers, String consumerGroup, Properties properties) {
         Properties props = constructDefaultKafkaConsumerProperties(brokers, consumerGroup, properties);
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
@@ -47,16 +57,16 @@ public class KafkaClient {
 
     private static Properties constructDefaultKafkaConsumerProperties(String brokers, String consumerGroup, Properties properties) {
         Properties props = new Properties();
-        if (properties != null) {
-            for (Map.Entry entry : properties.entrySet()) {
-                props.put(entry.getKey(), entry.getValue());
-            }
-        }
         props.put("bootstrap.servers", brokers);
         props.put("key.deserializer", StringDeserializer.class.getName());
         props.put("value.deserializer", StringDeserializer.class.getName());
         props.put("group.id", consumerGroup);
         props.put("enable.auto.commit", "false");
+        if (properties != null) {
+            for (Map.Entry entry : properties.entrySet()) {
+                props.put(entry.getKey(), entry.getValue());
+            }
+        }
         return props;
     }
 
@@ -103,7 +113,7 @@ public class KafkaClient {
         final String topic = kafkaConfig.getTopic();
 
         Map<Integer, Long> startOffsets = Maps.newHashMap();
-        try (final KafkaConsumer consumer = KafkaClient.getKafkaConsumer(brokers, cubeInstance.getName(), null)) {
+        try (final KafkaConsumer consumer = KafkaClient.getKafkaConsumer(brokers, cubeInstance.getName())) {
             final List<PartitionInfo> partitionInfos = consumer.partitionsFor(topic);
             for (PartitionInfo partitionInfo : partitionInfos) {
                 long latest = getLatestOffset(consumer, topic, partitionInfo.partition());
@@ -121,7 +131,7 @@ public class KafkaClient {
         final String topic = kafkaConfig.getTopic();
 
         Map<Integer, Long> startOffsets = Maps.newHashMap();
-        try (final KafkaConsumer consumer = KafkaClient.getKafkaConsumer(brokers, cubeInstance.getName(), null)) {
+        try (final KafkaConsumer consumer = KafkaClient.getKafkaConsumer(brokers, cubeInstance.getName())) {
             final List<PartitionInfo> partitionInfos = consumer.partitionsFor(topic);
             for (PartitionInfo partitionInfo : partitionInfos) {
                 long latest = getEarliestOffset(consumer, topic, partitionInfo.partition());

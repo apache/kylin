@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metrics.lib;
 
@@ -24,8 +24,11 @@ import java.util.regex.Pattern;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 
-import com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 
+/**
+ * ActiveReservoirReporter report metrics event via listener from ActiveReservoir
+ */
 public abstract class ActiveReservoirReporter implements Closeable {
 
     public static final String KYLIN_PREFIX = KylinConfig.getInstanceFromEnv().getKylinMetricsPrefix();
@@ -39,7 +42,7 @@ public abstract class ActiveReservoirReporter implements Closeable {
         int i = 0;
         String database = splits.length == 1 ? KYLIN_PREFIX : splits[i++];
         String tableNameOnly = splits[i];
-        return new Pair(database, tableNameOnly);
+        return new Pair<>(database, tableNameOnly);
     }
 
     public static String getTableName(Pair<String, String> tableNameSplits) {

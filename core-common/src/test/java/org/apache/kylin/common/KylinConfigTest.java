@@ -18,26 +18,22 @@
 
 package org.apache.kylin.common;
 
+import java.util.Map;
+import java.util.Properties;
+
+import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
+import org.junit.Test;
+
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Map;
-import java.util.Properties;
-
-import org.junit.Test;
-
-import com.google.common.collect.Maps;
 
 public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
-    @Test
-    public void testDuplicateConfig() {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        String v = config.getJobControllerLock();
-        assertEquals("org.apache.kylin.job.lock.MockJobLock", v);
-    }
 
     @Test
     public void testMRConfigOverride() {
@@ -104,7 +100,7 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
     }
 
     @Test
-    public void testThreadLocalOverride() {
+    public void testThreadLocalOverride() throws InterruptedException {
         final String metadata1 = "meta1";
         final String metadata2 = "meta2";
 
@@ -117,18 +113,23 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
         // test thread-local override
         KylinConfig threadConfig = KylinConfig.createKylinConfig(new Properties());
         threadConfig.setMetadataUrl(metadata2);
-        KylinConfig.setKylinConfigThreadLocal(threadConfig);
+        
+        try (SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(threadConfig)) {
 
-        assertEquals(metadata2, KylinConfig.getInstanceFromEnv().getMetadataUrl().toString());
-
-        // other threads still use system KylinConfig
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Started new thread.");
-                assertEquals(metadata1, KylinConfig.getInstanceFromEnv().getMetadataUrl().toString());
-            }
-        }).start();
+            assertEquals(metadata2, KylinConfig.getInstanceFromEnv().getMetadataUrl().toString());
+    
+            // other threads still use system KylinConfig
+            final String[] holder = new String[1];
+            Thread child = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    holder[0] = KylinConfig.getInstanceFromEnv().getMetadataUrl().toString();
+                }
+            });
+            child.start();
+            child.join();
+            assertEquals(metadata1, holder[0]);
+        }
     }
 
     @Test
@@ -137,4 +138,64 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
         String hdfsWorkingDirectory = conf.getHdfsWorkingDirectory();
         assertTrue(hdfsWorkingDirectory.startsWith("file:/"));
     }
+
+    @Test
+    public void testUnexpectedBlackInPro() {
+        KylinConfig conf = KylinConfig.getInstanceFromEnv();
+        Map<String, String> override = conf.getPropertiesByPrefix("kylin.engine.mr.config-override.");
+        assertEquals(2, override.size());
+        String s = override.get("test2");
+        assertEquals("test2", s);
+    }
+
+    @Test
+    public void testCalciteExtrasProperties() {
+        KylinConfig conf = KylinConfig.getInstanceFromEnv();
+        Properties extras = conf.getCalciteExtrasProperties();
+        assertEquals("true", extras.getProperty("caseSensitive"));
+        assertEquals("TO_UPPER", extras.getProperty("unquotedCasing"));
+        assertEquals("DOUBLE_QUOTE", extras.getProperty("quoting"));
+        assertEquals("LENIENT", extras.getProperty("conformance"));
+
+        conf.setProperty("kylin.query.calcite.extras-props.caseSensitive", "false");
+        conf.setProperty("kylin.query.calcite.extras-props.unquotedCasing", "UNCHANGED");
+        conf.setProperty("kylin.query.calcite.extras-props.quoting", "BRACKET");
+        conf.setProperty("kylin.query.calcite.extras-props.conformance", "DEFAULT");
+        extras = conf.getCalciteExtrasProperties();
+        assertEquals("false", extras.getProperty("caseSensitive"));
+        assertEquals("UNCHANGED", extras.getProperty("unquotedCasing"));
+        assertEquals("BRACKET", extras.getProperty("quoting"));
+        assertEquals("DEFAULT", extras.getProperty("conformance"));
+    }
+
+  @Test
+  public void testSetKylinConfigInEnvIfMissingTakingEmptyProperties() {
+      Properties properties = new Properties();
+      KylinConfig.setKylinConfigInEnvIfMissing(properties);
+
+      assertEquals(0, properties.size());
+      assertTrue(properties.isEmpty());
+
+      KylinConfig.setKylinConfigInEnvIfMissing(properties);
+
+      assertEquals(0, properties.size());
+      assertTrue(properties.isEmpty());
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testCreateInstanceFromUriThrowsIllegalStateExceptionOne() {
+        KylinConfig.createInstanceFromUri("cb%MnlG]3:nav");
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testCreateInstanceFromUriThrowsRuntimeException() {
+      Properties properties = new Properties();
+      KylinConfig.setKylinConfigInEnvIfMissing(properties);
+
+      assertEquals(0, properties.size());
+      assertTrue(properties.isEmpty());
+
+      KylinConfig.createInstanceFromUri("dHy3K~m");
+  }
+
 }

@@ -27,17 +27,21 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
+import org.apache.kylin.shaded.com.google.common.base.Charsets;
+import org.apache.kylin.shaded.com.google.common.io.Files;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.source.datagen.ColumnGenConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class H2Database {
     @SuppressWarnings("unused")
@@ -52,7 +56,9 @@ public class H2Database {
             "edw.test_sites", //
             "default.test_account", //
             "default.test_country", //
-            "default.streaming_table" };
+            "default.streaming_table", //
+            "default.streaming_category",
+            "default.streaming_v2_user_info_table"};
     private static final Map<String, String> javaToH2DataTypeMapping = new HashMap<String, String>();
 
     static {
@@ -80,20 +86,22 @@ public class H2Database {
 
     private void loadH2Table(String tableName) throws SQLException {
         TableMetadataManager metaMgr = TableMetadataManager.getInstance(config);
-        TableDesc tableDesc = metaMgr.getTableDesc(tableName.toUpperCase(), project);
+        TableDesc tableDesc = metaMgr.getTableDesc(tableName.toUpperCase(Locale.ROOT), project);
         File tempFile = null;
 
         try {
             tempFile = File.createTempFile("tmp_h2", ".csv");
             FileOutputStream tempFileStream = new FileOutputStream(tempFile);
             String path = path(tableDesc);
-            InputStream csvStream = metaMgr.getStore().getResource(path).inputStream;
+            InputStream csvStream = metaMgr.getStore().getResource(path).content();
 
             IOUtils.copy(csvStream, tempFileStream);
 
             csvStream.close();
             tempFileStream.close();
 
+            String content = Files.toString(tempFile, Charsets.UTF_8);
+            Files.write(convertNull(content, tableDesc, "ZXDNULL"), tempFile, Charsets.UTF_8);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -104,7 +112,7 @@ public class H2Database {
         String createDBSql = "CREATE SCHEMA IF NOT EXISTS DEFAULT;\nCREATE SCHEMA IF NOT EXISTS EDW;\nSET SCHEMA DEFAULT;\n";
         stmt.executeUpdate(createDBSql);
 
-        String sql = generateCreateH2TableSql(tableDesc, cvsFilePath);
+        String sql = generateCreateH2TableSql(tableDesc, cvsFilePath, "ZXDNULL");
         stmt.executeUpdate(sql);
 
         List<String> createIndexStatements = generateCreateH2IndexSql(tableDesc);
@@ -123,7 +131,7 @@ public class H2Database {
             return "/data/" + tableDesc.getIdentity() + ".csv";
     }
 
-    private String generateCreateH2TableSql(TableDesc tableDesc, String csvFilePath) {
+    private String generateCreateH2TableSql(TableDesc tableDesc, String csvFilePath, String nullString) {
         StringBuilder ddl = new StringBuilder();
         StringBuilder csvColumns = new StringBuilder();
 
@@ -140,7 +148,8 @@ public class H2Database {
             csvColumns.append(col.getName());
         }
         ddl.append(")" + "\n");
-        ddl.append("AS SELECT * FROM CSVREAD('" + csvFilePath + "', '" + csvColumns + "', 'charset=UTF-8 fieldSeparator=,');");
+        ddl.append("AS SELECT * FROM CSVREAD('" + csvFilePath + "', '" + csvColumns + "', 'null=" + nullString
+            + " charset=UTF-8 fieldSeparator=,');");
 
         return ddl.toString();
     }
@@ -162,11 +171,45 @@ public class H2Database {
     }
 
     private static String getH2DataType(String javaDataType) {
-        String hiveDataType = javaToH2DataTypeMapping.get(javaDataType.toLowerCase());
+        String hiveDataType = javaToH2DataTypeMapping.get(javaDataType.toLowerCase(Locale.ROOT));
         if (hiveDataType == null) {
             hiveDataType = javaDataType;
         }
-        return hiveDataType.toLowerCase();
+        return hiveDataType.toLowerCase(Locale.ROOT);
     }
 
+    private String convertNull(String content, TableDesc tableDesc, String nullValue) {
+        StringBuffer sb = new StringBuffer();
+
+        String[] nullStrings = new String[tableDesc.getColumns().length];
+        for (int i = 0; i < tableDesc.getColumns().length; ++i) {
+            ColumnDesc columnDesc = tableDesc.getColumns()[i];
+            if (ColumnGenConfig.isNullable(columnDesc)) {
+                nullStrings[i] = ColumnGenConfig.getNullStr(columnDesc);
+            } else {
+                nullStrings[i] = null;
+            }
+        }
+
+        String[] lines = content.split("\\n");
+        for (int j = 0; j < lines.length; ++j) {
+            String line = lines[j];
+            String[] columnValues = line.split(",", -1);
+            for (int i = 0; i < columnValues.length; ++i) {
+                String columnValue = columnValues[i];
+                if (nullStrings[i] != null && nullStrings[i].equals(columnValue)) {
+                    columnValue = nullValue;
+                }
+                sb.append(columnValue);
+                if (i < columnValues.length - 1) {
+                    sb.append(",");
+                }
+            }
+            if (j < lines.length - 1) {
+                sb.append("\n");
+            }
+        }
+
+        return sb.toString();
+    }
 }

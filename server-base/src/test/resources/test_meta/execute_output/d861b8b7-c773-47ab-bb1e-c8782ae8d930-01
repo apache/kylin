@@ -1,0 +1,13 @@
+{
+  "uuid" : "d861b8b7-c773-47ab-bb1e-c8782ae8d930-01",
+  "last_modified" : 1507863555561,
+  "version" : "2.2.0.20500",
+  "content" : null,
+  "status" : "SUCCEED",
+  "info" : {
+    "startTime" : "1505914710093",
+    "mapReduceWaitTime" : "243712",
+    "algorithm" : "LAYER",
+    "endTime" : "1507863555561"
+  }
+}

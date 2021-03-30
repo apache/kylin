@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<!--Since there is no presto dialect in calcite, we need to find a similar dialect(postgresql)-->
+<DATASOURCE_DEF NAME="kylin" ID="presto" DIALECT="postgresql">
+    <PROPERTY NAME="sql.default-converted-enabled" VALUE="true"/>
+    <PROPERTY NAME="sql.allow-no-offset" VALUE="true"/>
+    <PROPERTY NAME="sql.allow-fetch-no-rows" VALUE="false"/>
+    <PROPERTY NAME="sql.allow-no-orderby-with-fetch" VALUE="false"/>
+    <PROPERTY NAME="sql.keyword-default-escape" VALUE="false"/>
+    <PROPERTY NAME="sql.keyword-default-uppercase" VALUE="false"/>
+    <PROPERTY NAME="sql.case-sensitive" VALUE="false"/>
+    <PROPERTY NAME="metadata.enable-cache" VALUE="false"/>
+    <PROPERTY NAME="sql.paging-type" VALUE="LIMIT_OFFSET"/>
+    <PROPERTY NAME="transaction.isolation-level" VALUE="TRANSACTION_READ_UNCOMMITTED"/>
+    <PROPERTY NAME="sql.sqoop.enable-transform-date-to-string" VALUE="true"/>
+    <PROPERTY NAME="sql.sqoop.transform-date-to-string-expression" VALUE="date_format(%s,'%s')"/>
+
+    <!--DayOfYear-->
+    <FUNCTION_DEF ID="9" EXPRESSION="DAY_OF_YEAR($0)"/>
+    <!--Length-->
+    <FUNCTION_DEF ID="25" EXPRESSION="LENGTH($0)"/>
+    <!--initcap-->
+    <FUNCTION_DEF ID="28" EXPRESSION="concat(upper(substr($0,1,1)),lower(substr($0,2)))"/>
+    <!--Median-->
+    <FUNCTION_DEF ID="63" EXPRESSION="approx_percentile($0,0.5)"/>
+    <!--Daysbetween-->
+    <FUNCTION_DEF ID="64" EXPRESSION="date_diff('day',$0, $1)"/>
+    <!--DateAdd-->
+    <FUNCTION_DEF ID="65" EXPRESSION="DATE_ADD('day', $1, $0)"/>
+    <!--AddMonths-->
+    <FUNCTION_DEF ID="66" EXPRESSION="DATE_ADD('month', $1, $0)"/>
+    <!--DayofWeek-->
+    <FUNCTION_DEF ID="68" EXPRESSION="case when DAY_OF_WEEK($0) in (1,2,3,4,5,6) then DAY_OF_WEEK($0) + 1 else 1 end"/>
+    <!--Monthsbetween-->
+    <FUNCTION_DEF ID="69" EXPRESSION="DATE_DIFF('month', cast($0 as DATE), cast($1 as DATE))"/>
+    <!--LTrim-->
+    <FUNCTION_DEF ID="76" EXPRESSION="LTRIM($0)"/>
+    <!--RTrim-->
+    <FUNCTION_DEF ID="80" EXPRESSION="RTRIM($0)"/>
+    <!--to date-->
+    <FUNCTION_DEF ID="84" EXPRESSION="CAST($0 AS DATE)"/>
+    <!--if-->
+    <FUNCTION_DEF ID="85" EXPRESSION="IF($0, $1, $2)"/>
+    <!--SUBSTR-->
+    <FUNCTION_DEF ID="86" EXPRESSION="SUBSTRING($0, $1, $2)"/>
+    <!--SUBSTR-->
+    <FUNCTION_DEF ID="87" EXPRESSION="SUBSTRING($0, $1)"/>
+    <!--CONCAT-->
+    <FUNCTION_DEF ID="88" EXPRESSION="CAST ($0 AS STRING) || CAST ($1 AS STRING) || CAST ($2 AS STRING)"/>
+    <!--CAST VARCHAR-->
+    <FUNCTION_DEF ID="89" EXPRESSION="CAST($0 AS VARCHAR)"/>
+    <!--CAST TIMESTAMP-->
+    <FUNCTION_DEF ID="90" EXPRESSION="CAST($0 AS TIMESTAMP)"/>
+    <!--RAND_INTEGER-->
+    <FUNCTION_DEF ID="92" EXPRESSION="RAND_INTEGER($0, $1)"/>
+    <!--COT-->
+    <FUNCTION_DEF ID="93" EXPRESSION="COT($0)"/>
+    <!--SIGN-->
+    <FUNCTION_DEF ID="94" EXPRESSION="SIGN($0)"/>
+    <!--LOCALTIME-->
+    <FUNCTION_DEF ID="95" EXPRESSION="LOCALTIME"/>
+    <!--LOCALTIMESTAMP-->
+    <FUNCTION_DEF ID="96" EXPRESSION="LOCALTIMESTAMP"/>
+    <!--DAYOFMONTH-->
+    <FUNCTION_DEF ID="100" EXPRESSION="DAY_OF_MONTH($0)"/>
+
+    <TYPE_DEF ID="Any" EXPRESSION="ANY"/>
+
+    <TYPE_DEF ID="Int" EXPRESSION="INTEGER"/>
+    <TYPE_DEF ID="SmallInt" EXPRESSION="SMALLINT"/>
+    <TYPE_DEF ID="Short" EXPRESSION="SMALLINT"/>
+    <TYPE_DEF ID="Long" EXPRESSION="BIGINT"/>
+
+    <TYPE_DEF ID="Numeric" EXPRESSION="DECIMAL($p, $s)"/>
+    <TYPE_DEF ID="Decimal" EXPRESSION="DECIMAL($p, $s)"/>
+    <TYPE_DEF ID="Real" EXPRESSION="REAL"/>
+    <TYPE_DEF ID="Float" EXPRESSION="REAL"/>
+
+    <TYPE_DEF ID="String" EXPRESSION="VARCHAR"/>
+
+    <TYPE_DEF ID="Binary" EXPRESSION="VARBINARY"/>
+    <TYPE_DEF ID="Byte" EXPRESSION="VARBINARY"/>
+
+    <TYPE_DEF ID="Date" EXPRESSION="DATE"/>
+    <TYPE_DEF ID="Time" EXPRESSION="TIME"/>
+    <TYPE_DEF ID="TimeStamp" EXPRESSION="TIMESTAMP"/>
+</DATASOURCE_DEF>

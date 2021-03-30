@@ -1,0 +1,89 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
+<script type="text/ng-template" id="deleteSegment.html">
+    <div class="modal-header">
+        <h4 tooltip="refresh">CUBE SEGMENT DELETE CONFIRM</h4>
+    </div>
+    <div class="modal-body" style="background-color: white">
+        <div ng-if="cube.model.partition_desc.partition_date_column" class="row">
+            <div class="col-md-2"></div>
+            <div class="col-md-8">
+                <div ng-if="!!!(cube.segments) || cube.segments.length == 0">
+                    <span class="text-info">No Segment to Delete.</span>
+                </div>
+                <div ng-if="cube.segments && cube.segments.length > 0" class="row">
+                    <table class="table table-striped list">
+                        <tbody>
+                        <tr>
+                            <td>DELETE SEGMENT</td>
+                            <td>
+                                <select ng-model="segment.selected"
+                                        ng-init="segment.selected=cube.segments[0];"
+                                        ng-options="segment as segment.name for segment in cube.segments">
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>SEGMENT DETAIL</td>
+                            <td>
+                                <table class="table table-condensed">
+                                    <tr>
+                                        <td>Start Date (Include)</td>
+                                        <td>{{segment.selected.date_range_start |  reverseToGMT0}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>End Date (Exclude)</td>
+                                        <td>{{segment.selected.date_range_end |  reverseToGMT0}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Last build Time</td>
+                                        <td>{{segment.selected.last_build_time | utcToConfigTimeZone}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Last build ID</td>
+                                        <td>{{segment.selected.last_build_job_id}}</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <div ng-if="segment.selected && segment.selected.name !== cube.segments[0].name && segment.selected.name !== cube.segments[cube.segments.length-1].name">
+                        <span class="text-warning">Cube will gap if you delete selected segment.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2"></div>
+        </div>
+        <div ng-if="!cube.model.partition_desc.partition_date_column" class="row">
+            <div class="col-md-2"></div>
+            <div class="col-md-8">
+                <span>No partition date column defined. If you want to drop the cube, please click "Drop".</span>
+            </div>
+            <div class="col-md-2"></div>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button class="btn btn-primary" ng-click="cancel()">Close</button>
+        <button class="btn btn-success" ng-click="deleteSegment()" ng-disabled="!(cube.segments && cube.segments.length > 0)">Delete
+        </button>
+    </div>
+</script>

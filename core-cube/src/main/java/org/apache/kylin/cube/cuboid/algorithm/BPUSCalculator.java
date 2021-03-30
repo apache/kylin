@@ -18,15 +18,16 @@
 
 package org.apache.kylin.cube.cuboid.algorithm;
 
-import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  * Calculate the benefit based on Benefit Per Unit Space.
@@ -35,37 +36,45 @@ public class BPUSCalculator implements BenefitPolicy {
 
     private static Logger logger = LoggerFactory.getLogger(BPUSCalculator.class);
 
-    protected CuboidStats cuboidStats;
-    protected Map<Long, Long> cuboidAggCostMap;
+    protected final CuboidStats cuboidStats;
+    protected final ImmutableMap<Long, Long> initCuboidAggCostMap;
+    protected final Map<Long, Long> processCuboidAggCostMap;
 
     public BPUSCalculator(CuboidStats cuboidStats) {
         this.cuboidStats = cuboidStats;
-        this.cuboidAggCostMap = Maps.newHashMap();
+        this.initCuboidAggCostMap = ImmutableMap.copyOf(initCuboidAggCostMap());
+        this.processCuboidAggCostMap = Maps.newHashMap(initCuboidAggCostMap);
     }
 
-    @Override
-    public void initBeforeStart() {
-        cuboidAggCostMap.clear();
+    protected BPUSCalculator(CuboidStats cuboidStats, ImmutableMap<Long, Long> initCuboidAggCostMap) {
+        this.cuboidStats = cuboidStats;
+        this.initCuboidAggCostMap = initCuboidAggCostMap;
+        this.processCuboidAggCostMap = Maps.newHashMap(initCuboidAggCostMap);
+    }
+
+    private Map<Long, Long> initCuboidAggCostMap() {
+        Map<Long, Long> cuboidAggCostMap = Maps.newHashMap();
         //Initialize stats for mandatory cuboids
         for (Long cuboid : cuboidStats.getAllCuboidsForMandatory()) {
             if (getCuboidCost(cuboid) != null) {
                 cuboidAggCostMap.put(cuboid, getCuboidCost(cuboid));
             }
         }
-        Set<Long> mandatoryCuboidSetWithStats = cuboidAggCostMap.keySet();
+
         //Initialize stats for selection cuboids
         long baseCuboidCost = getCuboidCost(cuboidStats.getBaseCuboid());
         for (Long cuboid : cuboidStats.getAllCuboidsForSelection()) {
             long leastCost = baseCuboidCost;
-            for (Long cuboidTarget : mandatoryCuboidSetWithStats) {
-                if ((cuboid | cuboidTarget) == cuboidTarget) {
-                    if (leastCost > cuboidAggCostMap.get(cuboidTarget)) {
-                        leastCost = cuboidAggCostMap.get(cuboidTarget);
+            for (Map.Entry<Long, Long> cuboidTargetEntry : cuboidAggCostMap.entrySet()) {
+                if ((cuboid | cuboidTargetEntry.getKey()) == cuboidTargetEntry.getKey()) {
+                    if (leastCost > cuboidTargetEntry.getValue()) {
+                        leastCost = cuboidTargetEntry.getValue();
                     }
                 }
             }
             cuboidAggCostMap.put(cuboid, leastCost);
         }
+        return cuboidAggCostMap;
     }
 
     @Override
@@ -88,22 +97,21 @@ public class BPUSCalculator implements BenefitPolicy {
     }
 
     @Override
-    public CuboidBenefitModel.BenefitModel calculateBenefitTotal(List<Long> cuboidsToAdd, Set<Long> selected) {
+    public CuboidBenefitModel.BenefitModel calculateBenefitTotal(Set<Long> cuboidsToAdd, Set<Long> selected) {
         Set<Long> selectedInner = Sets.newHashSet(selected);
-        Map<Long, Long> cuboidAggCostMapSnapshot = Maps.newHashMap(cuboidAggCostMap);
+        Map<Long, Long> cuboidAggCostMapCopy = Maps.newHashMap(processCuboidAggCostMap);
         for (Long cuboid : cuboidsToAdd) {
             selectedInner.add(cuboid);
-            propagateAggregationCost(cuboid, selectedInner);
+            propagateAggregationCost(cuboid, selectedInner, cuboidAggCostMapCopy);
         }
         double totalCostSaving = 0;
         int benefitCount = 0;
-        for (Long cuboid : cuboidAggCostMap.keySet()) {
-            if (cuboidAggCostMap.get(cuboid) < cuboidAggCostMapSnapshot.get(cuboid)) {
-                totalCostSaving += cuboidAggCostMapSnapshot.get(cuboid) - cuboidAggCostMap.get(cuboid);
+        for (Map.Entry<Long, Long> entry : cuboidAggCostMapCopy.entrySet()) {
+            if (entry.getValue() < processCuboidAggCostMap.get(entry.getKey())) {
+                totalCostSaving += processCuboidAggCostMap.get(entry.getKey()) - entry.getValue();
                 benefitCount++;
             }
         }
-        cuboidAggCostMap = cuboidAggCostMapSnapshot;
 
         double benefitPerUnitSpace = totalCostSaving;
         return new CuboidBenefitModel.BenefitModel(benefitPerUnitSpace, benefitCount);
@@ -112,7 +120,7 @@ public class BPUSCalculator implements BenefitPolicy {
     protected double getCostSaving(long descendant, long cuboid) {
         long cuboidCost = getCuboidCost(cuboid);
         long descendantAggCost = getCuboidAggregationCost(descendant);
-        return descendantAggCost - cuboidCost;
+        return (double) descendantAggCost - cuboidCost;
     }
 
     protected Long getCuboidCost(long cuboid) {
@@ -120,30 +128,34 @@ public class BPUSCalculator implements BenefitPolicy {
     }
 
     private long getCuboidAggregationCost(long cuboid) {
-        return cuboidAggCostMap.get(cuboid);
+        return processCuboidAggCostMap.get(cuboid);
     }
 
     @Override
     public boolean ifEfficient(CuboidBenefitModel best) {
         if (best.getBenefit() < getMinBenefitRatio()) {
-            logger.info(String.format("The recommended cuboid %s doesn't meet minimum benifit ratio %f", best,
-                    getMinBenefitRatio()));
+            logger.info(String.format(Locale.ROOT, "The recommended cuboid %s doesn't meet minimum benifit ratio %f",
+                    best, getMinBenefitRatio()));
             return false;
         }
         return true;
     }
 
     public double getMinBenefitRatio() {
-        return 0.01;
+        return cuboidStats.getBpusMinBenefitRatio();
     }
 
     @Override
     public void propagateAggregationCost(long cuboid, Set<Long> selected) {
+        propagateAggregationCost(cuboid, selected, processCuboidAggCostMap);
+    }
+
+    public void propagateAggregationCost(long cuboid, Set<Long> selected, Map<Long, Long> processCuboidAggCostMap) {
         long aggregationCost = getCuboidCost(cuboid);
         Set<Long> childrenCuboids = cuboidStats.getAllDescendants(cuboid);
         for (Long child : childrenCuboids) {
             if (!selected.contains(child) && (aggregationCost < getCuboidAggregationCost(child))) {
-                cuboidAggCostMap.put(child, aggregationCost);
+                processCuboidAggCostMap.put(child, aggregationCost);
             }
         }
     }
@@ -158,8 +170,6 @@ public class BPUSCalculator implements BenefitPolicy {
 
     @Override
     public BenefitPolicy getInstance() {
-        BPUSCalculator bpusCalculator = new BPUSCalculator(this.cuboidStats);
-        bpusCalculator.cuboidAggCostMap.putAll(this.cuboidAggCostMap);
-        return bpusCalculator;
+        return new BPUSCalculator(this.cuboidStats, this.initCuboidAggCostMap);
     }
 }

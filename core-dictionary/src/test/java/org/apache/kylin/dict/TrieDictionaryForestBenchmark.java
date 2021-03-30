@@ -18,15 +18,15 @@
 
 package org.apache.kylin.dict;
 
-import org.apache.kylin.common.util.Dictionary;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
-import java.util.UUID;
+
+import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.RandomUtil;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * Created by xiefan on 16-12-28.
@@ -166,7 +166,7 @@ public class TrieDictionaryForestBenchmark {
     private ArrayList<String> genStringDataSet(int totalSize) {
         ArrayList<String> data = new ArrayList<>();
         for (int i = 0; i < totalSize; i++) {
-            data.add(UUID.randomUUID().toString());
+            data.add(RandomUtil.randomUUID().toString());
         }
         Collections.sort(data);
         return data;

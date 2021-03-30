@@ -34,8 +34,9 @@ package_name=apache-kylin-${version}-bin
 cd build/
 rm -rf ${package_name}
 mkdir ${package_name}
-cp -r ext lib tool bin conf tomcat spark ../examples/sample_cube commit_SHA1 ${package_name}
-rm -rf ext lib tomcat spark commit_SHA1
+cp -r ext lib tool bin conf tomcat ../examples/sample_cube commit_SHA1 VERSION ${package_name}
+cp ../NOTICE ../LICENSE ../README.md ${package_name}
+rm -rf ext lib tomcat commit_SHA1 VERSION
 
 ## comment all default properties, and append them to the user visible kylin.properties
 ## first 16 lines are license, just skip them
@@ -44,7 +45,7 @@ sed '1,16d' ../core-common/src/main/resources/kylin-defaults.properties | awk '{
 find ${package_name} -type d -exec chmod 755 {} \;
 find ${package_name} -type f -exec chmod 644 {} \;
 find ${package_name} -type f -name "*.sh" -exec chmod 755 {} \;
-find ${package_name}/spark/bin/ -type f -exec chmod +x {} \;
+
 mkdir -p ../dist
 tar -cvzf ../dist/${package_name}.tar.gz ${package_name}
 rm -rf ${package_name}

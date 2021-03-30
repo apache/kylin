@@ -30,15 +30,16 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
 
 public class PercentileMeasureType extends MeasureType<PercentileCounter> {
     // compression ratio saved in DataType.precision
     private final DataType dataType;
     public static final String FUNC_PERCENTILE = "PERCENTILE";
+    public static final String FUNC_PERCENTILE_APPROX = "PERCENTILE_APPROX";
     public static final String DATATYPE_PERCENTILE = "percentile";
 
-    public PercentileMeasureType(String funcName, DataType dataType) {
+    public PercentileMeasureType(DataType dataType) {
         this.dataType = dataType;
     }
 
@@ -46,12 +47,12 @@ public class PercentileMeasureType extends MeasureType<PercentileCounter> {
 
         @Override
         public MeasureType<PercentileCounter> createMeasureType(String funcName, DataType dataType) {
-            return new PercentileMeasureType(funcName, dataType);
+            return new PercentileMeasureType(dataType);
         }
 
         @Override
         public String getAggrFunctionName() {
-            return FUNC_PERCENTILE;
+            return FUNC_PERCENTILE_APPROX;
         }
 
         @Override
@@ -71,7 +72,8 @@ public class PercentileMeasureType extends MeasureType<PercentileCounter> {
             PercentileCounter current = new PercentileCounter(dataType.getPrecision());
 
             @Override
-            public PercentileCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+            public PercentileCounter valueOf(String[] values, MeasureDesc measureDesc,
+                    Map<TblColRef, Dictionary<String>> dictionaryMap) {
                 PercentileCounter counter = current;
                 counter.clear();
                 for (String v : values) {
@@ -79,6 +81,11 @@ public class PercentileMeasureType extends MeasureType<PercentileCounter> {
                         counter.add(Double.parseDouble(v));
                 }
                 return counter;
+            }
+
+            @Override
+            public void reset() {
+                current = new PercentileCounter(dataType.getPrecision());
             }
         };
     }
@@ -93,7 +100,9 @@ public class PercentileMeasureType extends MeasureType<PercentileCounter> {
         return true;
     }
 
-    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.<String, Class<?>> of(PercentileMeasureType.FUNC_PERCENTILE, PercentileAggFunc.class);
+    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.<String, Class<?>> of(
+            PercentileMeasureType.FUNC_PERCENTILE, PercentileAggFunc.class,
+            PercentileMeasureType.FUNC_PERCENTILE_APPROX, PercentileAggFunc.class);
 
     @Override
     public Map<String, Class<?>> getRewriteCalciteAggrFunctions() {

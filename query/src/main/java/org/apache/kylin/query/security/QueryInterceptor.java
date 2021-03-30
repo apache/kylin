@@ -21,6 +21,7 @@ package org.apache.kylin.query.security;
 import java.util.Collection;
 import java.util.List;
 
+import java.util.Locale;
 import org.apache.kylin.query.relnode.OLAPContext;
 
 public abstract class QueryInterceptor {
@@ -40,7 +41,7 @@ public abstract class QueryInterceptor {
 
         Collection<String> queryCols = getQueryIdentifiers(contexts);
         for (String id : blackList) {
-            if (queryCols.contains(id.toUpperCase())) {
+            if (queryCols.contains(id.toUpperCase(Locale.ROOT))) {
                 throw new AccessDeniedException(getIdentifierType() + ":" + id);
             }
         }

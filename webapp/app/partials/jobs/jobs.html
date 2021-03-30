@@ -20,9 +20,9 @@
   <!--Project: -->
   <div class="col-xs-3">
     <form ng-if="userService.isAuthorized()">
-      <div class="form-group" ng-if="userService.hasRole('ROLE_MODELER')" >
-        <a class="btn btn-xs btn-info" href="projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
-        <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_MODELER')" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
+      <div class="form-group" >
+        <a class="btn btn-xs btn-info"  href="projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
+        <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')"  style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
           <i class="fa fa-plus"></i>
         </a>
       </div>
@@ -33,7 +33,7 @@
 
 <div class="row models-main dataTables_wrapper"  style="padding-top:10px;padding-left: 5px;">
   <div ng-class="row">
-    <tabset ng-if="userService.hasRole('ROLE_ADMIN')">
+    <tabset>
       <tab heading="Jobs" select="jobTabSelected('jobs')" active="tabs[2].active">
         <div class="col-xs-12" ng-include src="'partials/jobs/jobList.html'"></div>
       </tab>
@@ -41,7 +41,6 @@
         <div class="col-xs-12" ng-include src="'partials/jobs/badQuery.html'"></div>
       </tab>
     </tabset>
-    <div ng-if="!userService.hasRole('ROLE_ADMIN')" class="col-xs-12" ng-include src="'partials/jobs/jobList.html'"></div>
   </div>
 </div>
 

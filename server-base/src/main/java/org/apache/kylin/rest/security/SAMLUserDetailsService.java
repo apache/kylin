@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.ldap.userdetails.LdapUserDetailsImpl;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
 import org.springframework.security.saml.SAMLCredential;
 
@@ -46,6 +47,16 @@ public class SAMLUserDetailsService implements org.springframework.security.saml
         UserDetails userDetails = null;
         try {
             userDetails = ldapUserDetailsService.loadUserByUsername(userName);
+            if (userDetails instanceof LdapUserDetailsImpl) {
+                LdapUserDetailsImpl.Essence essence = new LdapUserDetailsImpl.Essence();
+                essence.setDn(((LdapUserDetailsImpl) userDetails).getDn());
+                essence.setUsername(userEmail);
+                essence.setPassword(userDetails.getPassword());
+                essence.setAuthorities(userDetails.getAuthorities());
+                essence.setTimeBeforeExpiration(((LdapUserDetailsImpl) userDetails).getTimeBeforeExpiration());
+                essence.setGraceLoginsRemaining(((LdapUserDetailsImpl) userDetails).getGraceLoginsRemaining());
+                userDetails = essence.createUserDetails();
+            }
         } catch (org.springframework.security.core.userdetails.UsernameNotFoundException e) {
             logger.error("User not found in LDAP, check whether he/she has been added to the groups.", e);
         }

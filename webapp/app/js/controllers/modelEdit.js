@@ -19,7 +19,7 @@
 'use strict';
 
 
-KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, ModelService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelDescService,MetaModel,TableModel,ProjectService,ProjectModel,modelsManager, CubeService, VdmUtil) {
+KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, ModelService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelDescService,MetaModel,TableModel,ProjectService,ProjectModel,modelsManager, CubeService, VdmUtil, MessageBox) {
     //add or edit ?
     var absUrl = $location.absUrl();
     $scope.tableAliasMap={};
@@ -161,7 +161,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                     }, function (request) {
                         if (request.successful) {
                             $scope.state.modelSchema = request.modelSchema;
-                            SweetAlert.swal('', 'Updated the model successfully.', 'success');
+                            MessageBox.successNotify('Updated the model successfully.');
                             $location.path("/models");
                             //location.reload();
                         } else {
@@ -193,7 +193,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                         if(request.successful) {
 
                           $scope.state.modelSchema = request.modelSchema;
-                          SweetAlert.swal('', 'Created the model successfully.', 'success');
+                          MessageBox.successNotify('Created the model successfully.');
                           $location.path("/models");
                          // location.reload();
                         } else {

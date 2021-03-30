@@ -32,7 +32,7 @@ public class DoubleDeltaSerializer implements java.io.Serializable {
     static final int LENGTH_BITS = 23;
 
     static final long[] MASKS = new long[64];
-    {
+    static {
         for (int i = 0; i < MASKS.length; i++) {
             MASKS[i] = (1L << i) - 1;
         }

@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -46,8 +47,8 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
 
     static final Logger logger = LoggerFactory.getLogger(GlobalDictHDFSStore.class);
     static final String V1_INDEX_NAME = ".index";
-    static final String V2_INDEX_NAME = ".index_v2";
-    static final String VERSION_PREFIX = "version_";
+    public static final String V2_INDEX_NAME = ".index_v2";
+    public static final String VERSION_PREFIX = "version_";
     static final int BUFFER_SIZE = 8 * 1024 * 1024;
 
     private final Path basePath;
@@ -133,7 +134,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
     @Override
     public Long[] listAllVersions() throws IOException {
         if (!fileSystem.exists(basePath)) {
-            return new Long[0];  // for the removed SegmentAppendTrieDictBuilder
+            return new Long[0]; // for the removed SegmentAppendTrieDictBuilder
         }
 
         FileStatus[] versionDirs = fileSystem.listStatus(basePath, new PathFilter() {
@@ -261,9 +262,12 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
             return baseDir;
         }
 
-        checkArgument(baseDir.startsWith(srcConfig.getHdfsWorkingDirectory()), "Please check why current directory {} doesn't belong to source working directory {}", baseDir, srcConfig.getHdfsWorkingDirectory());
+        checkArgument(baseDir.startsWith(srcConfig.getHdfsWorkingDirectory()),
+                "Please check why current directory {} doesn't belong to source working directory {}", baseDir,
+                srcConfig.getHdfsWorkingDirectory());
 
-        final String dstBaseDir = baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory());
+        final String dstBaseDir = baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(),
+                dstConfig.getHdfsWorkingDirectory());
 
         Long[] versions = listAllVersions();
         if (versions.length == 0) { // empty dict, nothing to copy
@@ -271,7 +275,8 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
         }
 
         Path srcVersionDir = getVersionDir(versions[versions.length - 1]);
-        Path dstVersionDir = new Path(srcVersionDir.toString().replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()));
+        Path dstVersionDir = new Path(srcVersionDir.toString().replaceFirst(srcConfig.getHdfsWorkingDirectory(),
+                dstConfig.getHdfsWorkingDirectory()));
         FileSystem dstFS = dstVersionDir.getFileSystem(conf);
         if (dstFS.exists(dstVersionDir)) {
             dstFS.delete(dstVersionDir, true);
@@ -295,7 +300,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
         protected final FileSystem fs;
         protected final Configuration conf;
 
-        protected IndexFormatV1(FileSystem fs, Configuration conf) {
+        public IndexFormatV1(FileSystem fs, Configuration conf) {
             this.fs = fs;
             this.conf = conf;
         }
@@ -311,7 +316,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
                 String converterName = in.readUTF();
                 BytesConverter converter;
                 try {
-                    converter = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+                    converter = ClassUtil.forName(converterName, BytesConverter.class).getDeclaredConstructor().newInstance();
                 } catch (Exception e) {
                     throw new RuntimeException("Fail to instantiate BytesConverter: " + converterName, e);
                 }
@@ -381,7 +386,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
                 String converterName = in.readUTF();
                 BytesConverter converter;
                 try {
-                    converter = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+                    converter = ClassUtil.forName(converterName, BytesConverter.class).getDeclaredConstructor().newInstance();
                 } catch (Exception e) {
                     throw new RuntimeException("Fail to instantiate BytesConverter: " + converterName, e);
                 }
@@ -421,13 +426,14 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
         public void sanityCheck(Path dir, GlobalDictMetadata metadata) throws IOException {
             for (Map.Entry<AppendDictSliceKey, String> entry : metadata.sliceFileMap.entrySet()) {
                 if (!fs.exists(new Path(dir, entry.getValue()))) {
-                    throw new RuntimeException("The slice file " + entry.getValue() + " for the key: " + entry.getKey() + " must be existed!");
+                    throw new RuntimeException("The slice file " + entry.getValue() + " for the key: " + entry.getKey()
+                            + " must be existed!");
                 }
             }
         }
 
         public static String sliceFileName(AppendDictSliceKey key) {
-            return String.format("%s%d_%d", SLICE_PREFIX, System.currentTimeMillis(), key.hashCode());
+            return String.format(Locale.ROOT, "%s%d_%d", SLICE_PREFIX, System.currentTimeMillis(), key.hashCode());
         }
     }
 }

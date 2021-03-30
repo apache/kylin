@@ -18,95 +18,56 @@
 package org.apache.kylin.source.kafka;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 
-import javax.annotation.Nullable;
-
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.StreamingMessageRow;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.engine.mr.common.MapReduceExecutable;
-import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.JoinedFlatTable;
-import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.exception.ExecuteException;
-import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.job.execution.ExecutableContext;
-import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.source.kafka.config.KafkaConfig;
-import org.apache.kylin.source.kafka.hadoop.KafkaFlatTableJob;
-import org.apache.kylin.source.kafka.job.MergeOffsetStep;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+public class KafkaMRInput extends KafkaInputBase implements IMRInput {
 
-public class KafkaMRInput implements IMRInput {
-
-    CubeSegment cubeSegment;
+    private CubeSegment cubeSegment;
 
     @Override
-    public IMRBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
+    public IBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
         this.cubeSegment = (CubeSegment) flatDesc.getSegment();
-        return new BatchCubingInputSide(cubeSegment);
+        return new KafkaMRBatchCubingInputSide(cubeSegment, flatDesc);
     }
 
     @Override
-    public IMRTableInputFormat getTableInputFormat(TableDesc table) {
-        KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv());
-        KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(table.getIdentity());
-        List<TblColRef> columns = Lists.transform(Arrays.asList(table.getColumns()), new Function<ColumnDesc, TblColRef>() {
-            @Nullable
-            @Override
-            public TblColRef apply(ColumnDesc input) {
-                return input.getRef();
-            }
-        });
-
-        return new KafkaTableInputFormat(cubeSegment, columns, kafkaConfig, null);
+    public IBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
+        return new KafkaMRBatchMergeInputSide((CubeSegment)seg);
     }
 
     @Override
-    public IMRBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
-        return new KafkaMRBatchMergeInputSide((CubeSegment) seg);
+    public IMRTableInputFormat getTableInputFormat(TableDesc table, String uuid) {
+        return new KafkaTableInputFormat(cubeSegment, null);
     }
 
     public static class KafkaTableInputFormat implements IMRTableInputFormat {
         private final CubeSegment cubeSegment;
-        private StreamingParser streamingParser;
         private final JobEngineConfig conf;
+        private String delimiter = BatchConstants.SEQUENCE_FILE_DEFAULT_DELIMITER;
 
-        public KafkaTableInputFormat(CubeSegment cubeSegment, List<TblColRef> columns, KafkaConfig kafkaConfig, JobEngineConfig conf) {
+        public KafkaTableInputFormat(CubeSegment cubeSegment, JobEngineConfig conf) {
             this.cubeSegment = cubeSegment;
             this.conf = conf;
-            try {
-                streamingParser = StreamingParser.getStreamingParser(kafkaConfig.getParserName(), kafkaConfig.getAllParserProperties(), columns);
-            } catch (ReflectiveOperationException e) {
-                throw new IllegalArgumentException(e);
-            }
         }
 
         @Override
@@ -114,7 +75,8 @@ public class KafkaMRInput implements IMRInput {
             job.setInputFormatClass(SequenceFileInputFormat.class);
             String jobId = job.getConfiguration().get(BatchConstants.ARG_CUBING_JOB_ID);
             IJoinedFlatTableDesc flatHiveTableDesc = new CubeJoinedFlatTableDesc(cubeSegment);
-            String inputPath = JoinedFlatTable.getTableDir(flatHiveTableDesc, JobBuilderSupport.getJobWorkingDir(conf, jobId));
+            String inputPath = JoinedFlatTable.getTableDir(flatHiveTableDesc,
+                    JobBuilderSupport.getJobWorkingDir(conf, jobId));
             try {
                 FileInputFormat.addInputPath(job, new Path(inputPath));
             } catch (IOException e) {
@@ -125,124 +87,41 @@ public class KafkaMRInput implements IMRInput {
         @Override
         public Collection<String[]> parseMapperInput(Object mapperInput) {
             Text text = (Text) mapperInput;
-            ByteBuffer buffer = ByteBuffer.wrap(text.getBytes(), 0, text.getLength());
-            List<StreamingMessageRow>  streamingMessageRowList = streamingParser.parse(buffer);
-            List<String[]> parsedDataCollection = new ArrayList<>();
+            String[] columns = Bytes.toString(text.getBytes(), 0, text.getLength()).split(delimiter, -1);
+            return Collections.singletonList(columns);
+        }
 
-            for (StreamingMessageRow row: streamingMessageRowList) {
-                parsedDataCollection.add(row.getData().toArray(new String[row.getData().size()]));
+        @Override
+        public String getInputSplitSignature(InputSplit inputSplit) {
+            FileSplit fs = null;
+            if (inputSplit instanceof FileSplit) {
+                fs = (FileSplit) inputSplit;
+            } else if (inputSplit instanceof org.apache.hadoop.mapreduce.lib.input.FileSplit) {
+                fs = new FileSplit((org.apache.hadoop.mapreduce.lib.input.FileSplit) inputSplit);
+            } else {
+                throw new IllegalArgumentException("Wrong input split: " + inputSplit);
             }
 
-            return parsedDataCollection;
+            return fs.getPath().getName() + "_" + fs.getStart() + "_" + fs.getLength();
         }
-
     }
 
-    public static class BatchCubingInputSide implements IMRBatchCubingInputSide {
+    public static class KafkaMRBatchCubingInputSide extends BaseBatchCubingInputSide implements IMRBatchCubingInputSide {
 
-        final JobEngineConfig conf;
-        final CubeSegment seg;
-        private String outputPath;
-
-        public BatchCubingInputSide(CubeSegment seg) {
-            this.conf = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
-            this.seg = seg;
-        }
-
-        @Override
-        public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow) {
-            jobFlow.addTask(createSaveKafkaDataStep(jobFlow.getId()));
-        }
-
-        private MapReduceExecutable createSaveKafkaDataStep(String jobId) {
-            MapReduceExecutable result = new MapReduceExecutable();
-
-            IJoinedFlatTableDesc flatHiveTableDesc = new CubeJoinedFlatTableDesc(seg);
-            outputPath = JoinedFlatTable.getTableDir(flatHiveTableDesc, JobBuilderSupport.getJobWorkingDir(conf, jobId));
-            result.setName("Save data from Kafka");
-            result.setMapReduceJobClass(KafkaFlatTableJob.class);
-            JobBuilderSupport jobBuilderSupport = new JobBuilderSupport(seg, "system");
-            StringBuilder cmd = new StringBuilder();
-            jobBuilderSupport.appendMapReduceParameters(cmd);
-            JobBuilderSupport.appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getRealization().getName());
-            JobBuilderSupport.appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, outputPath);
-            JobBuilderSupport.appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
-            JobBuilderSupport.appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_Save_Kafka_Data_" + seg.getRealization().getName() + "_Step");
-
-            result.setMapReduceParams(cmd.toString());
-            return result;
-        }
-
-        @Override
-        public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
-            GarbageCollectionStep step = new GarbageCollectionStep();
-            step.setName(ExecutableConstants.STEP_NAME_KAFKA_CLEANUP);
-            step.setDataPath(outputPath);
-            jobFlow.addTask(step);
-
+        public KafkaMRBatchCubingInputSide(CubeSegment seg, IJoinedFlatTableDesc flatDesc) {
+            super(seg, flatDesc);
         }
 
         @Override
         public IMRTableInputFormat getFlatTableInputFormat() {
-            KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv());
-            KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(seg.getCubeInstance().getRootFactTable());
-            List<TblColRef> columns = new CubeJoinedFlatTableDesc(seg).getAllColumns();
-
-            return new KafkaTableInputFormat(seg, columns, kafkaConfig, conf);
+            return new KafkaTableInputFormat(seg, conf);
         }
     }
 
-    class KafkaMRBatchMergeInputSide implements IMRBatchMergeInputSide {
-
-        private CubeSegment cubeSegment;
+    public static class KafkaMRBatchMergeInputSide extends BaseBatchMergeInputSide implements IMRBatchMergeInputSide {
 
         KafkaMRBatchMergeInputSide(CubeSegment cubeSegment) {
-            this.cubeSegment = cubeSegment;
+            super(cubeSegment);
         }
-
-        @Override
-        public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow) {
-
-            final MergeOffsetStep result = new MergeOffsetStep();
-            result.setName("Merge offset step");
-
-            CubingExecutableUtil.setCubeName(cubeSegment.getRealization().getName(), result.getParams());
-            CubingExecutableUtil.setSegmentId(cubeSegment.getUuid(), result.getParams());
-            CubingExecutableUtil.setCubingJobId(jobFlow.getId(), result.getParams());
-            jobFlow.addTask(result);
-        }
-    }
-
-    public static class GarbageCollectionStep extends AbstractExecutable {
-        private static final Logger logger = LoggerFactory.getLogger(GarbageCollectionStep.class);
-
-        @Override
-        protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-            try {
-                rmdirOnHDFS(getDataPath());
-            } catch (IOException e) {
-                logger.error("job:" + getId() + " execute finished with exception", e);
-                return ExecuteResult.createError(e);
-            }
-
-            return new ExecuteResult(ExecuteResult.State.SUCCEED, "HDFS path " + getDataPath() + " is dropped.\n");
-        }
-
-        private void rmdirOnHDFS(String path) throws IOException {
-            Path externalDataPath = new Path(path);
-            FileSystem fs = HadoopUtil.getWorkingFileSystem();
-            if (fs.exists(externalDataPath)) {
-                fs.delete(externalDataPath, true);
-            }
-        }
-
-        public void setDataPath(String externalDataPath) {
-            setParam("dataPath", externalDataPath);
-        }
-
-        private String getDataPath() {
-            return getParam("dataPath");
-        }
-
     }
 }

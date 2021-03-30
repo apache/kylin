@@ -19,7 +19,7 @@
 package org.apache.kylin.storage.gtrecord;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Iterator;
 
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -37,9 +37,15 @@ import org.slf4j.LoggerFactory;
 public class ScannerWorker {
 
     private static final Logger logger = LoggerFactory.getLogger(ScannerWorker.class);
-    private IGTScanner internal = null;
+    
+    private final IGTScanner internal;
+    private final Object[] inputArgs;
 
-    public ScannerWorker(ISegment segment, Cuboid cuboid, GTScanRequest scanRequest, String gtStorage, StorageContext context) {
+    public ScannerWorker(ISegment segment, Cuboid cuboid, GTScanRequest scanRequest, String gtStorage,
+            StorageContext context) {
+        
+        inputArgs = new Object[] { segment, cuboid, scanRequest, gtStorage, context };
+        
         if (scanRequest == null) {
             logger.info("Segment {} will be skipped", segment);
             internal = new EmptyGTScanner();
@@ -49,19 +55,31 @@ public class ScannerWorker {
         final GTInfo info = scanRequest.getInfo();
 
         try {
-            IGTStorage rpc = (IGTStorage) Class.forName(gtStorage).getConstructor(ISegment.class, Cuboid.class, GTInfo.class, StorageContext.class).newInstance(segment, cuboid, info, context); // default behavior
+            IGTStorage rpc = (IGTStorage) Class.forName(gtStorage)
+                    .getConstructor(ISegment.class, Cuboid.class, GTInfo.class, StorageContext.class)
+                    .newInstance(segment, cuboid, info, context); // default behavior
             internal = rpc.getGTScanner(scanRequest);
-        } catch (IOException | InstantiationException | InvocationTargetException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+        checkNPE();
     }
-    
+
     public boolean isSegmentSkipped() {
         return internal instanceof EmptyGTScanner;
     }
 
     public Iterator<GTRecord> iterator() {
+        // to troubleshoot a myth NPE on line: return internal.iterator()
+        checkNPE();
         return internal.iterator();
+    }
+
+    private void checkNPE() {
+        if (internal == null) {
+            logger.error("Caught an impossible NPE, args are " + Arrays.toString(inputArgs), new Exception());
+        }
     }
 
     public void close() throws IOException {

@@ -19,7 +19,6 @@
 package org.apache.kylin.cube.cuboid;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -28,18 +27,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class TreeCuboidScheduler extends CuboidScheduler {
 
@@ -123,13 +119,11 @@ public class TreeCuboidScheduler extends CuboidScheduler {
                 throw new IllegalArgumentException("the cuboid:" + cuboidId + " is not exist in the tree");
             }
 
-            return Lists.transform(node.children, new Function<TreeNode, Long>() {
-                @Nullable
-                @Override
-                public Long apply(@Nullable TreeNode input) {
-                    return input.cuboidId;
-                }
-            });
+            List<Long> result = Lists.newArrayList();
+            for (TreeNode child : node.children) {
+                result.add(child.cuboidId);
+            }
+            return result;
         }
 
         public long findBestMatchCuboid(long cuboidId) {
@@ -244,7 +238,7 @@ public class TreeCuboidScheduler extends CuboidScheduler {
         @JsonIgnore
         int level;
         @JsonProperty("children")
-        List<TreeNode> children = new ArrayList<>();
+        List<TreeNode> children = Lists.newArrayList();
 
         public long getCuboidId() {
             return cuboidId;

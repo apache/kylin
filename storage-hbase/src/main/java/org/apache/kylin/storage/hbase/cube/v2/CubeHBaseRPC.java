@@ -30,6 +30,7 @@ import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FuzzyRowFilter;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -54,8 +55,8 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public abstract class CubeHBaseRPC implements IGTStorage {
 
@@ -76,7 +77,7 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         this.cubeSeg = (CubeSegment) segment;
         this.cuboid = cuboid;
         this.fullGTInfo = fullGTInfo;
-        this.queryContext = QueryContext.current();
+        this.queryContext = QueryContextFacade.current();
         this.storageContext = context;
 
         this.fuzzyKeyEncoder = new FuzzyKeyEncoder(cubeSeg, cuboid);
@@ -287,12 +288,12 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         logger.info(info.toString());
     }
 
-    protected int getCoprocessorTimeoutMillis() {
-        int coopTimeout;
+    protected long getCoprocessorTimeoutMillis() {
+        long coopTimeout;
         if (BackdoorToggles.getQueryTimeout() != -1) {
             coopTimeout = BackdoorToggles.getQueryTimeout();
         } else {
-            coopTimeout = cubeSeg.getConfig().getQueryCoprocessorTimeoutSeconds() * 1000;
+            coopTimeout = cubeSeg.getConfig().getQueryCoprocessorTimeoutSeconds() * 1000L;
         }
         
         int rpcTimeout;
@@ -307,9 +308,10 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         
         // coprocessor timeout is 0 by default
         if (coopTimeout <= 0) {
-            coopTimeout = (int) (rpcTimeout * 0.9);
+            coopTimeout = (long) (rpcTimeout * 0.9);
         }
-        
+
+        queryContext.checkMillisBeforeDeadline();
         logger.debug("{} = {} ms, use {} ms as timeout for coprocessor", HConstants.HBASE_RPC_TIMEOUT_KEY, rpcTimeout, coopTimeout);
         return coopTimeout;
     }

@@ -18,35 +18,36 @@
 
 package org.apache.kylin.rest.controller;
 
+import java.io.IOException;
+import java.util.Locale;
+
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class StreamingControllerTest {
 
     @Test
     public void testReadTableDesc() throws IOException {
-        String requestTableData = "{\"name\":\"my_table_name\",\"source_type\":1,\"columns\":[{\"id\":1,\"name\":" +
-                "\"amount\",\"datatype\":\"decimal\"},{\"id\":2,\"name\":\"category\",\"datatype\":\"varchar(256)\"}," +
-                "{\"id\":3,\"name\":\"order_time\",\"datatype\":\"timestamp\"},{\"id\":4,\"name\":\"device\"," +
-                "\"datatype\":\"varchar(256)\"},{\"id\":5,\"name\":\"qty\",\"datatype\":\"int\"},{\"id\":6,\"name\":" +
-                "\"user_id\",\"datatype\":\"varchar(256)\"},{\"id\":7,\"name\":\"user_age\",\"datatype\":\"int\"}," +
-                "{\"id\":8,\"name\":\"user_gender\",\"datatype\":\"varchar(256)\"},{\"id\":9,\"name\":\"currency\"," +
-                "\"datatype\":\"varchar(256)\"},{\"id\":10,\"name\":\"country\",\"datatype\":\"varchar(256)\"}," +
-                "{\"id\":11,\"name\":\"year_start\",\"datatype\":\"date\"},{\"id\":12,\"name\":\"quarter_start\"," +
-                "\"datatype\":\"date\"},{\"id\":13,\"name\":\"month_start\",\"datatype\":\"date\"},{\"id\":14," +
-                "\"name\":\"week_start\",\"datatype\":\"date\"},{\"id\":15,\"name\":\"day_start\",\"datatype\":" +
-                "\"date\"},{\"id\":16,\"name\":\"hour_start\",\"datatype\":\"timestamp\"},{\"id\":17,\"name\":" +
-                "\"minute_start\",\"datatype\":\"timestamp\"}],\"database\":\"my_database_name\"}";
+        String requestTableData = "{\"name\":\"my_table_name\",\"source_type\":1,\"columns\":[{\"id\":1,\"name\":"
+                + "\"amount\",\"datatype\":\"decimal\"},{\"id\":2,\"name\":\"category\",\"datatype\":\"varchar(256)\"},"
+                + "{\"id\":3,\"name\":\"order_time\",\"datatype\":\"timestamp\"},{\"id\":4,\"name\":\"device\","
+                + "\"datatype\":\"varchar(256)\"},{\"id\":5,\"name\":\"qty\",\"datatype\":\"int\"},{\"id\":6,\"name\":"
+                + "\"user_id\",\"datatype\":\"varchar(256)\"},{\"id\":7,\"name\":\"user_age\",\"datatype\":\"int\"},"
+                + "{\"id\":8,\"name\":\"user_gender\",\"datatype\":\"varchar(256)\"},{\"id\":9,\"name\":\"currency\","
+                + "\"datatype\":\"varchar(256)\"},{\"id\":10,\"name\":\"country\",\"datatype\":\"varchar(256)\"},"
+                + "{\"id\":11,\"name\":\"year_start\",\"datatype\":\"date\"},{\"id\":12,\"name\":\"quarter_start\","
+                + "\"datatype\":\"date\"},{\"id\":13,\"name\":\"month_start\",\"datatype\":\"date\"},{\"id\":14,"
+                + "\"name\":\"week_start\",\"datatype\":\"date\"},{\"id\":15,\"name\":\"day_start\",\"datatype\":"
+                + "\"date\"},{\"id\":16,\"name\":\"hour_start\",\"datatype\":\"timestamp\"},{\"id\":17,\"name\":"
+                + "\"minute_start\",\"datatype\":\"timestamp\"}],\"database\":\"my_database_name\"}";
         TableDesc desc = JsonUtil.readValue(requestTableData, TableDesc.class);
         String[] dbTable = HadoopUtil.parseHiveTableName(desc.getIdentity());
         desc.setName(dbTable[1]);
         desc.setDatabase(dbTable[0]);
-        Assert.assertEquals("my_table_name".toUpperCase(), desc.getName());
-        Assert.assertEquals("my_database_name".toUpperCase(), desc.getDatabase());
+        Assert.assertEquals("my_table_name".toUpperCase(Locale.ROOT), desc.getName());
+        Assert.assertEquals("my_database_name".toUpperCase(Locale.ROOT), desc.getDatabase());
     }
 }

@@ -1,0 +1,73 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
+<script type="text/ng-template" id="addUser.html">
+  <ng-form name="user_create_form">
+    <div class="modal-header">
+      <h4>New User</h4>
+    </div>
+    <input name="username" type="text" style="display:none"/>
+    <input name="password" type="password" style="width:1px;height:0;border:none"/>
+    <div class="modal-body" style="background-color: white">
+      <div class="form-group">
+        <label><b>User Name</b></label>
+        <div class="clearfix">
+          <input name="name_input" type="text" class="form-control" ng-model="user.name" required
+                 placeholder="You can use letters, numbers, and underscore characters '_'"
+                 ng-maxlength=100 ng-pattern="userPattern"/>
+                    <span class="text-warning"
+                          ng-if="user_create_form.name_input.$error.required  && user_create_form.name_input.$dirty"
+                    >&nbsp;The user name is required</span>
+                    <span class="text-warning"
+                          ng-if="user_create_form.name_input.$invalid && user_create_form.name_input.$dirty && !user_create_form.name_input.$error.required"
+                    >&nbsp;The user name is invalid</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label><b>User Password</b></label>
+        <div class="clearfix">
+          <input ng-pattern="pwdPattern" required name="pwd_input" type="password" class="form-control" placeholder="The password should have at least 8 characters, and contain at least one number, letter and special character（~!@#$%^&*(){}|:&quot;\<\>?[];\',./`)." ng-model="user.password"/>
+          <span class="text-warning"
+                          ng-if="user_create_form.pwd_input.$error.required  && user_create_form.pwd_input.$dirty"
+                    >&nbsp;The password is required</span>
+                    <span class="text-warning"
+                          ng-if="user_create_form.pwd_input.$invalid && user_create_form.pwd_input.$dirty && !user_create_form.pwd_input.$error.required"
+                    >&nbsp;The password is invalid</span>
+        </div>
+      </div>
+      <div class="form-group">
+          <label><b>User Role</b></label>
+          <div class="clearfix">
+              <label>
+                  <input type="radio" name="isadmin" ng-model="user.isAdmin" ng-value="true"/> Administrator
+              </label>
+              <label>
+                  <input type="radio" name="isadmin" ng-model="user.isAdmin" ng-value="false"/> User
+              </label>
+          </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" ng-click="cancel()">Close</button>
+      <button class="btn btn-success" ng-click="saveUser()" ng-disabled="user_create_form.$invalid || dialogActionLoading">
+        Submit
+      </button>
+    </div>
+  </ng-form>
+</script>
+

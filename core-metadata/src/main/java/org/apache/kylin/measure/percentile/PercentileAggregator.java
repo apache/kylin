@@ -43,6 +43,11 @@ public class PercentileAggregator extends MeasureAggregator<PercentileCounter> {
 
     @Override
     public PercentileCounter aggregate(PercentileCounter value1, PercentileCounter value2) {
+        if (value1 == null) {
+            return new PercentileCounter(value2);
+        } else if (value2 == null) {
+            return new PercentileCounter(value1);
+        }
         PercentileCounter merged = new PercentileCounter(value1);
         merged.merge(value2);
         return merged;

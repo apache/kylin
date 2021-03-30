@@ -18,7 +18,10 @@
 
 package org.apache.kylin.metrics.lib.impl.hive;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.kylin.metrics.lib.ActiveReservoir;
@@ -81,6 +84,10 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
         stop();
     }
 
+    HiveReservoirListener getListener() {
+        return listener;
+    }
+
     /**
      * A builder for {@link HiveReservoirReporter} instances.
      */
@@ -104,36 +111,75 @@ public class HiveReservoirReporter extends ActiveReservoirReporter {
         }
     }
 
-    private class HiveReservoirListener implements ActiveReservoirListener {
+    class HiveReservoirListener implements ActiveReservoirListener {
+        private Properties props;
+        private Map<String, HiveProducer> producerMap = new HashMap<>();
 
-        HiveProducer producer;
+        private long nRecord = 0;
+        private long nRecordSkip = 0;
+        private long nUpdate = 0;
 
         private HiveReservoirListener(Properties props) throws Exception {
-            producer = new HiveProducer(props);
+            this.props = props;
+        }
+
+        synchronized HiveProducer getProducer(String metricType) throws Exception {
+            HiveProducer producer = producerMap.get(metricType);
+            if (producer == null) {
+                producer = new HiveProducer(metricType, props);
+                producerMap.put(metricType, producer);
+            }
+            return producer;
         }
 
         public boolean onRecordUpdate(final List<Record> records) {
-            try {
-                producer.send(records);
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-                return false;
+            if (records.isEmpty()) {
+                return true;
             }
-            return true;
-        }
-
-        public boolean onRecordUpdate(final Record record) {
+            logger.info("Try to write {} records", records.size());
+            long prevNRecord = nRecord;
             try {
-                producer.send(record);
+                Map<String, List<Record>> queues = new HashMap<>();
+                for (Record record : records) {
+                    List<Record> recordQueues = queues.get(record.getSubject());
+                    if (recordQueues == null) {
+                        recordQueues = new ArrayList<>();
+                        queues.put(record.getSubject(), recordQueues);
+                    }
+                    recordQueues.add(record);
+                }
+                for (Map.Entry<String, List<Record>> entry : queues.entrySet()) {
+                    HiveProducer producer = getProducer(entry.getKey());
+                    producer.send(entry.getValue());
+                    nRecord += entry.getValue().size();
+                }
+                queues.clear();
+                if (nUpdate++ % 100 == 0) {
+                    logger.info("Has done the update {} times with {} records reported, {} records skipped", nUpdate,
+                            nRecord, nRecordSkip);
+                }
             } catch (Exception e) {
+                nRecordSkip += records.size() - (nRecord - prevNRecord);
                 logger.error(e.getMessage(), e);
+                logger.warn("Has skipped reporting {} records", nRecordSkip);
                 return false;
             }
             return true;
         }
 
         public void close() {
-            producer.close();
+            for (HiveProducer producer : producerMap.values()) {
+                producer.close();
+            }
+            producerMap.clear();
+        }
+
+        public long getNRecord() {
+            return nRecord;
+        }
+
+        public long getNRecordSkip() {
+            return nRecordSkip;
         }
     }
 }

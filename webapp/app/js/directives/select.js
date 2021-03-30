@@ -342,6 +342,10 @@ uis.controller('uiSelectCtrl',
     return angular.isUndefined(ctrl.selected) || ctrl.selected === null || ctrl.selected === '' || (ctrl.multiple && ctrl.selected.length === 0);
   };
 
+  ctrl.clearSelected = function() {
+    ctrl.selected = undefined;
+  }
+
   function _findIndex(collection, predicate, thisArg){
     if (collection.findIndex){
       return collection.findIndex(predicate, thisArg);
@@ -1627,7 +1631,7 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
                   }
                 }
             }
-            if (angular.equals(result.toUpperCase(),value.toUpperCase())){
+            if (angular.equals((typeof result =='string') ? result.toUpperCase() : result, (typeof value == 'string') ? value.toUpperCase() : value)) {
               resultMultiple.unshift(list[p]);
               return true;
             }

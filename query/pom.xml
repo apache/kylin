@@ -29,13 +29,24 @@
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
-        <version>2.3.0-SNAPSHOT</version>
+        <version>3.1.2-SNAPSHOT</version>
     </parent>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>atopcalcite</artifactId>
+            <groupId>org.apache.calcite</groupId>
+            <artifactId>calcite-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.calcite.avatica</groupId>
+                    <artifactId>avatica-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- It should be avatica(the shaded one), not avatica-core, since the inconsistency protobuf dependency with Hadoop -->
+        <dependency>
+            <groupId>org.apache.calcite.avatica</groupId>
+            <artifactId>avatica</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.calcite.avatica</groupId>
@@ -46,6 +57,10 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-storage</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-datasource-sdk</artifactId>
         </dependency>
 
         <!-- Provided -->
@@ -78,4 +93,28 @@
             <version>${mockito.version}</version>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>javacc-maven-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>javacc</id>
+                        <goals>
+                            <goal>javacc</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirectory>src/main/codegen/javacc/org/apache/kylin/query/util</sourceDirectory>
+                            <includes>
+                                <include>*.jj</include>
+                            </includes>
+                            <isStatic>false</isStatic>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

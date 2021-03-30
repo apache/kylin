@@ -23,27 +23,30 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import org.apache.commons.lang.StringUtils;
+import javax.annotation.Nullable;
 
-import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.execution.ExecutableContext;
 
-import javax.annotation.Nullable;
+import org.apache.kylin.shaded.com.google.common.base.Function;
+import org.apache.kylin.shaded.com.google.common.collect.Iterables;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class CubingExecutableUtil {
 
     public static final String CUBE_NAME = "cubeName";
+    public static final String DISPALY_NAME = "displayName";
+    public static final String SEGMENT_NAME = "segmentName";
     public static final String SEGMENT_ID = "segmentId";
     public static final String MERGING_SEGMENT_IDS = "mergingSegmentIds";
     public static final String STATISTICS_PATH = "statisticsPath";
     public static final String CUBING_JOB_ID = "cubingJobId";
     public static final String MERGED_STATISTICS_PATH = "mergedStatisticsPath";
     public static final String INDEX_PATH = "indexPath";
+    public static final String DICTIONARIES_PATH = "dictsPath";
 
     public static void setStatisticsPath(String path, Map<String, String> params) {
         params.put(STATISTICS_PATH, path);
@@ -59,6 +62,14 @@ public class CubingExecutableUtil {
 
     public static String getCubeName(Map<String, String> params) {
         return params.get(CUBE_NAME);
+    }
+
+    public static void setSegmentName(String segmentName, Map<String, String> params) {
+        params.put(SEGMENT_NAME, segmentName);
+    }
+
+    public static String getSegmentName(Map<String, String> params) {
+        return params.get(SEGMENT_NAME);
     }
 
     public static void setSegmentId(String segmentId, Map<String, String> params) {
@@ -78,13 +89,14 @@ public class CubingExecutableUtil {
         final CubeInstance cube = mgr.getCube(cubeName);
 
         if (cube == null) {
-            String cubeList = StringUtils.join(Iterables.transform(mgr.listAllCubes(), new Function<CubeInstance, String>() {
-                @Nullable
-                @Override
-                public String apply(@Nullable CubeInstance input) {
-                    return input.getName();
-                }
-            }).iterator(), ",");
+            String cubeList = StringUtils
+                    .join(Iterables.transform(mgr.listAllCubes(), new Function<CubeInstance, String>() {
+                        @Nullable
+                        @Override
+                        public String apply(@Nullable CubeInstance input) {
+                            return input.getName();
+                        }
+                    }).iterator(), ",");
 
             throw new IllegalStateException("target cube name: " + cubeName + " cube list: " + cubeList);
         }
@@ -92,13 +104,14 @@ public class CubingExecutableUtil {
         final CubeSegment newSegment = cube.getSegmentById(segmentId);
 
         if (newSegment == null) {
-            String segmentList = StringUtils.join(Iterables.transform(cube.getSegments(), new Function<CubeSegment, String>() {
-                @Nullable
-                @Override
-                public String apply(@Nullable CubeSegment input) {
-                    return input.getUuid();
-                }
-            }).iterator(), ",");
+            String segmentList = StringUtils
+                    .join(Iterables.transform(cube.getSegments(), new Function<CubeSegment, String>() {
+                        @Nullable
+                        @Override
+                        public String apply(@Nullable CubeSegment input) {
+                            return input.getUuid();
+                        }
+                    }).iterator(), ",");
 
             throw new IllegalStateException("target segment id: " + segmentId + " segment list: " + segmentList);
         }
@@ -133,6 +146,14 @@ public class CubingExecutableUtil {
 
     public static String getMergedStatisticsPath(Map<String, String> params) {
         return params.get(MERGED_STATISTICS_PATH);
+    }
+
+    public static void setDictsPath(String path, Map<String, String> params) {
+        params.put(DICTIONARIES_PATH, path);
+    }
+
+    public static String getDictsPath(Map<String, String> params) {
+        return params.get(DICTIONARIES_PATH);
     }
 
 }

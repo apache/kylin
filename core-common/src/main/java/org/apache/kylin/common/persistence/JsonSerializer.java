@@ -30,11 +30,17 @@ import org.apache.kylin.common.util.JsonUtil;
 public class JsonSerializer<T extends RootPersistentEntity> implements Serializer<T> {
 
     Class<T> clz;
+    boolean compact = false;
 
     public JsonSerializer(Class<T> clz) {
         this.clz = clz;
     }
 
+    public JsonSerializer(Class<T> clz, boolean compact) {
+        this.clz = clz;
+        this.compact = compact;
+    }
+    
     @Override
     public T deserialize(DataInputStream in) throws IOException {
         return JsonUtil.readValue(in, clz);
@@ -42,6 +48,9 @@ public class JsonSerializer<T extends RootPersistentEntity> implements Serialize
 
     @Override
     public void serialize(T obj, DataOutputStream out) throws IOException {
-        JsonUtil.writeValueIndent(out, obj);
+        if (compact)
+            JsonUtil.writeValue(out, obj);
+        else
+            JsonUtil.writeValueIndent(out, obj);
     }
 }

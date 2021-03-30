@@ -18,11 +18,9 @@
 
 package org.apache.kylin.query.relnode;
 
-import static org.apache.kylin.metadata.filter.CompareTupleFilter.CompareResultType;
-
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +34,8 @@ import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
@@ -49,37 +49,69 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexOver;
 import org.apache.calcite.rex.RexProgram;
 import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlCaseOperator;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
+import org.apache.calcite.sql.type.ArraySqlType;
+import org.apache.calcite.sql.type.BasicSqlType;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.tools.RelUtils;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.measure.bitmap.BitmapMeasureType;
+import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.expression.ColumnTupleExpression;
+import org.apache.kylin.metadata.expression.ConstantTupleExpression;
+import org.apache.kylin.metadata.expression.ExpressionColCollector;
+import org.apache.kylin.metadata.expression.NoneTupleExpression;
+import org.apache.kylin.metadata.expression.RexCallTupleExpression;
+import org.apache.kylin.metadata.expression.TupleExpression;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.query.relnode.visitor.TupleExpressionVisitor;
+import org.apache.kylin.query.schema.OLAPTable;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  */
 public class OLAPProjectRel extends Project implements OLAPRel {
 
-    private OLAPContext context;
-    private List<RexNode> rewriteProjects;
-    private boolean rewriting;
-    private ColumnRowType columnRowType;
-    private boolean hasJoin;
-    private boolean afterJoin;
-    private boolean afterAggregate;
-    private boolean isMerelyPermutation = false;//project additionally added by OLAPJoinPushThroughJoinRule
+    private final BasicSqlType dateType = new BasicSqlType(getCluster().getTypeFactory().getTypeSystem(),
+            SqlTypeName.DATE);
+    private final BasicSqlType timestampType = new BasicSqlType(getCluster().getTypeFactory().getTypeSystem(),
+            SqlTypeName.TIMESTAMP);
+    private final ArraySqlType dateArrayType = new ArraySqlType(dateType, true);
+    private final ArraySqlType timestampArrayType = new ArraySqlType(timestampType, true);
+    public List<RexNode> rewriteProjects;
+    OLAPContext context;
+    boolean rewriting;
+    ColumnRowType columnRowType;
+    boolean hasJoin;
+    boolean afterJoin;
+    boolean afterAggregate;
+    boolean isMerelyPermutation = false;//project additionally added by OLAPJoinPushThroughJoinRule
+    private int caseCount = 0;
+    /**
+     * A flag indicate whether has intersect_count in query
+     */
+    private boolean hasIntersect = false;
 
-    public OLAPProjectRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, List<RexNode> exps, RelDataType rowType) {
+    public OLAPProjectRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, List<RexNode> exps,
+            RelDataType rowType) {
         super(cluster, traitSet, child, exps, rowType);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         Preconditions.checkArgument(child.getConvention() == OLAPRel.CONVENTION);
-        this.rewriteProjects = exps;
+        this.rewriteProjects = new ArrayList<>(exps); // make is modifiable
         this.hasJoin = false;
         this.afterJoin = false;
         this.rowType = getRowType();
+        for (RexNode exp : exps) {
+            caseCount += RelUtils.countOperatorCall(SqlCaseOperator.INSTANCE, exp);
+        }
     }
 
     @Override
@@ -102,7 +134,10 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     @Override
     public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
         boolean hasRexOver = RexOver.containsOver(getProjects(), null);
-        return super.computeSelfCost(planner, mq).multiplyBy(.05).multiplyBy(getProjects().size() * (hasRexOver ? 50 : 1));
+        RelOptCost relOptCost = super.computeSelfCost(planner, mq).multiplyBy(.05)
+                .multiplyBy(getProjects().size() * (double) (hasRexOver ? 50 : 1))
+                .plus(planner.getCostFactory().makeCost(0.1 * caseCount, 0, 0));
+        return planner.getCostFactory().makeCost(relOptCost.getRows(), 0, 0);
     }
 
     @Override
@@ -125,152 +160,76 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         this.afterAggregate = context.afterAggregate;
 
         this.columnRowType = buildColumnRowType();
+        RelNode parentNode = implementor.getParentNode();
+        if (parentNode instanceof OLAPAggregateRel) {
+            OLAPAggregateRel rel = (OLAPAggregateRel) parentNode;
+            for (AggregateCall call : rel.getRewriteAggCalls()) {
+                if (call.getAggregation().getName().equalsIgnoreCase(BitmapMeasureType.FUNC_INTERSECT_COUNT_DISTINCT)) {
+                    hasIntersect = true;
+                    logger.trace("Find intersect count in query.");
+                    break;
+                }
+            }
+        }
     }
 
-    private ColumnRowType buildColumnRowType() {
-        List<TblColRef> columns = new ArrayList<TblColRef>();
-        List<Set<TblColRef>> sourceColumns = new ArrayList<Set<TblColRef>>();
+    ColumnRowType buildColumnRowType() {
+        List<TblColRef> columns = Lists.newArrayList();
+        List<TupleExpression> sourceColumns = Lists.newArrayList();
+
         OLAPRel olapChild = (OLAPRel) getInput();
         ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
+        boolean ifVerify = !hasSubQuery() && !afterAggregate;
+        TupleExpressionVisitor visitor = new TupleExpressionVisitor(inputColumnRowType, ifVerify);
         for (int i = 0; i < this.rewriteProjects.size(); i++) {
             RexNode rex = this.rewriteProjects.get(i);
             RelDataTypeField columnField = this.rowType.getFieldList().get(i);
             String fieldName = columnField.getName();
-            Set<TblColRef> sourceCollector = new HashSet<TblColRef>();
-            TblColRef column = translateRexNode(rex, inputColumnRowType, fieldName, sourceCollector);
-            if (column == null)
-                throw new IllegalStateException("No TblColRef found in " + rex);
+
+            TupleExpression tupleExpr = rex.accept(visitor);
+            TblColRef column = translateRexNode(rex, inputColumnRowType, tupleExpr, fieldName);
+            if (!this.rewriting && !this.afterAggregate && !isMerelyPermutation) {
+                Set<TblColRef> srcCols = ExpressionColCollector.collectColumns(tupleExpr);
+                // remove cols not belonging to context tables
+                Iterator<TblColRef> srcColIter = srcCols.iterator();
+                while (srcColIter.hasNext()) {
+                    if (!context.belongToContextTables(srcColIter.next())) {
+                        srcColIter.remove();
+                    }
+                }
+                this.context.allColumns.addAll(srcCols);
+
+                if (this.context.isDynamicColumnEnabled() && tupleExpr.ifForDynamicColumn()) {
+                    SqlTypeName fSqlType = columnField.getType().getSqlTypeName();
+                    String dataType = OLAPTable.DATATYPE_MAPPING.get(fSqlType);
+                    column.getColumnDesc().setDatatype(dataType);
+                    this.context.dynamicFields.put(column, columnField.getType());
+                }
+            } else {
+                tupleExpr = new NoneTupleExpression();
+            }
+
             columns.add(column);
-            sourceColumns.add(sourceCollector);
+            sourceColumns.add(tupleExpr);
         }
         return new ColumnRowType(columns, sourceColumns);
     }
 
-    private TblColRef translateRexNode(RexNode rexNode, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
-        TblColRef column = null;
-        if (rexNode instanceof RexInputRef) {
+    private TblColRef translateRexNode(RexNode rexNode, ColumnRowType inputColumnRowType, TupleExpression tupleExpr,
+            String fieldName) {
+        if (tupleExpr instanceof ColumnTupleExpression) {
+            return ((ColumnTupleExpression) tupleExpr).getColumn();
+        } else if (tupleExpr instanceof ConstantTupleExpression) {
+            Object value = ((ConstantTupleExpression) tupleExpr).getValue();
+            return TblColRef.newInnerColumn(value == null ? "null" : value.toString(), InnerDataTypeEnum.LITERAL);
+        } else if (tupleExpr instanceof RexCallTupleExpression && rexNode instanceof RexInputRef) {
             RexInputRef inputRef = (RexInputRef) rexNode;
-            column = translateRexInputRef(inputRef, inputColumnRowType, fieldName, sourceCollector);
-        } else if (rexNode instanceof RexLiteral) {
-            RexLiteral literal = (RexLiteral) rexNode;
-            column = translateRexLiteral(literal);
-        } else if (rexNode instanceof RexCall) {
-            RexCall call = (RexCall) rexNode;
-            column = translateRexCall(call, inputColumnRowType, fieldName, sourceCollector);
-        } else {
-            throw new IllegalStateException("Unsupported RexNode " + rexNode);
-        }
-        return column;
-    }
-
-    private TblColRef translateFirstRexInputRef(RexCall call, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
-        for (RexNode operand : call.getOperands()) {
-            if (operand instanceof RexInputRef) {
-                return translateRexInputRef((RexInputRef) operand, inputColumnRowType, fieldName, sourceCollector);
-            }
-            if (operand instanceof RexCall) {
-                TblColRef r = translateFirstRexInputRef((RexCall) operand, inputColumnRowType, fieldName, sourceCollector);
-                if (r != null)
-                    return r;
+            int index = inputRef.getIndex();
+            if (index < inputColumnRowType.size()) {
+                return inputColumnRowType.getColumnByIndex(index);
             }
         }
-        return null;
-    }
-
-    private TblColRef translateRexInputRef(RexInputRef inputRef, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
-        int index = inputRef.getIndex();
-        // check it for rewrite count
-        if (index < inputColumnRowType.size()) {
-            TblColRef column = inputColumnRowType.getColumnByIndex(index);
-            if (!column.isInnerColumn() && context.belongToContextTables(column) && !this.rewriting && !this.afterAggregate) {
-                if (!isMerelyPermutation) {
-                    context.allColumns.add(column);
-                }
-                sourceCollector.add(column);
-            }
-            return column;
-        } else {
-            throw new IllegalStateException("Can't find " + inputRef + " from child columnrowtype " + inputColumnRowType + " with fieldname " + fieldName);
-        }
-    }
-
-    private TblColRef translateRexLiteral(RexLiteral literal) {
-        if (RexLiteral.isNullLiteral(literal)) {
-            return TblColRef.newInnerColumn("null", InnerDataTypeEnum.LITERAL);
-        } else {
-            return TblColRef.newInnerColumn(literal.getValue().toString(), InnerDataTypeEnum.LITERAL);
-        }
-
-    }
-
-    private TblColRef translateRexCall(RexCall call, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
-        SqlOperator operator = call.getOperator();
-        if (operator == SqlStdOperatorTable.EXTRACT_DATE) {
-            return translateFirstRexInputRef(call, inputColumnRowType, fieldName, sourceCollector);
-        } else if (operator instanceof SqlUserDefinedFunction) {
-            if (operator.getName().equals("QUARTER")) {
-                return translateFirstRexInputRef(call, inputColumnRowType, fieldName, sourceCollector);
-            }
-        }
-
-        List<RexNode> children = limitTranslateScope(call.getOperands(), operator);
-
-        for (RexNode operand : children) {
-            translateRexNode(operand, inputColumnRowType, fieldName, sourceCollector);
-        }
-        return TblColRef.newInnerColumn(fieldName, InnerDataTypeEnum.LITERAL, call.toString());
-    }
-
-    //in most cases it will return children itself
-    private List<RexNode> limitTranslateScope(List<RexNode> children, SqlOperator operator) {
-
-        //group by case when 1 = 1 then x 1 = 2 then y else z 
-        if (operator instanceof SqlCaseOperator) {
-            int unknownWhenCalls = 0;
-            for (int i = 0; i < children.size() - 1; i += 2) {
-                if (children.get(i) instanceof RexCall) {
-                    RexCall whenCall = (RexCall) children.get(i);
-                    CompareResultType compareResultType = getCompareResultType(whenCall);
-                    if (compareResultType == CompareResultType.AlwaysTrue) {
-                        return Lists.newArrayList(children.get(i), children.get(i + 1));
-                    } else if (compareResultType == CompareResultType.Unknown) {
-                        unknownWhenCalls++;
-                    }
-                }
-            }
-
-            if (unknownWhenCalls == 0) {
-                return Lists.newArrayList(children.get(children.size() - 1));
-            }
-        }
-
-        return children;
-    }
-
-    private CompareResultType getCompareResultType(RexCall whenCall) {
-        List<RexNode> operands = whenCall.getOperands();
-        if (SqlKind.EQUALS == whenCall.getKind() && operands != null && operands.size() == 2) {
-            if (operands.get(0).equals(operands.get(1))) {
-                return CompareResultType.AlwaysTrue;
-            }
-
-            if (isConstant(operands.get(0)) && isConstant(operands.get(1))) {
-                return CompareResultType.AlwaysFalse;
-            }
-        }
-        return CompareResultType.Unknown;
-    }
-
-    private boolean isConstant(RexNode rexNode) {
-        if (rexNode instanceof RexLiteral) {
-            return true;
-        }
-
-        if (rexNode instanceof RexCall && SqlKind.CAST.equals(rexNode.getKind()) && ((RexCall) rexNode).getOperands().get(0) instanceof RexLiteral) {
-            return true;
-        }
-
-        return false;
+        return TblColRef.newInnerColumn(fieldName, InnerDataTypeEnum.LITERAL, tupleExpr.getDigest());
     }
 
     @Override
@@ -279,13 +238,15 @@ public class OLAPProjectRel extends Project implements OLAPRel {
             // merge project & filter
             OLAPFilterRel filter = (OLAPFilterRel) getInput();
             RelNode inputOfFilter = inputs.get(0).getInput(0);
-            RexProgram program = RexProgram.create(inputOfFilter.getRowType(), this.rewriteProjects, filter.getCondition(), this.rowType, getCluster().getRexBuilder());
+            RexProgram program = RexProgram.create(inputOfFilter.getRowType(), this.rewriteProjects,
+                    filter.getCondition(), this.rowType, getCluster().getRexBuilder());
             return new EnumerableCalc(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
                     inputOfFilter, program);
         } else {
             // keep project for table scan
             EnumerableRel input = sole(inputs);
-            RexProgram program = RexProgram.create(input.getRowType(), this.rewriteProjects, null, this.rowType, getCluster().getRexBuilder());
+            RexProgram program = RexProgram.create(input.getRowType(), this.rewriteProjects, null, this.rowType,
+                    getCluster().getRexBuilder());
             return new EnumerableCalc(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
                     input, program);
         }
@@ -303,17 +264,21 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         this.rewriting = true;
 
         // project before join or is just after OLAPToEnumerableConverter
-        if (!RewriteImplementor.needRewrite(this.context) || (this.hasJoin && !this.afterJoin) || this.afterAggregate || !(this.context.hasPrecalculatedFields())) {
+        if (!RewriteImplementor.needRewrite(this.context) || (this.hasJoin && !this.afterJoin) || this.afterAggregate
+                || !(this.context.hasPrecalculatedFields())) {
             this.columnRowType = this.buildColumnRowType();
             return;
         }
 
-        // find missed rewrite fields
-        int paramIndex = this.rowType.getFieldList().size();
-        List<RelDataTypeField> newFieldList = new LinkedList<RelDataTypeField>();
-        List<RexNode> newExpList = new LinkedList<RexNode>();
+        List<RelDataTypeField> newFieldList = Lists.newLinkedList();
+        List<RexNode> newExpList = Lists.newLinkedList();
+        Map<Integer, Pair<RelDataTypeField, RexNode>> replaceFieldMap = Maps
+                .newHashMapWithExpectedSize(this.context.dynamicFields.size());
+
         ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
 
+        // find missed rewrite fields
+        int paramIndex = this.rowType.getFieldList().size();
         for (Map.Entry<String, RelDataType> rewriteField : this.context.rewriteFields.entrySet()) {
             String rewriteFieldName = rewriteField.getKey();
             int rowIndex = this.columnRowType.getIndexByName(rewriteFieldName);
@@ -332,22 +297,51 @@ public class OLAPProjectRel extends Project implements OLAPRel {
             }
         }
 
-        if (!newFieldList.isEmpty()) {
+        // replace projects with dynamic fields
+        if (this.context.afterAggregate) {
+            Map<TblColRef, RelDataType> dynFields = this.context.dynamicFields;
+            for (TblColRef dynFieldCol : dynFields.keySet()) {
+                String replaceFieldName = dynFieldCol.getName();
+                int rowIndex = this.columnRowType.getIndexByName(replaceFieldName);
+                if (rowIndex >= 0) {
+                    int inputIndex = inputColumnRowType.getIndexByName(replaceFieldName);
+                    if (inputIndex >= 0) {
+                        // field to be replaced
+                        RelDataType fieldType = dynFields.get(dynFieldCol);
+                        RelDataTypeField newField = new RelDataTypeFieldImpl(replaceFieldName, rowIndex, fieldType);
+                        // project to be replaced
+                        RelDataTypeField inputField = getInput().getRowType().getFieldList().get(inputIndex);
+                        RexInputRef newFieldRef = new RexInputRef(inputField.getIndex(), inputField.getType());
+
+                        replaceFieldMap.put(rowIndex, new Pair<RelDataTypeField, RexNode>(newField, newFieldRef));
+                    }
+                }
+            }
+        }
+
+        if (!newFieldList.isEmpty() || !replaceFieldMap.isEmpty()) {
+            List<RexNode> newProjects = Lists.newArrayList(this.rewriteProjects);
+            List<RelDataTypeField> newFields = Lists.newArrayList(this.rowType.getFieldList());
+            for (int rowIndex : replaceFieldMap.keySet()) {
+                Pair<RelDataTypeField, RexNode> entry = replaceFieldMap.get(rowIndex);
+                newProjects.set(rowIndex, entry.getSecond());
+                newFields.set(rowIndex, entry.getFirst());
+            }
+
             // rebuild projects
-            List<RexNode> newProjects = new ArrayList<RexNode>(this.rewriteProjects);
             newProjects.addAll(newExpList);
             this.rewriteProjects = newProjects;
 
             // rebuild row type
             FieldInfoBuilder fieldInfo = getCluster().getTypeFactory().builder();
-            fieldInfo.addAll(this.rowType.getFieldList());
+            fieldInfo.addAll(newFields);
             fieldInfo.addAll(newFieldList);
             this.rowType = getCluster().getTypeFactory().createStructType(fieldInfo);
         }
 
         // rebuild columns
         this.columnRowType = this.buildColumnRowType();
-
+        rewriteProjectsForArrayDataType();
         this.rewriting = false;
     }
 
@@ -371,5 +365,88 @@ public class OLAPProjectRel extends Project implements OLAPRel {
 
     public boolean isMerelyPermutation() {
         return isMerelyPermutation;
+    }
+
+    @Override
+    public RelWriter explainTerms(RelWriter pw) {
+        return super.explainTerms(pw).item("ctx",
+                context == null ? "" : String.valueOf(context.id) + "@" + context.realization);
+    }
+
+    /**
+     * Change Array[String] to Array[Specific Type] for intersect_count
+     * https://github.com/apache/kylin/pull/785
+     */
+    private void rewriteProjectsForArrayDataType() {
+        if (hasIntersect) {
+            Set<TblColRef> tblColRefs = new HashSet<>(context.allColumns); // all column
+            IRealization realization = context.realization;
+            TblColRef groupBy = null;
+            DataType groupByType = null;
+            if (realization instanceof CubeInstance) {
+                CubeDesc cubeDesc = ((CubeInstance) realization).getDescriptor();
+                for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
+                    if (measureDesc.getFunction().getMeasureType() instanceof BitmapMeasureType) {
+                        TblColRef col1 = measureDesc.getFunction().getParameter().getColRef();
+                        tblColRefs.remove(col1); // Remove all column included in COUNT_DISTINCT
+                        logger.trace("Remove {}", col1);
+                    }
+                }
+                // After remove all columns included in COUNT_DISTINCT, last one should be a group by column
+                if (tblColRefs.size() == 1) {
+                    for (TblColRef colRef : tblColRefs) {
+                        groupBy = colRef;
+                        groupByType = groupBy.getType();
+                        logger.trace("Group By Column in intersect_count should be {}.", groupBy);
+                    }
+                    // only auto change to date/timestamp type from string type
+                    if (groupByType != null && groupByType.isDateTimeFamily()) {
+                        for (int i = 0; i < this.rewriteProjects.size(); i++) {
+                            RexNode rex = this.rewriteProjects.get(i);
+                            if (groupByType.isTimestamp()) {
+                                rewriteProjectForIntersect(rex, SqlTypeName.TIMESTAMP, timestampType,
+                                        timestampArrayType, i);
+                            } else if (groupByType.isDate()) {
+                                rewriteProjectForIntersect(rex, SqlTypeName.DATE, dateType, dateArrayType, i);
+                            }
+                        }
+                    }
+                } else {
+                    logger.trace("After remove, {}.", tblColRefs.size());
+                }
+            }
+        }
+    }
+
+    private void rewriteProjectForIntersect(RexNode rex, SqlTypeName sqlTypeName, BasicSqlType eleSqlType,
+            ArraySqlType arraySqlType, int idx) {
+        if (rex.isA(SqlKind.ARRAY_VALUE_CONSTRUCTOR)) { // somethings like ['2012-01-01', '2012-01-02', '2012-01-03']
+            List<RexNode> nodeList = ((RexCall) rex).getOperands();
+            RexLiteral newNode = null;
+            boolean needChange = true;
+            List<RexNode> newerList = new ArrayList<>();
+            if (!nodeList.isEmpty()) {
+                for (RexNode node : nodeList) {
+                    if (node instanceof RexLiteral) {
+                        RexLiteral literal = (RexLiteral) node;
+                        if (literal.getTypeName() == sqlTypeName) {
+                            needChange = false;
+                            break;
+                        } else {
+                            newNode = RexLiteral.fromJdbcString(eleSqlType, sqlTypeName,
+                                    literal.getValue2().toString());
+                        }
+                    }
+                    if (newNode != null) {
+                        newerList.add(newNode);
+                    }
+                    newNode = null;
+                }
+                if (needChange) {
+                    rewriteProjects.set(idx, ((RexCall) rex).clone(arraySqlType, newerList));
+                    logger.debug("Rewrite project REL {} for intersect count.", rewriteProjects.get(idx));
+                }
+            }
+        }
     }
 }

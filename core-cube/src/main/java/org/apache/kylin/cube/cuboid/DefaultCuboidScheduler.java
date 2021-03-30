@@ -38,11 +38,11 @@ import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.TooManyCuboidException;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Predicate;
+import org.apache.kylin.shaded.com.google.common.collect.Iterators;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class DefaultCuboidScheduler extends CuboidScheduler {
     private final long max;
@@ -175,11 +175,11 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
         long maxCombination = config.getCubeAggrGroupMaxCombination() * 10;
         maxCombination = maxCombination < 0 ? Long.MAX_VALUE : maxCombination;
         while (!children.isEmpty()) {
+            cuboidHolder.addAll(children);
             if (cuboidHolder.size() > maxCombination) {
                 throw new IllegalStateException("Too many cuboids for the cube. Cuboid combination reached "
-                        + cuboidHolder.size() + " and limit is " + maxCombination + ". Abort calculation.");
+                    + cuboidHolder.size() + " and limit is " + maxCombination + ". Abort calculation.");
             }
-            cuboidHolder.addAll(children);
             children = getOnTreeParentsByLayer(children);
         }
         cuboidHolder.add(Cuboid.getBaseCuboidId(cubeDesc));

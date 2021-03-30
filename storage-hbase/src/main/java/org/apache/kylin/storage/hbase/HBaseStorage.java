@@ -20,21 +20,23 @@ package org.apache.kylin.storage.hbase;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.engine.mr.IMROutput;
+import org.apache.kylin.engine.flink.IFlinkOutput;
 import org.apache.kylin.engine.mr.IMROutput2;
+import org.apache.kylin.engine.spark.ISparkOutput;
 import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.DataModelManager;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.IStorage;
 import org.apache.kylin.storage.IStorageQuery;
-import org.apache.kylin.storage.hbase.steps.HBaseMROutput;
+import org.apache.kylin.storage.hbase.steps.HBaseFlinkOutputTransition;
 import org.apache.kylin.storage.hbase.steps.HBaseMROutput2Transition;
+import org.apache.kylin.storage.hbase.steps.HBaseSparkOutputTransition;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 @SuppressWarnings("unused")
 //used by reflection
@@ -50,14 +52,16 @@ public class HBaseStorage implements IStorage {
             CubeInstance cubeInstance = (CubeInstance) realization;
             String cubeStorageQuery;
             if (cubeInstance.getStorageType() == IStorageAware.ID_HBASE) {//v2 query engine cannot go with v1 storage now
-                throw new IllegalStateException("Storage Engine (id=" + IStorageAware.ID_HBASE + ") is not supported any more");
+                throw new IllegalStateException(
+                        "Storage Engine (id=" + IStorageAware.ID_HBASE + ") is not supported any more");
             } else {
                 cubeStorageQuery = v2CubeStorageQuery;//by default use v2
             }
 
             IStorageQuery ret;
             try {
-                ret = (IStorageQuery) Class.forName(cubeStorageQuery).getConstructor(CubeInstance.class).newInstance((CubeInstance) realization);
+                ret = (IStorageQuery) Class.forName(cubeStorageQuery).getConstructor(CubeInstance.class)
+                        .newInstance((CubeInstance) realization);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to initialize storage query for " + cubeStorageQuery, e);
             }
@@ -70,21 +74,25 @@ public class HBaseStorage implements IStorage {
 
     private static TblColRef getPartitionCol(IRealization realization) {
         String modelName = realization.getModel().getName();
-        DataModelDesc dataModelDesc = DataModelManager.getInstance(KylinConfig.getInstanceFromEnv()).getDataModelDesc(modelName);
+        DataModelDesc dataModelDesc = DataModelManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getDataModelDesc(modelName);
         PartitionDesc partitionDesc = dataModelDesc.getPartitionDesc();
         Preconditions.checkArgument(partitionDesc != null, "PartitionDesc for " + realization + " is null!");
         TblColRef partitionColRef = partitionDesc.getPartitionDateColumnRef();
-        Preconditions.checkArgument(partitionColRef != null, "getPartitionDateColumnRef for " + realization + " is null");
+        Preconditions.checkArgument(partitionColRef != null,
+                "getPartitionDateColumnRef for " + realization + " is null");
         return partitionColRef;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <I> I adaptToBuildEngine(Class<I> engineInterface) {
-        if (engineInterface == IMROutput.class) {
-            return (I) new HBaseMROutput();
-        } else if (engineInterface == IMROutput2.class) {
+        if (engineInterface == IMROutput2.class) {
             return (I) new HBaseMROutput2Transition();
+        } else if (engineInterface == ISparkOutput.class) {
+            return (I) new HBaseSparkOutputTransition();
+        } else if (engineInterface == IFlinkOutput.class) {
+            return (I) new HBaseFlinkOutputTransition();
         } else {
             throw new RuntimeException("Cannot adapt to " + engineInterface);
         }

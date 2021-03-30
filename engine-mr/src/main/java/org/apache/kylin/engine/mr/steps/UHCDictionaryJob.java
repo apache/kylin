@@ -18,9 +18,13 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.ArrayPrimitiveWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -36,13 +40,10 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.engine.mr.steps.filter.UHCDictPathFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public class UHCDictionaryJob extends AbstractHadoopJob {
     protected static final Logger logger = LoggerFactory.getLogger(UHCDictionaryJob.class);
@@ -72,7 +73,7 @@ public class UHCDictionaryJob extends AbstractHadoopJob {
             CubeInstance cube = cubeMgr.getCube(cubeName);
             attachCubeMetadata(cube, job.getConfiguration());
 
-            List<TblColRef> uhcColumns = cubeMgr.getAllUHCColumns(cube.getDescriptor());
+            List<TblColRef> uhcColumns = cube.getDescriptor().getAllUHCColumns();
             int reducerCount = uhcColumns.size();
 
             //Note! handle uhc columns is null.
@@ -81,6 +82,7 @@ public class UHCDictionaryJob extends AbstractHadoopJob {
                 Path path = new Path(input.toString() + "/" + tblColRef.getIdentity());
                 if (HadoopUtil.getFileSystem(path).exists(path)) {
                     FileInputFormat.addInputPath(job, path);
+                    FileInputFormat.setInputPathFilter(job, UHCDictPathFilter.class);
                     hasUHCValue = true;
                 }
             }
@@ -131,7 +133,7 @@ public class UHCDictionaryJob extends AbstractHadoopJob {
         job.setPartitionerClass(UHCDictionaryPartitioner.class);
         job.setNumReduceTasks(numberOfReducers);
 
-        MultipleOutputs.addNamedOutput(job, BatchConstants.CFG_OUTPUT_DICT, SequenceFileOutputFormat.class, NullWritable.class, BytesWritable.class);
+        MultipleOutputs.addNamedOutput(job, BatchConstants.CFG_OUTPUT_DICT, SequenceFileOutputFormat.class, NullWritable.class, ArrayPrimitiveWritable.class);
         FileOutputFormat.setOutputPath(job, output);
         job.getConfiguration().set(BatchConstants.CFG_OUTPUT_PATH, output.toString());
 

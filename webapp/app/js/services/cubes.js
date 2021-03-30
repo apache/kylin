@@ -17,12 +17,32 @@
  */
 
 KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
+  function transformCuboidsResponse(data) {
+    var cuboids = {
+      nodeInfos: [],
+      treeNode: data.root,
+      totalRowCount: 0
+    };
+    function iterator(node, parentRowCount) {
+      node.parent_row_count = parentRowCount;
+      cuboids.nodeInfos.push(node);
+      cuboids.totalRowCount += node.row_count;
+      if (node.children.length) {
+        angular.forEach(node.children, function(child) {
+          iterator(child, node.row_count);
+        });
+      }
+    };
+    iterator(data.root, data.root.row_count);
+    return cuboids;
+  };
   return $resource(Config.service.url + 'cubes/:cubeId/:propName/:propValue/:action', {}, {
     list: {method: 'GET', params: {}, isArray: true},
     getValidEncodings: {method: 'GET', params: {action:"validEncodings"}, isArray: false},
     getCube: {method: 'GET', params: {}, isArray: false},
-    getSql: {method: 'GET', params: {propName: 'segs', action: 'sql'}, isArray: false},
+    getSql: {method: 'GET', params: {action: 'sql'}, isArray: false},
     updateNotifyList: {method: 'PUT', params: {propName: 'notify_list'}, isArray: false},
+    updateOwner: {method: 'PUT', params: {propName: 'owner'}, isArray: false},
     cost: {method: 'PUT', params: {action: 'cost'}, isArray: false},
     rebuildLookUp: {method: 'PUT', params: {propName: 'segs', action: 'refresh_lookup'}, isArray: false},
     rebuildCube: {method: 'PUT', params: {action: 'rebuild'}, isArray: false},
@@ -31,9 +51,51 @@ KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
     enable: {method: 'PUT', params: {action: 'enable'}, isArray: false},
     purge: {method: 'PUT', params: {action: 'purge'}, isArray: false},
     clone: {method: 'PUT', params: {action: 'clone'}, isArray: false},
+    deleteSegment: {method: 'DELETE', params: {propName: 'segs'}, isArray: false},
     drop: {method: 'DELETE', params: {}, isArray: false},
     save: {method: 'POST', params: {}, isArray: false},
     update: {method: 'PUT', params: {}, isArray: false},
-    getHbaseInfo: {method: 'GET', params: {propName: 'hbase'}, isArray: true}
+    getHbaseInfo: {method: 'GET', params: {propName: 'hbase'}, isArray: true},
+    getCurrentCuboids: {
+      method: 'GET',
+      params: {
+          propName: 'cuboids',
+          propValue: 'current'
+      },
+      isArray: false,
+      interceptor: {
+        response: function(response) {
+          return transformCuboidsResponse(response.data);
+        }
+      }
+    },
+    getRecommendCuboids: {
+      method: 'GET',
+      params: {propName: 'cuboids', propValue: 'recommend'},
+      isArray: false,
+      interceptor: {
+        response: function(response) {
+          return transformCuboidsResponse(response.data);
+        }
+      }
+    },
+    optimize: {method: 'PUT', params: {action: 'optimize'}, isArray: false},
+    ruleCheck: {
+      method: 'GET',
+      params: {
+        action: 'migrateRuleCheck'
+      },
+      isArray: false,
+      interceptor: {
+        response: function(response) {
+          return response.data;
+        }
+      }
+    },
+    lookupRefresh: {method: 'PUT', params: {action: 'refresh_lookup'}, isArray: false},
+    checkDuplicateCubeName: {method: 'GET', params: {action: 'validate'}, isArray: false},
+    migrate: {method: 'PUT', params: {action: 'migrateRequest'}, isArray: false},
+    approve: {method: 'PUT', params: {action: 'migrateApprove'}, isArray: false},
+    reject: {method: 'PUT', params: {action: 'migrateReject'}, isArray: false}
   });
 }]);

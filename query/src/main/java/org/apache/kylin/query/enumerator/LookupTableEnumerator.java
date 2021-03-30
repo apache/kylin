@@ -18,8 +18,8 @@
 
 package org.apache.kylin.query.enumerator;
 
+import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -27,19 +27,24 @@ import org.apache.calcite.linq4j.Enumerator;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.DimensionDesc;
-import org.apache.kylin.dict.lookup.LookupStringTable;
+import org.apache.kylin.dict.lookup.ILookupTable;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPTable;
 import org.apache.kylin.storage.hybrid.HybridInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class LookupTableEnumerator implements Enumerator<Object[]> {
+    private final static Logger logger = LoggerFactory.getLogger(LookupTableEnumerator.class);
 
-    private final Collection<String[]> allRows;
+    private final ILookupTable lookupTable;
     private final List<ColumnDesc> colDescs;
     private final Object[] current;
     private Iterator<String[]> iterator;
@@ -49,9 +54,15 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
         //TODO: assuming LookupTableEnumerator is handled by a cube
         CubeInstance cube = null;
 
-        if (olapContext.realization instanceof CubeInstance)
+        if (olapContext.realization instanceof CubeInstance) {
             cube = (CubeInstance) olapContext.realization;
-        else if (olapContext.realization instanceof HybridInstance) {
+            ProjectInstance project = cube.getProjectInstance();
+            List<RealizationEntry> realizationEntries = project.getRealizationEntries();
+            String lookupTableName = olapContext.firstTableScan.getTableName();
+            CubeManager cubeMgr = CubeManager.getInstance(cube.getConfig());
+            cube = cubeMgr.findLatestSnapshot(realizationEntries, lookupTableName, cube);
+            olapContext.realization = cube;
+        } else if (olapContext.realization instanceof HybridInstance) {
             final HybridInstance hybridInstance = (HybridInstance) olapContext.realization;
             final IRealization latestRealization = hybridInstance.getLatestRealization();
             if (latestRealization instanceof CubeInstance) {
@@ -67,8 +78,7 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
             throw new IllegalStateException("No dimension with derived columns found for lookup table " + lookupTableName + ", cube desc " + cube.getDescriptor());
 
         CubeManager cubeMgr = CubeManager.getInstance(cube.getConfig());
-        LookupStringTable table = cubeMgr.getLookupTable(cube.getLatestReadySegment(), dim.getJoin());
-        this.allRows = table.getAllRows();
+        this.lookupTable = cubeMgr.getLookupTable(cube.getLatestReadySegment(), dim.getJoin());
 
         OLAPTable olapTable = (OLAPTable) olapContext.firstTableScan.getOlapTable();
         this.colDescs = olapTable.getSourceColumns();
@@ -103,11 +113,16 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
 
     @Override
     public void reset() {
-        this.iterator = allRows.iterator();
+        this.iterator = lookupTable.iterator();
     }
 
     @Override
     public void close() {
+        try {
+            lookupTable.close();
+        } catch (IOException e) {
+            logger.error("error when close lookup table", e);
+        }
     }
 
 }

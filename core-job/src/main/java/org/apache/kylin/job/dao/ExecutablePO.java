@@ -25,7 +25,7 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  */
@@ -39,11 +39,17 @@ public class ExecutablePO extends RootPersistentEntity {
     @JsonProperty("tasks")
     private List<ExecutablePO> tasks;
 
+    @JsonProperty("tasks_check")
+    private List<ExecutablePO> tasksForCheck;
+
     @JsonProperty("type")
     private String type;
 
     @JsonProperty("params")
     private Map<String, String> params = Maps.newHashMap();
+
+    @JsonProperty("priority")
+    private Integer priority;
 
     public String getName() {
         return name;
@@ -59,6 +65,14 @@ public class ExecutablePO extends RootPersistentEntity {
 
     public void setTasks(List<ExecutablePO> tasks) {
         this.tasks = tasks;
+    }
+
+    public List<ExecutablePO> getTasksForCheck() {
+        return tasksForCheck;
+    }
+
+    public void setTasksForCheck(List<ExecutablePO> tasksForCheck) {
+        this.tasksForCheck = tasksForCheck;
     }
 
     public String getType() {
@@ -77,4 +91,12 @@ public class ExecutablePO extends RootPersistentEntity {
         this.params = params;
     }
 
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+    
 }

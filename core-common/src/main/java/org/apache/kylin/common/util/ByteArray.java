@@ -106,7 +106,11 @@ public class ByteArray implements Comparable<ByteArray>, Serializable {
         this.offset = offset;
         this.length = len;
     }
-    
+
+    public byte get(int i) {
+        return data[offset + i];
+    }
+
     @Override
     public int hashCode() {
         if (data == null) {
@@ -161,7 +165,7 @@ public class ByteArray implements Comparable<ByteArray>, Serializable {
     @Override
     public String toString() {
         if (data == null)
-            return null;
+            return "";
         else
             return Bytes.toStringBinary(data, offset, length);
     }

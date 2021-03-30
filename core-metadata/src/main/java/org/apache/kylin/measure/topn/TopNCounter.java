@@ -27,8 +27,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * Modified from the StreamSummary.java in https://github.com/addthis/stream-lib
@@ -167,12 +167,18 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
         }
 
         for (Map.Entry<T, Counter<T>> entry : another.counterMap.entrySet()) {
-            if (this.counterMap.containsKey(entry.getKey())) {
-                this.offer(entry.getValue().getItem(), (entry.getValue().count - m2));
+            Counter<T> counter = this.counterMap.get(entry.getKey());
+            if (counter != null) {
+                //                this.offer(entry.getValue().getItem(), (entry.getValue().count - m2));
+                counter.setCount(counter.getCount() + (entry.getValue().count - m2));
             } else {
-                this.offer(entry.getValue().getItem(), entry.getValue().count + m1);
+                //                this.offer(entry.getValue().getItem(), entry.getValue().count + m1);
+                counter = new Counter<T>(entry.getValue().getItem(), entry.getValue().count + m1);
+                this.counterMap.put(entry.getValue().getItem(), counter);
+                this.counterList.add(counter);
             }
         }
+        this.ordered = false;
 
         this.sortAndRetain();
         return this;
@@ -217,6 +223,12 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
         return counters;
     }
 
+    public TopNCounter<T> copy() {
+        TopNCounter result = new TopNCounter(capacity);
+        result.counterMap = Maps.newHashMap(counterMap);
+        return result;
+    }
+
     @Override
     public Iterator<Counter<T>> iterator() {
         if (this.descending == true) {
@@ -226,18 +238,18 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
         }
     }
 
-    private static final Comparator ASC_COMPARATOR = new Comparator<Counter>() {
+    static final Comparator ASC_COMPARATOR = new Comparator<Counter>() {
         @Override
         public int compare(Counter o1, Counter o2) {
-            return o1.getCount() > o2.getCount() ? 1 : o1.getCount() == o2.getCount() ? 0 : -1;
+            return Double.compare(o1.getCount(), o2.getCount());
         }
 
     };
 
-    private static final Comparator DESC_COMPARATOR = new Comparator<Counter>() {
+    static final Comparator DESC_COMPARATOR = new Comparator<Counter>() {
         @Override
         public int compare(Counter o1, Counter o2) {
-            return o1.getCount() > o2.getCount() ? -1 : o1.getCount() == o2.getCount() ? 0 : 1;
+            return Double.compare(o2.getCount(), o1.getCount());
         }
 
     };

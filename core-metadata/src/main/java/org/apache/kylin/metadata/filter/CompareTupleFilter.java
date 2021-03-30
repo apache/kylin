@@ -33,10 +33,13 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
  * @author xjiang
  */
 public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupleFilter {
-
+    
     public enum CompareResultType {
         AlwaysTrue, AlwaysFalse, Unknown
     }
+
+    // if the two children are both CompareTupleFilter, isNormal will be false
+    private boolean isNormal = true;
 
     // operand 1 is either a column or a function
     private TblColRef column;
@@ -74,6 +77,9 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
 
     @Override
     public void addChild(TupleFilter child) {
+        if (child instanceof CompareTupleFilter) {
+            child = optimizeChildCompareTupleFilter((CompareTupleFilter) child);
+        }
         super.addChild(child);
         if (child instanceof ColumnTupleFilter) {
             ColumnTupleFilter columnFilter = (ColumnTupleFilter) child;
@@ -135,6 +141,17 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
         this.firstCondValue = this.conditionValues.iterator().next();
     }
 
+    public void clearPreviousVariableValues(String variable) {
+        Object previousValue = dynamicVariables.get(variable);
+        if (previousValue == null) {
+            return;
+        }
+        if (this.firstCondValue == previousValue) {
+            this.firstCondValue = null;
+        }
+        this.conditionValues.remove(previousValue);
+    }
+
     @Override
     public TupleFilter copy() {
         return new CompareTupleFilter(this);
@@ -154,7 +171,6 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
 
     // TODO requires generalize, currently only evaluates COLUMN {op} CONST
     @Override
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public boolean evaluate(IEvaluatableTuple tuple, IFilterCodeSystem cs) {
         // extract tuple value
         Object tupleValue = null;
@@ -224,7 +240,7 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
 
     @Override
     public boolean isEvaluable() {
-        return (column != null || (function != null && function.isEvaluable())) //
+        return isNormal && (column != null || (function != null && function.isEvaluable())) //
                 && (!conditionValues.isEmpty() || operator == FilterOperatorEnum.ISNOTNULL || operator == FilterOperatorEnum.ISNULL) //
                 && secondColumn == null;
     }
@@ -273,4 +289,55 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
         return transformer.visit(this);
     }
 
+    private TupleFilter optimizeChildCompareTupleFilter(CompareTupleFilter child) {
+        FilterOptimizeTransformer transformer = new FilterOptimizeTransformer();
+        TupleFilter result = child.acceptOptimizeTransformer(transformer);
+        if (result == ConstantTupleFilter.TRUE) {
+            // use string instead of boolean since it's encoded as string
+            result = new ConstantTupleFilter("true");
+        } else if (result == ConstantTupleFilter.FALSE) {
+            result = new ConstantTupleFilter("false");
+        } else {
+            this.isNormal = false;
+        }
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        CompareTupleFilter that = (CompareTupleFilter) o;
+
+        if (operator != that.operator)
+            return false;
+        if (column != null ? !column.equals(that.column) : that.column != null)
+            return false;
+        if (function != null ? !function.equals(that.function) : that.function != null)
+            return false;
+        if (secondColumn != null ? !secondColumn.equals(that.secondColumn) : that.secondColumn != null)
+            return false;
+        if (conditionValues != null ? !conditionValues.equals(that.conditionValues) : that.conditionValues != null)
+            return false;
+        if (firstCondValue != null ? !firstCondValue.equals(that.firstCondValue) : that.firstCondValue != null)
+            return false;
+        return dynamicVariables != null ? dynamicVariables.equals(that.dynamicVariables)
+                : that.dynamicVariables == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = operator != null ? operator.hashCode() : 0;
+        result = 31 * result + (column != null ? column.hashCode() : 0);
+        result = 31 * result + (function != null ? function.hashCode() : 0);
+        result = 31 * result + (secondColumn != null ? secondColumn.hashCode() : 0);
+        result = 31 * result + (conditionValues != null ? conditionValues.hashCode() : 0);
+        result = 31 * result + (firstCondValue != null ? firstCondValue.hashCode() : 0);
+        result = 31 * result + (dynamicVariables != null ? dynamicVariables.hashCode() : 0);
+        return result;
+    }
 }

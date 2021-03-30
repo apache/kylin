@@ -21,32 +21,36 @@ package org.apache.kylin.query.relnode;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.calcite.adapter.enumerable.EnumerableWindowBridge;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
+import org.apache.calcite.adapter.enumerable.EnumerableWindowBridge;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.Window;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
-
-import com.google.common.base.Preconditions;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
+import org.apache.commons.compress.utils.Lists;
+import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import com.google.common.base.Preconditions;
 
 /**
  */
 public class OLAPWindowRel extends Window implements OLAPRel {
-    private ColumnRowType columnRowType;
-    private OLAPContext context;
+    ColumnRowType columnRowType;
+    OLAPContext context;
 
-    public OLAPWindowRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, List<RexLiteral> constants, RelDataType rowType, List<Group> groups) {
+    public OLAPWindowRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, List<RexLiteral> constants,
+            RelDataType rowType, List<Group> groups) {
         super(cluster, traitSet, input, constants, rowType, groups);
         Preconditions.checkArgument(getConvention() == CONVENTION);
         Preconditions.checkArgument(getConvention() == input.getConvention());
@@ -65,7 +69,9 @@ public class OLAPWindowRel extends Window implements OLAPRel {
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw) //
+
+        return super.explainTerms(pw)
+                .item("ctx", context == null ? "" : String.valueOf(context.id) + "@" + context.realization)//
                 .itemIf("constants", constants, !constants.isEmpty()) //
                 .itemIf("groups", groups, !groups.isEmpty());
     }
@@ -77,9 +83,10 @@ public class OLAPWindowRel extends Window implements OLAPRel {
 
         this.columnRowType = buildColumnRowType();
         this.context = implementor.getContext();
+        this.context.hasWindow = true;
     }
 
-    private ColumnRowType buildColumnRowType() {
+    ColumnRowType buildColumnRowType() {
         OLAPRel olapChild = (OLAPRel) getInput(0);
         ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
 
@@ -89,9 +96,27 @@ public class OLAPWindowRel extends Window implements OLAPRel {
 
         // add window aggregate calls column
         for (Group group : groups) {
-            for (AggregateCall aggrCall : group.getAggregateCalls(this)) {
-                TblColRef aggrCallCol = TblColRef.newInnerColumn(aggrCall.getName(), TblColRef.InnerDataTypeEnum.LITERAL);
-                columns.add(aggrCallCol);
+            if (olapChild instanceof OLAPUnionRel) {
+                for (AggregateCall aggrCall : group.getAggregateCalls(this)) {
+                    TblColRef aggrCallCol = TblColRef.newInnerColumn(aggrCall.getName(),
+                            TblColRef.InnerDataTypeEnum.LITERAL);
+                    columns.add(aggrCallCol);
+                }
+            } else {
+                List<TupleExpression> sourceColOuter = Lists.newArrayList();
+                group.keys.asSet().stream().map(inputColumnRowType::getTupleExpressionByIndex)
+                        .forEach(sourceColOuter::add);
+                group.orderKeys.getFieldCollations().stream().map(RelFieldCollation::getFieldIndex)
+                        .map(inputColumnRowType::getTupleExpressionByIndex).forEach(sourceColOuter::add);
+                for (AggregateCall aggrCall : group.getAggregateCalls(this)) {
+                    TblColRef aggrCallCol = TblColRef.newInnerColumn(aggrCall.getName(),
+                            TblColRef.InnerDataTypeEnum.LITERAL);
+                    List<TupleExpression> sourceColInner = Lists.newArrayList(sourceColOuter.iterator());
+                    aggrCall.getArgList().stream().filter(i -> i < inputColumnRowType.size())
+                            .map(inputColumnRowType::getTupleExpressionByIndex).forEach(sourceColInner::add);
+                    aggrCallCol.setSubTupleExps(sourceColInner);
+                    columns.add(aggrCallCol);
+                }
             }
         }
         return new ColumnRowType(columns);
@@ -111,7 +136,8 @@ public class OLAPWindowRel extends Window implements OLAPRel {
                 ((OLAPRel) input).replaceTraitSet(EnumerableConvention.INSTANCE);
             }
         }
-        return EnumerableWindowBridge.createEnumerableWindow(getCluster(), traitSet, inputs.get(0), constants, rowType, groups);
+        return EnumerableWindowBridge.createEnumerableWindow(getCluster(), traitSet, inputs.get(0), constants, rowType,
+                groups);
     }
 
     @Override

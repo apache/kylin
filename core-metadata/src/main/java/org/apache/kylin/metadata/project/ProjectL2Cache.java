@@ -34,13 +34,12 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
-import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  * This is a second level cache that is built on top of first level cached objects,
@@ -59,8 +58,12 @@ class ProjectL2Cache {
         this.mgr = mgr;
     }
 
-    public void clear() {
-        projectCaches.clear();
+    public void clear(String projectname) {
+        if (projectname == null) {
+            projectCaches.clear();
+        } else {
+            projectCaches.remove(projectname);
+        }
     }
 
     public ExternalFilterDesc getExternalFilterDesc(String project, String extFilterName) {
@@ -187,6 +190,10 @@ class ProjectL2Cache {
         return result;
     }
 
+    void reloadCacheByProject(String project) {
+        projectCaches.put(project, loadCache(project));
+    }
+
     private ProjectCache loadCache(String project) {
         logger.debug("Loading L2 project cache for " + project);
         ProjectCache projectCache = new ProjectCache(project);
@@ -225,12 +232,6 @@ class ProjectL2Cache {
                 logger.warn("Realization '" + entry + "' defined under project '" + project + "' is not found");
             }
 
-            //check if there's raw table parasite
-            //TODO: ugly impl here
-            IRealization parasite = registry.getRealization(RealizationType.INVERTED_INDEX, entry.getRealization());
-            if (parasite != null) {
-                projectCache.realizations.add(parasite);
-            }
         }
 
         for (IRealization realization : projectCache.realizations) {
@@ -263,7 +264,7 @@ class ProjectL2Cache {
                 return false;
             }
 
-            if (!col.getColumnDesc().isComputedColumnn()) {
+            if (!col.getColumnDesc().isComputedColumn()) {
                 ColumnDesc foundCol = table.findColumnByName(col.getName());
                 if (col.getColumnDesc().equals(foundCol) == false) {
                     logger.error("Realization '" + realization.getCanonicalName() + "' reports column '" + col.getCanonicalName() + "', but it is not equal to '" + foundCol + "' according to MetadataManager");

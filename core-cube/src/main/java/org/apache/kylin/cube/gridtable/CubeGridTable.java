@@ -28,10 +28,25 @@ public class CubeGridTable {
 
         GTInfo.Builder builder = GTInfo.builder();
         builder.setTableName("Cuboid " + cuboid.getId());
-        builder.setCodeSystem(new CubeCodeSystem(mapping.getDimensionEncodings(dimEncMap), mapping.getDependentMetricsMap()));
+        builder.setCodeSystem(
+                new CubeCodeSystem(mapping.getDimensionEncodings(dimEncMap), mapping.getDependentMetricsMap()));
         builder.setColumns(mapping.getDataTypes());
         builder.setPrimaryKey(mapping.getPrimaryKey());
         builder.enableColumnBlock(mapping.getColumnBlocks());
+        return builder.build();
+    }
+
+    public static GTInfo newGTInfo(Cuboid cuboid, IDimensionEncodingMap dimEncMap, CuboidToGridTableMapping mapping) {
+        GTInfo.Builder builder = GTInfo.builder();
+        builder.setTableName("Cuboid " + cuboid.getId());
+        builder.setCodeSystem(
+                new CubeCodeSystem(mapping.getDimensionEncodings(dimEncMap), mapping.getDependentMetricsMap()));
+        builder.setColumns(mapping.getDataTypes());
+        builder.setPrimaryKey(mapping.getPrimaryKey());
+        builder.enableColumnBlock(mapping.getColumnBlocks());
+        if (mapping instanceof CuboidToGridTableMappingExt) {
+            builder.enableDynamicDims(((CuboidToGridTableMappingExt) mapping).getDynamicDims());
+        }
         return builder.build();
     }
 }

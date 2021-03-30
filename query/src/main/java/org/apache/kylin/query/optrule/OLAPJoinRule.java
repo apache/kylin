@@ -29,6 +29,7 @@ import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.kylin.query.relnode.OLAPFilterRel;
 import org.apache.kylin.query.relnode.OLAPJoinRel;
+import org.apache.kylin.query.relnode.OLAPNonEquiJoinRel;
 import org.apache.kylin.query.relnode.OLAPRel;
 
 /**
@@ -48,14 +49,17 @@ public class OLAPJoinRule extends ConverterRule {
         RelNode right = join.getInput(1);
 
         RelTraitSet traitSet = join.getTraitSet().replace(OLAPRel.CONVENTION);
-        left = convert(left, traitSet);
-        right = convert(right, traitSet);
+        left = convert(left, left.getTraitSet().replace(OLAPRel.CONVENTION));
+        right = convert(right, right.getTraitSet().replace(OLAPRel.CONVENTION));
 
         final JoinInfo info = JoinInfo.of(left, right, join.getCondition());
         if (!info.isEqui() && join.getJoinType() != JoinRelType.INNER) {
-            // EnumerableJoinRel only supports equi-join. We can put a filter on top
-            // if it is an inner join.
-            throw new IllegalArgumentException("We only support equi left join, please check join conditions!");
+            try {
+                return new OLAPNonEquiJoinRel(join.getCluster(), traitSet, left, right,
+                        join.getCondition(), join.getVariablesSet(), join.getJoinType());
+            } catch (InvalidRelException e) {
+                throw new IllegalStateException(e);
+            }
         }
 
         RelOptCluster cluster = join.getCluster();

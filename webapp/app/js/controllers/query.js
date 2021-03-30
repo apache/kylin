@@ -19,9 +19,13 @@
 'use strict';
 
 KylinApp
-    .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, $modal, MessageService, $domUtilityService, $timeout, TableService, SweetAlert, VdmUtil) {
+    .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, CubeService, $modal, MessageService, $domUtilityService, $timeout, TableService, SweetAlert, VdmUtil) {
         $scope.mainPanel = 'query';
+        if ($routeParams.queryPanel) {
+            $scope.mainPanel = $routeParams.queryPanel;
+        }
         $scope.rowsPerPage = 50000;
+        $scope.hasLimit = true;
         $scope.base64 = $base64;
         $scope.queryString = "";
         $scope.queries = [];
@@ -44,13 +48,6 @@ KylinApp
         ];
         $scope.statusFilter = null;
         $scope.savedQueries = null;
-        $scope.cachedQueries = storage.get("saved_queries");
-        if (!$scope.cachedQueries) {
-            $scope.cachedQueries = [];
-        }
-        $scope.cachedQueries.curPage = 1;
-        $scope.cachedQueries.perPage = 3;
-
         $scope.srcTables = [];
         $scope.srcColumns = [];
 
@@ -59,12 +56,16 @@ KylinApp
             selectedProject: null
         };
 
+        $scope.locationChangeConfirmed = false;
+        $scope.specifyCube = null;
+        $scope.cubeItems = [];
+
         var Query = {
             createNew: function (sql, project) {
                 var query = {
                     originSql: sql,
                     sql: sql,
-                    project: (!!project)? project:$scope.projectModel.selectedProject,
+                    project: (!!project)? project:$scope.projectModel.getSelectedProject(),
                     status: 'executing',
                     acceptPartial: true,
                     result: {
@@ -111,14 +112,22 @@ KylinApp
         }
 
         $scope.checkLimit = function () {
-            if (!$scope.rowsPerPage) {
-                $scope.rowsPerPage = 50000;
+          if (!$scope.rowsPerPage) {
+            $scope.rowsPerPage = 50000;
+          }
+        }
+
+        $scope.changeLimit = function () {
+            if ($scope.hasLimit) {
+              $scope.rowsPerPage = 50000;
+            } else {
+              $scope.rowsPerPage = 0
             }
         }
 
         function getQuery(queries, query) {
             for (var i = 0; i < queries.length; i++) {
-                if (queries[i].sql == query.sql) {
+                if (queries[i].sql === query.sql && queries[i].project === query.project) {
                     return queries[i];
                 }
             }
@@ -243,7 +252,11 @@ KylinApp
 
         $scope.query = function (query) {
             scrollToButton();
-            QueryService.query({}, {sql: query.sql, offset: 0, limit: $scope.rowsPerPage, acceptPartial: query.acceptPartial, project: query.project}, function (result) {
+            var backdoorToggles = null;
+            if ($scope.specifyCube != null) {
+              backdoorToggles = {"DEBUG_TOGGLE_HIT_CUBE": $scope.specifyCube};
+            }
+            QueryService.query({}, {sql: query.sql, offset: 0, limit: $scope.rowsPerPage, acceptPartial: query.acceptPartial, project: query.project, backdoorToggles: backdoorToggles}, function (result) {
                 scrollToButton();
                 $scope.parseQueryResult(query, result, (!result || result.isException) ? 'failed' : 'success');
                 $scope.curQuery.result.hasMore = (query.result.results && query.result.results.length == $scope.rowsPerPage);
@@ -282,15 +295,6 @@ KylinApp
             $scope.query($scope.curQuery);
         }
 
-        $scope.resetGraph = function (query) {
-            var dimension = (query.graph.meta.dimensions && query.graph.meta.dimensions.length > 0) ? query.graph.meta.dimensions[0] : null;
-            var metrics = (query.graph.meta.metrics && query.graph.meta.metrics.length > 0) ? query.graph.meta.metrics[0] : null;
-            query.graph.state = {
-                dimensions: dimension,
-                metrics: ((query.graph.type.metrics.multiple) ? [metrics] : metrics)
-            };
-        }
-
         $scope.loadMore = function (query) {
             query.result.loading = true;
             var query = query;
@@ -326,6 +330,8 @@ KylinApp
             if (queryToRemove) {
                 var index = $scope.cachedQueries.indexOf(queryToRemove);
                 $scope.cachedQueries.splice(index, 1);
+                var indexFilter = $scope.cachedFilterQueries.indexOf(queryToRemove);
+                $scope.cachedFilterQueries.splice(indexFilter, 1);
                 storage.set("saved_queries", $scope.cachedQueries);
             }
         }
@@ -335,7 +341,6 @@ KylinApp
 
                 if ($scope.cachedQueries.length >= 99) {
                     delete $scope.cachedQueries.splice(0, 1);
-                    ;
                 }
 
                 $scope.cachedQueries.push({
@@ -348,11 +353,23 @@ KylinApp
         }
 
         $scope.listSavedQueries = function () {
-            QueryService.list({}, function (queries) {
+            QueryService.list({project: $scope.projectModel.selectedProject}, function (queries) {
                 $scope.savedQueries = queries;
                 $scope.savedQueries.curPage = 1;
                 $scope.savedQueries.perPage = 3;
             });
+        }
+
+        $scope.listCachedQueries = function () {
+          $scope.cachedQueries = storage.get("saved_queries") || [];
+          $scope.cachedFilterQueries = $scope.cachedQueries.filter(function (query) {
+            return query.project === $scope.projectModel.selectedProject;
+          });
+          if (!$scope.cachedFilterQueries) {
+            $scope.cachedFilterQueries = [];
+          }
+          $scope.cachedFilterQueries.curPage = 1;
+          $scope.cachedFilterQueries.perPage = 3;
         }
 
         $scope.removeSavedQuery = function (id) {
@@ -370,7 +387,7 @@ KylinApp
         };
 
         $scope.showSavePanel = function () {
-            $modal.open({
+            var modalInstance = $modal.open({
                 templateUrl: 'saveQueryModal.html',
                 controller: saveQueryController,
                 resolve: {
@@ -378,6 +395,11 @@ KylinApp
                         return $scope.curQuery;
                     }
                 }
+            });
+            modalInstance.result.then( function (result) {
+                $scope.listSavedQueries();
+            }, function (reason) {
+                $scope.listSavedQueries();
             });
         }
 
@@ -396,35 +418,55 @@ KylinApp
             }
         }
 
+        $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
+          $scope.listCachedQueries();
+          $scope.listSavedQueries();
+          $scope.cubeItems = [];
+          $scope.specifyCube = null;
+          CubeService.list({projectName:newValue}, function (_cubes) {
+            if (_cubes !== 0) {
+              angular.forEach(_cubes,function(cube){
+                if (cube.status==="READY"){
+                  $scope.cubeItems.push(cube.name);
+                }
+              })
+            }
+          })
+        });
+
         $scope.$on('$locationChangeStart', function (event, next, current) {
             var isExecuting = false;
+            var nextURL = $location.path();
             angular.forEach($scope.queries, function (query, index) {
                 if (query.status == "executing") {
                     isExecuting = true;
                 }
             });
 
-            if (isExecuting && (next.replace(current, "").indexOf("#") != 0)) {
+            if (!$scope.locationChangeConfirmed && isExecuting && (next.replace(current, "").indexOf("#") != 0)) {
+                event.preventDefault();
                 SweetAlert.swal({
-                    title: '',
-                    text: "You've executing query in current page, are you sure to leave this page?",
-                    type: '',
-                    showCancelButton: true,
-                    confirmButtonColor: '#DD6B55',
-                    confirmButtonText: "Yes",
-                    closeOnConfirm: true
+                  title: '',
+                  text: "You've executing query in current page, are you sure to leave this page?",
+                  type: '',
+                  showCancelButton: true,
+                  confirmButtonColor: '#DD6B55',
+                  confirmButtonText: "Yes",
+                  closeOnConfirm: true
                 }, function(isConfirm) {
-                    if(!isConfirm){
-                        event.preventDefault();
+                    if(isConfirm){
+                      $scope.locationChangeConfirmed = true;
+                      $location.path(nextURL);
                     }
-
                 });
             }
         });
 
 
     })
-    .controller('QueryResultCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, GraphService) {
+    .controller('QueryResultCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, kylinConfig, queryConfig) {
+        $scope.isAdminExportAllowed = kylinConfig.isAdminExportAllowed();
+        $scope.isNonAdminExportAllowed = kylinConfig.isNonAdminExportAllowed();
         $scope.buildGraphMetadata = function (query) {
             if (!query.graph.show) {
                 return;
@@ -467,34 +509,85 @@ KylinApp
             return $scope.curQuery.graph.type.dimension.types.indexOf(dimension.type) > -1;
         }
 
+        $scope.resetGraph = function (query) {
+            var dimension = (query.graph.meta.dimensions && query.graph.meta.dimensions.length > 0) ? query.graph.meta.dimensions[0] : null;
+            var metrics = (query.graph.meta.metrics && query.graph.meta.metrics.length > 0) ? query.graph.meta.metrics[0] : null;
+            query.graph.state = {
+                dimensions: dimension,
+                metrics: ((query.graph.type.metrics.multiple) ? [metrics] : metrics)
+            };
+            $scope.refreshGraphData(query);
+        }
+
         $scope.refreshGraphData = function (query) {
             if (query.graph.show) {
-                query.graph.data = GraphService.buildGraph(query);
-            }
-            else {
-                query.graph.data = [];
+                $scope.chart = undefined;
+
+                var selectedDimension = query.graph.state.dimensions;
+                var selectedMetric = query.graph.state.metrics;
+                if (selectedDimension && selectedMetric && query.graph.type.dimension.types.indexOf(selectedDimension.type) > -1) {
+                    $scope.chart = {};
+
+                    var chartType = query.graph.type.value;
+
+                    var dataValues = [];
+                    angular.forEach(query.result.results, function(result, ind) {
+                        var data = {
+                            label: result[selectedDimension.index],
+                            value: parseFloat(result[selectedMetric.index])
+                        };
+                        if (selectedDimension.type === 'date' && chartType === 'line') {
+                            data.label = parseInt(moment(data.label).format('X'));
+                        }
+                        dataValues.push(data);
+                    });
+
+                    dataValues = _.sortBy(dataValues, 'label');
+                    var oldLabel = dataValues[0].label;
+                    var groupValues = [{label: dataValues[0].label, value: 0}];
+                    angular.forEach(dataValues, function(data) {
+                        if (data.label === oldLabel) {
+                            groupValues[groupValues.length-1].value += data.value;
+                        } else {
+                            groupValues.push(data);
+                            oldLabel = data.label;
+                        }
+                    });
+
+                    $scope.chart.data = [{
+                        key: selectedMetric.column.label,
+                        values: groupValues
+                    }];
+
+                    if (chartType === 'line') {
+                        $scope.chart.options = angular.copy(queryConfig.lineChartOptions);
+                        if (selectedDimension.type === 'date') {
+                            $scope.chart.options.chart.xAxis.tickFormat = function (d) {
+                                return d3.time.format('%Y-%m-%d')(moment.unix(d).toDate());
+                            };
+                        }
+                    } else if (chartType === 'bar') {
+                        $scope.chart.options = angular.copy(queryConfig.barChartOptions);
+                        if (groupValues.length > 15) {
+                            $scope.chart.options.chart.showLegend = false;
+                            $scope.chart.options.chart.xAxis.height = 100;
+                            $scope.chart.options.chart.margin.bottom =  150;
+                            $scope.chart.options.chart.xAxis.rotateLabels = -90;
+                            if (groupValues.length > 50) {
+                                $scope.chart.options.chart.showXAxis = false;
+                            }
+                        }
+                    } else if (chartType === 'pie') {
+                        $scope.chart.options = angular.copy(queryConfig.pieChartOptions);
+                        $scope.chart.data = groupValues;
+                        if (groupValues.length > 15) {
+                            $scope.chart.options.chart.showLegend = false;
+                            $scope.chart.options.chart.showLabels = false;
+                        }
+                    }
+                }
+            } else {
+                $scope.chart.data = [];
             }
         }
-
-        $scope.xAxisTickFormatFunction = function () {
-            return function (d) {
-                return d3.time.format("%Y-%m-%d")(moment.unix(d).toDate());
-            }
-        };
-
-        $scope.xFunction = function () {
-            return function (d) {
-                return d.key;
-            }
-        };
-
-        $scope.yFunction = function () {
-            return function (d) {
-                return d.y;
-            }
-        }
-
-        $scope.$on('elementClick.directive', function (angularEvent, event) {
-            console.log('clicked.');
-        });
     });

@@ -23,45 +23,37 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.dict.lookup.LookupProviderFactory;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
+import org.apache.kylin.engine.mr.IMRInput.IMRBatchMergeInputSide;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
-import org.apache.kylin.engine.mr.IMROutput.IMRBatchCubingOutputSide;
-import org.apache.kylin.engine.mr.IMROutput.IMRBatchMergeOutputSide;
 import org.apache.kylin.engine.mr.IMROutput2.IMRBatchCubingOutputSide2;
 import org.apache.kylin.engine.mr.IMROutput2.IMRBatchMergeOutputSide2;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.source.SourceFactory;
+import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.storage.StorageFactory;
 
 public class MRUtil {
 
     public static IMRBatchCubingInputSide getBatchCubingInputSide(CubeSegment seg) {
         IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(seg);
-        return SourceFactory.createEngineAdapter(seg, IMRInput.class).getBatchCubingInputSide(flatDesc);
+        return (IMRBatchCubingInputSide)SourceManager.createEngineAdapter(seg, IMRInput.class).getBatchCubingInputSide(flatDesc);
     }
 
-    public static IMRTableInputFormat getTableInputFormat(String tableName, String prj) {
+    public static IMRTableInputFormat getTableInputFormat(String tableName, String prj, String uuid) {
         TableDesc t = getTableDesc(tableName, prj);
-        return SourceFactory.createEngineAdapter(t, IMRInput.class).getTableInputFormat(t);
+        return SourceManager.createEngineAdapter(t, IMRInput.class).getTableInputFormat(t, uuid);
     }
 
-    public static IMRTableInputFormat getTableInputFormat(TableDesc tableDesc) {
-        return SourceFactory.createEngineAdapter(tableDesc, IMRInput.class).getTableInputFormat(tableDesc);
+    public static IMRTableInputFormat getTableInputFormat(TableDesc tableDesc, String uuid) {
+        return SourceManager.createEngineAdapter(tableDesc, IMRInput.class).getTableInputFormat(tableDesc, uuid);
     }
 
     private static TableDesc getTableDesc(String tableName, String prj) {
         return TableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getTableDesc(tableName, prj);
-    }
-
-    public static IMRBatchCubingOutputSide getBatchCubingOutputSide(CubeSegment seg) {
-        return StorageFactory.createEngineAdapter(seg, IMROutput.class).getBatchCubingOutputSide(seg);
-    }
-
-    public static IMRBatchMergeOutputSide getBatchMergeOutputSide(CubeSegment seg) {
-        return StorageFactory.createEngineAdapter(seg, IMROutput.class).getBatchMergeOutputSide(seg);
     }
 
     public static IMRBatchCubingOutputSide2 getBatchCubingOutputSide2(CubeSegment seg) {
@@ -72,10 +64,18 @@ public class MRUtil {
         return StorageFactory.createEngineAdapter(seg, IMROutput2.class).getBatchMergeOutputSide(seg);
     }
 
-    public static IMRInput.IMRBatchMergeInputSide getBatchMergeInputSide(CubeSegment seg) {
-        return SourceFactory.createEngineAdapter(seg, IMRInput.class).getBatchMergeInputSide(seg);
+    public static IMRBatchMergeInputSide getBatchMergeInputSide(CubeSegment seg) {
+        return (IMRBatchMergeInputSide)SourceManager.createEngineAdapter(seg, IMRInput.class).getBatchMergeInputSide(seg);
     }
 
+    public static IMROutput2.IMRBatchOptimizeOutputSide2 getBatchOptimizeOutputSide2(CubeSegment seg) {
+        return StorageFactory.createEngineAdapter(seg, IMROutput2.class).getBatchOptimizeOutputSide(seg);
+    }
+
+    public static ILookupMaterializer getExtLookupMaterializer(String lookupStorageType) {
+        return LookupProviderFactory.createEngineAdapter(lookupStorageType, ILookupMaterializer.class);
+    }
+    
     // use this method instead of ToolRunner.run() because ToolRunner.run() is not thread-sale
     // Refer to: http://stackoverflow.com/questions/22462665/is-hadoops-toorunner-thread-safe
     public static int runMRJob(Tool tool, String[] args) throws Exception {

@@ -47,6 +47,11 @@ public class HLLCAggregator extends MeasureAggregator<HLLCounter> {
 
     @Override
     public HLLCounter aggregate(HLLCounter value1, HLLCounter value2) {
+        if (value1 == null) {
+            return new HLLCounter(value2);
+        } else if (value2 == null) {
+            return new HLLCounter(value1);
+        }
         HLLCounter result = new HLLCounter(value1);
         result.merge(value2);
         return result;

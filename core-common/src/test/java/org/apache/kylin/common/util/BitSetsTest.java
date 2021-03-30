@@ -18,19 +18,34 @@
 
 package org.apache.kylin.common.util;
 
+import org.junit.Test;
+
 import java.util.BitSet;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class BitSetsTest {
 
     @Test
     public void basicTest() {
         BitSet a = BitSets.valueOf(new int[] { 1, 3, 10 });
-        Assert.assertEquals(3, a.cardinality());
-        Assert.assertTrue(10 < a.size());
-        Assert.assertTrue(a.get(3));
+        assertEquals(3, a.cardinality());
+        assertTrue(10 < a.size());
+        assertTrue(a.get(3));
     }
+
+  @Test
+  public void testValueOfWithNull() {
+      BitSet bitSet = BitSets.valueOf((int[]) null);
+
+      assertEquals("{}", bitSet.toString());
+      assertEquals(0, bitSet.cardinality());
+
+      assertEquals(0, bitSet.length());
+      assertTrue(bitSet.isEmpty());
+
+      assertEquals(64, bitSet.size());
+  }
 
 }

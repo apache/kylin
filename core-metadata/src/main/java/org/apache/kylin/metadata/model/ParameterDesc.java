@@ -23,13 +23,16 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  */
@@ -129,7 +132,11 @@ public class ParameterDesc implements Serializable {
     }
 
     public boolean isColumnType() {
-        return FunctionDesc.PARAMETER_TYPE_COLUMN.equals(type);
+        return FunctionDesc.PARAMETER_TYPE_COLUMN.equals(type.toLowerCase(Locale.ROOT));
+    }
+
+    public boolean isConstant() {
+        return FunctionDesc.PARAMETER_TYPE_CONSTANT.equals(type.toLowerCase(Locale.ROOT));
     }
 
     @Override
@@ -149,8 +156,11 @@ public class ParameterDesc implements Serializable {
             if (p.isColumnType()) {
                 if (q.isColumnType() == false)
                     return false;
-                if (q.getColRef().equals(p.getColRef()) == false)
+                if (q.getColRef() != null && q.getColRef().equals(p.getColRef()) == false)
                     return false;
+                if (!(q.getType().equals(p.getType()) && q.getValue().equals(q.getValue()))) {
+                    return false;
+                }
             } else {
                 if (q.isColumnType() == true)
                     return false;
@@ -185,8 +195,13 @@ public class ParameterDesc implements Serializable {
 
     @Override
     public String toString() {
-        String thisStr = isColumnType() ? colRef.toString() : value;
-        return nextParameter == null ? thisStr : thisStr + "," + nextParameter.toString();
+        String tmp = null;
+        if (isColumnType() && colRef != null) {
+            tmp = colRef.toString();
+        } else {
+            tmp = value;
+        }
+        return nextParameter == null ? tmp : tmp + "," + nextParameter.toString();
     }
 
     /**
@@ -252,19 +267,19 @@ public class ParameterDesc implements Serializable {
 
             PlainParameter that = (PlainParameter) o;
 
-            if (type != null ? !type.equals(that.type) : that.type != null)
+            if (!Objects.equals(type, that.type))
                 return false;
 
             if (this.isColumnType()) {
                 if (!that.isColumnType())
                     return false;
-                if (!this.colRef.equals(that.colRef)) {
+                if (!Objects.equals(colRef, that.colRef)) {
                     return false;
                 }
             } else {
                 if (that.isColumnType())
                     return false;
-                if (!this.value.equals(that.value))
+                if (!Objects.equals(value, that.value))
                     return false;
             }
 

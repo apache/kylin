@@ -27,6 +27,11 @@ import org.slf4j.LoggerFactory;
 
 public class CheckUtil {
     public static final Logger logger = LoggerFactory.getLogger(CheckUtil.class);
+    private static final Random rand = new Random();
+
+    private CheckUtil(){
+        throw new IllegalStateException("Class CheckUtil is an utility class !");
+    }
 
     public static boolean checkCondition(boolean condition, String message, Object... args) {
         if (condition) {
@@ -38,13 +43,12 @@ public class CheckUtil {
     }
 
     public static int randomAvailablePort(int minPort, int maxPort) {
-        Random rand = new Random();
         for (int i = 0; i < 100; i++) {
             int p = minPort + rand.nextInt(maxPort - minPort);
             if (checkPortAvailable(p))
                 return p;
         }
-        throw new RuntimeException("Failed to get random available port between [" + minPort + "," + maxPort + ")");
+        throw new IllegalArgumentException("Failed to get random available port between [" + minPort + "," + maxPort + ")");
     }
 
     /**
@@ -53,29 +57,31 @@ public class CheckUtil {
      * @param port the port to check for availability
      */
     public static boolean checkPortAvailable(int port) {
-        ServerSocket ss = null;
-        DatagramSocket ds = null;
-        try {
-            ss = new ServerSocket(port);
+
+        try(ServerSocket ss = new ServerSocket(port);
+            DatagramSocket ds = new DatagramSocket(port);
+            ) {
             ss.setReuseAddress(true);
-            ds = new DatagramSocket(port);
             ds.setReuseAddress(true);
             return true;
         } catch (IOException e) {
-        } finally {
-            if (ds != null) {
-                ds.close();
-            }
-
-            if (ss != null) {
-                try {
-                    ss.close();
-                } catch (IOException e) {
-                    /* should not be thrown */
-                }
-            }
+            logger.error("Exception in checking port, should be ignored.");
         }
 
         return false;
+    }
+
+    public static boolean equals(String s1, String s2) {
+        if (s1 != null && s2 != null) {
+            return s1.trim().equalsIgnoreCase(s2.trim());
+        }
+        return s1 == null && s2 == null;
+    }
+
+    public static <T> boolean equals(T o1, T o2) {
+        if (o1 != null && o2 != null) {
+            return o1.equals(o2);
+        }
+        return o1 == null && o2 == null;
     }
 }

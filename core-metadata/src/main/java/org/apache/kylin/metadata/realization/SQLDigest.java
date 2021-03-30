@@ -19,15 +19,18 @@
 package org.apache.kylin.metadata.realization;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 
 /**
  */
@@ -56,10 +59,17 @@ public class SQLDigest {
     public List<TblColRef> groupbyColumns;
     public Set<TblColRef> subqueryJoinParticipants;
 
+    public Map<TblColRef, TupleExpression> dynGroupbyColumns;
+    public boolean groupByExpression;
+
     // aggregation
     public Set<TblColRef> metricColumns;
     public List<FunctionDesc> aggregations; // storage level measure type, on top of which various sql aggr function may apply
     public List<SQLCall> aggrSqlCalls; // sql level aggregation function call
+
+    public List<DynamicFunctionDesc> dynAggregations;
+    public Set<TblColRef> rtDimensionColumns; // dynamic col related dimension columns
+    public Set<TblColRef> rtMetricColumns; // dynamic col related metric columns
 
     // filter
     public Set<TblColRef> filterColumns;
@@ -70,15 +80,20 @@ public class SQLDigest {
     public List<TblColRef> sortColumns;
     public List<OrderEnum> sortOrders;
     public boolean isRawQuery;
+    public boolean isBorrowedContext;
     public boolean limitPrecedesAggr;
+    public boolean hasLimit;
 
     public Set<MeasureDesc> involvedMeasure;
 
     public SQLDigest(String factTable, Set<TblColRef> allColumns, List<JoinDesc> joinDescs, // model
-            List<TblColRef> groupbyColumns, Set<TblColRef> subqueryJoinParticipants, // group by
+            List<TblColRef> groupbyColumns, Set<TblColRef> subqueryJoinParticipants,
+            Map<TblColRef, TupleExpression> dynGroupByColumns, boolean groupByExpression, // group by
             Set<TblColRef> metricColumns, List<FunctionDesc> aggregations, List<SQLCall> aggrSqlCalls, // aggregation
+            List<DynamicFunctionDesc> dynAggregations, //
+            Set<TblColRef> rtDimensionColumns, Set<TblColRef> rtMetricColumns, // dynamic col related columns
             Set<TblColRef> filterColumns, TupleFilter filter, TupleFilter havingFilter, // filter
-            List<TblColRef> sortColumns, List<OrderEnum> sortOrders, boolean limitPrecedesAggr, // sort & limit
+            List<TblColRef> sortColumns, List<OrderEnum> sortOrders, boolean limitPrecedesAggr, boolean hasLimit, boolean isBorrowedContext, // sort & limit
             Set<MeasureDesc> involvedMeasure
     ) {
         this.factTable = factTable;
@@ -88,9 +103,17 @@ public class SQLDigest {
         this.groupbyColumns = groupbyColumns;
         this.subqueryJoinParticipants = subqueryJoinParticipants;
 
+        this.dynGroupbyColumns = dynGroupByColumns;
+        this.groupByExpression = groupByExpression;
+
         this.metricColumns = metricColumns;
         this.aggregations = aggregations;
         this.aggrSqlCalls = aggrSqlCalls;
+
+        this.dynAggregations = dynAggregations;
+
+        this.rtDimensionColumns = rtDimensionColumns;
+        this.rtMetricColumns = rtMetricColumns;
 
         this.filterColumns = filterColumns;
         this.filter = filter;
@@ -99,7 +122,9 @@ public class SQLDigest {
         this.sortColumns = sortColumns;
         this.sortOrders = sortOrders;
         this.isRawQuery = isRawQuery();
+        this.isBorrowedContext = isBorrowedContext;
         this.limitPrecedesAggr = limitPrecedesAggr;
+        this.hasLimit = hasLimit;
 
         this.involvedMeasure = involvedMeasure;
 

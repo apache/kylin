@@ -38,13 +38,18 @@ public class MRBatchCubingEngine2 implements IBatchCubingEngine {
     }
 
     @Override
-    public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
-        return new BatchCubingJobBuilder2(newSegment, submitter).build();
+    public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter, Integer priorityOffset) {
+        return new BatchCubingJobBuilder2(newSegment, submitter, priorityOffset).build();
     }
 
     @Override
     public DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter) {
         return new BatchMergeJobBuilder2(mergeSegment, submitter).build();
+    }
+
+    @Override
+    public DefaultChainedExecutable createBatchOptimizeJob(CubeSegment optimizeSegment, String submitter) {
+        return new BatchOptimizeJobBuilder2(optimizeSegment, submitter).build();
     }
 
     @Override

@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.mail.Email;
-import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.LoggerFactory;
@@ -90,22 +89,34 @@ public class MailService {
         Email email = new HtmlEmail();
         email.setHostName(host);
         email.setStartTLSEnabled(starttlsEnabled);
+        email.setSSLOnConnect(starttlsEnabled);
         if (starttlsEnabled) {
             email.setSslSmtpPort(port);
         } else {
-            email.setSmtpPort(Integer.valueOf(port));
+            email.setSmtpPort(Integer.parseInt(port));
         }
         
-        if (username != null && username.trim().length() > 0) {
+        if (username != null && !username.trim().isEmpty()) {
             email.setAuthentication(username, password);
         }
 
-        //email.setDebug(true);
-        try {
-            for (String receiver : receivers) {
+        for (String receiver : receivers) {
+            try {
                 email.addTo(receiver);
+            } catch (Exception e) {
+                logger.error("add " + receiver + " to send to mailbox list failed, " +
+                        "this will not affect sending to the valid mailbox", e);
             }
+        }
 
+        // List of valid recipients is empty
+        if (email.getToAddresses().isEmpty()) {
+            logger.error("No valid send to mailbox, please check");
+            return false;
+        }
+
+        // List of valid recipients is not empty
+        try {
             email.setFrom(sender);
             email.setSubject(subject);
             email.setCharset("UTF-8");
@@ -117,11 +128,10 @@ public class MailService {
             email.send();
             email.getMailSession();
 
-        } catch (EmailException e) {
+            return true;
+        } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             return false;
         }
-
-        return true;
     }
 }

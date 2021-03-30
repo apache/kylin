@@ -16,12 +16,7 @@
  * limitations under the License.
 */
 
-KylinApp.service('UserService', function ($http, $q) {
-    var roles = {
-        'ROLE_MODELER': '/models',
-        'ROLE_ANALYST': '/models',
-        'ROLE_ADMIN': '/models'
-    };
+KylinApp.service('UserService', function ($resource) {
     var curUser = {};
 
     this.getCurUser = function () {
@@ -46,14 +41,16 @@ KylinApp.service('UserService', function ($http, $q) {
         return  curUser.userDetails && curUser.userDetails.authorities && curUser.userDetails.authorities.length > 0;
     };
     this.getHomePage = function () {
-        var homePage = "/login";
-
-        if (curUser.userDetails && curUser.userDetails.authorities) {
-            angular.forEach(curUser.userDetails.authorities, function (authority, index) {
-                homePage = (!!roles[authority.authority]) ? roles[authority.authority] : homePage;
-            });
-        }
-
-        return homePage;
+        return this.isAuthorized()? "/models" : "/login";
     }
+
+    var apiService = $resource(Config.service.url + 'user/:action/:userName', {}, {
+      listUsers: {method: 'GET', params: {action: 'users'}, isArray: false},
+      delUser: {method: 'DELETE', isArray: false},
+      addUser: {method: 'POST',  params: {} ,isArray: false},
+      changePwd: {method: 'PUT', params: {action: 'password'}, isArray: false},
+      updateUser: {method: 'PUT', params: {}, isArray: false},
+      assignGroup: {method: 'PUT', params: {}, isArray: false}
+    });
+    angular.extend(this, apiService)
 });

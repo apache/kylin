@@ -206,6 +206,7 @@
 
 ==============================================================================
 Apache Kylin Subcomponents:
+==============================================================================
 
 The Apache Kylin project contains subcomponents with separate copyright
 notices and license terms. Your use of the source code for the these
@@ -235,3 +236,44 @@ For addthis/stream-lib:
 This product copies some Top-K code from addthis/stream-lib, which is under
 Apache License Version 2. For details, see
 https://github.com/addthis/stream-lib/blob/master/LICENSE.txt
+
+
+==============================================================================
+For amient/kafka-hadoop-loader:
+==============================================================================
+This library is open sourced under Apache License Version 2. For details, see
+https://github.com/michal-harish/kafka-hadoop-loader/blob/master/LICENSE
+
+
+==============================================================================
+For Apache Spark:
+==============================================================================
+apache/spark is licensed under the Apache License 2.0
+https://github.com/apache/spark/blob/master/LICENSE
+
+==============================================================================
+For Apache Tomcat
+==============================================================================
+apache/tomcat is licensed under the Apache License 2.0
+https://github.com/apache/tomcat/blob/trunk/LICENSE
+
+
+==============================================================================
+For RocksDB:
+==============================================================================
+RocksDB is dual-licensed under both the GPLv2 and Apache 2.0 License.You may
+select, at your option, one of the above-listed licenses.
+https://github.com/facebook/rocksdb/blob/master/LICENSE.Apache
+
+==============================================================================
+For HadoopMetrics2Reporter:
+==============================================================================
+HadoopMetrics2Reporter is licensed under Apache 2.0 License.
+https://github.com/joshelser/dropwizard-hadoop-metrics2
+
+
+==============================================================================
+For couchbase/spymemcached:
+==============================================================================
+couchbase/spymemcached is licensed under MIT License.
+https://github.com/couchbase/spymemcached/blob/master/LICENSE.txt

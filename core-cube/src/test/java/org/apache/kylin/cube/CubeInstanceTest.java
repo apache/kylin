@@ -21,14 +21,19 @@ package org.apache.kylin.cube;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.persistence.JsonSerializer;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class CubeInstanceTest {
 
@@ -46,12 +51,39 @@ public class CubeInstanceTest {
         Map<Long, Long> cuboidsWithRowCnt = cubeInstance.getCuboids();
         TreeCuboidScheduler.CuboidTree.createFromCuboids(Lists.newArrayList(cuboidsWithRowCnt.keySet()),
                 new TreeCuboidScheduler.CuboidCostComparator(cuboidsWithRowCnt));
+
+        List<Long> cuboids = Lists.newArrayList(cuboidsWithRowCnt.keySet());
+        Collections.sort(cuboids);
+        for (Long cuboid : cuboids) {
+            System.out.println(cuboid + ":" + cuboidsWithRowCnt.get(cuboid));
+        }
+        Assert.assertNotNull(cuboidsWithRowCnt.get(255L));
     }
 
-    public void printMap(Map<Long, Long> map) {
-        System.out.println("size: " + map.size());
-        for (Map.Entry<Long, Long> entry : map.entrySet()) {
-            System.out.println(entry.getKey() + ":" + entry.getValue());
-        }
+    @Test
+    public void copyCubeSegmentTest() {
+        int origSegCount = cubeInstance.getSegments().size();
+        CubeInstance newCubeInstance = CubeInstance.getCopyOf(cubeInstance);
+
+        CubeSegment mockSeg = new CubeSegment();
+        mockSeg.setUuid(RandomUtil.randomUUID().toString());
+        mockSeg.setStorageLocationIdentifier(RandomUtil.randomUUID().toString());
+        mockSeg.setStatus(SegmentStatusEnum.READY);
+        newCubeInstance.getSegments().add(mockSeg);
+
+        Assert.assertEquals(origSegCount, cubeInstance.getSegments().size());
+        Assert.assertEquals(origSegCount + 1, newCubeInstance.getSegments().size());
+    }
+
+    @Test
+    public void equalTest() {
+        CubeInstance cubeInstanceWithOtherName = CubeInstance.getCopyOf(cubeInstance);
+        cubeInstanceWithOtherName.setName("other");
+
+        Assert.assertNotEquals(cubeInstance, cubeInstanceWithOtherName);
+
+        Assert.assertEquals(cubeInstance, CubeInstance.getCopyOf(cubeInstance));
+
+        Assert.assertNotEquals(cubeInstance, null);
     }
 }

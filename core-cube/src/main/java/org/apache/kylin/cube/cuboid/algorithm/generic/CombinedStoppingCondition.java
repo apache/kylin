@@ -18,8 +18,8 @@
 
 package org.apache.kylin.cube.cuboid.algorithm.generic;
 
-import org.apache.kylin.cube.cuboid.algorithm.generic.lib.Population;
-import org.apache.kylin.cube.cuboid.algorithm.generic.lib.StoppingCondition;
+import org.apache.commons.math3.genetics.Population;
+import org.apache.commons.math3.genetics.StoppingCondition;
 
 import java.util.List;
 

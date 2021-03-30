@@ -21,11 +21,20 @@ package org.apache.kylin.common.util;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import java.util.Iterator;
+import java.util.Locale;
+
+import org.apache.kylin.shaded.com.google.common.base.Splitter;
+import org.apache.kylin.shaded.com.google.common.collect.Iterables;
 import org.apache.commons.lang.StringUtils;
 
 /**
  */
 public class StringUtil {
+
+    private StringUtil() {
+        throw new IllegalStateException("Class StringUtil is an utility class !");
+    }
 
     public static String[] filterSystemArgs(String[] args) {
         ArrayList<String> whatsLeft = new ArrayList<String>();
@@ -66,20 +75,41 @@ public class StringUtil {
     }
 
     public static String join(Iterable<String> parts, String separator) {
-        StringBuilder buf = new StringBuilder();
-        for (String p : parts) {
-            if (buf.length() > 0)
-                buf.append(separator);
-            buf.append(p);
+        if (parts == null) {
+            return null;
         }
-        return buf.toString();
+
+        Iterator<String> iterator = parts.iterator();
+
+        if (iterator == null) {
+            return null;
+        } else if (!iterator.hasNext()) {
+            return "";
+        } else {
+            StringBuilder buf = new StringBuilder();
+            final String first = iterator.next();
+            if (first != null) {
+                buf.append(first);
+            }
+            while (iterator.hasNext()) {
+                if (separator != null) {
+                    buf.append(separator);
+                }
+                final String part = iterator.next();
+                if (part != null) {
+                    buf.append(part);
+                }
+            }
+
+            return buf.toString();
+        }
     }
 
     public static void toUpperCaseArray(String[] source, String[] target) {
         if (source != null) {
             for (int i = 0; i < source.length; i++) {
                 if (source[i] != null) {
-                    target[i] = source[i].toUpperCase();
+                    target[i] = source[i].toUpperCase(Locale.ROOT);
                 }
             }
         }
@@ -154,14 +184,17 @@ public class StringUtil {
     }
 
     public static String[] splitAndTrim(String str, String splitBy) {
-        String[] split = str.split(splitBy);
-        ArrayList<String> r = new ArrayList<>(split.length);
-        for (String s : split) {
-            s = s.trim();
-            if (!s.isEmpty())
-                r.add(s);
-        }
-        return r.toArray(new String[r.size()]);
+        Splitter splitterWithTrim = Splitter.on(splitBy).trimResults().omitEmptyStrings();
+
+        return Iterables.toArray(splitterWithTrim.split(str), String.class);
+    }
+
+    public static String[] split(String str, String splitBy) {
+        return Iterables.toArray(Splitter.on(splitBy).split(str), String.class);
+    }
+
+    public static String[] splitByComma(String str) {
+        return split(str, ",");
     }
 
     // calculating length in UTF-8 of Java String without actually encoding it
@@ -187,4 +220,7 @@ public class StringUtil {
         return a == null ? b == null : a.equals(b);
     }
 
+    public static boolean isEmpty(String str) {
+        return str == null || str.length() == 0;
+    }
 }

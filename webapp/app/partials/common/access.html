@@ -19,7 +19,7 @@
 <div ng-controller="AccessCtrl">
     <div class="space-4"></div>
     <div class="pull-right">
-        <button class="btn btn-primary btn-xs" ng-click="renewAccess(entity)" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(entity, 16) && !newAccess"><i
+        <button class="btn btn-primary btn-xs" ng-click="renewAccess(entity)" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, permissions.ADMINISTRATION.mask) && !newAccess"><i
                 class="fa fa-plus"></i> Grant
         </button>
         <button class="btn btn-primary btn-xs" ng-click="resetNewAcess()" ng-if="newAccess"><i
@@ -36,21 +36,22 @@
                 <td style="width: 20%">
                     <label><b>Type&nbsp;</b> </label>
                     <input type="radio" ng-model="newAccess.principal" ng-value=true />  <span tooltip="Username">User</span>
-                    <input type="radio" ng-model="newAccess.principal" ng-value=false /> <span tooltip="User Role">Role</span>
+                    <input type="radio" ng-model="newAccess.principal" ng-value=false /> <span tooltip="User Role">Group</span>
                 </td>
                 <td style="width: 40%" >
                     <label><b>Name&nbsp;</b> </label>
                     <input ng-model="newAccess.sid" ng-if="newAccess.principal==true" placeholder=" User NT Account..." style="width: 80%" />
+                    <input ng-model="newAccess.sid" ng-if="newAccess.principal==false" placeholder=" User NT Account..." style="width: 80%" />
 
-                    <select chosen ng-model="newAccess.sid" ng-if="newAccess.principal==false" style="width: 80%"
+                    <!-- <select chosen ng-model="newAccess.sid" ng-if="newAccess.principal==false" style="width: 80%"
                             ng-options="authority as authority for authority in authorities">
                             <option value=""></option>
-                            </select>
+                            </select> -->
                 </td>
                 <td >
                     <label><b>Permission&nbsp;</b> </label>
                     <select ng-model="newAccess.permission" ng-init="newAccess.permission=permissions.READ.value"
-                            ng-options="permission.value as permission.name for (name, permission) in permissions">
+                            ng-options="permission.value as permission.name for (name, permission) in permissionsSorted">
                             <option value=""></option>
                             </select>
                 </td>
@@ -72,8 +73,8 @@
                 <th>Name</th>
                 <th>Type</th>
                 <th>Access</th>
-                <th ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(entity, 16)">Update</th>
-                <th ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(entity, 16)">Revoke</th>
+                <th ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, permissions.ADMINISTRATION.mask)">Update</th>
+                <th ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, permissions.ADMINISTRATION.mask)">Revoke</th>
             </tr>
         </thead>
         <tbody>
@@ -84,24 +85,24 @@
                 </td>
                 <td>
                     <span ng-if="accessEntity.sid.principal" >User</span>
-                    <span ng-if="accessEntity.sid.grantedAuthority">Role</span>
+                    <span ng-if="accessEntity.sid.grantedAuthority">Group</span>
                 </td>
                 <td>
-                    <span ng-if="accessEntity.permission.mask == 1">QUERY</span>
-                    <span ng-if="accessEntity.permission.mask == 32">EDIT</span>
-                    <span ng-if="accessEntity.permission.mask == 64">OPERATION</span>
-                    <span ng-if="accessEntity.permission.mask == 16">ADMIN</span>
+                  <span ng-if="accessEntity.permission.mask == permissions.READ.mask">QUERY</span>
+                  <span ng-if="accessEntity.permission.mask == permissions.OPERATION.mask">OPERATION</span>
+                  <span ng-if="accessEntity.permission.mask == permissions.MANAGEMENT.mask">MANAGEMENT</span>
+                  <span ng-if="accessEntity.permission.mask == permissions.ADMINISTRATION.mask">ADMIN</span>
                 </td>
-                <td ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(entity, 16)">
+                <td ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, permissions.ADMINISTRATION.mask)">
                     <select ng-model="accessEntity.newPermission"  ng-init="newAccess.permission=permissions.READ.value"
-                            ng-options="permission.value as permission.name for (name, permission) in permissions">
+                            ng-options="permission.value as permission.name for (name, permission) in permissionsSorted">
                         <option value="">-- select access --</option>
                     </select>
                     <button class="btn btn-default btn-xs" ng-disabled="!accessEntity.newPermission"
                             ng-click="update(type, entity, accessEntity, accessEntity.newPermission)">Update
                     </button>
                 </td>
-                <td ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(entity, 16)">
+                <td ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, permissions.ADMINISTRATION.mask)">
                     <button class="btn btn-default btn-xs" ng-click="revoke(type, accessEntity, entity)">Revoke</button>
                 </td>
             </tr>

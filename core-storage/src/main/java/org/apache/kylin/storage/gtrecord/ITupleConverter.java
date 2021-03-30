@@ -18,12 +18,13 @@
 
 package org.apache.kylin.storage.gtrecord;
 
+import java.io.Closeable;
 import java.util.List;
 
 import org.apache.kylin.measure.MeasureType.IAdvMeasureFiller;
 import org.apache.kylin.metadata.tuple.Tuple;
 
-public interface ITupleConverter {
+public interface ITupleConverter extends Closeable {
 
     public List<IAdvMeasureFiller> translateResult(Object[] gtValues, Tuple tuple);
 }

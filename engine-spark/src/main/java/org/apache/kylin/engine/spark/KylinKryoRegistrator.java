@@ -21,6 +21,7 @@ package org.apache.kylin.engine.spark;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.hadoop.io.Text;
 import org.apache.kylin.engine.spark.util.PercentileCounterSerializer;
 import org.apache.kylin.measure.percentile.PercentileCounter;
 import org.apache.spark.serializer.KryoRegistrator;
@@ -45,6 +46,8 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(String[].class);
         kyroClasses.add(String[][].class);
         kyroClasses.add(Object[].class);
+        kyroClasses.add(Object.class);
+        kyroClasses.add(Text.class);
         kyroClasses.add(java.math.BigDecimal.class);
         kyroClasses.add(java.util.ArrayList.class);
         kyroClasses.add(java.util.LinkedList.class);
@@ -83,24 +86,38 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.cube.model.HBaseColumnFamilyDesc[].class);
         kyroClasses.add(org.apache.kylin.cube.model.HBaseColumnDesc[].class);
         kyroClasses.add(org.apache.kylin.cube.model.RowKeyColDesc[].class);
-
         kylinClassByReflection1(kyroClasses);
         kylinClassByReflection2(kyroClasses);
 
-        kyroClasses.add(com.google.common.hash.Hashing.murmur3_128().getClass());
+        kyroClasses.add(org.apache.kylin.shaded.com.google.common.hash.Hashing.murmur3_128().getClass());
         kyroClasses.add(org.roaringbitmap.buffer.MutableRoaringArray.class);
         kyroClasses.add(org.roaringbitmap.buffer.MappeableContainer[].class);
         kyroClasses.add(org.roaringbitmap.buffer.MutableRoaringBitmap.class);
         kyroClasses.add(org.roaringbitmap.buffer.MappeableArrayContainer.class);
         kyroClasses.add(org.roaringbitmap.buffer.MappeableBitmapContainer.class);
 
+        kyroClasses.add(Class.class);
 
-        addClassQuitely(kyroClasses, "com.google.common.collect.EmptyImmutableList");
+        //shaded classes
+        addClassQuitely(kyroClasses, "org.apache.kylin.job.shaded.org.roaringbitmap.buffer.MutableRoaringArray");
+        addClassQuitely(kyroClasses, "org.apache.kylin.job.shaded.org.roaringbitmap.buffer.MutableRoaringBitmap");
+        addClassQuitely(kyroClasses, "org.apache.kylin.job.shaded.org.roaringbitmap.buffer.MappeableArrayContainer");
+        addClassQuitely(kyroClasses, "org.apache.kylin.job.shaded.org.roaringbitmap.buffer.MappeableBitmapContainer");
+        addClassQuitely(kyroClasses, "org.apache.kylin.job.shaded.org.roaringbitmap.buffer.ImmutableRoaringBitmap");
+        addClassQuitely(kyroClasses, "org.apache.kylin.job.shaded.org.roaringbitmap.buffer.ImmutableRoaringArray");
+        addClassQuitely(kyroClasses, "org.apache.kylin.job.shaded.org.roaringbitmap.buffer.MappeableRunContainer");
+
         addClassQuitely(kyroClasses, "java.nio.HeapShortBuffer");
         addClassQuitely(kyroClasses, "java.nio.HeapLongBuffer");
+        addClassQuitely(kyroClasses, "java.util.Collections$UnmodifiableRandomAccessList");
         addClassQuitely(kyroClasses, "scala.collection.immutable.Map$EmptyMap$");
         addClassQuitely(kyroClasses, "org.apache.spark.sql.catalyst.expressions.GenericInternalRow");
         addClassQuitely(kyroClasses, "org.apache.spark.unsafe.types.UTF8String");
+
+        addClassQuitely(kyroClasses, "org.apache.spark.internal.io.FileCommitProtocol$TaskCommitMessage");
+        addClassQuitely(kyroClasses, "scala.collection.immutable.Set$EmptySet$");
+        addClassQuitely(kyroClasses, "scala.reflect.ManifestFactory$$anon$2");
+        addClassQuitely(kyroClasses, "scala.collection.mutable.WrappedArray$ofRef");
 
         for (Class kyroClass : kyroClasses) {
             kryo.register(kyroClass);
@@ -154,7 +171,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.cube.model.RowKeyColDesc.class);
         kyroClasses.add(org.apache.kylin.cube.model.RowKeyDesc.class);
         kyroClasses.add(org.apache.kylin.cube.model.SelectRule.class);
-        kyroClasses.add(org.apache.kylin.cube.model.v1_4_0.CubeDesc.class);
+        kyroClasses.add(org.apache.kylin.cube.util.KeyValueBuilder.class);
         kyroClasses.add(org.apache.kylin.dict.AppendTrieDictionary.class);
         kyroClasses.add(org.apache.kylin.dict.CacheDictionary.class);
         kyroClasses.add(org.apache.kylin.dict.DateStrDictionary.class);
@@ -221,6 +238,12 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.measure.bitmap.BitmapSerializer.class);
         kyroClasses.add(org.apache.kylin.measure.bitmap.RoaringBitmapCounter.class);
         kyroClasses.add(org.apache.kylin.measure.bitmap.RoaringBitmapCounterFactory.class);
+        kyroClasses.add(org.apache.kylin.measure.map.bitmap.BitmapMapAggregator.class);
+        kyroClasses.add(org.apache.kylin.measure.map.bitmap.BitmapMapMeasureType.class);
+        kyroClasses.add(org.apache.kylin.measure.map.bitmap.BitmapMapSerializer.class);
+        kyroClasses.add(org.apache.kylin.measure.map.bitmap.RoaringBitmapCounterMap.class);
+        kyroClasses.add(org.apache.kylin.measure.map.bitmap.RoaringBitmapCounterMapFactory.class);
+        kyroClasses.add(org.apache.kylin.measure.map.bitmap.SegmentStartTimeKeySerializer.class);
         kyroClasses.add(org.apache.kylin.measure.dim.DimCountDistinctMeasureType.class);
         kyroClasses.add(org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType.class);
         kyroClasses.add(org.apache.kylin.measure.extendedcolumn.ExtendedColumnSerializer.class);
@@ -263,11 +286,9 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.metadata.datatype.StringSerializer.class);
         kyroClasses.add(org.apache.kylin.metadata.model.ColumnDesc.class);
         kyroClasses.add(org.apache.kylin.metadata.model.DataModelDesc.class);
-        kyroClasses.add(org.apache.kylin.metadata.model.ComputedColumnDesc.class);
         kyroClasses.add(org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity.class);
         kyroClasses.add(org.apache.kylin.metadata.model.DataModelDesc.TableKind.class);
         kyroClasses.add(org.apache.kylin.metadata.model.DatabaseDesc.class);
-        kyroClasses.add(org.apache.kylin.metadata.model.ComputedColumnDesc.class);
         kyroClasses.add(org.apache.kylin.metadata.model.ExternalFilterDesc.class);
         kyroClasses.add(org.apache.kylin.metadata.model.FunctionDesc.class);
         kyroClasses.add(org.apache.kylin.metadata.model.JoinDesc.class);

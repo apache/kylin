@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.SegmentRange.Endpoint;
@@ -32,9 +33,9 @@ import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
-public class Segments<T extends ISegment> extends ArrayList<T> implements Serializable{
+public class Segments<T extends ISegment> extends ArrayList<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -42,23 +43,24 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
 
     public static ISegmentAdvisor newSegmentAdvisor(ISegment seg) {
         try {
-            Class<? extends ISegmentAdvisor> clz = ClassUtil.forName(seg.getConfig().getSegmentAdvisor(), ISegmentAdvisor.class);
+            Class<? extends ISegmentAdvisor> clz = ClassUtil.forName(seg.getConfig().getSegmentAdvisor(),
+                    ISegmentAdvisor.class);
             return clz.getConstructor(ISegment.class).newInstance(seg);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
-    
+
     // ============================================================================
-    
+
     public Segments() {
         super();
     }
 
-    public Segments(Segments<T> copy) {
+    public Segments(List<T> copy) {
         super(copy);
     }
-    
+
     public T getFirstSegment() {
         if (this == null || this.size() == 0) {
             return null;
@@ -66,7 +68,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
             return this.get(0);
         }
     }
-    
+
     public long getTSStart() {
         Segments<T> readySegs = getSegments(SegmentStatusEnum.READY);
 
@@ -127,7 +129,8 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
 
     public T getSegment(String name, SegmentStatusEnum status) {
         for (T segment : this) {
-            if ((null != segment.getName() && segment.getName().equals(name)) && (status == null || segment.getStatus() == status)) {
+            if ((null != segment.getName() && segment.getName().equals(name))
+                    && (status == null || segment.getStatus() == status)) {
                 return segment;
             }
         }
@@ -138,7 +141,8 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
         Segments<T> buildingSegments = new Segments();
         if (null != this) {
             for (T segment : this) {
-                if (SegmentStatusEnum.NEW == segment.getStatus() || SegmentStatusEnum.READY_PENDING == segment.getStatus()) {
+                if (SegmentStatusEnum.NEW == segment.getStatus()
+                        || SegmentStatusEnum.READY_PENDING == segment.getStatus()) {
                     buildingSegments.add(segment);
                 }
             }
@@ -151,6 +155,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
         if (mergedSegment == null)
             return result;
 
+        long maxSegMergeSpan = KylinConfig.getInstanceFromEnv().getMaxSegmentMergeSpan();
         for (T seg : this) {
             if (seg.getStatus() != SegmentStatusEnum.READY && seg.getStatus() != SegmentStatusEnum.READY_PENDING)
                 continue;
@@ -158,11 +163,11 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
             if (seg == mergedSegment)
                 continue;
 
-            if (mergedSegment.getSegRange().contains(seg.getSegRange())) {
-                // make sure no holes
-                if (result.size() > 0 && !result.getLast().getSegRange().connects(seg.getSegRange()))
-                    throw new IllegalStateException("Merging segments must not have gaps between " + result.getLast() + " and " + seg);
+            if (maxSegMergeSpan > 0 && seg.getTSRange().duration() > maxSegMergeSpan) {
+                continue;
+            }
 
+            if (mergedSegment.getSegRange().contains(seg.getSegRange())) {
                 result.add(seg);
             }
         }
@@ -179,15 +184,29 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
         }
         Segments volatileSegs = new Segments();
         for(T seg: segs) {
-            if(seg.getTSRange().end.v + volatileRange >= latestSegEndTs) {
-                logger.warn("segment in volatile range: seg:" + seg.toString() +
-                        "rangeStart:" + seg.getTSRange().start.v + ", rangeEnd" + seg.getTSRange().end.v);
+            if (seg.getTSRange().end.v + volatileRange > latestSegEndTs) {
+                logger.warn("Segment in volatile range, seg: {}, rangeStart:{}, rangeEnd {}.", seg,
+                        seg.getTSRange().start.v, seg.getTSRange().end.v);
                 volatileSegs.add(seg);
             }
         }
-
         segs.removeAll(volatileSegs);
+    }
 
+    public void removeMaxSpanSegment(Segments<T> segs, long maxSegSpan) {
+        if (maxSegSpan <= 0) {
+            return;
+        }
+        Segments maxSpanSegs = new Segments();
+        for (T seg : segs) {
+            if (seg.getTSRange().duration() >= maxSegSpan) {
+
+                logger.warn("segment with max span: seg:" + seg.toString() +
+                        "rangeStart:" + seg.getTSRange().start.v + ", rangeEnd" + seg.getTSRange().end.v);
+                maxSpanSegs.add(seg);
+            }
+        }
+        segs.removeAll(maxSpanSegs);
     }
 
     public SegmentRange autoMergeCubeSegments(boolean needAutoMerge, String cubeName, long[] timeRanges, long volatileRange) throws IOException {
@@ -215,13 +234,12 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
                 }
             }
         }
-
         removeLatestSegmentByVolatileRange(readySegs, volatileRange);
-
+        removeMaxSpanSegment(readySegs, KylinConfig.getInstanceFromEnv().getMaxSegmentMergeSpan());
         // exclude those already under merging segments
         readySegs.removeAll(mergingSegs);
 
-        Arrays.sort(timeRanges);
+        Arrays.parallelSort(timeRanges);
 
         for (int i = timeRanges.length - 1; i >= 0; i--) {
             long toMergeRange = timeRanges[i];
@@ -429,7 +447,8 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
             pre = seg;
 
             for (ISegment aReady : ready) {
-                if (seg.getSegRange().overlaps(aReady.getSegRange()) && !seg.getSegRange().contains(aReady.getSegRange()))
+                if (seg.getSegRange().overlaps(aReady.getSegRange())
+                        && !seg.getSegRange().contains(aReady.getSegRange()))
                     throw new IllegalStateException("Segments overlap: " + aReady + " and " + seg);
             }
         }
@@ -469,5 +488,20 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
             endFit = true;
 
         return Pair.newPair(startFit, endFit);
+    }
+
+    // given all segments in cube, checks whether specified segment is operative (not under processing)
+    public boolean isOperative(ISegment seg) {
+        if (seg.getStatus() != SegmentStatusEnum.READY)
+            return false;
+
+        for (ISegment other : this) {
+            if (other == seg)
+                continue;
+
+            if (other.getSegRange().overlaps(seg.getSegRange()))
+                return false;
+        }
+        return true;
     }
 }

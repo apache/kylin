@@ -19,6 +19,7 @@
 package org.apache.kylin.query.relnode;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
 import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
@@ -33,14 +34,18 @@ import org.apache.calcite.rel.convert.ConverterImpl;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.query.routing.RealizationChooser;
 import org.apache.kylin.query.security.QueryInterceptor;
 import org.apache.kylin.query.security.QueryInterceptorUtil;
 
 import com.google.common.collect.Lists;
+import org.apache.kylin.query.util.QueryInfoCollector;
 
 /**
+ * If you're renaming this class, please keep it ending with OLAPToEnumerableConverter
+ * see org.apache.calcite.plan.OLAPRelMdRowCount#shouldIntercept(org.apache.calcite.rel.RelNode)
  */
 public class OLAPToEnumerableConverter extends ConverterImpl implements EnumerableRel {
 
@@ -56,7 +61,7 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
     @Override
     public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
         // huge cost to ensure OLAPToEnumerableConverter only appears once in rel tree
-        return planner.getCostFactory().makeCost(1E100, 0, 0);
+        return super.computeSelfCost(planner, mq).multiplyBy(0.05);
     }
 
     @Override
@@ -75,12 +80,25 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         List<OLAPContext> contexts = listContextsHavingScan();
 
         // intercept query
-        List<QueryInterceptor> intercepts = QueryInterceptorUtil.getQueryInterceptors();
-        for (QueryInterceptor intercept : intercepts) {
-            intercept.intercept(contexts);
+        if (contexts.size() > 0) {
+            List<QueryInterceptor> intercepts = QueryInterceptorUtil.getQueryInterceptors();
+            for (QueryInterceptor intercept : intercepts) {
+                intercept.intercept(contexts);
+            }
+        }
+
+        if (System.getProperty("calcite.debug") != null) {
+            String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
+            System.out.println("EXECUTION PLAN AFTER OLAPCONTEXT IS SET");
+            System.out.println(dumpPlan);
         }
 
         RealizationChooser.selectRealization(contexts);
+
+        QueryInfoCollector.current().setCubeNames(contexts.stream()
+                .filter(olapContext -> olapContext.realization != null)
+                .map(olapContext -> olapContext.realization.getCanonicalName())
+                .collect(Collectors.toList()));
 
         doAccessControl(contexts);
 
@@ -97,12 +115,13 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
             System.out.println("EXECUTION PLAN AFTER REWRITE");
             System.out.println(dumpPlan);
+            QueryContextFacade.current().setCalcitePlan(this.copy(getTraitSet(), getInputs()));
         }
 
         return impl.visitChild(this, 0, inputAsEnum, pref);
     }
 
-    private List<OLAPContext> listContextsHavingScan() {
+     protected List<OLAPContext> listContextsHavingScan() {
         // Context has no table scan is created by OLAPJoinRel which looks like
         //     (sub-query) as A join (sub-query) as B
         // No realization needed for such context.
@@ -116,7 +135,7 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         return result;
     }
 
-    private void doAccessControl(List<OLAPContext> contexts) {
+    protected void doAccessControl(List<OLAPContext> contexts) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         String controllerCls = config.getQueryAccessController();
         if (null != controllerCls && !controllerCls.isEmpty()) {

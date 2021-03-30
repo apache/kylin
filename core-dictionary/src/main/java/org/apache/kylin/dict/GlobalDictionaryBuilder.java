@@ -19,6 +19,7 @@
 package org.apache.kylin.dict;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
@@ -42,18 +43,29 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(GlobalDictionaryBuilder.class);
 
+    @Override
     public void init(DictionaryInfo dictInfo, int baseId, String hdfsDir) throws IOException {
         sourceColumn = dictInfo.getSourceTable() + "_" + dictInfo.getSourceColumn();
-        lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentThread();
-        lock.lock(getLockPath(sourceColumn), Long.MAX_VALUE);
-
         int maxEntriesPerSlice = KylinConfig.getInstanceFromEnv().getAppendDictEntrySize();
         if (hdfsDir == null) {
             //build in Kylin job server
             hdfsDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory();
         }
         String baseDir = hdfsDir + "resources/GlobalDict" + dictInfo.getResourceDir() + "/";
-        this.builder = new AppendTrieDictionaryBuilder(baseDir, maxEntriesPerSlice, true);
+
+        lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentThread();
+        String lockPath = getLockPath(sourceColumn);
+        try {
+            lock.lock(lockPath, Long.MAX_VALUE);
+            this.builder = new AppendTrieDictionaryBuilder(baseDir, maxEntriesPerSlice, true);
+        } catch (Throwable e) {
+            throw new RuntimeException(
+                    String.format(Locale.ROOT, "Failed to create global dictionary on %s ", sourceColumn), e);
+        } finally {
+            if (lock.isLockedByMe(lockPath)) {
+                lock.unlock(lockPath);
+            }
+        }
         this.baseId = baseId;
     }
 
@@ -63,7 +75,8 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
             if (lock.lock(getLockPath(sourceColumn))) {
                 logger.info("processed {} values for {}", counter, sourceColumn);
             } else {
-                throw new RuntimeException("Failed to create global dictionary on " + sourceColumn + " This client doesn't keep the lock");
+                throw new RuntimeException(
+                        "Failed to create global dictionary on " + sourceColumn + " This client doesn't keep the lock");
             }
         }
 
@@ -75,7 +88,8 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
             builder.addValue(value);
         } catch (Throwable e) {
             lock.unlock(getLockPath(sourceColumn));
-            throw new RuntimeException(String.format("Failed to create global dictionary on %s ", sourceColumn), e);
+            throw new RuntimeException(
+                    String.format(Locale.ROOT, "Failed to create global dictionary on %s ", sourceColumn), e);
         }
 
         return true;
@@ -91,6 +105,13 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
             lock.unlock(getLockPath(sourceColumn));
         }
         return new AppendTrieDictionary<>();
+    }
+
+    @Override
+    public void clear() {
+        if (lock.isLocked(getLockPath(sourceColumn))) {
+            lock.unlock(getLockPath(sourceColumn));
+        }
     }
 
     private String getLockPath(String pathName) {

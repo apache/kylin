@@ -18,32 +18,35 @@
 
 package org.apache.kylin.query.optrule;
 
+import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptRule;
-import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.kylin.query.relnode.OLAPFilterRel;
 import org.apache.kylin.query.relnode.OLAPRel;
 
 /**
  */
-public class OLAPFilterRule extends RelOptRule {
+public class OLAPFilterRule extends ConverterRule {
 
     public static final RelOptRule INSTANCE = new OLAPFilterRule();
 
     public OLAPFilterRule() {
-        super(operand(LogicalFilter.class, any()));
+        super(LogicalFilter.class, RelOptUtil.FILTER_PREDICATE, Convention.NONE, OLAPRel.CONVENTION, "OLAPFilterRule");
     }
 
     @Override
-    public void onMatch(RelOptRuleCall call) {
-        LogicalFilter filter = call.rel(0);
+    public RelNode convert(RelNode rel) {
+        LogicalFilter filter = (LogicalFilter) rel;
 
         RelTraitSet origTraitSet = filter.getTraitSet();
         RelTraitSet traitSet = origTraitSet.replace(OLAPRel.CONVENTION).simplify();
 
-        OLAPFilterRel olapFilter = new OLAPFilterRel(filter.getCluster(), traitSet, convert(filter.getInput(), traitSet), filter.getCondition());
-        call.transformTo(olapFilter);
+        return new OLAPFilterRel(filter.getCluster(), traitSet,
+                convert(filter.getInput(), filter.getInput().getTraitSet().replace(OLAPRel.CONVENTION)),
+                filter.getCondition());
     }
-
 }

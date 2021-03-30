@@ -33,7 +33,7 @@ public class ErrorTestExecutable extends BaseTestExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         try {
-            Thread.sleep(1000);
+            Thread.sleep(100);
         } catch (InterruptedException e) {
         }
         throw new RuntimeException("test error");

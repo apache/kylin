@@ -34,12 +34,13 @@ import org.slf4j.LoggerFactory;
  * deprecated use IntegerDimEnc instead
  * @deprecated
  */
-public class IntDimEnc extends DimensionEncoding implements Serializable{
+public class IntDimEnc extends DimensionEncoding implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private static Logger logger = LoggerFactory.getLogger(IntDimEnc.class);
 
-    private static final long[] CAP = { 0, 0xffL, 0xffffL, 0xffffffL, 0xffffffffL, 0xffffffffffL, 0xffffffffffffL, 0xffffffffffffffL, Long.MAX_VALUE };
+    private static final long[] CAP = { 0, 0xffL, 0xffffL, 0xffffffL, 0xffffffffL, 0xffffffffffL, 0xffffffffffffL,
+            0xffffffffffffffL, Long.MAX_VALUE };
 
     public static final String ENCODING_NAME = "int";
 
@@ -52,6 +53,16 @@ public class IntDimEnc extends DimensionEncoding implements Serializable{
         @Override
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
             return new IntDimEnc(Integer.parseInt(args[0]));
+        }
+
+        @Override
+        public boolean isValidDimensionEncoding(String encodingName, String[] args) {
+            try {
+                int length = Integer.parseInt(args[0]);
+                return length >= 1 && length < CAP.length;
+            } catch (Exception e) {
+                return false;
+            }
         }
     };
 
@@ -67,7 +78,7 @@ public class IntDimEnc extends DimensionEncoding implements Serializable{
 
     public IntDimEnc(int len) {
         if (len <= 0 || len >= CAP.length)
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("the length of IntDimEnc is " + len + ", which should be 1-8");
 
         this.fixedLen = len;
     }
@@ -87,7 +98,8 @@ public class IntDimEnc extends DimensionEncoding implements Serializable{
         long integer = Long.parseLong(valueStr);
         if (integer > CAP[fixedLen]) {
             if (avoidVerbose++ % 10000 == 0) {
-                logger.warn("Expect at most " + fixedLen + " bytes, but got " + valueStr + ", will truncate, hit times:" + avoidVerbose);
+                logger.warn("Expect at most " + fixedLen + " bytes, but got " + valueStr + ", will truncate, hit times:"
+                        + avoidVerbose);
             }
         }
 

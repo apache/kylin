@@ -18,7 +18,9 @@
 
 package org.apache.kylin.cube.cuboid;
 
-import com.google.common.base.Strings;
+import java.util.Locale;
+
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 
 public enum CuboidModeEnum {
     CURRENT("CURRENT"), RECOMMEND("RECOMMEND"), RECOMMEND_EXISTING("RECOMMEND_EXISTING"), RECOMMEND_MISSING(
@@ -39,7 +41,7 @@ public enum CuboidModeEnum {
             return null;
         }
         for (CuboidModeEnum mode : CuboidModeEnum.values()) {
-            if (mode.modeName.equals(modeName.toUpperCase())) {
+            if (mode.modeName.equals(modeName.toUpperCase(Locale.ROOT))) {
                 return mode;
             }
         }

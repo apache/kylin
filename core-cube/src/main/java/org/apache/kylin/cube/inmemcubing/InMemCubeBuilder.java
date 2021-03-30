@@ -19,14 +19,13 @@
 package org.apache.kylin.cube.inmemcubing;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.TreeSet;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -47,6 +46,7 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTScanRequestBuilder;
 import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.gridtable.IGTScanner;
+import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.measure.topn.Counter;
 import org.apache.kylin.measure.topn.TopNCounter;
 import org.apache.kylin.metadata.datatype.DoubleMutable;
@@ -56,7 +56,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * Build a cube (many cuboids) in memory. Calculating multiple cuboids at the same time as long as memory permits.
@@ -107,22 +107,24 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
-        GTInfo info = CubeGridTable.newGTInfo(Cuboid.findById(cuboidScheduler, cuboidID),
+        GTInfo info = CubeGridTable.newGTInfo(Cuboid.findForMandatory(cubeDesc, cuboidID),
                 new CubeDimEncMap(cubeDesc, dictionaryMap)
         );
 
         // Below several store implementation are very similar in performance. The ConcurrentDiskStore is the simplest.
         // MemDiskStore store = new MemDiskStore(info, memBudget == null ? MemoryBudgetController.ZERO_BUDGET : memBudget);
         // MemDiskStore store = new MemDiskStore(info, MemoryBudgetController.ZERO_BUDGET);
-        ConcurrentDiskStore store = new ConcurrentDiskStore(info);
+        IGTStore store = new ConcurrentDiskStore(info);
 
         GridTable gridTable = new GridTable(info, store);
         return gridTable;
     }
 
     @Override
-    public void build(BlockingQueue<List<String>> input, ICuboidWriter output) throws IOException {
-        ConcurrentNavigableMap<Long, CuboidResult> result = build(input);
+    public <T> void build(BlockingQueue<T> input, InputConverterUnit<T> inputConverterUnit, ICuboidWriter output)
+            throws IOException {
+        NavigableMap<Long, CuboidResult> result = build(
+                RecordConsumeBlockingQueueController.getQueueController(inputConverterUnit, input));
         try {
             for (CuboidResult cuboidResult : result.values()) {
                 outputCuboid(cuboidResult.cuboidId, cuboidResult.table, output);
@@ -133,8 +135,9 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         }
     }
 
-    public ConcurrentNavigableMap<Long, CuboidResult> build(BlockingQueue<List<String>> input) throws IOException {
-        final ConcurrentNavigableMap<Long, CuboidResult> result = new ConcurrentSkipListMap<Long, CuboidResult>();
+    public <T> NavigableMap<Long, CuboidResult> build(RecordConsumeBlockingQueueController<T> input)
+            throws IOException {
+        final NavigableMap<Long, CuboidResult> result = new ConcurrentSkipListMap<Long, CuboidResult>();
         build(input, new ICuboidCollector() {
             @Override
             public void collect(CuboidResult cuboidResult) {
@@ -150,9 +153,10 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         void collect(CuboidResult result);
     }
 
-    private void build(BlockingQueue<List<String>> input, ICuboidCollector collector) throws IOException {
+    private <T> void build(RecordConsumeBlockingQueueController<T> input, ICuboidCollector collector)
+            throws IOException {
         long startTime = System.currentTimeMillis();
-        logger.info("In Mem Cube Build start, " + cubeDesc.getName());
+        logger.info("In Mem Cube Build start, {}", cubeDesc.getName());
 
         baseCuboidMemTracker = new MemoryWaterLevel();
         baseCuboidMemTracker.markLow();
@@ -182,7 +186,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         join(taskThreads);
 
         long endTime = System.currentTimeMillis();
-        logger.info("In Mem Cube Build end, " + cubeDesc.getName() + ", takes " + (endTime - startTime) + " ms");
+        logger.info("In Mem Cube Build end, {}, takes {} ms", cubeDesc.getName(), (endTime - startTime));
 
         throwExceptionIfAny();
     }
@@ -212,12 +216,17 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private void throwExceptionIfAny() throws IOException {
-        ArrayList<Throwable> errors = new ArrayList<Throwable>();
+        List<Throwable> errors = Lists.newArrayList();
+
         for (int i = 0; i < taskThreadCount; i++) {
             Throwable t = taskThreadExceptions[i];
             if (t != null)
                 errors.add(t);
         }
+        processErrors(errors);
+    }
+
+    static void processErrors(List<Throwable> errors) throws IOException{
         if (errors.isEmpty()) {
             return;
         } else if (errors.size() == 1) {
@@ -308,27 +317,27 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private void makeMemoryBudget() {
-        baseResult.aggrCacheMB = Math.max(baseCuboidMemTracker.getEstimateMB(), 10); // 10 MB at minimal
-        logger.debug("Base cuboid aggr cache is " + baseResult.aggrCacheMB + " MB");
+        baseResult.setAggrCacheMB(Math.max(baseCuboidMemTracker.getEstimateMB(), 10)); // 10 MB at minimal
+        logger.debug("Base cuboid aggr cache is {} MB", baseResult.getAggrCacheMB());
         int systemAvailMB = MemoryBudgetController.gcAndGetSystemAvailMB();
-        logger.debug("System avail " + systemAvailMB + " MB");
+        logger.debug("System avail {} MB", systemAvailMB);
         int reserve = reserveMemoryMB;
-        logger.debug("Reserve " + reserve + " MB for system basics");
+        logger.debug("Reserve {} MB for system basics", reserve);
 
         int budget = systemAvailMB - reserve;
-        if (budget < baseResult.aggrCacheMB) {
+        if (budget < baseResult.getAggrCacheMB()) {
             // make sure we have base aggr cache as minimal
-            budget = baseResult.aggrCacheMB;
-            logger.warn("System avail memory (" + systemAvailMB + " MB) is less than base aggr cache (" + baseResult.aggrCacheMB + " MB) + minimal reservation (" + reserve + " MB), consider increase JVM heap -Xmx");
+            budget = baseResult.getAggrCacheMB();
+            logger.warn("System avail memory ({} MB) is less than base aggr cache ({} MB) + minimal reservation ({} MB), consider increase JVM heap -Xmx", systemAvailMB, baseResult.getAggrCacheMB(), reserve);
         }
 
-        logger.debug("Memory Budget is " + budget + " MB");
+        logger.debug("Memory Budget is {} MB", budget);
         memBudget = new MemoryBudgetController(budget);
     }
 
-    private CuboidResult createBaseCuboid(BlockingQueue<List<String>> input) throws IOException {
+    private <T> CuboidResult createBaseCuboid(RecordConsumeBlockingQueueController<T> input) throws IOException {
         long startTime = System.currentTimeMillis();
-        logger.info("Calculating base cuboid " + baseCuboidId);
+        logger.info("Calculating base cuboid {}", baseCuboidId);
 
         GridTable baseCuboid = newGridTableByCuboidID(baseCuboidId);
         GTBuilder baseBuilder = baseCuboid.rebuild();
@@ -340,36 +349,46 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         aggregationScanner.trackMemoryLevel(baseCuboidMemTracker);
 
         int count = 0;
-        for (GTRecord r : aggregationScanner) {
-            if (count == 0) {
-                baseCuboidMemTracker.markHigh();
+        try {
+            for (GTRecord r : aggregationScanner) {
+                if (count == 0) {
+                    baseCuboidMemTracker.markHigh();
+                }
+                baseBuilder.write(r);
+                count++;
             }
-            baseBuilder.write(r);
-            count++;
+        } finally {
+            aggregationScanner.close();
+            baseBuilder.close();
         }
-        aggregationScanner.close();
-        baseBuilder.close();
 
         long timeSpent = System.currentTimeMillis() - startTime;
-        logger.info("Cuboid " + baseCuboidId + " has " + count + " rows, build takes " + timeSpent + "ms");
+        logger.info("Cuboid {} has {} rows, build takes {}ms", baseCuboidId, count, timeSpent);
 
         int mbEstimateBaseAggrCache = (int) (aggregationScanner.getEstimateSizeOfAggrCache() / MemoryBudgetController.ONE_MB);
-        logger.info("Wild estimate of base aggr cache is " + mbEstimateBaseAggrCache + " MB");
+        logger.info("Wild estimate of base aggr cache is {} MB", mbEstimateBaseAggrCache);
 
-        return updateCuboidResult(baseCuboidId, baseCuboid, count, timeSpent, 0);
+        return updateCuboidResult(baseCuboidId, baseCuboid, count, timeSpent, 0, input.inputConverterUnit.ifChange());
     }
 
     private CuboidResult updateCuboidResult(long cuboidId, GridTable table, int nRows, long timeSpent, int aggrCacheMB) {
+        return updateCuboidResult(cuboidId, table, nRows, timeSpent, aggrCacheMB, true);
+    }
+
+    private CuboidResult updateCuboidResult(long cuboidId, GridTable table, int nRows, long timeSpent, int aggrCacheMB,
+            boolean ifCollect) {
         if (aggrCacheMB <= 0 && baseResult != null) {
             aggrCacheMB = (int) Math.round(//
                     (DERIVE_AGGR_CACHE_CONSTANT_FACTOR + DERIVE_AGGR_CACHE_VARIABLE_FACTOR * nRows / baseResult.nRows) //
-                            * baseResult.aggrCacheMB);
+                            * baseResult.getAggrCacheMB());
         }
 
         CuboidResult result = new CuboidResult(cuboidId, table, nRows, timeSpent, aggrCacheMB);
         taskCuboidCompleted.incrementAndGet();
 
-        resultCollector.collect(result);
+        if (ifCollect) {
+            resultCollector.collect(result);
+        }
         return result;
     }
 
@@ -388,7 +407,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         };
 
         // reserve memory for aggregation cache, can't be larger than the parent
-        memBudget.reserveInsist(consumer, parent.aggrCacheMB);
+        memBudget.reserveInsist(consumer, parent.getAggrCacheMB());
         try {
             return aggregateCuboid(parent, cuboidId);
         } finally {
@@ -413,7 +432,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                 aggrMask[i] = !measureDescs[i].getFunction().getMeasureType().onlyAggrInBaseCuboid();
 
                 if (!aggrMask[i]) {
-                    logger.info(measureDescs[i].toString() + " doesn't need aggregation.");
+                    logger.info("{} doesn't need aggregation.", measureDescs[i]);
                 }
             }
             scanner.setAggrMask(aggrMask);
@@ -424,17 +443,16 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private CuboidResult scanAndAggregateGridTable(GridTable gridTable, long parentId, long cuboidId, ImmutableBitSet aggregationColumns, ImmutableBitSet measureColumns) throws IOException {
         long startTime = System.currentTimeMillis();
-        logger.info("Calculating cuboid " + cuboidId);
+        logger.info("Calculating cuboid {}", cuboidId);
 
-        GTAggregateScanner scanner = prepareGTAggregationScanner(gridTable, parentId, cuboidId, aggregationColumns, measureColumns);
+
         GridTable newGridTable = newGridTableByCuboidID(cuboidId);
-        GTBuilder builder = newGridTable.rebuild();
-
         ImmutableBitSet allNeededColumns = aggregationColumns.or(measureColumns);
 
         GTRecord newRecord = new GTRecord(newGridTable.getInfo());
         int count = 0;
-        try {
+        try (GTAggregateScanner scanner = prepareGTAggregationScanner(gridTable, parentId, cuboidId, aggregationColumns, measureColumns);
+             GTBuilder builder = newGridTable.rebuild()) {
             for (GTRecord record : scanner) {
                 count++;
                 for (int i = 0; i < allNeededColumns.trueBitCount(); i++) {
@@ -443,17 +461,10 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                 }
                 builder.write(newRecord);
             }
-
-            //long t = System.currentTimeMillis();
-            //sanityCheck(parentId, cuboidId, scanner.getTotalSumForSanityCheck());
-            //logger.info("sanity check for Cuboid " + cuboidId + " cost " + (System.currentTimeMillis() - t) + "ms");
-        } finally {
-            scanner.close();
-            builder.close();
         }
 
         long timeSpent = System.currentTimeMillis() - startTime;
-        logger.info("Cuboid " + cuboidId + " has " + count + " rows, build takes " + timeSpent + "ms");
+        logger.info("Cuboid {} has {} rows, build takes {}ms", cuboidId, count, timeSpent);
 
         return updateCuboidResult(cuboidId, newGridTable, count, timeSpent, 0);
     }
@@ -484,9 +495,11 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             return;
         }
         if (Arrays.equals(totalSumForSanityCheck, totalSum) == false) {
-            logger.info("sanityCheck failed when calculate " + cuboidId + " from parent " + parentId);
-            logger.info("Expected: " + Arrays.toString(totalSumForSanityCheck));
-            logger.info("Actually: " + Arrays.toString(totalSum));
+            if(logger.isInfoEnabled()){
+                logger.info("sanityCheck failed when calculate{} from parent {}", cuboidId, parentId);
+                logger.info("Expected: {}", Arrays.toString(totalSumForSanityCheck));
+                logger.info("Actually: {}", Arrays.toString(totalSum));
+            }
             throw new IllegalStateException();
         }
     }
@@ -507,63 +520,18 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             long comp = this.childCuboidId - o.childCuboidId;
             return comp < 0 ? -1 : (comp > 0 ? 1 : 0);
         }
-    }
 
-    // ============================================================================
-
-    private class InputConverter implements IGTScanner {
-        GTInfo info;
-        GTRecord record;
-        BlockingQueue<List<String>> input;
-        final InMemCubeBuilderInputConverter inMemCubeBuilderInputConverter;
-
-        public InputConverter(GTInfo info, BlockingQueue<List<String>> input) {
-            this.info = info;
-            this.input = input;
-            this.record = new GTRecord(info);
-            this.inMemCubeBuilderInputConverter = new InMemCubeBuilderInputConverter(cubeDesc, flatDesc, dictionaryMap, info);
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            CuboidTask that = (CuboidTask) o;
+            return compareTo(that) == 0;
         }
 
         @Override
-        public Iterator<GTRecord> iterator() {
-            return new Iterator<GTRecord>() {
-
-                List<String> currentObject = null;
-
-                @Override
-                public boolean hasNext() {
-                    try {
-                        currentObject = input.take();
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        throw new RuntimeException(e);
-                    }
-                    return currentObject != null && currentObject.size() > 0;
-                }
-
-                @Override
-                public GTRecord next() {
-                    if (currentObject.size() == 0)
-                        throw new IllegalStateException();
-
-                    inMemCubeBuilderInputConverter.convert(currentObject, record);
-                    return record;
-                }
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-            };
-        }
-
-        @Override
-        public void close() throws IOException {
-        }
-
-        @Override
-        public GTInfo getInfo() {
-            return info;
+        public int hashCode() {
+            return Long.hashCode(childCuboidId);
         }
     }
 }

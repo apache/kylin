@@ -20,8 +20,8 @@ package org.apache.kylin.source.hive;
 
 import java.util.List;
 
-class HiveTableMeta {
-    static class HiveTableColumnMeta {
+public class HiveTableMeta {
+    public static class HiveTableColumnMeta {
         String name;
         String dataType;
         String comment;
@@ -48,11 +48,12 @@ class HiveTableMeta {
     int lastAccessTime;
     long fileSize;
     long fileNum;
+    long rowNum;
     boolean isNative;
     List<HiveTableColumnMeta> allColumns;
     List<HiveTableColumnMeta> partitionColumns;
 
-    public HiveTableMeta(String tableName, String sdLocation, String sdInputFormat, String sdOutputFormat, String owner, String tableType, int lastAccessTime, long fileSize, long fileNum, int skipHeaderLineCount, boolean isNative, List<HiveTableColumnMeta> allColumns, List<HiveTableColumnMeta> partitionColumns) {
+    public HiveTableMeta(String tableName, String sdLocation, String sdInputFormat, String sdOutputFormat, String owner, String tableType, int lastAccessTime, long fileSize, long fileNum, long rowNum, int skipHeaderLineCount, boolean isNative, List<HiveTableColumnMeta> allColumns, List<HiveTableColumnMeta> partitionColumns) {
         this.tableName = tableName;
         this.sdLocation = sdLocation;
         this.sdInputFormat = sdInputFormat;
@@ -62,6 +63,7 @@ class HiveTableMeta {
         this.lastAccessTime = lastAccessTime;
         this.fileSize = fileSize;
         this.fileNum = fileNum;
+        this.rowNum = rowNum;
         this.isNative = isNative;
         this.allColumns = allColumns;
         this.partitionColumns = partitionColumns;

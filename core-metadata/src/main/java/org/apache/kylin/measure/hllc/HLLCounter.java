@@ -18,8 +18,8 @@
 
 package org.apache.kylin.measure.hllc;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
+import org.apache.kylin.shaded.com.google.common.hash.HashFunction;
+import org.apache.kylin.shaded.com.google.common.hash.Hashing;
 import org.apache.kylin.common.util.BytesUtil;
 
 import java.io.IOException;
@@ -31,6 +31,14 @@ import java.util.Map;
 
 @SuppressWarnings("serial")
 public class HLLCounter implements Serializable, Comparable<HLLCounter> {
+
+    static double[] harmonicMean;
+
+    static {
+        harmonicMean = new double[256];
+        for (int i = 1; i < 256; i++)
+            harmonicMean[i] = 1.0 / (1L << i);
+    }
 
     // not final for test purpose
     static double OVERFLOW_FACTOR = 0.01;
@@ -57,7 +65,11 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
 
     public HLLCounter(HLLCounter another) {
         this(another.p, another.getRegisterType(), another.hashFunc);
-        merge(another);
+        if(another.getRegisterType() == RegisterType.DENSE){
+            ((DenseRegister)register).copyFrom((DenseRegister)another.register);
+        }else {
+            merge(another);
+        }
     }
 
     public HLLCounter(int p, RegisterType type) {
@@ -78,7 +90,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         }
     }
 
-    private boolean isDense(int size) {
+    public boolean isDense(int size) {
         double over = OVERFLOW_FACTOR * m;
         return size > (int) over;
     }
@@ -202,6 +214,8 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         int zeroBuckets;
 
         public HLLCSnapshot(HLLCounter hllc) {
+            int[] registerNums = new int[256];
+
             p = (byte) hllc.p;
             registerSum = 0;
             zeroBuckets = 0;
@@ -215,14 +229,14 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
                 dr = (DenseRegister) register;
             }
             byte[] registers = dr.getRawRegister();
-            for (int i = 0; i < hllc.m; i++) {
-                if (registers[i] == 0) {
-                    registerSum++;
-                    zeroBuckets++;
-                } else {
-                    registerSum += 1.0 / (1L << registers[i]);
-                }
+            for (int i = 0; i < hllc.m; i ++) {
+                registerNums[registers[i]] ++;
             }
+            zeroBuckets = registerNums[0];
+            for (int i= 1; i < 256; i ++)
+                registerSum += registerNums[i] * harmonicMean[i];
+
+            registerSum += zeroBuckets;
         }
 
         public long getCountEstimate() {
@@ -358,7 +372,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         return 1 + m;
     }
 
-    private int getRegisterIndexSize() {
+    public int getRegisterIndexSize() {
         return (p - 1) / 8 + 1; // 2 when p=16, 3 when p=17
     }
 

@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, modelConfig, ProjectModel, ModelService, MetaModel, modelsManager, cubesManager, TableModel, AccessService) {
+KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, modelConfig, ProjectModel, ModelService, MetaModel, modelsManager, cubesManager, TableModel, AccessService, MessageBox, CubeList) {
 
   //tree data
 
@@ -110,7 +110,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
         ModelService.drop({modelId: model.name}, {}, function (result) {
           loadingRequest.hide();
 //                    CubeList.removeCube(cube);
-          SweetAlert.swal('Success!', 'Model drop is done successfully', 'success');
+          MessageBox.successNotify('Model drop is done successfully');
           location.reload();
         }, function (e) {
           loadingRequest.hide();
@@ -132,7 +132,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
     var modelstate=false;
     var i=0;
 
-    CubeService.list({modelName:model.name}, function (_cubes) {
+    CubeService.list({modelName:model.name,projectName:$scope.projectModel.selectedProject}, function (_cubes) {
       model.cubes = _cubes;
 
       if (model.cubes.length != 0) {
@@ -145,14 +145,10 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
         })
       }
 
-      if (modelstate==false){
-    	  if (isEditJson) {
-    		  $location.path("/models/edit/" + model.name + "/descriptionjson");
-    	  } else {
-    		  $location.path("/models/edit/" + model.name);
-    	  }
+      if (isEditJson) {
+        $location.path("/models/edit/" + model.name + "/descriptionjson");
       } else {
-        SweetAlert.swal('Sorry','This model is still used by '+ cubename.join(','));
+        $location.path("/models/edit/" + model.name);
       }
     })
 
@@ -171,6 +167,34 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
     });
   }
 
+  $scope.listCubes = function(model) {
+    var defer = $q.defer();
+    var queryParam = {modelName: model.name};
+    if (!$scope.projectModel.isSelectedProjectValid() || !$scope.projectModel.projects.length) {
+      SweetAlert.swal('Oops...', "Please select target project.", 'info');
+      defer.resolve([]);
+      return defer.promise;
+    }
+
+    queryParam.projectName = $scope.projectModel.selectedProject;
+
+    $scope.loading = true;
+    CubeList.removeAll();
+    return CubeList.list(queryParam).then(function (resp) {
+      angular.forEach(CubeList.cubes, function(cube, index) {
+      })
+
+      $scope.loading = false;
+      defer.resolve(resp);
+      return defer.promise;
+
+    }, function(resp) {
+      $scope.loading = false;
+      defer.resolve([]);
+      SweetAlert.swal('Oops...', resp, 'error');
+      return defer.promise;
+    });
+  }
 
 
   $scope.openModal = function (model) {
@@ -247,7 +271,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
 });
 
 
-var modelCloneCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, model, MetaModel, SweetAlert,ProjectModel, loadingRequest,ModelService) {
+var modelCloneCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, model, MetaModel, SweetAlert,ProjectModel, loadingRequest,ModelService, MessageBox) {
   $scope.projectModel = ProjectModel;
 
   $scope.targetObj={
@@ -285,7 +309,7 @@ var modelCloneCtrl = function ($scope, $modalInstance, CubeService, MessageServi
         loadingRequest.show();
         ModelService.clone({modelId: model.name}, $scope.modelRequest, function (result) {
           loadingRequest.hide();
-          SweetAlert.swal('Success!', 'Clone model successfully', 'success');
+          MessageBox.successNotify('Clone model successfully');
           location.reload();
         }, function (e) {
           loadingRequest.hide();

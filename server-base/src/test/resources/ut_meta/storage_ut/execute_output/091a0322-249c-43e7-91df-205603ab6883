@@ -1,0 +1,12 @@
+{
+  "uuid" : "091a0322-249c-43e7-91df-205603ab6883",
+  "last_modified" : 1517798371078,
+  "version" : "2.3.0.20505",
+  "content" : null,
+  "status" : "READY",
+  "info" : {
+    "startTime" : "1517798275124",
+    "mapReduceWaitTime" : "34392",
+    "endTime" : "1517798371069"
+  }
+}

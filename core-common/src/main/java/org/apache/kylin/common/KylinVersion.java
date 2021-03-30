@@ -29,13 +29,13 @@ import javax.annotation.Nullable;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Predicate;
+import org.apache.kylin.shaded.com.google.common.collect.Iterables;
 
 public class KylinVersion implements Comparable {
-    private static final String COMMIT_SHA1_v15 = "commit_SHA1";
-    private static final String COMMIT_SHA1_v13 = "commit.sha1";
+    private static final String COMMIT_SHA1_V15 = "commit_SHA1";
+    private static final String COMMIT_SHA1_V13 = "commit.sha1";
 
     public final int major;
     public final int minor;
@@ -88,14 +88,14 @@ public class KylinVersion implements Comparable {
         comp = this.internal - v.internal;
         if (comp != 0)
             return comp;
-        
+
         return (this.isSnapshot ? 0 : 1) - (v.isSnapshot ? 0 : 1);
     }
 
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
      */
-    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("2.3.0.20500");
+    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("3.0.0.20500");
 
     private static final KylinVersion VERSION_200 = new KylinVersion("2.0.0");
 
@@ -131,7 +131,7 @@ public class KylinVersion implements Comparable {
     public static boolean isBefore200(String ver) {
         return new KylinVersion(ver).compareTo(VERSION_200) < 0;
     }
-    
+
     public static int compare(String v1, String v2) {
         return new KylinVersion(v1).compareTo(new KylinVersion(v2));
     }
@@ -163,12 +163,12 @@ public class KylinVersion implements Comparable {
                 SIGNATURE_INCOMPATIBLE_REVISIONS, new Predicate<KylinVersion>() {
                     @Override
                     public boolean apply(@Nullable KylinVersion input) {
-                        return v.major == input.major && v.minor == input.minor;
+                        return input == null ? false : v.major == input.major && v.minor == input.minor;
                     }
                 }), new Predicate<KylinVersion>() {
                     @Override
                     public boolean apply(@Nullable KylinVersion input) {
-                        return input.revision > v.revision;
+                        return input == null ? false : input.revision > v.revision;
                     }
                 });
 
@@ -194,9 +194,9 @@ public class KylinVersion implements Comparable {
 
     public static String getGitCommitInfo() {
         try {
-            File commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1_v15);
+            File commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1_V15);
             if (!commitFile.exists()) {
-                commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1_v13);
+                commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1_V13);
             }
             List<String> lines = FileUtils.readLines(commitFile, Charset.defaultCharset());
             StringBuilder sb = new StringBuilder();

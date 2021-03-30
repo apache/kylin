@@ -19,8 +19,7 @@
 package org.apache.kylin.storage.hbase.steps;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -31,14 +30,18 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.CuboidModeEnum;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.engine.mr.IMROutput2;
+import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.engine.mr.common.MapReduceUtil;
 import org.apache.kylin.engine.mr.steps.HiveToBaseCuboidMapper;
 import org.apache.kylin.engine.mr.steps.InMemCuboidMapper;
 import org.apache.kylin.engine.mr.steps.MergeCuboidJob;
 import org.apache.kylin.engine.mr.steps.NDCuboidMapper;
-import org.apache.kylin.engine.mr.steps.ReducerNumSizing;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.metadata.model.IEngineAware;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,27 +62,35 @@ public class HBaseMROutput2Transition implements IMROutput2 {
 
     @Override
     public IMRBatchCubingOutputSide2 getBatchCubingOutputSide(final CubeSegment seg) {
+
+        boolean useSpark = seg.getCubeDesc().getEngineType() == IEngineAware.ID_SPARK;
+
+        // TODO need refactor
+        final HBaseJobSteps steps = useSpark ? new HBaseSparkSteps(seg) : new HBaseMRSteps(seg);
+
         return new IMRBatchCubingOutputSide2() {
-            HBaseMRSteps steps = new HBaseMRSteps(seg);
 
             @Override
             public void addStepPhase2_BuildDictionary(DefaultChainedExecutable jobFlow) {
-                jobFlow.addTask(steps.createCreateHTableStepWithStats(jobFlow.getId()));
+                jobFlow.addTask(steps.createCreateHTableStep(jobFlow.getId()));
             }
 
             @Override
             public void addStepPhase3_BuildCube(DefaultChainedExecutable jobFlow) {
                 jobFlow.addTask(steps.createConvertCuboidToHfileStep(jobFlow.getId()));
+                if(seg.getConfig().isHFileDistCP()){
+                    jobFlow.addTask(steps.createDistcpHFileStep(jobFlow.getId()));
+                }
                 jobFlow.addTask(steps.createBulkLoadStep(jobFlow.getId()));
             }
 
             @Override
             public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
-                // nothing to do
+                steps.addCubingGarbageCollectionSteps(jobFlow);
             }
 
             @Override
-            public IMROutputFormat getOuputFormat() {
+            public IMROutputFormat getOutputFormat() {
                 return new HBaseMROutputFormat();
             }
         };
@@ -93,13 +104,23 @@ public class HBaseMROutput2Transition implements IMROutput2 {
         }
 
         @Override
-        public void configureJobOutput(Job job, String output, CubeSegment segment, int level) throws Exception {
+        public void configureJobOutput(Job job, String output, CubeSegment segment, CuboidScheduler cuboidScheduler,
+                int level) throws Exception {
             int reducerNum = 1;
             Class mapperClass = job.getMapperClass();
+
+            //allow user specially set config for base cuboid step
+            if (mapperClass == HiveToBaseCuboidMapper.class) {
+                for (Map.Entry<String, String> entry : segment.getConfig().getBaseCuboidMRConfigOverride().entrySet()) {
+                    job.getConfiguration().set(entry.getKey(), entry.getValue());
+                }
+            }
+
             if (mapperClass == HiveToBaseCuboidMapper.class || mapperClass == NDCuboidMapper.class) {
-                reducerNum = ReducerNumSizing.getLayeredCubingReduceTaskNum(segment, AbstractHadoopJob.getTotalMapInputMB(job), level);
+                reducerNum = MapReduceUtil.getLayeredCubingReduceTaskNum(segment, cuboidScheduler,
+                        AbstractHadoopJob.getTotalMapInputMB(job), level);
             } else if (mapperClass == InMemCuboidMapper.class) {
-                reducerNum = ReducerNumSizing.getInmemCubingReduceTaskNum(segment);
+                reducerNum = MapReduceUtil.getInmemCubingReduceTaskNum(segment, cuboidScheduler);
             }
             Path outputPath = new Path(output);
             FileOutputFormat.setOutputPath(job, outputPath);
@@ -116,13 +137,18 @@ public class HBaseMROutput2Transition implements IMROutput2 {
 
             @Override
             public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow) {
-                jobFlow.addTask(steps.createCreateHTableStepWithStats(jobFlow.getId()));
+                jobFlow.addTask(steps.createCreateHTableStep(jobFlow.getId()));
             }
 
             @Override
-            public void addStepPhase2_BuildCube(CubeSegment seg, List<CubeSegment> mergingSegments, DefaultChainedExecutable jobFlow) {
-                jobFlow.addTask(steps.createMergeCuboidDataStep(seg, mergingSegments, jobFlow.getId(), MergeCuboidJob.class));
+            public void addStepPhase2_BuildCube(CubeSegment seg, List<CubeSegment> mergingSegments,
+                    DefaultChainedExecutable jobFlow) {
+                jobFlow.addTask(
+                        steps.createMergeCuboidDataStep(seg, mergingSegments, jobFlow.getId(), MergeCuboidJob.class));
                 jobFlow.addTask(steps.createConvertCuboidToHfileStep(jobFlow.getId()));
+                if(seg.getConfig().isHFileDistCP()){
+                    jobFlow.addTask(steps.createDistcpHFileStep(jobFlow.getId()));
+                }
                 jobFlow.addTask(steps.createBulkLoadStep(jobFlow.getId()));
             }
 
@@ -132,15 +158,13 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             }
 
             @Override
-            public IMRMergeOutputFormat getOuputFormat() {
+            public IMRMergeOutputFormat getOutputFormat() {
                 return new HBaseMergeMROutputFormat();
             }
         };
     }
 
-    public static class HBaseMergeMROutputFormat implements IMRMergeOutputFormat{
-
-        private static final Pattern JOB_NAME_PATTERN = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
+    public static class HBaseMergeMROutputFormat implements IMRMergeOutputFormat {
 
         @Override
         public void configureJobInput(Job job, String input) throws Exception {
@@ -149,7 +173,8 @@ public class HBaseMROutput2Transition implements IMROutput2 {
 
         @Override
         public void configureJobOutput(Job job, String output, CubeSegment segment) throws Exception {
-            int reducerNum = ReducerNumSizing.getLayeredCubingReduceTaskNum(segment, AbstractHadoopJob.getTotalMapInputMB(job), -1);
+            int reducerNum = MapReduceUtil.getLayeredCubingReduceTaskNum(segment, segment.getCuboidScheduler(),
+                    AbstractHadoopJob.getTotalMapInputMB(job), -1);
             job.setNumReduceTasks(reducerNum);
 
             Path outputPath = new Path(output);
@@ -161,28 +186,38 @@ public class HBaseMROutput2Transition implements IMROutput2 {
         @Override
         public CubeSegment findSourceSegment(FileSplit fileSplit, CubeInstance cube) {
             String filePath = fileSplit.getPath().toString();
-            String jobID = extractJobIDFromPath(filePath);
-            return findSegmentWithUuid(jobID, cube);
+            String jobID = JobBuilderSupport.extractJobIDFromPath(filePath);
+            return CubeInstance.findSegmentWithJobId(jobID, cube);
         }
 
-        private static String extractJobIDFromPath(String path) {
-            Matcher matcher = JOB_NAME_PATTERN.matcher(path);
-            // check the first occurrence
-            if (matcher.find()) {
-                return matcher.group(1);
-            } else {
-                throw new IllegalStateException("Can not extract job ID from file path : " + path);
+    }
+
+    public IMRBatchOptimizeOutputSide2 getBatchOptimizeOutputSide(final CubeSegment seg) {
+        return new IMRBatchOptimizeOutputSide2() {
+            HBaseMRSteps steps = new HBaseMRSteps(seg);
+
+            @Override
+            public void addStepPhase2_CreateHTable(DefaultChainedExecutable jobFlow) {
+                jobFlow.addTask(steps.createCreateHTableStep(jobFlow.getId(), CuboidModeEnum.RECOMMEND));
             }
-        }
 
-        private static CubeSegment findSegmentWithUuid(String jobID, CubeInstance cubeInstance) {
-            for (CubeSegment segment : cubeInstance.getSegments()) {
-                String lastBuildJobID = segment.getLastBuildJobID();
-                if (lastBuildJobID != null && lastBuildJobID.equalsIgnoreCase(jobID)) {
-                    return segment;
+            @Override
+            public void addStepPhase3_BuildCube(DefaultChainedExecutable jobFlow) {
+                jobFlow.addTask(steps.createConvertCuboidToHfileStep(jobFlow.getId()));
+                if(seg.getConfig().isHFileDistCP()){
+                    jobFlow.addTask(steps.createDistcpHFileStep(jobFlow.getId()));
                 }
+                jobFlow.addTask(steps.createBulkLoadStep(jobFlow.getId()));
             }
-            throw new IllegalStateException("No merging segment's last build job ID equals " + jobID);
-        }
+
+            public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
+                steps.addOptimizeGarbageCollectionSteps(jobFlow);
+            }
+
+            @Override
+            public void addStepPhase5_Cleanup(DefaultChainedExecutable jobFlow) {
+                steps.addCheckpointGarbageCollectionSteps(jobFlow);
+            }
+        };
     }
 }

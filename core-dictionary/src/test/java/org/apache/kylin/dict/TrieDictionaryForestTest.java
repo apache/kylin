@@ -18,6 +18,7 @@
 
 package org.apache.kylin.dict;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -32,6 +33,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,6 +44,10 @@ import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.TreeSet;
 
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -50,6 +56,15 @@ import org.junit.Test;
  */
 
 public class TrieDictionaryForestTest {
+    @BeforeClass
+    public static void setUp() {
+        LocalFileMetadataTestCase.staticCreateTestMetadata();
+    }
+
+    @AfterClass
+    public static void after() {
+        LocalFileMetadataTestCase.staticCleanupTestMetadata();
+    }
 
     @Test
     public void testEmptyDict() {
@@ -186,8 +201,14 @@ public class TrieDictionaryForestTest {
         str.add("party");
         str.add("parties");
         str.add("paint");
-        String longStr = "paintjkjdfklajkdljfkdsajklfjklsadjkjekjrklewjrklewjklrjklewjkljkljkljkljweklrjewkljrklewjrlkjewkljrkljkljkjlkjjkljkljkljkljlkjlkjlkjljdfadfads" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
-                + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk";
+        String longStr = "paintjkjdfklajkdljfkdsajklfjklsadjkjekjrklewjrklewjklrjklewjkljkljkljkljweklrjewkljrklewjrlkjewkljrkljkljkjlkjjkljkljkljkljlkjlkjlkjljdfadfads"
+                + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
+                + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
+                + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
+                + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
+                + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
+                + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
+                + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk";
         System.out.println("The length of the long string is " + longStr.length());
         str.add(longStr);
 
@@ -739,13 +760,14 @@ public class TrieDictionaryForestTest {
             System.out.println("times:" + i);
         }
 
-        System.out.println("compare build time.  Old trie : " + oldDictTotalBuildTime / 1000.0 + "s.New trie : " + newDictTotalBuildTime / 1000.0 + "s");
+        System.out.println("compare build time.  Old trie : " + oldDictTotalBuildTime / 1000.0 + "s.New trie : "
+                + newDictTotalBuildTime / 1000.0 + "s");
     }
 
     private void evaluateDataSize(ArrayList<String> list) {
         long size = 0;
         for (String str : list)
-            size += str.getBytes().length;
+            size += str.getBytes(StandardCharsets.UTF_8).length;
         System.out.println("test data size : " + size / (1024 * 1024) + " MB");
     }
 
@@ -754,7 +776,7 @@ public class TrieDictionaryForestTest {
         Iterator<String> itr = rs.iterator();
         long bytesCount = 0;
         while (itr.hasNext())
-            bytesCount += itr.next().getBytes().length;
+            bytesCount += itr.next().getBytes(StandardCharsets.UTF_8).length;
         System.out.println("test data size : " + bytesCount / (1024 * 1024) + " MB");
     }
 
@@ -805,7 +827,8 @@ public class TrieDictionaryForestTest {
         benchmark("Benchmark", dict, set, map, strArray, array);
     }
 
-    private static int benchmark(String msg, TrieDictionaryForest<String> dict, TreeSet<String> set, HashMap<String, Integer> map, String[] strArray, byte[][] array) {
+    private static int benchmark(String msg, TrieDictionaryForest<String> dict, TreeSet<String> set,
+            HashMap<String, Integer> map, String[] strArray, byte[][] array) {
         int n = set.size();
         int times = Math.max(10 * 1000 * 1000 / n, 1); // run 10 million lookups
         int keep = 0; // make sure JIT don't OPT OUT function calls under test
@@ -888,6 +911,7 @@ public class TrieDictionaryForestTest {
 
             assertEquals(id, dict.getIdFromValue(value));
             assertEquals(value, dict.getValueFromId(id));
+            assertArrayEquals(Bytes.toBytes(value), dict.getValueByteFromId(id));
         }
 
         //test not found value
@@ -916,6 +940,7 @@ public class TrieDictionaryForestTest {
         // test null value
         int nullId = dict.getIdFromValue(null);
         assertNull(dict.getValueFromId(nullId));
+        assertNull(dict.getValueByteFromId(nullId));
     }
 
     private Map<String, Integer> rightIdMap(int baseId, ArrayList<String> strs) {
@@ -929,14 +954,16 @@ public class TrieDictionaryForestTest {
     }
 
     public static TrieDictionaryForestBuilder<String> newDictBuilder(Iterable<String> strs, int baseId) {
-        TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter(), baseId);
+        TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter(),
+                baseId);
         for (String s : strs)
             b.addValue(s);
         return b;
     }
 
     public static TrieDictionaryForestBuilder<String> newDictBuilder(Iterable<String> strs, int baseId, int treeSize) {
-        TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter(), baseId);
+        TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter(),
+                baseId);
         b.setMaxTrieTreeSize(treeSize);
         for (String s : strs) {
             b.addValue(s);
@@ -945,7 +972,8 @@ public class TrieDictionaryForestTest {
     }
 
     public static TrieDictionaryForestBuilder<String> newDictBuilder(Iterator<String> strs, int baseId, int treeSize) {
-        TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter(), baseId);
+        TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter(),
+                baseId);
         b.setMaxTrieTreeSize(treeSize);
         while (strs.hasNext())
             b.addValue(strs.next());

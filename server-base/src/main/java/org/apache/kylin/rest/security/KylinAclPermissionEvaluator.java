@@ -21,6 +21,7 @@ package org.apache.kylin.rest.security;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.rest.service.AclService;
@@ -88,7 +89,7 @@ public class KylinAclPermissionEvaluator extends AclPermissionEvaluator {
             try {
                 p = kylinPermissionFactory.buildFromName(permString);
             } catch (IllegalArgumentException notfound) {
-                p = kylinPermissionFactory.buildFromName(permString.toUpperCase());
+                p = kylinPermissionFactory.buildFromName(permString.toUpperCase(Locale.ROOT));
             }
 
             if (p != null) {
@@ -105,7 +106,7 @@ public class KylinAclPermissionEvaluator extends AclPermissionEvaluator {
         ExternalAclProvider eap = ExternalAclProvider.getInstance();
         if (eap == null)
             return super.hasPermission(authentication, targetId, targetType, permission);
-        
+
         return checkExternalPermission(eap, authentication, targetType, targetId.toString(), permission);
     }
 }

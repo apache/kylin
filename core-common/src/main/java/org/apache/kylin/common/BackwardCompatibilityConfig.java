@@ -33,22 +33,23 @@ import org.apache.kylin.common.util.OrderedProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class BackwardCompatibilityConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(BackwardCompatibilityConfig.class);
 
     private static final String KYLIN_BACKWARD_COMPATIBILITY = "kylin-backward-compatibility";
+    private static final String PROPERTIES_SUFFIX = ".properties";
 
     private final Map<String, String> old2new = Maps.newConcurrentMap();
     private final Map<String, String> old2newPrefix = Maps.newConcurrentMap();
 
     public BackwardCompatibilityConfig() {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        init(loader.getResourceAsStream(KYLIN_BACKWARD_COMPATIBILITY + ".properties"));
+        init(loader.getResourceAsStream(KYLIN_BACKWARD_COMPATIBILITY + PROPERTIES_SUFFIX));
         for (int i = 0; i < 10; i++) {
-            init(loader.getResourceAsStream(KYLIN_BACKWARD_COMPATIBILITY + (i) + ".properties"));
+            init(loader.getResourceAsStream(KYLIN_BACKWARD_COMPATIBILITY + (i) + PROPERTIES_SUFFIX));
         }
     }
 
@@ -73,13 +74,14 @@ public class BackwardCompatibilityConfig {
         for (Entry<Object, Object> kv : props.entrySet()) {
             String key = (String) kv.getKey();
             String value = (String) kv.getValue();
-            
+
             if (key.equals(value))
                 continue; // no change
-            
+
             if (value.contains(key))
-                throw new IllegalStateException("New key '" + value + "' contains old key '" + key + "' causes trouble to repeated find & replace");
-            
+                throw new IllegalStateException("New key '" + value + "' contains old key '" + key
+                        + "' causes trouble to repeated find & replace");
+
             if (value.endsWith("."))
                 old2newPrefix.put(key, value);
             else
@@ -122,7 +124,7 @@ public class BackwardCompatibilityConfig {
         return result;
     }
 
-    public OrderedProperties check(OrderedProperties props){
+    public OrderedProperties check(OrderedProperties props) {
         OrderedProperties result = new OrderedProperties();
         for (Entry<String, String> kv : props.entrySet()) {
             result.setProperty(check(kv.getKey()), kv.getValue());
@@ -142,26 +144,21 @@ public class BackwardCompatibilityConfig {
         BackwardCompatibilityConfig bcc = new BackwardCompatibilityConfig();
         File repoDir = new File(kylinRepoPath).getCanonicalFile();
         File outputDir = new File(outputPath).getCanonicalFile();
-        PrintWriter out = null;
 
         // generate sed file
         File sedFile = new File(outputDir, "upgrade-old-config.sed");
-        try {
-            out = new PrintWriter(sedFile);
+        try (PrintWriter out = new PrintWriter(sedFile, "UTF-8")) {
             for (Entry<String, String> e : bcc.old2new.entrySet()) {
                 out.println("s/" + quote(e.getKey()) + "/" + e.getValue() + "/g");
             }
             for (Entry<String, String> e : bcc.old2newPrefix.entrySet()) {
                 out.println("s/" + quote(e.getKey()) + "/" + e.getValue() + "/g");
             }
-        } finally {
-            IOUtils.closeQuietly(out);
         }
 
         // generate sh file
         File shFile = new File(outputDir, "upgrade-old-config.sh");
-        try {
-            out = new PrintWriter(shFile);
+        try (PrintWriter out = new PrintWriter(shFile, "UTF-8")) {
             out.println("#!/bin/bash");
             Stack<File> stack = new Stack<>();
             stack.push(repoDir);
@@ -177,10 +174,8 @@ public class BackwardCompatibilityConfig {
                         out.println("sed -i -f upgrade-old-config.sed " + f.getAbsolutePath());
                 }
             }
-        } finally {
-            IOUtils.closeQuietly(out);
         }
-        
+
         System.out.println("Files generated:");
         System.out.println(shFile);
         System.out.println(sedFile);
@@ -211,6 +206,7 @@ public class BackwardCompatibilityConfig {
         else if (name.endsWith("-site.xml"))
             return false;
         else
-            return name.endsWith(".java") || name.endsWith(".js") || name.endsWith(".sh") || name.endsWith(".properties") || name.endsWith(".xml");
+            return name.endsWith(".java") || name.endsWith(".js") || name.endsWith(".sh")
+                    || name.endsWith(PROPERTIES_SUFFIX) || name.endsWith(".xml");
     }
 }

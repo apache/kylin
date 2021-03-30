@@ -23,13 +23,14 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.gridtable.StorageLimitLevel;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.storage.gtrecord.GTCubeStorageQueryBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Range;
+import org.apache.kylin.shaded.com.google.common.collect.Range;
 
 /**
  * @author xjiang
@@ -47,7 +48,6 @@ public class StorageContext {
     private StorageLimitLevel storageLimitLevel = StorageLimitLevel.NO_LIMIT;
     private boolean hasSort = false;
     private boolean acceptPartialResult = false;
-    private long deadline;
 
     private boolean exactAggregation = false;
     private boolean needStorageAggregation = false;
@@ -57,6 +57,7 @@ public class StorageContext {
     private IStorageQuery storageQuery;
     private AtomicLong processedRowCount = new AtomicLong();
     private Cuboid cuboid;
+    private CuboidToGridTableMapping mapping;
     private boolean partialResultReturned = false;
 
     private Range<Long> reusedPeriod;
@@ -154,7 +155,7 @@ public class StorageContext {
             return;
         }
 
-        long temp = this.getOffset() + this.getLimit();
+        long temp = this.getOffset() + (long) this.getLimit();
 
         if (!isValidPushDownLimit(temp)) {
             logger.warn("Not enabling limit push down because current limit is invalid: " + this.getLimit());
@@ -174,19 +175,6 @@ public class StorageContext {
         return isValidPushDownLimit(finalPushDownLimit);
     }
 
-    public long getDeadline() {
-        return this.deadline;
-    }
-
-    public void setDeadline(IRealization realization) {
-        int timeout = realization.getConfig().getQueryTimeoutSeconds() * 1000;
-        if (timeout == 0) {
-            this.deadline = Long.MAX_VALUE;
-        } else {
-            this.deadline = timeout + System.currentTimeMillis();
-        }
-    }
-
     public void markSort() {
         this.hasSort = true;
     }
@@ -201,6 +189,14 @@ public class StorageContext {
 
     public Cuboid getCuboid() {
         return cuboid;
+    }
+
+    public CuboidToGridTableMapping getMapping() {
+        return mapping;
+    }
+
+    public void setMapping(CuboidToGridTableMapping mapping) {
+        this.mapping = mapping;
     }
 
     public long getProcessedRowCount() {

@@ -36,117 +36,37 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.SqlWith;
+import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlVisitor;
-import org.apache.calcite.sql.validate.SqlValidatorException;
 import org.apache.commons.lang.text.StrBuilder;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
-import org.apache.kylin.query.routing.NoRealizationFoundException;
-import org.apache.kylin.query.routing.RoutingIndicatorException;
-import org.apache.kylin.source.adhocquery.IPushDownConverter;
-import org.apache.kylin.source.adhocquery.IPushDownRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class PushDownUtil {
     private static final Logger logger = LoggerFactory.getLogger(PushDownUtil.class);
 
+    private PushDownUtil() {
+        throw new IllegalStateException("Class PushDownUtil is an utility class !");
+    }
+
     public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownSelectQuery(String project, String sql,
-            String defaultSchema, SQLException sqlException) throws Exception {
-        return tryPushDownQuery(project, sql, defaultSchema, sqlException, true);
+            String defaultSchema, SQLException sqlException, boolean isPrepare, KylinConfig kylinConfig) throws Exception {
+        PushDownExecutor executor = new PushDownExecutor(kylinConfig);
+        return executor.pushDownQuery(project, sql, defaultSchema, sqlException, true, isPrepare);
     }
 
     public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownNonSelectQuery(String project,
-            String sql, String defaultSchema) throws Exception {
-        return tryPushDownQuery(project, sql, defaultSchema, null, false);
-    }
-
-    private static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownQuery(String project, String sql,
-            String defaultSchema, SQLException sqlException, boolean isSelect) throws Exception {
-
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-
-        if (!kylinConfig.isPushDownEnabled())
-            return null;
-
-        if (isSelect) {
-            logger.info("Query failed to utilize pre-calculation, routing to other engines", sqlException);
-            if (!isExpectedCause(sqlException)) {
-                logger.info("quit doPushDownQuery because prior exception thrown is unexpected");
-                return null;
-            }
-        } else {
-            Preconditions.checkState(sqlException == null);
-            logger.info("Kylin cannot support non-select queries, routing to other engines");
-        }
-
-        IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(kylinConfig.getPushDownRunnerClassName());
-        runner.init(kylinConfig);
-        logger.debug("Query Pushdown runner {}", runner);
-
-        // default schema in calcite does not apply to other engines.
-        // since this is a universql requirement, it's not implemented as a converter
-        if (defaultSchema != null && !defaultSchema.equals("DEFAULT")) {
-            String completed = sql;
-            try {
-                completed = schemaCompletion(sql, defaultSchema);
-            } catch (SqlParseException e) {
-                // fail to parse the pushdown sql, ignore
-                logger.debug("fail to do schema completion on the pushdown sql, ignore it.", e.getMessage());
-            }
-            if (!sql.equals(completed)) {
-                logger.info("the query is converted to {} after schema completion", completed);
-                sql = completed;
-            }
-        }
-
-        for (String converterName : kylinConfig.getPushDownConverterClassNames()) {
-            IPushDownConverter converter = (IPushDownConverter) ClassUtil.newInstance(converterName);
-            String converted = converter.convert(sql, project, defaultSchema);
-            if (!sql.equals(converted)) {
-                logger.info("the query is converted to {} after applying converter {}", converted, converterName);
-                sql = converted;
-            }
-        }
-
-        List<List<String>> returnRows = Lists.newArrayList();
-        List<SelectedColumnMeta> returnColumnMeta = Lists.newArrayList();
-
-        if (isSelect) {
-            runner.executeQuery(sql, returnRows, returnColumnMeta);
-        }
-        if (!isSelect && kylinConfig.isPushDownUpdateEnabled()) {
-            runner.executeUpdate(sql);
-        }
-        return Pair.newPair(returnRows, returnColumnMeta);
-    }
-
-    private static boolean isExpectedCause(SQLException sqlException) {
-        Preconditions.checkArgument(sqlException != null);
-        Throwable rootCause = ExceptionUtils.getRootCause(sqlException);
-
-        //SqlValidatorException is not an excepted exception in the origin design.But in the multi pass scene,
-        //query pushdown may create tables, and the tables are not in the model, so will throw SqlValidatorException.
-        boolean isPushDownUpdateEnabled = KylinConfig.getInstanceFromEnv().isPushDownUpdateEnabled();
-
-        if (!isPushDownUpdateEnabled) {
-            return rootCause != null //
-                    && (rootCause instanceof NoRealizationFoundException //
-                            || rootCause instanceof RoutingIndicatorException); //
-        } else {
-            return (rootCause != null //
-                    && (rootCause instanceof NoRealizationFoundException //
-                            || rootCause instanceof SqlValidatorException //
-                            || rootCause instanceof RoutingIndicatorException)); //
-        }
+            String sql, String defaultSchema, boolean isPrepare) throws Exception {
+        PushDownExecutor executor = new PushDownExecutor(null);
+        return executor.pushDownQuery(project, sql, defaultSchema, null, true, isPrepare);
     }
 
     static String schemaCompletion(String inputSql, String schema) throws SqlParseException {
@@ -156,7 +76,7 @@ public class PushDownUtil {
         SqlNode node = CalciteParser.parse(inputSql);
 
         // get all table node that don't have schema by visitor pattern
-        FromTablesVisitor ftv = new FromTablesVisitor();
+        PushDownUtil.FromTablesVisitor ftv = new PushDownUtil.FromTablesVisitor();
         node.accept(ftv);
         List<SqlNode> tablesWithoutSchema = ftv.getTablesWithoutSchema();
         // sql do not need completion
@@ -169,7 +89,8 @@ public class PushDownUtil {
             tablesPos.add(CalciteParser.getReplacePos(tables, inputSql));
         }
 
-        // make the behind position in the front of the list, so that the front position will not be affected when replaced
+        // make the behind position in the front of the list, so that the front position
+        // will not be affected when replaced
         Collections.sort(tablesPos, new Comparator<Pair<Integer, Integer>>() {
             @Override
             public int compare(Pair<Integer, Integer> o1, Pair<Integer, Integer> o2) {
@@ -192,17 +113,37 @@ public class PushDownUtil {
      */
     static class FromTablesVisitor implements SqlVisitor<SqlNode> {
         private List<SqlNode> tables;
+        private List<SqlNode> withTables;
 
         FromTablesVisitor() {
             this.tables = new ArrayList<>();
+            this.withTables = new ArrayList<>();
         }
 
         List<SqlNode> getTablesWithoutSchema() {
-            return tables;
+            List<SqlNode> sqlNodes = Lists.newArrayList();
+            List<String> withs = Lists.newArrayList();
+            for (SqlNode withTable : withTables) {
+                withs.add(((SqlIdentifier) withTable).names.get(0)); // with clause not allow database.table pattern
+            }
+            for (SqlNode table : tables) {
+                SqlIdentifier identifier = (SqlIdentifier) table;
+                if (!withs.contains(identifier.names.get(0))) {
+                    sqlNodes.add(identifier);
+                }
+            }
+            return sqlNodes;
         }
 
         @Override
         public SqlNode visit(SqlNodeList nodeList) {
+            for (int i = 0; i < nodeList.size(); i++) {
+                SqlNode node = nodeList.get(i);
+                if (node instanceof SqlWithItem) {
+                    SqlWithItem item = (SqlWithItem) node;
+                    item.query.accept(this);
+                }
+            }
             return null;
         }
 
@@ -220,8 +161,17 @@ public class PushDownUtil {
             }
             if (call instanceof SqlOrderBy) {
                 SqlOrderBy orderBy = (SqlOrderBy) call;
-                ((SqlSelect) orderBy.query).getFrom().accept(this);
+                orderBy.query.accept(this);
                 return null;
+            }
+            if (call instanceof SqlWith) {
+                SqlWith sqlWith = (SqlWith) call;
+                List<SqlNode> list = sqlWith.withList.getList();
+                for (SqlNode sqlNode : list) {
+                    withTables.add(((SqlWithItem) sqlNode).name);
+                }
+                sqlWith.body.accept(this);
+                sqlWith.withList.accept(this);
             }
             if (call instanceof SqlBasicCall) {
                 SqlBasicCall node = (SqlBasicCall) call;
@@ -233,11 +183,6 @@ public class PushDownUtil {
                 node.getLeft().accept(this);
                 node.getRight().accept(this);
                 return null;
-            }
-            for (SqlNode operand : call.getOperandList()) {
-                if (operand != null) {
-                    operand.accept(this);
-                }
             }
             return null;
         }

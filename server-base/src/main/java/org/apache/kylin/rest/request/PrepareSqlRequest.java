@@ -19,13 +19,16 @@
 package org.apache.kylin.rest.request;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * @author xduo
  * 
  */
 public class PrepareSqlRequest extends SQLRequest {
+    private boolean enableStatementCache = true;
 
     public PrepareSqlRequest() {
         super();
@@ -41,7 +44,15 @@ public class PrepareSqlRequest extends SQLRequest {
         this.params = params;
     }
 
-    public static class StateParam implements Serializable{
+    public boolean isEnableStatementCache() {
+        return enableStatementCache;
+    }
+
+    public void setEnableStatementCache(boolean enableStatementCache) {
+        this.enableStatementCache = enableStatementCache;
+    }
+
+    public static class StateParam implements Serializable {
         private String className;
         private String value;
 
@@ -94,6 +105,20 @@ public class PrepareSqlRequest extends SQLRequest {
                 return false;
             return true;
         }
+    }
+
+    @Override
+    public Object getCacheKey() {
+        if (cacheKey != null)
+            return cacheKey;
+
+        cacheKey = super.getCacheKey();
+
+        if (params != null) {
+            ArrayList keyList = (ArrayList) (cacheKey);
+            Collections.addAll(keyList, params);
+        }
+        return cacheKey;
     }
 
     @Override

@@ -21,6 +21,11 @@ package org.apache.kylin.common.util;
 import java.util.List;
 
 public class MathUtil {
+
+    private MathUtil() {
+        throw new IllegalStateException("Class MathUtil is an utility class !");
+    }
+
     public static double findMedianInSortedList(List<Double> m) {
         int middle = m.size() / 2;
         if (m.size() % 2 == 1) {

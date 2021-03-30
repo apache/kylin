@@ -47,13 +47,13 @@
           class="org.springframework.security.acls.domain.AclAuthorizationStrategyImpl">
         <constructor-arg>
             <list>
-				<bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
+                <bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
                     <constructor-arg value="ROLE_ADMIN"/>
                 </bean>
-				<bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
+                <bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
                     <constructor-arg value="ROLE_ADMIN"/>
                 </bean>
-				<bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
+                <bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
                     <constructor-arg value="ROLE_ADMIN"/>
                 </bean>
             </list>
@@ -67,6 +67,10 @@
           class="org.springframework.security.acls.domain.DefaultPermissionGrantingStrategy">
         <constructor-arg ref="auditLogger"/>
     </bean>
+
+    <bean id="userService" class="org.apache.kylin.rest.service.KylinUserService"/>
+
+    <bean id="userGroupService" class="org.apache.kylin.rest.service.KylinUserGroupService"/>
 
     <beans profile="ldap,saml">
         <bean id="ldapSource"
@@ -97,12 +101,12 @@
                         </bean>
                     </constructor-arg>
                     <constructor-arg>
-                        <bean class="org.apache.kylin.rest.security.AuthoritiesPopulator">
+                        <bean class="org.apache.kylin.rest.security.LDAPAuthoritiesPopulator">
                             <constructor-arg index="0" ref="ldapSource"/>
                             <constructor-arg index="1"
                                              value="${kylin.security.ldap.user-group-search-base}"/>
                             <constructor-arg index="2" value="${kylin.security.acl.admin-role}"/>
-                            <constructor-arg index="3" value="${kylin.security.acl.default-role}"/>
+                            <property name="groupSearchFilter" value="${kylin.security.ldap.user-group-search-filter}"/>
                         </bean>
                     </constructor-arg>
                 </bean>
@@ -130,12 +134,12 @@
                         </bean>
                     </constructor-arg>
                     <constructor-arg>
-                        <bean class="org.apache.kylin.rest.security.AuthoritiesPopulator">
+                        <bean class="org.apache.kylin.rest.security.LDAPAuthoritiesPopulator">
                             <constructor-arg index="0" ref="ldapSource"/>
                             <constructor-arg index="1"
                                              value="${kylin.security.ldap.service-group-search-base}"/>
                             <constructor-arg index="2" value="${kylin.security.acl.admin-role}"/>
-                            <constructor-arg index="3" value="${kylin.security.acl.default-role}"/>
+                            <property name="groupSearchFilter" value="${kylin.security.ldap.user-group-search-filter}"/>
                         </bean>
                     </constructor-arg>
                 </bean>
@@ -198,7 +202,7 @@
             <constructor-arg>
                 <bean class="org.springframework.security.authentication.dao.DaoAuthenticationProvider">
                     <property name="userDetailsService">
-                        <bean class="org.springframework.security.provisioning.InMemoryUserDetailsManager">
+                        <bean class="org.apache.kylin.rest.service.KylinUserService">
                             <constructor-arg>
                                 <util:list
                                         value-type="org.springframework.security.core.userdetails.User">
@@ -232,22 +236,32 @@
             <scr:http-basic entry-point-ref="unauthorisedEntryPoint"/>
 
             <scr:intercept-url pattern="/api/user/authentication*/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cubes/checkCompatibility" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cubes/checkCompatibility/hiveTable" access="permitAll"/>
+            <scr:intercept-url pattern="/api/query/runningQueries" access="hasRole('ROLE_ADMIN')"/>
+            <scr:intercept-url pattern="/api/query/*/stop" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/query*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/**/metrics" access="permitAll"/>
+            <scr:intercept-url pattern="/api/**/jmetrics/**" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/cache*/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/streaming_coordinator/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/service_discovery/state/is_active_job_node" access="permitAll"/>
             <scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST')"/>
             <scr:intercept-url pattern="/api/cubes*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/models*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/streaming*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/job*/**" access="isAuthenticated()"/>
-            <scr:intercept-url pattern="/api/admin/config" access="permitAll"/>
-            <scr:intercept-url pattern="/api/projects" access="permitAll"/>
+            <scr:intercept-url pattern="/api/admin/public_config" access="permitAll"/>
+            <scr:intercept-url pattern="/api/admin/version" access="permitAll"/>
+            <scr:intercept-url pattern="/api/projects" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')"/>
+            <scr:intercept-url pattern="/api/tables/**/snapshotLocalCache/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/**" access="isAuthenticated()"/>
 
-            <scr:form-login login-page="/login" />
-            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/j_spring_security_logout" logout-success-url="/." />
+            <scr:form-login login-page="/login"/>
+            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/j_spring_security_logout"
+                        logout-success-url="/."/>
             <scr:session-management session-fixation-protection="newSession"/>
         </scr:http>
     </beans>
@@ -275,22 +289,30 @@
             <scr:http-basic entry-point-ref="unauthorisedEntryPoint"/>
 
             <scr:intercept-url pattern="/api/user/authentication*/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cubes/checkCompatibility" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cubes/checkCompatibility/hiveTable" access="permitAll"/>
+            <scr:intercept-url pattern="/api/query/runningQueries" access="hasRole('ROLE_ADMIN')"/>
+            <scr:intercept-url pattern="/api/query/*/stop" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/query*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/**/metrics" access="permitAll"/>
+            <scr:intercept-url pattern="/api/**/jmetrics/**" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/cache*/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/streaming_coordinator/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST')"/>
             <scr:intercept-url pattern="/api/cubes*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/models*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/streaming*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/job*/**" access="isAuthenticated()"/>
-            <scr:intercept-url pattern="/api/admin/config" access="permitAll"/>
             <scr:intercept-url pattern="/api/projects*/*" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/admin/public_config" access="permitAll"/>
             <scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')"/>
+            <scr:intercept-url pattern="/api/tables/**/snapshotLocalCache/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/**" access="isAuthenticated()"/>
 
-            <scr:form-login login-page="/login" />
-            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/j_spring_security_logout" logout-success-url="/." />
+            <scr:form-login login-page="/login"/>
+            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/j_spring_security_logout"
+                        logout-success-url="/."/>
             <scr:session-management session-fixation-protection="newSession"/>
         </scr:http>
 
@@ -318,7 +340,7 @@
 
         <!-- Central storage of cryptographic keys -->
         <bean id="keyManager" class="org.springframework.security.saml.key.JKSKeyManager">
-            <constructor-arg value="classpath:samlKeystore.jks"/>
+            <constructor-arg value="${kylin.security.saml.keystore-file}"/>
             <constructor-arg type="java.lang.String" value="changeit"/>
             <constructor-arg>
                 <map>
@@ -346,6 +368,7 @@
         <bean id="successRedirectHandler"
               class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler">
             <property name="defaultTargetUrl" value="/models"/>
+            <property name="alwaysUseDefaultTargetUrl" value="true"/>
         </bean>
 
         <!-- Handler deciding where to redirect user after failed login -->
@@ -358,7 +381,6 @@
         <!-- Handler for successful logout -->
         <bean id="successLogoutHandler"
               class="org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler">
-            <property name="defaultTargetUrl" value="/login"/>
         </bean>
 
         <!-- Logger for SAML messages and events -->
@@ -403,7 +425,7 @@
                         <constructor-arg>
                             <bean class="org.opensaml.saml2.metadata.provider.FilesystemMetadataProvider">
                                 <constructor-arg>
-                                    <value type="java.io.File">classpath:sso_metadata.xml</value>
+                                    <value type="java.io.File">${kylin.security.saml.metadata-file}</value>
                                 </constructor-arg>
                                 <property name="parserPool" ref="parserPool"/>
                             </bean>
@@ -419,11 +441,11 @@
         </bean>
 
         <bean id="ldapUserAuthoritiesPopulator"
-              class="org.apache.kylin.rest.security.AuthoritiesPopulator">
+              class="org.apache.kylin.rest.security.LDAPAuthoritiesPopulator">
             <constructor-arg index="0" ref="ldapSource"/>
             <constructor-arg index="1" value="${kylin.security.ldap.user-group-search-base}"/>
             <constructor-arg index="2" value="${kylin.security.acl.admin-role}"/>
-            <constructor-arg index="3" value="${kylin.security.acl.default-role}"/>
+            <property name="groupSearchFilter" value="${kylin.security.ldap.user-group-search-filter}"/>
         </bean>
 
         <bean id="userSearch"

@@ -19,14 +19,17 @@
 package org.apache.kylin.query.util;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.Lists;
 
 /**
@@ -34,48 +37,112 @@ import com.google.common.collect.Lists;
 public class QueryUtil {
 
     protected static final Logger logger = LoggerFactory.getLogger(QueryUtil.class);
-
+    private static final String KEYWORD_SELECT = "select";
+    private static final String KEYWORD_WITH = "with";
+    private static final String KEYWORD_EXPLAIN = "explain";
     private static List<IQueryTransformer> queryTransformers;
-
-    public interface IQueryTransformer {
-        String transform(String sql, String project, String defaultSchema);
+    private QueryUtil() {
+        throw new IllegalStateException("Class QueryUtil is an utility class !");
     }
 
+    public static String appendLimitOffsetToSql(String sql, int limit, int offset) {
+        String retSql = sql;
+        String prefixSql = "select * from (";
+        String suffixSql = ")";
+        if (StringUtils.startsWithIgnoreCase(sql, KEYWORD_EXPLAIN)
+                || StringUtils.startsWithIgnoreCase(sql, KEYWORD_WITH)) {
+            prefixSql = "";
+            suffixSql = "";
+        }
+        if (0 != limit && 0 != offset) {
+            retSql = prefixSql + sql + suffixSql + " limit " + String.valueOf(limit) + " offset "
+                    + String.valueOf(offset);
+        } else if (0 == limit && 0 != offset) {
+            retSql = prefixSql + sql + suffixSql + " offset " + String.valueOf(offset);
+        } else if (0 != limit && 0 == offset) {
+            retSql = prefixSql + sql + suffixSql + " limit " + String.valueOf(limit);
+        } else {
+            // do nothing
+        }
+        return retSql;
+    }
+
+    /**
+     * @deprecated Deprecated because of KYLIN-3594
+     */
+    @Deprecated
     public static String massageSql(String sql, String project, int limit, int offset, String defaultSchema) {
         sql = sql.trim();
         sql = sql.replace("\r", " ").replace("\n", System.getProperty("line.separator"));
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
+        ProjectManager projectManager = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
+        ProjectInstance projectInstance = projectManager.getProject(project);
+        KylinConfig kylinConfig = projectInstance.getConfig();
+        sql = removeCommentInSql(sql);
         while (sql.endsWith(";"))
             sql = sql.substring(0, sql.length() - 1);
 
-        if (limit > 0 && !sql.toLowerCase().contains("limit")) {
-            sql += ("\nLIMIT " + limit);
-        }
+        String sql1 = sql;
+        final String suffixPattern = "^.+?\\s(limit\\s\\d+)?\\s(offset\\s\\d+)?\\s*$";
+        sql = sql.replaceAll("\\s+", " ");
+        Pattern pattern = Pattern.compile(suffixPattern);
+        Matcher matcher = pattern.matcher(sql.toLowerCase(Locale.ROOT) + "  ");
 
-        if (offset > 0 && !sql.toLowerCase().contains("offset")) {
-            sql += ("\nOFFSET " + offset);
+        int toAppendLimit = 0;
+        int toAppendOffset = 0;
+        if (matcher.find()) {
+            if (limit > 0 && matcher.group(1) == null) {
+                toAppendLimit = limit;
+            }
+            if (offset > 0 && matcher.group(2) == null) {
+                toAppendOffset = offset;
+            }
         }
 
         // https://issues.apache.org/jira/browse/KYLIN-2649
-        if (kylinConfig.getForceLimit() > 0 && !sql.toLowerCase().contains("limit")
-                && sql.toLowerCase().contains("*")) {
-            sql += ("\nLIMIT " + kylinConfig.getForceLimit());
+        if (kylinConfig.getForceLimit() > 0 && limit <= 0 && matcher.group(1) == null
+                && sql1.toLowerCase(Locale.ROOT).matches("^select\\s+\\*\\p{all}*")) {
+            toAppendLimit = kylinConfig.getForceLimit();
         }
+
+        sql1 = appendLimitOffsetToSql(sql1, toAppendLimit, toAppendOffset);
 
         // customizable SQL transformation
         if (queryTransformers == null) {
             initQueryTransformers();
         }
         for (IQueryTransformer t : queryTransformers) {
-            sql = t.transform(sql, project, defaultSchema);
+            sql1 = t.transform(sql1, project, defaultSchema);
         }
-        return sql;
+        return sql1;
+    }
+
+    /**
+     * add remove catalog step at final
+     */
+    public static String massageSql(String sql, String project, int limit, int offset, String defaultSchema,
+            String catalog) {
+        String correctedSql = massageSql(sql, project, limit, offset, defaultSchema);
+        correctedSql = removeCatalog(correctedSql, catalog);
+        return correctedSql;
+    }
+
+    /**
+     * Although SQL standard define CATALOG concept, ISV has right not to implement it.
+     * We remove it in before send it to SQL parser.
+     *
+     * @param sql query which maybe has such pattern: [[catalogName.]schemaName.]tableName
+     * @return replace [[catalogName.]schemaName.]tableName with [schemaName.]tableName
+     */
+    static String removeCatalog(String sql, String catalog) {
+        if (catalog == null)
+            return sql;
+        else
+            return sql.replace(catalog + ".", "");
     }
 
     private static void initQueryTransformers() {
         List<IQueryTransformer> transformers = Lists.newArrayList();
-        transformers.add(new DefaultQueryTransformer());
 
         String[] classes = KylinConfig.getInstanceFromEnv().getQueryTransformers();
         for (String clz : classes) {
@@ -83,85 +150,11 @@ public class QueryUtil {
                 IQueryTransformer t = (IQueryTransformer) ClassUtil.newInstance(clz);
                 transformers.add(t);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to init query transformer", e);
+                throw new IllegalStateException("Failed to init query transformer", e);
             }
         }
+
         queryTransformers = transformers;
-    }
-
-    // correct sick / invalid SQL
-    private static class DefaultQueryTransformer implements IQueryTransformer {
-
-        private static final String S0 = "\\s*";
-        private static final String S1 = "\\s";
-        private static final String SM = "\\s+";
-        private static final Pattern PTN_GROUP_BY = Pattern.compile(S1 + "GROUP" + SM + "BY" + S1,
-                Pattern.CASE_INSENSITIVE);
-        private static final Pattern PTN_HAVING_COUNT_GREATER_THAN_ZERO = Pattern.compile(S1 + "HAVING" + SM + "[(]?"
-                + S0 + "COUNT" + S0 + "[(]" + S0 + "1" + S0 + "[)]" + S0 + ">" + S0 + "0" + S0 + "[)]?",
-                Pattern.CASE_INSENSITIVE);
-        private static final Pattern PTN_SUM_1 = Pattern.compile(S0 + "SUM" + S0 + "[(]" + S0 + "[1]" + S0 + "[)]" + S0,
-                Pattern.CASE_INSENSITIVE);
-        private static final Pattern PTN_NOT_EQ = Pattern.compile(S0 + "!=" + S0, Pattern.CASE_INSENSITIVE);
-        private static final Pattern PTN_INTERVAL = Pattern.compile(
-                "interval" + SM + "(floor\\()([\\d\\.]+)(\\))" + SM + "(second|minute|hour|day|month|year)",
-                Pattern.CASE_INSENSITIVE);
-        private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern.compile("\\{fn" + "(.*?)" + "\\}",
-                Pattern.CASE_INSENSITIVE);
-
-        @Override
-        public String transform(String sql, String project, String defaultSchema) {
-            Matcher m;
-
-            // Case fn{ EXTRACT(...) }
-            // Use non-greedy regrex matching to remove escape functions
-            while (true) {
-                m = PTN_HAVING_ESCAPE_FUNCTION.matcher(sql);
-                if (!m.find())
-                    break;
-                sql = sql.substring(0, m.start()) + m.group(1) + sql.substring(m.end());
-            }
-
-            // Case: HAVING COUNT(1)>0 without Group By
-            // Tableau generates: SELECT SUM(1) AS "COL" FROM "VAC_SW" HAVING
-            // COUNT(1)>0
-            m = PTN_HAVING_COUNT_GREATER_THAN_ZERO.matcher(sql);
-            if (m.find() && PTN_GROUP_BY.matcher(sql).find() == false) {
-                sql = sql.substring(0, m.start()) + " " + sql.substring(m.end());
-            }
-
-            // Case: SUM(1)
-            // Replace it with COUNT(1)
-            while (true) {
-                m = PTN_SUM_1.matcher(sql);
-                if (!m.find())
-                    break;
-                sql = sql.substring(0, m.start()) + " COUNT(1) " + sql.substring(m.end());
-            }
-
-            // Case: !=
-            // Replace it with <>
-            while (true) {
-                m = PTN_NOT_EQ.matcher(sql);
-                if (!m.find())
-                    break;
-                sql = sql.substring(0, m.start()) + " <> " + sql.substring(m.end());
-            }
-
-            // ( date '2001-09-28' + interval floor(1) day ) generated by cognos
-            // calcite only recognizes date '2001-09-28' + interval '1' day
-            while (true) {
-                m = PTN_INTERVAL.matcher(sql);
-                if (!m.find())
-                    break;
-
-                int value = (int) Math.floor(Double.valueOf(m.group(2)));
-                sql = sql.substring(0, m.start(1)) + "'" + value + "'" + sql.substring(m.end(3));
-            }
-
-            return sql;
-        }
-
     }
 
     public static String makeErrorMsgUserFriendly(Throwable e) {
@@ -174,6 +167,22 @@ public class QueryUtil {
                 msg = cause.getMessage();
                 break;
             }
+
+            if (cause.getClass().getName().contains("ArithmeticException")) {
+                msg = "ArithmeticException: " + cause.getMessage();
+                break;
+            }
+
+            if (cause.getClass().getName().contains("NumberFormatException")) {
+                msg = "NumberFormatException: " + cause.getMessage();
+                break;
+            }
+
+            //where in(...) condition has too many elements
+            if (cause.getClass().equals(StackOverflowError.class)) {
+                msg = "StackOverflowError maybe caused by that filters have too many elements";
+                break;
+            }
             cause = cause.getCause();
         }
 
@@ -181,6 +190,9 @@ public class QueryUtil {
     }
 
     public static String makeErrorMsgUserFriendly(String errorMsg) {
+        if (errorMsg == null) {
+            return "Unknown error.";
+        }
         try {
             // make one line
             errorMsg = errorMsg.replaceAll("\\s", " ");
@@ -198,33 +210,26 @@ public class QueryUtil {
     }
 
     public static boolean isSelectStatement(String sql) {
-        String sql1 = sql.toLowerCase();
+        String sql1 = sql.toLowerCase(Locale.ROOT);
         sql1 = removeCommentInSql(sql1);
         sql1 = sql1.trim();
-        return sql1.startsWith("select") || (sql1.startsWith("with") && sql1.contains("select"))
-                || (sql1.startsWith("explain") && sql1.contains("select"));
+
+        return sql1.startsWith(KEYWORD_SELECT) || (sql1.startsWith(KEYWORD_WITH) && sql1.contains(KEYWORD_SELECT))
+                || (sql1.startsWith(KEYWORD_EXPLAIN) && sql1.contains(KEYWORD_SELECT));
     }
 
-    public static String removeCommentInSql(String sql1) {
+
+    public static String removeCommentInSql(String sql) {
         // match two patterns, one is "-- comment", the other is "/* comment */"
-        final String[] commentPatterns = new String[] { "--[^\r\n]*", "/\\*[^\\*/]*" };
-        final int[] endOffset = new int[] { 0, 2 };
-
-        for (int i = 0; i < commentPatterns.length; i++) {
-            String commentPattern = commentPatterns[i];
-            Pattern pattern = Pattern.compile(commentPattern);
-            Matcher matcher = pattern.matcher(sql1);
-
-            while (matcher.find()) {
-                if (matcher.start() == 0) {
-                    sql1 = sql1.substring(matcher.end() + endOffset[i]).trim();
-                } else if ((matcher.start() > 0 && sql1.charAt(matcher.start() - 1) != '\'')) {
-                    sql1 = (sql1.substring(0, matcher.start()) + sql1.substring(matcher.end() + endOffset[i])).trim();
-                }
-                matcher = pattern.matcher(sql1);
-            }
+        try {
+            return new CommentParser(sql).Input().trim();
+        } catch (ParseException e) {
+            logger.error("Failed to parse sql: {}", sql, e);
+            return sql;
         }
+    }
 
-        return sql1;
+    public interface IQueryTransformer {
+        String transform(String sql, String project, String defaultSchema);
     }
 }

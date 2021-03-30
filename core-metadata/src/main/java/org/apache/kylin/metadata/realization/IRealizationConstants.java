@@ -22,6 +22,8 @@ package org.apache.kylin.metadata.realization;
  */
 public class IRealizationConstants {
 
+    public final static String LookupHbaseStorageLocationPrefix = "LOOKUP_";
+
     /**
      * For each cube htable, we leverage htable's metadata to keep track of
      * which kylin server(represented by its kylin_metadata prefix) owns this htable

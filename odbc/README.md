@@ -26,7 +26,7 @@ KylinODBC\Installer(64bit) - Contains a MSI installer for kylin odbc driver(x64)
 ## Development environment
 
 
-* Microsoft Visual Studio 2012 or later
+* Microsoft Visual Studio 2012 to 2015 (we only tested on VS 2012).
 * Microsoft Windows SDK, if you're running .NET 4, install http://www.microsoft.com/en-us/download/details.aspx?id=8279, if you're running .NET 4.5, install https://msdn.microsoft.com/en-US/windows/desktop/hh852363.aspx
 * Microsoft Data Access Components (MDAC, http://www.microsoft.com/en-us/download/details.aspx?id=21995), this is for getting the odbc header files
 * Install InstallShield, this is for packing ODBC binaries into a windows installer in Visual Studio. Download it free: http://learn.flexerasoftware.com/content/IS-EVAL-InstallShield-Limited-Edition-Visual-Studio?lang=1033&ver=pro

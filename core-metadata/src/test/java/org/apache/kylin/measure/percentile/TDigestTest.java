@@ -28,7 +28,7 @@ import org.apache.kylin.common.util.MathUtil;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import com.tdunning.math.stats.TDigest;
 
 @Ignore

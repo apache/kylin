@@ -18,6 +18,8 @@
 
 package org.apache.kylin.source.hive;
 
+import java.util.Locale;
+
 import org.apache.commons.configuration.PropertiesConfiguration;
 
 public class DBConnConf {
@@ -49,7 +51,7 @@ public class DBConnConf {
     }
 
     public String toString() {
-        return String.format("%s,%s,%s,%s", driver, url, user, pass);
+        return String.format(Locale.ROOT, "%s,%s,%s,%s", driver, url, user, pass);
     }
 
     public String getDriver() {

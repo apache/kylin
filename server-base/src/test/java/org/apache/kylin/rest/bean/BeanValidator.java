@@ -28,6 +28,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,7 +43,8 @@ public class BeanValidator {
     /**
      * Tests the get/set methods of the specified class.
      */
-    public static <T> void validateAccssor(final Class<T> clazz, final String... skipThese) throws IntrospectionException {
+    public static <T> void validateAccssor(final Class<T> clazz, final String... skipThese)
+            throws IntrospectionException {
         final PropertyDescriptor[] props = Introspector.getBeanInfo(clazz).getPropertyDescriptors();
         for (PropertyDescriptor prop : props) {
 
@@ -65,22 +67,27 @@ public class BeanValidator {
                     try {
                         Object value = buildValue(returnType);
 
-                        T bean = clazz.newInstance();
+                        T bean = clazz.getDeclaredConstructor().newInstance();
 
                         setter.invoke(bean, value);
 
-                        Assert.assertEquals(String.format("Failed while testing property %s", prop.getName()), value, getter.invoke(bean));
+                        Assert.assertEquals(
+                                String.format(Locale.ROOT, "Failed while testing property %s", prop.getName()), value,
+                                getter.invoke(bean));
 
                     } catch (Exception ex) {
                         ex.printStackTrace();
-                        System.err.println(String.format("An exception was thrown while testing the property %s: %s", prop.getName(), ex.toString()));
+                        System.err.println(
+                                String.format(Locale.ROOT, "An exception was thrown while testing the property %s: %s",
+                                        prop.getName(), ex.toString()));
                     }
                 }
             }
         }
     }
 
-    private static Object buildValue(Class<?> clazz) throws InstantiationException, IllegalAccessException, IllegalArgumentException, SecurityException, InvocationTargetException {
+    private static Object buildValue(Class<?> clazz) throws InstantiationException, IllegalAccessException,
+            IllegalArgumentException, SecurityException, InvocationTargetException {
 
         final Constructor<?>[] ctrs = clazz.getConstructors();
         for (Constructor<?> ctr : ctrs) {
@@ -117,30 +124,33 @@ public class BeanValidator {
         } else if (clazz.isEnum()) {
             return clazz.getEnumConstants()[0];
         } else if (clazz.isInterface()) {
-            return Proxy.newProxyInstance(clazz.getClassLoader(), new java.lang.Class[] { clazz }, new java.lang.reflect.InvocationHandler() {
-                @Override
-                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                    if (Object.class.getMethod("equals", Object.class).equals(method)) {
-                        return proxy == args[0];
-                    }
-                    if (Object.class.getMethod("hashCode", Object.class).equals(method)) {
-                        return Integer.valueOf(System.identityHashCode(proxy));
-                    }
-                    if (Object.class.getMethod("toString", Object.class).equals(method)) {
-                        return "Bean " + getMockedType(proxy);
-                    }
+            return Proxy.newProxyInstance(clazz.getClassLoader(), new java.lang.Class[] { clazz },
+                    new java.lang.reflect.InvocationHandler() {
+                        @Override
+                        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                            if (Object.class.getMethod("equals", Object.class).equals(method)) {
+                                return proxy == args[0];
+                            }
+                            if (Object.class.getMethod("hashCode", Object.class).equals(method)) {
+                                return Integer.valueOf(System.identityHashCode(proxy));
+                            }
+                            if (Object.class.getMethod("toString", Object.class).equals(method)) {
+                                return "Bean " + getMockedType(proxy);
+                            }
 
-                    return null;
-                }
+                            return null;
+                        }
 
-            });
+                    });
         } else {
-            System.err.println("Unable to build an instance of class " + clazz.getName() + ", please add some code to the " + BeanValidator.class.getName() + " class to do this.");
+            System.err.println("Unable to build an instance of class " + clazz.getName()
+                    + ", please add some code to the " + BeanValidator.class.getName() + " class to do this.");
             return null;
         }
     }
 
-    public static <T> void findBooleanIsMethods(Class<T> clazz, PropertyDescriptor descriptor) throws IntrospectionException {
+    public static <T> void findBooleanIsMethods(Class<T> clazz, PropertyDescriptor descriptor)
+            throws IntrospectionException {
         if (descriptor.getReadMethod() == null && descriptor.getPropertyType() == Boolean.class) {
             try {
                 PropertyDescriptor pd = new PropertyDescriptor(descriptor.getName(), clazz);

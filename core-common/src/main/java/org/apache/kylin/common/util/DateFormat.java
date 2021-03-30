@@ -32,11 +32,27 @@ public class DateFormat {
     public static final String DEFAULT_TIME_PATTERN = "HH:mm:ss";
     public static final String DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS = "yyyy-MM-dd HH:mm:ss";
     public static final String DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS = "yyyy-MM-dd HH:mm:ss.SSS";
-    public static final String[] SUPPORTED_DATETIME_PATTERN = { //
-            DEFAULT_DATE_PATTERN, //
-            DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS, //
-            DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS, //
-            COMPACT_DATE_PATTERN };
+    public static final String DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS_OFFSET = "yyyy-MM-dd HH:mm:ss.SSSZZ";
+    public static final String YYYY_MM_DD_HH_MM = "yyyy-MM-dd HH:mm";
+    public static final String YYYY_MM_DD_HH = "yyyy-MM-dd HH";
+    public static final String YYYYMMDDHHMMSS = "yyyyMMddHHmmss";
+    public static final String YYYYMMDDHHMM = "yyyyMMddHHmm";
+    public static final String YYYYMMDDHH = "yyyyMMddHH";
+    public static final String ISO_8601_24H_FULL_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
+
+    public static final String[] SUPPORTED_DATETIME_PATTERN = {
+            DEFAULT_DATE_PATTERN,
+            DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS,
+            DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS,
+            DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS_OFFSET,
+            COMPACT_DATE_PATTERN,
+            ISO_8601_24H_FULL_FORMAT,
+            YYYY_MM_DD_HH_MM,
+            YYYY_MM_DD_HH,
+            YYYYMMDDHHMMSS,
+            YYYYMMDDHHMM,
+            YYYYMMDDHH
+    };
 
     static final private Map<String, FastDateFormat> formatMap = new ConcurrentHashMap<String, FastDateFormat>();
 
@@ -48,7 +64,7 @@ public class DateFormat {
         }
         return r;
     }
-    
+
     public static String formatToCompactDateStr(long millis) {
         return formatToDateStr(millis, COMPACT_DATE_PATTERN);
     }
@@ -91,20 +107,49 @@ public class DateFormat {
         return date;
     }
 
+    public static String formatToTimeStrWithTimeZone(TimeZone timeZone, long mills){
+        return formatToStrWithTimeZone(timeZone, mills, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
+    }
+
+    public static String formatToDateStrWithTimeZone(TimeZone timeZone, long mills){
+        return formatToStrWithTimeZone(timeZone, mills, DEFAULT_DATE_PATTERN);
+    }
+
+    private static String formatToStrWithTimeZone(TimeZone timeZone, long mills, String pattern){
+        FastDateFormat dateFormat =  FastDateFormat.getInstance(pattern, timeZone);
+        return dateFormat.format(new Date(mills));
+    }
+
     public static long stringToMillis(String str) {
         // try to be smart and guess the date format
         if (isAllDigits(str)) {
-            if (str.length() == 8)
+            if (str.length() == 8 && isInputFormatDate(str, COMPACT_DATE_PATTERN))
                 //TODO: might be prolematic if an actual ts happends to be 8 digits, e.g. 1970-01-01 10:00:01.123
                 return stringToDate(str, COMPACT_DATE_PATTERN).getTime();
+            else if (str.length() == 10 && isInputFormatDate(str, YYYYMMDDHH))
+                return stringToDate(str, YYYYMMDDHH).getTime();
+            else if (str.length() == 12 && isInputFormatDate(str, YYYYMMDDHHMM))
+                return stringToDate(str, YYYYMMDDHHMM).getTime();
+            else if (str.length() == 14 && isInputFormatDate(str, YYYYMMDDHHMMSS))
+                return stringToDate(str, YYYYMMDDHHMMSS).getTime();
             else
                 return Long.parseLong(str);
         } else if (str.length() == 10) {
             return stringToDate(str, DEFAULT_DATE_PATTERN).getTime();
+        } else if (str.length() == 13) {
+            return stringToDate(str, YYYY_MM_DD_HH).getTime();
+        } else if (str.length() == 16) {
+            return stringToDate(str, YYYY_MM_DD_HH_MM).getTime();
         } else if (str.length() == 19) {
             return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS).getTime();
         } else if (str.length() > 19) {
-            return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS).getTime();
+            if (str.contains("T")) {
+                return stringToDate(str, ISO_8601_24H_FULL_FORMAT).getTime();
+            } else if (str.contains("+")) {
+                return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS_OFFSET).getTime();
+            } else {
+                return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS).getTime();
+            }
         } else {
             throw new IllegalArgumentException("there is no valid date pattern for:" + str);
         }
@@ -137,7 +182,16 @@ public class DateFormat {
         return false;
     }
 
+    public static boolean isInputFormatDate(String dateStr, String formatStr) {
+        try {
+            return dateStr.equals(dateToString(stringToDate(dateStr, formatStr), formatStr));
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
     public static boolean isDatePattern(String ptn) {
-        return COMPACT_DATE_PATTERN.equals(ptn) || DEFAULT_DATE_PATTERN.equals(ptn);
+        return COMPACT_DATE_PATTERN.equals(ptn) || YYYYMMDDHH.equals(ptn) || YYYYMMDDHHMM.equals(ptn)
+                || YYYYMMDDHHMMSS.equals(ptn);
     }
 }

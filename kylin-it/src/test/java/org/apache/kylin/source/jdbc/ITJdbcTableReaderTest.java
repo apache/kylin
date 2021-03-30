@@ -91,7 +91,7 @@ public class ITJdbcTableReaderTest extends LocalFileMetadataTestCase implements 
         int rowNumber = 0;
         while (reader.next()) {
             String[] row = reader.getRow();
-            Assert.assertEquals(11, row.length);
+            Assert.assertEquals(12, row.length);
 
             rowNumber++;
         }
@@ -104,6 +104,11 @@ public class ITJdbcTableReaderTest extends LocalFileMetadataTestCase implements 
     @Override
     public int getSourceType() {
         return ISourceAware.ID_JDBC;
+    }
+
+    @Override
+    public KylinConfig getConfig() {
+        return getTestConfig();
     }
 
 }

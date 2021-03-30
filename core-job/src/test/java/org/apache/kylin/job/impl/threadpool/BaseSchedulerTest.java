@@ -24,6 +24,7 @@ import java.lang.reflect.Modifier;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -38,16 +39,18 @@ import org.slf4j.LoggerFactory;
 public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseSchedulerTest.class);
-    
-    private DefaultScheduler scheduler;
-
-    protected ExecutableManager jobService;
+    protected DefaultScheduler scheduler;
+    protected ExecutableManager execMgr;
 
     @Before
     public void setup() throws Exception {
         System.setProperty("kylin.job.scheduler.poll-interval-second", "1");
         createTestMetadata();
-        jobService = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
+        execMgr = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
+        startScheduler();
+    }
+
+    protected void startScheduler() throws SchedulerException {
         scheduler = DefaultScheduler.createInstance();
         scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()), new MockJobLock());
         if (!scheduler.hasStarted()) {
@@ -72,21 +75,22 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
         field.set(null, newValue);
     }
 
-    protected void waitForJobFinish(String jobId) {
+    protected void waitForJobFinish(String jobId, int maxWaitTime) {
         int error = 0;
+        long start = System.currentTimeMillis();
         final int errorLimit = 3;
-        
-        while (error < errorLimit) {
+        while (error < errorLimit && (System.currentTimeMillis() - start < maxWaitTime)) {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
             try {
-                AbstractExecutable job = jobService.getJob(jobId);
+                AbstractExecutable job = execMgr.getJob(jobId);
                 ExecutableState status = job.getStatus();
-                if (status == ExecutableState.SUCCEED || status == ExecutableState.ERROR || status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED) {
+                if (status == ExecutableState.SUCCEED || status == ExecutableState.ERROR
+                        || status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED) {
                     break;
                 }
             } catch (Exception ex) {
@@ -94,15 +98,19 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
                 error++;
             }
         }
-        
+
         if (error >= errorLimit) {
-            throw new RuntimeException("waitForJobFinish() encounters exceptions, see logs above");
+            throw new RuntimeException("too many exceptions");
+        }
+
+        if (System.currentTimeMillis() - start >= maxWaitTime) {
+            throw new RuntimeException("too long wait time");
         }
     }
 
     protected void waitForJobStatus(String jobId, ExecutableState state, long interval) {
         while (true) {
-            AbstractExecutable job = jobService.getJob(jobId);
+            AbstractExecutable job = execMgr.getJob(jobId);
             if (job.getStatus() == state) {
                 break;
             } else {
@@ -111,6 +119,22 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+            }
+        }
+    }
+
+    protected void runningJobToError(String jobId) {
+        while (true) {
+            try {
+                AbstractExecutable job = execMgr.getJob(jobId);
+                ExecutableState status = job.getStatus();
+                if (status == ExecutableState.RUNNING) {
+                    scheduler.getFetcherRunner().setFetchFailed(true);
+                    break;
+                }
+                Thread.sleep(1000);
+            } catch (Exception ex) {
+                logger.error("", ex);
             }
         }
     }

@@ -38,6 +38,9 @@ public class HLLCSerializer extends DataTypeSerializer<HLLCounter> {
 
     @Override
     public void serialize(HLLCounter value, ByteBuffer out) {
+        if (value == null) {
+            value = new HLLCounter(precision);
+        }
         try {
             value.writeRegisters(out);
         } catch (IOException e) {
@@ -80,4 +83,16 @@ public class HLLCSerializer extends DataTypeSerializer<HLLCounter> {
         return current().maxLength();
     }
 
+    @Override
+    protected double getStorageBytesEstimate(double averageNumOfElementsInCounter) {
+        int registerIndexSize = current().getRegisterIndexSize();
+        int m = 1 << precision;
+        if (!current().isDense((int) averageNumOfElementsInCounter)
+                || averageNumOfElementsInCounter < (m - 5d) / (1d + registerIndexSize)) {
+            // 5 = 1 + 4 for scheme and size
+            // size * (getRegisterIndexSize + 1)
+            return 5 + averageNumOfElementsInCounter * (registerIndexSize + 1);
+        }
+        return getStorageBytesEstimate();
+    }
 }

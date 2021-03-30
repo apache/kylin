@@ -18,12 +18,12 @@
 
 package org.apache.kylin.rest.request;
 
-import com.google.common.collect.Maps;
-
 import java.util.Map;
 
-public class JobBuildRequest2 {
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
+public class JobBuildRequest2 {
+    
     private long sourceOffsetStart;
 
     private long sourceOffsetEnd;
@@ -35,6 +35,8 @@ public class JobBuildRequest2 {
     private String buildType;
 
     private boolean force;
+    
+    private Integer priorityOffset = 0;
 
     public long getSourceOffsetStart() {
         return sourceOffsetStart;
@@ -84,4 +86,11 @@ public class JobBuildRequest2 {
         this.force = force;
     }
 
+    public Integer getPriorityOffset() {
+        return priorityOffset;
+    }
+
+    public void setPriorityOffset(Integer priorityOffset) {
+        this.priorityOffset = priorityOffset;
+    }
 }

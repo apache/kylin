@@ -1,0 +1,17 @@
+{
+  "uuid" : "9655a579-50da-6eeb-5b76-66668e452c0a",
+  "last_modified" : 1550561622009,
+  "version" : "2.6.0.20500",
+  "name" : "test_streaming_join_table_cube",
+  "owner" : "ADMIN",
+  "descriptor" : "test_streaming_join_table_cube",
+  "display_name" : "test_streaming_join_table_cube",
+  "cost" : 50,
+  "status" : "DISABLED",
+  "segments" : [ ],
+  "create_time_utc" : 1550561622009,
+  "cuboid_bytes" : null,
+  "cuboid_bytes_recommend" : null,
+  "cuboid_last_optimized" : 0,
+  "snapshots" : { }
+}

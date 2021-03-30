@@ -23,10 +23,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
@@ -38,15 +38,11 @@ import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.shaded.com.google.common.collect.ComparisonChain;
 
 @SuppressWarnings("serial")
 public class Cuboid implements Comparable<Cuboid>, Serializable {
-
-    // TODO Should the cache be inside CuboidScheduler?
-    private final static Map<String, Map<Long, Cuboid>> CUBOID_CACHE = Maps.newConcurrentMap();
 
     // smaller is better
     public final static Comparator<Long> cuboidSelectComparator = new Comparator<Long>() {
@@ -56,25 +52,42 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
         }
     };
 
-    // this is the only entry point for query to find the right cuboid for a segment
-    public static Cuboid identifyCuboid(CubeSegment cubeSegment, Set<TblColRef> dimensions,
-            Collection<FunctionDesc> metrics) {
-        return identifyCuboid(cubeSegment.getCuboidScheduler(), dimensions, metrics);
+    // for mandatory cuboid, no need to translate cuboid
+    public static Cuboid findForMandatory(CubeDesc cube, long cuboidID) {
+        return CuboidManager.getInstance(cube.getConfig()).findMandatoryId(cube, cuboidID);
     }
-
-    // this is the only entry point for query to find the right cuboid for a cube instance
-    public static Cuboid identifyCuboid(CubeInstance cubeInstance, Set<TblColRef> dimensions,
+    
+    public static Cuboid findCuboid(CuboidScheduler cuboidScheduler, Set<TblColRef> dimensions,
             Collection<FunctionDesc> metrics) {
-        return identifyCuboid(cubeInstance.getCuboidScheduler(), dimensions, metrics);
-    }
-
-    public static Cuboid identifyCuboid(CuboidScheduler cuboidScheduler, Set<TblColRef> dimensions,
-            Collection<FunctionDesc> metrics) {
-        long cuboidID = identifyCuboidId(cuboidScheduler.getCubeDesc(), dimensions, metrics);
+        long cuboidID = toCuboidId(cuboidScheduler.getCubeDesc(), dimensions, metrics);
         return Cuboid.findById(cuboidScheduler, cuboidID);
     }
 
-    public static long identifyCuboidId(CubeDesc cubeDesc, Set<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
+    public static Cuboid findById(CuboidScheduler cuboidScheduler, byte[] cuboidID) {
+        return findById(cuboidScheduler, Bytes.toLong(cuboidID));
+    }
+
+    @Deprecated
+    public static Cuboid findById(CubeSegment cubeSegment, long cuboidID) {
+        return findById(cubeSegment.getCuboidScheduler(), cuboidID);
+    }
+
+    @VisibleForTesting
+    static Cuboid findById(CubeDesc cubeDesc, long cuboidID) {
+        return findById(cubeDesc.getInitialCuboidScheduler(), cuboidID);
+    }
+
+    public static Cuboid findById(CuboidScheduler cuboidScheduler, long cuboidID) {
+        KylinConfig config = cuboidScheduler.getCubeDesc().getConfig();
+        return CuboidManager.getInstance(config).findById(cuboidScheduler, cuboidID);
+    }
+
+    public static void clearCache(CubeInstance cubeInstance) {
+        KylinConfig config = cubeInstance.getConfig();
+        CuboidManager.getInstance(config).clearCache(cubeInstance);
+    }
+
+    public static long toCuboidId(CubeDesc cubeDesc, Set<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
         for (FunctionDesc metric : metrics) {
             if (metric.getMeasureType().onlyAggrInBaseCuboid())
                 return Cuboid.getBaseCuboidId(cubeDesc);
@@ -88,56 +101,12 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
         return cuboidID;
     }
 
-    public static Cuboid findById(CuboidScheduler cuboidScheduler, byte[] cuboidID) {
-        return findById(cuboidScheduler, Bytes.toLong(cuboidID));
-    }
-
-    public static Cuboid findById(CubeSegment cubeSegment, long cuboidID) {
-        return findById(cubeSegment.getCuboidScheduler(), cuboidID);
-    }
-
-    public static Cuboid findById(CubeInstance cubeInstance, long cuboidID) {
-        return findById(cubeInstance.getCuboidScheduler(), cuboidID);
-    }
-
-    @VisibleForTesting
-    static Cuboid findById(CubeDesc cubeDesc, long cuboidID) {
-        return findById(cubeDesc.getInitialCuboidScheduler(), cuboidID);
-    }
-
-    public static Cuboid findById(CuboidScheduler cuboidScheduler, long cuboidID) {
-        Map<Long, Cuboid> cubeCache = CUBOID_CACHE.get(cuboidScheduler.getCuboidCacheKey());
-        if (cubeCache == null) {
-            cubeCache = Maps.newConcurrentMap();
-            CUBOID_CACHE.put(cuboidScheduler.getCuboidCacheKey(), cubeCache);
-        }
-        Cuboid cuboid = cubeCache.get(cuboidID);
-        if (cuboid == null) {
-            long validCuboidID = cuboidScheduler.findBestMatchCuboid(cuboidID);
-            cuboid = new Cuboid(cuboidScheduler.getCubeDesc(), cuboidID, validCuboidID);
-            cubeCache.put(cuboidID, cuboid);
-        }
-        return cuboid;
-    }
-
     public static long getBaseCuboidId(CubeDesc cube) {
         return cube.getRowkey().getFullMask();
     }
 
     public static Cuboid getBaseCuboid(CubeDesc cube) {
         return findById(cube.getInitialCuboidScheduler(), getBaseCuboidId(cube));
-    }
-
-    public static void clearCache() {
-        CUBOID_CACHE.clear();
-    }
-
-    public static void clearCache(String cacheKey) {
-        CUBOID_CACHE.remove(cacheKey);
-    }
-    
-    public static void clearCache(CubeInstance cubeInstance) {
-        CUBOID_CACHE.remove(cubeInstance.getCuboidScheduler().getCuboidCacheKey());
     }
 
     // ============================================================================

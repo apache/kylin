@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
+import org.apache.kylin.rest.request.CubeMigrationRequest;
 import org.apache.kylin.rest.service.CacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -67,10 +69,28 @@ public class CacheController extends BasicController {
         cacheService.notifyMetadataChange(entity, Broadcaster.Event.getEvent(event), cacheKey);
     }
 
+    /**
+     * If cacheKey has "/", will lead to this method.
+     */
+    @RequestMapping(value = "/{entity}/{event}", method = { RequestMethod.PUT }, produces = { "application/json" })
+    @ResponseBody
+    public void wipeCacheWithRequestBody(@PathVariable String entity, @PathVariable String event,
+            @RequestBody String cacheKey) throws IOException {
+        cacheService.notifyMetadataChange(entity, Broadcaster.Event.getEvent(event), cacheKey);
+    }
+
     @RequestMapping(value = "/announce/config", method = { RequestMethod.POST }, produces = { "application/json" })
     public void hotLoadKylinConfig() throws IOException {
         KylinConfig.getInstanceFromEnv().reloadFromSiteProperties();
         cacheService.notifyMetadataChange(Broadcaster.SYNC_ALL, Broadcaster.Event.UPDATE, Broadcaster.SYNC_ALL);
+    }
+
+    @RequestMapping(value = "/migration", method = RequestMethod.POST)
+    @ResponseBody
+    public void clearCacheForCubeMigration(@RequestBody CubeMigrationRequest request) throws IOException {
+        cacheService.clearCacheForCubeMigration(request.getCube(), request.getProject(), request.getModel(), request.getTableToProjects());
+
+        cacheService.cleanDataCache(request.getProject());
     }
 
     public void setCacheService(CacheService cacheService) {

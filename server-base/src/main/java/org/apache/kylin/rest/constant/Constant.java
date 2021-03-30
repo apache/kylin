@@ -34,6 +34,8 @@ public class Constant {
     public final static String ROLE_MODELER = "ROLE_MODELER";
     public final static String ROLE_ANALYST = "ROLE_ANALYST";
 
+    public final static String GROUP_ALL_USERS = "ALL_USERS";
+
     public final static String ACCESS_HAS_ROLE_ADMIN = "hasRole('ROLE_ADMIN')";
     //public final static String ACCESS_HAS_ROLE_MODELER = "hasRole('ROLE_MODELER')";
 

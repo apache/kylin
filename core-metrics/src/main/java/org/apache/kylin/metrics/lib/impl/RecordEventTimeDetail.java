@@ -18,21 +18,22 @@
 
 package org.apache.kylin.metrics.lib.impl;
 
+import org.apache.kylin.common.KylinConfig;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.TimeZone;
-
-import org.apache.kylin.common.KylinConfig;
 
 public class RecordEventTimeDetail {
     private static final TimeZone timeZone;
-    private static final ThreadLocal<SimpleDateFormat> dateFormatThreadLocal = new ThreadLocal<SimpleDateFormat>();
-    private static final ThreadLocal<SimpleDateFormat> timeFormatThreadLocal = new ThreadLocal<SimpleDateFormat>();
+    private static final ThreadLocal<SimpleDateFormat> dateFormatThreadLocal = new ThreadLocal<>();
+    private static final ThreadLocal<SimpleDateFormat> timeFormatThreadLocal = new ThreadLocal<>();
 
     static {
-        timeZone = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone());
+        timeZone = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getKylinMetricsEventTimeZone());
     }
-
+    
     public final String year_begin_date;
     public final String month_begin_date;
     public final String date;
@@ -43,24 +44,24 @@ public class RecordEventTimeDetail {
     public final String week_begin_date;
 
     public RecordEventTimeDetail(long timeStamp) {
-        Calendar calendar = Calendar.getInstance(timeZone);
+        Calendar calendar = Calendar.getInstance(timeZone, Locale.ROOT);
         calendar.setTimeInMillis(timeStamp);
 
         SimpleDateFormat dateFormat = dateFormatThreadLocal.get();
         if (dateFormat == null) {
-            dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
             dateFormat.setTimeZone(timeZone);
             dateFormatThreadLocal.set(dateFormat);
         }
         SimpleDateFormat timeFormat = timeFormatThreadLocal.get();
         if (timeFormat == null) {
-            timeFormat = new SimpleDateFormat("HH:mm:ss");
+            timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.ROOT);
             timeFormat.setTimeZone(timeZone);
             timeFormatThreadLocal.set(timeFormat);
         }
 
-        String yearStr = String.format("%04d", calendar.get(Calendar.YEAR));
-        String monthStr = String.format("%02d", calendar.get(Calendar.MONTH) + 1);
+        String yearStr = String.format(Locale.ROOT, "%04d", calendar.get(Calendar.YEAR));
+        String monthStr = String.format(Locale.ROOT, "%02d", calendar.get(Calendar.MONTH) + 1);
         this.year_begin_date = yearStr + "-01-01";
         this.month_begin_date = yearStr + "-" + monthStr + "-01";
         this.date = dateFormat.format(calendar.getTime());
@@ -70,7 +71,7 @@ public class RecordEventTimeDetail {
         this.second = calendar.get(Calendar.SECOND);
 
         long timeStampForWeekBegin = timeStamp;
-        timeStampForWeekBegin -= 3600000 * 24 * (calendar.get(Calendar.DAY_OF_WEEK) - 1);
+        timeStampForWeekBegin -= 3600000L * 24 * (calendar.get(Calendar.DAY_OF_WEEK) - 1);
         calendar.setTimeInMillis(timeStampForWeekBegin);
         this.week_begin_date = dateFormat.format(calendar.getTime());
     }

@@ -36,6 +36,10 @@ public class ClassUtil {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ClassUtil.class);
 
+    private ClassUtil() {
+        throw new IllegalStateException("Class ClassUtil is an utility class !");
+    }
+
     public static void addClasspath(String path) {
         logger.info("Adding path " + path + " to class path");
         File file = new File(path);
@@ -81,7 +85,7 @@ public class ClassUtil {
 
     public static Object newInstance(String clz) {
         try {
-            return forName(clz, Object.class).newInstance();
+            return forName(clz, Object.class).getDeclaredConstructor().newInstance();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -116,7 +120,11 @@ public class ClassUtil {
 
                 url = (URL) e.nextElement();
                 if (!"jar".equals(url.getProtocol()))
-                    break;
+                    continue;
+                if (System.getenv("KYLIN_HOME") != null && url.getPath().contains(System.getenv("KYLIN_HOME"))) {
+                    logger.debug("It's better to use the jar under the hadoop directory.");
+                    continue;
+                }
                 if (preferJarKeyWord != null && url.getPath().indexOf(preferJarKeyWord) != -1)
                     break;
                 if (preferJarKeyWord == null)
@@ -133,5 +141,15 @@ public class ClassUtil {
         } catch (IOException var6) {
             throw new RuntimeException(var6);
         }
+    }
+
+    public static String findContainingJar(String className, String perferLibraryName) {
+        try {
+            return findContainingJar(Class.forName(className), perferLibraryName);
+        } catch (ClassNotFoundException e) {
+            logger.warn("failed to locate jar for class " + className + ", ignore it");
+        }
+
+        return "";
     }
 }

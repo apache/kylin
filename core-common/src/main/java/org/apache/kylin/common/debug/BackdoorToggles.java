@@ -18,12 +18,18 @@
 
 package org.apache.kylin.common.debug;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.Pair;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * BackdoorToggles and QueryContext are similar because they're both hosting per-query thread local variables.
@@ -34,7 +40,7 @@ import com.google.common.collect.Maps;
  */
 public class BackdoorToggles {
 
-    private static final ThreadLocal<Map<String, String>> _backdoorToggles = new ThreadLocal<Map<String, String>>();
+    private static final InternalThreadLocal<Map<String, String>> _backdoorToggles = new InternalThreadLocal<Map<String, String>>();
 
     public static void setToggles(Map<String, String> toggles) {
         _backdoorToggles.set(toggles);
@@ -47,7 +53,7 @@ public class BackdoorToggles {
         }
         _backdoorToggles.get().put(key, value);
     }
-    
+
     public static void addToggles(Map<String, String> toggles) {
         Map<String, String> map = _backdoorToggles.get();
         if (map == null) {
@@ -55,14 +61,18 @@ public class BackdoorToggles {
         }
         _backdoorToggles.get().putAll(toggles);
     }
-    
+
     // try avoid using this generic method
     public static String getToggle(String key) {
         Map<String, String> map = _backdoorToggles.get();
         if (map == null)
             return null;
-        
+
         return map.get(key);
+    }
+
+    public static String getForceHitCube(){
+        return getString(DEBUG_TOGGLE_HIT_CUBE);
     }
 
     public static String getCoprocessorBehavior() {
@@ -81,6 +91,10 @@ public class BackdoorToggles {
         return getBoolean(DEBUG_TOGGLE_DISABLE_QUERY_CACHE);
     }
 
+    public static boolean getDisableSegmentCache() {
+        return getBoolean(DEBUG_TOGGLE_DISABLE_QUERY_SEGMENT_CACHE);
+    }
+
     public static boolean getDisableFuzzyKey() {
         return getBoolean(DEBUG_TOGGLE_DISABLE_FUZZY_KEY);
     }
@@ -97,8 +111,20 @@ public class BackdoorToggles {
         return getString(DEBUG_TOGGLE_DUMPED_PARTITION_DIR);
     }
 
-    public static boolean getCheckAllModels(){
+    public static boolean getCheckAllModels() {
         return getBoolean(DEBUG_TOGGLE_CHECK_ALL_MODELS);
+    }
+
+    public static boolean getDisabledRawQueryLastHacker() {
+        return getBoolean(DISABLE_RAW_QUERY_HACKER);
+    }
+
+    public static boolean getHtraceEnabled() {
+        return getBoolean(DEBUG_TOGGLE_HTRACE_ENABLED);
+    }
+
+    public static boolean isStreamingProfileEnable() {
+        return getBoolean(DEBUG_TOGGLE_STREAMING_DETAIL_PROFILE);
     }
 
     public static int getQueryTimeout() {
@@ -106,7 +132,7 @@ public class BackdoorToggles {
         if (v == null)
             return -1;
         else
-            return Integer.valueOf(v);
+            return Integer.parseInt(v);
     }
 
     public static Pair<Short, Short> getShardAssignment() {
@@ -130,7 +156,7 @@ public class BackdoorToggles {
     public static boolean getPrepareOnly() {
         return getBoolean(DEBUG_TOGGLE_PREPARE_ONLY);
     }
-    
+
     private static String getString(String key) {
         Map<String, String> toggles = _backdoorToggles.get();
         if (toggles == null) {
@@ -146,6 +172,35 @@ public class BackdoorToggles {
 
     public static void cleanToggles() {
         _backdoorToggles.remove();
+    }
+
+    /**
+     * get extra calcite props from jdbc client
+     */
+    public static Properties getJdbcDriverClientCalciteProps() {
+        Properties props = new Properties();
+        String propsStr = getString(JDBC_CLIENT_CALCITE_PROPS);
+        if (propsStr == null) {
+            return props;
+        }
+        try {
+            props.load(new StringReader(propsStr));
+        } catch (IOException ignored) {
+            // ignored
+        }
+        final Set<String> allowedPropsNames = Sets.newHashSet(
+                "caseSensitive",
+                "unquotedCasing",
+                "quoting",
+                "conformance"
+        );
+        // remove un-allowed props
+        for (String key : props.stringPropertyNames()) {
+            if (!allowedPropsNames.contains(key)) {
+                props.remove(key);
+            }
+        }
+        return props;
     }
 
     /**
@@ -171,6 +226,18 @@ public class BackdoorToggles {
      }
      */
     public final static String DEBUG_TOGGLE_DISABLE_QUERY_CACHE = "DEBUG_TOGGLE_DISABLE_QUERY_CACHE";
+
+    /**
+     * set DEBUG_TOGGLE_DISABLE_QUERY_SEGMENT_CACHE=true to prevent using segment cache for current query
+     *
+     *
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DEBUG_TOGGLE_DISABLE_QUERY_SEGMENT_CACHE": "true"
+     }
+     */
+    public final static String DEBUG_TOGGLE_DISABLE_QUERY_SEGMENT_CACHE = "DEBUG_TOGGLE_DISABLE_QUERY_SEGMENT_CACHE";
 
     /**
      * set DEBUG_TOGGLE_HBASE_CUBE_QUERY_VERSION=v1/v2 to control which version CubeStorageQuery to use
@@ -264,7 +331,7 @@ public class BackdoorToggles {
      }
      */
     public final static String DEBUG_TOGGLE_PREPARE_ONLY = "DEBUG_TOGGLE_PREPARE_ONLY";
-    
+
     // properties on statement may go with this "channel" too
     /**
      * set ATTR_STATEMENT_MAX_ROWS="maxRows" to statement's max rows property
@@ -285,4 +352,47 @@ public class BackdoorToggles {
      }
      */
     public final static String DEBUG_TOGGLE_CHECK_ALL_MODELS = "DEBUG_TOGGLE_CHECK_ALL_MODELS";
+
+    /**
+     * set DISABLE_RAW_QUERY_HACKER="true" to disable RawQueryLastHacker.hackNoAggregations()
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DISABLE_RAW_QUERY_HACKER": "true"
+     }
+     */
+    public final static String DISABLE_RAW_QUERY_HACKER = "DISABLE_RAW_QUERY_HACKER";
+
+    /**
+     * set DEBUG_TOGGLE_HTRACE_ENABLED="true" to enable htrace
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DEBUG_TOGGLE_HTRACE_ENABLED": "true"
+     }
+     */
+    public final static String DEBUG_TOGGLE_HTRACE_ENABLED = "DEBUG_TOGGLE_HTRACE_ENABLED";
+
+    /**
+     * extra calcite props from jdbc client
+     */
+    public static final String JDBC_CLIENT_CALCITE_PROPS = "JDBC_CLIENT_CALCITE_PROPS";
+
+    /**
+     * set DEBUG_TOGGLE_STREAMING_PROFILE="true" to profile streaming query
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DEBUG_TOGGLE_STREAMING_DETAIL_PROFILE": "true"
+     }
+     */
+    public final static String DEBUG_TOGGLE_STREAMING_DETAIL_PROFILE = "DEBUG_TOGGLE_STREAMING_DETAIL_PROFILE";
+
+
+    /**
+     * The cube chosen by Kylin may not be enough correct, user should have
+     *  the right to choose which cube he want to query in some case, please
+     *  check https://issues.apache.org/jira/browse/KYLIN-4312 for information.
+     */
+    public final static String DEBUG_TOGGLE_HIT_CUBE = "DEBUG_TOGGLE_HIT_CUBE";
 }

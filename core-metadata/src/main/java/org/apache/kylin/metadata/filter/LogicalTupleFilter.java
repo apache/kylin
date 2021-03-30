@@ -27,7 +27,7 @@ import java.util.List;
 
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class LogicalTupleFilter extends TupleFilter implements IOptimizeableTupleFilter {
 
@@ -170,4 +170,30 @@ public class LogicalTupleFilter extends TupleFilter implements IOptimizeableTupl
         return transformer.visit(this);
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if (!(other instanceof LogicalTupleFilter)) {
+            return false;
+        }
+        final LogicalTupleFilter otherFilter = (LogicalTupleFilter) other;
+        if (otherFilter.operator != this.operator || otherFilter.children.size() != this.children.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < otherFilter.children.size(); i++) {
+            if (!otherFilter.children.get(i).equals(this.children.get(i))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return (operator == null ? 0 : operator.hashCode()) + 31 * this.children.hashCode();
+    }
 }

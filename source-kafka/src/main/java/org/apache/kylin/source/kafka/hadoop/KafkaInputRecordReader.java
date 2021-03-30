@@ -21,6 +21,7 @@ package org.apache.kylin.source.kafka.hadoop;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
@@ -89,13 +90,15 @@ public class KafkaInputRecordReader extends RecordReader<LongWritable, BytesWrit
 
         Properties kafkaProperties = KafkaConsumerProperties.extractKafkaConfigToProperties(conf);
 
-        consumer = org.apache.kylin.source.kafka.util.KafkaClient.getKafkaConsumer(brokers, consumerGroup, kafkaProperties);
+        consumer = org.apache.kylin.source.kafka.util.KafkaClient.getKafkaConsumer(brokers, consumerGroup,
+                kafkaProperties);
 
         earliestOffset = this.split.getOffsetStart();
         latestOffset = this.split.getOffsetEnd();
         TopicPartition topicPartition = new TopicPartition(topic, partition);
         consumer.assign(Arrays.asList(topicPartition));
-        log.info("Split {} Topic: {} Broker: {} Partition: {} Start: {} End: {}", new Object[] { this.split, topic, this.split.getBrokers(), partition, earliestOffset, latestOffset });
+        log.info("Split {} Topic: {} Broker: {} Partition: {} Start: {} End: {}",
+                new Object[] { this.split, topic, this.split.getBrokers(), partition, earliestOffset, latestOffset });
     }
 
     @Override
@@ -120,7 +123,9 @@ public class KafkaInputRecordReader extends RecordReader<LongWritable, BytesWrit
             iterator = messages.iterator();
             if (!iterator.hasNext()) {
                 log.info("No more messages, stop");
-                throw new IOException(String.format("Unexpected ending of stream, expected ending offset %d, but end at %d", latestOffset, watermark));
+                throw new IOException(String.format(Locale.ROOT,
+                        "Unexpected ending of stream, expected ending offset " + "%d, but end at %d", latestOffset,
+                        watermark));
             }
         }
 
@@ -139,7 +144,8 @@ public class KafkaInputRecordReader extends RecordReader<LongWritable, BytesWrit
         }
 
         log.error("Unexpected iterator end.");
-        throw new IOException(String.format("Unexpected ending of stream, expected ending offset %d, but end at %d", latestOffset, watermark));
+        throw new IOException(String.format(Locale.ROOT,
+                "Unexpected ending of stream, expected ending offset %d, but end at %d", latestOffset, watermark));
     }
 
     @Override
@@ -162,7 +168,8 @@ public class KafkaInputRecordReader extends RecordReader<LongWritable, BytesWrit
 
     @Override
     public void close() throws IOException {
-        log.info("{} num. processed messages {} ", topic + ":" + split.getBrokers() + ":" + partition, numProcessedMessages);
+        log.info("{} num. processed messages {} ", topic + ":" + split.getBrokers() + ":" + partition,
+                numProcessedMessages);
         consumer.close();
     }
 

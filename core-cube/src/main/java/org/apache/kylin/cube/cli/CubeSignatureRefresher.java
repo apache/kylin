@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -33,7 +34,7 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * used to bulk refresh the cube's signature in metadata store.
@@ -61,7 +62,7 @@ public class CubeSignatureRefresher {
         if (ArrayUtils.isEmpty(cubeNames)) {
             cubeDescs = cubeDescManager.listAllDesc();
         } else {
-            String[] names = cubeNames[0].split(",");
+            String[] names = StringUtil.splitByComma(cubeNames[0]);
             if (ArrayUtils.isEmpty(names))
                 return;
             cubeDescs = Lists.newArrayListWithCapacity(names.length);
@@ -97,7 +98,7 @@ public class CubeSignatureRefresher {
             String calculatedSign = cubeDesc.calculateSignature();
             if (cubeDesc.getSignature() == null || (!cubeDesc.getSignature().equals(calculatedSign))) {
                 cubeDesc.setSignature(calculatedSign);
-                store.putResource(cubeDesc.getResourcePath(), cubeDesc, CubeDescManager.CUBE_DESC_SERIALIZER);
+                store.checkAndPutResource(cubeDesc.getResourcePath(), cubeDesc, CubeDesc.newSerializerForLowLevelAccess());
                 updatedResources.add(cubeDesc.getResourcePath());
             }
         } catch (Exception e) {

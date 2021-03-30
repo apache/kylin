@@ -20,6 +20,7 @@ package org.apache.kylin.measure.extendedcolumn;
 
 import java.nio.ByteBuffer;
 
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -75,7 +76,7 @@ public class ExtendedColumnSerializerTest extends LocalFileMetadataTestCase {
         serializer.serialize(array, buffer);
         buffer.flip();
         ByteArray des = serializer.deserialize(buffer);
-        Assert.assertTrue(new ByteArray(text.getBytes()).equals(des));
+        Assert.assertTrue(new ByteArray(text.getBytes(StandardCharsets.UTF_8)).equals(des));
     }
 
     @Test
@@ -89,6 +90,6 @@ public class ExtendedColumnSerializerTest extends LocalFileMetadataTestCase {
         serializer.serialize(array, buffer);
         buffer.flip();
         ByteArray des = serializer.deserialize(buffer);
-        Assert.assertTrue(new ByteArray(StringUtils.repeat("h", 20).getBytes()).equals(des));
+        Assert.assertTrue(new ByteArray(StringUtils.repeat("h", 20).getBytes(StandardCharsets.UTF_8)).equals(des));
     }
 }

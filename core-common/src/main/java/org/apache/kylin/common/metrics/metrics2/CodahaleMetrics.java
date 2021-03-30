@@ -24,9 +24,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -52,13 +52,13 @@ import com.codahale.metrics.MetricSet;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.json.MetricsModule;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Splitter;
+import org.apache.kylin.shaded.com.google.common.cache.CacheBuilder;
+import org.apache.kylin.shaded.com.google.common.cache.CacheLoader;
+import org.apache.kylin.shaded.com.google.common.cache.LoadingCache;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * Codahale-backed Metrics implementation.
@@ -84,7 +84,6 @@ public class CodahaleMetrics implements Metrics {
     private LoadingCache<String, Counter> counters;
     private LoadingCache<String, Meter> meters;
     private LoadingCache<String, Histogram> histograms;
-    private ConcurrentHashMap<String, Gauge> gauges;
     private KylinConfig conf;
 
     public CodahaleMetrics() {
@@ -122,13 +121,6 @@ public class CodahaleMetrics implements Metrics {
                 return histogram;
             }
         });
-        gauges = new ConcurrentHashMap<String, Gauge>();
-        //register JVM metrics
-        //        registerAll("gc", new GarbageCollectorMetricSet());
-        //        registerAll("buffers", new BufferPoolMetricSet(ManagementFactory.getPlatformMBeanServer()));
-        //        registerAll("memory", new MemoryUsageGaugeSet());
-        //        registerAll("threads", new ThreadStatesGaugeSet());
-        //        registerAll("classLoadingz", new ClassLoadingGaugeSet());
 
         //initialize reporters
         initReporting();
@@ -144,9 +136,27 @@ public class CodahaleMetrics implements Metrics {
         for (Map.Entry<String, Metric> metric : metricRegistry.getMetrics().entrySet()) {
             metricRegistry.remove(metric.getKey());
         }
-        timers.invalidateAll();
-        counters.invalidateAll();
-        meters.invalidateAll();
+
+        try {
+            timersLock.lock();
+            timers.invalidateAll();
+        } finally {
+            timersLock.unlock();
+        }
+
+        try {
+            countersLock.lock();
+            counters.invalidateAll();
+        } finally {
+            countersLock.unlock();
+        }
+
+        try {
+            metersLock.lock();
+            meters.invalidateAll();
+        } finally {
+            metersLock.unlock();
+        }
     }
 
     @Override
@@ -243,7 +253,6 @@ public class CodahaleMetrics implements Metrics {
     private void addGaugeInternal(String name, Gauge gauge) {
         try {
             gaugesLock.lock();
-            gauges.put(name, gauge);
             // Metrics throws an Exception if we don't do this when the key already exists
             if (metricRegistry.getGauges().containsKey(name)) {
                 LOGGER.warn("A Gauge with name [" + name + "] already exists. "
@@ -432,7 +441,7 @@ public class CodahaleMetrics implements Metrics {
         MetricsReporting reporter = null;
         for (String metricsReportingName : metricsReporterNames) {
             try {
-                reporter = MetricsReporting.valueOf(metricsReportingName.trim().toUpperCase());
+                reporter = MetricsReporting.valueOf(metricsReportingName.trim().toUpperCase(Locale.ROOT));
             } catch (IllegalArgumentException e) {
                 LOGGER.error("Invalid reporter name " + metricsReportingName, e);
                 throw e;
