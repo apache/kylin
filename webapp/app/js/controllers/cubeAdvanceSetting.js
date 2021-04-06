@@ -521,6 +521,10 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     }
   };
 
+  $scope.isMeasureBitmap_map = function(type) {
+    return type == "bitmap_map";
+  }; 
+
   $scope.changeSnapshotTable = function(changeSnapshot, beforeTableName, snapshotTableDescList) {
     var existSnapshot = _.find(snapshotTableDescList, function(snapshot) {
       return snapshot.table_name === changeSnapshot.table_name;

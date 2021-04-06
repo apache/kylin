@@ -97,7 +97,8 @@ KylinApp.service('CubeDescModel', function (kylinConfig) {
     var dictionaries = {
       "column": null,
       "builder": null,
-      "reuse":null
+      "reuse":null,
+      "type":null
     }
     return dictionaries;
   }
