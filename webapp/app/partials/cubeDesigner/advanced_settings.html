@@ -489,12 +489,22 @@
                      <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Builder Class</b></label>
                      <div class="col-xs-12 col-sm-6">
                        <select class="form-control" chosen
+                               ng-if="isMeasureBitmap_map(newDictionaries.type)"
                                ng-model="newDictionaries.builder"
-                               ng-options="item.value as item.name for item in cubeConfig.buildDictionaries"
+                               ng-options="item.value as item.name for item in cubeConfig.buildDictionariesForBitMap_Map"
                                required>
                          <option value="">-- Select a builder class--</option>
                        </select>
                      </div>
+                     <div class="col-xs-12 col-sm-6">
+                      <select class="form-control" chosen
+                              ng-if="!isMeasureBitmap_map(newDictionaries.type)"
+                              ng-model="newDictionaries.builder"
+                              ng-options="item.value as item.name for item in cubeConfig.buildDictionariesForBitMap"
+                              required>
+                        <option value="">-- Select a builder class--</option>
+                      </select>
+                    </div>
                    </div>
                  </div>
                  <!--Reuse-->
