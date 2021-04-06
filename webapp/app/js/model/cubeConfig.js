@@ -51,7 +51,8 @@ KylinApp.constant('cubeConfig', {
     {name: 'Error Rate < 2.44%', value: 'hllc(14)'},
     {name: 'Error Rate < 1.72%', value: 'hllc(15)'},
     {name: 'Error Rate < 1.22%', value: 'hllc(16)'},
-    {name: 'Precisely (More Memory And Storage Needed)', value: 'bitmap'}
+    {name: 'Precisely (More Memory And Storage Needed)', value: 'bitmap'},
+    {name: 'Precisely (Different Encoding Among Segments)', value: 'bitmap_map'}
   ],
   topNTypes: [
     {name: 'Top 10', value: "topn(10)"},
@@ -119,8 +120,11 @@ KylinApp.constant('cubeConfig', {
     true,false
   ],
   statusNeedNofity:['ERROR', 'DISCARDED', 'SUCCEED'],
-  buildDictionaries:[
+  buildDictionariesForBitMap:[
     {name:"Global Dictionary", value:"org.apache.kylin.dict.GlobalDictionaryBuilder"},
+    {name:"Segment Dictionary", value:"org.apache.kylin.dict.global.SegmentAppendTrieDictBuilder"}
+  ],
+  buildDictionariesForBitMap_Map:[
     {name:"Segment Dictionary", value:"org.apache.kylin.dict.global.SegmentAppendTrieDictBuilder"}
   ],
   needSetLengthEncodingList:['fixed_length','fixed_length_hex','int','integer'],
