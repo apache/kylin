@@ -64,6 +64,7 @@ public class BatchOptimizeJobBuilder2 extends JobBuilderSupport {
 
         // Phase 1: Prepare base cuboid data from old segment
         String oldcuboidRootPath = getCuboidRootPath(oldSegment) + "*";
+        // write to optimizeCuboidRootPath + /base_cuboid OR +/old
         result.addTask(createFilterRecommendCuboidDataStep(oldcuboidRootPath, optimizeCuboidRootPath));
 
         // Phase 2: Prepare dictionary and statistics for new segment
