@@ -1731,6 +1731,14 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark-create-table-enabled", FALSE));
     }
 
+    public boolean isSparkOptimizeCubeViaSparkEnable() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark-optimize-cube-enabled", TRUE));
+    }
+
+    public boolean isUseSparkCalculateStatsEnable() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark-calculate-stats-enabled", TRUE));
+    }
+
     public boolean isFlinkSanityCheckEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.flink.sanity-check-enabled", FALSE));
     }

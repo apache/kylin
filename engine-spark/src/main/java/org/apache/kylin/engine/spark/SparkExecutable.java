@@ -208,7 +208,7 @@ public class SparkExecutable extends AbstractExecutable {
         if (!StringUtils.isEmpty(sparkJobId)) {
             return onResumed(sparkJobId, mgr);
         } else {
-            String cubeName = this.getParam(SparkCubingByLayer.OPTION_CUBE_NAME.getOpt());
+            String cubeName = this.getParam(BatchConstants.ARG_CUBE_NAME);
             CubeInstance cube;
             if (cubeName != null) {
                 cube = CubeManager.getInstance(context.getConfig()).getCube(cubeName);
@@ -220,7 +220,7 @@ public class SparkExecutable extends AbstractExecutable {
                 config = cube.getConfig();
             } else {
                 // when loading hive table, we can't get cube name/config, so we get config from project.
-                String projectName = this.getParam(SparkColumnCardinality.OPTION_PRJ.getOpt());
+                String projectName = this.getParam(BatchConstants.ARG_PROJECT);
                 ProjectInstance projectInst = ProjectManager.getInstance(context.getConfig()).getProject(projectName);
                 config = projectInst.getConfig();
             }
@@ -251,7 +251,7 @@ public class SparkExecutable extends AbstractExecutable {
 
             if (cube != null && !isCreateFlatTable()) {
                 setAlgorithmLayer();
-                String segmentID = this.getParam(SparkCubingByLayer.OPTION_SEGMENT_ID.getOpt());
+                String segmentID = this.getParam(BatchConstants.ARG_SEGMENT_ID);
                 CubeSegment segment = cube.getSegmentById(segmentID);
                 Segments<CubeSegment> mergingSeg = cube.getMergingSegments(segment);
                 dumpMetadata(segment, mergingSeg);
@@ -513,7 +513,7 @@ public class SparkExecutable extends AbstractExecutable {
         CubeDescTiretreeGlobalDomainDictUtil.cuboidJob(segment.getCubeDesc(), dumpList);
 
         JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segment.getConfig(),
-                this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
+                this.getParam(BatchConstants.ARG_META_URL));
     }
 
     private void attachSegmentsMetadataWithDict(List<CubeSegment> segments) throws IOException {
@@ -530,7 +530,7 @@ public class SparkExecutable extends AbstractExecutable {
             CubeDescTiretreeGlobalDomainDictUtil.cuboidJob(segment.getCubeDesc(), dumpList);
         }
         JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segments.get(0).getConfig(),
-                this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
+                this.getParam(BatchConstants.ARG_META_URL));
     }
 
     protected void readCounters(final Map<String, String> info) {
