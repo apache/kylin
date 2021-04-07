@@ -35,8 +35,11 @@ import org.apache.kylin.rest.service.MigrationRuleSet;
 import org.apache.kylin.rest.service.MigrationService;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.QueryService;
+import org.apache.kylin.rest.service.StreamingV2Service;
 import org.apache.kylin.rest.service.TableService;
+import org.apache.kylin.stream.core.source.StreamingSourceConfig;
 import org.apache.kylin.tool.migration.CompatibilityCheckRequest;
+import org.apache.kylin.tool.migration.StreamTableCompatibilityCheckRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +75,9 @@ public class MigrationController extends BasicController {
 
     @Autowired
     private TableService tableService;
+
+    @Autowired
+    private StreamingV2Service streamingV2Service;
 
     private final String targetHost = KylinConfig.getInstanceFromEnv().getMigrationTargetAddress();
 
@@ -140,6 +146,38 @@ public class MigrationController extends BasicController {
         return Strings.isNullOrEmpty(targetHost) ? this.targetHost : targetHost;
     }
 
+    @RequestMapping(value = "/checkStreamTableCompatibility", method = { RequestMethod.POST })
+    @ResponseBody
+    public void checkStreamTableCompatibility(@RequestBody StreamTableCompatibilityCheckRequest request) {
+        TableDesc tableDesc = null;
+        try {
+            tableDesc = JsonUtil.readValue(request.getTableDesc(), TableDesc.class);
+            // check table desc
+            logger.info("Stream table compatibility check for table {}, project {}",
+                    tableDesc.getName(), tableDesc.getProject());
+            tableService.checkStreamTableCompatibility(request.getProjectName(), tableDesc);
+            logger.info("Pass stream table compatibility check for table {}, project {}",
+                    tableDesc.getName(), tableDesc.getProject());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw new ConflictException(e.getMessage(), e);
+        }
+
+        // check stream source config
+        StreamingSourceConfig config = null;
+        try {
+            config = JsonUtil.readValue(request.getStreamSource(), StreamingSourceConfig.class);
+            logger.info("Stream source config compatibility check for table {}, project {}",
+                    tableDesc.getName(), tableDesc.getProject());
+            streamingV2Service.checkStreamingSourceCompatibility(request.getProjectName(), config);
+            logger.info("Pass stream source config compatibility check for table {}, project {}",
+                    tableDesc.getName(), tableDesc.getProject());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw new ConflictException(e.getMessage(), e);
+        }
+    }
+
     /**
      * Check the schema compatibility for table, model desc
      */
@@ -198,5 +236,9 @@ public class MigrationController extends BasicController {
             throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
         }
         return result;
+    }
+
+    private boolean isStreamingTable(CubeInstance cube) {
+        return cube.getDescriptor().getModel().getRootFactTable().getTableDesc().isStreamingTable();
     }
 }
