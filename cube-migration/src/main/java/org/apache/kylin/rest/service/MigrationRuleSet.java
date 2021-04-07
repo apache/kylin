@@ -55,7 +55,10 @@ import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceManager;
+import org.apache.kylin.stream.core.source.StreamingSourceConfig;
+import org.apache.kylin.stream.core.source.StreamingSourceConfigManager;
 import org.apache.kylin.tool.migration.CompatibilityCheckRequest;
+import org.apache.kylin.tool.migration.StreamTableCompatibilityCheckRequest;
 import org.apache.kylin.tool.query.QueryGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +89,7 @@ public class MigrationRuleSet {
     public static final Rule DEFAULT_SEGMENT_RULE = new SegmentRule();
     public static final Rule DEFAULT_CUBE_OVERWRITE_RULE = new CubeOverwriteRule();
     public static final Rule DEFAULT_QUERY_LATENCY_RULE = new QueryLatencyRule();
+    public static final Rule DEFAULT_STREAM_TABLE_CHECK_RULE = new StreamTableCompatibilityRule();
 
     private static List<Rule> MUSTTOPASS_RULES = Lists.newLinkedList();
 
@@ -114,7 +118,9 @@ public class MigrationRuleSet {
     // initialize default rules
     static {
         register(DEFAULT_HIVE_TABLE_CONSISTENCY_RULE, DEFAULT_CUBE_STATUS_RULE, DEFAULT_PROJECT_EXIST_RULE,
-                DEFAULT_EMAIL_NOTIFY_RULE, DEFAULT_SEGMENT_RULE, DEFAULT_CUBE_OVERWRITE_RULE, DEFAULT_COMPATIBLE_RULE);
+                 DEFAULT_EMAIL_NOTIFY_RULE, DEFAULT_SEGMENT_RULE, DEFAULT_CUBE_OVERWRITE_RULE,
+                 DEFAULT_COMPATIBLE_RULE, DEFAULT_STREAM_TABLE_CHECK_RULE);
+
         register(false, DEFAULT_AUTO_MERGE_RULE, DEFAULT_EXPANSION_RULE, DEFAULT_QUERY_LATENCY_RULE);
     }
 
@@ -369,6 +375,17 @@ public class MigrationRuleSet {
 
         @Override
         public void apply(Context ctx) throws RuleValidationException {
+            // check table type
+            CubeInstance cube = ctx.getCubeInstance();
+            boolean isStreamTable = cube.getDescriptor().getModel().getRootFactTable().getTableDesc().isStreamingTable();
+            if (isStreamTable) {
+                // check lambda
+                if (!cube.getDescriptor().getModel().getRootFactTable().getTableDesc().isLambdaTable()) {
+                    // streaming table without lambda doesn't need to check hive table
+                    return;
+                }
+            }
+
             // de-dup
             SetMultimap<String, String> db2tables = LinkedHashMultimap.create();
             for (TableRef tableRef : ctx.getCubeInstance().getModel().getAllTables()) {
@@ -400,7 +417,8 @@ public class MigrationRuleSet {
             // do schema check
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             TableSchemaUpdateChecker checker = new TableSchemaUpdateChecker(TableMetadataManager.getInstance(config),
-                    CubeManager.getInstance(config), DataModelManager.getInstance(config));
+                CubeManager.getInstance(config), DataModelManager.getInstance(config),
+                StreamingSourceConfigManager.getInstance(config));
             for (Pair<TableDesc, TableExtDesc> pair : allMeta) {
                 try {
                     TableSchemaUpdateChecker.CheckResult result = checker.allowReload(pair.getFirst(),
@@ -416,6 +434,42 @@ public class MigrationRuleSet {
         }
 
     }
+
+    private static class StreamTableCompatibilityRule implements Rule {
+
+        @Override
+        public void apply(Context ctx) throws RuleValidationException {
+            try {
+                checkStreamTableSchema(ctx);
+            } catch (IOException e) {
+                throw new RuleValidationException(e.getMessage(), e);
+            }
+        }
+
+        public void checkStreamTableSchema(Context ctx) throws IOException {
+            // check stream kylin table
+            TableDesc tableDesc = ctx.getCubeInstance().getModel().getRootFactTable().getTableDesc();
+            if (!tableDesc.isStreamingTable()) {
+                return;
+            }
+            logger.info("check the stream table schema, cubename {}, project {}, lambda {}",
+                    ctx.cubeInstance.getName(), ctx.cubeInstance.getProject(), tableDesc.isLambdaTable());
+
+            // get stream source config
+            StreamingSourceConfig streamingSourceConfig = StreamingSourceConfigManager
+                    .getInstance(ctx.cubeInstance.getConfig())
+                    .getConfig(tableDesc.getIdentity(), tableDesc.getProject());
+
+            StreamTableCompatibilityCheckRequest streamRequest = new StreamTableCompatibilityCheckRequest();
+            streamRequest.setProjectName(ctx.getTgtProjectName());
+            streamRequest.setTableDesc(JsonUtil.writeValueAsIndentString(tableDesc));
+            streamRequest.setStreamSource(JsonUtil.writeValueAsIndentString(streamingSourceConfig));
+
+            String jsonRequest = JsonUtil.writeValueAsIndentString(streamRequest);
+            RestClient client = new RestClient(ctx.getTargetAddress());
+            client.checkStreamTableCompatibility(jsonRequest);
+            }
+        }
 
     public static class Context {
         private final QueryService queryService;

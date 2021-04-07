@@ -124,7 +124,12 @@ public class TableService extends BasicService {
     private AclEvaluate aclEvaluate;
 
     public TableSchemaUpdateChecker getSchemaUpdateChecker() {
-        return new TableSchemaUpdateChecker(getTableManager(), getCubeManager(), getDataModelManager());
+        return new TableSchemaUpdateChecker(getTableManager(), getCubeManager(), getDataModelManager(), getStreamingSourceConfigManager());
+    }
+
+    public void checkStreamTableCompatibility(String project, TableDesc tableDesc) {
+        TableSchemaUpdateChecker.CheckResult result = getSchemaUpdateChecker().streamTableCheckCompatibility(tableDesc, project);
+        result.raiseExceptionWhenInvalid();
     }
 
     public void checkTableCompatibility(String prj, TableDesc tableDesc) {
@@ -201,7 +206,10 @@ public class TableService extends BasicService {
         // do schema check
         TableMetadataManager metaMgr = getTableManager();
         CubeManager cubeMgr = getCubeManager();
-        TableSchemaUpdateChecker checker = new TableSchemaUpdateChecker(metaMgr, cubeMgr, getDataModelManager());
+        TableSchemaUpdateChecker checker = new TableSchemaUpdateChecker(metaMgr,
+                cubeMgr,
+                getDataModelManager(),
+                getStreamingSourceConfigManager());
         for (Pair<TableDesc, TableExtDesc> pair : allMeta) {
             TableDesc tableDesc = pair.getFirst();
             TableSchemaUpdateChecker.CheckResult result = checker.allowReload(tableDesc, project);

@@ -173,7 +173,14 @@ public class CubeMigrationCLI extends AbstractApplication {
 
         CubeManager cubeManager = CubeManager.getInstance(srcConfig);
         CubeInstance cube = cubeManager.getCube(cubeName);
-        logger.info("cube to be moved is : " + cubeName);
+        logger.info("cube to be moved is {}, project is  {}", cubeName, projectName);
+        if (cube.getDescriptor().getModel().getRootFactTable().getTableDesc().isStreamingTable()) {
+            logger.info("move streaming cube, project: {}, cube name {}", projectName, cubeName);
+            if (migrateSegment) {
+               throw new InterruptedException("Can't migrate stream cube with data");
+            }
+        }
+        logger.info("cube to be moved is {}, project is {}, the real execute is {}", cubeName, projectName, realExecute);
 
         if (migrateSegment) {
             checkCubeState(cube);
@@ -208,6 +215,7 @@ public class CubeMigrationCLI extends AbstractApplication {
             updateMeta(dstConfig, projectName, cubeName, cube.getModel());
             updateMeta(srcConfig, cube.getProject(), cubeName, cube.getModel());
         } else {
+            logger.info("show operations for cube {}, project {}", cubeName, cube.getProject());
             showOpts();
         }
     }
@@ -362,6 +370,8 @@ public class CubeMigrationCLI extends AbstractApplication {
             metaResource.add(ACL_PREFIX + cube.getModel().getUuid());
         }
 
+        // if the cube is a stream cube, and add the stream source config
+        // streaming cube just support one fact table
         if (cubeDesc.isStreamingCube()) {
             // add streaming source config info for streaming cube
             String tableName = cubeDesc.getModel().getRootFactTableName();
@@ -682,6 +692,7 @@ public class CubeMigrationCLI extends AbstractApplication {
         }
         return srcItem;
     }
+
 
     private void updateMeta(KylinConfig config, String projectName, String cubeName, DataModelDesc model) {
         String[] nodes = config.getRawRestServers();

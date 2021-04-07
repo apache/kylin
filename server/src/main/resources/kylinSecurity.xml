@@ -238,6 +238,7 @@
             <scr:intercept-url pattern="/api/user/authentication*/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/cubes/checkCompatibility" access="permitAll"/>
             <scr:intercept-url pattern="/api/cubes/checkCompatibility/hiveTable" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cubes/checkStreamTableCompatibility" access="permitAll"/>
             <scr:intercept-url pattern="/api/query/runningQueries" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/query/*/stop" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/query*/**" access="isAuthenticated()"/>
@@ -291,6 +292,7 @@
             <scr:intercept-url pattern="/api/user/authentication*/**" access="permitAll"/>
             <scr:intercept-url pattern="/api/cubes/checkCompatibility" access="permitAll"/>
             <scr:intercept-url pattern="/api/cubes/checkCompatibility/hiveTable" access="permitAll"/>
+            <scr:intercept-url pattern="/api/cubes/checkStreamTableCompatibility" access="permitAll"/>
             <scr:intercept-url pattern="/api/query/runningQueries" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/query/*/stop" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/query*/**" access="isAuthenticated()"/>
