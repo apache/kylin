@@ -436,7 +436,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
                 });
 
                 if (!isColumnExit) {
-                    errors.push("The non-Int type precise count distinct measure must set advanced cict: " + measureColumn);
+                    errors.push("The non-Int type precise count distinct measure must set advanced dictionary: " + measureColumn);
                 }
             }
         });
