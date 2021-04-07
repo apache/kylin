@@ -456,4 +456,8 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         return false;
     }
 
+    public boolean isLambdaTable() {
+        return sourceType == ISourceAware.ID_KAFKA_HIVE;
+    }
+
 }

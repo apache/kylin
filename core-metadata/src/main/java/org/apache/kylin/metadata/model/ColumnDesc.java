@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.relaxng.datatype.Datatype;
 
 /**
  * Column Metadata from Source. All name should be uppercase.
@@ -158,6 +159,9 @@ public class ColumnDesc implements Serializable {
     }
 
     public DataType getType() {
+        if (type == null && datatype != null) {
+            this.type = DataType.getType(datatype);
+        }
         return type;
     }
 

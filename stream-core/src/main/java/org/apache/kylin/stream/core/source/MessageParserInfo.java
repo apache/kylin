@@ -19,6 +19,7 @@
 package org.apache.kylin.stream.core.source;
 
 import java.util.Map;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -80,4 +81,20 @@ public class MessageParserInfo {
         this.columnToSourceFieldMapping = columnToSourceFieldMapping;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MessageParserInfo that = (MessageParserInfo) o;
+        return formatTs == that.formatTs &&
+                Objects.equals(tsColName, that.tsColName) &&
+                Objects.equals(tsParser, that.tsParser) &&
+                Objects.equals(tsPattern, that.tsPattern) &&
+                Objects.equals(columnToSourceFieldMapping, that.columnToSourceFieldMapping);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(tsColName, tsParser, tsPattern, formatTs, columnToSourceFieldMapping);
+    }
 }

@@ -393,6 +393,10 @@ public class RestClient {
         checkCompatibility(jsonRequest, baseUrl + "/cubes/checkCompatibility");
     }
 
+    public void checkStreamTableCompatibility(String jsonRequest) throws IOException {
+        checkCompatibility(jsonRequest, baseUrl+"/cubes/checkStreamTableCompatibility");
+    }
+
     private void checkCompatibility(String jsonRequest, String url) throws IOException {
         HttpPost post = newPost(url);
         try {

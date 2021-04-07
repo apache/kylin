@@ -23,7 +23,9 @@ import java.net.InetAddress;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -103,6 +105,26 @@ public class StreamingV2Service extends BasicService {
     StreamingV2Service(StreamMetadataStore metadataStore, ReceiverAdminClient adminClient) {
         streamMetadataStore = metadataStore;
         receiverAdminClient = adminClient;
+    }
+
+    public void checkStreamingSourceCompatibility(final String prj, final StreamingSourceConfig streamingSourceConfig) throws Exception {
+        StreamingSourceConfig existing = getStreamingManagerV2().
+                getConfig(streamingSourceConfig.getName(), streamingSourceConfig.getProjectName());
+        if (existing == null) {
+            return;
+        } else if (!Objects.equals(streamingSourceConfig.getParserInfo(), existing.getParserInfo())) {
+            logger.info("stream source parse info compatibility check, source {}, target {}",
+                    streamingSourceConfig.getParserInfo(), existing.getParserInfo());
+            throw new Exception(String.format(Locale.ROOT,
+                    "the stream source parse info is not compatible, name %s, project %s",
+                    streamingSourceConfig.getName(), streamingSourceConfig.getProjectName()));
+        } else if (!Objects.equals(streamingSourceConfig.getProperties(), existing.getProperties())) {
+            logger.info("stream source properties compatibility check, source {}, target {}",
+                    streamingSourceConfig.getProperties(), existing.getProperties());
+            throw new Exception(String.format(Locale.ROOT,
+                    "the stream source properties are not compatible, name %s, project %s",
+                    streamingSourceConfig.getName(), streamingSourceConfig.getProjectName()));
+        }
     }
 
     public List<StreamingSourceConfig> listAllStreamingConfigs(final String table, final String projectName) throws IOException {

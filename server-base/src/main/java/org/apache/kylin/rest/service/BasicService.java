@@ -34,6 +34,7 @@ import org.apache.kylin.metadata.streaming.StreamingManager;
 import org.apache.kylin.metrics.MetricsManager;
 import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.storage.hybrid.HybridManager;
+import org.apache.kylin.stream.core.source.StreamingSourceConfigManager;
 
 public abstract class BasicService {
 
@@ -61,6 +62,10 @@ public abstract class BasicService {
 
     public StreamingManager getStreamingManager() {
         return StreamingManager.getInstance(getConfig());
+    }
+
+    public StreamingSourceConfigManager getStreamingSourceConfigManager() {
+        return StreamingSourceConfigManager.getInstance(getConfig());
     }
 
     public KafkaConfigManager getKafkaManager() throws IOException {
