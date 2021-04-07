@@ -86,6 +86,8 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.cube.model.HBaseColumnFamilyDesc[].class);
         kyroClasses.add(org.apache.kylin.cube.model.HBaseColumnDesc[].class);
         kyroClasses.add(org.apache.kylin.cube.model.RowKeyColDesc[].class);
+        kyroClasses.add(org.apache.kylin.cube.cuboid.TreeCuboidScheduler.TreeNode.class);
+        kyroClasses.add(org.apache.kylin.cube.cuboid.TreeCuboidScheduler.CuboidCostComparator.class);
         kylinClassByReflection1(kyroClasses);
         kylinClassByReflection2(kyroClasses);
 
@@ -146,6 +148,8 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.cube.common.RowKeySplitter.class);
         kyroClasses.add(org.apache.kylin.cube.cuboid.Cuboid.class);
         kyroClasses.add(org.apache.kylin.cube.cuboid.DefaultCuboidScheduler.class);
+        kyroClasses.add(org.apache.kylin.cube.cuboid.TreeCuboidScheduler.class);
+        kyroClasses.add(org.apache.kylin.cube.cuboid.TreeCuboidScheduler.CuboidTree.class);
         kyroClasses.add(org.apache.kylin.cube.gridtable.TrimmedDimensionSerializer.class);
         kyroClasses.add(org.apache.kylin.cube.kv.AbstractRowKeyEncoder.class);
         kyroClasses.add(org.apache.kylin.cube.kv.CubeDimEncMap.class);
@@ -155,6 +159,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.cube.kv.RowKeyColumnIO.class);
         kyroClasses.add(org.apache.kylin.cube.kv.RowKeyEncoder.class);
         kyroClasses.add(org.apache.kylin.cube.kv.RowKeyEncoderProvider.class);
+        kyroClasses.add(org.apache.kylin.cube.kv.RowKeyDecoder.class);
         kyroClasses.add(org.apache.kylin.cube.model.AggregationGroup.class);
         kyroClasses.add(org.apache.kylin.cube.model.AggregationGroup.HierarchyMask.class);
         kyroClasses.add(org.apache.kylin.cube.model.CubeDesc.class);

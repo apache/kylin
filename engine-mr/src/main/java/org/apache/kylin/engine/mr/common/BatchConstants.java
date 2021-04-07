@@ -94,7 +94,7 @@ public interface BatchConstants {
     String ARG_CUBE_NAME = "cubename";
     String ARG_II_NAME = "iiname";
     String ARG_SEGMENT_NAME = "segmentname";
-    String ARG_SEGMENT_ID = "segmentid";
+    String ARG_SEGMENT_ID = "segmentId";
     String ARG_PARTITION = "partitions";
     String ARG_STATS_ENABLED = "statisticsenabled";
     String ARG_STATS_OUTPUT = "statisticsoutput";
@@ -107,7 +107,7 @@ public interface BatchConstants {
     String ARG_TABLE_NAME = "tableName";
     String ARG_LOOKUP_SNAPSHOT_ID = "snapshotID";
     String ARG_EXT_LOOKUP_SNAPSHOTS_INFO = "extlookupsnapshots";
-    String ARG_META_URL = "metadataUrl";
+    String ARG_META_URL = "metaUrl";
     String ARG_HBASE_CONF_PATH = "hbaseConfPath";
     String ARG_SHRUNKEN_DICT_PATH = "shrunkenDictPath";
     String ARG_COUNTER_OUTPUT = "counterOutput";
@@ -116,6 +116,7 @@ public interface BatchConstants {
     String ARG_BASE64_ENCODED_SQL = "base64EncodedSql";
     String ARG_GLOBAL_DIC_PART_REDUCE_STATS = "global_dict_part_reduce_stats";
     String ARG_GLOBAL_DIC_MAX_DISTINCT_COUNT = "global_dict_max_distinct_count";
+    String ARG_HIVE_TABLE = "hiveTable";
 
     /**
      * logger and counter

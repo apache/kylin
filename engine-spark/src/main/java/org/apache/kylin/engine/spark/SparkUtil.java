@@ -20,7 +20,9 @@ package org.apache.kylin.engine.spark;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
@@ -30,22 +32,31 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.cube.CubeDescManager;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.ShrunkenDictionary;
 import org.apache.kylin.engine.EngineFactory;
-import org.apache.kylin.engine.mr.IMROutput2;
+import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
+import org.apache.kylin.engine.mr.common.SerializableConfiguration;
+import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.storage.StorageFactory;
+import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -61,10 +72,15 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.hive.HiveUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Tuple2;
 
 public class SparkUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(SparkUtil.class);
+
+    public static int getNormalRecordLogThreshold() {
+        return 1000;
+    }
 
     public static ISparkBatchCubingInputSide getBatchCubingInputSide(CubeSegment seg) {
         IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(seg);
@@ -83,8 +99,8 @@ public class SparkUtil {
         return (ISparkBatchMergeInputSide)SourceManager.createEngineAdapter(seg, ISparkInput.class).getBatchMergeInputSide(seg);
     }
 
-    public static IMROutput2.IMRBatchOptimizeOutputSide2 getBatchOptimizeOutputSide2(CubeSegment seg) {
-        return StorageFactory.createEngineAdapter(seg, IMROutput2.class).getBatchOptimizeOutputSide(seg);
+    public static ISparkOutput.ISparkBatchOptimizeOutputSide getBatchOptimizeOutputSide2(CubeSegment seg) {
+        return StorageFactory.createEngineAdapter(seg, ISparkOutput.class).getBatchOptimizeOutputSide(seg);
     }
 
     /**
@@ -227,5 +243,82 @@ public class SparkUtil {
         }
 
         return dictionaryMap;
+    }
+
+    public static SparkConf setKryoSerializerInConf() throws ClassNotFoundException {
+        Class[] kryoClassArray = new Class<?>[] { Class.forName("scala.reflect.ClassTag$$anon$1"),
+                Class.forName("org.apache.kylin.engine.mr.steps.SelfDefineSortableKey"),
+                Class.forName("scala.collection.mutable.WrappedArray$ofRef"),
+                Class.forName("org.apache.hadoop.io.Text") };
+
+        SparkConf sparkConf = new SparkConf();
+
+        //serialization conf
+        sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+        sparkConf.set("spark.kryo.registrator", "org.apache.kylin.engine.spark.KylinKryoRegistrator");
+        sparkConf.set("spark.kryo.registrationRequired", "true").registerKryoClasses(kryoClassArray);
+
+        return sparkConf;
+    }
+
+    public static String generateFilePath(String subOutputPath, String jobOutPath) {
+        logger.info(
+                "ConvergeCuboidDataReduce Out Path" + String.format(Locale.ROOT, "%s%s", jobOutPath, subOutputPath));
+        return String.format(Locale.ROOT, "%s%s", jobOutPath, subOutputPath);
+    }
+
+    public static JavaPairRDD<ByteArray, Object[]> getCuboIdRDDFromHdfs(JavaSparkContext sc, final String metaUrl,
+                                                                        final String cubeName, final CubeSegment seg, final String inputPath, final int measureNum,
+                                                                        SerializableConfiguration sConf) {
+
+        JavaPairRDD<Text, Text> rdd = sc.sequenceFile(inputPath, Text.class, Text.class);
+        // re-encode
+        return rdd.mapToPair(new ReEncodeCuboidFunction(cubeName, seg.getUuid(), metaUrl, sConf, measureNum));
+    }
+
+    static class ReEncodeCuboidFunction
+            extends SparkFunction.PairFunctionBase<Tuple2<Text, Text>, ByteArray, Object[]> {
+        private String cubeName;
+        private String sourceSegmentId;
+        private String metaUrl;
+        private SerializableConfiguration conf;
+        private int measureNum;
+        private transient KylinConfig kylinConfig;
+        private transient BufferedMeasureCodec segmentReEncoder = null;
+
+        ReEncodeCuboidFunction(String cubeName, String sourceSegmentId, String metaUrl, SerializableConfiguration conf,
+                int measureNum) {
+            this.cubeName = cubeName;
+            this.sourceSegmentId = sourceSegmentId;
+            this.metaUrl = metaUrl;
+            this.conf = conf;
+            this.measureNum = measureNum;
+        }
+
+        @Override
+        protected void doInit() {
+            this.kylinConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
+            try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                    .setAndUnsetThreadLocalConfig(kylinConfig)) {
+                final CubeInstance cube = CubeManager.getInstance(kylinConfig).getCube(cubeName);
+                final CubeDesc cubeDesc = CubeDescManager.getInstance(kylinConfig).getCubeDesc(cube.getDescName());
+                final CubeSegment sourceSeg = cube.getSegmentById(sourceSegmentId);
+                this.segmentReEncoder = new BufferedMeasureCodec(cubeDesc.getMeasures());
+            }
+        }
+
+        @Override
+        public Tuple2<ByteArray, Object[]> doCall(Tuple2<Text, Text> textTextTuple2) throws Exception {
+            Object[] result = new Object[measureNum];
+            segmentReEncoder.decode(ByteBuffer.wrap(textTextTuple2._2().getBytes(), 0, textTextTuple2._2().getLength()),
+                    result);
+            return new Tuple2<ByteArray, Object[]>(new ByteArray(textTextTuple2._1().getBytes()), result);
+        }
+    }
+
+    public static void configConvergeCuboidDataReduceOut(Job job, String output) throws IOException {
+        Path outputPath = new Path(output);
+        FileOutputFormat.setOutputPath(job, outputPath);
+        HadoopUtil.deletePath(job.getConfiguration(), outputPath);
     }
 }

@@ -35,8 +35,12 @@ import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.hllc.HLLCounter;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CubeStatsWriter {
+
+    protected static final Logger logger = LoggerFactory.getLogger(CubeStatsWriter.class);
 
     public static void writeCuboidStatistics(Configuration conf, Path outputPath, //
             Map<Long, HLLCounter> cuboidHLLMap, int samplingPercentage) throws IOException {
@@ -62,6 +66,8 @@ public class CubeStatsWriter {
             Map<Long, HLLCounter> cuboidHLLMap, int samplingPercentage, int mapperNumber, double mapperOverlapRatio,
             int shard) throws IOException {
         Path seqFilePath = new Path(outputPath, BatchConstants.CFG_OUTPUT_STATISTICS + "_" + shard);
+        logger.info("writePartialCuboidStatistics for cuboid: " + cuboidHLLMap.keySet().toString());
+        logger.info("writePartialCuboidStatistics Path: " + seqFilePath);
         writeCuboidStatisticsInner(conf, seqFilePath, cuboidHLLMap, samplingPercentage, mapperNumber,
                 mapperOverlapRatio, 0);
     }

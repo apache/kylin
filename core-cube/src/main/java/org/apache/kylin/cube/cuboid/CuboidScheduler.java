@@ -18,6 +18,7 @@
 
 package org.apache.kylin.cube.cuboid;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -32,7 +33,7 @@ import org.apache.kylin.shaded.com.google.common.collect.Lists;
 /**
  * Defines a cuboid tree, rooted by the base cuboid. A parent cuboid generates its child cuboids.
  */
-abstract public class CuboidScheduler {
+abstract public class CuboidScheduler implements Serializable {
     
     public static CuboidScheduler getInstance(CubeDesc cubeDesc) {
         String clzName = cubeDesc.getConfig().getCuboidScheduler();
