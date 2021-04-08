@@ -117,8 +117,7 @@ public class StreamingConsumerChannel implements Runnable {
                     logger.warn("interrupted!");
                     stopped = true;
                 } catch (IllegalStorageException ise) {
-                    logger.error("Found IllegalStorageException : {}, we cannot recover from that exception, stopping" +
-                        " consumer thread!", ise.getMessage(), ise);
+                    logger.error("Encounting unrecoverable exception, stopping consumer thread! {}", ise.getMessage(), ise);
                     throw ise;
                 } catch (Exception e) {
                     long countValue = addEventErrorCnt.incrementAndGet();
