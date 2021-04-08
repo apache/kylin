@@ -14,11 +14,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.hbase.lookup;
-
-import static org.junit.Assert.assertTrue;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -26,14 +24,17 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.Executable;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import static org.junit.Assert.assertTrue;
 
 public class UpdateSnapshotCacheForQueryServersStepTest extends LocalFileMetadataTestCase {
     private KylinConfig kylinConfig;
+
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
@@ -48,7 +49,7 @@ public class UpdateSnapshotCacheForQueryServersStepTest extends LocalFileMetadat
     @Test
     public void testExecute() throws ExecuteException {
         UpdateSnapshotCacheForQueryServersStep step = new UpdateSnapshotCacheForQueryServersStep();
-        ExecuteResult result = step.doWork(new DefaultContext(Maps.<String, Executable>newConcurrentMap(), kylinConfig));
+        ExecuteResult result = step.doWork(new DefaultContext(Maps.<String, Executable>newConcurrentMap(), kylinConfig), IJobRunner.EMPTY_JOB_RUNNER);
         System.out.println(result.output());
         assertTrue(result.succeed());
     }

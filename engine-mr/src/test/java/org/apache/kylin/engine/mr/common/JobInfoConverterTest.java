@@ -28,6 +28,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.mr.CubingJob;
@@ -130,7 +131,7 @@ public class JobInfoConverterTest {
         }
 
         @Override
-        protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+        protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "");
         }
     }
@@ -141,7 +142,7 @@ public class JobInfoConverterTest {
         }
 
         @Override
-        protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+        protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "");
         }
     }
