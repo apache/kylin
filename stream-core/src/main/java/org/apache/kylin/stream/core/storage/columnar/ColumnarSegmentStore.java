@@ -313,11 +313,14 @@ public class ColumnarSegmentStore implements IStreamingSegmentStore {
         String checkpointFragmentIDString = (String) checkpoint;
         FragmentId checkpointFragmentID = FragmentId.parse(checkpointFragmentIDString);
         List<DataSegmentFragment> fragments = getFragmentsFromFileSystem();
+        List<DataSegmentFragment> invalidFragments = Lists.newArrayList();
         for (DataSegmentFragment fragment : fragments) {
             if (fragment.getFragmentId().compareTo(checkpointFragmentID) > 0) {
                 fragment.purge();
+                invalidFragments.add(fragment);
             }
         }
+        this.fragments.removeAll(invalidFragments);
     }
 
     @Override

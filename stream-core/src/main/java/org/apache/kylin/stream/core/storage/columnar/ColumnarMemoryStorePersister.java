@@ -51,6 +51,7 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.stream.core.exception.IllegalStorageException;
 import org.apache.kylin.stream.core.storage.columnar.ParsedStreamingCubeInfo.CuboidInfo;
 import org.apache.kylin.stream.core.storage.columnar.protocol.CuboidMetaInfo;
 import org.apache.kylin.stream.core.storage.columnar.protocol.DimDictionaryMetaInfo;
@@ -110,7 +111,9 @@ public class ColumnarMemoryStorePersister {
             logger.info("Finish persist memory store for cube:{} segment:{}, take: {}ms", cubeInstance.getName(),
                     segmentName, stopwatch.elapsed(MILLISECONDS));
         } catch (Exception e) {
-            logger.error("Error persist DataSegment.", e);
+            logger.error("Error persist DataSegment, deleteing fragment folder:{}", fragment.getFragmentFolder().getPath());
+            fragment.purge();
+            throw new IllegalStorageException("Error persist DataSegment : " + e.getMessage(), e);
         }
     }
 

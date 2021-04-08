@@ -47,6 +47,9 @@ public class ConsumerStats {
     @JsonProperty("consume_lag")
     private long consumeLag;
 
+    @JsonProperty("consumer_thread_alive")
+    private boolean consumerThreadAlive;
+
     public Map<Integer, PartitionConsumeStats> getPartitionConsumeStatsMap() {
         return partitionConsumeStatsMap;
     }
@@ -101,5 +104,13 @@ public class ConsumerStats {
 
     public void setConsumeLag(long consumeLag) {
         this.consumeLag = consumeLag;
+    }
+
+    public boolean isConsumerThreadAlive() {
+        return consumerThreadAlive;
+    }
+
+    public void setConsumerThreadAlive(boolean consumerThreadAlive) {
+        this.consumerThreadAlive = consumerThreadAlive;
     }
 }
