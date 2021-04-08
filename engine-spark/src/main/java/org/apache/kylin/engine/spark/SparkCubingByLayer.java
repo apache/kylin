@@ -199,7 +199,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         if (cubeDesc.isShrunkenDictFromGlobalEnabled() && shrunkInputPath != null) {
             recordInputRDD = SparkUtil.hiveRecordInputRDD(isSequenceFile, sc, inputPath, hiveTable).cache();
             recordInputRDD
-                    .foreachPartition(new CreateShrunkenDictionary(cubeName, cubeDesc, cubeSegment, envConfig, sConf));
+                    .foreachPartition(new CreateShrunkenDictionary(cubeName, segmentId, metaUrl, sConf));
             encodedBaseRDD = recordInputRDD.mapToPair(new EncodeBaseCuboid(cubeName, segmentId, metaUrl, sConf));
         } else {
             encodedBaseRDD = SparkUtil.hiveRecordInputRDD(isSequenceFile, sc, inputPath, hiveTable)
@@ -518,12 +518,11 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
     public static class CreateShrunkenDictionary implements VoidFunction<Iterator<String[]>> {
         private String cubeName;
-        private CubeDesc cubeDesc;
-        private CubeSegment cubeSeg;
-
-        private KylinConfig kylinConfig;
+        private String segmentId;
+        private String metaUrl;
         private SerializableConfiguration scof;
-        private CubeJoinedFlatTableEnrich intermediateTableDesc;
+
+        private CubeSegment cubeSeg;
 
         private List<TblColRef> globalColumns;
         private int[] globalColumnIndex;
@@ -533,33 +532,34 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
         private String splitKey;
 
-        public CreateShrunkenDictionary(String cubeName, CubeDesc cubeDesc, CubeSegment cubeSegment, KylinConfig kylinConfig,
-                                        SerializableConfiguration serializableConfiguration) {
+        public CreateShrunkenDictionary(String cubeName, String segmentId, String metaUrl, SerializableConfiguration conf) {
             this.cubeName = cubeName;
-            this.cubeDesc = cubeDesc;
-            this.cubeSeg = cubeSegment;
-            this.kylinConfig = kylinConfig;
-            this.scof = serializableConfiguration;
-            this.intermediateTableDesc = new CubeJoinedFlatTableEnrich(EngineFactory.getJoinedFlatTableDesc(cubeSeg),
-                    cubeDesc);
+            this.scof = conf;
+            this.segmentId = segmentId;
+            this.metaUrl = metaUrl;
         }
 
         public void init() {
-            try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
-                    .setAndUnsetThreadLocalConfig(kylinConfig)) {
-                globalColumns = cubeDesc.getAllGlobalDictColumnsNeedBuilt();
-                globalColumnIndex = new int[globalColumns.size()];
-                globalColumnValues = Lists.newArrayListWithExpectedSize(globalColumns.size());
+            KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(scof, metaUrl);
+            CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
+            CubeDesc cubeDesc = cubeInstance.getDescriptor();
+            cubeSeg = cubeInstance.getSegmentById(segmentId);
+            CubeJoinedFlatTableEnrich intermediateTableDesc = new CubeJoinedFlatTableEnrich(
+                    EngineFactory.getJoinedFlatTableDesc(cubeSeg), cubeDesc);
 
-                splitKey = String.valueOf(TaskContext.getPartitionId());
+            globalColumns = cubeDesc.getAllGlobalDictColumnsNeedBuilt();
+            globalColumnIndex = new int[globalColumns.size()];
+            globalColumnValues = Lists.newArrayListWithExpectedSize(globalColumns.size());
 
-                for (int i = 0; i < globalColumns.size(); i++) {
-                    TblColRef colRef = globalColumns.get(i);
-                    int columnIndexOnFlatTbl = intermediateTableDesc.getColumnIndex(colRef);
-                    globalColumnIndex[i] = columnIndexOnFlatTbl;
-                    globalColumnValues.add(Sets.<String>newHashSet());
-                }
+            splitKey = String.valueOf(TaskContext.getPartitionId());
+
+            for (int i = 0; i < globalColumns.size(); i++) {
+                TblColRef colRef = globalColumns.get(i);
+                int columnIndexOnFlatTbl = intermediateTableDesc.getColumnIndex(colRef);
+                globalColumnIndex[i] = columnIndexOnFlatTbl;
+                globalColumnValues.add(Sets.<String>newHashSet());
             }
+
         }
 
         @Override
@@ -573,9 +573,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
                     }
                 }
             }
-            int count = 0;
             while (iter.hasNext()) {
-                count++;
                 String[] rowArray = iter.next();
                 for (int i = 0; i < globalColumnIndex.length; i++) {
                     String fieldValue = rowArray[globalColumnIndex[i]];
