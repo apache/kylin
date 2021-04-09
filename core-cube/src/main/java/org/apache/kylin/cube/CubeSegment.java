@@ -376,7 +376,15 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     public Map<TblColRef, Dictionary<String>> buildDictionaryMap() {
         Map<TblColRef, Dictionary<String>> result = Maps.newHashMap();
         for (TblColRef col : getCubeDesc().getAllColumnsHaveDictionary()) {
-            result.put(col, (Dictionary<String>) getDictionary(col));
+            result.put(col, getDictionary(col));
+        }
+        return result;
+    }
+
+    public Map<TblColRef, Dictionary<String>> buildDictionaryMap(List<TblColRef> colRefs) {
+        Map<TblColRef, Dictionary<String>> result = Maps.newHashMap();
+        for (TblColRef col : colRefs) {
+            result.put(col, getDictionary(col));
         }
         return result;
     }

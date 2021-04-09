@@ -2709,7 +2709,28 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.valueOf(getOptional("kylin.storage.distcp-max-map-num", "50"));
     }
 
-    public String getKylinDictCacheStrength(){
+    public String getKylinDictCacheStrength() {
         return getOptional("kylin.dict.cache.strength", "soft");
-    };
+    }
+
+    /*
+    * KYLIN will encode base Cuboid data row by row.
+    *
+    * For example, if a cube has 3 precisely count distinct measures: A, B, C.
+    * To encode every row, the default step is:
+    *   1. Firstly, load dictionary of column A and encode its value to an int number.
+    *   2. Then, load dictionary of column B and encode its value to an int number.
+    *   3. Lastly, load dictionary of column C and encode it.
+    *   4. Repeat 1~3 steps until all rows have been encoded.
+    *
+    * The default steps will load different column-dictionaries repeatedly.To make the step more
+    * efficient, we can encode column by column:
+    *   1. Firstly, load dictionary of column A and encode all column A to int values.
+    *   2. Then, load dictionary of column B and encode all column B to int values, in this step dictionary
+    *   of column A is no longer used, which reduces memory pressure.
+    *   3. Lastly, load dictionary of column C and encode all column C to int values.
+    * */
+    public boolean encodeBaseCuboidColumnByColumn() {
+        return Boolean.valueOf(getOptional("kylin.job.encode.base.cuboid.column-by-column", "false"));
+    }
 }

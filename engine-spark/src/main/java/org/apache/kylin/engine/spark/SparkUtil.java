@@ -20,6 +20,7 @@ package org.apache.kylin.engine.spark;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -199,30 +200,40 @@ public class SparkUtil {
     }
 
     public static Map<TblColRef, Dictionary<String>> getDictionaryMap(CubeSegment cubeSegment, String splitKey,
-                                                                      Configuration configuration) throws IOException {
-        Map<TblColRef, Dictionary<String>> dictionaryMap = cubeSegment.buildDictionaryMap();
+                                                                      Configuration configuration, List<TblColRef> colRefs) throws IOException {
 
         String shrunkenDictPath = configuration.get(BatchConstants.ARG_SHRUNKEN_DICT_PATH);
         if (shrunkenDictPath == null) {
-            return dictionaryMap;
+            return cubeSegment.buildDictionaryMap(colRefs);
         }
+
+        Map<TblColRef, Dictionary<String>> dictionaryMap = new HashMap<>();
 
         // replace global dictionary with shrunken dictionary if possible
         FileSystem fs = FileSystem.get(configuration);
         ShrunkenDictionary.StringValueSerializer valueSerializer = new ShrunkenDictionary.StringValueSerializer();
-        for (TblColRef colRef : cubeSegment.getCubeDesc().getAllGlobalDictColumnsNeedBuilt()) {
+
+        List<TblColRef> globalColumns = cubeSegment.getCubeDesc().getAllGlobalDictColumnsNeedBuilt();
+
+        for (TblColRef colRef : colRefs) {
+            //non-global dictionary load directly from resource path
+            if (!globalColumns.contains(colRef)) {
+                dictionaryMap.put(colRef, cubeSegment.getDictionary(colRef));
+                continue;
+            }
             Path colShrunkenDictDir = new Path(shrunkenDictPath, colRef.getIdentity());
             Path colShrunkenDictPath = new Path(colShrunkenDictDir, splitKey);
             if (!fs.exists(colShrunkenDictPath)) {
                 logger.warn("Shrunken dictionary for column " + colRef.getIdentity() + " in split " + splitKey
-                        + " does not exist!!!");
-                continue;
-            }
-            try (DataInputStream dis = fs.open(colShrunkenDictPath)) {
-                Dictionary<String> shrunkenDict = new ShrunkenDictionary(valueSerializer);
-                shrunkenDict.readFields(dis);
-                logger.info("Read Shrunken dictionary from {} success", colShrunkenDictPath);
-                dictionaryMap.put(colRef, shrunkenDict);
+                        + " does not exist, use global dictionary!!!");
+                dictionaryMap.put(colRef, cubeSegment.getDictionary(colRef));
+            } else {
+                try (DataInputStream dis = fs.open(colShrunkenDictPath)) {
+                    Dictionary<String> shrunkenDict = new ShrunkenDictionary(valueSerializer);
+                    shrunkenDict.readFields(dis);
+                    logger.info("Read Shrunken dictionary from {} success", colShrunkenDictPath);
+                    dictionaryMap.put(colRef, shrunkenDict);
+                }
             }
         }
 

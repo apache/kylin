@@ -24,11 +24,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.AbstractRowKeyEncoder;
+import org.apache.kylin.cube.kv.RowKeyEncoder;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableEnrich;
 import org.apache.kylin.cube.util.KeyValueBuilder;
@@ -57,6 +59,7 @@ public class BaseCuboidBuilder implements java.io.Serializable {
     protected List<MeasureDesc> measureDescList;
     protected BufferedMeasureCodec measureCodec;
     protected KeyValueBuilder kvBuilder;
+    protected Map<TblColRef, Integer> columnPosInFlatTable = new HashMap<>();
 
     public BaseCuboidBuilder(KylinConfig kylinConfig, CubeDesc cubeDesc, CubeSegment cubeSegment,
             CubeJoinedFlatTableEnrich intermediateTableDesc, AbstractRowKeyEncoder rowKeyEncoder,
@@ -73,6 +76,13 @@ public class BaseCuboidBuilder implements java.io.Serializable {
         measureCodec = new BufferedMeasureCodec(measureDescList);
 
         kvBuilder = new KeyValueBuilder(intermediateTableDesc);
+
+        int[] rowKeyColumnIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
+        List<TblColRef> columns = Cuboid.getBaseCuboid(cubeDesc).getColumns();
+        for (int i = 0; i < columns.size(); i++) {
+            columnPosInFlatTable.put(columns.get(i), rowKeyColumnIndexes[i]);
+        }
+
         checkHiveGlobalDictionaryColumn();
     }
 
@@ -100,6 +110,14 @@ public class BaseCuboidBuilder implements java.io.Serializable {
         return rowKeyEncoder.encode(colKeys);
     }
 
+    public byte[] buildRowKeyCol(TblColRef col, String[] flatRow, byte[] bytes) {
+        return ((RowKeyEncoder)rowKeyEncoder).encode(col, flatRow[columnPosInFlatTable.get(col)], bytes);
+    }
+
+    public void fillHeader(byte[] bytes) {
+        ((RowKeyEncoder)rowKeyEncoder).fillHeader(bytes);
+    }
+
     public ByteBuffer buildValue(String[] flatRow) {
         return measureCodec.encode(buildValueObjects(flatRow));
     }
@@ -113,6 +131,11 @@ public class BaseCuboidBuilder implements java.io.Serializable {
             measures[i] = aggrIngesters[i].valueOf(colValues, measure, dictionaryMap);
         }
         return measures;
+    }
+
+    public Object buildValueObject(int index, String[] flatRow) {
+        String[] colValues = kvBuilder.buildValueOf(index, flatRow);
+        return aggrIngesters[index].valueOf(colValues, measureDescList.get(index), dictionaryMap);
     }
 
     public void resetAggrs() {

@@ -18,7 +18,6 @@
 package org.apache.kylin.engine.spark;
 
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -28,10 +27,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -51,6 +52,8 @@ import org.apache.kylin.cube.kv.AbstractRowKeyEncoder;
 import org.apache.kylin.cube.kv.RowKeyEncoderProvider;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableEnrich;
+import org.apache.kylin.cube.model.RowKeyColDesc;
+import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.dict.ShrunkenDictionary;
 import org.apache.kylin.dict.ShrunkenDictionaryBuilder;
 import org.apache.kylin.engine.EngineFactory;
@@ -67,6 +70,7 @@ import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregators;
 import org.apache.kylin.measure.MeasureIngester;
+import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
@@ -86,6 +90,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import scala.Tuple2;
+import scala.Tuple3;
 
 /**
  * Spark application to build cube with the "by-layer" algorithm.
@@ -194,16 +199,17 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         logger.info("isShrunkenDictFromGlobalEnabled  {}  shrunkInputPath is {}",
                 cubeDesc.isShrunkenDictFromGlobalEnabled(), shrunkInputPath);
 
-        JavaRDD<String[]> recordInputRDD = null;
+        JavaRDD<String[]> recordInputRDD = SparkUtil.hiveRecordInputRDD(isSequenceFile, sc, inputPath, hiveTable);
 
         if (cubeDesc.isShrunkenDictFromGlobalEnabled() && shrunkInputPath != null) {
-            recordInputRDD = SparkUtil.hiveRecordInputRDD(isSequenceFile, sc, inputPath, hiveTable).cache();
-            recordInputRDD
-                    .foreachPartition(new CreateShrunkenDictionary(cubeName, segmentId, metaUrl, sConf));
-            encodedBaseRDD = recordInputRDD.mapToPair(new EncodeBaseCuboid(cubeName, segmentId, metaUrl, sConf));
+            recordInputRDD = recordInputRDD.cache();
+            recordInputRDD.foreachPartition(new CreateShrunkenDictionary(cubeName, segmentId, metaUrl, sConf));
+        }
+
+        if (envConfig.encodeBaseCuboidColumnByColumn()) {
+            encodedBaseRDD = encodeBaseCuboidColumnByColumn(recordInputRDD, envConfig, cubeName, segmentId, metaUrl, sConf);
         } else {
-            encodedBaseRDD = SparkUtil.hiveRecordInputRDD(isSequenceFile, sc, inputPath, hiveTable)
-                    .mapToPair(new EncodeBaseCuboid(cubeName, segmentId, metaUrl, sConf));
+            encodedBaseRDD =  recordInputRDD.mapToPair(new EncodeBaseCuboid(cubeName, segmentId, metaUrl, sConf));
         }
 
         Long totalCount = 0L;
@@ -252,6 +258,79 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         logger.info("Finished on calculating all level cuboids.");
         logger.info("HDFS: Number of bytes written=" + jobListener.metrics.getBytesWritten());
         //HadoopUtil.deleteHDFSMeta(metaUrl);
+    }
+
+    private JavaPairRDD<ByteArray, Object[]> encodeBaseCuboidColumnByColumn(JavaRDD<String[]> recordInputRDD, KylinConfig envConfig,
+            String cubeName, String segmentId, String metaUrl, SerializableConfiguration sConf) {
+        CubeInstance cube = CubeManager.getInstance(envConfig).getCube(cubeName);
+        CubeDesc cubeDesc = cube.getDescriptor();
+        List<MeasureDesc> measuresRequireDict = new ArrayList<>();
+        // measure that will use dictionaries: precise count_distinct and topN
+        for (MeasureDesc measure : cubeDesc.getMeasures()) {
+            MeasureType<?> aggrType = measure.getFunction().getMeasureType();
+            if (!CollectionUtils.isEmpty(aggrType.getColumnsNeedDictionary(measure.getFunction()))){
+                measuresRequireDict.add(measure);
+            }
+        }
+        final int measureSize = cubeDesc.getMeasures().size();
+        //create measure objects
+        JavaRDD<Tuple2<String[], Object[]>> measureEncodedRdd = recordInputRDD.map(new Function<String[], Tuple2<String[], Object[]>>() {
+            @Override
+            public Tuple2<String[], Object[]> call(String[] row) {
+                return new Tuple2(row, new Object[measureSize]);
+            }
+        });
+
+        //encode dict-encoded measure-columns one by one
+        for (MeasureDesc measureDesc : measuresRequireDict) {
+            measureEncodedRdd = measureEncodedRdd.map(new EncodeCuboidMeasure(cubeName, segmentId, metaUrl, sConf, Lists.newArrayList(measureDesc)));
+            measureEncodedRdd.count();
+        }
+        //encode rest measure-columns
+        List<MeasureDesc> remaining = new ArrayList<>();
+        for (MeasureDesc measure : cubeDesc.getMeasures()) {
+            if (!measuresRequireDict.contains(measure)) {
+                remaining.add(measure);
+            }
+        }
+        if (remaining.size() > 0) {
+            measureEncodedRdd = measureEncodedRdd.map(new EncodeCuboidMeasure(cubeName, segmentId, metaUrl, sConf, remaining));
+        }
+
+        CubeSegment cubeSegment = cube.getSegmentById(segmentId);
+        final int rowKeySize = RowKeyDesc.getRowKeyLength(cubeSegment);
+        //create RowKey bytes
+        JavaRDD<Tuple3<byte[], String[], Object[]>> dimensionEncodedRDD = measureEncodedRdd.map(new Function<Tuple2<String[], Object[]>, Tuple3<byte[], String[], Object[]>>() {
+            @Override
+            public Tuple3<byte[], String[], Object[]> call(Tuple2<String[], Object[]> v) throws Exception {
+                return new Tuple3<>(new byte[rowKeySize], v._1, v._2);
+            }
+        });
+
+        //encode dimension-columns
+        for (RowKeyColDesc rowKeyColumn : cubeDesc.getRowkey().getRowKeyColumns()) {
+            if (rowKeyColumn.isUsingDictionary()) {
+                dimensionEncodedRDD = dimensionEncodedRDD.map(
+                        new EncodeCuboidRowKey(cubeName, segmentId, metaUrl, sConf, Lists.newArrayList(rowKeyColumn.getColRef()), false));
+                dimensionEncodedRDD.count();
+            }
+        }
+        //encode remaining dimension-columns
+        List<TblColRef> dimensions = new ArrayList<>();
+        for (RowKeyColDesc rowKeyColumn : cubeDesc.getRowkey().getRowKeyColumns()) {
+            if (!rowKeyColumn.isUsingDictionary()) {
+                dimensions.add(rowKeyColumn.getColRef());
+            }
+        }
+        //if there is no remaining dimension-columns, will only fill RowKey's header
+        dimensionEncodedRDD = dimensionEncodedRDD.map(new EncodeCuboidRowKey(cubeName, segmentId, metaUrl, sConf, dimensions, true));
+
+        return dimensionEncodedRDD.mapToPair(new PairFunction<Tuple3<byte[], String[], Object[]>, ByteArray, Object[]>() {
+            @Override
+            public Tuple2<ByteArray, Object[]> call(Tuple3<byte[], String[], Object[]> tuple3) throws Exception {
+                return new Tuple2(new ByteArray(tuple3._1()), tuple3._3());
+            }
+        });
     }
 
     protected JavaPairRDD<ByteArray, Object[]> prepareOutput(JavaPairRDD<ByteArray, Object[]> rdd, KylinConfig config,
@@ -330,15 +409,12 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
                             long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
                             Cuboid baseCuboid = Cuboid.findForMandatory(cubeDesc, baseCuboidId);
                             String splitKey = String.valueOf(TaskContext.getPartitionId());
-                            try {
-                                baseCuboidBuilder = new BaseCuboidBuilder(kConfig, cubeDesc, cubeSegment, interDesc,
+                            baseCuboidBuilder = new BaseCuboidBuilder(kConfig, cubeDesc, cubeSegment, interDesc,
                                         AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid),
-                                        MeasureIngester.create(cubeDesc.getMeasures()),
-                                        SparkUtil.getDictionaryMap(cubeSegment, splitKey, conf.get()));
-                            } catch (IOException e) {
-                                logger.error("Fail to get shrunk dict");
-                                e.printStackTrace();
-                            }
+                            MeasureIngester.create(cubeDesc.getMeasures()),
+                            SparkUtil.getDictionaryMap(cubeSegment, splitKey, conf.get(),
+                                    cubeSegment.getCubeDesc().getAllColumnsHaveDictionary().stream().collect(Collectors.toList())));
+
                             initialized = true;
                         }
                     }
@@ -348,6 +424,124 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
             byte[] rowKey = baseCuboidBuilder.buildKey(rowArray);
             Object[] result = baseCuboidBuilder.buildValueObjects(rowArray);
             return new Tuple2<>(new ByteArray(rowKey), result);
+        }
+    }
+
+    static public class EncodeCuboidMeasure implements Function<Tuple2<String[], Object[]>, Tuple2<String[], Object[]>> {
+
+        private final List<MeasureDesc> measures;
+        private volatile transient boolean initialized = false;
+        private BaseCuboidBuilder baseCuboidBuilder = null;
+        private String cubeName;
+        private String segmentId;
+        private String metaUrl;
+        private SerializableConfiguration conf;
+        private List<Integer> measureToBuild = new ArrayList<>();
+
+        public EncodeCuboidMeasure(String cubeName, String segmentId, String metaurl, SerializableConfiguration conf,
+                                   List<MeasureDesc> measures) {
+            this.cubeName = cubeName;
+            this.segmentId = segmentId;
+            this.metaUrl = metaurl;
+            this.conf = conf;
+            this.measures = measures;
+        }
+
+        @Override
+        public Tuple2<String[], Object[]> call(Tuple2<String[], Object[]> tuple2) throws Exception {
+            if (initialized == false) {
+                synchronized (SparkCubingByLayer.class) {
+                    if (initialized == false) {
+                        KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
+                        CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
+                        CubeDesc cubeDesc = cubeInstance.getDescriptor();
+                        CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
+                        CubeJoinedFlatTableEnrich interDesc = new CubeJoinedFlatTableEnrich(
+                                EngineFactory.getJoinedFlatTableDesc(cubeSegment), cubeDesc);
+                        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
+                        Cuboid baseCuboid = Cuboid.findForMandatory(cubeDesc, baseCuboidId);
+
+                        List<TblColRef> dictColRefs = new ArrayList<>();
+
+                        //dictionaries in measures
+                        for (MeasureDesc measureDesc : measures) {
+                            MeasureType<?> aggrType = measureDesc.getFunction().getMeasureType();
+                            List<TblColRef> colRefs = aggrType.getColumnsNeedDictionary(measureDesc.getFunction());
+                            dictColRefs.addAll(colRefs);
+                            measureToBuild.add(cubeDesc.getMeasures().indexOf(measureDesc));
+                        }
+
+                        String splitKey = String.valueOf(TaskContext.getPartitionId());
+                        Map<TblColRef, Dictionary<String>> dictMap = SparkUtil.getDictionaryMap(cubeSegment, splitKey, conf.get(), dictColRefs);
+
+                        baseCuboidBuilder = new BaseCuboidBuilder(kConfig, cubeDesc, cubeSegment, interDesc,
+                                AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid),
+                                MeasureIngester.create(cubeDesc.getMeasures()), dictMap);
+
+                        initialized = true;
+                    }
+                }
+            }
+            baseCuboidBuilder.resetAggrs();
+
+            for (Integer toBuildMeasureIdx : measureToBuild) {
+                tuple2._2[toBuildMeasureIdx] = baseCuboidBuilder.buildValueObject(toBuildMeasureIdx, tuple2._1());
+            }
+            return tuple2;
+        }
+    }
+
+    static public class EncodeCuboidRowKey implements Function<Tuple3<byte[], String[], Object[]>, Tuple3<byte[], String[], Object[]>> {
+        private volatile transient boolean initialized = false;
+        private BaseCuboidBuilder baseCuboidBuilder = null;
+        private String cubeName;
+        private String segmentId;
+        private String metaUrl;
+        private SerializableConfiguration conf;
+        private CubeDesc cubeDesc;
+        private List<TblColRef> toEncodeRowKeys;
+        private boolean fillHeader;
+
+        public EncodeCuboidRowKey(String cubeName, String segmentId, String metaurl, SerializableConfiguration conf,
+                                  List<TblColRef> toEncodeMeasures, boolean fillHeader) {
+            this.cubeName = cubeName;
+            this.segmentId = segmentId;
+            this.metaUrl = metaurl;
+            this.conf = conf;
+            this.toEncodeRowKeys = toEncodeMeasures;
+            this.fillHeader = fillHeader;
+        }
+
+        @Override
+        public Tuple3<byte[], String[], Object[]> call(Tuple3<byte[], String[], Object[]> tuple3) throws Exception {
+            if (initialized == false) {
+                synchronized (SparkCubingByLayer.class) {
+                    if (initialized == false) {
+                        KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
+                        CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
+                        this.cubeDesc = cubeInstance.getDescriptor();
+                        CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
+                        CubeJoinedFlatTableEnrich interDesc = new CubeJoinedFlatTableEnrich(
+                                EngineFactory.getJoinedFlatTableDesc(cubeSegment), cubeDesc);
+                        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
+                        Cuboid baseCuboid = Cuboid.findForMandatory(cubeDesc, baseCuboidId);
+
+                        baseCuboidBuilder = new BaseCuboidBuilder(kConfig, cubeDesc, cubeSegment, interDesc,
+                                AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid),
+                                null, null);
+
+                        initialized = true;
+                    }
+                }
+            }
+
+            for (TblColRef toEncodeMeasure : toEncodeRowKeys) {
+                baseCuboidBuilder.buildRowKeyCol(toEncodeMeasure, tuple3._2(), tuple3._1());
+            }
+            if (fillHeader) {
+                baseCuboidBuilder.fillHeader(tuple3._1());
+            }
+            return tuple3;
         }
     }
 

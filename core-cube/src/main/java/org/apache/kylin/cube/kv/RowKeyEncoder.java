@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
@@ -44,6 +45,8 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder implements java.io.Seri
     private int uhcLength = -1;
     private int headerLength;
 
+    private Map<TblColRef, Integer> col2OffsetPosMap = new HashMap<>();
+
     public RowKeyEncoder(CubeSegment cubeSeg, Cuboid cuboid) {
         super(cubeSeg, cuboid);
         enableSharding = cubeSeg.isEnableSharding();
@@ -59,6 +62,12 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder implements java.io.Seri
                 uhcLength = colIO.getColumnLength(column);
             }
             bodyLength += colIO.getColumnLength(column);
+        }
+        int offset = headerLength;
+        for (TblColRef column : cuboid.getColumns()) {
+            col2OffsetPosMap.put(column, offset);
+            int colLength = colIO.getColumnLength(column);
+            offset += colLength;
         }
     }
 
@@ -158,6 +167,10 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder implements java.io.Seri
         return bytes;
     }
 
+    public byte[] encode(TblColRef colRef, String value, byte[] bytes) {
+        fillColumnValue(colRef, colIO.getColumnLength(colRef), value, bytes, col2OffsetPosMap.get(colRef));
+        return bytes;
+    }
 
     public void fillHeader(byte[] bytes) {
         int offset = 0;
