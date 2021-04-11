@@ -56,22 +56,19 @@ public class DingTalkServiceTest extends LocalFileMetadataTestCase {
 
         Map<String, Object> content = new HashMap();
         content.put("info", "dingtalk notification");
-
         Pair<String[], Map<String, Object>> mapPair = Pair.newPair(new String[]{"test"}, content);
+
         NotificationContext notificationInfo = new NotificationContext(config, receiversMap, NotificationConstants.JOB_ERROR, mapPair);
 
         DingTalkService dingTalkservice = new DingTalkService(notificationInfo);
-        boolean sent = sendTestDingTalk(dingTalkservice);
+        boolean sent = dingTalkservice.sendNotification();
         assert !sent;
 
         System.setProperty("kylin.job.notification-enabled", "false");
         // set kylin.job.notification-enabled=false, and run again, this time should be no mail delivered
         dingTalkservice = new DingTalkService(notificationInfo);
-        sent = sendTestDingTalk(dingTalkservice);
+        sent = dingTalkservice.sendNotification();
         assert !sent;
     }
-
-    private boolean sendTestDingTalk(DingTalkService dingTalkService) {
-        return dingTalkService.sendNotification();
-    }
+    
 }

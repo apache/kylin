@@ -23,6 +23,7 @@ import org.apache.kylin.common.util.Pair;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * All basic information of the notification.
@@ -51,10 +52,10 @@ public class NotificationContext {
     private boolean isHtmlMsg = true;
 
     /**
-     * when isHtmlMsg is false, subject and info will be sended as text 
+     * when isHtmlMsg is false, subject and info will be sended as text
      */
     private String subject = "";
-    
+
     private String info = "";
 
     public NotificationContext(KylinConfig config, Map<String, List<String>> receivers, String state, Pair<String[], Map<String, Object>> content) {
@@ -126,5 +127,24 @@ public class NotificationContext {
 
     public void setInfo(String info) {
         this.info = info;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NotificationContext that = (NotificationContext) o;
+        return isHtmlMsg == that.isHtmlMsg &&
+                Objects.equals(config, that.config) &&
+                Objects.equals(receivers, that.receivers) &&
+                Objects.equals(state, that.state) &&
+                Objects.equals(content, that.content) &&
+                Objects.equals(subject, that.subject) &&
+                Objects.equals(info, that.info);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(config, receivers, state, content, isHtmlMsg, subject, info);
     }
 }

@@ -18,11 +18,16 @@
 
 package org.apache.kylin.common.notify.util;
 
+import java.io.StringWriter;
+import java.io.Writer;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Map;
 
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.shaded.com.google.common.base.Joiner;
 
 public class MailNotificationUtil {
@@ -31,8 +36,13 @@ public class MailNotificationUtil {
 
     private static String[] emailTemps;
 
+    private static Configuration configuration;
+
     static {
         try {
+            configuration = new Configuration(Configuration.getVersion());
+            configuration.setClassForTemplateLoading(MailNotificationUtil.class, "/mail_templates");
+            configuration.setDefaultEncoding("UTF-8");
             localHostName = InetAddress.getLocalHost().getCanonicalHostName();
             emailTemps = new String[]{
                     NotificationConstants.JOB_ERROR,
@@ -74,8 +84,7 @@ public class MailNotificationUtil {
                 return null;
         }
     }
-
-
+    
     private MailNotificationUtil() {
         throw new IllegalStateException("Class MailNotificationUtil is an utility class !");
     }
@@ -85,7 +94,7 @@ public class MailNotificationUtil {
     }
 
     public static String getMailContent(String key, Map<String, Object> dataMap) {
-        return MailTemplateProvider.getInstance().buildMailContent(getMailTemplateKey(key), dataMap);
+        return buildMailContent(getMailTemplateKey(key), dataMap);
     }
 
     public static String getMailTitle(String... titleParts) {
@@ -94,5 +103,28 @@ public class MailNotificationUtil {
 
     public static boolean hasMailNotification(String state) {
         return Arrays.asList(emailTemps).contains(state);
+    }
+
+    private static String buildMailContent(String tplKey, Map<String, Object> data) {
+        try {
+            Template template = getTemplate(tplKey);
+            if (template == null) {
+                return "Cannot find email template for " + tplKey;
+            }
+
+            try (Writer out = new StringWriter()) {
+                template.process(data, out);
+                return out.toString();
+            }
+        } catch (Throwable e) {
+            return e.getLocalizedMessage();
+        }
+    }
+
+    private static Template getTemplate(String tplKey) throws Throwable {
+        if (StringUtils.isEmpty(tplKey)) {
+            return null;
+        }
+        return configuration.getTemplate(tplKey + ".ftl");
     }
 }

@@ -61,17 +61,14 @@ public class MailServiceTest extends LocalFileMetadataTestCase {
         NotificationContext notificationInfo = new NotificationContext(config, receiversMap, NotificationConstants.JOB_ERROR, mapPair);
 
         MailService mailservice = new MailService(notificationInfo);
-        boolean sent = sendTestEmail(mailservice);
+        boolean sent = mailservice.sendNotification();
         assert !sent;
 
         System.setProperty("kylin.job.notification-enabled", "false");
         // set kylin.job.notification-enabled=false, and run again, this time should be no mail delivered
         mailservice = new MailService(notificationInfo);
-        sent = sendTestEmail(mailservice);
+        sent = mailservice.sendNotification();
         assert !sent;
     }
-
-    private boolean sendTestEmail(MailService mailservice) {
-        return mailservice.sendNotification();
-    }
+    
 }
