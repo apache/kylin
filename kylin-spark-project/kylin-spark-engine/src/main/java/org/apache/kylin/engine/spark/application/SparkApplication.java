@@ -60,6 +60,7 @@ import org.apache.spark.sql.execution.SparkStrategy;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.apache.spark.util.Utils;
 import org.apache.spark.utils.ResourceUtils;
+import org.apache.spark.utils.SparkVersionUtils;
 import org.apache.spark.utils.YarnInfoFetcherUtils;
 import org.apache.kylin.engine.spark.common.util.TimeZoneUtils;
 import org.slf4j.Logger;
@@ -246,6 +247,17 @@ public abstract class SparkApplication {
                 if (!config.getSparkConfigOverride().containsKey("spark.sql.shuffle.partitions")) {
                     sparkConf.set("spark.sql.shuffle.partitions", "1");
                 }
+            }
+            // With spark 2.X, when set 'spark.sql.adaptive.enabled' to true,
+            // it will impact the actually partition number when doing repartition with spark,
+            // which will lead to the wrong results for global dict generation and repartition by
+            // shardby column.
+            // For example, after writing a cuboid data, kylin will repartition the cuboid data with
+            // a specified partition number if need, but if 'spark.sql.adaptive.enabled' is true,
+            // spark will optimize the partition number according to the size of partitions,
+            // which leads to the wrong results.
+            if (SparkVersionUtils.isLessThanSparkVersion("2.4", true)) {
+                sparkConf.set("spark.sql.adaptive.enabled", "false");
             }
 
             // for wrapping credential

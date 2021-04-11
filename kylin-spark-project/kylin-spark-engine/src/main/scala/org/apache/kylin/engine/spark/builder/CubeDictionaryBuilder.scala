@@ -30,6 +30,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{Column, Dataset, Row, SparkSession}
+import org.apache.spark.utils.SparkVersionUtils
 
 import scala.collection.JavaConverters._
 
@@ -43,20 +44,13 @@ class CubeDictionaryBuilder(val dataset: Dataset[Row],
 
   @throws[IOException]
   def buildDictSet(): Unit = {
-    // Set 'spark.sql.adaptive.enabled' to false if the value of it is true.
-    // Because when 'spark.sql.adaptive.enabled' is true, it will change the partition number
-    // dynamically and lead to wrong Global Dictionary results.
-    val aeOriginalValue = ss.conf.get("spark.sql.adaptive.enabled", "false").toBoolean
-    if (aeOriginalValue) {
-      ss.conf.set("spark.sql.adaptive.enabled", false);
+    if (SparkVersionUtils.isLessThanSparkVersion("2.4", true)) {
+      assert(!ss.conf.get("spark.sql.adaptive.enabled", "false").toBoolean,
+        "Parameter 'spark.sql.adaptive.enabled' must be false when building global dictionary.")
     }
     logInfo(s"Start building global dictionaries V2 for seg $seg")
     val m = s"Build global dictionaries V2 for seg $seg succeeded"
     time(m, colRefSet.asScala.foreach(col => safeBuild(col)))
-    if (aeOriginalValue) {
-      // set the original value to 'spark.sql.adaptive.enabled'
-      ss.conf.set("spark.sql.adaptive.enabled", aeOriginalValue);
-    }
   }
 
   @throws[IOException]
@@ -76,8 +70,6 @@ class CubeDictionaryBuilder(val dataset: Dataset[Row],
 
   @throws[IOException]
   private[builder] def build(ref: ColumnDesc, bucketPartitionSize: Int, afterDistinct: Dataset[Row]): Unit = {
-    assert(!ss.conf.get("spark.sql.adaptive.enabled", "false").toBoolean,
-      "Parameter 'spark.sql.adaptive.enabled' must be false when building global dictionary.")
     val columnName = ref.identity
     logInfo(s"Start building global dictionaries V2 for column $columnName.")
 

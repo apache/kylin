@@ -64,6 +64,7 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.spark.utils.SparkVersionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -288,6 +289,18 @@ public class NSparkExecutable extends AbstractExecutable {
         }
         if (UserGroupInformation.isSecurityEnabled()) {
             sparkConfigOverride.put("spark.hadoop.hive.metastore.sasl.enabled", "true");
+        }
+
+        // With spark 2.X, when set 'spark.sql.adaptive.enabled' to true,
+        // it will impact the actually partition number when doing repartition with spark,
+        // which will lead to the wrong results for global dict generation and repartition by
+        // shardby column.
+        // For example, after writing a cuboid data, kylin will repartition the cuboid data with
+        // a specified partition number if need, but if 'spark.sql.adaptive.enabled' is true,
+        // spark will optimize the partition number according to the size of partitions,
+        // which leads to the wrong results.
+        if (SparkVersionUtils.isLessThanSparkVersion("2.4", true)) {
+            sparkConfigOverride.put("spark.sql.adaptive.enabled", "false");
         }
 
         replaceSparkNodeJavaOpsConfIfNeeded(config, sparkConfigOverride);
