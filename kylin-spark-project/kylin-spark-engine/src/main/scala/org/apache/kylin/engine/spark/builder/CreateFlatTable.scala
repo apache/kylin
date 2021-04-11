@@ -44,7 +44,6 @@ class CreateFlatTable(val seg: SegmentInfo,
 
     val ccCols = seg.allColumns.filter(_.isInstanceOf[ComputedColumnDesc]).toSet
     var rootFactDataset = generateTableDataset(seg.factTable, ccCols.toSeq, ss, seg.project)
-    rootFactDataset = applyFilterCondition(seg, rootFactDataset)
 
     logInfo(s"Create flattable need join lookup tables $needJoin, need encode cols $needEncode")
 
@@ -58,6 +57,9 @@ class CreateFlatTable(val seg: SegmentInfo,
         val allTableDataset = Seq(rootFactDataset) ++ encodedLookupMap.map(_._2)
 
         rootFactDataset = joinFactTableWithLookupTables(rootFactDataset, encodedLookupMap, seg, ss)
+        // KYLIN-4965: Must apply filter conditions after join lookup tables,
+        // as there maybe some filter columns which are belonged to lookup tables.
+        rootFactDataset = applyFilterCondition(seg, rootFactDataset)
         rootFactDataset = encodeWithCols(rootFactDataset,
           filterCols(allTableDataset, ccCols),
           filterCols(allTableDataset, toBuildDictSet),
@@ -65,6 +67,9 @@ class CreateFlatTable(val seg: SegmentInfo,
       case (true, false) =>
         val lookupTableDatasetMap = generateLookupTableDataset(seg, ccCols.toSeq, ss)
         rootFactDataset = joinFactTableWithLookupTables(rootFactDataset, lookupTableDatasetMap, seg, ss)
+        // KYLIN-4965: Must apply filter conditions after join lookup tables,
+        // as there maybe some filter columns which are belonged to lookup tables.
+        rootFactDataset = applyFilterCondition(seg, rootFactDataset)
         rootFactDataset = withColumn(rootFactDataset, ccCols)
       case (false, true) =>
         val (dictCols, encodeCols) = (seg.toBuildDictColumns, seg.allDictColumns)
