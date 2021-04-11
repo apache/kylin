@@ -98,7 +98,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable> {
         return fetcher;
     }
 
-    private class JobRunner implements Runnable {
+    private class JobRunner implements IJobRunner {
 
         private final AbstractExecutable executable;
 
@@ -107,10 +107,15 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable> {
         }
 
         @Override
+        public boolean acquireJobLock() {
+            return true;
+        }
+
+        @Override
         public void run() {
             try (SetThreadName ignored = new SetThreadName("Scheduler %s Job %s",
                     System.identityHashCode(DefaultScheduler.this), executable.getId())) {
-                executable.execute(context);
+                executable.execute(context, this);
             } catch (ExecuteException e) {
                 logger.error("ExecuteException job:" + executable.getId(), e);
             } catch (Exception e) {

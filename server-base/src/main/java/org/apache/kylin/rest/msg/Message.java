@@ -65,6 +65,10 @@ public class Message {
         return "Cannot delete segment '%s' as its status is not READY. Discard the on-going job for it.";
     }
 
+    public String getDELETE_READY_SEG_BY_UUID() {
+        return "Cannot delete segment by UUID '%s' as its status is READY or its Cube is READY.";
+    }
+
     public String getDELETE_SEG_FROM_READY_CUBE() {
         return "Cannot delete segment '%s' from ready cube '%s'. Please disable the cube first.";
     }
@@ -171,6 +175,14 @@ public class Message {
 
     public String getREBUILD_SNAPSHOT_OF_VIEW() {
         return "Rebuild snapshot of hive view '%s' is not supported, please refresh segment of the cube";
+    }
+
+    public String getSNAPSHOT_GLOBAL() {
+        return "snapshot for lookup table '%s' is already global";
+    }
+
+    public String getCUBE_HAS_NOT_READY_SEGS() {
+        return "lookup table '%s' has not ready segment.";
     }
 
     // Model

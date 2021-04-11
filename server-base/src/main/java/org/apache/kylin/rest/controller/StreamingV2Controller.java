@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.directory.api.util.Strings;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -34,7 +35,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.dimension.TimeDerivedColumnType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
@@ -105,10 +105,21 @@ public class StreamingV2Controller extends BasicController {
     @RequestMapping(value = "/getConfig", method = { RequestMethod.GET })
     @ResponseBody
     public List<StreamingSourceConfig> getStreamings(@RequestParam(value = "table", required = false) String table,
+            @RequestParam(value = "project", required = false) String project,
             @RequestParam(value = "limit", required = false) Integer limit,
             @RequestParam(value = "offset", required = false) Integer offset) {
         try {
-            return streamingService.getStreamingConfigs(table, limit, offset);
+            // query all streaming config or query one streaming config
+            if (!Strings.isEmpty(table) && !Strings.isEmpty(project)) {
+                // check the table metadata
+                if (tableService.getTableDescByName(table, false, project) == null) {
+                    // the table metadata doesn't exist
+                    throw new InternalErrorException(String.format(Locale.ROOT,
+                            "The table %s of project %s doesn't exist, please make the stream table exists",
+                            table, project));
+                }
+            }
+            return streamingService.getStreamingConfigs(table, project, limit, offset);
         } catch (IOException e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
@@ -141,10 +152,15 @@ public class StreamingV2Controller extends BasicController {
         try {
             try {
                 tableDesc.setUuid(UUID.randomUUID().toString());
+                if (tableService.getTableDescByName(tableDesc.getIdentity(), false, project) != null) {
+                    throw new IOException(String.format(Locale.ROOT,
+                            "The table %s of project %s exists",
+                            tableDesc.getIdentity(), project));
+                }
                 tableService.loadTableToProject(tableDesc, null, project);
                 saveTableSuccess = true;
             } catch (IOException e) {
-                throw new BadRequestException("Failed to add streaming table.");
+                throw new BadRequestException("Failed to add streaming table, because of " + e.getMessage());
             }
             try {
                 streamingSourceConfig.setName(tableDesc.getIdentity());
@@ -160,7 +176,8 @@ public class StreamingV2Controller extends BasicController {
             if (!saveTableSuccess || !saveStreamingSuccess) {
                 if (saveTableSuccess) {
                     try {
-                        tableService.unloadHiveTable(tableDesc.getIdentity(), project);
+                        // just drop the table metadata and don't drop the stream source config info
+                        tableService.unloadHiveTable(tableDesc.getIdentity(), project, false);
                     } catch (IOException e) {
                         shouldThrow = new InternalErrorException(
                                 "Action failed and failed to rollback the create table " + e.getLocalizedMessage(), e);
@@ -196,10 +213,12 @@ public class StreamingV2Controller extends BasicController {
         // validate the compatibility for input table schema and the underline hive table schema
         if (tableDesc.getSourceType() == ISourceAware.ID_KAFKA_HIVE) {
             List<FieldSchema> fields;
+            List<FieldSchema> partitionFields;
             String db = tableDesc.getDatabase();
             try {
                 HiveMetaStoreClient metaStoreClient = new HiveMetaStoreClient(new HiveConf());
                 fields = metaStoreClient.getFields(db, tableDesc.getName());
+                partitionFields = metaStoreClient.getTable(db, tableDesc.getName()).getPartitionKeys();
                 logger.info("Checking the {} in {}", tableDesc.getName(), db);
             } catch (NoSuchObjectException noObjectException) {
                 logger.info("table not exist in hive meta store for table:" + tableDesc.getIdentity(),
@@ -216,18 +235,16 @@ public class StreamingV2Controller extends BasicController {
             for (FieldSchema field : fields) {
                 fieldSchemaMap.put(field.getName().toUpperCase(Locale.ROOT), field);
             }
+            // partition column
+            for (FieldSchema field : partitionFields) {
+                fieldSchemaMap.put(field.getName().toUpperCase(Locale.ROOT), field);
+            }
             List<String> incompatibleMsgs = Lists.newArrayList();
             for (ColumnDesc columnDesc : tableDesc.getColumns()) {
                 FieldSchema fieldSchema = fieldSchemaMap.get(columnDesc.getName().toUpperCase(Locale.ROOT));
                 if (fieldSchema == null) {
-                    // Partition column cannot be fetched via Hive Metadata API.
-                    if (!TimeDerivedColumnType.isTimeDerivedColumn(columnDesc.getName())) {
-                        incompatibleMsgs.add("Column not exist in hive table:" + columnDesc.getName());
-                        continue;
-                    } else {
-                        logger.info("Column not exist in hive table: {}.", columnDesc.getName());
-                        continue;
-                    }
+                    incompatibleMsgs.add("Column not exist in hive table:" + columnDesc.getName());
+                    continue;
                 }
                 if (!checkHiveTableFieldCompatible(fieldSchema, columnDesc)) {
                     String msg = String.format(Locale.ROOT,
@@ -281,7 +298,7 @@ public class StreamingV2Controller extends BasicController {
         final String user = SecurityContextHolder.getContext().getAuthentication().getName();
         logger.info("{} try to updateStreamingConfig.", user);
         try {
-            streamingSourceConfig = streamingService.updateStreamingConfig(streamingSourceConfig);
+            streamingService.updateStreamingConfig(streamingSourceConfig);
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this StreamingSourceConfig.");
         } catch (Exception e) {
@@ -293,10 +310,13 @@ public class StreamingV2Controller extends BasicController {
         return streamingRequest;
     }
 
-    @RequestMapping(value = "/{configName}", method = { RequestMethod.DELETE })
+    @Deprecated
+    @RequestMapping(value = "/{project}/{configName}", method = { RequestMethod.DELETE }, produces = {
+            "application/json" })
     @ResponseBody
-    public void deleteConfig(@PathVariable String configName) throws IOException {
-        StreamingSourceConfig config = streamingService.getStreamingManagerV2().getConfig(configName);
+    public void deleteConfig(@PathVariable String project, @PathVariable String configName) throws IOException {
+        // This method will never be called by the frontend.
+        StreamingSourceConfig config = streamingService.getStreamingManagerV2().getConfig(configName, project);
         if (null == config) {
             throw new NotFoundException("StreamingSourceConfig with name " + configName + " not found..");
         }

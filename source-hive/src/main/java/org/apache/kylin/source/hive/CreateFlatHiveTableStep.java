@@ -35,6 +35,7 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,7 +84,7 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         stepLogger.setILogListener((infoKey, info) -> {
                     // only care two properties here
                     if (ExecutableConstants.YARN_APP_ID.equals(infoKey)

@@ -202,12 +202,17 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable> {
         return this.hasStarted;
     }
 
-    private class JobRunner implements Runnable {
+    private class JobRunner implements IJobRunner {
 
         private final AbstractExecutable executable;
 
         public JobRunner(AbstractExecutable executable) {
             this.executable = executable;
+        }
+
+        @Override
+        public boolean acquireJobLock() {
+            return jobLock.lock(getLockPath(executable.getId()));
         }
 
         @Override
@@ -225,12 +230,12 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable> {
                             + ToolUtil.getHostName());
                 }
 
-                if (isAssigned && jobLock.lock(getLockPath(executable.getId()))) {
+                if (isAssigned && acquireJobLock()) {
                     logger.info(executable.toString() + " scheduled in server: " + serverName);
 
                     context.addRunningJob(executable);
                     jobWithLocks.add(executable.getId());
-                    executable.execute(context);
+                    executable.execute(context, this);
                 }
             } catch (ExecuteException e) {
                 logger.error("ExecuteException job:" + executable.getId() + " in server: " + serverName, e);

@@ -376,6 +376,35 @@ public class CubeController extends BasicController {
     }
 
     /**
+     * Force change a cube's lookup table to be global
+     *
+     *@throws IOException
+     */
+    @RequestMapping(value = "/{cubeNames}/{tableName}/change_lookup_global", method = {
+            RequestMethod.PUT }, produces = { "application/json" })
+    @ResponseBody
+    public List<CubeInstance> globalLookupSnapshot(@PathVariable String cubeNames, @PathVariable String tableName) {
+
+        List<CubeInstance> result = new ArrayList<>();
+
+        final CubeManager cubeMgr = cubeService.getCubeManager();
+        String[] changeCubes = cubeNames.toUpperCase(Locale.ROOT).split(",");
+        for (String cubeName : changeCubes) {
+            try {
+                checkCubeExists(cubeName);
+                final CubeInstance cube = cubeMgr.getCube(cubeName);
+                CubeInstance cubeInstance = cubeService.changeLookupSnapshotBeGlobal(cube, tableName);
+                logger.info("cube {} change snapshotTable {} global Success", cubeName, tableName);
+                result.add(cubeInstance);
+            } catch (Exception e) {
+                logger.error("cube {} change snapshotTable {} global Fail", cubeName, tableName);
+                logger.error(e.getLocalizedMessage(), e);
+            }
+        }
+        return result;
+    }
+
+    /**
      * Delete a cube segment
      *
      * @throws IOException
@@ -399,6 +428,32 @@ public class CubeController extends BasicController {
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
+
+    /**
+     * Delete a cube segment by UUID
+     *
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/segs2/{segmentID}", method = { RequestMethod.DELETE }, produces = {
+            "application/json" })
+    @ResponseBody
+    public CubeInstance deleteSegmentByUUID(@PathVariable String cubeName, @PathVariable String segmentID) {
+        checkCubeExists(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+
+        CubeSegment segment = cube.getSegmentById(segmentID);
+        if (segment == null) {
+            throw new NotFoundException("Cannot find segment by UUID '" + segmentID + "'");
+        }
+
+        try {
+            return cubeService.deleteSegmentById(cube, segmentID);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
 
     /**
      * Build/Rebuild a cube segment

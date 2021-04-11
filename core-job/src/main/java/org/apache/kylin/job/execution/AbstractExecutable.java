@@ -42,6 +42,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.kylin.shaded.com.google.common.base.MoreObjects;
@@ -159,7 +160,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     @Override
-    public final ExecuteResult execute(ExecutableContext executableContext) throws ExecuteException {
+    public final ExecuteResult execute(ExecutableContext executableContext, IJobRunner jobRunner) throws ExecuteException {
 
         logger.info("Executing AbstractExecutable ({})", this.getName());
 
@@ -178,7 +179,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                 catchedException = null;
                 result = null;
                 try {
-                    result = doWork(executableContext);
+                    result = doWork(executableContext, jobRunner);
                 } catch (Throwable e) {
                     logger.error("error running Executable: {}", this.toString());
                     catchedException = e;
@@ -189,6 +190,12 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
                 //don't invoke retry on ChainedExecutable
             } while (needRetry(this.retry, realException)); //exception in ExecuteResult should handle by user itself.
+
+            // If after doWork finishes and the job lock is lost, it should do short circuit
+            if (!jobRunner.acquireJobLock()) {
+                logger.warn("fail to acquire lock for {} after finishing doWork", id);
+                return ExecuteResult.createSucceed();
+            }
 
             //check exception in result to avoid retry on ChainedExecutable(only need to retry on subtask actually)
             if (realException != null) {
@@ -232,7 +239,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         new NotificationTransmitter(new NotificationContext(context.getConfig(), receivers, NotificationConstants.JOB_METADATA_PERSIST_FAIL, mapPair)).sendNotification();
     }
 
-    protected abstract ExecuteResult doWork(ExecutableContext context) throws ExecuteException, PersistentException;
+    protected abstract ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException, PersistentException;
 
     @Override
     public void cleanup() throws ExecuteException {

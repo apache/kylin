@@ -17,6 +17,7 @@
  */
 package org.apache.kylin.source.hive;
 
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.apache.kylin.shaded.com.google.common.base.Strings;
 import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 import org.apache.kylin.common.KylinConfig;
@@ -147,7 +148,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         KylinConfig config = getCubeSpecificConfig();
         DistributedLock lock = null;
         try {

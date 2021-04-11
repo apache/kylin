@@ -325,6 +325,10 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         snapshots = new ConcurrentHashMap<String, String>();
     }
 
+    public void removeSnapshots(String lookupTable) {
+        snapshots.remove(lookupTable);
+    }
+
     public String getSnapshotResPath(String table) {
         return getSnapshots().get(table);
     }

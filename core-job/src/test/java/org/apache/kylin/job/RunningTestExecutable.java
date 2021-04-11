@@ -21,6 +21,7 @@ package org.apache.kylin.job;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 
 public class RunningTestExecutable extends BaseTestExecutable {
 
@@ -29,7 +30,7 @@ public class RunningTestExecutable extends BaseTestExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {

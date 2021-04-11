@@ -71,7 +71,7 @@ public class CubeTupleConverter implements ITupleConverter {
     public final List<Integer> advMeasureIndexInGTValues;
     private List<ILookupTable> usedLookupTables;
 
-    final Set<Integer> timestampColumn = new HashSet<>();
+    final Set<Integer> needAdjustTimeColumns = new HashSet<>();
     String eventTimezone;
     boolean autoJustByTimezone;
     private final long timeZoneOffset;
@@ -113,9 +113,11 @@ public class CubeTupleConverter implements ITupleConverter {
         // pre-calculate dimension index mapping to tuple
         for (TblColRef dim : selectedDimensions) {
             tupleIdx[i] = tupleInfo.hasColumn(dim) ? tupleInfo.getColumnIndex(dim) : -1;
-            if (TimeDerivedColumnType.isTimeDerivedColumn(dim.getName())
-                    && !TimeDerivedColumnType.isTimeDerivedColumnAboveDayLevel(dim.getName())) {
-                timestampColumn.add(tupleIdx[i]);
+            // all time columns should be adjusted using timezone offset except derived column above day,
+            // such as DAY_START, WEEK_STAR, YEAR_START.
+            if (dim.getType().isDateTimeFamily() &&
+                !TimeDerivedColumnType.isTimeDerivedColumnAboveDayLevel(dim.getName())) {
+                needAdjustTimeColumns.add(tupleIdx[i]);
             }
             i++;
         }
@@ -175,7 +177,7 @@ public class CubeTupleConverter implements ITupleConverter {
             int ti = tupleIdx[i];
             if (ti >= 0) {
                 // add offset to return result according to timezone
-                if (autoJustByTimezone && timestampColumn.contains(ti)) {
+                if (autoJustByTimezone && needAdjustTimeColumns.contains(ti)) {
                     // For streaming
                     try {
                         String v = toString(gtValues[i]);
