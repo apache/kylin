@@ -28,6 +28,7 @@ import org.apache.spark.sql.KylinFunctions._
 import org.apache.spark.sql.functions.{col, _}
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{Dataset, Row}
+import org.apache.spark.utils.SparkVersionUtils
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable._
@@ -35,6 +36,10 @@ import scala.collection.mutable._
 object CubeTableEncoder extends Logging {
 
   def encodeTable(ds: Dataset[Row], seg: SegmentInfo, cols: util.Set[ColumnDesc]): Dataset[Row] = {
+    if (SparkVersionUtils.isLessThanSparkVersion("2.4", true)) {
+      assert(!ds.sparkSession.conf.get("spark.sql.adaptive.enabled", "false").toBoolean,
+        "Parameter 'spark.sql.adaptive.enabled' must be false when encode tables.")
+    }
     val structType = ds.schema
     var partitionedDs = ds
 

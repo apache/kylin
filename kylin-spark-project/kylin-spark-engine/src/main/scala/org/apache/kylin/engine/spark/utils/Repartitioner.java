@@ -154,7 +154,6 @@ public class Repartitioner {
             if (needRepartitionForShardByColumns()) {
                 logger.info("Cuboid[{}] repartition by column {} to {}", cuboid,
                         NSparkCubingUtil.getColumns(getShardByColumns())[0], repartitionNum);
-                //ss.sessionState().conf().setLocalProperty("spark.sql.adaptive.enabled", "false");
                 data = storage.getFrom(tempPath, ss).repartition(repartitionNum,
                         NSparkCubingUtil.getColumns(getShardByColumns()))
                         .sortWithinPartitions(sortCols);
@@ -166,9 +165,6 @@ public class Repartitioner {
             }
 
             storage.saveTo(path, data, ss);
-            //if (needRepartitionForShardByColumns()) {
-                //ss.sessionState().conf().setLocalProperty("spark.sql.adaptive.enabled", null);
-            //}
             if (readFileSystem.delete(tempResourcePath, true)) {
                 logger.info("Delete temp cuboid path successful. Temp path: {}.", tempPath);
             } else {

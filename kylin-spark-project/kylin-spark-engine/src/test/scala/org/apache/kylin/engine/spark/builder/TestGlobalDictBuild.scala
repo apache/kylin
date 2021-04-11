@@ -106,14 +106,11 @@ class TestGlobalDictBuild extends SparderBaseFunSuite with SharedSparkSession wi
     val meta6 = buildDict(segInfo, seg, randomDataSet, dictColSet)
     Assert.assertEquals(280, meta6.getBucketSize)
     Assert.assertEquals(7600, meta6.getDictCount)
-    Assert.assertFalse(spark.conf.get("spark.sql.adaptive.enabled").toBoolean)
 
-    spark.conf.set("spark.sql.adaptive.enabled", true)
     randomDataSet = generateOriginData(dictCol, 2000, 26)
     val meta7 = buildDict(segInfo, seg, randomDataSet, dictColSet)
     Assert.assertEquals(280, meta7.getBucketSize)
     Assert.assertEquals(9600, meta7.getDictCount)
-    Assert.assertTrue(spark.conf.get("spark.sql.adaptive.enabled").toBoolean)
     DefaultScheduler.destroyInstance()
   }
 
