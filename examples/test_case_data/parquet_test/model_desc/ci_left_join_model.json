@@ -223,7 +223,7 @@
     "TEST_KYLIN_FACT.ITEM_COUNT"
   ],
   "last_modified": 1422435345352,
-  "filter_condition": null,
+  "filter_condition": "TEST_CAL_DT.QTR_BEG_DT < DATE '2021-01-01' and TEST_KYLIN_FACT.TRANS_ID < 10000",
   "partition_desc": {
     "partition_date_column": "DEFAULT.TEST_KYLIN_FACT.CAL_DT",
     "partition_date_start": 0,
