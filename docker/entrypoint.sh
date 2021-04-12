@@ -24,7 +24,7 @@ rm -f /tmp/*.pid
 # start mysql
 if [ ! -f "/home/admin/first_run" ]
 then
-  mysqld_pre_systemd
+    mysqld_pre_systemd
 fi
 mysqld --daemonize --pid-file=/var/run/mysqld/mysqld.pid -u root
 if [ ! -f "/home/admin/first_run" ]
