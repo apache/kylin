@@ -70,6 +70,7 @@ import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.request.JobBuildRequest;
 import org.apache.kylin.rest.request.JobBuildRequest2;
 import org.apache.kylin.rest.request.JobOptimizeRequest;
+import org.apache.kylin.rest.request.JobOptimizeRequest2;
 import org.apache.kylin.rest.response.CubeInstanceResponse;
 import org.apache.kylin.rest.response.CuboidTreeResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -427,6 +428,64 @@ public class CubeController extends BasicController {
             checkCubeExists(cubeName);
             logger.info("cuboid recommend:" + jobOptimizeRequest.getCuboidsRecommend());
             return jobService.submitOptimizeJob(cube, jobOptimizeRequest.getCuboidsRecommend(), submitter).getFirst();
+        } catch (BadRequestException e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw e;
+        } catch (JobException e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new BadRequestException(e.getLocalizedMessage());
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
+    /**
+     * Send a optimize cube job for delete or add cuboid
+     *
+     * @param cubeName           Cube ID
+     * @param jobOptimizeRequest method (add or delete), cuboidsRecommend
+     * @return JobInstance of CheckpointExecutable
+     */
+    @RequestMapping(value = "/{cubeName}/optimize2", method = {RequestMethod.PUT})
+    @ResponseBody
+    public JobInstance optimize(@PathVariable String cubeName, @RequestBody JobOptimizeRequest2 jobOptimizeRequest) {
+        try {
+            String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
+
+            checkCubeExists(cubeName);
+            CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
+
+            Set<Long> cuboidIds = cube.getCuboidScheduler().getAllCuboidIds();
+            Set<Long> cuboidsAdd = jobOptimizeRequest.getCuboidsAdd();
+            Set<Long> cuboidsDelete = jobOptimizeRequest.getCuboidsDelete();
+            Set<Long> result = new HashSet<>(cuboidIds);
+
+            if (cuboidsAdd == null && cuboidsDelete == null) {
+                throw new BadRequestException("must use cuboidsAdd or cuboidsDelete in request body.");
+            }
+
+            if (cuboidsAdd != null && cuboidsAdd.size() != 0) {
+                result.addAll(cuboidsAdd);
+                logger.info(
+                        "Add cuboid cubeName: " + cubeName + " contained cuboids: " + Sets.intersection(cuboidIds, cuboidsAdd));
+                cuboidsAdd.removeAll(cuboidIds);
+                logger.info("Add cuboid cubeName: " + cubeName + " add cuboids: " + cuboidsAdd);
+            } else {
+                logger.info(cubeName + " no cuboids to add.");
+            }
+
+            if (cuboidsDelete != null && cuboidsDelete.size() != 0) {
+                result.removeAll(cuboidsDelete);
+                logger.info("Remove cuboid cubeName: " + cubeName + " remove cuboids: "
+                        + Sets.intersection(cuboidIds, cuboidsDelete));
+                cuboidsDelete.removeAll(cuboidIds);
+                logger.info("Remove cuboid cubeName: " + cubeName + " missing cuboids: " + cuboidsDelete);
+            } else {
+                logger.info(cubeName + " no cuboids to delete.");
+            }
+
+            return jobService.submitOptimizeJob(cube, result, submitter).getFirst();
         } catch (BadRequestException e) {
             logger.error(e.getLocalizedMessage(), e);
             throw e;
