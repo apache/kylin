@@ -77,56 +77,28 @@ public class NotificationContext {
         return config;
     }
 
-    public void setConfig(KylinConfig config) {
-        this.config = config;
-    }
-
     public Map<String, List<String>> getReceivers() {
         return receivers;
-    }
-
-    public void setReceivers(Map<String, List<String>> receivers) {
-        this.receivers = receivers;
     }
 
     public String getState() {
         return state;
     }
 
-    public void setState(String state) {
-        this.state = state;
-    }
-
     public Pair<String[], Map<String, Object>> getContent() {
         return content;
-    }
-
-    public void setContent(Pair<String[], Map<String, Object>> content) {
-        this.content = content;
     }
 
     public boolean isHtmlMsg() {
         return isHtmlMsg;
     }
 
-    public void setHtmlMsg(boolean htmlMsg) {
-        isHtmlMsg = htmlMsg;
-    }
-
     public String getSubject() {
         return subject;
     }
 
-    public void setSubject(String subject) {
-        this.subject = subject;
-    }
-
     public String getInfo() {
         return info;
-    }
-
-    public void setInfo(String info) {
-        this.info = info;
     }
 
     @Override

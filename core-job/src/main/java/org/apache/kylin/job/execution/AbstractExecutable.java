@@ -346,7 +346,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                 return;
             }
             final Pair<String[], Map<String, Object>> notification = formatNotifications(context, state);
-            doSendNotification(config, users, state.name(), notification);
+            doSendNotification(new NotificationContext(config, users, state.name(), notification));
         } catch (Exception e) {
             logger.error("error send notification", e);
         }
@@ -365,11 +365,11 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return users;
     }
 
-    private void doSendNotification(KylinConfig kylinConfig, Map<String, List<String>> receivers, String state, Pair<String[], Map<String, Object>> content) {
-        logger.info("prepare to send notify to:{}", receivers);
+    private void doSendNotification(NotificationContext notificationContext) {
+        logger.info("prepare to send notify to:{}", notificationContext.getReceivers());
         logger.info("job name:{}", getName());
         logger.info("submitter:{}", getSubmitter());
-        new NotificationTransmitter(new NotificationContext(kylinConfig, receivers, state, content)).sendNotification();
+        new NotificationTransmitter(notificationContext).sendNotification();
     }
 
     public final String getSubmitter() {
