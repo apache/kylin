@@ -248,7 +248,7 @@
       <dependency>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-shaded-guava</artifactId>
-        <version>${project.version}</version>
+        <version>3.1.0</version>
       </dependency>
       <dependency>
         <groupId>org.apache.kylin</groupId>
@@ -1362,7 +1362,6 @@
   </build>
 
   <modules>
-    <module>external</module>
     <module>core-common</module>
     <module>core-metadata</module>
     <module>core-dictionary</module>
@@ -1848,7 +1847,7 @@
                 <exclude>**/*.isl</exclude>
                 <exclude>**/*.isproj</exclude>
                 <exclude>**/*.bmp</exclude>
-
+                <exclude>**/*/CommentParser.jj</exclude>
                 <!-- protobuf generated -->
                 <exclude>
                   src/main/java/org/apache/kylin/storage/hbase/ii/coprocessor/endpoint/generated/IIProtos.java
