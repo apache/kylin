@@ -79,7 +79,7 @@ public class ModelServiceTest extends ServiceTestBase {
         deserialize.setFilterCondition("TRANS_ID = 1");
         modelService.validateModel("default", deserialize);
         try {
-            deserialize.setFilterCondition("TRANS_IDD = 1");
+            deserialize.setFilterCondition("kylin_account.TRANS_IDD = 1");
             modelService.validateModel("default", deserialize);
             Assert.fail("should throw an exception");
         } catch (Exception e){
