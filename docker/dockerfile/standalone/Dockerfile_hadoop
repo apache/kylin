@@ -16,11 +16,11 @@
 #
 
 # Docker image with Hadoop/Spark/Hive/ZK/Kafka installed
-FROM centos:6.9
+FROM centos:7.9.2009
 
 ENV HIVE_VERSION 1.2.1
-ENV HADOOP_VERSION 2.7.0
-ENV SPARK_VERSION 2.4.6
+ENV HADOOP_VERSION 2.8.5
+ENV SPARK_VERSION 2.4.7
 ENV ZK_VERSION 3.4.6
 ENV KAFKA_VERSION 1.1.1
 
@@ -42,6 +42,14 @@ WORKDIR /home/admin
 
 # install tools
 RUN yum -y install lsof.x86_64 wget.x86_64 tar.x86_64 git.x86_64 mysql-server.x86_64 mysql.x86_64 unzip.x86_64
+RUN yum -y install lsof.x86_64 wget.x86_64 tar.x86_64 git.x86_64 which.x86_64 net-tools.x86_64  unzip.x86_64
+
+#install mysql
+RUN wget https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm \
+    && rpm -Uvh mysql80-community-release-el7-3.noarch.rpm \
+    && yum-config-manager --disable mysql80-community \
+    && yum-config-manager --enable mysql57-community \
+    && yum install -y mysql-community-server.x86_64 mysql-community-client.x86_64
 
 # install mvn
 RUN wget https://archive.apache.org/dist/maven/maven-3/3.6.1/binaries/apache-maven-3.6.1-bin.tar.gz \
