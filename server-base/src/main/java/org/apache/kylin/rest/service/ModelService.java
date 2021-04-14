@@ -189,8 +189,8 @@ public class ModelService extends BasicService {
         if (!StringUtils.isEmpty(desc.getFilterCondition())) {
             try {
                 JoinedFormatter formatter = new JoinedFormatter(true);
-                ModelUtil.verifyFilterCondition(factTableName, formatter.formatSentence(desc.getFilterCondition()),
-                        tableDesc);
+                ModelUtil.verifyFilterCondition(project, getTableManager(), desc,
+                        formatter.formatSentence(desc.getFilterCondition()));
             } catch (Exception e) {
                 throw new BadRequestException(e.toString());
             }
