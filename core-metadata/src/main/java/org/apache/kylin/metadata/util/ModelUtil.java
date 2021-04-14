@@ -18,8 +18,10 @@
 
 package org.apache.kylin.metadata.util;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -27,7 +29,9 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
-import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.TableMetadataManager;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,15 +41,15 @@ public class ModelUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelUtil.class);
 
-    public static void verifyFilterCondition(String factTableName, String filterCondition, TableDesc tableDesc)
-            throws Exception {
+    public static void verifyFilterCondition(String project, TableMetadataManager tableManager, DataModelDesc modelDesc,
+            String filterCondition) throws Exception {
         StringBuilder checkSql = new StringBuilder();
-        checkSql.append("select * from ").append(factTableName).append(" where ").append(filterCondition);
+        checkSql.append("select * from ").append(modelDesc.getRootFactTableName()).append(" where ")
+                .append(filterCondition);
 
         SqlCall inputToNode = (SqlCall) parse(doubleQuoteKeywordDefault(checkSql.toString()));
-        SqlVerify sqlVerify = new SqlVerify(tableDesc);
+        SqlVerify sqlVerify = new SqlVerify(project, tableManager, modelDesc);
         sqlVerify.visit(inputToNode);
-
     }
 
     public static SqlNode parse(String sql) throws Exception {
@@ -56,16 +60,20 @@ public class ModelUtil {
 
     private static class SqlVerify extends SqlBasicVisitor {
 
-        private TableDesc tableDesc;
+        private DataModelDesc modelDesc;
+        private TableMetadataManager tableManager;
+        private String project;
 
-        SqlVerify(TableDesc tableDesc) {
-            this.tableDesc = tableDesc;
+        SqlVerify(String project, TableMetadataManager tableManager, DataModelDesc modelDesc) {
+            this.modelDesc = modelDesc;
+            this.tableManager = tableManager;
+            this.project = project;
         }
 
         @Override
         public Object visit(SqlCall call) {
             SqlSelect select = (SqlSelect) call;
-            WhereColumnVerify.verify(select.getWhere(), tableDesc);
+            WhereColumnVerify.verify(project, select.getWhere(), modelDesc, tableManager);
             return null;
         }
     }
@@ -74,11 +82,20 @@ public class ModelUtil {
 
         private List<String> allSqlIdentifier = Lists.newArrayList();
 
-        static void verify(SqlNode whereNode, TableDesc tableDesc) {
+        static void verify(String project, SqlNode whereNode, DataModelDesc modelDesc,
+                TableMetadataManager tableManager) {
             WhereColumnVerify whereColumnVerify = new WhereColumnVerify();
             whereNode.accept(whereColumnVerify);
+
+            List<ColumnDesc> columnDesc = Arrays.stream(modelDesc.getJoinTables()).flatMap(table -> {
+                return Arrays.stream(tableManager.getTableDesc(table.getTable(), project).getColumns());
+            }).collect(Collectors.toList());
+            columnDesc.addAll(
+                    Arrays.asList(tableManager.getTableDesc(modelDesc.getRootFactTableName(), project).getColumns()));
+            List<String> allColumn = columnDesc.stream().map(cd -> cd.getName().toLowerCase(Locale.ROOT))
+                    .collect(Collectors.toList());
             whereColumnVerify.allSqlIdentifier.stream().forEach(col -> {
-                if (tableDesc.findColumnByName(col) == null) {
+                if (!allColumn.contains(col.toLowerCase(Locale.ROOT))) {
                     String verifyError = String.format(Locale.ROOT,
                             "filter condition col: %s is not a column in the table ", col);
                     logger.error(verifyError);
@@ -88,7 +105,11 @@ public class ModelUtil {
         }
 
         public Object visit(SqlIdentifier id) {
-            allSqlIdentifier.add(id.names.get(0));
+            if (id.names.size() == 1) {
+                allSqlIdentifier.add(id.names.get(0));
+            } else if (id.names.size() == 2) {
+                allSqlIdentifier.add(id.names.get(1));
+            }
             return null;
         }
     }
