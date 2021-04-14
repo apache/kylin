@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -56,6 +57,7 @@ import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.measure.percentile.PercentileMeasureType;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.draft.Draft;
@@ -67,6 +69,7 @@ import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
@@ -820,7 +823,8 @@ public class CubeService extends BasicService implements InitializingBean {
             try {
                 cube = getCubeManager().getCube(cubeName);
                 SegmentRange offsets = cube.autoMergeCubeSegments();
-                if (offsets != null && !isMergingJobBeenDiscarded(cube, cubeName, cube.getProject(), offsets)) {
+                if (checkAllowMerge(cube) &&
+                        offsets != null && !isMergingJobBeenDiscarded(cube, cubeName, cube.getProject(), offsets)) {
                     CubeSegment newSeg = getCubeManager().mergeSegments(cube, null, offsets, true);
                     logger.info("Will submit merge job on " + newSeg);
                     DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(newSeg, "SYSTEM");
@@ -834,6 +838,26 @@ public class CubeService extends BasicService implements InitializingBean {
             }
         }
         return null;
+    }
+
+    //SegmentAppendTrieDictBuilder and use bit_map Measure doesn't support merge.
+    private boolean checkAllowMerge(CubeInstance cube) {
+        CubeDesc desc = cube.getDescriptor();
+
+        List<TblColRef> useSegmentAppendTrieDictCols = desc.getAllSegmentAppendTrieDictCol();
+        if (useSegmentAppendTrieDictCols.size() > 0) {
+            Set<FunctionDesc> bitmapMeasureFuncDescSet = desc.getMeasures().stream().map(MeasureDesc::getFunction)
+                    .filter(x -> x.getMeasureType() instanceof BitmapMeasureType).collect(Collectors.toSet());
+
+            for (FunctionDesc functionDesc : bitmapMeasureFuncDescSet) {
+                final List<TblColRef> columnsNeedDictionary = functionDesc.getMeasureType().getColumnsNeedDictionary(functionDesc);
+                if (columnsNeedDictionary.stream().filter(useSegmentAppendTrieDictCols::contains)
+                        .collect(Collectors.toList()).size() > 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     //Don't merge the job that has been discarded manually before

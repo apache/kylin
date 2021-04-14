@@ -1631,6 +1631,19 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }).map(DictionaryDesc::getColumnRef).collect(Collectors.toList());
     }
 
+    public List<TblColRef> getAllSegmentAppendTrieDictCol() {
+        List<DictionaryDesc> dictionaryDescList = getDictionaries();
+
+        if (dictionaryDescList == null) {
+            return new ArrayList<>();
+        }
+
+        return dictionaryDescList.stream().filter(dict -> {
+            String cls = dict.getBuilderClass();
+            return SegmentAppendTrieDictBuilder.class.getName().equals(cls);
+        }).map(DictionaryDesc::getColumnRef).collect(Collectors.toList());
+    }
+
     public List<TblColRef> getAllGlobalDictColumnsNeedBuilt() {
         Set<String> mrhiveDictColumns = new HashSet<>(Arrays.asList(config.getMrHiveDictColumns()));
 
