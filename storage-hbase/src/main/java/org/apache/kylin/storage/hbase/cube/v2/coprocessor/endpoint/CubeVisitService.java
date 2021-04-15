@@ -26,6 +26,7 @@ import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -53,6 +54,7 @@ import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.gridtable.GTAggregateScanner;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTTwoLayerAggregateScanner;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.gridtable.StorageLimitLevel;
@@ -68,8 +70,8 @@ import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.Cub
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Iterators;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import com.google.protobuf.HBaseZeroCopyByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
@@ -124,7 +126,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         public List<Cell> next() {
 
             if (nextOne.size() < 1) {
-                throw new IllegalStateException();
+                throw new NoSuchElementException();
             }
             ret.clear();
             ret.addAll(nextOne);
@@ -150,8 +152,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         private long rowCount;
         private long rowBytes;
 
-        ResourceTrackingCellListIterator(Iterator<List<Cell>> delegate,
-                                         long rowCountLimit, long bytesLimit, long deadline) {
+        ResourceTrackingCellListIterator(Iterator<List<Cell>> delegate, long rowCountLimit, long bytesLimit,
+                long deadline) {
             this.delegate = delegate;
             this.rowCountLimit = rowCountLimit;
             this.bytesLimit = bytesLimit;
@@ -242,12 +244,14 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
         // if user change kylin.properties on kylin server, need to manually redeploy coprocessor jar to update KylinConfig of Env.
         KylinConfig kylinConfig = KylinConfig.createKylinConfig(request.getKylinProperties());
-        
+
         String queryId = request.hasQueryId() ? request.getQueryId() : "UnknownId";
         logger.info("start query {} in thread {}", queryId, Thread.currentThread().getName());
+
+        RuntimeException shouldThrow = null;
         try (SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(kylinConfig);
                 SetThreadName ignored = new SetThreadName("Query %s", queryId)) {
-            
+
             final long serviceStartTime = System.currentTimeMillis();
 
             region = (HRegion) env.getRegion();
@@ -362,9 +366,21 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 finalScanner.close();
             }
 
-            long rowCountBeforeAggr = finalScanner instanceof GTAggregateScanner
-                    ? ((GTAggregateScanner) finalScanner).getInputRowCount()
-                    : finalRowCount;
+            long filterRowCount;
+            long aggRowCount;
+            if (finalScanner instanceof GTAggregateScanner) {
+                GTAggregateScanner aggScanner = (GTAggregateScanner) finalScanner;
+                filterRowCount = cellListIterator.getTotalScannedRowCount() - aggScanner.getInputRowCount();
+                aggRowCount = aggScanner.getInputRowCount() - finalRowCount;
+            } else if (finalScanner instanceof GTTwoLayerAggregateScanner) {
+                GTTwoLayerAggregateScanner twoLayerAggScanner = (GTTwoLayerAggregateScanner) finalScanner;
+                filterRowCount = cellListIterator.getTotalScannedRowCount()
+                        - twoLayerAggScanner.getFirstLayerInputRowCount();
+                aggRowCount = twoLayerAggScanner.getFirstLayerInputRowCount() - finalRowCount;
+            } else {
+                filterRowCount = cellListIterator.getTotalScannedRowCount() - finalRowCount;
+                aggRowCount = 0L;
+            }
 
             appendProfileInfo(sb, "agg done", serviceStartTime);
             logger.info("Total scanned {} rows and {} bytes", cellListIterator.getTotalScannedRowCount(),
@@ -402,8 +418,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             done.run(responseBuilder.//
                     setCompressedRows(HBaseZeroCopyByteString.wrap(compressedAllRows)).//too many array copies 
                     setStats(CubeVisitProtos.CubeVisitResponse.Stats.newBuilder()
-                            .setFilteredRowCount(cellListIterator.getTotalScannedRowCount() - rowCountBeforeAggr)
-                            .setAggregatedRowCount(rowCountBeforeAggr - finalRowCount)
+                            .setAggregatedRowCount(aggRowCount).setFilteredRowCount(filterRowCount)
                             .setScannedRowCount(cellListIterator.getTotalScannedRowCount())
                             .setScannedBytes(cellListIterator.getTotalScannedRowBytes())
                             .setServiceStartTime(serviceStartTime).setServiceEndTime(System.currentTimeMillis())
@@ -428,9 +443,13 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 try {
                     region.closeRegionOperation();
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    shouldThrow = new RuntimeException(e);
                 }
             }
+        }
+
+        if (null != shouldThrow) {
+            throw shouldThrow;
         }
     }
 

@@ -34,8 +34,8 @@ import org.apache.kylin.common.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class ResourceTool {
 
@@ -160,7 +160,7 @@ public class ResourceTool {
             void heartBeat() {
                 double percent = 100D * (successGroups.size() + errorGroups.size()) / allGroups.size();
                 double mb = totalBytes.get() / 1024D / 1024D;
-                double sec = (System.nanoTime() - startTime) / 1000000000D;
+                double sec = (System.nanoTime() - getStartTime()) / 1000000000D;
                 double kbps = totalBytes.get() / 1024D / sec;
                 String status = mb > 0 && kbps < 500 ? "-- Slow network or storage?" : "";
 

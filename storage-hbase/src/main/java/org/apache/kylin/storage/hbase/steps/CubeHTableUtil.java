@@ -19,16 +19,20 @@
 package org.apache.kylin.storage.hbase.steps;
 
 import java.io.IOException;
-
 import java.util.Locale;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableExistsException;
 import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.TableNotEnabledException;
+import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.exceptions.TimeoutIOException;
 import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.regionserver.BloomType;
@@ -46,7 +50,7 @@ import org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 /**
  */
@@ -54,13 +58,15 @@ public class CubeHTableUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeHTableUtil.class);
 
-    public static void createHTable(CubeSegment cubeSegment, byte[][] splitKeys) throws IOException {
-        String tableName = cubeSegment.getStorageLocationIdentifier();
+    public static void createHTable(CubeSegment cubeSegment, byte[][] splitKeys, boolean continueOnExists)
+            throws IOException {
+        TableName tableName = TableName.valueOf(cubeSegment.getStorageLocationIdentifier());
         CubeInstance cubeInstance = cubeSegment.getCubeInstance();
         CubeDesc cubeDesc = cubeInstance.getDescriptor();
         KylinConfig kylinConfig = cubeDesc.getConfig();
 
-        HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(cubeSegment.getStorageLocationIdentifier()));
+        HTableDescriptor tableDesc = new HTableDescriptor(tableName);
+        tableDesc.setCompactionEnabled(false);
         tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());
         tableDesc.setValue(IRealizationConstants.HTableTag, kylinConfig.getMetadataUrlPrefix());
         tableDesc.setValue(IRealizationConstants.HTableCreationTime, String.valueOf(System.currentTimeMillis()));
@@ -95,16 +101,69 @@ public class CubeHTableUtil {
                 tableDesc.addFamily(cf);
             }
 
-            if (admin.tableExists(TableName.valueOf(tableName))) {
-                // admin.disableTable(tableName);
-                // admin.deleteTable(tableName);
-                throw new RuntimeException("HBase table " + tableName + " exists!");
+            if (admin.tableExists(tableName)) {
+                if (!continueOnExists) {
+                    throw new RuntimeException("HBase table " + tableName.toString() + " exists!");
+                } else {
+                    logger.warn("HBase table " + tableName + " exists when create HTable, continue the process!");
+                    if (admin.isTableEnabled(tableName)) {
+                        try {
+                            admin.disableTable(tableName);
+                            logger.warn("Disabled existing enabled HBase table " + tableName.toString());
+                        } catch (TableNotEnabledException e) {
+                            logger.warn("HBase table " + tableName + " already disabled.", e);
+                        }
+                    } else {
+                        logger.warn("HBase table exists but in disabled state.");
+                    }
+                    try {
+                        admin.deleteTable(tableName);
+                        logger.info("Deleted existing HBase table " + tableName.toString());
+                    } catch (TableNotFoundException e) {
+                        logger.warn("HBase table " + tableName + " already deleted.", e);
+                    }
+                }
             }
 
             DeployCoprocessorCLI.deployCoprocessor(tableDesc);
 
-            admin.createTable(tableDesc, splitKeys);
-            Preconditions.checkArgument(admin.isTableAvailable(TableName.valueOf(tableName)), "table " + tableName + " created, but is not available due to some reasons");
+            try {
+                admin.createTable(tableDesc, splitKeys);
+            } catch (TableExistsException e) {
+                if (admin.isTableEnabled(tableName)) {
+                    logger.warn(
+                            "Duplicate create table request send to HMaster, ignore it and continue the process, table "
+                                    + tableName.toString());
+                } else {
+                    logger.warn(
+                            "Duplicate create table request send to HMaster, ignore it and continue enable the table "
+                                    + tableName.toString());
+                    admin.enableTable(tableName);
+                }
+            } catch (TimeoutIOException e) {
+                if (admin.isTableEnabled(tableName)) {
+                    logger.warn("False alerting?? Detect TimeoutIOException when creating HBase table "
+                            + tableName.toString(), e);
+                } else {
+                    throw e;
+                }
+            }
+
+            int availableRetry = kylinConfig.getHBaseHTableAvailableRetry();
+            while (availableRetry > 0) {
+                if (!admin.isTableAvailable(tableName)) {
+                    logger.warn("Table created but not available, wait for a while...");
+                    try {
+                        availableRetry--;
+                        Thread.sleep(60000);
+                    } catch (InterruptedException e) {
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            Preconditions.checkArgument(admin.isTableAvailable(tableName), "table " + tableName + " created, but is not available due to some reasons");
             logger.info("create hbase table " + tableName + " done.");
         } finally {
             IOUtils.closeQuietly(admin);

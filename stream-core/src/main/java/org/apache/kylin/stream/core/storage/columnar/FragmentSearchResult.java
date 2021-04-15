@@ -23,13 +23,16 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedMap;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Iterators;
+
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -50,7 +53,6 @@ import org.apache.kylin.stream.core.util.StreamFilterUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Iterators;
 
 public class FragmentSearchResult implements IStreamingSearchResult {
     private static Logger logger = LoggerFactory.getLogger(FragmentSearchResult.class);
@@ -120,7 +122,7 @@ public class FragmentSearchResult implements IStreamingSearchResult {
                     logger.info("query-{}: no data match the query in the file segment-{}_fragment-{}",
                             queryProfile.getQueryId(), fragment.getSegmentName(), fragment.getFragmentId());
                 }
-                return Iterators.emptyIterator();
+                return Collections.emptyIterator();
             }
             final Iterator<Integer> rows = indexSearchResult.rows;
             result = new Iterator<RawRecord>() {
@@ -453,7 +455,7 @@ public class FragmentSearchResult implements IStreamingSearchResult {
 
             public Iterator<Record> iterator() {
                 if (rawDimValues == null) {
-                    return Iterators.emptyIterator();
+                    return Collections.emptyIterator();
                 }
                 HavingFilterChecker havingFilterChecker = (havingFilter == null) ? null
                         : new HavingFilterChecker(havingFilter, schema);
@@ -463,7 +465,7 @@ public class FragmentSearchResult implements IStreamingSearchResult {
                 if (havingFilterChecker.check(aggrs)) {
                     return Iterators.singletonIterator(createRecord());
                 } else {
-                    return Iterators.emptyIterator();
+                    return Collections.emptyIterator();
                 }
             }
 

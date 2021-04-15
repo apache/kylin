@@ -26,7 +26,7 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.1.2-SNAPSHOT</version>
     </parent>
 
     <properties>
@@ -231,6 +231,10 @@
                                 <relocation>
                                     <pattern>org.apache.commons.jocl</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.commons.jocl</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.codahale.metrics</pattern>
+                                    <shadedPattern>${shadeBase}.com.codahale.metrics</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>

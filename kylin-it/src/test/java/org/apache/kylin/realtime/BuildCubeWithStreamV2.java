@@ -46,12 +46,12 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.DeployUtil;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
+import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.apache.kylin.job.streaming.Kafka10DataLoader;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.provision.MockKafka;
 import org.apache.kylin.query.KylinTestBase;
 import org.apache.kylin.rest.job.StorageCleanupJob;
-import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.apache.kylin.stream.coordinator.Coordinator;
 import org.apache.kylin.stream.coordinator.StreamingUtils;
 import org.apache.kylin.stream.core.client.ReceiverAdminClient;
@@ -160,7 +160,8 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
 
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(CUBE_NAME);
         final String streamingTableName = cubeInstance.getRootFactTable();
-        final StreamingSourceConfig sourceConfig = StreamingSourceConfigManager.getInstance(kylinConfig).getConfig(streamingTableName);
+        final String projectName = cubeInstance.getProject();
+        final StreamingSourceConfig sourceConfig = StreamingSourceConfigManager.getInstance(kylinConfig).getConfig(streamingTableName, projectName);
 
         topicName = KafkaSource.getTopicName(sourceConfig.getProperties());
         String bootstrapServers = KafkaSource.getBootstrapServers(sourceConfig.getProperties());
@@ -249,7 +250,7 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
         }
 
         if (consumeDataDone == false) {
-            throw new IllegalStateException("Exec timeout, data not be comsumed completely"); // ensure all messages have been comsumed.
+            throw new IllegalStateException("Exec timeout, data not be consumed completely"); // ensure all messages have been comsumed.
         }
 
         waittime = 0;
@@ -474,4 +475,3 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
     }
 
 }
-

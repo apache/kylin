@@ -19,13 +19,14 @@
 
 package org.apache.kylin.engine.flink.util;
 
+import java.nio.ByteBuffer;
+
+import org.apache.kylin.measure.percentile.PercentileCounter;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import org.apache.kylin.measure.percentile.PercentileCounter;
-
-import java.nio.ByteBuffer;
 
 /**
  * A customized kryo serializer for {@link PercentileCounter}
@@ -49,7 +50,16 @@ public class PercentileCounterSerializer extends Serializer<PercentileCounter> {
         double quantileRatio = input.readDouble();
         int length = input.readInt();
         byte[] buffer = new byte[length];
-        input.read(buffer);
+
+        int offset = 0;
+        int bytesRead;
+        while ((bytesRead = input.read(buffer, offset, buffer.length - offset)) != -1) {
+            offset += bytesRead;
+            if (offset >= buffer.length) {
+                break;
+            }
+        }
+
         PercentileCounter counter = new PercentileCounter(compression, quantileRatio);
         counter.readRegisters(ByteBuffer.wrap(buffer));
         return counter;

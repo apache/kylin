@@ -67,9 +67,9 @@ public class OLAPContext {
     public static final String PRM_ACCEPT_PARTIAL_RESULT = "AcceptPartialResult";
     public static final String PRM_USER_AUTHEN_INFO = "UserAuthenInfo";
 
-    static final InternalThreadLocal<Map<String, String>> _localPrarameters = new InternalThreadLocal<Map<String, String>>();
+    static final InternalThreadLocal<Map<String, String>> _localPrarameters = new InternalThreadLocal<>();
 
-    static final InternalThreadLocal<Map<Integer, OLAPContext>> _localContexts = new InternalThreadLocal<Map<Integer, OLAPContext>>();
+    static final InternalThreadLocal<Map<Integer, OLAPContext>> _localContexts = new InternalThreadLocal<>();
 
     public static void setParameters(Map<String, String> parameters) {
         _localPrarameters.set(parameters);
@@ -81,7 +81,7 @@ public class OLAPContext {
 
     public static void registerContext(OLAPContext ctx) {
         if (_localContexts.get() == null) {
-            Map<Integer, OLAPContext> contextMap = new HashMap<Integer, OLAPContext>();
+            Map<Integer, OLAPContext> contextMap = new HashMap<>();
             _localContexts.set(contextMap);
         }
         _localContexts.get().put(ctx.id, ctx);
@@ -147,7 +147,7 @@ public class OLAPContext {
 
     public Set<TblColRef> allColumns = new HashSet<>();
     public List<TblColRef> groupByColumns = new ArrayList<>();
-    public Set<TblColRef> subqueryJoinParticipants = new HashSet<TblColRef>();//subqueryJoinParticipants will be added to groupByColumns(only when other group by co-exists) and allColumns
+    public Set<TblColRef> subqueryJoinParticipants = new HashSet<>();//subqueryJoinParticipants will be added to groupByColumns(only when other group by co-exists) and allColumns
     public Set<TblColRef> metricsColumns = new HashSet<>();
     public List<FunctionDesc> aggregations = new ArrayList<>(); // storage level measure type, on top of which various sql aggr function may apply
     public List<TblColRef> aggrOutCols = new ArrayList<>(); // aggregation output (inner) columns
@@ -175,7 +175,7 @@ public class OLAPContext {
     public OLAPAuthentication olapAuthen = new OLAPAuthentication();
 
     public boolean isSimpleQuery() {
-        return (joins.size() == 0) && (groupByColumns.size() == 0) && (aggregations.size() == 0);
+        return (joins.isEmpty()) && (groupByColumns.isEmpty()) && (aggregations.isEmpty());
     }
 
     SQLDigest sqlDigest;
@@ -189,10 +189,10 @@ public class OLAPContext {
             Set<TblColRef> rtMetricColumns = new HashSet<>();
             List<DynamicFunctionDesc> dynFuncs = Lists.newLinkedList();
             for (FunctionDesc functionDesc : aggregations) {
-                if (functionDesc instanceof DynamicFunctionDesc) {
+                if (functionDesc instanceof DynamicFunctionDesc && !functionDesc.isDimensionAsMetric()) {
                     DynamicFunctionDesc dynFunc = (DynamicFunctionDesc) functionDesc;
-                    rtMetricColumns.addAll(dynFunc.getMeasureColumnSet());
-                    rtDimColumns.addAll(dynFunc.getFilterColumnSet());
+                    rtMetricColumns.addAll(dynFunc.getRuntimeFuncMap().keySet());
+                    rtDimColumns.addAll(dynFunc.getRuntimeDimensions());
                     dynFuncs.add(dynFunc);
                 }
             }
@@ -343,7 +343,7 @@ public class OLAPContext {
     // ============================================================================
 
     public interface IAccessController {
-        public void check(List<OLAPContext> contexts, KylinConfig config) throws IllegalStateException;
+        void check(List<OLAPContext> contexts, KylinConfig config);
     }
 
 }

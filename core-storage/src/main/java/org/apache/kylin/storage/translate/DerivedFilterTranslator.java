@@ -23,10 +23,12 @@ import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Array;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.CubeDesc.DeriveType;
 import org.apache.kylin.dict.lookup.ILookupTable;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeOrder;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -40,8 +42,8 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  * @author yangli9
@@ -60,7 +62,20 @@ public class DerivedFilterTranslator {
             assert hostCols.length == 1;
             CompareTupleFilter newComp = new CompareTupleFilter(compf.getOperator());
             newComp.addChild(new ColumnTupleFilter(hostCols[0]));
-            newComp.addChild(new ConstantTupleFilter(compf.getValues()));
+            Set<?> values = compf.getValues();
+            DataType pkDataType = compf.getColumn().getType();
+            if (pkDataType.isDateTimeFamily() && hostCols[0].getType().isStringFamily()) {
+                Set<String> newValues = Sets.newHashSetWithExpectedSize(values.size());
+                for (Object entry : values) {
+                    long ts = DateFormat.stringToMillis((String) entry);
+                    String newEntry = pkDataType.isDate() ? DateFormat.formatToDateStr(ts)
+                            : DateFormat.formatToTimeWithoutMilliStr(ts);
+                    newValues.add(newEntry);
+                }
+                newComp.addChild(new ConstantTupleFilter(newValues));
+            } else {
+                newComp.addChild(new ConstantTupleFilter(values));
+            }
             return new Pair<TupleFilter, Boolean>(newComp, false);
         }
 
@@ -83,6 +98,16 @@ public class DerivedFilterTranslator {
             }
         }
 
+        for (Array<String> entry : satisfyingHostRecords) {
+            for (int i = 0; i < pkCols.length; i++) {
+                if (pkCols[i].getType().isDateTimeFamily() && hostCols[i].getType().isStringFamily()) {
+                    long ts = DateFormat.stringToMillis(entry.getData()[i]);
+                    entry.getData()[i] = pkCols[i].getType().isDate() ? DateFormat.formatToDateStr(ts)
+                            : DateFormat.formatToTimeWithoutMilliStr(ts);
+                }
+            }
+        }
+        
         TupleFilter translated;
         boolean loosened;
         if (satisfyingHostRecords.size() > KylinConfig.getInstanceFromEnv().getDerivedInThreshold()) {
@@ -126,7 +151,7 @@ public class DerivedFilterTranslator {
                 for (int i = 0; i < hn; i++) {
                     CompareTupleFilter eq = new CompareTupleFilter(FilterOperatorEnum.EQ);
                     eq.addChild(new ColumnTupleFilter(hostCols[i]));
-                    eq.addChild(new ConstantTupleFilter(rec.data[i]));
+                    eq.addChild(new ConstantTupleFilter(rec.getData()[i]));
                     and.addChild(eq);
                 }
                 or.addChild(and);
@@ -138,7 +163,7 @@ public class DerivedFilterTranslator {
     private static List<String> asValues(Set<Array<String>> satisfyingHostRecords) {
         List<String> values = Lists.newArrayListWithCapacity(satisfyingHostRecords.size());
         for (Array<String> rec : satisfyingHostRecords) {
-            values.add(rec.data[0]);
+            values.add(rec.getData()[0]);
         }
         return values;
     }
@@ -170,7 +195,7 @@ public class DerivedFilterTranslator {
         }
 
         for (Array<String> rec : satisfyingHostRecords) {
-            String[] row = rec.data;
+            String[] row = rec.getData();
             for (int i = 0; i < row.length; i++) {
                 min[i] = orders[i].min(min[i], row[i]);
                 max[i] = orders[i].max(max[i], row[i]);

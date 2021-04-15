@@ -53,9 +53,9 @@ import org.apache.kylin.stream.core.storage.columnar.protocol.MetricMetaInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class RowRecordReader extends ColumnarFilesReader {
     private static final Logger logger = LoggerFactory.getLogger(RowRecordReader.class);
@@ -82,24 +82,25 @@ public class RowRecordReader extends ColumnarFilesReader {
     }
 
     public void initReaders() throws IOException {
-        FSDataInputStream in = fs.open(metaFilePath);
-        FragmentMetaInfo fragmentMetaInfo = JsonUtil.readValue(in, FragmentMetaInfo.class);
-        CuboidMetaInfo basicCuboidMetaInfo = fragmentMetaInfo.getBasicCuboidMetaInfo();
-        FSDataInputStream dictInputStream = fs.open(dataFilePath);
+        List<DimensionMetaInfo> allDimensions;
+        CuboidMetaInfo basicCuboidMetaInfo;
+        Map<String, DimensionEncoding> dimensionEncodingMap;
+        try (FSDataInputStream in = fs.open(metaFilePath)) {
+            FragmentMetaInfo fragmentMetaInfo = JsonUtil.readValue(in, FragmentMetaInfo.class);
+            basicCuboidMetaInfo = fragmentMetaInfo.getBasicCuboidMetaInfo();
+            allDimensions = basicCuboidMetaInfo.getDimensionsInfo();
+            dimensionEncodingMap = getDimensionEncodings(fragmentMetaInfo, allDimensions, dataFilePath);
+        }
 
-        List<DimensionMetaInfo> allDimensions = basicCuboidMetaInfo.getDimensionsInfo();
-        Map<String, DimensionEncoding> dimensionEncodingMap = getDimensionEncodings(fragmentMetaInfo, allDimensions,
-                dictInputStream);
         dimensionColumnReaders = Lists.newArrayList();
         dimensionColumnReaderItrs = Lists.newArrayList();
         dimensionEncodings = Lists.newArrayList();
         for (DimensionMetaInfo dimensionMetaInfo : allDimensions) {
-            FSDataInputStream dimInputStream = fs.open(dataFilePath);
             String dimName = dimensionMetaInfo.getName();
             DimensionEncoding dimEncoding = dimensionEncodingMap.get(dimName);
             ColumnarStoreDimDesc dimDesc = new ColumnarStoreDimDesc(dimEncoding.getLengthOfEncoding(),
                     dimensionMetaInfo.getCompressionType());
-            ColumnDataReader dimDataReader = dimDesc.getDimReaderFromFSInput(dimInputStream,
+            ColumnDataReader dimDataReader = dimDesc.getDimReaderFromFSInput(fs, dataFilePath,
                     dimensionMetaInfo.getStartOffset(), dimensionMetaInfo.getDataLength(),
                     (int) basicCuboidMetaInfo.getNumberOfRows());
             dimensionColumnReaders.add(dimDataReader);
@@ -112,13 +113,13 @@ public class RowRecordReader extends ColumnarFilesReader {
         metricsColumnReaderItrs = Lists.newArrayList();
         metricsDataTransformers = Lists.newArrayList();
         for (MetricMetaInfo metricMetaInfo : basicCuboidMetaInfo.getMetricsInfo()) {
-            FSDataInputStream metricsInputStream = fs.open(dataFilePath);
+
             MeasureDesc measure = findMeasure(metricMetaInfo.getName());
             DataType metricsDataType = measure.getFunction().getReturnDataType();
             ColumnarMetricsEncoding metricsEncoding = ColumnarMetricsEncodingFactory.create(metricsDataType);
             ColumnarStoreMetricsDesc metricsDesc = new ColumnarStoreMetricsDesc(metricsEncoding,
                     metricMetaInfo.getCompressionType());
-            ColumnDataReader metricsDataReader = metricsDesc.getMetricsReaderFromFSInput(metricsInputStream,
+            ColumnDataReader metricsDataReader = metricsDesc.getMetricsReaderFromFSInput(fs, dataFilePath,
                     metricMetaInfo.getStartOffset(), metricMetaInfo.getMetricLength(),
                     (int) basicCuboidMetaInfo.getNumberOfRows());
             metricsColumnReaders.add(metricsDataReader);
@@ -136,12 +137,15 @@ public class RowRecordReader extends ColumnarFilesReader {
                 return measure;
             }
         }
-        return null;
+        throw new IllegalArgumentException("No measure found with name '" + name + "'.");
     }
 
     private Map<String, DimensionEncoding> getDimensionEncodings(FragmentMetaInfo fragmentMetaInfo,
-            List<DimensionMetaInfo> allDimensions, FSDataInputStream dictInputStream) throws IOException {
-        Map<String, Dictionary> dictionaryMap = readAllDimensionsDictionary(fragmentMetaInfo, dictInputStream);
+            List<DimensionMetaInfo> allDimensions, Path dataPath) throws IOException {
+        Map<String, Dictionary> dictionaryMap;
+        try (FSDataInputStream dictInputStream = fs.open(dataPath)) {
+            dictionaryMap = readAllDimensionsDictionary(fragmentMetaInfo, dictInputStream);
+        }
 
         Map<String, DimensionEncoding> result = Maps.newHashMap();
         for (DimensionMetaInfo dimension : allDimensions) {
@@ -152,7 +156,7 @@ public class RowRecordReader extends ColumnarFilesReader {
                 Dictionary<String> dict = dictionaryMap.get(dimension.getName());
                 if (dict == null) {
                     logger.error("No dictionary found for dict-encoding column " + col);
-                    throw new RuntimeException("No dictionary found for dict-encoding column " + col);
+                    throw new IllegalStateException("No dictionary found for dict-encoding column " + col);
                 } else {
                     result.put(dimension.getName(), new DictionaryDimEnc(dict));
                 }
@@ -169,14 +173,11 @@ public class RowRecordReader extends ColumnarFilesReader {
     public Map<String, Dictionary> readAllDimensionsDictionary(FragmentMetaInfo fragmentMetaInfo,
             FSDataInputStream dataInputStream) throws IOException {
         List<DimDictionaryMetaInfo> dimDictMetaInfos = fragmentMetaInfo.getDimDictionaryMetaInfos();
-        ImmutableMap.Builder<String, Dictionary> builder = ImmutableMap.<String, Dictionary> builder();
-        Dictionary dict;
-        String colName;
+        ImmutableMap.Builder<String, Dictionary> builder = ImmutableMap.builder();
         for (DimDictionaryMetaInfo dimDictMetaInfo : dimDictMetaInfos) {
             dataInputStream.seek(dimDictMetaInfo.getStartOffset());
-            dict = DictionarySerializer.deserialize(dataInputStream);
-            colName = dimDictMetaInfo.getDimName();
-            builder.put(colName, dict);
+            Dictionary dict = DictionarySerializer.deserialize(dataInputStream);
+            builder.put(dimDictMetaInfo.getDimName(), dict);
         }
         return builder.build();
     }

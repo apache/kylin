@@ -6,15 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.engine.mr.common;
 
@@ -72,6 +72,8 @@ public interface BatchConstants {
     String CFG_MR_SPARK_JOB = "mr.spark.job";
     String CFG_SPARK_META_URL = "spark.meta.url";
     String CFG_GLOBAL_DICT_BASE_DIR = "global.dict.base.dir";
+    String CFG_GLOBAL_DICT_STATS_PARTITION_VALUE = "KYLIN_MAX_DISTINCT_COUNT";
+
 
     String CFG_HLL_REDUCER_NUM = "cuboidHLLCounterReducerNum";
 
@@ -112,6 +114,8 @@ public interface BatchConstants {
     String ARG_BASE64_ENCODED_STEP_NAME = "base64StepName";
     String ARG_SQL_COUNT = "sqlCount";
     String ARG_BASE64_ENCODED_SQL = "base64EncodedSql";
+    String ARG_GLOBAL_DIC_PART_REDUCE_STATS = "global_dict_part_reduce_stats";
+    String ARG_GLOBAL_DIC_MAX_DISTINCT_COUNT = "global_dict_max_distinct_count";
 
     /**
      * logger and counter

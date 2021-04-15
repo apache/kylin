@@ -21,8 +21,8 @@ package org.apache.kylin.common.util;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Range;
 
 /**
  */

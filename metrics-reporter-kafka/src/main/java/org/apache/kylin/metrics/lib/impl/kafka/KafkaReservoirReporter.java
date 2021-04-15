@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metrics.lib.impl.kafka;
 
@@ -58,7 +58,7 @@ public class KafkaReservoirReporter extends ActiveReservoirReporter {
         return new Builder(activeReservoir);
     }
 
-    private static String decorateTopic(String topic) {
+    public static String decorateTopic(String topic) {
         return ActiveReservoirReporter.KYLIN_PREFIX + "_" + KAFKA_REPORTER_SUFFIX + "_" + topic;
     }
 
@@ -88,6 +88,10 @@ public class KafkaReservoirReporter extends ActiveReservoirReporter {
         stop();
     }
 
+    KafkaReservoirListener getListener() {
+        return listener;
+    }
+
     /**
      * A builder for {@link KafkaReservoirReporter} instances.
      */
@@ -113,7 +117,7 @@ public class KafkaReservoirReporter extends ActiveReservoirReporter {
         }
     }
 
-    private class KafkaReservoirListener extends KafkaActiveReserviorListener {
+    class KafkaReservoirListener extends KafkaActiveReserviorListener {
         protected final Producer<byte[], byte[]> producer;
 
         private KafkaReservoirListener(Properties props) {

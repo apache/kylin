@@ -28,7 +28,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.gridtable.GTScanRequest;
 
-import com.google.common.base.Throwables;
+import org.apache.kylin.shaded.com.google.common.base.Throwables;
 
 class ExpectedSizeIterator implements Iterator<byte[]> {
     private final QueryContext queryContext;

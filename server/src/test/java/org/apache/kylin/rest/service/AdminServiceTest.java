@@ -59,11 +59,11 @@ public class AdminServiceTest extends ServiceTestBase {
                     "kylin.web.help.length=4\n" +
                     "kylin.web.timezone=\n" +
                     "kylin.server.external-acl-provider=\n" +
-                    "kylin.tool.auto-migrate-cube.enabled=\n" +
                     "kylin.storage.default=2\n" +
                     "kylin.cube.cubeplanner.enabled=true\n" +
                     "kylin.web.help=\n" +
                     "kylin.web.export-allow-other=true\n" +
+                    "kylin.cube.migration.enabled=false\n" +
                     "kylin.web.link-hadoop=\n" +
                     "kylin.web.hide-measures=RAW\n" +
                     "kylin.htrace.show-gui-trace-toggle=false\n" +

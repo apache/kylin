@@ -38,7 +38,7 @@ import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 public class ColumnGenerator {
 
@@ -255,8 +255,8 @@ public class ColumnGenerator {
         @Override
         public String next() {
             if (values.isEmpty())
-                return null;
-            
+                throw new NoSuchElementException();
+
             return values.get(rand.nextInt(values.size()));
         }
     }
@@ -318,7 +318,7 @@ public class ColumnGenerator {
             if (input.hasNext()) {
                 r = input.next();
             }
-            
+
             if (rand.nextDouble() < nullPct) {
                 r = nullStr;
             }

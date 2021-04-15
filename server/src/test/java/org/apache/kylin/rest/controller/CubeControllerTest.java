@@ -37,6 +37,7 @@ import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.ServiceTestBase;
 import org.apache.kylin.rest.service.StreamingService;
+import org.apache.kylin.rest.util.ValidateUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * @author xduo
@@ -66,6 +67,10 @@ public class CubeControllerTest extends ServiceTestBase {
     @Qualifier("streamingMgmtService")
     StreamingService streamingService;
 
+    @Autowired
+    @Qualifier("validateUtil")
+    private ValidateUtil validateUtil;
+
     @Before
     public void setup() throws Exception {
         super.setup();
@@ -73,6 +78,7 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeController = new CubeController();
         cubeController.setCubeService(cubeService);
         cubeController.setJobService(jobService);
+        cubeController.setValidateUtil(validateUtil);
 
         cubeDescController = new CubeDescController();
         cubeDescController.setCubeService(cubeService);
@@ -123,13 +129,20 @@ public class CubeControllerTest extends ServiceTestBase {
         List<String> notifyList = Lists.newArrayList();
         notifyList.add("john@example.com");
         cubeController.updateNotifyList(newCubeName, notifyList);
-
+        try {
+            cubeController.updateCubeOwner(newCubeName, "new_user");
+        } catch (InternalErrorException e) {
+            Assert.assertEquals("Operation failed, user:new_user not exists, please add first.",
+                e.getMessage());
+        }
+        cubeController.updateCubeOwner(newCubeName, "MODELER");
         List<CubeInstanceResponse> cubeInstances = cubeController.getCubes(newCubeName, cube.getModelName(), "default",
                 1, 0);
 
         CubeInstance cubeInstance = cubeController.getCube(cubeInstances.get(0).getName());
         Assert.assertTrue(cubeInstance.getDescriptor().getNotifyList().contains("john@example.com"));
-        Assert.assertTrue(cubeInstance.getCost() == 495);
+        Assert.assertEquals("MODELER", cubeInstance.getOwner());
+        Assert.assertEquals(495, cubeInstance.getCost());
         cubeController.deleteCube(newCubeName);
     }
 
@@ -190,7 +203,7 @@ public class CubeControllerTest extends ServiceTestBase {
 
         int newSegNumber = cubeService.getCubeManager().getCube(cubeName).getSegments().size();
 
-        Assert.assertTrue(segNumber == newSegNumber + 1);
+        Assert.assertEquals(segNumber, newSegNumber + 1);
 
         cubeController.enableCube(cubeName);
     }
@@ -213,17 +226,17 @@ public class CubeControllerTest extends ServiceTestBase {
 
         List<CubeSegment> holes = cubeController.getHoles(cubeName);
 
-        Assert.assertTrue(holes.size() == 1);
+        Assert.assertEquals(1, holes.size());
 
         CubeSegment hole = holes.get(0);
 
-        Assert.assertTrue(hole.getTSRange().equals(new TSRange(dateEnd, dateEnd + ONEDAY)));
+        Assert.assertEquals(hole.getTSRange(), new TSRange(dateEnd, dateEnd + ONEDAY));
     }
 
     @Test
     public void testGetCubes() {
         List<CubeInstanceResponse> cubes = cubeController.getCubes(null, null, null, 1, 0);
-        Assert.assertTrue(cubes.size() == 1);
+        Assert.assertEquals(1, cubes.size());
     }
 
     @Test

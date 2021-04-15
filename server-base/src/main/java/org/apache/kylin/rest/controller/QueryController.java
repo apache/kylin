@@ -66,7 +66,7 @@ import org.supercsv.io.CsvListWriter;
 import org.supercsv.io.ICsvListWriter;
 import org.supercsv.prefs.CsvPreference;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * Handle query requests.
@@ -208,7 +208,7 @@ public class QueryController extends BasicController {
         if (runTimeMoreThan == -1) {
             return QueryContextFacade.getAllRunningQueries();
         } else {
-            return QueryContextFacade.getLongRunningQueries(runTimeMoreThan * 1000);
+            return QueryContextFacade.getLongRunningQueries(runTimeMoreThan * 1000L);
         }
     }
 

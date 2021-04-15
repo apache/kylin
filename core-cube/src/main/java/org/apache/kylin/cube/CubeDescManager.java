@@ -256,6 +256,18 @@ public class CubeDescManager {
         }
     }
 
+    public CubeDesc updatelookupTableSnapshotGlobal(CubeDesc desc, String lookupTable, boolean global) throws IOException {
+        try (AutoLock lock = descMapLock.lockForWrite()) {
+            CubeDesc copy = desc.latestCopyForWrite();
+            copy.createAndSetSnapshotTableGlobal(lookupTable, global);
+            return updateCubeDesc(copy);
+        }
+    }
+
+    public CubeDesc copyForWrite(CubeDesc desc) {
+        return crud.copyForWrite(desc);
+    }
+
     /**
      * if there is some change need be applied after getting a cubeDesc from front-end, do it here
      * @param cubeDesc
@@ -297,7 +309,8 @@ public class CubeDescManager {
                 }
 
                 DataType returnType = DataType.getType(measureDesc.getFunction().getReturnType());
-                DataType newReturnType = new DataType(returnType.getName(), returnType.getPrecision(), keyLength);
+                int precision = returnType.getPrecision() < 1 ? 100 : returnType.getPrecision();
+                DataType newReturnType = new DataType(returnType.getName(), precision, keyLength);
                 measureDesc.getFunction().setReturnType(newReturnType.toString());
             }
         }

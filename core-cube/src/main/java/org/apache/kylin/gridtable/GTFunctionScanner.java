@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.DecimalUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
@@ -52,7 +51,7 @@ public class GTFunctionScanner implements IGTScanner {
             @Override
             public Object getValue(TblColRef col) {
                 int idx = col.getColumnDesc().getZeroBasedIndex();
-                return rtAggrMetrics.get(idx) ? DecimalUtil.toBigDecimal(next.getValue(idx)) : next.get(idx);
+                return rtAggrMetrics.get(idx) ? next.decodeValue(idx) : next.get(idx);
             }
         };
         this.filterCodeSystem = GTUtil.wrap(getInfo().codeSystem.getComparator());

@@ -21,6 +21,11 @@ source ${KYLIN_HOME:-"$(cd -P -- "$(dirname -- "$0")" && pwd -P)/../"}/bin/heade
 
 ## ${dir} assigned to $KYLIN_HOME/bin in header.sh
 source ${dir}/find-hadoop-conf-dir.sh
+if [[ $? == 0 ]]; then
+    echo "...................................................[`setColor 32 PASS`]"
+else
+    echo "...................................................[`setColor 31 FAIL`]"
+fi
 
 if [ -z "${kylin_hadoop_conf_dir}" ]; then
     hadoop_conf_param=
@@ -35,19 +40,31 @@ else
     echo "KYLIN_HOME is set to ${KYLIN_HOME}"
 fi
 
+echo "Checking HBase"
 if [ -z "$(command -v hbase version)" ]
 then
+    echo "...................................................[`setColor 31 FAIL`]"
     quit "Please make sure the user has the privilege to run hbase shell"
+else
+    echo "...................................................[`setColor 32 PASS`]"
 fi
 
+echo "Checking hive"
 if [ -z "$(command -v hive --version)" ]
 then
+    echo "...................................................[`setColor 31 FAIL`]"
     quit "Please make sure the user has the privilege to run hive shell"
+else
+    echo "...................................................[`setColor 32 PASS`]"
 fi
 
+echo "Checking hadoop shell"
 if [ -z "$(command -v hadoop version)" ]
 then
+    echo "...................................................[`setColor 31 FAIL`]"
     quit "Please make sure the user has the privilege to run hadoop shell"
+else
+    echo "...................................................[`setColor 32 PASS`]"
 fi
 
 WORKING_DIR=`bash $KYLIN_HOME/bin/get-properties.sh kylin.env.hdfs-working-dir`
@@ -56,31 +73,44 @@ then
     quit "Please set kylin.env.hdfs-working-dir in kylin.properties"
 fi
 
+echo "Checking hdfs working dir"
 hadoop ${hadoop_conf_param} fs -mkdir -p $WORKING_DIR
 if [ $? != 0 ]
 then
+    echo "...................................................[`setColor 31 FAIL`]"
     quit "Failed to create $WORKING_DIR. Please make sure the user has right to access $WORKING_DIR"
+else
+    echo "...................................................[`setColor 32 PASS`]"
 fi
 
-SPARK_EVENTLOG_DIR=`bash $KYLIN_HOME/bin/get-properties.sh kylin.engine.spark-conf.spark.eventLog.dir`
-if [ -n "$SPARK_EVENTLOG_DIR" ]
-then
-    hadoop ${hadoop_conf_param} fs -mkdir -p $SPARK_EVENTLOG_DIR
-    if [ $? != 0 ]
-    then
-        quit "Failed to create $SPARK_EVENTLOG_DIR. Please make sure the user has right to access $SPARK_EVENTLOG_DIR"
-    fi
+
+source ${dir}/find-spark-dependency.sh
+rtn=$?
+if [[ $rtn == 0 ]]; then
+    echo "...................................................[`setColor 32 PASS`]"
+else
+    echo "...................................................[`setColor 33 SKIP`]"
 fi
 
-SPARK_HISTORYLOG_DIR=`bash $KYLIN_HOME/bin/get-properties.sh kylin.engine.spark-conf.spark.history.fs.logDirectory`
-if [ -n "$SPARK_HISTORYLOG_DIR" ]
-then
-    hadoop ${hadoop_conf_param} fs -mkdir -p $SPARK_HISTORYLOG_DIR
-    if [ $? != 0 ]
-    then
-        quit "Failed to create $SPARK_HISTORYLOG_DIR. Please make sure the user has right to access $SPARK_HISTORYLOG_DIR"
-    fi
+source ${dir}/find-flink-dependency.sh
+rtn=$?
+if [[ $rtn == 0 ]]; then
+    echo "...................................................[`setColor 32 PASS`]"
+else
+    echo "...................................................[`setColor 33 SKIP`]"
 fi
+
+source ${dir}/find-kafka-dependency.sh
+rtn=$?
+if [[ $rtn == 0 ]]; then
+    echo "...................................................[`setColor 32 PASS`]"
+else
+    echo "...................................................[`setColor 33 SKIP`]"
+fi
+
 
 ${KYLIN_HOME}/bin/check-port-availability.sh ||  exit 1;
+
+echo ""
+echo `setColor 33 "Checking environment finished successfully. To check again, run 'bin/check-env.sh' manually."`
 

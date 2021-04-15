@@ -22,7 +22,7 @@ import static org.apache.kylin.metadata.filter.TupleFilter.and;
 import static org.apache.kylin.metadata.filter.TupleFilter.compare;
 import static org.apache.kylin.metadata.filter.TupleFilter.or;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -31,6 +31,8 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.DimensionRangeInfo;
+import org.apache.kylin.metadata.filter.DynamicTupleFilter;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
@@ -43,7 +45,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 import java.util.Map;
 
@@ -74,6 +76,30 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
         // make the segment empty, it should be pruned
         seg.setInputRecords(0);
         Assert.assertFalse(segmentPruner.check(seg));
+    }
+
+    @Test
+    public void testDynamicFilter() {
+        CubeSegment seg = cube.getFirstSegment();
+        TblColRef col = cube.getModel().findColumn("CUSTOMER.C_NATION");
+
+        // pass case of a dynamic filter
+        {
+            DynamicTupleFilter dyna = new DynamicTupleFilter("$0");
+            CompareTupleFilter f = compare(col, FilterOperatorEnum.EQ, dyna);
+            f.bindVariable("$0", "CHINA");
+            SegmentPruner segmentPruner = new SegmentPruner(f);
+            Assert.assertTrue(segmentPruner.check(seg));
+        }
+
+        // prune case of a dynamic filter
+        {
+            DynamicTupleFilter dyna = new DynamicTupleFilter("$0");
+            CompareTupleFilter f = compare(col, FilterOperatorEnum.EQ, dyna);
+            f.bindVariable("$0", "XXXX");
+            SegmentPruner segmentPruner = new SegmentPruner(f);
+            Assert.assertTrue(segmentPruner.check(seg) == false);
+        }
     }
 
     @Test

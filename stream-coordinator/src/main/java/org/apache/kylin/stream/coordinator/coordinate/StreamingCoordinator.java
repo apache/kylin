@@ -80,8 +80,8 @@ import org.apache.kylin.stream.core.util.NodeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  * <pre>
@@ -145,7 +145,6 @@ public class StreamingCoordinator implements CoordinatorClient {
         streamingJobSubmitExecutor.scheduleAtFixedRate(buildJobSubmitter, 0, 2, TimeUnit.MINUTES);
         clusterStateCheckExecutor.scheduleAtFixedRate(clusterDoctor, 5, 10, TimeUnit.MINUTES);
     }
-
 
     /**
      * Assign the streaming cube to replica sets. Replica sets is calculated by Assigner.
@@ -630,7 +629,7 @@ public class StreamingCoordinator implements CoordinatorClient {
             buildJobSubmitter.restore();
             while (true) {
                 try {
-                    Thread.sleep(5 * 60 * 1000);
+                    Thread.sleep(5 * 60 * 1000L);
                 } catch (InterruptedException exception) {
                     Thread.interrupted();
                     break;

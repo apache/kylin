@@ -43,9 +43,9 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.base.MoreObjects;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * Broadcast metadata changes across all Kylin servers.
@@ -79,7 +79,9 @@ public class Broadcaster implements Closeable {
 
     // ============================================================================
 
-    static final Map<String, List<Listener>> staticListenerMap = Maps.newConcurrentMap();
+    private static final Map<String, List<Listener>> staticListenerMap = Maps.newConcurrentMap();
+
+    private static final Object LOCK = new Object();
 
     private KylinConfig config;
     private ExecutorService announceMainLoop;
@@ -142,7 +144,7 @@ public class Broadcaster implements Closeable {
                                     } catch (IOException e) {
                                         logger.error(
                                                 "Announce broadcast event failed, targetNode {} broadcastEvent {}, error msg: {}",
-                                                node, broadcastEvent, e);
+                                                node, broadcastEvent, e.getMessage());
                                         syncErrorHandler.handleAnnounceError(node, restClient, broadcastEvent);
                                     }
                                 }
@@ -201,7 +203,7 @@ public class Broadcaster implements Closeable {
     }
 
     private static void doRegisterListener(Map<String, List<Listener>> lmap, Listener listener, String... entities) {
-        synchronized (lmap) {
+        synchronized (LOCK) {
             // ignore re-registration
             List<Listener> all = lmap.get(SYNC_ALL);
             if (all != null && all.contains(listener)) {
@@ -477,9 +479,13 @@ public class Broadcaster implements Closeable {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("entity", entity).add("event", event).add("cacheKey", cacheKey)
+            return MoreObjects.toStringHelper(this).add("entity", entity).add("event", event).add("cacheKey", cacheKey)
                     .toString();
         }
 
+    }
+
+    public static void clearStaticListenerMap() {
+        staticListenerMap.clear();
     }
 }

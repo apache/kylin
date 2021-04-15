@@ -18,6 +18,7 @@
 package org.apache.kylin.sdk.datasource.framework.conv;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.sql.SQLException;
@@ -26,6 +27,7 @@ import java.util.List;
 
 public class PostgresqlSqlConverterTest {
 
+    @Ignore
     @Test
     public void testConvertSql() throws SQLException {
         GenericSqlConverter sqlConverter = new GenericSqlConverter();

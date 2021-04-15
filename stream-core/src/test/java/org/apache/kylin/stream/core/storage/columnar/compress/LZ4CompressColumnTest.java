@@ -28,15 +28,14 @@ import java.nio.channels.FileChannel.MapMode;
 import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.util.Bytes;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.io.CountingOutputStream;
-import com.google.common.io.Files;
+import org.apache.kylin.shaded.com.google.common.io.CountingOutputStream;
+import org.apache.kylin.shaded.com.google.common.io.Files;
 
 public class LZ4CompressColumnTest {
     private File tmpColFile;
@@ -77,8 +76,7 @@ public class LZ4CompressColumnTest {
         int compressedSize = writeCompressedData(rowCnt);
         System.out.println("compressed data size:" + compressedSize);
         FileSystem fs = FileSystem.getLocal(new Configuration());
-        FSDataInputStream fsInputStream = fs.open(new Path(tmpColFile.getAbsolutePath()));
-        try (FSInputLZ4CompressedColumnReader reader = new FSInputLZ4CompressedColumnReader(fsInputStream, 0,
+        try (FSInputLZ4CompressedColumnReader reader = new FSInputLZ4CompressedColumnReader(fs, new Path(tmpColFile.getAbsolutePath()), 0,
                 compressedSize, rowCnt)) {
             int k = 0;
             for (byte[] val : reader) {

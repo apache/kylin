@@ -359,35 +359,6 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
       });
     };
 
-    $scope.isAutoMigrateCubeEnabled = function(){
-      return kylinConfig.isAutoMigrateCubeEnabled();
-    };
-
-    $scope.migrateCube = function (cube) {
-      SweetAlert.swal({
-        title: '',
-        text: "The cube will overwrite the same cube in prod env" +
-        "\nMigrating cube will elapse a couple of minutes." +
-        "\nPlease wait.",
-        type: '',
-        showCancelButton: true,
-        confirmButtonColor: '#DD6B55',
-        confirmButtonText: "Yes",
-        closeOnConfirm: true
-      }, function(isConfirm) {
-        if(isConfirm){
-          loadingRequest.show();
-          CubeService.autoMigrate({cubeId: cube.name, propName: $scope.projectModel.selectedProject}, {}, function (result) {
-            loadingRequest.hide();
-            MessageBox.successNotify(cube.name + ' migrate successfully!');
-          },function(e){
-            loadingRequest.hide();
-            SweetAlert.swal('Migrate failed!', "Please contact your ADMIN.", 'error');
-          });
-        }
-      });
-    };
-
     $scope.startJobSubmit = function (cube) {
 
       $scope.metaModel={
@@ -607,6 +578,39 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
             return $scope;
           }
         }
+      });
+    };
+
+    $scope.startMigrateCube = function(cube, action) {
+      $scope.loadDetail(cube).then(function () {
+        switch (action) {
+          case 0:
+            var template = 'cubeMigrate.html';
+            break;
+          case 1:
+            var template = 'migrateApprove.html';
+            break;
+          case -1:
+            var template = 'migrateReject.html';
+            break;
+          default:
+            var template = '';
+        }
+
+        if (!template) {
+          return;
+        }
+
+        $modal.open({
+          templateUrl: template,
+          controller: cubeMigrateCtrl,
+          windowClass:"clone-cube-window",
+          resolve: {
+            cube: function () {
+              return cube;
+            }
+          }
+        });
       });
     };
 
@@ -846,6 +850,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     endTime: 0
   };
   $scope.message = "";
+  $scope.refreshType = 'normal';
   var startTime;
   if(cube.segments.length == 0){
     startTime = (!!cube.detail.partition_date_start)?cube.detail.partition_date_start:0;
@@ -946,6 +951,51 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
   $scope.cancel = function () {
     $modalInstance.dismiss('cancel');
   };
+
+  $scope.getAdvRefreshTimeOptions = function(status) {
+    if ('start' === status) {
+      var startTimeOptions = [];
+      var lastInd = $scope.cube.segments.length - 1;
+      angular.forEach($scope.cube.segments, function(segment, ind) {
+        startTimeOptions.push(segment.date_range_start);
+        if (lastInd == ind) {
+          startTimeOptions.push(segment.date_range_end);
+        }
+      });
+      return startTimeOptions;
+    } else if ('end' === status) {
+      var endTimeOptions = [];
+      angular.forEach($scope.cube.segments, function(segment, ind) {
+        endTimeOptions.push(segment.date_range_end);
+      });
+      return endTimeOptions;
+    }
+  };
+  $scope.advRefreshStartTimeOptions = $scope.getAdvRefreshTimeOptions('start');
+  $scope.advRefreshEndTimeOptions = $scope.getAdvRefreshTimeOptions('end');
+  $scope.endTimeTypeCustomize = false;
+
+  $scope.changeEndTimeDisplay = function() {
+    $scope.endTimeTypeCustomize = !$scope.endTimeTypeCustomize;
+  };
+
+  $scope.setDateRange = function($view, $dates) {
+    var minDate = $scope.cube.segments[$scope.cube.segments.length-1].date_range_end;
+    // var maxDate = moment().startOf($view).valueOf(); // Now
+    angular.forEach($dates, function(date) {
+      var utcDateValue = date.utcDateValue;
+      date.selectable = utcDateValue >= minDate; // && utcDateValue <= maxDate;
+    });
+  };
+
+  $scope.changeRefreshType = function (type) {
+    $scope.refreshType = type;
+    if (type ==='normal') {
+      $scope.jobBuildRequest.buildType = 'REFRESH';
+    } else if (type === 'advance'){
+      $scope.jobBuildRequest.buildType = 'BUILD';
+    }
+  }
 };
 
 
@@ -1108,4 +1158,128 @@ var lookupRefreshCtrl = function($scope, scope, CubeList, $modalInstance, CubeSe
     });
   };
 
+};
+
+var cubeMigrateCtrl = function ($scope, $modalInstance, CubeService, cube, ProjectModel, loadingRequest, SweetAlert) {
+  $scope.migrate={
+    targetProject: ProjectModel.selectedProject,
+    cubeValidate: true,
+    lockProjectName: false
+  }
+
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
+
+  $scope.validate = function () {
+    $scope.MigrationRequest = {
+      projectName:$scope.migrate.targetProject
+    }
+    loadingRequest.show();
+    CubeService.ruleCheck({cubeId: cube.name, projectName: $scope.migrate.targetProject}, function(result) {
+      loadingRequest.hide();
+      $scope.migrate.cubeValidate = false;
+      $scope.migrate.lockProjectName = true;
+      if (result.length > 0) {
+        SweetAlert.swal('Attention', result, 'warning');
+      }
+    }, function (e) {
+      loadingRequest.hide();
+      if (e.data && e.data.exception) {
+        var message = e.data.exception;
+        var msg = !!(message) ? message : 'Failed to take action.';
+        SweetAlert.swal('Oops...', msg, 'error');
+      } else {
+        SweetAlert.swal('Oops...', 'Failed to take action.', 'error');
+      }
+    });
+  }
+
+  $scope.migrateCube = function(){
+    if(!$scope.migrate.targetProject){
+      SweetAlert.swal('Oops...', "Please input target project name.", 'info');
+      return;
+    }
+
+    $scope.MigrationRequest = {
+      projectName:$scope.migrate.targetProject
+    }
+
+    SweetAlert.swal({
+      title: '',
+      text: 'Are you sure to migrate the cube? ',
+      type: '',
+      showCancelButton: true,
+      confirmButtonColor: '#DD6B55',
+      confirmButtonText: "Yes",
+      closeOnConfirm: true
+    }, function (isConfirm) {
+      if (isConfirm) {
+        loadingRequest.show();
+        CubeService.migrate({cubeId: cube.name}, $scope.MigrationRequest, function (result) {
+          loadingRequest.hide();
+          $modalInstance.dismiss('cancel');
+          SweetAlert.swal('Success!', 'Your Migration Request has been well received. Please check your email to get timely update of this request.', 'success');
+        }, function (e) {
+          loadingRequest.hide();
+          if (e.data && e.data.exception) {
+            var msg = e.data.exception;
+            if(e.status == '400' && (e.data.exception.indexOf("QueryLatencyRule") > -1 || e.data.exception.indexOf("ExpansionRateRule") > -1)){
+              msg += '. Please refer to the guidance to optimize your cube design';
+            }
+            msg += '. For any question, please contact support team.';
+            SweetAlert.swal('Oops...', msg, 'error');
+          } else {
+            SweetAlert.swal('Oops...', 'Failed to take action.', 'error');
+          }
+        });
+      }
+    });
+  };
+
+  $scope.migrateApprove = function(){
+    $scope.MigrationRequest = {
+      projectName:$scope.migrate.targetProject
+    }
+    loadingRequest.show();
+    CubeService.approve({cubeId: cube.name}, $scope.MigrationRequest, function (result) {
+      loadingRequest.hide();
+      $modalInstance.dismiss('cancel');
+      SweetAlert.swal('Success!', 'Approve cube migration successfully', 'success');
+    }, function (e) {
+      loadingRequest.hide();
+      if (e.data && e.data.exception) {
+        var message = e.data.exception;
+        var msg = !!(message) ? message : 'Failed to take action.';
+        SweetAlert.swal('Oops...', msg, 'error');
+      } else {
+        SweetAlert.swal('Oops...', 'Failed to take action.', 'error');
+      }
+    });
+  };
+
+  $scope.migrateReject = function(){
+    if(!$scope.migrate.reason) {
+      SweetAlert.swal('Oops...', 'Please enter reason for refusal.', 'info');
+      return;
+    }
+    $scope.MigrationRequest = {
+      reason: $scope.migrate.reason
+    };
+    loadingRequest.show();
+    CubeService.reject({cubeId: cube.name}, $scope.MigrationRequest, function (result) {
+      loadingRequest.hide();
+      $modalInstance.dismiss('cancel');
+      SweetAlert.swal('Success!', 'Reject cube migration successfully', 'success');
+    }, function (e) {
+      loadingRequest.hide();
+      if (e.data && e.data.exception) {
+        var message = e.data.exception;
+        var msg = !!(message) ? message : 'Failed to take action.';
+        SweetAlert.swal('Oops...', msg, 'error');
+      } else {
+        SweetAlert.swal('Oops...', 'Failed to take action.', 'error');
+      }
+    });
+  }
 };

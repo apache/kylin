@@ -19,7 +19,7 @@
 package org.apache.kylin.engine.spark;
 
 import com.clearspring.analytics.util.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;

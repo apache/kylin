@@ -29,6 +29,7 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 
 public class RedistributeFlatHiveTableStep extends AbstractExecutable {
     private final PatternedLogger stepLogger = new PatternedLogger(logger);
@@ -45,7 +46,7 @@ public class RedistributeFlatHiveTableStep extends AbstractExecutable {
     }
 
     private void redistributeTable(KylinConfig config, int numReducers) throws IOException {
-        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(getName());
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(getName() + " " + getCubeName() + " " + getId());
         hiveCmdBuilder.overwriteHiveProps(config.getHiveConfigOverride());
         hiveCmdBuilder.addStatement(getInitStatement());
         hiveCmdBuilder.addStatement("set mapreduce.job.reduces=" + numReducers + ";\n");
@@ -65,7 +66,7 @@ public class RedistributeFlatHiveTableStep extends AbstractExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         KylinConfig config = getCubeSpecificConfig();
         String intermediateTable = getIntermediateTable();
         String database, tableName;

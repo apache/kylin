@@ -43,9 +43,6 @@ import org.slf4j.LoggerFactory;
 
 public class StreamingCubeDataSearcher {
     private static Logger logger = LoggerFactory.getLogger(StreamingCubeDataSearcher.class);
-
-    private static int TIMEOUT = Integer.MAX_VALUE;
-
     private StreamingSegmentManager streamingSegmentManager;
     private String cubeName;
     private CubeDesc cubeDesc;
@@ -73,7 +70,15 @@ public class StreamingCubeDataSearcher {
         try {
             logger.info("query-{}: use cuboid {} to serve the query", queryProfile.getQueryId(),
                     searchRequest.getHitCuboid());
-            ResultCollector resultCollector = getResultCollector();
+            ResultCollector resultCollector = getResultCollector(searchRequest);
+            if (resultCollector instanceof MultiThreadsResultCollector) {
+                while (MultiThreadsResultCollector.isFullUp() && System.currentTimeMillis() < searchRequest.getDeadline()) {
+                    Thread.sleep(50);
+                }
+                if (System.currentTimeMillis() >= searchRequest.getDeadline()) {
+                    throw new RuntimeException("Timeout for " + queryProfile.getQueryId());
+                }
+            }
             Collection<StreamingCubeSegment> segments = streamingSegmentManager.getAllSegments();
             StreamingDataQueryPlanner scanRangePlanner = searchRequest.getQueryPlanner();
             for (StreamingCubeSegment queryableSegment : segments) {
@@ -105,10 +110,10 @@ public class StreamingCubeDataSearcher {
         }
     }
 
-    private ResultCollector getResultCollector() {
+    private ResultCollector getResultCollector(StreamingSearchContext searchRequest) {
         int useThreads = cubeDesc.getConfig().getStreamingReceiverUseThreadsPerQuery();
         if (useThreads > 1) {
-            return new MultiThreadsResultCollector(useThreads, TIMEOUT);
+            return new MultiThreadsResultCollector(useThreads, searchRequest.getDeadline());
         } else {
             return new SingleThreadResultCollector();
         }

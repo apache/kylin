@@ -36,8 +36,8 @@ if [[ `uname -a` =~ "Darwin" ]]; then
     alias md5cmd="md5 -q"
 fi
 
-spark_version="2.3.2"
-spark_pkg_md5="01b3e6aef0ef574e066d15e035b9b2dd"
+spark_version="2.4.5"
+spark_pkg_md5="4007fd48841fcc5be31a705f8223620a"
 hdp_version="2.4.0.0-169"
 cdh_version="5.7.5"
 cdh_path="/opt/cloudera/parcels/CDH"
@@ -80,19 +80,19 @@ echo "Download spark binary done"
 rm -rf ${spark_package_dir}
 
 if [ ! -f "${spark_conf_path}/hive-site.xml" ]; then
-        echo "Copy hive-site.xml to ${spark_conf_path}"
-        ln -s ${hive_site_path} ${spark_conf_path}/hive-site.xml
+    echo "Copy hive-site.xml to ${spark_conf_path}"
+    ln -s ${hive_site_path} ${spark_conf_path}/hive-site.xml
 fi
 
 
 if [ -d "${cdh_path}" ]; then
-        if [ ! -f "${spark_jars_path}/hive-hcatalog-core-1.1.0-cdh${cdh_version}.jar" ]; then
-                echo "Download hive hcatalog dependency for cdh-${cdh_version}"
-                wget --directory-prefix=${spark_jars_path} https://repository.cloudera.com/content/repositories/releases/org/apache/hive/hcatalog/hive-hcatalog-core/1.1.0-cdh${cdh_version}/hive-hcatalog-core-1.1.0-cdh${cdh_version}.jar || echo "Download hive hcatalog dependency for cdh-${cdh_version}failed."
-        fi
+    if [ ! -f "${spark_jars_path}/hive-hcatalog-core-1.1.0-cdh${cdh_version}.jar" ]; then
+        echo "Download hive hcatalog dependency for cdh-${cdh_version}"
+        wget --directory-prefix=${spark_jars_path} https://repository.cloudera.com/content/repositories/releases/org/apache/hive/hcatalog/hive-hcatalog-core/1.1.0-cdh${cdh_version}/hive-hcatalog-core-1.1.0-cdh${cdh_version}.jar || echo "Download hive hcatalog dependency for cdh-${cdh_version}failed."
+    fi
 elif [ -d "${hdp_path}" ]; then
-        if [ ! -f "${spark_jars_path}/hive-hcatalog-core-1.2.1000.${hdp_version}.jar" ]; then
-                echo "Download hive hcatalog dependency for cdh-${hdp_version}"
-                wget --directory-prefix=${spark_jars_path} https://repo.hortonworks.com/content/repositories/releases/org/apache/hive/hcatalog/hive-hcatalog-core/1.2.1000.${hdp_version}/hive-hcatalog-core-1.2.1000.${hdp_version}.jar || echo "Download hive hcatalog dependency for hdp-${hdp_version} failed."
-        fi
+    if [ ! -f "${spark_jars_path}/hive-hcatalog-core-1.2.1000.${hdp_version}.jar" ]; then
+        echo "Download hive hcatalog dependency for cdh-${hdp_version}"
+        wget --directory-prefix=${spark_jars_path} https://repo.hortonworks.com/content/repositories/releases/org/apache/hive/hcatalog/hive-hcatalog-core/1.2.1000.${hdp_version}/hive-hcatalog-core-1.2.1000.${hdp_version}.jar || echo "Download hive hcatalog dependency for hdp-${hdp_version} failed."
+    fi
 fi

@@ -25,12 +25,15 @@ import java.util.List;
 import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.ProjectRequest;
+import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.ProjectService;
@@ -40,6 +43,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.acls.model.Sid;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -67,6 +72,11 @@ public class ProjectController extends BasicController {
     @Autowired
     @Qualifier("cubeMgmtService")
     private CubeService cubeService;
+
+    @Autowired
+    @Qualifier("validateUtil")
+    private ValidateUtil validateUtil;
+
     @Autowired
     private AclEvaluate aclEvaluate;
 
@@ -204,6 +214,49 @@ public class ProjectController extends BasicController {
         }
     }
 
+    @RequestMapping(value = "/{projectName}/owner", method = { RequestMethod.PUT }, produces = {
+        "application/json" })
+    @ResponseBody
+    public ProjectInstance updateProjectOwner(@PathVariable String projectName, @RequestBody String owner) {
+        ProjectInstance updatedProj;
+        ProjectInstance currentProject = null;
+        String oldOwner = null;
+        boolean updateOwnerSuccess = false;
+        boolean updateAccessSuccess = false;
+        try {
+            validateUtil.checkIdentifiersExists(owner, true);
+            currentProject = projectService.getProjectManager().getProject(projectName);
+            if (currentProject == null) {
+                throw new NotFoundException("The project named " + projectName + " does not exists");
+            }
+            oldOwner = currentProject.getOwner();
+            // update project owner
+            updatedProj = projectService.updateProjectOwner(currentProject, owner);
+            updateOwnerSuccess = true;
+
+            //grant ADMINISTRATION permission to new owner
+            AclEntity ae = accessService.getAclEntity("ProjectInstance", currentProject.getUuid());
+            Sid sid = accessService.getSid(owner, true);
+            accessService.grant(ae, AclPermission.ADMINISTRATION, sid);
+            updateAccessSuccess = true;
+        } catch (AccessDeniedException accessDeniedException) {
+            throw new ForbiddenException("You don't have right to update this project's owner.");
+        } catch (Exception e) {
+            logger.error("Failed to deal with the request.", e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        } finally {
+            if (!updateAccessSuccess && currentProject != null && updateOwnerSuccess) {
+                try {
+                    projectService.updateProjectOwner(currentProject, oldOwner);
+                } catch (IOException e) {
+                    logger.error("Failed to roll back the request.", e);
+                }
+            }
+        }
+
+        return updatedProj;
+    }
+
     public void setProjectService(ProjectService projectService) {
         this.projectService = projectService;
     }
@@ -214,5 +267,9 @@ public class ProjectController extends BasicController {
 
     public void setCubeService(CubeService cubeService) {
         this.cubeService = cubeService;
+    }
+
+    public void setValidateUtil(ValidateUtil validateUtil) {
+        this.validateUtil = validateUtil;
     }
 }

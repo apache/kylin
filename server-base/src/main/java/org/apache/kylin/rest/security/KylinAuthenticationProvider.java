@@ -18,28 +18,35 @@
 
 package org.apache.kylin.rest.security;
 
+import static org.apache.kylin.cache.cachemanager.CacheConstants.USER_CACHE;
+
+import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
+
+import javax.annotation.PostConstruct;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.service.UserService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.Assert;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.hash.HashFunction;
+import org.apache.kylin.shaded.com.google.common.hash.Hashing;
 
 /**
  * A wrapper class for the authentication provider; Will do something more for Kylin.
@@ -48,20 +55,12 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(KylinAuthenticationProvider.class);
 
-    private final static com.google.common.cache.Cache<String, Authentication> userCache = CacheBuilder.newBuilder()
-            .maximumSize(KylinConfig.getInstanceFromEnv().getServerUserCacheMaxEntries())
-            .expireAfterWrite(KylinConfig.getInstanceFromEnv().getServerUserCacheExpireSeconds(), TimeUnit.SECONDS)
-            .removalListener(new RemovalListener<String, Authentication>() {
-                @Override
-                public void onRemoval(RemovalNotification<String, Authentication> notification) {
-                    KylinAuthenticationProvider.logger.debug("User cache {} is removed due to {}",
-                            notification.getKey(), notification.getCause());
-                }
-            }).build();
-
     @Autowired
     @Qualifier("userService")
     UserService userService;
+
+    @Autowired
+    private CacheManager cacheManager;
 
     //Embedded authentication provider
     private AuthenticationProvider authenticationProvider;
@@ -75,19 +74,21 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
         hf = Hashing.murmur3_128();
     }
 
+    @PostConstruct
+    public void init() {
+        Preconditions.checkNotNull(cacheManager, "cacheManager is not injected yet");
+    }
+    
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 
-        byte[] hashKey = hf.hashString(authentication.getName() + authentication.getCredentials()).asBytes();
+        byte[] hashKey = hf.hashString(authentication.getName() + authentication.getCredentials(), Charset.defaultCharset()).asBytes();
         String userKey = Arrays.toString(hashKey);
 
-        if (userService.isEvictCacheFlag()) {
-            userCache.invalidateAll();
-            userService.setEvictCacheFlag(false);
-        }
-        Authentication authed = userCache.getIfPresent(userKey);
-
-        if (null != authed) {
+        Authentication authed;
+        Cache.ValueWrapper authedUser = cacheManager.getCache(USER_CACHE).get(userKey);
+        if (authedUser != null) {
+            authed = (Authentication) authedUser.get();
             SecurityContextHolder.getContext().setAuthentication(authed);
         } else {
             try {
@@ -114,11 +115,11 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
                 logger.debug("User {} authorities : {}", username, user.getAuthorities());
                 if (!userService.userExists(username)) {
                     userService.createUser(user);
-                } else if (needUpdateUser(user, username)) {
-                    userService.updateUser(user);
+                } else {
+                    updateUserIfNeeded(user, username);
                 }
 
-                userCache.put(userKey, authed);
+                cacheManager.getCache(USER_CACHE).put(userKey, authed);
             } catch (AuthenticationException e) {
                 logger.error("Failed to auth user: " + authentication.getName(), e);
                 throw e;
@@ -130,10 +131,22 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
         return authed;
     }
 
-    // in case ldap users changing.
-    private boolean needUpdateUser(ManagedUser user, String username) {
-        return KylinConfig.getInstanceFromEnv().getSecurityProfile().equals("ldap")
-                && !userService.loadUserByUsername(username).equals(user);
+    private void updateUserIfNeeded(ManagedUser newUser, String username) {
+        String securityProfile = KylinConfig.getInstanceFromEnv().getSecurityProfile();
+        // in case ldap users changing.
+        if (securityProfile.equals("ldap") || securityProfile.equals("saml")) {
+            UserDetails existingUser = userService.loadUserByUsername(username);
+            SimpleGrantedAuthority groupAllUsersAuthority = new SimpleGrantedAuthority(Constant.GROUP_ALL_USERS);
+            if (existingUser.getAuthorities().contains(groupAllUsersAuthority)) {
+                if (!newUser.getAuthorities().contains(groupAllUsersAuthority)) {
+                    newUser.getAuthorities().add(groupAllUsersAuthority);
+                }
+            }
+            if (!existingUser.equals(newUser)) {
+                logger.info("Going to update user info for {}", username);
+                userService.updateUser(newUser);
+            }
+        }
     }
 
     @Override

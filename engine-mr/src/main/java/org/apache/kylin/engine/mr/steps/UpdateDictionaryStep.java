@@ -23,7 +23,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -57,7 +58,7 @@ public class UpdateDictionaryStep extends AbstractExecutable {
     private static final Logger logger = LoggerFactory.getLogger(UpdateDictionaryStep.class);
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         final CubeManager cubeMgr = CubeManager.getInstance(context.getConfig());
         final DictionaryManager dictMgrHdfs;
         final DictionaryManager dictMgrHbase;

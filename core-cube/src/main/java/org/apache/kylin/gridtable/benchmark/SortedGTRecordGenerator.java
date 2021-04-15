@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
 import org.apache.kylin.common.util.ByteArray;
@@ -31,7 +32,8 @@ import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.IGTScanner;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class SortedGTRecordGenerator {
 
@@ -43,7 +45,7 @@ public class SortedGTRecordGenerator {
     }
 
     public void addDimension(long cardinality, int length, Map<Integer, Integer> weights) {
-        assert cardinality > 0;
+        Preconditions.checkArgument(cardinality > 0);
         ColSpec spec = new ColSpec();
         spec.cardinality = cardinality;
         spec.length = length;
@@ -56,7 +58,7 @@ public class SortedGTRecordGenerator {
     }
 
     public void addMeasure(int length, Randomizer randomizer) {
-        assert length > 0;
+        Preconditions.checkArgument(length > 0);
         ColSpec spec = new ColSpec();
         spec.length = length;
         spec.measureRandomizer = randomizer;
@@ -91,7 +93,7 @@ public class SortedGTRecordGenerator {
     }
 
     public static class BytesRandomizer implements Randomizer {
-        final private byte[] bytes;
+        private final byte[] bytes;
 
         public BytesRandomizer(int len) {
             this.bytes = new byte[len];
@@ -138,6 +140,9 @@ public class SortedGTRecordGenerator {
 
                 @Override
                 public GTRecord next() {
+                    if (counter >= nRows)
+                        throw new NoSuchElementException();
+
                     for (int i = 0; i < colSpecs.size(); i++) {
                         ColSpec spec = colSpecs.get(i);
                         if (spec.cardinality > 0) {
@@ -194,7 +199,7 @@ public class SortedGTRecordGenerator {
         int curValue;
 
         public Distribution(ColSpec spec, long nRows) {
-            assert spec.cardinality > 0;
+            Preconditions.checkArgument(spec.cardinality > 0);
 
             this.spec = spec;
             this.nRows = nRows;

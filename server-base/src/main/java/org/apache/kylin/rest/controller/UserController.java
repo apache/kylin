@@ -62,7 +62,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * Handle user authentication request to protected kylin rest resources by
@@ -191,6 +191,8 @@ public class UserController extends BasicController {
         }
         logger.info("Saving {}", user);
 
+        user.setPassword(pwdEncode(user.getPassword()));
+
         completeAuthorities(user);
         userService.updateUser(user);
         return get(userName);
@@ -215,6 +217,7 @@ public class UserController extends BasicController {
                 throw new BadRequestException("pwd update error");
             }
 
+            existing = userService.copyForWrite(existing);
             existing.setPassword(pwdEncode(user.getNewPassword()));
             existing.setDefaultPassword(false);
             logger.info("update password for user {}", user);

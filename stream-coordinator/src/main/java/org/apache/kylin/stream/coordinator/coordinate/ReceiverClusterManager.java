@@ -18,11 +18,11 @@
 package org.apache.kylin.stream.coordinator.coordinate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
-import com.google.common.collect.MapDifference;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.base.Function;
+import org.apache.kylin.shaded.com.google.common.collect.Collections2;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.MapDifference;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -71,11 +71,11 @@ import java.util.stream.Collectors;
  * <pre>
  * This class manage operation related to multi streaming receivers. They are often not atomic and maybe idempotent.
  *
- * In a multi-step transcation, following steps should be thought twice:
+ * In a multi-step transaction, following steps should be thought twice:
  *  1. should fail fast or continue when exception thrown.
  *  2. should API(RPC) be synchronous or asynchronous
- *  3. when transcation failed, will roll back always succeed
- *  4. transcation should be idempotent so when it failed, it could be fixed by retry
+ *  3. when transaction failed, will roll back always succeed
+ *  4. transaction should be idempotent so when it failed, it could be fixed by retry
  * </pre>
  */
 public class ReceiverClusterManager {

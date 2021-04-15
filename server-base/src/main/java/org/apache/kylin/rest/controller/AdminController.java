@@ -20,11 +20,15 @@ package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.util.VersionUtil;
+import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
@@ -48,6 +52,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 @RequestMapping(value = "/admin")
 public class AdminController extends BasicController {
+
+    private Set<String> propertiesWhiteList = new HashSet<>();
 
     @Autowired
     @Qualifier("adminService")
@@ -106,6 +112,28 @@ public class AdminController extends BasicController {
         return configRes;
     }
 
+    @RequestMapping(value = "/config/hdfs", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public GeneralResponse getHDFSConfig() throws IOException {
+        String config = adminService.getHadoopConfigAsString();
+
+        GeneralResponse configRes = new GeneralResponse();
+        configRes.put("config", config);
+
+        return configRes;
+    }
+
+    @RequestMapping(value = "/config/hbase", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public GeneralResponse getHBaseConfig() throws IOException {
+        String config = adminService.getHBaseConfigAsString();
+
+        GeneralResponse configRes = new GeneralResponse();
+        configRes.put("config", config);
+
+        return configRes;
+    }
+
     @RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public MetricsResponse cubeMetrics(MetricsRequest request) {
@@ -118,8 +146,14 @@ public class AdminController extends BasicController {
         adminService.cleanupStorage();
     }
 
-    @RequestMapping(value = "/config", method = { RequestMethod.PUT }, produces = { "application/json" })
+    @RequestMapping(value = "/config", method = {RequestMethod.PUT}, produces = {"application/json"})
     public void updateKylinConfig(@RequestBody UpdateConfigRequest updateConfigRequest) {
+        if (propertiesWhiteList.isEmpty()) {
+            propertiesWhiteList.addAll(Arrays.asList(KylinConfig.getInstanceFromEnv().getPropertiesWhiteListForModification().split(",")));
+        }
+        if (!adminService.configWritableStatus() && !propertiesWhiteList.contains(updateConfigRequest.getKey())) {
+            throw new BadRequestException("Update configuration from API is not allowed.");
+        }
         adminService.updateConfig(updateConfigRequest.getKey(), updateConfigRequest.getValue());
     }
 

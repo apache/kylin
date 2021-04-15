@@ -59,6 +59,8 @@ public class JdbcHiveInputBase extends org.apache.kylin.source.jdbc.JdbcHiveInpu
             PartitionDesc partitionDesc = flatDesc.getDataModel().getPartitionDesc();
             String partCol = null;
             boolean enableQuote = dataSource.getSqlConverter().getConfigurer().enableQuote();
+            enableQuote = enableQuote && config.enableHiveDdlQuote();
+            logger.debug("Quote switch is set to {}", enableQuote);
             SqlDialect sqlDialect = enableQuote ? dataSource.getSqlConverter().getConfigurer().getSqlDialect() : FlatTableSqlQuoteUtils.NON_QUOTE_DIALECT;
             SqlConverter.IConfigurer iconfigurer = dataSource.getSqlConverter().getConfigurer();
 
@@ -102,7 +104,7 @@ public class JdbcHiveInputBase extends org.apache.kylin.source.jdbc.JdbcHiveInpu
                 if (segRange != null && !segRange.isInfinite()) {
                     if (partitionDesc.getPartitionDateColumnRef().getTableAlias().equals(splitTableAlias)
                             && (partitionDesc.getPartitionTimeColumnRef() == null || partitionDesc
-                                    .getPartitionTimeColumnRef().getTableAlias().equals(splitTableAlias))) {
+                            .getPartitionTimeColumnRef().getTableAlias().equals(splitTableAlias))) {
                         String quotedPartCond = FlatTableSqlQuoteUtils.quoteIdentifierInSqlExpr(flatDesc,
                                 partitionDesc.getPartitionConditionBuilder().buildDateRangeCondition(partitionDesc,
                                         flatDesc.getSegment(), segRange, null), sqlDialect);

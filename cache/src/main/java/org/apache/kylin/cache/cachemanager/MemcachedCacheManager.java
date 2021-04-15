@@ -37,9 +37,9 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.support.AbstractCacheManager;
 import org.springframework.cache.support.SimpleValueWrapper;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import net.spy.memcached.MemcachedClientIF;
 
@@ -59,8 +59,11 @@ public class MemcachedCacheManager extends AbstractCacheManager {
     protected Collection<? extends Cache> loadCaches() {
         Cache successCache = new MemCachedCacheAdaptor(
                 new MemcachedChunkingCache(MemcachedCache.create(memcachedCacheConfig, CacheConstants.QUERY_CACHE)));
+        Cache userCache = new MemCachedCacheAdaptor(
+                new MemcachedCache(MemcachedCache.create(memcachedCacheConfig, CacheConstants.USER_CACHE, 86400)));
 
         addCache(successCache);
+        addCache(userCache);
 
         Collection<String> names = getCacheNames();
         Collection<Cache> caches = Lists.newArrayList();

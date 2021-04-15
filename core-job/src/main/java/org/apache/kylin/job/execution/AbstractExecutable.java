@@ -38,14 +38,14 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.apache.kylin.job.util.MailNotificationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.base.MoreObjects;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  */
@@ -60,6 +60,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected static final String END_TIME = "endTime";
     protected static final String INTERRUPT_TIME = "interruptTime";
     protected static final String BUILD_INSTANCE = "buildInstance";
+    protected static final String PROJECT_INSTANCE_NAME = "projectName";
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
     public static final String NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY = "no need to send email, user list is empty";
@@ -157,7 +158,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     @Override
-    public final ExecuteResult execute(ExecutableContext executableContext) throws ExecuteException {
+    public final ExecuteResult execute(ExecutableContext executableContext, IJobRunner jobRunner) throws ExecuteException {
 
         logger.info("Executing AbstractExecutable ({})", this.getName());
 
@@ -176,7 +177,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                 catchedException = null;
                 result = null;
                 try {
-                    result = doWork(executableContext);
+                    result = doWork(executableContext, jobRunner);
                 } catch (Throwable e) {
                     logger.error("error running Executable: {}", this.toString());
                     catchedException = e;
@@ -187,6 +188,12 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
                 //don't invoke retry on ChainedExecutable
             } while (needRetry(this.retry, realException)); //exception in ExecuteResult should handle by user itself.
+
+            // If after doWork finishes and the job lock is lost, it should do short circuit
+            if (!jobRunner.acquireJobLock()) {
+                logger.warn("fail to acquire lock for {} after finishing doWork", id);
+                return ExecuteResult.createSucceed();
+            }
 
             //check exception in result to avoid retry on ChainedExecutable(only need to retry on subtask actually)
             if (realException != null) {
@@ -226,7 +233,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         new MailService(context.getConfig()).sendMail(users, title, content);
     }
 
-    protected abstract ExecuteResult doWork(ExecutableContext context) throws ExecuteException, PersistentException;
+    protected abstract ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException, PersistentException;
 
     @Override
     public void cleanup() throws ExecuteException {
@@ -558,7 +565,15 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         } catch (RuntimeException e) {
             logger.error("failed to get job status:" + getId(), e);
         }
-        return Objects.toStringHelper(this).add("id", getId()).add("name", getName()).add("state", state)
+        return MoreObjects.toStringHelper(this).add("id", getId()).add("name", getName()).add("state", state)
                 .toString();
+    }
+
+    public String getProjectName() {
+        return getParam(PROJECT_INSTANCE_NAME);
+    }
+
+    public void setProjectName(String name) {
+        setParam(PROJECT_INSTANCE_NAME, name);
     }
 }

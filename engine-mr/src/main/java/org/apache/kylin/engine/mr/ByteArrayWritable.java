@@ -113,7 +113,8 @@ public class ByteArrayWritable implements WritableComparable<ByteArrayWritable> 
      *         negative if left is smaller than right.
      */
     public int compareTo(ByteArrayWritable that) {
-        return WritableComparator.compareBytes(this.data, this.offset, this.length, that.data, that.offset, that.length);
+        return WritableComparator.compareBytes(this.data, this.offset, this.length, that.data, that.offset,
+                that.length);
     }
 
     /**
@@ -122,7 +123,7 @@ public class ByteArrayWritable implements WritableComparable<ByteArrayWritable> 
      * @return Positive if left is bigger than right, 0 if they are equal, and
      *         negative if left is smaller than right.
      */
-    public int compareTo(final byte[] that) {
+    public int compareToByteArray(final byte[] that) {
         return WritableComparator.compareBytes(this.data, this.offset, this.length, that, 0, that.length);
     }
 
@@ -132,7 +133,7 @@ public class ByteArrayWritable implements WritableComparable<ByteArrayWritable> 
     @Override
     public boolean equals(Object other) {
         if (other instanceof byte[]) {
-            return compareTo((byte[]) other) == 0;
+            return compareToByteArray((byte[]) other) == 0;
         }
         if (other instanceof ByteArrayWritable) {
             return compareTo((ByteArrayWritable) other) == 0;

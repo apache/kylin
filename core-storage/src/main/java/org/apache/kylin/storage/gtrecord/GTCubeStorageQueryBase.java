@@ -68,9 +68,9 @@ import org.apache.kylin.storage.translate.DerivedFilterTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
@@ -597,8 +597,9 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             }
         }
         for (SQLDigest.SQLCall aggrSQLCall : aggrSQLCalls) {
-            if (aggrSQLCall.function.equals(BitmapMeasureType.FUNC_INTERSECT_COUNT_DISTINCT)) {
-                logger.info("exactAggregation is false because has INTERSECT_COUNT");
+            if (aggrSQLCall.function.equals(BitmapMeasureType.FUNC_INTERSECT_COUNT_DISTINCT)
+            || aggrSQLCall.function.equals(BitmapMeasureType.FUNC_INTERSECT_VALUE)) {
+                logger.info("exactAggregation is false because has INTERSECT_COUNT OR INTERSECT_VALUE");
                 return false;
             }
         }

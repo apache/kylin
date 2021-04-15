@@ -18,7 +18,7 @@
 
 package org.apache.kylin.common.livy;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.SourceConfigurationUtil;
 import org.codehaus.jettison.json.JSONException;
@@ -74,7 +74,7 @@ public class LivyRestBuilder {
                 try {
                     postJson.put(key, value);
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    logger.error("livy builder failed.", e);
                 }
             });
 
@@ -83,7 +83,7 @@ public class LivyRestBuilder {
                 try {
                     postJson.put(key, Lists.newArrayList(value.split(",")));
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    logger.error("livy builder failed.", e);
                 }
             });
 
@@ -93,14 +93,14 @@ public class LivyRestBuilder {
                 try {
                     confJson.put(key, value);
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    logger.error("livy builder failed.", e);
                 }
             });
             postJson.put("conf", confJson);
 
             return postJson.toString();
         } catch (JSONException e) {
-            e.printStackTrace();
+            logger.error("livy builder failed.", e);
             throw new JSONException("create livy json error :" + e.getMessage());
         }
     }

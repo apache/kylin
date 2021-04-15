@@ -37,8 +37,8 @@ import org.apache.kylin.stream.core.exception.IllegalStorageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * checkpoint

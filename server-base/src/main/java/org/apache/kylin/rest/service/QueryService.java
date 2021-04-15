@@ -24,6 +24,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -55,6 +56,8 @@ import org.apache.calcite.prepare.CalcitePrepareImpl;
 import org.apache.calcite.prepare.OnlyPrepareEarlyAbortException;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.BasicSqlType;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
@@ -74,6 +77,7 @@ import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.ServerMode;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
@@ -116,6 +120,8 @@ import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.QueryRequestLimits;
 import org.apache.kylin.rest.util.SQLResponseSignatureUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
+import org.apache.kylin.shaded.com.google.common.hash.Hasher;
+import org.apache.kylin.shaded.com.google.common.hash.Hashing;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
 import org.apache.kylin.storage.stream.StreamStorageQuery;
@@ -130,9 +136,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * @author xduo
@@ -180,6 +186,7 @@ public class QueryService extends BasicService {
         config.setMaxTotal(kylinConfig.getQueryMaxCacheStatementNum());
         config.setBlockWhenExhausted(false);
         config.setMinEvictableIdleTimeMillis(10 * 60 * 1000L); // cached statement will be evict if idle for 10 minutes
+        config.setTimeBetweenEvictionRunsMillis(60 * 1000L); 
         GenericKeyedObjectPool<PreparedContextKey, PreparedContext> pool = new GenericKeyedObjectPool<>(factory,
                 config);
         return pool;
@@ -324,9 +331,27 @@ public class QueryService extends BasicService {
             }
         }
 
+        // if Realization Names is empty, get value from SQLResponse.
         if (realizationNames.isEmpty()) {
             if (!Strings.isNullOrEmpty(response.getCube())) {
                 realizationNames.addAll(Lists.newArrayList(StringUtil.splitByComma(response.getCube())));
+            }
+        }
+
+        // if Cuboid Ids is empty, get value from SQLResponse.
+        if (cuboidIds.isEmpty()) {
+            List<QueryContext.CubeSegmentStatisticsResult> cubeSegmentStatisticsList =
+                    response.getCubeSegmentStatisticsList();
+            if (CollectionUtils.isNotEmpty(cubeSegmentStatisticsList)) {
+                cubeSegmentStatisticsList.forEach(cubeSegmentStatResult -> {
+                    if (MapUtils.isNotEmpty(cubeSegmentStatResult.getCubeSegmentStatisticsMap())) {
+                        cubeSegmentStatResult.getCubeSegmentStatisticsMap().values().forEach(cubeSegmentStatMap -> {
+                            cubeSegmentStatMap.values().forEach(cubeSegmentStat -> {
+                                cuboidIds.add(cubeSegmentStat.getTargetCuboidId());
+                            });
+                        });
+                    }
+                });
             }
         }
 
@@ -379,13 +404,16 @@ public class QueryService extends BasicService {
 
     public SQLResponse doQueryWithCache(SQLRequest sqlRequest, boolean isQueryInspect) {
         Message msg = MsgPicker.getMsg();
-        sqlRequest.setUsername(getUserName());
+
+        Hasher hasher = Hashing.murmur3_32().newHasher();
+        hasher.putString(getUserName(), StandardCharsets.UTF_8);
+        // use hash of the username to avoid sql injection
+        sqlRequest.setUsername(hasher.hash().toString());
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        String serverMode = kylinConfig.getServerMode();
-        if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase(Locale.ROOT))
-                || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase(Locale.ROOT)))) {
-            throw new BadRequestException(String.format(Locale.ROOT, msg.getQUERY_NOT_ALLOWED(), serverMode));
+        if (!ServerMode.SERVER_MODE.canServeQuery()) {
+            throw new BadRequestException(
+                    String.format(Locale.ROOT, msg.getQUERY_NOT_ALLOWED(), kylinConfig.getServerMode()));
         }
         if (StringUtils.isBlank(sqlRequest.getProject())) {
             throw new BadRequestException(msg.getEMPTY_PROJECT_NAME());
@@ -403,9 +431,16 @@ public class QueryService extends BasicService {
         if (sqlRequest.getBackdoorToggles() != null)
             BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
 
+        // set initial info when starting a query
         final QueryContext queryContext = QueryContextFacade.current();
+        queryContext.setUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+        queryContext.setGroups(AclPermissionUtil.getCurrentUserGroups());
+        queryContext.setProject(sqlRequest.getProject());
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
+            // force clear the query context before a new query
+            OLAPContext.clearThreadLocalContexts();
+
             SQLResponse sqlResponse = null;
             String sql = sqlRequest.getSql();
             String project = sqlRequest.getProject();
@@ -420,22 +455,22 @@ public class QueryService extends BasicService {
             sql = result.getSecond();
             sqlRequest.setSql(sql);
 
-            // try some cheap executions
-            if (sqlResponse == null && isQueryInspect) {
-                sqlResponse = new SQLResponse(null, null, 0, false, sqlRequest.getSql());
-            }
+            try (QueryRequestLimits limit = new QueryRequestLimits(sqlRequest.getProject())) {
+                // try some cheap executions
+                if (sqlResponse == null && isQueryInspect) {
+                    sqlResponse = new SQLResponse(null, null, 0, false, sqlRequest.getSql());
+                }
 
-            if (sqlResponse == null && isCreateTempStatement) {
-                sqlResponse = new SQLResponse(null, null, 0, false, null);
-            }
+                if (sqlResponse == null && isCreateTempStatement) {
+                    sqlResponse = new SQLResponse(null, null, 0, false, null);
+                }
 
-            if (sqlResponse == null && isQueryCacheEnabled) {
-                sqlResponse = searchQueryInCache(sqlRequest);
-            }
+                if (sqlResponse == null && isQueryCacheEnabled) {
+                    sqlResponse = searchQueryInCache(sqlRequest);
+                }
 
-            // real execution if required
-            if (sqlResponse == null) {
-                try (QueryRequestLimits limit = new QueryRequestLimits(sqlRequest.getProject())) {
+                // real execution if required
+                if (sqlResponse == null) {
                     sqlResponse = queryAndUpdateCache(sqlRequest, isQueryCacheEnabled);
                 }
             }
@@ -464,11 +499,11 @@ public class QueryService extends BasicService {
         Message msg = MsgPicker.getMsg();
         final QueryContext queryContext = QueryContextFacade.current();
 
-        boolean isDummpyResponseEnabled = queryCacheEnabled && kylinConfig.isLazyQueryEnabled();
+        boolean isDummyResponseEnabled = queryCacheEnabled && kylinConfig.isLazyQueryEnabled();
         SQLResponse sqlResponse = null;
         try {
             // Add dummy response which will be updated or evicted when query finishes
-            if (isDummpyResponseEnabled) {
+            if (isDummyResponseEnabled) {
                 SQLResponse dummyResponse = new SQLResponse();
                 dummyResponse.setLazyQueryStartTime(System.currentTimeMillis());
                 cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), dummyResponse);
@@ -531,7 +566,7 @@ public class QueryService extends BasicService {
                 if (!realtimeQuery) {
                     cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), sqlResponse);
                 }
-            } else if (isDummpyResponseEnabled) {
+            } else if (isDummyResponseEnabled) {
                 cacheManager.getCache(QUERY_CACHE).evict(sqlRequest.getCacheKey());
             }
 
@@ -548,6 +583,10 @@ public class QueryService extends BasicService {
                     && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
                 Cache exceptionCache = cacheManager.getCache(QUERY_CACHE);
                 exceptionCache.put(sqlRequest.getCacheKey(), sqlResponse);
+            } else if (isDummyResponseEnabled) {
+                // evict dummy response to avoid caching too many bad queries
+                Cache exceptionCache = cacheManager.getCache(QUERY_CACHE);
+                exceptionCache.evict(sqlRequest.getCacheKey());
             }
         }
         return sqlResponse;
@@ -628,10 +667,7 @@ public class QueryService extends BasicService {
 
         try {
             conn = QueryConnection.getConnection(sqlRequest.getProject());
-            String userInfo = SecurityContextHolder.getContext().getAuthentication().getName();
-            QueryContext context = QueryContextFacade.current();
-            context.setUsername(userInfo);
-            context.setGroups(AclPermissionUtil.getCurrentUserGroups());
+            String userInfo = QueryContextFacade.current().getUsername();
             final Collection<? extends GrantedAuthority> grantedAuthorities = SecurityContextHolder.getContext()
                     .getAuthentication().getAuthorities();
             for (GrantedAuthority grantedAuthority : grantedAuthorities) {
@@ -658,8 +694,6 @@ public class QueryService extends BasicService {
             parameters.put(OLAPContext.PRM_USER_AUTHEN_INFO, userInfo);
             parameters.put(OLAPContext.PRM_ACCEPT_PARTIAL_RESULT, String.valueOf(sqlRequest.isAcceptPartial()));
             OLAPContext.setParameters(parameters);
-            // force clear the query context before a new query
-            OLAPContext.clearThreadLocalContexts();
 
             // special case for prepare query.
             List<List<String>> results = Lists.newArrayList();
@@ -1020,13 +1054,15 @@ public class QueryService extends BasicService {
 
     private Pair<List<List<String>>, List<SelectedColumnMeta>> pushDownQuery(SQLRequest sqlRequest, String correctedSql,
             Connection conn, SQLException sqlException) throws Exception {
+        ProjectInstance projectInstance = getProjectManager().getProject(sqlRequest.getProject());
         try {
             return PushDownUtil.tryPushDownSelectQuery(sqlRequest.getProject(), correctedSql, conn.getSchema(),
-                    sqlException, BackdoorToggles.getPrepareOnly());
+                    sqlException, BackdoorToggles.getPrepareOnly(), projectInstance != null ? projectInstance.getConfig() : null);
         } catch (Exception e2) {
             logger.error("pushdown engine failed current query too", e2);
             //exception in pushdown, throw it instead of exception in calcite
-            throw e2;
+            throw new Exception(sqlException != null ? ("olap exception : " + sqlException.getMessage()) : ("")
+                    + " pushdown exception : " + e2.getMessage(), e2);
         }
     }
 

@@ -87,6 +87,15 @@ public class JoinTableDesc implements Serializable {
         this.tableRef = ref;
     }
 
+    public static JoinTableDesc getCopyOf(JoinTableDesc other) {
+        JoinTableDesc copy = new JoinTableDesc();
+        copy.table = other.table;
+        copy.kind = other.kind;
+        copy.alias = other.alias;
+        copy.join = other.join;
+        return copy;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)

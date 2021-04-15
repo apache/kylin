@@ -26,14 +26,15 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
@@ -47,9 +48,9 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
+import org.apache.kylin.engine.mr.common.CubeJobLockUtil;
 import org.apache.kylin.engine.mr.common.CuboidRecommenderUtil;
 import org.apache.kylin.job.JobInstance;
-import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.exception.JobException;
@@ -76,7 +77,6 @@ import org.apache.kylin.metrics.property.QueryCubePropertyEnum;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
-import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
@@ -104,11 +104,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Preconditions;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.cache.Cache;
+import org.apache.kylin.shaded.com.google.common.cache.CacheBuilder;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * Stateless & lightweight service facade of cube management functions.
@@ -370,6 +369,15 @@ public class CubeService extends BasicService implements InitializingBean {
         cleanSegmentStorage(toRemoveSegs);
     }
 
+    public void deleteCubeFast(CubeInstance cube) throws IOException {
+        aclEvaluate.checkProjectWritePermission(cube);
+        // user make sure no job running and no hybrid cube, so no check jobs status and hybrid definition
+        int cubeNum = getCubeManager().getCubesByDesc(cube.getDescriptor().getName()).size();
+        getCubeManager().dropCube(cube.getName(), cubeNum == 1);//only delete cube desc when no other cube is using it
+
+    }
+
+
     /**
      * Stop all jobs belonging to this cube and clean out all segments
      *
@@ -438,6 +446,10 @@ public class CubeService extends BasicService implements InitializingBean {
                 }
                 //unAssign cube
                 getStreamingCoordinator().unAssignCube(cubeName);
+
+                //discard jobs
+                releaseAllJobs(cubeInstance);
+
             }
             return cubeInstance;
         } catch (Exception e) {
@@ -571,6 +583,18 @@ public class CubeService extends BasicService implements InitializingBean {
         getCubeDescManager().updateCubeDesc(desc);
     }
 
+    public CubeInstance updateCubeOwner(CubeInstance cube, String owner) throws IOException {
+        aclEvaluate.checkProjectWritePermission(cube);
+        if (Objects.equals(cube.getOwner(), owner)) {
+            // Do nothing
+            return cube;
+        }
+        cube.setOwner(owner);
+
+        CubeUpdate update = new CubeUpdate(cube.latestCopyForWrite()).setOwner(owner);
+        return getCubeManager().updateCube(update);
+    }
+
     public CubeInstance rebuildLookupSnapshot(CubeInstance cube, String segmentName, String lookupTable)
             throws IOException {
         aclEvaluate.checkProjectOperationPermission(cube);
@@ -584,6 +608,31 @@ public class CubeService extends BasicService implements InitializingBean {
         getCubeManager().buildSnapshotTable(seg, lookupTable, null);
 
         return cube;
+    }
+
+    public CubeInstance deleteSegmentById(CubeInstance cube, String uuid) throws IOException {
+        aclEvaluate.checkProjectWritePermission(cube);
+        Message msg = MsgPicker.getMsg();
+
+        CubeSegment toDelete = null;
+
+        toDelete = cube.getSegmentById(uuid);
+
+        if (toDelete == null) {
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getSEG_NOT_FOUND(), uuid));
+        }
+
+        if (cube.getStatus() == RealizationStatusEnum.DISABLED || isOrphonSegment(cube, uuid)) {
+
+            CubeInstance cubeInstance = CubeManager.getInstance(getConfig()).updateCubeDropSegments(cube, toDelete);
+
+            cleanSegmentStorage(Collections.singletonList(toDelete));
+
+            return cubeInstance;
+        } else {
+            throw new BadRequestException(
+                    String.format(Locale.ROOT, msg.getDELETE_READY_SEG_BY_UUID(), uuid, cube.getName()));
+        }
     }
 
     public CubeInstance deleteSegment(CubeInstance cube, String segmentName) throws IOException {
@@ -670,6 +719,22 @@ public class CubeService extends BasicService implements InitializingBean {
             final ExecutableState status = cubingJob.getStatus();
             if (status != ExecutableState.SUCCEED && status != ExecutableState.DISCARDED) {
                 getExecutableManager().discardJob(cubingJob.getId());
+
+                //release global dict lock if exists
+                DistributedLock lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory()
+                        .lockForCurrentThread();
+                if (lock.isLocked(CubeJobLockUtil.getLockPath(cube.getName(), cubingJob.getId()))) {//release cube job dict lock if exists
+                    lock.purgeLocks(CubeJobLockUtil.getLockPath(cube.getName(), null));
+                    logger.info("{} unlock cube job global lock path({}) success", cubingJob.getId(),
+                            CubeJobLockUtil.getLockPath(cube.getName(), null));
+
+                    if (lock.isLocked(CubeJobLockUtil.getEphemeralLockPath(cube.getName()))) {//release cube job Ephemeral lock if exists
+                        lock.purgeLocks(CubeJobLockUtil.getEphemeralLockPath(cube.getName()));
+                        logger.info("{} unlock cube job ephemeral lock path({}) success", cubingJob.getId(),
+                                CubeJobLockUtil.getEphemeralLockPath(cube.getName()));
+                    }
+                }
+
             }
         }
     }
@@ -779,7 +844,7 @@ public class CubeService extends BasicService implements InitializingBean {
         final List<CubingJob> jobInstanceList = jobService.listJobsByRealizationName(cubeName, projectName,
                 EnumSet.of(ExecutableState.DISCARDED));
         for (CubingJob cubingJob : jobInstanceList) {
-            if (cubingJob.getSegmentName().equals(segmentName)) {
+            if (segmentName.equals(cubingJob.getSegmentName())) {
                 logger.debug("Merge job {} has been discarded before, will not merge.", segmentName);
                 return true;
             }
@@ -898,6 +963,54 @@ public class CubeService extends BasicService implements InitializingBean {
             return d;
         }
         return null;
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#project, 'MANAGEMENT')")
+    public CubeInstance changeLookupSnapshotBeGlobal(CubeInstance cube, String lookupTable) throws BadRequestException {
+        aclEvaluate.checkProjectWritePermission(cube.getProject());
+        Message msg = MsgPicker.getMsg();
+        CubeDesc cubeDesc = cube.getDescriptor();
+
+        TableDesc tableDesc = getTableManager().getTableDesc(lookupTable, cube.getProject());
+
+        if (tableDesc == null) {
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getTABLE_DESC_NOT_FOUND(), lookupTable));
+        }
+
+        Set<String> inMemLookupTables = cubeDesc.getInMemLookupTables();
+        if (!inMemLookupTables.contains(lookupTable)) {
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getTABLE_DESC_NOT_FOUND(), lookupTable));
+        }
+
+        if (cubeDesc.isGlobalSnapshotTable(lookupTable)) {
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getSNAPSHOT_GLOBAL(), tableDesc.getName()));
+        }
+
+        try {
+            RealizationStatusEnum ostatus = cube.getStatus();
+
+            if (null == ostatus || !cube.getStatus().equals(RealizationStatusEnum.DISABLED)) {
+                throw new BadRequestException(
+                        String.format(Locale.ROOT, msg.getENABLE_NOT_DISABLED_CUBE(), cube.getName(), ostatus));
+            }
+
+            int segmentsCount = cube.getSegments().size();
+            if (segmentsCount == 0) {
+                // change in persistence
+                getCubeDescManager().updatelookupTableSnapshotGlobal(cubeDesc, lookupTable, true);
+            } else if (cube.getSegments(SegmentStatusEnum.READY).size() == segmentsCount) {
+                // change in persistence
+                getCubeManager().updateCubeToBeGlobal(cube, lookupTable);
+                getCubeDescManager().updatelookupTableSnapshotGlobal(cubeDesc, lookupTable, true);
+            } else {
+                throw new BadRequestException(
+                        String.format(Locale.ROOT, msg.getCUBE_HAS_NOT_READY_SEGS(), cube.getName()));
+            }
+        } catch (IOException e) {
+            logger.error("Failed to auto update snapshot be global " + cube.getName() + "@" + lookupTable, e);
+        }
+        return cube;
     }
 
     public List<Draft> listCubeDrafts(String cubeName, String modelName, String project, boolean exactMatch)
@@ -1083,44 +1196,6 @@ public class CubeService extends BasicService implements InitializingBean {
         sqlRequest.setSql(sql);
 
         return queryService.doQueryWithCache(sqlRequest, false).getResults();
-    }
-
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public void migrateCube(CubeInstance cube, String projectName) {
-        KylinConfig config = cube.getConfig();
-        if (!config.isAllowAutoMigrateCube()) {
-            throw new InternalErrorException("One click migration is disabled, please contact your ADMIN");
-        }
-
-        for (CubeSegment segment : cube.getSegments()) {
-            if (segment.getStatus() != SegmentStatusEnum.READY) {
-                throw new InternalErrorException(
-                        "At least one segment is not in READY state. Please check whether there are Running or Error jobs.");
-            }
-        }
-
-        String srcCfgUri = config.getAutoMigrateCubeSrcConfig();
-        String dstCfgUri = config.getAutoMigrateCubeDestConfig();
-
-        Preconditions.checkArgument(StringUtils.isNotEmpty(srcCfgUri), "Source configuration should not be empty.");
-        Preconditions.checkArgument(StringUtils.isNotEmpty(dstCfgUri),
-                "Destination configuration should not be empty.");
-
-        String stringBuilder = ("%s/bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI %s %s %s %s %s %s true true");
-        String cmd = String.format(Locale.ROOT, stringBuilder, KylinConfig.getKylinHome(), srcCfgUri, dstCfgUri,
-                cube.getName(), projectName, config.isAutoMigrateCubeCopyAcl(), config.isAutoMigrateCubePurge());
-
-        logger.info("One click migration cmd: " + cmd);
-
-        CliCommandExecutor exec = new CliCommandExecutor();
-        PatternedLogger patternedLogger = new PatternedLogger(logger);
-
-        try {
-            exec.execute(cmd, patternedLogger);
-        } catch (IOException e) {
-            throw new InternalErrorException("Failed to perform one-click migrating", e);
-        }
     }
 
     private class HTableInfoSyncListener extends Broadcaster.Listener {

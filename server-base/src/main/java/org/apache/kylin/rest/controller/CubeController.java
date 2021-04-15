@@ -53,6 +53,7 @@ import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
+import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
@@ -100,9 +101,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  * CubeController is defined as Restful API entrance for UI.
@@ -127,6 +128,10 @@ public class CubeController extends BasicController {
     @Autowired
     @Qualifier("queryService")
     private QueryService queryService;
+
+    @Autowired
+    @Qualifier("validateUtil")
+    private ValidateUtil validateUtil;
 
     @Autowired
     private AclEvaluate aclEvaluate;
@@ -261,6 +266,30 @@ public class CubeController extends BasicController {
         }
     }
 
+    /**
+     * Update cube owner
+     *
+     * @param cubeName
+     * @param owner
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/owner", method = { RequestMethod.PUT }, produces = {
+        "application/json" })
+    @ResponseBody
+    public CubeInstance updateCubeOwner(@PathVariable String cubeName, @RequestBody String owner) {
+        checkCubeExists(cubeName);
+        try {
+            validateUtil.checkIdentifiersExists(owner, true);
+            CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+            return cubeService.updateCubeOwner(cube, owner);
+        } catch (AccessDeniedException accessDeniedException) {
+            throw new ForbiddenException("You don't have right to update this cube's owner.");
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
     @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public CubeInstance updateCubeCost(@PathVariable String cubeName, @RequestParam(value = "cost") int cost) {
@@ -318,6 +347,35 @@ public class CubeController extends BasicController {
     }
 
     /**
+     * Force change a cube's lookup table to be global
+     *
+     *@throws IOException
+     */
+    @RequestMapping(value = "/{cubeNames}/{tableName}/change_lookup_global", method = {
+            RequestMethod.PUT }, produces = { "application/json" })
+    @ResponseBody
+    public List<CubeInstance> globalLookupSnapshot(@PathVariable String cubeNames, @PathVariable String tableName) {
+
+        List<CubeInstance> result = new ArrayList<>();
+
+        final CubeManager cubeMgr = cubeService.getCubeManager();
+        String[] changeCubes = cubeNames.toUpperCase(Locale.ROOT).split(",");
+        for (String cubeName : changeCubes) {
+            try {
+                checkCubeExists(cubeName);
+                final CubeInstance cube = cubeMgr.getCube(cubeName);
+                CubeInstance cubeInstance = cubeService.changeLookupSnapshotBeGlobal(cube, tableName);
+                logger.info("cube {} change snapshotTable {} global Success", cubeName, tableName);
+                result.add(cubeInstance);
+            } catch (Exception e) {
+                logger.error("cube {} change snapshotTable {} global Fail", cubeName, tableName);
+                logger.error(e.getLocalizedMessage(), e);
+            }
+        }
+        return result;
+    }
+
+    /**
      * Delete a cube segment
      *
      * @throws IOException
@@ -341,6 +399,32 @@ public class CubeController extends BasicController {
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
+
+    /**
+     * Delete a cube segment by UUID
+     *
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/segs2/{segmentID}", method = { RequestMethod.DELETE }, produces = {
+            "application/json" })
+    @ResponseBody
+    public CubeInstance deleteSegmentByUUID(@PathVariable String cubeName, @PathVariable String segmentID) {
+        checkCubeExists(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+
+        CubeSegment segment = cube.getSegmentById(segmentID);
+        if (segment == null) {
+            throw new NotFoundException("Cannot find segment by UUID '" + segmentID + "'");
+        }
+
+        try {
+            return cubeService.deleteSegmentById(cube, segmentID);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
 
     /**
      * Build/Rebuild a cube segment
@@ -544,17 +628,18 @@ public class CubeController extends BasicController {
             throw new BadRequestException("Cloning cubes across projects is not supported.");
         }
 
+        // explicitly convert the input parameter
+        String newName = ValidateUtil.convertStringToBeAlphanumericUnderscore(newCubeName);
         CubeDesc cubeDesc = cube.getDescriptor();
         CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
-
-        newCubeDesc.setName(newCubeName);
+        newCubeDesc.setName(newName);
 
         CubeInstance newCube;
         try {
             newCube = cubeService.createCubeAndDesc(project, newCubeDesc);
 
             //reload to avoid shallow clone
-            cubeService.getCubeDescManager().reloadCubeDescLocal(newCubeName);
+            cubeService.getCubeDescManager().reloadCubeDescLocal(newName);
         } catch (IOException e) {
             throw new InternalErrorException("Failed to clone cube ", e);
         }
@@ -588,6 +673,22 @@ public class CubeController extends BasicController {
         //drop Cube
         try {
             cubeService.deleteCube(cube);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to delete cube. " + " Caused by: " + e.getMessage(), e);
+        }
+
+    }
+
+    @RequestMapping(value = "/{cubeName}/fast", method = {RequestMethod.DELETE})
+    @ResponseBody
+    public void deleteCubeFast(@PathVariable String cubeName) {
+        checkCubeExists(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+
+        //drop Cube
+        try {
+            cubeService.deleteCubeFast(cube);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to delete cube. " + " Caused by: " + e.getMessage(), e);
@@ -735,6 +836,30 @@ public class CubeController extends BasicController {
         cubeRequest.setCubeDescData(descData);
         cubeRequest.setSuccessful(true);
         return cubeRequest;
+    }
+
+    @RequestMapping(value = "/{cubeName}/engine/{engineType}", method = RequestMethod.PUT)
+    @ResponseBody
+    public void updateCubeEngineType(@PathVariable String cubeName, @PathVariable String engineType) throws IOException {
+        checkCubeExists(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        CubeDesc desc = cube.getDescriptor();
+        int engineTypeID = desc.getEngineType();
+        switch(engineType) {
+            case "MR_V2":
+                engineTypeID = IEngineAware.ID_MR_V2;
+                break;
+            case "SPARK":
+                engineTypeID = IEngineAware.ID_SPARK;
+                break;
+            case "FLINK":
+                engineTypeID = IEngineAware.ID_FLINK;
+                break;
+            default:
+                logger.warn("Engine type {} is not support", engineType);
+        }
+        desc.setEngineType(engineTypeID);
+        cubeService.updateCubeAndDesc(cube, desc, cube.getProject(), true);
     }
 
     /**
@@ -1038,18 +1163,15 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cube}/{project}/migrate", method = { RequestMethod.POST })
-    @ResponseBody
-    public void migrateCube(@PathVariable String cube, @PathVariable String project) {
-        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cube);
-        cubeService.migrateCube(cubeInstance, project);
-    }
-
     public void setCubeService(CubeService cubeService) {
         this.cubeService = cubeService;
     }
 
     public void setJobService(JobService jobService) {
         this.jobService = jobService;
+    }
+
+    public void setValidateUtil(ValidateUtil validateUtil) {
+        this.validateUtil = validateUtil;
     }
 }

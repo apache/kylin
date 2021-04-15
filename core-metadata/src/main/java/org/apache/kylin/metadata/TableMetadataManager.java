@@ -35,7 +35,6 @@ import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
@@ -43,14 +42,15 @@ import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableDesc.TableProject;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  */
@@ -118,7 +118,7 @@ public class TableMetadataManager {
                 TableDesc.class, srcTableMap) {
             @Override
             protected TableDesc initEntityAfterReload(TableDesc t, String resourceName) {
-                String prj = TableDesc.parseResourcePath(resourceName).getSecond();
+                String prj = TableDesc.parseResourcePath(resourceName).getProject();
                 t.init(config, prj);
                 return t;
             }
@@ -138,9 +138,9 @@ public class TableMetadataManager {
                     srcTableCrud.reloadQuietly(cacheKey);
             }
 
-            Pair<String, String> pair = TableDesc.parseResourcePath(cacheKey);
-            String table = pair.getFirst();
-            String prj = pair.getSecond();
+            TableProject tableProject = TableDesc.parseResourcePath(cacheKey);
+            String table = tableProject.getTable();
+            String prj = tableProject.getProject();
 
             if (prj == null) {
                 for (ProjectInstance p : ProjectManager.getInstance(config).findProjectsByTable(table)) {
@@ -185,7 +185,7 @@ public class TableMetadataManager {
             Map<String, TableDesc> ret = new LinkedHashMap<>();
             for (String tableName : prjTableNames) {
                 String tableIdentity = getTableIdentity(tableName);
-                ret.put(tableIdentity, getProjectSpecificTableDesc(tableIdentity, prj));
+                ret.put(tableIdentity, getProjectSpecificTableDesc(tableIdentity, prj, true));
             }
             return ret;
         }
@@ -195,8 +195,12 @@ public class TableMetadataManager {
      * Get TableDesc by name
      */
     public TableDesc getTableDesc(String tableName, String prj) {
+        return getTableDesc(tableName, prj, true);
+    }
+
+    public TableDesc getTableDesc(String tableName, String prj, boolean ifUseGlobal) {
         try (AutoLock lock = srcTableMapLock.lockForWrite()) {
-            return getProjectSpecificTableDesc(getTableIdentity(tableName), prj);
+            return getProjectSpecificTableDesc(getTableIdentity(tableName), prj, ifUseGlobal);
         }
     }
 
@@ -205,11 +209,11 @@ public class TableMetadataManager {
      * 
      * All locks on srcTableMapLock are WRITE LOCKS because of this method!!
      */
-    private TableDesc getProjectSpecificTableDesc(String fullTableName, String prj) {
+    private TableDesc getProjectSpecificTableDesc(String fullTableName, String prj, boolean ifUseGlobal) {
         String key = mapKey(fullTableName, prj);
         TableDesc result = srcTableMap.get(key);
 
-        if (result == null) {
+        if (result == null && ifUseGlobal) {
             try (AutoLock lock = srcTableMapLock.lockForWrite()) {
                 result = srcTableMap.get(mapKey(fullTableName, null));
                 if (result != null) {
@@ -299,7 +303,7 @@ public class TableMetadataManager {
                     t = convertOldTableExtToNewer(resourceName);
                 }
 
-                String prj = TableDesc.parseResourcePath(resourceName).getSecond();
+                String prj = TableDesc.parseResourcePath(resourceName).getProject();
                 t.init(prj);
                 return t;
             }
@@ -323,7 +327,7 @@ public class TableMetadataManager {
 
     public void reloadTableExtQuietly(String table, String project) {
         try (AutoLock lock = srcExtMapLock.lockForWrite()) {
-            srcExtCrud.reloadQuietly(TableExtDesc.concatResourcePath(table, project));
+            srcExtCrud.reloadQuietly(TableDesc.makeResourceName(table, project));
         }
     }
 
@@ -402,6 +406,21 @@ public class TableMetadataManager {
         }
     }
 
+    public void saveNewTableExtFromOld(String oldTableId, String prj, String newTableId) throws IOException {
+        try (AutoLock lock = srcExtMapLock.lockForWrite()) {
+            String path = TableExtDesc.concatResourcePath(oldTableId, prj);
+            ResourceStore store = getStore();
+            TableExtDesc newTableExt = store.getResource(path, TABLE_EXT_SERIALIZER);
+            if (newTableExt != null) {
+                newTableExt.setIdentity(newTableId);
+                newTableExt.setLastModified(0L);
+
+                newTableExt.init(prj);
+                srcExtCrud.save(newTableExt);
+            }
+        }
+    }
+
     private TableExtDesc convertOldTableExtToNewer(String resourceName) {
         ResourceStore store = getStore();
         Map<String, String> attrs = Maps.newHashMap();
@@ -424,7 +443,7 @@ public class TableMetadataManager {
         String cardinality = attrs.get(MetadataConstants.TABLE_EXD_CARDINALITY);
 
         // parse table identity from file name
-        String tableIdentity = TableDesc.parseResourcePath(resourceName).getFirst();
+        String tableIdentity = TableDesc.parseResourcePath(resourceName).getTable();
         TableExtDesc result = new TableExtDesc();
         result.setIdentity(tableIdentity);
         result.setUuid(RandomUtil.randomUUID().toString());

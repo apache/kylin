@@ -22,13 +22,15 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import org.apache.kylin.metrics.lib.ActiveReservoirListener;
 import org.apache.kylin.metrics.lib.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * A Reservoir which staged metrics message in memory, and emit them in fixed rate.
@@ -37,7 +39,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 public class BlockingReservoir extends AbstractActiveReservoir {
 
     private static final Logger logger = LoggerFactory.getLogger(BlockingReservoir.class);
-    private static final int MAX_QUEUE_SIZE = 50000;
+    private static final int MAX_QUEUE_SIZE = 500000;
 
     /**
      * Cache for metrics message with max size is maxReportSize
@@ -58,11 +60,19 @@ public class BlockingReservoir extends AbstractActiveReservoir {
     }
 
     public BlockingReservoir(int minReportSize, int maxReportSize, int maxReportTime) {
-        this.minReportSize = minReportSize;
+        this(minReportSize, maxReportSize, maxReportTime, MAX_QUEUE_SIZE);
+    }
+
+    public BlockingReservoir(int minReportSize, int maxReportSize, int maxReportTime, int maxQueueSize) {
+        Preconditions.checkArgument(minReportSize > 0, "minReportSize should be larger than 0");
+        Preconditions.checkArgument(maxReportSize >= minReportSize,
+                "maxReportSize should not be less than minBatchSize");
+        Preconditions.checkArgument(maxReportTime > 0, "maxReportTime should be larger than 0");
         this.maxReportSize = maxReportSize;
         this.maxReportTime = maxReportTime * 60 * 1000L;
 
-        this.recordsQueue = new LinkedBlockingQueue<>(MAX_QUEUE_SIZE);
+        this.recordsQueue = maxQueueSize <= 0 ? new LinkedBlockingQueue<>() : new LinkedBlockingQueue<>(maxQueueSize);
+        this.minReportSize = minReportSize;
         this.listeners = Lists.newArrayList();
 
         this.records = Lists.newArrayListWithExpectedSize(this.maxReportSize);
@@ -95,9 +105,11 @@ public class BlockingReservoir extends AbstractActiveReservoir {
         if (ifAll) {
             records = Lists.newArrayList();
             recordsQueue.drainTo(records);
+            logger.info("Will report {} metrics records", records.size());
         } else {
             records.clear();
             recordsQueue.drainTo(records, maxReportSize);
+            logger.info("Will report {} metrics records, remaining {} records", records.size(), size());
         }
 
         boolean ifSucceed = true;
@@ -127,9 +139,18 @@ public class BlockingReservoir extends AbstractActiveReservoir {
         return true;
     }
 
-    @Override
-    public void start() {
+    @VisibleForTesting
+    void notifyUpdate() {
+        onRecordUpdate(false);
+    }
+
+    @VisibleForTesting
+    void setReady() {
         super.start();
+    }
+
+    public void start() {
+        setReady();
         scheduledReporter.start();
     }
 
@@ -161,9 +182,10 @@ public class BlockingReservoir extends AbstractActiveReservoir {
                     startTime = System.currentTimeMillis();
                     continue;
                 } else if (size() < minReportSize && (System.currentTimeMillis() - startTime < maxReportTime)) {
-                    logger.info("The number of records in the blocking queue is less than {} and " +
-                            "the duration from last reporting is less than {} ms. " +
-                            "Will delay to report!", minReportSize, maxReportTime);
+                    logger.info(
+                            "The number of records in the blocking queue is less than {} and "
+                                    + "the duration from last reporting is less than {} ms. " + "Will delay to report!",
+                            minReportSize, maxReportTime);
                     sleep();
                     continue;
                 }
@@ -177,7 +199,7 @@ public class BlockingReservoir extends AbstractActiveReservoir {
 
         private void sleep() {
             try {
-                Thread.sleep(60 * 1000);
+                Thread.sleep(60 * 1000L);
             } catch (InterruptedException e) {
                 logger.warn("Interrupted during running");
             }

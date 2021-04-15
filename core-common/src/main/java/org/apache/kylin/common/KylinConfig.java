@@ -18,9 +18,9 @@
 
 package org.apache.kylin.common;
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.ClassUtil;
@@ -47,6 +47,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 /**
  */
@@ -131,7 +134,7 @@ public class KylinConfig extends KylinConfigBase {
         }
     }
 
-    public static KylinConfig getInstanceFromEnv() {
+    public static KylinConfig getInstanceFromEnv(boolean allowConfigFileNoExist) {
         synchronized (KylinConfig.class) {
             KylinConfig config = THREAD_ENV_INSTANCE.get();
             if (config != null) {
@@ -145,10 +148,18 @@ public class KylinConfig extends KylinConfigBase {
                     buildDefaultOrderedProperties();
 
                     config = new KylinConfig();
-                    config.reloadKylinConfig(buildSiteProperties());
+                    try {
+                        config.reloadKylinConfig(buildSiteProperties());
+                    } catch (KylinConfigCannotInitException e) {
+                        logger.info("Kylin Config Can not Init Exception");
+                        if (!allowConfigFileNoExist) {
+                            throw e;
+                        }
+                    }
+
                     VersionUtil.loadKylinVersion();
-                    logger.info("Initialized a new KylinConfig from getInstanceFromEnv : "
-                            + System.identityHashCode(config));
+                    logger.info("Initialized a new KylinConfig from getInstanceFromEnv : {}",
+                            System.identityHashCode(config));
                     SYS_ENV_INSTANCE = config;
                 } catch (IllegalArgumentException e) {
                     throw new IllegalStateException("Failed to find KylinConfig ", e);
@@ -156,6 +167,10 @@ public class KylinConfig extends KylinConfigBase {
             }
             return SYS_ENV_INSTANCE;
         }
+    }
+
+    public static KylinConfig getInstanceFromEnv() {
+        return getInstanceFromEnv(false);
     }
 
     // Only used in test cases!!!
@@ -199,7 +214,7 @@ public class KylinConfig extends KylinConfigBase {
             // for the developers using windows, without this condition, it will never find the file
             if (file.exists() || metaUri.contains("/") || Shell.WINDOWS) {
                 if (!file.exists()) {
-                    file.mkdirs();
+                    throw new IllegalArgumentException("File not exists: " + metaUri);
                 }
                 if (file.isDirectory()) {
                     return UriType.LOCAL_FOLDER;
@@ -387,9 +402,9 @@ public class KylinConfig extends KylinConfigBase {
             // 2. load site conf, to keep backward compatibility it's still named kylin.properties
             // actually it's better to be named kylin-site.properties
             File propFile = getSitePropertiesFile();
-            if (propFile == null || !propFile.exists()) {
+            if (!propFile.exists()) {
                 logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE + " at '"
-                        + (propFile != null ? propFile.getAbsolutePath() : "") + "'");
+                        + propFile.getAbsolutePath() + "'");
                 throw new RuntimeException("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
             }
             loadPropertiesFromInputStream(new FileInputStream(propFile), orderedProperties);
@@ -441,7 +456,7 @@ public class KylinConfig extends KylinConfigBase {
 
     // ============================================================================
 
-    transient Map<Class, Object> managersCache = new ConcurrentHashMap<>();
+    private final transient Map<Class, Object> managersCache = new ConcurrentHashMap<>();
 
     private KylinConfig() {
         super();
@@ -451,20 +466,16 @@ public class KylinConfig extends KylinConfigBase {
         super(props, force);
     }
 
-    public <T> T getManager(Class<T> clz) {
+    public <T> T getManager(final Class<T> clz) {
         KylinConfig base = base();
         if (base != this)
             return base.getManager(clz);
-
-        if (managersCache == null) {
-            managersCache = new ConcurrentHashMap<>();
-        }
 
         Object mgr = managersCache.get(clz);
         if (mgr != null)
             return (T) mgr;
 
-        synchronized (clz) {
+        synchronized (managersCache) {
             mgr = managersCache.get(clz);
             if (mgr != null)
                 return (T) mgr;
@@ -525,7 +536,15 @@ public class KylinConfig extends KylinConfigBase {
             String value = entry.getValue().toString();
             orderedProperties.setProperty(key, value);
         }
-
+        // Reset some properties which might be overriden by system properties
+        String[] systemProps = { "kylin.server.cluster-servers", "kylin.server.cluster-servers-with-mode" };
+        for (String sysProp : systemProps) {
+            String sysPropValue = System.getProperty(sysProp);
+            if (!Strings.isNullOrEmpty(sysPropValue)) {
+                orderedProperties.setProperty(sysProp, sysPropValue);
+            }
+        }
+        
         final StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
             sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
@@ -559,6 +578,25 @@ public class KylinConfig extends KylinConfigBase {
 
     public synchronized void reloadFromSiteProperties() {
         reloadKylinConfig(buildSiteProperties());
+    }
+
+    public static String getConfigAsString(Configuration conf) {
+        final StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, String> entry : conf) {
+            sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
+        }
+        return sb.toString();
+    }
+
+    public static Configuration getConfigFromString(String configInStr) throws IOException {
+        Properties props = new Properties();
+        props.load(new StringReader(configInStr));
+
+        Configuration config = new Configuration();
+        for (Map.Entry<Object, Object> entry : props.entrySet()) {
+            config.set((String) entry.getKey(), (String) entry.getValue());
+        }
+        return config;
     }
 
     public KylinConfig base() {

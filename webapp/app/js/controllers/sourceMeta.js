@@ -131,6 +131,39 @@ KylinApp
       });
     };
 
+    $scope.calCardinality = function (tableName) {
+      SweetAlert.swal({
+        title: "",
+        text: "Are you sure to recalculate column cardinality?",
+        showCancelButton: true,
+        confirmButtonColor: '#DD6B55',
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        closeOnConfirm: true
+      }, function (isConfirm) {
+        if (isConfirm) {
+          if (!$scope.projectModel.selectedProject) {
+            SweetAlert.swal('', 'Please select a project.', 'info');
+            return;
+          }
+          loadingRequest.show();
+          TableService.genCardinality({tableName: tableName, pro: $scope.projectModel.selectedProject}, {}, function () {
+            loadingRequest.hide();
+            MessageBox.successNotify('Cardinality job has been submitted successfully. Please wait a while to get the numbers.');
+          }, function (e) {
+            loadingRequest.hide();
+            if (e.data && e.data.exception) {
+              var message = e.data.exception;
+              var msg = !!(message) ? message : 'Failed to take action.';
+              SweetAlert.swal('Oops...', msg, 'error');
+            } else {
+              SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+            }
+          });
+        }
+      });
+    };
+
     $scope.openTreeModal = function () {
       if(!$scope.projectModel.selectedProject){
         SweetAlert.swal('Oops...', "Please select a project.", 'info');
@@ -206,7 +239,7 @@ KylinApp
       }, function (isConfirm) {
         if (isConfirm) {
           if (!$scope.projectModel.selectedProject) {
-            SweetAlert.swal('', 'Please choose your project first!.', 'info');
+            SweetAlert.swal('', 'Please select a project.', 'info');
             return;
           }
           loadingRequest.show();
@@ -419,8 +452,9 @@ KylinApp
       }
 
       $scope.confirmReload = function() {
+        $scope.cancel();
         scope.reloadTable($scope.selectTable, $scope.isCalculate.val).then(function() {
-          $scope.cancel();
+          scope.aceSrcTbLoaded(true);
         })
       }
 
@@ -441,7 +475,7 @@ KylinApp
         }
 
         if (!$scope.projectName) {
-          SweetAlert.swal('', 'Please choose your project first!.', 'info');
+          SweetAlert.swal('', 'Please select a project.', 'info');
           return;
         }
 
@@ -450,9 +484,6 @@ KylinApp
              scope.aceSrcTbLoaded(true);
            });
       }
-
-
-
     };
 
     $scope.editStreamingConfig = function(tableName){
@@ -1074,7 +1105,8 @@ KylinApp
       $scope.streamingConfig = {
         name: '',
         properties: {},
-        parser_info: {}
+        parser_info: {},
+        project_name: ''
       };
 
       $scope.tableData = {
@@ -1315,12 +1347,16 @@ KylinApp
         }
       };
 
+      /**
+       *
+       * @param pattern
+       */
       $scope.updateTsPatternOption = function(pattern) {
         if (pattern === '--- Other ---') {
           $scope.selfDefinedTsPattern = true;
           $scope.streaming.TSPattern = '';
         } else {
-          $scope.selfDefinedTsPattern = pattern;
+          $scope.streaming.TSPattern = pattern;
           $scope.selfDefinedTsPattern = false;
         }
       };
@@ -1364,6 +1400,7 @@ KylinApp
         $scope.streamingConfig.parser_info.ts_parser = $scope.streaming.TSParser;
         $scope.streamingConfig.parser_info.ts_pattern = $scope.streaming.TSPattern;
         $scope.streamingConfig.parser_info.field_mapping = {};
+        $scope.streamingConfig.project_name = projectName;
         $scope.tableData.columns.forEach(function(col) {
           if (col.comment) {
             $scope.streamingConfig.parser_info.field_mapping[col.name] = col.comment.replace(/\|/g, '.') || ''
@@ -1495,7 +1532,8 @@ KylinApp
       if (_.values(tableConfig.streamingSourceType).indexOf($scope.tableModel.selectedSrcTable.source_type) > -1) {
         var table = $scope.tableModel.selectedSrcTable;
         var streamingName = table.database+"."+table.name;
-        StreamingServiceV2.getConfig({table:streamingName}, function (configs) {
+        var projectName = $scope.projectModel.getSelectedProject();
+        StreamingServiceV2.getConfig({table:streamingName, project: projectName}, function (configs) {
           $scope.currentStreamingConfig = configs[0];
         });
       }

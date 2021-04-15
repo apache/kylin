@@ -26,8 +26,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
-import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -44,7 +43,7 @@ import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class HadoopUtil {
     @SuppressWarnings("unused")
@@ -65,20 +64,14 @@ public class HadoopUtil {
             return conf;
         }
         Configuration conf = hadoopConfig.get();
+        conf.set("fs.hdfs.impl.disable.cache", "true");
         return conf;
     }
 
     public static Configuration healSickConfig(Configuration conf) {
-        // https://issues.apache.org/jira/browse/KYLIN-953
-        if (StringUtils.isBlank(conf.get("hadoop.tmp.dir"))) {
-            conf.set("hadoop.tmp.dir", "/tmp");
-        }
-        if (StringUtils.isBlank(conf.get("hbase.fs.tmp.dir"))) {
-            conf.set("hbase.fs.tmp.dir", "/tmp");
-        }
         //  https://issues.apache.org/jira/browse/KYLIN-3064
         conf.set("yarn.timeline-service.enabled", "false");
-
+        conf.set("fs.hdfs.impl.disable.cache", "true");
         return conf;
     }
 

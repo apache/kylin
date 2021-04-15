@@ -24,8 +24,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Locale;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
+import org.apache.kylin.shaded.com.google.common.base.Splitter;
+import org.apache.kylin.shaded.com.google.common.collect.Iterables;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -220,4 +220,7 @@ public class StringUtil {
         return a == null ? b == null : a.equals(b);
     }
 
+    public static boolean isEmpty(String str) {
+        return str == null || str.length() == 0;
+    }
 }

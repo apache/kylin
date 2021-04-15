@@ -67,8 +67,20 @@ public class DictionaryManager {
 
     private DictionaryManager(KylinConfig config) {
         this.config = config;
-        this.dictCache = CacheBuilder.newBuilder()//
-                .softValues()//
+        CacheStrength strength = CacheStrength.valueOf(config.getKylinDictCacheStrength());
+        CacheBuilder cacheBuilder = CacheBuilder.newBuilder();
+        switch (strength) {
+            case soft:
+                cacheBuilder.softValues();
+                break;
+            case week:
+                cacheBuilder.weakValues();
+                break;
+            case strong:
+            default:
+                break;
+        }
+        this.dictCache = cacheBuilder//
                 .removalListener(new RemovalListener<String, DictionaryInfo>() {
                     @Override
                     public void onRemoval(RemovalNotification<String, DictionaryInfo> notification) {
@@ -450,4 +462,7 @@ public class DictionaryManager {
         return ResourceStore.getStore(config);
     }
 
+    private enum CacheStrength{
+        week, soft, strong
+    }
 }

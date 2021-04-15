@@ -44,6 +44,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
+import org.apache.kylin.cube.model.CubeDescTiretreeGlobalDomainDictUtil;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
@@ -58,6 +59,8 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.metadata.model.IEngineAware;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -198,7 +201,7 @@ public class SparkExecutable extends AbstractExecutable {
 
     @SuppressWarnings("checkstyle:methodlength")
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         ExecutableManager mgr = getManager();
         Map<String, String> extra = mgr.getOutput(getId()).getExtra();
         String sparkJobId = extra.get(ExecutableConstants.SPARK_JOB_ID);
@@ -297,7 +300,7 @@ public class SparkExecutable extends AbstractExecutable {
             logger.info("cmd: " + cmd);
             final ExecutorService executorService = Executors.newSingleThreadExecutor();
             final CliCommandExecutor exec = new CliCommandExecutor();
-            final PatternedLogger patternedLogger = new PatternedLogger(logger, new PatternedLogger.ILogListener() {
+            final PatternedLogger patternedLogger = new PatternedLogger(logger, IEngineAware.ID_SPARK, new PatternedLogger.ILogListener() {
                 @Override
                 public void onLogEvent(String infoKey, Map<String, String> info) {
                     // only care three properties here
@@ -506,6 +509,9 @@ public class SparkExecutable extends AbstractExecutable {
             // cube statistics is not available for new segment
             dumpList.add(segment.getStatisticsResourcePath());
         }
+        //tiretree global domain dic
+        CubeDescTiretreeGlobalDomainDictUtil.cuboidJob(segment.getCubeDesc(), dumpList);
+
         JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segment.getConfig(),
                 this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
     }
@@ -520,6 +526,8 @@ public class SparkExecutable extends AbstractExecutable {
                 // cube statistics is not available for new segment
                 dumpList.add(segment.getStatisticsResourcePath());
             }
+            //tiretree global domain dic
+            CubeDescTiretreeGlobalDomainDictUtil.cuboidJob(segment.getCubeDesc(), dumpList);
         }
         JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segments.get(0).getConfig(),
                 this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));

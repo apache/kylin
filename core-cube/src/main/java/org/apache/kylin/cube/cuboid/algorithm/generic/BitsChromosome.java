@@ -18,8 +18,8 @@
 
 package org.apache.kylin.cube.cuboid.algorithm.generic;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableSet;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.commons.math3.genetics.Chromosome;
 import org.apache.kylin.cube.cuboid.algorithm.BenefitPolicy;
 import org.apache.kylin.cube.cuboid.algorithm.CuboidBenefitModel;

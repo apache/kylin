@@ -21,24 +21,24 @@ package org.apache.kylin.metrics.lib;
 import java.io.Closeable;
 
 /**
- * Reservoir for mertics message, a Reservoir(something like cache)'s duty is store mertics message temporarily
- * and emit messages to external Sink by notifying specific ActiveReservoirListener.
+ * Reservoir for metrics event, a Reservoir(something like cache/buffer)'s duty is store metrics event temporarily
+ * and emit events to external Sink by notifying specific ActiveReservoirListener.
  */
 public interface ActiveReservoir extends Closeable {
 
     /**
-     * @return how many mertics message was currently cached(not emit)
+     * @return how many metrics message was currently cached(not emit)
      */
     int size();
 
     /**
      * stage metrics message into Reservoir, but whether to emit it to external storage
-     * immediately is decided by specific implemention
+     * immediately is decided by specific implementation
      */
     void update(Record record);
 
     /**
-     * add listener which responsed to message update
+     * add listener which is in charge of send metrics event update
      */
     void addListener(ActiveReservoirListener listener);
 
@@ -46,10 +46,13 @@ public interface ActiveReservoir extends Closeable {
 
     void removeAllListener();
 
+    /**
+     * A backup listener, it will be called when one of the previous listener failed.
+     */
     void setHAListener(ActiveReservoirListener listener);
 
     /**
-     * do some prepare to accept metrics message
+     * do some prepare to accept metrics event
      */
     void start();
 

@@ -19,9 +19,7 @@ package org.apache.kylin.measure.bitmap;
 
 import org.apache.kylin.measure.ParamAsMeasureCount;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * BitmapIntersectDistinctCountAggFunc is an UDAF used for calculating the intersection of two or more bitmaps
@@ -30,54 +28,10 @@ import java.util.Map;
  *          requires an bitmap count distinct measure of uuid, and an dimension of event
  */
 public class BitmapIntersectDistinctCountAggFunc implements ParamAsMeasureCount {
-    private static final BitmapCounterFactory factory = RoaringBitmapCounterFactory.INSTANCE;
 
     @Override
     public int getParamAsMeasureCount() {
         return -2;
-    }
-
-    public static class RetentionPartialResult {
-        Map<Object, BitmapCounter> map;
-        List keyList;
-
-        public RetentionPartialResult() {
-            map = new LinkedHashMap<>();
-        }
-
-        public void add(Object key, List keyList, Object value) {
-            if (this.keyList == null) {
-                this.keyList = keyList;
-            }
-            if (this.keyList != null && this.keyList.contains(key)) {
-                BitmapCounter counter = map.computeIfAbsent(key, o -> factory.newBitmap());
-
-                counter.orWith((BitmapCounter) value);
-            }
-        }
-
-        public long result() {
-            if (keyList == null || keyList.isEmpty()) {
-                return 0;
-            }
-            // if any specified key not in map, the intersection must be 0
-            for (Object key : keyList) {
-                if (!map.containsKey(key)) {
-                    return 0;
-                }
-            }
-            BitmapCounter counter = null;
-            for (Object key : keyList) {
-                BitmapCounter c = map.get(key);
-                if (counter == null) {
-                    counter = factory.newBitmap();
-                    counter.orWith(c);
-                } else {
-                    counter.andWith(c);
-                }
-            }
-            return counter != null ? counter.getCount() : 0;
-        }
     }
 
     public static RetentionPartialResult init() {
@@ -94,7 +48,7 @@ public class BitmapIntersectDistinctCountAggFunc implements ParamAsMeasureCount 
     }
 
     public static long result(RetentionPartialResult result) {
-        return result.result();
+        return result.countResult();
     }
 }
 

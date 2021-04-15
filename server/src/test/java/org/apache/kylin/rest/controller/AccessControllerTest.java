@@ -154,7 +154,6 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         accessRequest.setSid("ADMIN");
         aes = accessController.revoke(CUBE_INSTANCE, "a24ca905-1fc6-4f67-985c-38fa5aeafd92", accessRequest);
         assertEquals(0, aes.size());
-
     }
 
     @Test
@@ -263,5 +262,110 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         swichToAdmin();
         AccessRequest groupAccessRequest = getAccessRequest(sid, permission, false);
         accessController.grant(PROJECT_INSTANCE, uuid, groupAccessRequest);
+    }
+
+    @Test
+    public void testIndexInAclOfResponse() throws IOException {
+        swichToAdmin();
+        List<ProjectInstance> projects = projectController.getProjects(10000, 0);
+        assertTrue(projects.size() > 0);
+        ProjectInstance project = projects.get(0);
+        ManagedUser user = new ManagedUser("user_0", "kylin", false, "all_users");
+        userService.createUser(user);
+        user = new ManagedUser("user_1", "kylin", false, "all_users");
+        userService.createUser(user);
+        user = new ManagedUser("user_2", "kylin", false, "all_users");
+        userService.createUser(user);
+        List<AccessEntryResponse> aes = accessController.getAccessEntities(PROJECT_INSTANCE,
+            project.getUuid());
+        assertEquals(0, aes.size());
+
+        AccessRequest accessRequest = getAccessRequest("user_0", ADMINISTRATION, true);
+        aes = accessController.grant(PROJECT_INSTANCE, project.getUuid(), accessRequest);
+        assertTrue(checkAccessEntryResponse(aes, accessController.getAccessEntities(PROJECT_INSTANCE,
+            project.getUuid())));
+        assertEquals(1, aes.size());
+
+        int aeId = 0;
+        for (AccessEntryResponse ae : aes) {
+            aeId = (Integer) ae.getId();
+        }
+        accessRequest = new AccessRequest();
+        accessRequest.setAccessEntryId(aeId);
+        accessRequest.setPermission(READ);
+
+        aes = accessController.update(PROJECT_INSTANCE, project.getUuid(), accessRequest);
+        assertTrue(checkAccessEntryResponse(aes, accessController.getAccessEntities(PROJECT_INSTANCE,
+            project.getUuid())));
+        assertEquals(1, aes.size());
+
+        accessRequest = getAccessRequest("user_1", ADMINISTRATION, true);
+        aes = accessController.grant(PROJECT_INSTANCE, project.getUuid(), accessRequest);
+        assertTrue(checkAccessEntryResponse(aes, accessController.getAccessEntities(PROJECT_INSTANCE,
+            project.getUuid())));
+        assertEquals(2, aes.size());
+
+        accessRequest = getAccessRequest("user_2", ADMINISTRATION, true);
+        aes = accessController.grant(PROJECT_INSTANCE, project.getUuid(), accessRequest);
+        assertTrue(checkAccessEntryResponse(aes, accessController.getAccessEntities(PROJECT_INSTANCE,
+            project.getUuid())));
+        assertEquals(3, aes.size());
+
+
+        accessRequest = new AccessRequest();
+        accessRequest.setAccessEntryId(1);
+        accessRequest.setSid("user_1");
+        accessRequest.setPrincipal(true);
+        aes = accessController.revoke(PROJECT_INSTANCE, project.getUuid(), accessRequest);
+        assertTrue(checkAccessEntryResponse(aes, accessController.getAccessEntities(PROJECT_INSTANCE,
+            project.getUuid())));
+        assertEquals(2, aes.size());
+
+        accessRequest = getAccessRequest("user_1", ADMINISTRATION, true);
+        aes = accessController.grant(PROJECT_INSTANCE, project.getUuid(), accessRequest);
+        assertTrue(checkAccessEntryResponse(aes, accessController.getAccessEntities(PROJECT_INSTANCE,
+            project.getUuid())));
+        assertEquals(3, aes.size());
+
+        accessRequest = new AccessRequest();
+        accessRequest.setAccessEntryId(1);
+        accessRequest.setSid("user_1");
+        accessRequest.setPrincipal(true);
+        aes = accessController.revoke(PROJECT_INSTANCE, project.getUuid(), accessRequest);
+        assertTrue(checkAccessEntryResponse(aes, accessController.getAccessEntities(PROJECT_INSTANCE,
+            project.getUuid())));
+        assertEquals(2, aes.size());
+
+        accessRequest = new AccessRequest();
+        accessRequest.setAccessEntryId(0);
+        accessRequest.setSid("user_0");
+        accessRequest.setPrincipal(true);
+        aes = accessController.revoke(PROJECT_INSTANCE, project.getUuid(), accessRequest);
+        assertTrue(checkAccessEntryResponse(aes, accessController.getAccessEntities(PROJECT_INSTANCE,
+            project.getUuid())));
+        assertEquals(1, aes.size());
+
+        accessRequest = new AccessRequest();
+        accessRequest.setAccessEntryId(0);
+        accessRequest.setSid("user_2");
+        accessRequest.setPrincipal(true);
+        aes = accessController.revoke(PROJECT_INSTANCE, project.getUuid(), accessRequest);
+        assertTrue(checkAccessEntryResponse(aes, accessController.getAccessEntities(PROJECT_INSTANCE,
+            project.getUuid())));
+        assertEquals(0, aes.size());
+    }
+
+    private boolean checkAccessEntryResponse(List<AccessEntryResponse> left, List<AccessEntryResponse> right) {
+        for (int i = 0; i < left.size(); i++) {
+            AccessEntryResponse leftAer = left.get(i);
+            AccessEntryResponse rightAer = right.get(i);
+            if (!(leftAer.getId().equals(rightAer.getId())
+                && leftAer.getPermission().getMask() == rightAer.getPermission().getMask()
+                && leftAer.getSid().equals(rightAer.getSid())
+                && leftAer.isGranting() == rightAer.isGranting())) {
+                return false;
+            }
+        }
+        return true;
     }
 }

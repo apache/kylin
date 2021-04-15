@@ -24,7 +24,7 @@ import java.util.Map.Entry;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class LookupMaterializeContext {
     private DefaultChainedExecutable jobFlow;

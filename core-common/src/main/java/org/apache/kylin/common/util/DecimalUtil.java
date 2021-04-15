@@ -32,9 +32,10 @@ public class DecimalUtil {
         // There are some values of "long" that cannot be represented as "double".
         // Not so "int". If it isn't a long, go straight to double.
         return number instanceof BigDecimal ? (BigDecimal) number
-                : number instanceof BigInteger ? new BigDecimal((BigInteger) number)
-                        : number instanceof Long ? new BigDecimal(number.longValue())
-                                : new BigDecimal(number.doubleValue());
+                : number instanceof Integer ? new BigDecimal((Integer) number)
+                        : number instanceof BigInteger ? new BigDecimal((BigInteger) number)
+                                : number instanceof Long ? new BigDecimal(number.longValue())
+                                        : BigDecimal.valueOf(number.doubleValue());
     }
 
     public static BigDecimal toBigDecimal(Object o) {

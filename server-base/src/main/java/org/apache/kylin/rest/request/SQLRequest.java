@@ -22,7 +22,7 @@ import java.io.Serializable;
 import java.util.Locale;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * if you're adding/removing fields from SQLRequest, take a look at getCacheKey
@@ -40,7 +40,7 @@ public class SQLRequest implements Serializable {
 
     private Map<String, String> backdoorToggles;
 
-    protected volatile Object cacheKey = null;
+    protected transient Object cacheKey = null;
 
     public SQLRequest() {
     }

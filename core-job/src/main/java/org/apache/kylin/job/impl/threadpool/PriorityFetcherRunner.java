@@ -34,7 +34,7 @@ import org.apache.kylin.job.execution.Output;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class PriorityFetcherRunner extends FetcherRunner {
 
@@ -96,6 +96,10 @@ public class PriorityFetcherRunner extends FetcherRunner {
                 if (runningJobs.containsKey(id)) {
                     // logger.debug("Job id:" + id + " is already running");
                     nRunning++;
+                    continue;
+                }
+                if (succeedJobs.contains(id)) {
+                    nSUCCEED++;
                     continue;
                 }
 

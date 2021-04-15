@@ -18,17 +18,13 @@
 
 package org.apache.kylin.rest.service;
 
-import org.apache.kylin.rest.security.ManagedUser;
-import org.springframework.security.provisioning.UserDetailsManager;
-
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.kylin.rest.security.ManagedUser;
+import org.springframework.security.provisioning.UserDetailsManager;
+
 public interface UserService extends UserDetailsManager {
-
-    boolean isEvictCacheFlag();
-
-    void setEvictCacheFlag(boolean evictCacheFlag);
 
     List<ManagedUser> listUsers() throws IOException;
 
@@ -37,6 +33,8 @@ public interface UserService extends UserDetailsManager {
     List<ManagedUser> listUsers(String userName, String groupName, Boolean isFuzzyMatch) throws IOException;
 
     List<String> listAdminUsers() throws IOException;
+
+    ManagedUser copyForWrite(ManagedUser user);
 
     //For performance consideration, list all users may be incomplete(eg. not load user's authorities until authorities has benn used).
     //So it's an extension point that can complete user's information latter.

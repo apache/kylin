@@ -18,7 +18,8 @@
 
 package org.apache.kylin.source.hive;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -56,7 +57,7 @@ public class RedistributeFlatHiveTableByLivyStep extends AbstractExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         KylinConfig config = getCubeSpecificConfig();
         String intermediateTable = getIntermediateTable();
         String database, tableName;

@@ -67,7 +67,7 @@ public class HBaseLookupTable implements ILookupTable{
 
     @Override
     public String[] getRow(Array<String> key) {
-        byte[] encodedKey = encoder.encodeRowKey(key.data);
+        byte[] encodedKey = encoder.encodeRowKey(key.getData());
         Get get = new Get(encodedKey);
         try {
             Result result = table.get(get);

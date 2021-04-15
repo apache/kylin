@@ -66,7 +66,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class DictGridTableTest extends LocalFileMetadataTestCase {
 
@@ -314,7 +314,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
 
         // note the unEvaluatable column 1 in filter is added to group by
         assertEquals(
-                "GTScanRequest [range=[[null, null]-[null, null]], columns={0, 1, 3}, filterPushDown=AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], [null], [null]], aggrGroupBy={0, 1}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]",
+                "GTScanRequest [range=[[null, null]-[null, null]], columns={0, 1, 3}, filterPushDown=AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], [], []], aggrGroupBy={0, 1}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]",
                 req.toString());
 
         doScanAndVerify(table, useDeserializedGTScanRequest(req), "[1421280000000, 20, null, 20, null]",
@@ -364,12 +364,12 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         long start = System.currentTimeMillis();
         GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null)
                 .setFilterPushDown(filter).createGTScanRequest();
-        IGTScanner scanner = table.scan(req);
         int i = 0;
-        for (GTRecord r : scanner) {
-            i++;
+        try (IGTScanner scanner = table.scan(req)) {
+            for (GTRecord r : scanner) {
+                i++;
+            }
         }
-        scanner.close();
         long end = System.currentTimeMillis();
         System.out.println(
                 (end - start) + "ms with filter cache enabled=" + FilterResultCache.DEFAULT_OPTION + ", " + i + " rows");
@@ -555,17 +555,17 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
 
     private void doScanAndVerify(GridTable table, GTScanRequest req, String... verifyRows) throws IOException {
         System.out.println(req);
-        IGTScanner scanner = table.scan(req);
-        int i = 0;
-        for (GTRecord r : scanner) {
-            System.out.println(r);
-            if (verifyRows == null || i >= verifyRows.length) {
-                Assert.fail();
+        try (IGTScanner scanner = table.scan(req)) {
+            int i = 0;
+            for (GTRecord r : scanner) {
+                System.out.println(r);
+                if (verifyRows == null || i >= verifyRows.length) {
+                    Assert.fail();
+                }
+                assertEquals(verifyRows[i], r.toString());
+                i++;
             }
-            assertEquals(verifyRows[i], r.toString());
-            i++;
         }
-        scanner.close();
     }
 
     public static ByteArray enc(GTInfo info, int col, String value) {

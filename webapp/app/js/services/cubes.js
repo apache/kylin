@@ -42,6 +42,7 @@ KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
     getCube: {method: 'GET', params: {}, isArray: false},
     getSql: {method: 'GET', params: {action: 'sql'}, isArray: false},
     updateNotifyList: {method: 'PUT', params: {propName: 'notify_list'}, isArray: false},
+    updateOwner: {method: 'PUT', params: {propName: 'owner'}, isArray: false},
     cost: {method: 'PUT', params: {action: 'cost'}, isArray: false},
     rebuildLookUp: {method: 'PUT', params: {propName: 'segs', action: 'refresh_lookup'}, isArray: false},
     rebuildCube: {method: 'PUT', params: {action: 'rebuild'}, isArray: false},
@@ -79,8 +80,22 @@ KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
       }
     },
     optimize: {method: 'PUT', params: {action: 'optimize'}, isArray: false},
-    autoMigrate: {method: 'POST', params: {action: 'migrate'}, isArray: false},
+    ruleCheck: {
+      method: 'GET',
+      params: {
+        action: 'migrateRuleCheck'
+      },
+      isArray: false,
+      interceptor: {
+        response: function(response) {
+          return response.data;
+        }
+      }
+    },
     lookupRefresh: {method: 'PUT', params: {action: 'refresh_lookup'}, isArray: false},
-    checkDuplicateCubeName: {method: 'GET', params: {action: 'validate'}, isArray: false}
+    checkDuplicateCubeName: {method: 'GET', params: {action: 'validate'}, isArray: false},
+    migrate: {method: 'PUT', params: {action: 'migrateRequest'}, isArray: false},
+    approve: {method: 'PUT', params: {action: 'migrateApprove'}, isArray: false},
+    reject: {method: 'PUT', params: {action: 'migrateReject'}, isArray: false}
   });
 }]);

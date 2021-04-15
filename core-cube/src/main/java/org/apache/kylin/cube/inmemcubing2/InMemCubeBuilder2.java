@@ -63,8 +63,10 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * Build a cube (many cuboids) in memory. Calculating multiple cuboids at the same time as long as memory permits.
@@ -106,7 +108,7 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
     }
 
     public int getBaseResultCacheMB() {
-        return baseResult.aggrCacheMB;
+        return baseResult.getAggrCacheMB();
     }
 
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
@@ -198,7 +200,7 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
         }
 
         baseCuboidMemTracker.markLow();
-        baseResult.aggrCacheMB = Math.max(baseCuboidMemTracker.getEstimateMB(), 10); // 10 MB at minimal
+        baseResult.setAggrCacheMB(Math.max(baseCuboidMemTracker.getEstimateMB(), 10)); // 10 MB at minimal
 
         makeMemoryBudget();
         return baseResult;
@@ -226,7 +228,7 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
         };
 
         // reserve memory for aggregation cache, can't be larger than the parent
-        memBudget.reserveInsist(consumer, parent.aggrCacheMB);
+        memBudget.reserveInsist(consumer, parent.getAggrCacheMB());
         try {
             return aggregateCuboid(parent, cuboidId);
         } finally {
@@ -268,12 +270,12 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
         logger.info("Reserve {} MB for system basics", reserve);
 
         int budget = systemAvailMB - reserve;
-        if (budget < baseResult.aggrCacheMB) {
+        if (budget < baseResult.getAggrCacheMB()) {
             // make sure we have base aggr cache as minimal
-            budget = baseResult.aggrCacheMB;
+            budget = baseResult.getAggrCacheMB();
             logger.warn(
                     "System avail memory ({} MB) is less than base aggr cache ({} MB) + minimal reservation ({} MB), consider increase JVM heap -Xmx",
-                    systemAvailMB, baseResult.aggrCacheMB, reserve);
+                    systemAvailMB, baseResult.getAggrCacheMB(), reserve);
         }
 
         logger.info("Memory Budget is {} MB", budget);
@@ -284,7 +286,7 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
             MemoryBudgetController.MemoryWaterLevel baseCuboidMemTracker) throws IOException {
         logger.info("Calculating base cuboid {}", baseCuboidId);
 
-        Stopwatch sw = new Stopwatch();
+        Stopwatch sw = Stopwatch.createUnstarted();
         sw.start();
         GridTable baseCuboid = newGridTableByCuboidID(baseCuboidId);
         GTBuilder baseBuilder = baseCuboid.rebuild();
@@ -310,13 +312,13 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
             baseBuilder.close();
 
             sw.stop();
-            logger.info("Cuboid {} has {} rows, build takes {}ms", baseCuboidId, count, sw.elapsedMillis());
+            logger.info("Cuboid {} has {} rows, build takes {}ms", baseCuboidId, count, sw.elapsed(MILLISECONDS));
 
             int mbEstimateBaseAggrCache = (int) (aggregationScanner.getEstimateSizeOfAggrCache()
                     / MemoryBudgetController.ONE_MB);
             logger.info("Wild estimate of base aggr cache is {} MB", mbEstimateBaseAggrCache);
 
-            return updateCuboidResult(baseCuboidId, baseCuboid, count, sw.elapsedMillis(), 0,
+            return updateCuboidResult(baseCuboidId, baseCuboid, count, sw.elapsed(MILLISECONDS), 0,
                     input.inputConverterUnit.ifChange());
         }
     }
@@ -331,7 +333,7 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
         if (aggrCacheMB <= 0 && baseResult != null) {
             aggrCacheMB = (int) Math.round(
                     (DERIVE_AGGR_CACHE_CONSTANT_FACTOR + DERIVE_AGGR_CACHE_VARIABLE_FACTOR * nRows / baseResult.nRows) //
-                            * baseResult.aggrCacheMB);
+                            * baseResult.getAggrCacheMB());
         }
 
         CuboidResult result = new CuboidResult(cuboidId, table, nRows, timeSpent, aggrCacheMB);
@@ -376,7 +378,7 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
 
     protected CuboidResult scanAndAggregateGridTable(GridTable gridTable, GridTable newGridTable, long parentId,
             long cuboidId, ImmutableBitSet aggregationColumns, ImmutableBitSet measureColumns) throws IOException {
-        Stopwatch sw = new Stopwatch();
+        Stopwatch sw = Stopwatch.createUnstarted();
         sw.start();
         logger.info("Calculating cuboid {}", cuboidId);
 
@@ -402,8 +404,8 @@ public class InMemCubeBuilder2 extends AbstractInMemCubeBuilder {
             builder.close();
         }
         sw.stop();
-        logger.info("Cuboid {} has {} rows, build takes {}ms", cuboidId, count, sw.elapsedMillis());
+        logger.info("Cuboid {} has {} rows, build takes {}ms", cuboidId, count, sw.elapsed(MILLISECONDS));
 
-        return updateCuboidResult(cuboidId, newGridTable, count, sw.elapsedMillis(), 0);
+        return updateCuboidResult(cuboidId, newGridTable, count, sw.elapsed(MILLISECONDS), 0);
     }
 }

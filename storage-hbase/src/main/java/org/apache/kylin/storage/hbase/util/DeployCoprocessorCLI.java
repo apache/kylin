@@ -66,8 +66,8 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  *
@@ -420,7 +420,7 @@ public class DeployCoprocessorCLI {
     }
 
     public static Path getNewestCoprocessorJar(KylinConfig config, FileSystem fileSystem) throws IOException {
-        Path coprocessorDir = getCoprocessorHDFSDir(fileSystem, config);
+        Path coprocessorDir = getCoprocessorHDFSDir(fileSystem, getHDFSWorkingDirectory(config));
         FileStatus newestJar = null;
         for (FileStatus fileStatus : fileSystem.listStatus(coprocessorDir)) {
             if (fileStatus.getPath().toString().endsWith(".jar")) {
@@ -440,8 +440,14 @@ public class DeployCoprocessorCLI {
         return path;
     }
 
-    public static synchronized Path uploadCoprocessorJar(String localCoprocessorJar, FileSystem fileSystem,
-            Set<String> oldJarPaths) throws IOException {
+    public synchronized static Path uploadCoprocessorJar(String localCoprocessorJar, FileSystem fileSystem,
+                                                         Set<String> oldJarPaths) throws IOException {
+        String hdfsWorkingDirectory = getHDFSWorkingDirectory(KylinConfig.getInstanceFromEnv());
+        return uploadCoprocessorJar(localCoprocessorJar, fileSystem, hdfsWorkingDirectory, oldJarPaths);
+    }
+
+    public synchronized static Path uploadCoprocessorJar(String localCoprocessorJar, FileSystem fileSystem,
+                                                         String hdfsWorkingDirectory, Set<String> oldJarPaths) throws IOException {
         Path uploadPath = null;
         File localCoprocessorFile = new File(localCoprocessorJar);
 
@@ -449,7 +455,7 @@ public class DeployCoprocessorCLI {
         if (oldJarPaths == null) {
             oldJarPaths = new HashSet<String>();
         }
-        Path coprocessorDir = getCoprocessorHDFSDir(fileSystem, KylinConfig.getInstanceFromEnv());
+        Path coprocessorDir = getCoprocessorHDFSDir(fileSystem, hdfsWorkingDirectory);
         for (FileStatus fileStatus : fileSystem.listStatus(coprocessorDir)) {
             if (isSame(localCoprocessorFile, fileStatus)) {
                 uploadPath = fileStatus.getPath();
@@ -511,9 +517,12 @@ public class DeployCoprocessorCLI {
         return baseName;
     }
 
-    private static Path getCoprocessorHDFSDir(FileSystem fileSystem, KylinConfig config) throws IOException {
+    private static String getHDFSWorkingDirectory(KylinConfig config) {
         String hdfsWorkingDirectory = config.getHdfsWorkingDirectory();
-        hdfsWorkingDirectory = HBaseConnection.makeQualifiedPathInHBaseCluster(hdfsWorkingDirectory);
+        return HBaseConnection.makeQualifiedPathInHBaseCluster(hdfsWorkingDirectory);
+    }
+
+    private static Path getCoprocessorHDFSDir(FileSystem fileSystem, String hdfsWorkingDirectory) throws IOException {
         Path coprocessorDir = new Path(hdfsWorkingDirectory, "coprocessor");
         fileSystem.mkdirs(coprocessorDir);
         return coprocessorDir;

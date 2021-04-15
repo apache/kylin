@@ -41,7 +41,7 @@ import org.apache.kylin.common.util.DBUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 public class JDBCResourceStore extends PushdownResourceStore {
 
@@ -180,8 +180,8 @@ public class JDBCResourceStore extends PushdownResourceStore {
                     String folderPrefix = folderPath.endsWith("/") ? folderPath : folderPath + "/";
                     String lookForPrefix = folderPrefix;
                     if (filter.hasPathPrefixFilter()) {
-                        Preconditions.checkArgument(filter.pathPrefix.startsWith(folderPrefix));
-                        lookForPrefix = filter.pathPrefix;
+                        Preconditions.checkArgument(filter.getPathPrefix().startsWith(folderPrefix));
+                        lookForPrefix = filter.getPathPrefix();
                     }
 
                     if (isRootPath(folderPath)) {
@@ -192,8 +192,8 @@ public class JDBCResourceStore extends PushdownResourceStore {
                             pstat = connection.prepareStatement(sql);
                             // '_' is LIKE wild char, need escape
                             pstat.setString(1, lookForPrefix.replace("_", "#_") + "%");
-                            pstat.setLong(2, filter.lastModStart);
-                            pstat.setLong(3, filter.lastModEndExclusive);
+                            pstat.setLong(2, filter.getLastModStart());
+                            pstat.setLong(3, filter.getLastModEndExclusive());
                             rs = pstat.executeQuery();
                             while (rs.next()) {
                                 String resPath = rs.getString(META_TABLE_KEY);
@@ -218,8 +218,8 @@ public class JDBCResourceStore extends PushdownResourceStore {
                         pstat = connection.prepareStatement(sql);
                         // '_' is LIKE wild char, need escape
                         pstat.setString(1, lookForPrefix.replace("_", "#_") + "%");
-                        pstat.setLong(2, filter.lastModStart);
-                        pstat.setLong(3, filter.lastModEndExclusive);
+                        pstat.setLong(2, filter.getLastModStart());
+                        pstat.setLong(3, filter.getLastModEndExclusive());
                         rs = pstat.executeQuery();
                         while (rs.next()) {
                             String resPath = rs.getString(META_TABLE_KEY);

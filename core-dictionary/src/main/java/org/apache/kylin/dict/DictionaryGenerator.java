@@ -22,19 +22,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-
-import javax.annotation.Nullable;
+import com.google.common.collect.Lists;
 
 /**
  * @author yangli9
@@ -49,18 +48,11 @@ public class DictionaryGenerator {
 
         // build dict, case by data type
         IDictionaryBuilder builder;
-        if (dataType.isDateTimeFamily()) {
-            if (dataType.isDate())
-                builder = new DateDictBuilder();
-            else
-                builder = new TimeDictBuilder();
-        } else {
-            boolean useForest = KylinConfig.getInstanceFromEnv().isUseForestTrieDictionary();
-            if (dataType.isNumberFamily())
-                builder = useForest ? new NumberTrieDictForestBuilder() : new NumberTrieDictBuilder();
-            else
-                builder = useForest ? new StringTrieDictForestBuilder() : new StringTrieDictBuilder();
-        }
+        boolean useForest = KylinConfig.getInstanceFromEnv().isUseForestTrieDictionary();
+        if (dataType.isNumberFamily())
+            builder = useForest ? new NumberTrieDictForestBuilder() : new NumberTrieDictBuilder();
+        else
+            builder = useForest ? new StringTrieDictForestBuilder() : new StringTrieDictBuilder();
         return builder;
     }
 
@@ -117,88 +109,11 @@ public class DictionaryGenerator {
             @Nullable
             @Override
             public Dictionary<String> apply(@Nullable DictionaryInfo input) {
+                Preconditions.checkNotNull(input);
                 return input.dictionaryObject;
             }
         });
         return buildDictionary(dataType, new MultipleDictionaryValueEnumerator(dataType, dictList));
-    }
-
-    private static class DateDictBuilder implements IDictionaryBuilder {
-        private static final String[] DATE_PATTERNS = new String[] { "yyyy-MM-dd", "yyyyMMdd" };
-
-        private int baseId;
-        private String datePattern;
-
-        @Override
-        public void init(DictionaryInfo info, int baseId, String hdfsDir) throws IOException {
-            this.baseId = baseId;
-        }
-
-        @Override
-        public boolean addValue(String value) {
-            if (StringUtils.isBlank(value)) // empty string is treated as null
-                return false;
-
-            // detect date pattern on the first value
-            if (datePattern == null) {
-                for (String p : DATE_PATTERNS) {
-                    try {
-                        DateFormat.stringToDate(value, p);
-                        datePattern = p;
-                        break;
-                    } catch (Exception e) {
-                        // continue;
-                    }
-                }
-                if (datePattern == null)
-                    throw new IllegalArgumentException("Unknown date pattern for input value: " + value);
-            }
-
-            // check the date format
-            DateFormat.stringToDate(value, datePattern);
-            return true;
-        }
-
-        @Override
-        public Dictionary<String> build() throws IOException {
-            if (datePattern == null)
-                datePattern = DATE_PATTERNS[0];
-
-            return new DateStrDictionary(datePattern, baseId);
-        }
-
-
-        @Override
-        public void clear() {
-            // do nothing
-        }
-    }
-
-    private static class TimeDictBuilder implements IDictionaryBuilder {
-
-        @Override
-        public void init(DictionaryInfo info, int baseId, String hdfsDir) throws IOException {
-        }
-
-        @Override
-        public boolean addValue(String value) {
-            if (StringUtils.isBlank(value)) // empty string is treated as null
-                return false;
-
-            // check the time format
-            DateFormat.stringToMillis(value);
-            return true;
-        }
-
-        @Override
-        public Dictionary<String> build() throws IOException {
-            return new TimeStrDictionary(); // base ID is always 0
-        }
-
-        @Override
-        public void clear() {
-
-        }
     }
 
     private static class StringTrieDictBuilder implements IDictionaryBuilder {

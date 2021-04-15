@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import com.google.common.collect.UnmodifiableIterator;
+import org.apache.kylin.shaded.com.google.common.collect.UnmodifiableIterator;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.gridtable.GTInfo;

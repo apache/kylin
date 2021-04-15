@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -32,8 +33,8 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * Holds per query information and statistics.
@@ -53,10 +54,12 @@ public class QueryContext {
 
     private final String queryId;
     private String username;
+    private String project;
     private Set<String> groups;
     private AtomicLong scannedRows = new AtomicLong();
     private AtomicLong returnedRows = new AtomicLong();
     private AtomicLong scannedBytes = new AtomicLong();
+    private AtomicLong returnedBytes = new AtomicLong();
     private Object calcitePlan;
 
     private AtomicBoolean isRunning = new AtomicBoolean(true);
@@ -67,13 +70,31 @@ public class QueryContext {
     private List<RPCStatistics> rpcStatisticsList = Lists.newCopyOnWriteArrayList();
     private Map<Integer, CubeSegmentStatisticsResult> cubeSegmentStatisticsResultMap = Maps.newConcurrentMap();
 
-    QueryContext() {
-        this(System.currentTimeMillis());
+    final int maxConnThreads;
+
+    private ExecutorService connPool;
+
+    QueryContext(int maxConnThreads) {
+        this(maxConnThreads, System.currentTimeMillis());
     }
 
-    QueryContext(long startMills) {
+    QueryContext(int maxConnThreads, long startMills) {
         queryId = RandomUtil.randomUUID().toString();
         queryStartMillis = startMills;
+        this.maxConnThreads = maxConnThreads;
+    }
+
+    public ExecutorService getConnectionPool(ExecutorService sharedConnPool) {
+        if (connPool != null) {
+            return connPool;
+        }
+
+        synchronized (this) {
+            if (connPool == null) {
+                connPool = new SubThreadPoolExecutor(sharedConnPool, "QUERY", maxConnThreads);
+            }
+            return connPool;
+        }
     }
 
     public long getQueryStartMillis() {
@@ -100,6 +121,14 @@ public class QueryContext {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
     }
 
     public Set<String> getGroups() {
@@ -140,6 +169,14 @@ public class QueryContext {
 
     public long addAndGetScannedBytes(long deltaBytes) {
         return scannedBytes.addAndGet(deltaBytes);
+    }
+
+    public long getReturnedBytes() {
+        return returnedBytes.get();
+    }
+
+    public long addAndGetReturnedBytes(long deltaBytes) {
+        return returnedBytes.addAndGet(deltaBytes);
     }
 
     public void addQueryStopListener(QueryStopListener listener) {
@@ -222,14 +259,12 @@ public class QueryContext {
         }
         ConcurrentMap<String, CubeSegmentStatistics> segmentStatisticsMap = cubeSegmentStatisticsMap.get(cubeName);
         if (segmentStatisticsMap == null) {
-            logger.warn(
-                    "cubeSegmentStatistic should be initialized for cube {}", cubeName);
+            logger.warn("cubeSegmentStatistic should be initialized for cube {}", cubeName);
             return null;
         }
         CubeSegmentStatistics segmentStatistics = segmentStatisticsMap.get(segmentName);
         if (segmentStatistics == null) {
-            logger.warn(
-                    "segmentStatistics should be initialized for cube {} with segment{}", cubeName, segmentName);
+            logger.warn("segmentStatistics should be initialized for cube {} with segment{}", cubeName, segmentName);
             return null;
         }
         return segmentStatistics;
@@ -280,16 +315,15 @@ public class QueryContext {
         if (old == null) {
             segmentStatistics.setWrapper(cubeName, segmentName, sourceCuboidId, targetCuboidId, filterMask);
         } else if (segmentStatistics.sourceCuboidId != sourceCuboidId
-                || segmentStatistics.targetCuboidId != targetCuboidId
-                || segmentStatistics.filterMask != filterMask) {
+                || segmentStatistics.targetCuboidId != targetCuboidId || segmentStatistics.filterMask != filterMask) {
             StringBuilder inconsistency = new StringBuilder();
             if (segmentStatistics.sourceCuboidId != sourceCuboidId) {
-                inconsistency.append(
-                        "sourceCuboidId exist " + segmentStatistics.sourceCuboidId + INPUT + sourceCuboidId);
+                inconsistency
+                        .append("sourceCuboidId exist " + segmentStatistics.sourceCuboidId + INPUT + sourceCuboidId);
             }
             if (segmentStatistics.targetCuboidId != targetCuboidId) {
-                inconsistency.append(
-                        "targetCuboidId exist " + segmentStatistics.targetCuboidId + INPUT + targetCuboidId);
+                inconsistency
+                        .append("targetCuboidId exist " + segmentStatistics.targetCuboidId + INPUT + targetCuboidId);
             }
             if (segmentStatistics.filterMask != filterMask) {
                 inconsistency.append("filterMask exist " + segmentStatistics.filterMask + INPUT + filterMask);

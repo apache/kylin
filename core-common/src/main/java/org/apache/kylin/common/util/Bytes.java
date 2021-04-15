@@ -18,9 +18,9 @@
 
 package org.apache.kylin.common.util;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkPositionIndex;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkArgument;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkPositionIndex;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -71,7 +71,7 @@ public class Bytes {
     /**
      * Size of boolean in bytes
      */
-    public static final int SIZEOF_BOOLEAN = Byte.SIZE / Byte.SIZE;
+    public static final int SIZEOF_BOOLEAN = 1;
 
     /**
      * Size of byte in bytes

@@ -32,14 +32,16 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.DBUtils;
+import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.SourceConfigurationUtil;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 public class BeelineHiveClient implements IHiveClient {
 
@@ -120,8 +122,14 @@ public class BeelineHiveClient implements IHiveClient {
     }
 
     public List<String> getHiveTableNames(String database) throws Exception {
+        String hiveTablePrefix = HiveCmdBuilder.getHiveTablePrefix().get();
         List<String> ret = Lists.newArrayList();
-        ResultSet tables = metaData.getTables(null, database, null, null);
+        ResultSet tables = null;
+        if (StringUtils.isBlank(hiveTablePrefix)) {
+            tables = metaData.getTables(null, database, null, null);
+        } else {
+            tables = metaData.getTables(null, database, hiveTablePrefix + "*", null);
+        }
         while (tables.next()) {
             ret.add(String.valueOf(tables.getObject(3)));
         }
@@ -134,10 +142,26 @@ public class BeelineHiveClient implements IHiveClient {
         ResultSet resultSet = null;
         long count = 0;
         try {
-            String query = "select count(*) from ";
-            resultSet = stmt.executeQuery(query.concat(database + "." + tableName));
-            if (resultSet.next()) {
-                count = resultSet.getLong(1);
+            HiveTableMetaBuilder builder = new HiveTableMetaBuilder();
+            String exe = "use ";
+            stmt.execute(exe.concat(database));
+            String des = "describe formatted ";
+            resultSet = stmt.executeQuery(des.concat(tableName));
+            extractHiveTableMeta(resultSet, builder);
+            count = builder.createHiveTableMeta().rowNum;
+            if (count <= 0) {
+                String querySQL = "select count(*) from ".concat(database + "." + tableName);
+                List<Object[]> datas = null;
+                try {
+                    datas = getHiveResult(querySQL);
+                    if (Objects.nonNull(datas) && !datas.isEmpty()) {
+                        count = Integer.parseInt(datas.get(0)[0] + "");
+                    } else {
+                        throw new IOException("execute get hive table rows result fail : " + querySQL);
+                    }
+                } catch (Exception e) {
+                    throw new IOException("execute get hive table rows result fail : " + querySQL, e);
+                }
             }
         } finally {
             DBUtils.closeQuietly(resultSet);
@@ -276,6 +300,9 @@ public class BeelineHiveClient implements IHiveClient {
             }
             if ("numFiles".equals(resultSet.getString(2).trim())) {
                 builder.setFileNum(Long.parseLong(resultSet.getString(3).trim()));
+            }
+            if ("numRows".equals(resultSet.getString(2).trim())) {
+                builder.setRowNum(Long.parseLong(resultSet.getString(3).trim()));
             }
             if ("skip.header.line.count".equals(resultSet.getString(2).trim())) {
                 builder.setSkipHeaderLineCount(resultSet.getString(3).trim());

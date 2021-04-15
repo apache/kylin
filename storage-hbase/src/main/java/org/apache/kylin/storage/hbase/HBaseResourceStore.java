@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -59,7 +60,7 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 public class HBaseResourceStore extends PushdownResourceStore {
 
@@ -87,12 +88,18 @@ public class HBaseResourceStore extends PushdownResourceStore {
         tableName = metadataUrl.getIdentifier();
         createHTableIfNeeded(tableName);
 
-        kvSizeLimit = Integer
+        int kvSizeLimitActual = Integer
                 .parseInt(getConnection().getConfiguration().get("hbase.client.keyvalue.maxsize", "10485760"));
+        kvSizeLimit = kvSizeLimitActual > 10485760 ? kvSizeLimitActual : 10485760;
+        logger.debug("hbase.client.keyvalue.maxsize is {}, kvSizeLimit is set to {}", kvSizeLimitActual, kvSizeLimit);
     }
 
-    Connection getConnection() throws IOException {
+    protected Connection getConnection() throws IOException {
         return HBaseConnection.get(metadataUrl);
+    }
+
+    protected Configuration getCurrentHBaseConfiguration() {
+        return HBaseConnection.getCurrentHBaseConfiguration();
     }
 
     private StorageURL buildMetadataUrl(KylinConfig kylinConfig) throws IOException {
@@ -174,8 +181,8 @@ public class HBaseResourceStore extends PushdownResourceStore {
         String folderPrefix = folderPath.endsWith("/") ? folderPath : folderPath + "/";
         String lookForPrefix = folderPrefix;
         if (filter.hasPathPrefixFilter()) {
-            Preconditions.checkArgument(filter.pathPrefix.startsWith(folderPrefix));
-            lookForPrefix = filter.pathPrefix;
+            Preconditions.checkArgument(filter.getPathPrefix().startsWith(folderPrefix));
+            lookForPrefix = filter.getPathPrefix();
         }
 
         byte[] startRow = Bytes.toBytes(lookForPrefix);
@@ -235,14 +242,14 @@ public class HBaseResourceStore extends PushdownResourceStore {
 
     private FilterList generateTimeFilterList(VisitFilter visitFilter) {
         FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-        if (visitFilter.lastModStart >= 0) { // NOTE: Negative value does not work in its binary form
+        if (visitFilter.getLastModStart() >= 0) { // NOTE: Negative value does not work in its binary form
             SingleColumnValueFilter timeStartFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS,
-                    CompareFilter.CompareOp.GREATER_OR_EQUAL, Bytes.toBytes(visitFilter.lastModStart));
+                    CompareFilter.CompareOp.GREATER_OR_EQUAL, Bytes.toBytes(visitFilter.getLastModStart()));
             filterList.addFilter(timeStartFilter);
         }
-        if (visitFilter.lastModEndExclusive != Long.MAX_VALUE) {
+        if (visitFilter.getLastModEndExclusive() != Long.MAX_VALUE) {
             SingleColumnValueFilter timeEndFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS,
-                    CompareFilter.CompareOp.LESS, Bytes.toBytes(visitFilter.lastModEndExclusive));
+                    CompareFilter.CompareOp.LESS, Bytes.toBytes(visitFilter.getLastModEndExclusive()));
             filterList.addFilter(timeEndFilter);
         }
         return filterList.getFilters().isEmpty() ? null : filterList;
@@ -323,6 +330,7 @@ public class HBaseResourceStore extends PushdownResourceStore {
             byte[] bOldTS = oldTS == 0 ? null : Bytes.toBytes(oldTS);
 
             if (content.length > kvSizeLimit) {
+                logger.info("Length of content exceeds the limit of {} bytes, push down {} to HDFS", kvSizeLimit, resPath);
                 pushdown = writePushdown(resPath, ContentWriter.create(content));
                 content = BytesUtil.EMPTY_BYTE_ARRAY;
             }
@@ -335,11 +343,13 @@ public class HBaseResourceStore extends PushdownResourceStore {
             logger.trace("Update row {} from oldTs: {}, to newTs: {}, operation result: {}", resPath, oldTS, newTS, ok);
             if (!ok) {
                 long real = getResourceTimestampImpl(resPath);
-                throw new WriteConflictException(
+                if (real != newTS) {
+                    throw new WriteConflictException(
                         "Overwriting conflict " + resPath +
-                                ", expect old TS " + oldTS +
-                                ", but it is " + real +
-                                ", the expected new TS: " + newTS);
+                            ", expect old TS " + oldTS +
+                            ", but it is " + real +
+                            ", the expected new TS: " + newTS);
+                }
             }
 
             return newTS;

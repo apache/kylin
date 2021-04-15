@@ -30,7 +30,9 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.metadata.TableMetadataManager;
@@ -48,13 +50,15 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class ProjectManager {
     private static final Logger logger = LoggerFactory.getLogger(ProjectManager.class);
-
+    public static final Serializer<ProjectInstance> PROJECT_SERIALIZER = new JsonSerializer<ProjectInstance>(
+            ProjectInstance.class);
+    
     public static ProjectManager getInstance(KylinConfig config) {
         return config.getManager(ProjectManager.class);
     }
@@ -238,6 +242,18 @@ public class ProjectManager {
         }
     }
 
+    // update project itself
+    public ProjectInstance updateProjectOwner(ProjectInstance project, String newOwner) throws IOException {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
+            project.setOwner(newOwner);
+
+            if (project.getUuid() == null)
+                project.updateRandomUuid();
+
+            return save(project);
+        }
+    }
+
     public void removeProjectLocal(String proj) {
         try (AutoLock lock = prjMapLock.lockForWrite()) {
             projectMap.removeLocal(proj);
@@ -329,6 +345,22 @@ public class ProjectManager {
             }
 
             projectInstance.removeTable(table.getIdentity());
+            save(projectInstance);
+        }
+    }
+
+    public void removeTableDescFromProject(String[] tableIdentities, String projectName) throws IOException {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
+            TableMetadataManager metaMgr = getTableManager();
+            ProjectInstance projectInstance = getProject(projectName);
+            for (String tableId : tableIdentities) {
+                TableDesc table = metaMgr.getTableDesc(tableId, projectName);
+                if (table == null) {
+                    throw new IllegalStateException("Cannot find table '" + tableId + "' in metadata manager");
+                }
+                projectInstance.removeTable(table.getIdentity());
+            }
+
             save(projectInstance);
         }
     }

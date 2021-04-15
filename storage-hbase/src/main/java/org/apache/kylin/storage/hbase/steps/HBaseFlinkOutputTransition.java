@@ -43,7 +43,7 @@ public class HBaseFlinkOutputTransition implements IFlinkOutput {
 
     @Override
     public IFlinkBatchCubingOutputSide getBatchCubingOutputSide(final CubeSegment seg) {
-        final HBaseMRSteps steps = new HBaseMRSteps(seg);
+        final HBaseJobSteps steps = buildHBaseJobSteps(seg);
 
         return new IFlinkBatchCubingOutputSide() {
 
@@ -55,6 +55,9 @@ public class HBaseFlinkOutputTransition implements IFlinkOutput {
             @Override
             public void addStepPhase3_BuildCube(DefaultChainedExecutable jobFlow) {
                 jobFlow.addTask(steps.createConvertCuboidToHfileStep(jobFlow.getId()));
+                if(seg.getConfig().isHFileDistCP()){
+                    jobFlow.addTask(steps.createDistcpHFileStep(jobFlow.getId()));
+                }
                 jobFlow.addTask(steps.createBulkLoadStep(jobFlow.getId()));
             }
 
@@ -69,7 +72,7 @@ public class HBaseFlinkOutputTransition implements IFlinkOutput {
     @Override
     public IFlinkBatchMergeOutputSide getBatchMergeOutputSide(final CubeSegment seg) {
         return new IFlinkBatchMergeOutputSide() {
-            final HBaseMRSteps steps = new HBaseMRSteps(seg);
+            final HBaseJobSteps steps = buildHBaseJobSteps(seg);
 
             @Override
             public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow) {
@@ -80,6 +83,9 @@ public class HBaseFlinkOutputTransition implements IFlinkOutput {
             public void addStepPhase2_BuildCube(CubeSegment seg, List<CubeSegment> mergingSegments,
                     DefaultChainedExecutable jobFlow) {
                 jobFlow.addTask(steps.createConvertCuboidToHfileStep(jobFlow.getId()));
+                if(seg.getConfig().isHFileDistCP()){
+                    jobFlow.addTask(steps.createDistcpHFileStep(jobFlow.getId()));
+                }
                 jobFlow.addTask(steps.createBulkLoadStep(jobFlow.getId()));
             }
 
@@ -93,5 +99,13 @@ public class HBaseFlinkOutputTransition implements IFlinkOutput {
 
     public IFlinkBatchOptimizeOutputSide getBatchOptimizeOutputSide(final CubeSegment seg) {
         return null;
+    }
+
+    private HBaseJobSteps buildHBaseJobSteps(CubeSegment seg) {
+        if (seg.getConfig().isFlinkCubeHFileEnable()) {
+            return new HBaseFlinkSteps(seg);
+        } else {
+            return new HBaseMRSteps(seg);
+        }
     }
 }

@@ -41,6 +41,8 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.metadata.model.IEngineAware;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.apache.kylin.metadata.model.Segments;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +50,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -128,7 +132,7 @@ public class FlinkExecutable extends AbstractExecutable {
 
     @SuppressWarnings("checkstyle:methodlength")
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException, PersistentException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException, PersistentException {
         ExecutableManager manager = getManager();
         Map<String, String> extra = manager.getOutput(getId()).getExtra();
         String flinkJobId = extra.get(ExecutableConstants.FLINK_JOB_ID);
@@ -163,9 +167,6 @@ public class FlinkExecutable extends AbstractExecutable {
             String hadoopClasspathEnv = new File(hadoopConf).getParentFile().getAbsolutePath();
 
             String jobJar = config.getKylinJobJarPath();
-            if (StringUtils.isEmpty(jars)) {
-                jars = jobJar;
-            }
 
             String segmentID = this.getParam(FlinkCubingByLayer.OPTION_SEGMENT_ID.getOpt());
             CubeSegment segment = cube.getSegmentById(segmentID);
@@ -205,20 +206,32 @@ public class FlinkExecutable extends AbstractExecutable {
                     //flink on yarn specific option (pattern : -yn 1)
                     if (configOptionKey.startsWith("-y") && !entry.getValue().isEmpty()) {
                         sb.append(" ").append(configOptionKey).append(" ").append(entry.getValue());
-                    } else if(!configOptionKey.startsWith("-y")){
+                    } else if (!configOptionKey.startsWith("-y")) {
                         //flink on yarn specific option (pattern : -yD taskmanager.network.memory.min=536346624)
                         sb.append(" ").append(configOptionKey).append("=").append(entry.getValue());
                     }
                 }
             }
 
+            //set job name
+            sb.append(" -ynm ").append(this.getName().replaceAll(" ", "-")).append(" ");
+
+            if (StringUtils.isNotBlank(jars)) {
+                String[] splitJars = jars.split(",\\s*");
+                Set<String> setJars = new HashSet();
+                setJars.addAll(Arrays.asList(splitJars));
+                for (String jar : setJars) {
+                    sb.append(String.format(Locale.ROOT, " -C file://%s", jar));
+                }
+            }
+
             sb.append(" -c org.apache.kylin.common.util.FlinkEntry -p %s %s %s ");
             final String cmd = String.format(Locale.ROOT, sb.toString(), hadoopConf, hadoopClasspathEnv,
-                    KylinConfig.getFlinkHome(), parallelism, jars, formatArgs());
+                    KylinConfig.getFlinkHome(), parallelism, jobJar, formatArgs());
             logger.info("cmd: " + cmd);
             final ExecutorService executorService = Executors.newSingleThreadExecutor();
             final CliCommandExecutor exec = new CliCommandExecutor();
-            final PatternedLogger patternedLogger = new PatternedLogger(logger, (String infoKey, Map<String, String> info) -> {
+            final PatternedLogger patternedLogger = new PatternedLogger(logger, IEngineAware.ID_FLINK, (String infoKey, Map<String, String> info) -> {
                 // only care three properties here
                 if (ExecutableConstants.FLINK_JOB_ID.equals(infoKey)
                         || ExecutableConstants.YARN_APP_ID.equals(infoKey)

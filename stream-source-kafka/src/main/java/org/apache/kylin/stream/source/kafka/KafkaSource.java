@@ -56,12 +56,12 @@ import org.apache.kylin.stream.source.kafka.consumer.KafkaConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.MapDifference;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Function;
+import org.apache.kylin.shaded.com.google.common.collect.FluentIterable;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.MapDifference;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class KafkaSource implements IStreamingSource {
     public static final String PROP_TOPIC = "topic";
@@ -76,8 +76,9 @@ public class KafkaSource implements IStreamingSource {
         KylinConfig kylinConf = KylinConfig.getInstanceFromEnv();
         CubeInstance cube = CubeManager.getInstance(kylinConf).getCube(cubeName);
         String streamingTableName = cube.getRootFactTable();
+        String projectName = cube.getProject();
         StreamingSourceConfig streamingSourceConfig = StreamingSourceConfigManager.getInstance(kylinConf)
-                .getConfig(streamingTableName);
+                .getConfig(streamingTableName, projectName);
 
         String topicName = getTopicName(streamingSourceConfig.getProperties());
         Map<String, Object> conf = getKafkaConf(streamingSourceConfig.getProperties(), cube.getConfig());
@@ -145,8 +146,9 @@ public class KafkaSource implements IStreamingSource {
             CubeInstance cubeInstance = CubeManager.getInstance(kylinConf).getCube(cubeName);
             IStreamingSource streamingSource = StreamingSourceFactory.getStreamingSource(cubeInstance);
             String streamingName = cubeInstance.getRootFactTable();
+            String projectName = cubeInstance.getProject();
             StreamingSourceConfig streamingSourceConfig = StreamingSourceConfigManager.getInstance(kylinConf)
-                    .getConfig(streamingName);
+                    .getConfig(streamingName, projectName);
             String topic = getTopicName(streamingSourceConfig.getProperties());
             Map<String, Object> conf = getKafkaConf(streamingSourceConfig.getProperties(), cubeInstance.getConfig());
 
@@ -295,7 +297,7 @@ public class KafkaSource implements IStreamingSource {
         CubeInstance cube = CubeManager.getInstance(kylinConf).getCube(cubeName);
         String streamingTableName = cube.getRootFactTable();
         StreamingSourceConfig streamingSourceConfig = StreamingSourceConfigManager.getInstance(kylinConf)
-                .getConfig(streamingTableName);
+                .getConfig(streamingTableName, cube.getProject());
         String topicName = getTopicName(streamingSourceConfig.getProperties());
         ISourcePosition sourcePosition = new KafkaPosition();
         Map<String, Object> conf = getKafkaConf(streamingSourceConfig.getProperties(), cube.getConfig());

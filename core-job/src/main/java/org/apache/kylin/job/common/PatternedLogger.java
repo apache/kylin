@@ -25,9 +25,10 @@ import java.util.regex.Pattern;
 import org.apache.kylin.common.util.BufferedLogger;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.constant.ExecutableConstants;
+import org.apache.kylin.metadata.model.IEngineAware;
 import org.slf4j.Logger;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * A logger which parses certain patterns from log
@@ -35,6 +36,7 @@ import com.google.common.collect.Maps;
 public class PatternedLogger extends BufferedLogger {
     private final Map<String, String> info = Maps.newHashMap();
     private ILogListener listener = null;
+    private int engineType;
 
     private static final Pattern PATTERN_APP_ID = Pattern.compile("Submitted application (.*?) to ResourceManager");
     private static final Pattern PATTERN_APP_URL = Pattern.compile("The url to track the job: (.*)");
@@ -51,7 +53,7 @@ public class PatternedLogger extends BufferedLogger {
 
     // spark
     private static final Pattern PATTERN_SPARK_APP_ID = Pattern.compile("Submitted application (.*)");
-    private static final Pattern PATTERN_SPARK_APP_URL = Pattern.compile("tracking URL: (.*)");
+    private static final Pattern PATTERN_SPARK_APP_URL = Pattern.compile("(?i)Tracking URL: (.*)");
     private static final Pattern PATTERN_JOB_STATE = Pattern.compile("Final-State : (.*?)$");
 
     //flink
@@ -82,8 +84,9 @@ public class PatternedLogger extends BufferedLogger {
         super(wrappedLogger);
     }
 
-    public PatternedLogger(Logger wrappedLogger, ILogListener listener) {
+    public PatternedLogger(Logger wrappedLogger, int engineType, ILogListener listener) {
         super(wrappedLogger);
+        this.engineType = engineType;
         this.listener = listener;
     }
 
@@ -94,6 +97,11 @@ public class PatternedLogger extends BufferedLogger {
         for (Pattern pattern : patternMap.keySet()) {
             matcher = pattern.matcher(message);
             if (matcher.find()) {
+                if (pattern == PATTERN_SPARK_APP_ID && engineType == IEngineAware.ID_FLINK) {
+                    pattern = PATTERN_FLINK_APP_ID;
+                } else if (pattern == PATTERN_FLINK_APP_ID && engineType == IEngineAware.ID_SPARK) {
+                    pattern = PATTERN_SPARK_APP_ID;
+                }
                 String key = patternMap.get(pattern).getFirst();
                 int index = patternMap.get(pattern).getSecond();
                 String value = matcher.group(index);

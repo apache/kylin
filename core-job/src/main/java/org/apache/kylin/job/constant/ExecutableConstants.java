@@ -57,6 +57,7 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_GET_CUBOID_KEY_DISTRIBUTION = "Calculate HTable Region Splits";
     public static final String STEP_NAME_CREATE_HBASE_TABLE = "Create HTable";
     public static final String STEP_NAME_CONVERT_CUBOID_TO_HFILE = "Convert Cuboid Data to HFile";
+    public static final String STEP_NAME_HFILE_DISTCP = "HFile Distcp To HBase";
     public static final String STEP_NAME_BULK_LOAD_HFILE = "Load HFile to HBase Table";
     public static final String STEP_NAME_COPY_DICTIONARY = "Copy dictionary from Old Segment";
     public static final String STEP_NAME_MERGE_DICTIONARY = "Merge Cuboid Dictionary";
@@ -84,10 +85,15 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_STREAMING_BUILD_BASE_CUBOID = "Build Base Cuboid Data For Streaming Job";
     public static final String STEP_NAME_STREAMING_SAVE_DICTS = "Save Cube Dictionaries";
 
-    // MR - Hive Dict
-    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_EXTRACT_DICTVAL = "Build Global Dict - extract distinct value from data";
-    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_BUILD_DICTVAL = "Build Global Dict - merge to dict table";
-    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_REPLACE_DICTVAL = "Build Global Dict - replace intermediate table";
+    // Hive Global Dictionary built by MR
+    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_EXTRACT_DICTVAL = "Build Hive Global Dict - extract distinct value";
+    public static final String STEP_NAME_GLOBAL_DICT_PART_BUILD_DICTVAL = "Build Hive Global Dict - parallel part build";
+    public static final String STEP_NAME_GLOBAL_DICT_TOTAL_BUILD_DICTVAL = "Build Hive Global Dict - parallel total build";
+    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_BUILD_DICTVAL = "Build Hive Global Dict - merge to dict table";
+    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_REPLACE_DICTVAL = "Build Hive Global Dict - replace intermediate table";
 
     public static final String FLINK_SPECIFIC_CONFIG_NAME_MERGE_DICTIONARY = "mergedict";
+
+    public static final String STEP_NAME_CALCULATE_COLUMN_CARDINALITY = "Calculate Hive Table Column Cardinality";
+    public static final String STEP_NAME_SAVE_CARDINALITY_TO_METADATA = "Save cardinality result to Metadata";
 }

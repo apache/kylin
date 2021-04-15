@@ -124,4 +124,11 @@ public class PushDownUtilTest {
                 "ORDER BY c_customer_id limit 5"; //
         Assert.assertEquals(expected, PushDownUtil.schemaCompletion(ori, "EDW"));
     }
+
+    @Test
+    public void testWithSyntax2() throws SqlParseException {
+        String origin = "with tmp as (select id from a),tmp2 as (select * from b) select * from tmp,tmp2 where tmp.id = tmp2.id";
+        String expected = "with tmp as (select id from ssb.a),tmp2 as (select * from ssb.b) select * from tmp,tmp2 where tmp.id = tmp2.id";
+        Assert.assertEquals(expected, PushDownUtil.schemaCompletion(origin, "ssb"));
+    }
 }

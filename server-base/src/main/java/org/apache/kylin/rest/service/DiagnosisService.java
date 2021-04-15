@@ -30,18 +30,22 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.metadata.badquery.BadQueryEntry;
 import org.apache.kylin.metadata.badquery.BadQueryHistory;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.ValidateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 @Component("diagnosisService")
 public class DiagnosisService extends BasicService {
@@ -81,14 +85,29 @@ public class DiagnosisService extends BasicService {
     }
 
     public String dumpProjectDiagnosisInfo(String project, File exportPath) throws IOException {
-        aclEvaluate.checkProjectOperationPermission(project);
-        String[] args = { project, exportPath.getAbsolutePath() };
+        project = ValidateUtil.convertStringToBeAlphanumericUnderscore(project);
+        ProjectInstance projectInstance =
+                ProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                        .getProject(project);
+        if (null == projectInstance) {
+            Message msg = MsgPicker.getMsg();
+            throw new BadRequestException(
+                    String.format(Locale.ROOT, msg.getDIAG_PROJECT_NOT_FOUND(), project));
+        }
+        aclEvaluate.checkProjectOperationPermission(projectInstance);
+        String[] args = { projectInstance.getName(), exportPath.getAbsolutePath() };
         runDiagnosisCLI(args);
         return getDiagnosisPackageName(exportPath);
     }
 
     public String dumpJobDiagnosisInfo(String jobId, File exportPath) throws IOException {
-        aclEvaluate.checkProjectOperationPermission(jobService.getJobInstance(jobId));
+        Message msg = MsgPicker.getMsg();
+        JobInstance jobInstance = jobService.getJobInstance(jobId);
+        if (null == jobInstance) {
+            throw new BadRequestException(
+                    String.format(Locale.ROOT, msg.getDIAG_JOBID_NOT_FOUND(), jobId));
+        }
+        aclEvaluate.checkProjectOperationPermission(jobInstance);
         String[] args = { jobId, exportPath.getAbsolutePath() };
         runDiagnosisCLI(args);
         return getDiagnosisPackageName(exportPath);
@@ -98,9 +117,8 @@ public class DiagnosisService extends BasicService {
         Message msg = MsgPicker.getMsg();
 
         File cwd = new File("");
-        logger.debug("Current path: " + cwd.getAbsolutePath());
-
-        logger.debug("DiagnosisInfoCLI args: " + Arrays.toString(args));
+        logger.debug("Current path: {}", cwd.getAbsolutePath());
+        logger.debug("DiagnosisInfoCLI args: {}", Arrays.toString(args));
         File script = new File(KylinConfig.getKylinHome() + File.separator + "bin", "diag.sh");
         if (!script.exists()) {
             throw new BadRequestException(

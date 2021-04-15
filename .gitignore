@@ -79,6 +79,8 @@ webapp/CHANGELOG.md
 # package file
 build/tomcat
 build/lib
+build/VERSION
+
 *.tgz
 *.tar.gz
 webapp/app/components/*
@@ -86,7 +88,6 @@ webapp/app/components/*
 ebay*
 build/commit_SHA1
 dist/
-tomcat/
 webapp/app/kylin-servlet.xml
 webapp/app/web.xml
 dependency-reduced-pom.xml

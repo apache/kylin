@@ -36,7 +36,7 @@ import org.apache.kylin.storage.hbase.steps.HBaseFlinkOutputTransition;
 import org.apache.kylin.storage.hbase.steps.HBaseMROutput2Transition;
 import org.apache.kylin.storage.hbase.steps.HBaseSparkOutputTransition;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 
 @SuppressWarnings("unused")
 //used by reflection

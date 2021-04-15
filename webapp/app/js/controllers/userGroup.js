@@ -30,19 +30,18 @@ KylinApp
     kylinConfig.init().$promise.then(function() {
       $scope.securityType = kylinConfig.getSecurityType();
       $scope.allowUseUserAndGroupModule = ['testing', 'custom'].indexOf($scope.securityType) >= 0;
-    })
+    });
     $scope.page = {
       curpage: kylinConfig.page.offset,
       limit:  kylinConfig.page.limit
-    }
+    };
     $scope.editPage = {
       curpage: kylinConfig.page.offset,
       limit: kylinConfig.page.limit
-    }
+    };
     $scope.selectGroups = {};
     $scope.selectUsers = {};
-    
-    
+
     $scope.filter = {
       name: '',
       groupName: ''
@@ -51,21 +50,21 @@ KylinApp
       return {
         repeatPassword: '',
         newPassword:''
-      }
-    }
+      };
+    };
     var createUserMeta = function () {
       return {
         name: '',
         password: '',
         isAdmin: false,
         authorities: ["ALL_USERS"]
-      }
-    }
+      };
+    };
     var createGroupMeta = function () {
       return {
         name: ''
-      }
-    }
+      };
+    };
     var createFilter = function (offset, limit, pageObj) {
       offset = (!!offset) ? offset : pageObj.curpage;
       if (pageObj) {
@@ -75,13 +74,13 @@ KylinApp
       limit = (!!limit) ? limit : pageObj.limit;
       return {
         offset: offset * limit,
-        limit: (offset + 1) * limit,
+        limit: limit,
         name: $scope.filter.name,
         groupName: $scope.tabData.groupName,
         isFuzzMatch: true,
         project: ProjectModel.selectedProject
       };
-    }
+    };
     $scope.showUserListByGroup = function (groupName) {
       $scope.$emit('change.active', {
         activeTab: 'tab_users',
@@ -94,7 +93,7 @@ KylinApp
         groupName: ''
       });
       $scope.listUsers();
-    }
+    };
     $scope.user = createUserMeta();
     $scope.group = createGroupMeta();
     $scope.getGroupList = function (offset, limit, pageObj) {
@@ -108,7 +107,7 @@ KylinApp
         $scope.grouploading = false;
         ResponseUtil.handleError(res);
       });
-    }
+    };
     $scope.getUserList = function (offset, limit, pageObj) {
       var queryParam = createFilter(offset, limit, pageObj);
       $scope.grouploading = true;
@@ -120,19 +119,23 @@ KylinApp
         $scope.userloading = false;
         ResponseUtil.handleError(res);
       });
-    }
+    };
     $scope.listUsers = function (offset, limit) {
+      $scope.page.curpage = kylinConfig.page.offset
       $scope.getUserList(offset, limit, $scope.page);
-    }
+    };
     $scope.listGroups = function (offset, limit) {
+      $scope.page.curpage = kylinConfig.page.offset
       $scope.getGroupList(offset, limit, $scope.page);
-    }
+    };
     $scope.listEditUsers = function (offset, limit) {
+      $scope.editPage.curpage = kylinConfig.page.offset
       $scope.getUserList(offset, limit, $scope.editPage);
-    }
+    };
     $scope.listEditGroups = function (offset, limit) {
+      $scope.editPage.curpage = kylinConfig.page.offset
       $scope.getGroupList(offset, limit, $scope.editPage);
-    }
+    };
 
     $scope.delUser = function (userName) {
       SweetAlert.swal({
@@ -151,10 +154,10 @@ KylinApp
             $scope.listUsers($scope.page.curpage);
           }, function (e) {
             ResponseUtil.handleError(e);
-          })
-        }
-      })
-    }
+          });
+        };
+      });
+    };
     var updateUser = function (user, isDisable) {
       let updateUser = angular.extend({}, user)
       updateUser.disabled = isDisable
@@ -163,14 +166,14 @@ KylinApp
         SweetAlert.swal('User status update successfuly', null, 'success');
       }, function (e) {
         ResponseUtil.handleError(e);
-      })
-    }
+      });
+    };
     $scope.disableUser = function (user) {
       updateUser(user, true);
-    }
+    };
     $scope.enableUser = function (user) {
       updateUser(user, false);
-    }
+    };
     $scope.delGroup = function (groupName) {
       SweetAlert.swal({
         title: '',
@@ -191,7 +194,7 @@ KylinApp
           })
         }
       })
-    }
+    };
     $scope.isAllchecked = function(selectedItems, items) {
       if (items && items.hasOwnProperty('length')) {
         for(let i = 0; i < items.length; i++) {
@@ -208,7 +211,7 @@ KylinApp
         }
       }
       return true;
-    }
+    };
     $scope.selectAllUsers = function(element){
       setTimeout(function() {
         $scope.isChecked = element.checked;
@@ -217,7 +220,7 @@ KylinApp
         })
         $scope.$apply()
       }, 1);
-    }
+    };
     $scope.selectAllGroups = function(element){
       setTimeout(function() {
         $scope.isChecked = element.checked;
@@ -226,10 +229,10 @@ KylinApp
         }
         $scope.$apply()
       }, 1);
-    }
+    };
     $scope.selectGroup = function (groupName) {
       $scope.selectGroups[groupName] = !$scope.selectGroups[groupName];
-    }
+    };
     var userEditCtr = function ($scope, $modalInstance, UserService,SweetAlert, kylinConfig) {
       $scope.userPattern = /^[\w.@]+$/;
       $scope.groupPattern = /^[\w.@]+$/;
@@ -253,7 +256,7 @@ KylinApp
           $scope.dialogActionLoading = false;
           ResponseUtil.handleError(res);
         })
-      }
+      };
 
       $scope.saveAssignUser = function () {
         let users = []
@@ -274,11 +277,11 @@ KylinApp
           $scope.dialogActionLoading = false;
           ResponseUtil.handleError(res);
         })
-      }
+      };
 
       $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
-      }
+      };
       $scope.saveUser = function () {
         $scope.dialogActionLoading = true;
         if ($scope.user.isAdmin) {
@@ -295,7 +298,7 @@ KylinApp
           $scope.dialogActionLoading = false;
           ResponseUtil.handleError(res)
         })
-      }
+      };
       $scope.saveGroup = function () {
         $scope.dialogActionLoading = true;
         UserGroupService.addGroup({
@@ -309,7 +312,7 @@ KylinApp
           $scope.dialogActionLoading = false;
           ResponseUtil.handleError(res)
         })
-      }
+      };
       $scope.saveNewPassword = function () {
         $scope.dialogActionLoading = true;
         UserService.changePwd($scope.changePwdUser, function () {
@@ -321,8 +324,8 @@ KylinApp
           $scope.dialogActionLoading = false;
           ResponseUtil.handleError(e);
         })
-      }
-    }
+      };
+    };
     $scope.createUser = function () {
       $scope.user = createUserMeta();
       $modal.open({
@@ -330,7 +333,7 @@ KylinApp
         controller: userEditCtr,
         scope: $scope
       });
-    }
+    };
     $scope.createGroup = function () {
       $scope.group = createGroupMeta();
       $modal.open({
@@ -338,7 +341,7 @@ KylinApp
         controller: userEditCtr,
         scope: $scope
       });
-    }
+    };
     $scope.assignToGroup = function (userName, authorities) {
       $scope.listEditGroups();
       $scope.user.name = userName;
@@ -351,7 +354,7 @@ KylinApp
         controller: userEditCtr,
         scope: $scope
       });
-    }
+    };
     $scope.assignToUser = function (groupName) {
       $scope.listEditUsers();
       $scope.group.name = groupName;
@@ -370,8 +373,8 @@ KylinApp
             scope: $scope
           });
         })
-      })  
-    }
+      })
+    };
     $scope.changePwdUser = createChangePwdMeta()
     $scope.changePwd = function (user) {
       $scope.changePwdUser.username = user.username;
@@ -383,5 +386,5 @@ KylinApp
         controller: userEditCtr,
         scope: $scope
       });
-    }
+    };
   });

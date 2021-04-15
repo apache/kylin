@@ -20,7 +20,6 @@ package org.apache.kylin.job.impl.threadpool;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
@@ -33,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
+import org.apache.kylin.common.util.ServerMode;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.common.util.ToolUtil;
@@ -48,10 +48,9 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.lock.JobLock;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Maps;
 
 /**
  * schedule the cubing jobs when several job server running with the same metadata.
@@ -107,9 +106,9 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable> {
 
     @Override
     public synchronized void init(JobEngineConfig jobEngineConfig, JobLock jobLock) throws SchedulerException {
-        String serverMode = jobEngineConfig.getConfig().getServerMode();
-        if (!("job".equals(serverMode.toLowerCase(Locale.ROOT)) || "all".equals(serverMode.toLowerCase(Locale.ROOT)))) {
-            logger.info("server mode: " + serverMode + ", no need to run job scheduler");
+        if (!ServerMode.SERVER_MODE.canServeJobBuild()) {
+            logger.info(
+                    "server mode: " + jobEngineConfig.getConfig().getServerMode() + ", no need to run job scheduler");
             return;
         }
         logger.info("Initializing Job Engine ....");
@@ -203,12 +202,17 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable> {
         return this.hasStarted;
     }
 
-    private class JobRunner implements Runnable {
+    private class JobRunner implements IJobRunner {
 
         private final AbstractExecutable executable;
 
         public JobRunner(AbstractExecutable executable) {
             this.executable = executable;
+        }
+
+        @Override
+        public boolean acquireJobLock() {
+            return jobLock.lock(getLockPath(executable.getId()));
         }
 
         @Override
@@ -226,12 +230,12 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable> {
                             + ToolUtil.getHostName());
                 }
 
-                if (isAssigned && jobLock.lock(getLockPath(executable.getId()))) {
+                if (isAssigned && acquireJobLock()) {
                     logger.info(executable.toString() + " scheduled in server: " + serverName);
 
                     context.addRunningJob(executable);
                     jobWithLocks.add(executable.getId());
-                    executable.execute(context);
+                    executable.execute(context, this);
                 }
             } catch (ExecuteException e) {
                 logger.error("ExecuteException job:" + executable.getId() + " in server: " + serverName, e);

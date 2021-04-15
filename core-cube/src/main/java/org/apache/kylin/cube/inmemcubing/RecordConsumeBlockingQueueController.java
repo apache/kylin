@@ -18,17 +18,19 @@
 
 package org.apache.kylin.cube.inmemcubing;
 
+import java.util.NoSuchElementException;
 import java.util.concurrent.BlockingQueue;
 
 public class RecordConsumeBlockingQueueController<T> extends ConsumeBlockingQueueController<T> {
 
     public final InputConverterUnit<T> inputConverterUnit;
 
-    private RecordConsumeBlockingQueueController(InputConverterUnit<T> inputConverterUnit, BlockingQueue<T> input, int batchSize) {
+    private RecordConsumeBlockingQueueController(InputConverterUnit<T> inputConverterUnit, BlockingQueue<T> input,
+            int batchSize) {
         super(input, batchSize);
         this.inputConverterUnit = inputConverterUnit;
     }
-   
+
     private T currentObject = null;
     private volatile boolean ifEnd = false;
 
@@ -59,7 +61,7 @@ public class RecordConsumeBlockingQueueController<T> extends ConsumeBlockingQueu
     @Override
     public T next() {
         if (ifEnd() || currentObject == null)
-            throw new IllegalStateException();
+            throw new NoSuchElementException();
 
         T result = currentObject;
         currentObject = null;
@@ -69,12 +71,14 @@ public class RecordConsumeBlockingQueueController<T> extends ConsumeBlockingQueu
     public boolean ifEnd() {
         return ifEnd;
     }
-    
-    public static <T> RecordConsumeBlockingQueueController<T> getQueueController(InputConverterUnit<T> inputConverterUnit, BlockingQueue<T> input){
+
+    public static <T> RecordConsumeBlockingQueueController<T> getQueueController(
+            InputConverterUnit<T> inputConverterUnit, BlockingQueue<T> input) {
         return new RecordConsumeBlockingQueueController<>(inputConverterUnit, input, DEFAULT_BATCH_SIZE);
     }
-    
-    public static <T> RecordConsumeBlockingQueueController<T> getQueueController(InputConverterUnit<T> inputConverterUnit, BlockingQueue<T> input, int batchSize){
+
+    public static <T> RecordConsumeBlockingQueueController<T> getQueueController(
+            InputConverterUnit<T> inputConverterUnit, BlockingQueue<T> input, int batchSize) {
         return new RecordConsumeBlockingQueueController<>(inputConverterUnit, input, batchSize);
     }
 }

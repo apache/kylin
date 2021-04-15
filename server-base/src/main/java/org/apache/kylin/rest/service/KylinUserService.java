@@ -38,6 +38,7 @@ import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.security.KylinUserManager;
 import org.apache.kylin.rest.security.ManagedUser;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +48,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import com.google.common.base.Preconditions;
 
 public class KylinUserService implements UserService {
 
@@ -111,18 +111,6 @@ public class KylinUserService implements UserService {
 
     protected ResourceStore aclStore;
 
-    private boolean evictCacheFlag = false;
-
-    @Override
-    public boolean isEvictCacheFlag() {
-        return evictCacheFlag;
-    }
-
-    @Override
-    public void setEvictCacheFlag(boolean evictCacheFlag) {
-        this.evictCacheFlag = evictCacheFlag;
-    }
-
     @PostConstruct
     public void init() throws IOException {
         aclStore = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
@@ -156,7 +144,6 @@ public class KylinUserService implements UserService {
         }
         getKylinUserManager().update(managedUser);
         logger.trace("update user : {}", user.getUsername());
-        setEvictCacheFlag(true);
     }
 
     @Override
@@ -166,7 +153,6 @@ public class KylinUserService implements UserService {
         }
         getKylinUserManager().delete(userName);
         logger.trace("delete user : {}", userName);
-        setEvictCacheFlag(true);
     }
 
     @Override
@@ -221,6 +207,11 @@ public class KylinUserService implements UserService {
             }
         }
         return adminUsers;
+    }
+
+    @Override
+    public ManagedUser copyForWrite(ManagedUser user) {
+        return getKylinUserManager().copyForWrite(user);
     }
 
     @Override

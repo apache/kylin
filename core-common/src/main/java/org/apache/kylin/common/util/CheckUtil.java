@@ -70,4 +70,18 @@ public class CheckUtil {
 
         return false;
     }
+
+    public static boolean equals(String s1, String s2) {
+        if (s1 != null && s2 != null) {
+            return s1.trim().equalsIgnoreCase(s2.trim());
+        }
+        return s1 == null && s2 == null;
+    }
+
+    public static <T> boolean equals(T o1, T o2) {
+        if (o1 != null && o2 != null) {
+            return o1.equals(o2);
+        }
+        return o1 == null && o2 == null;
+    }
 }

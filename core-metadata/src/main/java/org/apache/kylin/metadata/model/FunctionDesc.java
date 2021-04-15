@@ -36,9 +36,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Joiner;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  */
@@ -88,6 +88,10 @@ public class FunctionDesc implements Serializable {
     private DataType returnDataType;
     private MeasureType<?> measureType;
     private boolean isDimensionAsMetric = false;
+
+    /**
+     * The flag of Hive Global Dictionary for COUNT_DISTINCT
+     */
     private boolean isMrDict = false;
 
     public boolean isMrDict() {
@@ -220,7 +224,6 @@ public class FunctionDesc implements Serializable {
         return FUNC_COUNT.equalsIgnoreCase(expression) && (parameter == null || parameter.isConstant());
     }
 
-
     /**
      * Get Full Expression such as sum(amount), count(1), count(*)...
      */
@@ -293,12 +296,25 @@ public class FunctionDesc implements Serializable {
     }
 
     public void setReturnType(String returnType) {
-        this.returnType = returnType;
-        this.returnDataType = DataType.getType(returnType);
+        setReturnDataType(DataType.getType(returnType));
     }
 
     public DataType getReturnDataType() {
         return returnDataType;
+    }
+
+    public void setReturnDataType(DataType returnDataType) {
+        if (returnDataType == null) {
+            this.returnDataType = null;
+            this.returnType = null;
+            this.measureType = null;
+            return;
+        }
+        this.returnDataType = returnDataType;
+        this.returnType = returnDataType.toString();
+        if (measureType != null) {
+            reInitMeasureType();
+        }
     }
 
     public Map<String, String> getConfiguration() {

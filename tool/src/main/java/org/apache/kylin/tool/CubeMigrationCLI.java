@@ -19,6 +19,7 @@
 package org.apache.kylin.tool;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,13 +50,17 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
+import org.apache.kylin.dict.lookup.ExtTableSnapshotInfo;
+import org.apache.kylin.dict.lookup.ExtTableSnapshotInfoManager;
 import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -67,6 +72,7 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.stream.core.source.StreamingSourceConfig;
+import org.apache.kylin.stream.core.source.StreamingSourceConfigManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -197,11 +203,12 @@ public class CubeMigrationCLI extends AbstractApplication {
                 checkMigrationSuccess(dstConfig, cubeName, true);
             }
             updateMeta(dstConfig, projectName, cubeName, cube.getModel());
+            updateMeta(srcConfig, cube.getProject(), cubeName, cube.getModel());
         } else {
             showOpts();
         }
     }
-    
+
     public void checkMigrationSuccess(KylinConfig kylinConfig, String cubeName, Boolean ifFix) throws IOException {
         CubeMigrationCheckCLI checkCLI = new CubeMigrationCheckCLI(kylinConfig, ifFix);
         checkCLI.execute(cubeName);
@@ -247,6 +254,18 @@ public class CubeMigrationCLI extends AbstractApplication {
         for (CubeSegment segment : cube.getSegments()) {
             operations
                     .add(new Opt(OptType.CHANGE_HTABLE_HOST, new Object[] { segment.getStorageLocationIdentifier() }));
+        }
+        ExtTableSnapshotInfoManager srcExtSnapshotManager = ExtTableSnapshotInfoManager.getInstance(srcConfig);
+        List<SnapshotTableDesc> globalSnapshotDescList = cube.getDescriptor().getSnapshotTableDescList();
+        for (SnapshotTableDesc snapshotDesc : globalSnapshotDescList) {
+            if (snapshotDesc.isGlobal()
+                    && ExtTableSnapshotInfo.STORAGE_TYPE_HBASE.equals(snapshotDesc.getStorageType())) {
+                String tableName = snapshotDesc.getTableName();
+                String snapshotResPath = cube.getSnapshotResPath(tableName);
+                ExtTableSnapshotInfo extTableSnapshotInfo = srcExtSnapshotManager.getSnapshot(snapshotResPath);
+                operations.add(new Opt(OptType.CHANGE_HTABLE_HOST,
+                        new Object[] { extTableSnapshotInfo.getStorageLocationIdentifier() }));
+            }
         }
     }
 
@@ -296,7 +315,7 @@ public class CubeMigrationCLI extends AbstractApplication {
             for (TableRef tableRef : tableRefs) {
                 String tableId = tableRef.getTableIdentity();
                 if (path.contains(tableId)) {
-                    String prj = TableDesc.parseResourcePath(path).getSecond();
+                    String prj = TableDesc.parseResourcePath(path).getProject();
                     if (prj == null && tableMap.get(tableId) == null)
                         tableMap.put(tableRef.getTableIdentity(), path);
 
@@ -332,6 +351,7 @@ public class CubeMigrationCLI extends AbstractApplication {
                 dictAndSnapshot.addAll(segment.getSnapshotPaths());
                 dictAndSnapshot.addAll(segment.getDictionaryPaths());
             }
+            dictAndSnapshot.addAll(cube.getSnapshotPaths());
         }
 
         if (doAclCopy) {
@@ -341,7 +361,18 @@ public class CubeMigrationCLI extends AbstractApplication {
 
         if (cubeDesc.isStreamingCube()) {
             // add streaming source config info for streaming cube
-            metaResource.add(StreamingSourceConfig.concatResourcePath(cubeDesc.getModel().getRootFactTableName()));
+            String tableName = cubeDesc.getModel().getRootFactTableName();
+            String projectName = cubeDesc.getProject();
+            KylinConfig kylinConf = KylinConfig.getInstanceFromEnv();
+            StreamingSourceConfigManager manager = StreamingSourceConfigManager.getInstance(kylinConf);
+            StreamingSourceConfig sourceConfig = manager.getConfig(tableName, projectName);
+            if (sourceConfig != null) {
+                metaResource.add(sourceConfig.getResourcePathWithProjName());
+            } else {
+                throw new InterruptedIOException(String.format(Locale.ROOT,
+                        "The stream source config doesn't exist, the table name: %s, the project name: %s",
+                        tableName, projectName));
+            }
         }
     }
 
@@ -425,10 +456,10 @@ public class CubeMigrationCLI extends AbstractApplication {
             String tableName = (String) opt.params[0];
             System.out.println("CHANGE_HTABLE_HOST, table name: " + tableName);
             HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
-            hbaseAdmin.disableTable(tableName);
+//            hbaseAdmin.disableTable(tableName);
             desc.setValue(IRealizationConstants.HTableTag, dstConfig.getMetadataUrlPrefix());
             hbaseAdmin.modifyTable(tableName, desc);
-            hbaseAdmin.enableTable(tableName);
+//            hbaseAdmin.enableTable(tableName);
             logger.info("CHANGE_HTABLE_HOST is completed");
             break;
         }
@@ -438,6 +469,16 @@ public class CubeMigrationCLI extends AbstractApplication {
             if (res == null) {
                 logger.info("Item: {} doesn't exist, ignore it.", item);
                 break;
+            }
+            // dataModel`s project maybe be different with new project.
+            if (item.startsWith(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT)) {
+                DataModelDesc dataModelDesc = srcStore.getResource(item, DataModelManager.getInstance(srcConfig).getDataModelSerializer());
+                if (dataModelDesc != null && dataModelDesc.getProjectName() != null && !dataModelDesc.getProjectName().equals(dstProject)) {
+                    dataModelDesc.setProjectName(dstProject);
+                    dstStore.putResource(item, dataModelDesc, res.lastModified(), DataModelManager.getInstance(srcConfig).getDataModelSerializer());
+                    logger.info("Item " + item + " is copied");
+                    break;
+                }
             }
             dstStore.putResource(renameTableWithinProject(item), res.content(), res.lastModified());
             res.content().close();
@@ -505,6 +546,11 @@ public class CubeMigrationCLI extends AbstractApplication {
                             }
                         }
                     }
+                    for (Map.Entry<String, String> entry : cube.getSnapshots().entrySet()) {
+                        if (entry.getValue().equalsIgnoreCase(item)) {
+                            entry.setValue(snapSaved.getResourcePath());
+                        }
+                    }
                     dstStore.checkAndPutResource(cubeResPath, cube, cubeSerializer);
                     logger.info("Item " + item + " is dup, instead " + snapSaved.getResourcePath() + " is reused");
 
@@ -520,8 +566,12 @@ public class CubeMigrationCLI extends AbstractApplication {
         case RENAME_FOLDER_IN_HDFS: {
             String srcPath = (String) opt.params[0];
             String dstPath = (String) opt.params[1];
-            renameHDFSPath(srcPath, dstPath);
-            logger.info("HDFS Folder renamed from " + srcPath + " to " + dstPath);
+            if (hdfsFS.exists(new Path(srcPath))) {
+                renameHDFSPath(srcPath, dstPath);
+                logger.info("HDFS Folder renamed from " + srcPath + " to " + dstPath);
+            } else {
+                logger.warn("HDFS Folder is not exist,ignore it. path : " + srcPath);
+            }
             break;
         }
         case ADD_INTO_PROJECT: {
@@ -632,10 +682,10 @@ public class CubeMigrationCLI extends AbstractApplication {
         }
         }
     }
-    
+
     private String renameTableWithinProject(String srcItem) {
-        if (dstProject != null && srcItem.contains(ResourceStore.TABLE_RESOURCE_ROOT)) {
-            String tableIdentity = TableDesc.parseResourcePath(srcItem).getFirst();
+        if (dstProject != null && srcItem.startsWith(ResourceStore.TABLE_RESOURCE_ROOT)) {
+            String tableIdentity = TableDesc.parseResourcePath(srcItem).getTable();
             if (srcItem.contains(ResourceStore.TABLE_EXD_RESOURCE_ROOT))
                 return TableExtDesc.concatResourcePath(tableIdentity, dstProject);
             else
@@ -645,10 +695,10 @@ public class CubeMigrationCLI extends AbstractApplication {
     }
 
     private void updateMeta(KylinConfig config, String projectName, String cubeName, DataModelDesc model) {
-        String[] nodes = config.getRestServers();
+        String[] nodes = config.getRawRestServers();
         Map<String, String> tableToProjects = new HashMap<>();
         for (TableRef tableRef : model.getAllTables()) {
-            tableToProjects.put(tableRef.getTableIdentity(), tableRef.getTableDesc().getProject());
+            tableToProjects.put(tableRef.getTableIdentity(), projectName);
         }
 
         for (String node : nodes) {
@@ -670,7 +720,7 @@ public class CubeMigrationCLI extends AbstractApplication {
             if (nRetry > 3) {
                 throw new InterruptedException("Cannot rename folder " + srcPath + " to folder " + dstPath);
             } else {
-                Thread.sleep(sleepTime * nRetry * nRetry);
+                Thread.sleep((long) sleepTime * nRetry * nRetry);
             }
         }
     }

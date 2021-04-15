@@ -30,7 +30,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * A bi-way dictionary that maps from dimension/column values to IDs and vice
@@ -53,7 +53,7 @@ abstract public class Dictionary<T> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     // ID with all bit-1 (0xff e.g.) reserved for NULL value
-    public static final int[] NULL_ID = new int[] { 0, 0xff, 0xffff, 0xffffff, 0xffffffff };
+    protected static final int[] NULL_ID = new int[] { 0, 0xff, 0xffff, 0xffffff, 0xffffffff };
 
     abstract public int getMinId();
 

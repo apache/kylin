@@ -66,6 +66,14 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
     return false;
   }
 
+  this.isCubeMigrationEnabled = function(){
+    var status = this.getProperty("kylin.cube.migration.enabled").trim();
+    if(status!=='false'){
+      return true;
+    }
+    return false;
+  }
+
   //deprecated
   this.getDeployEnv = function () {
     this.deployEnv = this.getProperty("kylin.env");
@@ -165,14 +173,6 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
 
   this.isInitialized = function() {
     return angular.isString(_config);
-  }
-
-  this.isAutoMigrateCubeEnabled = function(){
-    var status = this.getProperty("kylin.tool.auto-migrate-cube.enabled").trim();
-    if(status && status =='true'){
-      return true;
-    }
-    return false;
   }
 
   this.getSourceType = function(){

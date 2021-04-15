@@ -51,8 +51,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Stopwatch;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class TrieDictionaryTest {
     @BeforeClass
@@ -170,6 +170,26 @@ public class TrieDictionaryTest {
     }
 
     @Test
+    public void utf8PartOverflowTest() {
+        //construct values more than 255 bytes
+        StringBuilder sb = new StringBuilder();
+        for (int i=0; i<255; i++){
+            sb.append('a');
+        }
+        // append utf-8 words, each word is more than 1 byte
+        sb.append("你好");
+        TrieDictionaryBuilder<String> b = new TrieDictionaryBuilder<String>(new StringBytesConverter());
+        b.addValue(sb.toString());
+        TrieDictionary<String> dict = b.build(0);
+        int totalValues = 0;
+        for (int i = dict.getMinId(); i <= dict.getMaxId(); i++) {
+            totalValues ++;
+        }
+        assertEquals(1, totalValues);
+        assertEquals(sb.toString(), dict.getValueFromId(0));
+    }
+
+    @Test
     public void emptyValueTest() {
         ArrayList<String> str = new ArrayList<String>();
         str.add("");
@@ -242,7 +262,7 @@ public class TrieDictionaryTest {
         TrieDictionary<String> dict = b.build(0);
         System.out.println("Dictionary size for file " + file + " is " + dict.getSize());
 
-        Stopwatch sw = new Stopwatch();
+        Stopwatch sw = Stopwatch.createUnstarted();
         sw.start();
         List<String> values1 = dict.enumeratorValuesByParent();
         System.out.println("By iterating id visit the time cost " + sw.elapsed(TimeUnit.MILLISECONDS) + " ms");

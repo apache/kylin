@@ -32,45 +32,37 @@ import org.apache.kylin.stream.core.storage.columnar.protocol.FragmentMetaInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
 
 public class DictsReader extends ColumnarFilesReader {
     private static final Logger logger = LoggerFactory.getLogger(DictsReader.class);
-    private FSDataInputStream metaInputStream;
-    private FSDataInputStream dataInputStream;
 
     public DictsReader(Path path, FileSystem fileSystem) throws IOException {
         super(fileSystem, path);
     }
 
     public ImmutableMap<String, Dictionary> readDicts() throws IOException {
-        metaInputStream = fs.open(metaFilePath);
-        FragmentMetaInfo fragmentMetaInfo = JsonUtil.readValue(metaInputStream, FragmentMetaInfo.class);
-        List<DimDictionaryMetaInfo> dimDictMetaInfos = fragmentMetaInfo.getDimDictionaryMetaInfos();
-        ImmutableMap.Builder<String, Dictionary> builder = ImmutableMap.<String, Dictionary> builder();
-        dataInputStream = fs.open(dataFilePath);
-        Dictionary dict;
-        String colName;
-        for (DimDictionaryMetaInfo dimDictMetaInfo : dimDictMetaInfos) {
-            dataInputStream.seek(dimDictMetaInfo.getStartOffset());
-            dict = DictionarySerializer.deserialize(dataInputStream);
-            colName = dimDictMetaInfo.getDimName();
-            builder.put(colName, dict);
+        try (FSDataInputStream metaInputStream = fs.open(metaFilePath);
+             FSDataInputStream dataInputStream = fs.open(dataFilePath)) {
+            FragmentMetaInfo fragmentMetaInfo = JsonUtil.readValue(metaInputStream, FragmentMetaInfo.class);
+            List<DimDictionaryMetaInfo> dimDictMetaInfos = fragmentMetaInfo.getDimDictionaryMetaInfos();
+            ImmutableMap.Builder<String, Dictionary> builder = ImmutableMap.builder();
+            Dictionary dict;
+            String colName;
+            logger.info("Reading dictionary from {}", dataFilePath.getName());
+            for (DimDictionaryMetaInfo dimDictMetaInfo : dimDictMetaInfos) {
+                dataInputStream.seek(dimDictMetaInfo.getStartOffset());
+                dict = DictionarySerializer.deserialize(dataInputStream);
+                colName = dimDictMetaInfo.getDimName();
+                logger.info("Add dict for {}", colName);
+                builder.put(colName, dict);
+            }
+            return builder.build();
         }
-        return builder.build();
     }
 
     @Override
     public void close() throws IOException{
-        try {
-            if (metaInputStream != null) {
-                metaInputStream.close();
-            }
-            if (dataInputStream != null) {
-                dataInputStream.close();
-            }
-        } catch (IOException e) {
-            logger.error("close file error", e);
-        }
+
     }
 }

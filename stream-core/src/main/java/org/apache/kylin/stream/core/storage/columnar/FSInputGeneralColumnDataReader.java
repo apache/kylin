@@ -20,17 +20,20 @@ package org.apache.kylin.stream.core.storage.columnar;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 public class FSInputGeneralColumnDataReader implements ColumnDataReader {
     private FSDataInputStream fsInputStream;
     private int numOfVals;
 
-    public FSInputGeneralColumnDataReader(FSDataInputStream fsInputStream, int dataStartOffset, int dataLength)
+    public FSInputGeneralColumnDataReader(FileSystem fs, Path file, int dataStartOffset, int dataLength)
             throws IOException {
-        this.fsInputStream = fsInputStream;
-        fsInputStream.seek(dataStartOffset + dataLength - 4);
+        this.fsInputStream = fs.open(file);
+        fsInputStream.seek(dataStartOffset + dataLength - 4L);
         this.numOfVals = fsInputStream.readInt();
         fsInputStream.seek(dataStartOffset);
     }
@@ -59,7 +62,7 @@ public class FSInputGeneralColumnDataReader implements ColumnDataReader {
                     readRowCount++;
                     return result;
                 } catch (IOException e) {
-                    throw new RuntimeException("error when read data", e);
+                    throw new NoSuchElementException("error when read data");
                 }
             }
 

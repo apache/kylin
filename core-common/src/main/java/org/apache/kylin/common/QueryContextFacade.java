@@ -27,8 +27,8 @@ import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class QueryContextFacade {
 
@@ -38,7 +38,8 @@ public class QueryContextFacade {
     private static final InternalThreadLocal<QueryContext> CURRENT_CTX = new InternalThreadLocal<QueryContext>() {
         @Override
         protected QueryContext initialValue() {
-            QueryContext queryContext = new QueryContext();
+            QueryContext queryContext = new QueryContext(
+                    KylinConfig.getInstanceFromEnv().getHBaseMaxConnectionThreadsPerQuery());
             RUNNING_CTX_MAP.put(queryContext.getQueryId(), queryContext);
             return queryContext;
         }
@@ -96,7 +97,8 @@ public class QueryContextFacade {
      */
     public static TreeSet<QueryContext> getLongRunningQueries(long runningTime) {
         SortedSet<QueryContext> allRunningQueries = getAllRunningQueries();
-        QueryContext tmpCtx = new QueryContext(runningTime + 1L); // plus 1 to include those contexts in same accumulatedMills but different uuid
+        QueryContext tmpCtx = new QueryContext(KylinConfig.getInstanceFromEnv().getHBaseMaxConnectionThreadsPerQuery(),
+                runningTime + 1L); // plus 1 to include those contexts in same accumulatedMills but different uuid
         return (TreeSet<QueryContext>) allRunningQueries.headSet(tmpCtx);
     }
 }

@@ -17,24 +17,10 @@
 # limitations under the License.
 #
 
-echo "start build kylin image base on current source code"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd ${DIR}
 echo "build image in dir "${DIR}
 
-rm -rf ./kylin
-mkdir -p ./kylin
-
-echo "start copy kylin source code"
-
-for file in `ls ../`
-do
-    if [ docker != $file ]
-    then
-        cp -r ../$file ./kylin/
-    fi
-done
-
-echo "finish copy kylin source code"
-
-docker build -t apache-kylin-standalone .
+echo "start build Hadoop docker image"
+docker build -f Dockerfile_hadoop -t hadoop2.7-all-in-one .
+docker build -f Dockerfile -t apachekylin/apache-kylin-standalone:3.1.0 .

@@ -17,21 +17,28 @@
 */
 package org.apache.kylin.engine.spark;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeDescManager;
@@ -44,6 +51,8 @@ import org.apache.kylin.cube.kv.AbstractRowKeyEncoder;
 import org.apache.kylin.cube.kv.RowKeyEncoderProvider;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableEnrich;
+import org.apache.kylin.dict.ShrunkenDictionary;
+import org.apache.kylin.dict.ShrunkenDictionaryBuilder;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.BatchCubingJobBuilder2;
 import org.apache.kylin.engine.mr.IMROutput2;
@@ -59,13 +68,19 @@ import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregators;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.spark.SparkConf;
+import org.apache.spark.TaskContext;
 import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.api.java.function.PairFunction;
+import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.storage.StorageLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,6 +106,9 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
             .withDescription("Hive Intermediate Table").create("hiveTable");
     public static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg()
             .isRequired(true).withDescription("Hive Intermediate Table PATH").create(BatchConstants.ARG_INPUT);
+    public static final Option OPTION_SHRUNK_INPUT_PATH = OptionBuilder
+            .withArgName(BatchConstants.ARG_SHRUNKEN_DICT_PATH).hasArg().isRequired(false)
+            .withDescription("shrunken Dictionary Path").create(BatchConstants.ARG_SHRUNKEN_DICT_PATH);
 
     private Options options;
 
@@ -102,6 +120,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_META_URL);
         options.addOption(OPTION_OUTPUT_PATH);
+        options.addOption(OPTION_SHRUNK_INPUT_PATH);
     }
 
     @Override
@@ -117,6 +136,8 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         String cubeName = optionsHelper.getOptionValue(OPTION_CUBE_NAME);
         String segmentId = optionsHelper.getOptionValue(OPTION_SEGMENT_ID);
         String outputPath = optionsHelper.getOptionValue(OPTION_OUTPUT_PATH);
+        String shrunkInputPath = optionsHelper.getOptionValue(OPTION_SHRUNK_INPUT_PATH);
+        logger.info("shrunkInputPath is {}", shrunkInputPath);
 
         Class[] kryoClassArray = new Class[] { Class.forName("scala.reflect.ClassTag$$anon$1") };
 
@@ -130,7 +151,12 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         JavaSparkContext sc = new JavaSparkContext(conf);
         sc.sc().addSparkListener(jobListener);
         HadoopUtil.deletePath(sc.hadoopConfiguration(), new Path(outputPath));
-        SparkUtil.modifySparkHadoopConfiguration(sc.sc()); // set dfs.replication=2 and enable compress
+        SparkUtil.modifySparkHadoopConfiguration(sc.sc(), AbstractHadoopJob
+                .loadKylinConfigFromHdfs(new SerializableConfiguration(sc.hadoopConfiguration()), metaUrl)); // set dfs.replication and enable compress
+
+        if (shrunkInputPath != null)
+            sc.hadoopConfiguration().set(BatchConstants.ARG_SHRUNKEN_DICT_PATH, shrunkInputPath);
+
         final SerializableConfiguration sConf = new SerializableConfiguration(sc.hadoopConfiguration());
         KylinConfig envConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
 
@@ -164,9 +190,21 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
         boolean isSequenceFile = JoinedFlatTable.SEQUENCEFILE.equalsIgnoreCase(envConfig.getFlatTableStorageFormat());
 
-        final JavaPairRDD<ByteArray, Object[]> encodedBaseRDD = SparkUtil
-                .hiveRecordInputRDD(isSequenceFile, sc, inputPath, hiveTable)
-                .mapToPair(new EncodeBaseCuboid(cubeName, segmentId, metaUrl, sConf));
+        final JavaPairRDD<ByteArray, Object[]> encodedBaseRDD;
+        logger.info("isShrunkenDictFromGlobalEnabled  {}  shrunkInputPath is {}",
+                cubeDesc.isShrunkenDictFromGlobalEnabled(), shrunkInputPath);
+
+        JavaRDD<String[]> recordInputRDD = null;
+
+        if (cubeDesc.isShrunkenDictFromGlobalEnabled() && shrunkInputPath != null) {
+            recordInputRDD = SparkUtil.hiveRecordInputRDD(isSequenceFile, sc, inputPath, hiveTable).cache();
+            recordInputRDD
+                    .foreachPartition(new CreateShrunkenDictionary(cubeName, segmentId, metaUrl, sConf));
+            encodedBaseRDD = recordInputRDD.mapToPair(new EncodeBaseCuboid(cubeName, segmentId, metaUrl, sConf));
+        } else {
+            encodedBaseRDD = SparkUtil.hiveRecordInputRDD(isSequenceFile, sc, inputPath, hiveTable)
+                    .mapToPair(new EncodeBaseCuboid(cubeName, segmentId, metaUrl, sConf));
+        }
 
         Long totalCount = 0L;
         if (envConfig.isSparkSanityCheckEnabled()) {
@@ -190,6 +228,11 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
         saveToHDFS(allRDDs[0], metaUrl, cubeName, cubeSegment, outputPath, 0, job, envConfig);
 
+        // use ShrunkenDictionary should unpersist recordInputRDD
+        if (recordInputRDD != null) {
+            recordInputRDD.unpersist();
+        }
+
         PairFlatMapFunction flatMapFunction = new CuboidFlatMap(cubeName, segmentId, metaUrl, sConf);
         // aggregate to ND cuboids
         for (level = 1; level <= totalLevels; level++) {
@@ -197,11 +240,13 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
             allRDDs[level] = allRDDs[level - 1].flatMapToPair(flatMapFunction).reduceByKey(reducerFunction2, partition)
                     .persist(storageLevel);
-            allRDDs[level - 1].unpersist(false);
             if (envConfig.isSparkSanityCheckEnabled() == true) {
                 sanityCheck(allRDDs[level], totalCount, level, cubeStatsReader, countMeasureIndex);
             }
             saveToHDFS(allRDDs[level], metaUrl, cubeName, cubeSegment, outputPath, level, job, envConfig);
+            // must do 'unpersist' after allRDDs[level] is created,
+            // otherwise the parent RDD 'allRDDs[level - 1]' will be recomputed
+            allRDDs[level - 1].unpersist(false);
         }
         allRDDs[totalLevels].unpersist(false);
         logger.info("Finished on calculating all level cuboids.");
@@ -284,9 +329,16 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
                                     EngineFactory.getJoinedFlatTableDesc(cubeSegment), cubeDesc);
                             long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
                             Cuboid baseCuboid = Cuboid.findForMandatory(cubeDesc, baseCuboidId);
-                            baseCuboidBuilder = new BaseCuboidBuilder(kConfig, cubeDesc, cubeSegment, interDesc,
-                                    AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid),
-                                    MeasureIngester.create(cubeDesc.getMeasures()), cubeSegment.buildDictionaryMap());
+                            String splitKey = String.valueOf(TaskContext.getPartitionId());
+                            try {
+                                baseCuboidBuilder = new BaseCuboidBuilder(kConfig, cubeDesc, cubeSegment, interDesc,
+                                        AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid),
+                                        MeasureIngester.create(cubeDesc.getMeasures()),
+                                        SparkUtil.getDictionaryMap(cubeSegment, splitKey, conf.get()));
+                            } catch (IOException e) {
+                                logger.error("Fail to get shrunk dict");
+                                e.printStackTrace();
+                            }
                             initialized = true;
                         }
                     }
@@ -462,6 +514,114 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
             }
         })._2();
         return count;
+    }
+
+    public static class CreateShrunkenDictionary implements VoidFunction<Iterator<String[]>> {
+        private String cubeName;
+        private String segmentId;
+        private String metaUrl;
+        private SerializableConfiguration scof;
+
+        private CubeSegment cubeSeg;
+
+        private List<TblColRef> globalColumns;
+        private int[] globalColumnIndex;
+        private List<Set<String>> globalColumnValues;
+
+        private volatile transient boolean initialized = false;
+
+        private String splitKey;
+
+        public CreateShrunkenDictionary(String cubeName, String segmentId, String metaUrl, SerializableConfiguration conf) {
+            this.cubeName = cubeName;
+            this.scof = conf;
+            this.segmentId = segmentId;
+            this.metaUrl = metaUrl;
+        }
+
+        public void init() {
+            KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(scof, metaUrl);
+            CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
+            CubeDesc cubeDesc = cubeInstance.getDescriptor();
+            cubeSeg = cubeInstance.getSegmentById(segmentId);
+            CubeJoinedFlatTableEnrich intermediateTableDesc = new CubeJoinedFlatTableEnrich(
+                    EngineFactory.getJoinedFlatTableDesc(cubeSeg), cubeDesc);
+
+            globalColumns = cubeDesc.getAllGlobalDictColumnsNeedBuilt();
+            globalColumnIndex = new int[globalColumns.size()];
+            globalColumnValues = Lists.newArrayListWithExpectedSize(globalColumns.size());
+
+            splitKey = String.valueOf(TaskContext.getPartitionId());
+
+            for (int i = 0; i < globalColumns.size(); i++) {
+                TblColRef colRef = globalColumns.get(i);
+                int columnIndexOnFlatTbl = intermediateTableDesc.getColumnIndex(colRef);
+                globalColumnIndex[i] = columnIndexOnFlatTbl;
+                globalColumnValues.add(Sets.<String>newHashSet());
+            }
+
+        }
+
+        @Override
+        public void call(Iterator<String[]> iter) throws Exception {
+
+            if (initialized == false) {
+                synchronized (CreateShrunkenDictionary.class) {
+                    if (initialized == false) {
+                        init();
+                        initialized = true;
+                    }
+                }
+            }
+            while (iter.hasNext()) {
+                String[] rowArray = iter.next();
+                for (int i = 0; i < globalColumnIndex.length; i++) {
+                    String fieldValue = rowArray[globalColumnIndex[i]];
+                    if (fieldValue == null)
+                        continue;
+                    globalColumnValues.get(i).add(fieldValue);
+                }
+            }
+
+            FileSystem fs = FileSystem.get(scof.get());
+            Path outputDirBase = new Path(scof.get().get(BatchConstants.ARG_SHRUNKEN_DICT_PATH));
+
+            Map<TblColRef, Dictionary<String>> globalDictionaryMap = cubeSeg
+                    .buildGlobalDictionaryMap(globalColumns.size());
+
+            ShrunkenDictionary.StringValueSerializer strValueSerializer = new ShrunkenDictionary.StringValueSerializer();
+
+            for (int i = 0; i < globalColumns.size(); i++) {
+                List<String> colDistinctValues = Lists.newArrayList(globalColumnValues.get(i));
+                if (colDistinctValues.size() == 0) {
+                    continue;
+                }
+                // sort values to accelerate the encoding process by reducing the swapping of global dictionary slices
+                Collections.sort(colDistinctValues);
+
+                //only get one col dict
+                ShrunkenDictionaryBuilder<String> dictBuilder = new ShrunkenDictionaryBuilder<>(
+                        globalDictionaryMap.get(globalColumns.get(i)));
+
+                for (String colValue : colDistinctValues) {
+                    dictBuilder.addValue(colValue);
+                }
+
+                Dictionary<String> shrunkenDict = dictBuilder.build(strValueSerializer);
+
+                Path colDictDir = new Path(outputDirBase, globalColumns.get(i).getIdentity());
+
+                if (!fs.exists(colDictDir)) {
+                    fs.mkdirs(colDictDir);
+                }
+                Path shrunkenDictPath = new Path(colDictDir, splitKey);
+                try (DataOutputStream dos = fs.create(shrunkenDictPath)) {
+                    logger.info("Write Shrunken dictionary to {} success", shrunkenDictPath);
+                    shrunkenDict.write(dos);
+                }
+            }
+
+        }
     }
 
 }

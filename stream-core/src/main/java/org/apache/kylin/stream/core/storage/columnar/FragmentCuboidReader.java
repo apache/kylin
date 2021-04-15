@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dimension.DimensionEncoding;
@@ -32,21 +33,18 @@ import org.apache.kylin.stream.core.storage.columnar.protocol.CuboidMetaInfo;
 import org.apache.kylin.stream.core.storage.columnar.protocol.DimensionMetaInfo;
 import org.apache.kylin.stream.core.storage.columnar.protocol.MetricMetaInfo;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 public class FragmentCuboidReader implements Iterable<RawRecord> {
     private long rowCount;
     private long readRowCount = 0;
     private int dimCnt;
     private int metricCnt;
-
-    private CubeDesc cubeDesc;
     private ColumnDataReader[] dimensionDataReaders;
     private ColumnDataReader[] metricDataReaders;
 
     public FragmentCuboidReader(CubeDesc cubeDesc, FragmentData fragmentData, CuboidMetaInfo cuboidMetaInfo,
             TblColRef[] dimensions, MeasureDesc[] measures, DimensionEncoding[] dimEncodings) {
-        this.cubeDesc = cubeDesc;
         this.dimCnt = dimensions.length;
         this.metricCnt = measures.length;
         this.dimensionDataReaders = new ColumnDataReader[dimCnt];
@@ -127,14 +125,14 @@ public class FragmentCuboidReader implements Iterable<RawRecord> {
         return new Iterator<RawRecord>() {
             @Override
             public boolean hasNext() {
-                if (readRowCount >= rowCount) {
-                    return false;
-                }
-                return true;
+                return readRowCount < rowCount;
             }
 
             @Override
             public RawRecord next() {
+                if (!hasNext())
+                    throw new NoSuchElementException();
+
                 for (int i = 0; i < dimensionDataReaders.length; i++) {
                     oneRawRecord.setDimension(i, dimValItr[i].next());
                 }

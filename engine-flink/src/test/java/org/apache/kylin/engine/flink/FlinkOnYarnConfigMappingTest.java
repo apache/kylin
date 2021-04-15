@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 package org.apache.kylin.engine.flink;
 
 import org.apache.flink.configuration.FallbackKey;
@@ -40,10 +40,10 @@ public class FlinkOnYarnConfigMappingTest {
                 String flinkConfigOption = entry.getKey();
 
                 boolean matchedAnyOne;
-                matchedAnyOne = flinkConfigOption.equals(JobManagerOptions.JOB_MANAGER_HEAP_MEMORY.key());
+                matchedAnyOne = flinkConfigOption.equals(JobManagerOptions.TOTAL_PROCESS_MEMORY.key());
                 if (!matchedAnyOne) {
-                    if (JobManagerOptions.JOB_MANAGER_HEAP_MEMORY.hasFallbackKeys()) {
-                        Iterator<FallbackKey> deprecatedKeyIterator = JobManagerOptions.JOB_MANAGER_HEAP_MEMORY
+                    if (JobManagerOptions.TOTAL_PROCESS_MEMORY.hasFallbackKeys()) {
+                        Iterator<FallbackKey> deprecatedKeyIterator = JobManagerOptions.TOTAL_PROCESS_MEMORY
                                 .fallbackKeys().iterator();
                         while (deprecatedKeyIterator.hasNext()) {
                             matchedAnyOne = matchedAnyOne && flinkConfigOption.equals(deprecatedKeyIterator.next().getKey());
@@ -65,10 +65,10 @@ public class FlinkOnYarnConfigMappingTest {
                 String flinkConfigOption = entry.getKey();
 
                 boolean matchedAnyOne;
-                matchedAnyOne = flinkConfigOption.equals(TaskManagerOptions.TASK_MANAGER_HEAP_MEMORY.key());
+                matchedAnyOne = flinkConfigOption.equals(TaskManagerOptions.TOTAL_PROCESS_MEMORY.key());
                 if (!matchedAnyOne) {
-                    if (TaskManagerOptions.TASK_MANAGER_HEAP_MEMORY.hasFallbackKeys()) {
-                        Iterator<FallbackKey> deprecatedKeyIterator = TaskManagerOptions.TASK_MANAGER_HEAP_MEMORY
+                    if (TaskManagerOptions.TOTAL_PROCESS_MEMORY.hasFallbackKeys()) {
+                        Iterator<FallbackKey> deprecatedKeyIterator = TaskManagerOptions.TOTAL_PROCESS_MEMORY
                                 .fallbackKeys().iterator();
                         while (deprecatedKeyIterator.hasNext()) {
                             matchedAnyOne = matchedAnyOne && flinkConfigOption.equals(deprecatedKeyIterator.next().getKey());

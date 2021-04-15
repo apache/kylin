@@ -43,18 +43,15 @@ import org.slf4j.LoggerFactory;
 public class JobInfoConverter {
     private static final Logger logger = LoggerFactory.getLogger(JobInfoConverter.class);
 
-    public static JobInstance parseToJobInstanceQuietly(CubingJob job, Map<String, Output> outputs) {
+    public static JobInstance parseToJobInstanceQuietly(AbstractExecutable job, Map<String, Output> outputs) {
         try {
-            return parseToJobInstance(job, outputs);
-        } catch (Exception e) {
-            logger.error("Failed to parse job instance: uuid={}", job, e);
-            return null;
-        }
-    }
-
-    public static JobInstance parseToJobInstanceQuietly(CheckpointExecutable job, Map<String, Output> outputs) {
-        try {
-            return parseToJobInstance(job, outputs);
+            if (job instanceof CheckpointExecutable) {
+                return parseToJobInstance((CheckpointExecutable)job, outputs);
+            } else if (job instanceof CubingJob) {
+                return parseToJobInstance((CubingJob)job, outputs);
+            } else {
+                return null;
+            }
         } catch (Exception e) {
             logger.error("Failed to parse job instance: uuid={}", job, e);
             return null;
@@ -73,15 +70,24 @@ public class JobInfoConverter {
             return null;
         }
 
-        CubingJob cubeJob = (CubingJob) job;
-        CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+        CubingJob cubeJob = job;
+        String cubeName = CubingExecutableUtil.getCubeName(cubeJob.getParams());
+        String displayCubeName = cubeName;
+        try {
+            CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
+            if (cube != null) {
+                cubeName = cube.getName();
+                displayCubeName = cube.getDisplayName();
+            }
+        } catch (Exception e) {
+            logger.warn("Fail to get cube instance for {}.", cubeName);
+        }
 
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setProjectName(cubeJob.getProjectName());
-        result.setRelatedCube(cube != null ? cube.getName() : CubingExecutableUtil.getCubeName(cubeJob.getParams()));
-        result.setDisplayCubeName(cube != null ? cube.getDisplayName() : CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+        result.setRelatedCube(cubeName);
+        result.setDisplayCubeName(displayCubeName);
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
         result.setRelatedSegmentName(CubingExecutableUtil.getSegmentName(cubeJob.getParams()));
         result.setLastModified(output.getLastModified());

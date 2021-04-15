@@ -62,7 +62,7 @@ public class BasicMeasureType extends MeasureType {
     }
 
     @Override
-    public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
+    public void validate(FunctionDesc functionDesc) {
         DataType rtype = dataType;
 
         if (funcName.equals(FunctionDesc.FUNC_SUM)) {

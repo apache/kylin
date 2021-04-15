@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
@@ -64,12 +65,13 @@ import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  * This should be in cube module. It's here in engine-mr because currently stats
@@ -106,7 +108,7 @@ public class CubeStatsReader {
         Path path = new Path(HadoopUtil.fixWindowsPath("file://" + tmpSeqFile.getAbsolutePath()));
 
         CubeStatsResult cubeStatsResult = new CubeStatsResult(path, kylinConfig.getCubeStatsHLLPrecision());
-        tmpSeqFile.delete();
+        Files.deleteIfExists(tmpSeqFile.toPath());
 
         this.seg = cubeSegment;
         this.cuboidScheduler = cuboidScheduler;
@@ -171,7 +173,11 @@ public class CubeStatsReader {
 
     // return map of Cuboid ID => MB
     public Map<Long, Double> getCuboidSizeMap() {
-        return getCuboidSizeMapFromRowCount(seg, getCuboidRowEstimatesHLL(), sourceRowCount);
+        return getCuboidSizeMap(false);
+    }
+
+    public Map<Long, Double> getCuboidSizeMap(boolean origin) {
+        return getCuboidSizeMapFromRowCount(seg, getCuboidRowEstimatesHLL(), sourceRowCount, origin);
     }
 
     public double estimateCubeSize() {
@@ -199,6 +205,11 @@ public class CubeStatsReader {
 
     public static Map<Long, Double> getCuboidSizeMapFromRowCount(CubeSegment cubeSegment, Map<Long, Long> rowCountMap,
             long sourceRowCount) {
+        return getCuboidSizeMapFromRowCount(cubeSegment, rowCountMap, sourceRowCount, true);
+    }
+
+    private static Map<Long, Double> getCuboidSizeMapFromRowCount(CubeSegment cubeSegment, Map<Long, Long> rowCountMap,
+                                                                  long sourceRowCount, boolean origin) {
         final CubeDesc cubeDesc = cubeSegment.getCubeDesc();
         final List<Integer> rowkeyColumnSize = Lists.newArrayList();
         final Cuboid baseCuboid = Cuboid.getBaseCuboid(cubeDesc);
@@ -215,8 +226,99 @@ public class CubeStatsReader {
             sizeMap.put(entry.getKey(), estimateCuboidStorageSize(cubeSegment, entry.getKey(), entry.getValue(),
                     baseCuboid.getId(), baseCuboidRowCount, rowkeyColumnSize, sourceRowCount));
         }
+
+        if (origin == false && cubeSegment.getConfig().enableJobCuboidSizeOptimize()) {
+            optimizeSizeMap(sizeMap, cubeSegment);
+        }
+
         return sizeMap;
     }
+
+    private static Double harmonicMean(List<Double> data) {
+        if (data == null || data.isEmpty()) {
+            return 1.0;
+        }
+        Double sum = 0.0;
+        for (Double item : data) {
+            sum += 1.0 / item;
+        }
+
+        if (sum == 0.0) {
+            return 1.0;
+        } else {
+            return data.size() / sum;
+        }
+
+    }
+
+    private static List<Double> getHistoricalRating(CubeSegment cubeSegment,
+                                                    CubeInstance cubeInstance,
+                                                    int totalLevels) {
+        boolean isMerged = cubeSegment.isMerged();
+
+        Map<Integer, List<Double>> layerRatio = Maps.newHashMap();
+        List<Double> result = Lists.newArrayList();
+
+        for (CubeSegment seg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
+            if (seg.isMerged() != isMerged || seg.getEstimateRatio() == null) {
+                continue;
+            }
+
+            logger.info("get ratio from {} with: {}", seg.getName(), StringUtils.join(seg.getEstimateRatio(), ","));
+
+            for(int level = 0; level <= totalLevels; level++) {
+                if (seg.getEstimateRatio().get(level) <= 0) {
+                    continue;
+                }
+
+                List<Double> temp = layerRatio.get(level) == null ? Lists.newArrayList() : layerRatio.get(level);
+
+                temp.add(seg.getEstimateRatio().get(level));
+                layerRatio.put(level, temp);
+            }
+        }
+
+        if (layerRatio.size() == 0) {
+            logger.info("Fail to get historical rating.");
+            return null;
+        } else {
+            for(int level = 0; level <= totalLevels; level++) {
+                logger.debug("level {}: {}", level, StringUtils.join(layerRatio.get(level), ","));
+                result.add(level, harmonicMean(layerRatio.get(level)));
+            }
+
+            logger.info("Finally estimate ratio is {}", StringUtils.join(result, ","));
+
+            return result;
+        }
+    }
+
+    private static void optimizeSizeMap(Map<Long, Double> sizeMap, CubeSegment cubeSegment) {
+        CubeInstance cubeInstance = cubeSegment.getCubeInstance();
+        int totalLevels = cubeInstance.getCuboidScheduler().getBuildLevel();
+        List<List<Long>> layeredCuboids = cubeInstance.getCuboidScheduler().getCuboidsByLayer();
+
+        logger.info("cube size is {} before optimize", SumHelper.sumDouble(sizeMap.values()));
+
+        List<Double> levelRating = getHistoricalRating(cubeSegment, cubeInstance, totalLevels);
+
+        if (levelRating == null) {
+            logger.info("Fail to optimize, use origin.");
+            return;
+        }
+
+        for (int level = 0; level <= totalLevels; level++) {
+            Double rate = levelRating.get(level);
+
+            for (Long cuboidId : layeredCuboids.get(level)) {
+                double oriValue = (sizeMap.get(cuboidId) == null ? 0.0 : sizeMap.get(cuboidId));
+                sizeMap.put(cuboidId, oriValue * rate);
+            }
+        }
+
+        logger.info("cube size is {} after optimize", SumHelper.sumDouble(sizeMap.values()));
+    }
+
 
     /**
      * Estimate the cuboid's size
@@ -275,7 +377,7 @@ public class CubeStatsReader {
     private void print(PrintWriter out) {
         Map<Long, Long> cuboidRows = getCuboidRowEstimatesHLL();
         Map<Long, Double> cuboidSizes = getCuboidSizeMap();
-        List<Long> cuboids = new ArrayList<Long>(cuboidRows.keySet());
+        List<Long> cuboids = new ArrayList<>(cuboidRows.keySet());
         Collections.sort(cuboids);
 
         out.println("============================================================================");
@@ -427,7 +529,7 @@ public class CubeStatsReader {
     }
 
     public static void main(String[] args) throws IOException {
-        System.out.println("CubeStatsReader is used to read cube statistic saved in metadata store");
+        logger.info("CubeStatsReader is used to read cube statistic saved in metadata store");
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         CubeInstance cube = CubeManager.getInstance(config).getCube(args[0]);
         List<CubeSegment> segments = cube.getSegments();

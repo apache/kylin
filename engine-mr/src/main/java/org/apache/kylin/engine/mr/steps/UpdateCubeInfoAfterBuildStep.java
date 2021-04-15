@@ -30,6 +30,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
@@ -44,13 +45,15 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.apache.kylin.metadata.datatype.DataTypeOrder;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  */
@@ -65,7 +68,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         final CubeManager cubeManager = CubeManager.getInstance(context.getConfig());
         final CubeInstance cube = cubeManager.getCube(CubingExecutableUtil.getCubeName(this.getParams()))
                 .latestCopyForWrite();
@@ -76,13 +79,18 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         long sourceSizeBytes = cubingJob.findSourceSizeBytes();
         long cubeSizeBytes = cubingJob.findCubeSizeBytes();
 
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        List<Double> cuboidEstimateRatio = cubingJob.findEstimateRatio(segment, config);
+
         segment.setLastBuildJobID(CubingExecutableUtil.getCubingJobId(this.getParams()));
         segment.setLastBuildTime(System.currentTimeMillis());
         segment.setSizeKB(cubeSizeBytes / 1024);
         segment.setInputRecords(sourceCount);
         segment.setInputRecordsSize(sourceSizeBytes);
+        segment.setEstimateRatio(cuboidEstimateRatio);
 
         try {
+            deleteDictionaryIfNeeded(segment);
             saveExtSnapshotIfNeeded(cubeManager, cube, segment);
             updateSegment(segment);
 
@@ -92,6 +100,19 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             logger.error("fail to update cube after build", e);
             return ExecuteResult.createError(e);
         }
+    }
+
+    // Don't delete the dicts in metadata store, let it done regularly by the metadata cleanup tool
+    private Set<String> deleteDictionaryIfNeeded(CubeSegment segment) {
+        Set<TblColRef> dictColToDelete = segment.getCubeDesc().getAllColumnsNeedDictionaryForBuildingOnly();
+        Set<String> dictResPathToDelete = Sets.newHashSetWithExpectedSize(dictColToDelete.size());
+        for (TblColRef dictCol : dictColToDelete) {
+            String pathToDelete = segment.removeDictResPath(dictCol);
+            if (!Strings.isNullOrEmpty(pathToDelete)) {
+                dictResPathToDelete.add(pathToDelete);
+            }
+        }
+        return dictResPathToDelete;
     }
 
     private void saveExtSnapshotIfNeeded(CubeManager cubeManager, CubeInstance cube, CubeSegment segment)

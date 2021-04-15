@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.measure.MeasureAggregator;
 
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  */

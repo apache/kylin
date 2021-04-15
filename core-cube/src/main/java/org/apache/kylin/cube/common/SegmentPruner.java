@@ -31,6 +31,7 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeOrder;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.DynamicTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
@@ -127,7 +128,7 @@ public class SegmentPruner {
             return true;
         
         // pass on non-constant filter
-        if (comp.getChildren().size() > 1 && !(comp.getChildren().get(1) instanceof ConstantTupleFilter))
+        if (comp.getChildren().size() <= 1 || !isConstantValue(comp.getChildren().get(1)))
             return true;
 
         TblColRef col = comp.getColumn();
@@ -157,6 +158,10 @@ public class SegmentPruner {
         default:
             return true;
         }
+    }
+
+    private static boolean isConstantValue(TupleFilter tupleFilter) {
+        return tupleFilter instanceof ConstantTupleFilter || tupleFilter instanceof DynamicTupleFilter;
     }
 
     private static String toString(Object v) {

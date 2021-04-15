@@ -160,10 +160,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
 
     });
-    // ~ public methods
-    $scope.filterProj = function(project){
-        return $scope.userService.hasRole('ROLE_ADMIN') || $scope.hasPermission(project,$scope.permissions.ADMINISTRATION.mask);
-    };
 
     $scope.removeElement = function (arr, element) {
         var index = arr.indexOf(element);
@@ -440,7 +436,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
                 });
 
                 if (!isColumnExit) {
-                    errors.push("The non-Int type precise count distinct measure must set advanced cict: " + measureColumn);
+                    errors.push("The non-Int type precise count distinct measure must set advanced dictionary: " + measureColumn);
                 }
             }
         });

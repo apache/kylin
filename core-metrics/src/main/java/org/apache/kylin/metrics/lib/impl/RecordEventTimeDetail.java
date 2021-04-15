@@ -18,23 +18,22 @@
 
 package org.apache.kylin.metrics.lib.impl;
 
+import org.apache.kylin.common.KylinConfig;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.threadlocal.InternalThreadLocal;
-
 public class RecordEventTimeDetail {
     private static final TimeZone timeZone;
-    private static final InternalThreadLocal<SimpleDateFormat> dateFormatThreadLocal = new InternalThreadLocal<SimpleDateFormat>();
-    private static final InternalThreadLocal<SimpleDateFormat> timeFormatThreadLocal = new InternalThreadLocal<SimpleDateFormat>();
+    private static final ThreadLocal<SimpleDateFormat> dateFormatThreadLocal = new ThreadLocal<>();
+    private static final ThreadLocal<SimpleDateFormat> timeFormatThreadLocal = new ThreadLocal<>();
 
     static {
-        timeZone = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone());
+        timeZone = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getKylinMetricsEventTimeZone());
     }
-
+    
     public final String year_begin_date;
     public final String month_begin_date;
     public final String date;

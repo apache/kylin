@@ -20,8 +20,11 @@ package org.apache.kylin.cache.memcached;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -38,14 +41,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Shorts;
+import org.apache.kylin.shaded.com.google.common.annotations.VisibleForTesting;
+import org.apache.kylin.shaded.com.google.common.base.Charsets;
+import org.apache.kylin.shaded.com.google.common.base.Joiner;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
+import org.apache.kylin.shaded.com.google.common.base.Throwables;
+import org.apache.kylin.shaded.com.google.common.primitives.Ints;
+import org.apache.kylin.shaded.com.google.common.primitives.Shorts;
 
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.ConnectionFactory;
@@ -136,11 +139,22 @@ public class MemcachedCache {
                     .setOpQueueMaxBlockTime(config.getTimeout()).setOpTimeout(config.getTimeout())
                     .setReadBufferSize(config.getReadBufferSize()).setOpQueueFactory(opQueueFactory).build();
             return new MemcachedCache(new MemcachedClient(new MemcachedConnectionFactory(connectionFactory),
-                    AddrUtil.getAddresses(hostsStr)), config, memcachedPrefix, timeToLive);
+                    getResolvedAddrList(hostsStr)), config, memcachedPrefix, timeToLive);
         } catch (IOException e) {
             logger.error("Unable to create MemcachedCache instance.", e);
             throw Throwables.propagate(e);
         }
+    }
+
+    public static List<InetSocketAddress> getResolvedAddrList(String hostsStr) {
+        List<InetSocketAddress> addrs = AddrUtil.getAddresses(hostsStr);
+        Iterator<InetSocketAddress> addrIterator = addrs.iterator();
+        while (addrIterator.hasNext()) {
+            if (addrIterator.next().isUnresolved()) {
+                addrIterator.remove();
+            }
+        }
+        return addrs;
     }
 
     public String getName() {

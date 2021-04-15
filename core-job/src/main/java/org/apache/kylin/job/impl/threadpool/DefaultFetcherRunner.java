@@ -65,12 +65,18 @@ public class DefaultFetcherRunner extends FetcherRunner {
                     nRunning++;
                     continue;
                 }
+                if (succeedJobs.contains(id)) {
+                    nSUCCEED++;
+                    continue;
+                }
 
                 final Output outputDigest;
                 try {
                     outputDigest = getExecutableManager().getOutputDigest(id);
                 } catch (IllegalArgumentException e) {
-                    logger.warn("job " + id + " output digest is null, skip.", e);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("job " + id + " output digest is null.", e);
+                    }
                     nOthers++;
                     continue;
                 }
@@ -92,7 +98,7 @@ public class DefaultFetcherRunner extends FetcherRunner {
                 }
 
                 KylinConfig config = jobEngineConfig.getConfig();
-                if(config.isSchedulerSafeMode()) {
+                if (config.isSchedulerSafeMode()) {
                     String cubeName = executable.getCubeName();
                     String projectName = CubeManager.getInstance(config).getCube(cubeName).getProject();
                     if (!config.getSafeModeRunnableProjects().contains(projectName) &&

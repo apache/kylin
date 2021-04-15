@@ -46,7 +46,7 @@ abstract public class MeasureType<T> implements java.io.Serializable {
      * ---------------------------------------------------------------------------- */
 
     /** Validates a user defined FunctionDesc has expected parameter etc. Throw IllegalArgumentException if anything wrong. */
-    public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
+    public void validate(FunctionDesc functionDesc) {
         return;
     }
 
@@ -74,6 +74,11 @@ abstract public class MeasureType<T> implements java.io.Serializable {
 
     /** Some special measures need dictionary to encode column values for optimal storage. TopN is an example. */
     public List<TblColRef> getColumnsNeedDictionary(FunctionDesc functionDesc) {
+        return Collections.emptyList();
+    }
+
+    /** Some special measures need dictionary for cube building only, don't need to store them. */
+    public List<TblColRef> getColumnsNeedDictionaryForBuildingOnly(FunctionDesc functionDesc) {
         return Collections.emptyList();
     }
 

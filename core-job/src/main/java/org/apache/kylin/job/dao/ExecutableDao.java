@@ -31,6 +31,7 @@ import org.apache.kylin.common.persistence.ContentReader;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.persistence.WriteConflictException;
 import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -42,7 +43,7 @@ import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  */
@@ -440,9 +441,22 @@ public class ExecutableDao {
 
     public void updateJobOutput(ExecutableOutputPO output) throws PersistentException {
         try {
-            writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
-            if (!isTaskExecutableOutput(output.getUuid()))
-                executableOutputDigestMap.put(output.getUuid(), output);
+            int retry = 7;
+            while (retry-- > 0) {
+                try {
+                    writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
+                    if (!isTaskExecutableOutput(output.getUuid()))
+                        executableOutputDigestMap.put(output.getUuid(), output);
+                    return;
+                } catch (WriteConflictException e) {
+                    if (retry <= 0) {
+                        logger.error("Retry is out, till got error, abandoning...", e);
+                        throw e;
+                    }
+                    logger.warn("Write conflict to update  job output id:" +  output.getUuid() + " retry remaining " + retry
+                            + ", will retry...");
+                }
+            }
         } catch (IOException e) {
             logger.error("error update job output id:" + output.getUuid(), e);
             throw new PersistentException(e);

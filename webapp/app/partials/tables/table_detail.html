@@ -21,6 +21,7 @@
     <h3 class="text-info">Table Schema:{{ tableModel.selectedSrcTable.name}}</h3>
     <a class="btn btn-primary pull-right" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask)" ng-click="unloadTable(tableModel.selectedSrcTable.database+'.'+tableModel.selectedSrcTable.name)" style="margin-left:10px;" ><span class="fa fa-remove"></span>&nbsp;Unload Table</a>
     <a class="btn btn-success pull-right" ng-if="tableModel.selectedSrcTable.source_type==0&&(userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask))"  ng-click="openReloadModal(tableModel.selectedSrcTable.database+'.'+tableModel.selectedSrcTable.name)" style="margin-left:10px;" ><span class="fa fa-download"></span>&nbsp;Reload Table</a>
+    <a class="btn btn-info pull-right" ng-if="tableModel.selectedSrcTable.source_type==0&&(userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"  ng-click="calCardinality(tableModel.selectedSrcTable.database+'.'+tableModel.selectedSrcTable.name)" style="margin-left:10px;"><span class="fa fa-download"></span>&nbsp;Cardinality</a>
     <div class="tabbable nav-tabs-custom">
       <ul class="nav nav-tabs">
         <li class="active">
@@ -148,7 +149,7 @@
                   <td
                     style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
                     <!--{{ tableModel.selectedSrcTable.cardinality[column.name]}}-->
-                    {{column.cardinality}}
+                    {{column.cardinality || 'N/A'}}
                   </td>
                   <td
                     style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">

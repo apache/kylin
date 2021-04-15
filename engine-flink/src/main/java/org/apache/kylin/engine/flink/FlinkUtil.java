@@ -17,7 +17,7 @@
 */
 package org.apache.kylin.engine.flink;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -34,6 +34,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeSegment;
@@ -102,7 +103,7 @@ public class FlinkUtil {
     }
 
     public static void modifyFlinkHadoopConfiguration(Job job) throws Exception {
-        job.getConfiguration().set("dfs.replication", "2"); // cuboid intermediate files, replication=2
+        job.getConfiguration().set("dfs.replication", KylinConfig.getInstanceFromEnv().getCuboidDfsReplication()); // cuboid intermediate files
         job.getConfiguration().set("mapreduce.output.fileoutputformat.compress", "true");
         job.getConfiguration().set("mapreduce.output.fileoutputformat.compress.type", "BLOCK");
         job.getConfiguration().set("mapreduce.output.fileoutputformat.compress.codec", "org.apache.hadoop.io.compress.DefaultCodec"); // or org.apache.hadoop.io.compress.SnappyCodec

@@ -39,16 +39,19 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryInfoSerializer;
+import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.PersistentException;
+import org.apache.kylin.job.execution.CardinalityExecutable;
+import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class MetadataCleanupJob {
 
@@ -77,7 +80,7 @@ public class MetadataCleanupJob {
     }
 
     // function entrance
-    public Map<String, Long> cleanup(boolean delete, int jobOutdatedDays) throws Exception {
+    public Map<String, Long> cleanup(boolean delete, int jobOutdatedDays, boolean deleteAllJobs) throws Exception {
         CubeManager cubeManager = CubeManager.getInstance(config);
         long newResourceTimeCut = System.currentTimeMillis() - NEW_RESOURCE_THREADSHOLD_MS;
         FileSystem fs = HadoopUtil.getWorkingFileSystem(HadoopUtil.getCurrentConfiguration());
@@ -165,7 +168,7 @@ public class MetadataCleanupJob {
         List<ExecutablePO> allExecutable = executableDao.getJobs();
         for (ExecutablePO executable : allExecutable) {
             long lastModified = executable.getLastModified();
-            if (lastModified < outdatedJobTimeCut && isJobComplete(executableDao, executable)) {
+            if (lastModified < outdatedJobTimeCut && (deleteAllJobs || isJobComplete(executableDao, executable))) {
                 String jobResPath = ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + executable.getUuid();
                 String jobOutputResPath = ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + executable.getUuid();
                 long outputLastModified = getTimestamp(jobOutputResPath);
@@ -196,8 +199,15 @@ public class MetadataCleanupJob {
         try {
             ExecutableOutputPO output = executableDao.getJobOutput(jobId);
             String status = output.getStatus();
-            if (StringUtils.equals(status, ExecutableState.SUCCEED.toString())
-                    || StringUtils.equals(status, ExecutableState.DISCARDED.toString())) {
+            String jobType = job.getType();
+            if (jobType.equals(CubingJob.class.getName())
+                    || jobType.equals(CheckpointExecutable.class.getName())) {
+                if (StringUtils.equals(status, ExecutableState.SUCCEED.toString())
+                        || StringUtils.equals(status, ExecutableState.DISCARDED.toString())) {
+                    isComplete = true;
+                }
+            } else if (jobType.equals(CardinalityExecutable.class.getName())) {
+                // Ignore state of DefaultChainedExecutable
                 isComplete = true;
             }
         } catch (PersistentException e) {

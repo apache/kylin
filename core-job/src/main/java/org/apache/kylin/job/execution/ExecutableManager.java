@@ -32,8 +32,10 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.kafka.KafkaMsgProducer;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
+import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
@@ -42,9 +44,9 @@ import org.apache.kylin.job.exception.PersistentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
 /**
  */
@@ -65,11 +67,15 @@ public class ExecutableManager {
 
     private final KylinConfig config;
     private final ExecutableDao executableDao;
+    private KafkaMsgProducer kafkaMsgProducer;
 
     private ExecutableManager(KylinConfig config) {
         logger.info("Using metadata url: " + config);
         this.config = config;
         this.executableDao = ExecutableDao.getInstance(config);
+        if (config.jobStatusWriteKafka()) {
+            this.kafkaMsgProducer = KafkaMsgProducer.getInstance();
+        }
     }
 
     private static ExecutablePO parse(AbstractExecutable executable) {
@@ -477,9 +483,61 @@ public class ExecutableManager {
             }
             executableDao.updateJobOutput(jobOutput);
             logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
+
+            //write status to kafka
+            if (config.jobStatusWriteKafka()) {
+                AbstractExecutable executable = getJob(jobId);
+                if (executable == null) {
+                    return;
+                }
+                if (executable instanceof DefaultChainedExecutable) {
+                    StringBuffer result = new StringBuffer();
+
+                    DefaultChainedExecutable job = (DefaultChainedExecutable)executable;
+
+                    result.append("{");
+
+                    result.append("\"jobId\":\"" + job.getId() + "\",");
+                    result.append("\"jobName\":\"" + job.getName() + "\",");
+                    result.append("\"status\":\"" + parseToJobStatus(job.getStatus()).name() + "\",");
+                    result.append("\"subTaskSize\": \"" + job.getTasks().size() + "\",");
+
+                    result.append("\"subTasks\":[");
+                    job.getTasks().forEach(item -> {
+                        result.append("{");
+                        result.append("\"jobId\":\"" + item.getId() + "\",");
+                        result.append("\"jobName\":\"" + item.getName() + "\",");
+                        result.append("\"status\":\"" + parseToJobStatus(item.getStatus()).name() + "\"");
+                        result.append("},");
+                    });
+                    String resultStr = result.substring(0, result.length() - 1);
+                    resultStr += "]}";
+
+                    kafkaMsgProducer.sendJobStatusMessage(resultStr);
+                }
+            }
         } catch (PersistentException e) {
             logger.error("error change job:" + jobId + " to " + newStatus);
             throw new RuntimeException(e);
+        }
+    }
+
+    private JobStatusEnum parseToJobStatus(ExecutableState state) {
+        switch (state) {
+            case READY:
+                return JobStatusEnum.PENDING;
+            case RUNNING:
+                return JobStatusEnum.RUNNING;
+            case ERROR:
+                return JobStatusEnum.ERROR;
+            case DISCARDED:
+                return JobStatusEnum.DISCARDED;
+            case SUCCEED:
+                return JobStatusEnum.FINISHED;
+            case STOPPED:
+                return JobStatusEnum.STOPPED;
+            default:
+                throw new RuntimeException("invalid state:" + state);
         }
     }
 

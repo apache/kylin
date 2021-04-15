@@ -26,6 +26,7 @@ import org.apache.kylin.job.exception.ShellException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -41,7 +42,7 @@ public class ShellExecutable extends AbstractExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         try {
             logger.info("executing:" + getCmd());
             final PatternedLogger patternedLogger = new PatternedLogger(logger);

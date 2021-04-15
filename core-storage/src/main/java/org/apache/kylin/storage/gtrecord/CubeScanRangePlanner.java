@@ -46,20 +46,23 @@ import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRange;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTScanRequestBuilder;
+import org.apache.kylin.gridtable.GTTwoLayerAggregateParam;
 import org.apache.kylin.gridtable.GTUtil;
 import org.apache.kylin.gridtable.IGTComparator;
 import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.DynamicFunctionDesc;
+import org.apache.kylin.metadata.model.ExpressionDynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.TwoLayerFunctionDesc;
 import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class CubeScanRangePlanner extends ScanRangePlannerBase {
 
@@ -107,7 +110,8 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
         this.havingFilter = havingFilter;
 
         this.gtDimensions = mapping.makeGridTableColumns(dimensions);
-        this.gtAggrGroups = mapping.makeGridTableColumns(replaceDerivedColumns(groupByPushDown, cubeSegment.getCubeDesc()));
+        this.gtAggrGroups = mapping
+                .makeGridTableColumns(replaceDerivedColumns(groupByPushDown, cubeSegment.getCubeDesc()));
         this.gtAggrMetrics = mapping.makeGridTableColumns(metrics);
         this.gtAggrFuncs = mapping.makeAggrFuncs(metrics);
 
@@ -126,17 +130,54 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
 
         // for dynamic measures
         Set<FunctionDesc> tmpRtAggrMetrics = Sets.newHashSet();
+        Set<TwoLayerFunctionDesc> twoLayerFuncs = Sets.newHashSet();
+        Set<TblColRef> vanishDims = Sets.newHashSet();
         for (DynamicFunctionDesc dynFunc : dynFuncs) {
-            tmpRtAggrMetrics.addAll(dynFunc.getRuntimeFuncs());
             int c = mapping.getIndexOf(dynFunc);
             tmpGtDynCols.set(c);
-            this.tupleExpressionMap.put(c, GTUtil.convertFilterColumnsAndConstants(dynFunc.getTupleExpression(), gtInfo,
-                    mapping, dynFunc.getRuntimeFuncMap(), groupByPushDown));
+            tmpRtAggrMetrics.addAll(dynFunc.getRuntimeFuncMap().values());
+            if (dynFunc instanceof ExpressionDynamicFunctionDesc) {
+                TupleExpression tupleExpr = ((ExpressionDynamicFunctionDesc) dynFunc).getTupleExpression();
+                this.tupleExpressionMap.put(c, GTUtil.convertFilterColumnsAndConstants(tupleExpr, gtInfo, mapping,
+                        dynFunc.getRuntimeFuncMap(), groupByPushDown));
+                tupleExpr = GTUtil.convertFilterColumnsAndConstants(tupleExpr, gtInfo, mapping,
+                        dynFunc.getRuntimeFuncMap(), groupByPushDown);
+                this.tupleExpressionMap.put(c, tupleExpr);
+            } else if (dynFunc instanceof TwoLayerFunctionDesc) {
+                TwoLayerFunctionDesc twoLayerFunc = (TwoLayerFunctionDesc) dynFunc;
+                twoLayerFuncs.add(twoLayerFunc);
+                vanishDims.addAll(twoLayerFunc.getRuntimeDimensions());
+            }
         }
         this.gtDynColumns = new ImmutableBitSet(tmpGtDynCols);
         this.gtRtAggrMetrics = mapping.makeGridTableColumns(tmpRtAggrMetrics);
 
-        this.gtAggrGroups = mapping.makeGridTableColumns(replaceDerivedColumns(groupByPushDown, cubeSegment.getCubeDesc()));
+        //// for two layer measures
+        ImmutableBitSet vDimMask = mapping.makeGridTableColumns(vanishDims);
+        ImmutableBitSet outLayerMetrics = mapping.makeGridTableColumns(twoLayerFuncs);
+        String[] outLayerMetricsFuncs = mapping.makeAggrFuncs(twoLayerFuncs);
+
+        List<TwoLayerFunctionDesc> outLFuncList = Lists.newArrayList(twoLayerFuncs);
+        int[] outLIndexes = mapping.getMetricsIndexes(outLFuncList);
+        Map<Integer, TwoLayerFunctionDesc> outLFuncMap = Maps.newHashMap();
+        for (int i = 0; i < outLIndexes.length; i++) {
+            outLFuncMap.put(outLIndexes[i], outLFuncList.get(i));
+        }
+
+        int[] inLayerMetrics = new int[outLayerMetrics.trueBitCount()];
+        String[] inLayerMetricsFuncs = new String[outLayerMetrics.trueBitCount()];
+        for (int i = 0; i < outLayerMetrics.trueBitCount(); i++) {
+            int c = outLayerMetrics.trueBitAt(i);
+            FunctionDesc func = outLFuncMap.get(c).getRuntimeFuncMap().values().iterator().next();
+            inLayerMetrics[i] = mapping.getIndexOf(func);
+            inLayerMetricsFuncs[i] = func.getExpression();
+        }
+
+        this.twoLayerAggParam = new GTTwoLayerAggregateParam(vDimMask, outLayerMetrics, outLayerMetricsFuncs,
+                inLayerMetrics, inLayerMetricsFuncs);
+
+        this.gtAggrGroups = mapping
+                .makeGridTableColumns(replaceDerivedColumns(groupByPushDown, cubeSegment.getCubeDesc()));
         this.gtAggrMetrics = mapping.makeGridTableColumns(metrics);
         this.gtAggrFuncs = mapping.makeAggrFuncs(metrics);
     }
@@ -174,6 +215,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
                     .setFilterPushDown(gtFilter)//
                     .setRtAggrMetrics(gtRtAggrMetrics).setDynamicColumns(gtDynColumns)
                     .setExprsPushDown(tupleExpressionMap)//
+                    .setTwoLayerAggregateParam(twoLayerAggParam)//
                     .setAllowStorageAggregation(context.isNeedStorageAggregation())
                     .setAggCacheMemThreshold(cubeSegment.getConfig().getQueryCoprocessorMemGB())//
                     .setStoragePushDownLimit(context.getFinalPushDownLimit())
@@ -258,7 +300,8 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
             return result;
         }
 
-        List<Map<Integer, ByteArray>> fuzzyValueCombinations = FuzzyValueCombination.calculate(fuzzyValueSet, maxFuzzyKeys);
+        List<Map<Integer, ByteArray>> fuzzyValueCombinations = FuzzyValueCombination.calculate(fuzzyValueSet,
+                maxFuzzyKeys);
         for (Map<Integer, ByteArray> fuzzyValue : fuzzyValueCombinations) {
 
             GTRecord fuzzy = new GTRecord(gtInfo);

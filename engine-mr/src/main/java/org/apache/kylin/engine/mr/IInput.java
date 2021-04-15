@@ -24,23 +24,38 @@ import org.apache.kylin.metadata.model.ISegment;
 
 public interface IInput {
 
-    /** Return a helper to participate in batch cubing job flow. */
+    /**
+     * Return a helper to participate in batch cubing job flow.
+     */
     public IBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc);
 
-    /** Return a helper to participate in batch cubing merge job flow. */
+    /**
+     * Return a helper to participate in batch cubing merge job flow.
+     */
     public IBatchMergeInputSide getBatchMergeInputSide(ISegment seg);
 
     public interface IBatchCubingInputSide {
-        /** Add step that creates an intermediate flat table as defined by CubeJoinedFlatTableDesc */
+        /**
+         * Add step that creates an intermediate flat table as defined by CubeJoinedFlatTableDesc
+         */
         public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow);
 
-        /** Add step that does necessary clean up, like delete the intermediate flat table */
+        /**
+         * An optional step that replace/encode flat table with Hive Global Dictionary
+         */
+        public void addStepPhase_ReplaceFlatTableGlobalColumnValue(DefaultChainedExecutable jobFlow);
+
+        /**
+         * Add step that does necessary clean up, like delete the intermediate flat table
+         */
         public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow);
     }
 
     public interface IBatchMergeInputSide {
 
-        /** Add step that executes before merge dictionary and before merge cube. */
+        /**
+         * Add step that executes before merge dictionary and before merge cube.
+         */
         public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow);
 
     }

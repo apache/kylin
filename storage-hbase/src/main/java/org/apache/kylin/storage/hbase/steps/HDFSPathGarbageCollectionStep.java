@@ -32,11 +32,12 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.job.impl.threadpool.IJobRunner;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
 /**
  * Created by sunyerui on 15/9/17.
@@ -55,7 +56,7 @@ public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult doWork(ExecutableContext context, IJobRunner jobRunner) throws ExecuteException {
         try {
             config = new JobEngineConfig(context.getConfig());
             List<String> toDeletePaths = getDeletePaths();
@@ -91,7 +92,8 @@ public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
                 }
                 // If hbase was deployed on another cluster, the job dir is empty and should be dropped,
                 // because of rowkey_stats and hfile dirs are both dropped.
-                if (fileSystem.listStatus(oldPath.getParent()).length == 0) {
+                Path parentPath = oldPath.getParent();
+                if (fileSystem.exists(parentPath) && fileSystem.listStatus(parentPath).length == 0) {
                     Path emptyJobPath = new Path(JobBuilderSupport.getJobWorkingDir(config, getJobId()));
                     emptyJobPath = Path.getPathWithoutSchemeAndAuthority(emptyJobPath);
                     if (fileSystem.exists(emptyJobPath)) {
