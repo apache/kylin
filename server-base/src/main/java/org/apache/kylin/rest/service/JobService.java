@@ -237,6 +237,9 @@ public class JobService extends BasicService implements InitializingBean {
 
         checkCubeDescSignature(cube);
         checkAllowBuilding(cube);
+        if (cube.isStreamLambdaCube() && buildType == CubeBuildTypeEnum.BUILD) {
+            checkStreamLambdaBuildingSegment(cube, tsRange);
+        }
 
         if (buildType == CubeBuildTypeEnum.BUILD || buildType == CubeBuildTypeEnum.REFRESH) {
             checkAllowParallelBuilding(cube);
@@ -432,6 +435,22 @@ public class JobService extends BasicService implements InitializingBean {
                 throw new BadRequestException("The cube " + cube.getName() + " has READY_PENDING segments "
                         + readyPendingSegments + ". It's not allowed for building");
             }
+        }
+    }
+
+    private void checkStreamLambdaBuildingSegment(CubeInstance cube, TSRange tsRange) {
+        if (tsRange == null || tsRange.end.v < tsRange.start.v) {
+            throw new BadRequestException("The tsRange is invalid " + tsRange +
+                "for the cube " + cube.getName() +
+                ". It's not allowed to submit a build job");
+        }
+        CubeSegment latestReadySegment = cube.getLatestReadySegment();
+
+        if (latestReadySegment != null && tsRange.end.v > latestReadySegment.getTSRange().end.v) {
+            throw new BadRequestException(
+                "The stream cube " + cube.getName() + "can't be submitted the appending segment. " +
+                    "The latest ready segment tsrange is " + latestReadySegment.getTSRange() +
+                    ", and the appending segment tsrange is " + tsRange);
         }
     }
 
