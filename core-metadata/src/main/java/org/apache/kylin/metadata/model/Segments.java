@@ -467,8 +467,9 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
     }
 
     public Pair<Boolean, Boolean> fitInSegments(ISegment newOne) {
-        if (this.isEmpty())
-            return null;
+        if (this.isEmpty()) {
+          return Pair.newPair(false, false);        
+        }
 
         ISegment first = this.get(0);
         ISegment last = this.get(this.size() - 1);
