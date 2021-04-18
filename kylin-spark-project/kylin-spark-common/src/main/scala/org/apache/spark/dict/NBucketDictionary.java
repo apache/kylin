@@ -19,6 +19,12 @@ package org.apache.spark.dict;
 
 import java.io.IOException;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +42,9 @@ public class NBucketDictionary {
     private Object2LongMap<String> absoluteDictMap;
     // Relative dictionary needs to calculate dictionary code according to NGlobalDictMetaInfo's bucketOffsets
     private Object2LongMap<String> relativeDictMap;
+    private Object2LongMap<String> skewedDictMap;
 
-    NBucketDictionary(String baseDir, String workingDir, int bucketId, NGlobalDictMetaInfo metainfo)
+    NBucketDictionary(String baseDir, String workingDir, int bucketId, NGlobalDictMetaInfo metainfo, String skewDictStorageFile)
             throws IOException {
         this.workingDir = workingDir;
         this.bucketId = bucketId;
@@ -49,6 +56,15 @@ public class NBucketDictionary {
             this.absoluteDictMap = globalDictStore.getBucketDict(versions[versions.length - 1], metainfo, bucketId);
         }
         this.relativeDictMap = new Object2LongOpenHashMap<>();
+        if (!StringUtils.isEmpty(skewDictStorageFile)) {
+            FileSystem fs = FileSystem.get(new Configuration());
+            if (fs.exists(new Path(skewDictStorageFile))) {
+                Kryo kryo = new Kryo();
+                Input input = new Input(fs.open(new Path(skewDictStorageFile)));
+                skewedDictMap = (Object2LongMap<String>) kryo.readClassAndObject(input);
+                input.close();
+            }
+        }
     }
 
     NBucketDictionary(String workingDir) {
@@ -72,6 +88,9 @@ public class NBucketDictionary {
     }
 
     public long encode(Object value) {
+        if (null != skewedDictMap && skewedDictMap.containsKey(value.toString())) {
+            return skewedDictMap.getLong(value.toString());
+        }
         return absoluteDictMap.getLong(value.toString());
     }
 

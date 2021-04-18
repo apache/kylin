@@ -24,7 +24,7 @@ import org.apache.spark.dict.{NBucketDictionary, NGlobalDictionary}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.DeclarativeAggregate
 import org.apache.spark.sql.catalyst.expressions.codegen.Block._
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode}
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode, FalseLiteral}
 import org.apache.spark.sql.types._
 import org.roaringbitmap.longlong.Roaring64NavigableMap
 
@@ -484,4 +484,62 @@ case class ApproxCountDistinctDecode(_left: Expression, _right: Expression)
   override def dataType: DataType = LongType
 
   override def prettyName: String = "approx_count_distinct_decode"
+}
+
+case class ScatterSkewData(left: Expression, right: Expression) extends BinaryExpression with ExpectsInputTypes {
+  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode) : ExprCode = {
+
+    val rand = ctx.addMutableState("java.util.Random", "rand")
+    val skewData = ctx.addMutableState("it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap",
+      "skewData")
+    val skewDataStorage = right.simpleString
+
+    val initParamsFuncName = ctx.addNewFunction(s"initParams",
+      s"""
+         | private void initParams() {
+         |   ${rand} = new java.util.Random();
+         |   com.esotericsoftware.kryo.Kryo kryo = new com.esotericsoftware.kryo.Kryo();
+         |   try {
+         |       org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(new org.apache.hadoop.conf.Configuration());
+         |       if (fs.exists(new org.apache.hadoop.fs.Path("${skewDataStorage}"))) {
+         |           com.esotericsoftware.kryo.io.Input input = new com.esotericsoftware.kryo.io.Input(
+         |               fs.open(new org.apache.hadoop.fs.Path("${skewDataStorage}")));
+         |           ${skewData} = (it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap<String>) kryo.readClassAndObject(input);
+         |           input.close();
+         |       }
+         |   } catch (java.io.IOException e) {
+         |       throw new java.lang.RuntimeException(e);
+         |   }
+         | }
+        """.stripMargin)
+
+    val addSalt = ctx.addNewFunction(s"addSalt",
+      s"""
+         | private org.apache.spark.unsafe.types.UTF8String addSalt(org.apache.spark.unsafe.types.UTF8String val) {
+         |   if (null != ${skewData} && (null == val || ${skewData}.containsKey(val.toString()))) {
+         |      return org.apache.spark.unsafe.types.UTF8String.fromString(
+         |          java.lang.Integer.toString(${rand}.nextInt()));
+         |   } else {
+         |      return val;
+         |   }
+         | }
+        """.stripMargin)
+
+    ctx.addPartitionInitializationStatement(s"$initParamsFuncName();");
+
+    val leftGen = left.genCode(ctx)
+    val rightGen = right.genCode(ctx)
+    val resultCode = s"""${ev.value} = $addSalt(${leftGen.value});"""
+
+    ev.copy(code = code"""
+        ${leftGen.code}
+        ${rightGen.code}
+        ${CodeGenerator.javaType(dataType)} ${ev.value} = ${CodeGenerator.defaultValue(dataType)};
+        $resultCode""", isNull = FalseLiteral)
+
+  }
+
+  override def dataType: DataType = StringType
+
+  override def inputTypes: Seq[AbstractDataType] = Seq(AnyDataType, AnyDataType)
 }

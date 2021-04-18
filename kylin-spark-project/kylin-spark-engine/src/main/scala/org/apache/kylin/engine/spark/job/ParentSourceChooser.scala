@@ -185,7 +185,7 @@ class ParentSourceChooser(
     //    sourceInfo.setViewFactTablePath(viewPath)
 
     //    val needJoin = ParentSourceChooser.needJoinLookupTables(segInfo.getModel, toBuildTree)
-    val flatTable = new CreateFlatTable(segInfo, toBuildTree, ss, sourceInfo)
+    val flatTable = new CreateFlatTable(segInfo, toBuildTree, ss, sourceInfo, jobId)
     val afterJoin: Dataset[Row] = flatTable.generateDataset(needEncoding, true)
     sourceInfo.setFlatTableDS(afterJoin)
 

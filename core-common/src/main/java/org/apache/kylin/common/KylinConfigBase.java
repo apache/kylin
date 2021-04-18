@@ -3125,4 +3125,32 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean rePartitionEncodedDatasetWithRowKey() {
         return Boolean.valueOf(getOptional("kylin.engine.spark.repartition.encoded.dataset", "false"));
     }
+
+    /*
+     * Detect dataset skew in dictionary encode step.
+     * */
+    public boolean detectDataSkewInDictEncodingEnabled() {
+        return Boolean.valueOf(getOptional("kylin.dictionary.detect.data.skew.in.encoding", "false"));
+    }
+
+    /*
+    * In some data skew cases, the repartition step during dictionary encoding will be slow.
+    * We can choose to sample from the dataset to detect skewed. This configuration is used to set the sample rate.
+    * */
+    public double sampleRateInEncodingSkewDetection() {
+        return Double.valueOf(getOptional("kylin.dictionary.detect.data.skew.sample.rate", "0.1"));
+    }
+
+    /*
+    * In KYLIN4, dictionaries are hashed into several buckets, column data are repartitioned by the same hash algorithm
+    * during encoding step too. In data skew cases, the repartition step will be very slow. Kylin will automatically
+    * sample from the source to detect skewed data and repartition these skewed data to random partitions.
+    * This configuration is used to set the skew data threshhold, valued from 0 to 1.
+    * e.g.
+    *   if you set this value to 0.05, for each value that takes up more than 5% percent of the total will be regarded
+    *   as skew data, as a result the skewed data will be no more than 20 records
+    * */
+    public double skewPercentageThreshHold() {
+        return Double.valueOf(getOptional("kylin.dictionary.data.skew.percentage.threshhold", "0.05"));
+    }
 }
