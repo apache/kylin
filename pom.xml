@@ -7,9 +7,9 @@
  to you under the Apache License, Version 2.0 (the
  "License"); you may not use this file except in compliance
  with the License.  You may obtain a copy of the License at
-
+ 
      http://www.apache.org/licenses/LICENSE-2.0
-
+ 
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,24 +17,24 @@
  limitations under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.apache</groupId>
-        <artifactId>apache</artifactId>
-        <version>19</version>
-        <relativePath />
-        <!-- no parent resolution -->
-    </parent>
+  <parent>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>19</version>
+    <relativePath />
+    <!-- no parent resolution -->
+  </parent>
 
-    <groupId>org.apache.kylin</groupId>
-    <artifactId>kylin</artifactId>
-    <packaging>pom</packaging>
-    <version>3.1.2</version>
+  <groupId>org.apache.kylin</groupId>
+  <artifactId>kylin</artifactId>
+  <packaging>pom</packaging>
+  <version>3.1.3-SNAPSHOT</version>
 
-    <name>Apache Kylin</name>
-    <url>http://kylin.apache.org</url>
-    <inceptionYear>2014</inceptionYear>
+  <name>Apache Kylin</name>
+  <url>http://kylin.apache.org</url>
+  <inceptionYear>2014</inceptionYear>
 
 
     <properties>
