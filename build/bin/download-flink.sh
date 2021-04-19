@@ -37,9 +37,10 @@ fi
 
 flink_version="1.11.1"
 scala_version="2.11"
-flink_shaded_hadoop_version="3.1.1.7.1.1.0-565-9.0"
+flink_shaded_version="10.0"
+hadoop_version="2.7.5"
 flink_pkg_md5="3b7aa59b44add1a0625737f6516e0929"
-flink_shaded_hadoop_md5="7b78e546dd93f4facd322921f29de1eb"
+flink_shaded_hadoop_md5="4287a314bfb09a3dc957cbda3f91d7ca"
 
 if [ ! -f "flink-${flink_version}-bin-scala_${scala_version}.tgz" ]; then
     echo "No binary file found, start to download package to ${flink_package_dir}"
@@ -52,8 +53,8 @@ else
     fi
 fi
 
-flink_shaded_hadoop_jar="flink-shaded-hadoop-3-uber-${flink_shaded_hadoop_version}.jar"
-flink_shaded_hadoop_path="https://repository.cloudera.com/artifactory/libs-release-local/org/apache/flink/flink-shaded-hadoop-3-uber/${flink_shaded_hadoop_version}/${flink_shaded_hadoop_jar}"
+flink_shaded_hadoop_jar="flink-shaded-hadoop-2-uber-${hadoop_version}-${flink_shaded_version}.jar"
+flink_shaded_hadoop_path="https://repo.maven.apache.org/maven2/org/apache/flink/flink-shaded-hadoop-2-uber/${hadoop_version}-${flink_shaded_version}/${flink_shaded_hadoop_jar}"
 
 if [ ! -f $flink_shaded_hadoop_jar ]; then
     echo "Start to download $flink_shaded_hadoop_jar"
