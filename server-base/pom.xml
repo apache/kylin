@@ -28,7 +28,7 @@
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
-        <version>3.1.2-SNAPSHOT</version>
+        <version>3.1.1</version>
     </parent>
 
     <dependencies>
@@ -252,11 +252,21 @@
             <artifactId>jetty-webapp</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-util</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
