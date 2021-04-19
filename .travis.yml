@@ -47,7 +47,8 @@ script:
         echo "The pull request from ${TRAVIS_PULL_REQUEST_SLUG} is an EXTERNAL pull request. Skip sonar analysis.";
     else
         git fetch --unshallow --quiet;
-        mvn sonar:sonar -e -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=2ca24e5a04ad1fca4ca956953810421aa8bd1470 -Dsonar.organization=kylin;
+        echo "Skip sonar temporarily because sonarcloud require jdk11"
+        # mvn sonar:sonar -e -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=2ca24e5a04ad1fca4ca956953810421aa8bd1470 -Dsonar.organization=kylin;
     fi
 
 notification:
