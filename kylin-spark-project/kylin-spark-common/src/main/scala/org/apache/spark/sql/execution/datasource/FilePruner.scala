@@ -237,7 +237,7 @@ class FilePruner(cubeInstance: CubeInstance,
 
     require(isResolved)
     val startTime = System.nanoTime
-    val timePartitionFilters = getSpecFilter(dataFilters, timePartitionColumn)
+    val timePartitionFilters = getSegmentFilter(dataFilters, timePartitionColumn)
     logInfo(s"Applying time partition filters: ${timePartitionFilters.mkString(",")}")
 
     val fsc = ShardFileStatusCache.getFileStatusCache(session)
@@ -295,8 +295,48 @@ class FilePruner(cubeInstance: CubeInstance,
     }
   }
 
-  private def getSpecFilter(dataFilters: Seq[Expression], col: Attribute): Seq[Expression] = {
-    dataFilters.filter(_.references.subsetOf(AttributeSet(col)))
+  private def getSegmentFilter(dataFilters: Seq[Expression], col: Attribute): Seq[Expression] = {
+    dataFilters.map(extractSegmentFilter(_, col)).filter(!_.equals(None)).map(_.get)
+  }
+
+  private def extractSegmentFilter(filter: Expression, col: Attribute): Option[Expression] = {
+    filter match {
+      case expressions.Or(left, right) =>
+        val leftChild = extractSegmentFilter(left, col)
+        val rightChild = extractSegmentFilter(right, col)
+
+        //if there exists leaf-node that doesn't contain partition column, the parent filter is
+        //unnecessary for segment prunning.
+        //e.g. "where a = xxx or partition =xxx", we can't filter any segment
+        if (leftChild.eq(None) || rightChild.eq(None)) {
+          None
+        } else {
+          Some(expressions.Or(leftChild.get, rightChild.get))
+        }
+      case expressions.And(left, right) =>
+        val leftChild = extractSegmentFilter(left, col)
+        val rightChild = extractSegmentFilter(right, col)
+
+        //if there is only one leaf-node that contains partition column
+        //e.g. "where a = xxx and partition =xxx",
+        //then we can filter segment using "where partition=xxx"
+        if (!leftChild.eq(None) && !rightChild.eq(None)) {
+          Some(expressions.And(leftChild.get, rightChild.get))
+        } else if (!rightChild.eq(None)) {
+          rightChild
+        } else if (!leftChild.eq(None)) {
+          leftChild
+        } else {
+          None
+        }
+      case _ =>
+        //other unary filter like EqualTo, GreaterThan, GreaterThanOrEqual, etc.
+        if (filter.references.contains(col)) {
+          Some(filter)
+        } else {
+          None
+        }
+    }
   }
 
   private def pruneSegments(filters: Seq[Expression],
