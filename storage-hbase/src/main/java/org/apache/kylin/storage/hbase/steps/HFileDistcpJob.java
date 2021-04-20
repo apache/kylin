@@ -74,14 +74,15 @@ public class HFileDistcpJob extends AbstractHadoopJob {
 
             List<Path> sourceList = Lists.newArrayList();
             sourceList.add(input);
-            DistCpOptions distCpOptions = new DistCpOptions(sourceList, output);
-            distCpOptions.setMapBandwidth(cube.getConfig().getDistCPMapBandWidth());
-            distCpOptions.setMaxMaps(cube.getConfig().getDistCPMaxMapNum());
-            distCpOptions.setOverwrite(true);
-            distCpOptions.setBlocking(true);
+
+            DistCpOptions.Builder distCpOptionsBuilder = new DistCpOptions.Builder(sourceList, output);
+            distCpOptionsBuilder.withMapBandwidth(cube.getConfig().getDistCPMapBandWidth());
+            distCpOptionsBuilder.maxMaps(cube.getConfig().getDistCPMaxMapNum());
+            distCpOptionsBuilder.withOverwrite(true);
+            distCpOptionsBuilder.withBlocking(true);
 
             configuration.set(JobContext.JOB_NAME, getOptionValue(OPTION_JOB_NAME));
-            DistCp distCp = new DistCp(configuration, distCpOptions);
+            DistCp distCp = new DistCp(configuration, distCpOptionsBuilder.build());
 
             job = distCp.execute();
 
