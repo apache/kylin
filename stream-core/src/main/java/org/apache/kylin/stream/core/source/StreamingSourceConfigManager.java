@@ -24,12 +24,12 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 import org.apache.kylin.stream.core.exception.StreamingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,7 +117,7 @@ public class StreamingSourceConfigManager {
      * @throws IOException
      */
     public StreamingSourceConfig reloadStreamingConfigLocal(String name, String projectName) throws IOException {
-        if (Strings.isEmpty(name) || Strings.isEmpty(projectName)) {
+        if (Strings.isNullOrEmpty(name) || Strings.isNullOrEmpty(projectName)) {
             throw new StreamingException(String.format(Locale.ROOT,
                     "the table name %s or project name %s is null", name, projectName));
         }
@@ -163,7 +163,7 @@ public class StreamingSourceConfigManager {
 
     public StreamingSourceConfig getConfigMustWithProject(String name, String projectName) {
         name = name.toUpperCase(Locale.ROOT);
-        if (Strings.isEmpty(name) || Strings.isEmpty(projectName)) {
+        if (Strings.isNullOrEmpty(name) || Strings.isNullOrEmpty(projectName)) {
             throw new StreamingException(String.format(Locale.ROOT,
                     "the table name %s or project name %s is null", name, projectName));
         }

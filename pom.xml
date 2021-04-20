@@ -30,7 +30,7 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>3.1.1</version>
+    <version>3.1.2</version>
 
     <name>Apache Kylin</name>
     <url>http://kylin.apache.org</url>
@@ -249,7 +249,7 @@
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-shaded-guava</artifactId>
-                <version>${project.version}</version>
+                <version>3.1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.kylin</groupId>
@@ -1007,12 +1007,6 @@
                 <artifactId>opensaml</artifactId>
                 <version>${opensaml.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.apache.curator</groupId>
-                <artifactId>curator-test</artifactId>
-                <version>2.12.0</version>
-                <scope>test</scope>
-            </dependency>
 
             <!-- Spring Core -->
             <dependency>
@@ -1131,11 +1125,6 @@
                 <version>${scala.version}</version>
             </dependency>
 
-            <dependency>
-                <groupId>org.scala-lang</groupId>
-                <artifactId>scala-reflect</artifactId>
-                <version>${scala.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.scala-lang</groupId>
                 <artifactId>scala-reflect</artifactId>
@@ -1453,7 +1442,7 @@
     </build>
 
     <modules>
-        <module>external</module>
+<!--        <module>external</module>-->
         <module>core-common</module>
         <module>core-metadata</module>
         <module>core-dictionary</module>
@@ -1584,6 +1573,12 @@
                                 <bundledSignature>jdk-deprecated</bundledSignature>
                                 <!--<bundledSignature>jdk-non-portable</bundledSignature>-->
                             </bundledSignatures>
+                            <excludes>
+                                <exclude>**/ParseException.class</exclude>
+                                <exclude>**/SimpleCharStream.class</exclude>
+                                <exclude>**/*TokenManager.class</exclude>
+                                <exclude>**/TokenMgrError.class</exclude>
+                            </excludes>
                             <signaturesFiles>
                                 <signaturesFile>
                                     ${user.dir}/dev-support/signatures.txt

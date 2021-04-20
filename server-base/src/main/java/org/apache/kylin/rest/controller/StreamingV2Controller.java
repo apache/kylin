@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.directory.api.util.Strings;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -59,6 +58,7 @@ import org.apache.kylin.stream.core.model.stats.CubeRealTimeState;
 import org.apache.kylin.stream.core.model.stats.ReceiverStats;
 import org.apache.kylin.stream.core.source.Partition;
 import org.apache.kylin.stream.core.source.StreamingSourceConfig;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,7 +110,7 @@ public class StreamingV2Controller extends BasicController {
             @RequestParam(value = "offset", required = false) Integer offset) {
         try {
             // query all streaming config or query one streaming config
-            if (!Strings.isEmpty(table) && !Strings.isEmpty(project)) {
+            if (!Strings.isNullOrEmpty(table) && !Strings.isNullOrEmpty(project)) {
                 // check the table metadata
                 if (tableService.getTableDescByName(table, false, project) == null) {
                     // the table metadata doesn't exist

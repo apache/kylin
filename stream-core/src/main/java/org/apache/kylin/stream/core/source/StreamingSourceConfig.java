@@ -25,7 +25,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.directory.api.util.Strings;
+import org.apache.curator.shaded.com.google.common.base.Strings;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -64,7 +64,7 @@ public class StreamingSourceConfig extends RootPersistentEntity {
     }
 
     public static String concatResourcePathWithProjName(String name, String projectName) {
-        if (Strings.isEmpty(projectName)) {
+        if (Strings.isNullOrEmpty(projectName)) {
             return concatResourcePath(name);
         } else {
             // like table desc
