@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -17,10 +15,22 @@
 # limitations under the License.
 #
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-cd ${DIR}
-echo "build image in dir "${DIR}
+ARG HADOOP_VERSION=2.8.5
+FROM apachekylin/kylin-ci-hadoop-base:hadoop_${HADOOP_VERSION}
 
-echo "start build Hadoop docker image"
-docker build -f Dockerfile_hadoop -t hadoop2.7-all-in-one .
-docker build -f Dockerfile -t apachekylin/apache-kylin-standalone:3.1.0 .
+ENV HADOOP_VERSION ${HADOOP_VERSION}
+
+ARG HADOOP_WEBHDFS_PORT=50070
+ENV HADOOP_WEBHDFS_PORT ${HADOOP_WEBHDFS_PORT}
+EXPOSE ${HADOOP_WEBHDFS_PORT} 8020
+
+HEALTHCHECK CMD curl -f http://localhost:${HADOOP_WEBHDFS_PORT}/ || exit 1
+
+ENV HDFS_CONF_dfs_namenode_name_dir=file:///hadoop/dfs/name
+RUN mkdir -p /hadoop/dfs/name
+VOLUME /hadoop/dfs/name
+
+ADD run_nn.sh /run_nn.sh
+RUN chmod a+x /run_nn.sh
+
+CMD ["/run_nn.sh"]

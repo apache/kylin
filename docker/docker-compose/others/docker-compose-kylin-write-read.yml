@@ -1,0 +1,51 @@
+version: "3.3"
+
+services:
+  kylin-all:
+    image: ${CLIENT_IMAGETAG}
+    container_name: kylin-all
+    hostname: kylin-all
+    volumes:
+      - ./kylin/kylin-all:/opt/kylin/
+    env_file:
+      - client-write-read.env
+    environment:
+      KYLIN_HOME: /opt/kylin/
+    networks:
+      - write_kylin
+    ports:
+      - 7070:7070
+
+  kylin-job:
+    image: ${CLIENT_IMAGETAG}
+    container_name: kylin-job
+    hostname: kylin-job
+    volumes:
+      - ./kylin/kylin-job:/opt/kylin/
+    env_file:
+      - client-write-read.env
+    environment:
+      KYLIN_HOME: /opt/kylin/
+    networks:
+      - write_kylin
+    ports:
+      - 7071:7070
+
+  kylin-query:
+    image: ${CLIENT_IMAGETAG}
+    container_name: kylin-query
+    hostname: kylin-query
+    volumes:
+      - ./kylin/kylin-query:/opt/kylin/
+    env_file:
+      - client-write-read.env
+    environment:
+      KYLIN_HOME: /opt/kylin/
+    networks:
+      - write_kylin
+    ports:
+      - 7072:7070
+
+networks:
+  write_kylin:
+    external: true

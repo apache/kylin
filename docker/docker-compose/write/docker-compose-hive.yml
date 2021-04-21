@@ -1,0 +1,37 @@
+version: "3.3"
+
+services:
+  write-hive-server:
+    image: ${HIVE_IMAGETAG:-apachekylin/kylin-ci-hive:hive_1.2.2_hadoop_2.8.5}
+    container_name: write-hive-server
+    hostname: write-hive-server
+    env_file:
+      - write-hadoop.env
+    environment:
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:mysql://metastore-db/metastore"
+      SERVICE_PRECONDITION: "write-hive-metastore:9083"
+      HIVE_SITE_CONF_javax_jdo_option_ConnectionDriverName: com.mysql.jdbc.Driver
+    networks:
+      - write_kylin
+    ports:
+      - 10000:10000
+
+  write-hive-metastore:
+    image: ${HIVE_IMAGETAG:-apachekylin/kylin-ci-hive:hive_1.2.2_hadoop_2.8.5}
+    container_name: write-hive-metastore
+    hostname: write-hive-metastore
+    env_file:
+      - write-hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:${HADOOP_WEBHDFS_PORT:-50070} write-datanode1:${HADOOP_DN_PORT:-50075} write-datanode2:${HADOOP_DN_PORT:-50075} write-datanode3:${HADOOP_DN_PORT:-50075} metastore-db:3306"
+      HIVE_SITE_CONF_javax_jdo_option_ConnectionDriverName: com.mysql.jdbc.Driver
+    command: /opt/hive/bin/hive --service metastore
+    networks:
+      - write_kylin
+    expose:
+      - 9083
+
+networks:
+  write_kylin:
+    external: true
+

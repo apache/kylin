@@ -1,0 +1,133 @@
+version: "3.3"
+
+services:
+  write-namenode:
+    image: ${HADOOP_NAMENODE_IMAGETAG:-apachekylin/kylin-ci-hadoop-namenode:hadoop_2.8.5}
+    container_name: write-namenode
+    hostname: write-namenode
+    volumes:
+      - ./data/write_hadoop_namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test-kylin
+      - HADOOP_WEBHDFS_PORT=${HADOOP_WEBHDFS_PORT:-50070}
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+    expose:
+      - 8020
+    ports:
+      - 50070:50070
+      - 9870:9870
+
+  write-datanode1:
+    image: ${HADOOP_DATANODE_IMAGETAG:-apachekylin/kylin-ci-hadoop-datanode:hadoop_2.8.5}
+    container_name: write-datanode1
+    hostname: write-datanode1
+    volumes:
+      - ./data/write_hadoop_datanode1:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:${HADOOP_WEBHDFS_PORT:-50070}"
+      HADOOP_WEBHDFS_PORT: ${HADOOP_WEBHDFS_PORT:-50070}
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+    expose:
+      - ${HADOOP_DN_PORT:-50075}
+
+  write-datanode2:
+    image: ${HADOOP_DATANODE_IMAGETAG:-apachekylin/kylin-ci-hadoop-datanode:hadoop_2.8.5}
+    container_name: write-datanode2
+    hostname: write-datanode2
+    volumes:
+      - ./data/write_hadoop_datanode2:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:${HADOOP_WEBHDFS_PORT:-50070}"
+      HADOOP_WEBHDFS_PORT: ${HADOOP_WEBHDFS_PORT:-50070}
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+    expose:
+      - ${HADOOP_DN_PORT:-50075}
+
+  write-datanode3:
+    image: ${HADOOP_DATANODE_IMAGETAG:-apachekylin/kylin-ci-hadoop-datanode:hadoop_2.8.5}
+    container_name: write-datanode3
+    hostname: write-datanode3
+    volumes:
+      - ./data/write_hadoop_datanode3:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:${HADOOP_WEBHDFS_PORT:-50070}"
+      HADOOP_WEBHDFS_PORT: ${HADOOP_WEBHDFS_PORT:-50070}
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+    expose:
+      - ${HADOOP_DN_PORT:-50075}
+
+  write-resourcemanager:
+    image: ${HADOOP_RESOURCEMANAGER_IMAGETAG:-apachekylin/kylin-ci-hadoop-resourcemanager:hadoop_2.8.5}
+    container_name: write-resourcemanager
+    hostname: write-resourcemanager
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:${HADOOP_WEBHDFS_PORT:-50070} write-datanode1:${HADOOP_DN_PORT:-50075} write-datanode2:${HADOOP_DN_PORT:-50075} write-datanode3:${HADOOP_DN_PORT:-50075}"
+      HADOOP_WEBHDFS_PORT: ${HADOOP_WEBHDFS_PORT:-50070}
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+    ports:
+      - 8088:8088
+
+  write-nodemanager1:
+    image: ${HADOOP_NODEMANAGER_IMAGETAG:-apachekylin/kylin-ci-hadoop-nodemanager:hadoop_2.8.5}
+    container_name: write-nodemanager1
+    hostname: write-nodemanager1
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:${HADOOP_WEBHDFS_PORT:-50070} write-datanode1:${HADOOP_DN_PORT:-50075} write-datanode2:${HADOOP_DN_PORT:-50075} write-datanode3:${HADOOP_DN_PORT:-50075} write-resourcemanager:8088"
+      HADOOP_WEBHDFS_PORT: ${HADOOP_WEBHDFS_PORT:-50070}
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+    ports:
+      - 8044:8042
+
+  write-nodemanager2:
+    image: ${HADOOP_NODEMANAGER_IMAGETAG:-apachekylin/kylin-ci-hadoop-nodemanager:hadoop_2.8.5}
+    container_name: write-nodemanager2
+    hostname: write-nodemanager2
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:${HADOOP_WEBHDFS_PORT:-50070} write-datanode1:${HADOOP_DN_PORT:-50075} write-datanode2:${HADOOP_DN_PORT:-50075} write-datanode3:${HADOOP_DN_PORT:-50075} write-resourcemanager:8088"
+      HADOOP_WEBHDFS_PORT: ${HADOOP_WEBHDFS_PORT:-50070}
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+    ports:
+      - 8043:8042
+
+  write-historyserver:
+    image: ${HADOOP_HISTORYSERVER_IMAGETAG:-apachekylin/kylin-ci-hadoop-historyserver:hadoop_2.8.5}
+    container_name: write-historyserver
+    hostname: write-historyserver
+    volumes:
+      - ./data/write_hadoop_historyserver:/hadoop/yarn/timeline
+    environment:
+      SERVICE_PRECONDITION: "write-namenode:${HADOOP_WEBHDFS_PORT:-50070} write-datanode1:${HADOOP_DN_PORT:-50075} write-datanode2:${HADOOP_DN_PORT:-50075} write-datanode3:${HADOOP_DN_PORT:-50075} write-resourcemanager:8088"
+      HADOOP_WEBHDFS_PORT: ${HADOOP_WEBHDFS_PORT:-50070}
+    env_file:
+      - write-hadoop.env
+    networks:
+      - kylin
+    ports:
+      - 8188:8188
+      - 10020:10020
+    expose:
+      - 10020
+
+networks:
+  kylin:

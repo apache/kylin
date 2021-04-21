@@ -1,0 +1,13 @@
+version: "3.3"
+
+services:
+  kerberos-kdc:
+    image: ${KERBEROS_IMAGE}
+    container_name: kerberos-kdc
+    hostname: kerberos-kdc
+    networks:
+      - write_kylin
+
+networks:
+  write_kylin:
+    external: true
