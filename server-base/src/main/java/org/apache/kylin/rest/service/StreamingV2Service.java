@@ -437,6 +437,10 @@ public class StreamingV2Service extends BasicService {
         for (Node receiver : receivers) {
             Future<ReceiverStats> futureStats = statsFuturesMap.get(receiver);
             try {
+                if (futureStats == null) {
+                    logger.warn("Receiver node {} can not be connect.", receiver);
+                    continue;
+                }
                 ReceiverStats receiverStats = futureStats.get();
                 receiverStatsMap.put(receiver, receiverStats);
             } catch (InterruptedException e) {
