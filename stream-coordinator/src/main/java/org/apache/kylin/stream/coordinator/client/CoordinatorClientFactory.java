@@ -18,9 +18,6 @@
 
 package org.apache.kylin.stream.coordinator.client;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.stream.coordinator.Coordinator;
 import org.apache.kylin.stream.coordinator.StreamMetadataStore;
@@ -56,8 +53,18 @@ public class CoordinatorClientFactory {
                 logger.warn("no coordinator node registered");
                 return false;
             }
-            InetAddress inetAddress = InetAddress.getByName(coordinatorNode.getHost());
-            return NetworkInterface.getByInetAddress(inetAddress) != null;
+            String hostAddr = KylinConfig.getInstanceFromEnv().getServerRestAddress();
+            String[] hostAddrInfo = hostAddr.split(":");
+            if (hostAddrInfo.length < 2) {
+                logger.error("kylin.server.host-address {} is not qualified ", hostAddr);
+                throw new RuntimeException("kylin.server.host-address " + hostAddr + " is not qualified");
+            }
+            String host = hostAddrInfo[0];
+            int port = Integer.parseInt(hostAddrInfo[1]);
+
+            if (!host.equals(coordinatorNode.getHost()) || port != coordinatorNode.getPort()) {
+                return false;
+            }
         } catch (Exception e) {
             logger.error("Error when check network interface.", e);
         }
