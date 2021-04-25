@@ -46,8 +46,7 @@ public class ServerMode {
     }
 
     public boolean canServeStreamingCoordinator() {
-        return serverModes.contains(SERVER_MODE_ALL)
-                || serverModes.contains(SERVER_MODE_STREAM_COORDINATOR);
+        return serverModes.contains(SERVER_MODE_STREAM_COORDINATOR);
     }
 
     public boolean canServeAll() {
