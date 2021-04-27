@@ -15,6 +15,57 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v3.1.2 - 2021-04-26
+
+__New Feature__
+
+* [KYLIN-4794] - Make it possible to force hit a cube set for sqls with cube join
+* [KYLIN-4938] - Remove segment by UUID
+* [KYLIN-4939] - Transform lookup table snapshot from segment level to cube level
+* [KYLIN-4940] - Implement the step of "Extract Dictionary from Global Dictionary" for spark cubing engine
+
+__Improvement__
+
+* [KYLIN-4613] - add buildCubeCLi as hadoop main class and jobRestClient
+* [KYLIN-4636] - Make /api/admin/public_config callable for profile saml
+* [KYLIN-4658] - Union all issue with regarding to windows function & aggregation on
+* [KYLIN-4667] - Automatically set kylin.query.cache-signature-enabled to be true when memcached is enabled
+* [KYLIN-4702] - Missing cube-level lookup table snapshot when doing cube migration
+* [KYLIN-4711] - Change default value to 3 for kylin.metadata.hbase-client-retries-number
+* [KYLIN-4827] - SparkMergingDictionary parallelize not work
+* [KYLIN-4833] - use distcp to control the speed of writting hfile data to hbase cluster
+* [KYLIN-4836] - fix CubeMigrationCLI bug
+* [KYLIN-4837] - optimize CubeMigrationCLI
+* [KYLIN-4838] - fix KYLIN-4679 bug
+* [KYLIN-4854] - the official website document about system cube have some errors
+* [KYLIN-4862] - Build Cube use two job engine, cause there is no valid state transfer from:ERROR to:SUCCEED
+* [KYLIN-4863] - dependency cache script files not fully used
+* [KYLIN-4920] - stream lambda: hive table can be in database other than default
+* [KYLIN-4929] - Skip metrics update for simple queries to avoid NPE warnings
+* [KYLIN-4933] - Support set cache strength for dict cache
+* [KYLIN-4955] - fix typo in KYLIN UI when not set dictionary for count_distinct measure
+
+__Bug Fix__
+
+* [KYLIN-4640] - StepInfo saved wrong key about flink or spark
+* [KYLIN-4771] - Query streaming cube - Thread pool of MultiThreadsResultCollector be blocked.
+* [KYLIN-4787] - The script sample.sh cannot automatically switch to the hive database set by the user to create sample hive tables
+* [KYLIN-4810] - TrieDictionary is not correctly build
+* [KYLIN-4819] - build cube failed when `kylin.metadata.hbase-client-retries-number` great than 1
+* [KYLIN-4826] - The value of config kylin.source.hive.warehouse-dir can not be found
+* [KYLIN-4841] - Spark RDD cache is invalid when building with spark engine
+* [KYLIN-4847] - Cuboid to HFile step failed on multiple job server env because of trying to read the metric jar file from the inactive job server's location.
+* [KYLIN-4855] - kylin metrics prefix bug in system-cube.sh
+* [KYLIN-4879] - The function of sql to remove comments is not perfect. In some cases, the sql query conditions used will be modified
+* [KYLIN-4882] - config["kylin.engine.spark-fact-distinct"] overwrite in the Cube-level is invalid
+* [KYLIN-4896] - cube metadata miss
+* [KYLIN-4900] - The result of derived time columns are error, when timezone is GMT-1 or GMT-N
+* [KYLIN-4901] - Query result use diff timezone in real-time stream
+* [KYLIN-4921] - stream config lost when create table with same table_name in diff project.
+* [KYLIN-4930] - unexpected empty search result in group/user management page
+* [KYLIN-4962] - Fix NPE in ShrunkDict step
+* [KYLIN-4979] - Fix flink shaded jar version error in download-flink.sh
+
 ## v4.0.0-beta - 2021-02-07
 _Tag:_ [kylin-4.0.0-beta](https://github.com/apache/kylin/tree/kylin-4.0.0-beta)
 This is a major release after 4.0.0-alpha, with 25 new features/improvements and 14 bug fixes.
