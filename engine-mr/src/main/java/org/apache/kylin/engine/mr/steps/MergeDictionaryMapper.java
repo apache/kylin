@@ -168,8 +168,7 @@ public class MergeDictionaryMapper extends KylinMapper<IntWritable, NullWritable
                             long perSourceRecordCount = Bytes.toLong(valueW.getBytes());
                             if (perSourceRecordCount > 0) {
                                 sourceRecordCount += perSourceRecordCount;
-                                CubeSegment iSegment = cubeInstance.getSegmentById(segmentId);
-                                effectiveTimeRange += iSegment.getTSRange().duration();
+                                effectiveTimeRange += cubeSegment.getTSRange().duration();
                             }
                         }  else if (keyW.get() > 0) {
                             HLLCounter hll = new HLLCounter(kylinConfig.getCubeStatsHLLPrecision());
