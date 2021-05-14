@@ -24,6 +24,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.kylin.stream.core.exception.IllegalStorageException;
 import org.apache.kylin.stream.core.exception.StreamingException;
 import org.apache.kylin.stream.core.metrics.StreamingMetrics;
 import org.apache.kylin.stream.core.model.StreamingMessage;
@@ -115,6 +116,10 @@ public class StreamingConsumerChannel implements Runnable {
                 } catch (InterruptedException ie) {
                     logger.warn("interrupted!");
                     stopped = true;
+                } catch (IllegalStorageException ise) {
+                    logger.error("Encountering unrecoverable exception, stopping consumer thread! {}",
+                        ise.getMessage(), ise);
+                    throw ise;
                 } catch (Exception e) {
                     long countValue = addEventErrorCnt.incrementAndGet();
                     if (countValue % 1000 < 3) {
@@ -301,6 +306,7 @@ public class StreamingConsumerChannel implements Runnable {
         stats.setPartitionConsumeStatsMap(partitionConsumeStatsMap);
         stats.setConsumeOffsetInfo(getSourceConsumeInfo());
         stats.setConsumeLag(totalLag);
+        stats.setConsumerThreadAlive(this.consumerThread.isAlive());
         return stats;
     }
 
