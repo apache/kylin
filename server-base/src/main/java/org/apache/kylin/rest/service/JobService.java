@@ -501,8 +501,7 @@ public class JobService extends BasicService implements InitializingBean {
 
     public String getJobStepOutput(String jobId, String stepId) {
         ExecutableManager executableManager = getExecutableManager();
-        AbstractExecutable job = executableManager.getJob(jobId);
-        if (job instanceof CheckpointExecutable) {
+        if (executableManager.getOutputFromHDFSByJobId(jobId, stepId) == null) {
             return executableManager.getOutput(stepId).getVerboseMsg();
         }
         return executableManager.getOutputFromHDFSByJobId(jobId, stepId).getVerboseMsg();
@@ -510,8 +509,7 @@ public class JobService extends BasicService implements InitializingBean {
 
     public String getAllJobStepOutput(String jobId, String stepId) {
         ExecutableManager executableManager = getExecutableManager();
-        AbstractExecutable job = executableManager.getJob(jobId);
-        if (job instanceof CheckpointExecutable) {
+        if (executableManager.getOutputFromHDFSByJobId(jobId, stepId, Integer.MAX_VALUE) == null) {
             return executableManager.getOutput(stepId).getVerboseMsg();
         }
         return executableManager.getOutputFromHDFSByJobId(jobId, stepId, Integer.MAX_VALUE).getVerboseMsg();

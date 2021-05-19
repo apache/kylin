@@ -271,6 +271,9 @@ public class ExecutableManager {
         AbstractExecutable jobInstance = getJob(jobId);
         String outputStorePath = KylinConfig.getInstanceFromEnv().getJobOutputStorePath(jobInstance.getParam(MetadataConstants.P_PROJECT_NAME), stepId);
         ExecutableOutputPO jobOutput = getJobOutputFromHDFS(outputStorePath);
+        if (jobOutput == null) {
+            return null;
+        }
         assertOutputNotNull(jobOutput, outputStorePath);
 
         if (Objects.nonNull(jobOutput.getLogPath())) {
@@ -291,9 +294,7 @@ public class ExecutableManager {
             Path path = new Path(resPath);
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
             if (!fs.exists(path)) {
-                ExecutableOutputPO executableOutputPO = new ExecutableOutputPO();
-                executableOutputPO.setContent("job output not found, please check kylin.log");
-                return executableOutputPO;
+                return null;
             }
 
             din = fs.open(path);

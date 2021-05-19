@@ -45,6 +45,9 @@ public class JobStepFactory {
         case OPTIMIZING:
             step = new NSparkOptimizingStep(OptimizeBuildJob.class.getName());
             break;
+        case MERGE_STATISTICS:
+            step = new NSparkMergeStatisticsStep();
+            break;
         case CLEAN_UP_AFTER_MERGE:
             step = new NSparkUpdateMetaAndCleanupAfterMergeStep();
             break;
