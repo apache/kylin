@@ -351,6 +351,18 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
             Assert.assertEquals("select count(*)",
                     QueryUtil.removeCommentInSql("select count(*) -- , --\t --/ --"));
         }
+        {
+            Assert.assertEquals("select 1\t''", QueryUtil.removeCommentInSql("select 1\t''/* comment */"));
+        }
+        {
+            Assert.assertEquals("select ' \t\n,\r/-'", QueryUtil.removeCommentInSql("select ' \t\n,\r/-'"));
+        }
+        {
+            Assert.assertEquals("select ' \t\n,\r/-'", QueryUtil.removeCommentInSql("select ' \t\n,\r/-'--comment"));
+        }
+        {
+            Assert.assertEquals("select ' \t\n,\r/-'", QueryUtil.removeCommentInSql("select ' \t\n,\r/-'/*comment*/"));
+        }
     }
 
     @Test
