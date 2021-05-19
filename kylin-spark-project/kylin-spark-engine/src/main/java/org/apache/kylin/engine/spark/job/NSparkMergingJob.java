@@ -87,6 +87,9 @@ public class NSparkMergingJob extends CubingJob {
 
         JobStepFactory.addStep(job, JobStepType.RESOURCE_DETECT, cube);
         JobStepFactory.addStep(job, JobStepType.MERGING, cube);
+        if (KylinConfig.getInstanceFromEnv().isSegmentStatisticsEnabled()) {
+            JobStepFactory.addStep(job, JobStepType.MERGE_STATISTICS, cube);
+        }
         JobStepFactory.addStep(job, JobStepType.CLEAN_UP_AFTER_MERGE, cube);
 
         return job;
