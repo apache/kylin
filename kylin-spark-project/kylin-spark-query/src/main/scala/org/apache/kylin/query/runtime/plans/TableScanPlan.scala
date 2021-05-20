@@ -19,18 +19,18 @@ package org.apache.kylin.query.runtime.plans
 
 import java.util
 import java.util.concurrent.ConcurrentHashMap
-
 import org.apache.calcite.DataContext
 import org.apache.kylin.common.QueryContextFacade
-import org.apache.kylin.cube.CubeInstance
+import org.apache.kylin.cube.{CubeInstance, CubeSegment}
 import org.apache.kylin.metadata.model._
 import org.apache.kylin.metadata.tuple.TupleInfo
 import org.apache.kylin.query.SchemaProcessor
 import org.apache.kylin.query.exception.UnsupportedQueryException
 import org.apache.kylin.query.relnode.{OLAPRel, OLAPTableScan}
-import org.apache.kylin.query.runtime.{DerivedProcess, RuntimeHelper, SparderLookupManager}
+import org.apache.kylin.query.runtime.{DerivedProcess, RuntimeHelper, SparderLookupManager, SparderRexVisitor}
 import org.apache.kylin.storage.hybrid.HybridInstance
 import org.apache.kylin.storage.spark.HadoopFileStorageQuery
+import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{ArrayType, DoubleType, StructField, StructType}
 import org.apache.spark.sql.utils.SparkTypeUtil
@@ -64,9 +64,10 @@ object TableScanPlan extends LogEx {
     olapContext.resetSQLDigest()
     val query = new HadoopFileStorageQuery(cubeInstance)
     val returnTupleInfo = olapContext.returnTupleInfo
-    val request = query.getStorageQueryRequest(
+    val requestAndFilter = query.getStorageQueryRequest(
       olapContext,
-      returnTupleInfo)
+      returnTupleInfo);
+    val request = requestAndFilter._1
     val cuboid = request.getCuboid
     val gridTableMapping = cuboid.getCuboidToGridTableMapping
 
@@ -75,10 +76,16 @@ object TableScanPlan extends LogEx {
     val factTableAlias = olapContext.firstTableScan.getBackupAlias
     val schemaNames = SchemaProcessor.buildGTSchema(cuboid, factTableAlias)
     import org.apache.kylin.query.implicits.implicits._
+
     var df = SparderContext.getSparkSession.kylin
       .format("parquet")
-      .cuboidTable(cubeInstance, cuboid)
+      .cuboidTable(cubeInstance, cuboid,
+        if(requestAndFilter._2 == null) {
+          List[CubeSegment]()
+        } else
+          requestAndFilter._2.preCalculatedSegment.asScala.toList)
       .toDF(schemaNames: _*)
+
     // may have multi TopN measures.
     val topNMeasureIndexes = df.schema.fields.map(_.dataType).zipWithIndex.filter(_._1.isInstanceOf[ArrayType]).map(_._2)
     val tuple = DerivedProcess.process(olapContext, cuboid, cubeInstance, df, request)

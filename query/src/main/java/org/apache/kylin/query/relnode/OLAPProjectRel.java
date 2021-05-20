@@ -266,7 +266,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     }
 
     @Override
-    public void implementRewrite(RewriteImplementor implementor) {
+    public void implementRewrite(RelNode parent, RewriteImplementor implementor) {
         implementor.visitChild(this, getInput());
 
         this.rewriting = true;

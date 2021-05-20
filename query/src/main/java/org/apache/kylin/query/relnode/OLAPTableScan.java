@@ -458,7 +458,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
     }
 
     @Override
-    public void implementRewrite(RewriteImplementor implementor) {
+    public void implementRewrite(RelNode parent, RewriteImplementor implementor) {
         Map<String, RelDataType> rewriteFields = this.context.rewriteFields;
         for (Map.Entry<String, RelDataType> rewriteField : rewriteFields.entrySet()) {
             String fieldName = rewriteField.getKey();
