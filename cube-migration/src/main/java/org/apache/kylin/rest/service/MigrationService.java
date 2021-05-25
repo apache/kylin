@@ -22,15 +22,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.notify.NotificationContext;
+import org.apache.kylin.common.notify.NotificationTransmitter;
+import org.apache.kylin.common.notify.util.NotificationConstants;
 import org.apache.kylin.common.persistence.AclEntity;
-import org.apache.kylin.common.util.MailService;
-import org.apache.kylin.common.util.MailTemplateProvider;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.RuleValidationException;
-import org.apache.kylin.rest.util.MailNotificationUtil;
 import org.apache.kylin.tool.CubeMigrationCLI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +74,7 @@ public class MigrationService extends BasicService {
         root.put("cubename", ctx.getCubeInstance().getName());
         root.put("status", "NEED APPROVE");
         root.put("envname", envName);
-        sendMigrationMail(MailNotificationUtil.MIGRATION_REQUEST, getEmailRecipients(cube), root);
+        sendMigrationNotification(NotificationConstants.JOB_MIGRATION_REQUEST, getRecipients(cube), root);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
@@ -85,7 +86,7 @@ public class MigrationService extends BasicService {
             root.put("status", "REJECTED");
             root.put("envname", envName);
 
-            sendMigrationMail(MailNotificationUtil.MIGRATION_REJECTED, getEmailRecipients(cubeName), root);
+            sendMigrationNotification(NotificationConstants.JOB_MIGRATION_REJECTED, getRecipients(cubeName), root);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
@@ -122,7 +123,7 @@ public class MigrationService extends BasicService {
             root.put("status", "APPROVED");
             root.put("envname", envName);
 
-            sendMigrationMail(MailNotificationUtil.MIGRATION_APPROVED, getEmailRecipients(cubeName), root);
+            sendMigrationNotification(NotificationConstants.JOB_MIGRATION_APPROVED, getRecipients(cubeName), root);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
@@ -138,7 +139,7 @@ public class MigrationService extends BasicService {
             root.put("status", "COMPLETED");
             root.put("envname", envName);
 
-            sendMigrationMail(MailNotificationUtil.MIGRATION_COMPLETED, getEmailRecipients(cubeName), root);
+            sendMigrationNotification(NotificationConstants.JOB_MIGRATION_COMPLETED, getRecipients(cubeName), root);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
@@ -155,7 +156,7 @@ public class MigrationService extends BasicService {
             root.put("failedReason", reason);
             root.put("envname", envName);
 
-            sendMigrationMail(MailNotificationUtil.MIGRATION_FAILED, getEmailRecipients(cubeName), root);
+            sendMigrationNotification(NotificationConstants.JOB_MIGRATION_FAILED, getRecipients(cubeName), root);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return false;
@@ -186,40 +187,51 @@ public class MigrationService extends BasicService {
         return cubeAdmins;
     }
 
-    public List<String> getEmailRecipients(String cubeName) throws Exception {
+    public Map<String, List<String>> getRecipients(String cubeName) throws Exception {
         CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
-        return getEmailRecipients(cubeInstance);
+        return getRecipients(cubeInstance);
     }
 
-    public List<String> getEmailRecipients(CubeInstance cubeInstance) throws Exception {
-        List<String> recipients = Lists.newArrayList();
-        recipients.addAll(getCubeAdmins(cubeInstance));
-        recipients.addAll(cubeInstance.getDescriptor().getNotifyList());
+    public Map<String, List<String>> getRecipients(CubeInstance cubeInstance) throws Exception {
+        Map<String, List<String>> receivers = Maps.newHashMap();
+        List<String> emailRecipients = Lists.newArrayList();
+        emailRecipients.addAll(getCubeAdmins(cubeInstance));
+        emailRecipients.addAll(cubeInstance.getDescriptor().getNotifyEmailList());
         String[] adminDls = KylinConfig.getInstanceFromEnv().getAdminDls();
         if (adminDls != null) {
-            recipients.addAll(Lists.newArrayList(adminDls));
+            emailRecipients.addAll(Lists.newArrayList(adminDls));
         }
-        return recipients;
+        receivers.put(NotificationConstants.NOTIFY_EMAIL_LIST, emailRecipients);
+        receivers.put(NotificationConstants.NOTIFY_DINGTALK_LIST, cubeInstance.getDescriptor().getNotifyDingTalkList());
+        return receivers;
     }
 
-    public void sendMigrationMail(String state, List<String> recipients, Map<String, String> root) {
+    public void sendMigrationNotification(String state, Map<String, List<String>> recipients, Map<String, String> root) {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         root.put("requester", submitter);
 
-        String title;
+        String[] titles;
 
         // No project name for rejected title
-        if (state == MailNotificationUtil.MIGRATION_REJECTED) {
-            title = MailNotificationUtil.getMailTitle("MIGRATION", root.get("status"), root.get("envname"),
-                    root.get("cubename"));
+        if (state == NotificationConstants.JOB_MIGRATION_REJECTED) {
+            titles = new String[]{
+                    "MIGRATION",
+                    root.get("status"),
+                    root.get("envname"),
+                    root.get("cubename")
+            };
         } else {
-            title = MailNotificationUtil.getMailTitle("MIGRATION", root.get("status"), root.get("envname"),
-                    root.get("projectname"), root.get("cubename"));
+            titles = new String[]{
+                    "MIGRATION",
+                    root.get("status"),
+                    root.get("envname"),
+                    root.get("projectname"),
+                    root.get("cubename")
+            };
         }
 
-        String content = MailTemplateProvider.getInstance().buildMailContent(state,
-                Maps.<String, Object> newHashMap(root));
-
-        new MailService(KylinConfig.getInstanceFromEnv()).sendMail(recipients, title, content);
+        Pair<String[], Map<String, Object>> hashMapPair = Pair.newPair(titles, Maps.<String, Object>newHashMap(root));
+        NotificationContext notificationContext = new NotificationContext(KylinConfig.getInstanceFromEnv(), recipients, state, hashMapPair);
+        new NotificationTransmitter(notificationContext).sendNotification();
     }
 }

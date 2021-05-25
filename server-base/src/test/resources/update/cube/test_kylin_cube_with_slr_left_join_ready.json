@@ -40,5 +40,6 @@
   } ],
   "status" : "READY",
   "create_time" : null,
-  "notify_list" : null
+  "notify_email_list" : null,
+  "notify_dingtalk_list" : null
 }

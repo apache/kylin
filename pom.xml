@@ -132,6 +132,7 @@
     <!-- Commons -->
     <commons-lang3.version>3.4</commons-lang3.version>
     <commons-email.version>1.5</commons-email.version>
+    <commons-dingtalk.version>1.0.1</commons-dingtalk.version>
     <commons-validator.version>1.4.0</commons-validator.version>
     <commons-compress.version>1.19</commons-compress.version>
     <commons-dbcp.version>1.4</commons-dbcp.version>
@@ -808,6 +809,11 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-email</artifactId>
         <version>${commons-email.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aliyun</groupId>
+        <artifactId>alibaba-dingtalk-service-sdk</artifactId>
+        <version>${commons-dingtalk.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-validator</groupId>

@@ -265,7 +265,8 @@
                        [ "BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL", "SELLER_ACCOUNT.ACCOUNT_SELLER_LEVEL" ], [ "LSTG_FORMAT_NAME", "LSTG_SITE_ID" ], [ "OPS_USER_ID", "OPS_REGION" ] ]
     }
   } ],
-  "notify_list" : [ ],
+  "notify_email_list" : [ ],
+  "notify_dingtalk_list" : [ ],
   "status_need_notify" : [ ],
   "partition_date_start" : 1325376000000,
   "partition_date_end" : 3153600000000,

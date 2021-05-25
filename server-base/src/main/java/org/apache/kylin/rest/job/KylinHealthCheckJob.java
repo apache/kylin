@@ -32,10 +32,12 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.notify.NotificationContext;
+import org.apache.kylin.common.notify.NotificationTransmitter;
+import org.apache.kylin.common.notify.util.NotificationConstants;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.BufferedLogger;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.MailService;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -49,6 +51,7 @@ import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,7 +137,9 @@ public class KylinHealthCheckJob extends AbstractApplication {
         String subject = "Kylin Cluster Health Report of " + config.getClusterName() + " on "
                 + new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(new Date());
         List<String> users = Lists.newArrayList(config.getAdminDls());
-        new MailService(config).sendMail(users, subject, content, false);
+        new NotificationTransmitter(new NotificationContext(config, ImmutableMap.<String, List<String>>builder()
+                .put(NotificationConstants.NOTIFY_EMAIL_LIST, users)
+                .build(), subject, content, false)).sendNotification();
     }
 
     private void checkErrorMeta() {
@@ -266,8 +271,8 @@ public class KylinHealthCheckJob extends AbstractApplication {
         long outdatedCubeTimeCut = System.currentTimeMillis() - 1L * staleCubeThresholdInDays * 24 * 60 * 60 * 1000;
         for (CubeInstance cube : cubes) {
             long lastTime = cube.getLastModified();
-            logger.info("Cube {} last modified time: {}, {}", cube.getName(), new Date(lastTime),
-                    cube.getDescriptor().getNotifyList());
+            logger.info("Cube {} last modified time: {}, email {}, dingtalk {}", cube.getName(), new Date(lastTime),
+                    cube.getDescriptor().getNotifyEmailList(), cube.getDescriptor().getNotifyDingTalkList());
             if (lastTime < outdatedCubeTimeCut) {
                 if (cube.isReady()) {
                     reporter.log(

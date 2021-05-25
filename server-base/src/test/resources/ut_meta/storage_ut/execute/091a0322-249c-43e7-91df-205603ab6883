@@ -21,7 +21,8 @@
     "submitter" : "ADMIN",
     "envName" : "DEV",
     "segmentId" : "2838c7fc-722a-48fa-9d1a-8ab37837a123",
-    "notify_list" : "",
+    "notify_email_list" : "",
+    "notify_dingtalk_list" : "",
     "projectName" : "default",
     "cubeName" : "sample_cube"
   }

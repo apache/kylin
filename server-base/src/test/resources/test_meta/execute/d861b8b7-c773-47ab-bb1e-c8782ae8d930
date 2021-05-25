@@ -34,7 +34,8 @@
     "submitter" : "ADMIN",
     "envName" : "DEV",
     "segmentId" : "a110ac52-9a91-49fe-944a-346d61e54115",
-    "notify_list" : "",
+    "notify_email_list" : "",
+    "notify_dingtalk_list" : "",
     "projectName" : "learn_kylin",
     "cubeName" : "ss"
   }

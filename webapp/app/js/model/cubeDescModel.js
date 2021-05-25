@@ -25,7 +25,7 @@ KylinApp.service('CubeDescModel', function (kylinConfig) {
     if (kylinConfig.isInitialized()) {
     	engineType = kylinConfig.getCubeEng();
     	storageType = kylinConfig.getStorageEng();
-    } else { 
+    } else {
       kylinConfig.init().$promise.then(function (data) {
       	kylinConfig.initWebConfigInfo();
     	engineType = kylinConfig.getCubeEng();
@@ -60,7 +60,8 @@ KylinApp.service('CubeDescModel', function (kylinConfig) {
       "mandatory_dimension_set_list": [],
       "partition_date_start":0,
       "partition_date_end":undefined,
-      "notify_list": [],
+      "notify_email_list": [],
+      "notify_dingtalk_list": [],
       "hbase_mapping": {
         "column_family": []
       },

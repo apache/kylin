@@ -324,7 +324,7 @@
                                             text-align: left;
                                             font-size: medium;
                                             font-style: normal;">
-                            MR Job
+                            ${job_type}
                         </th>
                         <td style="padding: 8px;
                                 line-height: 1.42857143;
@@ -332,7 +332,7 @@
                                 border: 1px solid #ddd;
                                 font-size: medium;
                                 font-style: normal;">
-                        ${mr_job_id}
+                        ${job_id}
                         </td>
                     </tr>
                 </table>

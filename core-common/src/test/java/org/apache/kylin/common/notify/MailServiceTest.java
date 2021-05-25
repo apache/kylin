@@ -16,13 +16,18 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.common.util;
+package org.apache.kylin.common.notify;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.notify.util.NotificationConstants;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -34,7 +39,6 @@ public class MailServiceTest extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
-
     }
 
     @After
@@ -44,25 +48,27 @@ public class MailServiceTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testSendEmail() throws IOException {
-
         KylinConfig config = KylinConfig.getInstanceFromEnv();
+        List<String> receivers = new ArrayList<String>(1);
+        receivers.add("foobar@foobar.com");
+        Map<String, List<String>> receiversMap = new HashMap();
+        receiversMap.put(NotificationConstants.NOTIFY_EMAIL_LIST, receivers);
 
-        MailService mailservice = new MailService(config);
-        boolean sent = sendTestEmail(mailservice);
-        assert sent;
+        Map<String, Object> content = new HashMap();
+        content.put("info", "email notification");
+        Pair<String[], Map<String, Object>> mapPair = Pair.newPair(new String[]{"test"}, content);
+
+        NotificationContext notificationInfo = new NotificationContext(config, receiversMap, NotificationConstants.JOB_ERROR, mapPair);
+
+        MailService mailservice = new MailService(notificationInfo);
+        boolean sent = mailservice.sendNotification();
+        assert !sent;
 
         System.setProperty("kylin.job.notification-enabled", "false");
         // set kylin.job.notification-enabled=false, and run again, this time should be no mail delivered
-        mailservice = new MailService(config);
-        sent = sendTestEmail(mailservice);
+        mailservice = new MailService(notificationInfo);
+        sent = mailservice.sendNotification();
         assert !sent;
-
     }
-
-    private boolean sendTestEmail(MailService mailservice) {
-
-        List<String> receivers = new ArrayList<String>(1);
-        receivers.add("foobar@foobar.com");
-        return mailservice.sendMail(receivers, "A test email from Kylin", "Hello!");
-    }
+    
 }

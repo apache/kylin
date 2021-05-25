@@ -16,20 +16,25 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.common.util;
+package org.apache.kylin.common.notify;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.notify.util.MailNotificationUtil;
+import org.apache.kylin.common.notify.util.NotificationConstants;
+import org.apache.kylin.common.util.Pair;
 import org.slf4j.LoggerFactory;
 
 /**
  * @author xduo
  */
-public class MailService {
+public class MailService extends NotifyServiceBase {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MailService.class);
 
     private Boolean enabled = Boolean.TRUE;
@@ -40,24 +45,16 @@ public class MailService {
     private String password;
     private String sender;
 
-    public MailService(KylinConfig config) {
-        this(config.isMailEnabled(), config.isStarttlsEnabled(), config.getMailHost(), config.getSmtpPort(), config.getMailUsername(), config.getMailPassword(), config.getMailSender());
-    }
-
-    private MailService(boolean enabled, boolean starttlsEnabled, String host, String port, String username, String password, String sender) {
-        this.enabled = enabled;
-        this.starttlsEnabled = starttlsEnabled;
-        this.host = host;
-        this.port = port;
-        this.username = username;
-        this.password = password;
-        this.sender = sender;
-
-        if (enabled) {
-            if (host.isEmpty()) {
-                throw new RuntimeException("mail service host is empty");
-            }
-        }
+    public MailService(NotificationContext notificationContext) {
+        super(notificationContext);
+        KylinConfig kylinConfig = getNotificationContext().getConfig();
+        this.enabled = kylinConfig.isNotificationEnabled();
+        this.starttlsEnabled = kylinConfig.isStarttlsEnabled();
+        this.host = kylinConfig.getMailHost();
+        this.port = kylinConfig.getSmtpPort();
+        this.username = kylinConfig.getMailUsername();
+        this.password = kylinConfig.getMailPassword();
+        this.sender = kylinConfig.getMailSender();
     }
 
     /**
@@ -67,8 +64,8 @@ public class MailService {
      * @return true or false indicating whether the email was delivered successfully
      * @throws IOException
      */
-    public boolean sendMail(List<String> receivers, String subject, String content) {
-        return sendMail(receivers, subject, content, true);
+    private boolean sendMail(List<String> receivers, String subject, String content) {
+        return sendMail(receivers, subject, content, getNotificationContext().isHtmlMsg());
     }
 
     /**
@@ -78,11 +75,16 @@ public class MailService {
      * @return true or false indicating whether the email was delivered successfully
      * @throws IOException
      */
-    public boolean sendMail(List<String> receivers, String subject, String content, boolean isHtmlMsg) {
+    private boolean sendMail(List<String> receivers, String subject, String content, boolean isHtmlMsg) {
 
         if (!enabled) {
             logger.info("Email service is disabled; this mail will not be delivered: " + subject);
             logger.info("To enable mail service, set 'kylin.job.notification-enabled=true' in kylin.properties");
+            return false;
+        }
+
+        if (host.isEmpty()) {
+            logger.warn("mail service host is empty");
             return false;
         }
 
@@ -132,6 +134,24 @@ public class MailService {
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             return false;
+        }
+    }
+
+    public boolean sendNotification() {
+        List<String> receivers = getNotificationContext().getReceivers().get(NotificationConstants.NOTIFY_EMAIL_LIST);
+        if (CollectionUtils.isEmpty(receivers)) {
+            logger.warn("no need to send email, receivers is empty");
+            return false;
+        } else {
+            logger.info("prepare to send email to:{}", receivers);
+            if (getNotificationContext().isHtmlMsg()) {
+                Pair<String[], Map<String, Object>> content = getNotificationContext().getContent();
+                String contentEmail = MailNotificationUtil.getMailContent(getNotificationContext().getState(), content.getSecond());
+                String title = MailNotificationUtil.getMailTitle(content.getFirst());
+                return sendMail(receivers, title, contentEmail);
+            } else {
+                return sendMail(receivers, getNotificationContext().getSubject(), getNotificationContext().getInfo());
+            }
         }
     }
 }

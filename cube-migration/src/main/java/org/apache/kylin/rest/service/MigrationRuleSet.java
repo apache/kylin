@@ -81,7 +81,7 @@ public class MigrationRuleSet {
     public static final Rule DEFAULT_PROJECT_EXIST_RULE = new ProjectExistenceRule();
     public static final Rule DEFAULT_AUTO_MERGE_RULE = new AutoMergePolicyRule();
     public static final Rule DEFAULT_EXPANSION_RULE = new ExpansionRateRule();
-    public static final Rule DEFAULT_EMAIL_NOTIFY_RULE = new NotificationEmailRule();
+    public static final Rule DEFAULT_NOTIFY_RULE = new NotificationRule();
     public static final Rule DEFAULT_COMPATIBLE_RULE = new CompatibleRule();
     public static final Rule DEFAULT_SEGMENT_RULE = new SegmentRule();
     public static final Rule DEFAULT_CUBE_OVERWRITE_RULE = new CubeOverwriteRule();
@@ -114,7 +114,7 @@ public class MigrationRuleSet {
     // initialize default rules
     static {
         register(DEFAULT_HIVE_TABLE_CONSISTENCY_RULE, DEFAULT_CUBE_STATUS_RULE, DEFAULT_PROJECT_EXIST_RULE,
-                DEFAULT_EMAIL_NOTIFY_RULE, DEFAULT_SEGMENT_RULE, DEFAULT_CUBE_OVERWRITE_RULE, DEFAULT_COMPATIBLE_RULE);
+                DEFAULT_NOTIFY_RULE, DEFAULT_SEGMENT_RULE, DEFAULT_CUBE_OVERWRITE_RULE, DEFAULT_COMPATIBLE_RULE);
         register(false, DEFAULT_AUTO_MERGE_RULE, DEFAULT_EXPANSION_RULE, DEFAULT_QUERY_LATENCY_RULE);
     }
 
@@ -206,14 +206,19 @@ public class MigrationRuleSet {
         }
     }
 
-    private static class NotificationEmailRule implements Rule {
+    private static class NotificationRule implements Rule {
 
         @Override
         public void apply(Context ctx) throws RuleValidationException {
             CubeDesc cubeDesc = ctx.getCubeInstance().getDescriptor();
-            List<String> notifyList = cubeDesc.getNotifyList();
-            if (notifyList == null || notifyList.size() == 0) {
+            List<String> emailNotifyList = cubeDesc.getNotifyEmailList();
+            if (emailNotifyList == null || emailNotifyList.size() == 0) {
                 throw new RuleValidationException("Cube email notification list is not set or empty.");
+            }
+
+            List<String> dingTalkNotifyList = cubeDesc.getNotifyDingTalkList();
+            if (dingTalkNotifyList == null || dingTalkNotifyList.size() == 0) {
+                throw new RuleValidationException("Cube dingTalk notification list is not set or empty.");
             }
         }
     }
