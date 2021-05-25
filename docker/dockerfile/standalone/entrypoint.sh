@@ -20,16 +20,19 @@ echo "127.0.0.1 sandbox sandbox.hortonworks.com" >> /etc/hosts
 
 # clean pid files
 rm -f /tmp/*.pid
-
+if [ ! -f "/home/admin/first_run" ]
+then
+    mysqld_pre_systemd
+fi
+mysqld --daemonize --pid-file=/var/run/mysqld/mysqld.pid -u root
 # start mysql
 if [ ! -f "/home/admin/first_run" ]
 then
-    service mysqld start
-    mysqladmin -uroot password 123456
+    mysql_init_password=`cat /var/log/mysqld.log |grep -Po '(?<=A temporary password is generated for root@localhost: )\S+'`
+    mysql --connect-expired-password -u root -p$mysql_init_password -e "set global validate_password_policy=0;set global validate_password_length=6;alter user user() identified by '123456';"
     mysql -uroot -p123456 -e "CREATE DATABASE IF NOT EXISTS kylin4 default charset utf8 COLLATE utf8_general_ci;"
-    mysql -uroot -p123456 -e "grant all privileges on root.* to root@'%' identified by '123456';"
+    mysql -uroot -p123456 -e "grant all privileges on root.* to root@'%' identified by '123456';FLUSH   PRIVILEGES;"
 fi
-service mysqld restart
 
 # start hdfs
 if [ ! -f "/home/admin/first_run" ]
