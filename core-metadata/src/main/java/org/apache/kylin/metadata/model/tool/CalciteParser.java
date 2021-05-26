@@ -160,9 +160,16 @@ public class CalciteParser {
     private static Pair<Integer, Integer> getPosWithBracketsCompletion(String inputSql, int left, int right) {
         int leftBracketNum = 0;
         int rightBracketNum = 0;
+        boolean constantFlag = false;
         String substring = inputSql.substring(left, right);
         for (int i = 0; i < substring.length(); i++) {
             char temp = substring.charAt(i);
+            if (temp == '\'') {
+                constantFlag = !constantFlag;
+            }
+            if (constantFlag) {
+                continue;
+            }
             if (temp == '(') {
                 leftBracketNum++;
             }
