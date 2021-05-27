@@ -18,7 +18,8 @@
 # Docker image for apache kylin, based on the Hadoop image
 FROM hadoop2.7-all-in-one-for-kylin4-beta
 
-ENV KYLIN_VERSION 4.0.0-beta
+ARG KYLIN_VERSION=4.0.0-beta
+ENV KYLIN_VERSION $KYLIN_VERSION
 ENV KYLIN_HOME /home/admin/apache-kylin-$KYLIN_VERSION-bin
 
 # Download Kylin

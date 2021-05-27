@@ -18,9 +18,12 @@
 # Docker image with Hadoop/Spark/Hive/ZK/Kafka installed
 FROM centos:7.9.2009
 
+ARG HADOOP_VERSION=2.8.5
+ARG SPARK_VERSION=2.4.7
+
 ENV HIVE_VERSION 1.2.1
-ENV HADOOP_VERSION 2.8.5
-ENV SPARK_VERSION 2.4.7
+ENV HADOOP_VERSION $HADOOP_VERSION
+ENV SPARK_VERSION $SPARK_VERSION
 ENV ZK_VERSION 3.4.6
 ENV KAFKA_VERSION 1.1.1
 
@@ -84,6 +87,7 @@ COPY conf/hive/hive-site.xml $HADOOP_CONF/
 RUN wget https://archive.apache.org/dist/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop2.7.tgz \
     && tar -zxvf /home/admin/spark-$SPARK_VERSION-bin-hadoop2.7.tgz \
     && rm -f /home/admin/spark-$SPARK_VERSION-bin-hadoop2.7.tgz \
+    && find -L $SPARK_HOME -name slf4j*.jar | xargs rm -f \
     && cp $HIVE_HOME/conf/hive-site.xml $SPARK_HOME/conf \
     && cp $SPARK_HOME/yarn/*.jar $HADOOP_HOME/share/hadoop/yarn/lib
 RUN cp $HIVE_HOME/lib/mysql-connector-java-5.1.24.jar $SPARK_HOME/jars
