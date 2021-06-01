@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "less.js": "~1.4.0",
-    "angular-mocks-unstable": "~1.1.5"
+    "angular-mocks": "~1.2.0"
   },
   "resolutions": {
     "angular": "1.2.29",
