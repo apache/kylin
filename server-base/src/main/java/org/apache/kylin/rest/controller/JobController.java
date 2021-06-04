@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Locale;
 
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
@@ -82,9 +83,11 @@ public class JobController extends BasicController {
             }
         }
 
-        JobTimeFilterEnum timeFilter = JobTimeFilterEnum.LAST_ONE_WEEK;
+        JobTimeFilterEnum timeFilter = null;
         if (null != jobRequest.getTimeFilter()) {
             timeFilter = JobTimeFilterEnum.getByCode(jobRequest.getTimeFilter());
+        } else {
+            timeFilter = JobTimeFilterEnum.getByCode(KylinConfig.getInstanceFromEnv().getDefaultTimeFilter());
         }
 
         JobService.JobSearchMode jobSearchMode = JobService.JobSearchMode.CUBING_ONLY;

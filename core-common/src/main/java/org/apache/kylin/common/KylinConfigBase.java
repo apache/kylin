@@ -2927,6 +2927,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.query.intersect.separator", "|");
     }
 
+    public int getDefaultTimeFilter() {
+        return Integer.parseInt(getOptional("kylin.web.default-time-filter", "2"));
+    }
+
     /**
      * the maximum number of returned values for intersect_value function
      */
