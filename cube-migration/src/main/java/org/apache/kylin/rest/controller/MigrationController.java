@@ -167,11 +167,12 @@ public class MigrationController extends BasicController {
         StreamingSourceConfig config = null;
         try {
             config = JsonUtil.readValue(request.getStreamSource(), StreamingSourceConfig.class);
-            logger.info("Stream source config compatibility check for table {}, project {}",
-                    tableDesc.getName(), tableDesc.getProject());
+            logger.info("Stream source config compatibility check for table {}, source project {}, target project {}",
+                    config.getName(), config.getProjectName(), request.getProjectName());
             streamingV2Service.checkStreamingSourceCompatibility(request.getProjectName(), config);
-            logger.info("Pass stream source config compatibility check for table {}, project {}",
-                    tableDesc.getName(), tableDesc.getProject());
+            logger.info(
+                    "Pass stream source config compatibility check for table {}, source project {}, target project {}",
+                    config.getName(), config.getProjectName(), request.getProjectName());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             throw new ConflictException(e.getMessage(), e);
