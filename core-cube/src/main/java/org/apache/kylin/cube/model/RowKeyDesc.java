@@ -25,6 +25,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -135,6 +138,16 @@ public class RowKeyDesc implements java.io.Serializable {
     public int[] getColumnsNeedIndex() {
         return columnsNeedIndex;
 
+    }
+
+    public static int getRowKeyLength(CubeSegment cubeSegment) {
+        int rowKeySize = 0;
+        rowKeySize += cubeSegment.getRowKeyPreambleSize();
+        RowKeyColumnIO columnIO = new RowKeyColumnIO(cubeSegment.getDimensionEncodingMap());
+        for (TblColRef column : Cuboid.getBaseCuboid(cubeSegment.getCubeDesc()).getColumns()) {
+            rowKeySize += (columnIO.getColumnLength(column));
+        }
+        return rowKeySize;
     }
 
 }
