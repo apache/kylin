@@ -53,6 +53,14 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         }
     }
 
+    public void setProjectName(String name) {
+        setParam(MetadataConstants.P_PROJECT_NAME, name);
+    }
+
+    public String getProjectName() {
+        return getParam(MetadataConstants.P_PROJECT_NAME);
+    }
+
     public long getMapReduceWaitTime() {
         return getExtraInfoAsLong(MetadataConstants.MAP_REDUCE_WAIT_TIME, 0L);
     }
