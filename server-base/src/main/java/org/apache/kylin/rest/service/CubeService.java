@@ -623,7 +623,7 @@ public class CubeService extends BasicService implements InitializingBean {
 
             CubeInstance cubeInstance = CubeManager.getInstance(getConfig()).updateCubeDropSegments(cube, toDelete);
 
-            cleanSegmentStorage(Collections.singletonList(toDelete));
+            cleanSegmentStorage(cubeInstance, Collections.singletonList(toDelete));
 
             return cubeInstance;
         } else {

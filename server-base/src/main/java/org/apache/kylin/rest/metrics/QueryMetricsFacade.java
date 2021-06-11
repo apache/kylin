@@ -127,7 +127,6 @@ public class QueryMetricsFacade {
         } catch (Exception e) {
             logger.error(e.getMessage());
         }
-
     }
 
     private static void incrQueryCount(QueryMetrics queryMetrics, SQLResponse sqlResponse) {
