@@ -89,6 +89,10 @@ public class BuildJobSubmitter implements Runnable {
 
     void restore() {
         logger.info("Restore job submitter");
+        // Clear the cache first, when the leader change
+        segmentBuildJobCheckList.clear();
+        cubeCheckList.clear();
+        // Restore job
         List<String> cubes = coordinator.getStreamMetadataStore().getCubes();
         for (String cube : cubes) {
             List<SegmentBuildState> segmentBuildStates = coordinator.getStreamMetadataStore()
