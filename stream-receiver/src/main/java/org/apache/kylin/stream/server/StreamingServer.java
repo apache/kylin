@@ -168,7 +168,10 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
                         for (StreamingCubeSegment segment : activeSegments) {
                             long delta = curr - segment.getLastUpdateTime();
                             if (curr > segment.getDateRangeEnd() && delta > segmentManager.cubeDuration) {
-                                logger.debug("Make {} immutable because it lastUpdate[{}] exceed wait duration.", segment.getSegmentName(), segment.getLastUpdateTime());
+                                logger.debug(
+                                        "Make cube {} segment {} immutable because it lastUpdate[{}] exceed wait duration {}.",
+                                        segment.getCubeName(), segment.getSegmentName(), segment.getLastUpdateTime(),
+                                        segmentManager.cubeDuration);
                                 segmentManager.makeSegmentImmutable(segment.getSegmentName());
                             }
                         }
@@ -229,23 +232,27 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
         int i = 0;
         for (StreamingCubeSegment segment : segments) {
             futureList.get(i).get();
-            logger.info("Save remote store state to metadata store.");
+            logger.info("Save cube {} segment {} remote store state to metadata store.", cubeName,
+                    segment.getSegmentName());
             streamMetadataStore.addCompleteReplicaSetForSegmentBuild(segment.getCubeName(), segment.getSegmentName(),
                     replicaSetID);
 
-            logger.info("save remote checkpoint to metadata store");
+            logger.info("Save cube {} segment {} remote checkpoint to metadata store.", cubeName,
+                    segment.getSegmentName());
             ISourcePosition smallestSourcePosition = segmentManager.getSmallestSourcePosition(segment);
-            String smallestSourcePosStr = streamingSource.getSourcePositionHandler().serializePosition(smallestSourcePosition);
+            String smallestSourcePosStr = streamingSource.getSourcePositionHandler()
+                    .serializePosition(smallestSourcePosition);
             streamMetadataStore.saveSourceCheckpoint(segment.getCubeName(), segment.getSegmentName(), replicaSetID,
                     smallestSourcePosStr);
 
             logger.info("Send notification to coordinator for cube {} segment {}.", cubeName, segment.getSegmentName());
             coordinatorClient.segmentRemoteStoreComplete(currentNode, segment.getCubeName(),
                     new Pair<>(segment.getDateRangeStart(), segment.getDateRangeEnd()));
-            logger.info("Send notification success.");
+            logger.info("Send notification to coordinator for cube {} segment {} successfully.", cubeName,
+                    segment.getSegmentName());
             segment.saveState(StreamingCubeSegment.State.REMOTE_PERSISTED);
-            logger.info("Commit cube {} segment {}  status converted to {}.", segment.getCubeName(), segment.getSegmentName(),
-                    StreamingCubeSegment.State.REMOTE_PERSISTED.name());
+            logger.info("Commit cube {} segment {}  status converted to {}.", segment.getCubeName(),
+                    segment.getSegmentName(), StreamingCubeSegment.State.REMOTE_PERSISTED.name());
             i++;
         }
     }
