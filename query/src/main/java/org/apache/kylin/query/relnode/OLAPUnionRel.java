@@ -33,7 +33,6 @@ import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.SetOp;
 import org.apache.calcite.rel.core.Union;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.expression.ColumnTupleExpression;
 import org.apache.kylin.metadata.expression.RexCallTupleExpression;
 import org.apache.kylin.metadata.expression.TupleExpression;
@@ -110,8 +109,7 @@ public class OLAPUnionRel extends Union implements OLAPRel {
             for (TblColRef innerCol : innerCols) {
                 children.add(new ColumnTupleExpression(innerCol));
             }
-
-            sourceColumns.add(new RexCallTupleExpression(DataType.ANY, children));
+            sourceColumns.add(new RexCallTupleExpression(children));
         }
 
         ColumnRowType fackColumnRowType = new ColumnRowType(columns, sourceColumns);

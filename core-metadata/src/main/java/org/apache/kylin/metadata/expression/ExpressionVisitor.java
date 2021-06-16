@@ -19,15 +19,17 @@
 package org.apache.kylin.metadata.expression;
 
 public interface ExpressionVisitor {
-    public TupleExpression visitConstant(ConstantTupleExpression constExpr);
+    TupleExpression visitNumber(NumberTupleExpression numExpr);
 
-    public TupleExpression visitColumn(ColumnTupleExpression colExpr);
+    TupleExpression visitString(StringTupleExpression strExpr);
 
-    public TupleExpression visitBinary(BinaryTupleExpression binaryExpr);
+    TupleExpression visitColumn(ColumnTupleExpression colExpr);
 
-    public TupleExpression visitCaseCall(CaseTupleExpression caseExpr);
+    TupleExpression visitBinary(BinaryTupleExpression binaryExpr);
 
-    public TupleExpression visitRexCall(RexCallTupleExpression rexCallExpr);
+    TupleExpression visitCaseCall(CaseTupleExpression caseExpr);
 
-    public TupleExpression visitNone(NoneTupleExpression noneExpr);
+    TupleExpression visitRexCall(RexCallTupleExpression rexCallExpr);
+
+    TupleExpression visitNone(NoneTupleExpression noneExpr);
 }

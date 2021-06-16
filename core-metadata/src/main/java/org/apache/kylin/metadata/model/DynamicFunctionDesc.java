@@ -18,19 +18,37 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.expression.ExpressionColCollector;
+import org.apache.kylin.metadata.expression.TupleExpression;
+
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
+
 public abstract class DynamicFunctionDesc extends FunctionDesc {
 
-    public DynamicFunctionDesc(ParameterDesc parameter, String expression, String returnType) {
+    protected final TupleExpression tupleExpression;
+    protected final Set<TblColRef> filterColSet;
+    protected Map<TblColRef, FunctionDesc> runtimeFuncMap;
+
+    public DynamicFunctionDesc(ParameterDesc parameter, TupleExpression tupleExpression) {
         this.setParameter(parameter);
-        this.setExpression(expression);
-        this.setReturnType(returnType);
+        this.tupleExpression = tupleExpression;
+
+        Pair<Set<TblColRef>, Set<TblColRef>> colsPair = ExpressionColCollector.collectColumnsPair(tupleExpression);
+        filterColSet = colsPair.getFirst();
+        Set<TblColRef> measureColumns = colsPair.getSecond();
+        this.runtimeFuncMap = Maps.newHashMapWithExpectedSize(measureColumns.size());
+        for (TblColRef column : measureColumns) {
+            runtimeFuncMap.put(column, constructRuntimeFunction(column));
+        }
     }
 
     @Override
-    public boolean needRewriteField() {
+    public boolean needRewrite() {
         return false;
     }
 
@@ -39,11 +57,29 @@ public abstract class DynamicFunctionDesc extends FunctionDesc {
         return false;
     }
 
-    public abstract Set<TblColRef> getRuntimeDimensions();
+    public TupleExpression getTupleExpression() {
+        return tupleExpression;
+    }
 
-    public abstract Map<TblColRef, FunctionDesc> getRuntimeFuncMap();
+    public Set<TblColRef> getFilterColumnSet() {
+        return filterColSet;
+    }
 
-    public abstract void setRuntimeFuncMap(Map<TblColRef, FunctionDesc> funcMap);
+    public Set<TblColRef> getMeasureColumnSet() {
+        return runtimeFuncMap.keySet();
+    }
+
+    public Collection<FunctionDesc> getRuntimeFuncs() {
+        return runtimeFuncMap.values();
+    }
+
+    public Map<TblColRef, FunctionDesc> getRuntimeFuncMap() {
+        return runtimeFuncMap;
+    }
+
+    public void setRuntimeFuncMap(Map<TblColRef, FunctionDesc> funcMap) {
+        this.runtimeFuncMap = funcMap;
+    }
 
     protected abstract FunctionDesc constructRuntimeFunction(TblColRef column);
 }

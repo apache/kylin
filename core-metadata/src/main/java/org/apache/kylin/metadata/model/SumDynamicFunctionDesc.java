@@ -25,15 +25,17 @@ import org.apache.kylin.metadata.expression.TupleExpression;
 
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
-public class SumExpressionDynamicFunctionDesc extends ExpressionDynamicFunctionDesc {
+public class SumDynamicFunctionDesc extends DynamicFunctionDesc {
 
     public static final TblColRef mockCntCol = TblColRef.newInnerColumn(FunctionDesc.FUNC_COUNT,
             TblColRef.InnerDataTypeEnum.DERIVED);
 
     private Set<TblColRef> measureColumnSet;
 
-    public SumExpressionDynamicFunctionDesc(ParameterDesc parameter, TupleExpression tupleExpression) {
-        super(parameter, FUNC_SUM, null, tupleExpression);
+    public SumDynamicFunctionDesc(ParameterDesc parameter, TupleExpression tupleExpression) {
+        super(parameter, tupleExpression);
+        setExpression(FUNC_SUM);
+        setReturnType("decimal");
     }
 
     @Override
@@ -47,9 +49,9 @@ public class SumExpressionDynamicFunctionDesc extends ExpressionDynamicFunctionD
     }
 
     @Override
-    public Set<TblColRef> getRuntimeMeasures() {
+    public Set<TblColRef> getMeasureColumnSet() {
         if (measureColumnSet == null) {
-            measureColumnSet = Sets.newHashSet(super.getRuntimeMeasures());
+            measureColumnSet = Sets.newHashSet(super.getMeasureColumnSet());
             measureColumnSet.remove(mockCntCol);
         }
         return measureColumnSet;
@@ -57,16 +59,19 @@ public class SumExpressionDynamicFunctionDesc extends ExpressionDynamicFunctionD
 
     @Override
     protected FunctionDesc constructRuntimeFunction(TblColRef column) {
-        return column == mockCntCol ? FunctionDesc.newInstance(FunctionDesc.FUNC_COUNT, null, null)
-                : FunctionDesc.newInstance(FUNC_SUM, ParameterDesc.newInstance(column), null);
+        return column == mockCntCol ? constructCountFunction() : constructSumFunction(column);
     }
 
-    @Override
-    protected void resetReturnType() {
-        DataType returnType = tupleExpression.getDataType();
-        for (FunctionDesc funcDesc : runtimeFuncMap.values()) {
-            returnType = TupleExpression.referDataType(returnType, funcDesc.getReturnDataType());
-        }
-        setReturnDataType(returnType);
+    private FunctionDesc constructCountFunction() {
+        return FunctionDesc.newInstance(FunctionDesc.FUNC_COUNT, null, null);
+    }
+
+    private FunctionDesc constructSumFunction(TblColRef column) {
+        FunctionDesc function = new FunctionDesc();
+        function.setParameter(ParameterDesc.newInstance(column));
+        function.setExpression(FUNC_SUM);
+        function.setReturnType("decimal");
+
+        return function;
     }
 }

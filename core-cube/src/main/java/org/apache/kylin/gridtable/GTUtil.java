@@ -143,8 +143,10 @@ public class GTUtil {
 
             @Override
             public TblColRef mapCol(TblColRef col) {
-                int gtColIdx = innerFuncMap.get(col) != null ? mapping.getIndexOf(innerFuncMap.get(col))
-                        : mapping.getIndexOf(col);
+                int gtColIdx = mapping.getIndexOf(col);
+                if (gtColIdx < 0 && innerFuncMap.get(col) != null) {
+                    gtColIdx = mapping.getIndexOf(innerFuncMap.get(col));
+                }
                 return info.colRef(gtColIdx);
             }
         };

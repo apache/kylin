@@ -192,8 +192,8 @@ public class OLAPContext {
             for (FunctionDesc functionDesc : aggregations) {
                 if (functionDesc instanceof DynamicFunctionDesc) {
                     DynamicFunctionDesc dynFunc = (DynamicFunctionDesc) functionDesc;
-                    rtMetricColumns.addAll(dynFunc.getRuntimeFuncMap().keySet());
-                    rtDimColumns.addAll(dynFunc.getRuntimeDimensions());
+                    rtMetricColumns.addAll(dynFunc.getMeasureColumnSet());
+                    rtDimColumns.addAll(dynFunc.getFilterColumnSet());
                     dynFuncs.add(dynFunc);
                 }
             }
