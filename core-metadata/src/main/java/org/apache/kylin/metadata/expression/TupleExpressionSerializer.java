@@ -26,7 +26,6 @@ import java.util.Stack;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -59,9 +58,15 @@ public class TupleExpressionSerializer {
             this.buffer = buffer;
         }
 
-        public TupleExpression visitConstant(ConstantTupleExpression constExpr) {
-            serializeExpression(0, constExpr, buffer, cs);
-            return constExpr;
+        @Override
+        public TupleExpression visitNumber(NumberTupleExpression numExpr) {
+            serializeExpression(0, numExpr, buffer, cs);
+            return numExpr;
+        }
+
+        public TupleExpression visitString(StringTupleExpression strExpr) {
+            serializeExpression(0, strExpr, buffer, cs);
+            return strExpr;
         }
 
         @Override
@@ -82,7 +87,8 @@ public class TupleExpressionSerializer {
             TupleExpression right = binaryExpr.getRight().accept(this);
             // serialize none
             serializeExpression(-1, binaryExpr, buffer, cs);
-            return decorator == null ? binaryExpr : new BinaryTupleExpression(binaryExpr.getOperator(), left, right);
+            return decorator == null ? binaryExpr
+                    : new BinaryTupleExpression(binaryExpr.getOperator(), Lists.newArrayList(left, right));
         }
 
         @Override
@@ -151,13 +157,12 @@ public class TupleExpressionSerializer {
     }
 
     private static void serializeExpression(int flag, TupleExpression expr, ByteBuffer buffer,
-            IFilterCodeSystem<?> cs) {
+                                            IFilterCodeSystem<?> cs) {
         if (flag < 0) {
             BytesUtil.writeVInt(-1, buffer);
         } else {
             int opVal = expr.getOperator().getValue();
             BytesUtil.writeVInt(opVal, buffer);
-            DataType.serializer.serialize(expr.getDataType(), buffer);
             expr.serialize(cs, buffer);
             BytesUtil.writeVInt(flag, buffer);
         }
@@ -174,10 +179,8 @@ public class TupleExpressionSerializer {
                 continue;
             }
 
-            DataType dataType = DataType.serializer.deserialize(buffer);
-
             // deserialize expression
-            TupleExpression tuple = createTupleExpression(dataType, opVal);
+            TupleExpression tuple = createTupleExpression(opVal);
             tuple.deserialize(cs, buffer);
 
             if (rootTuple == null) {
@@ -203,7 +206,7 @@ public class TupleExpressionSerializer {
         return rootTuple;
     }
 
-    private static TupleExpression createTupleExpression(DataType dataType, int opVal) {
+    private static TupleExpression createTupleExpression(int opVal) {
         TupleExpression.ExpressionOperatorEnum op = ID_OP_MAP.get(opVal);
         if (op == null) {
             throw new IllegalStateException("operator value is " + opVal);
@@ -214,16 +217,19 @@ public class TupleExpressionSerializer {
         case MINUS:
         case MULTIPLE:
         case DIVIDE:
-            tuple = new BinaryTupleExpression(dataType, op);
+            tuple = new BinaryTupleExpression(op);
             break;
-        case CONSTANT:
-            tuple = new ConstantTupleExpression(dataType, null);
+        case NUMBER:
+            tuple = new NumberTupleExpression(null);
+            break;
+        case STRING:
+            tuple = new StringTupleExpression(null);
             break;
         case COLUMN:
-            tuple = new ColumnTupleExpression(dataType, null);
+            tuple = new ColumnTupleExpression(null);
             break;
         case CASE:
-            tuple = new CaseTupleExpression(dataType, null, null);
+            tuple = new CaseTupleExpression(null, null);
             break;
         default:
             throw new IllegalStateException("Error ExpressionOperatorEnum: " + op.getValue());

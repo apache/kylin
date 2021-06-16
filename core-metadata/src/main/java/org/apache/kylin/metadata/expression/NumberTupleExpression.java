@@ -21,29 +21,26 @@ package org.apache.kylin.metadata.expression;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.Collections;
-import java.util.Objects;
 
+import org.apache.kylin.common.util.DecimalUtil;
+import org.apache.kylin.metadata.datatype.BigDecimalSerializer;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
-public class ConstantTupleExpression extends TupleExpression {
+public class NumberTupleExpression extends TupleExpression {
 
-    public final static ConstantTupleExpression ZERO = new ConstantTupleExpression(0);
+    public static final BigDecimalSerializer serializer = new BigDecimalSerializer(DataType.getType("decimal"));
 
-    private Object value;
+    private BigDecimal value;
 
-    public ConstantTupleExpression(Object value) {
-        this(referDataType(value), value);
+    public NumberTupleExpression(Object value) {
+        this(DecimalUtil.toBigDecimal(value));
     }
 
-    public ConstantTupleExpression(DataType dataType, Object value) {
-        super(dataType, ExpressionOperatorEnum.CONSTANT, Collections.<TupleExpression> emptyList());
-        this.value = referValue(value);
-    }
-
-    public Object getValue() {
-        return value;
+    public NumberTupleExpression(BigDecimal value) {
+        super(ExpressionOperatorEnum.NUMBER, Collections.<TupleExpression> emptyList());
+        this.value = value;
     }
 
     @Override
@@ -51,13 +48,13 @@ public class ConstantTupleExpression extends TupleExpression {
     }
 
     @Override
-    public Object calculate(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs) {
+    public BigDecimal calculate(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs) {
         return value;
     }
 
     @Override
     public TupleExpression accept(ExpressionVisitor visitor) {
-        return visitor.visitConstant(this);
+        return visitor.visitNumber(this);
     }
 
     @Override
@@ -70,32 +67,29 @@ public class ConstantTupleExpression extends TupleExpression {
         value = serializer.deserialize(buffer);
     }
 
+    public BigDecimal getValue() {
+        return value;
+    }
+
+    public String toString() {
+        return value.toString();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        ConstantTupleExpression that = (ConstantTupleExpression) o;
-        return Objects.equals(value, that.value);
+
+        NumberTupleExpression that = (NumberTupleExpression) o;
+
+        return value != null ? value.equals(that.value) : that.value == null;
+
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(value);
-    }
-
-    public static DataType referDataType(Object value) {
-        if (value instanceof Number) {
-            if (value instanceof Short || value instanceof Integer || value instanceof Long) {
-                return DataType.getType("bigint");
-            } else if (value instanceof BigDecimal) {
-                return DataType.getType("decimal");
-            } else {
-                return DataType.getType("double");
-            }
-        } else {
-            return DataType.getType("varchar");
-        }
+        return value != null ? value.hashCode() : 0;
     }
 }

@@ -19,14 +19,9 @@
 package org.apache.kylin.metadata.expression;
 
 import java.nio.ByteBuffer;
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.kylin.common.util.DecimalUtil;
-import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +32,7 @@ public abstract class TupleExpression {
     public enum ExpressionOperatorEnum {
         PLUS(0, "+"), MINUS(1, "-"), MULTIPLE(2, "*"), DIVIDE(3, "/"), //
         CASE(10, "Case"), //
-        COLUMN(20, "InputRef"), CONSTANT(21, "Constant"), //
+        COLUMN(20, "InputRef"), NUMBER(21, "Number"), STRING(22, "String"), //
         REXCALL(30, "RexCall"), NONE(31, "NONE");
 
         private final int value;
@@ -59,15 +54,10 @@ public abstract class TupleExpression {
 
     protected final ExpressionOperatorEnum operator;
     protected final List<TupleExpression> children;
-    protected final DataType dataType;
-    protected final DataTypeSerializer serializer;
     protected String digest;
     protected Boolean ifAbleToPushDown = null;
 
-    protected TupleExpression(DataType dataType, ExpressionOperatorEnum op, List<TupleExpression> exprs) {
-        this.dataType = dataType;
-        this.serializer = dataType == null || TblColRef.InnerDataTypeEnum.contains(dataType.getName())
-                || dataType.equals(DataType.ANY) ? null : DataTypeSerializer.create(dataType);
+    protected TupleExpression(ExpressionOperatorEnum op, List<TupleExpression> exprs) {
         this.operator = op;
         this.children = exprs;
     }
@@ -101,10 +91,6 @@ public abstract class TupleExpression {
 
     public abstract void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer);
 
-    public DataType getDataType() {
-        return dataType;
-    }
-
     public ExpressionOperatorEnum getOperator() {
         return operator;
     }
@@ -122,65 +108,10 @@ public abstract class TupleExpression {
     }
 
     public List<? extends TupleExpression> getChildren() {
-        return Collections.unmodifiableList(children);
+        return children;
     }
 
     public void addChild(TupleExpression child) {
         children.add(child);
-    }
-
-    public Object referValue(Object value) {
-        return referValue(value, dataType);
-    }
-
-    public static DataType referDataType(DataType dt1, DataType dt2) {
-        if (dt1 == null || dt2 == null) {
-            DataType dt = dt1 == null ? dt2 : dt1;
-            if (dt == null) {
-                return null;
-            }
-            if (dt.isNumberFamily()) {
-                if (dt.isIntegerFamily()) {
-                    return DataType.getType("bigint");
-                } else if (dt.isDecimal()) {
-                    return DataType.getType("decimal");
-                } else {
-                    return DataType.getType("double");
-                }
-            } else {
-                return dt;
-            }
-        }
-
-        if (dt1.isNumberFamily() && dt2.isNumberFamily()) {
-            if (dt1.isIntegerFamily() && dt2.isIntegerFamily()) {
-                return DataType.getType("bigint");
-            } else if (dt1.isDecimal() || dt2.isDecimal()) {
-                return DataType.getType("decimal");
-            } else {
-                return DataType.getType("double");
-            }
-        } else {
-            assert dt1.equals(dt2);
-            return dt1;
-        }
-    }
-
-    public static Object referValue(Object value, DataType dt) {
-        if (value == null) {
-            return null;
-        }
-        if (dt != null && dt.isNumberFamily()) {
-            Number number = (Number) value;
-            if (dt.isIntegerFamily()) {
-                return number.longValue();
-            } else if (dt.isDecimal()) {
-                return DecimalUtil.toBigDecimal(number);
-            } else {
-                return number.doubleValue();
-            }
-        } else {
-            return value;
-        }
     }
 }

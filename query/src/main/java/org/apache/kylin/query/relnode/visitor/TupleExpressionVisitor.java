@@ -31,26 +31,25 @@ import org.apache.calcite.sql.fun.SqlCastFunction;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.util.NlsString;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.expression.BinaryTupleExpression;
 import org.apache.kylin.metadata.expression.CaseTupleExpression;
 import org.apache.kylin.metadata.expression.ColumnTupleExpression;
-import org.apache.kylin.metadata.expression.ConstantTupleExpression;
+import org.apache.kylin.metadata.expression.NumberTupleExpression;
 import org.apache.kylin.metadata.expression.RexCallTupleExpression;
+import org.apache.kylin.metadata.expression.StringTupleExpression;
 import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.FilterOptimizeTransformer;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.relnode.ColumnRowType;
-import org.apache.kylin.query.schema.OLAPTable;
 import org.apache.kylin.query.util.RexUtil;
 
 import com.google.common.collect.Lists;
 
 public class TupleExpressionVisitor extends RexVisitorImpl<TupleExpression> {
-    private final ColumnRowType inputRowType;
-    private final boolean ifVerify;
+    final ColumnRowType inputRowType;
+    final boolean ifVerify;
 
     public TupleExpressionVisitor(ColumnRowType inputRowType, boolean ifVerify) {
         super(true);
@@ -99,8 +98,7 @@ public class TupleExpressionVisitor extends RexVisitorImpl<TupleExpression> {
         assert call.operands.size() == 2;
         TupleExpression left = call.operands.get(0).accept(this);
         TupleExpression right = call.operands.get(1).accept(this);
-        DataType dataType = DataType.getType(OLAPTable.DATATYPE_MAPPING.get(call.type.getSqlTypeName()));
-        BinaryTupleExpression tuple = new BinaryTupleExpression(dataType, op, Lists.newArrayList(left, right));
+        BinaryTupleExpression tuple = new BinaryTupleExpression(op, Lists.newArrayList(left, right));
         tuple.setDigest(call.toString());
         return tuple;
     }
@@ -134,9 +132,7 @@ public class TupleExpressionVisitor extends RexVisitorImpl<TupleExpression> {
                 elseExpr = elseNode.accept(this);
             }
         }
-
-        DataType dataType = DataType.getType(OLAPTable.DATATYPE_MAPPING.get(call.type.getSqlTypeName()));
-        CaseTupleExpression tuple = new CaseTupleExpression(dataType, whenList, elseExpr);
+        CaseTupleExpression tuple = new CaseTupleExpression(whenList, elseExpr);
         tuple.setDigest(call.toString());
         return tuple;
     }
@@ -146,9 +142,7 @@ public class TupleExpressionVisitor extends RexVisitorImpl<TupleExpression> {
         for (RexNode rexNode : call.operands) {
             children.add(rexNode.accept(this));
         }
-
-        DataType dataType = DataType.getType(OLAPTable.DATATYPE_MAPPING.get(call.type.getSqlTypeName()));
-        RexCallTupleExpression tuple = new RexCallTupleExpression(dataType, children);
+        RexCallTupleExpression tuple = new RexCallTupleExpression(children);
         tuple.setDigest(call.toString());
         return tuple;
     }
@@ -164,7 +158,12 @@ public class TupleExpressionVisitor extends RexVisitorImpl<TupleExpression> {
         // check it for rewrite count
         if (index < inputRowType.size()) {
             TblColRef column = inputRowType.getColumnByIndex(index);
-            TupleExpression tuple = new ColumnTupleExpression(column);
+            TupleExpression tuple;
+            if (column.getSubTupleExps() != null) {
+                tuple = new RexCallTupleExpression(column.getSubTupleExps());
+            } else {
+                tuple = new ColumnTupleExpression(column);
+            }
             tuple.setDigest(inputRef.toString());
             return tuple;
         } else {
@@ -190,17 +189,15 @@ public class TupleExpressionVisitor extends RexVisitorImpl<TupleExpression> {
     public TupleExpression visitLiteral(RexLiteral literal) {
         TupleExpression tuple;
         Object value = literal.getValue();
-
-        DataType dataType = DataType.getType(OLAPTable.DATATYPE_MAPPING.get(literal.getType().getSqlTypeName()));
         if (value instanceof Number) {
-            tuple = new ConstantTupleExpression(dataType, value);
+            tuple = new NumberTupleExpression(value);
         } else {
             if (value == null) {
-                tuple = new ConstantTupleExpression(dataType, null);
+                tuple = new StringTupleExpression(null);
             } else if (value instanceof NlsString) {
-                tuple = new ConstantTupleExpression(dataType, ((NlsString) value).getValue());
+                tuple = new StringTupleExpression(((NlsString) value).getValue());
             } else {
-                tuple = new ConstantTupleExpression(dataType, value.toString());
+                tuple = new StringTupleExpression(value.toString());
             }
         }
         tuple.setDigest(literal.toString());

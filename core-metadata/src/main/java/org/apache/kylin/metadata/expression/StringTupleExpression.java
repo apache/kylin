@@ -21,18 +21,20 @@ package org.apache.kylin.metadata.expression;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 
+import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.datatype.StringSerializer;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
-public class NoneTupleExpression extends TupleExpression {
+public class StringTupleExpression extends TupleExpression {
 
-    public NoneTupleExpression() {
-        super(ExpressionOperatorEnum.NONE, Collections.<TupleExpression> emptyList());
-    }
+    public static final StringSerializer serializer = new StringSerializer(DataType.getType("varchar"));
 
-    @Override
-    public boolean ifAbleToPushDown() {
-        return false;
+    private String value;
+
+    public StringTupleExpression(String value) {
+        super(ExpressionOperatorEnum.STRING, Collections.<TupleExpression> emptyList());
+        this.value = value;
     }
 
     @Override
@@ -40,22 +42,48 @@ public class NoneTupleExpression extends TupleExpression {
     }
 
     @Override
-    public Object calculate(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs) {
-        throw new UnsupportedOperationException();
+    public String calculate(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs) {
+        return value;
     }
 
     @Override
     public TupleExpression accept(ExpressionVisitor visitor) {
-        return visitor.visitNone(this);
+        return visitor.visitString(this);
     }
 
     @Override
     public void serialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
-        throw new UnsupportedOperationException();
+        serializer.serialize(value, buffer);
     }
 
     @Override
     public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
-        throw new UnsupportedOperationException();
+        value = serializer.deserialize(buffer);
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public String toString() {
+        return value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        StringTupleExpression that = (StringTupleExpression) o;
+
+        return value != null ? value.equals(that.value) : that.value == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return value != null ? value.hashCode() : 0;
     }
 }

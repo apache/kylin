@@ -21,14 +21,13 @@ package org.apache.kylin.metadata.expression;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
 public class RexCallTupleExpression extends TupleExpression {
 
-    public RexCallTupleExpression(DataType dataType, List<TupleExpression> children) {
-        super(dataType, ExpressionOperatorEnum.REXCALL, children);
+    public RexCallTupleExpression(List<TupleExpression> children) {
+        super(ExpressionOperatorEnum.REXCALL, children);
     }
 
     @Override
