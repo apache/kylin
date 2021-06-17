@@ -26,19 +26,19 @@ CentOS 6.5+ 或Ubuntu 16.0.4+
 - 软件要求：
   - Hadoop 2.7+,3.0
   - Hive 0.13+,1.2.1+
+  - Spark 2.4.6
   - JDK: 1.8+
 
-建议使用集成的Hadoop环境进行kylin的安装与测试，比如Hortonworks HDP 或Cloudera CDH ，kylin发布前在 Hortonworks HDP 2.2-2.6 and 3.0, Cloudera CDH 5.7-5.11 and 6.0, AWS EMR 5.7-5.10, Azure HDInsight 3.5-3.6上测试通过。 
+建议使用集成的Hadoop环境进行kylin的安装与测试，比如Hortonworks HDP 或Cloudera CDH ，kylin发布前在 Hortonworks HDP 2.4, Cloudera CDH 5.7 and 6.0, AWS EMR 5.31 and 6.0, Azure HDInsight 4.0 上测试通过。 
 
 当你的环境满足上述前置条件时 ，你可以开始安装使用kylin。
 
 #### step1、下载kylin压缩包
 
-从[Apache Kylin Download Site](https://kylin.apache.org/download/)下载一个适用于你的Hadoop版本的二进制文件。目前最新Release版本是kylin 3.1.0和kylin 2.6.6，其中3.0版本支持实时摄入数据进行预计算的功能。以CDH 5.的hadoop环境为例，可以使用如下命令行下载kylin 3.1.0：
-
+从[Apache Kylin Download Site](https://kylin.apache.org/download/)下载 kylin4.0 的二进制文件。
 ```
 cd /usr/local/
-wget http://apache.website-solution.net/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-cdh57.tar.gz
+wget http://apache.website-solution.net/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin.tar.gz
 ```
 
 #### step2、解压kylin
@@ -46,14 +46,14 @@ wget http://apache.website-solution.net/kylin/apache-kylin-3.1.0/apache-kylin-3.
 解压下载得到的kylin压缩包，并配置环境变量KYLIN_HOME指向解压目录：
 
 ```
-tar -zxvf  apache-kylin-3.1.0-bin-cdh57.tar.gz
-cd apache-kylin-3.1.0-bin-cdh57
+tar -zxvf  apache-kylin-4.0.0-bin.tar.gz
+cd apache-kylin-4.0.0-bin-cdh57
 export KYLIN_HOME=`pwd`
 ```
 
 #### step3、下载SPARK
 
-由于kylin启动时会对SPARK环境进行检查，所以你需要设置SPARK_HOME指向自己的spark安装路径：
+Kylin4.0 使用 Spark 作为查询和构建引擎，所以你需要设置SPARK_HOME指向自己的spark安装路径：
 
 ```
 export SPARK_HOME=/path/to/spark
@@ -100,7 +100,7 @@ $KYLIN_HOME/bin/kylin.sh start
 
 ```
 A new Kylin instance is started by root. To stop it, run 'kylin.sh stop'
-Check the log at /usr/local/apache-kylin-3.1.0-bin-cdh57/logs/kylin.log
+Check the log at /usr/local/apache-kylin-4.0.0-bin/logs/kylin.log
 Web UI is at http://<hostname>:7070/kylin
 ```
 
@@ -121,9 +121,7 @@ $KYLIN_HOME/bin/sample.sh
 ```
 
 完成后登陆kylin，点击System->Configuration->Reload Metadata来重载元数据
-元数据重载完成后你可以在左上角的Project中看到一个名为learn_kylin的项目，它包含kylin_sales_cube和kylin_streaming_cube, 它们分别为batch cube和streaming cube，你可以直接对kylin_sales_cube进行构建，构建完成后就可以查询。
-
-关于sample cube，可以参考[Sample Cube](/cn/docs/tutorial/kylin_sample.html)。
+元数据重载完成后你可以在左上角的Project中看到一个名为learn_kylin的项目，它包含kylin_sales_cube和kylin_streaming_cube, 它们分别为batch cube和streaming cube，不过 kylin4.0 暂时还不支持 streaming cube，你可以直接对kylin_sales_cube进行构建，构建完成后就可以查询。
 
 当然，你也可以根据下面的教程来尝试创建自己的Cube。
 
@@ -137,6 +135,10 @@ $KYLIN_HOME/bin/sample.sh
 
 点击Model->Data Source->Load Table From Tree，
 Kylin会读取到Hive数据源中的表并以树状方式显示出来，你可以选择自己要使用的表，然后点击sync进行将其加载到kylin。
+
+此外，Kylin4.0 还支持 CSV 格式文件作为数据源，你也可以点击 Model->Data Source->Load CSV File as Table 来加载 CSV 数据源。
+
+本例中仍然使用 Hive 数据源进行讲解与演示。 
 
 ![](/images/docs/quickstart/load_hive_table.png)
 
@@ -178,7 +180,7 @@ Kylin会读取到Hive数据源中的表并以树状方式显示出来，你可�
 
 ![](/images/docs/quickstart/cube_add_measure.png)
 
-添加完所有Measure后点击Next进行下一步，这一页是关于Cube数据刷新的设置。在这里可以设施自动合并的阈值（Auto Merge Thresholds）、数据保留的最短时间（Retention Threshold）以及第一个Segment的起点时间。
+添加完所有Measure后点击Next进行下一步，这一页是关于Cube数据刷新的设置。在这里可以设置自动合并的阈值（Auto Merge Thresholds）、数据保留的最短时间（Retention Threshold）以及第一个Segment的起点时间。
 
 ![](/images/docs/quickstart/segment_auto_merge.png)
 

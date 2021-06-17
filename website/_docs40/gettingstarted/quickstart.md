@@ -32,34 +32,32 @@ The Linux account running Kylin must have access to the Hadoop cluster, includin
 
  
 
-(4) Software Requirements: Hadoop 2.7+, 3.0-3.1; Hive 0.13+, 1.2.1+; JDK: 1.8+
+(4) Software Requirements: Hadoop 2.7+, 3.0-3.1; Hive 0.13+, 1.2.1+; Spark 2.4.6; JDK: 1.8+
 
  
 
-It is recommended to use an integrated Hadoop environment for Kylin installation and testing, such as Hortonworks HDP or Cloudera CDH. Before Kylin was released, Hortonworks HDP 2.2-2.6 and 3.0, Cloudera CDH 5.7-5.11 and 6.0, AWS EMR 5.7-5.10, and Azure HDInsight 3.5-3.6 passed the test.
+It is recommended to use an integrated Hadoop environment for Kylin installation and testing, such as Hortonworks HDP or Cloudera CDH. Before Kylin was released, Hortonworks HDP 2.4, Cloudera CDH 5.7 and 6.0, AWS EMR 5.31 and 6.0, and Azure HDInsight 4.0 passed the test.
 
 #### Install and Use
 When your environment meets the above prerequisites, you can install and start using Kylin.
 
 #### Step1. Download the Kylin Archive
-Download a binary for your version of Hadoop from [Apache Kylin Download Site](https://kylin.apache.org/download/). Currently, the latest versions are Kylin 3.1.0 and Kylin 2.6.6, of which, version 3.0 supports the function of ingesting data in real time for pre-calculation. If your Hadoop environment is CDH 5.7, you can download Kylin 3.1.0 using the following command line:
-
-```
+Download a kylin4.0 binary package from [Apache Kylin Download Site](https://kylin.apache.org/download/). 
 cd /usr/local/
-wget http://apache.website-solution.net/kylin/apache-kylin-3.1.0/apache-kylin-3.1.0-bin-cdh57.tar.gz
+wget http://apache.website-solution.net/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin.tar.gz
 ```
 
 #### Step2. Extract Kylin
 Extract the downloaded Kylin archive and configure the environment variable KYLIN_HOME to point to the extracted directory:
 
 ```
-tar -zxvf  apache-kylin-3.1.0-bin-cdh57.tar.gz
-cd apache-kylin-3.1.0-bin-cdh57
+tar -zxvf  apache-kylin-4.0.0-bin.tar.gz
+cd apache-kylin-4.0.0-bin
 export KYLIN_HOME=`pwd`
 ```
 
 #### Step3. Download Spark
-Since Kylin checks the Spark environment when it starts, you need to set SPARK_HOME:
+Kylin 4.0 uses spark as query engine and build engine, you need to set SPARK_HOME:
 
 ```
 export SPARK_HOME=/path/to/spark
@@ -101,7 +99,7 @@ Start script to start Kylin. If the startup is successful, the following will be
 
 ```
 A new Kylin instance is started by root. To stop it, run 'kylin.sh stop'
-Check the log at /usr/local/apache-kylin-3.1.0-bin-cdh57/logs/kylin.log
+Check the log at /usr/local/apache-kylin-4.0.0-bin/logs/kylin.log
 Web UI is at http://<hostname>:7070/kylin
 ```
 
@@ -121,10 +119,8 @@ $KYLIN_HOME/bin/sample.sh
 After completing, log in to Kylin, click System -> Configuration -> Reload Metadata to reload the metadata.
 
 After the metadata is reloaded, you can see a project named learn_kylin in Project in the upper left corner. 
-This contains kylin_sales_cube and kylin_streaming_cube, which are a batch cube and a streaming cube, respectively. 
+This contains kylin_sales_cube and kylin_streaming_cube, which are a batch cube and a streaming cube, respectively. However, kylin 4.0 does not support streaming cube yet.
 You can build the kylin_sales_cube directly and you can query it after the build is completed. 
-
-For sample cube, you can refer to:[Sample Cube](/docs/tutorial/kylin_sample.html)
 
 Of course, you can also try to create your own cube based on the following tutorial.
 
@@ -134,12 +130,16 @@ After logging in to Kylin, click the + in the upper left corner to create a Proj
 ![](/images/docs/quickstart/create_project.png)
 
 #### Step10. Load Hive Table
-Click Model -> the Data Source -> the Load the From the Table Tree. 
+Click `Model -> the Data Source -> the Load the From the Table Tree`. 
 Kylin reads the Hive data source table and displays it in a tree. You can choose the tables you would like to add to models and then click Sync. The selected tables will then be loaded into Kylin.
 
 ![](/images/docs/quickstart/load_hive_table.png)
 
 They then appear in the Tables directory of the data source.
+
+In addition, kylin 4.0 also supports CSV file as data source. You can also click `model -> data source -> Load CSV file as table` to load the CSV data source.
+
+In this example, Hive data source is still used for explanation and demonstration.
 
 #### Step11. Create the Model
 Click Model -> New -> New Model:

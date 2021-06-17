@@ -46,10 +46,6 @@ since: v0.7.1
 
    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/5 hive-table-info.png)
 
-6. 在后台，Kylin 将会执行 MapReduce 任务计算新同步表的基数（cardinality），任务完成后，刷新页面并点击表名，基数值将会显示在表信息中。
-
-   ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/5 hive-table-cardinality.png)
-
 ### III. 新建 Data Model
 创建 cube 前，需定义一个数据模型。数据模型定义了一个星型（star schema）或雪花（snowflake schema）模型。一个模型可以被多个 cube 使用。
 
@@ -121,7 +117,7 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
 
    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 meas-+meas.png)
 
-2. 根据它的表达式共有7种不同类型的度量：`SUM`、`MAX`、`MIN`、`COUNT`、`COUNT_DISTINCT` `TOP_N`, `EXTENDED_COLUMN` 和 `PERCENTILE`。请合理选择 `COUNT_DISTINCT` 和 `TOP_N` 返回类型，它与 cube 的大小相关。
+2. 根据它的表达式共有7种不同类型的度量：`SUM`、`MAX`、`MIN`、`COUNT`、`COUNT_DISTINCT` `TOP_N` 和 `PERCENTILE`。请合理选择 `COUNT_DISTINCT` 和 `TOP_N` 返回类型，它与 cube 的大小相关。
    * SUM
 
      ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-sum.png)
@@ -141,7 +137,7 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
    * DISTINCT_COUNT
    这个度量有两个实现：
    1）近似实现 HyperLogLog，选择可接受的错误率，低错误率需要更多存储；
-   2）精确实现 bitmap（具体限制请看 https://issues.apache.org/jira/browse/KYLIN-1186）
+   2）精确实现 bitmap（具体实现请看 [Global Dictionary on Kylin 4](https://cwiki.apache.org/confluence/display/KYLIN/Global+Dictionary+on+Spark)）
 
      ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-distinct.png)
    
@@ -154,11 +150,6 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
    **注意**：如果您想要使用 `TOP_N`，您需要为 “ORDER | SUM by Column” 添加一个 `SUM` 度量。例如，如果您创建了一个根据价格的总和选出 top100 的卖家的度量，那么也应该创建一个 SUM(price) 度量。
 
      ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-topn.png)
-
-   * EXTENDED_COLUMN
-   Extended_Column 作为度量比作为维度更节省空间。一列和另一列可以生成新的列。
-   
-     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-extended_column.PNG)
 
    * PERCENTILE
    Percentile 代表了百分比。值越大，错误就越少。100为最合适的值。
@@ -194,6 +185,8 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
 `Rowkeys`: 是由维度编码值组成。
 
 你可以拖拽维度列去调整其在 rowkey 中位置; 位于rowkey前面的列，将可以用来大幅缩小查询的范围。通常建议将 mandantory 维度放在开头, 然后是在过滤 ( where 条件)中起到很大作用的维度；如果多个列都会被用于过滤，将高基数的维度（如 user_id）放在低基数的维度（如 age）的前面。
+
+此外，你还可以在这里指定使用某一列作为 shardBy 列，kylin4.0 会根据 shardBy 列对存储文件进行分片，分片能够使查询引擎跳过不必要的文件，提高查询性能，最好选择高基列并且会在多个 cuboid 中出现的列作为 shardBy 列。
 
 `Mandatory Cuboids`: 维度组合白名单。确保你想要构建的 cuboid 能被构建。
 
