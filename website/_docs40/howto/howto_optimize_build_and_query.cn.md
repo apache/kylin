@@ -14,3 +14,6 @@ Apache kylin4.0 是继 Kylin3.0 之后一个重大的的架构升级版本，cub
 同时提供视频讲解：
 [How to optimize build performance in kylin 4.0](https://www.bilibili.com/video/BV1ry4y1z7Nt) 
 [How to optimize query performance in kylin 4.0](https://www.bilibili.com/video/BV18K411G7k3)
+
+以及 Kylin4.0 用户有赞的最佳实践博客：
+[有赞为什么选择 kylin4.0](/cn_blog/2021/06/17/Why-did-Youzan-choose-Kylin4/) 

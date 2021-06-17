@@ -51,3 +51,6 @@ Content-Type: application/json;charset=UTF-8
 
 ### 5.	If the job got errors, you can resume it. 
 *   `PUT http://localhost:7070/kylin/api/jobs/{job_uuid}/resume`
+
+### 6.	Adjust the cuboid list of a cube and trigger optimize segment job
+*   `PUT http://localhost:7070/kylin/api/cubes/{cube_name}/optimize2`

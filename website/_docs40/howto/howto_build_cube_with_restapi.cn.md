@@ -52,3 +52,6 @@ Content-Type: application/json;charset=UTF-8
 
 ### 5.	如果构建任务出现错误，可以重新开始它
 *   `PUT http://localhost:7070/kylin/api/jobs/{job_uuid}/resume`
+
+### 6.  调整某个 cube 中的 cuboid list，触发 optimize segment 任务
+*   `PUT http://localhost:7070/kylin/api/cubes/{cube_name}/optimize2`
