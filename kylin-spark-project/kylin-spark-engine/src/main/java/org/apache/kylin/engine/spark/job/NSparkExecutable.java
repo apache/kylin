@@ -387,8 +387,10 @@ public class NSparkExecutable extends AbstractExecutable {
         if (StringUtils.isNotBlank(sparkUploadFiles)) {
             sb.append("--files ").append(sparkUploadFiles).append(" ");
         }
-        sb.append("--principal ").append(config.getKerberosPrincipal()).append(" ");
-        sb.append("--keytab ").append(config.getKerberosKeytabPath()).append(" ");
+        if (config.isKerberosEnabled()) {
+            sb.append("--principal ").append(config.getKerberosPrincipal()).append(" ");
+            sb.append("--keytab ").append(config.getKerberosKeytabPath()).append(" ");
+        }
         sb.append("--name job_step_%s ");
         sb.append("--jars %s %s %s");
         String cmd = String.format(Locale.ROOT, sb.toString(), hadoopConf, sparkSubmitCmd, getId(), jars, kylinJobJar,
