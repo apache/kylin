@@ -28,7 +28,8 @@ import java.util.Set;
 public class NSparkLocalStep extends NSparkExecutable {
     private final static String[] excludedSparkConf = new String[] {"spark.executor.cores",
             "spark.executor.memoryOverhead", "spark.executor.extraJavaOptions",
-            "spark.executor.instances", "spark.executor.memory", "spark.executor.extraClassPath"};
+            "spark.executor.instances", "spark.executor.memory", "spark.executor.extraClassPath",
+            "spark.submit.deployMode"};
 
     @Override
     protected Set<String> getMetadataDumpList(KylinConfig config) {
