@@ -65,7 +65,7 @@ object SparderLookupManager extends Logging {
           columns(index).getName).toString,
           SparkTypeUtil.toSparkType(columns(index).getType))
       }))
-    val rsourcePath = kylinConfig.getReadHdfsWorkingDirectory + sourcePath
+    val rsourcePath = kylinConfig.getHdfsWorkingDirectory + sourcePath
     SparderContext.getSparkSession.read
       .schema(StructType(tableDesc.getColumns.map(column => StructField(column.getName, SparkTypeUtil.toSparkType(column.getType))).toSeq))
       .parquet(rsourcePath)

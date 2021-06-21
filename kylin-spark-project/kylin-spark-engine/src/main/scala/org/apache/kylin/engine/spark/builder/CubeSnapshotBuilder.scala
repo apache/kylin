@@ -75,7 +75,7 @@ class CubeSnapshotBuilder extends Logging {
     val newSnapMap = Maps.newHashMap[String, String]
     val fs = HadoopUtil.getWorkingFileSystem
     val kylinConf = seg.kylinconf
-    val baseDir = kylinConf.getReadHdfsWorkingDirectory
+    val baseDir = kylinConf.getHdfsWorkingDirectory
     val toBuildTableDesc = seg.snapshotTables
     if (kylinConf.isSnapshotParallelBuildEnabled) {
       val service = Executors.newCachedThreadPool()
