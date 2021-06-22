@@ -492,6 +492,11 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
                 rowKeyCol.getColRef().getColumnDesc().getUpgradedType().isStringFamily()) {
             return true;
         }
+        // KYLIN-4942
+        if (rowKeyCol.getEncoding().startsWith("boolean") &&
+                rowKeyCol.getColRef().getColumnDesc().getUpgradedType().isIntegerFamily()) {
+            return true;
+        }
         // KYLIN-5007
         if (rowKeyCol.getEncoding().startsWith("integer") &&
                 rowKeyCol.getColRef().getColumnDesc().getUpgradedType().isStringFamily()) {
