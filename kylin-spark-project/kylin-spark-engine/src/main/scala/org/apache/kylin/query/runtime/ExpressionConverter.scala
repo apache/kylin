@@ -24,11 +24,11 @@ import org.apache.calcite.rel.`type`.RelDataType
 import org.apache.calcite.sql.SqlKind
 import org.apache.calcite.sql.SqlKind._
 import org.apache.calcite.sql.`type`.SqlTypeName
+import org.apache.kylin.engine.spark.cross.CrossDateTimeUtils
 import org.apache.kylin.query.util.UnsupportedSparkFunctionException
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.KylinFunctions._
 import org.apache.spark.sql.catalyst.expressions.{If, IfNull, StringLocate}
-import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.utils.SparkTypeUtil
 
@@ -213,8 +213,7 @@ object ExpressionConverter {
           // time_funcs
           case "current_date" =>
             k_lit(
-              DateTimeUtils.dateToString(
-                DateTimeUtils.millisToDays(System.currentTimeMillis())))
+              CrossDateTimeUtils.dateToString())
           case "current_timestamp" =>
             current_timestamp()
           case "to_timestamp" =>

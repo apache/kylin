@@ -71,7 +71,12 @@
         <!-- Spark dependency -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-app</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -87,16 +92,28 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.11</artifactId>
-            <version>${spark.version}</version>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-core-common</artifactId>
             <type>test-jar</type>
-            <scope>provided</scope>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-client</artifactId>
+                </exclusion>
+            </exclusions>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.scalamock</groupId>
-            <artifactId>scalamock_2.11</artifactId>
+            <artifactId>scalamock_${scala.binary.version}</artifactId>
             <version>4.1.0</version>
             <scope>test</scope>
         </dependency>
@@ -125,36 +142,20 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>8</source>
-                    <target>8</target>
-                </configuration>
-            </plugin>
-            <!--<plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
-                <version>3.2.2</version>
-            </plugin>-->
-            <plugin>
-                <groupId>org.scalatest</groupId>
-                <artifactId>scalatest-maven-plugin</artifactId>
-                <version>1.0</version>
-                <configuration>
-                    <reportsDirectory>
-                        ${project.build.directory}/surefire-reports
-                    </reportsDirectory>
-                    <junitxml>.</junitxml>
-                    <filereports>SparkTestSuite.txt</filereports>
-                    <stdout>I</stdout>
-                </configuration>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>test</id>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
                         <goals>
-                            <goal>test</goal>
+                            <goal>add-source</goal>
                         </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/main/${spark.version.dir}</source>
+                            </sources>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -163,12 +164,24 @@
                 <artifactId>scala-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>scala-compile-first</id>
+                        <id>compile-version-dependent-source</id>
                         <phase>process-resources</phase>
                         <goals>
-                            <goal>add-source</goal>
                             <goal>compile</goal>
                         </goals>
+                        <configuration>
+                            <sourceDir>${spark.version.dir}</sourceDir>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-common-scala-source</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDir>scala</sourceDir>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>scala-test-compile</id>

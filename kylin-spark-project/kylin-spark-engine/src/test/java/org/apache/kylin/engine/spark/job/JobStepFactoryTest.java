@@ -30,9 +30,9 @@ import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.junit.Assert;
 import org.junit.Test;
-import org.spark_project.guava.collect.Sets;
 
 import java.io.IOException;
 import java.util.Set;

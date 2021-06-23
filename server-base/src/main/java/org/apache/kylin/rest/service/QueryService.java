@@ -483,7 +483,7 @@ public class QueryService extends BasicService {
                 logger.warn("Write metric error.", th);
             }
             if (sqlResponse.getIsException())
-                throw new InternalErrorException(sqlResponse.getExceptionMessage());
+                throw new InternalErrorException(sqlResponse.getExceptionMessage(), sqlResponse.getThrowable());
 
             return sqlResponse;
 

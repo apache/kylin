@@ -19,7 +19,6 @@
 package org.apache.spark.sql.execution.datasource
 
 import java.sql.{Date, Timestamp}
-
 import org.apache.hadoop.fs.{FileStatus, Path}
 import org.apache.kylin.common.util.DateFormat
 import org.apache.kylin.cube.cuboid.Cuboid
@@ -29,7 +28,7 @@ import org.apache.kylin.engine.spark.metadata.MetadataConverter
 import org.apache.kylin.metadata.model.{PartitionDesc, SegmentStatusEnum}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.analysis.Resolver
-import org.apache.spark.sql.catalyst.expressions.{Attribute, AttributeSet, EmptyRow, Expression, Literal}
+import org.apache.spark.sql.catalyst.expressions.{Attribute, AttributeSet, EmptyRow, Expression, ExpressionUtils, Literal}
 import org.apache.spark.sql.catalyst.{InternalRow, expressions}
 import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.sources._
@@ -346,7 +345,7 @@ class FilePruner(cubeInstance: CubeInstance,
       segDirs
     } else {
       val translatedFilter = filters.map(filter => convertCastFilter(filter))
-        .flatMap(DataSourceStrategy.translateFilter)
+        .flatMap(ExpressionUtils.translateFilter)
       if (translatedFilter.isEmpty) {
         logInfo("Can not use filters to prune segments.")
         segDirs
@@ -357,8 +356,8 @@ class FilePruner(cubeInstance: CubeInstance,
             val tsRange = cubeInstance.getSegment(e.segmentName, SegmentStatusEnum.READY).getTSRange
             SegFilters(tsRange.startValue, tsRange.endValue, pattern)
               .foldFilter(reducedFilter) match {
-              case Trivial(true) => true
-              case Trivial(false) => false
+              case AlwaysTrue => true
+              case AlwaysFalse => false
             }
           }
         }
@@ -555,22 +554,20 @@ case class SegFilters(start: Long, end: Long, pattern: String) extends Logging {
         }
       case And(left: Filter, right: Filter) =>
         And(foldFilter(left), foldFilter(right)) match {
-          case And(Trivial(false), _) => Trivial(false)
-          case And(_, Trivial(false)) => Trivial(false)
-          case And(Trivial(true), right) => right
-          case And(left, Trivial(true)) => left
+          case And(AlwaysFalse, _) => Trivial(false)
+          case And(_, AlwaysFalse) => Trivial(false)
+          case And(AlwaysTrue, right) => right
+          case And(left, AlwaysTrue) => left
           case other => other
         }
       case Or(left: Filter, right: Filter) =>
         Or(foldFilter(left), foldFilter(right)) match {
-          case Or(Trivial(true), _) => Trivial(true)
-          case Or(_, Trivial(true)) => Trivial(true)
-          case Or(Trivial(false), right) => right
-          case Or(left, Trivial(false)) => left
+          case Or(AlwaysTrue, _) => Trivial(true)
+          case Or(_, AlwaysTrue) => Trivial(true)
+          case Or(AlwaysFalse, right) => right
+          case Or(left, AlwaysFalse) => left
           case other => other
         }
-      case trivial: Trivial =>
-        trivial
       case unsupportedFilter =>
         // return 'true' to scan all partitions
         // currently unsupported filters are:
@@ -581,8 +578,7 @@ case class SegFilters(start: Long, end: Long, pattern: String) extends Logging {
         Trivial(true)
     }
   }
-}
-
-case class Trivial(value: Boolean) extends Filter {
-  override def references: Array[String] = findReferences(value)
+  def Trivial(value: Boolean): Filter = {
+    if (value) AlwaysTrue else AlwaysFalse
+  }
 }

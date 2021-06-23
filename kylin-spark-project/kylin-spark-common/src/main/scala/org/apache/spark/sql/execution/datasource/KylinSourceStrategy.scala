@@ -17,14 +17,16 @@
  */
 package org.apache.spark.sql.execution.datasource
 
+import org.apache.spark.SPARK_VERSION
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.planning.PhysicalOperation
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.expressions
-import org.apache.spark.sql.{execution, Strategy}
+import org.apache.spark.sql.{Strategy, execution}
 import org.apache.spark.sql.execution.{KylinFileSourceScanExec, SparkPlan}
 import org.apache.spark.sql.execution.datasources.{HadoopFsRelation, LogicalRelation}
 import org.apache.spark.sql.catalyst.expressions.{AttributeReference, AttributeSet, ExpressionSet, NamedExpression, SubqueryExpression}
+import org.apache.spark.utils.KylinReflectUtils
 
 /**
  * A strategy for planning scans over collections of files that might be partitioned or bucketed
@@ -119,15 +121,34 @@ object KylinSourceStrategy extends Strategy with Logging {
       val outputAttributes = readDataColumns ++ partitionColumns
       // to trigger setShufflePartitions
       filePruner.listFiles(partitionKeyFilters.iterator.toSeq, dataFilters.iterator.toSeq)
-      val scan =
-        new KylinFileSourceScanExec(
+      val className = "org.apache.spark.sql.execution.KylinFileSourceScanExec"
+      val (scan: KylinFileSourceScanExec, ignored: Class[_]) = if (SPARK_VERSION.startsWith("2.4")) {
+        KylinReflectUtils.createObject(
+          className,
           fsRelation,
           outputAttributes,
           outputSchema,
           partitionKeyFilters.toSeq,
           filePruner.getShardSpec,
           dataFilters,
-          table.map(_.identifier))
+          table.map(_.identifier)
+        )
+      } else if (SPARK_VERSION.startsWith("3.1")) {
+        KylinReflectUtils.createObject(
+          className,
+          fsRelation,
+          outputAttributes,
+          outputSchema,
+          partitionKeyFilters.toSeq,
+          filePruner.getShardSpec,
+          None,
+          dataFilters,
+          table.map(_.identifier),
+          java.lang.Boolean.TRUE
+        )
+      } else {
+        throw new UnsupportedOperationException(s"Spark version ${SPARK_VERSION} is not supported.")
+      }
 
       val afterScanFilter = afterScanFilters.toSeq.reduceOption(expressions.And)
       val withFilter = afterScanFilter.map(execution.FilterExec(_, scan)).getOrElse(scan)

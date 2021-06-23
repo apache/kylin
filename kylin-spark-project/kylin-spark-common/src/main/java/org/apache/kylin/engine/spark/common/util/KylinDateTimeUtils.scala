@@ -19,7 +19,7 @@
 package org.apache.kylin.engine.spark.common.util
 
 import org.apache.calcite.avatica.util.TimeUnitRange
-import org.apache.spark.sql.catalyst.util.DateTimeUtils
+import org.apache.kylin.engine.spark.cross.CrossDateTimeUtils
 
 object KylinDateTimeUtils {
   val MICROS_PER_MILLIS: Long = 1000L
@@ -34,7 +34,7 @@ object KylinDateTimeUtils {
   def addMonths(timestamp: Long, m: Int): Long = {
     // spark ts unit is microsecond
     val ms = timestamp / 1000
-    val day0 = DateTimeUtils.millisToDays(ms)
+    val day0 = CrossDateTimeUtils.millisToDays(ms)
     val millis = ms - day0 * MILLIS_PER_DAY
     val x = dateAddMonths(day0, m)
     (x * MILLIS_PER_DAY + millis) * 1000
@@ -63,9 +63,9 @@ object KylinDateTimeUtils {
 
   def subtractMonths(t0: Long, t1: Long): Int = {
     val millis0 = floorMod(t0, MILLIS_PER_DAY)
-    val d0 = DateTimeUtils.millisToDays(t0)
+    val d0 = CrossDateTimeUtils.millisToDays(t0)
     val millis1 = floorMod(t1, MILLIS_PER_DAY)
-    val d1 = DateTimeUtils.millisToDays(t1)
+    val d1 = CrossDateTimeUtils.millisToDays(t1)
     var x = dateSubtractMonths(d0, d1)
     val d2 = dateAddMonths(d1, x)
     if (x > 0 && d2 == d0 && millis0 < millis1) x -= 1

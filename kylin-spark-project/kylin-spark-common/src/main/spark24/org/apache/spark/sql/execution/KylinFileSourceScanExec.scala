@@ -21,7 +21,7 @@ package org.apache.spark.sql.execution
 import org.apache.hadoop.fs.{BlockLocation, FileStatus, LocatedFileStatus, Path}
 import org.apache.kylin.common.KylinConfig
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.catalyst.expressions.{Ascending, Attribute, Expression, SortOrder}
+import org.apache.spark.sql.catalyst.expressions.{Ascending, Attribute, Expression, ExpressionUtils, SortOrder}
 import org.apache.spark.sql.catalyst.plans.physical.{HashPartitioning, Partitioning, UnknownPartitioning}
 import org.apache.spark.sql.catalyst.{InternalRow, TableIdentifier}
 import org.apache.spark.sql.execution.datasources._
@@ -57,7 +57,7 @@ class KylinFileSourceScanExec(
     ret
   }
 
-  private lazy val inputRDD: RDD[InternalRow] = {
+  private lazy val _inputRDD: RDD[InternalRow] = {
     val readFile: (PartitionedFile) => Iterator[InternalRow] =
       relation.fileFormat.buildReaderWithPartitionValues(
         sparkSession = relation.sparkSession,
@@ -77,11 +77,12 @@ class KylinFileSourceScanExec(
   }
 
   override def inputRDDs(): Seq[RDD[InternalRow]] = {
-    inputRDD :: Nil
+    _inputRDD :: Nil
   }
 
   @transient
-  private val pushedDownFilters = dataFilters.flatMap(DataSourceStrategy.translateFilter)
+  private val pushedDownFilters = dataFilters
+    .flatMap(ExpressionUtils.translateFilter)
   logInfo(s"Pushed Filters: ${pushedDownFilters.mkString(",")}")
 
   override lazy val (outputPartitioning, outputOrdering): (Partitioning, Seq[SortOrder]) = {

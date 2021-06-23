@@ -20,9 +20,9 @@ package org.apache.kylin.engine.spark.builder
 
 import java.text.SimpleDateFormat
 import java.util.{Locale, TimeZone, UUID}
-
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.cube.{CubeInstance, CubeManager, CubeSegment}
+import org.apache.kylin.engine.spark.cross.CrossDateTimeUtils
 import org.apache.kylin.engine.spark.job.KylinBuildEnv
 import org.apache.kylin.engine.spark.metadata.MetadataConverter
 import org.apache.kylin.engine.spark.metadata.cube.model.ForestSpanningTree
@@ -30,7 +30,7 @@ import org.apache.kylin.job.engine.JobEngineConfig
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler
 import org.apache.kylin.job.lock.MockJobLock
 import org.apache.kylin.metadata.model.SegmentRange
-import org.apache.spark.InfoHelper
+import org.apache.spark.{InfoHelper, SPARK_VERSION}
 import org.apache.spark.sql.common.{LocalMetadata, SharedSparkSession, SparderBaseFunSuite}
 import org.apache.spark.sql.{Dataset, Row}
 import org.junit.Assert
@@ -96,17 +96,32 @@ class TestCreateFlatTable extends SparderBaseFunSuite with SharedSparkSession wi
     val afterJoin1 = generateFlatTable(seg1, cube, true)
     afterJoin1.collect()
 
-    val jobs = helper.getJobsByGroupId(groupId)
-    Assert.assertEquals(jobs.length, 15)
+    if (SPARK_VERSION.startsWith("2.4")) {
+      val jobs = helper.getJobsByGroupId(groupId)
+      Assert.assertEquals(jobs.length, 15)
+    } else if (SPARK_VERSION.startsWith("3.1")) {
+      // in Spark 3.x, BroadcastExchangeExec overwrites job group ID
+      val jobs = helper.getJobsByGroupId(null)
+      Assert.assertEquals(6, jobs.count(_.jobGroup.exists(_.endsWith(groupId))))
+      Assert.assertEquals(9, jobs.count(_.description.exists(_.contains("broadcast exchange"))))
+    }
     DefaultScheduler.destroyInstance()
   }
 
   private def checkFilterCondition(ds: Dataset[Row], seg: CubeSegment) = {
     val queryExecution = ds.queryExecution.simpleString
-    val startTime = dateFormat.format(seg.getTSRange.start.v)
-    val endTime = dateFormat.format(seg.getTSRange.end.v)
+    var startTime = dateFormat.format(seg.getTSRange.start.v)
+    var endTime = dateFormat.format(seg.getTSRange.end.v)
 
     //Test Filter Condition
+
+    // dates will not be converted to string by default since spark 3.0.0.
+    // see https://issues.apache.org/jira/browse/SPARK-27638 for details.
+    if (SPARK_VERSION.startsWith("3.") && conf.get("spark.sql.legacy.typeCoercion.datetimeToString.enabled", "false") == "false") {
+      startTime = CrossDateTimeUtils.stringToDate(startTime).get.toString
+      endTime = CrossDateTimeUtils.stringToDate(endTime).get.toString
+    }
+
     Assert.assertTrue(queryExecution.contains(startTime))
     Assert.assertTrue(queryExecution.contains(endTime))
   }

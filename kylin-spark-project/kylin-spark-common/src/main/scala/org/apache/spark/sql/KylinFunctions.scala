@@ -51,7 +51,7 @@ object KylinFunctions {
     case _ => Column(Literal(literal))
   }
 
-  def k_like(left: Column, right: Column): Column = Column(Like(left.expr, right.expr))
+  def k_like(left: Column, right: Column): Column = Column(new Like(left.expr, right.expr))
 
   def in(value: Expression, list: Seq[Expression]): Column = Column(In(value, list))
 

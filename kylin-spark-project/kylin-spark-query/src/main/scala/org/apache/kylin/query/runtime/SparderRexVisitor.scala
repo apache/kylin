@@ -28,13 +28,13 @@ import org.apache.calcite.sql.SqlKind._
 import org.apache.calcite.sql.`type`.{BasicSqlType, IntervalSqlType, SqlTypeFamily, SqlTypeName}
 import org.apache.calcite.sql.fun.SqlDatetimeSubtractionOperator
 import org.apache.kylin.common.util.DateFormat
+import org.apache.kylin.engine.spark.cross.CrossDateTimeUtils
 import org.apache.spark.sql.KylinFunctions._
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{DateType, LongType, TimestampType}
 import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.utils.SparkTypeUtil
-import org.apache.spark.unsafe.types.UTF8String
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
@@ -312,9 +312,9 @@ class SparderRexVisitor(
       case literalSql: BasicSqlType => {
         literalSql.getSqlTypeName match {
           case SqlTypeName.DATE =>
-            return Some(DateTimeUtils.stringToTime(literal.toString))
+            return Some(DateTimeUtils.toJavaDate(CrossDateTimeUtils.stringToDate(literal).get))
           case SqlTypeName.TIMESTAMP =>
-            return Some(DateTimeUtils.toJavaTimestamp(DateTimeUtils.stringToTimestamp(UTF8String.fromString(literal.toString)).head))
+            return Some(DateTimeUtils.toJavaTimestamp(CrossDateTimeUtils.stringToTimestamp(literal).head))
           case _ =>
         }
       }

@@ -18,7 +18,6 @@
 package org.apache.spark.sql.utils
 
 import org.apache.calcite.sql.`type`.SqlTypeName
-import org.apache.spark.unsafe.types.UTF8String
 import org.apache.kylin.common.util.DateFormat
 import org.apache.spark.sql.Column
 import org.apache.spark.internal.Logging
@@ -28,19 +27,23 @@ import java.math.BigDecimal
 import org.apache.calcite.util.NlsString
 import org.apache.calcite.rel.`type`.RelDataType
 import java.sql.{Date, Timestamp, Types}
+import java.time.ZoneId
 import java.util.regex.Pattern
 
 import org.apache.spark.sql.functions.col
 import org.apache.calcite.avatica.util.TimeUnitRange
 import org.apache.calcite.rex.RexLiteral
-import java.util.{GregorianCalendar, Locale, TimeZone}
+import java.util.{GregorianCalendar, Locale}
 
 import org.apache.kylin.engine.spark.metadata.FunctionDesc
-import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.kylin.metadata.datatype.DataType
 import org.apache.spark.sql.types._
+import org.apache.kylin.engine.spark.cross.CrossDateTimeUtils
 
 object SparkTypeUtil extends Logging {
+  private def defaultZoneId = ZoneId.systemDefault()
+  private def UTC = ZoneId.of("UTC")
+
   val DATETIME_FAMILY = List("time", "date", "timestamp", "datetime")
 
   def isDateTimeFamilyType(dataType: String): Boolean = {
@@ -167,9 +170,9 @@ object SparkTypeUtil extends Logging {
         s.getValue
       case g: GregorianCalendar =>
         if (literal.getTypeName.getName.equals("DATE")) {
-          new Date(DateTimeUtils.stringToTimestamp(UTF8String.fromString(literal.toString)).get / 1000)
+          new Date(CrossDateTimeUtils.stringToTimestamp(literal).get / 1000)
         } else {
-          new Timestamp(DateTimeUtils.stringToTimestamp(UTF8String.fromString(literal.toString)).get / 1000)
+          new Timestamp(CrossDateTimeUtils.stringToTimestamp(literal).get / 1000)
         }
       case range: TimeUnitRange =>
         // Extract(x from y) in where clause
@@ -259,7 +262,7 @@ object SparkTypeUtil extends Logging {
               val time = DateFormat.stringToDate(string).getTime
               if (toCalcite) {
                 //current date is local timezone, org.apache.calcite.avatica.util.AbstractCursor.DateFromNumberAccessor need to utc
-                DateTimeUtils.stringToDate(UTF8String.fromString(string)).get
+                CrossDateTimeUtils.stringToDate(string).get
               } else {
                 // ms to s
                 time / 1000
@@ -277,7 +280,7 @@ object SparkTypeUtil extends Logging {
             var ts = s.asInstanceOf[Timestamp].toString
             if (toCalcite) {
               // current ts is local timezone ,org.apache.calcite.avatica.util.AbstractCursor.TimeFromNumberAccessor need to utc
-              DateTimeUtils.stringToTimestamp(UTF8String.fromString(ts), TimeZone.getTimeZone("UTC")).get / 1000
+              CrossDateTimeUtils.stringToTimestamp(ts, UTC).get / 1000
             } else {
               // ms to s
               s.asInstanceOf[Timestamp].getTime / 1000
