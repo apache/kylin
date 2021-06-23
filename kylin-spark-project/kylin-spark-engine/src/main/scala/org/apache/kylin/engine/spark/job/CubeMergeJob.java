@@ -228,7 +228,7 @@ public class CubeMergeJob extends SparkApplication {
         segment.setAdditionalInfo(additionalInfo);
         cubeSegments.add(segment);
         update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
-        cubeManager.updateCube(update);
+        cubeManager.updateCube(update, true);
     }
 
     @Override

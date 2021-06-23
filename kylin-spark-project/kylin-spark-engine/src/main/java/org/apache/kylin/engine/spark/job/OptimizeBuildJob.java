@@ -214,7 +214,7 @@ public class OptimizeBuildJob extends SparkApplication {
         optSeg.setAdditionalInfo(additionalInfo);
         cubeSegments.add(optSeg);
         update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
-        cubeManager.updateCube(update);
+        cubeManager.updateCube(update, true);
     }
 
     private void build(Collection<NBuildSourceInfo> buildSourceInfos, SegmentInfo seg, SpanningTree st) {
