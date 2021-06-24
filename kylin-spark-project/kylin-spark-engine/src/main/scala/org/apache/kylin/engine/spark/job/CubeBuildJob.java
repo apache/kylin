@@ -262,7 +262,7 @@ public class CubeBuildJob extends SparkApplication {
         segment.setAdditionalInfo(additionalInfo);
         cubeSegments.add(segment);
         update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
-        cubeManager.updateCube(update);
+        cubeManager.updateCube(update, true);
     }
 
     private void collectPersistedTablePath(List<String> persistedFlatTable, ParentSourceChooser sourceChooser) {
@@ -292,7 +292,7 @@ public class CubeBuildJob extends SparkApplication {
         }
         if (!cubeSegments.isEmpty()) {
             update.setToUpdateSegs(cubeSegments.toArray(new CubeSegment[0]));
-            cubeManager.updateCube(update);
+            cubeManager.updateCube(update, true);
         }
     }
 

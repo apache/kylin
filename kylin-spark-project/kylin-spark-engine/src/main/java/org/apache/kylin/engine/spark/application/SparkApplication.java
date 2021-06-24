@@ -82,12 +82,12 @@ public abstract class SparkApplication {
 
     public void execute(String[] args) {
         Path path = new Path(args[0]);
+        FileSystem fs = HadoopUtil.getFileSystem(path);
         try (
-                FileSystem fileSystem = FileSystem.get(path.toUri(), HadoopUtil.getCurrentConfiguration());
-                FSDataInputStream inputStream = fileSystem.open(path);
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                FSDataInputStream inputStream = fs.open(path);
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)
         ) {
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
             String argsLine = bufferedReader.readLine();
             if (argsLine.isEmpty()) {
                 throw new RuntimeException("Args file is empty");
@@ -139,9 +139,8 @@ public abstract class SparkApplication {
      * http request the spark job controller
      */
     public Boolean updateSparkJobInfo(String url, String json) {
-        String serverIp = System.getProperty("spark.driver.rest.server.ip", "127.0.0.1");
-        String port = System.getProperty("spark.driver.rest.server.port", "7070");
-        String requestApi = String.format(Locale.ROOT, "http://%s:%s" + url, serverIp, port);
+        String serverAddress = System.getProperty("spark.driver.rest.server.address", "127.0.0.1:7070");
+        String requestApi = String.format(Locale.ROOT, "http://%s%s", serverAddress, url);
 
         try {
             DefaultHttpClient httpClient = new DefaultHttpClient();

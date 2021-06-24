@@ -474,10 +474,6 @@ public abstract class KylinConfigBase implements Serializable {
         return getMetadataUrl().getIdentifier();
     }
 
-    public String getServerPort() {
-        return getOptional("server.port", "7070");
-    }
-
     public Map<String, String> getResourceStoreImpls() {
         Map<String, String> r = Maps.newLinkedHashMap();
         // ref constants in ISourceAware
@@ -2947,19 +2943,29 @@ public abstract class KylinConfigBase implements Serializable {
      *
      * @param isLocal run spark local mode or not
      */
-    public String sparkUploadFiles(boolean isLocal) {
+    public String sparkUploadFiles(boolean isLocal, boolean isYarnCluster) {
         try {
-            String path1 = "";
+            String path = "";
             if (!isLocal) {
-                File storageFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/conf",
+                String executorLogPath = "";
+                String driverLogPath = "";
+                File executorLogFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/conf",
                         "spark-executor-log4j.properties");
-                if (storageFile != null) {
-                    path1 = storageFile.getCanonicalPath();
-
+                if (executorLogFile != null) {
+                    executorLogPath = executorLogFile.getCanonicalPath();
+                }
+                path = executorLogPath;
+                if (isYarnCluster) {
+                    File driverLogFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/conf",
+                            "spark-driver-log4j.properties");
+                    if (driverLogFile != null) {
+                        driverLogPath = driverLogFile.getCanonicalPath();
+                    }
+                    path = executorLogPath + "," + driverLogPath;
                 }
             }
 
-            return getOptional("kylin.query.engine.sparder-additional-files", path1);
+            return getOptional("kylin.query.engine.sparder-additional-files", path);
         } catch (IOException e) {
             return "";
         }
@@ -2969,7 +2975,7 @@ public abstract class KylinConfigBase implements Serializable {
      * Used to upload user-defined log4j configuration
      */
     public String sparkUploadFiles() {
-        return sparkUploadFiles(false);
+        return sparkUploadFiles(false, false);
     }
 
     @ConfigTag(ConfigTag.Tag.NOT_CLEAR)

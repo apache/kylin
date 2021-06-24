@@ -205,6 +205,10 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
     abstract protected T initEntityAfterReload(T entity, String resourceName);
 
     public T save(T entity) throws IOException {
+        return save(entity, false);
+    }
+
+    public T save(T entity, boolean isLocal) throws IOException {
         Preconditions.checkArgument(entity != null);
         completeUuidIfNeeded(entity);
         Preconditions.checkArgument(entityType.isInstance(entity));
@@ -225,7 +229,11 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         store.checkAndPutResource(path, entity, serializer);
         
         // just to trigger the event broadcast, the entity won't stay in cache
-        cache.put(resName, entity);
+        if (isLocal) {
+            cache.putLocal(resName, entity);
+        } else {
+            cache.put(resName, entity);
+        }
 
         // keep the pass-in entity out of cache, the caller may use it for further update
         // return a reloaded new object

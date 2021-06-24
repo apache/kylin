@@ -300,10 +300,14 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    // try minimize the use of this method, use udpateCubeXXX() instead
     public CubeInstance updateCube(CubeUpdate update) throws IOException {
+        return updateCube(update, false);
+    }
+
+    // try minimize the use of this method, use udpateCubeXXX() instead
+    public CubeInstance updateCube(CubeUpdate update, boolean isLocal) throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
-            CubeInstance cube = updateCubeWithRetry(update, 0);
+            CubeInstance cube = updateCubeWithRetry(update, 0, isLocal);
             return cube;
         }
     }
@@ -369,6 +373,10 @@ public class CubeManager implements IRealizationProvider {
     }
 
     private CubeInstance updateCubeWithRetry(CubeUpdate update, int retry) throws IOException {
+        return updateCubeWithRetry(update, retry, false);
+    }
+
+    private CubeInstance updateCubeWithRetry(CubeUpdate update, int retry, boolean isLocal) throws IOException {
         if (update == null || update.getCubeInstance() == null)
             throw new IllegalStateException();
 
@@ -396,7 +404,7 @@ public class CubeManager implements IRealizationProvider {
         setCubeMember(cube, update);
 
         try {
-            cube = crud.save(cube);
+            cube = crud.save(cube, isLocal);
         } catch (WriteConflictException ise) {
             logger.warn("Write conflict to update cube {} at try {}, will retry...", cube.getName(), retry);
             if (retry >= 7) {

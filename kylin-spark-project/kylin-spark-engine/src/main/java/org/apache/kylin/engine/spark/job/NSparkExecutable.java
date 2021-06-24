@@ -22,8 +22,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -79,6 +77,12 @@ import org.apache.kylin.shaded.com.google.common.collect.Sets;
 public class NSparkExecutable extends AbstractExecutable {
 
     private static final Logger logger = LoggerFactory.getLogger(NSparkExecutable.class);
+
+    protected static final String SPARK_MASTER = "spark.master";
+    protected static final String DEPLOY_MODE = "spark.submit.deployMode";
+    private static final String APP_JAR_NAME = "__app__.jar";
+
+    private volatile boolean isYarnCluster = false;
 
     protected void setSparkSubmitClassName(String className) {
         this.setParam(MetadataConstants.P_CLASS_NAME, className);
@@ -173,7 +177,7 @@ public class NSparkExecutable extends AbstractExecutable {
             String pathName = getId() + "_" + MetadataConstants.P_JOB_ID;
             Path tgtPath = new Path(getConfig().getJobTmpDir(getParams().get("project")), pathName);
             FileSystem fileSystem = FileSystem.get(tgtPath.toUri(), HadoopUtil.getCurrentConfiguration());
-            try (BufferedOutputStream outputStream = new BufferedOutputStream(fileSystem.create(tgtPath, false))) {
+            try (BufferedOutputStream outputStream = new BufferedOutputStream(fileSystem.create(tgtPath))) {
                 outputStream.write(JsonUtil.writeValueAsBytes(getParams()));
             }
 
@@ -289,6 +293,10 @@ public class NSparkExecutable extends AbstractExecutable {
 
     protected Map<String, String> getSparkConfigOverride(KylinConfig config) {
         Map<String, String> sparkConfigOverride = config.getSparkConfigOverride();
+        if ("yarn".equals(sparkConfigOverride.get(SPARK_MASTER))
+                && "cluster".equals(sparkConfigOverride.get(DEPLOY_MODE)) && !(this instanceof NSparkLocalStep)) {
+            this.isYarnCluster = true;
+        }
         if (!sparkConfigOverride.containsKey("spark.driver.memory")) {
             sparkConfigOverride.put("spark.driver.memory", computeStepDriverMemory() + "m");
         }
@@ -325,13 +333,7 @@ public class NSparkExecutable extends AbstractExecutable {
         if (sparkConfigOverride.containsKey(sparkDriverExtraJavaOptionsKey)) {
             sb.append(sparkConfigOverride.get(sparkDriverExtraJavaOptionsKey));
         }
-        String serverIp = "127.0.0.1";
-        try {
-            serverIp = InetAddress.getLocalHost().getHostAddress();
-        } catch (UnknownHostException e) {
-            logger.warn("use the InetAddress get local ip failed!", e);
-        }
-        String serverPort = config.getServerPort();
+        String serverAddress = config.getServerRestAddress();
         String hdfsWorkingDir = config.getHdfsWorkingDirectory();
 
         String sparkDriverHdfsLogPath = null;
@@ -342,8 +344,7 @@ public class NSparkExecutable extends AbstractExecutable {
             }
         }
 
-        String log4jConfiguration = "file:" + config.getLogSparkDriverPropertiesFile();
-        sb.append(String.format(Locale.ROOT, " -Dlog4j.configuration=%s ", log4jConfiguration));
+        wrapLog4jConf(sb, config);
         sb.append(String.format(Locale.ROOT, " -Dkylin.kerberos.enabled=%s ", config.isKerberosEnabled()));
         if (config.isKerberosEnabled()) {
             sb.append(String.format(Locale.ROOT, " -Dkylin.kerberos.principal=%s ", config.getKerberosPrincipal()));
@@ -356,8 +357,7 @@ public class NSparkExecutable extends AbstractExecutable {
         sb.append(String.format(Locale.ROOT, " -Dkylin.hdfs.working.dir=%s ", hdfsWorkingDir));
         sb.append(String.format(Locale.ROOT, " -Dspark.driver.log4j.appender.hdfs.File=%s ", sparkDriverHdfsLogPath));
         sb.append(String.format(Locale.ROOT, " -Dlog4j.debug=%s ", "true"));
-        sb.append(String.format(Locale.ROOT, " -Dspark.driver.rest.server.ip=%s ", serverIp));
-        sb.append(String.format(Locale.ROOT, " -Dspark.driver.rest.server.port=%s ", serverPort));
+        sb.append(String.format(Locale.ROOT, " -Dspark.driver.rest.server.address=%s ", serverAddress));
         sb.append(String.format(Locale.ROOT, " -Dspark.driver.param.taskId=%s ", getId()));
         sb.append(String.format(Locale.ROOT, " -Dspark.driver.local.logDir=%s ", config.getKylinLogDir() + "/spark"));
         sparkConfigOverride.put(sparkDriverExtraJavaOptionsKey, sb.toString());
@@ -378,12 +378,15 @@ public class NSparkExecutable extends AbstractExecutable {
         if (!isLocalMaster(sparkConfs)) {
             appendSparkConf(sb, "spark.executor.extraClassPath", Paths.get(kylinJobJar).getFileName().toString());
         }
-        appendSparkConf(sb, "spark.driver.extraClassPath", kylinJobJar);
+        // In yarn cluster mode, make sure class SparkDriverHdfsLogAppender will be in NM container's classpath.
+        appendSparkConf(sb, "spark.driver.extraClassPath", isYarnCluster ? //
+                String.format(Locale.ROOT, "%s:%s", APP_JAR_NAME,
+                        Paths.get(kylinJobJar).getFileName().toString()) : kylinJobJar);
 
         if (sparkConfs.containsKey("spark.sql.hive.metastore.jars")) {
             jars = jars + "," + sparkConfs.get("spark.sql.hive.metastore.jars");
         }
-        String sparkUploadFiles = config.sparkUploadFiles(isLocalMaster(sparkConfs));
+        String sparkUploadFiles = config.sparkUploadFiles(isLocalMaster(sparkConfs), isYarnCluster);
         if (StringUtils.isNotBlank(sparkUploadFiles)) {
             sb.append("--files ").append(sparkUploadFiles).append(" ");
         }
@@ -391,6 +394,19 @@ public class NSparkExecutable extends AbstractExecutable {
             sb.append("--principal ").append(config.getKerberosPrincipal()).append(" ");
             sb.append("--keytab ").append(config.getKerberosKeytabPath()).append(" ");
         }
+        if (isYarnCluster) {
+            final String aliasedJar = String.format(Locale.ROOT, "%s#%s", kylinJobJar, //
+                    Paths.get(kylinJobJar).getFileName().toString());
+            // Make sure class SparkDriverHdfsLogAppender will be in NM container's classpath.
+            if (StringUtils.isBlank(jars) || jars.equals(kylinJobJar)) {
+                jars = aliasedJar;
+            } else if (jars.contains(kylinJobJar)) {
+                jars = jars.replace(kylinJobJar, aliasedJar);
+            } else {
+                jars = String.format(Locale.ROOT, "%s,%s", jars, aliasedJar);
+            }
+        }
+
         sb.append("--name job_step_%s ");
         sb.append("--jars %s %s %s");
         String cmd = String.format(Locale.ROOT, sb.toString(), hadoopConf, sparkSubmitCmd, getId(), jars, kylinJobJar,
@@ -398,6 +414,16 @@ public class NSparkExecutable extends AbstractExecutable {
         // SparkConf still have a change to be changed in CubeBuildJob.java (Spark Driver)
         logger.info("spark submit cmd: {}", cmd);
         return cmd;
+    }
+
+    private void wrapLog4jConf(StringBuilder sb, KylinConfig config) {
+        final String localLog4j = config.getLogSparkDriverPropertiesFile();
+        final String log4jName = Paths.get(localLog4j).getFileName().toString();
+        if (isYarnCluster) {
+            sb.append(String.format(Locale.ROOT, " -Dlog4j.configuration=%s ", log4jName));
+        } else {
+            sb.append(String.format(Locale.ROOT, " -Dlog4j.configuration=file:%s ", localLog4j));
+        }
     }
 
     protected void appendSparkConf(StringBuilder sb, String key, String value) {
