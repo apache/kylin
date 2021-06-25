@@ -19,11 +19,10 @@
 package org.apache.spark.sql.execution.datasource
 
 import java.sql.{Date, Timestamp}
-
 import org.apache.hadoop.fs.{FileStatus, Path}
 import org.apache.kylin.common.util.DateFormat
 import org.apache.kylin.cube.cuboid.Cuboid
-import org.apache.kylin.cube.CubeInstance
+import org.apache.kylin.cube.{CubeInstance, CubeSegment}
 import org.apache.kylin.engine.spark.metadata.cube.PathManager
 import org.apache.kylin.engine.spark.metadata.MetadataConverter
 import org.apache.kylin.metadata.model.{PartitionDesc, SegmentStatusEnum}
@@ -74,7 +73,8 @@ case class ShardSpec(numShards: Int,
 class FilePruner(cubeInstance: CubeInstance,
                  cuboid: Cuboid,
                  val session: SparkSession,
-                 val options: Map[String, String])
+                 val options: Map[String, String],
+                 val cubeSegment: List[CubeSegment] = null)
   extends FileIndex with ResetShufflePartition with Logging {
 
   val MAX_SHARDING_SIZE_PER_TASK: Long =
@@ -234,18 +234,26 @@ class FilePruner(cubeInstance: CubeInstance,
     if (cached.containsKey((partitionFilters, dataFilters))) {
       return cached.get((partitionFilters, dataFilters))
     }
-
     require(isResolved)
+
     val startTime = System.nanoTime
-    val timePartitionFilters = getSegmentFilter(dataFilters, timePartitionColumn)
-    logInfo(s"Applying time partition filters: ${timePartitionFilters.mkString(",")}")
+    // segment pruning
+    var selected: Seq[SegmentDirectory] =
+    if (!cubeSegment.isEmpty) {
+      cubeSegment
+        .filter(_.getStatus.equals(SegmentStatusEnum.READY)).map(seg => {
+        SegmentDirectory(seg.getName, seg.getStorageLocationIdentifier, Nil)
+      })
+    } else {
+      val timePartitionFilters = getSegmentFilter(dataFilters, timePartitionColumn)
+      logInfo(s"Applying time partition filters: ${timePartitionFilters.mkString(",")}")
+      // segment pruning
+      afterPruning("segment", timePartitionFilters, segmentDirs) {
+        pruneSegments
+      }
+    }
 
     val fsc = ShardFileStatusCache.getFileStatusCache(session)
-
-    // segment pruning
-    var selected = afterPruning("segment", timePartitionFilters, segmentDirs) {
-      pruneSegments
-    }
 
     // fetch segment directories info in parallel
     selected = selected.par.map(seg => {
@@ -296,7 +304,7 @@ class FilePruner(cubeInstance: CubeInstance,
   }
 
   private def getSegmentFilter(dataFilters: Seq[Expression], col: Attribute): Seq[Expression] = {
-    dataFilters.map(extractSegmentFilter(_, col)).filter(!_.equals(None)).map(_.get)
+      dataFilters.map(extractSegmentFilter(_, col)).filter(!_.equals(None)).map(_.get)
   }
 
   private def extractSegmentFilter(filter: Expression, col: Attribute): Option[Expression] = {

@@ -18,6 +18,8 @@
 
 package org.apache.kylin.storage;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.common.StorageURL;
@@ -57,6 +59,7 @@ public class StorageContext {
     private IStorageQuery storageQuery;
     private AtomicLong processedRowCount = new AtomicLong();
     private Cuboid cuboid;
+    private List<Cuboid> cuboidList = new ArrayList<>();
     private CuboidToGridTableMapping mapping;
     private boolean partialResultReturned = false;
 
@@ -185,10 +188,15 @@ public class StorageContext {
 
     public void setCuboid(Cuboid c) {
         cuboid = c;
+        cuboidList.add(c);
     }
 
     public Cuboid getCuboid() {
         return cuboid;
+    }
+
+    public List<Cuboid> getCuboidList() {
+        return cuboidList;
     }
 
     public CuboidToGridTableMapping getMapping() {

@@ -404,7 +404,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     }
 
     @Override
-    public void implementRewrite(RewriteImplementor implementor) {
+    public void implementRewrite(RelNode parent, RewriteImplementor implementor) {
         // only rewrite the innermost aggregation
         if (needRewrite()) {
             translateAggregation();

@@ -114,7 +114,7 @@ public class OLAPWindowRel extends Window implements OLAPRel {
     }
 
     @Override
-    public void implementRewrite(RewriteImplementor implementor) {
+    public void implementRewrite(RelNode parent, RewriteImplementor implementor) {
         for (RelNode child : getInputs()) {
             implementor.visitChild(this, child);
         }

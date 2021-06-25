@@ -120,7 +120,7 @@ public class OLAPValuesRel extends Values implements OLAPRel {
     }
 
     @Override
-    public void implementRewrite(RewriteImplementor rewriter) {
+    public void implementRewrite(RelNode parent, RewriteImplementor rewriter) {
 
     }
 
