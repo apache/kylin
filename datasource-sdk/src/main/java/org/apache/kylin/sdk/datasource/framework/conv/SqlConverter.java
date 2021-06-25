@@ -44,7 +44,7 @@ public class SqlConverter {
         String converted = orig;
 
         if (!configurer.skipHandleDefault()) {
-            String escapedDefault = SqlDialect.CALCITE
+            String escapedDefault = SqlDialect.DatabaseProduct.CALCITE.getDialect()
                     .quoteIdentifier(configurer.useUppercaseDefault() ? "DEFAULT" : "default");
             converted = converted.replaceAll("(?i)default\\.", escapedDefault + "."); // use Calcite dialect to cater to SqlParser
             converted = converted.replaceAll("\"(?i)default\"\\.", escapedDefault + ".");
@@ -54,7 +54,7 @@ public class SqlConverter {
             String beforeConvert = converted;
             try {
                 // calcite cannot recognize `, convert ` to " before parse
-                converted = converted.replaceAll("`", "\"");
+                converted = converted.replace("`", "\"");
                 SqlNode sqlNode = SqlParser.create(converted).parseQuery();
                 sqlNode = sqlNode.accept(sqlNodeConverter);
                 converted = sqlWriter.format(sqlNode);
