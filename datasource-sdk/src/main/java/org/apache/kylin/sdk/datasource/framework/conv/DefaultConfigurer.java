@@ -30,8 +30,8 @@ public class DefaultConfigurer implements SqlConverter.IConfigurer{
     private static final Map<String, SqlDialect> sqlDialectMap = Maps.newHashMap();
 
     static {
-        sqlDialectMap.put("default", SqlDialect.CALCITE);
-        sqlDialectMap.put("calcite", SqlDialect.CALCITE);
+        sqlDialectMap.put("default", SqlDialect.DatabaseProduct.CALCITE.getDialect());
+        sqlDialectMap.put("calcite", SqlDialect.DatabaseProduct.CALCITE.getDialect());
         sqlDialectMap.put("greenplum", SqlDialect.DatabaseProduct.POSTGRESQL.getDialect());
         sqlDialectMap.put("postgresql", SqlDialect.DatabaseProduct.POSTGRESQL.getDialect());
         sqlDialectMap.put("mysql", SqlDialect.DatabaseProduct.MYSQL.getDialect());
@@ -41,7 +41,7 @@ public class DefaultConfigurer implements SqlConverter.IConfigurer{
         sqlDialectMap.put("redshift", SqlDialect.DatabaseProduct.REDSHIFT.getDialect());
         sqlDialectMap.put("hive", SqlDialect.DatabaseProduct.HIVE.getDialect());
         sqlDialectMap.put("h2", SqlDialect.DatabaseProduct.H2.getDialect());
-        sqlDialectMap.put("unknown", SqlDialect.DUMMY);
+        sqlDialectMap.put("unknown", SqlDialect.DatabaseProduct.UNKNOWN.getDialect());
     }
 
     private AbstractJdbcAdaptor adaptor;
@@ -84,7 +84,7 @@ public class DefaultConfigurer implements SqlConverter.IConfigurer{
     public SqlDialect getSqlDialect() {
         String dialectName = dsDef.getDialectName() == null ? dsDef.getId() : dsDef.getDialectName();
         SqlDialect sqlDialect = sqlDialectMap.get(dialectName.toLowerCase(Locale.ROOT));
-        return sqlDialect == null ? sqlDialectMap.get("unkown") : sqlDialect;
+        return sqlDialect == null ? sqlDialectMap.get("unknown") : sqlDialect;
     }
 
     @Override
