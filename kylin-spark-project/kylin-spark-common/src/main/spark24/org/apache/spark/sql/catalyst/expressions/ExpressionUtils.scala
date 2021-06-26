@@ -21,7 +21,9 @@ package org.apache.spark.sql.catalyst.expressions
 import scala.util.{Failure, Success, Try}
 import scala.reflect.ClassTag
 import org.apache.spark.sql.AnalysisException
-import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.{FunctionBuilder, expressions}
+import org.apache.spark.sql.execution.datasources.DataSourceStrategy
+import org.apache.spark.sql.sources.Filter
 
 object
 ExpressionUtils {
@@ -76,6 +78,12 @@ ExpressionUtils {
     }
 
     (name, (expressionInfo[T](name), builder))
+  }
+
+  def simpleString(expression: Expression): String = expression.simpleString
+
+  def translateFilter(expression: Expression): Option[Filter] = {
+    DataSourceStrategy.translateFilter(expression)
   }
 
   private def expressionInfo[T <: Expression : ClassTag](name: String): ExpressionInfo = {

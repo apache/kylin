@@ -18,9 +18,9 @@
 package org.apache.spark.sql.catalyst.expressions
 
 import org.apache.kylin.engine.spark.common.util.KylinDateTimeUtils._
-import java.util.{Calendar, Locale, TimeZone}
+import org.apache.kylin.engine.spark.cross.CrossDateTimeUtils
 
-import org.apache.spark.sql.catalyst.util.DateTimeUtils
+import java.util.{Calendar, Locale, TimeZone}
 
 object TimestampAddImpl {
   private val localCalendar = new ThreadLocal[Calendar] {
@@ -34,7 +34,7 @@ object TimestampAddImpl {
     calendar.clear()
     addTime("DAY", time, calendar)
     addTime(unit, increment, calendar)
-    DateTimeUtils.millisToDays(calendar.getTimeInMillis)
+    CrossDateTimeUtils.millisToDays(calendar.getTimeInMillis)
   }
 
   // add long on DateType

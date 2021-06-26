@@ -83,7 +83,7 @@ class CubeDictionaryBuilder(val dataset: Dataset[Row],
       .filter(dictCol.isNotNull)
       .repartition(bucketPartitionSize, dictCol)
       .foreachPartition {
-        iter =>
+        iter: Iterator[Row] =>
           DictHelper.genDict(columnName, broadcastDict, iter)
       }
 

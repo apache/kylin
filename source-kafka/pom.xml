@@ -44,7 +44,7 @@
         <!-- Provided -->
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.11</artifactId>
+            <artifactId>kafka_${scala.binary.version}</artifactId>
         </dependency>
 
         <!-- Env & Test -->

@@ -19,7 +19,7 @@
 package org.apache.kylin.cluster
 
 import org.apache.kylin.common.KylinConfig
-import org.apache.spark.util.KylinReflectUtils
+import org.apache.spark.utils.KylinReflectUtils
 
 
 object ClusterInfoFetcherFactory {

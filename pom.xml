@@ -80,6 +80,7 @@
 
     <!-- Spark versions -->
     <spark.version>2.4.7</spark.version>
+    <spark.version.dir>spark24</spark.version.dir>
     <janino.version>3.0.16</janino.version>
 
     <kryo.version>4.0.0</kryo.version>
@@ -92,6 +93,7 @@
 
     <!-- Scala versions -->
     <scala.version>2.11.8</scala.version>
+    <scala.binary.version>2.11</scala.binary.version>
 
     <reflections.version>0.9.10</reflections.version>
 
@@ -519,6 +521,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-yarn-client</artifactId>
+        <version>${hadoop2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-yarn-api</artifactId>
         <version>${hadoop2.version}</version>
       </dependency>
@@ -729,7 +736,8 @@
         <artifactId>avatica</artifactId>
         <version>${avatica.version}</version>
       </dependency>
-      <!-- Workaround for hive 0.14 avatica dependency -->
+      <!-- Workaround for hive 0.14 avatica dependency
+           WARNING: fasterxml jackson library may conflict
       <dependency>
         <groupId>org.apache.calcite</groupId>
         <artifactId>calcite-avatica</artifactId>
@@ -741,6 +749,7 @@
           </exclusion>
         </exclusions>
       </dependency>
+      -->
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
@@ -775,8 +784,12 @@
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-core_2.11</artifactId>
+        <artifactId>spark-core_${scala.binary.version}</artifactId>
         <exclusions>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+          </exclusion>
           <exclusion>
             <artifactId>jetty-plus</artifactId>
             <groupId>org.eclipse.jetty</groupId>
@@ -819,20 +832,42 @@
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-sql_2.11</artifactId>
+        <artifactId>spark-sql_${scala.binary.version}</artifactId>
         <version>${spark.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-hive_2.11</artifactId>
+        <artifactId>spark-hive_${scala.binary.version}</artifactId>
         <version>${spark.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-yarn_2.11</artifactId>
+        <artifactId>spark-yarn_${scala.binary.version}</artifactId>
         <version>${spark.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-common</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-server-web-proxy</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-client</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>com.esotericsoftware</groupId>
@@ -849,19 +884,19 @@
       </dependency>
       <dependency>
         <groupId>org.apache.flink</groupId>
-        <artifactId>flink-scala_2.11</artifactId>
+        <artifactId>flink-scala_${scala.binary.version}</artifactId>
         <version>${flink.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.flink</groupId>
-        <artifactId>flink-hadoop-compatibility_2.11</artifactId>
+        <artifactId>flink-hadoop-compatibility_${scala.binary.version}</artifactId>
         <version>${flink.version}</version>
       </dependency>
       <!-- Kafka dependency -->
       <dependency>
         <groupId>org.apache.kafka</groupId>
-        <artifactId>kafka_2.11</artifactId>
+        <artifactId>kafka_${scala.binary.version}</artifactId>
         <version>${kafka.version}</version>
       </dependency>
 
@@ -1159,19 +1194,19 @@
       <!-- Spark dependency -->
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-sql_2.11</artifactId>
+        <artifactId>spark-sql_${scala.binary.version}</artifactId>
         <version>${spark.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-hive_2.11</artifactId>
+        <artifactId>spark-hive_${scala.binary.version}</artifactId>
         <version>${spark.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-unsafe_2.11</artifactId>
+        <artifactId>spark-unsafe_${scala.binary.version}</artifactId>
         <version>${spark.version}</version>
       </dependency>
       <dependency>
@@ -2085,9 +2120,29 @@
                 </lifecycleMappingMetadata>
               </configuration>
             </plugin>
+            <plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>build-helper-maven-plugin</artifactId>
+              <version>3.2.0</version>
+            </plugin>
           </plugins>
         </pluginManagement>
       </build>
+    </profile>
+    <profile>
+      <id>spark3</id>
+      <properties>
+        <scala.version>2.12.10</scala.version>
+        <scala.binary.version>2.12</scala.binary.version>
+        <spark.version>3.1.1</spark.version>
+        <spark.version.dir>spark31</spark.version.dir>
+        <jackson.version>2.10.0</jackson.version>
+      </properties>
+      <!--
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      -->
     </profile>
   </profiles>
 </project>

@@ -21,8 +21,8 @@ package org.apache.kylin.engine.spark.job;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 import org.apache.kylin.metadata.model.Segments;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.spark.sql.Column;
-import org.spark_project.guava.collect.Sets;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
