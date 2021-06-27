@@ -476,7 +476,33 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             logger.debug("storageLimitLevel set to NO_LIMIT because group by clause is an expression");
         }
 
+        for (RowKeyColDesc rowKeyCol : context.getCuboid().getCubeDesc().getRowkey().getRowKeyColumns()) {
+            if (groups.contains(rowKeyCol.getColRef()) && encodingUnsupported(rowKeyCol)) {
+                storageLimitLevel = StorageLimitLevel.NO_LIMIT;
+                logger.debug("storageLimitLevel set to NO_LIMIT because Tuple data type is different with Record");
+            }
+        }
+
         context.applyLimitPushDown(cubeInstance, storageLimitLevel);
+    }
+
+    private boolean encodingUnsupported(RowKeyColDesc rowKeyCol) {
+        // KYLIN-3089
+        if (rowKeyCol.getEncoding().startsWith("fixed_length") &&
+                rowKeyCol.getColRef().getColumnDesc().getUpgradedType().isStringFamily()) {
+            return true;
+        }
+        // KYLIN-4942
+        if (rowKeyCol.getEncoding().startsWith("boolean") &&
+                rowKeyCol.getColRef().getColumnDesc().getUpgradedType().isIntegerFamily()) {
+            return true;
+        }
+        // KYLIN-5007
+        if (rowKeyCol.getEncoding().startsWith("integer") &&
+                rowKeyCol.getColRef().getColumnDesc().getUpgradedType().isStringFamily()) {
+            return true;
+        }
+        return false;
     }
 
     private void enableStreamAggregateIfBeneficial(Cuboid cuboid, Set<TblColRef> groupsD, StorageContext context) {
