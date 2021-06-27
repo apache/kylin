@@ -211,6 +211,7 @@
                     <th>ID</th>
                     <th class="col-xs-5">Column</th>
                     <th>Shard By</th>
+                    <th>Cardinality</th>
                   </tr>
                   </thead>
 
@@ -231,6 +232,10 @@
 
                   <td>
                    <span>{{rowkey_column.isShardBy}}</span>
+                  </td>
+
+                  <td>
+                    <span>{{rowkey_column.cardinality | number}}</span>
                   </td>
                 </tr>
                 </tbody>
@@ -266,6 +271,10 @@
                       <small class="help-block red" ng-show="state.mode=='edit' && rule.shardColumnAvailable==false && rowkey_column.isShardBy == true">at most one 'shard by' column is allowed.</small>
                     </td>
                   </tr>
+
+                  <td>
+                    <span>{{rowkey_column.cardinality | number}}</span>
+                  </td>
                   </tbody>
                 </table>
               </div>

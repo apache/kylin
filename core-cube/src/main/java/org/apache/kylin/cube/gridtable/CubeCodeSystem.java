@@ -18,12 +18,15 @@
 
 package org.apache.kylin.cube.gridtable;
 
+import static org.apache.kylin.metadata.filter.FilterOptimizeTransformer.logger;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Map;
 
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DictionaryDimEnc.DictionarySerializer;
@@ -33,6 +36,7 @@ import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.IGTCodeSystem;
 import org.apache.kylin.gridtable.IGTComparator;
 import org.apache.kylin.measure.MeasureAggregator;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.datatype.DynamicDimSerializer;
 
@@ -127,6 +131,23 @@ public class CubeCodeSystem implements IGTCodeSystem {
             if (dictEnc.getRoundingFlag() != roundingFlag) {
                 serializer = dictEnc.copy(roundingFlag).asDataTypeSerializer();
             }
+
+            // Deal with data type change from string to datetime
+            DataType dataType = info.getColumnType(col);
+            if (dataType.isDateTimeFamily()) {
+                try {
+                    long ts = DateFormat.stringToMillis((String) value);
+                    if (dataType.isDate()) {
+                        value = DateFormat.formatToDateStr(ts);
+                    } else {
+                        value = DateFormat.formatToTimeWithoutMilliStr(ts);
+                    }
+                    logger.info("Convert value from {} to {}", ts, value);
+                } catch (Exception e) {
+                    logger.warn("Fail to convert value {} to string due to {}", value, e);
+                }
+            }
+            
             try {
                 serializer.serialize(value, buf);
             } catch (IllegalArgumentException ex) {

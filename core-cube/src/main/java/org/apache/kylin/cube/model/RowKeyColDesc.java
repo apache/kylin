@@ -45,6 +45,14 @@ import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 public class RowKeyColDesc implements java.io.Serializable {
     private static final Logger logger = LoggerFactory.getLogger(RowKeyColDesc.class);
 
+    public static boolean isDateDimEnc(RowKeyColDesc rowKeyColDesc) {
+        return DateDimEnc.ENCODING_NAME.equals(rowKeyColDesc.getEncodingName());
+    }
+
+    public static boolean isTimeDimEnc(RowKeyColDesc rowKeyColDesc) {
+        return TimeDimEnc.ENCODING_NAME.equals(rowKeyColDesc.getEncodingName());
+    }
+
     @JsonProperty("column")
     private String column;
     @JsonProperty("encoding")
@@ -81,12 +89,14 @@ public class RowKeyColDesc implements java.io.Serializable {
         // convert date/time dictionary on date/time column to DimensionEncoding implicitly
         // however date/time dictionary on varchar column is still required
         DataType type = colRef.getType();
-        if (DictionaryDimEnc.ENCODING_NAME.equals(encodingName)) {
+        if (DictionaryDimEnc.ENCODING_NAME.equals(encodingName) && cubeDesc.getConfig().isRowKeyEncodingAutoConvert()) {
             if (type.isDate()) {
                 encoding = encodingName = DateDimEnc.ENCODING_NAME;
+                logger.info("Implicitly convert encoding to {}", encodingName);
             }
             if (type.isTimeFamily()) {
                 encoding = encodingName = TimeDimEnc.ENCODING_NAME;
+                logger.info("Implicitly convert encoding to {}", encodingName);
             }
         }
 

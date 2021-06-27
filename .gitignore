@@ -82,6 +82,8 @@ webapp/CHANGELOG.md
 build/tomcat
 build/lib
 build/spark
+build/VERSION
+
 *.tgz
 *.tar.gz
 webapp/app/components/*

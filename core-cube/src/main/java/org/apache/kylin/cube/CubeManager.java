@@ -47,7 +47,6 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDescTiretreeGlobalDomainDictUtil;
-import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
@@ -300,10 +299,14 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    // try minimize the use of this method, use udpateCubeXXX() instead
     public CubeInstance updateCube(CubeUpdate update) throws IOException {
+        return updateCube(update, false);
+    }
+
+    // try minimize the use of this method, use udpateCubeXXX() instead
+    public CubeInstance updateCube(CubeUpdate update, boolean isLocal) throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
-            CubeInstance cube = updateCubeWithRetry(update, 0);
+            CubeInstance cube = updateCubeWithRetry(update, 0, isLocal);
             return cube;
         }
     }
@@ -313,6 +316,16 @@ public class CubeManager implements IRealizationProvider {
             cube = cube.latestCopyForWrite(); // get a latest copy
             CubeUpdate update = new CubeUpdate(cube);
             update.setStatus(newStatus);
+            ProjectManager.getInstance(config).touchProject(cube.getProject());
+            return updateCube(update);
+        }
+    }
+
+    public CubeInstance updateCubeOwner(CubeInstance cube, String owner) throws IOException {
+        try (AutoLock lock = cubeMapLock.lockForWrite()) {
+            cube = cube.latestCopyForWrite(); // get a latest copy
+            CubeUpdate update = new CubeUpdate(cube);
+            update.setOwner(owner);
             ProjectManager.getInstance(config).touchProject(cube.getProject());
             return updateCube(update);
         }
@@ -369,6 +382,10 @@ public class CubeManager implements IRealizationProvider {
     }
 
     private CubeInstance updateCubeWithRetry(CubeUpdate update, int retry) throws IOException {
+        return updateCubeWithRetry(update, retry, false);
+    }
+
+    private CubeInstance updateCubeWithRetry(CubeUpdate update, int retry, boolean isLocal) throws IOException {
         if (update == null || update.getCubeInstance() == null)
             throw new IllegalStateException();
 
@@ -396,7 +413,7 @@ public class CubeManager implements IRealizationProvider {
         setCubeMember(cube, update);
 
         try {
-            cube = crud.save(cube);
+            cube = crud.save(cube, isLocal);
         } catch (WriteConflictException ise) {
             logger.warn("Write conflict to update cube {} at try {}, will retry...", cube.getName(), retry);
             if (retry >= 7) {
@@ -1261,7 +1278,7 @@ public class CubeManager implements IRealizationProvider {
                     IRealization realization = registry.getRealization(entry.getType(), entry.getRealization());
                     if (realization != null && realization.isReady() && realization instanceof CubeInstance) {
                         CubeInstance current = (CubeInstance) realization;
-                        if (checkMeetSnapshotTable(current, lookupTableName)) {
+                        if (current.getDescriptor().findDimensionByTable(lookupTableName) != null) {
                             CubeSegment segment = current.getLatestReadySegment();
                             if (segment != null) {
                                 long latestBuildTime = segment.getLastBuildTime();
@@ -1276,31 +1293,12 @@ public class CubeManager implements IRealizationProvider {
             }
         } catch (Exception e) {
             logger.info("Unexpected error.", e);
+            throw e;
         }
         if (!cubeInstance.equals(cube)) {
             logger.debug("Picked cube {} over {} as it provides a more recent snapshot of the lookup table {}", cube,
                     cubeInstance, lookupTableName);
         }
         return cube == null ? cubeInstance : cube;
-    }
-
-    /**
-     * check if {toCheck} has snapshot of {lookupTableName}
-     * @param lookupTableName look like {SCHMEA}.{TABLE}
-     */
-    private boolean checkMeetSnapshotTable(CubeInstance toCheck, String lookupTableName) {
-        boolean checkRes = false;
-        String lookupTbl = lookupTableName;
-        String[] strArr = lookupTableName.split("\\.");
-        if (strArr.length > 1) {
-            lookupTbl = strArr[strArr.length - 1];
-        }
-        for (DimensionDesc dimensionDesc : toCheck.getDescriptor().getDimensions()) {
-            if (dimensionDesc.getTableRef().getTableName().equalsIgnoreCase(lookupTbl)) {
-                checkRes = true;
-                break;
-            }
-        }
-        return checkRes;
     }
 }

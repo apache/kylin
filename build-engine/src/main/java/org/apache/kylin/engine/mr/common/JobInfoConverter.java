@@ -43,18 +43,15 @@ import org.slf4j.LoggerFactory;
 public class JobInfoConverter {
     private static final Logger logger = LoggerFactory.getLogger(JobInfoConverter.class);
 
-    public static JobInstance parseToJobInstanceQuietly(CubingJob job, Map<String, Output> outputs) {
+    public static JobInstance parseToJobInstanceQuietly(AbstractExecutable job, Map<String, Output> outputs) {
         try {
-            return parseToJobInstance(job, outputs);
-        } catch (Exception e) {
-            logger.error("Failed to parse job instance: uuid={}", job, e);
-            return null;
-        }
-    }
-
-    public static JobInstance parseToJobInstanceQuietly(CheckpointExecutable job, Map<String, Output> outputs) {
-        try {
-            return parseToJobInstance(job, outputs);
+            if (job instanceof CheckpointExecutable) {
+                return parseToJobInstance((CheckpointExecutable)job, outputs);
+            } else if (job instanceof CubingJob) {
+                return parseToJobInstance((CubingJob)job, outputs);
+            } else {
+                return null;
+            }
         } catch (Exception e) {
             logger.error("Failed to parse job instance: uuid={}", job, e);
             return null;

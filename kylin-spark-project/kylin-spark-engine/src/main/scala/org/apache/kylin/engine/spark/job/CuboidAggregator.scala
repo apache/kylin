@@ -28,10 +28,11 @@ import org.apache.kylin.measure.bitmap.BitmapMeasureType
 import org.apache.kylin.measure.hllc.HLLCMeasureType
 import org.apache.spark.sql.catalyst.expressions.aggregate.AggregateFunction
 import org.apache.spark.sql.functions.{col, _}
-import org.apache.spark.sql.types.{StringType, _}
+import org.apache.spark.sql.types.{BinaryType, BooleanType, ByteType, DoubleType, FloatType, ShortType, StringType, _}
 import org.apache.spark.sql.udaf._
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.apache.spark.sql.catalyst.expressions.Literal
+import org.apache.spark.unsafe.types.UTF8String
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -72,8 +73,19 @@ object CuboidAggregator {
           val colIndex = dataSet.schema.fieldNames.zipWithIndex.map(tp => (tp._2, tp._1)).toMap
           columns.appendAll(measure.pra.map(p =>col(p.id.toString)))
         } else {
-          val value = measure.pra.head.asInstanceOf[LiteralColumnDesc].value
-            columns.append(new Column(Literal.create(value, measure.pra.head.dataType)))
+          var value = measure.pra.head.asInstanceOf[LiteralColumnDesc].value
+          value = measure.pra.head.dataType match {
+            case BooleanType => value.asInstanceOf[String].toBoolean
+            case ByteType => value.asInstanceOf[String].toByte
+            case ShortType => value.asInstanceOf[String].toShort
+            case IntegerType | DateType => value.asInstanceOf[String].toInt
+            case LongType | TimestampType => value.asInstanceOf[String].toLong
+            case FloatType => value.asInstanceOf[String].toFloat
+            case DoubleType => value.asInstanceOf[String].toDouble
+            case BinaryType => value.asInstanceOf[String].toArray
+            case StringType => value.asInstanceOf[UTF8String]
+          }
+          columns.append(new Column(Literal.create(value, measure.pra.head.dataType)))
         }
       }
 

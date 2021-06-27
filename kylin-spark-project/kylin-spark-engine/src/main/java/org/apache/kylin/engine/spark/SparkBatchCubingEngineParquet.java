@@ -26,7 +26,7 @@ import org.apache.kylin.engine.IBatchCubingEngine;
 import org.apache.kylin.engine.spark.job.NSparkMergingJob;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
-import org.spark_project.guava.collect.Sets;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 public class SparkBatchCubingEngineParquet implements IBatchCubingEngine {
     @Override

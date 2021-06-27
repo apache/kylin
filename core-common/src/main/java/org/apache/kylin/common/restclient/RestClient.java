@@ -54,16 +54,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 
 /**
  */
 public class RestClient {
 
     private static final Logger logger = LoggerFactory.getLogger(RestClient.class);
-    private static final String UTF_8 = "UTF-8";
+    protected static final String UTF_8 = "UTF-8";
     private static final String APPLICATION_JSON = "application/json";
-    private static final String INVALID_RESPONSE = "Invalid response ";
-    private static final String CUBES = "/cubes/";
+    protected static final String INVALID_RESPONSE = "Invalid response ";
+    protected static final String CUBES = "/cubes/";
     private static final String WITH_URL = " with url ";
 
     protected static Pattern fullRestPattern = Pattern.compile("(?:([^:]+)[:]([^@]+)[@])?([^:]+)(?:[:](\\d+))?");
@@ -141,7 +142,7 @@ public class RestClient {
         HttpConnectionParams.setConnectionTimeout(httpParams, httpConnectionTimeoutMs);
 
         final PoolingClientConnectionManager cm = new PoolingClientConnectionManager();
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        KylinConfig config = KylinConfig.getInstanceFromEnv(true);
         cm.setDefaultMaxPerRoute(config.getRestClientDefaultMaxPerRoute());
         cm.setMaxTotal(config.getRestClientMaxTotal());
 
@@ -174,6 +175,25 @@ public class RestClient {
         }
     }
 
+    public void announceWipeCache(String entity, String event, String cacheKey) throws IOException {
+        String url = baseUrl + "/cache/announce/" + entity + "/" + cacheKey + "/" + event;
+        HttpPut request = new HttpPut(url);
+
+        try {
+            HttpResponse response = client.execute(request);
+
+            if (response.getStatusLine().getStatusCode() != 200) {
+                String msg = EntityUtils.toString(response.getEntity());
+                throw new IOException("Invalid response " + response.getStatusLine().getStatusCode()
+                        + " with announce cache wipe url " + url + "\n" + msg);
+            }
+        } catch (Exception ex) {
+            throw new IOException(ex);
+        } finally {
+            request.releaseConnection();
+        }
+    }
+    
     public void wipeCache(String entity, String event, String cacheKey) throws IOException {
         HttpPut request;
         String url;
@@ -201,18 +221,30 @@ public class RestClient {
     }
 
     public String getKylinProperties() throws IOException {
-        String url = baseUrl + "/admin/config";
-        HttpGet request = newGet(url);
+        return getConfiguration(baseUrl + "/admin/config", true);
+    }
+
+    public String getHDFSConfiguration() throws IOException {
+        return getConfiguration(baseUrl + "/admin/config/hdfs", true);
+    }
+
+    public String getHBaseConfiguration() throws IOException {
+        return getConfiguration(baseUrl + "/admin/config/hbase", true);
+    }
+
+    private String getConfiguration(String url, boolean ifAuth) throws IOException {
+        HttpGet request = ifAuth ? newGet(url) : new HttpGet(url);
         HttpResponse response = null;
         try {
             response = client.execute(request);
             String msg = EntityUtils.toString(response.getEntity());
-            Map<String, String> map = JsonUtil.readValueAsMap(msg);
-            msg = map.get("config");
 
             if (response.getStatusLine().getStatusCode() != 200)
                 throw new IOException(INVALID_RESPONSE + response.getStatusLine().getStatusCode()
                         + " with cache wipe url " + url + "\n" + msg);
+
+            Map<String, String> map = JsonUtil.readValueAsMap(msg);
+            msg = map.get("config");
             return msg;
         } finally {
             cleanup(request, response);
@@ -350,6 +382,33 @@ public class RestClient {
         return content;
     }
 
+    public void checkCompatibility(String jsonRequest) throws IOException {
+        checkCompatibility(jsonRequest, false);
+    }
+
+    public void checkCompatibility(String jsonRequest, boolean ifHiveCheck) throws IOException {
+        if (ifHiveCheck) {
+            checkCompatibility(jsonRequest, baseUrl + "/cubes/checkCompatibility/hiveTable");
+        }
+        checkCompatibility(jsonRequest, baseUrl + "/cubes/checkCompatibility");
+    }
+
+    private void checkCompatibility(String jsonRequest, String url) throws IOException {
+        HttpPost post = newPost(url);
+        try {
+            post.setEntity(new StringEntity(jsonRequest, "UTF-8"));
+            HttpResponse response = client.execute(post);
+            if (response.getStatusLine().getStatusCode() != 200) {
+                String msg = getContent(response);
+                Map<String, String> kvMap = JsonUtil.readValueAsMap(msg);
+                String exception = kvMap.containsKey("exception") ? kvMap.get("exception") : "unknown";
+                throw new IOException("Error code: " + response.getStatusLine().getStatusCode() + "\n" + exception);
+            }
+        } finally {
+            post.releaseConnection();
+        }
+    }
+    
     private HashMap dealResponse(HttpResponse response) throws IOException {
         if (response.getStatusLine().getStatusCode() != 200) {
             throw new IOException(INVALID_RESPONSE + response.getStatusLine().getStatusCode());
@@ -362,9 +421,11 @@ public class RestClient {
     private void addHttpHeaders(HttpRequestBase method) {
         method.addHeader("Accept", "application/json, text/plain, */*");
         method.addHeader("Content-Type", APPLICATION_JSON);
-        String basicAuth = DatatypeConverter
-                .printBase64Binary((this.userName + ":" + this.password).getBytes(StandardCharsets.UTF_8));
-        method.addHeader("Authorization", "Basic " + basicAuth);
+        if (!Strings.isNullOrEmpty(this.userName) && !Strings.isNullOrEmpty(this.password)) {
+            String basicAuth = DatatypeConverter
+                    .printBase64Binary((this.userName + ":" + this.password).getBytes(StandardCharsets.UTF_8));
+            method.addHeader("Authorization", "Basic " + basicAuth);
+        }
     }
 
     private HttpPost newPost(String url) {
@@ -373,13 +434,13 @@ public class RestClient {
         return post;
     }
 
-    private HttpPut newPut(String url) {
+    protected HttpPut newPut(String url) {
         HttpPut put = new HttpPut(url);
         addHttpHeaders(put);
         return put;
     }
 
-    private HttpGet newGet(String url) {
+    protected HttpGet newGet(String url) {
         HttpGet get = new HttpGet(url);
         addHttpHeaders(get);
         return get;
@@ -406,7 +467,7 @@ public class RestClient {
         }
     }
 
-    private String getContent(HttpResponse response) throws IOException {
+    protected String getContent(HttpResponse response) throws IOException {
         StringBuffer result = new StringBuffer();
         try (BufferedReader rd = new BufferedReader(
                 new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8))) {
@@ -419,7 +480,7 @@ public class RestClient {
         return result.toString();
     }
 
-    private void cleanup(HttpRequestBase request, HttpResponse response) {
+    protected void cleanup(HttpRequestBase request, HttpResponse response) {
         try {
             if (response != null)
                 EntityUtils.consume(response.getEntity());

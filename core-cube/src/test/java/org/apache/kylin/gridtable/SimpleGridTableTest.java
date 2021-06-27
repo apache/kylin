@@ -51,7 +51,7 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
         GridTable table = new GridTable(info, store);
 
         GTBuilder builder = rebuild(table);
-        IGTScanner scanner = scan(table);
+        scan(table);
     }
 
     @Test
@@ -61,7 +61,7 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
         GridTable table = new GridTable(info, store);
 
         GTBuilder builder = rebuild(table);
-        IGTScanner scanner = scan(table);
+        scan(table);
     }
 
     @Test
@@ -71,7 +71,7 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
         GridTable table = new GridTable(info, store);
 
         GTBuilder builder = rebuild(table);
-        IGTScanner scanner = scanAndAggregate(table);
+        scanAndAggregate(table);
     }
 
     @Test
@@ -81,55 +81,53 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
         GridTable table = new GridTable(info, store);
 
         rebuildViaAppend(table);
-        IGTScanner scanner = scan(table);
+        scan(table);
     }
 
-    private IGTScanner scan(GridTable table) throws IOException {
+    private void scan(GridTable table) throws IOException {
         GTScanRequest req = new GTScanRequestBuilder().setInfo(table.getInfo()).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest();
-        IGTScanner scanner = table.scan(req);
-        for (GTRecord r : scanner) {
-            Object[] v = r.getValues();
-            assertTrue(((String) v[0]).startsWith("2015-"));
-            assertTrue(((String) v[2]).equals("Food"));
-            assertTrue(((Long) v[3]).longValue() == 10);
-            assertTrue(((BigDecimal) v[4]).doubleValue() == 10.5);
-            System.out.println(r);
-        }
-        scanner.close();
-        return scanner;
-    }
-
-    private IGTScanner scanAndAggregate(GridTable table) throws IOException {
-        GTScanRequest req = new GTScanRequestBuilder().setInfo(table.getInfo()).setRanges(null).setDimensions(null).setAggrGroupBy(setOf(0, 2)).setAggrMetrics(setOf(3, 4)).setAggrMetricsFuncs(new String[] { "count", "sum" }).setFilterPushDown(null).createGTScanRequest();
-        IGTScanner scanner = table.scan(req);
-        int i = 0;
-        for (GTRecord r : scanner) {
-            Object[] v = r.getValues();
-            switch (i) {
-            case 0:
-                assertTrue(((Long) v[3]).longValue() == 20);
-                assertTrue(((BigDecimal) v[4]).doubleValue() == 21.0);
-                break;
-            case 1:
-                assertTrue(((Long) v[3]).longValue() == 30);
-                assertTrue(((BigDecimal) v[4]).doubleValue() == 31.5);
-                break;
-            case 2:
-                assertTrue(((Long) v[3]).longValue() == 40);
-                assertTrue(((BigDecimal) v[4]).doubleValue() == 42.0);
-                break;
-            case 3:
+        try (IGTScanner scanner = table.scan(req)) {
+            for (GTRecord r : scanner) {
+                Object[] v = r.getValues();
+                assertTrue(((String) v[0]).startsWith("2015-"));
+                assertTrue(((String) v[2]).equals("Food"));
                 assertTrue(((Long) v[3]).longValue() == 10);
                 assertTrue(((BigDecimal) v[4]).doubleValue() == 10.5);
-                break;
-            default:
-                fail();
+                System.out.println(r);
             }
-            i++;
-            System.out.println(r);
         }
-        scanner.close();
-        return scanner;
+    }
+
+    private void scanAndAggregate(GridTable table) throws IOException {
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(table.getInfo()).setRanges(null).setDimensions(null).setAggrGroupBy(setOf(0, 2)).setAggrMetrics(setOf(3, 4)).setAggrMetricsFuncs(new String[] { "count", "sum" }).setFilterPushDown(null).createGTScanRequest();
+        try (IGTScanner scanner = table.scan(req)) {
+            int i = 0;
+            for (GTRecord r : scanner) {
+                Object[] v = r.getValues();
+                switch (i) {
+                    case 0:
+                        assertTrue(((Long) v[3]).longValue() == 20);
+                        assertTrue(((BigDecimal) v[4]).doubleValue() == 21.0);
+                        break;
+                    case 1:
+                        assertTrue(((Long) v[3]).longValue() == 30);
+                        assertTrue(((BigDecimal) v[4]).doubleValue() == 31.5);
+                        break;
+                    case 2:
+                        assertTrue(((Long) v[3]).longValue() == 40);
+                        assertTrue(((BigDecimal) v[4]).doubleValue() == 42.0);
+                        break;
+                    case 3:
+                        assertTrue(((Long) v[3]).longValue() == 10);
+                        assertTrue(((BigDecimal) v[4]).doubleValue() == 10.5);
+                        break;
+                    default:
+                        fail();
+                }
+                i++;
+                System.out.println(r);
+            }
+        }
     }
 
     static GTBuilder rebuild(GridTable table) throws IOException {

@@ -19,9 +19,8 @@
 package org.apache.spark.sql.udf
 
 import java.util.{Calendar, Locale, TimeZone}
-
-import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.kylin.engine.spark.common.util.KylinDateTimeUtils.{MICROS_PER_MILLIS, MONTHS_PER_QUARTER}
+import org.apache.kylin.engine.spark.cross.CrossDateTimeUtils
 
 object TimestampAddImpl {
   private val localCalendar = new ThreadLocal[Calendar] {
@@ -35,7 +34,7 @@ object TimestampAddImpl {
     calendar.clear()
     addTime("DAY", time, calendar)
     addTime(unit, increment, calendar)
-    DateTimeUtils.millisToDays(calendar.getTimeInMillis)
+    CrossDateTimeUtils.millisToDays(calendar.getTimeInMillis)
   }
 
   // add long on DateType

@@ -20,7 +20,7 @@ KylinApp.constant('cubeConfig', {
 
   //~ Define metadata & class
   measureParamType: ['column', 'constant'],
-  measureExpressions: ['SUM', 'MIN', 'MAX', 'COUNT', 'COUNT_DISTINCT',"TOP_N", 'RAW','EXTENDED_COLUMN','PERCENTILE'],
+  measureExpressions: ['SUM', 'MIN', 'MAX', 'COUNT', 'COUNT_DISTINCT',"TOP_N", 'RAW','PERCENTILE'],
   dimensionDataTypes: ["string", "tinyint", "int", "bigint", "date"],
   cubePartitionTypes: ['APPEND'],
   engineType:[
@@ -108,13 +108,13 @@ KylinApp.constant('cubeConfig', {
     'yyyyMMddHH',
     'yyyyMMdd',
     // 'timestamp',
-    // 'other'
+    'other'
   ],
   partitionTimeFormatOpt:[
     'HH:mm:ss',
     'HH:mm',
     'HH',
-    // 'other'
+    'other'
   ],
   rowKeyShardOptions:[
     true,false

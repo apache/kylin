@@ -26,6 +26,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -363,6 +364,15 @@ public class CubeService extends BasicService implements InitializingBean {
         cleanSegmentStorage(cube, toRemoveSegs);
     }
 
+    public void deleteCubeFast(CubeInstance cube) throws IOException {
+        aclEvaluate.checkProjectWritePermission(cube);
+        // user make sure no job running and no hybrid cube, so no check jobs status and hybrid definition
+        int cubeNum = getCubeManager().getCubesByDesc(cube.getDescriptor().getName()).size();
+        getCubeManager().dropCube(cube.getName(), cubeNum == 1);//only delete cube desc when no other cube is using it
+
+    }
+
+
     /**
      * Stop all jobs belonging to this cube and clean out all segments
      *
@@ -570,6 +580,18 @@ public class CubeService extends BasicService implements InitializingBean {
         getCubeDescManager().updateCubeDesc(desc);
     }
 
+    public CubeInstance updateCubeOwner(CubeInstance cube, String owner) throws IOException {
+        aclEvaluate.checkProjectWritePermission(cube);
+        if (Objects.equals(cube.getOwner(), owner)) {
+            // Do nothing
+            return cube;
+        }
+        cube.setOwner(owner);
+
+        CubeUpdate update = new CubeUpdate(cube.latestCopyForWrite()).setOwner(owner);
+        return getCubeManager().updateCube(update);
+    }
+
     public CubeInstance rebuildLookupSnapshot(CubeInstance cube, String segmentName, String lookupTable)
             throws IOException {
         aclEvaluate.checkProjectOperationPermission(cube);
@@ -583,6 +605,31 @@ public class CubeService extends BasicService implements InitializingBean {
         getCubeManager().buildSnapshotTable(seg, lookupTable, null);
 
         return cube;
+    }
+
+    public CubeInstance deleteSegmentById(CubeInstance cube, String uuid) throws IOException {
+        aclEvaluate.checkProjectWritePermission(cube);
+        Message msg = MsgPicker.getMsg();
+
+        CubeSegment toDelete = null;
+
+        toDelete = cube.getSegmentById(uuid);
+
+        if (toDelete == null) {
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getSEG_NOT_FOUND(), uuid));
+        }
+
+        if (cube.getStatus() == RealizationStatusEnum.DISABLED || isOrphonSegment(cube, uuid)) {
+
+            CubeInstance cubeInstance = CubeManager.getInstance(getConfig()).updateCubeDropSegments(cube, toDelete);
+
+            cleanSegmentStorage(cubeInstance, Collections.singletonList(toDelete));
+
+            return cubeInstance;
+        } else {
+            throw new BadRequestException(
+                    String.format(Locale.ROOT, msg.getDELETE_READY_SEG_BY_UUID(), uuid, cube.getName()));
+        }
     }
 
     public CubeInstance deleteSegment(CubeInstance cube, String segmentName) throws IOException {
@@ -788,7 +835,7 @@ public class CubeService extends BasicService implements InitializingBean {
                 EnumSet.of(ExecutableState.DISCARDED));
         for (CubingJob cubingJob : jobInstanceList) {
             String jobSegmentName = cubingJob.getSegmentName();
-            if (jobSegmentName != null && jobSegmentName.equals(segmentName)) {
+            if (jobSegmentName != null && segmentName.equals(jobSegmentName)) {
                 logger.debug("Merge job {} has been discarded before, will not merge.", segmentName);
                 return true;
             }
@@ -1117,8 +1164,15 @@ public class CubeService extends BasicService implements InitializingBean {
                 "Destination configuration should not be empty.");
 
         String stringBuilder = ("%s/bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI %s %s %s %s %s %s true true");
-        String cmd = String.format(Locale.ROOT, stringBuilder, KylinConfig.getKylinHome(), srcCfgUri, dstCfgUri,
-                cube.getName(), projectName, config.isAutoMigrateCubeCopyAcl(), config.isAutoMigrateCubePurge());
+        String cmd = String.format(Locale.ROOT,
+                stringBuilder,
+                KylinConfig.getKylinHome(),
+                CliCommandExecutor.checkParameterWhiteList(srcCfgUri),
+                CliCommandExecutor.checkParameterWhiteList(dstCfgUri),
+                cube.getName(),
+                CliCommandExecutor.checkParameterWhiteList(projectName),
+                config.isAutoMigrateCubeCopyAcl(),
+                config.isAutoMigrateCubePurge());
 
         logger.info("One click migration cmd: " + cmd);
 

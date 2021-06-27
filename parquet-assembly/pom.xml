@@ -105,6 +105,14 @@
                                     <pattern>org.roaringbitmap</pattern>
                                     <shadedPattern>${shadeBase}.org.roaringbitmap</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>com.fasterxml.jackson</pattern>
+                                    <shadedPattern>${shadeBase}.com.fasterxml.jackson</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.codahale.metrics</pattern>
+                                    <shadedPattern>${shadeBase}.com.codahale.metrics</shadedPattern>
+                                </relocation>
                             </relocations>
                             <filters>
                                 <filter>

@@ -240,6 +240,11 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testNonEqualJoin() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_non_equal_join", null, true);
+    }
+
+    @Test
     public void testUnionQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_union", null, true);
     }

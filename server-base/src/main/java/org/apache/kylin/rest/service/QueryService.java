@@ -450,22 +450,22 @@ public class QueryService extends BasicService {
             sql = result.getSecond();
             sqlRequest.setSql(sql);
 
-            // try some cheap executions
-            if (sqlResponse == null && isQueryInspect) {
-                sqlResponse = new SQLResponse(null, null, 0, false, sqlRequest.getSql());
-            }
+            try (QueryRequestLimits limit = new QueryRequestLimits(sqlRequest.getProject())) {
+                // try some cheap executions
+                if (sqlResponse == null && isQueryInspect) {
+                    sqlResponse = new SQLResponse(null, null, 0, false, sqlRequest.getSql());
+                }
 
-            if (sqlResponse == null && isCreateTempStatement) {
-                sqlResponse = new SQLResponse(null, null, 0, false, null);
-            }
+                if (sqlResponse == null && isCreateTempStatement) {
+                    sqlResponse = new SQLResponse(null, null, 0, false, null);
+                }
 
-            if (sqlResponse == null && isQueryCacheEnabled) {
-                sqlResponse = searchQueryInCache(sqlRequest);
-            }
+                if (sqlResponse == null && isQueryCacheEnabled) {
+                    sqlResponse = searchQueryInCache(sqlRequest);
+                }
 
-            // real execution if required
-            if (sqlResponse == null) {
-                try (QueryRequestLimits limit = new QueryRequestLimits(sqlRequest.getProject())) {
+                // real execution if required
+                if (sqlResponse == null) {
                     sqlResponse = queryAndUpdateCache(sqlRequest, isQueryCacheEnabled);
                 }
             }
@@ -483,7 +483,7 @@ public class QueryService extends BasicService {
                 logger.warn("Write metric error.", th);
             }
             if (sqlResponse.getIsException())
-                throw new InternalErrorException(sqlResponse.getExceptionMessage());
+                throw new InternalErrorException(sqlResponse.getExceptionMessage(), sqlResponse.getThrowable());
 
             return sqlResponse;
 
@@ -499,11 +499,11 @@ public class QueryService extends BasicService {
         Message msg = MsgPicker.getMsg();
         final QueryContext queryContext = QueryContextFacade.current();
 
-        boolean isDummpyResponseEnabled = queryCacheEnabled && kylinConfig.isLazyQueryEnabled();
+        boolean isDummyResponseEnabled = queryCacheEnabled && kylinConfig.isLazyQueryEnabled();
         SQLResponse sqlResponse = null;
         try {
             // Add dummy response which will be updated or evicted when query finishes
-            if (isDummpyResponseEnabled) {
+            if (isDummyResponseEnabled) {
                 SQLResponse dummyResponse = new SQLResponse();
                 dummyResponse.setLazyQueryStartTime(System.currentTimeMillis());
                 cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), dummyResponse);
@@ -566,7 +566,7 @@ public class QueryService extends BasicService {
                 if (!realtimeQuery) {
                     cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), sqlResponse);
                 }
-            } else if (isDummpyResponseEnabled) {
+            } else if (isDummyResponseEnabled) {
                 cacheManager.getCache(QUERY_CACHE).evict(sqlRequest.getCacheKey());
             }
 
@@ -583,6 +583,10 @@ public class QueryService extends BasicService {
                     && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
                 Cache exceptionCache = cacheManager.getCache(QUERY_CACHE);
                 exceptionCache.put(sqlRequest.getCacheKey(), sqlResponse);
+            } else if (isDummyResponseEnabled) {
+                // evict dummy response to avoid caching too many bad queries
+                Cache exceptionCache = cacheManager.getCache(QUERY_CACHE);
+                exceptionCache.evict(sqlRequest.getCacheKey());
             }
         }
         return sqlResponse;

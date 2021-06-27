@@ -302,11 +302,11 @@ case class DictEncode(left: Expression, mid: Expression, right: Expression) exte
     val globalDictClass = classOf[NGlobalDictionary].getName
     val bucketDictClass = classOf[NBucketDictionary].getName
 
-    val globalDictTerm = ctx.addMutableState(globalDictClass, s"${mid.simpleString.replace("[", "").replace("]", "")}_globalDict")
-    val bucketDictTerm = ctx.addMutableState(bucketDictClass, s"${mid.simpleString.replace("[", "").replace("]", "")}_bucketDict")
+    val globalDictTerm = ctx.addMutableState(globalDictClass, s"${ExpressionUtils.simpleString(mid).replace("[", "").replace("]", "")}_globalDict")
+    val bucketDictTerm = ctx.addMutableState(bucketDictClass, s"${ExpressionUtils.simpleString(mid).replace("[", "").replace("]", "")}_bucketDict")
 
-    val dictParamsTerm = mid.simpleString
-    val bucketSizeTerm = right.simpleString.toInt
+    val dictParamsTerm = ExpressionUtils.simpleString(mid)
+    val bucketSizeTerm = ExpressionUtils.simpleString(right).toInt
 
     val initBucketDictFuncName = ctx.addNewFunction(s"init${bucketDictTerm.replace("[", "").replace("]", "")}BucketDict",
       s"""

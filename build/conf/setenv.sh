@@ -30,6 +30,9 @@ export MALLOC_ARENA_MAX=${MALLOC_ARENA_MAX:-4}
 
 # export KYLIN_JVM_SETTINGS="-Xms16g -Xmx16g -XX:MaxPermSize=512m -XX:NewSize=3g -XX:MaxNewSize=3g -XX:SurvivorRatio=4 -XX:+CMSClassUnloadingEnabled -XX:+CMSParallelRemarkEnabled -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:CMSInitiatingOccupancyFraction=70 -XX:+UseCMSInitiatingOccupancyOnly -XX:+DisableExplicitGC -XX:+HeapDumpOnOutOfMemoryError -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:$KYLIN_HOME/logs/kylin.gc.%p -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=64M"
 
+# for jdk version not less than 13 
+# export KYLIN_JVM_SETTINGS="-Xms50g -Xmx50g -XX:+UnlockExperimentalVMOptions -XX:+UseZGC -XX:+HeapDumpOnOutOfMemoryError -verbose:gc -Xlog:gc*:$KYLIN_HOME/logs/kylin.gc.`date +'%Y%m%d%H%M'` -XX:+PrintFlagsFinal"
+
 # uncomment following to for it to take effect(the values need adjusting to fit your env)
 # export KYLIN_DEBUG_SETTINGS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
 

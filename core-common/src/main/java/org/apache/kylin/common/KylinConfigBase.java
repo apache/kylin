@@ -46,6 +46,7 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.FileUtils;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -474,10 +475,6 @@ public abstract class KylinConfigBase implements Serializable {
         return getMetadataUrl().getIdentifier();
     }
 
-    public String getServerPort() {
-        return getOptional("server.port", "7070");
-    }
-
     public Map<String, String> getResourceStoreImpls() {
         Map<String, String> r = Maps.newLinkedHashMap();
         // ref constants in ISourceAware
@@ -555,6 +552,14 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getHbaseClientRetriesNumber() {
         return getOptional("kylin.metadata.hbase-client-retries-number", "1");
+    }
+
+    public boolean isModelSchemaUpdaterCheckerEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.metadata.model-schema-updater-checker-enabled", "false"));
+    }
+
+    public boolean isAbleChangeStringToDateTime() {
+        return Boolean.parseBoolean(getOptional("kylin.metadata.able-change-string-to-datetime", "false"));
     }
 
     // ============================================================================
@@ -711,6 +716,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.cube.cuboid-scheduler", "org.apache.kylin.cube.cuboid.DefaultCuboidScheduler");
     }
 
+    public boolean isRowKeyEncodingAutoConvert() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.kylin.cube.rowkey-encoding-auto-convert", "true"));
+    }
+    
     public String getSegmentAdvisor() {
         return getOptional("kylin.cube.segment-advisor", "org.apache.kylin.cube.CubeSegmentAdvisor");
     }
@@ -1131,7 +1140,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getHiveDatabaseForIntermediateTable() {
-        return this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT);
+        return CliCommandExecutor.checkHiveProperty(this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT));
     }
 
     public String getFlatTableStorageFormat() {
@@ -1965,8 +1974,12 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.query.ignore-unknown-function", FALSE));
     }
 
+    public boolean isMemcachedEnabled() {
+        return !StringUtil.isEmpty(getMemCachedHosts());
+    }
+
     public String getMemCachedHosts() {
-        return getRequired("kylin.cache.memcached.hosts");
+        return getOptional("kylin.cache.memcached.hosts", null);
     }
 
     public boolean isQuerySegmentCacheEnabled() {
@@ -2144,7 +2157,8 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean isQueryCacheSignatureEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.cache-signature-enabled", FALSE));
+        return Boolean.parseBoolean(
+                this.getOptional("kylin.query.cache-signature-enabled", String.valueOf(isMemcachedEnabled())));
     }
 
     public int getFlatFilterMaxChildrenSize() {
@@ -2264,6 +2278,17 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.web.dashboard-enabled", FALSE));
     }
 
+    public boolean isWebConfigEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.web.set-config-enable", FALSE));
+    }
+
+    /**
+     * @see #isWebConfigEnabled
+     */
+    public String getPropertiesWhiteListForModification() {
+        return getOptional("kylin.web.properties.whitelist", "kylin.query.cache-enabled");
+    }
+
     public String getPropertiesWhiteList() {
         return getOptional("kylin.web.properties.whitelist", "kylin.web.timezone,kylin.query.cache-enabled,kylin.env,"
                 + "kylin.web.hive-limit,kylin.storage.default,"
@@ -2318,6 +2343,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.htrace.trace-every-query", FALSE));
     }
 
+    public String getKylinMetricsEventTimeZone() {
+        return getOptional("kylin.metrics.event-time-zone", getTimeZone()).toUpperCase(Locale.ROOT);
+    }
+    
     public boolean isKylinMetricsMonitorEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.metrics.monitor-enabled", FALSE));
     }
@@ -2345,7 +2374,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getKylinMetricsSubjectSuffix() {
-        return getOptional("kylin.metric.subject-suffix", getDeployEnv());
+        return getOptional("kylin.metrics.subject-suffix", getDeployEnv());
     }
 
     public String getKylinMetricsSubjectJob() {
@@ -2931,6 +2960,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.query.intersect.separator", "|");
     }
 
+    public int getDefaultTimeFilter() {
+        return Integer.parseInt(getOptional("kylin.web.default-time-filter", "2"));
+    }
+
     /**
      * the maximum number of returned values for intersect_value function
      */
@@ -2947,19 +2980,29 @@ public abstract class KylinConfigBase implements Serializable {
      *
      * @param isLocal run spark local mode or not
      */
-    public String sparkUploadFiles(boolean isLocal) {
+    public String sparkUploadFiles(boolean isLocal, boolean isYarnCluster) {
         try {
-            String path1 = "";
+            String path = "";
             if (!isLocal) {
-                File storageFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/conf",
+                String executorLogPath = "";
+                String driverLogPath = "";
+                File executorLogFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/conf",
                         "spark-executor-log4j.properties");
-                if (storageFile != null) {
-                    path1 = storageFile.getCanonicalPath();
-
+                if (executorLogFile != null) {
+                    executorLogPath = executorLogFile.getCanonicalPath();
+                }
+                path = executorLogPath;
+                if (isYarnCluster) {
+                    File driverLogFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/conf",
+                            "spark-driver-log4j.properties");
+                    if (driverLogFile != null) {
+                        driverLogPath = driverLogFile.getCanonicalPath();
+                    }
+                    path = executorLogPath + "," + driverLogPath;
                 }
             }
 
-            return getOptional("kylin.query.engine.sparder-additional-files", path1);
+            return getOptional("kylin.query.engine.sparder-additional-files", path);
         } catch (IOException e) {
             return "";
         }
@@ -2969,7 +3012,7 @@ public abstract class KylinConfigBase implements Serializable {
      * Used to upload user-defined log4j configuration
      */
     public String sparkUploadFiles() {
-        return sparkUploadFiles(false);
+        return sparkUploadFiles(false, false);
     }
 
     @ConfigTag(ConfigTag.Tag.NOT_CLEAR)

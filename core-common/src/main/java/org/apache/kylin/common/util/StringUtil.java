@@ -220,4 +220,7 @@ public class StringUtil {
         return a == null ? b == null : a.equals(b);
     }
 
+    public static boolean isEmpty(String str) {
+        return str == null || str.length() == 0;
+    }
 }

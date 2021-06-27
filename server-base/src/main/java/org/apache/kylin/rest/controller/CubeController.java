@@ -129,6 +129,10 @@ public class CubeController extends BasicController {
     private QueryService queryService;
 
     @Autowired
+    @Qualifier("validateUtil")
+    private ValidateUtil validateUtil;
+
+    @Autowired
     private AclEvaluate aclEvaluate;
 
     @RequestMapping(value = "{cubeName}/validate", method = RequestMethod.GET, produces = { "application/json" })
@@ -261,6 +265,30 @@ public class CubeController extends BasicController {
         }
     }
 
+    /**
+     * Update cube owner
+     *
+     * @param cubeName
+     * @param owner
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/owner", method = { RequestMethod.PUT }, produces = {
+        "application/json" })
+    @ResponseBody
+    public CubeInstance updateCubeOwner(@PathVariable String cubeName, @RequestBody String owner) {
+        checkCubeExists(cubeName);
+        try {
+            validateUtil.checkIdentifiersExists(owner, true);
+            CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+            return cubeService.updateCubeOwner(cube, owner);
+        } catch (AccessDeniedException accessDeniedException) {
+            throw new ForbiddenException("You don't have right to update this cube's owner.");
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
     @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public CubeInstance updateCubeCost(@PathVariable String cubeName, @RequestParam(value = "cost") int cost) {
@@ -319,6 +347,32 @@ public class CubeController extends BasicController {
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
+
+    /**
+     * Delete a cube segment by UUID
+     *
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/segs2/{segmentID}", method = { RequestMethod.DELETE }, produces = {
+            "application/json" })
+    @ResponseBody
+    public CubeInstance deleteSegmentByUUID(@PathVariable String cubeName, @PathVariable String segmentID) {
+        checkCubeExists(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+
+        CubeSegment segment = cube.getSegmentById(segmentID);
+        if (segment == null) {
+            throw new NotFoundException("Cannot find segment by UUID '" + segmentID + "'");
+        }
+
+        try {
+            return cubeService.deleteSegmentById(cube, segmentID);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
 
     /**
      * Build/Rebuild a cube segment
@@ -624,6 +678,22 @@ public class CubeController extends BasicController {
         //drop Cube
         try {
             cubeService.deleteCube(cube);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to delete cube. " + " Caused by: " + e.getMessage(), e);
+        }
+
+    }
+
+    @RequestMapping(value = "/{cubeName}/fast", method = {RequestMethod.DELETE})
+    @ResponseBody
+    public void deleteCubeFast(@PathVariable String cubeName) {
+        checkCubeExists(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+
+        //drop Cube
+        try {
+            cubeService.deleteCubeFast(cube);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to delete cube. " + " Caused by: " + e.getMessage(), e);
@@ -1098,5 +1168,9 @@ public class CubeController extends BasicController {
 
     public void setJobService(JobService jobService) {
         this.jobService = jobService;
+    }
+
+    public void setValidateUtil(ValidateUtil validateUtil) {
+        this.validateUtil = validateUtil;
     }
 }

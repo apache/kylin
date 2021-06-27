@@ -74,7 +74,9 @@ public class DefaultFetcherRunner extends FetcherRunner {
                 try {
                     outputDigest = getExecutableManager().getOutputDigest(id);
                 } catch (IllegalArgumentException e) {
-                    logger.warn("job " + id + " output digest is null, skip.", e);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("job " + id + " output digest is null.", e);
+                    }
                     nOthers++;
                     continue;
                 }

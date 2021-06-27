@@ -18,39 +18,54 @@
 
 'use strict';
 
-KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfig,MetaModel,cubesManager,CubeDescModel,SweetAlert,VdmUtil,modelsManager) {
+KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfig,MetaModel,TableService,cubesManager,CubeDescModel,SweetAlert,VdmUtil,modelsManager) {
   $scope.cubesManager = cubesManager;
 
   var needLengthKeyList=cubeConfig.needSetLengthEncodingList;
   $scope.convertedRowkeys = [];
   $scope.dim_cap = $scope.cubeMetaFrame.aggregation_groups.length > 0 && $scope.cubeMetaFrame.aggregation_groups[0].select_rule.dim_cap ? $scope.cubeMetaFrame.aggregation_groups[0].select_rule.dim_cap : 0;
-  angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(item){
-    item.encoding=$scope.removeVersion(item.encoding);
-    var _valueLength;
-    var tableName=VdmUtil.getNameSpaceTopName(item.column);
-    var databaseName=modelsManager.getDatabaseByColumnName(item.column);
-    var baseKey=item.encoding.replace(/:\d+/,'');
-    if(needLengthKeyList.indexOf(baseKey)>-1){
-      var result=/:(\d+)/.exec(item.encoding);
-      _valueLength=result?result[1]:0;
-    }
-    var _encoding=baseKey;
-    var rowkeyObj = {
-      column:item.column,
-      encoding:_encoding+(item.encoding_version?"[v"+item.encoding_version+"]":"[v1]"),
-      encodingName:_encoding,
-      valueLength:_valueLength,
-      isShardBy:item.isShardBy,
-      encoding_version:item.encoding_version||1,
-      table:tableName,
-      database:databaseName
-    }
-    if(item.index){
-      rowkeyObj.index=item.index;
-    }
-    $scope.convertedRowkeys.push(rowkeyObj);
 
-  })
+  TableService.list({ext: true, project:$scope.projectModel.selectedProject}, function(tables) {
+    $scope.initRowKey(tables);
+  }, function (error) {
+    $scope.initRowKey([]);
+  });
+
+  $scope.initRowKey = function(tables) {
+    angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(item){
+      item.encoding=$scope.removeVersion(item.encoding);
+      var _valueLength;
+      var tableName=VdmUtil.getNameSpaceTopName(item.column);
+      var databaseName=modelsManager.getDatabaseByColumnName(item.column);
+      var baseKey=item.encoding.replace(/:\d+/,'');
+      if(needLengthKeyList.indexOf(baseKey)>-1){
+        var result=/:(\d+)/.exec(item.encoding);
+        _valueLength=result?result[1]:0;
+      }$scope.cubeMetaFrame
+      var _encoding=baseKey;
+      var rowkeyTable = _.find(tables, function(table) {
+        var modelDesc = modelsManager.getModel($scope.cubeMetaFrame.model_name);
+        var lookupTable = modelDesc ? _.find(modelDesc.lookups, function(lookup){ return lookup.alias === tableName; }) : undefined;
+        return ((modelDesc && modelDesc.fact_table === (table.database + '.' + table.name) && table.name === tableName) || (lookupTable && lookupTable.table === (table.name + table.database)));
+      });
+      var cardinality = rowkeyTable ? rowkeyTable.cardinality[VdmUtil.removeNameSpace(item.column)] : undefined;
+      var rowkeyObj = {
+        column:item.column,
+        encoding:_encoding+(item.encoding_version?"[v"+item.encoding_version+"]":"[v1]"),
+        encodingName:_encoding,
+        valueLength:_valueLength,
+        isShardBy:item.isShardBy,
+        encoding_version:item.encoding_version||1,
+        table:tableName,
+        database:databaseName,
+        cardinality: cardinality || 'N/A'
+      }
+      if(item.index){
+        rowkeyObj.index=item.index;
+      }
+      $scope.convertedRowkeys.push(rowkeyObj);
+    })
+  }
 
 
   $scope.rule={
@@ -66,6 +81,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     var isShardBy = item.isShardBy;
     var version=$scope.getTypeVersion(item.encoding);
     var encodingType=$scope.removeVersion(item.encoding);
+    var cardinality = item.cardinality;
 
     if(needLengthKeyList.indexOf(encodingType)!=-1){
       encoding = encodingType+":"+item.valueLength;
@@ -77,6 +93,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     $scope.cubeMetaFrame.rowkey.rowkey_columns[index].encoding = encoding;
     $scope.cubeMetaFrame.rowkey.rowkey_columns[index].encoding_version =version;
     $scope.cubeMetaFrame.rowkey.rowkey_columns[index].isShardBy = isShardBy;
+    $scope.cubeMetaFrame.rowkey.rowkey_columns[index].cardinality = cardinality;
     if(checkShard == true){
       $scope.checkShardByColumn();
     }

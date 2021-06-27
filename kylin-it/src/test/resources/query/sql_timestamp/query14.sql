@@ -19,4 +19,5 @@ SELECT sum(price)  as sum_price
  FROM TEST_KYLIN_FACT 
  WHERE CAL_DT > cast(TIMESTAMPADD(Day, -15000, CURRENT_TIMESTAMP ) as DATE)
 GROUP BY CAL_DT
+ORDER BY CAL_DT
 ;{"scanRowCount":731,"scanBytes":215217,"scanFiles":1,"cuboidId":262144}

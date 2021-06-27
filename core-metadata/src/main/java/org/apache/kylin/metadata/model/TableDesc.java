@@ -236,8 +236,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     public String getIdentity() {
         if (identity == null) {
-            identity = String.format(Locale.ROOT, "%s.%s", this.getDatabase().toUpperCase(Locale.ROOT), this.getName())
-                    .toUpperCase(Locale.ROOT);
+            setIdentity();
         }
         return identity;
     }
@@ -278,6 +277,9 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         } else {
             this.name = null;
         }
+        if (identity != null) {
+            setIdentity();
+        }
     }
 
     @JsonProperty("database")
@@ -288,6 +290,14 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     @JsonProperty("database")
     public void setDatabase(String database) {
         this.database.setName(database);
+        if (identity != null) {
+            setIdentity();
+        }
+    }
+
+    private void setIdentity() {
+        identity = String.format(Locale.ROOT, "%s.%s", this.getDatabase().toUpperCase(Locale.ROOT), this.getName())
+                .toUpperCase(Locale.ROOT);
     }
 
     public ColumnDesc[] getColumns() {

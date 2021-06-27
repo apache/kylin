@@ -21,6 +21,7 @@ package org.apache.kylin.stream.core.storage.columnar.compress;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.apache.kylin.stream.core.storage.columnar.ColumnDataReader;
 import org.apache.kylin.stream.core.storage.columnar.GeneralColumnDataReader;
@@ -123,6 +124,10 @@ public class RunLengthCompressedColumnReader implements ColumnDataReader {
 
         @Override
         public byte[] next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+
             if (readRLEntryValCnt >= currRLEntryValCnt) {
                 loadNextEntry();
             }

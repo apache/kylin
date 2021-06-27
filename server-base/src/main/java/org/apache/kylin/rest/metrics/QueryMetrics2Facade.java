@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.concurrent.ThreadSafe;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.metrics.common.Metrics;
 import org.apache.kylin.common.metrics.common.MetricsConstant;
@@ -58,7 +59,7 @@ public class QueryMetrics2Facade {
         }
         String projectName = sqlRequest.getProject();
         String cube = sqlResponse.getCube();
-        if (cube == null) {
+        if (StringUtils.isEmpty(cube)) {
             return;
         }
         String cubeName = cube.replace("=", "->");

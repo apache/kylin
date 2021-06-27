@@ -51,7 +51,7 @@ public class PatternedLogger extends BufferedLogger {
 
     // spark
     private static final Pattern PATTERN_SPARK_APP_ID = Pattern.compile("Submitted application (.*)");
-    private static final Pattern PATTERN_SPARK_APP_URL = Pattern.compile("tracking URL: (.*)");
+    private static final Pattern PATTERN_SPARK_APP_URL = Pattern.compile("(?i)Tracking URL: (.*)");
     private static final Pattern PATTERN_JOB_STATE = Pattern.compile("Final-State : (.*?)$");
 
     //flink

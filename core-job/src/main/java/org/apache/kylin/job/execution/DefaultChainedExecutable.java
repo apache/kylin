@@ -53,7 +53,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         }
     }
 
-    protected void setProjectName(String name) {
+    public void setProjectName(String name) {
         setParam(MetadataConstants.P_PROJECT_NAME, name);
     }
 

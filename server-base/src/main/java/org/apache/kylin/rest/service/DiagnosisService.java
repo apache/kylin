@@ -30,12 +30,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.metadata.badquery.BadQueryEntry;
 import org.apache.kylin.metadata.badquery.BadQueryHistory;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.ValidateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,14 +85,28 @@ public class DiagnosisService extends BasicService {
     }
 
     public String dumpProjectDiagnosisInfo(String project, File exportPath) throws IOException {
-        aclEvaluate.checkProjectOperationPermission(project);
+        Message msg = MsgPicker.getMsg();
+        ProjectInstance projectInstance =
+                ProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
+                        .getProject(ValidateUtil.convertStringToBeAlphanumericUnderscore(project));
+        if (null == projectInstance) {
+            throw new BadRequestException(
+                    String.format(Locale.ROOT, msg.getDIAG_PROJECT_NOT_FOUND(), project));
+        }
+        aclEvaluate.checkProjectOperationPermission(projectInstance);
         String[] args = { project, exportPath.getAbsolutePath() };
         runDiagnosisCLI(args);
         return getDiagnosisPackageName(exportPath);
     }
 
     public String dumpJobDiagnosisInfo(String jobId, File exportPath) throws IOException {
-        aclEvaluate.checkProjectOperationPermission(jobService.getJobInstance(jobId));
+        Message msg = MsgPicker.getMsg();
+        JobInstance jobInstance = jobService.getJobInstance(jobId);
+        if (null == jobInstance) {
+            throw new BadRequestException(
+                    String.format(Locale.ROOT, msg.getDIAG_JOBID_NOT_FOUND(), jobId));
+        }
+        aclEvaluate.checkProjectOperationPermission(jobInstance);
         String[] args = { jobId, exportPath.getAbsolutePath() };
         runDiagnosisCLI(args);
         return getDiagnosisPackageName(exportPath);

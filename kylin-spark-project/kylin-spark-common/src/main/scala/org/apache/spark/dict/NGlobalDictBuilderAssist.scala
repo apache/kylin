@@ -55,7 +55,7 @@ object NGlobalDictBuilderAssist extends Logging {
     existsDictDs
       .repartition(bucketPartitionSize, col(existsDictDs.schema.head.name).cast(StringType))
       .foreachPartition {
-        iter =>
+        iter: Iterator[(String, Long)] =>
           val partitionID = TaskContext.get().partitionId()
           logInfo(s"Rebuild partition dict col: ${ref.identity}, partitionId: $partitionID")
           val d = broadcastDict.value
