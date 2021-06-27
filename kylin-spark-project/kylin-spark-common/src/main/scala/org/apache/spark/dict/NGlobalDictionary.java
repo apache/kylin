@@ -39,6 +39,7 @@ public class NGlobalDictionary implements Serializable {
     private String sourceTable;
     private String sourceColumn;
     private boolean isFirst = true;
+    private String skewDictStorageFile;
 
     public String getResourceDir() {
         return "/" + project + HadoopUtil.GLOBAL_DICT_STORAGE_ROOT + "/" + sourceTable + "/" + sourceColumn + "/";
@@ -71,13 +72,16 @@ public class NGlobalDictionary implements Serializable {
         if (metadata != null) {
             isFirst = false;
         }
+        if (dictInfo.length >= 5) {
+            skewDictStorageFile = dictInfo[4];
+        }
     }
 
     public NBucketDictionary loadBucketDictionary(int bucketId) throws IOException {
         if (null == metadata) {
             metadata = getMetaInfo();
         }
-        return new NBucketDictionary(baseDir, getWorkingDir(), bucketId, metadata);
+        return new NBucketDictionary(baseDir, getWorkingDir(), bucketId, metadata, skewDictStorageFile);
     }
 
     public NBucketDictionary createNewBucketDictionary() {

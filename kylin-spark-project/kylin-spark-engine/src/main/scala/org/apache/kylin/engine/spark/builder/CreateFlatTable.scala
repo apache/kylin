@@ -36,7 +36,8 @@ import scala.collection.JavaConverters._
 class CreateFlatTable(val seg: SegmentInfo,
                       val toBuildTree: SpanningTree,
                       val ss: SparkSession,
-                      val sourceInfo: NBuildSourceInfo) extends Logging {
+                      val sourceInfo: NBuildSourceInfo,
+                      val jobId: String) extends Logging {
 
   import org.apache.kylin.engine.spark.builder.CreateFlatTable._
 
@@ -108,7 +109,7 @@ class CreateFlatTable(val seg: SegmentInfo,
     val matchedCols = filterCols(ds, encodeCols)
     var encodeDs = ds
     if (!matchedCols.isEmpty) {
-      encodeDs = CubeTableEncoder.encodeTable(ds, seg, matchedCols.asJava)
+      encodeDs = CubeTableEncoder.encodeTable(ds, seg, matchedCols.asJava, jobId)
     }
     encodeDs
   }

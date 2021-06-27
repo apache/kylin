@@ -96,9 +96,14 @@ class TestCreateFlatTable extends SparderBaseFunSuite with SharedSparkSession wi
     val afterJoin1 = generateFlatTable(seg1, cube, true)
     afterJoin1.collect()
 
+
     if (SPARK_VERSION.startsWith("2.4")) {
       val jobs = helper.getJobsByGroupId(groupId)
-      Assert.assertEquals(jobs.length, 15)
+      if (seg1.getConfig.detectDataSkewInDictEncodingEnabled()) {
+        Assert.assertEquals(jobs.length, 18)
+      } else {
+        Assert.assertEquals(jobs.length, 15)
+      }  
     } else if (SPARK_VERSION.startsWith("3.1")) {
       // in Spark 3.x, BroadcastExchangeExec overwrites job group ID
       val jobs = helper.getJobsByGroupId(null)
@@ -140,7 +145,8 @@ class TestCreateFlatTable extends SparderBaseFunSuite with SharedSparkSession wi
   private def generateFlatTable(segment: CubeSegment, cube: CubeInstance, needEncode: Boolean): Dataset[Row] = {
     val seg = MetadataConverter.getSegmentInfo(segment.getCubeInstance, segment.getUuid, segment.getName, segment.getStorageLocationIdentifier)
     val spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(seg.toBuildLayouts))
-    val flatTable = new CreateFlatTable(seg, spanningTree, spark, null)
+    //for test case there is no build job id
+    val flatTable = new CreateFlatTable(seg, spanningTree, spark, null, spark.sparkContext.applicationId)
     val afterJoin = flatTable.generateDataset(needEncode)
     afterJoin
   }

@@ -24,7 +24,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCo
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.catalyst.expressions.{ApproxCountDistinctDecode, BinaryExpression,
   DictEncode, Expression, ExpressionInfo, ExpressionUtils, ImplicitCastInputTypes, In,
-  KylinAddMonths, Like, Literal, PreciseCountDistinctDecode, RoundBase, SplitPart, Sum0,
+  KylinAddMonths, Like, Literal, PreciseCountDistinctDecode, RoundBase, ScatterSkewData, SplitPart, Sum0,
   TimestampAdd, TimestampDiff, Truncate, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.aggregate.AggregateFunction
 import org.apache.spark.sql.udaf.{ApproxCountDistinct, IntersectCount, PreciseCountDistinct}
@@ -42,6 +42,10 @@ object KylinFunctions {
 
   def dict_encode(column: Column, dictParams: Column, bucketSize: Column): Column = {
     Column(DictEncode(column.expr, dictParams.expr, bucketSize.expr))
+  }
+
+  def scatter_skew_data(column: Column, skewDataStorage: Column): Column = {
+    Column(ScatterSkewData(column.expr, skewDataStorage.expr))
   }
 
   // special lit for KYLIN.
