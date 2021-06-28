@@ -41,7 +41,7 @@ public class TopNAggregator extends MeasureAggregator<TopNCounter<ByteArray>> {
             capacity = value.getCapacity();
             sum = new TopNCounter<>(capacity * 10);
         }
-        sum.merge(value);
+        sum.merge(value, false);
     }
 
     @Override
@@ -56,7 +56,11 @@ public class TopNAggregator extends MeasureAggregator<TopNCounter<ByteArray>> {
 
     @Override
     public TopNCounter<ByteArray> getState() {
-        sum.retain(capacity);
+        if (sum.isOrdered()) {
+            sum.retain(capacity);
+        } else {
+            sum.sortAndRetain(capacity);
+        }
         return sum;
     }
 

@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
@@ -45,6 +46,7 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
     public static final int EXTRA_SPACE_RATE = 50;
 
     protected int capacity;
+    protected int scaleCapacity;
     private HashMap<T, Counter<T>> counterMap;
     protected LinkedList<Counter<T>> counterList; //a linked list, first the is the toppest element
     private boolean ordered = true;
@@ -55,6 +57,7 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
      */
     public TopNCounter(int capacity) {
         this.capacity = capacity;
+        this.scaleCapacity = capacity * KylinConfig.getInstanceFromEnv().getTopNExtraSortRate();
         counterMap = Maps.newHashMap();
         counterList = Lists.newLinkedList();
     }
@@ -92,15 +95,15 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
     /**
      * Sort and keep the expected size;
      */
-    public void sortAndRetain() {
+    public void sortAndRetain(int capacity) {
         Collections.sort(counterList, this.descending ? DESC_COMPARATOR : ASC_COMPARATOR);
         retain(capacity);
         ordered = true;
     }
 
     public List<Counter<T>> topK(int k) {
-        if (ordered == false) {
-            sortAndRetain();
+        if (!ordered) {
+            sortAndRetain(this.capacity);
         }
         List<Counter<T>> topK = new ArrayList<>(k);
         Iterator<Counter<T>> iterator = counterList.iterator();
@@ -155,12 +158,29 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
      * @return
      */
     public TopNCounter<T> merge(TopNCounter<T> another) {
-        boolean thisFull = this.size() >= this.capacity;
-        boolean anotherFull = another.size() >= another.capacity;
-        double m1 = thisFull ? this.counterList.getLast().count : 0.0;
-        double m2 = anotherFull ? another.counterList.getLast().count : 0.0;
+        return merge(another, true);
+    }
+    /**
+     * Merge another counter into this counter;
+     * @param another
+     * @param sortAndRetain
+     * @return
+     */
+    public TopNCounter<T> merge(TopNCounter<T> another, boolean sortAndRetain) {
+        boolean thisFull;
+        boolean anotherFull;
+        if (sortAndRetain) {
+            thisFull = this.size() >= this.capacity;
+            anotherFull = another.size() >= another.capacity;
+        } else {
+            thisFull = this.size() >= this.scaleCapacity;
+            anotherFull = another.size() >= another.scaleCapacity;
+        }
 
-        if (anotherFull == true) {
+        double m1 = thisFull ? getLastCount(this) : 0.0;
+        double m2 = anotherFull ? getLastCount(another) : 0.0;
+
+        if (anotherFull) {
             for (Counter<T> entry : this.counterMap.values()) {
                 entry.count += m2;
             }
@@ -180,8 +200,19 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
         }
         this.ordered = false;
 
-        this.sortAndRetain();
+        if (sortAndRetain || this.size() % this.scaleCapacity == 0
+            || this.capacity == this.scaleCapacity) {
+            this.sortAndRetain(this.capacity);
+        }
+
         return this;
+    }
+
+    private double getLastCount(TopNCounter<T> counter) {
+        if (!counter.isOrdered()) {
+            counter.sortAndRetain(this.capacity);
+        }
+        return counter.getCounterList().getLast().getCount();
     }
 
     /**
@@ -254,4 +285,7 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
 
     };
 
+    public boolean isOrdered() {
+        return ordered;
+    }
 }
