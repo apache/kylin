@@ -240,7 +240,14 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable> {
             } catch (ExecuteException e) {
                 logger.error("ExecuteException job:" + executable.getId() + " in server: " + serverName, e);
             } catch (Exception e) {
-                logger.error("unknown error execute job:" + executable.getId() + " in server: " + serverName, e);
+                if (AbstractExecutable.isMetaDataPersistException(e, 5)) {
+                    logger.error("MetaData persist exception. execute job:" + executable.getId() + " in server: " + serverName, e);
+                    // Job fail due to PersistException
+                    ExecutableManager.getInstance(jobEngineConfig.getConfig())
+                            .forceKillJobWithRetry(executable.getId());
+                } else {
+                    logger.error("unknown error execute job:" + executable.getId() + " in server: " + serverName, e);
+                }
             } finally {
                 context.removeRunningJob(executable);
                 releaseJobLock(executable);
