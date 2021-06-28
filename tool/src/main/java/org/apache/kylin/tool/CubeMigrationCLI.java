@@ -45,6 +45,7 @@ import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -172,14 +173,17 @@ public class CubeMigrationCLI extends AbstractApplication {
 
         CubeManager cubeManager = CubeManager.getInstance(srcConfig);
         CubeInstance cube = cubeManager.getCube(cubeName);
-        logger.info("cube to be moved is {}, project is  {}", cubeName, projectName);
-        if (cube.getDescriptor().getModel().getRootFactTable().getTableDesc().isStreamingTable()) {
-            logger.info("move streaming cube, project: {}, cube name {}", projectName, cubeName);
+        logger.info("cube to be moved is {}, src project is {}, target project is  {}", cubeName, cube.getProject(),
+                projectName);
+        if (cube.getModel().getRootFactTable().getTableDesc().isStreamingTable()) {
+            logger.info("move streaming cube, src project: {}, target project: {}, cube name {}", cube.getProject(),
+                    projectName, cubeName);
             if (migrateSegment) {
-               throw new InterruptedException("Can't migrate stream cube with data");
+                throw new InterruptedException("Can't migrate stream cube with data");
             }
         }
-        logger.info("cube to be moved is {}, project is {}, the real execute is {}", cubeName, projectName, realExecute);
+        logger.info("cube to be moved is {}, src project: {}, target project is {}, the real execute is {}", cubeName,
+                cube.getProject(), projectName, realExecute);
 
         if (migrateSegment) {
             checkCubeState(cube);
@@ -369,6 +373,7 @@ public class CubeMigrationCLI extends AbstractApplication {
 
         // if the cube is a stream cube, and add the stream source config
         // streaming cube just support one fact table
+
         if (cubeDesc.isStreamingCube()) {
             // add streaming source config info for streaming cube
             String tableName = cubeDesc.getModel().getRootFactTableName();
@@ -489,8 +494,21 @@ public class CubeMigrationCLI extends AbstractApplication {
                     logger.info("Item " + item + " is copied");
                     break;
                 }
+            } else if (item.startsWith(ResourceStore.STREAMING_V2_RESOURCE_ROOT)) {
+                // deserialize the stream source config
+                StreamingSourceConfig sourceConfig = JsonUtil.readValue(res.content(), StreamingSourceConfig.class);
+                if (!sourceConfig.getProjectName().equals(dstProject)) {
+                    logger.info(
+                        "migration streaming table source config: the source project {} is diff from target project {}",
+                        sourceConfig.getProjectName(), dstProject);
+                }
+                // change to the target project
+                sourceConfig.setProjectName(dstProject);
+                dstStore.putResource(sourceConfig.getResourcePathWithProjName(), sourceConfig, res.lastModified(),
+                    StreamingSourceConfig.SERIALIZER);
+            } else {
+                dstStore.putResource(renameTableWithinProject(item), res.content(), res.lastModified());
             }
-            dstStore.putResource(renameTableWithinProject(item), res.content(), res.lastModified());
             res.content().close();
             logger.info("Item " + item + " is copied");
             break;
@@ -656,7 +674,6 @@ public class CubeMigrationCLI extends AbstractApplication {
             // no harm
             logger.info("Undo for COPY_FILE_IN_META is ignored");
             String item = (String) opt.params[0];
-
             if (item.startsWith(ACL_PREFIX) && doAclCopy) {
                 logger.info("Remove acl record");
                 dstStore.deleteResource(item);
