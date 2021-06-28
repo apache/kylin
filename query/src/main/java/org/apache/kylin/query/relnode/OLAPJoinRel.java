@@ -219,7 +219,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         ColumnRowType rightColumnRowType = olapRight.getColumnRowType();
         columns.addAll(rightColumnRowType.getAllColumns());
 
-        if (columns.size() != this.rowType.getFieldCount()) {
+        if (columns.size() < this.rowType.getFieldCount()) {
             throw new IllegalStateException(
                     "RowType=" + this.rowType.getFieldCount() + ", ColumnRowType=" + columns.size());
         }
