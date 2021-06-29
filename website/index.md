@@ -130,7 +130,7 @@ title: Analytical Data Warehouse for Big Data
   <!-- second -->
   <section id="first" class="main">
       <div class="container" >
-        <h4 class="index-title" style="margin-top:50px;"><span>Who are using Kylin?</span></h4>
+        <h4 class="index-title" style="margin-top:50px;"><span>Who is using Kylin?</span></h4>
         <div class="row" style="margin-top:30px;">
             <!-- 1 -->
             <a class="sponsor" href="http://www.ebay.com/"> 
@@ -339,7 +339,16 @@ title: Analytical Data Warehouse for Big Data
             </a>
             <a class="sponsor" href="https://www.zto.com/"> 
                 <img src="/images/logo/zto.jpg">
-            </a>                         
+            </a>
+            <a class="sponsor" href="https://www.apple.com/"> 
+                <img src="/images/logo/apple.jpg">
+            </a>
+            <a class="sponsor" href="https://www.microsoft.com/"> 
+                <img src="/images/logo/microsoft.jpg">
+            </a> 
+            <a class="sponsor" href="https://aws.amazon.com/"> 
+                <img src="/images/logo/aws.jpg">
+            </a>                        
         </div>
         <!-- /container --> 
       </div>

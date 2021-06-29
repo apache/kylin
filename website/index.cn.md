@@ -336,7 +336,16 @@ title: 大数据分析型数据仓库
             </a>
             <a class="sponsor" href="https://www.zto.com/"> 
                 <img src="/images/logo/zto.jpg">
-            </a>                                                                                              
+            </a>
+            <a class="sponsor" href="https://www.apple.com/"> 
+                <img src="/images/logo/apple.jpg">
+            </a>
+            <a class="sponsor" href="https://www.microsoft.com/"> 
+                <img src="/images/logo/microsoft.jpg">
+            </a> 
+            <a class="sponsor" href="https://aws.amazon.com/"> 
+                <img src="/images/logo/aws.jpg">
+            </a>                                                                                               
         </div>
         <!-- /container --> 
       </div>
