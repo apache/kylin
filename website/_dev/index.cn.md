@@ -6,6 +6,9 @@ permalink: /cn/development/index.html
 
 Apache Kylin 一直寻求的不只是代码的贡献，还寻求使用文档，性能报告，问答等方面的贡献。所有类型的贡献都为成为 Kylin Committer 铺平了道路。每个人都有机会，尤其是那些有分析和解决方案背景的，因为缺少来自于用户和解决方案视角的内容。
 
+这里是适用于 Apache Kylin3.x 及以前版本的开发文档，查看其他版本开发文档：
+* [v4.x 版本开发文档](/cn/development40/)
+
 ### 如何贡献
 查看[如何贡献](/cn/development/howto_contribute.html)文档。
 

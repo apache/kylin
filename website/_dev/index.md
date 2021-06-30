@@ -6,6 +6,9 @@ permalink: /development/index.html
 
 Apache Kylin is always looking for contributions of not only code, but also usage document, performance report, Q&A etc. All kinds of contributions pave the way towards a Kylin Committer. There is opportunity for everyone, especially for those come from analysis and solution background, due to the lacking of content from user and solution perspective.
 
+Here is the development document for Apache kylin 3.x and earlier version. Check the development documents of other versions:
+* [v4.x development documents](/development40/) 
+
 ### How to Contribute
 Check out the [How to Contribute](/development/howto_contribute.html) document.
 
