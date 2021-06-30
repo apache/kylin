@@ -149,12 +149,22 @@ title: Analytical Data Warehouse for Big Data
                 <img src="/images/logo/baidu.png">
             </a>
             <!-- 2 -->
+            <a class="sponsor" href="https://www.apple.com/"> 
+                <img src="/images/logo/apple.jpg">
+            </a>
+            <a class="sponsor" href="https://www.microsoft.com/"> 
+                <img src="/images/logo/microsoft.jpg">
+            </a> 
+            <a class="sponsor" href="https://aws.amazon.com/"> 
+                <img src="/images/logo/aws.jpg">
+            </a>  
             <a class="sponsor" href="https://www.gome.com.cn/"> 
                 <img src="/images/logo/gome.png">
             </a>
             <a class="sponsor" href="https://www.jpmorgan.com/"> 
                 <img src="/images/logo/jpmorgan.png">
             </a>
+            <!-- 3 -->
             <a class="sponsor" href="https://strikingly.com/"> 
                 <img style="width: 200px;height: 80px" src="/images/logo/strikingly.png">
             </a>
@@ -164,13 +174,13 @@ title: Analytical Data Warehouse for Big Data
             <a class="sponsor" href="https://www.58.com/"> 
                 <img src="/images/logo/58.png">
             </a>
-            <!-- 3 -->
             <a class="sponsor" href="http://www.jd.com/"> 
                 <img src="/images/logo/jd.jpg">
             </a>
             <a class="sponsor" href="http://www.4399.com/"> 
                 <img src="/images/logo/4399.png">
             </a>
+            <!-- 4 -->
             <a class="sponsor" href="http://www.exponential.com/"> 
                 <img src="/images/logo/exponential.jpg">
             </a>
@@ -180,13 +190,13 @@ title: Analytical Data Warehouse for Big Data
             <a class="sponsor" href="http://www.didiglobal.com/"> 
                 <img src="/images/logo/didi.png">
             </a>
-            <!-- 4 -->
             <a class="sponsor" href="http://www.dream-it.cn/"> 
                 <img src="/images/logo/dreamsoft.png">
             </a>
             <a class="sponsor" href="http://www.meituan.com/"> 
                 <img src="/images/logo/meituan.jpg">
             </a>
+            <!-- 5 -->
             <a class="sponsor" href="https://kyligence.io/"> 
                 <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/kyligence.jpg">
             </a>
@@ -196,13 +206,13 @@ title: Analytical Data Warehouse for Big Data
             <a class="sponsor" href="https://gameforge.com/"> 
                 <img src="/images/logo/gameforge.png">
             </a>
-            <!-- 5 -->
             <a class="sponsor" href="https://www.glispa.com/"> 
                 <img src="/images/logo/glispa.jpg">
             </a>
             <a class="sponsor" href="https://www.sohu.com/"> 
                 <img src="/images/logo/soho.png">
             </a>
+            <!-- 6 -->
             <a class="sponsor" href="http://www.300.cn/"> 
                 <img src="/images/logo/growforce.png">
             </a>
@@ -212,13 +222,13 @@ title: Analytical Data Warehouse for Big Data
             <a class="sponsor" href="http://www.iflytek.com/"> 
                 <img src="/images/logo/iflytek.png">
             </a>
-            <!-- 6 -->
             <a class="sponsor" href="http://www.iqiyi.com/"> 
                 <img src="/images/logo/iqiyi.png">
             </a>
             <a class="sponsor" href="javascript:void(0);">
                 <img src="/images/logo/leeco.png">
             </a>
+            <!-- 7 -->
             <a class="sponsor" href="https://www.meizu.com/"> 
                 <img src="/images/logo/meizu.png">
             </a>
@@ -228,13 +238,13 @@ title: Analytical Data Warehouse for Big Data
             <a class="sponsor" href="https://www.qunar.com/"> 
                 <img src="/images/logo/qunar.png">
             </a>
-            <!-- 7 -->
             <a class="sponsor" href="http://www.stratebi.com/"> 
                 <img src="/images/logo/stratebi.png">
             </a>
             <a class="sponsor" href="https://www.toutiao.com/"> 
                 <img src="/images/logo/toutiao.png">
             </a>
+            <!-- 8 -->
             <a class="sponsor" href="https://www.trinitymobility.com/"> 
                 <img style="width: 200px;height: 80px" src="/images/logo/trinity.png">
             </a>
@@ -244,13 +254,13 @@ title: Analytical Data Warehouse for Big Data
             <a class="sponsor" href="http://www.vip.com/"> 
                 <img src="/images/logo/vipcom.png">
             </a>
-            <!-- 8 -->
             <a class="sponsor" href="http://www.wanda.cn/"> 
                 <img src="/images/logo/wanda.png">
             </a>
             <a class="sponsor" href="http://www.zte.com.cn/"> 
                 <img src="/images/logo/zte.png">
-            </a>             
+            </a>
+            <!-- 9 -->             
             <a class="sponsor" href="https://www.infoworks.io/"> 
                 <img src="/images/logo/infoworks.png">
             </a>
@@ -260,13 +270,13 @@ title: Analytical Data Warehouse for Big Data
             <a class="sponsor" href="https://www.telecoming.com/"> 
                 <img src="/images/logo/telecoming.jpg">
             </a>
-            <!-- 9 -->
             <a class="sponsor" href="http://www.163.com/"> 
                 <img src="/images/logo/netease.png">
             </a>
             <a class="sponsor" href="http://www.mininglamp.com/"> 
                 <img style="width: 200px;height: 80px;margin-bottom: 10px;text-align: left;" src="/images/logo/mininglamp.png">
             </a>
+            <!-- 10 -->
             <a class="sponsor" href="https://www.ele.me/home/"> 
                 <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/ele.png">
             </a>
@@ -276,13 +286,13 @@ title: Analytical Data Warehouse for Big Data
             <a class="sponsor" href="https://www.qq.com/"> 
                 <img src="/images/logo/qq.jpg">
             </a>
-            <!-- 10 -->
             <a class="sponsor" href="http://www.xiaomi.com/"> 
                 <img src="/images/logo/xiaomi.jpg">
             </a>
             <a class="sponsor" href="http://www.wanmei.com/">
                 <img src="/images/logo/wanmei.jpg">
             </a>
+            <!-- 11 -->
             <a class="sponsor" href="http://www.powerbi.com.cn/">
                 <img src="/images/logo/aowei.jpg">
             </a>
@@ -292,13 +302,13 @@ title: Analytical Data Warehouse for Big Data
             <a class="sponsor" href="https://www.jianshu.com/">
                 <img src="/images/logo/jianshu.jpg">
             </a>
-            <!-- 11 -->
             <a class="sponsor" href="http://www.keruyun.com/"> 
                 <img src="/images/logo/keruyun.jpg">
             </a>
             <a class="sponsor" href="https://www.qutoutiao.net/">
                 <img src="/images/logo/qutoutiao.jpg">
             </a>
+            <!-- 12 -->
             <a class="sponsor" href="http://www.bianfeng.com/">
                 <img src="/images/logo/bianfeng.jpg">
             </a>
@@ -308,13 +318,13 @@ title: Analytical Data Warehouse for Big Data
             <a class="sponsor" href="https://www.meitu.com/">
                 <img src="/images/logo/meitu.jpg">
             </a>
-            <!-- 12 -->
             <a class="sponsor" href="https://www.neusoft.com/"> 
                 <img src="/images/logo/neusoft.jpg">
             </a>
             <a class="sponsor" href="https://www.wenjuan.com/">
                 <img src="/images/logo/wenjuanwang.jpg">
             </a>
+            <!-- 13 -->
             <a class="sponsor" href="http://www.yidianzixun.com/">
                 <img src="/images/logo/yidianzixun.jpg">
             </a>
@@ -324,13 +334,13 @@ title: Analytical Data Warehouse for Big Data
             <a class="sponsor" href="https://www.zybang.com/">
                 <img src="/images/logo/zuoyebang.jpg">
             </a>
-            <!-- 13 -->
             <a class="sponsor" href="http://www.zqykj.com/"> 
                 <img src="/images/logo/zhiqiyun.jpg">
             </a>
             <a class="sponsor" href="https://www.epam.com/"> 
                 <img src="/images/logo/epam.jpg">
             </a>
+            <!-- 14 -->
             <a class="sponsor" href="http://www.moji.com/"> 
                 <img src="/images/logo/moji.jpg">
             </a>
@@ -339,16 +349,7 @@ title: Analytical Data Warehouse for Big Data
             </a>
             <a class="sponsor" href="https://www.zto.com/"> 
                 <img src="/images/logo/zto.jpg">
-            </a>
-            <a class="sponsor" href="https://www.apple.com/"> 
-                <img src="/images/logo/apple.jpg">
-            </a>
-            <a class="sponsor" href="https://www.microsoft.com/"> 
-                <img src="/images/logo/microsoft.jpg">
-            </a> 
-            <a class="sponsor" href="https://aws.amazon.com/"> 
-                <img src="/images/logo/aws.jpg">
-            </a>                        
+            </a>                      
         </div>
         <!-- /container --> 
       </div>
