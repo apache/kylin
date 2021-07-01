@@ -155,8 +155,8 @@ title: Analytical Data Warehouse for Big Data
             <a class="sponsor" href="https://www.microsoft.com/"> 
                 <img src="/images/logo/microsoft.jpg">
             </a> 
-            <a class="sponsor" href="https://aws.amazon.com/"> 
-                <img src="/images/logo/aws.jpg">
+            <a class="sponsor" href="https://www.amazon.com/"> 
+                <img src="/images/logo/amazon.png">
             </a>  
             <a class="sponsor" href="https://www.gome.com.cn/"> 
                 <img src="/images/logo/gome.png">
