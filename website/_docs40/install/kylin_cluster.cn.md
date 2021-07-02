@@ -47,9 +47,9 @@ kylin.server.self-discovery-enabled=true
 ```
 更多关于kylin任务调度器的细节可以参考[Apache Kylin Wiki](https://cwiki.apache.org/confluence/display/KYLIN/Comparison+of+Kylin+Job+scheduler).
 
-
-
 ### 安装负载均衡器
 
 为了将查询请求发送给集群而非单个节点，您可以部署一个负载均衡器，如 [Nginx](http://nginx.org/en/)， [F5](https://www.f5.com/) 或 [cloudlb](https://rubygems.org/gems/cloudlb/) 等，使得客户端和负载均衡器通信代替和特定的 Kylin 实例通信。
 
+### 读写分离部署
+Kylin4 的读写分离部署方式与 Kylin3 存在一定的差异，请参考文档：[Read Write Separation Deployment for Kylin 4](https://cwiki.apache.org/confluence/display/KYLIN/Read-Write+Separation+Deployment+for+Kylin+4.0)

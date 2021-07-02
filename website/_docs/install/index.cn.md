@@ -42,7 +42,7 @@ Kylin 可以在 Hadoop 集群的任意节点上启动。方便起见，您可以
 cd /usr/local/
 wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz
 ```
-
+ 
 2. 解压 tar 包，配置环境变量 `$KYLIN_HOME` 指向 Kylin 文件夹。
 
 ```shell
@@ -51,7 +51,7 @@ cd apache-kylin-2.5.0-bin-hbase1x
 export KYLIN_HOME=`pwd`
 ```
 
-从 v2.6.1 开始， Kylin 不再包含 Spark 二进制包; 您需要另外下载 Spark，然后设置 `SPARK_HOME` 系统变量到 Spark 安装目录： 
+3. 从 v2.6.1 开始， Kylin 不再包含 Spark 二进制包; 您需要另外下载 Spark，然后设置 `SPARK_HOME` 系统变量到 Spark 安装目录： 
 
 ```shell
 export SPARK_HOME=/path/to/spark
