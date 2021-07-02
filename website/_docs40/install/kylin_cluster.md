@@ -51,3 +51,6 @@ For more details about the kylin job scheduler, please refer to [Apache Kylin Wi
 ### Installing a load balancer
 
 To send query requests to a cluster instead of a single node, you can deploy a load balancer such as [Nginx](http://nginx.org/en/), [F5](https://www.f5.com/) or [cloudlb](https://rubygems.org/gems/cloudlb/), etc., so that the client and load balancer communication instead communicate with a specific Kylin instance.
+
+### Read and write separation deployment
+There are some differences between read and write separation deployment of kylin 4 and kylin 3, Please refer to : [Read Write Separation Deployment for Kylin 4](https://cwiki.apache.org/confluence/display/KYLIN/Read-Write+Separation+Deployment+for+Kylin+4.0)

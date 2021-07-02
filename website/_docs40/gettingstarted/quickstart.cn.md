@@ -67,7 +67,7 @@ $KYLIN_HOME/bin/download-spark.sh
 
 脚本会将解压好的spark放在$KYLIN_HOME目录下，如果系统中没有设置SPARK_HOME，启动kylin时会自动找到$KYLIN_HOME目录下的spark。
 
-### ste4、配置 Mysql 元数据
+### step4、配置 Mysql 元数据
 
 Kylin 4.0 使用 Mysql 作为元数据存储，需要在kylin.properties做如下配置：
 

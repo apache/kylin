@@ -43,6 +43,8 @@ When your environment meets the above prerequisites, you can install and start u
 
 #### Step1. Download the Kylin Archive
 Download a kylin4.0 binary package from [Apache Kylin Download Site](https://kylin.apache.org/download/). 
+
+```
 cd /usr/local/
 wget http://apache.website-solution.net/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin.tar.gz
 ```
