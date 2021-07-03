@@ -63,6 +63,7 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.spark.deploy.SparkApplicationClient;
 import org.apache.spark.utils.SparkVersionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,6 +84,7 @@ public class NSparkExecutable extends AbstractExecutable {
     private static final String APP_JAR_NAME = "__app__.jar";
 
     private volatile boolean isYarnCluster = false;
+    private volatile boolean isStandaloneCluster = false;
 
     protected void setSparkSubmitClassName(String className) {
         this.setParam(MetadataConstants.P_CLASS_NAME, className);
@@ -165,6 +167,9 @@ public class NSparkExecutable extends AbstractExecutable {
         }
     }
 
+    /**
+     * Dump metadata from Kylin Metadata and persist to HDFS(getDistMetaUrl) for Spark Application
+     */
     void attachMetadataAndKylinProps(KylinConfig config) throws IOException {
         // The way of Updating metadata is CopyOnWrite. So it is safe to use Reference in the value.
         Set<String> dumpList = getMetadataDumpList(config);
@@ -272,6 +277,9 @@ public class NSparkExecutable extends AbstractExecutable {
 
             CliCommandExecutor exec = new CliCommandExecutor();
             exec.execute(cmd, patternedLogger, jobId);
+            if (isStandaloneCluster) {
+                SparkApplicationClient.awaitAndCheckAppState(SparkApplicationClient.STANDALONE_CLUSTER(), jobId);
+            }
             updateMetaAfterOperation(config);
             //Add metrics information to execute result for JobMetricsFacade
             getManager().addJobInfo(getId(), getJobMetricsInfo(config));
@@ -297,6 +305,12 @@ public class NSparkExecutable extends AbstractExecutable {
                 && "cluster".equals(sparkConfigOverride.get(DEPLOY_MODE)) && !(this instanceof NSparkLocalStep)) {
             this.isYarnCluster = true;
         }
+
+        if (sparkConfigOverride.get(SPARK_MASTER).toLowerCase(Locale.ROOT).startsWith("spark")
+                && "cluster".equals(sparkConfigOverride.get(DEPLOY_MODE)) && !(this instanceof NSparkLocalStep)) {
+            this.isStandaloneCluster = true;
+        }
+
         if (!sparkConfigOverride.containsKey("spark.driver.memory")) {
             sparkConfigOverride.put("spark.driver.memory", computeStepDriverMemory() + "m");
         }
@@ -434,7 +448,7 @@ public class NSparkExecutable extends AbstractExecutable {
     private ExecuteResult runLocalMode(String appArgs, KylinConfig config) {
         try {
             Class<? extends Object> appClz = ClassUtil.forName(getSparkSubmitClassName(), Object.class);
-            appClz.getMethod("main", String[].class).invoke(null, (Object) new String[] { appArgs });
+            appClz.getMethod("main", String[].class).invoke(null, (Object) new String[]{appArgs});
             updateMetaAfterOperation(config);
 
             //Add metrics information to execute result for JobMetricsFacade

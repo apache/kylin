@@ -1541,6 +1541,9 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
 
+    public String getSparkStandaloneMasterWebUI() {
+        return getOptional("kylin.engine.spark.standalone.master.httpUrl", "");
+    }
 
     public String getKylinJobJarPath() {
         final String jobJar = getOptional(KYLIN_ENGINE_MR_JOB_JAR);

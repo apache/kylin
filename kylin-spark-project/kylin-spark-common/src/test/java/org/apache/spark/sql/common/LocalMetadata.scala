@@ -18,9 +18,6 @@
 
 package org.apache.spark.sql.common
 
-import java.io.{File, IOException}
-
-import org.apache.commons.io.FileUtils
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.{LocalFileMetadataTestCase, TempMetadataBuilder}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}

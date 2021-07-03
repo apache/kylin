@@ -80,7 +80,7 @@ public class MetaDumpUtil {
             }
 
             KylinConfig dstConfig = KylinConfig.createKylinConfig(props);
-            //upload metadata
+            // upload metadata
             new ResourceTool().copy(KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath()), dstConfig);
         }
     }

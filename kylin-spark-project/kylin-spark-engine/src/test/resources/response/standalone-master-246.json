@@ -1,0 +1,94 @@
+{
+  "url": "spark://cdh-master:10030",
+  "workers": [
+    {
+      "id": "worker-20210630172110-10.1.3.90-10040",
+      "host": "10.1.3.90",
+      "port": 10040,
+      "webuiaddress": "http://10.1.3.90:10041",
+      "cores": 5,
+      "coresused": 0,
+      "coresfree": 5,
+      "memory": 20480,
+      "memoryused": 0,
+      "memoryfree": 20480,
+      "state": "ALIVE",
+      "lastheartbeat": 1625193717228
+    }
+  ],
+  "aliveworkers": 1,
+  "cores": 5,
+  "coresused": 0,
+  "memory": 20480,
+  "memoryused": 0,
+  "activeapps": [],
+  "completedapps": [
+    {
+      "id": "app-20210701230444-0000",
+      "starttime": 1625151884352,
+      "name": "job_step_6eb0d430-2882-4699-9915-1154959c2cd8-01",
+      "cores": 4,
+      "user": "root",
+      "memoryperslave": 1024,
+      "submitdate": "Thu Jul 01 23:04:44 CST 2021",
+      "state": "FINISHED",
+      "duration": 26068
+    },
+    {
+      "id": "app-20210701232026-0001",
+      "starttime": 1625152826024,
+      "name": "job_step_6eb0d430-2882-4699-9915-1154959c2cd8-01",
+      "cores": 4,
+      "user": "root",
+      "memoryperslave": 1024,
+      "submitdate": "Thu Jul 01 23:20:26 CST 2021",
+      "state": "FINISHED",
+      "duration": 29656
+    },
+    {
+      "id": "app-20210701234053-0002",
+      "starttime": 1625154053758,
+      "name": "job_step_93338927-bbbf-4baf-8a22-b44cb701b57b-01",
+      "cores": 4,
+      "user": "root",
+      "memoryperslave": 1024,
+      "submitdate": "Thu Jul 01 23:40:53 CST 2021",
+      "state": "FINISHED",
+      "duration": 27223
+    }
+  ],
+  "activedrivers": [],
+  "completeddrivers": [
+    {
+      "id": "driver-20210701230402-0000",
+      "starttime": "1625151842605",
+      "state": "FINISHED",
+      "cores": 1,
+      "memory": 1024,
+      "submitdate": "Thu Jul 01 23:04:02 CST 2021",
+      "worker": "worker-20210630172110-10.1.3.90-10040",
+      "mainclass": "org.apache.kylin.engine.spark.application.SparkEntry"
+    },
+    {
+      "id": "driver-20210701232014-0001",
+      "starttime": "1625152814554",
+      "state": "FINISHED",
+      "cores": 1,
+      "memory": 1024,
+      "submitdate": "Thu Jul 01 23:20:14 CST 2021",
+      "worker": "worker-20210630172110-10.1.3.90-10040",
+      "mainclass": "org.apache.kylin.engine.spark.application.SparkEntry"
+    },
+    {
+      "id": "driver-20210701233954-0002",
+      "starttime": "1625153994011",
+      "state": "FINISHED",
+      "cores": 1,
+      "memory": 1024,
+      "submitdate": "Thu Jul 01 23:39:54 CST 2021",
+      "worker": "worker-20210630172110-10.1.3.90-10040",
+      "mainclass": "org.apache.kylin.engine.spark.application.SparkEntry"
+    }
+  ],
+  "status": "ALIVE"
+}
