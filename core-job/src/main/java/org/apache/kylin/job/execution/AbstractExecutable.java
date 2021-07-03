@@ -699,9 +699,9 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return 1024;
     }
 
-    //Default driver memory base is 1024M
-    //Adujst driver memory by cuboid number with stratogy[2 -> 20 -> 100]
-    //If cuboid number is 10, then driver.memory=2*1024=2048M
+    // Default driver memory base is 1024M
+    // Adjust driver memory by cuboid number with stratogy[2 -> 20 -> 100]
+    // If cuboid number is 10, then driver.memory=2*1024=2048M
     public static Integer computeDriverMemory(Integer cuboidNum) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         int[] driverMemoryStrategy = config.getSparkEngineDriverMemoryStrategy();
