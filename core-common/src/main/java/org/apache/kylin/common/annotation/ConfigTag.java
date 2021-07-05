@@ -39,6 +39,9 @@ public @interface ConfigTag {
          */
         DEPRECATED,
 
+        /**
+         * Not tested/verified
+         */
         NOT_CLEAR,
 
         /**

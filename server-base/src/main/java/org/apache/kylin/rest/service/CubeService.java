@@ -64,7 +64,7 @@ import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.TableDesc;
+//import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
@@ -592,20 +592,20 @@ public class CubeService extends BasicService implements InitializingBean {
         return getCubeManager().updateCube(update);
     }
 
-    public CubeInstance rebuildLookupSnapshot(CubeInstance cube, String segmentName, String lookupTable)
-            throws IOException {
-        aclEvaluate.checkProjectOperationPermission(cube);
-        Message msg = MsgPicker.getMsg();
-        TableDesc tableDesc = getTableManager().getTableDesc(lookupTable, cube.getProject());
-        if (tableDesc.isView()) {
-            throw new BadRequestException(
-                    String.format(Locale.ROOT, msg.getREBUILD_SNAPSHOT_OF_VIEW(), tableDesc.getName()));
-        }
-        CubeSegment seg = cube.getSegment(segmentName, SegmentStatusEnum.READY);
-        getCubeManager().buildSnapshotTable(seg, lookupTable, null);
-
-        return cube;
-    }
+//    public CubeInstance rebuildLookupSnapshot(CubeInstance cube, String segmentName, String lookupTable)
+//            throws IOException {
+//        aclEvaluate.checkProjectOperationPermission(cube);
+//        Message msg = MsgPicker.getMsg();
+//        TableDesc tableDesc = getTableManager().getTableDesc(lookupTable, cube.getProject());
+//        if (tableDesc.isView()) {
+//            throw new BadRequestException(
+//                    String.format(Locale.ROOT, msg.getREBUILD_SNAPSHOT_OF_VIEW(), tableDesc.getName()));
+//        }
+//        CubeSegment seg = cube.getSegment(segmentName, SegmentStatusEnum.READY);
+//        getCubeManager().buildSnapshotTable(seg, lookupTable, null);
+//
+//        return cube;
+//    }
 
     public CubeInstance deleteSegmentById(CubeInstance cube, String uuid) throws IOException {
         aclEvaluate.checkProjectWritePermission(cube);

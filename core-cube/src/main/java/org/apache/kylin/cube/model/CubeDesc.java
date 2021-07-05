@@ -60,8 +60,6 @@ import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
-import org.apache.kylin.dict.GlobalDictionaryBuilder;
-import org.apache.kylin.dict.global.SegmentAppendTrieDictBuilder;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -1559,30 +1557,30 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return null;
     }
 
-    public List<TblColRef> getAllGlobalDictColumns() {
-        List<TblColRef> globalDictCols = new ArrayList<TblColRef>();
-        List<DictionaryDesc> dictionaryDescList = getDictionaries();
-
-        if (dictionaryDescList == null) {
-            return globalDictCols;
-        }
-
-        for (DictionaryDesc dictionaryDesc : dictionaryDescList) {
-            String cls = dictionaryDesc.getBuilderClass();
-            if (GlobalDictionaryBuilder.class.getName().equals(cls)
-                    || SegmentAppendTrieDictBuilder.class.getName().equals(cls))
-                globalDictCols.add(dictionaryDesc.getColumnRef());
-        }
-        return globalDictCols;
-    }
+//    public List<TblColRef> getAllGlobalDictColumns() {
+//        List<TblColRef> globalDictCols = new ArrayList<TblColRef>();
+//        List<DictionaryDesc> dictionaryDescList = getDictionaries();
+//
+//        if (dictionaryDescList == null) {
+//            return globalDictCols;
+//        }
+//
+//        for (DictionaryDesc dictionaryDesc : dictionaryDescList) {
+//            String cls = dictionaryDesc.getBuilderClass();
+//            if (GlobalDictionaryBuilder.class.getName().equals(cls)
+//                    || SegmentAppendTrieDictBuilder.class.getName().equals(cls))
+//                globalDictCols.add(dictionaryDesc.getColumnRef());
+//        }
+//        return globalDictCols;
+//    }
 
     // UHC (ultra high cardinality column): contain the ShardByColumns and the GlobalDictionaryColumns
-    public List<TblColRef> getAllUHCColumns() {
-        List<TblColRef> uhcColumns = new ArrayList<>();
-        uhcColumns.addAll(getAllGlobalDictColumns());
-        uhcColumns.addAll(getShardByColumns());
-        return uhcColumns;
-    }
+//    public List<TblColRef> getAllUHCColumns() {
+//        List<TblColRef> uhcColumns = new ArrayList<>();
+//        uhcColumns.addAll(getAllGlobalDictColumns());
+//        uhcColumns.addAll(getShardByColumns());
+//        return uhcColumns;
+//    }
 
     public String getProject() {
         DataModelDesc modelDesc = getModel();

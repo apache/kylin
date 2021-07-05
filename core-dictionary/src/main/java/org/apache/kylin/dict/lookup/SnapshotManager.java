@@ -63,7 +63,7 @@ public class SnapshotManager {
                 SnapshotManager.logger.info("Snapshot with resource path {} is removed due to {}",
                         notification.getKey(), notification.getCause());
             }
-        }).maximumSize(config.getCachedSnapshotMaxEntrySize())//
+        }).maximumSize(100L)//
                 .expireAfterWrite(1, TimeUnit.DAYS).build(new CacheLoader<String, SnapshotTable>() {
                     @Override
                     public SnapshotTable load(String key) throws Exception {
@@ -173,11 +173,11 @@ public class SnapshotManager {
             KylinConfig cubeConfig) throws IOException {
         String dup = checkDupByInfo(snapshot);
 
-        if ((float) snapshot.getSignature().getSize() / 1024 / 1024 > cubeConfig.getTableSnapshotMaxMB()) {
-            throw new IllegalStateException(
-                    "Table snapshot should be no greater than " + cubeConfig.getTableSnapshotMaxMB() //
-                            + " MB, but " + tableDesc + " size is " + snapshot.getSignature().getSize());
-        }
+//        if ((float) snapshot.getSignature().getSize() / 1024 / 1024 > cubeConfig.getTableSnapshotMaxMB()) {
+//            throw new IllegalStateException(
+//                    "Table snapshot should be no greater than " + cubeConfig.getTableSnapshotMaxMB() //
+//                            + " MB, but " + tableDesc + " size is " + snapshot.getSignature().getSize());
+//        }
 
         if (dup != null) {
             logger.info("Identical input {}, reuse existing snapshot at {}", table.getSignature(), dup);
