@@ -21,6 +21,7 @@ package org.apache.kylin.stream.coordinator.coordinate;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -347,6 +348,17 @@ public class StreamingCoordinator implements CoordinatorClient {
     }
 
     public synchronized void createReplicaSet(ReplicaSet rs) {
+        List<ReplicaSet> allReplicaset = streamMetadataStore.getReplicaSets();
+        // before creating the new set, we should check whether the nodes are in other sets.
+        for (Node receiver : rs.getNodes()) {
+            for (ReplicaSet set : allReplicaset) {
+                if (set.containPhysicalNode(receiver)) {
+                    throw new CoordinateException(String.format(
+                        Locale.ROOT,
+                        "The receiver node %s is already exists in the set %s", receiver, set));
+                }
+            }
+        }
         int replicaSetID = streamMetadataStore.createReplicaSet(rs);
         try {
             for (Node receiver : rs.getNodes()) {
@@ -379,7 +391,7 @@ public class StreamingCoordinator implements CoordinatorClient {
         List<ReplicaSet> allReplicaSet = streamMetadataStore.getReplicaSets();
         for (ReplicaSet other : allReplicaSet) {
             if (other.getReplicaSetID() != replicaSetID) {
-                if (other.getNodes().contains(receiver)) {
+                if (other.containPhysicalNode(receiver)) {
                     logger.error("Error add Node {} to replicaSet {}, already exist in replicaSet {} ", nodeID,
                             replicaSetID, other.getReplicaSetID());
                     throw new IllegalStateException("Node exists in ReplicaSet!");
