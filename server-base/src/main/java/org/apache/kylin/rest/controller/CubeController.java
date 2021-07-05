@@ -36,7 +36,7 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
+//import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler;
@@ -308,20 +308,20 @@ public class CubeController extends BasicController {
      *
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = {
-            RequestMethod.PUT }, produces = { "application/json" })
-    @ResponseBody
-    public CubeInstance rebuildLookupSnapshot(@PathVariable String cubeName, @PathVariable String segmentName,
-            @RequestParam(value = "lookupTable") String lookupTable) {
-        try {
-            final CubeManager cubeMgr = cubeService.getCubeManager();
-            final CubeInstance cube = cubeMgr.getCube(cubeName);
-            return cubeService.rebuildLookupSnapshot(cube, segmentName, lookupTable);
-        } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage(), e);
-        }
-    }
+//    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = {
+//            RequestMethod.PUT }, produces = { "application/json" })
+//    @ResponseBody
+//    public CubeInstance rebuildLookupSnapshot(@PathVariable String cubeName, @PathVariable String segmentName,
+//            @RequestParam(value = "lookupTable") String lookupTable) {
+//        try {
+//            final CubeManager cubeMgr = cubeService.getCubeManager();
+//            final CubeInstance cube = cubeMgr.getCube(cubeName);
+//            return cubeService.rebuildLookupSnapshot(cube, segmentName, lookupTable);
+//        } catch (IOException e) {
+//            logger.error(e.getLocalizedMessage(), e);
+//            throw new InternalErrorException(e.getLocalizedMessage(), e);
+//        }
+//    }
 
     /**
      * Delete a cube segment

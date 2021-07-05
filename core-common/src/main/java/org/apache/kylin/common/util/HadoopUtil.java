@@ -101,10 +101,6 @@ public class HadoopUtil {
         return getFileSystem(workingPath, conf);
     }
 
-    public static FileSystem getReadFileSystem() throws IOException {
-        return getFileSystem(KylinConfig.getInstanceFromEnv().getReadHdfsWorkingDirectory());
-    }
-
     public static FileSystem getFileSystem(String path) {
         return getFileSystem(new Path(makeURI(path)));
     }

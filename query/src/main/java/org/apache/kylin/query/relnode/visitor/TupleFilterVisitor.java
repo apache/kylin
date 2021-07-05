@@ -37,7 +37,6 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.util.NlsString;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.filter.CaseTupleFilter;
@@ -60,7 +59,6 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 
 public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
 
@@ -70,8 +68,7 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
 
     // is the fact table is a streamingv2 table
     private boolean autoJustByTimezone = false;
-    private static final long TIME_ZONE_OFFSET = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getStreamingDerivedTimeTimezone())
-            .getRawOffset();
+    private static final long TIME_ZONE_OFFSET = 0;
 
     public TupleFilterVisitor(ColumnRowType inputRowType) {
         super(true);

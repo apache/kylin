@@ -25,8 +25,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.dict.ByteComparator;
-import org.apache.kylin.dict.StringBytesConverter;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.source.IReadableTable;
 import org.slf4j.Logger;
@@ -92,9 +90,9 @@ public class SortedColumnDFSFile implements IReadableTable {
     }
 
     private Comparator<String> getComparatorByType(DataType type) {
-        Comparator<String> comparator;
+        Comparator<String> comparator = null;
         if (!type.isNumberFamily()) {
-            comparator = new ByteComparator<>(new StringBytesConverter());
+//            comparator = new ByteComparator<>(new StringBytesConverter());
         } else if (type.isIntegerFamily()) {
             comparator = new Comparator<String>() {
                 @Override
