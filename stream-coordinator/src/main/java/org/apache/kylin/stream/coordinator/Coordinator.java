@@ -706,6 +706,16 @@ public class Coordinator implements CoordinatorClient {
     }
 
     public synchronized void createReplicaSet(ReplicaSet rs) {
+        List<ReplicaSet> allReplicaset = streamMetadataStore.getReplicaSets();
+        // before creating the new set, we should check whether the nodes are in other sets.
+        for (Node receiver : rs.getNodes()) {
+            for (ReplicaSet set : allReplicaset) {
+                if (set.containPhysicalNode(receiver)) {
+                    throw new CoordinateException(String.format(Locale.ROOT,
+                            "The receiver node %s is already exists in the set %s", receiver, set));
+                }
+            }
+        }
         int replicaSetID = streamMetadataStore.createReplicaSet(rs);
         try {
             for (Node receiver : rs.getNodes()) {
@@ -737,7 +747,7 @@ public class Coordinator implements CoordinatorClient {
         List<ReplicaSet> allReplicaSet = streamMetadataStore.getReplicaSets();
         for (ReplicaSet other : allReplicaSet) {
             if (other.getReplicaSetID() != replicaSetID) {
-                if (other.getNodes().contains(receiver)) {
+                if (other.containPhysicalNode(receiver)) {
                     logger.error("error add Node {} to replicaSet {}, already exist in replicaSet {} ", nodeID,
                             replicaSetID, other.getReplicaSetID());
                     throw new IllegalStateException("Node exists in ReplicaSet!");
