@@ -133,6 +133,7 @@ object MetadataConverter {
     val (columnIndexes, shardByColumnsId, idToColumnMap, measureId) = genIDToColumnMap(cubeInstance)
     (cubeInstance.getCuboidsByMode(cuboidMode)
       .asScala
+      .filter(id => cubeInstance.getConfig.isBuildBaseCuboid || !id.equals(cubeInstance.getCuboidScheduler.getBaseCuboidId))
       .map { long =>
         genLayoutEntity(columnIndexes, shardByColumnsId, idToColumnMap, measureId, long)
       }.toList, measureId.asScala.toMap)

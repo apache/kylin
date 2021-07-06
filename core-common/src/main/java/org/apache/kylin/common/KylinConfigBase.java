@@ -3196,4 +3196,8 @@ public abstract class KylinConfigBase implements Serializable {
     public double skewPercentageThreshHold() {
         return Double.valueOf(getOptional("kylin.dictionary.data.skew.percentage.threshhold", "0.05"));
     }
+
+    public boolean isBuildBaseCuboid() {
+        return Boolean.valueOf(getOptional("kylin.engine.cuboid.build.base", "true"));
+    }
 }
