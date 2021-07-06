@@ -23,5 +23,13 @@ echo "build image in dir "${DIR}
 
 
 echo "start build Hadoop docker image"
-docker build -f Dockerfile_hadoop -t hadoop2.7-all-in-one-for-kylin4-beta .
-docker build -f Dockerfile -t apachekylin/apache-kylin-standalone:4.0.0-beta .
+if [ $1 == "spark3" ]
+then
+  docker build -f Dockerfile_hadoop -t hadoop2.7-all-in-one-for-kylin4-beta \
+      --build-arg SPARK_VERSION=3.1.1 --build-arg HADOOP_VERSION=2.7.7 .
+  docker build -f Dockerfile -t apachekylin/apache-kylin-standalone:4.0.0-beta \
+      --build-arg KYLIN_VERSION=4.0.0-beta-spark3 .
+else
+  docker build -f Dockerfile_hadoop -t hadoop2.7-all-in-one-for-kylin4-beta .
+  docker build -f Dockerfile -t apachekylin/apache-kylin-standalone:4.0.0-beta .
+fi

@@ -18,6 +18,15 @@
 #
 echo "127.0.0.1 sandbox sandbox.hortonworks.com" >> /etc/hosts
 
+export SPARK_DIST_CLASSPATH=$($HADOOP_HOME/bin/hadoop classpath)
+
+if [ $SPARK_VERSION == 3.1.1 ]; then
+    echo "kylin.engine.spark-conf.spark.sql.hive.metastore.jars=${HIVE_HOME}/lib/*" >> ${KYLIN_HOME}/conf/kylin.properties
+    echo "kylin.engine.spark-conf.spark.sql.hive.metastore.version=${HIVE_VERSION}" >> ${KYLIN_HOME}/conf/kylin.properties
+    echo "kylin.query.spark-conf.spark.sql.hive.metastore.jars=${HIVE_HOME}/lib/*" >> ${KYLIN_HOME}/conf/kylin.properties
+    echo "kylin.query.spark-conf.spark.sql.hive.metastore.version=${HIVE_VERSION}" >> ${KYLIN_HOME}/conf/kylin.properties
+fi
+
 # clean pid files
 rm -f /tmp/*.pid
 if [ ! -f "/home/admin/first_run" ]
