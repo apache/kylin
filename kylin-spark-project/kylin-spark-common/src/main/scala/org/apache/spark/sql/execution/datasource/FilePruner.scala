@@ -299,6 +299,9 @@ class FilePruner(cubeInstance: CubeInstance,
   }
 
   private def extractSegmentFilter(filter: Expression, col: Attribute): Option[Expression] = {
+    if (col == null) {
+      return None
+    }
     filter match {
       case expressions.Or(left, right) =>
         val leftChild = extractSegmentFilter(left, col)
@@ -330,7 +333,7 @@ class FilePruner(cubeInstance: CubeInstance,
         }
       case _ =>
         //other unary filter like EqualTo, GreaterThan, GreaterThanOrEqual, etc.
-        if (col != null && filter.references.subsetOf(AttributeSet(col))) {
+        if (filter.references.subsetOf(AttributeSet(col))) {
           Some(filter)
         } else {
           None
