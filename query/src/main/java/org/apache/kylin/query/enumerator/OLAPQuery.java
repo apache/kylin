@@ -64,6 +64,10 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
         case OLAP:
             return BackdoorToggles.getPrepareOnly() ? new EmptyEnumerator()
                     : new OLAPEnumerator(olapContext, optiqContext);
+        case LOOKUP_TABLE:
+            return BackdoorToggles.getPrepareOnly() ? new EmptyEnumerator() : new LookupTableEnumerator(olapContext);
+        case COL_DICT:
+            return BackdoorToggles.getPrepareOnly() ? new EmptyEnumerator() : new DictionaryEnumerator(olapContext);
         case HIVE:
             return BackdoorToggles.getPrepareOnly() ? new EmptyEnumerator() : new HiveEnumerator(olapContext);
         default:

@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -79,9 +80,9 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
             TupleFilter havingFilter, StorageContext context) {
         this.context = context;
 
-//        this.maxScanRanges = cubeSegment.getConfig().getQueryStorageVisitScanRangeMax();
-//        this.maxFuzzyKeysPerSplit = cubeSegment.getConfig().getQueryScanFuzzyKeyMax();
-//        this.maxFuzzyKeys = maxFuzzyKeysPerSplit * cubeSegment.getConfig().getQueryScanFuzzyKeySplitMax();
+        this.maxScanRanges = cubeSegment.getConfig().getQueryStorageVisitScanRangeMax();
+        this.maxFuzzyKeysPerSplit = cubeSegment.getConfig().getQueryScanFuzzyKeyMax();
+        this.maxFuzzyKeys = maxFuzzyKeysPerSplit * cubeSegment.getConfig().getQueryScanFuzzyKeySplitMax();
 
         this.cubeSegment = cubeSegment;
         this.cubeDesc = cubeSegment.getCubeDesc();
@@ -147,9 +148,9 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
      */
     public CubeScanRangePlanner(GTInfo info, TblColRef gtPartitionCol, TupleFilter gtFilter) {
 
-//        this.maxScanRanges = KylinConfig.getInstanceFromEnv().getQueryStorageVisitScanRangeMax();
-//        this.maxFuzzyKeysPerSplit = KylinConfig.getInstanceFromEnv().getQueryScanFuzzyKeyMax();
-//        this.maxFuzzyKeys = maxFuzzyKeysPerSplit * KylinConfig.getInstanceFromEnv().getQueryScanFuzzyKeySplitMax();
+        this.maxScanRanges = KylinConfig.getInstanceFromEnv().getQueryStorageVisitScanRangeMax();
+        this.maxFuzzyKeysPerSplit = KylinConfig.getInstanceFromEnv().getQueryScanFuzzyKeyMax();
+        this.maxFuzzyKeys = maxFuzzyKeysPerSplit * KylinConfig.getInstanceFromEnv().getQueryScanFuzzyKeySplitMax();
 
         this.gtInfo = info;
 
@@ -174,7 +175,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
                     .setRtAggrMetrics(gtRtAggrMetrics).setDynamicColumns(gtDynColumns)
                     .setExprsPushDown(tupleExpressionMap)//
                     .setAllowStorageAggregation(context.isNeedStorageAggregation())
-                    .setAggCacheMemThreshold(0)//
+                    .setAggCacheMemThreshold(cubeSegment.getConfig().getQueryCoprocessorMemGB())//
                     .setStoragePushDownLimit(context.getFinalPushDownLimit())
                     .setStorageLimitLevel(context.getStorageLimitLevel()).setHavingFilterPushDown(havingFilter)
                     .createGTScanRequest();

@@ -18,6 +18,8 @@
 
 package org.apache.kylin.cube.model;
 
+import org.apache.kylin.dict.lookup.SnapshotTable;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,8 +33,8 @@ SnapshotTableDesc implements java.io.Serializable{
     private String tableName;
 
     @JsonProperty("storage_type")
-    private String storageType = "Parquet";
-    
+    private String storageType = SnapshotTable.STORAGE_TYPE_METASTORE;
+
     @JsonProperty("local_cache_enable")
     private boolean enableLocalCache = true;
 
@@ -61,6 +63,10 @@ SnapshotTableDesc implements java.io.Serializable{
 
     public void setGlobal(boolean global) {
         this.global = global;
+    }
+
+    public boolean isExtSnapshotTable() {
+        return !SnapshotTable.STORAGE_TYPE_METASTORE.equals(storageType);
     }
 
     public boolean isEnableLocalCache() {

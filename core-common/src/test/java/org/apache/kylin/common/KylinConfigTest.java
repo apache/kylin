@@ -76,16 +76,16 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
         assertEquals("1234", configExt.getOptional("1234"));
     }
 
-//    @Test
-//    public void testPropertiesHotLoad() {
-//        KylinConfig config = KylinConfig.getInstanceFromEnv();
-//        assertEquals("whoami@kylin.apache.org", config.getKylinOwner());
-//
-//        updateProperty("kylin.storage.hbase.owner-tag", "kylin@kylin.apache.org");
-//        KylinConfig.getInstanceFromEnv().reloadFromSiteProperties();
-//
-//        assertEquals("kylin@kylin.apache.org", config.getKylinOwner());
-//    }
+    @Test
+    public void testPropertiesHotLoad() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertEquals("whoami@kylin.apache.org", config.getKylinOwner());
+
+        updateProperty("kylin.storage.hbase.owner-tag", "kylin@kylin.apache.org");
+        KylinConfig.getInstanceFromEnv().reloadFromSiteProperties();
+
+        assertEquals("kylin@kylin.apache.org", config.getKylinOwner());
+    }
 
     @Test
     public void testGetMetadataUrlPrefix() {

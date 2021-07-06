@@ -32,7 +32,6 @@ import org.apache.kylin.shaded.com.google.common.base.Predicate;
 import org.apache.kylin.shaded.com.google.common.collect.Iterables;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
-@Deprecated
 public abstract class DimensionEncodingFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(DimensionEncodingFactory.class);
