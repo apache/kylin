@@ -295,7 +295,7 @@ class FilePruner(cubeInstance: CubeInstance,
   }
 
   private def getSegmentFilter(dataFilters: Seq[Expression], col: Attribute): Seq[Expression] = {
-    dataFilters.map(extractSegmentFilter(_, col)).filter(!_.equals(None)).map(_.get)
+    dataFilters.map(extractSegmentFilter(_, col)).filter(_.isDefined).map(_.get)
   }
 
   private def extractSegmentFilter(filter: Expression, col: Attribute): Option[Expression] = {
