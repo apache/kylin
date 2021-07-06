@@ -330,7 +330,7 @@ class FilePruner(cubeInstance: CubeInstance,
         }
       case _ =>
         //other unary filter like EqualTo, GreaterThan, GreaterThanOrEqual, etc.
-        if (filter.references.subsetOf(AttributeSet(col))) {
+        if (col != null && filter.references.subsetOf(AttributeSet(col))) {
           Some(filter)
         } else {
           None
