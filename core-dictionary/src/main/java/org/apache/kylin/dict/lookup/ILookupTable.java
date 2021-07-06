@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.cube;
+package org.apache.kylin.dict.lookup;
 
 import org.apache.kylin.common.util.Array;
 

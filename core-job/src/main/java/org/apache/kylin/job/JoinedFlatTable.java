@@ -18,6 +18,7 @@
 
 package org.apache.kylin.job;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -31,6 +32,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
+import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
@@ -111,16 +113,16 @@ public class JoinedFlatTable {
             kylinConfig = (flatDesc.getSegment()).getConfig();
         }
 
-//        if (kylinConfig.isAdvancedFlatTableUsed()) {
-//            try {
-//                Class advancedFlatTable = Class.forName(kylinConfig.getAdvancedFlatTableClass());
-//                Method method = advancedFlatTable.getMethod("generateInsertDataStatement", IJoinedFlatTableDesc.class,
-//                        JobEngineConfig.class);
-//                return (String) method.invoke(null, flatDesc);
-//            } catch (Exception e) {
-//                throw new RuntimeException(e);
-//            }
-//        }
+        if (kylinConfig.isAdvancedFlatTableUsed()) {
+            try {
+                Class advancedFlatTable = Class.forName(kylinConfig.getAdvancedFlatTableClass());
+                Method method = advancedFlatTable.getMethod("generateInsertDataStatement", IJoinedFlatTableDesc.class,
+                        JobEngineConfig.class);
+                return (String) method.invoke(null, flatDesc);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         return "INSERT OVERWRITE TABLE " + quoteIdentifier(flatDesc.getTableName(), null) + " " + generateSelectDataStatement(flatDesc)
                 + ";\n";

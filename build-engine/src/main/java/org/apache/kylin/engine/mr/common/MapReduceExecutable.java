@@ -500,6 +500,12 @@ public class MapReduceExecutable extends AbstractExecutable {
         for (Map.Entry<String, String> entry : configOverride.getMRConfigOverride().entrySet()) {
             conf.set(entry.getKey(), entry.getValue());
         }
+        if (conf.get("mapreduce.job.is-mem-hungry") != null
+                && Boolean.parseBoolean(conf.get("mapreduce.job.is-mem-hungry"))) {
+            for (Map.Entry<String, String> entry : configOverride.getMemHungryConfigOverride().entrySet()) {
+                conf.set(entry.getKey(), entry.getValue());
+            }
+        }
 
         if (StringUtils.isNotBlank(cubeName)) {
             remainingArgs.add("-" + BatchConstants.ARG_CUBE_NAME);

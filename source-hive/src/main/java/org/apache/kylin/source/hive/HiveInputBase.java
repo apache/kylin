@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Locale;
 import java.util.Collections;
@@ -92,15 +93,15 @@ public class HiveInputBase {
 
             // create global dict
             KylinConfig dictConfig = (flatDesc.getSegment()).getConfig();
-//            String[] mrHiveDictColumns = dictConfig.getMrHiveDictColumns();
-//            if (mrHiveDictColumns.length > 0) {
-//                String globalDictDatabase = dictConfig.getMrHiveDictDB();
-//                if (null == globalDictDatabase) {
-//                    throw new IllegalArgumentException("Mr-Hive Global dict database is null.");
-//                }
-//                String globalDictTable = cubeName + dictConfig.getMrHiveDictTableSuffix();
-//                addStepPhase1_DoCreateMrHiveGlobalDict(jobFlow, mrHiveDictColumns, globalDictDatabase, globalDictTable);
-//            }
+            String[] mrHiveDictColumns = dictConfig.getMrHiveDictColumns();
+            if (mrHiveDictColumns.length > 0) {
+                String globalDictDatabase = dictConfig.getMrHiveDictDB();
+                if (null == globalDictDatabase) {
+                    throw new IllegalArgumentException("Mr-Hive Global dict database is null.");
+                }
+                String globalDictTable = cubeName + dictConfig.getMrHiveDictTableSuffix();
+                addStepPhase1_DoCreateMrHiveGlobalDict(jobFlow, mrHiveDictColumns, globalDictDatabase, globalDictTable);
+            }
 
             // then count and redistribute
             if (cubeConfig.isHiveRedistributeEnabled()) {
@@ -288,13 +289,13 @@ public class HiveInputBase {
             deleteTables.add(getIntermediateTableIdentity());
 
             // mr-hive dict and inner table do not need delete hdfs
-//            String[] mrHiveDicts = flatDesc.getSegment().getConfig().getMrHiveDictColumns();
-//            if (Objects.nonNull(mrHiveDicts) && mrHiveDicts.length > 0) {
-//                String dictDb = flatDesc.getSegment().getConfig().getMrHiveDictDB();
-//                String tableName = dictDb + "." + flatDesc.getTableName() + "_"
-//                        + MRHiveDictUtil.DictHiveType.GroupBy.getName();
-//                deleteTables.add(tableName);
-//            }
+            String[] mrHiveDicts = flatDesc.getSegment().getConfig().getMrHiveDictColumns();
+            if (Objects.nonNull(mrHiveDicts) && mrHiveDicts.length > 0) {
+                String dictDb = flatDesc.getSegment().getConfig().getMrHiveDictDB();
+                String tableName = dictDb + "." + flatDesc.getTableName() + "_"
+                        + MRHiveDictUtil.DictHiveType.GroupBy.getName();
+                deleteTables.add(tableName);
+            }
             step.setIntermediateTables(deleteTables);
 
             step.setExternalDataPaths(Collections.singletonList(JoinedFlatTable.getTableDir(flatDesc, jobWorkingDir)));
