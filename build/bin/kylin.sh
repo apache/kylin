@@ -288,7 +288,7 @@ then
 
         # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
         ${JAVA_HOME}/bin/java -cp $STREAM_CLASSPATH ${KYLIN_EXTRA_START_OPTS} \
-        -Dlog4j.configuration=stream-receiver-log4j.properties\
+        -Dlog4j.configuration=file:${KYLIN_HOME}/conf/stream-receiver-log4j.properties\
         -DKYLIN_HOME=${KYLIN_HOME}\
         -Dkylin.hbase.dependency=${hbase_dependency} \
         org.apache.kylin.stream.server.StreamingReceiver $@ > ${KYLIN_HOME}/logs/streaming_receiver.out 2>&1 & echo $! > ${KYLIN_HOME}/streaming_receiver_pid &
@@ -318,7 +318,7 @@ then
 
         # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
         ${JAVA_HOME}/bin/java -cp $STREAM_CLASSPATH ${KYLIN_EXTRA_START_OPTS} \
-        -Dlog4j.configuration=stream-receiver-log4j.properties\
+        -Dlog4j.configuration=file:${KYLIN_HOME}/conf/stream-receiver-log4j.properties\
         -DKYLIN_HOME=${KYLIN_HOME}\
         -Dkylin.hbase.dependency=${hbase_dependency} \
         org.apache.kylin.stream.server.StreamingReceiver $@
@@ -385,7 +385,7 @@ then
         shift
         # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
         ${JAVA_HOME}/bin/java -cp $STREAM_CLASSPATH ${KYLIN_EXTRA_START_OPTS} \
-        -Dlog4j.configuration=stream-receiver-log4j.properties\
+        -Dlog4j.configuration=file:${KYLIN_HOME}/conf/stream-receiver-log4j.properties\
         -DKYLIN_HOME=${KYLIN_HOME}\
         -Dkylin.hbase.dependency=${hbase_dependency} \
         "$@"
