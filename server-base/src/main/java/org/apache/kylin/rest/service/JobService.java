@@ -42,6 +42,7 @@ import org.apache.kylin.common.zookeeper.KylinServerDiscovery;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
@@ -261,9 +262,9 @@ public class JobService extends BasicService implements InitializingBean {
                     src = new SourcePartition(tsRange, segRange, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
 //                    src = source.enrichSourcePartitionBeforeBuild(cube, src);
                 }
-
                 newSeg = getCubeManager().appendSegment(cube, src);
                 job = EngineFactory.createBatchCubingJob(newSeg, submitter, priorityOffset);
+
             } else if (buildType == CubeBuildTypeEnum.MERGE) {
                 newSeg = getCubeManager().mergeSegments(cube, tsRange, segRange, force);
                 job = EngineFactory.createBatchMergeJob(newSeg, submitter);
@@ -273,6 +274,11 @@ public class JobService extends BasicService implements InitializingBean {
             } else {
                 throw new BadRequestException(String.format(Locale.ROOT, msg.getINVALID_BUILD_TYPE(), buildType));
             }
+            newSeg.setLastBuildJobID(job.getId());
+            CubeInstance cubeCopy = cube.latestCopyForWrite();
+            CubeUpdate update = new CubeUpdate(cubeCopy);
+            update.setToUpdateSegs(newSeg);
+            getCubeManager().updateCube(update);
 
             getExecutableManager().addJob(job);
 
