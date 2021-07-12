@@ -78,6 +78,10 @@ public class RealizationRegistry {
         if (providers.isEmpty())
             throw new IllegalArgumentException("Failed to find realization provider by url: " + config.getMetadataUrl());
 
+        // must have CubeManager in provides
+        if (!providers.containsKey(RealizationType.CUBE))
+            throw new IllegalArgumentException("Failed to init CubeManager by url: " + config.getMetadataUrl());
+
         logger.info("RealizationRegistry is " + providers);
     }
 
