@@ -861,6 +861,12 @@ public class CubeController extends BasicController {
                 return cubeRequest;
             }
 
+            if (!cube.getProject().equalsIgnoreCase(projectName)) {
+                String error = "Not allow change cube project!";
+                updateRequest(cubeRequest, false, error);
+                return cubeRequest;
+            }
+
             validateColumnFamily(desc);
 
             //cube renaming is not allowed
