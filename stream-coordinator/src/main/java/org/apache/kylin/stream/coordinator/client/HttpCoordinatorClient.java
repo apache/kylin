@@ -212,10 +212,10 @@ public class HttpCoordinatorClient implements CoordinatorClient {
     }
 
     private Object postRequest(final String path, final String requestContent) throws IOException {
-        final String url = getBaseUrl() + path;
         CoordinatorResponse response = retryCaller.call(new CoordinatorRetryCallable() {
             @Override
             public CoordinatorResponse call() throws Exception {
+                final String url = getBaseUrl() + path;
                 String msg = restService.postRequest(url, requestContent);
                 return JsonUtil.readValue(msg, CoordinatorResponse.class);
             }
@@ -224,10 +224,10 @@ public class HttpCoordinatorClient implements CoordinatorClient {
     }
 
     private Object getRequest(String path) throws IOException {
-        final String url = getBaseUrl() + path;
         CoordinatorResponse response = retryCaller.call(new CoordinatorRetryCallable() {
             @Override
             public CoordinatorResponse call() throws Exception {
+                final String url = getBaseUrl() + path;
                 String msg = restService.getRequest(url);
                 return JsonUtil.readValue(msg, CoordinatorResponse.class);
             }
@@ -236,10 +236,10 @@ public class HttpCoordinatorClient implements CoordinatorClient {
     }
 
     private Object putRequest(String path) throws IOException {
-        final String url = getBaseUrl() + path;
         CoordinatorResponse response = retryCaller.call(new CoordinatorRetryCallable() {
             @Override
             public CoordinatorResponse call() throws Exception {
+                final String url = getBaseUrl() + path;
                 String msg = restService.putRequest(url);
                 return JsonUtil.readValue(msg, CoordinatorResponse.class);
             }
@@ -248,10 +248,10 @@ public class HttpCoordinatorClient implements CoordinatorClient {
     }
 
     private Object deleteRequest(String path) throws IOException {
-        final String url = getBaseUrl() + path;
         CoordinatorResponse response = retryCaller.call(new CoordinatorRetryCallable() {
             @Override
             public CoordinatorResponse call() throws Exception {
+                final String url = getBaseUrl() + path;
                 String msg = restService.deleteRequest(url);
                 return JsonUtil.readValue(msg, CoordinatorResponse.class);
             }
