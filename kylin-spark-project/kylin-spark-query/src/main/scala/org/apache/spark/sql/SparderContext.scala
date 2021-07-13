@@ -136,10 +136,12 @@ object SparderContext extends Logging {
                 case "true" =>
                   "local"
                 case _ =>
-                  "yarn-client"
+                  kylinConf.getSparderConfigOverrideWithSpecificName("spark.master")
               }
+              logInfo("SparderContext deploy with spark master: " + master)
               val sparkSession = SparkSession.builder
                 .master(master)
+                .config("spark.submit.deployMode", "client")
                 .appName(kylinConf.getSparderAppName)
                 .withExtensions { ext =>
                   ext.injectPlannerStrategy(_ => KylinSourceStrategy)

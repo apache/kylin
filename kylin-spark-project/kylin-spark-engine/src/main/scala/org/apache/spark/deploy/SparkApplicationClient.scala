@@ -43,11 +43,12 @@ object SparkApplicationClient extends Logging {
       case STANDALONE_CLUSTER =>
         var appState = StandaloneAppClient.getAppState(stepId)
         while (true) {
-          logInfo(s"$stepId state is $appState .")
-          if (!finalStates.contains(appState)) {
-            Thread.sleep(10000)
-          }
           appState = StandaloneAppClient.getAppState(stepId)
+          logInfo(s"$stepId state is $appState .")
+          if (finalStates.contains(appState)) {
+            return appState
+          }
+          Thread.sleep(10000)
         }
         appState
       case m => throw new UnsupportedOperationException("waitAndCheckAppState " + m)
