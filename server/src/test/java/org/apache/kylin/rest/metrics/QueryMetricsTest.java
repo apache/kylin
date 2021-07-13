@@ -75,7 +75,7 @@ public class QueryMetricsTest extends ServiceTestBase {
 
         QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse);
 
-        Thread.sleep(2000);
+        Thread.sleep(10000);
 
         Assert.assertEquals(1L, mBeanServer.getAttribute(objectName, "QueryCount"));
         Assert.assertEquals(1L, mBeanServer.getAttribute(objectName, "QuerySuccessCount"));
@@ -104,7 +104,7 @@ public class QueryMetricsTest extends ServiceTestBase {
 
         QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse2);
 
-        Thread.sleep(2000);
+        Thread.sleep(10000);
 
         Assert.assertEquals(2L, mBeanServer.getAttribute(objectName, "QueryCount"));
         Assert.assertEquals(1L, mBeanServer.getAttribute(objectName, "QuerySuccessCount"));
