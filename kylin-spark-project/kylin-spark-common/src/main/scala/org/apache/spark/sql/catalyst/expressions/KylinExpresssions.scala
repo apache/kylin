@@ -492,7 +492,7 @@ case class ScatterSkewData(left: Expression, right: Expression) extends BinaryEx
     val rand = ctx.addMutableState("java.util.Random", "rand")
     val skewData = ctx.addMutableState("it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap",
       "skewData")
-    val skewDataStorage = right.simpleString
+    val skewDataStorage = ExpressionUtils.simpleString(right)
 
     val initParamsFuncName = ctx.addNewFunction(s"initParams",
       s"""
