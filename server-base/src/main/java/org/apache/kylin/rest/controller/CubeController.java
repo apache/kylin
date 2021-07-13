@@ -869,6 +869,14 @@ public class CubeController extends BasicController {
 
             validateColumnFamily(desc);
 
+            // check build engine for stream cube
+            if (desc.isStreamingCube()) {
+                if (desc.getEngineType() != IEngineAware.ID_MR_V2) {
+                    logger.info("streaming cube just supports MR engine");
+                    throw new BadRequestException("Invalid Engine type, Streaming cube just supports MapReduce engine");
+                }
+            }
+
             //cube renaming is not allowed
             if (!cube.getDescriptor().getName().equalsIgnoreCase(desc.getName())) {
                 String error = "Cube Desc renaming is not allowed: desc.getName(): " + desc.getName()
