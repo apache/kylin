@@ -151,7 +151,7 @@
     <tomcat.version>7.0.100</tomcat.version>
     <t-digest.version>3.1</t-digest.version>
     <freemarker.version>2.3.23</freemarker.version>
-    <rocksdb.version>5.9.2</rocksdb.version>
+    <rocksdb.version>5.18.4</rocksdb.version>
     <lz4.version>1.3.0</lz4.version>
     <mssql-jdbc.version>6.2.2.jre8</mssql-jdbc.version>
     <!--metric-->
