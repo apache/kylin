@@ -73,6 +73,9 @@ public class CalculateStatsFromBaseCuboidJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_ID, segmentID);
             job.getConfiguration().set(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, statistics_sampling_percent);
+            // use customized writer should disable mr.speculation
+            job.getConfiguration().set("mapreduce.reduce.speculative", "false");
+
             logger.info("Starting: " + job.getJobName());
 
             setJobClasspath(job, cube.getConfig());
