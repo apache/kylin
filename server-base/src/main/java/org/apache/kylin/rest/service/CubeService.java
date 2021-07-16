@@ -614,25 +614,30 @@ public class CubeService extends BasicService implements InitializingBean {
         aclEvaluate.checkProjectWritePermission(cube);
         Message msg = MsgPicker.getMsg();
 
-        CubeSegment toDelete = null;
+        if (cube.getStatus() == RealizationStatusEnum.READY) {
+            throw new BadRequestException(
+                    String.format(Locale.ROOT, msg.getDELETE_SEG_FROM_READY_CUBE_BY_UUID(), uuid, cube.getName()));
+        }
 
-        toDelete = cube.getSegmentById(uuid);
-
+        CubeSegment toDelete = cube.getSegmentById(uuid);
         if (toDelete == null) {
             throw new BadRequestException(String.format(Locale.ROOT, msg.getSEG_NOT_FOUND(), uuid));
         }
 
-        if (cube.getStatus() == RealizationStatusEnum.DISABLED || isOrphonSegment(cube, uuid)) {
-
-            CubeInstance cubeInstance = CubeManager.getInstance(getConfig()).updateCubeDropSegments(cube, toDelete);
-
-            cleanSegmentStorage(Collections.singletonList(toDelete));
-
-            return cubeInstance;
-        } else {
-            throw new BadRequestException(
-                    String.format(Locale.ROOT, msg.getDELETE_READY_SEG_BY_UUID(), uuid, cube.getName()));
+        if (toDelete.getStatus() != SegmentStatusEnum.READY) {
+            if (toDelete.getStatus() == SegmentStatusEnum.NEW) {
+                if (!isOrphonSegment(cube, toDelete.getUuid())) {
+                    throw new BadRequestException(
+                            String.format(Locale.ROOT, msg.getDELETE_NOT_READY_SEG_BY_UUID(), uuid));
+                }
+            } else {
+                throw new BadRequestException(String.format(Locale.ROOT, msg.getDELETE_NOT_READY_SEG_BY_UUID(), uuid));
+            }
         }
+
+        CubeInstance cubeInstance = CubeManager.getInstance(getConfig()).updateCubeDropSegments(cube, toDelete);
+        cleanSegmentStorage(Collections.singletonList(toDelete));
+        return cubeInstance;
     }
 
     public CubeInstance deleteSegment(CubeInstance cube, String segmentName) throws IOException {
