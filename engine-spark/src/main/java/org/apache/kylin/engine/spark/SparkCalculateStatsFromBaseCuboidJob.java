@@ -133,6 +133,8 @@ public class SparkCalculateStatsFromBaseCuboidJob extends AbstractApplication im
 
         SparkConf sparkConf = SparkUtil.setKryoSerializerInConf();
         sparkConf.setAppName("Kylin_Calculate_Statics_From_BaseCuboid_Data_" + cubeName + "_With_Spark");
+        // use customized writer should disable spark.speculation
+        sparkConf.set("spark.speculation", "false");
 
         KylinSparkJobListener jobListener = new KylinSparkJobListener();
         try (JavaSparkContext sc = new JavaSparkContext(sparkConf)) {
