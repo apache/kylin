@@ -168,11 +168,27 @@ public class BuildJobSubmitter implements Runnable {
             logger.info("Force traverse all cubes periodically.");
             for (StreamingCubeInfo cubeInfo : coordinator.getEnableStreamingCubes()) {
                 List<String> segmentList = checkSegmentBuildJobFromMetadata(cubeInfo.getCubeName());
-                for (String segmentName : segmentList) {
-                    submitSegmentBuildJob(cubeInfo.getCubeName(), segmentName);
-                }
+                submitAllCandidateJob(cubeInfo.getCubeName(), segmentList);
             }
         }
+    }
+
+    /**
+     * Submit build job for the list of segments sequentially. If one job is failed, the other job will not be submitted.
+     * @param cubeName
+     * @param segmentList
+     * @return True all job submitted successfully, False someone job submitted unsuccessfully.
+     */
+    private boolean submitAllCandidateJob(String cubeName, List<String> segmentList) {
+        for (String segmentName : segmentList) {
+            boolean success = submitSegmentBuildJob(cubeName, segmentName);
+            if (!success) {
+                // if this segment building fail to submit, we should give up other uncommitted segment building job
+                logger.info("Failed to submit stream segment build job, cube {}, segment {}", cubeName, segmentName);
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -226,7 +242,7 @@ public class BuildJobSubmitter implements Runnable {
                 segmentBuildJobCheckList.entrySet()) {
             ConcurrentSkipListSet<SegmentJobBuildInfo> buildInfos = entry.getValue();
             if (buildInfos.isEmpty()) {
-                logger.trace("Skip {}", entry.getKey());
+                logger.trace("Skip trace earliest segment build job {}", entry.getKey());
                 continue;
             }
 
@@ -276,14 +292,7 @@ public class BuildJobSubmitter implements Runnable {
         while (iterator.hasNext()) {
             String cubeName = iterator.next();
             List<String> segmentList = checkSegmentBuildJobFromMetadata(cubeName);
-            boolean allSubmited = true;
-            for (String segmentName : segmentList) {
-                boolean ok = submitSegmentBuildJob(cubeName, segmentName);
-                allSubmited = allSubmited && ok;
-                if (!ok) {
-                    logger.debug("Failed to submit building job for {}.", segmentName);
-                }
-            }
+            boolean allSubmited = submitAllCandidateJob(cubeName, segmentList);
             if (allSubmited) {
                 iterator.remove();
                 logger.debug("Removed {} from check list.", cubeName);
@@ -568,9 +577,9 @@ public class BuildJobSubmitter implements Runnable {
     void dumpSegmentBuildJobCheckList() {
         if (!logger.isTraceEnabled())
             return;
-        StringBuilder sb = new StringBuilder("Dump JobCheckList:\t");
+        StringBuilder sb = new StringBuilder("Dump JobCheckList:");
         for (Map.Entry<String, ConcurrentSkipListSet<SegmentJobBuildInfo>> cube : segmentBuildJobCheckList.entrySet()) {
-            sb.append(cube.getKey()).append(":").append(cube.getValue());
+            sb.append("\n" + cube.getKey()).append(":").append(cube.getValue());
         }
         if (logger.isTraceEnabled()) {
             logger.trace(sb.toString());
