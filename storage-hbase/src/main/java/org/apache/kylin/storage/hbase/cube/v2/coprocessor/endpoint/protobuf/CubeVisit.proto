@@ -39,6 +39,7 @@ message CubeVisitRequest {
     optional bool spillEnabled = 7 [default = true];
     optional int64 maxScanBytes = 8; // must be positive
     optional bool isExactAggregate = 9 [default = false];
+    optional string segName = 10;
     message IntList {
         repeated int32 ints = 1;
     }
@@ -58,6 +59,7 @@ message CubeVisitResponse {
         optional int32 normalComplete =10;
         optional int64 scannedBytes = 11;
         optional int64 filteredRowCount = 12;
+        optional string segName = 13;
     }
     enum ErrorType {
         UNKNOWN_TYPE = 0;
