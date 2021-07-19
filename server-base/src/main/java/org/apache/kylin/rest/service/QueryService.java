@@ -1217,6 +1217,10 @@ public class QueryService extends BasicService {
         Class<?> clazz;
         try {
             clazz = Class.forName(param.getClassName());
+            if (!Rep.VALUE_MAP.containsKey(clazz)) {
+                clazz = Class.forName("java.lang.Object");
+            }
+            logger.debug("Class parameter for sql is: " + clazz.getName());
         } catch (ClassNotFoundException e) {
             throw new InternalErrorException(e);
         }
