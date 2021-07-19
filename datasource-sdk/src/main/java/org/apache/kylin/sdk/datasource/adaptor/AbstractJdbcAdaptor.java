@@ -74,9 +74,9 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
 
         Class.forName(config.driver);
         dataSource.setDriverClassName(config.driver);
-        dataSource.setUrl(config.url);
-        dataSource.setUsername(config.username);
-        dataSource.setPassword(config.password);
+        dataSource.setUrl(filterUrl(config.url));
+        dataSource.setUsername(filterUser(config.username));
+        dataSource.setPassword(filterPassword(config.password));
         dataSource.setMaxActive(config.poolMaxTotal);
         dataSource.setMaxIdle(config.poolMaxIdle);
         dataSource.setMinIdle(config.poolMinIdle);
@@ -91,6 +91,12 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
         DataSourceDef jdbcDs = provider.getById(getDataSourceId());
         configurer = new DefaultConfigurer(this, jdbcDs);
     }
+
+    protected abstract String filterPassword(String password);
+
+    protected abstract String filterUser(String username);
+
+    protected abstract String filterUrl(String url);
 
     /**
      * Used by <C>org.apache.commons.dbcp.BasicDataSource</C> to validate source connection.

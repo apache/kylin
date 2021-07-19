@@ -45,6 +45,21 @@ public class DefaultAdaptor extends AbstractJdbcAdaptor {
         super(config);
     }
 
+    @Override
+    protected String filterPassword(String password) {
+        return password;
+    }
+
+    @Override
+    protected String filterUser(String username) {
+        return username;
+    }
+
+    @Override
+    protected String filterUrl(String url) {
+        return url;
+    }
+
     /**
      * By default, the typeId from JDBC source will be returned.
      * @param type The column type name from JDBC source.
