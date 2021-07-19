@@ -1214,12 +1214,7 @@ public class QueryService extends BasicService {
             throws SQLException {
         boolean isNull = (null == param.getValue());
 
-        Class<?> clazz;
-        try {
-            clazz = Class.forName(param.getClassName());
-        } catch (ClassNotFoundException e) {
-            throw new InternalErrorException(e);
-        }
+        Class<?> clazz = getValidClass(param.getClassName());
 
         Rep rep = Rep.of(clazz);
 
@@ -1286,6 +1281,25 @@ public class QueryService extends BasicService {
         } catch (Exception e) {
             return -1;
         }
+    }
+
+    public Class<?> getValidClass(String className) {
+        Class<?> clazz;
+        try {
+            List<String> classList = new ArrayList<>();
+            Rep.VALUE_MAP.keySet().forEach(key -> {
+                classList.add(key.getName());
+            });
+            if (classList.contains(className)) {
+                clazz = Class.forName(className);
+            } else {
+                clazz = Class.forName("java.lang.Object");
+            }
+            logger.debug("Class parameter for sql is: " + clazz.getName());
+        } catch (ClassNotFoundException e) {
+            throw new InternalErrorException(e);
+        }
+        return clazz;
     }
 
     public void setCacheManager(CacheManager cacheManager) {
