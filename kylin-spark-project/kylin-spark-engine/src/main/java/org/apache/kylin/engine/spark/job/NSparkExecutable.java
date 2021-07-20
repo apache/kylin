@@ -161,7 +161,10 @@ public class NSparkExecutable extends AbstractExecutable {
             return runLocalMode(filePath, config);
         } else {
             logger.info("Task id: {}", getId());
-            killOrphanApplicationIfExists(config, getId());
+            if ("yarn".equals(config.getSparkEngineConfigOverrideWithSpecificName("spark.master"))) {
+                logger.info("Try to kill orphan application on yarn.");
+                killOrphanApplicationIfExists(config, getId());
+            }
             return runSparkSubmit(config, hadoopConf, jars, kylinJobJar,
                     "-className " + getSparkSubmitClassName() + " " + filePath, getParent().getId());
         }

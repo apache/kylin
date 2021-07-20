@@ -1591,8 +1591,20 @@ public abstract class KylinConfigBase implements Serializable {
         return getPropertiesByPrefix("kylin.engine.flink-conf.");
     }
 
-    public Map<String, String> getSparkConfigOverrideWithSpecificName(String configName) {
-        return getPropertiesByPrefix("kylin.engine.spark-conf-" + configName + ".");
+    public String getSparkEngineConfigOverrideWithSpecificName(String configName) {
+        Map<String, String> config = getPropertiesByPrefix("kylin.engine.spark-conf." + configName);
+        if (config.size() != 0) {
+            return String.valueOf(config.values().iterator().next());
+        }
+        return null;
+    }
+
+    public String getSparderConfigOverrideWithSpecificName(String configName) {
+        Map<String, String> config = getPropertiesByPrefix("kylin.query.spark-conf." + configName);
+        if (config.size() != 0) {
+            return String.valueOf(config.values().iterator().next());
+        }
+        return null;
     }
 
     public Map<String, String> getFlinkConfigOverrideWithSpecificName(String configName) {
