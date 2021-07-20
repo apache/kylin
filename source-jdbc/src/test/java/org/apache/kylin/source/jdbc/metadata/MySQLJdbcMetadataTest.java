@@ -36,13 +36,20 @@ public class MySQLJdbcMetadataTest extends DefaultJdbcMetadataTest {
     @Before
     public void setup() {
         dbConnConf = new DBConnConf();
-        dbConnConf.setUrl("jdbc:mysql://fakehost:1433/database");
+        dbConnConf.setUrl("jdbc:mysql://fakehost:1433/database?allowLoadLocalInfile=true&autoDeserialize=true&allowLocalInfile=true&allowUrlInLocalInfile=true");
         dbConnConf.setDriver("com.mysql.jdbc.Driver");
-        dbConnConf.setUser("user");
-        dbConnConf.setPass("pass");
+        dbConnConf.setUser("userautoDeserialize=true");
+        dbConnConf.setPass("passautoDeserialize=true");
         jdbcMetadata = new MySQLJdbcMetadata(dbConnConf);
 
         setupProperties();
+    }
+
+    @Test
+    public void testInvalidParams() {
+        Assert.assertEquals("jdbc:mysql://fakehost:1433/database?allowLoadLocalInfile=false&autoDeserialize=false&allowLocalInfile=false&allowUrlInLocalInfile=false", dbConnConf.getUrl());
+        Assert.assertEquals("user", dbConnConf.getUser());
+        Assert.assertEquals("pass", dbConnConf.getPass());
     }
 
     @Test

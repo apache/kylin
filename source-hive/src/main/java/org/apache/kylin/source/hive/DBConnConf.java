@@ -21,12 +21,25 @@ package org.apache.kylin.source.hive;
 import java.util.Locale;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DBConnConf {
+    private static final Logger logger = LoggerFactory.getLogger(DBConnConf.class);
     public static final String KEY_DRIVER = "driver";
     public static final String KEY_URL = "url";
     public static final String KEY_USER = "user";
     public static final String KEY_PASS = "pass";
+
+    public static final String ALLOW_LOAD_LOCAL_IN_FILE_NAME = "allowLoadLocalInfile=true";
+
+    public static final String AUTO_DESERIALIZE = "autoDeserialize=true";
+
+    public static final String ALLOW_LOCAL_IN_FILE_NAME = "allowLocalInfile=true";
+
+    public static final String ALLOW_URL_IN_LOCAL_IN_FILE_NAME = "allowUrlInLocalInfile=true";
+
+    private static final String APPEND_PARAMS = "allowLoadLocalInfile=false&autoDeserialize=false&allowLocalInfile=false&allowUrlInLocalInfile=false";
 
     private String driver;
     private String url;
@@ -63,6 +76,9 @@ public class DBConnConf {
     }
 
     public String getUrl() {
+        if (url != null && url.startsWith("jdbc:mysql")) {
+            url = filterUrl(url);
+        }
         return url;
     }
 
@@ -71,6 +87,11 @@ public class DBConnConf {
     }
 
     public String getUser() {
+        if (user.contains(AUTO_DESERIALIZE)) {
+            logger.warn("sensitive param : {} in username field is filtered", AUTO_DESERIALIZE);
+            user = user.replace(AUTO_DESERIALIZE, "");
+        }
+        logger.debug("username : {}", user);
         return user;
     }
 
@@ -79,10 +100,35 @@ public class DBConnConf {
     }
 
     public String getPass() {
+        if (pass.contains(AUTO_DESERIALIZE)) {
+            logger.warn("sensitive param : {} in password field is filtered", AUTO_DESERIALIZE);
+            pass = pass.replace(AUTO_DESERIALIZE, "");
+        }
         return pass;
     }
 
     public void setPass(String pass) {
         this.pass = pass;
+    }
+
+    private static String filterUrl(String url) {
+        if (url.contains("?")) {
+            if (url.contains(ALLOW_LOAD_LOCAL_IN_FILE_NAME)) {
+                url = url.replace(ALLOW_LOAD_LOCAL_IN_FILE_NAME, "allowLoadLocalInfile=false");
+            }
+            if (url.contains(AUTO_DESERIALIZE)) {
+                url = url.replace(AUTO_DESERIALIZE, "autoDeserialize=false");
+            }
+            if (url.contains(ALLOW_LOCAL_IN_FILE_NAME)) {
+                url = url.replace(ALLOW_LOCAL_IN_FILE_NAME, "allowLocalInfile=false");
+            }
+            if (url.contains(ALLOW_URL_IN_LOCAL_IN_FILE_NAME)) {
+                url = url.replace(ALLOW_URL_IN_LOCAL_IN_FILE_NAME, "allowUrlInLocalInfile=false");
+            }
+        } else {
+            url = url + "?" + APPEND_PARAMS;
+        }
+        logger.debug("jdbc url: " + url);
+        return url;
     }
 }

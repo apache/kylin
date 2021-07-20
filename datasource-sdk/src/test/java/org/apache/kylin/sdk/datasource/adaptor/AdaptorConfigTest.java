@@ -33,4 +33,18 @@ public class AdaptorConfigTest {
         Assert.assertNotEquals(conf1, conf3);
         Assert.assertNotEquals(conf1.hashCode(), conf3.hashCode());
     }
+
+    @Test
+    public void testInvalidParams() throws Exception {
+        String driver = "com.mysql.jdbc.Driver";
+        String invalidUrl = "jdbc:mysql://hostname:3306/kylin_test?allowLoadLocalInfile=true&autoDeserialize=true&allowLocalInfile=true&allowUrlInLocalInfile=true";
+        String invalidUser = "user&autoDeserialize=true";
+        String invalidPassword = "pass&autoDeserialize=true";
+
+        AdaptorConfig adaptorConfig = new AdaptorConfig(invalidUrl, driver, invalidUser, invalidPassword);
+
+        Assert.assertEquals("jdbc:mysql://hostname:3306/kylin_test?allowLoadLocalInfile=false&autoDeserialize=false&allowLocalInfile=false&allowUrlInLocalInfile=false", adaptorConfig.url);
+        Assert.assertEquals("user&", adaptorConfig.username);
+        Assert.assertEquals("pass&", adaptorConfig.password);
+    }
 }
