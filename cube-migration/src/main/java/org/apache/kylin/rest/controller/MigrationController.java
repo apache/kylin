@@ -193,7 +193,7 @@ public class MigrationController extends BasicController {
             }
             DataModelDesc dataModelDesc = JsonUtil.readValue(request.getModelDescData(), DataModelDesc.class);
             logger.info("Schema compatibility check for model {}", dataModelDesc.getName());
-            modelService.checkModelCompatibility(dataModelDesc, tableDescList);
+            modelService.checkModelCompatibility(request.getProjectName(), dataModelDesc, tableDescList);
             logger.info("Pass schema compatibility check for model {}", dataModelDesc.getName());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

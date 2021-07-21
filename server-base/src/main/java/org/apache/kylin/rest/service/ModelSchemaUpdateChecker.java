@@ -70,6 +70,11 @@ public class ModelSchemaUpdateChecker {
             return new CheckResult(true, format(Locale.ROOT, "Model '%s' hasn't been created before", modelName));
         }
 
+        static CheckResult invalidOnIncompatibleProjectForModel(String existingProject, String modelName) {
+            return new CheckResult(false, format(Locale.ROOT, "The model '%s' already exists in the project '%s'",
+                    modelName, existingProject));
+        }
+
         static CheckResult validOnCompatibleSchema(String modelName) {
             return new CheckResult(true,
                     format(Locale.ROOT, "Table '%s' is compatible with all existing cubes", modelName));
@@ -172,16 +177,20 @@ public class ModelSchemaUpdateChecker {
         return allowEdit(modelDesc, prj, !modelDesc.isDraft());
     }
 
-    public CheckResult allowEdit(DataModelDesc modelDesc, String prj, boolean needInit) {
+    public CheckResult allowEdit(DataModelDesc modelDesc, String targetPrj, boolean needInit) {
 
         final String modelName = modelDesc.getName();
         // No model
         DataModelDesc existing = dataModelManager.getDataModelDesc(modelName);
         if (existing == null) {
             return CheckResult.validOnFirstCreate(modelName);
+        } else if (!existing.getProjectName().equals(targetPrj)){
+            // existing model should be in the same target project
+            return CheckResult.invalidOnIncompatibleProjectForModel(existing.getProjectName(), modelName);
         }
+        
         if (needInit) {
-            modelDesc.init(metadataManager.getConfig(), metadataManager.getAllTablesMap(prj));
+            modelDesc.init(metadataManager.getConfig(), metadataManager.getAllTablesMap(targetPrj));
         }
 
         // No cube

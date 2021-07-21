@@ -169,7 +169,7 @@ public class ModelService extends BasicService {
         result.raiseExceptionWhenInvalid();
     }
 
-    public void checkModelCompatibility(DataModelDesc dataModalDesc, List<TableDesc> tableDescList) {
+    public void checkModelCompatibility(String targetProject, DataModelDesc dataModalDesc, List<TableDesc> tableDescList) {
         ModelSchemaUpdateChecker checker = new ModelSchemaUpdateChecker(getTableManager(), getCubeManager(),
                 getDataModelManager());
 
@@ -178,7 +178,7 @@ public class ModelService extends BasicService {
             tableDescMap.put(tableDesc.getIdentity(), tableDesc);
         }
         dataModalDesc.init(getConfig(), tableDescMap);
-        ModelSchemaUpdateChecker.CheckResult result = checker.allowEdit(dataModalDesc, null, false);
+        ModelSchemaUpdateChecker.CheckResult result = checker.allowEdit(dataModalDesc, targetProject, false);
         result.raiseExceptionWhenInvalid();
     }
 
