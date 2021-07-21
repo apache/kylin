@@ -283,8 +283,8 @@ title: Analytical Data Warehouse for Big Data
             <a class="sponsor" href="https://www.teld.cn/"> 
                 <img src="/images/logo/teld.jpg">
             </a>
-            <a class="sponsor" href="https://www.qq.com/"> 
-                <img src="/images/logo/qq.jpg">
+            <a class="sponsor" href="https://www.tencent.com/"> 
+                <img src="/images/logo/tencent.jpg">
             </a>
             <a class="sponsor" href="http://www.xiaomi.com/"> 
                 <img src="/images/logo/xiaomi.jpg">
@@ -349,7 +349,20 @@ title: Analytical Data Warehouse for Big Data
             </a>
             <a class="sponsor" href="https://www.zto.com/"> 
                 <img src="/images/logo/zto.jpg">
-            </a>                      
+            </a>
+            <a class="sponsor" href="https://www.hundsun.com/"> 
+                <img src="/images/logo/hundsun.jpg">
+            </a>
+            <a class="sponsor" href="http://www.chinaoly.com/"> 
+                <img src="/images/logo/chinaoly.jpg">
+            </a>   
+            <!-- 15 -->
+            <a class="sponsor" href="https://www.deppon.com/"> 
+                <img src="/images/logo/deppon.jpg">
+            </a>
+            <a class="sponsor" href="https://www.dmall.com/"> 
+                <img src="/images/logo/dmall.jpg">
+            </a>
         </div>
         <!-- /container --> 
       </div>
