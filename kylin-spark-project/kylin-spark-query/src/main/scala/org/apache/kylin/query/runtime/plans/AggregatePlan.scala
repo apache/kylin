@@ -22,7 +22,8 @@ import org.apache.calcite.rel.core.Aggregate
 import org.apache.calcite.rel.core.AggregateCall
 import org.apache.calcite.sql.SqlKind
 import org.apache.kylin.common.KylinConfig
-import org.apache.kylin.metadata.model.FunctionDesc
+import org.apache.kylin.cube.CubeInstance
+import org.apache.kylin.metadata.model.{FunctionDesc, PartitionDesc, SegmentStatusEnum, TblColRef}
 import org.apache.kylin.query.relnode.{KylinAggregateCall, OLAPAggregateRel}
 import org.apache.kylin.query.runtime.RuntimeHelper
 import org.apache.kylin.query.SchemaProcessor
@@ -244,7 +245,16 @@ object AggregatePlan extends LogEx {
     }
     val groupByCols = rel.getGroups.asScala.map(_.getIdentity).toSet
     if (groupByCols.isEmpty) return false
+    val f = olapContext.realization.asInstanceOf[CubeInstance].getSegments(SegmentStatusEnum.READY).size()
+    if (!groupByContainsPartition(groupByCols, cuboid.getCubeDesc.getModel.getPartitionDesc) &&
+      olapContext.realization.asInstanceOf[CubeInstance].getSegments(SegmentStatusEnum.READY).size() != 1) {
+      return false
+    }
     val cuboidDims = cuboid.getColumns.asScala.map(_.getIdentity).toSet
     groupByCols.equals(cuboidDims)
+  }
+
+  def groupByContainsPartition(groupByCols: Set[String], partitionDesc: PartitionDesc): Boolean = {
+    partitionDesc != null && partitionDesc.getPartitionDateColumnRef != null && groupByCols.contains(partitionDesc.getPartitionDateColumnRef.getIdentity)
   }
 }
