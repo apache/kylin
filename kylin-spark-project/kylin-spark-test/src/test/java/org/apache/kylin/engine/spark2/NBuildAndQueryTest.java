@@ -105,6 +105,21 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
         report(results);
     }
 
+    @Test
+    public void exactlyMatchCuboidMultiSegmentTest() throws Exception {
+        final KylinConfig config = KylinConfig.getInstanceFromEnv();
+        buildSegments("ci_left_join_cube", new SegmentRange.TSRange(dateToLong("2012-01-01"), dateToLong("2013-01-01")),
+                new SegmentRange.TSRange(dateToLong("2013-01-01"), dateToLong("2015-01-01")));
+
+        populateSSWithCSVData(config, getProject(), KylinSparkEnv.getSparkSession());
+
+        List<QueryCallable> tasks = new ArrayList<>();
+        tasks.add(new QueryCallable(CompareLevel.SAME, "left", "sql_exactly_agg"));
+        List<Pair<String, Throwable>> results = execAndGetResults(tasks);
+        Assert.assertEquals(results.size(), tasks.size());
+        report(results);
+    }
+
     private List<Pair<String, Throwable>> execAndGetResults(List<QueryCallable> tasks)
             throws InterruptedException, java.util.concurrent.ExecutionException {
         ThreadPoolExecutor executor = new ThreadPoolExecutor(9//
