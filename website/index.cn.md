@@ -293,9 +293,9 @@ title: 大数据分析型数据仓库
             <a class="sponsor" href="http://www.powerbi.com.cn/">
                 <img src="/images/logo/aowei.jpg">
             </a>
-            <a class="sponsor" href="http://www.qukuaiwang.com.cn/">
-                <img src="/images/logo/huobi.jpg">
-            </a>
+            <a class="sponsor" href="http://www.chinaoly.com/"> 
+                <img src="/images/logo/chinaoly.jpg">
+            </a>  
             <a class="sponsor" href="https://www.jianshu.com/">
                 <img src="/images/logo/jianshu.jpg">
             </a>
@@ -350,13 +350,10 @@ title: 大数据分析型数据仓库
             <a class="sponsor" href="https://www.hundsun.com/"> 
                 <img src="/images/logo/hundsun.jpg">
             </a>
-            <a class="sponsor" href="http://www.chinaoly.com/"> 
-                <img src="/images/logo/chinaoly.jpg">
-            </a>   
-           <!-- 15 -->
             <a class="sponsor" href="https://www.deppon.com/"> 
                 <img src="/images/logo/deppon.jpg">
-            </a>
+            </a> 
+            <!-- 15 -->
             <a class="sponsor" href="https://www.dmall.com/"> 
                 <img src="/images/logo/dmall.jpg">
             </a>
