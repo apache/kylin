@@ -44,7 +44,7 @@ object CrossDateTimeUtils {
   }
 
   def daysToMillis(days: Int): Long = {
-    DateTimeUtils.daysToMicros(days, DEFAULT_TZ_ID)
+    DateTimeUtils.daysToMicros(days, DEFAULT_TZ_ID) / 1000
   }
 
   def dateToString(): String = {

@@ -32,7 +32,9 @@ object QueryMetricUtils extends Logging {
     try {
       val metrics = plan.collect {
         case exec: AdaptiveSparkPlanExec => metricLine(recursiveGetSparkPlan(exec.executedPlan))
-        case exec: SparkPlan => metricLine(exec)
+        case exec: KylinFileSourceScanExec => metricLine(exec)
+        case exec: FileSourceScanExec => metricLine(exec)
+        case exec: HiveTableScanExec => metricLine(exec)
       }
 
       val scanRows = metrics.map(metric => java.lang.Long.valueOf(metric._1))
