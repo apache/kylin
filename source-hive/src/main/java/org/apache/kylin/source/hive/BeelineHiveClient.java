@@ -244,7 +244,7 @@ public class BeelineHiveClient implements IHiveClient {
 
     private void parseResultEntry(ResultSet resultSet, HiveTableMetaBuilder builder) throws SQLException {
         List<HiveTableMeta.HiveTableColumnMeta> partitionColumns = Lists.newArrayList();
-        if ("# Partition Information".equals(resultSet.getString(1).trim())) { // TODO: this should also be updated
+        if ("# Partition Information".equals(resultSet.getString(1).trim())) {
             resultSet.next();
             Preconditions.checkArgument("# col_name".equals(resultSet.getString(1).trim()));
             resultSet.next();
