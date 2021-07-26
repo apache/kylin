@@ -244,7 +244,7 @@ public class BeelineHiveClient implements IHiveClient {
 
     private void parseResultEntry(ResultSet resultSet, HiveTableMetaBuilder builder) throws SQLException {
         List<HiveTableMeta.HiveTableColumnMeta> partitionColumns = Lists.newArrayList();
-        if ("# Partition Information".equals(resultSet.getString(1).trim())) {
+        if ("# Partition Information".equals(resultSet.getString(1).trim())) { // TODO: this should also be updated
             resultSet.next();
             Preconditions.checkArgument("# col_name".equals(resultSet.getString(1).trim()));
             resultSet.next();
@@ -259,10 +259,10 @@ public class BeelineHiveClient implements IHiveClient {
             builder.setPartitionColumns(partitionColumns);
         }
 
-        if ("Owner:".equals(resultSet.getString(1).trim())) {
+        if ("Owner".equals(resultSet.getString(1).trim())) {
             builder.setOwner(resultSet.getString(2).trim());
         }
-        if ("LastAccessTime:".equals(resultSet.getString(1).trim())) {
+        if ("Last Access".equals(resultSet.getString(1).trim())) {
             try {
                 int i = Integer.parseInt(resultSet.getString(2).trim());
                 builder.setLastAccessTime(i);
@@ -270,19 +270,19 @@ public class BeelineHiveClient implements IHiveClient {
                 builder.setLastAccessTime(0);
             }
         }
-        if ("Location:".equals(resultSet.getString(1).trim())) {
+        if ("Location".equals(resultSet.getString(1).trim())) {
             builder.setSdLocation(resultSet.getString(2).trim());
         }
-        if ("Table Type:".equals(resultSet.getString(1).trim())) {
+        if ("Type".equals(resultSet.getString(1).trim())) {
             builder.setTableType(resultSet.getString(2).trim());
         }
-        if ("Table Parameters:".equals(resultSet.getString(1).trim())) {
+        if ("Table Properties".equals(resultSet.getString(1).trim())) {
             extractTableParam(resultSet, builder);
         }
-        if ("InputFormat:".equals(resultSet.getString(1).trim())) {
+        if ("InputFormat".equals(resultSet.getString(1).trim())) {
             builder.setSdInputFormat(resultSet.getString(2).trim());
         }
-        if ("OutputFormat:".equals(resultSet.getString(1).trim())) {
+        if ("OutputFormat".equals(resultSet.getString(1).trim())) {
             builder.setSdOutputFormat(resultSet.getString(2).trim());
         }
     }
@@ -316,7 +316,6 @@ public class BeelineHiveClient implements IHiveClient {
     }
 
     public static void main(String[] args) throws SQLException {
-
         BeelineHiveClient loader = new BeelineHiveClient(
                 "-n root --hiveconf hive.security.authorization.sqlstd.confwhitelist.append='mapreduce.job.*|dfs.*' -u 'jdbc:hive2://sandbox:10000'");
         //BeelineHiveClient loader = new BeelineHiveClient(StringUtils.join(args, " "));
