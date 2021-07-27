@@ -114,7 +114,7 @@ public class NBuildAndQueryTest extends LocalWithSparkSessionTest {
         populateSSWithCSVData(config, getProject(), KylinSparkEnv.getSparkSession());
 
         List<QueryCallable> tasks = new ArrayList<>();
-        tasks.add(new QueryCallable(CompareLevel.SAME, "left", "sql_exactly_agg"));
+        tasks.add(new QueryCallable(CompareLevel.SAME, "left", "sql_exactly_agg_multi_segment"));
         List<Pair<String, Throwable>> results = execAndGetResults(tasks);
         Assert.assertEquals(results.size(), tasks.size());
         report(results);
