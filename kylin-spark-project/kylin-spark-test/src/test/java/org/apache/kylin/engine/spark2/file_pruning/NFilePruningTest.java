@@ -208,7 +208,8 @@ public class NFilePruningTest extends LocalWithSparkSessionTest {
     private long assertResultsAndScanFiles(String sql, long numScanFiles) throws Exception {
         Dataset<Row> dataset = queryCubeAndSkipCompute(getProject(), sql);
         dataset.collect();
-        long actualNum = findFileSourceScanExec(dataset.queryExecution().sparkPlan()).metrics().get("numFiles").get().value();
+        long actualNum = findFileSourceScanExec(dataset.queryExecution().executedPlan())
+                .metrics().get("numFiles").get().value();
         Assert.assertEquals(numScanFiles, actualNum);
         return actualNum;
     }

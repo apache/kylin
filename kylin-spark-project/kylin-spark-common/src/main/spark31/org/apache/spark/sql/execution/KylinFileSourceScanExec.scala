@@ -53,11 +53,10 @@ class KylinFileSourceScanExec(
       metrics.filter(e => driverMetrics.contains(e._1)).values.toSeq)
   }
 
-  @transient lazy val _selectedPartitions: Seq[PartitionDirectory] = {
+  @transient override lazy val selectedPartitions: Array[PartitionDirectory] = {
     val optimizerMetadataTimeNs = relation.location.metadataOpsTimeNs.getOrElse(0L)
     val startTime = System.nanoTime()
     val ret = relation.location.listFiles(partitionFilters, dataFilters)
-
     driverMetrics("numFiles") = ret.map(_.files.size.toLong).sum
     driverMetrics("filesSize") = ret.map(_.files.map(_.getLen).sum).sum
     if (relation.partitionSchemaOption.isDefined) {
@@ -67,9 +66,9 @@ class KylinFileSourceScanExec(
     val timeTakenMs = NANOSECONDS.toMillis((System.nanoTime() - startTime) + optimizerMetadataTimeNs)
     driverMetrics("metadataTime") = timeTakenMs
     ret
-  }
+  }.toArray
 
-  private lazy val _inputRDD: RDD[InternalRow] = {
+  override lazy val inputRDD: RDD[InternalRow] = {
     val readFile: (PartitionedFile) => Iterator[InternalRow] =
       relation.fileFormat.buildReaderWithPartitionValues(
         sparkSession = relation.sparkSession,
@@ -82,16 +81,16 @@ class KylinFileSourceScanExec(
 
     val readRDD = optionalShardSpec match {
       case Some(spec) if KylinConfig.getInstanceFromEnv.isShardingJoinOptEnabled =>
-        createShardingReadRDD(spec, readFile, _selectedPartitions, relation)
+        createShardingReadRDD(spec, readFile, selectedPartitions, relation)
       case _ =>
-        createNonShardingReadRDD(readFile, _selectedPartitions, relation)
+        createNonShardingReadRDD(readFile, selectedPartitions, relation)
     }
     sendDriverMetrics()
     readRDD
   }
 
   override def inputRDDs(): Seq[RDD[InternalRow]] = {
-    _inputRDD :: Nil
+    inputRDD :: Nil
   }
 
   @transient

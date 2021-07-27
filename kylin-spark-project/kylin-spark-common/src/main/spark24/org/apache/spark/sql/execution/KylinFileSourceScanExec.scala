@@ -57,7 +57,7 @@ class KylinFileSourceScanExec(
     ret
   }
 
-  private lazy val _inputRDD: RDD[InternalRow] = {
+  private lazy val inputRDD: RDD[InternalRow] = {
     val readFile: (PartitionedFile) => Iterator[InternalRow] =
       relation.fileFormat.buildReaderWithPartitionValues(
         sparkSession = relation.sparkSession,
@@ -77,7 +77,7 @@ class KylinFileSourceScanExec(
   }
 
   override def inputRDDs(): Seq[RDD[InternalRow]] = {
-    _inputRDD :: Nil
+    inputRDD :: Nil
   }
 
   @transient

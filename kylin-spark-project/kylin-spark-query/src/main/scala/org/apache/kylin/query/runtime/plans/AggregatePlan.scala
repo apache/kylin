@@ -245,7 +245,6 @@ object AggregatePlan extends LogEx {
     }
     val groupByCols = rel.getGroups.asScala.map(_.getIdentity).toSet
     if (groupByCols.isEmpty) return false
-    val f = olapContext.realization.asInstanceOf[CubeInstance].getSegments(SegmentStatusEnum.READY).size()
     if (!groupByContainsPartition(groupByCols, cuboid.getCubeDesc.getModel.getPartitionDesc) &&
       olapContext.realization.asInstanceOf[CubeInstance].getSegments(SegmentStatusEnum.READY).size() != 1) {
       return false
