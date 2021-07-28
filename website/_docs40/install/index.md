@@ -64,7 +64,7 @@ Or configure SPARK_HOME points to the path of spark2.4.6 in the environment.
 
 Kylin 4.0 uses MySQL as metadata storage, make the following configuration in `kylin.properties`:
 
-```$xslt
+```shell
 kylin.metadata.url=kylin_metadata@jdbc,driverClassName=com.mysql.jdbc.Driver,url=jdbc:mysql//localhost:3306/kylin_test,username=,password=
 kylin.env.zookeeper-connect-string=ip:2181
 ```

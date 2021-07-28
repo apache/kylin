@@ -60,7 +60,7 @@ $KYLIN_HOME/bin/download-spark.sh
 
 Kylin 4.0 使用 Mysql 作为元数据存储，需要在 kylin.properties 中做如下配置：
 
-```$xslt
+```shell
 kylin.metadata.url=kylin_metadata@jdbc,driverClassName=com.mysql.jdbc.Driver,url=jdbc:mysql://localhost:3306/kylin_test,username=,password=
 kylin.env.zookeeper-connect-string=ip
 ```

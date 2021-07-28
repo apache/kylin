@@ -25,6 +25,7 @@
   - install/configuration
   - install/advance_settings
   - install/kylin_docker
+  - install/deploy_without_hadoop
 
 - title: 教程
   docs:
