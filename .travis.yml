@@ -35,7 +35,10 @@ cache:
 jobs:
   include:
     - name: Linux ARM64
-      arch: arm64  
+      arch: arm64-graviton2
+      dist: focal
+      virt: vm
+      group: edge
     - name: Linux x86
       arch: amd64
       
@@ -79,3 +82,4 @@ before_cache:
 branches:
   except:
     - document
+
