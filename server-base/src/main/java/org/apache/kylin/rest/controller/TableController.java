@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collections;
 
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.JsonUtil;
@@ -224,7 +225,8 @@ public class TableController extends BasicController {
     @ResponseBody
     public List<TableSnapshotResponse> getTableSnapshots(@PathVariable final String project,
             @PathVariable final String tableName) throws IOException {
-        return tableService.getLookupTableSnapshots(project, tableName);
+        // TODO
+        return Collections.emptyList();
     }
 
     @RequestMapping(value = "/supported_datetime_patterns", method = { RequestMethod.GET })

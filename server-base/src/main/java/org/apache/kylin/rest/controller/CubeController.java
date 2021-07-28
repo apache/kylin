@@ -313,14 +313,9 @@ public class CubeController extends BasicController {
     @ResponseBody
     public CubeInstance rebuildLookupSnapshot(@PathVariable String cubeName, @PathVariable String segmentName,
             @RequestParam(value = "lookupTable") String lookupTable) {
-        try {
-            final CubeManager cubeMgr = cubeService.getCubeManager();
-            final CubeInstance cube = cubeMgr.getCube(cubeName);
-            return cubeService.rebuildLookupSnapshot(cube, segmentName, lookupTable);
-        } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage(), e);
-        }
+        final CubeManager cubeMgr = cubeService.getCubeManager();
+        final CubeInstance cube = cubeMgr.getCube(cubeName);
+        return cube;
     }
 
     /**

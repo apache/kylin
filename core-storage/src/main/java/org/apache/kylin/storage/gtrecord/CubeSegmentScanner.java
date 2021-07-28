@@ -26,15 +26,15 @@ import java.util.Set;
 
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.dict.BuiltInFunctionTransformer;
+//import org.apache.kylin.dict.BuiltInFunctionTransformer;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.metadata.expression.TupleExpression;
-import org.apache.kylin.metadata.filter.ITupleFilterTransformer;
-import org.apache.kylin.metadata.filter.StringCodeSystem;
+//import org.apache.kylin.metadata.filter.ITupleFilterTransformer;
+//import org.apache.kylin.metadata.filter.StringCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.filter.TupleFilterSerializer;
+//import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -42,50 +42,51 @@ import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Deprecated
 public class CubeSegmentScanner implements Iterable<GTRecord> {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeSegmentScanner.class);
 
-    final CubeSegment cubeSeg;
-    final ScannerWorker scanner;
-    final Cuboid cuboid;
+    CubeSegment cubeSeg;
+    ScannerWorker scanner;
+    Cuboid cuboid;
 
-    final GTScanRequest scanRequest;
+    GTScanRequest scanRequest;
 
     public CubeSegmentScanner(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> dimensions, //
             Set<TblColRef> groups, List<TblColRef> dynGroups, List<TupleExpression> dynGroupExprs, //
             Collection<FunctionDesc> metrics, List<DynamicFunctionDesc> dynFuncs, //
             TupleFilter originalfilter, TupleFilter havingFilter, StorageContext context) {
 
-        logger.info("Init CubeSegmentScanner for segment {}", cubeSeg.getName());
-
-        this.cuboid = cuboid;
-        this.cubeSeg = cubeSeg;
-
-        //the filter might be changed later in this CubeSegmentScanner (In ITupleFilterTransformer)
-        //to avoid issues like in https://issues.apache.org/jira/browse/KYLIN-1954, make sure each CubeSegmentScanner
-        //is working on its own copy
-        byte[] serialize = TupleFilterSerializer.serialize(originalfilter, StringCodeSystem.INSTANCE);
-        TupleFilter filter = TupleFilterSerializer.deserialize(serialize, StringCodeSystem.INSTANCE);
-
-        // translate FunctionTupleFilter to IN clause
-        ITupleFilterTransformer translator = new BuiltInFunctionTransformer(cubeSeg.getDimensionEncodingMap());
-        filter = translator.transform(filter);
-
-        CubeScanRangePlanner scanRangePlanner;
-        try {
-            scanRangePlanner = new CubeScanRangePlanner(cubeSeg, cuboid, filter, dimensions, groups, dynGroups,
-                    dynGroupExprs, metrics, dynFuncs, havingFilter, context);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        scanRequest = scanRangePlanner.planScanRequest();
-
-        String gtStorage = ((GTCubeStorageQueryBase) context.getStorageQuery()).getGTStorage();
-        scanner = new ScannerWorker(cubeSeg, cuboid, scanRequest, gtStorage, context);
+//        logger.info("Init CubeSegmentScanner for segment {}", cubeSeg.getName());
+//
+//        this.cuboid = cuboid;
+//        this.cubeSeg = cubeSeg;
+//
+//        //the filter might be changed later in this CubeSegmentScanner (In ITupleFilterTransformer)
+//        //to avoid issues like in https://issues.apache.org/jira/browse/KYLIN-1954, make sure each CubeSegmentScanner
+//        //is working on its own copy
+//        byte[] serialize = TupleFilterSerializer.serialize(originalfilter, StringCodeSystem.INSTANCE);
+//        TupleFilter filter = TupleFilterSerializer.deserialize(serialize, StringCodeSystem.INSTANCE);
+//
+//        // translate FunctionTupleFilter to IN clause
+//        ITupleFilterTransformer translator = new BuiltInFunctionTransformer(cubeSeg.getDimensionEncodingMap());
+//        filter = translator.transform(filter);
+//
+//        CubeScanRangePlanner scanRangePlanner;
+//        try {
+//            scanRangePlanner = new CubeScanRangePlanner(cubeSeg, cuboid, filter, dimensions, groups, dynGroups,
+//                    dynGroupExprs, metrics, dynFuncs, havingFilter, context);
+//        } catch (RuntimeException e) {
+//            throw e;
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        scanRequest = scanRangePlanner.planScanRequest();
+//
+//        String gtStorage = ((GTCubeStorageQueryBase) context.getStorageQuery()).getGTStorage();
+//        scanner = new ScannerWorker(cubeSeg, cuboid, scanRequest, gtStorage, context);
     }
 
     public boolean isSegmentSkipped() {

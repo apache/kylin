@@ -83,10 +83,10 @@ public class CubeDimEncMap implements IDimensionEncodingMap, java.io.Serializabl
 
     @Override
     public Dictionary<String> getDictionary(TblColRef col) {
-        if (seg == null)
-            return dictionaryMap.get(col);
-        else
-            return seg.getDictionary(col);
+//        if (seg == null)
+        return dictionaryMap.get(col);
+//        else
+//            return seg.getDictionary(col);
     }
 
 }

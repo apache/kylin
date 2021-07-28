@@ -27,7 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
+//import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,19 +41,19 @@ import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.persistence.WriteConflictException;
 import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
-import org.apache.kylin.common.util.Dictionary;
+//import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.CubeDescTiretreeGlobalDomainDictUtil;
+//import org.apache.kylin.cube.model.CubeDescTiretreeGlobalDomainDictUtil;
 import org.apache.kylin.cube.model.SnapshotTableDesc;
-import org.apache.kylin.dict.DictionaryInfo;
-import org.apache.kylin.dict.DictionaryManager;
-import org.apache.kylin.dict.lookup.ILookupTable;
-import org.apache.kylin.dict.lookup.LookupProviderFactory;
-import org.apache.kylin.dict.lookup.SnapshotManager;
-import org.apache.kylin.dict.lookup.SnapshotTable;
+//import org.apache.kylin.dict.DictionaryInfo;
+//import org.apache.kylin.dict.DictionaryManager;
+//import org.apache.kylin.dict.lookup.ILookupTable;
+//import org.apache.kylin.dict.lookup.LookupProviderFactory;
+//import org.apache.kylin.dict.lookup.SnapshotManager;
+//import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
@@ -61,14 +61,14 @@ import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
-import org.apache.kylin.metadata.model.JoinDesc;
+//import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TblColRef;
+//import org.apache.kylin.metadata.model.TableDesc;
+//import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
@@ -77,8 +77,8 @@ import org.apache.kylin.metadata.realization.IRealizationProvider;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.source.IReadableTable;
-import org.apache.kylin.source.SourceManager;
+//import org.apache.kylin.source.IReadableTable;
+//import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.SourcePartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,7 +129,7 @@ public class CubeManager implements IRealizationProvider {
 
     // a few inner classes to group related methods
     private SegmentAssist segAssist = new SegmentAssist();
-    private DictionaryAssist dictAssist = new DictionaryAssist();
+//    private DictionaryAssist dictAssist = new DictionaryAssist();
 
     private Random ran = new Random();
 
@@ -555,28 +555,28 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    public ILookupTable getLookupTable(CubeSegment cubeSegment, JoinDesc join) {
-        String tableName = join.getPKSide().getTableIdentity();
-        CubeDesc cubeDesc = cubeSegment.getCubeDesc();
-        SnapshotTableDesc snapshotTableDesc = cubeDesc.getSnapshotTableDesc(tableName);
-        return getInMemLookupTable(cubeSegment, join, snapshotTableDesc);
-    }
-
-    private ILookupTable getInMemLookupTable(CubeSegment cubeSegment, JoinDesc join,
-            SnapshotTableDesc snapshotTableDesc) {
-        String tableName = join.getPKSide().getTableIdentity();
-        String snapshotResPath = getSnapshotResPath(cubeSegment, tableName, snapshotTableDesc);
-        String[] pkCols = join.getPrimaryKey();
-
-        try {
-            SnapshotTable snapshot = getSnapshotManager().getSnapshotTable(snapshotResPath);
-            TableDesc tableDesc = getMetadataManager().getTableDesc(tableName, cubeSegment.getProject());
-            return LookupProviderFactory.getInMemLookupTable(tableDesc, pkCols, snapshot);
-        } catch (IOException e) {
-            throw new IllegalStateException(
-                    "Failed to load lookup table " + tableName + " from snapshot " + snapshotResPath, e);
-        }
-    }
+//    public ILookupTable getLookupTable(CubeSegment cubeSegment, JoinDesc join) {
+//        String tableName = join.getPKSide().getTableIdentity();
+//        CubeDesc cubeDesc = cubeSegment.getCubeDesc();
+//        SnapshotTableDesc snapshotTableDesc = cubeDesc.getSnapshotTableDesc(tableName);
+//        return getInMemLookupTable(cubeSegment, join, snapshotTableDesc);
+//    }
+//
+//    private ILookupTable getInMemLookupTable(CubeSegment cubeSegment, JoinDesc join,
+//            SnapshotTableDesc snapshotTableDesc) {
+//        String tableName = join.getPKSide().getTableIdentity();
+//        String snapshotResPath = getSnapshotResPath(cubeSegment, tableName, snapshotTableDesc);
+//        String[] pkCols = join.getPrimaryKey();
+//
+//        try {
+//            SnapshotTable snapshot = getSnapshotManager().getSnapshotTable(snapshotResPath);
+//            TableDesc tableDesc = getMetadataManager().getTableDesc(tableName, cubeSegment.getProject());
+//            return LookupProviderFactory.getInMemLookupTable(tableDesc, pkCols, snapshot);
+//        } catch (IOException e) {
+//            throw new IllegalStateException(
+//                    "Failed to load lookup table " + tableName + " from snapshot " + snapshotResPath, e);
+//        }
+//    }
 
     private String getSnapshotResPath(CubeSegment cubeSegment, String tableName, SnapshotTableDesc snapshotTableDesc) {
         String snapshotResPath;
@@ -628,13 +628,13 @@ public class CubeManager implements IRealizationProvider {
         return TableMetadataManager.getInstance(config);
     }
 
-    private DictionaryManager getDictionaryManager() {
-        return DictionaryManager.getInstance(config);
-    }
-
-    private SnapshotManager getSnapshotManager() {
-        return SnapshotManager.getInstance(config);
-    }
+//    private DictionaryManager getDictionaryManager() {
+//        return DictionaryManager.getInstance(config);
+//    }
+//
+//    private SnapshotManager getSnapshotManager() {
+//        return SnapshotManager.getInstance(config);
+//    }
 
     private ResourceStore getStore() {
         return ResourceStore.getStore(this.config);
@@ -1125,143 +1125,143 @@ public class CubeManager implements IRealizationProvider {
     // Dictionary/Snapshot related methods
     // ============================================================================
 
-    public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, IReadableTable inpTable)
-            throws IOException {
-        return dictAssist.buildDictionary(cubeSeg, col, inpTable);
-    }
-
-    public DictionaryInfo saveDictionary(CubeSegment cubeSeg, TblColRef col, IReadableTable inpTable,
-            Dictionary<String> dict) throws IOException {
-        return dictAssist.saveDictionary(cubeSeg, col, inpTable, dict);
-    }
-
-    /**
-     * return null if no dictionary for given column
-     */
-    public Dictionary<String> getDictionary(CubeSegment cubeSeg, TblColRef col) {
-        return dictAssist.getDictionary(cubeSeg, col);
-    }
-
-    public SnapshotTable buildSnapshotTable(CubeSegment cubeSeg, String lookupTable, String uuid) throws IOException {
-        return dictAssist.buildSnapshotTable(cubeSeg, lookupTable, uuid);
-    }
-
-    private TableMetadataManager getMetadataManager() {
-        return TableMetadataManager.getInstance(config);
-    }
-
-    private class DictionaryAssist {
-        public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, IReadableTable inpTable)
-                throws IOException {
-            CubeDesc cubeDesc = cubeSeg.getCubeDesc();
-            if (!cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col))
-                return null;
-
-            String builderClass = cubeDesc.getDictionaryBuilderClass(col);
-            DictionaryInfo dictInfo = getDictionaryManager().buildDictionary(col, inpTable, builderClass);
-
-            saveDictionaryInfo(cubeSeg, col, dictInfo);
-            return dictInfo;
-        }
-
-        public DictionaryInfo saveDictionary(CubeSegment cubeSeg, TblColRef col, IReadableTable inpTable,
-                Dictionary<String> dict) throws IOException {
-            CubeDesc cubeDesc = cubeSeg.getCubeDesc();
-            if (!cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col))
-                return null;
-
-            DictionaryInfo dictInfo = getDictionaryManager().saveDictionary(col, inpTable, dict);
-
-            saveDictionaryInfo(cubeSeg, col, dictInfo);
-            return dictInfo;
-        }
-
-        private void saveDictionaryInfo(CubeSegment cubeSeg, TblColRef col, DictionaryInfo dictInfo)
-                throws IOException {
-            if (dictInfo == null)
-                return;
-
-            // work on copy instead of cached objects
-            CubeInstance cubeCopy = cubeSeg.getCubeInstance().latestCopyForWrite(); // get a latest copy
-            CubeSegment segCopy = cubeCopy.getSegmentById(cubeSeg.getUuid());
-
-            Dictionary<?> dict = dictInfo.getDictionaryObject();
-            segCopy.putDictResPath(col, dictInfo.getResourcePath());
-            segCopy.getRowkeyStats().add(new Object[] { col.getIdentity(), dict.getSize(), dict.getSizeOfId() });
-
-            CubeUpdate update = new CubeUpdate(cubeCopy);
-            update.setToUpdateSegs(segCopy);
-            updateCube(update);
-        }
-
-        /**
-         * return null if no dictionary for given column
-         */
-        @SuppressWarnings("unchecked")
-        public Dictionary<String> getDictionary(CubeSegment cubeSeg, TblColRef col) {
-            DictionaryInfo info = null;
-            String dictResPath = null;
-            try {
-                DictionaryManager dictMgr = getDictionaryManager();
-
-                //tiretree global domain dic
-                List<CubeDescTiretreeGlobalDomainDictUtil.GlobalDict> globalDicts = cubeSeg.getCubeDesc().listDomainDict();
-                if (!globalDicts.isEmpty()) {
-                    dictResPath = CubeDescTiretreeGlobalDomainDictUtil.globalReuseDictPath(cubeSeg.getConfig(), col, cubeSeg.getCubeDesc());
-                }
-
-                if (Objects.isNull(dictResPath)){
-                    dictResPath = cubeSeg.getDictResPath(col);
-                }
-
-                if (dictResPath == null)
-                    return null;
-
-                info = dictMgr.getDictionaryInfo(dictResPath);
-                if (info == null)
-                    throw new IllegalStateException("No dictionary found by " + dictResPath
-                            + ", invalid cube state; cube segment" + cubeSeg + ", col " + col);
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to get dictionary for cube segment" + cubeSeg + ", col" + col,
-                        e);
-            }
-            return (Dictionary<String>) info.getDictionaryObject();
-        }
-
-        public SnapshotTable buildSnapshotTable(CubeSegment cubeSeg, String lookupTable, String uuid)
-                throws IOException {
-            // work on copy instead of cached objects
-            CubeInstance cubeCopy = cubeSeg.getCubeInstance().latestCopyForWrite(); // get a latest copy
-            CubeSegment segCopy = cubeCopy.getSegmentById(cubeSeg.getUuid());
-
-            TableMetadataManager metaMgr = getTableManager();
-            SnapshotManager snapshotMgr = getSnapshotManager();
-
-            TableDesc tableDesc = new TableDesc(metaMgr.getTableDesc(lookupTable, segCopy.getProject()));
-            IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc, uuid);
-            SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc, cubeSeg.getConfig());
-
-            CubeDesc cubeDesc = cubeSeg.getCubeDesc();
-            if (!cubeDesc.isGlobalSnapshotTable(lookupTable)) {
-                segCopy.putSnapshotResPath(lookupTable, snapshot.getResourcePath());
-                CubeUpdate update = new CubeUpdate(cubeCopy);
-                update.setToUpdateSegs(segCopy);
-                updateCube(update);
-
-                // Update the input cubeSeg after the resource store updated
-                cubeSeg.putSnapshotResPath(lookupTable, segCopy.getSnapshotResPath(lookupTable));
-            } else {
-                CubeUpdate cubeUpdate = new CubeUpdate(cubeCopy);
-                Map<String, String> map = Maps.newHashMap();
-                map.put(lookupTable, snapshot.getResourcePath());
-                cubeUpdate.setUpdateTableSnapshotPath(map);
-                updateCube(cubeUpdate);
-
-                cubeSeg.getCubeInstance().putSnapshotResPath(lookupTable, snapshot.getResourcePath());
-            }
-            return snapshot;
-        }
-    }
+//    public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, IReadableTable inpTable)
+//            throws IOException {
+//        return dictAssist.buildDictionary(cubeSeg, col, inpTable);
+//    }
+//
+//    public DictionaryInfo saveDictionary(CubeSegment cubeSeg, TblColRef col, IReadableTable inpTable,
+//            Dictionary<String> dict) throws IOException {
+//        return dictAssist.saveDictionary(cubeSeg, col, inpTable, dict);
+//    }
+//
+//    /**
+//     * return null if no dictionary for given column
+//     */
+//    public Dictionary<String> getDictionary(CubeSegment cubeSeg, TblColRef col) {
+//        return dictAssist.getDictionary(cubeSeg, col);
+//    }
+//
+//    public SnapshotTable buildSnapshotTable(CubeSegment cubeSeg, String lookupTable, String uuid) throws IOException {
+//        return dictAssist.buildSnapshotTable(cubeSeg, lookupTable, uuid);
+//    }
+//
+//    private TableMetadataManager getMetadataManager() {
+//        return TableMetadataManager.getInstance(config);
+//    }
+//
+//    private class DictionaryAssist {
+//        public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, IReadableTable inpTable)
+//                throws IOException {
+//            CubeDesc cubeDesc = cubeSeg.getCubeDesc();
+//            if (!cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col))
+//                return null;
+//
+//            String builderClass = cubeDesc.getDictionaryBuilderClass(col);
+//            DictionaryInfo dictInfo = getDictionaryManager().buildDictionary(col, inpTable, builderClass);
+//
+//            saveDictionaryInfo(cubeSeg, col, dictInfo);
+//            return dictInfo;
+//        }
+//
+//        public DictionaryInfo saveDictionary(CubeSegment cubeSeg, TblColRef col, IReadableTable inpTable,
+//                Dictionary<String> dict) throws IOException {
+//            CubeDesc cubeDesc = cubeSeg.getCubeDesc();
+//            if (!cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col))
+//                return null;
+//
+//            DictionaryInfo dictInfo = getDictionaryManager().saveDictionary(col, inpTable, dict);
+//
+//            saveDictionaryInfo(cubeSeg, col, dictInfo);
+//            return dictInfo;
+//        }
+//
+//        private void saveDictionaryInfo(CubeSegment cubeSeg, TblColRef col, DictionaryInfo dictInfo)
+//                throws IOException {
+//            if (dictInfo == null)
+//                return;
+//
+//            // work on copy instead of cached objects
+//            CubeInstance cubeCopy = cubeSeg.getCubeInstance().latestCopyForWrite(); // get a latest copy
+//            CubeSegment segCopy = cubeCopy.getSegmentById(cubeSeg.getUuid());
+//
+//            Dictionary<?> dict = dictInfo.getDictionaryObject();
+//            segCopy.putDictResPath(col, dictInfo.getResourcePath());
+//            segCopy.getRowkeyStats().add(new Object[] { col.getIdentity(), dict.getSize(), dict.getSizeOfId() });
+//
+//            CubeUpdate update = new CubeUpdate(cubeCopy);
+//            update.setToUpdateSegs(segCopy);
+//            updateCube(update);
+//        }
+//
+//        /**
+//         * return null if no dictionary for given column
+//         */
+//        @SuppressWarnings("unchecked")
+//        public Dictionary<String> getDictionary(CubeSegment cubeSeg, TblColRef col) {
+//            DictionaryInfo info = null;
+//            String dictResPath = null;
+//            try {
+//                DictionaryManager dictMgr = getDictionaryManager();
+//
+//                //tiretree global domain dic
+//                List<CubeDescTiretreeGlobalDomainDictUtil.GlobalDict> globalDicts = cubeSeg.getCubeDesc().listDomainDict();
+//                if (!globalDicts.isEmpty()) {
+//                    dictResPath = CubeDescTiretreeGlobalDomainDictUtil.globalReuseDictPath(cubeSeg.getConfig(), col, cubeSeg.getCubeDesc());
+//                }
+//
+//                if (Objects.isNull(dictResPath)){
+//                    dictResPath = cubeSeg.getDictResPath(col);
+//                }
+//
+//                if (dictResPath == null)
+//                    return null;
+//
+//                info = dictMgr.getDictionaryInfo(dictResPath);
+//                if (info == null)
+//                    throw new IllegalStateException("No dictionary found by " + dictResPath
+//                            + ", invalid cube state; cube segment" + cubeSeg + ", col " + col);
+//            } catch (IOException e) {
+//                throw new IllegalStateException("Failed to get dictionary for cube segment" + cubeSeg + ", col" + col,
+//                        e);
+//            }
+//            return (Dictionary<String>) info.getDictionaryObject();
+//        }
+//
+//        public SnapshotTable buildSnapshotTable(CubeSegment cubeSeg, String lookupTable, String uuid)
+//                throws IOException {
+//            // work on copy instead of cached objects
+//            CubeInstance cubeCopy = cubeSeg.getCubeInstance().latestCopyForWrite(); // get a latest copy
+//            CubeSegment segCopy = cubeCopy.getSegmentById(cubeSeg.getUuid());
+//
+//            TableMetadataManager metaMgr = getTableManager();
+//            SnapshotManager snapshotMgr = getSnapshotManager();
+//
+//            TableDesc tableDesc = new TableDesc(metaMgr.getTableDesc(lookupTable, segCopy.getProject()));
+//            IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc, uuid);
+//            SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc, cubeSeg.getConfig());
+//
+//            CubeDesc cubeDesc = cubeSeg.getCubeDesc();
+//            if (!cubeDesc.isGlobalSnapshotTable(lookupTable)) {
+//                segCopy.putSnapshotResPath(lookupTable, snapshot.getResourcePath());
+//                CubeUpdate update = new CubeUpdate(cubeCopy);
+//                update.setToUpdateSegs(segCopy);
+//                updateCube(update);
+//
+//                // Update the input cubeSeg after the resource store updated
+//                cubeSeg.putSnapshotResPath(lookupTable, segCopy.getSnapshotResPath(lookupTable));
+//            } else {
+//                CubeUpdate cubeUpdate = new CubeUpdate(cubeCopy);
+//                Map<String, String> map = Maps.newHashMap();
+//                map.put(lookupTable, snapshot.getResourcePath());
+//                cubeUpdate.setUpdateTableSnapshotPath(map);
+//                updateCube(cubeUpdate);
+//
+//                cubeSeg.getCubeInstance().putSnapshotResPath(lookupTable, snapshot.getResourcePath());
+//            }
+//            return snapshot;
+//        }
+//    }
 
     /**
      * To keep "select * from LOOKUP_TABLE" has consistent and latest result, we manually choose

@@ -29,11 +29,13 @@ import org.apache.kylin.dimension.FixedLenHexDimEnc;
 import org.apache.kylin.dimension.IntegerDimEnc;
 import org.apache.kylin.dimension.OneMoreByteVLongDimEnc;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Ordering;
 
+@Ignore
 public class DimEncodingPreserveOrderTest {
     private static List<long[]> successValue;
     private static List<long[]> failValue;

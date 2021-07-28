@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collection;
+//import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -44,12 +44,12 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.cube.CubeInstance;
+//import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.dict.lookup.SnapshotManager;
-import org.apache.kylin.dict.lookup.SnapshotTable;
-import org.apache.kylin.engine.spark.source.CsvSource;
+//import org.apache.kylin.cube.CubeSegment;
+//import org.apache.kylin.dict.lookup.SnapshotManager;
+//import org.apache.kylin.dict.lookup.SnapshotTable;
+//import org.apache.kylin.engine.spark.source.CsvSource;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.CsvColumnDesc;
@@ -61,10 +61,10 @@ import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.TableDescResponse;
-import org.apache.kylin.rest.response.TableSnapshotResponse;
+//import org.apache.kylin.rest.response.TableSnapshotResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.source.IReadableTable;
-import org.apache.kylin.source.IReadableTable.TableSignature;
+//import org.apache.kylin.source.IReadableTable;
+//import org.apache.kylin.source.IReadableTable.TableSignature;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceManager;
@@ -80,7 +80,7 @@ import org.apache.kylin.shaded.com.google.common.base.Predicate;
 import org.apache.kylin.shaded.com.google.common.collect.Iterables;
 import org.apache.kylin.shaded.com.google.common.collect.LinkedHashMultimap;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
-import org.apache.kylin.shaded.com.google.common.collect.Maps;
+//import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.shaded.com.google.common.collect.SetMultimap;
 
 @Component("tableService")
@@ -361,70 +361,70 @@ public class TableService extends BasicService {
 //        }
 //    }
 
-    public List<TableSnapshotResponse> getLookupTableSnapshots(String project, String tableName) throws IOException {
-        TableDesc tableDesc = getTableManager().getTableDesc(tableName, project);
-        if (SourceManager.getSource(tableDesc).getClass() == CsvSource.class) {
-            return new ArrayList<>();
-        }
-        IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc, null);
-        TableSignature signature = hiveTable.getSignature();
-        return internalGetLookupTableSnapshots(tableName, signature);
-    }
+//    public List<TableSnapshotResponse> getLookupTableSnapshots(String project, String tableName) throws IOException {
+//        TableDesc tableDesc = getTableManager().getTableDesc(tableName, project);
+//        if (SourceManager.getSource(tableDesc).getClass() == CsvSource.class) {
+//            return new ArrayList<>();
+//        }
+//        IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc, null);
+//        TableSignature signature = hiveTable.getSignature();
+//        return internalGetLookupTableSnapshots(tableName, signature);
+//    }
 
-    List<TableSnapshotResponse> internalGetLookupTableSnapshots(String tableName, TableSignature signature)
-            throws IOException {
-        SnapshotManager snapshotManager = SnapshotManager.getInstance(getConfig());
-        List<SnapshotTable> metaStoreTableSnapshots = snapshotManager.getSnapshots(tableName, signature);
-
-        Map<String, List<String>> snapshotUsageMap = getSnapshotUsages();
-
-        List<TableSnapshotResponse> result = Lists.newArrayList();
-
-        for (SnapshotTable metaStoreTableSnapshot : metaStoreTableSnapshots) {
-            TableSnapshotResponse response = new TableSnapshotResponse();
-            response.setSnapshotID(metaStoreTableSnapshot.getId());
-            response.setSnapshotType(TableSnapshotResponse.TYPE_INNER);
-            response.setLastBuildTime(metaStoreTableSnapshot.getLastBuildTime());
-            response.setStorageType(SnapshotTable.STORAGE_TYPE_METASTORE);
-            response.setSourceTableSize(metaStoreTableSnapshot.getSignature().getSize());
-            response.setSourceTableLastModifyTime(metaStoreTableSnapshot.getSignature().getLastModifiedTime());
-            response.setCubesAndSegmentsUsage(snapshotUsageMap.get(metaStoreTableSnapshot.getResourcePath()));
-            result.add(response);
-        }
-
-        return result;
-    }
+//    List<TableSnapshotResponse> internalGetLookupTableSnapshots(String tableName, TableSignature signature)
+//            throws IOException {
+//        SnapshotManager snapshotManager = SnapshotManager.getInstance(getConfig());
+//        List<SnapshotTable> metaStoreTableSnapshots = snapshotManager.getSnapshots(tableName, signature);
+//
+//        Map<String, List<String>> snapshotUsageMap = getSnapshotUsages();
+//
+//        List<TableSnapshotResponse> result = Lists.newArrayList();
+//
+//        for (SnapshotTable metaStoreTableSnapshot : metaStoreTableSnapshots) {
+//            TableSnapshotResponse response = new TableSnapshotResponse();
+//            response.setSnapshotID(metaStoreTableSnapshot.getId());
+//            response.setSnapshotType(TableSnapshotResponse.TYPE_INNER);
+//            response.setLastBuildTime(metaStoreTableSnapshot.getLastBuildTime());
+//            response.setStorageType(SnapshotTable.STORAGE_TYPE_METASTORE);
+//            response.setSourceTableSize(metaStoreTableSnapshot.getSignature().getSize());
+//            response.setSourceTableLastModifyTime(metaStoreTableSnapshot.getSignature().getLastModifiedTime());
+//            response.setCubesAndSegmentsUsage(snapshotUsageMap.get(metaStoreTableSnapshot.getResourcePath()));
+//            result.add(response);
+//        }
+//
+//        return result;
+//    }
 
     /**
      * @return Map of SnapshotID, CubeName or SegmentName list
      */
-    private Map<String, List<String>> getSnapshotUsages() {
-        CubeManager cubeManager = CubeManager.getInstance(getConfig());
-        Map<String, List<String>> snapshotCubeSegmentMap = Maps.newHashMap();
-        for (CubeInstance cube : cubeManager.listAllCubes()) {
-            Collection<String> cubeSnapshots = cube.getSnapshots().values();
-            for (String cubeSnapshot : cubeSnapshots) {
-                List<String> usages = snapshotCubeSegmentMap.get(cubeSnapshot);
-                if (usages == null) {
-                    usages = Lists.newArrayList();
-                    snapshotCubeSegmentMap.put(cubeSnapshot, usages);
-                }
-                usages.add(cube.getName());
-            }
-            for (CubeSegment segment : cube.getSegments()) {
-                Collection<String> segmentSnapshots = segment.getSnapshotPaths();
-                for (String segmentSnapshot : segmentSnapshots) {
-                    List<String> usages = snapshotCubeSegmentMap.get(segmentSnapshot);
-                    if (usages == null) {
-                        usages = Lists.newArrayList();
-                        snapshotCubeSegmentMap.put(segmentSnapshot, usages);
-                    }
-                    usages.add(cube.getName() + ":" + segment.getName());
-                }
-            }
-        }
-        return snapshotCubeSegmentMap;
-    }
+//    private Map<String, List<String>> getSnapshotUsages() {
+//        CubeManager cubeManager = CubeManager.getInstance(getConfig());
+//        Map<String, List<String>> snapshotCubeSegmentMap = Maps.newHashMap();
+//        for (CubeInstance cube : cubeManager.listAllCubes()) {
+//            Collection<String> cubeSnapshots = cube.getSnapshots().values();
+//            for (String cubeSnapshot : cubeSnapshots) {
+//                List<String> usages = snapshotCubeSegmentMap.get(cubeSnapshot);
+//                if (usages == null) {
+//                    usages = Lists.newArrayList();
+//                    snapshotCubeSegmentMap.put(cubeSnapshot, usages);
+//                }
+//                usages.add(cube.getName());
+//            }
+//            for (CubeSegment segment : cube.getSegments()) {
+//                Collection<String> segmentSnapshots = segment.getSnapshotPaths();
+//                for (String segmentSnapshot : segmentSnapshots) {
+//                    List<String> usages = snapshotCubeSegmentMap.get(segmentSnapshot);
+//                    if (usages == null) {
+//                        usages = Lists.newArrayList();
+//                        snapshotCubeSegmentMap.put(segmentSnapshot, usages);
+//                    }
+//                    usages.add(cube.getName() + ":" + segment.getName());
+//                }
+//            }
+//        }
+//        return snapshotCubeSegmentMap;
+//    }
 
 //    /**
 //     * Generate cardinality for table This will trigger a hadoop job

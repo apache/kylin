@@ -42,6 +42,7 @@ import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.kylin.shaded.com.google.common.collect.Iterators;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
+@Deprecated
 public class SequentialCubeTupleIterator implements ITupleIterator {
 
     private static final Logger logger = LoggerFactory.getLogger(SequentialCubeTupleIterator.class);

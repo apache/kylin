@@ -18,7 +18,7 @@
 
 package org.apache.kylin.query.enumerator;
 
-import java.io.IOException;
+//import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -32,7 +32,7 @@ import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.DimensionDesc;
-import org.apache.kylin.dict.lookup.ILookupTable;
+//import org.apache.kylin.dict.lookup.ILookupTable;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.RealizationEntry;
@@ -44,12 +44,11 @@ import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- */
+@Deprecated
 public class LookupTableEnumerator implements Enumerator<Object[]> {
     private final static Logger logger = LoggerFactory.getLogger(LookupTableEnumerator.class);
 
-    private final ILookupTable lookupTable;
+//    private ILookupTable lookupTable;
     private final List<ColumnDesc> colDescs;
     private final Object[] current;
     private Iterator<String[]> iterator;
@@ -97,7 +96,7 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
             throw new IllegalStateException("No dimension with derived columns found for lookup table " + lookupTableName + ", cube desc " + cube.getDescriptor());
 
         CubeManager cubeMgr = CubeManager.getInstance(cube.getConfig());
-        this.lookupTable = cubeMgr.getLookupTable(cube.getLatestReadySegment(), dim.getJoin());
+//        this.lookupTable = cubeMgr.getLookupTable(cube.getLatestReadySegment(), dim.getJoin());
 
         OLAPTable olapTable = (OLAPTable) olapContext.firstTableScan.getOlapTable();
         this.colDescs = olapTable.getSourceColumns();
@@ -132,16 +131,16 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
 
     @Override
     public void reset() {
-        this.iterator = lookupTable.iterator();
+//        this.iterator = lookupTable.iterator();
     }
 
     @Override
     public void close() {
-        try {
-            lookupTable.close();
-        } catch (IOException e) {
-            logger.error("error when close lookup table", e);
-        }
+//        try {
+//            lookupTable.close();
+//        } catch (IOException e) {
+//            logger.error("error when close lookup table", e);
+//        }
     }
 
 }
