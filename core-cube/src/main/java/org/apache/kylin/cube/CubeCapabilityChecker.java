@@ -23,9 +23,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.basic.BasicMeasureType;
@@ -175,7 +178,18 @@ public class CubeCapabilityChecker {
     private static Set<TblColRef> unmatchedDimensions(Collection<TblColRef> dimensionColumns, CubeInstance cube) {
         HashSet<TblColRef> result = Sets.newHashSet(dimensionColumns);
         CubeDesc cubeDesc = cube.getDescriptor();
-        result.removeAll(cubeDesc.listDimensionColumnsIncludingDerived());
+        if (cube.getConfig().isBuildBaseCuboid()) {
+            result.removeAll(cubeDesc.listDimensionColumnsIncludingDerived());
+        } else {
+            HashSet<TblColRef> aggResult = result;
+            for (AggregationGroup aggGroup : cubeDesc.getAggregationGroups()) {
+                HashSet<TblColRef> tmpAggResult = (HashSet<TblColRef>) result.stream().filter(col -> !Arrays.asList(aggGroup.getIncludes()).contains(col.getCanonicalName())).collect(Collectors.toSet());
+                if (tmpAggResult.size() < aggResult.size()) {
+                    aggResult = tmpAggResult;
+                }
+            }
+            result = aggResult;
+        }
         return result;
     }
 
