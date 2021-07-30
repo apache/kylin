@@ -78,7 +78,7 @@ public class CubeInstanceCreator {
         cubeInstance.setDescName(tableName.replace('.', '_'));
         cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
         cubeInstance.setOwner(owner);
-        cubeInstance.setCreateTimeUTC(0L);
+        cubeInstance.setCreateTimeUTC(System.currentTimeMillis());
         cubeInstance.updateRandomUuid();
 
         return cubeInstance;
