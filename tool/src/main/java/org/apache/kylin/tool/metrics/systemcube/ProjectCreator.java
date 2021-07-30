@@ -47,7 +47,7 @@ public class ProjectCreator {
         projectInstance.setOwner(owner);
         projectInstance.setDescription(SYSTEM_PROJECT_DESC);
         projectInstance.setStatus(ProjectStatusEnum.ENABLED);
-        projectInstance.setCreateTimeUTC(0L);
+        projectInstance.setCreateTimeUTC(System.currentTimeMillis());
         projectInstance.updateRandomUuid();
 
         if (kylinTables != null)
