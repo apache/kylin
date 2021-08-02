@@ -18,31 +18,19 @@
 
 package org.apache.kylin.cube.util;
 
-//import java.io.IOException;
-//import java.util.HashMap;
 import java.util.List;
-//import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-//import org.apache.kylin.common.util.Dictionary;
-//import org.apache.kylin.cube.CubeInstance;
-//import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableEnrich;
-//import org.apache.kylin.dict.DictionaryGenerator;
-//import org.apache.kylin.dict.DictionaryInfo;
-//import org.apache.kylin.dict.DictionaryManager;
-//import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
-//import org.apache.kylin.metadata.model.TblColRef;
-//import org.apache.kylin.source.IReadableTable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//import org.apache.kylin.shaded.com.google.common.collect.HashMultimap;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.shaded.com.google.common.hash.HashFunction;
 import org.apache.kylin.shaded.com.google.common.hash.Hasher;

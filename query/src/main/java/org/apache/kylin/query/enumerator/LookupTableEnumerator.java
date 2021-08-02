@@ -18,7 +18,6 @@
 
 package org.apache.kylin.query.enumerator;
 
-//import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -27,12 +26,12 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.apache.calcite.linq4j.Enumerator;
+import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.DimensionDesc;
-//import org.apache.kylin.dict.lookup.ILookupTable;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.RealizationEntry;
@@ -44,7 +43,7 @@ import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Deprecated
+@Clarification(deprecated = true, msg = "Only for HBase storage")
 public class LookupTableEnumerator implements Enumerator<Object[]> {
     private final static Logger logger = LoggerFactory.getLogger(LookupTableEnumerator.class);
 

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.shaded.com.google.common.collect.UnmodifiableIterator;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
@@ -43,7 +44,7 @@ import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Deprecated
+@Clarification(deprecated = true, msg = "Only for HBase storage")
 public class SegmentCubeTupleIterator implements ITupleIterator {
 
     private static final Logger logger = LoggerFactory.getLogger(SegmentCubeTupleIterator.class);

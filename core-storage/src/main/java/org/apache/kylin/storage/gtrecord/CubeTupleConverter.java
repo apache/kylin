@@ -26,22 +26,17 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 
-//import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.common.util.Array;
-//import org.apache.kylin.common.util.DateFormat;
-//import org.apache.kylin.common.util.Dictionary;
-//import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.cube.model.RowKeyDesc;
-//import org.apache.kylin.dict.lookup.ILookupTable;
 import org.apache.kylin.dimension.TimeDerivedColumnType;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureType.IAdvMeasureFiller;
 import org.apache.kylin.metadata.model.FunctionDesc;
-//import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
@@ -49,11 +44,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
-//import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
-/**
- * Convert Object[] (decoded GTRecord) to tuple
- */
+@Clarification(deprecated = true, msg = "Only for HBase storage")
 public class CubeTupleConverter implements ITupleConverter {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeTupleConverter.class);
@@ -69,7 +61,6 @@ public class CubeTupleConverter implements ITupleConverter {
 
     public final List<IAdvMeasureFiller> advMeasureFillers;
     public final List<Integer> advMeasureIndexInGTValues;
-//    private List<ILookupTable> usedLookupTables;
 
     final Set<Integer> timestampColumn = new HashSet<>();
     String eventTimezone;

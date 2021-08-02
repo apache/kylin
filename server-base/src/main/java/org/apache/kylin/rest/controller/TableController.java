@@ -225,8 +225,7 @@ public class TableController extends BasicController {
     @ResponseBody
     public List<TableSnapshotResponse> getTableSnapshots(@PathVariable final String project,
             @PathVariable final String tableName) throws IOException {
-        // TODO
-        return Collections.emptyList();
+        throw new UnsupportedOperationException("API getTableSnapshots is not supported in Kylin 4.0 .");
     }
 
     @RequestMapping(value = "/supported_datetime_patterns", method = { RequestMethod.GET })

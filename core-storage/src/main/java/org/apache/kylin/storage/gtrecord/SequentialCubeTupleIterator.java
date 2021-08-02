@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -42,7 +43,7 @@ import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.kylin.shaded.com.google.common.collect.Iterators;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 
-@Deprecated
+@Clarification(deprecated = true, msg = "Only for HBase storage")
 public class SequentialCubeTupleIterator implements ITupleIterator {
 
     private static final Logger logger = LoggerFactory.getLogger(SequentialCubeTupleIterator.class);

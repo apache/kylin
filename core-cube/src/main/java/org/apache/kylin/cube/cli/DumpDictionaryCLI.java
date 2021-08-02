@@ -18,45 +18,10 @@
 
 package org.apache.kylin.cube.cli;
 
-//import java.io.DataInputStream;
-//import java.io.File;
-//import java.io.FileInputStream;
-//import java.io.IOException;
-//import java.util.Date;
-//
-//import org.apache.kylin.common.util.JsonUtil;
-//import org.apache.kylin.dict.DictionaryInfo;
-//import org.apache.kylin.dict.DictionaryInfoSerializer;
 
+import org.apache.kylin.common.annotation.Clarification;
+
+@Clarification(deprecated=true, msg = "Dimension dict is removed in Kylin 4.")
 public class DumpDictionaryCLI {
 
-//    public static void main(String[] args) throws IOException {
-//        for (String path : args) {
-//            dump(new File(path));
-//        }
-//    }
-//
-//    public static void dump(File f) throws IOException {
-//        if (f.isDirectory()) {
-//            File[] files = f.listFiles();
-//            if (files == null) {
-//                return;
-//            }
-//            for (File c : files)
-//                dump(c);
-//            return;
-//        }
-//
-//        if (f.getName().endsWith(".dict")) {
-//            DictionaryInfoSerializer ser = new DictionaryInfoSerializer();
-//            DictionaryInfo dictInfo = ser.deserialize(new DataInputStream(new FileInputStream(f)));
-//
-//            System.out.println("============================================================================");
-//            System.out.println("File: " + f.getAbsolutePath());
-//            System.out.println(new Date(dictInfo.getLastModified()));
-//            System.out.println(JsonUtil.writeValueAsIndentString(dictInfo));
-//            dictInfo.getDictionaryObject().dump(System.out);
-//            System.out.println();
-//        }
-//    }
 }

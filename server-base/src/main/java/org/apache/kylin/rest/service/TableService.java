@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-//import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -44,12 +43,7 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
-//import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-//import org.apache.kylin.cube.CubeSegment;
-//import org.apache.kylin.dict.lookup.SnapshotManager;
-//import org.apache.kylin.dict.lookup.SnapshotTable;
-//import org.apache.kylin.engine.spark.source.CsvSource;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.CsvColumnDesc;
@@ -61,10 +55,7 @@ import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.TableDescResponse;
-//import org.apache.kylin.rest.response.TableSnapshotResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
-//import org.apache.kylin.source.IReadableTable;
-//import org.apache.kylin.source.IReadableTable.TableSignature;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceManager;
@@ -80,7 +71,6 @@ import org.apache.kylin.shaded.com.google.common.base.Predicate;
 import org.apache.kylin.shaded.com.google.common.collect.Iterables;
 import org.apache.kylin.shaded.com.google.common.collect.LinkedHashMultimap;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
-//import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.shaded.com.google.common.collect.SetMultimap;
 
 @Component("tableService")
@@ -340,148 +330,8 @@ public class TableService extends BasicService {
             TableDescResponse rtableDesc = cloneTableDesc(table, prj);
             descs.add(rtableDesc);
         }
-
         return descs;
     }
-
-//    public void calculateCardinalityIfNotPresent(String[] tables, String submitter, String prj) throws Exception {
-//        // calculate cardinality for Hive source
-//        ProjectInstance projectInstance = getProjectManager().getProject(prj);
-//        if (projectInstance == null || projectInstance.getSourceType() != ISourceAware.ID_HIVE) {
-//            return;
-//        }
-//        TableMetadataManager metaMgr = getTableManager();
-//        ExecutableManager exeMgt = ExecutableManager.getInstance(getConfig());
-//        for (String table : tables) {
-//            TableExtDesc tableExtDesc = metaMgr.getTableExt(table, prj);
-//            String jobID = tableExtDesc.getJodID();
-//            if (null == jobID || ExecutableState.RUNNING != exeMgt.getOutput(jobID).getState()) {
-//                calculateCardinality(table, submitter, prj);
-//            }
-//        }
-//    }
-
-//    public List<TableSnapshotResponse> getLookupTableSnapshots(String project, String tableName) throws IOException {
-//        TableDesc tableDesc = getTableManager().getTableDesc(tableName, project);
-//        if (SourceManager.getSource(tableDesc).getClass() == CsvSource.class) {
-//            return new ArrayList<>();
-//        }
-//        IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc, null);
-//        TableSignature signature = hiveTable.getSignature();
-//        return internalGetLookupTableSnapshots(tableName, signature);
-//    }
-
-//    List<TableSnapshotResponse> internalGetLookupTableSnapshots(String tableName, TableSignature signature)
-//            throws IOException {
-//        SnapshotManager snapshotManager = SnapshotManager.getInstance(getConfig());
-//        List<SnapshotTable> metaStoreTableSnapshots = snapshotManager.getSnapshots(tableName, signature);
-//
-//        Map<String, List<String>> snapshotUsageMap = getSnapshotUsages();
-//
-//        List<TableSnapshotResponse> result = Lists.newArrayList();
-//
-//        for (SnapshotTable metaStoreTableSnapshot : metaStoreTableSnapshots) {
-//            TableSnapshotResponse response = new TableSnapshotResponse();
-//            response.setSnapshotID(metaStoreTableSnapshot.getId());
-//            response.setSnapshotType(TableSnapshotResponse.TYPE_INNER);
-//            response.setLastBuildTime(metaStoreTableSnapshot.getLastBuildTime());
-//            response.setStorageType(SnapshotTable.STORAGE_TYPE_METASTORE);
-//            response.setSourceTableSize(metaStoreTableSnapshot.getSignature().getSize());
-//            response.setSourceTableLastModifyTime(metaStoreTableSnapshot.getSignature().getLastModifiedTime());
-//            response.setCubesAndSegmentsUsage(snapshotUsageMap.get(metaStoreTableSnapshot.getResourcePath()));
-//            result.add(response);
-//        }
-//
-//        return result;
-//    }
-
-    /**
-     * @return Map of SnapshotID, CubeName or SegmentName list
-     */
-//    private Map<String, List<String>> getSnapshotUsages() {
-//        CubeManager cubeManager = CubeManager.getInstance(getConfig());
-//        Map<String, List<String>> snapshotCubeSegmentMap = Maps.newHashMap();
-//        for (CubeInstance cube : cubeManager.listAllCubes()) {
-//            Collection<String> cubeSnapshots = cube.getSnapshots().values();
-//            for (String cubeSnapshot : cubeSnapshots) {
-//                List<String> usages = snapshotCubeSegmentMap.get(cubeSnapshot);
-//                if (usages == null) {
-//                    usages = Lists.newArrayList();
-//                    snapshotCubeSegmentMap.put(cubeSnapshot, usages);
-//                }
-//                usages.add(cube.getName());
-//            }
-//            for (CubeSegment segment : cube.getSegments()) {
-//                Collection<String> segmentSnapshots = segment.getSnapshotPaths();
-//                for (String segmentSnapshot : segmentSnapshots) {
-//                    List<String> usages = snapshotCubeSegmentMap.get(segmentSnapshot);
-//                    if (usages == null) {
-//                        usages = Lists.newArrayList();
-//                        snapshotCubeSegmentMap.put(segmentSnapshot, usages);
-//                    }
-//                    usages.add(cube.getName() + ":" + segment.getName());
-//                }
-//            }
-//        }
-//        return snapshotCubeSegmentMap;
-//    }
-
-//    /**
-//     * Generate cardinality for table This will trigger a hadoop job
-//     * The result will be merged into table exd info
-//     *
-//     * @param tableName
-//     */
-//    public void calculateCardinality(String tableName, String submitter, String prj) throws Exception {
-//        aclEvaluate.checkProjectWritePermission(prj);
-//        Message msg = MsgPicker.getMsg();
-//
-//        tableName = normalizeHiveTableName(tableName);
-//        TableDesc table = getTableManager().getTableDesc(tableName, prj);
-//        final TableExtDesc tableExt = getTableManager().getTableExt(tableName, prj);
-//        if (table == null) {
-//            BadRequestException e = new BadRequestException(
-//                    String.format(Locale.ROOT, msg.getTABLE_DESC_NOT_FOUND(), tableName));
-//            logger.error("Cannot find table descriptor " + tableName, e);
-//            throw e;
-//        }
-//
-//        CardinalityExecutable job = new CardinalityExecutable();
-//        //make sure the job could be scheduled when the DistributedScheduler is enable.
-//        job.setParam("segmentId", tableName);
-//        job.setName("Hive Column Cardinality calculation for table '" + tableName + "'");
-//        job.setSubmitter(submitter);
-//
-//        String outPath = getConfig().getHdfsWorkingDirectory() + "cardinality/" + job.getId() + "/" + tableName;
-//        String param = "-table " + tableName + " -output " + outPath + " -project " + prj;
-//
-//        if (getConfig().isSparkCardinalityEnabled()) { // use spark engine to calculate cardinality
-//            SparkExecutable step1 = new SparkExecutable();
-//            step1.setClassName(SparkColumnCardinality.class.getName());
-//            step1.setParam(SparkColumnCardinality.OPTION_OUTPUT.getOpt(), outPath);
-//            step1.setParam(SparkColumnCardinality.OPTION_PRJ.getOpt(), prj);
-//            step1.setParam(SparkColumnCardinality.OPTION_TABLE_NAME.getOpt(), tableName);
-//            step1.setParam(SparkColumnCardinality.OPTION_COLUMN_COUNT.getOpt(), String.valueOf(table.getColumnCount()));
-//            job.addTask(step1);
-//        } else {
-//            MapReduceExecutable step1 = new MapReduceExecutable();
-//            step1.setMapReduceJobClass(HiveColumnCardinalityJob.class);
-//            step1.setMapReduceParams(param);
-//            step1.setParam("segmentId", tableName);
-//            job.addTask(step1);
-//        }
-//
-//        HadoopShellExecutable step2 = new HadoopShellExecutable();
-//
-//        step2.setJobClass(HiveColumnCardinalityUpdateJob.class);
-//        step2.setJobParams(param);
-//        step2.setParam("segmentId", tableName);
-//        job.addTask(step2);
-//        tableExt.setJodID(job.getId());
-//        getTableManager().saveTableExt(tableExt, prj);
-//
-//        getExecutableManager().addJob(job);
-//    }
 
     public String normalizeHiveTableName(String tableName) {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);

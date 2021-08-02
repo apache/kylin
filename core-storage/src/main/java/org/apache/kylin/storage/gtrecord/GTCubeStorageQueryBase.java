@@ -18,7 +18,6 @@
 
 package org.apache.kylin.storage.gtrecord;
 
-//import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,17 +30,14 @@ import java.util.Set;
 import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
-//import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.RawQueryLastHacker;
-//import org.apache.kylin.cube.common.SegmentPruner;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMappingExt;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.RowKeyColDesc;
-//import org.apache.kylin.dict.lookup.ILookupTable;
 import org.apache.kylin.gridtable.StorageLimitLevel;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.bitmap.BitmapMeasureType;
@@ -86,25 +82,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
     @Override
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
-//        GTCubeStorageQueryRequest request = getStorageQueryRequest(context, sqlDigest, returnTupleInfo);
-//
-//        List<CubeSegmentScanner> scanners = Lists.newArrayList();
-//        SegmentPruner segPruner = new SegmentPruner(sqlDigest.filter);
-//        for (CubeSegment cubeSeg : segPruner.listSegmentsForQuery(cubeInstance)) {
-//            CubeSegmentScanner scanner = new CubeSegmentScanner(cubeSeg, request.getCuboid(), request.getDimensions(), //
-//                    request.getGroups(), request.getDynGroups(), request.getDynGroupExprs(), //
-//                    request.getMetrics(), request.getDynFuncs(), //
-//                    request.getFilter(), request.getHavingFilter(), request.getContext());
-//            if (!scanner.isSegmentSkipped())
-//                scanners.add(scanner);
-//        }
-//
-//        if (scanners.isEmpty())
-            return ITupleIterator.EMPTY_TUPLE_ITERATOR;
-
-//        return new SequentialCubeTupleIterator(scanners, request.getCuboid(), request.getDimensions(),
-//                request.getDynGroups(), request.getGroups(), request.getMetrics(), returnTupleInfo,
-//                request.getContext(), sqlDigest);
+        throw new UnsupportedOperationException("Removed in Kylin 4.0 .");
     }
 
     public GTCubeStorageQueryRequest getStorageQueryRequest(StorageContext context, SQLDigest sqlDigest,

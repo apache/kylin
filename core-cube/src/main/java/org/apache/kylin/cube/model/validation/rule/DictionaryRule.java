@@ -18,20 +18,9 @@
 
 package org.apache.kylin.cube.model.validation.rule;
 
-//import java.util.ArrayList;
-//import java.util.HashSet;
-//import java.util.List;
-//import java.util.Set;
-//
-//import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.model.CubeDesc;
-//import org.apache.kylin.cube.model.DictionaryDesc;
-//import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
-//import org.apache.kylin.cube.model.validation.ResultLevel;
 import org.apache.kylin.cube.model.validation.ValidateContext;
-//import org.apache.kylin.dict.GlobalDictionaryBuilder;
-//import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,69 +36,7 @@ import org.slf4j.LoggerFactory;
 public class DictionaryRule implements IValidatorRule<CubeDesc> {
     private static final Logger logger = LoggerFactory.getLogger(DictionaryRule.class);
 
-    static final String ERROR_DUPLICATE_DICTIONARY_COLUMN = "Duplicated dictionary specification for column: ";
-    static final String ERROR_REUSE_BUILDER_BOTH_SET = "REUSE and BUILDER both set on dictionary for column: ";
-    static final String ERROR_REUSE_BUILDER_BOTH_EMPTY = "REUSE and BUILDER both empty on dictionary for column: ";
-    static final String ERROR_TRANSITIVE_REUSE = "Transitive REUSE is not allowed for dictionary: ";
-    static final String ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE = "If one column is used for both dimension and precisely count distinct measure, its dimension encoding should not be dict: ";
-
     @Override
     public void validate(CubeDesc cubeDesc, ValidateContext context) {
-//        List<DictionaryDesc> dictDescs = cubeDesc.getDictionaries();
-//        Set<TblColRef> dimensionColumns = cubeDesc.listDimensionColumnsIncludingDerived();
-//        RowKeyDesc rowKeyDesc = cubeDesc.getRowkey();
-//
-//        if (dictDescs == null || dictDescs.isEmpty()) {
-//            return;
-//        }
-//
-//        Set<TblColRef> allDictCols = new HashSet<>();
-//        Set<TblColRef> baseCols = new HashSet<>(); // col with builder
-//        List<DictionaryDesc> reuseDictionaries = new ArrayList<>();
-//
-//        // first pass
-//        for (DictionaryDesc dictDesc : dictDescs) {
-//            TblColRef dictCol = dictDesc.getColumnRef();
-//            TblColRef reuseCol = dictDesc.getResuseColumnRef();
-//            String builderClass = dictDesc.getBuilderClass();
-//
-//            if (!allDictCols.add(dictCol)) {
-//                context.addResult(ResultLevel.ERROR, ERROR_DUPLICATE_DICTIONARY_COLUMN + dictCol);
-//                return;
-//            }
-//
-//            if (reuseCol != null && StringUtils.isNotEmpty(builderClass)) {
-//                context.addResult(ResultLevel.ERROR, ERROR_REUSE_BUILDER_BOTH_SET + dictCol);
-//                return;
-//            }
-//
-//            if (reuseCol == null && StringUtils.isEmpty(builderClass)) {
-//                if(dictDesc.isDomain()) {
-//                    logger.info("() is tiretree global domain dic", dictCol);
-//                }else{
-//                    context.addResult(ResultLevel.ERROR, ERROR_REUSE_BUILDER_BOTH_EMPTY + dictCol);
-//                    return;
-//                }
-//            }
-//
-//            if (StringUtils.isNotEmpty(builderClass) && builderClass.equalsIgnoreCase(GlobalDictionaryBuilder.class.getName()) && dimensionColumns.contains(dictCol) && rowKeyDesc.isUseDictionary(dictCol)) {
-//                context.addResult(ResultLevel.ERROR, ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE + dictCol);
-//                return;
-//            }
-//
-//            if (reuseCol != null) {
-//                reuseDictionaries.add(dictDesc);
-//            } else {
-//                baseCols.add(dictCol);
-//            }
-//        }
-//
-//        // second pass: check no transitive reuse
-//        for (DictionaryDesc dictDesc : reuseDictionaries) {
-//            if (!baseCols.contains(dictDesc.getResuseColumnRef())) {
-//                context.addResult(ResultLevel.ERROR, ERROR_TRANSITIVE_REUSE + dictDesc.getColumnRef());
-//                return;
-//            }
-//        }
     }
 }
