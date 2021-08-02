@@ -18,8 +18,6 @@
 
 package org.apache.kylin.cube.model;
 
-import org.apache.kylin.dict.lookup.SnapshotTable;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,7 +31,7 @@ SnapshotTableDesc implements java.io.Serializable{
     private String tableName;
 
     @JsonProperty("storage_type")
-    private String storageType = SnapshotTable.STORAGE_TYPE_METASTORE;
+    private String storageType = "metaStore";
 
     @JsonProperty("local_cache_enable")
     private boolean enableLocalCache = true;
@@ -65,17 +63,17 @@ SnapshotTableDesc implements java.io.Serializable{
         this.global = global;
     }
 
-    public boolean isExtSnapshotTable() {
-        return !SnapshotTable.STORAGE_TYPE_METASTORE.equals(storageType);
-    }
-
-    public boolean isEnableLocalCache() {
-        return enableLocalCache;
-    }
-
-    public void setEnableLocalCache(boolean enableLocalCache) {
-        this.enableLocalCache = enableLocalCache;
-    }
+//    public boolean isExtSnapshotTable() {
+//        return !SnapshotTable.STORAGE_TYPE_METASTORE.equals(storageType);
+//    }
+//
+//    public boolean isEnableLocalCache() {
+//        return enableLocalCache;
+//    }
+//
+//    public void setEnableLocalCache(boolean enableLocalCache) {
+//        this.enableLocalCache = enableLocalCache;
+//    }
 
     public static SnapshotTableDesc getCopyOf(SnapshotTableDesc other) {
         SnapshotTableDesc copy = new SnapshotTableDesc();

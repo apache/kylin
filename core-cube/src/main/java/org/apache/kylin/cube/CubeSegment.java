@@ -33,7 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
@@ -369,28 +368,6 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
 
     public void setStorageLocationIdentifier(String storageLocationIdentifier) {
         this.storageLocationIdentifier = storageLocationIdentifier;
-    }
-
-    public Map<TblColRef, Dictionary<String>> buildDictionaryMap() {
-        Map<TblColRef, Dictionary<String>> result = Maps.newHashMap();
-        for (TblColRef col : getCubeDesc().getAllColumnsHaveDictionary()) {
-            result.put(col, (Dictionary<String>) getDictionary(col));
-        }
-        return result;
-    }
-
-    public Map<TblColRef, Dictionary<String>> buildGlobalDictionaryMap(int globalColumnsSize) {
-        Map<TblColRef, Dictionary<String>> result = Maps.newHashMapWithExpectedSize(globalColumnsSize);
-        for (TblColRef col : getCubeDesc().getAllGlobalDictColumns()) {
-            result.put(col, getDictionary(col));
-        }
-        return result;
-    }
-
-    public Dictionary<String> getDictionary(TblColRef col) {
-        TblColRef reuseCol = getCubeDesc().getDictionaryReuseColumn(col);
-        CubeManager cubeMgr = CubeManager.getInstance(this.getCubeInstance().getConfig());
-        return cubeMgr.getDictionary(this, reuseCol);
     }
 
     public CubeDimEncMap getDimensionEncodingMap() {

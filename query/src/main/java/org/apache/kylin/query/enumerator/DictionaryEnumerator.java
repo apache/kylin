@@ -20,13 +20,11 @@ package org.apache.kylin.query.enumerator;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.calcite.linq4j.Enumerator;
+import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.tuple.Tuple;
@@ -37,8 +35,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
+@Clarification(deprecated = true, msg = "Only for HBase storage")
 public class DictionaryEnumerator implements Enumerator<Object[]> {
 
     private final static Logger logger = LoggerFactory.getLogger(DictionaryEnumerator.class);
@@ -95,21 +93,21 @@ public class DictionaryEnumerator implements Enumerator<Object[]> {
     }
 
     public static List<Dictionary<String>> getAllDictionaries(TblColRef col, IRealization realization) {
-        Set<Dictionary<String>> result = Sets.newHashSet();
-        if (realization instanceof CubeInstance) {
-            final CubeInstance cube = (CubeInstance) realization;
-            for (CubeSegment segment : cube.getSegments(SegmentStatusEnum.READY)) {
-                result.add(segment.getDictionary(col));
-            }
-        } else if (realization instanceof HybridInstance) {
-            final HybridInstance hybridInstance = (HybridInstance) realization;
-            for (IRealization entry : hybridInstance.getRealizations()) {
-                result.addAll(getAllDictionaries(col, entry));
-            }
-        } else {
-            throw new IllegalStateException("All leaf realizations should be CubeInstance");
-        }
-        return Lists.newArrayList(result);
+//        Set<Dictionary<String>> result = Sets.newHashSet();
+//        if (realization instanceof CubeInstance) {
+//            final CubeInstance cube = (CubeInstance) realization;
+//            for (CubeSegment segment : cube.getSegments(SegmentStatusEnum.READY)) {
+//                result.add(segment.getDictionary(col));
+//            }
+//        } else if (realization instanceof HybridInstance) {
+//            final HybridInstance hybridInstance = (HybridInstance) realization;
+//            for (IRealization entry : hybridInstance.getRealizations()) {
+//                result.addAll(getAllDictionaries(col, entry));
+//            }
+//        } else {
+//            throw new IllegalStateException("All leaf realizations should be CubeInstance");
+//        }
+        return Lists.newArrayList();
     }
 
     @Override

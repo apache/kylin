@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 
-@Clarification(deprecated = true, msg = "Useless code in Kylin 4")
+@Clarification(deprecated = true, msg = "Dimension dict is removed in Kylin 4 .")
 public class CubeDimEncMap implements IDimensionEncodingMap, java.io.Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeDimEncMap.class);
@@ -83,10 +83,10 @@ public class CubeDimEncMap implements IDimensionEncodingMap, java.io.Serializabl
 
     @Override
     public Dictionary<String> getDictionary(TblColRef col) {
-        if (seg == null)
-            return dictionaryMap.get(col);
-        else
-            return seg.getDictionary(col);
+//        if (seg == null)
+        return dictionaryMap.get(col);
+//        else
+//            return seg.getDictionary(col);
     }
 
 }

@@ -25,8 +25,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.dict.ByteComparator;
-import org.apache.kylin.dict.StringBytesConverter;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.source.IReadableTable;
 import org.slf4j.Logger;
@@ -92,40 +90,41 @@ public class SortedColumnDFSFile implements IReadableTable {
     }
 
     private Comparator<String> getComparatorByType(DataType type) {
-        Comparator<String> comparator;
-        if (!type.isNumberFamily()) {
-            comparator = new ByteComparator<>(new StringBytesConverter());
-        } else if (type.isIntegerFamily()) {
-            comparator = new Comparator<String>() {
-                @Override
-                public int compare(String str1, String str2) {
-                    try {
-                        Long num1 = Long.parseLong(str1);
-                        Long num2 = Long.parseLong(str2);
-                        return num1.compareTo(num2);
-                    } catch (NumberFormatException e) {
-                        logger.error("NumberFormatException when parse integer family number.str1:" + str1 + " str2:" + str2);
-                        e.printStackTrace();
-                        return 0;
-                    }
-                }
-            };
-        } else {
-            comparator = new Comparator<String>() {
-                @Override
-                public int compare(String str1, String str2) {
-                    try {
-                        Double num1 = Double.parseDouble(str1);
-                        Double num2 = Double.parseDouble(str2);
-                        return num1.compareTo(num2);
-                    } catch (NumberFormatException e) {
-                        logger.error("NumberFormatException when parse doul family number.str1:" + str1 + " str2:" + str2);
-                        return 0;
-                    }
-                }
-            };
-        }
-        return comparator;
+        return null;
+//        Comparator<String> comparator;
+//        if (!type.isNumberFamily()) {
+//            comparator = new ByteComparator<>(new StringBytesConverter());
+//        } else if (type.isIntegerFamily()) {
+//            comparator = new Comparator<String>() {
+//                @Override
+//                public int compare(String str1, String str2) {
+//                    try {
+//                        Long num1 = Long.parseLong(str1);
+//                        Long num2 = Long.parseLong(str2);
+//                        return num1.compareTo(num2);
+//                    } catch (NumberFormatException e) {
+//                        logger.error("NumberFormatException when parse integer family number.str1:" + str1 + " str2:" + str2);
+//                        e.printStackTrace();
+//                        return 0;
+//                    }
+//                }
+//            };
+//        } else {
+//            comparator = new Comparator<String>() {
+//                @Override
+//                public int compare(String str1, String str2) {
+//                    try {
+//                        Double num1 = Double.parseDouble(str1);
+//                        Double num2 = Double.parseDouble(str2);
+//                        return num1.compareTo(num2);
+//                    } catch (NumberFormatException e) {
+//                        logger.error("NumberFormatException when parse doul family number.str1:" + str1 + " str2:" + str2);
+//                        return 0;
+//                    }
+//                }
+//            };
+//        }
+//        return comparator;
     }
 
     @Override

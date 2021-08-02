@@ -25,8 +25,10 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class RowKeySplitterTest extends LocalFileMetadataTestCase {
 
     @Before

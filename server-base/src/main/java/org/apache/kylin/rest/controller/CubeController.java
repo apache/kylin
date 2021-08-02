@@ -36,7 +36,6 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler;
@@ -101,7 +100,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
-import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
@@ -176,14 +174,7 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "validEncodings", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public Map<String, Integer> getValidEncodings() {
-        Map<String, Integer> encodings;
-        try {
-            encodings = DimensionEncodingFactory.getValidEncodings();
-        } catch (Exception e) {
-            logger.error("Error when getting valid encodings", e);
-            return Maps.newHashMap();
-        }
-        return encodings;
+        throw new UnsupportedOperationException("Unsupported in Kylin 4.0 .");
     }
 
     @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET }, produces = { "application/json" })
@@ -313,14 +304,7 @@ public class CubeController extends BasicController {
     @ResponseBody
     public CubeInstance rebuildLookupSnapshot(@PathVariable String cubeName, @PathVariable String segmentName,
             @RequestParam(value = "lookupTable") String lookupTable) {
-        try {
-            final CubeManager cubeMgr = cubeService.getCubeManager();
-            final CubeInstance cube = cubeMgr.getCube(cubeName);
-            return cubeService.rebuildLookupSnapshot(cube, segmentName, lookupTable);
-        } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage(), e);
-        }
+        throw new UnsupportedOperationException("Unsupported in Kylin 4.0 .");
     }
 
     /**
@@ -401,15 +385,7 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/build2", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public JobInstance build2(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
-        try {
-            Class<?> clazz = Class.forName("org.apache.kafka.clients.consumer.KafkaConsumer");
-            if (clazz == null) {
-                throw new ClassNotFoundException();
-            }
-        } catch (ClassNotFoundException e) {
-            throw new InternalErrorException("Could not find Kafka dependency");
-        }
-        return rebuild2(cubeName, req);
+        throw new UnsupportedOperationException("Unsupported in Kylin 4.0 .");
     }
 
     /**
@@ -418,9 +394,7 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/rebuild2", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public JobInstance rebuild2(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
-        return buildInternal(cubeName, null, new SegmentRange(req.getSourceOffsetStart(), req.getSourceOffsetEnd()),
-                req.getSourcePartitionOffsetStart(), req.getSourcePartitionOffsetEnd(), req.getBuildType(),
-                req.isForce(), req.getPriorityOffset());
+        throw new UnsupportedOperationException("Unsupported in Kylin 4.0 .");
     }
 
     private JobInstance buildInternal(String cubeName, TSRange tsRange, SegmentRange segRange, //
@@ -1079,38 +1053,19 @@ public class CubeController extends BasicController {
         return cubeService.getCuboidHitFrequency(cubeName, false);
     }
 
-//    /**
-//     * Initiate the very beginning of a streaming cube. Will seek the latest offests of each partition from streaming
-//     * source (kafka) and record in the cube descriptor; In the first build job, it will use these offests as the start point.
-//     *
-//     * @param cubeName
-//     * @return
-//     */
-//    @RequestMapping(value = "/{cubeName}/init_start_offsets", method = { RequestMethod.PUT }, produces = {
-//            "application/json" })
-//    @ResponseBody
-//    public GeneralResponse initStartOffsets(@PathVariable String cubeName) {
-//        checkCubeExists(cubeName);
-//        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
-//        if (cubeInstance.getSourceType() != ISourceAware.ID_STREAMING) {
-//            String msg = "Cube '" + cubeName + "' is not a Streaming Cube.";
-//            throw new IllegalArgumentException(msg);
-//        }
-//
-//        final GeneralResponse response = new GeneralResponse();
-//        try {
-//            final Map<Integer, Long> startOffsets = KafkaClient.getLatestOffsets(cubeInstance);
-//            CubeDesc desc = cubeInstance.getDescriptor();
-//            desc.setPartitionOffsetStart(startOffsets);
-//            cubeService.getCubeDescManager().updateCubeDesc(desc);
-//            response.setProperty("result", "success");
-//            response.setProperty("offsets", startOffsets.toString());
-//        } catch (Throwable e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//        return response;
-//    }
+    /**
+     * Initiate the very beginning of a streaming cube. Will seek the latest offests of each partition from streaming
+     * source (kafka) and record in the cube descriptor; In the first build job, it will use these offests as the start point.
+     *
+     * @param cubeName
+     * @return
+     */
+    @RequestMapping(value = "/{cubeName}/init_start_offsets", method = { RequestMethod.PUT }, produces = {
+            "application/json" })
+    @ResponseBody
+    public GeneralResponse initStartOffsets(@PathVariable String cubeName) {
+        throw new UnsupportedOperationException("Unsupported in Kylin 4.0 .");
+    }
 
     private CubeDesc deserializeCubeDesc(CubeRequest cubeRequest) {
         CubeDesc desc = null;

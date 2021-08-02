@@ -27,13 +27,11 @@ import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.CubeDesc.DeriveType;
-import org.apache.kylin.dict.lookup.ILookupTable;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeOrder;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
-import org.apache.kylin.metadata.filter.FilterCodeSystemFactory;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
@@ -52,7 +50,7 @@ public class DerivedFilterTranslator {
 
     private static final Logger logger = LoggerFactory.getLogger(DerivedFilterTranslator.class);
 
-    public static Pair<TupleFilter, Boolean> translate(ILookupTable lookup, DeriveInfo hostInfo, CompareTupleFilter compf) {
+    public static Pair<TupleFilter, Boolean> translate(DeriveInfo hostInfo, CompareTupleFilter compf) {
 
         TblColRef derivedCol = compf.getColumn();
         TblColRef[] hostCols = hostInfo.columns;
@@ -91,12 +89,12 @@ public class DerivedFilterTranslator {
 
         Set<Array<String>> satisfyingHostRecords = Sets.newHashSet();
         SingleColumnTuple tuple = new SingleColumnTuple(derivedCol);
-        for (String[] row : lookup) {
-            tuple.value = row[di];
-            if (compf.evaluate(tuple, FilterCodeSystemFactory.getFilterCodeSystem(derivedCol.getColumnDesc().getType()))) {
-                collect(row, pi, satisfyingHostRecords);
-            }
-        }
+//        for (String[] row : lookup) {
+//            tuple.value = row[di];
+//            if (compf.evaluate(tuple, FilterCodeSystemFactory.getFilterCodeSystem(derivedCol.getColumnDesc().getType()))) {
+//                collect(row, pi, satisfyingHostRecords);
+//            }
+//        }
 
         for (Array<String> entry : satisfyingHostRecords) {
             for (int i = 0; i < pkCols.length; i++) {

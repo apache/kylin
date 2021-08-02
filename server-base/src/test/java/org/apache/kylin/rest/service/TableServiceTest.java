@@ -18,18 +18,13 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-import java.util.List;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.rest.response.TableSnapshotResponse;
-import org.apache.kylin.source.IReadableTable.TableSignature;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.Ignore;
 
-
+@Ignore
 public class TableServiceTest extends LocalFileMetadataTestCase {
     private TableService tableService;
 
@@ -44,10 +39,4 @@ public class TableServiceTest extends LocalFileMetadataTestCase {
         this.cleanupTestMetadata();
     }
 
-    @Test
-    public void testGetTableSnapshots() throws IOException {
-        TableSignature tableSignature = new TableSignature("TEST_CAL_DT.csv", 100, System.currentTimeMillis());
-        List<TableSnapshotResponse> snapshotResponseList = tableService.internalGetLookupTableSnapshots("EDW.TEST_CAL_DT", tableSignature);
-        Assert.assertEquals(8, snapshotResponseList.size());
-    }
 }
