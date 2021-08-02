@@ -195,9 +195,7 @@ permalink: /cn/docs40/install/deploy_without_hadoop.html
   nohup $HIVE_HOME/bin/hive --service metastore >> $HIVE_HOME/logs/hivemetastorelog.log 2>&1 &
   ```
 
-  注意：
-
-  如果在这个步骤中出现了如下报错：
+  注意：如果在这个步骤中出现了如下报错：
 
   ```shell
   java.lang.NoSuchMethodError: com.google.common.base.Preconditions.checkArgument(ZLjava/lang/String;Ljava/lang/Object;)V
