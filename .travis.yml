@@ -15,9 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-language: java
+---
+language: generic
 
 addons:
+  apt:
+    packages:
+      - openjdk-8-jdk
+      - unzip
   sonarcloud:
     organization: "kylin"
     token:
@@ -27,22 +32,25 @@ cache:
   directories:
     - $HOME/.m2
 
-matrix:
+jobs:
   include:
-    - arch: arm64
-      addons:
-        apt:
-          packages: openjdk-8-jdk
-    - arch: amd64
-      jdk: openjdk8
+    - name: Linux ARM64
+      arch: arm64-graviton2
+      dist: focal
+      virt: vm
+      group: edge
+    - name: Linux x86
+      arch: amd64
 
 before_install:
-  - echo "Downloading Maven 3.5.3"
-      && wget https://archive.apache.org/dist/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.zip
-      && unzip -qq apache-maven-3.5.3-bin.zip
-      && export M2_HOME=$PWD/apache-maven-3.5.3
-      && export PATH=$M2_HOME/bin:$PATH
-      && mvn -version
+  - export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-${TRAVIS_CPU_ARCH}";
+  - export PATH="$JAVA_HOME/bin:$PATH";
+  - echo "Downloading Maven 3.8.1"
+  - wget --quiet https://archive.apache.org/dist/maven/maven-3/3.8.1/binaries/apache-maven-3.8.1-bin.zip
+  - unzip -qq -o apache-maven-3.8.1-bin.zip
+  - export M2_HOME=$PWD/apache-maven-3.8.1
+  - export PATH=$M2_HOME/bin:$PATH
+  - mvn -version
   - echo "MAVEN_OPTS='-Xms1024m -Xmx3072m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=384m'" > ~/.mavenrc
   - sed -i 's/log4j.logger.org.apache.kylin=DEBUG/log4j.logger.org.apache.kylin=WARN/g' build/conf/kylin-server-log4j.properties
   - sed -i 's/log4j.logger.org.apache.kylin=INFO/log4j.logger.org.apache.kylin=WARN/g' build/conf/kylin-tools-log4j.properties
@@ -70,7 +78,7 @@ notification:
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-  
+
 before_cache:
   # Remove project's local artifacts to force maven reactor resolve
   - rm -rf $HOME/.m2/repository/org/apache/kylin
@@ -78,4 +86,4 @@ before_cache:
 # blocklist
 branches:
   except:
-  - document
+    - document
