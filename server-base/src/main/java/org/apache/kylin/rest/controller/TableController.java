@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,11 +33,16 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
+import org.apache.kylin.rest.request.HiveTableExtRequest;
 import org.apache.kylin.rest.request.HiveTableRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
+import org.apache.kylin.rest.response.TableSnapshotResponse;
+import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.TableACLService;
 import org.apache.kylin.rest.service.TableService;
+import org.apache.kylin.rest.util.AclPermissionUtil;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,8 +57,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
-import org.apache.kylin.shaded.com.google.common.collect.Sets;
-
 /**
  * @author xduo
  */
@@ -66,6 +69,10 @@ public class TableController extends BasicController {
     @Autowired
     @Qualifier("tableService")
     private TableService tableService;
+
+    @Autowired
+    @Qualifier("jobService")
+    private JobService jobService;
 
     @Autowired
     @Qualifier("TableAclService")
@@ -284,5 +291,15 @@ public class TableController extends BasicController {
 
     public void setTableService(TableService tableService) {
         this.tableService = tableService;
+    }
+
+    @RequestMapping(value = "/{project}/{tableName}/sample_job", method = { RequestMethod.POST }, produces = {
+            "application/json" })
+    @ResponseBody
+    public EnvelopeResponse sample(@PathVariable String project, @PathVariable String tableName,
+            @RequestBody HiveTableExtRequest request) throws IOException {
+        String jobID = jobService.submitSampleTableJob(project, AclPermissionUtil.getCurUser(), request.getRows(),
+                tableName);
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, jobID, "");
     }
 }

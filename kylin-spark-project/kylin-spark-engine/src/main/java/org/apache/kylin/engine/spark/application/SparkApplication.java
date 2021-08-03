@@ -34,7 +34,6 @@ import org.apache.kylin.engine.spark.job.LogJobInfoUtils;
 import org.apache.kylin.engine.spark.job.UdfManager;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.engine.spark.utils.SparkConfHelper;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -328,9 +327,14 @@ public abstract class SparkApplication {
         SparkConfHelper helper = new SparkConfHelper();
         helper.setFetcher(KylinBuildEnv.get().clusterInfoFetcher());
         Path shareDir = config.getJobTmpShareDir(project, jobId);
-        String contentSize = chooseContentSize(shareDir);
-
+        FileSystem fs = HadoopUtil.getWorkingFileSystem();
+        boolean exists = fs.exists(shareDir);
+        if (!exists) {
+            logger.info("this not exist {}", shareDir.toUri().getPath());
+            return;
+        }
         // add content size with unit
+        String contentSize = chooseContentSize(shareDir);
         helper.setOption(SparkConfHelper.SOURCE_TABLE_SIZE, contentSize);
         helper.setOption(SparkConfHelper.LAYOUT_SIZE, Integer.toString(layoutSize));
         Map<String, String> configOverride = config.getSparkConfigOverride();

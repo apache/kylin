@@ -693,7 +693,7 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isRowKeyEncodingAutoConvert() {
         return Boolean.parseBoolean(getOptional("kylin.cube.kylin.cube.rowkey-encoding-auto-convert", "true"));
     }
-    
+
     public String getSegmentAdvisor() {
         return getOptional("kylin.cube.segment-advisor", "org.apache.kylin.cube.CubeSegmentAdvisor");
     }
@@ -2340,7 +2340,7 @@ public abstract class KylinConfigBase implements Serializable {
     public String getKylinMetricsEventTimeZone() {
         return getOptional("kylin.metrics.event-time-zone", getTimeZone()).toUpperCase(Locale.ROOT);
     }
-    
+
     public boolean isKylinMetricsMonitorEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.metrics.monitor-enabled", FALSE));
     }
@@ -2746,6 +2746,43 @@ public abstract class KylinConfigBase implements Serializable {
     @ConfigTag(ConfigTag.Tag.DEBUG_HACK)
     public String getSparkBuildClassName() {
         return getOptional("kylin.engine.spark.build-class-name", "org.apache.kylin.engine.spark.job.CubeBuildJob");
+    }
+
+    @ConfigTag(ConfigTag.Tag.DEBUG_HACK)
+    public String getSparkSampleTableClassName() {
+        return getOptional("kylin.engine.spark.sample-class-name", "org.apache.kylin.engine.spark.job.TableAnalyzerJob");
+    }
+
+    public Double getSparkSampleTableHignFrequency() {
+        String frequency = getOptional("kylin.engine.spark.sample-high-frequency", "0.1");
+        return Double.parseDouble(frequency);
+    }
+
+
+    public Boolean getSparkEngineTaskImpactInstanceEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark.task-impact-instance-enabled", "true"));
+    }
+
+    public int getSparkEngineTaskCoreFactor() {
+        return Integer.parseInt(getOptional("kylin.engine.spark.task-core-factor", "3"));
+    }
+
+    public int getSparkEngineDriverMemoryBase() {
+        return Integer.parseInt(getOptional("kylin.engine.driver-memory-base", "1024"));
+    }
+
+    public boolean isTrackingUrlIpAddressEnabled() {
+        return Boolean.valueOf(this.getOptional("kylin.job.tracking-url-ip-address-enabled", TRUE));
+    }
+
+    //Auto adjust the memory of driver
+    public int[] getSparkEngineDriverMemoryStrategy() {
+        String[] dft = {"2", "20", "100"};
+        return getOptionalIntArray("kylin.engine.driver-memory-strategy", dft);
+    }
+
+    public int getSparkEngineDriverMemoryMaximum() {
+        return Integer.parseInt(getOptional("kylin.engine.driver-memory-maximum", "4096"));
     }
 
     public StorageURL getJobTmpMetaStoreUrl(String project, String jobId) {

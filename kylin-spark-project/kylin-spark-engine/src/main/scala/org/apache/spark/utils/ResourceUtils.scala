@@ -64,6 +64,26 @@ object ResourceUtils extends Logging {
     }
   }
 
+  @throws[Exception]
+  def caculateRequiredCores(detectItems: JMap[String, String]): String = {
+    Try {
+      val it = detectItems.entrySet().iterator()
+      var pNum = SparkJobConstants.DEFAULT_REQUIRED_CORES
+      if (it.hasNext) {
+        val item = it.next()
+        pNum = item.getValue
+        logInfo(s"Require core num is $pNum")
+      }
+      pNum
+    } match {
+      case Success(partitionNum) =>
+        partitionNum
+      case Failure(throwable) =>
+        logWarning(s"caculate required cores failed ${this.getClass.getName}", throwable)
+        SparkJobConstants.DEFAULT_REQUIRED_CORES
+    }
+  }
+
 
   def checkResource(sparkConf: SparkConf, clusterInfo: ClusterInfoFetcher): Boolean = {
     val queue = sparkConf.get("spark.yarn.queue", "default")

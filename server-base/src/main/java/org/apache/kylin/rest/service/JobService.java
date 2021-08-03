@@ -67,20 +67,24 @@ import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecutableManager;
+import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Sets;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.SourcePartition;
@@ -91,9 +95,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import org.apache.kylin.shaded.com.google.common.collect.Lists;
-import org.apache.kylin.shaded.com.google.common.collect.Sets;
 
 /**
  * @author ysong1
@@ -1108,6 +1109,16 @@ public class JobService extends BasicService implements InitializingBean {
 
     public List<CubingJob> listJobsByRealizationName(final String realizationName, final String projectName) {
         return listJobsByRealizationName(realizationName, projectName, EnumSet.allOf(ExecutableState.class));
+    }
+
+    public String submitSampleTableJob(String project, String submitter, long maxSampleCount, String tableName) {
+        aclEvaluate.checkProjectOperationPermission(project);
+        TableMetadataManager tableMgr = TableMetadataManager.getInstance(getConfig());
+        TableDesc tableDesc = tableMgr.getTableDesc(tableName, project);
+        DefaultChainedExecutable job = EngineFactory.createSampleTableJob(project, submitter, maxSampleCount,
+                tableDesc);
+        getExecutableManager().addJob(job);
+        return job.getId();
     }
 
     public enum JobSearchMode {

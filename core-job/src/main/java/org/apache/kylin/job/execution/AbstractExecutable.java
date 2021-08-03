@@ -18,6 +18,10 @@
 
 package org.apache.kylin.job.execution;
 
+import static org.apache.kylin.job.constant.ExecutableConstants.MR_JOB_ID;
+import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
+import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -38,23 +42,19 @@ import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.model.CubeBuildTypeEnum;
+import org.apache.kylin.cube.model.validation.JobTypeEnum;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.JobStoppedException;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
 import org.apache.kylin.job.util.MailNotificationUtil;
 import org.apache.kylin.metadata.MetadataConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.kylin.shaded.com.google.common.base.MoreObjects;
 import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
-
-import static org.apache.kylin.job.constant.ExecutableConstants.MR_JOB_ID;
-import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
-import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -82,7 +82,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     private AbstractExecutable parentExecutable = null;
     private Map<String, String> params = Maps.newHashMap();
     protected Integer priority;
-    private CubeBuildTypeEnum jobType;
+    private JobTypeEnum jobType;
     private String logPath;
     protected String project;
     private String targetSubject;
@@ -606,8 +606,12 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         this.project = project;
     }
 
-    public void setJobType(CubeBuildTypeEnum jobType) {
+    public void setJobType(JobTypeEnum jobType) {
         this.jobType = jobType;
+    }
+
+    public JobTypeEnum getJobTypeEnum() {
+        return jobType;
     }
 
     public String getTargetSubject() {
