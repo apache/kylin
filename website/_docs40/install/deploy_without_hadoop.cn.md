@@ -309,7 +309,7 @@ permalink: /cn/docs40/install/deploy_without_hadoop.html
 
 - 修改配置文件 `vim $KYLIN_HOME/conf/kylin.properties`
 
-  ```properties
+  ```shell
   kylin.metadata.url=kylin_metadata@jdbc,url=jdbc:mysql://hostname:3306/kylin,username=root,password=password,maxActive=10,maxIdle=10
   kylin.env.zookeeper-connect-string=hostname
   kylin.engine.spark-conf.spark.master=spark://hostname:7077

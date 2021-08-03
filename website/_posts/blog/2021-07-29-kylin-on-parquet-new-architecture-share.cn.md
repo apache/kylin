@@ -3,7 +3,7 @@ layout: post-blog
 title:  Apache kylin4 新架构分享
 date:   2021-07-29 15:00:00
 author: 陶加涛
-categories: blog
+categories: cn_blog
 ---
 
 这篇文章主要分为以下几个部分：
