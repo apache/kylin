@@ -12,19 +12,18 @@ Compared with kylin3, kylin4 implements a new spark build engine and parquet sto
 
 After realizing the feature of supporting build and query in spark standalone mode, we tried to deploy kylin4.0 without Hadoop on the EC2 instance of AWS, and successfully built the cube and query.
 
-### Environmental preparation
-The version information provided here is that we selected during the test. If users need to use other versions for deployment, you can replace them by yourself and ensure the compatibility between component versions.
-
+### Environment preparation
 - Apply for AWS EC2 Linux instances as required
 - Create Amazon RDS for MySQL as kylin and hive metabases
 - S3 as kylin's storage
 
 ### Component version information
+The component version information provided here is that we selected during the test. If users need to use other versions for deployment, you can replace them by yourself and ensure the compatibility between component versions.
 
 * JDK 1.8
 * Hive 2.3.9
 * Zookeeper 3.4.13
-* Kylin 4.0
+* Kylin 4.0 for spark3
 * Spark 3.1.1
 * Hadoop 3.2.0（No startup required）
 
@@ -323,7 +322,7 @@ The version information provided here is that we selected during the test. If us
 
 - Modify kylin.properties `vim $KYLIN_HOME/conf/kylin.properties`
 
-  ```properties
+  ```shell
   kylin.metadata.url=kylin_metadata@jdbc,url=jdbc:mysql://hostname:3306/kylin,username=root,password=password,maxActive=10,maxIdle=10
   kylin.env.zookeeper-connect-string=hostname
   kylin.engine.spark-conf.spark.master=spark://hostname:7077
