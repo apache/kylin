@@ -22,18 +22,20 @@ import java.io.IOException
 import java.nio.charset.Charset
 import java.util.{Map => JMap}
 
-import org.apache.kylin.shaded.com.google.common.collect.Maps
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.apache.hadoop.fs._
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity
+import org.apache.kylin.shaded.com.google.common.collect.Maps
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.execution.columnar.InMemoryTableScanExec
-import org.apache.spark.sql.execution.{FileSourceScanExec, SparkPlan}
+import org.apache.spark.sql.execution.exchange.{BroadcastExchangeExec, ReusedExchangeExec}
+import org.apache.spark.sql.execution.{FileSourceScanExec, LeafExecNode, SparkPlan}
 import org.apache.spark.sql.hive.execution.HiveTableScanExec
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 object ResourceDetectUtils extends Logging {
   private val json = new Gson()
@@ -59,10 +61,27 @@ object ResourceDetectUtils extends Logging {
     paths
   }
 
+  def getPartitions(plan: SparkPlan): String = {
+    val leafNodePartitionsLengthMap: mutable.Map[String, Int] = mutable.Map()
+    var pNum = 0
+    plan.foreach {
+      case node: LeafExecNode =>
+        val pn = node match {
+          case ree: ReusedExchangeExec if ree.child.isInstanceOf[BroadcastExchangeExec] => 1
+          case _ => leafNodePartitionsLengthMap.getOrElseUpdate(node.nodeName, node.execute().partitions.length)
+        }
+        pNum = pNum + pn
+        logInfo(s"${node.nodeName} partition size $pn")
+      case _ =>
+    }
+    logInfo(s"Partition num $pNum")
+    pNum.toString
+  }
+
   @throws[IOException]
   protected def listSourcePath(shareDir: Path): java.util.Map[String, java.util.Map[String, java.util.List[String]]] = {
     val fs = HadoopUtil.getWorkingFileSystem
-    val fileStatuses = fs.listStatus(shareDir, new PathFilter{
+    val fileStatuses = fs.listStatus(shareDir, new PathFilter {
       override def accept(path: Path): Boolean = {
         path.toString.endsWith(ResourceDetectUtils.fileName())
       }

@@ -96,4 +96,6 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_DETECT_RESOURCE = "Detect Resource";
     public static final String STEP_NAME_BUILD_CUBOID_FROM_PARENT_CUBOID = "Build recommend cuboid from parent cuboid";
 
+    public static final String STEP_NAME_SAMPLE_TABLE = "Sample Table";
+
 }

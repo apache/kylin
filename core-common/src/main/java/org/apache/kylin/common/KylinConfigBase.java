@@ -2724,6 +2724,17 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.engine.spark.build-class-name", "org.apache.kylin.engine.spark.job.CubeBuildJob");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEBUG_HACK)
+    public String getSparkSampleTableClassName() {
+        return getOptional("kylin.engine.spark.sample-class-name", "org.apache.kylin.engine.spark.job.TableAnalyzerJob");
+    }
+
+    public Double getSparkSampleTableHignFrequency() {
+        String frequency = getOptional("kylin.engine.spark.sample-high-frequency", "0.1");
+        return Double.parseDouble(frequency);
+    }
+
+
     public Boolean getSparkEngineTaskImpactInstanceEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark.task-impact-instance-enabled", "true"));
     }

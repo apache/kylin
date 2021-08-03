@@ -59,4 +59,10 @@ public interface MetadataConstants {
 
     String SOURCE_RECORD_COUNT = "sourceRecordCount";
 
+    String TABLE_SAMPLE_FREQUENCY = "sampleFrequency";
+
+    String TABLE_SAMPLE_MAX_COUNT = "maxSampleCount";
+
+    String TABLE_NAME = "table";
+
 }
