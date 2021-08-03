@@ -357,6 +357,9 @@ title: 大数据分析型数据仓库
             <a class="sponsor" href="https://www.dmall.com/"> 
                 <img src="/images/logo/dmall.jpg">
             </a>
+             <a class="sponsor" href="https://www.youzan.com/"> 
+                <img src="/images/logo/youzan.png">
+            </a>
         </div>
         <!-- /container --> 
       </div>
