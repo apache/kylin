@@ -46,7 +46,6 @@ import java.util.NoSuchElementException;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.prepare.CalcitePrepareImpl;
