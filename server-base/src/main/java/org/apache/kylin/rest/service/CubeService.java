@@ -669,7 +669,7 @@ public class CubeService extends BasicService implements InitializingBean {
 
         if (toRemoveSegs != null && !toRemoveSegs.isEmpty()) {
             for (CubeSegment segment : toRemoveSegs) {
-                PathManager.deleteSegmentParquetStoragePath(cube, segment);
+                PathManager.deleteSegmentParquetStoragePath(cube, segment.getName(), segment.getStorageLocationIdentifier());
             }
         }
     }

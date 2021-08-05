@@ -58,12 +58,11 @@ public final class PathManager {
     /**
      * Delete segment path
      */
-    public static boolean deleteSegmentParquetStoragePath(CubeInstance cube, CubeSegment segment) throws IOException {
-        if (cube == null || segment == null) {
+    public static boolean deleteSegmentParquetStoragePath(CubeInstance cube, String segmentName, String identifier) throws IOException {
+        if (cube == null) {
             return false;
         }
-        String path = getSegmentParquetStoragePath(cube, segment.getName(),
-                segment.getStorageLocationIdentifier());
+        String path = getSegmentParquetStoragePath(cube, segmentName, identifier);
         logger.info("Deleting segment parquet path {}", path);
         HadoopUtil.deletePath(HadoopUtil.getCurrentConfiguration(), new Path(path));
         return true;

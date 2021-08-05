@@ -36,7 +36,6 @@ import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.kylin.metadata.MetadataConstants;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,15 +142,14 @@ public class NSparkCubingJob extends CubingJob {
         this.cube = cube;
     }
 
-    public void cleanupAfterJobDiscard() {
+    public void cleanupAfterJobDiscard(String segmentName, String segmentIdentifier) {
         try {
             PathManager.deleteJobTempPath(getConfig(), getParam(MetadataConstants.P_PROJECT_NAME),
                     getParam(MetadataConstants.P_JOB_ID));
 
             CubeManager cubeManager = CubeManager.getInstance(getConfig());
             CubeInstance cube = cubeManager.getCube(getParam(MetadataConstants.P_CUBE_NAME));
-            CubeSegment segment = cube.getSegment(getParam(MetadataConstants.SEGMENT_NAME), SegmentStatusEnum.NEW);
-            PathManager.deleteSegmentParquetStoragePath(cube, segment);
+            PathManager.deleteSegmentParquetStoragePath(cube, segmentName, segmentIdentifier);
         } catch (IOException e) {
             logger.warn("Delete resource file failed after job be discarded, due to", e);
         }
