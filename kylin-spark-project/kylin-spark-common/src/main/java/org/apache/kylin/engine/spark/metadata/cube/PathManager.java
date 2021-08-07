@@ -59,7 +59,7 @@ public final class PathManager {
      * Delete segment path
      */
     public static boolean deleteSegmentParquetStoragePath(CubeInstance cube, String segmentName, String identifier) throws IOException {
-        if (cube == null) {
+        if (cube == null || StringUtils.isNoneBlank(segmentName)|| StringUtils.isNoneBlank(identifier)) {
             return false;
         }
         String path = getSegmentParquetStoragePath(cube, segmentName, identifier);
