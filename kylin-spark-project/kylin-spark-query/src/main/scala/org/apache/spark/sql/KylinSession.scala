@@ -135,6 +135,14 @@ object KylinSession extends Logging {
 
     private lazy val conf: KylinConfig = KylinConfig.getInstanceFromEnv
 
+    def setDistJarFiles(sparkConf: SparkConf, key: String, value: String): Unit = {
+      if (sparkConf.contains(key)) {
+        sparkConf.set(key, value + "," + sparkConf.get(key))
+      } else {
+        sparkConf.set(key, value)
+      }
+    }
+
     def initSparkConf(sparkConf: SparkConf): SparkConf = {
       if (sparkConf.getBoolean("user.kylin.session", false)) {
         return sparkConf
@@ -172,12 +180,13 @@ object KylinSession extends Logging {
 
       if (!"true".equalsIgnoreCase(System.getProperty("spark.local"))) {
         if (sparkConf.get("spark.master").startsWith("yarn")) {
-          sparkConf.set("spark.yarn.dist.jars",
+          setDistJarFiles(sparkConf, "spark.yarn.dist.jars",
             KylinConfig.getInstanceFromEnv.getKylinParquetJobJarPath)
-          sparkConf.set("spark.yarn.dist.files", conf.sparkUploadFiles())
+          setDistJarFiles(sparkConf, "spark.yarn.dist.files", conf.sparkUploadFiles())
         } else {
-          sparkConf.set("spark.jars", conf.sparderJars)
-          sparkConf.set("spark.files", conf.sparkUploadFiles())
+          setDistJarFiles(sparkConf, "spark.jars",
+            KylinConfig.getInstanceFromEnv.getKylinParquetJobJarPath)
+          setDistJarFiles(sparkConf, "spark.files", conf.sparkUploadFiles())
         }
 
         val fileName = KylinConfig.getInstanceFromEnv.getKylinParquetJobJarPath

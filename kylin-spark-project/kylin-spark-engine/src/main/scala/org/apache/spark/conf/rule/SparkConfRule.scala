@@ -107,8 +107,20 @@ class ExecutorInstancesRule extends SparkConfRule {
     logInfo(s"The number of instances calculated by cuboids " +
       s"is: $calculateExecutorInsByLayoutSize")
 
-    val availableMem = helper.getFetcher.fetchQueueAvailableResource(queue).available.memory
-    val availableCore = helper.getFetcher.fetchQueueAvailableResource(queue).available.vCores
+    var availableMem = Int.MaxValue
+    try {
+      availableMem = helper.getFetcher.fetchQueueAvailableResource(queue).available.memory
+    } catch {
+      case throwable: Throwable =>
+        logWarning(s"Error when getting available memory from cluster, ignore it.")
+    }
+    var availableCore = Int.MaxValue
+    try {
+      availableCore = helper.getFetcher.fetchQueueAvailableResource(queue).available.vCores
+    } catch {
+      case throwable: Throwable =>
+        logWarning(s"Error when getting available cpus from cluster, ignore it.")
+    }
     val executorMem = (Utils.byteStringAsMb(helper.getConf(SparkConfHelper.EXECUTOR_MEMORY)) +
       Utils.byteStringAsMb(helper.getConf(SparkConfHelper.EXECUTOR_OVERHEAD)))
 

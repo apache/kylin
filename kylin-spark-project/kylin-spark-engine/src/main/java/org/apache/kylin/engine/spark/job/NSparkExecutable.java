@@ -400,9 +400,6 @@ public class NSparkExecutable extends AbstractExecutable {
                 String.format(Locale.ROOT, "%s:%s", APP_JAR_NAME,
                         Paths.get(kylinJobJar).getFileName().toString()) : kylinJobJar);
 
-        if (sparkConfs.containsKey("spark.sql.hive.metastore.jars")) {
-            jars = jars + "," + sparkConfs.get("spark.sql.hive.metastore.jars");
-        }
         String sparkUploadFiles = config.sparkUploadFiles(isLocalMaster(sparkConfs), isYarnCluster);
         if (StringUtils.isNotBlank(sparkUploadFiles)) {
             sb.append("--files ").append(sparkUploadFiles).append(" ");
