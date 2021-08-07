@@ -59,7 +59,7 @@ public class NSparkUpdateMetaAndCleanupAfterMergeStep extends NSparkExecutable {
             // delete segments which were merged
             for (CubeSegment segment : mergingSegments) {
                 try {
-                    PathManager.deleteSegmentParquetStoragePath(cube, segment);
+                    PathManager.deleteSegmentParquetStoragePath(cube, segment.getName(), segment.getStorageLocationIdentifier());
                 } catch (IOException e) {
                     throw new ExecuteException("Can not delete segment: " + segment.getName() + ", in cube: " + cube.getName());
                 }
