@@ -143,17 +143,11 @@ function retrieveDependency() {
 
     # compose hadoop_dependencies
     hadoop_dependencies=${hadoop_dependencies}:`hadoop classpath`
-#    if [ -n "${hbase_dependency}" ]; then
-#        hadoop_dependencies=${hadoop_dependencies}:${hbase_dependency}
-#    fi
     if [ -n "${hive_dependency}" ]; then
-        hadoop_dependencies=${hadoop_dependencies}:${hive_dependency}
+        hadoop_dependencies=${hive_dependency}:${hadoop_dependencies}
     fi
     if [ -n "${kafka_dependency}" ]; then
         hadoop_dependencies=${hadoop_dependencies}:${kafka_dependency}
-    fi
-    if [ -n "${spark_dependency}" ]; then
-        hadoop_dependencies=${hadoop_dependencies}:${spark_dependency}
     fi
 
     # compose KYLIN_TOMCAT_CLASSPATH
@@ -305,6 +299,11 @@ function retrieveStartCommand() {
     verbose "java opts is ${KYLIN_EXTRA_START_OPTS} ${KYLIN_TOMCAT_OPTS}"
     verbose "java classpath is ${KYLIN_TOMCAT_CLASSPATH}"
     classpathDebug ${KYLIN_TOMCAT_CLASSPATH}
+    # For Sparder
+    if [ -z ${HADOOP_CONF_DIR} ]
+    then
+      export HADOOP_CONF_DIR=${kylin_hadoop_conf_dir}
+    fi
     $JAVA ${KYLIN_EXTRA_START_OPTS} ${KYLIN_TOMCAT_OPTS} -classpath ${KYLIN_TOMCAT_CLASSPATH}  org.apache.catalina.startup.Bootstrap start >> ${KYLIN_HOME}/logs/kylin.out 2>&1 & echo $! > ${KYLIN_HOME}/pid &
 }
 

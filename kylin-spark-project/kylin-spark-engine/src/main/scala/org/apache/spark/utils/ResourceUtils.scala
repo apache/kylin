@@ -67,8 +67,11 @@ object ResourceUtils extends Logging {
 
   def checkResource(sparkConf: SparkConf, clusterInfo: ClusterInfoFetcher): Boolean = {
     val queue = sparkConf.get("spark.yarn.queue", "default")
-    val driverMemory = (Utils.byteStringAsMb(sparkConf.get(DRIVER_MEMORY)) + Utils.byteStringAsMb(sparkConf.get(DRIVER_OVERHEAD))).toInt
-    val driverCores = sparkConf.get(DRIVER_CORES).toInt
+    var driverMemory = Utils.byteStringAsMb(sparkConf.get(DRIVER_MEMORY)).toInt
+    if (sparkConf.contains(DRIVER_OVERHEAD)) {
+      driverMemory = driverMemory + Utils.byteStringAsMb(sparkConf.get(DRIVER_OVERHEAD)).toInt
+    }
+    val driverCores = sparkConf.get(DRIVER_CORES, "1").toInt
     val queueAvailable = minusDriverResource(clusterInfo.fetchQueueAvailableResource(queue), driverMemory, driverCores)
     val instances = sparkConf.get(EXECUTOR_INSTANCES).toInt
     val executorMemory = (Utils.byteStringAsMb(sparkConf.get(EXECUTOR_MEMORY))

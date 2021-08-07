@@ -121,7 +121,6 @@ public class SparkClassLoader extends URLClassLoader {
         for (File jar : jars) {
             addURL(jar.toURI().toURL());
         }
-
     }
 
     @Override

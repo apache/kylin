@@ -82,6 +82,7 @@ import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.ValidateUtil;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -174,7 +175,14 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "validEncodings", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public Map<String, Integer> getValidEncodings() {
-        throw new UnsupportedOperationException("Unsupported in Kylin 4.0 .");
+        Map<String, Integer> encodings;
+        try {
+            encodings = DimensionEncodingFactory.getValidEncodings();
+        } catch (Exception e) {
+            logger.error("Error when getting valid encodings", e);
+            return Maps.newHashMap();
+        }
+        return encodings;
     }
 
     @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET }, produces = { "application/json" })
