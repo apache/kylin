@@ -128,6 +128,9 @@ Kylin4 的查询引擎 `Sparder(SparderContext)` 是由 spark application 后端
 从查询结果对比中可以看出，对于***简单查询***，kylin3 与 Kylin4 不相上下，kylin4 略有不足；而对于***复杂查询***，kylin4 则体现出了明显的优势，查询速度比 kylin3 快很多。
 并且，Kylin4 中的***简单查询***的性能还存在很大的优化空间。在有赞使用 Kylin4 的实践中，对于***简单查询***的性能可以优化到 1 秒以内。
 
+## 如何升级
+请参考文档：[How to migrate metadata to Kylin4](https://cwiki.apache.org/confluence/display/KYLIN/How+to+migrate+metadata+to+Kylin+4)
+
 ## Kylin 4.0 查询和构建调优
 对于 Kylin4 的调优，请参考：[How to improve cube building and query performance](/docs40/howto/howto_optimize_build_and_query.html)
 

@@ -98,3 +98,14 @@ CubeMetaIngester.java 将提取的 cube 注入到另一个 metadata store 中。
 | overwriteTables <overwriteTables> | If table meta conflicts, overwrite the one in metadata store with the one in srcPath. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false. |
 | project <project>                 | (Required) Specify the target project for the new cubes.                              
 | srcPath <srcPath>                 | (Required) Specify the path to the extracted Cube metadata zip file.                                                                                                                               |
+
+## CubeMigrationCLI.java
+
+### 作用
+自 Apache kylin 2.0 以来提供了迁移工具来支持跨不同集群迁移元数据。在 kylin4.0 中，我们对 CubeMigration 工具进行了改进并添加了新功能，增强功能列表如下所示：
+-支持迁移源集群中的所有多维数据集
+-支持在源集群中迁移整个项目
+-支持将元数据从旧版本迁移和升级到Kylin 4
+
+### 如何使用
+请参考文档：[How to migrate metadata to Kylin4](https://cwiki.apache.org/confluence/display/KYLIN/How+to+migrate+metadata+to+Kylin+4)

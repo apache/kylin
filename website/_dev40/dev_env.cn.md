@@ -13,24 +13,24 @@ permalink: /cn/development40/dev_env.html
 
 ### 安装 Maven
 
-最新的 Maven 下载地址：<http://maven.apache.org/download.cgi>，然后创建一个软链接，以便 `mvn` 可以在任何地方运行。
+下载 Maven 3.5.4 及以上版本：<http://maven.apache.org/download.cgi>，然后创建一个软链接，以便 `mvn` 可以在任何地方运行。
 
 {% highlight Groff markup %}
 cd ~
-wget http://xenia.sote.hu/ftp/mirrors/www.apache.org/maven/maven-3/3.2.5/binaries/apache-maven-3.2.5-bin.tar.gz
-tar -xzvf apache-maven-3.2.5-bin.tar.gz
-ln -s /root/apache-maven-3.2.5/bin/mvn /usr/bin/mvn
+wget http://xenia.sote.hu/ftp/mirrors/www.apache.org/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz
+tar -xzvf apache-maven-3.5.4-bin.tar.gz
+ln -s /root/apache-maven-3.5.4/bin/mvn /usr/bin/mvn
 {% endhighlight %}
 
 ### 安装 Spark
 
-在像 /usr/local/spark 这样的本地文件夹下手动安装 Spark；Kylin4 支持 Spark2.4.6，你需要从 Spark 下载页面获取下载链接。 
+在像 /usr/local/spark 这样的本地文件夹下手动安装 Spark；Kylin4 支持 Spark 2.4.7，你需要从 Spark 下载页面获取下载链接。 
 
 {% highlight Groff markup %}
-wget -O /tmp/spark-2.4.6-bin-hadoop2.7.tgz https://archive.apache.org/dist/spark/spark-2.4.6/spark-2.4.6-bin-hadoop2.7.tgz
+wget -O /tmp/spark-2.4.7-bin-hadoop2.7.tgz https://archive.apache.org/dist/spark/spark-2.4.7/spark-2.4.7-bin-hadoop2.7.tgz
 cd /usr/local
-tar -zxvf /tmp/spark-2.4.6-bin-hadoop2.7.tgz
-ln -s spark-2.4.6-bin-hadoop2.7 spark
+tar -zxvf /tmp/spark-2.4.7-bin-hadoop2.7.tgz
+ln -s spark-2.4.7-bin-hadoop2.7 spark
 {% endhighlight %}
 
 ### 编译

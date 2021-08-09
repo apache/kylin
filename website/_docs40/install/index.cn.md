@@ -9,7 +9,7 @@ permalink: /cn/docs40/install/index.html
 
 * Hadoop: cdh5.x, cdh6.x, hdp2.x, EMR5.x, EMR6.x, HDI4.x
 * Hive: 0.13 - 1.2.1+
-* Spark: 2.4.6
+* Spark: 2.4.7
 * Mysql: 5.1.17及以上
 * JDK: 1.8+
 * OS: Linux only, CentOS 6.5+ or Ubuntu 16.0.4+
@@ -33,14 +33,14 @@ Kylin 可以在 Hadoop 集群的任意节点上启动。方便起见，您可以
 
 ### Kylin 安装
 
-1. 从 [Apache Kylin下载网站](https://kylin.apache.org/download/) 下载一个 Apache Kylin 4.0 的二进制文件。可通过如下命令行下载得到：
+- 从 [Apache Kylin下载网站](https://kylin.apache.org/download/) 下载一个 Apache Kylin 4.0 的二进制文件。可通过如下命令行下载得到：
 
 ```shell
 cd /usr/local/
 wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin.tar.gz
 ```
 
-2. 解压 tar 包，配置环境变量 `$KYLIN_HOME` 指向 Kylin 文件夹。
+- 解压 tar 包，配置环境变量 `$KYLIN_HOME` 指向 Kylin 文件夹。
 
 ```shell
 tar -zxvf apache-kylin-4.0.0-bin.tar.gz
@@ -48,15 +48,15 @@ cd apache-kylin-4.0.0-bin
 export KYLIN_HOME=`pwd`
 ```
 
-使用脚本下载spark:
+- 使用脚本下载spark:
 
 ```shell
 $KYLIN_HOME/bin/download-spark.sh
 ```
 
-或者配置 SPARK_HOME 指向环境中的 spark2.4.6 的路径。
+或者配置 SPARK_HOME 指向环境中的 spark2.4.7 的路径。
 
-3. 配置 Mysql 元数据
+- 配置 Mysql 元数据
 
 Kylin 4.0 使用 Mysql 作为元数据存储，需要在 kylin.properties 中做如下配置：
 
@@ -65,7 +65,7 @@ kylin.metadata.url=kylin_metadata@jdbc,driverClassName=com.mysql.jdbc.Driver,url
 kylin.env.zookeeper-connect-string=ip
 ```
 
-你需要修改其中的 Mysql 用户名和密码，以及存储元数据的database和table。
+你需要修改其中的 Mysql 用户名和密码，以及存储元数据的database和table。并将 mysql jdbc connector 放在 `$KYLIN_HOME/ext` 目录下，没有该目录时请自行创建。
 请参考 [配置 Mysql 为 Metastore](/_docs40/tutorial/mysql_metastore.html)  了解 Mysql 作为 Metastore 的详细配置。
 
 ### Kylin tarball 目录

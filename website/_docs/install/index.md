@@ -38,14 +38,14 @@ Linux accounts running Kylin must have access to the Hadoop cluster, including t
 
 ### Kylin Installation
 
-1. Download a binary package for your Hadoop version from the [Apache Kylin Download Site](https://kylin.apache.org/download/). For example, Kylin 2.5.0 for HBase 1.x can be downloaded from the following command line:
+- Download a binary package for your Hadoop version from the [Apache Kylin Download Site](https://kylin.apache.org/download/). For example, Kylin 2.5.0 for HBase 1.x can be downloaded from the following command line:
 
 ```shell
 cd /usr/local/
 wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz
 ```
 
-2. Unzip the tarball and configure the environment variable `$KYLIN_HOME` to the Kylin folder.
+- Unzip the tarball and configure the environment variable `$KYLIN_HOME` to the Kylin folder.
 
 ```shell
 tar -zxvf apache-kylin-2.5.0-bin-hbase1x.tar.gz
@@ -53,7 +53,7 @@ cd apache-kylin-2.5.0-bin-hbase1x
 export KYLIN_HOME=`pwd`
 ```
 
-From v2.6.1, Kylin will not ship Spark binary anymore; You need to install Spark seperately, and then point `SPARK_HOME` system environment variable to it: 
+- From v2.6.1, Kylin will not ship Spark binary anymore; You need to install Spark seperately, and then point `SPARK_HOME` system environment variable to it: 
 
 ```shell
 export SPARK_HOME=/path/to/spark
