@@ -9,7 +9,7 @@ permalink: /docs40/install/index.html
 
 * Hadoop: cdh5.x, cdh6.x, hdp2.x, EMR5.x, EMR6.x, HDI4.x
 * Hive: 0.13 - 1.2.1+
-* Spark: 2.4.6
+* Spark: 2.4.7
 * Mysql: 5.1.17及以上
 * JDK: 1.8+
 * OS: Linux only, CentOS 6.5+ or Ubuntu 16.0.4+
@@ -37,14 +37,14 @@ Linux accounts running Kylin must have access to the Hadoop cluster, including t
 
 ### Kylin Installation
 
-1. Download a Apache kylin 4.0.0 binary package from the [Apache Kylin Download Site](https://kylin.apache.org/download/). For example, the following command line can be used:
+- Download a Apache kylin 4.0.0 binary package from the [Apache Kylin Download Site](https://kylin.apache.org/download/). For example, the following command line can be used:
 
 ```shell
 cd /usr/local/
 wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin.tar.gz
 ```
 
-2. Unzip the tarball and configure the environment variable `$KYLIN_HOME` to the Kylin folder.
+- Unzip the tarball and configure the environment variable `$KYLIN_HOME` to the Kylin folder.
 
 ```shell
 tar -zxvf apache-kylin-4.0.0-bin.tar.gz
@@ -52,15 +52,15 @@ cd apache-kylin-4.0.0-bin
 export KYLIN_HOME=`pwd`
 ```
 
-Run the script to download spark:
+- Run the script to download spark:
 
 ```shell
 $KYLIN_HOME/bin/download-spark.sh
 ```
 
-Or configure SPARK_HOME points to the path of spark2.4.6 in the environment.
+Or configure SPARK_HOME points to the path of spark2.4.7 in the environment.
 
-3. Configure MySQL metastore
+- Configure MySQL metastore
 
 Kylin 4.0 uses MySQL as metadata storage, make the following configuration in `kylin.properties`:
 
@@ -69,7 +69,7 @@ kylin.metadata.url=kylin_metadata@jdbc,driverClassName=com.mysql.jdbc.Driver,url
 kylin.env.zookeeper-connect-string=ip:2181
 ```
 
-You need to change the Mysql user name and password, as well as the database and table where the metadata is stored.
+You need to change the Mysql user name and password, as well as the database and table where the metadata is stored. And put mysql jdbc connector into `$KYLIN_HOME/ext/`, if there is no such directory, please create it.
 Please refer to [配置 Mysql 为 Metastore](/_docs40/tutorial/mysql_metastore.html) learn about the detailed configuration of MySQL as a Metastore.
 
 ### Kylin tarball structure

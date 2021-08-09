@@ -14,24 +14,24 @@ Following this tutorial, you can easily build a kylin4 development environment o
 
 ### Install Maven
 
-The latest maven can be found at <http://maven.apache.org/download.cgi>, we create a symbolic so that `mvn` can be run anywhere.
+Download Maven 3.5.4 and above version: <http://maven.apache.org/download.cgi>, we create a symbolic so that `mvn` can be run anywhere.
 
 {% highlight Groff markup %}
 cd ~
-wget http://xenia.sote.hu/ftp/mirrors/www.apache.org/maven/maven-3/3.2.5/binaries/apache-maven-3.2.5-bin.tar.gz
-tar -xzvf apache-maven-3.2.5-bin.tar.gz
-ln -s /root/apache-maven-3.2.5/bin/mvn /usr/bin/mvn
+wget http://xenia.sote.hu/ftp/mirrors/www.apache.org/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz
+tar -xzvf apache-maven-3.5.4-bin.tar.gz
+ln -s /root/apache-maven-3.5.4/bin/mvn /usr/bin/mvn
 {% endhighlight %}
 
 ### Install Spark
 
-Manually install the Spark binary in a local folder like /usr/local/spark. Kylin4 supports spark 2.4.6, you need to get the download link from the spark download page.
+Manually install the Spark binary in a local folder like /usr/local/spark. Kylin4 supports Spark 2.4.7, you need to get the download link from the spark download page.
 
 {% highlight Groff markup %}
-wget -O /tmp/spark-2.4.6-bin-hadoop2.7.tgz https://archive.apache.org/dist/spark/spark-2.4.6/spark-2.4.6-bin-hadoop2.7.tgz
+wget -O /tmp/spark-2.4.7-bin-hadoop2.7.tgz https://archive.apache.org/dist/spark/spark-2.4.7/spark-2.4.7-bin-hadoop2.7.tgz
 cd /usr/local
-tar -zxvf /tmp/spark-2.4.6-bin-hadoop2.7.tgz
-ln -s spark-2.4.6-bin-hadoop2.7 spark
+tar -zxvf /tmp/spark-2.4.7-bin-hadoop2.7.tgz
+ln -s spark-2.4.7-bin-hadoop2.7 spark
 {% endhighlight %}
 
 ### Compile

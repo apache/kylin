@@ -102,3 +102,14 @@ All supported parameters are listed below:
 | overwriteTables <overwriteTables> | If table meta conflicts, overwrite the one in metadata store with the one in srcPath. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false. |
 | project <project>                 | (Required) Specify the target project for the new cubes.                                                                                                                                           |
 | srcPath <srcPath>                 | (Required) Specify the path to the extracted Cube metadata zip file.                                                                                                                               |
+
+## CubeMigrationCLI.java
+
+## Function
+Apache Kylin have provided migration tool to support migrating metadata across different clusters since version 2.0. Recently, we have refined and added new ability to CubeMigration tool, The list of enhanced functions is showed as below:
+- Support migrating all cubes in source cluster
+- Support migrating a whole project in source cluster
+- Support migrating and upgrading metadata from older version to Kylin 4
+
+### How to use
+Please check: [How to migrate metadata to Kylin4](https://cwiki.apache.org/confluence/display/KYLIN/How+to+migrate+metadata+to+Kylin+4)

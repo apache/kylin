@@ -21,11 +21,11 @@
 - title: 安装
   docs:
   - install/index
+  - install/deploy_without_hadoop
   - install/kylin_cluster
+  - install/kylin_docker
   - install/configuration
   - install/advance_settings
-  - install/kylin_docker
-  - install/deploy_without_hadoop
 
 - title: 教程
   docs:

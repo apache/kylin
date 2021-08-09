@@ -132,6 +132,9 @@ The test results can reflect the following two points:
 From the comparison of query results, it can be seen that kylin3 and kylin4 are the same for ***simple query***, kylin4 is slightly insufficient; However, kylin4 has obvious advantages over kylin3 for ***complex query***.
 Moreover, there is still a lot of room to optimize the performance of ***simple query*** in kylin4. In the practice of Youzan using kylin4, the performance of ***simple query*** can be optimized to less than 1 second.
 
+## How to upgrade
+Please check: [How to migrate metadata to Kylin4](https://cwiki.apache.org/confluence/display/KYLIN/How+to+migrate+metadata+to+Kylin+4)
+
 ## Kylin 4.0 query and build tuning
 For kylin4 tuning, please refer to: [How to improve cube building and query performance](/docs40/howto/howto_optimize_build_and_query.html)
 
