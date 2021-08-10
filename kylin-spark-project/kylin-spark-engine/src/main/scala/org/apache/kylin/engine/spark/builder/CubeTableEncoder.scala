@@ -111,12 +111,12 @@ object CubeTableEncoder extends Logging {
             partitionedDs = partitionedDs.select(columns ++ Seq(scatterColumn): _*)
               .repartition(enlargedBucketSize, col("scatter_skew_data_" + ref.columnName))
               .select(columns ++ Seq(encodeCol): _*)
-            return partitionedDs;
           }
+        } else {
+          partitionedDs = partitionedDs
+            .repartition(enlargedBucketSize, col(encodeColRef).cast(StringType))
+            .select(columns ++ Seq(encodeCol): _*)
         }
-        partitionedDs = partitionedDs
-          .repartition(enlargedBucketSize, col(encodeColRef).cast(StringType))
-          .select(columns ++ Seq(encodeCol): _*)
       }
     )
 
