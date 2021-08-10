@@ -30,7 +30,6 @@ import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.spark.SparkEnv;
 import org.apache.spark.deploy.SparkHadoopUtil;
-import org.apache.spark.deploy.yarn.YarnSparkHadoopUtil;
 import scala.runtime.BoxedUnit;
 
 import java.io.File;
@@ -112,11 +111,6 @@ public class SparkExecutorHdfsAppender extends AbstractHdfsLogAppender {
 
     @Override
     void init() {
-        if (StringUtils.isBlank(this.identifier)) {
-            this.identifier = YarnSparkHadoopUtil.getContainerId().getApplicationAttemptId().getApplicationId()
-                    .toString();
-        }
-
         LogLog.warn("metadataIdentifier -> " + getMetadataIdentifier());
         LogLog.warn("category -> " + getCategory());
         LogLog.warn("identifier -> " + getIdentifier());
