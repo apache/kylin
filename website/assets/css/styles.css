@@ -435,6 +435,7 @@ a:hover, a:focus {
 }
 .navbar-nav .dropdown-menu li a{
 	margin: 0px;
+	text-align: left;
 }
 /*.top-logo {
 	background-image: -webkit-gradient(  linear,  left bottom,  right bottom,  color-stop(0, #C6419E),  color-stop(1, #6382FF) );
