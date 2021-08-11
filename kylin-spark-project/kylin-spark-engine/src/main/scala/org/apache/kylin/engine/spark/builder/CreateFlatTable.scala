@@ -47,6 +47,7 @@ class CreateFlatTable(val seg: SegmentInfo,
     var rootFactDataset = generateTableDataset(seg.factTable, ccCols.toSeq, ss, seg.project)
 
     logInfo(s"Create flattable need join lookup tables $needJoin, need encode cols $needEncode")
+    rootFactDataset = applyPartitionCondition(seg, rootFactDataset)
 
     (needJoin, needEncode) match {
       case (true, true) =>
@@ -148,13 +149,18 @@ object CreateFlatTable extends Logging {
 
   private def applyFilterCondition(desc: SegmentInfo, ds: Dataset[Row]): Dataset[Row] = {
     var afterFilter = ds
-
     if (StringUtils.isNotBlank(desc.filterCondition)) {
       val afterConvertCondition = desc.filterCondition
       logInfo(s"Filter condition is $afterConvertCondition")
       afterFilter = afterFilter.where(afterConvertCondition)
     }
+    afterFilter
+  }
+
+  private def applyPartitionCondition(desc: SegmentInfo, ds: Dataset[Row]): Dataset[Row] = {
+    var afterFilter = ds
     if (StringUtils.isNotBlank(desc.partitionExp)) {
+      logInfo(s"Partition Filter condition is ${desc.partitionExp}")
       afterFilter = afterFilter.where(desc.partitionExp)
     }
     afterFilter
