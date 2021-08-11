@@ -570,6 +570,7 @@ public class ExecutableManager {
             if (endTime != 0) {
                 long interruptTime = System.currentTimeMillis() - endTime + job.getInterruptTime();
                 info = Maps.newHashMap(getJobOutput(jobId).getInfo());
+                getJobOutput(jobId).getInfo().remove(AbstractExecutable.END_TIME);
                 info.put(AbstractExecutable.INTERRUPT_TIME, Long.toString(interruptTime));
                 info.remove(AbstractExecutable.END_TIME);
             }
