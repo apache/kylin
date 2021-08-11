@@ -329,9 +329,7 @@ public class CubeBuildJob extends SparkApplication {
             Preconditions.checkState(!toBuildCuboids.isEmpty(), "To be built cuboids is empty.");
             Dataset<Row> parentDS = info.getParentDS();
 
-            if (toBuildCuboids.size() > 1) {
-                buildLayoutWithUpdate.cacheAndRegister(info.getLayoutId(), parentDS);
-            }
+            buildLayoutWithUpdate.cacheAndRegister(info.getLayoutId(), parentDS);
 
             // record the source count of flat table
             if (info.getLayoutId() == ParentSourceChooser.FLAT_TABLE_FLAG()) {
