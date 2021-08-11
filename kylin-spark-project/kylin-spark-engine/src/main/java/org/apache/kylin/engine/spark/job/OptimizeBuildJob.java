@@ -271,7 +271,7 @@ public class OptimizeBuildJob extends SparkApplication {
 
                         @Override
                         public NBuildSourceInfo getBuildSourceInfo() {
-                            return info;
+                            return null;
                         }
                     }, config);
                 } else {
