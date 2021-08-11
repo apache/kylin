@@ -75,8 +75,9 @@ public class BuildLayoutWithUpdate {
 
     public void submit(JobEntity job, KylinConfig config) {
 
-        //if job's BuildSourceInfo is empty, it means this is a merge job, no parent dataset to persist
-        if (persistParentDataset && job.getBuildSourceInfo() != null && job.getBuildSourceInfo().getToBuildCuboids().size() > 1) {
+        // if job's BuildSourceInfo is null, it means this is a merge job or optimize job,
+        // no parent dataset to be persisted
+        if (persistParentDataset && job.getBuildSourceInfo() != null) {
             //when reuse parent dataset is enabled, ensure parent dataset is registered
             if(!layout2DataSet.containsKey(job.getBuildSourceInfo().getLayoutId())){
                 logger.error("persist parent dataset is enabled, but parent dataset not registered");
@@ -102,7 +103,7 @@ public class BuildLayoutWithUpdate {
                     throwable = t;
                 } finally {
                     //unpersist parent dataset
-                    if (persistParentDataset && job.getBuildSourceInfo() != null && job.getBuildSourceInfo().getToBuildCuboids().size() > 1) {
+                    if (persistParentDataset && job.getBuildSourceInfo() != null) {
                         long remain = toBuildCuboidSize.get(job.getBuildSourceInfo().getLayoutId()).decrementAndGet();
                         if (remain == 0) {
                             toBuildCuboidSize.remove(job.getBuildSourceInfo().getLayoutId());
