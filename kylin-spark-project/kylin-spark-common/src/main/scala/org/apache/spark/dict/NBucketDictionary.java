@@ -57,10 +57,11 @@ public class NBucketDictionary {
         }
         this.relativeDictMap = new Object2LongOpenHashMap<>();
         if (!StringUtils.isEmpty(skewDictStorageFile)) {
-            FileSystem fs = FileSystem.get(new Configuration());
-            if (fs.exists(new Path(skewDictStorageFile))) {
+            Path skewedDictPath = new Path(skewDictStorageFile);
+            FileSystem fs = skewedDictPath.getFileSystem(new Configuration());
+            if (fs.exists(skewedDictPath)) {
                 Kryo kryo = new Kryo();
-                Input input = new Input(fs.open(new Path(skewDictStorageFile)));
+                Input input = new Input(fs.open(skewedDictPath));
                 skewedDictMap = (Object2LongMap<String>) kryo.readClassAndObject(input);
                 input.close();
             }

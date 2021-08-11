@@ -500,10 +500,11 @@ case class ScatterSkewData(left: Expression, right: Expression) extends BinaryEx
          |   ${rand} = new java.util.Random();
          |   com.esotericsoftware.kryo.Kryo kryo = new com.esotericsoftware.kryo.Kryo();
          |   try {
-         |       org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(new org.apache.hadoop.conf.Configuration());
-         |       if (fs.exists(new org.apache.hadoop.fs.Path("${skewDataStorage}"))) {
+         |       org.apache.hadoop.fs.Path skewDictPath = new org.apache.hadoop.fs.Path("${skewDataStorage}");
+         |       org.apache.hadoop.fs.FileSystem fs = skewDictPath.getFileSystem(new org.apache.hadoop.conf.Configuration());
+         |       if (fs.exists(skewDictPath)) {
          |           com.esotericsoftware.kryo.io.Input input = new com.esotericsoftware.kryo.io.Input(
-         |               fs.open(new org.apache.hadoop.fs.Path("${skewDataStorage}")));
+         |               fs.open(skewDictPath));
          |           ${skewData} = (it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap<String>) kryo.readClassAndObject(input);
          |           input.close();
          |       }
