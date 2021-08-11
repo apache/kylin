@@ -45,22 +45,23 @@
         <ul class="nav navbar-nav">
           <li><a href="/">Home</a></li>
           <li>
-            <a href="/docs">Docs</a>
-<!--        
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Docs</a>     
+            <a href="/docs" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Docs<span class="caret"></span></a>
             <ul class="dropdown-menu">
-              {% for section in site.data.docs %}
-                  <li class="dropdown-submenu"><a href="#{{ section | first }}" data-toggle="collapse" class="navtitle">{{ section.title }}</a>
-                  <ul class="dropdown-menu">
-                  {% include docs_ul.html items=section.docs %}
-                  <ul>
-                  </li>
-              {% endfor %}
-            </ul> -->
+              <li><a href="/docs40/">V4.0 Document</a></li>
+              <li><a href="/docs30/">V3.0 Document</a></li>
+              <li><a href="/docs24/">V2.4 Document</a></li>
+              <li><a href="/archive/">Archive</a></li>
+            </ul>
           </li>
           <li><a href="/download">Download</a></li>
           <li><a href="/community" >Community</a></li>
-          <li><a href="/development" >Development</a></li>
+          <li>
+            <a href="/development" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Development<span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="/development40/">V4.x Development Docs</a></li>
+              <li><a href="/development/">V3.x And Earlier Development Docs</a></li>
+            </ul>
+          </li>
           <li><a href="/blog">Blog</a></li>
           <li><a href="/cn" >中文版</a></li> 
         </ul>     
