@@ -53,7 +53,7 @@ object CubeTableEncoder extends Logging {
     val bucketThreshold = seg.kylinconf.getGlobalDictV2ThresholdBucketSize
     val minBucketSize: Long = sourceCnt / bucketThreshold
 
-    var repartitionSizeAfterEncode = 0;
+    var repartitionSizeAfterEncode = 0
     cols.asScala.foreach(
       ref => {
         val globalDict = new NGlobalDictionary(seg.project, ref.tableAliasName, ref.columnName, seg.kylinconf.getHdfsWorkingDirectory)
@@ -72,11 +72,12 @@ object CubeTableEncoder extends Logging {
         var encodeCol = dict_encode(col(encodeColRef).cast(StringType), lit(dictParams), lit(bucketSize).cast(StringType)).as(aliasName)
         val columns = partitionedDs.schema.map(ty => col(ty.name))
 
+        var scatterSkewedData = false
         if (seg.kylinconf.detectDataSkewInDictEncodingEnabled()) {
           //find skewed data in dict-encoding step
           val castEncodeColRef = col(encodeColRef).cast(StringType)
           val sampleData = ds.select(castEncodeColRef).sample(seg.kylinconf.sampleRateInEncodingSkewDetection()).cache()
-          val totalCount = sampleData.count();
+          val totalCount = sampleData.count()
           val skewDictStorage = new Path(seg.kylinconf.getJobTmpDir(seg.project) +
             "/" + jobId + "/skewed_data/" + ref.identity)
           val skewedDict = new Object2LongOpenHashMap[String]()
@@ -90,6 +91,7 @@ object CubeTableEncoder extends Logging {
 
           //save skewed data dict
           if (skewedDict.size() > 0) {
+            scatterSkewedData = true
             val kryo = new Kryo()
             val fs = skewDictStorage.getFileSystem(new Configuration())
             if (fs.exists(skewDictStorage)) {
@@ -112,7 +114,8 @@ object CubeTableEncoder extends Logging {
               .repartition(enlargedBucketSize, col("scatter_skew_data_" + ref.columnName))
               .select(columns ++ Seq(encodeCol): _*)
           }
-        } else {
+        }
+        if (!scatterSkewedData) {
           partitionedDs = partitionedDs
             .repartition(enlargedBucketSize, col(encodeColRef).cast(StringType))
             .select(columns ++ Seq(encodeCol): _*)
