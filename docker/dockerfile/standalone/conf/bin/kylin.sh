@@ -212,7 +212,7 @@ function prepareFairScheduler() {
   <pool name="query_pushdown">
     <schedulingMode>FAIR</schedulingMode>
     <weight>1</weight>
-    <minShare>1</minShare>
+    <minShare>0</minShare>
   </pool>
   <pool name="heavy_tasks">
     <schedulingMode>FAIR</schedulingMode>
@@ -227,7 +227,7 @@ function prepareFairScheduler() {
   <pool name="vip_tasks">
     <schedulingMode>FAIR</schedulingMode>
     <weight>15</weight>
-    <minShare>1</minShare>
+    <minShare>0</minShare>
   </pool>
 </allocations>
 EOL
