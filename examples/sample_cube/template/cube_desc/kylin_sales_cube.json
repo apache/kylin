@@ -306,7 +306,14 @@
   "storage_type" : %default_storage_type%,
   "override_kylin_properties" : {
     "kylin.cube.aggrgroup.is-mandatory-only-valid" : "true",
-    "kylin.engine.spark.rdd-partition-cut-mb" : "500"
+    "kylin.engine.build-base-cuboid-enabled": "false",
+    "kylin.query.spark.pool": "vip_tasks",
+    "kylin.storage.columnar.shard-countdistinct-rowcount" : "2500",
+    "kylin.query.spark-engine.spark-sql-shuffle-partitions" : "4",
+    "kylin.dictionary.globalV2-min-hash-partitions" : "3",
+    "kylin.dictionary.globalV2-threshold-bucket-size": "1000",
+    "kylin.engine.spark.cache-parent-dataset-count" : "5",
+    "kylin.engine.spark.cache-parent-dataset-storage-level" : "MEMORY_AND_DISK_SER"
   },
   "cuboid_black_list" : [ ],
   "parent_forward" : 3,
