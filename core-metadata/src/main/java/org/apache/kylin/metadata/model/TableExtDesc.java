@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 
@@ -222,6 +223,18 @@ public class TableExtDesc extends RootPersistentEntity {
         TableExtDesc tableExtDesc = (TableExtDesc) o;
 
         return getResourcePath().equals(tableExtDesc.getResourcePath());
+    }
+
+    /**
+     * Get stats info of specified column by column name.
+     */
+    public ColumnStats getColumnStatsByName(String colName) {
+        Map<String, ColumnStats> columnStatsMap = Maps.newHashMap();
+        for (ColumnStats col : columnStats) {
+            columnStatsMap.putIfAbsent(col.getColumnName(), col);
+        }
+
+        return columnStatsMap.getOrDefault(colName, null);
     }
 
     @Override

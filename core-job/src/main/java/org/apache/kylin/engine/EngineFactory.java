@@ -26,6 +26,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 
 public class EngineFactory {
 
@@ -40,6 +41,16 @@ public class EngineFactory {
             engines.set(current);
         }
         return current.get(aware.getEngineType());
+    }
+
+    public static IBatchCubingEngine batchEngine() {
+        ImplementationSwitch<IBatchCubingEngine> current = engines.get();
+        if (current == null) {
+            current = new ImplementationSwitch<>(KylinConfig.getInstanceFromEnv().getJobEngines(),
+                    IBatchCubingEngine.class);
+            engines.set(current);
+        }
+        return current.get(IEngineAware.ID_SPARK_II);
     }
 
     /** Mark deprecated to indicate for test purpose only */
@@ -69,5 +80,10 @@ public class EngineFactory {
     /** Optimize a segment based on the cuboid recommend list produced by the cube planner. */
     public static DefaultChainedExecutable createBatchOptimizeJob(CubeSegment optimizeSegment, String submitter) {
         return batchEngine(optimizeSegment).createBatchOptimizeJob(optimizeSegment, submitter);
+    }
+
+    public static DefaultChainedExecutable createSampleTableJob(String project, String submitter, long maxSampleCount,
+            TableDesc tableDesc) {
+        return batchEngine().createSampleTableJob(project, submitter, maxSampleCount, tableDesc);
     }
 }

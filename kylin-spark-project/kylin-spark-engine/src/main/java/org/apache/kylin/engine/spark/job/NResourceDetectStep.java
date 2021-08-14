@@ -33,9 +33,8 @@ public class NResourceDetectStep extends NSparkLocalStep {
             this.setSparkSubmitClassName(ResourceDetectBeforeCubingJob.class.getName());
         } else if (parent instanceof NSparkMergingJob) {
             this.setSparkSubmitClassName(ResourceDetectBeforeMergingJob.class.getName());
-        /*} else if (parent instanceof NTableSamplingJob) {
+        } else if (parent instanceof NTableSamplingJob) {
             this.setSparkSubmitClassName(ResourceDetectBeforeSampling.class.getName());
-        */
         } else if (parent instanceof NSparkOptimizingJob) {
             this.setSparkSubmitClassName(ResourceDetectBeforeOptimizingJob.class.getName());
         } else {
