@@ -3307,6 +3307,14 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     /**
+     * whether to enable sparder monitor function
+     */
+    @ConfigTag(ConfigTag.Tag.GLOBAL_LEVEL)
+    public boolean isSparderCanaryEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.canary.sparder-context-canary-enabled", TRUE));
+    }
+
+    /**
      * Sparder is considered unavailable when the check task is unresponsive for more than this time
      */
     @ConfigTag(ConfigTag.Tag.GLOBAL_LEVEL)
