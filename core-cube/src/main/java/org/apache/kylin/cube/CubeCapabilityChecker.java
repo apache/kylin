@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -183,10 +182,32 @@ public class CubeCapabilityChecker {
         } else {
             HashSet<TblColRef> aggResult = result;
             for (AggregationGroup aggGroup : cubeDesc.getAggregationGroups()) {
-                HashSet<TblColRef> tmpAggResult = (HashSet<TblColRef>) result.stream().filter(col -> !Arrays.asList(aggGroup.getIncludes()).contains(col.getCanonicalName())).collect(Collectors.toSet());
+                List<String> aggGroupColumn = Arrays.asList(aggGroup.getIncludes());
+                HashSet<TblColRef> tmpAggResult = new HashSet<>(dimensionColumns);
+                Iterator<TblColRef> iterator = result.iterator();
+                while (iterator.hasNext()) {
+                    TblColRef col = iterator.next();
+                    String colName = col.getCanonicalName();
+                    String[] colInfo = colName.split("\\.");
+                    // colName: database.table.column
+                    if (colInfo.length == 3) {
+                        colName = colInfo[1] + "." + colInfo[2];
+                    }
+                    // colName: tableAlias:database.table.column
+                    if (col.getTableAlias() != null) {
+                        colName = col.getTableAlias() + "." + colInfo[2];
+                    }
+                    // aggGroupColumn: [table1Alias.column1,table2Alias.column2,....]
+                    if (aggGroupColumn.contains(colName)) {
+                        tmpAggResult.remove(col);
+                    }
+                }
                 if (tmpAggResult.size() < aggResult.size()) {
                     aggResult = tmpAggResult;
                 }
+            }
+            if (aggResult.size() > 0) {
+                aggResult.removeAll(cubeDesc.listDerivedDimensionColumns());
             }
             result = aggResult;
         }

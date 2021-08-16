@@ -255,6 +255,19 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     /**
+     * @return derived dimension columns
+     */
+    public List<TblColRef> listDerivedDimensionColumns() {
+        List<TblColRef> result = new ArrayList<TblColRef>();
+        for (TblColRef col : dimensionColumns) {
+            if (isDerived(col)) {
+                result.add(col);
+            }
+        }
+        return result;
+    }
+
+    /**
      * @return dimension columns excluding derived
      */
     public List<TblColRef> listDimensionColumnsExcludingDerived(boolean alsoExcludeExtendedCol) {
