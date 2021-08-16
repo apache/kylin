@@ -205,7 +205,7 @@ object SparderContext extends Logging {
         initializingThread.join()
       }
 
-      if (System.getProperty("spark.local") ne "true") {
+      if (System.getProperty("spark.local") != "true" && KylinConfig.getInstanceFromEnv.isSparderCanaryEnabled) {
         //monitor sparder
         SparderContextCanary.init()
       }

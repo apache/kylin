@@ -40,9 +40,13 @@ object JobMetricsUtils extends Logging {
     if (execution != null) {
       metrics = collectOutputRows(execution.executedPlan)
       logInfo(s"Collect output rows successfully. $metrics")
-    } else {
-      logInfo(s"Collect output rows failed.")
     }
+
+    // comment below source, because it always collect failed when using apache spark.
+
+    // else {
+    // logDebug(s"Collect output rows failed.")
+    //}
     metrics
   }
 
@@ -86,7 +90,21 @@ object JobMetricsUtils extends Logging {
     rowMetrics
   }
 
-  // to get actual QueryExecution when write parquet, more info in issue #8212
+  /**
+   * When using a custom spark which sent event which contain QueryExecution belongs to a specific N_EXECUTION_ID_KEY,
+   * kylin can cache QueryExecution object into QueryExecutionCache and collect metrics such as bytes/row count for a cuboid
+   *
+     override def onOtherEvent(event: SparkListenerEvent): Unit = event match {
+        case e: PostQueryExecutionForKylin =>
+          val nExecutionId = e.localProperties.getProperty(QueryExecutionCache.N_EXECUTION_ID_KEY, "")
+          if (nExecutionId != "" && e.queryExecution != null) {
+            QueryExecutionCache.setQueryExecution(nExecutionId, e.queryExecution)
+          } else {
+            logWarning("executionIdStr is null, can't get QueryExecution from SQLExecution.")
+          }
+        case _ => // Ignore
+      }
+   */
   def registerListener(ss: SparkSession): Unit = {
     sparkListener = new SparkListener {
 

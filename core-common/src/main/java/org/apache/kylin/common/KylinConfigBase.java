@@ -566,42 +566,52 @@ public abstract class KylinConfigBase implements Serializable {
     // DICTIONARY & SNAPSHOT
     // ============================================================================
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isUseForestTrieDictionary() {
         return Boolean.parseBoolean(getOptional("kylin.dictionary.use-forest-trie", TRUE));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public long getTrieDictionaryForestMaxTrieSizeMB() {
         return Integer.parseInt(getOptional("kylin.dictionary.forest-trie-max-mb", "500"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public long getCachedDictMaxEntrySize() {
         return Long.parseLong(getOptional("kylin.dictionary.max-cache-entry", "3000"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getCachedDictMaxSize() {
         return Integer.parseInt(getOptional("kylin.dictionary.max-cache-size", "-1"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isGrowingDictEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.dictionary.growing-enabled", FALSE));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isDictResuable() {
         return Boolean.parseBoolean(this.getOptional("kylin.dictionary.resuable", FALSE));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public long getCachedDictionaryMaxEntrySize() {
         return Long.parseLong(getOptional("kylin.dictionary.cached-dict-max-cache-entry", "50000"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getAppendDictEntrySize() {
         return Integer.parseInt(getOptional("kylin.dictionary.append-entry-size", "10000000"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getAppendDictMaxVersions() {
         return Integer.parseInt(getOptional("kylin.dictionary.append-max-versions", "3"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getAppendDictVersionTTL() {
         return Integer.parseInt(getOptional("kylin.dictionary.append-version-ttl", "259200000"));
     }
@@ -670,43 +680,6 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.dictionary.mr-hive.table.suffix", "_global_dict");
     }
 
-    // ============================================================================
-    // Distributed/Spark Global dictionary
-    // Add wiki link here
-    // ============================================================================
-
-
-    public int getGlobalDictV2MinHashPartitions() {
-        return Integer.parseInt(getOptional("kylin.dictionary.globalV2-min-hash-partitions", "10"));
-    }
-
-    public int getGlobalDictV2ThresholdBucketSize() {
-        return Integer.parseInt(getOptional("kylin.dictionary.globalV2-threshold-bucket-size", "500000"));
-    }
-
-    public int getDictionarySliceEvicationThreshold() {
-        return Integer.parseInt(getOptional("kylin.dictionary.slice.eviction.threshold", "5"));
-    }
-
-    public double getGlobalDictV2InitLoadFactor() {
-        return Double.parseDouble(getOptional("kylin.dictionary.globalV2-init-load-factor", "0.5"));
-    }
-
-    public double getGlobalDictV2BucketOverheadFactor() {
-        return Double.parseDouble(getOptional("kylin.dictionary.globalV2-bucket-overhead-factor", "1.5"));
-    }
-
-    public int getGlobalDictV2MaxVersions() {
-        return Integer.parseInt(getOptional("kylin.dictionary.globalV2-max-versions", "3"));
-    }
-
-    public long getGlobalDictV2VersionTTL() {
-        return Long.parseLong(getOptional("kylin.dictionary.globalV2-version-ttl", "259200000"));
-    }
-
-    public boolean isCheckGlobalDictV2() {
-        return Boolean.parseBoolean(getOptional("kylin.dictionary.globalV2-check", "true"));
-    }
 
     // ============================================================================
     // CUBE
@@ -1106,7 +1079,7 @@ public abstract class KylinConfigBase implements Serializable {
     /**
      * was for route to hive, not used any more
      */
-    @Deprecated
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getHiveUrl() {
         return getOptional("kylin.source.hive.connection-url", "");
     }
@@ -1114,7 +1087,7 @@ public abstract class KylinConfigBase implements Serializable {
     /**
      * was for route to hive, not used any more
      */
-    @Deprecated
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getHiveUser() {
         return getOptional("kylin.source.hive.connection-user", "");
     }
@@ -1122,7 +1095,7 @@ public abstract class KylinConfigBase implements Serializable {
     /**
      * was for route to hive, not used any more
      */
-    @Deprecated
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getHivePassword() {
         return getOptional("kylin.source.hive.connection-password", "");
     }
@@ -1444,7 +1417,7 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(this.getOptional("kylin.storage.hbase.max-visit-scanrange", "1000000"));
     }
 
-    @ConfigTag(ConfigTag.Tag.UNCATEGORIZED)
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getDefaultIGTStorage() {
         return getOptional("kylin.storage.hbase.gtstorage",
                 "org.apache.kylin.storage.hbase.cube.v2.CubeHBaseEndpointRPC");
@@ -1515,7 +1488,6 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.storage.hbase.replication-scope", "0"));
     }
 
-    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean cleanStorageAfterDelOperation() {
         return Boolean.parseBoolean(getOptional("kylin.storage.clean-after-delete-operation", FALSE));
     }
@@ -1538,11 +1510,6 @@ public abstract class KylinConfigBase implements Serializable {
 
     public int getDefaultCubeEngine() {
         return Integer.parseInt(getOptional("kylin.engine.default", "6"));
-    }
-
-
-    public String getSparkStandaloneMasterWebUI() {
-        return getOptional("kylin.engine.spark.standalone.master.httpUrl", "");
     }
 
     public String getKylinJobJarPath() {
@@ -1683,89 +1650,95 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     // ============================================================================
-    // ENGINE.SPARK
+    // ENGINE.SPARK (DEPRECATED)
     // ============================================================================
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getHadoopConfDir() {
         return getOptional("kylin.env.hadoop-conf-dir", "");
     }
 
-    /**
-     * Get the sparder app name, default value is: 'sparder_on_localhost-7070'
-     */
-    public String getSparderAppName() {
-        String customSparderAppName = getOptional("kylin.query.sparder-context.app-name", "");
-        if (StringUtils.isEmpty(customSparderAppName)) {
-            customSparderAppName =
-                    "sparder_on_" + getServerRestAddress().replaceAll(":", "-");
-        }
-        return customSparderAppName;
-    }
-
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getSparkAdditionalJars() {
         return getOptional("kylin.engine.spark.additional-jars", "");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getFlinkAdditionalJars() {
         return getOptional("kylin.engine.flink.additional-jars", "");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public float getSparkRDDPartitionCutMB() {
         return Float.parseFloat(getOptional("kylin.engine.spark.rdd-partition-cut-mb", "10.0"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public float getFlinkPartitionCutMB() {
         return Float.parseFloat(getOptional("kylin.engine.flink.partition-cut-mb", "10.0"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getSparkMinPartition() {
         return Integer.parseInt(getOptional("kylin.engine.spark.min-partition", "1"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getFlinkMinPartition() {
         return Integer.parseInt(getOptional("kylin.engine.flink.min-partition", "1"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getSparkMaxPartition() {
         return Integer.parseInt(getOptional("kylin.engine.spark.max-partition", "5000"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getFlinkMaxPartition() {
         return Integer.parseInt(getOptional("kylin.engine.flink.max-partition", "5000"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getSparkStorageLevel() {
         return getOptional("kylin.engine.spark.storage-level", "MEMORY_AND_DISK_SER");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isSparkSanityCheckEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark.sanity-check-enabled", FALSE));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isSparkFactDistinctEnable() {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark-fact-distinct", "false"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isSparkUHCDictionaryEnable() {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark-udc-dictionary", "false"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isSparkCardinalityEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark-cardinality", "false"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getSparkOutputMaxSize() {
         return Integer.valueOf(getOptional("kylin.engine.spark.output.max-size", "10485760"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isSparkDimensionDictionaryEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark-dimension-dictionary", "false"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isFlinkSanityCheckEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.flink.sanity-check-enabled", FALSE));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isSparCreateHiveTableViaSparkEnable() {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark-create-table-enabled", "false"));
     }
@@ -1774,26 +1747,32 @@ public abstract class KylinConfigBase implements Serializable {
     // ENGINE.LIVY
     // ============================================================================
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isLivyEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.livy-conf.livy-enabled", FALSE));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getLivyRestApiBacktick() {
         return getOptional("kylin.engine.livy.backtick.quote", "");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getLivyUrl() {
         return getOptional("kylin.engine.livy-conf.livy-url");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public Map<String, String> getLivyKey() {
         return getPropertiesByPrefix("kylin.engine.livy-conf.livy-key.");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public Map<String, String> getLivyArr() {
         return getPropertiesByPrefix("kylin.engine.livy-conf.livy-arr.");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public Map<String, String> getLivyMap() {
         return getPropertiesByPrefix("kylin.engine.livy-conf.livy-map.");
     }
@@ -1802,6 +1781,7 @@ public abstract class KylinConfigBase implements Serializable {
     // QUERY
     // ============================================================================
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isDictionaryEnumeratorEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.enable-dict-enumerator", FALSE));
     }
@@ -1871,10 +1851,6 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.query.stream-aggregate-enabled", TRUE));
     }
 
-    public String getProjectQuerySparkPool() {
-        return getOptional("kylin.query.spark.pool", null);
-    }
-
     public boolean isProjectIsolationEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.storage.project-isolation-enable", TRUE));
     }
@@ -1908,11 +1884,13 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.project-concurrent-running-threshold", "0"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public long getQueryMaxScanBytes() {
         long value = Long.parseLong(getOptional("kylin.query.max-scan-bytes", "0"));
         return value > 0 ? value : Long.MAX_VALUE;
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public long getQueryMaxReturnRows() {
         return Integer.parseInt(this.getOptional("kylin.query.max-return-rows", "5000000"));
     }
@@ -2456,7 +2434,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     // ============================================================================
-    // jdbc metadata resource store
+    // Jdbc metadata resource store
     // ============================================================================
 
     public String getMetadataDialect() {
@@ -2492,151 +2470,189 @@ public abstract class KylinConfigBase implements Serializable {
     // ============================================================================
     // Realtime streaming
     // ============================================================================
+
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getStreamingStoreClass() {
         return getOptional("kylin.stream.store.class",
                 "org.apache.kylin.stream.core.storage.columnar.ColumnarSegmentStore");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getStreamingBasicCuboidJobDFSBlockSize() {
         return getOptional("kylin.stream.job.dfs.block.size", String.valueOf(16 * 1024 * 1024));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getStreamingIndexPath() {
         return getOptional("kylin.stream.index.path", "stream_index");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingCubeConsumerTasksNum() {
         return Integer.parseInt(getOptional("kylin.stream.cube-num-of-consumer-tasks", "3"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingCubeWindowInSecs() {
         return Integer.parseInt(getOptional("kylin.stream.cube.window", "3600"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingCubeDurationInSecs() {
         return Integer.parseInt(getOptional("kylin.stream.cube.duration", "7200"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingCubeMaxDurationInSecs() {
         return Integer.parseInt(getOptional("kylin.stream.cube.duration.max", "43200"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingCheckPointFileMaxNum() {
         return Integer.parseInt(getOptional("kylin.stream.checkpoint.file.max.num", "5"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingCheckPointIntervalsInSecs() {
         return Integer.parseInt(getOptional("kylin.stream.index.checkpoint.intervals", "300"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingIndexMaxRows() {
         return Integer.parseInt(getOptional("kylin.stream.index.maxrows", "50000"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingMaxImmutableSegments() {
         return Integer.parseInt(getOptional("kylin.stream.immutable.segments.max.num", "100"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isStreamingConsumeFromLatestOffsets() {
         return Boolean.parseBoolean(getOptional("kylin.stream.consume.offsets.latest", "true"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getStreamingNode() {
         return getOptional("kylin.stream.node", null);
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public Map<String, String> getStreamingNodeProperties() {
         return getPropertiesByPrefix("kylin.stream.node");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getStreamingMetadataStoreType() {
         return getOptional("kylin.stream.metadata.store.type", "zk");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getStreamingSegmentRetentionPolicy() {
         return getOptional("kylin.stream.segment.retention.policy", "fullBuild");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getStreamingAssigner() {
         return getOptional("kylin.stream.assigner", "DefaultAssigner");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getCoordinatorHttpClientTimeout() {
         return Integer.parseInt(getOptional("kylin.stream.coordinator.client.timeout.millsecond", "5000"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getReceiverHttpClientTimeout() {
         return Integer.parseInt(getOptional("kylin.stream.receiver.client.timeout.millsecond", "5000"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingReceiverHttpMaxThreads() {
         return Integer.parseInt(getOptional("kylin.stream.receiver.http.max.threads", "200"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingReceiverHttpMinThreads() {
         return Integer.parseInt(getOptional("kylin.stream.receiver.http.min.threads", "10"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingReceiverQueryCoreThreads() {
         return Integer.parseInt(getOptional("kylin.stream.receiver.query-core-threads", "50"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingReceiverQueryMaxThreads() {
         return Integer.parseInt(getOptional("kylin.stream.receiver.query-max-threads", "200"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingReceiverUseThreadsPerQuery() {
         return Integer.parseInt(getOptional("kylin.stream.receiver.use-threads-per-query", "8"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingRPCHttpConnTimeout() {
         return Integer.parseInt(getOptional("kylin.stream.rpc.http.connect.timeout", "10000"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingRPCHttpReadTimeout() {
         return Integer.parseInt(getOptional("kylin.stream.rpc.http.read.timeout", "60000"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isStreamingBuildAdditionalCuboids() {
         return Boolean.parseBoolean(getOptional("kylin.stream.build.additional.cuboids", "false"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public Map<String, String> getStreamingSegmentRetentionPolicyProperties(String policyName) {
         return getPropertiesByPrefix("kylin.stream.segment.retention.policy." + policyName + ".");
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingMaxFragmentsInSegment() {
         return Integer.parseInt(getOptional("kylin.stream.segment-max-fragments", "50"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingMinFragmentsInSegment() {
         return Integer.parseInt(getOptional("kylin.stream.segment-min-fragments", "15"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public int getStreamingMaxFragmentSizeInMb() {
         return Integer.parseInt(getOptional("kylin.stream.max-fragment-size-mb", "300"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isStreamingFragmentsAutoMergeEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.stream.fragments-auto-merge-enable", "true"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isStreamingConcurrentScanEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.stream.segment.concurrent.scan", "false"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isStreamingStandAloneMode() {
         return Boolean.parseBoolean(getOptional("kylin.stream.stand-alone.mode", "false"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isNewCoordinatorEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.stream.new.coordinator-enabled", "true"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getLocalStorageImpl() {
         return getOptional("kylin.stream.settled.storage", null);
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getStreamMetrics() {
         return getOptional("kylin.stream.metrics.option", "");
     }
@@ -2644,10 +2660,12 @@ public abstract class KylinConfigBase implements Serializable {
     /**
      * whether to print encode integer value for count distinct string value, only for debug/test purpose
      */
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isPrintRealtimeDictEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.stream.print-realtime-dict-enabled", "false"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public long getStreamMetricsInterval() {
         return Long.parseLong(getOptional("kylin.stream.metrics.interval", "5"));
     }
@@ -2655,14 +2673,17 @@ public abstract class KylinConfigBase implements Serializable {
     /**
      * whether realtime query should add timezone offset by kylin's web-timezone, please refer to KYLIN-4010 for detail
      */
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getStreamingDerivedTimeTimezone() {
         return (getOptional("kylin.stream.event.timezone", ""));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public boolean isAutoResubmitDiscardJob() {
         return Boolean.parseBoolean(getOptional("kylin.stream.auto-resubmit-after-discard-enabled", "true"));
     }
 
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public String getHiveDatabaseLambdaCube() {
         return this.getOptional("kylin.stream.hive.database-for-lambda-cube", DEFAULT);
     }
@@ -2691,8 +2712,9 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.tool.health-check.stale-job-threshold-days", "30"));
     }
 
+
     // ============================================================================
-    // Kylin 4.x related
+    // Kylin 4.X Build Engine
     // ============================================================================
 
     public String getKylinParquetJobJarPath() {
@@ -2710,6 +2732,7 @@ public abstract class KylinConfigBase implements Serializable {
     /**
      * Use https://github.com/spektom/spark-flamegraph for Spark profile
      */
+    @ConfigTag(ConfigTag.Tag.DEBUG_HACK)
     public String getSparkSubmitCmd() {
         return getOptional("kylin.engine.spark-cmd", null);
     }
@@ -2722,32 +2745,6 @@ public abstract class KylinConfigBase implements Serializable {
     @ConfigTag(ConfigTag.Tag.DEBUG_HACK)
     public String getSparkBuildClassName() {
         return getOptional("kylin.engine.spark.build-class-name", "org.apache.kylin.engine.spark.job.CubeBuildJob");
-    }
-
-    public Boolean getSparkEngineTaskImpactInstanceEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.engine.spark.task-impact-instance-enabled", "true"));
-    }
-
-    public int getSparkEngineTaskCoreFactor() {
-        return Integer.parseInt(getOptional("kylin.engine.spark.task-core-factor", "3"));
-    }
-
-    public int getSparkEngineDriverMemoryBase() {
-        return Integer.parseInt(getOptional("kylin.engine.driver-memory-base", "1024"));
-    }
-
-    public boolean isTrackingUrlIpAddressEnabled() {
-        return Boolean.valueOf(this.getOptional("kylin.job.tracking-url-ip-address-enabled", TRUE));
-    }
-
-    //Auto adjust the memory of driver
-    public int[] getSparkEngineDriverMemoryStrategy() {
-        String[] dft = {"2", "20", "100"};
-        return getOptionalIntArray("kylin.engine.driver-memory-strategy", dft);
-    }
-
-    public int getSparkEngineDriverMemoryMaximum() {
-        return Integer.parseInt(getOptional("kylin.engine.driver-memory-maximum", "4096"));
     }
 
     public StorageURL getJobTmpMetaStoreUrl(String project, String jobId) {
@@ -2857,10 +2854,11 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.valueOf(getOptional("kylin.storage.columnar.dfs-replication", "3"));
     }
 
-    public boolean isAutoSetSparkConf() {
-        return Boolean.parseBoolean(getOptional("kylin.spark-conf.auto.prior", "true"));
-    }
-
+    /**
+     * Read-Write separation deployment for Kylin 4
+     * Please check https://cwiki.apache.org/confluence/display/KYLIN/Read-Write+Separation+Deployment+for+Kylin+4.0
+     */
+    @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
     public String getBuildConf() {
         return getOptional("kylin.engine.submit-hadoop-conf-dir", "");
     }
@@ -2882,6 +2880,88 @@ public abstract class KylinConfigBase implements Serializable {
 
     public int getSparkEngineMaxRetryTime() {
         return Integer.parseInt(getOptional("kylin.engine.max-retry-time", "3"));
+    }
+
+    @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
+    public int getSnapshotShardSizeMB() {
+        return Integer.parseInt(getOptional("kylin.snapshot.shard-size-mb", "128"));
+    }
+
+    /**
+     * If we should calculate cuboid statistics for each segment, which is needed for cube planner phase two
+     */
+    @ConfigTag(ConfigTag.Tag.NOT_CLEAR)
+    public boolean isSegmentStatisticsEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.engine.segment-statistics-enabled", "false"));
+    }
+
+    @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
+    public String getParentDatasetStorageLevel() {
+        return getOptional("kylin.engine.spark.cache-parent-dataset-storage-level", "NONE");
+    }
+
+    @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
+    public int getMaxParentDatasetPersistCount() {
+        return Integer.parseInt(getOptional("kylin.engine.spark.cache-parent-dataset-count", "1"));
+    }
+
+    @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
+    public boolean isBuildBaseCuboid() {
+        return Boolean.valueOf(getOptional("kylin.engine.build-base-cuboid-enabled", TRUE));
+    }
+
+    public boolean isTrackingUrlIpAddressEnabled() {
+        return Boolean.valueOf(this.getOptional("kylin.job.tracking-url-ip-address-enabled", TRUE));
+    }
+
+    // ============================================================================
+    // Kylin 4.X Spark resources automatic adjustment strategy configuration
+    // ============================================================================
+
+    /**
+     * <pre>
+     * For a CubeBuildJob and CubeMergeJob, it is important to allocate enough and proper resources(cpu/memory), including following config entries mainly:
+     *   - spark.driver.memory
+     *   - spark.executor.memory
+     *   - spark.executor.cores
+     *   - spark.executor.memoryOverhead
+     *   - spark.executor.instances
+     *   - spark.sql.shuffle.partitions
+     *
+     *  When `kylin.spark-conf.auto.prior` is set to true, Kylin will try to adjust above config entries according to:
+     *    - Count of cuboids to be built
+     *    - (Max)Size of fact table
+     *    - Available resources from current resource manager 's queue
+     *
+     *  But user still can choose to override some config via `kylin.engine.spark-conf.XXX` in Cube level .
+     *  Check detail at https://cwiki.apache.org/confluence/display/KYLIN/How+to+improve+cube+building+and+query+performance
+     * </pre>
+     *
+     */
+    @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
+    public boolean isAutoSetSparkConf() {
+        return Boolean.parseBoolean(getOptional("kylin.spark-conf.auto.prior", "true"));
+    }
+
+    public Boolean getSparkEngineTaskImpactInstanceEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark.task-impact-instance-enabled", "true"));
+    }
+
+    public int getSparkEngineTaskCoreFactor() {
+        return Integer.parseInt(getOptional("kylin.engine.spark.task-core-factor", "3"));
+    }
+
+    public int getSparkEngineDriverMemoryBase() {
+        return Integer.parseInt(getOptional("kylin.engine.driver-memory-base", "1024"));
+    }
+
+    public int[] getSparkEngineDriverMemoryStrategy() {
+        String[] dft = {"2", "20", "100"};
+        return getOptionalIntArray("kylin.engine.driver-memory-strategy", dft);
+    }
+
+    public int getSparkEngineDriverMemoryMaximum() {
+        return Integer.parseInt(getOptional("kylin.engine.driver-memory-maximum", "4096"));
     }
 
     public double getSparkEngineRetryMemoryGradient() {
@@ -2908,13 +2988,133 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.engine.executor-instance-strategy", "100,2,500,3,1000,4");
     }
 
-    public int getSnapshotShardSizeMB() {
-        return Integer.parseInt(getOptional("kylin.snapshot.shard-size-mb", "128"));
+
+    // ============================================================================
+    // Kylin 4.X Global dictionary
+    // Wiki : https://cwiki.apache.org/confluence/display/KYLIN/Global+Dictionary+on+Spark
+    // ============================================================================
+
+
+    @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
+    public int getGlobalDictV2MinHashPartitions() {
+        return Integer.parseInt(getOptional("kylin.dictionary.globalV2-min-hash-partitions", "10"));
+    }
+
+    @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
+    public int getGlobalDictV2ThresholdBucketSize() {
+        return Integer.parseInt(getOptional("kylin.dictionary.globalV2-threshold-bucket-size", "500000"));
+    }
+
+    public int getDictionarySliceEvicationThreshold() {
+        return Integer.parseInt(getOptional("kylin.dictionary.slice.eviction.threshold", "5"));
+    }
+
+    @ConfigTag({ConfigTag.Tag.CUBE_LEVEL})
+    public double getGlobalDictV2InitLoadFactor() {
+        return Double.parseDouble(getOptional("kylin.dictionary.globalV2-init-load-factor", "0.5"));
+    }
+
+    @ConfigTag({ConfigTag.Tag.CUBE_LEVEL})
+    public double getGlobalDictV2BucketOverheadFactor() {
+        return Double.parseDouble(getOptional("kylin.dictionary.globalV2-bucket-overhead-factor", "1.5"));
+    }
+
+    @ConfigTag({ConfigTag.Tag.CUBE_LEVEL})
+    public int getGlobalDictV2MaxVersions() {
+        return Integer.parseInt(getOptional("kylin.dictionary.globalV2-max-versions", "3"));
+    }
+
+    @ConfigTag({ConfigTag.Tag.CUBE_LEVEL})
+    public long getGlobalDictV2VersionTTL() {
+        return Long.parseLong(getOptional("kylin.dictionary.globalV2-version-ttl", "259200000"));
+    }
+
+    @ConfigTag({ConfigTag.Tag.CUBE_LEVEL})
+    public boolean isCheckGlobalDictV2() {
+        return Boolean.parseBoolean(getOptional("kylin.dictionary.globalV2-check-enabled", "true"));
+    }
+
+    /**
+     * Detect dataset skew in dictionary encode step.
+     */
+    @ConfigTag({ConfigTag.Tag.CUBE_LEVEL})
+    public boolean detectDataSkewInDictEncodingEnabled() {
+        return Boolean.valueOf(getOptional("kylin.dictionary.detect-data-skew-sample-enabled", FALSE));
+    }
+
+    /**
+     * In some data skew cases, the repartition step during dictionary encoding will be slow.
+     * We can choose to sample from the dataset to detect skewed. This configuration is used to set the sample rate.
+     */
+    @ConfigTag({ConfigTag.Tag.CUBE_LEVEL})
+    public double sampleRateInEncodingSkewDetection() {
+        return Double.valueOf(getOptional("kylin.dictionary.detect-data-skew-sample-rate", "0.1"));
+    }
+
+    /*
+     * In KYLIN4, dictionaries are hashed into several buckets, column data are repartitioned by the same hash algorithm
+     * during encoding step too. In data skew cases, the repartition step will be very slow. Kylin will automatically
+     * sample from the source to detect skewed data and repartition these skewed data to random partitions.
+     * This configuration is used to set the skew data threshold, valued from 0 to 1.
+     * e.g.
+     *   if you set this value to 0.05, for each value that takes up more than 5% percent of the total will be regarded
+     *   as skew data, as a result the skewed data will be no more than 20 records
+     * */
+    @ConfigTag({ConfigTag.Tag.CUBE_LEVEL})
+    public double skewPercentageThreshHold() {
+        return Double.valueOf(getOptional("kylin.dictionary.detect-data-skew-percentage-threshold", "0.05"));
+    }
+
+    /***
+     * Global dictionary will be split into several buckets. To encode a column to int value more
+     * efficiently, source dataset will be repartitioned by the to-be encoded column to the same
+     * amount of partitions as the dictionary's bucket size.
+     *
+     * It sometimes bring side effect, because repartitioning by a single column is more likely to cause
+     * serious data skew, causing one task takes the majority of time in first layer's cuboid building.
+     *
+     * When faced with this case, you can try repartitioning encoded dataset by all
+     * RowKey columns to avoid data skew. The repartition size is default to max bucket
+     * size of all dictionaries, but you can also set to other flexible value by this option:
+     * 'kylin.engine.spark.dataset.repartition.num.after.encoding'
+     */
+    @ConfigTag({ConfigTag.Tag.CUBE_LEVEL})
+    public boolean rePartitionEncodedDatasetWithRowKey() {
+        return Boolean.valueOf(getOptional("kylin.engine.spark.repartition.dataset.after.encode-enabled", FALSE));
+    }
+
+    @ConfigTag({ConfigTag.Tag.CUBE_LEVEL})
+    public int getRepartitionNumAfterEncode() {
+        return Integer.valueOf(getOptional("kylin.engine.spark.repartition.dataset.after.encode.num", "0"));
+    }
+
+    @ConfigTag(ConfigTag.Tag.GLOBAL_LEVEL)
+    public String getSparkStandaloneMasterWebUI() {
+        return getOptional("kylin.engine.spark.standalone.master.httpUrl", "");
+    }
+
+
+    // ============================================================================
+    // Kylin 4.X Query Engine (SparderContext)
+    // ============================================================================
+
+    /**
+     * Set the sparder app name, default value is: 'sparder_on_${hostname}-${port}'
+     */
+    @ConfigTag(ConfigTag.Tag.GLOBAL_LEVEL)
+    public String getSparderAppName() {
+        String customSparderAppName = getOptional("kylin.query.sparder-context.app-name", "");
+        if (StringUtils.isEmpty(customSparderAppName)) {
+            customSparderAppName =
+                    "sparder_on_" + getServerRestAddress().replaceAll(":", "-");
+        }
+        return customSparderAppName;
     }
 
     /**
      * driver memory that can be used by join(mostly BHJ)
      */
+    @ConfigTag(ConfigTag.Tag.DEPRECATED)
     public double getJoinMemoryFraction() {
         return Double.parseDouble(getOptional("kylin.query.spark-engine.join-memory-fraction", "0.3"));
     }
@@ -2932,7 +3132,6 @@ public abstract class KylinConfigBase implements Serializable {
         return getLogPropertyFile("spark-executor-log4j.properties");
     }
 
-
     private String getLogPropertyFile(String filename) {
         if (isDevEnv()) {
             return Paths.get(getKylinHomeWithoutWarn(),
@@ -2943,30 +3142,59 @@ public abstract class KylinConfigBase implements Serializable {
         }
     }
 
+    /**
+     * <pre>
+     * SparderContext will try to set `spark.sql.shuffle.partitions` for each query according to bytes to scan
+     * 1. set to -1 to let it auto decided by query engine, to be specific, it is
+     *   ${total bytes of all files after pruned by FilePruner} / KylinConfigBase#getQueryPartitionSplitSizeMB
+     * 2. other positive integer to set a fixed value.
+     * </pre>
+     *
+     * @see KylinConfigBase#getQueryPartitionSplitSizeMB
+     */
+    @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
+    public int getSparkSqlShufflePartitions() {
+        return Integer.parseInt(getOptional("kylin.query.spark-engine.spark-sql-shuffle-partitions",
+                "-1"));
+    }
+
+    @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
     public int getQueryPartitionSplitSizeMB() {
         return Integer.parseInt(getOptional("kylin.query.spark-engine.partition-split-size-mb",
                 "64"));
+    }
+
+    @ConfigTag(ConfigTag.Tag.GLOBAL_LEVEL)
+    public boolean isAutoSetPushDownPartitions() {
+        return Boolean
+                .parseBoolean(this.getOptional("kylin.query.pushdown.auto-set-shuffle-partitions-enabled", "true"));
+    }
+
+    @ConfigTag(ConfigTag.Tag.GLOBAL_LEVEL)
+    public int getBaseShufflePartitionSize() {
+        return Integer.parseInt(this.getOptional("kylin.query.pushdown.base-shuffle-partition-size", "48"));
     }
 
     /**
      * The max size in mb handled per task when using shard by column,
      * if the sharding size exceeds this value, it will fall back to non-sharding read RDD
      */
+    @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
     public int getMaxShardingSizeMBPerTask() {
         return Integer.parseInt(getOptional("kylin.query.spark-engine.max-sharding-size-mb",
                 "64"));
     }
 
+    @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
     public boolean isShardingJoinOptEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.spark-engine.expose-sharding-trait",
                 "true"));
     }
 
-    public int getSparkSqlShufflePartitions() {
-        return Integer.parseInt(getOptional("kylin.query.spark-engine.spark-sql-shuffle-partitions",
-                "-1"));
-    }
-
+    /**
+     * Set proper resources(cpu and memory) for SparderContext
+     */
+    @ConfigTag(ConfigTag.Tag.GLOBAL_LEVEL)
     public Map<String, String> getQuerySparkConf() {
         return getPropertiesByPrefix("kylin.query.spark-conf.");
     }
@@ -2986,6 +3214,7 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.bitmap-upper-bound", "10000000"));
     }
 
+    @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
     public boolean needReplaceAggWhenExactlyMatched() {
         return Boolean.parseBoolean(getOptional("kylin.query.need-replace-exactly-agg", "true"));
     }
@@ -3045,26 +3274,50 @@ public abstract class KylinConfigBase implements Serializable {
         }
     }
 
-    public boolean isAutoSetPushDownPartitions() {
-        return Boolean
-                .parseBoolean(this.getOptional("kylin.query.pushdown.auto-set-shuffle-partitions-enabled", "true"));
-    }
-
     public String getJobOutputStorePath(String project, String jobId) {
         return getSparkLogDir(project) + getNestedPath(jobId) + "execute_output.json";
     }
 
-    public int getBaseShufflePartitionSize() {
-        return Integer.parseInt(this.getOptional("kylin.query.pushdown.base-shuffle-partition-size", "48"));
+    /**
+     * <pre>
+     * The fair scheduler of Apache Spark supports grouping jobs into pools, and setting different scheduling options (e.g. weight) for each pool. This can be useful to create a “high-priority” pool for more important query jobs.
+     *
+     * Query engine of Kylin 4 support set pool for query at project level and thread level, and it has built-in pools:($KYLIN_HOME/conf/fairscheduler.xml)
+     *
+     *   - lightweight_tasks are query which not require all available cpu cores
+     *   - heavy_tasks are query which require all available cpu cores
+     *   - query_pushdown are query which not answered by cube
+     *
+     * Please check following link for detail.
+     *   - http://spark.apache.org/docs/latest/job-scheduling.html#scheduling-within-an-application
+     *   - https://cwiki.apache.org/confluence/display/KYLIN/Use+different+spark+pool+for+different+query
+     * </pre>
+     */
+    @ConfigTag({ConfigTag.Tag.PROJECT_LEVEL, ConfigTag.Tag.THREAD_LEVEL})
+    public String getProjectQuerySparkPool() {
+        return getOptional("kylin.query.spark.pool", null);
     }
 
+    /**
+     * Whether or not to start SparderContext when query server start, set to false if your
+     */
+    @ConfigTag(ConfigTag.Tag.GLOBAL_LEVEL)
     public boolean isAutoStartSparder() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.auto-sparder-context", "false"));
+        return Boolean.parseBoolean(this.getOptional("kylin.query.auto-sparder-context-enabled", "false"));
+    }
+
+    /**
+     * whether to enable sparder monitor function
+     */
+    @ConfigTag(ConfigTag.Tag.GLOBAL_LEVEL)
+    public boolean isSparderCanaryEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.canary.sparder-context-canary-enabled", TRUE));
     }
 
     /**
      * Sparder is considered unavailable when the check task is unresponsive for more than this time
      */
+    @ConfigTag(ConfigTag.Tag.GLOBAL_LEVEL)
     public int getSparderCanaryErrorResponseMs() {
         return Integer.parseInt(this.getOptional("kylin.canary.sparder-context-error-response-ms", "3000"));
     }
@@ -3072,6 +3325,7 @@ public abstract class KylinConfigBase implements Serializable {
     /**
      * The maximum number of restart sparder when sparder is not available
      */
+    @ConfigTag(ConfigTag.Tag.GLOBAL_LEVEL)
     public int getThresholdToRestartSparder() {
         return Integer.parseInt(this.getOptional("kylin.canary.sparder-context-threshold-to-restart-spark", "3"));
     }
@@ -3079,16 +3333,11 @@ public abstract class KylinConfigBase implements Serializable {
     /**
      * Time period between two sparder health checks
      */
+    @ConfigTag(ConfigTag.Tag.GLOBAL_LEVEL)
     public int getSparderCanaryPeriodMinutes() {
         return Integer.parseInt(this.getOptional("kylin.canary.sparder-context-period-min", "3"));
     }
 
-    /**
-     * If we should calculate cuboid statistics for each segment, which is needed for cube planner phase two
-     */
-    public boolean isSegmentStatisticsEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.engine.segment-statistics-enabled", "false"));
-    }
 
     // ============================================================================
     // Spark with Kerberos
@@ -3153,66 +3402,5 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getKerberosPrincipal() {
         return getOptional("kylin.kerberos.principal");
-    }
-
-    public String getParentDatasetStorageLevel() {
-        return getOptional("kylin.engine.spark.parent-dataset.storage.level", "NONE");
-    }
-
-    public int getMaxParentDatasetPersistCount() {
-        return Integer.parseInt(getOptional("kylin.engine.spark.parent-dataset.max.persist.count", "1"));
-    }
-
-    public int getRepartitionNumAfterEncode() {
-        return Integer.valueOf(getOptional("kylin.engine.spark.dataset.repartition.num.after.encoding", "0"));
-    }
-
-    /***
-     * Global dictionary will be split into several buckets. To encode a column to int value more
-     * efficiently, source dataset will be repartitioned by the to-be encoded column to the same
-     * amount of partitions as the dictionary's bucket size.
-     *
-     * It sometimes bring side effect, because repartitioning by a single column is more likely to cause
-     * serious data skew, causing one task takes the majority of time in first layer's cuboid building.
-     *
-     * When faced with this case, you can try repartitioning encoded dataset by all
-     * RowKey columns to avoid data skew. The repartition size is default to max bucket
-     * size of all dictionaries, but you can also set to other flexible value by this option:
-     * 'kylin.engine.spark.dataset.repartition.num.after.encoding'
-     ***/
-    public boolean rePartitionEncodedDatasetWithRowKey() {
-        return Boolean.valueOf(getOptional("kylin.engine.spark.repartition.encoded.dataset", "false"));
-    }
-
-    /*
-     * Detect dataset skew in dictionary encode step.
-     * */
-    public boolean detectDataSkewInDictEncodingEnabled() {
-        return Boolean.valueOf(getOptional("kylin.dictionary.detect.data.skew.in.encoding", "false"));
-    }
-
-    /*
-    * In some data skew cases, the repartition step during dictionary encoding will be slow.
-    * We can choose to sample from the dataset to detect skewed. This configuration is used to set the sample rate.
-    * */
-    public double sampleRateInEncodingSkewDetection() {
-        return Double.valueOf(getOptional("kylin.dictionary.detect.data.skew.sample.rate", "0.1"));
-    }
-
-    /*
-    * In KYLIN4, dictionaries are hashed into several buckets, column data are repartitioned by the same hash algorithm
-    * during encoding step too. In data skew cases, the repartition step will be very slow. Kylin will automatically
-    * sample from the source to detect skewed data and repartition these skewed data to random partitions.
-    * This configuration is used to set the skew data threshhold, valued from 0 to 1.
-    * e.g.
-    *   if you set this value to 0.05, for each value that takes up more than 5% percent of the total will be regarded
-    *   as skew data, as a result the skewed data will be no more than 20 records
-    * */
-    public double skewPercentageThreshHold() {
-        return Double.valueOf(getOptional("kylin.dictionary.data.skew.percentage.threshhold", "0.05"));
-    }
-
-    public boolean isBuildBaseCuboid() {
-        return Boolean.valueOf(getOptional("kylin.engine.cuboid.build.base", "true"));
     }
 }

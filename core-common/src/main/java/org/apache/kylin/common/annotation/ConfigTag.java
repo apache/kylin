@@ -34,11 +34,17 @@ public @interface ConfigTag {
     Tag[] value();
 
     enum Tag {
+
+        // =============== basic classification ===============
+
         /**
-         * Indicate this property will be removed soon.
+         * Out of date, indicate this property will be removed soon, most of them are from Kylin 3.X.
          */
         DEPRECATED,
 
+        /**
+         * Not well tested/supported for now.
+         */
         NOT_CLEAR,
 
         /**
@@ -47,28 +53,36 @@ public @interface ConfigTag {
         NOT_IMPLEMENTED,
 
         /**
-         * To be categorized
-         */
-        UNCATEGORIZED,
-
-        /**
-         * For hacker or developer
+         * For hacker or developer, not for user
          */
         DEBUG_HACK,
 
+        // =============== configuration level ===============
+
         /**
-         * Support cube level configuration
+         * Support thread/local level configuration (BackdoorToggles)
+         */
+        THREAD_LEVEL,
+
+        /**
+         * Support cube level configuration (CubeInstance)
          */
         CUBE_LEVEL,
 
         /**
-         * Support project level configuration
+         * Support project level configuration (ProjectInstance)
          */
         PROJECT_LEVEL,
 
         /**
-         * Only support global configuration
+         * Only support global level configuration, require restart Kylin instance (kylin.properties)
          */
-        GLOBAL_LEVEL
+        GLOBAL_LEVEL,
+
+        // =============== importance level ===============
+
+        MAJOR,
+
+        MINOR
     }
 }

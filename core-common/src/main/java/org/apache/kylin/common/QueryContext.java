@@ -214,12 +214,10 @@ public class QueryContext {
         return scanTime.addAndGet(time);
     }
 
-    @Clarification(priority = Clarification.Priority.MAJOR, msg = "remove this")
     public void addQueryStopListener(QueryStopListener listener) {
         this.stopListeners.add(listener);
     }
 
-    @Clarification(priority = Clarification.Priority.MAJOR, msg = "Maybe we can change spark.scheduler.pool to implement resource isolation.")
     public void setHighPriorityQuery(boolean highPriorityQuery) {
         isHighPriorityQuery = highPriorityQuery;
     }
