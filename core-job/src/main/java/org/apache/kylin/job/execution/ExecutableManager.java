@@ -570,7 +570,6 @@ public class ExecutableManager {
             if (endTime != 0) {
                 long interruptTime = System.currentTimeMillis() - endTime + job.getInterruptTime();
                 info = Maps.newHashMap(getJobOutput(jobId).getInfo());
-                getJobOutput(jobId).getInfo().remove(AbstractExecutable.END_TIME);
                 info.put(AbstractExecutable.INTERRUPT_TIME, Long.toString(interruptTime));
                 info.remove(AbstractExecutable.END_TIME);
             }
@@ -682,6 +681,10 @@ public class ExecutableManager {
                 } else {
                     jobOutput.setInfo(info);
                 }
+            }
+            if ((ExecutableState.ERROR.equals(oldStatus) || ExecutableState.STOPPED.equals(oldStatus))
+                    && ExecutableState.READY.equals(newStatus)) {
+                jobOutput.getInfo().remove(AbstractExecutable.END_TIME);
             }
             if (output != null) {
                 if (output.length() > config.getJobOutputMaxSize()) {
