@@ -181,7 +181,7 @@ public class StorageCleanupJob extends AbstractApplication {
                     if (eligibleStorage(status)) {
                         String projectName = status.getPath().getName();
                         if (!projects.contains(projectName)) {
-                            deleteOp(status.getPath(), STORAGE_CLEAN_TYPE.PROJECT_DIR);
+                            deleteOp(status.getPath(), StorageCleanType.PROJECT_DIR);
                         } else {
                             cleanupGlobalDict(projectName,
                                     cubes.stream().filter(cube -> projectName.equals(cube.getProject()))
@@ -213,7 +213,7 @@ public class StorageCleanupJob extends AbstractApplication {
                         if (eligibleStorage(status)) {
                             String segment = status.getPath().getName();
                             if (!segments.contains(segment)) {
-                                deleteOp(status.getPath(), STORAGE_CLEAN_TYPE.SEGMENT_DIR);
+                                deleteOp(status.getPath(), StorageCleanType.SEGMENT_DIR);
                             }
                         }
                     }
@@ -230,7 +230,7 @@ public class StorageCleanupJob extends AbstractApplication {
                 FileStatus[] jobTmpPaths = fs.listStatus(prjPath);
                 for (FileStatus status : jobTmpPaths) {
                     if (!eligibleStorage(status)) {
-                        deleteOp(status.getPath(), STORAGE_CLEAN_TYPE.JOB_TMP);
+                        deleteOp(status.getPath(), StorageCleanType.JOB_TMP);
                     }
                 }
             }
@@ -247,7 +247,7 @@ public class StorageCleanupJob extends AbstractApplication {
                     if (eligibleStorage(status)) {
                         String cubeName = status.getPath().getName();
                         if (!cubes.contains(cubeName)) {
-                            deleteOp(status.getPath(), STORAGE_CLEAN_TYPE.CUBE_DIR);
+                            deleteOp(status.getPath(), StorageCleanType.CUBE_DIR);
                         }
                     }
                 }
@@ -283,7 +283,7 @@ public class StorageCleanupJob extends AbstractApplication {
         }
 
         for (Path path : toDeleteSnapshot) {
-            deleteOp(path, STORAGE_CLEAN_TYPE.TABLE_SNAPSHOT);
+            deleteOp(path, StorageCleanType.TABLE_SNAPSHOT);
         }
     }
 
@@ -325,11 +325,11 @@ public class StorageCleanupJob extends AbstractApplication {
         }
 
         for (Path path : toDeleteDict) {
-            deleteOp(path, STORAGE_CLEAN_TYPE.GLOBAL_DICTIONARY);
+            deleteOp(path, StorageCleanType.GLOBAL_DICTIONARY);
         }
     }
 
-    private void deleteOp(Path path, STORAGE_CLEAN_TYPE type) throws IOException {
+    private void deleteOp(Path path, StorageCleanType type) throws IOException {
         if (delete) {
             logger.info("Deleting unreferenced {}, {}", type, path);
             fs.delete(path, true);
@@ -343,7 +343,7 @@ public class StorageCleanupJob extends AbstractApplication {
     }
 }
 
-enum STORAGE_CLEAN_TYPE {
+enum StorageCleanType {
     PROJECT_DIR,
     GLOBAL_DICTIONARY,
     TABLE_SNAPSHOT,
