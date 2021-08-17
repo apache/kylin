@@ -226,10 +226,10 @@ public class StorageCleanupJob extends AbstractApplication {
         if (cleanupJobTmp) {
             logger.info("Start to clean up stale job_tmp ...");
             for (String prj : projects) {
-                Path prjPath = new Path(config.getHdfsWorkingDirectory(prj));
+                Path prjPath = new Path(config.getHdfsWorkingDirectory(prj), "job_tmp");
                 FileStatus[] jobTmpPaths = fs.listStatus(prjPath);
                 for (FileStatus status : jobTmpPaths) {
-                    if (!eligibleStorage(status)) {
+                    if (eligibleStorage(status)) {
                         deleteOp(status.getPath(), StorageCleanType.JOB_TMP);
                     }
                 }
