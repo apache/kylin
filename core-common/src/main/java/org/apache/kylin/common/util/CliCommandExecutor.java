@@ -152,7 +152,7 @@ public class CliCommandExecutor {
             }
 
             if (Thread.interrupted()) {
-                logger.info("CliCommandExecutor is interruppted by other, kill the sub process: " + command);
+                logger.info("CliCommandExecutor is interrupted by other, kill the sub process: " + command);
                 proc.destroy();
                 try {
                     Thread.sleep(1000);
