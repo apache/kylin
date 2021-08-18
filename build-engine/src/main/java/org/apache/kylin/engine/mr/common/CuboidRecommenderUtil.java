@@ -51,8 +51,9 @@ public class CuboidRecommenderUtil {
         }
         CubeInstance cube = segment.getCubeInstance();
         long baseCuboid = cube.getCuboidScheduler().getBaseCuboidId();
-        if (cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == null
-                || cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == 0L) {
+        if ((cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == null
+                || cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == 0L)
+                && segment.getConfig().isBuildBaseCuboid()) {
             logger.info(BASE_CUBOID_COUNT_IN_CUBOID_STATISTICS_IS_ZERO);
             return null;
         }
@@ -77,7 +78,8 @@ public class CuboidRecommenderUtil {
         Pair<Map<Long, Long>, Map<Long, Double>> statsPair = CuboidStatsReaderUtil
                 .readCuboidStatsAndSizeFromCube(currentCuboids, cube);
         long baseCuboid = cuboidScheduler.getBaseCuboidId();
-        if (statsPair.getFirst().get(baseCuboid) == null || statsPair.getFirst().get(baseCuboid) == 0L) {
+        if ((statsPair.getFirst().get(baseCuboid) == null || statsPair.getFirst().get(baseCuboid) == 0L)
+                && cube.getConfig().isBuildBaseCuboid()) {
             logger.info(BASE_CUBOID_COUNT_IN_CUBOID_STATISTICS_IS_ZERO);
             return null;
         }
@@ -121,8 +123,9 @@ public class CuboidRecommenderUtil {
         }
         CubeInstance cube = segment.getCubeInstance();
         long baseCuboid = cube.getCuboidScheduler().getBaseCuboidId();
-        if (cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == null
-                || cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == 0L) {
+        if ((cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == null
+                || cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == 0L)
+                && segment.getConfig().isBuildBaseCuboid()) {
             logger.info(BASE_CUBOID_COUNT_IN_CUBOID_STATISTICS_IS_ZERO);
             return null;
         }
