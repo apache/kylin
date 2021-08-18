@@ -64,7 +64,7 @@ public class StorageCleanupJobTest {
         prepareHDFSFiles(basePath, mockFs);
 
         StorageCleanupJob job = new StorageCleanupJob(kylinConfig, mockFs);
-        job.execute(new String[] { "--delete", "true" });
+        job.execute(new String[] { "--delete", "true", "--cleanupThreshold", "12" });
 
         ArgumentCaptor<Path> pathCaptor = ArgumentCaptor.forClass(Path.class);
         verify(mockFs, times(6)).delete(pathCaptor.capture(), eq(true));

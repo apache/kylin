@@ -17,3 +17,5 @@
 #
 
 This maven module is deprecated and maybe be removed in the future.
+
+Remind that the path 'kylin-it/src/test/resources/query' is still be used by module 'kylin-spark-project/kylin-spark-test' .

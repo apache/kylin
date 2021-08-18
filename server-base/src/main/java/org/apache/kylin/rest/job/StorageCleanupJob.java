@@ -43,43 +43,75 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Please update https://cwiki.apache.org/confluence/display/KYLIN/How+to+clean+up+storage+in+Kylin+4
+ *   if you change this class.
+ */
 public class StorageCleanupJob extends AbstractApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(StorageCleanupJob.class);
 
-    @SuppressWarnings("static-access")
-    protected static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false)
-            .withDescription("Delete the unused storage").create("delete");
-    @SuppressWarnings("static-access")
-    protected static final Option OPTION_CLEANUP_TABLE_SNAPSHOT = OptionBuilder.withArgName("cleanupTableSnapshot")
-            .hasArg().isRequired(false).withDescription("Delete the unused storage").create("cleanupTableSnapshot");
-    @SuppressWarnings("static-access")
-    protected static final Option OPTION_CLEANUP_GLOBAL_DICT = OptionBuilder.withArgName("cleanupGlobalDict").hasArg()
-            .isRequired(false).withDescription("Delete the unused storage").create("cleanupGlobalDict");
-    @SuppressWarnings("static-access")
-    protected static final Option OPTION_CLEANUP_THRESHOLD_HOUR = OptionBuilder.withArgName("cleanupThreshold").hasArg()
-            .isRequired(false).withDescription("Delete unused storage that have not been modified in how many hours")
-            .create("cleanupThreshold");
-
+    /**
+     * It is considered quite safe to remove job_tmp path which was created 1 week ago .
+     */
+    public static final int DEFAULT_CLEANUP_HOUR_THRESHOLD = 24 * 7;
+    public static final boolean DEFAULT_CLEANUP_DICT = true;
+    public static final boolean DEFAULT_CLEANUP_SNAPSHOT = true;
+    public static final boolean DEFAULT_CLEANUP_JOB_TMP = false;
+    public static final boolean DEFAULT_CLEANUP = false;
     private static final String GLOBAL_DICT_PREFIX = "/dict/global_dict/";
     private static final String TABLE_SNAPSHOT_PREFIX = "/table_snapshot/";
 
-    private static final String TABLE_SNAPSHOT = "table snapshot";
-    private static final String GLOBAL_DICTIONARY = "global dictionary";
-    private static final String SEGMENT_PARQUET_FILE = "segment parquet file";
+    @SuppressWarnings("static-access")
+    protected static final Option OPTION_DELETE = OptionBuilder.withArgName("delete")
+            .hasArg().isRequired(false)
+            .withType(Boolean.class.getName())
+            .withDescription("Boolean, whether or not to do real delete operation. Default value is " + DEFAULT_CLEANUP + ", means a dry run.")
+            .create("delete");
+
+    @SuppressWarnings("static-access")
+    protected static final Option OPTION_CLEANUP_TABLE_SNAPSHOT = OptionBuilder.withArgName("cleanupTableSnapshot")
+            .hasArg().isRequired(false)
+            .withType(Boolean.class.getName())
+            .withDescription("Boolean, whether or not to delete unreferenced snapshot files. Default value is " + DEFAULT_CLEANUP_SNAPSHOT + " .")
+            .create("cleanupTableSnapshot");
+
+    @SuppressWarnings("static-access")
+    protected static final Option OPTION_CLEANUP_GLOBAL_DICT = OptionBuilder.withArgName("cleanupGlobalDict")
+            .hasArg().isRequired(false)
+            .withType(Boolean.class.getName())
+            .withDescription("Boolean, whether or not to delete unreferenced global dict files. Default value is " + DEFAULT_CLEANUP_DICT + " .")
+            .create("cleanupGlobalDict");
+
+    @SuppressWarnings("static-access")
+    protected static final Option OPTION_CLEANUP_JOB_TMP = OptionBuilder.withArgName("cleanupJobTmp")
+            .hasArg().isRequired(false)
+            .withType(Boolean.class.getName())
+            .withDescription("Boolean, whether or not to delete job tmp files. Default value is " + DEFAULT_CLEANUP_JOB_TMP + " .")
+            .create("cleanupJobTmp");
+
+    @SuppressWarnings("static-access")
+    protected static final Option OPTION_CLEANUP_THRESHOLD_HOUR = OptionBuilder.withArgName("cleanupThreshold")
+            .hasArg().isRequired(false)
+            .withType(Integer.class.getName())
+            .withDescription(
+                    "Integer, used to specific delete unreferenced storage that have not been modified before how many hours (recent files are protected). " +
+                    "Default value is " + DEFAULT_CLEANUP_HOUR_THRESHOLD + " hours.")
+            .create("cleanupThreshold");
 
     final protected KylinConfig config;
     final protected FileSystem fs;
     final protected ExecutableManager executableManager;
 
-    protected boolean delete = false;
-    protected boolean cleanupTableSnapshot = true;
-    protected boolean cleanupGlobalDict = true;
-    protected int cleanupThreshold = 12; // 12 hour
-
+    protected boolean delete = DEFAULT_CLEANUP;
+    protected boolean cleanupTableSnapshot = DEFAULT_CLEANUP_SNAPSHOT;
+    protected boolean cleanupGlobalDict = DEFAULT_CLEANUP_DICT;
+    protected boolean cleanupJobTmp = DEFAULT_CLEANUP;
+    protected int cleanupThreshold = DEFAULT_CLEANUP_HOUR_THRESHOLD;
     protected long storageTimeCut;
 
     protected static final List<String> protectedDir = Arrays.asList("cube_statistics", "resources-jdbc", "_sparder_logs");
@@ -101,6 +133,7 @@ public class StorageCleanupJob extends AbstractApplication {
         options.addOption(OPTION_DELETE);
         options.addOption(OPTION_CLEANUP_GLOBAL_DICT);
         options.addOption(OPTION_CLEANUP_TABLE_SNAPSHOT);
+        options.addOption(OPTION_CLEANUP_JOB_TMP);
         options.addOption(OPTION_CLEANUP_THRESHOLD_HOUR);
         return options;
     }
@@ -108,13 +141,6 @@ public class StorageCleanupJob extends AbstractApplication {
     @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
         logger.info("options: '" + optionsHelper.getOptionsAsString() + "'");
-        logger.info("delete option value: '" + optionsHelper.getOptionValue(OPTION_DELETE) + "'");
-        logger.info("cleanup table snapshot option value: '"
-                + optionsHelper.getOptionValue(OPTION_CLEANUP_TABLE_SNAPSHOT) + "'");
-        logger.info(
-                "delete global dict option value: '" + optionsHelper.getOptionValue(OPTION_CLEANUP_GLOBAL_DICT) + "'");
-        logger.info("delete unused storage that have not been modified in how many hours option value: '"
-                + optionsHelper.getOptionValue(OPTION_CLEANUP_THRESHOLD_HOUR) + "'");
         delete = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_DELETE));
         if (optionsHelper.hasOption(OPTION_CLEANUP_TABLE_SNAPSHOT)) {
             cleanupTableSnapshot = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_CLEANUP_TABLE_SNAPSHOT));
@@ -122,11 +148,18 @@ public class StorageCleanupJob extends AbstractApplication {
         if (optionsHelper.hasOption(OPTION_CLEANUP_GLOBAL_DICT)) {
             cleanupGlobalDict = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_CLEANUP_GLOBAL_DICT));
         }
+        if (optionsHelper.hasOption(OPTION_CLEANUP_JOB_TMP)) {
+            cleanupJobTmp = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_CLEANUP_JOB_TMP));
+        }
         if (optionsHelper.hasOption(OPTION_CLEANUP_THRESHOLD_HOUR)) {
             cleanupThreshold = Integer.parseInt(optionsHelper.getOptionValue(OPTION_CLEANUP_THRESHOLD_HOUR));
         }
 
         storageTimeCut = System.currentTimeMillis() - cleanupThreshold * 3600 * 1000L;
+        Date cleanBeforeDate = new Date(storageTimeCut);
+        logger.info("===================================================================\n" +
+                        "delete : {}; cleanupTableSnapshot : {}; cleanupGlobalDict : {}; cleanupJobTmp : {}; cleanBeforeDate : {}."
+                , delete, cleanupTableSnapshot, cleanupGlobalDict, cleanupJobTmp, cleanBeforeDate);
         cleanup();
     }
 
@@ -138,7 +171,7 @@ public class StorageCleanupJob extends AbstractApplication {
         List<String> projects = projectManager.listAllProjects().stream().map(ProjectInstance::getName)
                 .collect(Collectors.toList());
 
-        //clean up deleted projects and cubes
+        logger.info("Start to clean up unreferenced projects and cubes ...");
         List<CubeInstance> cubes = cubeManager.listAllCubes();
         Path metadataPath = new Path(config.getHdfsWorkingDirectory());
         if (fs.exists(metadataPath)) {
@@ -148,7 +181,7 @@ public class StorageCleanupJob extends AbstractApplication {
                     if (eligibleStorage(status)) {
                         String projectName = status.getPath().getName();
                         if (!projects.contains(projectName)) {
-                            cleanupStorage(status.getPath(), SEGMENT_PARQUET_FILE);
+                            deleteOp(status.getPath(), StorageCleanType.PROJECT_DIR);
                         } else {
                             cleanupGlobalDict(projectName,
                                     cubes.stream().filter(cube -> projectName.equals(cube.getProject()))
@@ -164,14 +197,14 @@ public class StorageCleanupJob extends AbstractApplication {
             }
         }
 
-        //clean up no used segments
+        logger.info("Start to clean up no unreferenced segments ...");
         for (CubeInstance cube : cubes) {
             List<String> segments = cube.getSegments().stream().map(segment -> {
                 return segment.getName() + "_" + segment.getStorageLocationIdentifier();
             }).collect(Collectors.toList());
             String project = cube.getProject();
 
-            //list all segment directory
+            // list all segment directory
             Path cubePath = new Path(config.getHdfsWorkingDirectory(project) + "/parquet/" + cube.getName());
             if (fs.exists(cubePath)) {
                 FileStatus[] segmentStatus = fs.listStatus(cubePath);
@@ -180,13 +213,26 @@ public class StorageCleanupJob extends AbstractApplication {
                         if (eligibleStorage(status)) {
                             String segment = status.getPath().getName();
                             if (!segments.contains(segment)) {
-                                cleanupStorage(status.getPath(), SEGMENT_PARQUET_FILE);
+                                deleteOp(status.getPath(), StorageCleanType.SEGMENT_DIR);
                             }
                         }
                     }
                 }
             } else {
-                logger.warn("Cube path doesn't exist! The path is " + cubePath);
+                logger.warn("Cube path doesn't exist! The path is {}", cubePath);
+            }
+        }
+
+        if (cleanupJobTmp) {
+            logger.info("Start to clean up stale job_tmp ...");
+            for (String prj : projects) {
+                Path prjPath = new Path(config.getJobTmpDir(prj));
+                FileStatus[] jobTmpPaths = fs.listStatus(prjPath);
+                for (FileStatus status : jobTmpPaths) {
+                    if (eligibleStorage(status)) {
+                        deleteOp(status.getPath(), StorageCleanType.JOB_TMP);
+                    }
+                }
             }
         }
     }
@@ -201,7 +247,7 @@ public class StorageCleanupJob extends AbstractApplication {
                     if (eligibleStorage(status)) {
                         String cubeName = status.getPath().getName();
                         if (!cubes.contains(cubeName)) {
-                            cleanupStorage(status.getPath(), SEGMENT_PARQUET_FILE);
+                            deleteOp(status.getPath(), StorageCleanType.CUBE_DIR);
                         }
                     }
                 }
@@ -237,7 +283,7 @@ public class StorageCleanupJob extends AbstractApplication {
         }
 
         for (Path path : toDeleteSnapshot) {
-            cleanupStorage(path, TABLE_SNAPSHOT);
+            deleteOp(path, StorageCleanType.TABLE_SNAPSHOT);
         }
     }
 
@@ -279,20 +325,29 @@ public class StorageCleanupJob extends AbstractApplication {
         }
 
         for (Path path : toDeleteDict) {
-            cleanupStorage(path, GLOBAL_DICTIONARY);
+            deleteOp(path, StorageCleanType.GLOBAL_DICTIONARY);
         }
     }
 
-    private void cleanupStorage(Path path, String storageType) throws IOException {
+    private void deleteOp(Path path, StorageCleanType type) throws IOException {
         if (delete) {
-            logger.info("Deleting unused {}, {}", storageType, path);
+            logger.info("Deleting unreferenced {}, {}", type, path);
             fs.delete(path, true);
         } else {
-            logger.info("Dry run, pending delete unused {}, {}", storageType, path);
+            logger.info("Dry run, pending delete unreferenced path {}, {}", type, path);
         }
     }
 
     private boolean eligibleStorage(FileStatus status) {
         return status != null && status.getModificationTime() < storageTimeCut;
     }
+}
+
+enum StorageCleanType {
+    PROJECT_DIR,
+    GLOBAL_DICTIONARY,
+    TABLE_SNAPSHOT,
+    CUBE_DIR,
+    SEGMENT_DIR,
+    JOB_TMP
 }
