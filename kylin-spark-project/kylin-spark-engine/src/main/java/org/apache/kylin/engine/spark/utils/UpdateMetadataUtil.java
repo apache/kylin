@@ -113,30 +113,30 @@ public class UpdateMetadataUtil {
             CubeStatsReader origSegStatsReader = new CubeStatsReader(origSeg, config);
             Map<Long, HLLCounter> cuboidHLLMap = Maps.newHashMap();
             if (origSegStatsReader.getCuboidRowHLLCounters() == null) {
-                throw new IllegalArgumentException(
+                logger.warn(
                         "Cuboid statistics of original segment do not exist. Please check the config of kylin.engine.segment-statistics-enabled.");
-            }
-            addFromCubeStatsReader(origSegStatsReader, cuboidHLLMap);
-            addFromCubeStatsReader(optSegStatsReader, cuboidHLLMap);
+            } else {
+                addFromCubeStatsReader(origSegStatsReader, cuboidHLLMap);
+                addFromCubeStatsReader(optSegStatsReader, cuboidHLLMap);
 
-            Set<Long> recommendCuboids = currentInstanceCopy.getCuboidsByMode(CuboidModeEnum.RECOMMEND);
-            Map<Long, HLLCounter> resultCuboidHLLMap = Maps.newHashMapWithExpectedSize(recommendCuboids.size());
-            for (long cuboid : recommendCuboids) {
-                HLLCounter hll = cuboidHLLMap.get(cuboid);
-                if (hll == null) {
-                    logger.warn("Cannot get the row count stats for cuboid " + cuboid);
-                } else {
-                    resultCuboidHLLMap.put(cuboid, hll);
+                Set<Long> recommendCuboids = currentInstanceCopy.getCuboidsByMode(CuboidModeEnum.RECOMMEND);
+                Map<Long, HLLCounter> resultCuboidHLLMap = Maps.newHashMapWithExpectedSize(recommendCuboids.size());
+                for (long cuboid : recommendCuboids) {
+                    HLLCounter hll = cuboidHLLMap.get(cuboid);
+                    if (hll == null) {
+                        logger.warn("Cannot get the row count stats for cuboid " + cuboid);
+                    } else {
+                        resultCuboidHLLMap.put(cuboid, hll);
+                    }
                 }
+                if (fs.exists(statisticsFile)) {
+                    fs.delete(statisticsFile, false);
+                }
+                CubeStatsWriter.writeCuboidStatistics(HadoopUtil.getCurrentConfiguration(), new Path(statisticsDir),
+                        resultCuboidHLLMap, 1, origSegStatsReader.getSourceRowCount());
+                FSDataInputStream is = fs.open(statisticsFile);
+                ResourceStore.getStore(config).putBigResource(resKey, is, System.currentTimeMillis());
             }
-            if (fs.exists(statisticsFile)) {
-                fs.delete(statisticsFile, false);
-            }
-            CubeStatsWriter.writeCuboidStatistics(HadoopUtil.getCurrentConfiguration(), new Path(statisticsDir),
-                    resultCuboidHLLMap, 1, origSegStatsReader.getSourceRowCount());
-            FSDataInputStream is = fs.open(statisticsFile);
-            ResourceStore.getStore(config).putBigResource(resKey, is, System.currentTimeMillis());
-
             toUpdateSeg.setStatus(SegmentStatusEnum.READY_PENDING);
         } else {
             toUpdateSeg.setStatus(SegmentStatusEnum.READY);
