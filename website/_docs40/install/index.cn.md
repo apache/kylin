@@ -127,7 +127,7 @@ Kylin with pid 25964 has been stopped.
 ### HDFS 目录结构
 Kylin 会在 HDFS 上生成文件，默认根目录是 "/kylin/", 然后会使用 Kylin 集群的元数据表名作为第二层目录名，默认为 "kylin_metadata" (可以在`conf/kylin.properties`中定制).
 
-通常, `/kylin/kylin_metadata` 目录下按照不同的 project 存放数据，比如 leanrn_kylin 项目的数据目录为 `/kylin/kylin_metadata/learn_kylin`, 该目录下通常包括以下子目录：
+通常, `/kylin/kylin_metadata` 目录下按照不同的 project 存放数据，比如 learn_kylin 项目的数据目录为 `/kylin/kylin_metadata/learn_kylin`, 该目录下通常包括以下子目录：
 1.`job_tmp`: 存放执行任务过程中生成的临时文件。
 2.`parquet`: 存放各个 cube 的 cuboid 文件。
 3.`table_snapshot`: 存放维度表快照。
