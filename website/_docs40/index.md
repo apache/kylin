@@ -129,6 +129,10 @@ The test results can reflect the following two points:
 - The build speed of kylin4 is significantly higher than that of kylin3.1.0 spark engine;
 - Compared with HBase, the parquet file size of kylin4 is significantly reduced;
 
+- Comparison of query response(SSB and TPC-H)
+![](/images/tutorial/4.0/overview/query_response_ssb.png)
+![](/images/tutorial/4.0/overview/query_response_tpch.png)
+
 From the comparison of query results, it can be seen that kylin3 and kylin4 are the same for ***simple query***, kylin4 is slightly insufficient; However, kylin4 has obvious advantages over kylin3 for ***complex query***.
 Moreover, there is still a lot of room to optimize the performance of ***simple query*** in kylin4. In the practice of Youzan using kylin4, the performance of ***simple query*** can be optimized to less than 1 second.
 

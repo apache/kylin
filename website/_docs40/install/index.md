@@ -131,7 +131,7 @@ You can run `ps -ef | grep kylin` to see if the Kylin process has stopped.
 ### HDFS folder structure
 Kylin will generate files on HDFS. The default root directory is "kylin/", and then the metadata table name of kylin cluster will be used as the second layer directory name, and the default is "kylin_metadata"(can be customized in `conf/kylin.properties`)
 
-Generally, `/kylin/kylin_metadata` directory stores data according to different projects, such as data directory of "learn_kylin" project is `/kylin/kylin_metadata/learn_ Kylin`, which usually includes the following subdirectories:
+Generally, `/kylin/kylin_metadata` directory stores data according to different projects, such as data directory of "learn_kylin" project is `/kylin/kylin_metadata/learn_kylin`, which usually includes the following subdirectories:
 1.`job_tmp`: store temporary files generated during the execution of tasks.
 2.`parquet`: the cuboid file of each cube.
 3.`table_snapshot`: stores the dimension table snapshot.
