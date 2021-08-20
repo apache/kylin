@@ -56,6 +56,14 @@ public class JoinedFormatter {
         setDateEnv(flatDesc);
     }
 
+    public JoinedFormatter(Boolean validateModel) {
+        // for validate model filter condition
+        String start = "20190710";
+        String end = "20190711";
+        setKeyValue(START_DATE, start);
+        setKeyValue(END_DATE, end);
+    }
+
     private void setDateEnv(IJoinedFlatTableDesc flatDesc) {
         DataModelDesc model = flatDesc.getDataModel();
         PartitionDesc partDesc = model.getPartitionDesc();
@@ -83,7 +91,7 @@ public class JoinedFormatter {
         return value == null ? "" : value;
     }
 
-    String formatSentence(String sentence) {
+    public String formatSentence(String sentence) {
         String[] cArray = REG_PATTERN.split(sentence);
         StringBuilder sbr = new StringBuilder();
         List<String> keys = getKeys(sentence);

@@ -31,6 +31,13 @@ public class HivePushDownConverterTest extends TestCase {
     }
 
     @Test
+    public void testStringReplace1() {
+        String originString = "select * from (select '(aaaa' from P_LINEORDER) ";
+        String replacedString = HivePushDownConverter.subqueryReplace(originString);
+        assertEquals("select * from (select '(aaaa' from P_LINEORDER) ", replacedString);
+    }
+
+    @Test
     public void testExtractReplace() {
         String originString = "ignore EXTRACT(YEAR FROM KYLIN_CAL_DT.CAL_DT) ignore";
         String replacedString = HivePushDownConverter.extractReplace(originString);

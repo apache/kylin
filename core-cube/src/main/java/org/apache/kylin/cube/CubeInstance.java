@@ -773,4 +773,8 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         throw new IllegalStateException("No segment's last build job ID equals " + jobID);
     }
 
+    public boolean isStreamLambdaCube() {
+        return getModel().getRootFactTable().getTableDesc().isLambdaTable();
+    }
+
 }

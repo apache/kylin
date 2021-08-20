@@ -233,11 +233,11 @@
                       </div>
 
                       <!--Group by Column-->
-                      <div class="form-group" ng-if="newMeasure.function.expression === 'TOP_N'||(newMeasure.function.expression === 'COUNT_DISTINCT' && newMeasure.function.returntype!=='bitmap')" >
+                      <div class="form-group" ng-if="newMeasure.function.expression === 'TOP_N'||(newMeasure.function.expression === 'COUNT_DISTINCT' && newMeasure.function.returntype!=='bitmap'&& (newMeasure.function.returntype!=='bitmap_map')" >
                         <div class="row">
                           <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
                             <b ng-if="newMeasure.function.expression === 'TOP_N'">Group by Column:</b>
-                            <b ng-if="newMeasure.function.expression === 'COUNT_DISTINCT' && (newMeasure.function.returntype!=='bitmap')">Additional distinct column in this measure:</b>
+                            <b ng-if="newMeasure.function.expression === 'COUNT_DISTINCT' && (newMeasure.function.returntype!=='bitmap'&& (newMeasure.function.returntype!=='bitmap_map')">Additional distinct column in this measure:</b>
                           </label>
                           <div class="form-group large-popover" >
                               <div class="box-body">

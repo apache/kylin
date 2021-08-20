@@ -98,7 +98,7 @@ public class BulkLoadJob extends AbstractHadoopJob {
 
         int ret = 0;
         if (count > 0) {
-            logger.debug("Start to run LoadIncrementalHFiles");
+            logger.debug("Start to run LoadIncrementalHFiles, File count is: " + count);
             ret = MRUtil.runMRJob(new LoadIncrementalHFiles(conf), newArgs);
             logger.debug("End to run LoadIncrementalHFiles");
             return ret;

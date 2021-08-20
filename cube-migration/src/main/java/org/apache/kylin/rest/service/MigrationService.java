@@ -101,7 +101,7 @@ public class MigrationService extends BasicService {
         String projectName = ctx.getTgtProjectName();
         try {
             sendApprovedMailQuietly(cubeName, projectName);
-
+            logger.info("migration approved, cube {}, project {}", cubeName, projectName);
             // do cube migration
             new CubeMigrationCLI().moveCube(localHost, ctx.getTargetAddress(), cubeName, projectName, "true", "false",
                     "true", "true", "false");

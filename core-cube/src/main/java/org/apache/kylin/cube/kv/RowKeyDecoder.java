@@ -19,6 +19,7 @@
 package org.apache.kylin.cube.kv;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +35,7 @@ import org.apache.kylin.metadata.model.TblColRef;
  * @author xjiang
  * 
  */
-public class RowKeyDecoder {
+public class RowKeyDecoder implements Serializable {
 
     private final CubeDesc cubeDesc;
     private final RowKeyColumnIO colIO;

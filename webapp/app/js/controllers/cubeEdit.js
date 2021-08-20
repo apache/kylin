@@ -740,7 +740,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     var distinctMeasures = [];
 
     angular.forEach($scope.cubeMetaFrame.measures, function (measure, index) {
-      if (measure.function.expression === 'COUNT_DISTINCT' && measure.function.returntype === 'bitmap' && !$scope.isIntMeasure(measure)) {
+      if (measure.function.expression === 'COUNT_DISTINCT' && (measure.function.returntype === 'bitmap' || measure.function.returntype === 'bitmap_map' )
+       && !$scope.isIntMeasure(measure)) {
         var measureColumn = measure.function.parameter.value;
         distinctMeasures.push(measureColumn);
         //keep backward compatibility
@@ -758,8 +759,15 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         if (!isColumnExit) {
           var dict = CubeDescModel.createDictionaries();
           dict.column = measureColumn;
-          dict.builder = cubeConfig.buildDictionaries[0].value;
-          $scope.cubeMetaFrame.dictionaries.push(dict)
+          if (measure.function.returntype === 'bitmap_map') {
+            dict.builder = cubeConfig.buildDictionariesForBitMap_Map[0].value;
+            dict.type = measure.function.returntype;
+            $scope.cubeMetaFrame.dictionaries.push(dict)
+          } else {
+            dict.builder = cubeConfig.buildDictionariesForBitMap[0].value;
+            dict.type = measure.function.returntype;
+            $scope.cubeMetaFrame.dictionaries.push(dict)
+          }
         }
       }
     });

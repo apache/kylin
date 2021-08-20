@@ -102,6 +102,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         // for cube planner, will keep cuboidSizeMap unchanged if cube planner is disabled
         Set<Long> buildingCuboids = cube.getCuboidsByMode(cuboidModeName);
         if (buildingCuboids != null && !buildingCuboids.isEmpty()) {
+            logger.info("CreateHTableJob buildingCuboids size: " + buildingCuboids.size());
             Map<Long, Double> optimizedCuboidSizeMap = Maps.newHashMapWithExpectedSize(buildingCuboids.size());
             for (Long cuboid : buildingCuboids) {
                 Double cuboidSize = cuboidSizeMap.get(cuboid);
@@ -109,6 +110,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
                     logger.warn("{} cuboid's size is null will replace by 0", cuboid);
                     cuboidSize = 0.0;
                 }
+                logger.info("Cuboid:" + cuboid + " size: " + cuboidSize);
                 optimizedCuboidSizeMap.put(cuboid, cuboidSize);
             }
             cuboidSizeMap = optimizedCuboidSizeMap;

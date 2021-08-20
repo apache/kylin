@@ -46,12 +46,17 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_SQOOP_TO_FLAT_HIVE_TABLE = "Sqoop To Flat Hive Table";
     public static final String STEP_NAME_MATERIALIZE_HIVE_VIEW_IN_LOOKUP = "Materialize Hive View in Lookup Tables";
     public static final String STEP_NAME_FACT_DISTINCT_COLUMNS = "Extract Fact Table Distinct Columns";
+    public static final String STEP_NAME_FACT_DISTINCT_COLUMNS_SPARK = "Extract Fact Table Distinct Columns With Spark";
     public static final String STEP_NAME_CALCULATE_STATS_FROM_BASE_CUBOID = "Calculate Statistics from Base Cuboid";
     public static final String STEP_NAME_FILTER_RECOMMEND_CUBOID_DATA_FOR_OPTIMIZATION = "Filter Recommend Cuboid Data for Optimization";
+    public static final String STEP_NAME_FILTER_RECOMMEND_CUBOID_DATA_FOR_OPTIMIZATION_SPARK = "Filter Recommend Cuboid Data for Optimization with Spark";
+    public static final String STEP_NAME_CALCULATE_STATS_FROM_BASECUBOID_SPARK = "Calculate Stats From BaseCuboid Step with Spark";
     public static final String STEP_NAME_UPDATE_OLD_CUBOID_SHARD = "Update Old Cuboid Shard for Optimization";
+    public static final String STEP_NAME_UPDATE_OLD_CUBOID_SHARD_SPARK = "Update Old Cuboid Shard for Optimization With Spark";
     public static final String STEP_NAME_BUILD_BASE_CUBOID = "Build Base Cuboid";
     public static final String STEP_NAME_BUILD_IN_MEM_CUBE = "Build Cube In-Mem";
     public static final String STEP_NAME_BUILD_SPARK_CUBE = "Build Cube with Spark";
+    public static final String STEP_NAME_OPTIMIZE_SPARK_CUBE = "Optimize Cube with Spark";
     public static final String STEP_NAME_BUILD_FLINK_CUBE = "Build Cube with Flink";
     public static final String STEP_NAME_BUILD_N_D_CUBOID = "Build N-Dimension Cuboid";
     public static final String STEP_NAME_GET_CUBOID_KEY_DISTRIBUTION = "Calculate HTable Region Splits";
@@ -64,6 +69,7 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_MERGE_STATISTICS = "Merge Cuboid Statistics";
     public static final String STEP_NAME_MERGE_UPDATE_DICTIONARY = "Update Dictionary Data";
     public static final String STEP_NAME_MERGE_STATISTICS_WITH_OLD = "Merge Cuboid Statistics with Old for Optimization";
+    public static final String STEP_NAME_MERGE_STATISTICS_WITH_SPARK = "Merge Cuboid Statistics with Spark for Optimization";
     public static final String STEP_NAME_SAVE_STATISTICS = "Save Cuboid Statistics";
     public static final String STEP_NAME_MERGE_CUBOID = "Merge Cuboid Data";
     public static final String STEP_NAME_UPDATE_CUBE_INFO = "Update Cube Info";

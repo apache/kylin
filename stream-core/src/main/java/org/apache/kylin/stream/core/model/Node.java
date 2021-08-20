@@ -23,6 +23,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.kylin.common.util.CliCommandExecutor;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class Node {
@@ -35,6 +36,7 @@ public class Node {
 
     @JsonCreator
     public Node(@JsonProperty("host") String host, @JsonProperty("port") int port) {
+        CliCommandExecutor.checkHostName(host);
         this.host = host;
         this.port = port;
     }

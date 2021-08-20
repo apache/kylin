@@ -158,6 +158,9 @@ public class ColumnDesc implements Serializable {
     }
 
     public DataType getType() {
+        if (type == null && datatype != null) {
+            this.type = DataType.getType(datatype);
+        }
         return type;
     }
 

@@ -45,11 +45,13 @@ import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 import org.apache.kylin.shaded.com.google.common.collect.Iterables;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
+import org.apache.kylin.stream.core.source.StreamingSourceConfigManager;
 
 public class TableSchemaUpdateChecker {
     private final TableMetadataManager metadataManager;
     private final CubeManager cubeManager;
     private final DataModelManager dataModelManager;
+    private StreamingSourceConfigManager streamingSourceConfigManager;
 
     public static class CheckResult {
         private final boolean valid;
@@ -75,6 +77,11 @@ public class TableSchemaUpdateChecker {
                     format(Locale.ROOT, "Table '%s' is compatible with all existing cubes", tableName));
         }
 
+        static CheckResult validOnStreamTableDescCompatible(String tablename) {
+            return new CheckResult(true,
+                format(Locale.ROOT, "Stream table '%s' is compatible with existing stream table", tablename));
+        }
+
         static CheckResult invalidOnFetchSchema(String tableName, Exception e) {
             return new CheckResult(false,
                     format(Locale.ROOT, "Failed to fetch metadata of '%s': %s", tableName, e.getMessage()));
@@ -91,12 +98,22 @@ public class TableSchemaUpdateChecker {
                             "Found %d issue(s) with '%s':%n%s Please disable and " + "purge related " + "cube(s) first",
                             reasons.size(), tableName, buf.toString()));
         }
+
+        static CheckResult invalidOnStreamTableCompatible(String tablename, String reason) {
+            return new CheckResult(
+                false,
+                format(Locale.ROOT, "Stream table is incompatible, the reason is %s", reason));
+        }
     }
 
-    TableSchemaUpdateChecker(TableMetadataManager metadataManager, CubeManager cubeManager, DataModelManager dataModelManager) {
+    TableSchemaUpdateChecker(
+        TableMetadataManager metadataManager, CubeManager cubeManager,
+        DataModelManager dataModelManager, StreamingSourceConfigManager streamingSourceConfigManager) {
         this.metadataManager = checkNotNull(metadataManager, "metadataManager is null");
         this.cubeManager = checkNotNull(cubeManager, "cubeManager is null");
         this.dataModelManager = checkNotNull(dataModelManager, "dataModelManager is null");
+        this.streamingSourceConfigManager =
+            checkNotNull(streamingSourceConfigManager, "streamingSourceConfigManager is null");
     }
 
     private List<CubeInstance> findCubeByTable(final TableDesc table) {
@@ -184,6 +201,25 @@ public class TableSchemaUpdateChecker {
             }
         }
         return true;
+    }
+
+    public CheckResult streamTableCheckCompatibility(TableDesc newTableDesc, String prj) {
+        final String fullTableName = newTableDesc.getIdentity();
+        TableDesc existing = metadataManager.getTableDesc(fullTableName, prj);
+        // check the table desc
+        // 1. check source type
+        // 2. check all columns
+        if (existing == null) {
+            return CheckResult.validOnFirstLoad(fullTableName);
+        } else if (newTableDesc.getSourceType() != existing.getSourceType()) {
+            String reason = format(Locale.ROOT, "the source type is %s, the target type is %s",
+                    newTableDesc.getSourceType(), existing.getSourceType());
+            return CheckResult.invalidOnStreamTableCompatible(fullTableName, reason);
+        } else if (!checkAllColumnsInTableDesc(newTableDesc, existing)) {
+            String reason = "the columns are incompatible";
+            return CheckResult.invalidOnStreamTableCompatible(fullTableName, reason);
+        }
+        return CheckResult.validOnStreamTableDescCompatible(fullTableName);
     }
 
     public CheckResult allowReload(TableDesc newTableDesc, String prj) {

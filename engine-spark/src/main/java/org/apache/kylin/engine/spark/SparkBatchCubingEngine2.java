@@ -51,8 +51,11 @@ public class SparkBatchCubingEngine2 implements IBatchCubingEngine {
 
     @Override
     public DefaultChainedExecutable createBatchOptimizeJob(CubeSegment optimizeSegment, String submitter) {
-        //TODO use Spark to optimize
-        return new BatchOptimizeJobBuilder2(optimizeSegment, submitter).build();
+        if (optimizeSegment.getConfig().isSparkOptimizeCubeViaSparkEnable()) {
+            return new SparkBatchOptimizeJobBuilder2(optimizeSegment, submitter).build();
+        } else {
+            return new BatchOptimizeJobBuilder2(optimizeSegment, submitter).build();
+        }
     }
 
     @Override

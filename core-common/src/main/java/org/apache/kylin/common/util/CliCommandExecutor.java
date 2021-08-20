@@ -166,7 +166,7 @@ public class CliCommandExecutor {
     public static final String COMMAND_BLOCK_LIST = "[ &`>|{}()$;\\-#~!+*\\\\]+";
     public static final String COMMAND_WHITE_LIST = "[^\\w%,@/:=?.\"\\[\\]]";
     public static final String HIVE_BLOCK_LIST = "[ <>()$;\\-#!+*\"'/=%@]+";
-
+    public static final String HOST_NAME_WHITE_LIST = "[^-.a-zA-Z0-9]";
 
     /**
      * <pre>
@@ -199,6 +199,14 @@ public class CliCommandExecutor {
 
     public static String checkHiveProperty(String hiveProperty) {
         return checkParameter(hiveProperty, HIVE_BLOCK_LIST);
+    }
+
+    public static void checkHostName(String nodeName) {
+        String repaired = nodeName.replaceAll(HOST_NAME_WHITE_LIST, "");
+        if (repaired.length() != nodeName.length()) {
+            throw new IllegalArgumentException("Detected illegal character in host name " + nodeName + " by "
+                    + HOST_NAME_WHITE_LIST + ", operation not allowed.");
+        }
     }
 
     private static String checkParameter(String commandParameter, String rex) {

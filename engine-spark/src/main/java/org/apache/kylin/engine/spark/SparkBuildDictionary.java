@@ -93,14 +93,14 @@ public class SparkBuildDictionary extends AbstractApplication implements Seriali
     public static final Option OPTION_DICT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_DICT_PATH).hasArg()
             .isRequired(true).withDescription("Cube dictionary output path").create(BatchConstants.ARG_DICT_PATH);
     public static final Option OPTION_SEGMENT_ID = OptionBuilder.withArgName("segmentId").hasArg().isRequired(true)
-            .withDescription("Cube Segment Id").create("segmentId");
+            .withDescription("Cube Segment Id").create(BatchConstants.ARG_SEGMENT_ID);
     public static final Option OPTION_CUBING_JOB_ID = OptionBuilder
             .withArgName(BatchConstants.ARG_CUBING_JOB_ID).hasArg().isRequired(true)
             .withDescription("Cubing job id").create(BatchConstants.ARG_CUBING_JOB_ID);
     public static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg()
             .isRequired(true).withDescription("Hive Intermediate Table PATH").create(BatchConstants.ARG_INPUT);
     public static final Option OPTION_META_URL = OptionBuilder.withArgName("metaUrl").hasArg().isRequired(true)
-            .withDescription("HDFS metadata url").create("metaUrl");
+            .withDescription("HDFS metadata url").create(BatchConstants.ARG_META_URL);
     public static final Option OPTION_COUNTER_PATH = OptionBuilder.withArgName(BatchConstants.ARG_COUNTER_OUTPUT).hasArg()
             .isRequired(true).withDescription("counter output path").create(BatchConstants.ARG_COUNTER_OUTPUT);
 

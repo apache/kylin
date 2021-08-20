@@ -50,7 +50,7 @@ public class ModelServiceTest extends ServiceTestBase {
     @Test
     public void testSuccessModelUpdate() throws IOException, JobException {
         Serializer<DataModelDesc> serializer = modelService.getDataModelManager().getDataModelSerializer();
-        
+
         List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_inner_join_model", "default", true);
         Assert.assertTrue(dataModelDescs.size() == 1);
 
@@ -62,6 +62,29 @@ public class ModelServiceTest extends ServiceTestBase {
         deserialize.setOwner("somebody");
         DataModelDesc dataModelDesc = modelService.updateModelAndDesc("default", deserialize);
         Assert.assertTrue(dataModelDesc.getOwner().equals("somebody"));
+    }
+
+    @Test
+    public void testVerifyFilterCondition() throws IOException {
+        Serializer<DataModelDesc> serializer = modelService.getDataModelManager()
+            .getDataModelSerializer();
+        List<DataModelDesc> dataModelDescs = modelService
+            .listAllModels("ci_inner_join_model", "default", true);
+        Assert.assertTrue(dataModelDescs.size() == 1);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        serializer.serialize(dataModelDescs.get(0), new DataOutputStream(baos));
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        DataModelDesc deserialize = serializer.deserialize(new DataInputStream(bais));
+        deserialize.setOwner("somebody");
+        deserialize.setFilterCondition("TRANS_ID = 1");
+        modelService.validateModel("default", deserialize);
+        try {
+            deserialize.setFilterCondition("kylin_account.TRANS_IDD = 1");
+            modelService.validateModel("default", deserialize);
+            Assert.fail("should throw an exception");
+        } catch (Exception e){
+            Assert.assertTrue(e.getMessage().equals("java.lang.IllegalArgumentException: filter condition col: TRANS_IDD is not a column in the table "));
+        }
     }
 
     @Test
