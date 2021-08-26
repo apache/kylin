@@ -68,6 +68,9 @@ public abstract class KylinConfigBase implements Serializable {
     private static final String FILE_SCHEME = "file:";
     private static final String MAPRFS_SCHEME = "maprfs:";
     private static final Integer DEFAULT_MR_HIVE_GLOBAL_DICT_REDUCE_NUM_PER_COLUMN = 2;
+    private static final String DEFAULT_JDBC_URL_ALLOWED_PROPERTIED = "database,useSSL,requireSSL,ssl,sslmode";
+    private static final String DEFAULT_JDBC_URL_ALLOWED_SCHEMA = "mysql,sqlserver,redshift,postgresql,presto,h2,microsoft:sqlserver,jtds:sqlserver";
+    private static final String DEFAULT_JDBC_URL_ALLOWED_SQLSERVER_SCHEMA = "sqlserver,microsoft:sqlserver,jtds:sqlserver";
 
     /*
      * DON'T DEFINE CONSTANTS FOR PROPERTY KEYS!
@@ -2727,5 +2730,18 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getKylinDictCacheStrength(){
         return getOptional("kylin.dict.cache.strength", "soft");
-    };
+    }
+
+    public String getJdbcUrlAllowedProperties() {
+        return getOptional("kylin.jdbc.url.allowed.properties", DEFAULT_JDBC_URL_ALLOWED_PROPERTIED);
+    }
+
+    public String getJdbcAllowedSchema() {
+        return DEFAULT_JDBC_URL_ALLOWED_SCHEMA + "," + getOptional("kylin.jdbc.url.allowed.additional.schema", "");
+    }
+
+    public String getJdbcAllowedSqlServerSchema() {
+        return getOptional("kylin.jdbc.url.allowed.sqlserver.schema", DEFAULT_JDBC_URL_ALLOWED_SQLSERVER_SCHEMA);
+    }
+
 }

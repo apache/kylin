@@ -17,6 +17,8 @@
  */
 package org.apache.kylin.sdk.datasource.adaptor;
 
+import org.apache.kylin.common.JDBCConnectionUtils;
+
 public class AdaptorConfig {
     public final String url;
     public final String driver;
@@ -29,10 +31,10 @@ public class AdaptorConfig {
     public int poolMinIdle = 0;
 
     public AdaptorConfig(String url, String driver, String username, String password) {
-        this.url = url;
-        this.driver = driver;
+        this.url = JDBCConnectionUtils.checkUrl(url);
         this.username = username;
         this.password = password;
+        this.driver = driver;
     }
 
     @Override
