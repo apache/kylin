@@ -17,15 +17,23 @@
  */
 package org.apache.kylin.sdk.datasource.adaptor;
 
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class AdaptorConfigTest {
+import java.sql.SQLException;
+
+public class AdaptorConfigTest extends LocalFileMetadataTestCase {
+    @BeforeClass
+    public static void setupClass() throws SQLException {
+        staticCreateTestMetadata();
+    }
     @Test
     public void testEquals() {
-        AdaptorConfig conf1 = new AdaptorConfig("a", "b", "c", "d");
-        AdaptorConfig conf2 = new AdaptorConfig("a", "b", "c", "d");
-        AdaptorConfig conf3 = new AdaptorConfig("a1", "b1", "c1", "d1");
+        AdaptorConfig conf1 = new AdaptorConfig("jdbc:mysql://fakehost:1433/database", "b", "c", "d");
+        AdaptorConfig conf2 = new AdaptorConfig("jdbc:mysql://fakehost:1433/database", "b", "c", "d");
+        AdaptorConfig conf3 = new AdaptorConfig("jdbc:mysql://fakehost:1433/database", "b1", "c1", "d1");
 
         Assert.assertEquals(conf1, conf2);
         Assert.assertEquals(conf1.hashCode(), conf2.hashCode());
