@@ -20,6 +20,8 @@ package org.apache.kylin.source.hive;
 
 import java.util.Locale;
 
+import org.apache.kylin.common.JDBCConnectionUtils;
+
 public class DBConnConf {
     public static final String KEY_DRIVER = "driver";
     public static final String KEY_URL = "url";
@@ -54,6 +56,7 @@ public class DBConnConf {
     }
 
     public String getUrl() {
+        JDBCConnectionUtils.checkUrl(url);
         return url;
     }
 
