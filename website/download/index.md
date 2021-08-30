@@ -6,13 +6,14 @@ permalink: /download/index.html
 
 You can verify the download by following these [procedures](https://www.apache.org/info/verification.html) and using these [KEYS](https://www.apache.org/dist/kylin/KEYS).
 
-#### v4.0.0-beta
-- This is a major release after 4.0.0-alpha, with 25 new features/improvements and 14 bug fixes. Check the release notes.
+#### v4.0.0
+- This is the first GA release for Kylin 4, with 32 new features/improvements and 10 bug fixes. Check the release notes.
 - [Release notes](/docs/release_notes.html), [installation guide](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide) and [upgrade guide](https://cwiki.apache.org/confluence/display/KYLIN/How+to+upgrade)
-- Source download: [apache-kylin-4.0.0-beta-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-source-release.zip.sha256)\]
-- Binary for Apache Hadoop 2 and Hadoop 3 download (Please use the specified version Spark for Kylin 4.X, the version should be Apache Spark 2.4.6, not the Spark that provided by the environment):
-  - [apache-kylin-4.0.0-beta-bin.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0-beta/apache-kylin-4.0.0-beta-bin.tar.gz.sha256)\] (Verified on CDH 5.7, CDH 6.2, AWS EMR 5.31, AWS EMR 6.0.0, HDP 2.4, Hadoop 3 and EMR environments require additional configuration, please check the [installation guide](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide))
-  
+- Source download: [apache-kylin-4.0.0-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-source-release.zip.sha256)\]
+- Binary for the download (check this to see which binary you should choose [Hadoop Matrix supported](https://cwiki.apache.org/confluence/display/KYLIN/Support+Hadoop+Version+Matrix+of+Kylin+4)) :
+  - for Apache Spark 2.4.7 [apache-kylin-4.0.0-bin-spark2.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin-spark2.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin-spark2.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin-spark2.tar.gz.sha256)\] 
+  - for Apache Spark 3.1.1 [apache-kylin-4.0.0-bin-spark3.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin-spark3.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin-spark3.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin-spark3.tar.gz.sha256)\]
+
 #### v3.1.2
 - This is a bug-fix release after 3.1.0, with 40 bug fixes and enhancement. Check the release notes.
 - [Release notes](/docs/release_notes.html), [installation guide](/docs/install/index.html) and [upgrade guide](/docs/howto/howto_upgrade.html)
