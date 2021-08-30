@@ -8,7 +8,7 @@ You can verify the download by following these [procedures](https://www.apache.o
 
 #### v4.0.0
 - This is the first GA release for Kylin 4, with 32 new features/improvements and 10 bug fixes. Check the release notes.
-- [Release notes](/docs/release_notes.html), [installation guide](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide) and [upgrade guide](https://cwiki.apache.org/confluence/display/KYLIN/How+to+upgrade)
+- [Release notes](/docs40/release_notes.html), [installation guide](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide) and [upgrade guide](https://cwiki.apache.org/confluence/display/KYLIN/How+to+upgrade)
 - Source download: [apache-kylin-4.0.0-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-source-release.zip.sha256)\]
 - Binary for the download (check this to see which binary you should choose [Hadoop Matrix supported](https://cwiki.apache.org/confluence/display/KYLIN/Support+Hadoop+Version+Matrix+of+Kylin+4)) :
   - for Apache Spark 2.4.7 [apache-kylin-4.0.0-bin-spark2.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin-spark2.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin-spark2.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin-spark2.tar.gz.sha256)\] 

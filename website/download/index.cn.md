@@ -7,7 +7,7 @@ title: 下载
 
 #### v4.0.0
 - 这是 Kylin 4 的第一个正式版本，包含32个新功能以及改进和10个问题的修复。关于具体内容请查看发布说明。
-- [发布说明](/docs/release_notes.html), [安装指南](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide) and [升级指南](/docs40/howto/howto_upgrade.html)
+- [发布说明](/docs40/release_notes.html), [安装指南](https://cwiki.apache.org/confluence/display/KYLIN/Installation+Guide) and [升级指南](/docs40/howto/howto_upgrade.html)
 - 源码下载: [apache-kylin-4.0.0-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-source-release.zip.sha256)\]
 - 二进制包 (选择二进制包前请检查文档 [Hadoop 支持矩阵](https://cwiki.apache.org/confluence/display/KYLIN/Support+Hadoop+Version+Matrix+of+Kylin+4)):
   - for Apache Spark 2.4.7 [apache-kylin-4.0.0-bin-spark2.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin-spark2.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin-spark2.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin-spark2.tar.gz.sha256)\] 
