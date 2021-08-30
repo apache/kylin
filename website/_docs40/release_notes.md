@@ -5,7 +5,7 @@ categories: gettingstarted
 permalink: /docs40/release_notes.html
 ---
 
-To download latest release, please visit: [http://kylin.apache.org/download/](http://kylin.apache.org/download/), 
+To download the latest release, please visit: [http://kylin.apache.org/download/](http://kylin.apache.org/download/), 
 there are source code package, binary package and installation guide avaliable.
 
 Any problem or issue, please report to Apache Kylin JIRA project: [https://issues.apache.org/jira/browse/KYLIN](https://issues.apache.org/jira/browse/KYLIN)
@@ -14,6 +14,59 @@ or send to Apache Kylin mailing list:
 
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
+
+## v4.0.0 - 2021-08-30
+
+__New Feature__
+
+* [KYLIN-4498] - CubePlaner for Kylin on Parquet
+* [KYLIN-4895] - change spark deploy mode of kylin4.0 engine from local to cluster
+* [KYLIN-4905] - Support limit .. offset ... in spark query engine
+* [KYLIN-4925] - Use Spark 3 as build and query engine for Kylin 4
+* [KYLIN-4948] - Provide an API to allow users to adjust cuboids manually
+* [KYLIN-4966] - Refresh the existing segment according to the new cuboid list in kylin4
+* [KYLIN-5011] - Detect and scatter skewed data in dict encoding step
+* [KYLIN-5019] - Avoid building global dictionary from all data of fact table each time
+* [KYLIN-5059] - Fix error when using different HDFS cluster in cube building
+
+__Bug Fix__
+
+* [KYLIN-4729] - The hive table will be overwrited when add csv table with the same name
+* [KYLIN-4879] - The function of sql to remove comments is not perfect. In some cases, the sql query conditions used will be modified
+* [KYLIN-4887] - Segment pruner support string type partition col in spark query engine
+* [KYLIN-4889] - Query error when spark engine in local mode
+* [KYLIN-4935] - Existing JobOutput's extend info will be lost when it is updated
+* [KYLIN-4967] - Forbid to set 'spark.sql.adaptive.enabled' to true when building cube with Spark 2.X
+* [KYLIN-5013] - Write table_snapshot to wrong cluster in Kylin4.0
+* [KYLIN-5014] - Spark driver log is abnormal in yarn cluster mode
+* [KYLIN-5021] - FilePruner in Spark3 throws NPE when no partition columns in cube
+* [KYLIN-5040] - Cuboid should not be exactly matched when there is no group by time partition column and there are multiple segments in the query
+
+__Improvement__
+
+* [KYLIN-4554] - Validate "filter condition" on model saving
+* [KYLIN-4888] - Performance optimization of union query with spark engine
+* [KYLIN-4890] - Use numSlices = 1 to reduce task num when executing sparder canary
+* [KYLIN-4892] - Reduce the times of fetching files status from HDFS in FilePruner
+* [KYLIN-4893] - Optimize query performance when using shard by column
+* [KYLIN-4894] - Upgrade Apache Spark version to 2.4.7
+* [KYLIN-4897] - Add table snapshot and global dictionary cleaning in StorageCleanupJob
+* [KYLIN-4898] - Add automated test cases
+* [KYLIN-4903] - cache parent datasource to accelerate next layer's cuboid building
+* [KYLIN-4906] - support query/job server dynamic register and discovery in kylin4
+* [KYLIN-4908] - Segment pruner support integer partition col in spark query engine
+* [KYLIN-4910] - Return hostname as Sparder URL address when spark master is set to local
+* [KYLIN-4917] - Fix some problem of logger system in kylin4
+* [KYLIN-4923] - CubeMigration Tools support migrate meta from 2.x/3.x cluster to 4.0 cluster
+* [KYLIN-4926] - Optimize Global Dict building: replace operation 'mapPartitions.count()' with 'foreachPartitions'
+* [KYLIN-4927] - Forbid to use AE when building Global Dict
+* [KYLIN-4936] - Exactly aggregation can't transform to project
+* [KYLIN-4937] - Verify the uniqueness of the global dictionary after building global dictionary
+* [KYLIN-4944] - Upgrade CentOS version, Hadoop version and Spark version for Kylin Docker image
+* [KYLIN-4945] - Repartition encoded dataset to avoid data skew caused by a single column
+* [KYLIN-4980] - Support prunning segments from complex filter conditions
+* [KYLIN-5027] - Add the config of whether to build base cuboid in kylin4
+* [KYLIN-5031] - The last_build_job_id of segment is null when the semgent status is RUNNING or ERROR.
 
 ## v3.1.2 - 2021-04-26
 
