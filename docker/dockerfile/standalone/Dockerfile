@@ -16,16 +16,19 @@
 #
 
 # Docker image for apache kylin, based on the Hadoop image
-FROM hadoop2.7-all-in-one-for-kylin4-beta
+FROM hadoop2.7-all-in-one-for-kylin4
 
-ENV KYLIN_VERSION 4.0.0-beta
-ENV KYLIN_HOME /home/admin/apache-kylin-$KYLIN_VERSION-bin
+ENV RELATED_SPARK_VERSION spark2
+ENV KYLIN_VERSION 4.0.0
+ENV KYLIN_HOME /home/admin/apache-kylin-$KYLIN_VERSION-bin-$RELATED_SPARK_VERSION
 
 # Download Kylin
-RUN wget https://archive.apache.org/dist/kylin/apache-kylin-$KYLIN_VERSION/apache-kylin-$KYLIN_VERSION-bin.tar.gz \
-    && tar -zxvf /home/admin/apache-kylin-$KYLIN_VERSION-bin.tar.gz \
-    && rm -f /home/admin/apache-kylin-$KYLIN_VERSION-bin.tar.gz
+RUN wget https://archive.apache.org/dist/kylin/apache-kylin-$KYLIN_VERSION/apache-kylin-$KYLIN_VERSION-bin-$RELATED_SPARK_VERSION.tar.gz \
+    && tar -zxvf /home/admin/apache-kylin-$KYLIN_VERSION-bin-$RELATED_SPARK_VERSION.tar.gz \
+    && rm -f /home/admin/apache-kylin-$KYLIN_VERSION-bin-$RELATED_SPARK_VERSION.tar.gz
 RUN rm -f $KYLIN_HOME/conf/kylin.properties
+# See KYLIN-5071
+RUN sed -i "s/\"kylin.engine.build-base-cuboid-enabled\":\ \"false\"/\"kylin.engine.build-base-cuboid-enabled\":\ \"true\"/g" $KYLIN_HOME/sample_cube/template/cube_desc/kylin_sales_cube.json
 COPY conf/kylin/* $KYLIN_HOME/conf/
 RUN rm -f $KYLIN_HOME/bin/kylin.sh
 COPY conf/bin/kylin.sh $KYLIN_HOME/bin/

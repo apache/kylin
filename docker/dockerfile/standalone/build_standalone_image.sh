@@ -21,7 +21,6 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd ${DIR}
 echo "build image in dir "${DIR}
 
-
 echo "start build Hadoop docker image"
-docker build -f Dockerfile_hadoop -t hadoop2.7-all-in-one-for-kylin4-beta .
-docker build -f Dockerfile -t apachekylin/apache-kylin-standalone:4.0.0-beta .
+docker build -f Dockerfile_hadoop -t hadoop2.7-all-in-one-for-kylin4 .
+docker build -f Dockerfile -t apachekylin/apache-kylin-standalone:4.0.0 .
