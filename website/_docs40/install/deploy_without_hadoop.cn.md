@@ -5,12 +5,12 @@ categories: install
 permalink: /cn/docs40/install/deploy_without_hadoop.html
 ---
 
-相比于 Kylin3，Kylin4.0 实现了全新 spark 构建引擎和 parquet 存储，使 kylin 不依赖 hadoop 环境部署成为可能。与在 AWS EMR 之上部署 Kylin3 相比，直接在 AWS EC2 实例上部署 Kylin4 存在以下优势：
+相比于 Kylin 3.x，Kylin 4.0 实现了全新 spark 构建引擎和 parquet 存储，使 kylin 不依赖 hadoop 环境部署成为可能。与在 AWS EMR 之上部署 Kylin 3.x 相比，直接在 AWS EC2 实例上部署 Kylin 4.0 存在以下优势：
 1. 节省成本。相比 AWS EMR 节点，AWS EC2 节点的成本更低。
 2. 更加灵活。在 EC2 节点上，用户可以更加自主选择自己所需的服务以及组件进行安装部署。
 3. 去 Hadoop。Hadoop 生态比较重，需要投入一定的人力成本进行维护，去 Hadoop 可以更加贴近云原生。
 
-在实现了支持在 spark standalone 模式下进行构建和查询的功能之后，我们在 AWS 的 EC2 实例上对无 hadoop 部署 Kylin4 做了尝试，并成功构建 cube 和进行了查询。
+在实现了支持在 Spark Standalone 模式下进行构建和查询的功能之后，我们在 AWS 的 EC2 实例上对无 Hadoop 部署 Kylin 4.0 做了尝试，并成功构建 Cube 和进行了查询。
 
 ### 环境准备
 
@@ -55,7 +55,7 @@ permalink: /cn/docs40/install/deploy_without_hadoop.html
 
   ```shell
   mkdir /usr/local/java
-  tar -xvf jdk-8u291-linux-x64.tar -C /usr/local/java
+  tar -xvf java-1.8.0-openjdk.tar -C /usr/local/java
   ``` 
 
 #### 3 配置 Hadoop
@@ -313,8 +313,7 @@ permalink: /cn/docs40/install/deploy_without_hadoop.html
   kylin.metadata.url=kylin_metadata@jdbc,url=jdbc:mysql://hostname:3306/kylin,username=root,password=password,maxActive=10,maxIdle=10
   kylin.env.zookeeper-connect-string=hostname
   kylin.engine.spark-conf.spark.master=spark://hostname:7077
-  # 当 spark.submit.deployMode 配置为 cluster 时，需要额外配置 kylin.engine.spark.standalone.master.httpUrl
-  kylin.engine.spark-conf.spark.submit.deployMode=client/cluster
+  kylin.engine.spark-conf.spark.submit.deployMode=client
   kylin.env.hdfs-working-dir=s3://bucket/kylin
   kylin.engine.spark-conf.spark.eventLog.dir=s3://bucket/kylin/spark-history
   kylin.engine.spark-conf.spark.history.fs.logDirectory=s3://bucket/kylin/spark-history

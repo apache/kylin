@@ -5,12 +5,12 @@ categories: install
 permalink: /docs40/install/deploy_without_hadoop.html
 ---
 
-Compared with kylin3, kylin4 implements a new spark build engine and parquet storage, making it possible for kylin to deploy without Hadoop environment. Compared with deploying kylin3 on AWS EMR, deploying kylin4 directly on AWS EC2 instances has the following advantages:
+Compared with Kylin 3.x, Kylin 4.0 implements a new Spark build engine and parquet storage, making it possible for Kylin to deploy without Hadoop environment. Compared with deploying Kylin 3.x on AWS EMR, deploying kylin4 directly on AWS EC2 instances has the following advantages:
 1. Cost saving. Compared with AWS EMR node, AWS EC2 node has lower cost.
 2. More flexible. On the EC2 node, users can more independently select the services and components they need for installation and deployment.
 3. Remove Hadoop dependency. Hadoop ecology is heavy and needs to be maintained at a certain labor cost. Remove hadoop can be closer to the cloud-native.
 
-After realizing the feature of supporting build and query in spark standalone mode, we tried to deploy kylin4.0 without Hadoop on the EC2 instance of AWS, and successfully built the cube and query.
+After realizing the feature of supporting build and query in Spark Standalone mode, we tried to deploy Kylin 4.0 without Hadoop on the EC2 instance of AWS, and successfully built the cube and query.
 
 ### Environment preparation
 - Apply for AWS EC2 Linux instances as required
@@ -53,7 +53,7 @@ The component version information provided here is that we selected during the t
 
   ```shell
   mkdir /usr/local/java
-  tar -xvf jdk-8u291-linux-x64.tar -C /usr/local/java
+  tar -xvf java-1.8.0-openjdk.tar -C /usr/local/java
   ```
  
 
@@ -326,8 +326,7 @@ The component version information provided here is that we selected during the t
   kylin.metadata.url=kylin_metadata@jdbc,url=jdbc:mysql://hostname:3306/kylin,username=root,password=password,maxActive=10,maxIdle=10
   kylin.env.zookeeper-connect-string=hostname
   kylin.engine.spark-conf.spark.master=spark://hostname:7077
-  # 当 spark.submit.deployMode 配置为 cluster 时，需要额外配置 kylin.engine.spark.standalone.master.httpUrl
-  kylin.engine.spark-conf.spark.submit.deployMode=client/cluster
+  kylin.engine.spark-conf.spark.submit.deployMode=client
   kylin.env.hdfs-working-dir=s3://bucket/kylin
   kylin.engine.spark-conf.spark.eventLog.dir=s3://bucket/kylin/spark-history
   kylin.engine.spark-conf.spark.history.fs.logDirectory=s3://bucket/kylin/spark-history
@@ -338,7 +337,7 @@ The component version information provided here is that we selected during the t
 
 - Execute `bin/kylin.sh start`
 
-- Kylin may encounter ClassNotFound type errors during startup. Please refer to the following methods to restart kylin:
+- Kylin may encounter ClassNotFound type errors during startUp. Please refer to the following methods to restart kylin:
 
   ```shell
   # Download commons-collections-3.2.2.jar 
