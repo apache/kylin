@@ -124,7 +124,7 @@ The new package is generated in "dist/" folder; Copy it to the "docker" folder:
 cp ./dist/apache-kylin-3.1.0-SNAPSHOT-bin.tar.gz ./docker
 ```
 
-Use the "Dockerfile_dev" file to build:
+Use the "Dockerfile_dev" file customized by yourself to build:
 
 ```
 docker build -f Dockerfile_dev -t apache-kylin-standalone:test .
