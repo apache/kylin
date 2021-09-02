@@ -16,7 +16,7 @@
 #
 
 # Docker image for apache kylin, based on the Hadoop image
-FROM hadoop2.7-all-in-one-for-kylin4
+FROM hadoop2.8-all-in-one-for-kylin4
 
 ENV RELATED_SPARK_VERSION spark2
 ENV KYLIN_VERSION 4.0.0
