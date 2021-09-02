@@ -9,17 +9,19 @@ since: v4.0.0
 In order to allow users to easily try Kylin, and to facilitate developers to verify and debug after modifying the source code. We provide Kylin's docker image. In this image, each service that Kylin relies on is properly installed and deployed, including:
 
 - JDK 1.8
-- Hadoop 2.7.0
+- Hadoop 2.8.5
 - Hive 1.2.1
-- Spark 2.4.6
+- Spark 2.4.7
+- Kafka 1.1.1
 - MySQL 5.1.73
+- Zookeeper 3.4.6
 
 ## Quickly try Kylin
 
 We have pushed the Kylin image for the user to the docker hub. Users do not need to build the image locally, just execute the following command to pull the image from the docker hub: 
 
 {% highlight Groff markup %}
-docker pull apachekylin/apache-kylin-standalone:4.0.0-beta
+docker pull apachekylin/apache-kylin-standalone:4.0.0
 {% endhighlight %}
 
 After the pull is successful, execute the following command to start the container: 
@@ -33,7 +35,7 @@ docker run -d \
 -p 8032:8032 \
 -p 8042:8042 \
 -p 2181:2181 \
-apachekylin/apache-kylin-standalone:4.0.0-beta
+apachekylin/apache-kylin-standalone:4.0.0
 {% endhighlight %}
 
 The following services are automatically started when the container starts: 
@@ -61,4 +63,4 @@ For the resource setting method for the container, please refer to:
 
 ---
 
-For how to customize the image, please check the github page [kylin/docker](https://github.com/apache/kylin/tree/master/docker/).
+For how to customize the image, please check the github page [kylin/docker](https://github.com/apache/kylin/tree/main/docker/).
