@@ -9,17 +9,19 @@ since: v4.0.0
 为了让用户方便的试用 Kylin，以及方便开发者在修改了源码后进行验证及调试。我们提供了 Kylin 的 docker 镜像。该镜像中，Kylin 依赖的各个服务均已正确的安装及部署，包括：
 
 - JDK 1.8
-- Hadoop 2.7.0
+- Hadoop 2.8.5
 - Hive 1.2.1
-- Spark 2.4.6
+- Spark 2.4.7
+- Kafka 1.1.1
 - MySQL 5.1.73
+- Zookeeper 3.4.6
 
 ## 快速试用 Kylin
 
 我们已将面向用户的 Kylin 镜像上传至 docker 仓库，用户无需在本地构建镜像，直接执行以下命令从 docker 仓库 pull 镜像：
 
 {% highlight Groff markup %}
-docker pull apachekylin/apache-kylin-standalone:4.0.0-beta
+docker pull apachekylin/apache-kylin-standalone:4.0.0
 {% endhighlight %}
 
 pull 成功后，执行以下命令启动容器：
@@ -62,4 +64,4 @@ apachekylin/apache-kylin-standalone:4.0.0-beta
 ---
 
 
-关于如何定制修改 Docker image，请参阅 Git 代码库的 [kylin/docker](https://github.com/apache/kylin/tree/master/docker/)
+关于如何定制修改 Docker image，请参阅 Git 代码库的 [kylin/docker](https://github.com/apache/kylin/tree/main/docker/)
