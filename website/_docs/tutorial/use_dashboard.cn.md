@@ -5,7 +5,6 @@ categories: tutorial
 permalink: /cn/docs/tutorial/use_dashboard.html
 ---
 
-> 自 Apache Kylin v2.3.0 起使用
 
 # Dashboard
 
