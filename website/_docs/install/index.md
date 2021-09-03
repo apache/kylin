@@ -7,15 +7,14 @@ permalink: /docs/install/index.html
 
 ### Software Requirements
 
-* Hadoop: 2.7+, 3.1+ (since v2.5)
+* Hadoop: cdh5.x, cdh6.x, hdp2.x, EMR5.x, EMR6.x, HDI4.x
 * Hive: 0.13 - 1.2.1+
-* HBase: 1.1+, 2.0 (since v2.5)
-* Spark (optional) 2.3.0+
-* Kafka (optional) 1.0.0+ (since v2.5)
-* JDK: 1.8+ (since v2.5)
+* Spark: 2.4.7
+* Mysql: 5.1.17及以上
+* JDK: 1.8+
 * OS: Linux only, CentOS 6.5+ or Ubuntu 16.0.4+
 
-Tests passed on Hortonworks HDP 2.2-2.6 and 3.0, Cloudera CDH 5.7-5.11 and 6.0, AWS EMR 5.7-5.10, Azure HDInsight 3.5-3.6.
+Tests passed on Hortonworks HDP2.4, Cloudera CDH 5.7 and 6.3.2, AWS EMR 5.31 and 6.0, Azure HDInsight 4.0.
 
 We recommend you to try out Kylin or develop it using the integrated sandbox, such as [HDP sandbox](http://hortonworks.com/products/hortonworks-sandbox/), and make sure it has at least 10 GB of memory. When configuring a sandbox, we recommend that you use the Bridged Adapter model instead of the NAT model.
 
@@ -29,41 +28,49 @@ The minimum configuration of a server running Kylin is 4 core CPU, 16 GB RAM and
 
 ### Hadoop Environment
 
-Kylin relies on Hadoop clusters to handle large data sets. You need to prepare a Hadoop cluster with HDFS, YARN, MapReduce, Hive, HBase, Zookeeper and other services for Kylin to run.
-Kylin can be launched on any node in a Hadoop cluster. For convenience, you can run Kylin on the master node. For better stability, it is recommended to deploy Kylin on a clean Hadoop client node with Hive, HBase, HDFS and other command lines installed and client configuration (such as `core-site.xml`, `hive-site.xml`, `hbase-site.xml` and others) are also reasonably configured and can be automatically synchronized with other nodes.
+Kylin relies on Hadoop clusters to handle large data sets. You need to prepare a Hadoop cluster with HDFS, YARN, Hive, Zookeeper and other services for Kylin to run.
+Kylin can be launched on any node in a Hadoop cluster. For convenience, you can run Kylin on the master node. For better stability, it is recommended to deploy Kylin on a clean Hadoop client node with Hive, HDFS and other command lines installed and client configuration (such as `core-site.xml`, `hive-site.xml`and others) are also reasonably configured and can be automatically synchronized with other nodes.
 
-Linux accounts running Kylin must have access to the Hadoop cluster, including the permission to create/write HDFS folders, Hive tables, HBase tables, and submit MapReduce tasks.
+Linux accounts running Kylin must have access to the Hadoop cluster, including the permission to create/write HDFS folders, Hive tables.
 
 
 
 ### Kylin Installation
 
-- Download a binary package for your Hadoop version from the [Apache Kylin Download Site](https://kylin.apache.org/download/). For example, Kylin 2.5.0 for HBase 1.x can be downloaded from the following command line:
+- Download a Apache kylin 4.0.0 binary package from the [Apache Kylin Download Site](https://kylin.apache.org/download/). For example, the following command line can be used:
 
 ```shell
 cd /usr/local/
-wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz
+wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-4.0.0/apache-kylin-4.0.0-bin.tar.gz
 ```
 
 - Unzip the tarball and configure the environment variable `$KYLIN_HOME` to the Kylin folder.
 
 ```shell
-tar -zxvf apache-kylin-2.5.0-bin-hbase1x.tar.gz
-cd apache-kylin-2.5.0-bin-hbase1x
+tar -zxvf apache-kylin-4.0.0-bin.tar.gz
+cd apache-kylin-4.0.0-bin
 export KYLIN_HOME=`pwd`
 ```
 
-- From v2.6.1, Kylin will not ship Spark binary anymore; You need to install Spark seperately, and then point `SPARK_HOME` system environment variable to it: 
-
-```shell
-export SPARK_HOME=/path/to/spark
-```
-
-or run the script to download it:
+- Run the script to download spark:
 
 ```shell
 $KYLIN_HOME/bin/download-spark.sh
 ```
+
+Or configure SPARK_HOME points to the path of spark2.4.7 in the environment.
+
+- Configure MySQL metastore
+
+Kylin 4.0 uses MySQL as metadata storage, make the following configuration in `kylin.properties`:
+
+```shell
+kylin.metadata.url=kylin_metadata@jdbc,driverClassName=com.mysql.jdbc.Driver,url=jdbc:mysql//localhost:3306/kylin_test,username=,password=
+kylin.env.zookeeper-connect-string=ip:2181
+```
+
+You need to change the Mysql user name and password, as well as the database and table where the metadata is stored. And put mysql jdbc connector into `$KYLIN_HOME/ext/`, if there is no such directory, please create it.
+Please refer to [配置 Mysql 为 Metastore](/_docs40/tutorial/mysql_metastore.html) learn about the detailed configuration of MySQL as a Metastore.
 
 ### Kylin tarball structure
 * `bin`: shell scripts to start/stop Kylin service, backup/restore metadata, as well as some utility scripts.
@@ -71,9 +78,14 @@ $KYLIN_HOME/bin/download-spark.sh
 * `lib`: Kylin jar files for external use, like the Hadoop job jar, JDBC driver, HBase coprocessor jar, etc.
 * `meta_backups`: default backup folder when run "bin/metastore.sh backup";
 * `sample_cube`: files to create the sample cube and its tables.
-* `spark`: the default spark binary that built with Kylin.
+* `spark`: Spark by $KYLIN_HOME/bin/download.sh download.
 * `tomcat` the tomcat web server that run Kylin application. 
 * `tool`: the jar file for running utility CLI. 
+
+### Perform additional steps for some environments
+For Hadoop environment of CDH6.X, EMR5.X, EMR6.X, you need to perform some additional steps before starting kylin.
+For CDH6.X environment, please check the document: [Deploy kylin4.0 on CDH6](https://cwiki.apache.org/confluence/display/KYLIN/Deploy+Kylin+4+on+CDH+6)
+For EMR environment, please check the document: [Deploy kylin4.0 on EMR](https://cwiki.apache.org/confluence/display/KYLIN/Deploy+Kylin+4+on+AWS+EMR)
 
 ### Checking the operating environment
 
@@ -86,30 +98,12 @@ Run the script, `$KYLIN_HOME/bin/kylin.sh start` , to start Kylin. The interface
 
 ```
 Retrieving hadoop conf dir...
-KYLIN_HOME is set to /usr/local/apache-kylin-2.5.0-bin-hbase1x
+KYLIN_HOME is set to /usr/local/apache-kylin-4.0.0-bin
 ......
 A new Kylin instance is started by root. To stop it, run 'kylin.sh stop'
-Check the log at /usr/local/apache-kylin-2.5.0-bin-hbase1x/logs/kylin.log
+Check the log at /usr/local/apache-kylin-4.0.0-bin/logs/kylin.log
 Web UI is at http://<hostname>:7070/kylin
 ```
-
-**Note**: If you encounter the following error when starting kylin (possible in Hadoop3 environment)：
-
-```
-Caused by: java.lang.NoSuchMethodError: com.google.common.base.Preconditions.checkArgument(ZLjava/lang/String;Ljava/lang/Object;)V
-	at org.apache.hadoop.conf.Configuration.set(Configuration.java:1358)
-	at org.apache.hadoop.conf.Configuration.set(Configuration.java:1339)
-	at org.apache.kylin.common.util.HadoopUtil.healSickConfig(HadoopUtil.java:77)
-	at org.apache.kylin.common.util.HadoopUtil.getCurrentConfiguration(HadoopUtil.java:63)
-	at org.apache.kylin.storage.hbase.HBaseConnection.newHBaseConfiguration(HBaseConnection.java:170)
-	at org.apache.kylin.storage.hbase.HBaseConnection.get(HBaseConnection.java:259)
-	at org.apache.kylin.storage.hbase.HBaseResourceStore.getConnection(HBaseResourceStore.java:96)
-	at org.apache.kylin.storage.hbase.HBaseResourceStore.createHTableIfNeeded(HBaseResourceStore.java:119)
-	at org.apache.kylin.storage.hbase.HBaseResourceStore.<init>(HBaseResourceStore.java:89)
-	... 8 more
-```
-
-You can try download [guava-28.0-jre.jar](https://repo1.maven.org/maven2/com/google/guava/guava/28.0-jre/guava-28.0-jre.jar), put it into `$KYLIN_HOME/tool/` and `$KYLIN_HOME/tomcat/lib/` and restart kylin `bin/kylin.sh restart`.
 
 ### Using Kylin
 
@@ -125,7 +119,7 @@ Run the `$KYLIN_HOME/bin/kylin.sh stop` script to stop Kylin. The console output
 
 ```
 Retrieving hadoop conf dir...
-KYLIN_HOME is set to /usr/local/apache-kylin-2.5.0-bin-hbase1x
+KYLIN_HOME is set to /usr/local/apache-kylin-4.0.0-bin
 Stopping Kylin: 25964
 Stopping in progress. Will check after 2 secs again...
 Kylin with pid 25964 has been stopped.
@@ -135,11 +129,9 @@ You can run `ps -ef | grep kylin` to see if the Kylin process has stopped.
 
 
 ### HDFS folder structure
-Kylin will generate files on HDFS. The root folder is "/kylin/", but will have the second level folder for each Kylin cluster, named with the metadata table name, by default it is "kylin_metadata" (can be customized in `conf/kylin.properties`).
+Kylin will generate files on HDFS. The default root directory is "kylin/", and then the metadata table name of kylin cluster will be used as the second layer directory name, and the default is "kylin_metadata"(can be customized in `conf/kylin.properties`)
 
-Usually, there are at least these four kind of directories under `/kylin/kylin_metadata`: `cardinality`, `coprocessor`, `kylin-job_id`, `resources`. 
-1. `cardinality`: the output folder of the cardinality calculation job when Kylin loads a Hive table. It can be cleaned when there is no job running;
-2. `coprocessor`: the folder that Kylin puts HBase coprocessor jar file. Please do not delete it. 
-3. `kylin-job_id`: the cubing job's output folder. Please keep them; if need a cleanup, follow the [storage cleanup guide](/docs/howto/howto_cleanup_storage.html). 
-4. `resources`: the metadata entries that too big to persisted in HBase (e.g, a dictionary or table snapshot); Please do not delete it; if need a cleanup, follow the [cleanup resources from metadata](/docs/howto/howto_backup_metadata.html) 
-5. `jdbc-resources`: similar as `resources`, only appeared when using MySQL as the metadata storage。
+Generally, `/kylin/kylin_metadata` directory stores data according to different projects, such as data directory of "learn_kylin" project is `/kylin/kylin_metadata/learn_kylin`, which usually includes the following subdirectories:
+1.`job_tmp`: store temporary files generated during the execution of tasks.
+2.`parquet`: the cuboid file of each cube.
+3.`table_snapshot`: stores the dimension table snapshot.

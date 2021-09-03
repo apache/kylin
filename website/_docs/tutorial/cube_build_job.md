@@ -18,50 +18,37 @@ First of all, make sure that you have authority of the cube you want to build.
 
 4. Click `Submit`, you will see the new job in the `Monitor` page.
 
-   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/4 jobs-page.png)
+   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/4 jobs-page.4.x.png)
 
 5. The new job is in "pending" status; after a while, it will be started to run and you will see the progress by refresh the web page or click the refresh button.
 
-   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/5 job-progress.png)
+   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/5 job-progress.4.x.png)
 
 
 6. Wait the job to finish. In the between if you want to discard it, click `Actions` -> `Discard` button. If the job is failed, you can click `Resume` to retry.
 
    ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/6 discard.png)
 
-7. After the job is 100% finished, the cube's status becomes to "Ready", means it is ready to serve SQL queries. In the `Model` tab, find the cube, click cube name to expand the section, in the "Storage" tab, it will list the cube segments. Each segment has a start/end time; Its underlying HBase table information is also listed.
+7. After the job is 100% finished, the cube's status becomes to "Ready", means it is ready to serve SQL queries. In the `Model` tab, find the cube, click cube name to expand the section, in the "Storage" tab, it will list the cube segments. Each segment has a start/end time; Its underlying Parquet file information is also listed.
 
-   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/10 cube-segment.png)
+   ![](/images/tutorial/4.0/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/10 cube-segment.png)
 
 If you have more source data, repeat the steps above to build them into the cube.
 
 ### Job Monitoring
 In the `Monitor` page, click the job detail button to see detail information show in the right side.
 
-![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/7 job-steps.png)
+![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/7 job-steps.4.x.png)
 
 The detail information of a job provides a step-by-step record to trace a job. You can hover a step status icon to see the basic status and information.
 
-![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/8 hover-step.png)
+![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/8 hover-step.4.x.png)
 
-Click the icon buttons showing in each step to see the details: `Parameters`, `Log`, `MRJob`.
-
-* Parameters
-
-   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/9 parameters.png)
-
-   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/9 parameters-d.png)
-
-* Log
+Click the icon buttons showing in each step to see the Log.
         
-   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/9 log.png)
+![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/9 log.png)
 
-   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/9 log-d.png)
+![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/9 log-d.4.x.png)
 
-* MRJob(MapReduce Job)
-
-   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/9 mrjob.png)
-
-   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/9 mrjob-d.png)
 
 

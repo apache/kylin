@@ -21,11 +21,11 @@
 - title: 安装
   docs:
   - install/index
+  - install/deploy_without_hadoop
   - install/kylin_cluster
-  - install/configuration
-  - install/kylin_aws_emr
   - install/kylin_docker
-  - install/kylin_on_kubernetes
+  - install/configuration
+  - install/advance_settings
 
 - title: 教程
   docs:
@@ -33,22 +33,14 @@
   - tutorial/web
   - tutorial/create_cube
   - tutorial/cube_build_job
-  - tutorial/cube_migration
   - tutorial/sql_reference
   - tutorial/project_level_acl
-  - tutorial/cube_spark
-  - tutorial/cube_flink
-  - tutorial/cube_streaming
-  - tutorial/realtime_olap
-  - tutorial/cube_build_performance
   - tutorial/kylin_client_tool
   - tutorial/setup_systemcube
   - tutorial/use_cube_planner
   - tutorial/use_dashboard
-  - tutorial/setup_jdbc_datasource
   - tutorial/hybrid
   - tutorial/mysql_metastore
-  - tutorial/query_pushdown
 
 - title: 工具集成
   docs:
@@ -68,9 +60,7 @@
   - howto/howto_use_restapi
   - howto/howto_build_cube_with_restapi
   - howto/howto_optimize_cubes
-  - howto/howto_optimize_build
+  - howto/howto_optimize_build_and_query
   - howto/howto_backup_metadata
   - howto/howto_cleanup_storage
   - howto/howto_use_cli
-  - howto/howto_use_hive_mr_dict
-  - howto/sample_dataset

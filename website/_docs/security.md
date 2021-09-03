@@ -5,32 +5,6 @@ categories: docs
 permalink: /docs/security.html
 ---
 
-### [CVE-2020-13937](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-13937)
-
-__Severity__
-
-Important
-
-__Versions Affected__
-
-Kylin 2.0.0, 2.1.0, 2.2.0, 2.3.0, 2.3.1, 2.3.2, 2.4.0, 2.4.1, 2.5.0, 2.5.1, 2.5.2, 2.6.0, 2.6.1, 2.6.2, 2.6.3, 2.6.4, 2.6.5, 2.6.6, 3.0.0-alpha, 3.0.0-alpha2, 3.0.0-beta, 3.0.0, 3.0.1, 3.0.2, 3.1.0, 4.0.0-alpha.
-
-__Description__
-
-Kylin has one restful api which exposed Kylin's configuration information without any authentication, so it is dangerous because some confidential information entries will be disclosed to everyone.
-
-__Mitigation__
-
-Users of all previous versions after 2.0 should upgrade to 3.1.0.
-
-Users could edit `$KYLIN_HOME/WEB-INF/classes/kylinSecurity.xml`, and remove this line `<scr:intercept-url pattern="/api/admin/config" access="permitAll"/>`. After that,  restart all Kylin instances to make it effective.
-
-Otherwise, you can upgrade Kylin to 3.1.1.
-
-__Credit__
-
-This issue was discovered by Ngo Wei Lin (@Creastery) of STAR Labs (@starlabs_sg).
-
 ### [CVE-2020-13926](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-13926)
 
 __Severity__

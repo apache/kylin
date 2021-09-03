@@ -54,7 +54,7 @@ CubeMetaExtractor.java 用于提取与 cube 相关的信息以达到调试/分�
 ./bin/kylin.sh org.apache.kylin.tool.extractor.CubeMetaExtractor -cube querycube -destDir /root/newconfigdir1
 {% endhighlight %}
 结果：
-命令执行成功后，您想要抽取的 cube / project / hybrid 将会存在于您指定的 destDir 目录中。
+命令执行成功后，您想要抽取的 cube/project/hybrid 将会存在于您指定的 destDir 目录中。
 
 下面会列出所有支持的参数：
 
@@ -92,31 +92,20 @@ CubeMetaIngester.java 将提取的 cube 注入到另一个 metadata store 中。
 
 下面会列出所有支持的参数：
 
-| Parameter                                          | Description                                                                                                                                                                                        |
-| -------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| forceIngest <forceIngest>                          | Skip the target cube, model and table check and ingest by force. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false.                      |
-| overwriteTables <overwriteTables>                  | If table meta conflicts, overwrite the one in metadata store with the one in srcPath. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false. |
-| createProjectIfNotExists <createProjectIdNotExists>| If the specified project is not exists, kylin will create it.                                                                                                                                      |
-| project <project>                                  | (Required) Specify the target project for the new cubes.                                                                                                                                           |
-| srcPath <srcPath>                                  | (Required) Specify the path to the extracted Cube metadata zip file.                                                                                                                               |
+| Parameter                         | Description                                                                                                                                                                                        |
+| --------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| forceIngest <forceIngest>         | Skip the target cube, model and table check and ingest by force. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false.                      |
+| overwriteTables <overwriteTables> | If table meta conflicts, overwrite the one in metadata store with the one in srcPath. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false. |
+| project <project>                 | (Required) Specify the target project for the new cubes.                              
+| srcPath <srcPath>                 | (Required) Specify the path to the extracted Cube metadata zip file.                                                                                                                               |
 
-## CubeMigrationCheckCLI.java
+## CubeMigrationCLI.java
 
 ### 作用
-CubeMigrationCheckCLI.java 用于在迁移 Cube 之后检查“KYLIN_HOST”属性是否与 dst 中所有 Cube segment 对应的 HTable 的 MetadataUrlPrefix 一致。CubeMigrationCheckCLI.java 会在 CubeMigrationCLI.java 中被调用，通常不单独使用。
+自 Apache kylin 2.0 以来提供了迁移工具来支持跨不同集群迁移元数据。在 kylin4.0 中，我们对 CubeMigration 工具进行了改进并添加了新功能，增强功能列表如下所示：
+-支持迁移源集群中的所有多维数据集
+-支持在源集群中迁移整个项目
+-支持将元数据从旧版本迁移和升级到Kylin 4
 
 ### 如何使用
-{% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCheckCLI -fix <conf_value> -dstCfgUri <dstCfgUri_value> -cube <cube_name>
-{% endhighlight %}
-例如：
-{% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCheckCLI -fix true -dstCfgUri kylin-prod:7070 -cube querycube
-{% endhighlight %}
-下面会列出所有支持的参数：
-
-| Parameter           | Description                                                                   |
-| ------------------- | :---------------------------------------------------------------------------- |
-| fix                 | Fix the inconsistent Cube segments' HOST, default false                       |
-| dstCfgUri           | The KylinConfig of the Cube’s new home                                       |
-| cube                | The name of Cube migrated                                                     |
+请参考文档：[How to migrate metadata to Kylin4](https://cwiki.apache.org/confluence/display/KYLIN/How+to+migrate+metadata+to+Kylin+4)

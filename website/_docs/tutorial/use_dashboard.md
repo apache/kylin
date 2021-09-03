@@ -5,8 +5,6 @@ categories: tutorial
 permalink: /docs/tutorial/use_dashboard.html
 ---
 
-> Available since Apache Kylin v2.3.0
-
 # Dashboard
 
 As a project owner, do you want to know your Cube usage metrics? Do you want to know how many queries are against your Cube every day? What is the AVG query latency? Do you want to know the AVG Cube build time per GB source data, which is very helpful to foresee the time cost of a coming Cube build job? You can find all information from Kylin Dashboard. 

@@ -184,23 +184,13 @@ This step is designed for incremental cube build.
 
 For more please read this blog: [New Aggregation Group](/blog/2016/02/18/new-aggregation-group/)
 
-`Rowkeys`: the rowkeys are composed by the dimension encoded values. "Dictionary" is the default encoding method; If a dimension is not fit with dictionary (e.g., cardinality > 10 million), select "false" and then enter the fixed length for that dimension, usually that is the max length of that column; if a value is longer than that size it will be truncated. Please note, without dictionary encoding, the cube size might be much bigger.
+`Rowkeys`: the rowkeys are composed by the dimension encoded values. 
 
 You can drag & drop a dimension column to adjust its position in rowkey; Put the mandatory dimension at the beginning, then followed the dimensions that heavily involved in filters (where condition). Put high cardinality dimensions ahead of low cardinality dimensions.
 
 `Mandatory Cuboids`: Whitelist of the cuboids that you want to build.
 
 `Cube Engine`: The engine for building cube. There are 2 engines: MapReduce and Spark. If your cube only has simple measures (COUNT, SUM, MIN, MAX), Spark can gain better performance; If cube has complex measures (COUNT DISTINCT, TOP_N), MapReduce is more stable.
-
-`Advanced Dictionaries`: "Global Dictionary" is the default dictionary for precise count distinct measure, it can ensure one value always be encoded into one consistent integer, so it can support "COUNT DISTINCT" rollup among multiple segments. But global dictionary may grow to very big size as time go.
-
-"Segment Dictionary" is a special dictionary for precise count distinct measure, which is built on one segment and could not support rollup among segments. Its size can be much smaller than global dictionary. Specifically, if your cube isn't partitioned or you can ensure all your SQLs will group by your partition_column, you could use "Segment Dictionary" instead of "Global Dictionary".
-
-Please note: "Global Dictionary" and "Segment Dictionary" are one-way dictionary for COUNT DISTINCT (converting a non-integer value to integer for bitmap), they couldn't be used as the encoding for a dimension.
-
-`Advanced Snapshot Table`: design for global lookup table and provide different storage type.
-
-`Advanced ColumnFamily`: If there are more than one ultra-high cardinality precise count distinct or TopN measures, you could divide these measures to more column family to optimize the I/O from HBase.
 
 **Step 6. Configuration Overwrites**
 
