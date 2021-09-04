@@ -22,10 +22,7 @@ import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.catalyst.expressions.{ApproxCountDistinctDecode, BinaryExpression,
-  DictEncode, Expression, ExpressionInfo, ExpressionUtils, ImplicitCastInputTypes, In,
-  KylinAddMonths, Like, Literal, PreciseCountDistinctDecode, RoundBase, ScatterSkewData, SplitPart, Sum0,
-  TimestampAdd, TimestampDiff, Truncate, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{ApproxCountDistinctDecode, BinaryExpression, DictEncode, Expression, ExpressionInfo, ExpressionUtils, ImplicitCastInputTypes, In, KylinAddMonths, Like, Literal, PercentileDecode, PreciseCountDistinctDecode, RoundBase, ScatterSkewData, SplitPart, Sum0, TimestampAdd, TimestampDiff, Truncate, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.aggregate.AggregateFunction
 import org.apache.spark.sql.udaf.{ApproxCountDistinct, IntersectCount, PreciseCountDistinct}
 
@@ -74,6 +71,9 @@ object KylinFunctions {
 
   def approx_count_distinct_decode(column: Column, precision: Int): Column =
     Column(ApproxCountDistinctDecode(column.expr, Literal(precision)))
+
+  def k_percentile_decode(column: Column, p: Column, precision: Int): Column =
+    Column(PercentileDecode(column.expr, p.expr, Literal(precision)))
 
   def precise_count_distinct(column: Column): Column =
     Column(PreciseCountDistinct(column.expr).toAggregateExpression())

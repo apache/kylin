@@ -33,6 +33,10 @@ public class PercentileSerializer extends DataTypeSerializer<PercentileCounter> 
         this.compression = type.getPrecision();
     }
 
+    public PercentileSerializer(int precision) {
+        this.compression = precision;
+    }
+
     @Override
     public int peekLength(ByteBuffer in) {
         return current().peekLength(in);

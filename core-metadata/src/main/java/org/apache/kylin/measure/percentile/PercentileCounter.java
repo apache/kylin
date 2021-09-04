@@ -64,6 +64,13 @@ public class PercentileCounter implements Serializable {
         return registers.quantile(quantileRatio);
     }
 
+    public Double getResultEstimateWithQuantileRatio(double quantileRatio) {
+        if (registers.size() == 0) {
+            return null;
+        }
+        return registers.quantile(quantileRatio);
+    }
+
     public void writeRegisters(ByteBuffer out) {
         registers.compress();
         registers.asSmallBytes(out);
