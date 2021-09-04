@@ -20,6 +20,7 @@ package org.apache.spark.sql.catalyst.expressions
 import com.esotericsoftware.kryo.io.{Input, KryoDataInput}
 import org.apache.kylin.engine.spark.common.util.KylinDateTimeUtils
 import org.apache.kylin.measure.hllc.HLLCounter
+import org.apache.kylin.measure.percentile.PercentileSerializer
 import org.apache.spark.dict.{NBucketDictionary, NGlobalDictionary}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.DeclarativeAggregate
@@ -543,4 +544,31 @@ case class ScatterSkewData(left: Expression, right: Expression) extends BinaryEx
   override def dataType: DataType = StringType
 
   override def inputTypes: Seq[AbstractDataType] = Seq(AnyDataType, AnyDataType)
+}
+
+case class PercentileDecode(bytes: Expression, quantile: Expression, precision: Expression) extends TernaryExpression with ExpectsInputTypes {
+
+  override def inputTypes: Seq[AbstractDataType] = Seq(BinaryType, DecimalType, IntegerType)
+
+  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
+    val expressionUtils = ExpressionUtils.getClass.getName.stripSuffix("$")
+    defineCodeGen(ctx, ev, (bytes, quantile, precision) => {
+      s"""$expressionUtils.percentileDecodeHelper($bytes, $quantile, $precision)"""
+    })
+  }
+
+  override protected def nullSafeEval(bytes: Any, quantile: Any, precision: Any): Any = {
+    val arrayBytes = bytes.asInstanceOf[Array[Byte]]
+    val serializer = new PercentileSerializer(precision.asInstanceOf[Int]);
+    val counter = serializer.deserialize(ByteBuffer.wrap(arrayBytes))
+    counter.getResultEstimateWithQuantileRatio(quantile.asInstanceOf[Decimal].toDouble)
+  }
+
+  override def dataType: DataType = DoubleType
+
+  override def prettyName: String = "percentile_decode"
+
+  override def nullable: Boolean = false
+
+  override def children: Seq[Expression] = Seq(bytes, quantile, precision)
 }

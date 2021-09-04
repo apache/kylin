@@ -18,15 +18,17 @@
 
 package org.apache.spark.sql.catalyst.expressions
 
+import org.apache.kylin.measure.percentile.PercentileSerializer
 import scala.util.{Failure, Success, Try}
 import scala.reflect.ClassTag
 import org.apache.spark.sql.AnalysisException
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.{FunctionBuilder, expressions}
 import org.apache.spark.sql.execution.datasources.DataSourceStrategy
 import org.apache.spark.sql.sources.Filter
+import org.apache.spark.sql.types.Decimal
+import java.nio.ByteBuffer
 
-object
-ExpressionUtils {
+object ExpressionUtils {
   def expression[T <: Expression](name: String)
     (implicit tag: ClassTag[T]): (String, (ExpressionInfo, FunctionBuilder)) = {
 
@@ -108,5 +110,12 @@ ExpressionUtils {
     } else {
       new ExpressionInfo(clazz.getCanonicalName, name)
     }
+  }
+
+  def percentileDecodeHelper(bytes: Any, quantile: Any, precision: Any): Double = {
+    val arrayBytes = bytes.asInstanceOf[Array[Byte]]
+    val serializer = new PercentileSerializer(precision.asInstanceOf[Int]);
+    val counter = serializer.deserialize(ByteBuffer.wrap(arrayBytes))
+    counter.getResultEstimateWithQuantileRatio(quantile.asInstanceOf[Decimal].toDouble)
   }
 }

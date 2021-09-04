@@ -59,23 +59,30 @@ object AggregatePlan extends LogEx {
       // exactly match, skip agg, direct project.
       val hash = System.identityHashCode(rel).toString
       val aggCols = rel.getRewriteAggCalls.asScala.zipWithIndex.map {
-        case (call: KylinAggregateCall, index: Int)
-          if OLAPAggregateRel.getAggrFuncName(call).equals("COUNT_DISTINCT") =>
+        case (call: KylinAggregateCall, index: Int) =>
           val dataType = call.getFunc.getReturnDataType
           val funcName = OLAPAggregateRel.getAggrFuncName(call)
           val argNames = call.getArgList.asScala.map(dataFrame.schema.names.apply(_))
           val columnName = argNames.map(col)
           val aggName = SchemaProcessor.replaceToAggravateSchemaName(index, funcName, hash, argNames: _*)
-          if (call.isHllCountDistinctFunc) {
-            KylinFunctions
-              .approx_count_distinct_decode(columnName.head, dataType.getPrecision)
-              .alias(aggName)
-          } else if (call.isBitmapCountDistinctFunc) {
-            // execute count distinct precisely
-            KylinFunctions.precise_count_distinct_decode(columnName.head).alias(aggName)
-          } else {
-            throw new IllegalArgumentException(
-              s"""Unsupported function name $funcName""")
+          funcName match {
+            case FunctionDesc.FUNC_COUNT_DISTINCT =>
+              if (call.isHllCountDistinctFunc) {
+                KylinFunctions
+                  .approx_count_distinct_decode(columnName.head, dataType.getPrecision)
+                  .alias(aggName)
+              } else if (call.isBitmapCountDistinctFunc) {
+                // execute count distinct precisely
+                KylinFunctions.precise_count_distinct_decode(columnName.head).alias(aggName)
+              } else {
+                throw new IllegalArgumentException(
+                  s"""Unsupported function name $funcName""")
+              }
+            case FunctionDesc.FUNC_PERCENTILE =>
+              val aggName = SchemaProcessor.replaceToAggravateSchemaName(index, "PERCENTILE_DECODE", hash, argNames: _*)
+              KylinFunctions.k_percentile_decode(columnName.head, columnName(1), dataType.getPrecision).alias(aggName)
+            case _ =>
+              col(schemaNames.apply(call.getArgList.get(0)))
           }
         case (call: Any, index: Int) =>
           col(schemaNames.apply(call.getArgList.get(0)))
@@ -223,7 +230,7 @@ object AggregatePlan extends LogEx {
       .isSum0
   }
 
-  val exactlyMatchSupportedFunctions = List("SUM", "MIN", "MAX", "COUNT_DISTINCT")
+  val exactlyMatchSupportedFunctions = List("SUM", "MIN", "MAX", "COUNT_DISTINCT", "PERCENTILE", "PERCENTILE_APPROX")
 
   def isExactlyCuboidMatched(rel: OLAPAggregateRel, groupByList: List[Column]): Boolean = {
     val olapContext = rel.getContext
@@ -241,7 +248,9 @@ object AggregatePlan extends LogEx {
         return false
       }
       // when using intersect_count and intersect_value
-      if (call.getArgList.size() > 1) return false
+      if (call.getArgList.size() > 1 && !OLAPAggregateRel.getAggrFuncName(call).startsWith("PERCENTILE")) {
+        return false
+      }
     }
     val groupByCols = rel.getGroups.asScala.map(_.getIdentity).toSet
     if (groupByCols.isEmpty) return false
