@@ -63,8 +63,31 @@ mkdir -p ${KYLIN_HOME}/logs
 # check hive usability first, this operation will insert one version record into VERSION table
 $KYLIN_HOME/bin/check-hive-usability.sh > ${KYLIN_HOME}/logs/kylin-verbose.log 2>&1
 
+function check_hdfs_usability() {
+    echo "Checking HDFS's service..."
+    started_hdfs=
+    ((time_left = 60))
+    while ((time_left > 0)); do
+        hdfs dfs -test -d /tmp
+        started_hdfs=$?
+        if [[ $started_hdfs -eq 0 ]]; then
+            break
+        fi
+        sleep 5
+        ((timeLeft -= 5))
+    done
+    if [[ $started_hdfs -eq 0 ]]; then
+        echo "HDFS's service started..."
+    else
+        echo "ERROR: Check HDFS's service failed, please check the status of your cluster"
+    fi
+}
+
 if [ ! -f "/home/admin/first_run" ]
 then
+    # check hdfs usability first if hdfs service was not started normally
+    check_hdfs_usability
+
     hdfs dfs -mkdir -p /kylin4/spark-history
     hdfs dfs -mkdir -p /spark2_jars
     hdfs dfs -put -f $SPARK_HOME/jars/* hdfs://localhost:9000/spark2_jars/
