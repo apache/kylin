@@ -41,6 +41,7 @@
   - tutorial/use_dashboard
   - tutorial/hybrid
   - tutorial/mysql_metastore
+  - tutorial/query_pushdown
 
 - title: 工具集成
   docs:
