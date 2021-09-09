@@ -11454,7 +11454,13 @@ module.service('gridUtil', ['$log', '$window', '$document', '$http', '$templateC
       var parts = path.split(uiGridConstants.DOT_REGEXP);
       var preparsed = [parts.shift()];    // first item must be var notation, thus skip
       angular.forEach(parts, function (part) {
-        preparsed.push(part.replace(uiGridConstants.FUNC_REGEXP, '\']$1'));
+        var specialFun = ['COUNT', 'SUM', 'MIN', 'MAX', 'AVG'];
+        var parttemp = part.replace(uiGridConstants.FUNC_REGEXP, '');
+        if (specialFun.indexOf(parttemp) > -1) {
+          preparsed.push(part + '\']');
+        } else {
+          preparsed.push(part.replace(uiGridConstants.FUNC_REGEXP, '\']$1'));
+        }
       });
       return preparsed.join('[\'');
     }
