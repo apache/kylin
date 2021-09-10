@@ -55,6 +55,7 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.spark.SparkConf;
+import org.apache.spark.deploy.StandaloneAppClient;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.hive.utils.ResourceDetectUtils;
 import org.apache.spark.util.Utils;
@@ -197,11 +198,14 @@ public abstract class SparkApplication {
         }
     }
 
-    private Map<String, String> getTrackingInfo(boolean ipAddressPreferred) {
+    private Map<String, String> getTrackingInfo(boolean ipAddressPreferred, String sparkMaster) {
         String applicationId = ss.sparkContext().applicationId();
         Map<String, String> extraInfo = new HashMap<>();
         try {
             String trackingUrl = getTrackingUrl(applicationId);
+            if (sparkMaster.startsWith("spark")) {
+                trackingUrl = StandaloneAppClient.getAppUrl(applicationId, sparkMaster);
+            }
             if (StringUtils.isBlank(trackingUrl)) {
                 logger.warn("Get tracking url of application {}, but empty url found.", applicationId);
                 return extraInfo;
@@ -290,7 +294,7 @@ public abstract class SparkApplication {
 
             if (isJobOnCluster(sparkConf)) {
                 updateSparkJobExtraInfo("/kylin/api/jobs/spark", project, jobId,
-                        getTrackingInfo(config.isTrackingUrlIpAddressEnabled()));
+                        getTrackingInfo(config.isTrackingUrlIpAddressEnabled(), sparkConf.get("spark.master")));
             }
             // for spark metrics
             //JobMetricsUtils.registerListener(ss);

@@ -38,7 +38,6 @@ object StandaloneAppClient extends Logging {
   private val cacheTtl = 3600 * 1000 * 24 * 5
   private val cacheMaxSize = 30000
 
-  // private val masterUrlHtml: String = KylinConfig.getInstanceFromEnv.getSparkStandaloneMasterWebUI + "/app/?appId="
   private val masterUrlJson: String = KylinConfig.getInstanceFromEnv.getSparkStandaloneMasterWebUI + "/json"
 
   private val restService: RestService = new RestService(10000, 10000)
@@ -81,6 +80,23 @@ object StandaloneAppClient extends Logging {
     }
   }
 
+  def getAppUrl(appId: String, standaloneMaster: String): String = {
+    var sparkUI = KylinConfig.getInstanceFromEnv.getSparkStandaloneMasterWebUI
+    if (sparkUI.isEmpty) {
+      sparkUI = "http://" + getMasterHost(standaloneMaster) + ":8080/"
+      logWarning("Parameter 'kylin.engine.spark.standalone.master.httpUrl' is not configured. Use " +
+        sparkUI + " as the spark standalone Web UI address.")
+    }
+    if (!sparkUI.endsWith("/")) {
+      sparkUI = sparkUI + "/"
+    }
+    val sparkApp = sparkUI + "app/?appId="
+    sparkApp + appId
+  }
+
+  def getMasterHost(master: String): String = {
+    master.split("(://|:)").tail.head
+  }
 
   def parseApplicationState(responseStr: String): Unit = {
     val curr = System.currentTimeMillis()
