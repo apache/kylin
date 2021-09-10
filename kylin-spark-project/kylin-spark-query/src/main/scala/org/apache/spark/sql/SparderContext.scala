@@ -36,6 +36,8 @@ import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.util.ToolUtil
 import org.apache.kylin.query.monitor.SparderContextCanary
 import org.apache.kylin.spark.classloader.ClassLoaderUtils
+import org.apache.spark.deploy.StandaloneAppClient
+import org.apache.spark.sql.SparderContext.master_app_url
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
 import org.apache.spark.sql.execution.datasource.{KylinSourceStrategy, ShardFileStatusCache}
 import org.apache.spark.sql.metrics.SparderMetricsListener
@@ -181,6 +183,10 @@ object SparderContext extends Logging {
                   if (hostName.equals("Unknown")) {
                     hostName = "localhost"
                   }
+                  master_app_url = "http://" + hostName + ":" + sparkSession.sparkContext.getConf
+                    .get("spark.ui.port", "4040")
+                case mode: String if mode.startsWith("spark") =>
+                  val hostName = StandaloneAppClient.getMasterHost(kylinConf.getSparderConfigOverrideWithSpecificName("spark.master"))
                   master_app_url = "http://" + hostName + ":" + sparkSession.sparkContext.getConf
                     .get("spark.ui.port", "4040")
                 case _ =>
