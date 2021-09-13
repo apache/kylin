@@ -10,7 +10,7 @@ permalink: /cn/docs/install/kylin_build_src_setup_windows_local_nexus.html
 ### windows加速构建Kylin源码 安装本地nexus
 1. 下载nexus
 https://www.sonatype.com/download-oss-sonatype
-![Windos]()
+![Windos](/images/install/kylin_build_src_setup_local_nexus01.png)
 2. 解压安装包nexus-3.14.0-04-win64.zip
 3.配置nexus的端口和上下文路径
 - ../nexus-3.14.0-04-win64/nexus-3.14.0-04/etc/nexus-default.properties
@@ -73,21 +73,21 @@ nexus.exe /stop <optional-service-name>
 
 9. 在本地nexus添加需要使用的maven仓库地址
 * 创建repository
-![]()
-![]()
+![](/images/install/kylin_build_src_setup_local_nexus02.png)
+![](/images/install/kylin_build_src_setup_local_nexus03.png)
 
 * 添加Kyligence Maven仓库 https://repository.kyligence.io/repository/maven-public/
-![]()
+![](/images/install/kylin_build_src_setup_local_nexus04.png)
 
 * 添加CDH Maven仓库 https://repository.cloudera.com/artifactory/cdh-releases-rcs/
-![]()
+![](/images/install/kylin_build_src_setup_local_nexus05.png)
 
 * 添加阿里云 Maven仓库 https://maven.aliyun.com/repository/central/
-![]()
+![](/images/install/kylin_build_src_setup_local_nexus06.png)
 
 
 * 创建本地 nexus仓库
-![]()
+![](/images/install/kylin_build_src_setup_local_nexus07.png)
 
 
 10. 修改本地Maven setting.xml文件
