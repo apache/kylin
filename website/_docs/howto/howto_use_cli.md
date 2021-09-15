@@ -48,11 +48,11 @@ CubeMetaExtractor.java is to extract Cube related info for debugging / distribut
 ### How to use
 At least two parameters should be followed. 
 {% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.extractor.CubeMetaExtractor -<conf_name> <conf_value> -destDir <your_dest_dir>
+./bin/kylin.sh org.apache.kylin.tool.CubeMetaExtractor -<conf_name> <conf_value> -destDir <your_dest_dir>
 {% endhighlight %}
 For example: 
 {% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.extractor.CubeMetaExtractor -cube kylin_sales_cube -destDir /tmp/kylin_sales_cube
+./bin/kylin.sh org.apache.kylin.tool.CubeMetaExtractor -cube kylin_sales_cube -destDir /tmp/kylin_sales_cube
 {% endhighlight %}
 Result:
 After the command is executed, the cube, project or hybrid you want to extract will be dumped in the specified path.
@@ -96,31 +96,20 @@ After the command is successfully executed, the cube you want to ingest will exi
 
 All supported parameters are listed below:
 
-| Parameter                                          | Description                                                                                                                                                                                        |
-| -------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| forceIngest <forceIngest>                          | Skip the target Cube, model and table check and ingest by force. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false.                      |
-| overwriteTables <overwriteTables>                  | If table meta conflicts, overwrite the one in metadata store with the one in srcPath. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false. |
-| createProjectIfNotExists <createProjectIdNotExists>| If the specified project is not exists, kylin will create it.                                                                                                                     |
-| project <project>                                  | (Required) Specify the target project for the new cubes.                                                                                                                                           |
-| srcPath <srcPath>                                  | (Required) Specify the path to the extracted Cube metadata zip file.                                                                                                                               |
+| Parameter                         | Description                                                                                                                                                                                        |
+| --------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| forceIngest <forceIngest>         | Skip the target Cube, model and table check and ingest by force. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false.                      |
+| overwriteTables <overwriteTables> | If table meta conflicts, overwrite the one in metadata store with the one in srcPath. Use in caution because it might break existing cubes! Suggest to backup metadata store first. Default false. |
+| project <project>                 | (Required) Specify the target project for the new cubes.                                                                                                                                           |
+| srcPath <srcPath>                 | (Required) Specify the path to the extracted Cube metadata zip file.                                                                                                                               |
 
-## CubeMigrationCheckCLI.java
+## CubeMigrationCLI.java
 
-### Function
-CubeMigrationCheckCLI.java serves for the purpose of checking the "KYLIN_HOST" property to be consistent with the dst's MetadataUrlPrefix for all of Cube segments' corresponding HTables after migrating a Cube. CubeMigrationCheckCLI.java will be called in CubeMigrationCLI.java and is usually not used separately. 
+## Function
+Apache Kylin have provided migration tool to support migrating metadata across different clusters since version 2.0. Recently, we have refined and added new ability to CubeMigration tool, The list of enhanced functions is showed as below:
+- Support migrating all cubes in source cluster
+- Support migrating a whole project in source cluster
+- Support migrating and upgrading metadata from older version to Kylin 4
 
 ### How to use
-{% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCheckCLI -fix <conf_value> -dstCfgUri <dstCfgUri_value> -cube <cube_name>
-{% endhighlight %}
-For example: 
-{% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCheckCLI -fix true -dstCfgUri kylin-prod:7070 -cube querycube
-{% endhighlight %}
-All supported parameters are listed below:
-
-| Parameter           | Description                                                                   |
-| ------------------- | :---------------------------------------------------------------------------- |
-| fix                 | Fix the inconsistent Cube segments' HOST, default false                       |
-| dstCfgUri           | The KylinConfig of the Cube’s new home                                       |
-| cube                | The cube name.                                                     |
+Please check: [How to migrate metadata to Kylin4](https://cwiki.apache.org/confluence/display/KYLIN/How+to+migrate+metadata+to+Kylin+4)

@@ -3,7 +3,7 @@ layout: docs
 title:  "Terminology"
 categories: gettingstarted
 permalink: /docs/gettingstarted/terminology.html
-since: v0.5.x
+since: v4.0.0
 ---
  
 

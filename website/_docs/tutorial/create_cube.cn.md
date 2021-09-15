@@ -46,10 +46,6 @@ since: v0.7.1
 
    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/5 hive-table-info.png)
 
-6. 在后台，Kylin 将会执行 MapReduce 任务计算新同步表的基数（cardinality），任务完成后，刷新页面并点击表名，基数值将会显示在表信息中。
-
-   ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/5 hive-table-cardinality.png)
-
 ### III. 新建 Data Model
 创建 cube 前，需定义一个数据模型。数据模型定义了一个星型（star schema）或雪花（snowflake schema）模型。一个模型可以被多个 cube 使用。
 
@@ -121,7 +117,7 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
 
    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 meas-+meas.png)
 
-2. 根据它的表达式共有8种不同类型的度量：`SUM`、`MAX`、`MIN`、`COUNT`、`COUNT_DISTINCT` `TOP_N`, `EXTENDED_COLUMN` 和 `PERCENTILE`。请合理选择 `COUNT_DISTINCT` 和 `TOP_N` 返回类型，它与 cube 的大小相关。
+2. 根据它的表达式共有7种不同类型的度量：`SUM`、`MAX`、`MIN`、`COUNT`、`COUNT_DISTINCT` `TOP_N` 和 `PERCENTILE`。请合理选择 `COUNT_DISTINCT` 和 `TOP_N` 返回类型，它与 cube 的大小相关。
    * SUM
 
      ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-sum.png)
@@ -141,7 +137,7 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
    * DISTINCT_COUNT
    这个度量有两个实现：
    1）近似实现 HyperLogLog，选择可接受的错误率，低错误率需要更多存储；
-   2）精确实现 bitmap（具体限制请看 https://issues.apache.org/jira/browse/KYLIN-1186）
+   2）精确实现 bitmap（具体实现请看 [Global Dictionary on Kylin 4](https://cwiki.apache.org/confluence/display/KYLIN/Global+Dictionary+on+Spark)）
 
      ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-distinct.png)
    
@@ -154,11 +150,6 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
    **注意**：如果您想要使用 `TOP_N`，您需要为 “ORDER | SUM by Column” 添加一个 `SUM` 度量。例如，如果您创建了一个根据价格的总和选出 top100 的卖家的度量，那么也应该创建一个 SUM(price) 度量。
 
      ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-topn.png)
-
-   * EXTENDED_COLUMN
-   Extended_Column 作为度量比作为维度更节省空间。一列和另一列可以生成新的列。
-   
-     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-extended_column.PNG)
 
    * PERCENTILE
    Percentile 代表了百分比。值越大，错误就越少。100为最合适的值。
@@ -191,23 +182,15 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
 
 关于更多维度优化，请阅读这个博客: [新的聚合组](/blog/2016/02/18/new-aggregation-group/)
 
-`Rowkeys`: 是由维度编码值组成。"Dictionary" （字典）是默认的编码方式; 字典只能处理中低基数（少于一千万）的维度；如果维度基数很高（如大于1千万), 选择 "false" 然后为维度输入合适的长度，通常是那列的最大长度值; 如果超过最大值，会被截断。请注意，如果没有字典编码，cube 的大小可能会非常大。
+`Rowkeys`: 是由维度编码值组成。
 
 你可以拖拽维度列去调整其在 rowkey 中位置; 位于rowkey前面的列，将可以用来大幅缩小查询的范围。通常建议将 mandantory 维度放在开头, 然后是在过滤 ( where 条件)中起到很大作用的维度；如果多个列都会被用于过滤，将高基数的维度（如 user_id）放在低基数的维度（如 age）的前面。
 
+此外，你还可以在这里指定使用某一列作为 shardBy 列，kylin4.0 会根据 shardBy 列对存储文件进行分片，分片能够使查询引擎跳过不必要的文件，提高查询性能，最好选择高基列并且会在多个 cuboid 中出现的列作为 shardBy 列。
+
 `Mandatory Cuboids`: 维度组合白名单。确保你想要构建的 cuboid 能被构建。
 
-`Cube Engine`: cube 构建引擎。有两种：MapReduce 和 Spark。如果你的 cube 只有简单度量（SUM, MIN, MAX)，建议使用 Spark。如果 cube 中有复杂类型度量（COUNT DISTINCT, TOP_N），建议使用 MapReduce。 
-
-`Advanced Dictionaries`: "Global Dictionary" 是用于精确计算 COUNT DISTINCT 的字典, 它会将一个非 integer的值转成 integer，以便于 bitmap 进行去重。如果你要计算 COUNT DISTINCT 的列本身已经是 integer 类型，那么不需要定义 Global Dictionary。 Global Dictionary 会被所有 segment 共享，因此支持在跨 segments 之间做上卷去重操作。请注意，Global Dictionary 随着数据的加载，可能会不断变大。
-
-"Segment Dictionary" 是另一个用于精确计算 COUNT DISTINCT 的字典，与 Global Dictionary 不同的是，它是基于一个 segment 的值构建的，因此不支持跨 segments 的汇总计算。如果你的 cube 不是分区的或者能保证你的所有 SQL 按照 partition_column 进行 group by, 那么你应该使用 "Segment Dictionary" 而不是 "Global Dictionary"，这样可以避免单个字典过大的问题。
-
-请注意："Global Dictionary" 和 "Segment Dictionary" 都是单向编码的字典，仅用于 COUNT DISTINCT 计算(将非 integer 类型转成 integer 用于 bitmap计算)，他们不支持解码，因此不能为普通维度编码。
-
-`Advanced Snapshot Table`: 为全局 lookup 表而设计，提供不同的存储类型。
-
-`Advanced ColumnFamily`: 如果有超过一个的COUNT DISTINCT 或 TopN 度量, 你可以将它们放在更多列簇中，以优化与HBase 的I/O。
+`Cube Engine`: cube 构建引擎。Spark构建。
 
 **步骤6. 重写配置**
 

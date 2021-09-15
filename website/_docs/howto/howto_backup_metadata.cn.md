@@ -5,18 +5,18 @@ categories: 帮助
 permalink: /cn/docs/howto/howto_backup_metadata.html
 ---
 
-Kylin将它全部的元数据（包括cube描述和实例、项目、倒排索引描述和实例、任务、表和字典）组织成层级文件系统的形式。然而，Kylin 使用 HBase 来存储元数据，而不是一个普通的文件系统。如果你查看过Kylin的配置文件（kylin.properties），你会发现这样一行：
+Kylin将它全部的元数据（包括cube描述和实例、项目、倒排索引描述和实例、任务、表和字典）组织成层级文件系统的形式。然而，Kylin 使用 Mysql 来存储元数据，而不是一个普通的文件系统。如果你查看过Kylin的配置文件（kylin.properties），你会发现这样一行：
 
 {% highlight Groff markup %}
-## The metadata store in hbase
-kylin.metadata.url=kylin_metadata@hbase
+## The metadata store in mysql
+kylin.metadata.url=kylin_metadata@jdbc,driverClassName=com.mysql.jdbc.Driver,url=jdbc:mysql://localhost:3306/kylin_database,username=,password=
 {% endhighlight %}
 
-这表明元数据会被保存在一个叫作 “kylin_metadata”的htable 里。你可以在 hbase shell 里 scan 该 htbale 来获取它。
+这表明元数据会被保存在一个叫作 “kylin_metadata” 的 table 里, 并且该元数据 table 位于名为 kylin_database 的 database。
 
 ## 元数据路径
 
-Kylin使用`resource root path + resource name + resource suffix`作为key值(HBase中的rowkey)来存储元数据。你可以参考如下表格使用`./bin/metastore.sh`命令。
+Kylin使用`resource root path + resource name + resource suffix`作为key值来存储元数据。你可以参考如下表格使用`./bin/metastore.sh`命令。
  
 | Resource root path  | resource name         | resource suffix
 | --------------------| :---------------------| :--------------|
@@ -24,20 +24,16 @@ Kylin使用`resource root path + resource name + resource suffix`作为key值(HB
 | /cube_desc          | /cube name            | .json |
 | /cube_statistics    | /cube name/uuid       | .seq |
 | /model_desc         | /model name           | .json |
-| /dict               | /DATABASE.TABLE/COLUMN/uuid | .dict |
 | /project            | /project name         | .json |
-| /table_snapshot     | /DATABASE.TABLE/uuid  | .snapshot |
 | /table              | /DATABASE.TABLE--project name | .json |
 | /table_exd          | /DATABASE.TABLE--project name | .json |
 | /execute            | /job id               |  |
 | /execute_output     | /job id-step index    |  |
-| /kafka              | /DATABASE.TABLE       | .json |
-| /streaming          | /DATABASE.TABLE       | .json |
 | /user               | /user name            |  |
 
 ## 查看元数据
 
-Kylin以二进制字节的格式将元数据存储在HBase中，如果你想要查看一些元数据，可以运行：
+Kylin 以二进制字节的格式将元数据存储在 Mysql 中，如果你想要查看一些元数据，可以运行：
 
 {% highlight Groff markup %}
 ./bin/metastore.sh list /path/to/store/metadata
@@ -53,7 +49,7 @@ Kylin以二进制字节的格式将元数据存储在HBase中，如果你想要�
 
 ## 使用二进制包来备份 metadata
 
-有时你需要将 Kylin 的 metadata store 从 hbase 备份到磁盘文件系统。在这种情况下，假设你在部署 Kylin 的 hadoop 命令行（或沙盒）里，你可以到KYLIN_HOME并运行：
+有时你需要将 Kylin 的 metadata store 从 Mysql 备份到磁盘文件系统。在这种情况下，假设你在部署 Kylin 的 hadoop 命令行（或沙盒）里，你可以到KYLIN_HOME并运行：
 
 {% highlight Groff markup %}
 ./bin/metastore.sh backup
@@ -73,7 +69,7 @@ Kylin以二进制字节的格式将元数据存储在HBase中，如果你想要�
 
 万一你发现你的元数据被搞得一团糟，想要恢复先前的备份：
 
-首先，重置 metatdara store（这个会清理 Kylin 在 HBase 的 metadata store的所有信息，请确保先备份）：
+首先，重置 metatdara store（这个会清理 Kylin 在 Mysql 的 metadata store的所有信息，请确保先备份）：
 
 {% highlight Groff markup %}
 ./bin/metastore.sh reset
@@ -109,23 +105,8 @@ cd $KYLIN_HOME
 ./bin/metastore.sh restore /path/to/restore_new
 {% endhighlight %}
 
-只有在此文件夹中的文件才会上传到Kylin Metastore。 同样，在恢复完成后，单击 Web UI 上的“Reload Metadata”按钮以刷新缓存。
+只有在此文件夹中的文件才会上传到 Kylin Metastore。 同样，在恢复完成后，单击 Web UI 上的“Reload Metadata”按钮以刷新缓存。
 
 ## 在开发环境备份/恢复元数据
 
 在开发调试 Kylin 时，典型的环境是一台装有 IDE 的开发机上和一个后台的沙盒，通常你会写代码并在开发机上运行测试案例，但每次都需要将二进制包放到沙盒里以检查元数据是很麻烦的。这时有一个名为 SandboxMetastoreCLI 工具类可以帮助你在开发机本地下载/上传元数据。
-
-## 从 metadata store 清理无用的资源
-随着运行时间增长，类似字典、表快照的资源变得没有用（cube segment被丢弃或者合并了），但是它们依旧占用空间，你可以运行命令来找到并清除它们：
-
-首先，运行一个检查，这是安全的因为它不会改变任何东西，通过添加 "--jobThreshold 30(默认值，您可以改为任何数字)" 参数，您可以设置要保留的 metadata resource 天数：
-{% highlight Groff markup %}
-./bin/metastore.sh clean --jobThreshold 30
-{% endhighlight %}
-
-将要被删除的资源会被列出来：
-
-接下来，增加 “--delete true” 参数来清理这些资源；在这之前，你应该确保已经备份 metadata store：
-{% highlight Groff markup %}
-./bin/metastore.sh clean --delete true --jobThreshold 30
-{% endhighlight %}

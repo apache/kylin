@@ -10,66 +10,9 @@ In `conf/kylin.properties` there are many parameters, which control/impact on Ky
 
 ![]( /images/install/overwrite_config_v2.png)
 
-Here take two example: 
-
- * `kylin.cube.algorithm`: it defines the Cubing algorithm that the job engine will select; Its default value is "auto", means the engine will dynamically pick an algorithm ("layer" or "inmem") by sampling the data. If you knows Kylin and your data/cluster well, you can set your preferred algorithm directly.   
-
- * `kylin.storage.hbase.region-cut-gb`: it defines how big a region is when creating the HBase table. The default value is "5" (GB) per region. It might be too big for a small or medium cube, so you can give it a smaller value to get more regions created, then can gain better query performance.
-
-## Overwrite default Hadoop job conf at Cube level
-The `conf/kylin_job_conf.xml` and `conf/kylin_job_conf_inmem.xml` manage the default configurations for Hadoop jobs. If you have the need to customize the configs by cube, you can achieve that with the similar way as above, but need adding a prefix `kylin.engine.mr.config-override.`; These configs will be parsed out and then applied when submitting jobs. See two examples below:
-
- * If want a cube's job getting more memory from Yarn, you can define: `kylin.engine.mr.config-override.mapreduce.map.java.opts=-Xmx7g` and `kylin.engine.mr.config-override.mapreduce.map.memory.mb=8192`
- * If want a cube's job going to a different Yarn resource queue, you can define: `kylin.engine.mr.config-override.mapreduce.job.queuename=myQueue` ("myQueue" is just a sample, change to your queue name)
-
-## Overwrite default Hive job conf at Cube level
-
-The `conf/kylin_hive_conf.xml` manages the default configurations when running Hive job (like creating intermediate flat hive table). If you have the need to customize the configs by cube, you can achieve that with the similar way as above, but need using another prefix `kylin.source.hive.config-override.`; These configs will be parsed out and then applied when running "hive -e" or "beeline" commands. See example below:
-
- * If want hive goes to a different Yarn resource queue, you can define: `kylin.source.hive.config-override.mapreduce.job.queuename=myQueue` ("myQueue" is just a sample, change to your queue name)
-
 ## Overwrite default Spark conf at Cube level
 
  The configurations for Spark are managed in `conf/kylin.properties` with prefix `kylin.engine.spark-conf.`. For example, if you want to use job queue "myQueue" to run Spark, setting "kylin.engine.spark-conf.spark.yarn.queue=myQueue" will let Spark get "spark.yarn.queue=myQueue" feeded when submitting applications. The parameters can be configured at Cube level, which will override the default values in `conf/kylin.properties`. 
-
-## Enable compression
-
-By default, Kylin does not enable compression, this is not the recommend settings for production environment, but a tradeoff for new Kylin users. A suitable compression algorithm will reduce the storage overhead. But unsupported algorithm will break the Kylin job build also. There are three kinds of compression used in Kylin, HBase table compression, Hive output compression and MR jobs output compression. 
-
-* HBase table compression
-The compression settings define in `kyiln.properties` by `kylin.hbase.default.compression.codec`, default value is *none*. The valid value includes *none*, *snappy*, *lzo*, *gzip* and *lz4*. Before changing the compression algorithm, please make sure the selected algorithm is supported on your HBase cluster. Especially for snappy, lzo and lz4, not all Hadoop distributions include these. 
-
-* Hive output compression
-The compression settings define in `kylin_hive_conf.xml`. The default setting is empty which leverages the Hive default configuration. If you want to override the settings, please add (or replace) the following properties into `kylin_hive_conf.xml`. Take the snappy compression for example:
-{% highlight Groff markup %}
-    <property>
-        <name>mapreduce.map.output.compress.codec</name>
-        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
-        <description></description>
-    </property>
-    <property>
-        <name>mapreduce.output.fileoutputformat.compress.codec</name>
-        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
-        <description></description>
-    </property>
-{% endhighlight %}
-
-* MR jobs output compression
-The compression settings define in `kylin_job_conf.xml` and `kylin_job_conf_inmem.xml`. The default setting is empty which leverages the MR default configuration. If you want to override the settings, please add (or replace) the following properties into `kylin_job_conf.xml` and `kylin_job_conf_inmem.xml`. Take the snappy compression for example:
-{% highlight Groff markup %}
-    <property>
-        <name>mapreduce.map.output.compress.codec</name>
-        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
-        <description></description>
-    </property>
-    <property>
-        <name>mapreduce.output.fileoutputformat.compress.codec</name>
-        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
-        <description></description>
-    </property>
-{% endhighlight %}
-
-Compression settings only take effect after restarting Kylin server instance.
 
 ## Allocate more memory to Kylin instance
 
@@ -150,40 +93,3 @@ java -classpath kylin-server-base-\<version\>.jar:kylin-core-common-\<version\>.
 {% endhighlight %}
 
 * Start Kylin
-
-
-## Use SparkSql to create intermediate flat Hive table 
-
-**Note: There will be an issue when connecting thriftserver again, detail info, please check [https://issues.apache.org/jira/browse/SPARK-21067](https://issues.apache.org/jira/browse/SPARK-21067)**
-
-Kylin can use SparkSql to create intermediate flat Hive table; Before enable this: 
-
-- Make sure the following parameters exist in hive-site.xml:
-
-{% highlight Groff markup %}
-
-<property>
-  <name>hive.security.authorization.sqlstd.confwhitelist</name>
-  <value>mapred.*|hive.*|mapreduce.*|spark.*</value>
-</property>
-
-<property>
-  <name>hive.security.authorization.sqlstd.confwhitelist.append</name>
-  <value>mapred.*|hive.*|mapreduce.*|spark.*</value>
-</property>
-    
-{% endhighlight %}
-- Change `hive.execution.engine` to mr (Optional), if you want to use tez, please make sure the dependency of tez has been added
-- Copy the hive-site.xml to $SPARK_HOME/conf
-- Make sure the environmental variable HADOOP_CONF_DIR has been set
-- Use `sbin/start-thriftserver.sh --master spark://sparkmasterip:sparkmasterport` to start the thriftserver, usually port is 7077
-- Edit `conf/kylin.properties`, set the following parameters:
-{% highlight Groff markup %}
-kylin.source.hive.enable-sparksql-for-table-ops=true
-kylin.source.hive.sparksql-beeline-shell=/path/to/spark-client/bin/beeline
-kylin.source.hive.sparksql-beeline-params=-n root -u 'jdbc:hive2://thriftserverip:thriftserverport'
-{% endhighlight %}
-
-Restart Kylin server to take effective. To disable, set `kylin.source.hive.enable-sparksql-for-table-ops` back to `false`.
-
-

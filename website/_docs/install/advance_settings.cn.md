@@ -10,66 +10,9 @@ permalink: /cn/docs/install/advance_settings.html
 
 ![]( /images/install/overwrite_config_v2.png)
 
-两个示例：
-
- * `kylin.cube.algorithm`：定义了 job engine 选择的 Cubing 算法；默认值为 "auto"，意味着 engine 会通过采集数据动态的选择一个算法 ("layer" or "inmem")。如果您很了解 Kylin 和 您的数据/集群，您可以直接设置您喜欢的算法。   
-
- * `kylin.storage.hbase.region-cut-gb`：定义了创建 HBase 表时一个 region 的大小。默认一个 region "5" (GB)。对于小的或中等大小的 cube 来说它的值可能太大了，所以您可以设置更小的值来获得更多的 regions，可获得更好的查询性能。
-
-## 在 Cube 级别重写默认的 Hadoop job conf 值
-`conf/kylin_job_conf.xml` 和 `conf/kylin_job_conf_inmem.xml` 管理 Hadoop jobs 的默认配置。如果您想通过 cube 自定义配置，您可以通过和上面相似的方式获得，但是需要加一个前缀 `kylin.engine.mr.config-override.`；当提交 jobs 这些配置会被解析并应用。下面是两个示例:
-
- * 希望 job 从 Yarn 获得更多 memory，您可以这样定义：`kylin.engine.mr.config-override.mapreduce.map.java.opts=-Xmx7g` 和 `kylin.engine.mr.config-override.mapreduce.map.memory.mb=8192`
- * 希望 cube's job 使用不同的 Yarn resource queue，您可以这样定义：`kylin.engine.mr.config-override.mapreduce.job.queuename=myQueue` ("myQueue" 是一个举例，可更换成您的 queue 名字)
-
-## 在 Cube 级别重写默认的 Hive job conf 值
-
-`conf/kylin_hive_conf.xml` 管理运行时 Hive job 的默认配置 (例如创建 flat hive table)。如果您想通过 cube 自定义配置，您可以通过和上面相似的方式获得，但需要另一个前缀 `kylin.source.hive.config-override.`；当运行 "hive -e" 或 "beeline" 命令，这些配置会被解析并应用。请看下面示例:
-
- * 希望 hive 使用不同的 Yarn resource queue，您可以这样定义：`kylin.source.hive.config-override.mapreduce.job.queuename=myQueue` ("myQueue" 是一个举例，可更换成您的 queue 名字)
-
 ## 在 Cube 级别重写默认的 Spark conf 值
 
  Spark 的配置是在 `conf/kylin.properties` 中管理，前缀为 `kylin.engine.spark-conf.`。例如，如果您想要使用 job queue "myQueue" 运行 Spark，设置 "kylin.engine.spark-conf.spark.yarn.queue=myQueue" 会让 Spark 在提交应用时获取 "spark.yarn.queue=myQueue"。参数可以在 Cube 级别进行配置，将会覆盖 `conf/kylin.properties` 中的默认值。 
-
-## 支持压缩
-
-默认情况，Kylin 不支持压缩，在产品环境这不是一个推荐的设置，但对于新的 Kylin 用户是个权衡。一个合适的算法将会减少存储负载。不支持的算法会阻碍 Kylin job build。Kylin 可以使用三种类型的压缩，HBase 表压缩，Hive 输出压缩 和 MR jobs 输出压缩。 
-
-* HBase 表压缩
-压缩设置通过 `kylin.hbase.default.compression.codec` 定义在 `kyiln.properties` 中，默认值为 *none*。有效的值包括 *none*，*snappy*，*lzo*，*gzip* 和 *lz4*。在变换压缩算法前，请确保您的 Hbase 集群支持所选算法。尤其是 snappy，lzo 和 lz4，不是所有的 Hadoop 分布式都会包含。 
-
-* Hive 输出压缩
-压缩设置定义在 `kylin_hive_conf.xml`。默认设置为 empty 其利用了 Hive 的默认配置。如果您重写配置，请在 `kylin_hive_conf.xml` 中添加 (或替换) 下列属性。以 snappy 压缩为例:
-{% highlight Groff markup %}
-    <property>
-        <name>mapreduce.map.output.compress.codec</name>
-        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
-        <description></description>
-    </property>
-    <property>
-        <name>mapreduce.output.fileoutputformat.compress.codec</name>
-        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
-        <description></description>
-    </property>
-{% endhighlight %}
-
-* MR jobs 输出压缩
-压缩设置定义在 `kylin_job_conf.xml` 和 `kylin_job_conf_inmem.xml`中。默认设置为 empty 其利用了 MR 的默认配置。如果您重写配置，请在 `kylin_job_conf.xml` 和 `kylin_job_conf_inmem.xml` 中添加 (或替换) 下列属性。以 snappy 压缩为例:
-{% highlight Groff markup %}
-    <property>
-        <name>mapreduce.map.output.compress.codec</name>
-        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
-        <description></description>
-    </property>
-    <property>
-        <name>mapreduce.output.fileoutputformat.compress.codec</name>
-        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
-        <description></description>
-    </property>
-{% endhighlight %}
-
-压缩设置只有在重启 Kylin 服务器实例后才会生效。
 
 ## 分配更多内存给 Kylin 实例
 
@@ -153,38 +96,3 @@ java -classpath kylin-server-base-\<version\>.jar:kylin-core-common-\<version\>.
 {% endhighlight %}
 
 *启动 Kylin
-
-
-## 使用 SparkSql 创建 Hive 中间表
-
-**注意：当第二次连接 thriftserver 进行构建时将会出现问题，详细信息请查看 [https://issues.apache.org/jira/browse/SPARK-21067](https://issues.apache.org/jira/browse/SPARK-21067)**
-
-Kylin 能够使用 SparkSql 创建 Hive 中间表；使其生效之前： 
-
-- 确保以下参数存在于 hive-site.xml：
-
-{% highlight Groff markup %}
-
-<property>
-  <name>hive.security.authorization.sqlstd.confwhitelist</name>
-  <value>mapred.*|hive.*|mapreduce.*|spark.*</value>
-</property>
-
-<property>
-  <name>hive.security.authorization.sqlstd.confwhitelist.append</name>
-  <value>mapred.*|hive.*|mapreduce.*|spark.*</value>
-</property>
-    
-{% endhighlight %}
-- 将 `hive.execution.engine` 改为 mr（可选），如果您想要使用 tez，请确保 tez 相关依赖已导入
-- 将 hive-site.xml 拷贝到 $SPARK_HOME/conf
-- 确保设置了 HADOOP_CONF_DIR 环境变量
-- 使用 `sbin/start-thriftserver.sh --master spark://sparkmasterip:sparkmasterport` 命令启动 thriftserver，通常端口为 7077
-- 编辑 `conf/kylin.properties`，设置如下参数：
-{% highlight Groff markup %}
-kylin.source.hive.enable-sparksql-for-table-ops=true
-kylin.source.hive.sparksql-beeline-shell=/path/to/spark-client/bin/beeline
-kylin.source.hive.sparksql-beeline-params=-n root -u 'jdbc:hive2://thriftserverip:thriftserverport'
-{% endhighlight %}
-
-重启 Kylin 令其生效。通过将 `kylin.source.hive.enable-sparksql-for-table-ops` 设置为 `false` 来令其失效
