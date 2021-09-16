@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
+import org.apache.spark.utils.SparkHadoopUtils;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -91,7 +92,7 @@ public abstract class AbstractHdfsLogAppender extends AppenderSkeleton {
 
     public FileSystem getFileSystem() {
         if (null == fileSystem) {
-            return getFileSystem(new Configuration());
+            return getFileSystem(SparkHadoopUtils.newConfigurationWithSparkConf());
         }
         return fileSystem;
     }

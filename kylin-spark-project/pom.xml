@@ -37,6 +37,7 @@
         <module>kylin-spark-query</module>
         <module>kylin-spark-test</module>
         <module>kylin-spark-classloader</module>
+        <module>kylin-soft-affinity-cache</module>
     </modules>
 
     <dependencies>

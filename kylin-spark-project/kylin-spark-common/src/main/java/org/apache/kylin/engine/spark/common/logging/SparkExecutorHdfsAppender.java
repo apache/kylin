@@ -20,7 +20,6 @@ package org.apache.kylin.engine.spark.common.logging;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -30,6 +29,7 @@ import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.spark.SparkEnv;
 import org.apache.spark.deploy.SparkHadoopUtil;
+import org.apache.spark.utils.SparkHadoopUtils;
 import scala.runtime.BoxedUnit;
 
 import java.io.File;
@@ -160,7 +160,7 @@ public class SparkExecutorHdfsAppender extends AbstractHdfsLogAppender {
                 SparkHadoopUtil.get().runAsSparkUser(new scala.runtime.AbstractFunction0<scala.runtime.BoxedUnit>() {
                     @Override
                     public BoxedUnit apply() {
-                        if (!initHdfsWriter(file, new Configuration())) {
+                        if (!initHdfsWriter(file, SparkHadoopUtils.newConfigurationWithSparkConf())) {
                             LogLog.error("Failed to init the hdfs writer!");
                         }
                         try {
