@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
+import org.apache.spark.utils.SparkHadoopUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -92,7 +93,7 @@ public class SparkDriverHdfsLogAppender extends AbstractHdfsLogAppender {
     public void doWriteLog(int eventSize, List<LoggingEvent> transaction)
             throws IOException, InterruptedException {
         if (!isWriterInited()) {
-            Configuration conf = new Configuration();
+            Configuration conf = SparkHadoopUtils.newConfigurationWithSparkConf();
             if (isKerberosEnable()) {
                 UserGroupInformation.setConfiguration(conf);
                 UserGroupInformation.loginUserFromKeytab(getKerberosPrincipal(), getKerberosKeytab());

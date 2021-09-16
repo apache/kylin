@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.annotation.ConfigTag;
@@ -295,6 +296,10 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getHdfsWorkingDirectory() {
+        return getHdfsWorkingDirectoryInternal(HadoopUtil.getCurrentConfiguration());
+    }
+
+    public String getHdfsWorkingDirectoryInternal(Configuration hadoopConf) {
         if (cachedHdfsWorkingDirectory != null) {
             return cachedHdfsWorkingDirectory;
         }
@@ -306,7 +311,7 @@ public abstract class KylinConfigBase implements Serializable {
             throw new IllegalArgumentException("kylin.env.hdfs-working-dir must be absolute, but got " + root);
 
         try {
-            FileSystem fs = path.getFileSystem(HadoopUtil.getCurrentConfiguration());
+            FileSystem fs = path.getFileSystem(hadoopConf);
             path = fs.makeQualified(path);
         } catch (IOException e) {
             throw new RuntimeException(e);
