@@ -84,6 +84,7 @@ public class HadoopFileStorageQuery extends GTCubeStorageQueryBase {
         dimensionsD.addAll(groupsD);
         dimensionsD.addAll(otherDimsD);
         Cuboid cuboid = findCuboid(cubeInstance, dimensionsD, metrics);
+        log.info("For OLAPContext {}, need cuboid {}, hit cuboid {}, level diff is {}.", olapContext.id, cuboid.getInputID() , cuboid.getId(), Long.bitCount(cuboid.getInputID() ^ cuboid.getId()));
         context.setCuboid(cuboid);
         return new GTCubeStorageQueryRequest(cuboid, dimensionsD, groupsD, null, null, null,
                 metrics, null, null, null, context);
