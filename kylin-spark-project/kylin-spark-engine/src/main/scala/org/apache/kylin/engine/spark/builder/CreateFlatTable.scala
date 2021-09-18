@@ -46,7 +46,7 @@ class CreateFlatTable(val seg: SegmentInfo,
     val ccCols = seg.allColumns.filter(_.isInstanceOf[ComputedColumnDesc]).toSet
     var rootFactDataset = generateTableDataset(seg.factTable, ccCols.toSeq, ss, seg.project)
 
-    logInfo(s"Create flattable need join lookup tables $needJoin, need encode cols $needEncode")
+    logInfo(s"Create flat table need join lookup tables $needJoin, need encode cols $needEncode")
     rootFactDataset = applyPartitionCondition(seg, rootFactDataset)
 
     (needJoin, needEncode) match {

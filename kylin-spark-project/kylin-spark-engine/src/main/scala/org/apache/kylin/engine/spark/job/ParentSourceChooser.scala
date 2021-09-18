@@ -75,7 +75,7 @@ class ParentSourceChooser(
 
   def decideFlatTableSource(entity: LayoutEntity): Unit = {
     if (flatTableSource == null) {
-      if (needEncoding) {
+      if (segInfo.snapshotTables.nonEmpty && needEncoding) {
         // hacked, for some case, you do not want to trigger buildSnapshot
         // eg: resource detect
         // Move this to a more suitable place

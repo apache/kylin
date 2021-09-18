@@ -189,13 +189,18 @@ class CubeSnapshotBuilder extends Logging {
     joinDescs.foreach {
       joinDesc =>
         val tableInfo = joinDesc.lookupTable
-        val lookupTableName = tableInfo.tableName
-        val df = ss.table(tableInfo)
-        val countColumn = df.count()
-        val lookupTablePKS = joinDesc.PKS.map(lookupTablePK => lookupTablePK.columnName)
-        val countDistinctColumn = df.agg(countDistinct(lookupTablePKS.head, lookupTablePKS.tail: _*)).collect().map(_.getLong(0)).head
-        if (countColumn != countDistinctColumn) {
-          throw new IllegalStateException(s"Failed to build lookup table ${lookupTableName} snapshot for Dup key found, key= ${lookupTablePKS.mkString(",")}")
+        // Build snapshot when DataModelDesc.JoinTableDesc.TableKind is TableKind.LOOKUP
+        if (seg.snapshotTables.exists(t => t.identity.equals(tableInfo.identity))) {
+          val lookupTableName = tableInfo.tableName
+          val df = ss.table(tableInfo)
+          val countColumn = df.count()
+          val lookupTablePKS = joinDesc.PKS.map(lookupTablePK => lookupTablePK.columnName)
+          val countDistinctColumn = df.agg(countDistinct(lookupTablePKS.head, lookupTablePKS.tail: _*)).collect().map(_.getLong(0)).head
+          if (countColumn != countDistinctColumn) {
+            throw new IllegalStateException(s"Failed to build lookup table ${lookupTableName} snapshot for Dup key found, key= ${lookupTablePKS.mkString(",")}")
+          }
+        } else {
+          logInfo("Skip check duplicate primary key on table : " + tableInfo.identity)
         }
     }
   }
