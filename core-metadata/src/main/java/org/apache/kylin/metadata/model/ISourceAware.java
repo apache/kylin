@@ -27,6 +27,7 @@ public interface ISourceAware {
     public static final int ID_SPARKSQL = 5;
     public static final int ID_EXTERNAL = 7;
     public static final int ID_JDBC = 8;
+    public static final int ID_HUDI = 9;
     public static final int ID_EXTENSIBLE_JDBC = 16;
     public static final int ID_KAFKA = 20;
     public static final int ID_KAFKA_HIVE = 21;
