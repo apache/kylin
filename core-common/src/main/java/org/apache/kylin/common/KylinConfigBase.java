@@ -35,15 +35,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.SortedSet;
-import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -888,6 +881,73 @@ public abstract class KylinConfigBase implements Serializable {
     public int getJobOutputMaxSize() {
         return Integer.parseInt(getOptional("kylin.job.execute-output.max-size", "10485760"));
     }
+
+
+    // ============================================================================
+    // SOURCE.HUDI
+    // ============================================================================
+    public String getHudiUtilHome(){
+        String hudiUtilHome = getOptional("kylin.source.hudi.util-path","");
+        return hudiUtilHome;
+    }
+
+    public String getHudiDBName(){
+        String hudiDBNm = getOptional("kylin.source.hudi.database","");
+        return hudiDBNm;
+    }
+
+    public String getHudiHiveJDBCUrl(){
+        String hudiHiveJdbc = getOptional("kylin.source.hudi.jdbc-url","");
+        return hudiHiveJdbc;
+    }
+
+    public String getHudiHiveUser(){
+        String hudiHiveUser = getOptional("kylin.source.hudi.hive-user", "");
+        return hudiHiveUser;
+    }
+
+    public String getHudiHivePwd(){
+        String hudiHivePwd = getOptional("kylin.source.hudi.hive-pwd","");
+        return hudiHivePwd;
+    }
+
+    public String getHudiPartitionExtractor(){
+        String hudiPartitionExtractor = getOptional("kylin.source.hudi.partition-value-extractor","org.apache.hudi.hive.SlashEncodedDayPartitionValueExtractor");
+        return hudiPartitionExtractor;
+
+    }
+
+    public String getHudiPartitionKey(){
+        String hudiPartitionKey = getOptional("kylin.source.hudi.partitionKey","");
+        return hudiPartitionKey;
+    }
+
+    public Boolean isHudiMetaSync(){
+        String isHudiMetaSync = getOptional("kylin.source.hudi.isHiveSync","false");
+        return Boolean.valueOf(isHudiMetaSync);
+    }
+
+    public Map<String,String> parseHudiConfigParams(){
+        LinkedHashMap<String,String> hudiConfigParams = (LinkedHashMap)getPropertiesByPrefix("kylin.source.hudi.");
+        Set<String> keys = hudiConfigParams.keySet();
+        for(String key:keys){
+            if(key.contains("isHiveSync")){
+                hudiConfigParams.remove(key);
+            }
+            else if (key.contains("hive-user")){
+                String value = hudiConfigParams.get(key);
+                hudiConfigParams.put("user",value);
+                hudiConfigParams.remove(key);
+            }
+            else if (key.contains("hive-pwd")){
+                String value = hudiConfigParams.get(key);
+                hudiConfigParams.put("pass",value);
+                hudiConfigParams.remove(key);
+            }
+        }
+        return hudiConfigParams;
+    }
+
 
     // ============================================================================
     // SOURCE.HIVE
