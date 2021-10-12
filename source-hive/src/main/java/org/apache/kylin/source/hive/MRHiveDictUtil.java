@@ -103,8 +103,7 @@ public class MRHiveDictUtil {
                 + ") \n"
                 + "COMMENT 'Hive Global Dictionary' \n"
                 + "PARTITIONED BY (dict_column string) \n"
-                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' \n"
-                + "STORED AS TEXTFILE; \n";
+                + "STORED AS ORC; \n";
     }
 
     public static String generateDropTableStatement(String tableName) {
@@ -124,7 +123,7 @@ public class MRHiveDictUtil {
         ddl.append(") \n");
         ddl.append("COMMENT '' \n");
         ddl.append("PARTITIONED BY (dict_column string) \n");
-        ddl.append("STORED AS TEXTFILE \n");
+        ddl.append("STORED AS ORC \n");
         ddl.append(";").append("\n");
         return ddl.toString();
     }
@@ -139,8 +138,7 @@ public class MRHiveDictUtil {
         ddl.append(") \n");
         ddl.append("COMMENT '' \n");
         ddl.append("PARTITIONED BY (dict_column string) \n");
-        ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' \n");
-        ddl.append("STORED AS TEXTFILE \n");
+        ddl.append("STORED AS ORC \n");
         ddl.append(";").append("\n");
         return ddl.toString();
     }
