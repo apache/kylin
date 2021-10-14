@@ -29,7 +29,7 @@ public class HiveTableMetaBuilder {
     private String sdOutputFormat;
     private String owner;
     private String tableType;
-    private int lastAccessTime;
+    private long lastAccessTime;
     private long fileSize;
     private long fileNum;
     private int skipHeaderLineCount;
@@ -67,7 +67,7 @@ public class HiveTableMetaBuilder {
         return this;
     }
 
-    public HiveTableMetaBuilder setLastAccessTime(int lastAccessTime) {
+    public HiveTableMetaBuilder setLastAccessTime(long lastAccessTime) {
         this.lastAccessTime = lastAccessTime;
         return this;
     }
