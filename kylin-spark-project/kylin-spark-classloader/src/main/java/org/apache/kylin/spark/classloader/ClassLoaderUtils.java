@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class ClassLoaderUtils {
-    static URLClassLoader sparkClassLoader = null;
     static URLClassLoader originClassLoader = null;
     private static Logger logger = LoggerFactory.getLogger(ClassLoaderUtils.class);
 
@@ -38,25 +37,6 @@ public final class ClassLoaderUtils {
             }
         }
         return null;
-    }
-
-    public static ClassLoader getSparkClassLoader() {
-        if (sparkClassLoader == null) {
-            return Thread.currentThread().getContextClassLoader();
-        } else {
-            return sparkClassLoader;
-        }
-    }
-
-    public static void setSparkClassLoader(URLClassLoader classLoader) {
-        if (sparkClassLoader != null) {
-            logger.error("sparkClassLoader already initialized");
-        }
-        logger.info("set sparkClassLoader :" + classLoader);
-        if (System.getenv("DEBUG_SPARK_CLASSLOADER") != null) {
-            return;
-        }
-        sparkClassLoader = classLoader;
     }
 
     public static ClassLoader getOriginClassLoader() {

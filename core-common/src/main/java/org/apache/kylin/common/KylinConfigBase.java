@@ -1129,7 +1129,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getHiveClientMode() {
-        return getOptional("kylin.source.hive.client", "cli");
+        return getOptional("kylin.source.hive.client", "spark_catalog");
     }
 
     public String getHiveBeelineShell() {
