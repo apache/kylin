@@ -113,6 +113,12 @@ module.exports = function (grunt) {
           },
           {
             expand: true,
+            cwd: 'app',
+            src: ['i18n/**'],
+            dest: 'dist/'
+          },
+          {
+            expand: true,
             cwd: 'app/components/ace/',
             src: ['fonts/*'],
             dest: 'dist/'
@@ -254,6 +260,7 @@ module.exports = function (grunt) {
         files: [
           "app/css/*.*",
           "app/fonts/*.*",
+          "app/i18n/*.*",
           "app/image/*.*",
           "app/js/*.*",
           "app/less/*.*",
@@ -271,7 +278,7 @@ module.exports = function (grunt) {
       },
       rules: [           // rewrite rules for static resources
         {from: '^/kylin/routes.json$', to: '/routes.json'},
-        {from: '^/kylin/((css|fonts|image|js)/.*)$', to: '/$1'},
+        {from: '^/kylin/((css|fonts|i18n|image|js)/.*)$', to: '/$1'},
         {from: '^/kylin/(?!api/).*$', to: '/'},
       ],
       devserver: {

@@ -47,7 +47,11 @@ if (typeof String.prototype.endsWith != 'function') {
   };
 }
 // Angular module to load routes.
-KylinApp.config(function ($routeProvider, $httpProvider, $locationProvider, $logProvider) {
+KylinApp
+.constant('LANGUAGES', [
+  'zh-cn',
+  'en'
+]).config(function ($routeProvider, $httpProvider, $locationProvider, $logProvider, $translateProvider) {
     //resolve http always use cache data in IE11,IE10
     $httpProvider.defaults.headers.common['Cache-Control'] = 'no-cache';
     $httpProvider.defaults.headers.common['Pragma'] = 'no-cache';
@@ -105,6 +109,14 @@ KylinApp.config(function ($routeProvider, $httpProvider, $locationProvider, $log
       };
     });
     httpHeaders = $httpProvider.defaults.headers;
+    // i18n add 0
+    $translateProvider.useStaticFilesLoader({
+      prefix: 'i18n/',
+      suffix: '.json'
+    });
+
+    $translateProvider.preferredLanguage('zh-cn');
+	// i18n add 1
   })
   .run(function ($location) {
 

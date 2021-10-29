@@ -58,6 +58,23 @@
           </li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
+          <li ui-sref-active="active" uib-dropdown class="dropdown pointer">
+              <a class="dropdown-toggle" uib-dropdown-toggle href="">
+                  <!-- <span> -->
+                      <!-- <span class="glyphicon glyphicon-flag"></span> -->
+                      <span class="hidden-sm" data-translate="global.menu.language">Language</span>
+                      <!-- <b class="caret"></b> -->
+                  <!-- </span> -->
+              </a>
+              <ul class="dropdown-menu" uib-dropdown-menu">
+                  <li active-menu="en">
+                      <a href="" ng-click="changeLanguage('en');">English</a>
+                  </li>
+                  <li active-menu="zh-cn">
+                    <a href="" ng-click="changeLanguage('zh-cn');">中文简体</a>
+                </li>
+              </ul>
+          </li>
           <li class="dropdown light-blue" ng-if="config.documents.length > 0">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-book"></i> Help <i
               class="ace-icon fa fa-caret-down"></i></a>
@@ -68,16 +85,16 @@
               </li>
             </ul>
           </li>
-          <li class="purple" ng-if="!userService.isAuthorized()"><a href="login">Login</a></li>
+          <li class="purple" ng-if="!userService.isAuthorized()"><a href="login">{{'Login' | translate}}</a></li>
           <li class="dropdown light-blue" ng-if="userService.isAuthorized()">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-              <span class="user-info"><small>Welcome,</small> {{userService.getCurUser().userDetails.username}}</span>
+              <span class="user-info"><small data-translate="page.header.Welcome">Welcome,</small> {{userService.getCurUser().userDetails.username}}</span>
               <i class="ace-icon fa fa-caret-down"></i>
             </a>
             <ul class="user-menu dropdown-menu-right dropdown-menu dropdown-yellow dropdown-caret dropdown-close"
                 role="menu">
-              <li><a href="user/profile"><i class="ace-icon fa fa-user"></i> Profile</a></li>
-              <li><a ng-click="logout()"><i class="ace-icon fa fa-power-off"></i> Logout</a></li>
+              <li><a href="user/profile"><i class="ace-icon fa fa-user"></i> {{'Profile' | translate}}</a></li>
+              <li><a ng-click="logout()"><i class="ace-icon fa fa-power-off"></i> {{'Logout' | translate}}</a></li>
             </ul>
           </li>
         </ul>

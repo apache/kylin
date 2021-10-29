@@ -15,6 +15,7 @@
     "components": {
       "src": [
         "app/components/jquery/dist/jquery.min.js",
+        "app/components/messageformat/messageformat.js",
         "app/components/bootstrap/dist/js/bootstrap.min.js",
         "app/components/angular/angular.js",
         "app/components/angular-animate/angular-animate.min.js",
@@ -23,6 +24,7 @@
         "app/components/angular-bootstrap/ui-bootstrap-tpls.min.js",
         "app/components/angular-cookies/angular-cookies.js",
         "app/components/angularLocalStorage/src/angularLocalStorage.js",
+        "app/components/angular-dynamic-locale/src/tmhDynamicLocale.js",
         "app/components/angular-base64/angular-base64.min.js",
         "app/components/ng-grid/build/ng-grid.js",
         "app/components/ace-builds/src-min-noconflict/ace.js",
@@ -47,6 +49,11 @@
         "app/components/angular-toggle-switch/angular-toggle-switch.js",
         "app/components/angular-ui-select/dist/select.js",
         "app/components/angular-sanitize/angular-sanitize.js",
+        "app/components/angular-translate/angular-translate.js",
+        "app/components/angular-translate-interpolation-messageformat/angular-translate-interpolation-messageformat.js",
+        "app/components/angular-translate-loader-partial/angular-translate-loader-partial.js",
+        "app/components/angular-translate-loader-static-files/angular-translate-loader-static-files.js",
+        "app/components/angular-translate-storage-cookie/angular-translate-storage-cookie.js",
         "app/components/angular-nvd3/dist/angular-nvd3.js",
         "app/components/moment-timezone/builds/moment-timezone-with-data.js",
         "app/components/bootstrap-daterangepicker/daterangepicker.js",
