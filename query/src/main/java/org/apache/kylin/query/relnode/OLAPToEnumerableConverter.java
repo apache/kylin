@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import org.apache.kylin.common.QueryTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,6 +107,8 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             logger.debug("EXECUTION PLAN AFTER OLAPCONTEXT IS SET");
             logger.debug(dumpPlan);
         }
+
+        QueryContextFacade.current().getQueryTrace().startSpan(QueryTrace.CUBE_MATCHING);
 
         RealizationChooser.selectRealization(contexts);
 

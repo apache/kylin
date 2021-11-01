@@ -27,6 +27,7 @@ import org.apache.kylin.common.{KylinConfig, QueryContext, QueryContextFacade}
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.metadata.project.ProjectManager
 import org.apache.kylin.query.runtime.plans.ResultType.ResultType
+import org.apache.kylin.query.util.SparkJobTrace
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SparderContext}
 import org.apache.spark.sql.hive.utils.QueryMetricUtils
@@ -104,8 +105,12 @@ object ResultPlan extends Logging {
     sparkContext.setJobGroup(jobGroup,
       "Query Id: " + QueryContextFacade.current().getQueryId,
       interruptOnCancel = true)
+    val currentTrace = QueryContextFacade.current().getQueryTrace
+    currentTrace.endLastSpan()
+    val jobTrace = new SparkJobTrace(jobGroup, currentTrace, sparkContext)
     try {
       val rows = df.collect()
+      jobTrace.jobFinished()
       val (scanRows, scanFiles, metadataTime, scanTime, scanBytes) = QueryMetricUtils.collectScanMetrics(df.queryExecution.executedPlan)
       QueryContextFacade.current().addAndGetScannedRows(scanRows.asScala.map(Long2long(_)).sum)
       QueryContextFacade.current().addAndGetScanFiles(scanFiles.asScala.map(Long2long(_)).sum)
