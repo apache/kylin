@@ -29,7 +29,7 @@ fi
 
 if [ ! -d "$KYLIN_HOME/spark" ]; then
   echo "Skip spark which not owned by kylin. SPARK_HOME is $SPARK_HOME and KYLIN_HOME is $KYLIN_HOME ."
-  exit 0
+  return
 fi
 
 echo "Start replace hadoop jars under ${KYLIN_HOME}/spark/jars."
