@@ -22,9 +22,9 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ master ]
+    branches: [ kylin3 ]
   pull_request:
-    branches: [ master ]
+    branches: [ kylin3 ]
 
 jobs:
   build:
