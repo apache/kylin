@@ -51,6 +51,7 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T>, java.
         implementations.put("long8", Long8Serializer.class);
         implementations.put("boolean", BooleanSerializer.class);
         implementations.put("date", DateTimeSerializer.class);
+        implementations.put("time", DateTimeSerializer.class);
         implementations.put("datetime", DateTimeSerializer.class);
         implementations.put("timestamp", DateTimeSerializer.class);
     }
