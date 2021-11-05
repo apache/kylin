@@ -18,7 +18,6 @@
 
 package org.apache.kylin.source.hive;
 
-import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ContentSummary;
