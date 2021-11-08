@@ -870,7 +870,7 @@ public class CubeController extends BasicController {
             validateColumnFamily(desc);
 
             // check build engine for stream cube
-            if (desc.isStreamingCube()) {
+            if (cube.getDescriptor().isStreamingCube()) {
                 if (desc.getEngineType() != IEngineAware.ID_MR_V2) {
                     logger.info("streaming cube just supports MR engine");
                     throw new BadRequestException("Invalid Engine type, Streaming cube just supports MapReduce engine");
