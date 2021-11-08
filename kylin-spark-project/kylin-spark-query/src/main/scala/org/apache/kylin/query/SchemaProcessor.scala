@@ -194,7 +194,7 @@ case class AggColumnInfo(
   hash: String,
   args: String*) {
   override def toString: String =
-    s"$funcName(${args.mkString("_")})_${index}_$hash"
+    s"${funcName}_${args.mkString("_")}__${index}_$hash"
 }
 
 case class TopNColumnInfo(tableName: String, columnId: Int, columnName: String)

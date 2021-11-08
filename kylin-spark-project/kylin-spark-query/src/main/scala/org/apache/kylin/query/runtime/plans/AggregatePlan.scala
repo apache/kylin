@@ -18,15 +18,14 @@
 package org.apache.kylin.query.runtime.plans
 
 import org.apache.calcite.DataContext
-import org.apache.calcite.rel.core.Aggregate
-import org.apache.calcite.rel.core.AggregateCall
+import org.apache.calcite.rel.core.{Aggregate, AggregateCall}
 import org.apache.calcite.sql.SqlKind
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.cube.CubeInstance
-import org.apache.kylin.metadata.model.{FunctionDesc, PartitionDesc, SegmentStatusEnum, TblColRef}
-import org.apache.kylin.query.relnode.{KylinAggregateCall, OLAPAggregateRel}
-import org.apache.kylin.query.runtime.RuntimeHelper
+import org.apache.kylin.metadata.model.{FunctionDesc, PartitionDesc, SegmentStatusEnum}
 import org.apache.kylin.query.SchemaProcessor
+import org.apache.kylin.query.relnode.{KylinAggregateCall, OLAPAggregateRel, OLAPRel}
+import org.apache.kylin.query.runtime.RuntimeHelper
 import org.apache.spark.sql.KylinFunctions._
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.{CreateArray, In}
@@ -217,6 +216,13 @@ object AggregatePlan extends LogEx {
             first(argNames.head).alias(aggName)
           case FunctionDesc.FUNC_GROUPING =>
             grouping(argNames.head).alias(aggName)
+          case FunctionDesc.FUNC_PERCENTILE => {
+            val col = argNames(0)
+            val inputColumnRowType = rel.getInput.asInstanceOf[OLAPRel].getColumnRowType
+            val percentage = inputColumnRowType.getColumnByIndex(call.getArgList.get(1)).getName
+            expr(s"approx_percentile($col, $percentage)").alias(aggName)
+          }
+
           case _ =>
             throw new IllegalArgumentException(
               s"""Unsupported function name $funcName""")
