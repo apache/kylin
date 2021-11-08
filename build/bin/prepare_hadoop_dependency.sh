@@ -130,11 +130,11 @@ if [[ $(is_aws_emr_6) == 1 ]]; then
   cp ${configuration_jars} ${KYLIN_HOME}/lib
 fi
 
-if [ $(is_cdh_6_x) == 1 ]; then
+if [[ $(is_cdh_6_x) == 1 ]]; then
    if [ -d "${KYLIN_HOME}/bin/hadoop3_jars/cdh6" ]; then
      find ${SPARK_HOME}/jars -name "hive-exec-*.jar" -exec rm -f {} \;
      echo "Copy jars from ${KYLIN_HOME}/bin/hadoop3_jars/cdh6"
-     cp ${KYLIN_HOME}/hadoop3_jars/cdh6/*.jar ${SPARK_HOME}/jars
+     cp ${KYLIN_HOME}/bin/hadoop3_jars/cdh6/*.jar ${SPARK_HOME}/jars
    fi
 fi
 
