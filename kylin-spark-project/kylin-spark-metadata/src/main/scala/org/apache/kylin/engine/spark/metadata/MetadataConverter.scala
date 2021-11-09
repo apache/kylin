@@ -130,10 +130,11 @@ object MetadataConverter {
   }
 
   def extractEntityAndMeasures(cubeInstance: CubeInstance, cuboidMode: CuboidModeEnum): (List[LayoutEntity], Map[Integer, FunctionDesc]) = {
+    val buildBaseCuboid = cubeInstance.getConfig.isBuildBaseCuboid || cuboidMode.equals(CuboidModeEnum.CURRENT_WITH_BASE)
     val (columnIndexes, shardByColumnsId, idToColumnMap, measureId) = genIDToColumnMap(cubeInstance)
     (cubeInstance.getCuboidsByMode(cuboidMode)
       .asScala
-      .filter(id => cubeInstance.getConfig.isBuildBaseCuboid || !id.equals(cubeInstance.getCuboidScheduler.getBaseCuboidId))
+      .filter(id => buildBaseCuboid.equals(true) || !id.equals(cubeInstance.getCuboidScheduler.getBaseCuboidId))
       .map { long =>
         genLayoutEntity(columnIndexes, shardByColumnsId, idToColumnMap, measureId, long)
       }.toList, measureId.asScala.toMap)

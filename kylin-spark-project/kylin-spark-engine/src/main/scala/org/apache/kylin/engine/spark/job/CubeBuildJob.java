@@ -35,7 +35,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.cube.cuboid.CuboidModeEnum;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.CubeStatsWriter;
 import org.apache.kylin.engine.mr.common.StatisticsDecisionUtil;
@@ -111,7 +113,6 @@ public class CubeBuildJob extends SparkApplication {
 
         String firstSegmentId = segmentIds.iterator().next();
         String cubeId = getParam(MetadataConstants.P_CUBE_ID);
-        SegmentInfo seg = ManagerHub.getSegmentInfo(config, cubeId, firstSegmentId);
         cubeManager = CubeManager.getInstance(config);
         cubeInstance = cubeManager.getCubeByUuid(cubeId);
         CubeSegment newSegment = cubeInstance.getSegmentById(firstSegmentId);
@@ -124,9 +125,10 @@ public class CubeBuildJob extends SparkApplication {
 
         if (needStatistics) {
             // 1.1 Call CuboidStatistics#statistics
+            SegmentInfo statisticsSeg = ManagerHub.getSegmentInfo(config, cubeId, firstSegmentId, CuboidModeEnum.CURRENT_WITH_BASE);
             long startMills = System.currentTimeMillis();
-            spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(seg.toBuildLayouts()));
-            sourceChooser = new ParentSourceChooser(spanningTree, seg, newSegment, jobId, ss, config, false);
+            spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(statisticsSeg.toBuildLayouts()));
+            sourceChooser = new ParentSourceChooser(spanningTree, statisticsSeg, newSegment, jobId, ss, config, false);
             sourceChooser.setNeedStatistics();
             sourceChooser.decideFlatTableSource(null);
             Map<Long, HLLCounter> hllMap = new HashMap<>();
@@ -163,7 +165,7 @@ public class CubeBuildJob extends SparkApplication {
         try {
             //TODO: what if a segment is deleted during building?
             for (String segId : segmentIds) {
-                seg = ManagerHub.getSegmentInfo(config, cubeId, segId);
+                SegmentInfo seg = ManagerHub.getSegmentInfo(config, cubeId, segId);
                 spanningTree = new ForestSpanningTree(
                         JavaConversions.asJavaCollection(seg.toBuildLayouts()));
                 logger.info("There are {} cuboids to be built in segment {}.",
