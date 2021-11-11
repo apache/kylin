@@ -18,16 +18,13 @@
 
 package org.apache.kylin.engine.spark.job;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
+import org.apache.kylin.engine.spark.NSparkCubingEngine;
+import org.apache.kylin.engine.spark.application.SparkApplication;
+import org.apache.kylin.engine.spark.builder.CubeMergeAssist;
 import org.apache.kylin.engine.spark.builder.NBuildSourceInfo;
 import org.apache.kylin.engine.spark.metadata.SegmentInfo;
 import org.apache.kylin.engine.spark.metadata.cube.ManagerHub;
@@ -35,27 +32,26 @@ import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 import org.apache.kylin.engine.spark.metadata.cube.model.ForestSpanningTree;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree;
+import org.apache.kylin.engine.spark.utils.BuildUtils;
+import org.apache.kylin.engine.spark.utils.JobMetrics;
+import org.apache.kylin.engine.spark.utils.JobMetricsUtils;
+import org.apache.kylin.engine.spark.utils.Metrics;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.IStorageAware;
+import org.apache.kylin.shaded.com.google.common.collect.Lists;
+import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.shaded.com.google.common.collect.Lists;
-import org.apache.kylin.shaded.com.google.common.collect.Maps;
-
-import org.apache.kylin.engine.spark.NSparkCubingEngine;
-import org.apache.kylin.engine.spark.application.SparkApplication;
-import org.apache.kylin.engine.spark.builder.CubeMergeAssist;
-import org.apache.kylin.engine.spark.utils.BuildUtils;
-import org.apache.kylin.engine.spark.utils.JobMetrics;
-import org.apache.kylin.engine.spark.utils.JobMetricsUtils;
-import org.apache.kylin.engine.spark.utils.Metrics;
-import org.apache.kylin.engine.spark.utils.QueryExecutionCache;
 import scala.collection.JavaConversions;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class CubeMergeJob extends SparkApplication {
     protected static final Logger logger = LoggerFactory.getLogger(CubeMergeJob.class);
@@ -165,14 +161,14 @@ public class CubeMergeJob extends SparkApplication {
             sourceCount += cuboid.getSourceRows();
         }
 
-        // for spark metrics
-        String queryExecutionId = UUID.randomUUID().toString();
-        ss.sparkContext().setLocalProperty(QueryExecutionCache.N_EXECUTION_ID_KEY(), queryExecutionId);
         ss.sparkContext().setJobDescription("merge layout " + layoutId);
         NSparkCubingEngine.NSparkCubingStorage storage = StorageFactory.createEngineAdapter(layout,
                 NSparkCubingEngine.NSparkCubingStorage.class);
         String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_NAME), seg.name(), seg.identifier(), String.valueOf(layoutId));
         String tempPath = path + CubeBuildJob.TEMP_DIR_SUFFIX;
+        // for spark metrics
+        String queryExecutionId = tempPath;
+        JobMetricsUtils.registerQueryExecutionListener(ss, queryExecutionId);
         // save to temp path
         storage.saveTo(tempPath, dataset, ss);
 
@@ -191,9 +187,8 @@ public class CubeMergeJob extends SparkApplication {
         int partitionNum = BuildUtils.repartitionIfNeed(layout, storage, path, tempPath, config, ss);
         layout.setShardNum(partitionNum);
         cuboidShardNum.put(layoutId, (short)partitionNum);
-        ss.sparkContext().setLocalProperty(QueryExecutionCache.N_EXECUTION_ID_KEY(), null);
         ss.sparkContext().setJobDescription(null);
-        QueryExecutionCache.removeQueryExecution(queryExecutionId);
+        JobMetricsUtils.registerQueryExecutionListener(ss, queryExecutionId);
 
         BuildUtils.fillCuboidInfo(layout, path);
 
