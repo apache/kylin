@@ -33,18 +33,18 @@ import scala.collection.JavaConverters._
 object NGlobalDictBuilderAssist extends Logging {
 
   @throws[IOException]
-  def resize(ref: ColumnDesc, desc: SegmentInfo, bucketPartitionSize: Int, ss: SparkSession): Unit = {
+  def resize(ref: ColumnDesc, desc: SegmentInfo, currentBucketSize:Int , resizeBucketSize: Int, ss: SparkSession): Unit = {
     val globalDict = new NGlobalDictionary(desc.project, ref.tableAliasName, ref.columnName, desc.kylinconf.getHdfsWorkingDirectory)
 
     val broadcastDict = ss.sparkContext.broadcast(globalDict)
     globalDict.prepareWrite()
 
     import ss.implicits._
-    val existsDictDs = ss.createDataset(0 to bucketPartitionSize)
+    val existsDictDs = ss.range(0 , currentBucketSize, 1, currentBucketSize)
       .flatMap {
         bucketId =>
           val gDict: NGlobalDictionary = broadcastDict.value
-          val bucketDict: NBucketDictionary = gDict.loadBucketDictionary(bucketId)
+          val bucketDict: NBucketDictionary = gDict.loadBucketDictionary(bucketId.intValue())
           val tupleList = new util.ArrayList[(String, Long)](bucketDict.getAbsoluteDictMap.size)
           bucketDict.getAbsoluteDictMap.object2LongEntrySet.asScala
             .foreach(dictTuple => tupleList.add((dictTuple.getKey, dictTuple.getLongValue)))
@@ -53,7 +53,7 @@ object NGlobalDictBuilderAssist extends Logging {
 
     ss.sparkContext.setJobDescription("Resize dict " + ref.identity)
     existsDictDs
-      .repartition(bucketPartitionSize, col(existsDictDs.schema.head.name).cast(StringType))
+      .repartition(resizeBucketSize, col(existsDictDs.schema.head.name).cast(StringType))
       .foreachPartition {
         iter: Iterator[(String, Long)] =>
           val partitionID = TaskContext.get().partitionId()
@@ -67,7 +67,7 @@ object NGlobalDictBuilderAssist extends Logging {
           bucketDict.saveBucketDict(partitionID)
       }
 
-    globalDict.writeMetaDict(bucketPartitionSize,
+    globalDict.writeMetaDict(resizeBucketSize,
       desc.kylinconf.getGlobalDictV2MaxVersions, desc.kylinconf.getGlobalDictV2VersionTTL)
   }
 
