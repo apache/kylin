@@ -41,16 +41,15 @@ import org.apache.kylin.engine.spark.metadata.cube.PathManager;
 import org.apache.kylin.engine.spark.metadata.cube.model.ForestSpanningTree;
 import org.apache.kylin.engine.spark.metadata.cube.model.LayoutEntity;
 import org.apache.kylin.engine.spark.metadata.cube.model.SpanningTree;
+import org.apache.kylin.engine.spark.utils.BuildUtils;
 import org.apache.kylin.engine.spark.utils.JobMetrics;
 import org.apache.kylin.engine.spark.utils.JobMetricsUtils;
 import org.apache.kylin.engine.spark.utils.Metrics;
-import org.apache.kylin.engine.spark.utils.QueryExecutionCache;
-import org.apache.kylin.engine.spark.utils.BuildUtils;
-import org.apache.kylin.metadata.model.IStorageAware;
-import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.shaded.com.google.common.base.Joiner;
+import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.storage.StorageFactory;
@@ -63,16 +62,13 @@ import scala.Tuple2;
 import scala.collection.JavaConversions;
 
 import java.io.IOException;
-
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.ArrayList;
-import java.util.UUID;
-
 import java.util.stream.Collectors;
 
 public class OptimizeBuildJob extends SparkApplication {
@@ -378,15 +374,15 @@ public class OptimizeBuildJob extends SparkApplication {
                                      long parentId) throws IOException {
         long layoutId = layout.getId();
 
-        // for spark metrics
-        String queryExecutionId = UUID.randomUUID().toString();
-        ss.sparkContext().setLocalProperty(QueryExecutionCache.N_EXECUTION_ID_KEY(), queryExecutionId);
-
         NSparkCubingEngine.NSparkCubingStorage storage = StorageFactory.createEngineAdapter(layout,
                 NSparkCubingEngine.NSparkCubingStorage.class);
         String path = PathManager.getParquetStoragePath(config, getParam(MetadataConstants.P_CUBE_NAME), seg.name(), seg.identifier(),
                 String.valueOf(layoutId));
+
         String tempPath = path + TEMP_DIR_SUFFIX;
+        // for spark metrics
+        String queryExecutionId = tempPath;
+        JobMetricsUtils.registerQueryExecutionListener(ss, queryExecutionId);
         // save to temp path
         logger.info("Cuboids are saved to temp path : " + tempPath);
         storage.saveTo(tempPath, dataset, ss);
@@ -402,14 +398,14 @@ public class OptimizeBuildJob extends SparkApplication {
             cuboidsRowCount.putIfAbsent(layoutId, cuboidRowCnt);
             layout.setSourceRows(cuboidsRowCount.get(parentId));
         } else {
+            cuboidsRowCount.putIfAbsent(layoutId, rowCount);
             layout.setRows(rowCount);
             layout.setSourceRows(metrics.getMetrics(Metrics.SOURCE_ROWS_CNT()));
         }
         int shardNum = BuildUtils.repartitionIfNeed(layout, storage, path, tempPath, cubeInstance.getConfig(), ss);
         layout.setShardNum(shardNum);
         cuboidShardNum.put(layoutId, (short) shardNum);
-        ss.sparkContext().setLocalProperty(QueryExecutionCache.N_EXECUTION_ID_KEY(), null);
-        QueryExecutionCache.removeQueryExecution(queryExecutionId);
+        JobMetricsUtils.unRegisterQueryExecutionListener(ss, queryExecutionId);
         BuildUtils.fillCuboidInfo(layout, path);
     }
 
