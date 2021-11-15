@@ -796,7 +796,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public double getCubePlannerExpansionRateThreshold() {
-        return Double.parseDouble(getOptional("kylin.cube.cubeplanner.expansion-threshold", "15.0"));
+        return Double.parseDouble(getOptional("kylin.cube.cubeplanner.expansion-threshold", "2.5"));
     }
 
     public int getCubePlannerRecommendCuboidCacheMaxSize() {
@@ -3311,7 +3311,7 @@ public abstract class KylinConfigBase implements Serializable {
      */
     @ConfigTag(ConfigTag.Tag.GLOBAL_LEVEL)
     public boolean isSparderCanaryEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.canary.sparder-context-canary-enabled", TRUE));
+        return Boolean.parseBoolean(this.getOptional("kylin.canary.sparder-context-canary-enabled", FALSE));
     }
 
     /**
