@@ -29,7 +29,7 @@
       "intermediateTable" : "kylin_intermediate_ss_a110ac52_9a91_49fe_944a_346d61e54115"
     }
   }],
-  "type" : "org.apache.kylin.engine.mr.CubingJob",
+  "type" : "org.apache.kylin.engine.spark.job.NSparkCubingJob",
   "params" : {
     "submitter" : "ADMIN",
     "envName" : "DEV",
