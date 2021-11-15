@@ -127,7 +127,7 @@ object SparderContext extends Logging {
     getSparkSession.sparkContext.conf.get(key)
   }
 
-  def initSpark(): Unit =
+  def initSpark(): Unit = {
     this.synchronized {
       if (initializingThread == null && (spark == null || spark.sparkContext.isStopped)) {
         initializingThread = new Thread(new Runnable {
@@ -219,6 +219,7 @@ object SparderContext extends Logging {
       // init FileStatusCache
       ShardFileStatusCache.getFileStatusCache(getOriginalSparkSession)
     }
+  }
 
   def registerListener(sc: SparkContext): Unit = {
     val sparkListener = new SparkListener {

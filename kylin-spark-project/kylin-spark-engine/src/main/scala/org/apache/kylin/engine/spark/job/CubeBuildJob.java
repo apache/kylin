@@ -154,8 +154,12 @@ public class CubeBuildJob extends SparkApplication {
 
             // 1.3 Trigger cube planner phase one and save optimized cuboid set into CubeInstance
             recommendCuboidMap = StatisticsDecisionUtil.optimizeCubingPlan(newSegment);
-            if (!recommendCuboidMap.isEmpty())
-                logger.info("Triggered cube planner phase one .");
+            if (!recommendCuboidMap.isEmpty()) {
+                logger.info("Triggered cube planner phase one. The number of recommend cuboids is {}. " +
+                        "If there are too many cuboids, " +
+                        "you can reduce the number of recommend cuboids by reducing the value of " +
+                        "'kylin.cube.cubeplanner.expansion-threshold'", recommendCuboidMap.size());
+            }
         }
 
         buildLayoutWithUpdate = new BuildLayoutWithUpdate(config);
