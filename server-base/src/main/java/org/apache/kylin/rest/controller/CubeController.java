@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -597,42 +598,12 @@ public class CubeController extends BasicController {
     public CubeInstance cloneCube(@PathVariable String cubeName, @RequestBody CubeRequest cubeRequest) {
         String newCubeName = cubeRequest.getCubeName();
         String projectName = cubeRequest.getProject();
-
-        checkCubeExists(cubeName);
-        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-        if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
-            throw new BadRequestException("Broken cube can't be cloned");
-        }
-        if (!ValidateUtil.isAlphanumericUnderscore(newCubeName)) {
-            throw new BadRequestException("Invalid Cube name, only letters, numbers and underscore supported.");
-        }
-
-        ProjectInstance project = cubeService.getProjectManager().getProject(projectName);
-        if (project == null) {
-            throw new NotFoundException("Project " + projectName + " doesn't exist");
-        }
-        // KYLIN-1925, forbid cloning cross projects
-        if (!project.getName().equals(cube.getProject())) {
-            throw new BadRequestException("Cloning cubes across projects is not supported.");
-        }
-
-        CubeDesc cubeDesc = cube.getDescriptor();
-        CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
-
-        newCubeDesc.setName(newCubeName);
-
-        CubeInstance newCube;
+        CubeInstance cube = prepareCloneCube(cubeName, newCubeName, projectName);
         try {
-            newCube = cubeService.createCubeAndDesc(project, newCubeDesc);
-
-            //reload to avoid shallow clone
-            cubeService.getCubeDescManager().reloadCubeDescLocal(newCubeName);
+            return cubeService.cloneCube(projectName, newCubeName, cube);
         } catch (IOException e) {
             throw new InternalErrorException("Failed to clone cube ", e);
         }
-
-        return newCube;
-
     }
 
     @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT }, produces = { "application/json" })
@@ -1097,6 +1068,39 @@ public class CubeController extends BasicController {
         request.setCubeDescData("");
         request.setSuccessful(success);
         request.setMessage(message);
+    }
+
+    private CubeInstance prepareCloneCube(String cubeName, String newCubeName, String projectName) {
+        Message msg = MsgPicker.getMsg();
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        if (Objects.isNull(cube)) {
+            throw new NotFoundException(String.format(Locale.ROOT, msg.getCUBE_NOT_FOUND(), cubeName));
+        }
+
+        if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
+            throw new BadRequestException("Broken cube can't be cloned");
+        }
+
+        if (!ValidateUtil.isAlphanumericUnderscore(newCubeName)) {
+            // Also check newCubeName is not null.
+            throw new BadRequestException("Invalid Cube name, only letters, numbers and underscore supported.");
+        }
+
+        // check new cube name not exists.
+        if (!Objects.isNull(cubeService.getCubeManager().getCube(newCubeName))) {
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getCUBE_ALREADY_EXIST(), newCubeName));
+        }
+
+        ProjectInstance project = cubeService.getProjectManager().getProject(projectName);
+        if (Objects.isNull(project)) {
+            throw new NotFoundException("Project " + projectName + " doesn't exist");
+        }
+        // KYLIN-1925, forbid cloning cross projects
+        if (!projectName.equals(cube.getProject())) {
+            throw new BadRequestException("Cloning cubes across projects is not supported.");
+        }
+
+        return cube;
     }
 
     private void checkCubeExists(String cubeName) {

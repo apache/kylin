@@ -267,6 +267,24 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
+    public CubeInstance createCube(String cubeName, String projectName, CubeDesc desc, String owner, byte[] cuboidBytes)
+            throws IOException {
+        try (AutoLock lock = cubeMapLock.lockForWrite()) {
+            logger.info("Creating cube '{}-->{}' from desc '{}'", projectName, cubeName, desc.getName());
+
+            // save cube resource
+            CubeInstance cube = CubeInstance.create(cubeName, desc);
+            cube.setOwner(owner);
+            cube.updateCuboidBytes(cuboidBytes);
+            updateCubeWithRetry(new CubeUpdate(cube), 0);
+
+            ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cubeName, projectName,
+                    owner);
+
+            return cube;
+        }
+    }
+
     /**
      * when clear all segments, it's supposed to reinitialize the CubeInstance
      */

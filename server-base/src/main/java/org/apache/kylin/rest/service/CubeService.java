@@ -239,6 +239,27 @@ public class CubeService extends BasicService implements InitializingBean {
         return createdCube;
     }
 
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#project, 'MANAGEMENT')")
+    public CubeInstance cloneCube(String projectName, String newCubeName, CubeInstance originalCube) throws IOException {
+        CubeDesc cubeDesc = originalCube.getDescriptor();
+        CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
+        newCubeDesc.setName(newCubeName);
+
+        String owner = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        CubeDesc createdDesc = getCubeDescManager().createCubeDesc(newCubeDesc);
+
+        if (createdDesc.isBroken()) {
+            throw new BadRequestException(createdDesc.getErrorsAsString());
+        }
+
+        int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc, false);
+        logger.info("New cube " + newCubeName + " has " + cuboidCount + " cuboids");
+
+        return getCubeManager().createCube(newCubeName, projectName, createdDesc, owner, originalCube.getCuboidBytes());
+    }
+
     public List<CubeInstance> listAllCubes(String projectName) {
         ProjectManager projectManager = getProjectManager();
         ProjectInstance project = projectManager.getProject(projectName);

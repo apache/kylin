@@ -764,6 +764,14 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return ret;
     }
 
+    public byte[] getCuboidBytes() {
+        return this.cuboidBytes;
+    }
+
+    public void updateCuboidBytes(byte[] cuboidBytes) {
+        this.cuboidBytes = cuboidBytes;
+    }
+
     public static CubeSegment findSegmentWithJobId(String jobID, CubeInstance cubeInstance) {
         for (CubeSegment segment : cubeInstance.getSegments()) {
             String lastBuildJobID = segment.getLastBuildJobID();
