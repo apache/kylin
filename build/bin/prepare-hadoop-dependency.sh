@@ -27,8 +27,12 @@ then
     return
 fi
 
-if [ ! -d "$KYLIN_HOME/spark" ]; then
-  echo "Skip spark which not owned by kylin. SPARK_HOME is $SPARK_HOME and KYLIN_HOME is $KYLIN_HOME ."
+if [[ $SPARK_HOME != $KYLIN_HOME* ]]; then
+  echo "Skip spark which not owned by kylin. SPARK_HOME is $SPARK_HOME and KYLIN_HOME is $KYLIN_HOME.
+  Please download the correct version of Apache Spark, unzip it, rename it to 'spark' and put it in $KYLIN_HOME directory.
+  Do not use the spark that comes with your hadoop environment.
+  If your hadoop environment is cdh6.x, you need to do some additional operations in advance.
+  Please refer to the link: https://cwiki.apache.org/confluence/display/KYLIN/Deploy+Kylin+4+on+CDH+6."
   return
 fi
 
