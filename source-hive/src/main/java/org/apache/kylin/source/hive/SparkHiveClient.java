@@ -30,6 +30,7 @@ import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import scala.Option;
 import scala.collection.Iterator;
+import scala.collection.immutable.Map;
 
 import java.io.IOException;
 import java.util.List;
@@ -86,11 +87,14 @@ public class SparkHiveClient implements IHiveClient {
             }
         }
 
+        Map<String, String> properties = catalogTable.ignoredProperties();
         builder.setAllColumns(allColumns);
         builder.setPartitionColumns(partitionColumns);
         builder.setSdLocation(catalogTable.location().getPath());
-        builder.setFileSize(Long.parseLong(catalogTable.ignoredProperties().apply(TABLE_TOTAL_SIZE)));
-        builder.setFileNum(Long.parseLong(catalogTable.ignoredProperties().apply(TABLE_FILE_NUM)));
+        long totalSize = properties.contains(TABLE_TOTAL_SIZE) ? Long.parseLong(properties.apply(TABLE_TOTAL_SIZE)) : 0L;
+        builder.setFileSize(totalSize);
+        long totalFileNum = properties.contains(TABLE_FILE_NUM) ? Long.parseLong(properties.apply(TABLE_FILE_NUM)) : 0L;
+        builder.setFileNum(totalFileNum);
         builder.setIsNative(catalogTable.tableType().equals(CatalogTableType.MANAGED()));
         builder.setTableName(tableName);
         builder.setSdInputFormat(catalogTable.storage().inputFormat().toString());
@@ -116,8 +120,9 @@ public class SparkHiveClient implements IHiveClient {
 
     @Override
     public long getHiveTableRows(String database, String tableName) throws Exception {
-        return Long.parseLong(catalog.getTempViewOrPermanentTableMetadata(new TableIdentifier(tableName, Option.apply(database)))
-                .ignoredProperties().apply(HIVE_TABLE_ROWS));
+        Map<String, String> properties = catalog.getTempViewOrPermanentTableMetadata(new TableIdentifier(tableName, Option.apply(database))).ignoredProperties();
+        long hiveTableRows = properties.contains(HIVE_TABLE_ROWS) ? Long.parseLong(properties.apply(HIVE_TABLE_ROWS)) : 0L;
+        return hiveTableRows;
     }
 
     /*
