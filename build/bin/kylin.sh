@@ -61,7 +61,7 @@ function retrieveDependency() {
         verbose "hdp_version is ${hdp_version}"
     fi
 
-    source ${KYLIN_HOME}/bin/prepare_hadoop_dependency.sh
+    source ${KYLIN_HOME}/bin/prepare-hadoop-dependency.sh
 
     tomcat_root=${dir}/../tomcat
     export tomcat_root
