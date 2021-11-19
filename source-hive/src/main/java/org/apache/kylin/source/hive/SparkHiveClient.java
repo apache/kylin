@@ -90,7 +90,11 @@ public class SparkHiveClient implements IHiveClient {
         Map<String, String> properties = catalogTable.ignoredProperties();
         builder.setAllColumns(allColumns);
         builder.setPartitionColumns(partitionColumns);
-        builder.setSdLocation(catalogTable.location().getPath());
+        if (catalogTable.tableType().equals(CatalogTableType.MANAGED())) {
+            builder.setSdLocation(catalogTable.location().getPath());
+        } else {
+            builder.setSdLocation("unknown");
+        }
         long totalSize = properties.contains(TABLE_TOTAL_SIZE) ? Long.parseLong(properties.apply(TABLE_TOTAL_SIZE)) : 0L;
         builder.setFileSize(totalSize);
         long totalFileNum = properties.contains(TABLE_FILE_NUM) ? Long.parseLong(properties.apply(TABLE_FILE_NUM)) : 0L;
