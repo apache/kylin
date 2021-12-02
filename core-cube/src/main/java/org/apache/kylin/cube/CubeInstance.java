@@ -460,13 +460,10 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     public Set<Long> getCuboidsByMode(CuboidModeEnum cuboidMode) {
         Set<Long> currentCuboid = getCuboidScheduler().getAllCuboidIds();
-        if (cuboidMode == null || cuboidMode == CURRENT) {
+        if (cuboidMode == null || cuboidMode == CURRENT || cuboidMode == CURRENT_WITH_BASE) {
             return currentCuboid;
         }
-        if (cuboidMode == CURRENT_WITH_BASE) {
-            currentCuboid.add(getCuboidScheduler().getBaseCuboidId());
-            return currentCuboid;
-        }
+
         Set<Long> cuboidsRecommend = getCuboidsRecommend();
         if (cuboidsRecommend == null || cuboidMode == RECOMMEND) {
             return cuboidsRecommend;
