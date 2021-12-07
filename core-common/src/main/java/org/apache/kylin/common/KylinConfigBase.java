@@ -2740,4 +2740,7 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.jdbc.url.allowed.sqlserver.schema", DEFAULT_JDBC_URL_ALLOWED_SQLSERVER_SCHEMA);
     }
 
+    public String getEncryptCipherIvSpec() {
+        return getOptional("kylin.security.encrypt.cipher.ivSpec", "AAAAAAAAAAAAAAAA");
+    }
 }
