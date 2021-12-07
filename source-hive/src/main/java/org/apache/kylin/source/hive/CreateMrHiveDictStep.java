@@ -63,7 +63,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
         try {
             // Step 1: Apply for lock if required
             if (getIsLock()) {
-                getLock(lock);
+                MRHiveDictUtil.getLock(getCubeName(), getId(), lock, threadLock, stepLogger);
             }
 
             final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder(getName());
@@ -130,7 +130,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
 
             // Step 3: Release lock if required
             if (getIsUnlock()) {
-                unLock(lock);
+                MRHiveDictUtil.unLock(getCubeName(), getId(), lock, stepLogger);
             }
             getManager().addJobInfo(getId(), stepLogger.getInfo());
         } catch (Exception e) {
@@ -160,7 +160,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
 
             if (isDiscarded()) {
                 if (getIsLock() && lock != null) {
-                    unLock(lock);
+                    MRHiveDictUtil.unLock(getCubeName(), getId(), lock, stepLogger);
                 }
                 return new ExecuteResult(ExecuteResult.State.DISCARDED, stepLogger.getBufferedLog());
             } else {
@@ -170,7 +170,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
             logger.error("job:" + getId() + " execute finished with exception", e);
             if (isDiscarded()) {
                 if (getIsLock()) {
-                    unLock(lock);
+                    MRHiveDictUtil.unLock(getCubeName(), getId(), lock, stepLogger);
                 }
                 return new ExecuteResult(ExecuteResult.State.DISCARDED, stepLogger.getBufferedLog());
             } else {
@@ -262,122 +262,6 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
         setParam("lockPathName", pathName);
     }
 
-    public String getLockPathName() {
-        return getParam("lockPathName");
-    }
-
-    private String getMRDictLockPathName() {
-        String pathName = getLockPathName();
-        if (Strings.isNullOrEmpty(pathName)) {
-            throw new IllegalArgumentException(" create MR/Hive dict lock path name is null");
-        }
-
-        String flowJobId = getJobFlowJobId();
-        if (Strings.isNullOrEmpty(flowJobId)) {
-            throw new IllegalArgumentException(" create MR/Hive dict lock path flowJobId is null");
-        }
-        return MRHiveDictUtil.getLockPath(pathName, flowJobId);
-    }
-
-    private String getMRDictLockParentPathName() {
-        String pathName = getLockPathName();
-        if (Strings.isNullOrEmpty(pathName)) {
-            throw new IllegalArgumentException(" create MR/Hive dict lock path name is null");
-        }
-        return MRHiveDictUtil.getLockPath(pathName, null);
-    }
-
-    private String getEphemeralLockPathName() {
-        String pathName = getLockPathName();
-        if (Strings.isNullOrEmpty(pathName)) {
-            throw new IllegalArgumentException(" create MR/Hive dict lock path name is null");
-        }
-
-        return MRHiveDictUtil.getEphemeralLockPath(pathName);
-    }
-
-    private void getLock(DistributedLock lock) throws InterruptedException {
-        logger.info("{} try to get global MR/Hive ZK lock", getId());
-        String ephemeralLockPath = getEphemeralLockPathName();
-        String fullLockPath = getMRDictLockPathName();
-        boolean isLocked = true;
-        boolean getLocked = false;
-        long lockStartTime = System.currentTimeMillis();
-
-        boolean isLockedByTheJob = lock.isLocked(fullLockPath);
-        logger.info("{} global MR/Hive ZK lock is isLockedByTheJob:{}", getId(), isLockedByTheJob);
-        if (!isLockedByTheJob) {
-            while (isLocked) {
-                isLocked = lock.isLocked(getMRDictLockParentPathName());//other job global lock
-
-                if (!isLocked) {
-                    isLocked = lock.isLocked(ephemeralLockPath);//get the ephemeral current lock
-                    stepLogger.log("zookeeper lock path :" + ephemeralLockPath + ", result is " + isLocked);
-                    logger.info("zookeeper lock path :{}, is locked by other job result is {}", ephemeralLockPath,
-                            isLocked);
-
-                    if (!isLocked) {
-                        //try to get ephemeral lock
-                        try {
-                            logger.debug("{} before start to get lock ephemeralLockPath {}", getId(), ephemeralLockPath);
-                            threadLock.lock();
-                            logger.debug("{} start to get lock ephemeralLockPath {}", getId(), ephemeralLockPath);
-                            getLocked = lock.lock(ephemeralLockPath);
-                            logger.debug("{} finish get lock ephemeralLockPath {},getLocked {}", getId(), ephemeralLockPath, getLocked);
-                        } finally {
-                            threadLock.unlock();
-                            logger.debug("{} finish unlock the thread lock ,ephemeralLockPath {} ", getId(), ephemeralLockPath);
-                        }
-
-                        if (getLocked) {//get ephemeral lock success
-                            try {
-                                getLocked = lock.globalPermanentLock(fullLockPath);//add the fullLockPath lock in case of the server crash then the other can the same job can get the lock
-                                if (getLocked) {
-                                    break;
-                                } else {
-                                    if (lock.isLocked(ephemeralLockPath)) {
-                                        lock.unlock(ephemeralLockPath);
-                                    }
-                                }
-                            } catch (Exception e) {
-                                if (lock.isLocked(ephemeralLockPath)) {
-                                    lock.unlock(ephemeralLockPath);
-                                }
-                            }
-                        }
-                        isLocked = true; //get lock fail,will try again
-                    }
-                }
-                // wait 1 min and try again
-                logger.info(
-                        "{},global parent lock path({}) is locked by other job result is {} ,ephemeral lock path :{} is locked by other job result is {},will try after one minute",
-                        getId(), getMRDictLockParentPathName(), isLocked, ephemeralLockPath, isLocked);
-                Thread.sleep(60000);
-            }
-        } else {
-            lock.lock(ephemeralLockPath);
-        }
-        stepLogger.log("zookeeper get lock costTime : " + ((System.currentTimeMillis() - lockStartTime) / 1000) + " s");
-        long useSec = ((System.currentTimeMillis() - lockStartTime) / 1000);
-        logger.info("job {} get zookeeper lock path:{} success,zookeeper get lock costTime : {} s", getId(),
-                fullLockPath, useSec);
-    }
-
-    private void unLock(DistributedLock lock) {
-        String parentLockPath = getMRDictLockParentPathName();
-        String ephemeralLockPath = getEphemeralLockPathName();
-        if (lock.isLocked(getMRDictLockPathName())) {
-            lock.purgeLocks(parentLockPath);
-            stepLogger.log("zookeeper unlock path :" + parentLockPath);
-            logger.info("{} unlock full lock path :{} success", getId(), parentLockPath);
-        }
-
-        if (lock.isLocked(ephemeralLockPath)) {
-            lock.purgeLocks(ephemeralLockPath);
-            stepLogger.log("zookeeper unlock path :" + ephemeralLockPath);
-            logger.info("{} unlock full lock path :{} success", getId(), ephemeralLockPath);
-        }
-    }
 
     private static String serializeMap(Map<String, String> map) {
         JSONArray result = new JSONArray();

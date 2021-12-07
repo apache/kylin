@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.Locale;
 import java.util.Collections;
 
+import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.shaded.com.google.common.base.Strings;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileSystem;
@@ -101,7 +103,11 @@ public class HiveInputBase {
             String[] mrHiveDictColumns = dictConfig.getMrHiveDictColumnsExcludeRefColumns();
             if (Objects.nonNull(mrHiveDictColumns) && mrHiveDictColumns.length > 0
                     && !"".equals(mrHiveDictColumns[0])) {
-                addStepPhase1_DoCreateMrHiveGlobalDict(jobFlow, mrHiveDictColumns);
+                if (dictConfig.getHiveGlobalDictEngine().equalsIgnoreCase("spark")) {
+                    addStepPhase1_DoCreateSparkHiveGlobalDict(jobFlow, mrHiveDictColumns);
+                } else {
+                    addStepPhase1_DoCreateMrHiveGlobalDict(jobFlow, mrHiveDictColumns);
+                }
             }
 
             // then count and redistribute
@@ -133,10 +139,13 @@ public class HiveInputBase {
             final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
 
             if (Objects.nonNull(mrHiveDictColumnsExcludeRefCols) && mrHiveDictColumnsExcludeRefCols.length > 0) {
-                jobFlow.addTask(createHiveGlobalDictMergeGlobalDict(flatDesc, hiveInitStatements, cubeName, mrHiveDictColumnsExcludeRefCols, globalDictDatabase, globalDictTable));
                 for (String item : mrHiveDictColumnsExcludeRefCols) {
                     dictRef.put(item, "");
                 }
+                if (dictConfig.getHiveGlobalDictEngine().equalsIgnoreCase("mr")) {
+                    jobFlow.addTask(createHiveGlobalDictMergeGlobalDict(flatDesc, hiveInitStatements, cubeName, mrHiveDictColumnsExcludeRefCols, globalDictDatabase, globalDictTable));
+                }
+
             }
 
             // replace step
@@ -160,26 +169,73 @@ public class HiveInputBase {
 
         }
 
+        protected void addStepPhase1_DoCreateSparkHiveGlobalDict(DefaultChainedExecutable jobFlow, String[] mrHiveDictColumns) {
+            final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
+
+            jobFlow.addTask(createSparkHiveGlobalDictExtractStep(flatDesc, cubeName,
+                    mrHiveDictColumns, jobFlow.getId()));
+
+        }
+
+        private SparkExecutable createSparkHiveGlobalDictExtractStep(IJoinedFlatTableDesc flatDesc, String cubeName, String[] mrHiveDictColumns, String jobId) {
+            CubeSegment seg = (CubeSegment) flatDesc.getSegment();
+            KylinConfig config = seg.getConfig();
+
+            SparkExecutable sparkExecutable = new SparkExecutable();
+            sparkExecutable.setName(ExecutableConstants.STEP_NAME_GLOBAL_DICT_SPARK_BUILD);
+            sparkExecutable.setClassName(CreateSparkHiveDictStep.class.getName());
+            sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_HIVE_DICT_COLUMNS.getArgName(), joinDictColumns(mrHiveDictColumns));
+            sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_FLOW_JOB_ID.getArgName(), jobId);
+            sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_CUBE_NAME.getArgName(), cubeName);
+            sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_SEGMENT_ID.getArgName(), seg.getUuid());
+            sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_META_URL.getArgName(), getSegmentMetadataUrl(config, seg.getRealization().getName(), jobId));
+            sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_WAREHOUSE_DIR.getArgName(), config.getHiveDatabaseDir(null));
+            sparkExecutable.setJobId(jobId);
+
+            StringBuilder jars = new StringBuilder();
+            StringUtil.appendWithSeparator(jars, config.getSparkAdditionalJars());
+            sparkExecutable.setJars(jars.toString());
+
+            return sparkExecutable;
+        }
+
+        private String getSegmentMetadataUrl(KylinConfig kylinConfig, String segName, String jobId) {
+            String path = hdfsWorkingDir + "kylin-" + jobId + "/" + segName + "/metadata";
+            Map<String, String> param = new HashMap<>();
+            param.put("path", path);
+            return new StorageURL(kylinConfig.getMetadataUrl().getIdentifier(), "hdfs", param).toString();
+        }
+
+        private String joinDictColumns(String[] hiveDictColumns) {
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0;i<hiveDictColumns.length;i++) {
+                if (i > 0) {
+                    builder.append(",");
+                }
+                builder.append(hiveDictColumns[i]);
+            }
+            return builder.toString();
+        }
+
         protected static AbstractExecutable createMrHiveGlobalDictExtractStep(IJoinedFlatTableDesc flatDesc, String hiveInitStatements,
                                                                               String cubeName, String[] mrHiveDictColumns, String jobId) {
             KylinConfig cfg = flatDesc.getSegment().getConfig();
             String globalDictTable = MRHiveDictUtil.globalDictTableName(flatDesc, cubeName);
-            String globalDictDatabase = cfg.getMrHiveDictDB();
             final String distinctValueTable = MRHiveDictUtil.distinctValueTable(flatDesc);
             final String segmentLevelDictTableName = MRHiveDictUtil.segmentLevelDictTableName(flatDesc);
 
-            final String createGlobalDictTableHql = MRHiveDictUtil.generateDictionaryDdl(flatDesc, globalDictDatabase, globalDictTable);
+            final String createGlobalDictTableHql = MRHiveDictUtil.generateDictionaryDdl(globalDictTable);
             final String dropDistinctValueTableHql = MRHiveDictUtil.generateDropTableStatement(distinctValueTable);
             final String createDistinctValueTableHql = MRHiveDictUtil.generateDistinctValueTableStatement(flatDesc);
             final String dropSegmentLevelDictTableHql = MRHiveDictUtil.generateDropTableStatement(segmentLevelDictTableName);
-            final String createSegmentLevelDictTableHql = MRHiveDictUtil.generateDictTableStatement(flatDesc, segmentLevelDictTableName);
+            final String createSegmentLevelDictTableHql = MRHiveDictUtil.generateDictTableStatement(segmentLevelDictTableName);
 
-            String maxAndDistinctCountSql = MRHiveDictUtil.generateDictStatisticsSql(distinctValueTable, globalDictTable, globalDictDatabase);
+            String maxAndDistinctCountSql = MRHiveDictUtil.generateDictStatisticsSql(distinctValueTable, globalDictTable);
 
             StringBuilder insertDataToDictIntermediateTableSql = new StringBuilder();
             for (String dictColumn : mrHiveDictColumns) {
                 insertDataToDictIntermediateTableSql
-                        .append(MRHiveDictUtil.generateInsertDataStatement(flatDesc, dictColumn, globalDictDatabase, globalDictTable));
+                        .append(MRHiveDictUtil.generateInsertDataStatement(flatDesc, dictColumn, globalDictTable));
             }
             String setParametersHql = "set hive.exec.compress.output=false;set hive.mapred.mode=unstrict;";
             CreateMrHiveDictStep step = new CreateMrHiveDictStep();
@@ -223,10 +279,10 @@ public class HiveInputBase {
                             .append("');")
                             .append(" \n");
 
-                    String dictHql = "INSERT OVERWRITE TABLE " + globalDictDatabase + "." + globalDictTable + " \n"
+                    String dictHql = "INSERT OVERWRITE TABLE " + globalDictTable + " \n"
                             + "PARTITION (dict_column = '" + dictColumn + "') \n"
                             + "SELECT dict_key, dict_val FROM "
-                            + globalDictDatabase + "." + globalDictTable + " \n" + "WHERE dict_column = '" + dictColumn
+                            + globalDictTable + " \n" + "WHERE dict_column = '" + dictColumn
                             + "' \n" + flatDesc.getDataModel().getConfig().getHiveUnionStyle() + " \n"
                             + "SELECT dict_key, dict_val FROM "
                             + globalDictIntermediateTable + " \n" + " WHERE dict_column = '" + dictColumn + "' ;\n";
@@ -301,7 +357,7 @@ public class HiveInputBase {
                         insertOverwriteHql
                                 .append("FROM ").append(flatTable).append(" a \nLEFT OUTER JOIN \n (")
                                 .append("SELECT dict_key, dict_val FROM ")
-                                .append(globalDictDatabase).append(".").append(globalDictTable)
+                                .append(globalDictTable)
                                 .append(" WHERE dict_column = '").append(dictColumn).append("') b \n")
                                 .append("ON a.").append(JoinedFlatTable.colName(dictColumnRef)).append(" = b.dict_key;");
                     }

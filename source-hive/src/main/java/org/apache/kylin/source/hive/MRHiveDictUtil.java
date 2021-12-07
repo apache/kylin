@@ -18,6 +18,8 @@
 
 package org.apache.kylin.source.hive;
 
+import org.apache.kylin.common.lock.DistributedLock;
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ContentSummary;
@@ -39,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -85,34 +88,26 @@ public class MRHiveDictUtil {
     }
 
     public static String distinctValueTable(IJoinedFlatTableDesc flatDesc) {
-        return flatDesc.getTableName() + flatDesc.getSegment().getConfig().getMrHiveDistinctValueTableSuffix();
+        return flatDesc.getSegment().getConfig().getMrHiveDictDB() + "." + flatDesc.getTableName() + flatDesc.getSegment().getConfig().getMrHiveDistinctValueTableSuffix();
     }
 
     public static String segmentLevelDictTableName(IJoinedFlatTableDesc flatDesc) {
-        return flatDesc.getTableName() + flatDesc.getSegment().getConfig().getMrHiveDictTableSuffix();
+        return flatDesc.getSegment().getConfig().getMrHiveDictDB() + "." + flatDesc.getTableName() + flatDesc.getSegment().getConfig().getMrHiveDictTableSuffix();
     }
 
     public static String globalDictTableName(IJoinedFlatTableDesc flatDesc, String cubeName) {
-        return cubeName + flatDesc.getSegment().getConfig().getMrHiveDictTableSuffix();
+        return flatDesc.getSegment().getConfig().getMrHiveDictDB() + "." + cubeName + flatDesc.getSegment().getConfig().getMrHiveDictTableSuffix();
     }
 
-    public static String generateDictionaryDdl(IJoinedFlatTableDesc flatDesc, String db, String tbl) {
-        KylinConfig config = flatDesc.getSegment().getConfig();
-        String tableFormat = config.getMrHiveDictTableFormat();
-        StringBuilder ddl = new StringBuilder();
-        ddl.append("CREATE TABLE IF NOT EXISTS " + db + "." + tbl + "\n");
-        ddl.append(" ( dict_key STRING COMMENT '', \n");
-        ddl.append("   dict_val INT COMMENT '' \n");
-        ddl.append(") \n");
-        ddl.append("COMMENT 'Hive Global Dictionary' \n");
-        ddl.append("PARTITIONED BY (dict_column string) \n");
-        if ("TEXTFILE".equalsIgnoreCase(tableFormat)) {
-            ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' \n");
-            ddl.append("STORED AS TEXTFILE; \n");
-        } else {
-            ddl.append("STORED AS " +tableFormat+ "; \n");
-        }
-        return ddl.toString();
+    public static String generateDictionaryDdl(String tbl) {
+        return "CREATE TABLE IF NOT EXISTS " + tbl + "\n"
+                + " ( dict_key STRING COMMENT '', \n"
+                + "   dict_val INT COMMENT '' \n"
+                + ") \n"
+                + "COMMENT 'Hive Global Dictionary' \n"
+                + "PARTITIONED BY (dict_column string) \n"
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' \n"
+                + "STORED AS TEXTFILE; \n";
     }
 
     public static String generateDropTableStatement(String tableName) {
@@ -122,39 +117,33 @@ public class MRHiveDictUtil {
     }
 
     public static String generateDistinctValueTableStatement(IJoinedFlatTableDesc flatDesc) {
-        KylinConfig config = flatDesc.getSegment().getConfig();
-        String table = config.getMrHiveDistinctValueTableSuffix();
-        String tableFormat = config.getMrHiveDictTableFormat();
-
         StringBuilder ddl = new StringBuilder();
+        String table = flatDesc.getSegment().getConfig().getMrHiveDictDB() + "." + flatDesc.getTableName()
+                + flatDesc.getSegment().getConfig().getMrHiveDistinctValueTableSuffix();
+
         ddl.append("CREATE TABLE IF NOT EXISTS " + table + " \n");
         ddl.append("( \n ");
         ddl.append("  dict_key" + " " + "STRING" + " COMMENT '' \n");
         ddl.append(") \n");
         ddl.append("COMMENT '' \n");
         ddl.append("PARTITIONED BY (dict_column string) \n");
-        ddl.append("STORED AS ").append(tableFormat).append(";\n");
+        ddl.append("STORED AS TEXTFILE \n");
+        ddl.append(";").append("\n");
         return ddl.toString();
     }
 
-    public static String generateDictTableStatement(IJoinedFlatTableDesc flatDesc, String globalTableName) {
-        KylinConfig config = flatDesc.getSegment().getConfig();
-        String tableFormat = config.getMrHiveDictTableFormat();
-
+    public static String generateDictTableStatement(String globalTableName) {
         StringBuilder ddl = new StringBuilder();
+
         ddl.append("CREATE TABLE IF NOT EXISTS " + globalTableName + " \n");
         ddl.append("( \n ");
         ddl.append("  dict_key" + " " + "STRING" + " COMMENT '' , \n");
-        ddl.append("  dict_val" + " " + "INT" + " COMMENT '' \n");
+        ddl.append("  dict_val" + " " + "STRING" + " COMMENT '' \n");
         ddl.append(") \n");
         ddl.append("COMMENT '' \n");
         ddl.append("PARTITIONED BY (dict_column string) \n");
-        if ("TEXTFILE".equalsIgnoreCase(tableFormat)) {
-            ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' \n");
-            ddl.append("STORED AS TEXTFILE \n");
-        } else {
-            ddl.append("STORED AS ").append(tableFormat).append("\n");
-        }
+        ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' \n");
+        ddl.append("STORED AS TEXTFILE \n");
         ddl.append(";").append("\n");
         return ddl.toString();
     }
@@ -164,7 +153,7 @@ public class MRHiveDictUtil {
      *
      * @see #distinctValueTable
      */
-    public static String generateInsertDataStatement(IJoinedFlatTableDesc flatDesc, String dictColumn, String globalDictDatabase, String globalDictTable) {
+    public static String generateInsertDataStatement(IJoinedFlatTableDesc flatDesc, String dictColumn, String globalDictTable) {
         int index = 0;
         for (TblColRef tblColRef : flatDesc.getAllColumns()) {
             if (JoinedFlatTable.colName(tblColRef, flatDesc.useAlias()).equalsIgnoreCase(dictColumn)) {
@@ -186,11 +175,11 @@ public class MRHiveDictUtil {
         sql.append("SELECT a.DICT_KEY FROM (\n");
         sql.append("  SELECT " + "\n");
         sql.append(JoinedFlatTable.colName(col)).append(" as DICT_KEY \n");
-        sql.append("  FROM ").append(flatDesc.getTableName()).append("\n");
+        sql.append("  FROM ").append(flatDesc.getSegment().getConfig().getHiveDatabaseForIntermediateTable()).append(".").append(flatDesc.getTableName()).append("\n");
         sql.append("  GROUP BY ");
         sql.append(JoinedFlatTable.colName(col)).append(") a \n");
         sql.append("    LEFT JOIN \n");
-        sql.append("  (SELECT DICT_KEY FROM ").append(globalDictDatabase).append(".").append(globalDictTable);
+        sql.append("  (SELECT DICT_KEY FROM ").append(globalDictTable);
         sql.append("    WHERE DICT_COLUMN = '").append(dictColumn);
         sql.append("' ) b \n");
         sql.append("ON a.DICT_KEY = b.DICT_KEY \n");
@@ -205,7 +194,7 @@ public class MRHiveDictUtil {
     /**
      * Calculate and store "columnName,segmentDistinctCount,previousMaxDictId" into specific partition
      */
-    public static String generateDictStatisticsSql(String distinctValueTable, String globalDictTable, String globalDictDatabase) {
+    public static String generateDictStatisticsSql(String distinctValueTable, String globalDictTable) {
         return "INSERT OVERWRITE TABLE  " + distinctValueTable + " PARTITION (DICT_COLUMN = '" + BatchConstants.CFG_GLOBAL_DICT_STATS_PARTITION_VALUE + "') "
                 + "\n" + "SELECT CONCAT_WS(',', tc.dict_column, cast(tc.total_distinct_val AS String), if(tm.max_dict_val is null, '0', cast(max_dict_val as string))) "
                 + "\n" + "FROM ("
@@ -215,7 +204,7 @@ public class MRHiveDictUtil {
                 + "\n" + "    GROUP BY dict_column) tc "
                 + "\n" + "LEFT JOIN (\n"
                 + "\n" + "    SELECT dict_column, if(max(dict_val) is null, 0, max(dict_val)) as max_dict_val "
-                + "\n" + "    FROM " + globalDictDatabase + "." + globalDictTable
+                + "\n" + "    FROM " + globalDictTable
                 + "\n" + "    GROUP BY dict_column) tm "
                 + "\n" + "ON tc.dict_column = tm.dict_column;";
     }
@@ -269,4 +258,116 @@ public class MRHiveDictUtil {
         ContentSummary contentSummary = fs.getContentSummary(path);
         return contentSummary.getLength();
     }
+
+    public static String getMRDictLockParentPathName(String pathName) {
+        if (Strings.isNullOrEmpty(pathName)) {
+            throw new IllegalArgumentException(" create MR/Hive dict lock path name is null");
+        }
+        return MRHiveDictUtil.getLockPath(pathName, null);
+    }
+
+    public static String getMRDictLockPathName(String pathName, String jobId) {
+        if (Strings.isNullOrEmpty(pathName)) {
+            throw new IllegalArgumentException(" create MR/Hive dict lock path name is null");
+        }
+
+        if (Strings.isNullOrEmpty(jobId)) {
+            throw new IllegalArgumentException(" create MR/Hive dict lock path flowJobId is null");
+        }
+        return MRHiveDictUtil.getLockPath(pathName, jobId);
+    }
+
+    public static String getEphemeralLockPathName(String pathName) {
+        if (Strings.isNullOrEmpty(pathName)) {
+            throw new IllegalArgumentException(" create MR/Hive dict lock path name is null");
+        }
+
+        return MRHiveDictUtil.getEphemeralLockPath(pathName);
+    }
+
+    public static void getLock(String cubeName, String jobId, DistributedLock lock, Lock threadLock, PatternedLogger stepLogger) throws InterruptedException {
+
+        String parentPathName = MRHiveDictUtil.getMRDictLockParentPathName(cubeName);
+        logger.info("{} try to get global MR/Hive ZK lock", jobId);
+        String ephemeralLockPath = MRHiveDictUtil.getEphemeralLockPathName(cubeName);
+        String fullLockPath = MRHiveDictUtil.getMRDictLockPathName(cubeName, jobId);
+        boolean isLocked = true;
+        boolean getLocked = false;
+        long lockStartTime = System.currentTimeMillis();
+
+        boolean isLockedByTheJob = lock.isLocked(fullLockPath);
+        logger.info("{} global MR/Hive ZK lock is isLockedByTheJob:{}", jobId, isLockedByTheJob);
+        if (!isLockedByTheJob) {
+            while (isLocked) {
+                isLocked = lock.isLocked(parentPathName);//other job global lock
+
+                if (!isLocked) {
+                    isLocked = lock.isLocked(ephemeralLockPath);//get the ephemeral current lock
+                    stepLogger.log("zookeeper lock path :" + ephemeralLockPath + ", result is " + isLocked);
+                    logger.info("zookeeper lock path :{}, is locked by other job result is {}", ephemeralLockPath,
+                            isLocked);
+
+                    if (!isLocked) {
+                        //try to get ephemeral lock
+                        try {
+                            logger.debug("{} before start to get lock ephemeralLockPath {}", jobId, ephemeralLockPath);
+                            threadLock.lock();
+                            logger.debug("{} start to get lock ephemeralLockPath {}", jobId, ephemeralLockPath);
+                            getLocked = lock.lock(ephemeralLockPath);
+                            logger.debug("{} finish get lock ephemeralLockPath {},getLocked {}", jobId, ephemeralLockPath, getLocked);
+                        } finally {
+                            threadLock.unlock();
+                            logger.debug("{} finish unlock the thread lock ,ephemeralLockPath {} ", jobId, ephemeralLockPath);
+                        }
+
+                        if (getLocked) {//get ephemeral lock success
+                            try {
+                                getLocked = lock.globalPermanentLock(fullLockPath);//add the fullLockPath lock in case of the server crash then the other can the same job can get the lock
+                                if (getLocked) {
+                                    break;
+                                } else {
+                                    if (lock.isLocked(ephemeralLockPath)) {
+                                        lock.unlock(ephemeralLockPath);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                if (lock.isLocked(ephemeralLockPath)) {
+                                    lock.unlock(ephemeralLockPath);
+                                }
+                            }
+                        }
+                        isLocked = true; //get lock fail,will try again
+                    }
+                }
+                // wait 1 min and try again
+                logger.info(
+                        "{},global parent lock path({}) is locked by other job result is {} ,ephemeral lock path :{} is locked by other job result is {},will try after one minute",
+                        jobId, parentPathName, isLocked, ephemeralLockPath, isLocked);
+                Thread.sleep(60000);
+            }
+        } else {
+            lock.lock(ephemeralLockPath);
+        }
+        stepLogger.log("zookeeper get lock costTime : " + ((System.currentTimeMillis() - lockStartTime) / 1000) + " s");
+        long useSec = ((System.currentTimeMillis() - lockStartTime) / 1000);
+        logger.info("job {} get zookeeper lock path:{} success,zookeeper get lock costTime : {} s", jobId,
+                fullLockPath, useSec);
+    }
+
+    public static void unLock(String cubeName, String jobId, DistributedLock lock, PatternedLogger stepLogger) {
+        String parentLockPath = getMRDictLockParentPathName(cubeName);
+        String ephemeralLockPath = getEphemeralLockPathName(cubeName);
+        if (lock.isLocked(getMRDictLockPathName(cubeName, jobId))) {
+            lock.purgeLocks(parentLockPath);
+            stepLogger.log("zookeeper unlock path :" + parentLockPath);
+            logger.info("{} unlock full lock path :{} success", jobId, parentLockPath);
+        }
+
+        if (lock.isLocked(ephemeralLockPath)) {
+            lock.purgeLocks(ephemeralLockPath);
+            stepLogger.log("zookeeper unlock path :" + ephemeralLockPath);
+            logger.info("{} unlock full lock path :{} success", jobId, ephemeralLockPath);
+        }
+    }
+
 }
