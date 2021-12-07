@@ -75,7 +75,7 @@
    </init-param>     
   <init-param>
       <param-name>cors.supportsCredentials </param-name>
-      <param-value>true</param-value>
+      <param-value>false</param-value>
    </init-param>    
 </filter>
 
