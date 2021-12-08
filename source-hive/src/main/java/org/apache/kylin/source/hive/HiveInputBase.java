@@ -189,7 +189,7 @@ public class HiveInputBase {
             sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_CUBE_NAME.getArgName(), cubeName);
             sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_SEGMENT_ID.getArgName(), seg.getUuid());
             sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_META_URL.getArgName(), getSegmentMetadataUrl(config, seg.getRealization().getName(), jobId));
-            sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_WAREHOUSE_DIR.getArgName(), config.getHiveDatabaseDir(null));
+            sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_WAREHOUSE_DIR.getArgName(), config.getIntermediateTableDatabaseDir());
             sparkExecutable.setJobId(jobId);
 
             StringBuilder jars = new StringBuilder();

@@ -713,7 +713,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getHiveGlobalDictEngine() {
-        return getOptional("kylin.dictionary.engine", "mr");
+        return getOptional("kylin.dictionary.mr-hive.engine", "mr");
     }
 
     // ============================================================================
