@@ -168,11 +168,11 @@ public class HiveInputBase {
             final String distinctValueTable = MRHiveDictUtil.distinctValueTable(flatDesc);
             final String segmentLevelDictTableName = MRHiveDictUtil.segmentLevelDictTableName(flatDesc);
 
-            final String createGlobalDictTableHql = MRHiveDictUtil.generateDictionaryDdl(globalDictDatabase, globalDictTable);
+            final String createGlobalDictTableHql = MRHiveDictUtil.generateDictionaryDdl(flatDesc, globalDictDatabase, globalDictTable);
             final String dropDistinctValueTableHql = MRHiveDictUtil.generateDropTableStatement(distinctValueTable);
             final String createDistinctValueTableHql = MRHiveDictUtil.generateDistinctValueTableStatement(flatDesc);
             final String dropSegmentLevelDictTableHql = MRHiveDictUtil.generateDropTableStatement(segmentLevelDictTableName);
-            final String createSegmentLevelDictTableHql = MRHiveDictUtil.generateDictTableStatement(segmentLevelDictTableName);
+            final String createSegmentLevelDictTableHql = MRHiveDictUtil.generateDictTableStatement(flatDesc, segmentLevelDictTableName);
 
             String maxAndDistinctCountSql = MRHiveDictUtil.generateDictStatisticsSql(distinctValueTable, globalDictTable, globalDictDatabase);
 
