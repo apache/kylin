@@ -97,6 +97,7 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_GLOBAL_DICT_TOTAL_BUILD_DICTVAL = "Build Hive Global Dict - parallel total build";
     public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_BUILD_DICTVAL = "Build Hive Global Dict - merge to dict table";
     public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_REPLACE_DICTVAL = "Build Hive Global Dict - replace intermediate table";
+    public static final String STEP_NAME_GLOBAL_DICT_SPARK_REPLACE_DICTVAL = "Build Hive Global Dict - replace intermediate table With Spark";
 
     public static final String FLINK_SPECIFIC_CONFIG_NAME_MERGE_DICTIONARY = "mergedict";
 
