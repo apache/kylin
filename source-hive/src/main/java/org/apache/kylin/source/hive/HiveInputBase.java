@@ -143,9 +143,8 @@ public class HiveInputBase {
                     dictRef.put(item, "");
                 }
                 if (dictConfig.getHiveGlobalDictEngine().equalsIgnoreCase("mr")) {
-                    jobFlow.addTask(createHiveGlobalDictMergeGlobalDict(flatDesc, hiveInitStatements, cubeName, mrHiveDictColumnsExcludeRefCols, globalDictDatabase, globalDictTable));
+                    jobFlow.addTask(createHiveGlobalDictMergeGlobalDict(flatDesc, hiveInitStatements, cubeName, mrHiveDictColumnsExcludeRefCols, globalDictTable));
                 }
-
             }
 
             // replace step
@@ -184,7 +183,7 @@ public class HiveInputBase {
             SparkExecutable sparkExecutable = new SparkExecutable();
             sparkExecutable.setName(ExecutableConstants.STEP_NAME_GLOBAL_DICT_SPARK_BUILD);
             sparkExecutable.setClassName(CreateSparkHiveDictStep.class.getName());
-            sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_HIVE_DICT_COLUMNS.getArgName(), joinDictColumns(mrHiveDictColumns));
+            sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_HIVE_DICT_COLUMNS.getArgName(), joinColumns(mrHiveDictColumns));
             sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_FLOW_JOB_ID.getArgName(), jobId);
             sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_CUBE_NAME.getArgName(), cubeName);
             sparkExecutable.setParam(CreateSparkHiveDictStep.OPTION_SEGMENT_ID.getArgName(), seg.getUuid());
@@ -206,7 +205,7 @@ public class HiveInputBase {
             return new StorageURL(kylinConfig.getMetadataUrl().getIdentifier(), "hdfs", param).toString();
         }
 
-        private String joinDictColumns(String[] hiveDictColumns) {
+        private String joinColumns(String[] hiveDictColumns) {
             StringBuilder builder = new StringBuilder();
             for (int i = 0;i<hiveDictColumns.length;i++) {
                 if (i > 0) {
@@ -264,7 +263,7 @@ public class HiveInputBase {
          */
         protected static AbstractExecutable createHiveGlobalDictMergeGlobalDict(IJoinedFlatTableDesc flatDesc,
                                                                                 String hiveInitStatements, String cubeName, String[] mrHiveDictColumns,
-                                                                                String globalDictDatabase, String globalDictTable) {
+                                                                                String globalDictTable) {
 
             String globalDictIntermediateTable = MRHiveDictUtil.segmentLevelDictTableName(flatDesc);
             StringBuilder addPartitionHql = new StringBuilder();

@@ -210,7 +210,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         String[] mrHiveDictColumns = dictConfig.getMrHiveDictColumns();
 
         if (Objects.nonNull(mrHiveDictColumnExcludeRef) && mrHiveDictColumnExcludeRef.length > 0
-                && !"".equals(mrHiveDictColumnExcludeRef[0]) && !dictConfig.getHiveGlobalDictEngine().equalsIgnoreCase("spark")) {
+                && !"".equals(mrHiveDictColumnExcludeRef[0]) && dictConfig.getHiveGlobalDictEngine().equalsIgnoreCase("mr")) {
 
             // 1. parallel part build
             result.addTask(createBuildGlobalHiveDictPartBuildJob(jobId));
