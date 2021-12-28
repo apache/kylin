@@ -60,7 +60,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public class CreateSparkHiveDictStep extends AbstractApplication implements Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(CreateSparkHiveDictStep.class);
-    private final PatternedLogger stepLogger = new PatternedLogger(logger);
+
+    private transient final PatternedLogger stepLogger = new PatternedLogger(logger);
 
     public static final Option OPTION_CUBE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_CUBE_NAME).hasArg().isRequired(true).withDescription("Cube Name").create(BatchConstants.ARG_CUBE_NAME);
     public static final Option OPTION_HIVE_DICT_COLUMNS = OptionBuilder.withArgName("hiveDictColumns").hasArg().isRequired(true).withDescription("Hive Dict Columns").create("hiveDictColumns");
