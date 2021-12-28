@@ -98,15 +98,23 @@ public class MRHiveDictUtil {
         return cubeName + flatDesc.getSegment().getConfig().getMrHiveDictTableSuffix();
     }
 
-    public static String generateDictionaryDdl(String db, String tbl) {
-        return "CREATE TABLE IF NOT EXISTS " + db + "." + tbl + "\n"
-                + " ( dict_key STRING COMMENT '', \n"
-                + "   dict_val INT COMMENT '' \n"
-                + ") \n"
-                + "COMMENT 'Hive Global Dictionary' \n"
-                + "PARTITIONED BY (dict_column string) \n"
-                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' \n"
-                + "STORED AS TEXTFILE; \n";
+    public static String generateDictionaryDdl(IJoinedFlatTableDesc flatDesc, String db, String tbl) {
+        KylinConfig config = flatDesc.getSegment().getConfig();
+        String tableFormat = config.getMrHiveDictTableFormat();
+        StringBuilder ddl = new StringBuilder();
+        ddl.append("CREATE TABLE IF NOT EXISTS " + db + "." + tbl + "\n");
+        ddl.append(" ( dict_key STRING COMMENT '', \n");
+        ddl.append("   dict_val INT COMMENT '' \n");
+        ddl.append(") \n");
+        ddl.append("COMMENT 'Hive Global Dictionary' \n");
+        ddl.append("PARTITIONED BY (dict_column string) \n");
+        if ("TEXTFILE".equalsIgnoreCase(tableFormat)) {
+            ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' \n");
+            ddl.append("STORED AS TEXTFILE; \n");
+        } else {
+            ddl.append("STORED AS " +tableFormat+ "; \n");
+        }
+        return ddl.toString();
     }
 
     public static String generateDropTableStatement(String tableName) {
@@ -116,24 +124,26 @@ public class MRHiveDictUtil {
     }
 
     public static String generateDistinctValueTableStatement(IJoinedFlatTableDesc flatDesc) {
-        StringBuilder ddl = new StringBuilder();
-        String table = flatDesc.getTableName()
-                + flatDesc.getSegment().getConfig().getMrHiveDistinctValueTableSuffix();
+        KylinConfig config = flatDesc.getSegment().getConfig();
+        String table = config.getMrHiveDistinctValueTableSuffix();
+        String tableFormat = config.getMrHiveDictTableFormat();
 
+        StringBuilder ddl = new StringBuilder();
         ddl.append("CREATE TABLE IF NOT EXISTS " + table + " \n");
         ddl.append("( \n ");
         ddl.append("  dict_key" + " " + "STRING" + " COMMENT '' \n");
         ddl.append(") \n");
         ddl.append("COMMENT '' \n");
         ddl.append("PARTITIONED BY (dict_column string) \n");
-        ddl.append("STORED AS TEXTFILE \n");
-        ddl.append(";").append("\n");
+        ddl.append("STORED AS ").append(tableFormat).append(";\n");
         return ddl.toString();
     }
 
-    public static String generateDictTableStatement(String globalTableName) {
-        StringBuilder ddl = new StringBuilder();
+    public static String generateDictTableStatement(IJoinedFlatTableDesc flatDesc, String globalTableName) {
+        KylinConfig config = flatDesc.getSegment().getConfig();
+        String tableFormat = config.getMrHiveDictTableFormat();
 
+        StringBuilder ddl = new StringBuilder();
         ddl.append("CREATE TABLE IF NOT EXISTS " + globalTableName + " \n");
         ddl.append("( \n ");
         ddl.append("  dict_key" + " " + "STRING" + " COMMENT '' , \n");
@@ -141,8 +151,12 @@ public class MRHiveDictUtil {
         ddl.append(") \n");
         ddl.append("COMMENT '' \n");
         ddl.append("PARTITIONED BY (dict_column string) \n");
-        ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' \n");
-        ddl.append("STORED AS TEXTFILE \n");
+        if ("TEXTFILE".equalsIgnoreCase(tableFormat)) {
+            ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' \n");
+            ddl.append("STORED AS TEXTFILE \n");
+        } else {
+            ddl.append("STORED AS ").append(tableFormat).append("\n");
+        }
         ddl.append(";").append("\n");
         return ddl.toString();
     }

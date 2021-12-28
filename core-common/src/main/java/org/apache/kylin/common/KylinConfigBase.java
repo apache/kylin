@@ -711,6 +711,10 @@ public abstract class KylinConfigBase implements Serializable {
     public String getHiveGlobalDictReplaceEngine() {
         return getOptional("kylin.dictionary.mr-hive.replace.engine", "mr");
     }
+  
+    public String getMrHiveDictTableFormat() {
+        return getOptional("kylin.dictionary.mr-hive.table.format", "TEXTFILE");
+    }
 
     // ============================================================================
     // CUBE
@@ -2740,4 +2744,7 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.jdbc.url.allowed.sqlserver.schema", DEFAULT_JDBC_URL_ALLOWED_SQLSERVER_SCHEMA);
     }
 
+    public String getEncryptCipherIvSpec() {
+        return getOptional("kylin.security.encrypt.cipher.ivSpec", "AAAAAAAAAAAAAAAA");
+    }
 }
