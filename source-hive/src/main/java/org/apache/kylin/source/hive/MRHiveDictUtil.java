@@ -123,7 +123,7 @@ public class MRHiveDictUtil {
 
     public static String generateDistinctValueTableStatement(IJoinedFlatTableDesc flatDesc) {
         KylinConfig config = flatDesc.getSegment().getConfig();
-        String table = config.getMrHiveDistinctValueTableSuffix();
+        String table = flatDesc.getTableName() + config.getMrHiveDistinctValueTableSuffix();
         String tableFormat = config.getMrHiveDictTableFormat();
 
         StringBuilder ddl = new StringBuilder();
