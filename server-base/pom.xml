@@ -28,7 +28,7 @@
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>4.0.1</version>
     </parent>
 
     <dependencies>
@@ -54,7 +54,7 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-build-engine</artifactId>
-            <version>4.0.0-SNAPSHOT</version>
+            <version>4.0.1</version>
         </dependency>
 
         <!-- these plug-in modules, should not have API dependencies -->
@@ -69,7 +69,7 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-metastore-hbase</artifactId>
-            <version>4.0.0-SNAPSHOT</version>
+            <version>4.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>

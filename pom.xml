@@ -30,7 +30,7 @@
   <groupId>org.apache.kylin</groupId>
   <artifactId>kylin</artifactId>
   <packaging>pom</packaging>
-  <version>4.0.0-SNAPSHOT</version>
+  <version>4.0.1</version>
 
   <name>Apache Kylin</name>
   <url>http://kylin.apache.org</url>
@@ -243,7 +243,7 @@
     <developerConnection>scm:git:ssh://git@github.com/apache/kylin.git
     </developerConnection>
     <url>https://github.com/apache/kylin</url>
-    <tag>HEAD</tag>
+    <tag>kylin-4.0.1</tag>
   </scm>
 
   <dependencyManagement>
@@ -2010,7 +2010,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <ignore/>
+                        <ignore />
                       </action>
                     </pluginExecution>
                   </pluginExecutions>
