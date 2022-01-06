@@ -14,7 +14,7 @@ Check out the [How to Contribute](/development40/howto_contribute.html) document
 
 ### Source Repository
 Apache Kylin™ source code is version controlled using Git version control:
-Commits [Summary](https://github.com/apache/kylin/commits/master)  
+Commits [Summary](https://github.com/apache/kylin/commits/main)
 Source Repo: [https://github.com/apache/kylin ](https://github.com/apache/kylin )  
 Mirrored to Gitbox: [https://gitbox.apache.org/repos/asf?p=kylin.git ](https://gitbox.apache.org/repos/asf?p=kylin.git )
 

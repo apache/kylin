@@ -39,7 +39,7 @@ If you want to configure timezone for derived time column or learn how to update
 
 ### Streaming Coordinator
 Streaming coordinator works as the master node of streaming receiver cluster. It's main responsibility include assign/unassign specific topic partition to specific replica set, pause or resume consuming behavior, collect mertics such as consume rate (message per second).
-When `kylin.server.mode` is set to `all` or `stream_coordinator`, that process is a streaming coordinator candidate(as well as query server and job server if you use `all`). Coordinator only manage metadata, won't process entered message. 
+When `kylin.server.mode` is set to `stream_coordinator`, that process is a streaming coordinator candidate(as well as query server and job server if you use `all`). Coordinator only manage metadata, won't process entered message.
 
 ### Coordinator Cluster
 For the purpose of eliminating single point of failure, we could start more than one coordinator process. When cluster has several coordinator processes, a leader will be selected by zookeeper. Only  the leader will answer coordinator client's request, others process will become standby/candidate, so single point of failure will be eliminated.

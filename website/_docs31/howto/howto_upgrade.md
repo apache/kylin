@@ -19,6 +19,14 @@ Running as a Hadoop client, Apache Kylin's metadata and Cube data are persistend
 
 Below are versions specific guides:
 
+## Upgrade from 3.1.2 to 3.1.3
+1) When using the real-time function, users need to set `kylin.server.mode=stream_coordinator` for the coordinator node, which can no longer be set to `kylin.server.mode=all`.
+2) Kylin users can customize the IV value of the encryption algorithm by config `kylin.security.encrypt.cipher.ivSpec` in kylin 3.1.3.
+If you uses the default value, there is no need to modify the encryption password in kylin.properties.
+If you changes the value of `kylin.security.encrypt.cipher.ivSpec`, the encrypted password needs to be re-encrypted.
+
+The encryption algorithm may be used in `kylin.metadata.url(mysql password)`, `kylin.security.ldap.connection-password`, etc.
+
 ## Upgrade from 3.0 to 3.1.0
 
 1)`Set Config` on web of kylin v3.1.0 is turned off by default.
