@@ -20,6 +20,13 @@ Develop
 =============
 Please refer to [https://github.com/Kyligence/kylin-on-parquet-v2/wiki/Development-document](https://github.com/Kyligence/kylin-on-parquet-v2/wiki/Development-document).
 
+quick build
+```shell
+git clone -b <branch_name> https://github.com/apache/kylin.git
+
+cd kylin && sudo ./build/script/package.sh -T 2 -P <profile.id>
+```
+
 Get started with Kylin in 5 minutes with Docker
 =============
 In order to allow users to try Kylin easily, we provide a docker image for Kylin.
