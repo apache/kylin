@@ -88,7 +88,7 @@ The role of Streaming Receiver is worker, each receiver is a Java process, manag
   A collection of Streaming Receivers is called a Receiver cluster.
 
 3. **Streaming Coordinator**
-As the Master node of the Receiver cluster, the Streaming Coordinator is mainly responsible for managing Receiver, including allocating/de-allocating Kafka topic partitions to specified Replica sets, suspending or restoring consumption, collecting and displaying various statistical indicators (such as message per second). When `kylin.server.mode` is set to `all` or `stream_coordinator`, the process becomes a Streaming Coordinator. The Coordinator only processes metadata and cluster scheduling, and does not consume messages.
+As the Master node of the Receiver cluster, the Streaming Coordinator is mainly responsible for managing Receiver, including allocating/de-allocating Kafka topic partitions to specified Replica sets, suspending or restoring consumption, collecting and displaying various statistical indicators (such as message per second). When `kylin.server.mode` is set to `stream_coordinator`, the process becomes a Streaming Coordinator. The Coordinator only processes metadata and cluster scheduling, and does not consume messages.
 
 4. **Coordinator Cluster**
 Multiple Coordinators can exist at the same time to form a Coordinator cluster. In multiple Coordinators, there is only one leader at a time, only the leader can respond to the request, and the rest of the processes are standby/backup.

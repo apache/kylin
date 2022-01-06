@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  Config different spark Pool for different types of SQL
+title:  Config spark Pool for SQL
 categories: howto
 permalink: /docs/howto/howto_config_spark_pool.html
 ---
