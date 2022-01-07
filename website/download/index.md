@@ -16,7 +16,7 @@ You can verify the download by following these [procedures](https://www.apache.o
 
 #### v3.1.3
 - This is a bug-fix release after Kylin 3.1.1, with 10 new features/improvements and 14 bug fixes. Check the release notes.
-- [Release notes](/docs/release_notes.html), [installation guide](/docs/install/index.html) and [upgrade guide](/docs/howto/howto_upgrade.html)
+- [Release notes](/docs31/release_notes.html), [installation guide](/docs31/install/index.html) and [upgrade guide](/docs31/howto/howto_upgrade.html)
 - Source download: [apache-kylin-3.1.3-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.1.3/apache-kylin-3.1.3-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.1.3/apache-kylin-3.1.3-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.1.3/apache-kylin-3.1.3-source-release.zip.sha256)\]
 - Binary for Hadoop 2 download:
   - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-3.1.3-bin-hbase1x.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.1.3/apache-kylin-3.1.3-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.1.3/apache-kylin-3.1.3-bin-hbase1x.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.1.3/apache-kylin-3.1.3-bin-hbase1x.tar.gz.sha256)\]

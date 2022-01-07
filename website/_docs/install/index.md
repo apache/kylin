@@ -58,7 +58,7 @@ export KYLIN_HOME=`pwd`
 $KYLIN_HOME/bin/download-spark.sh
 ```
 
-Or configure SPARK_HOME points to the path of spark2.4.7 in the environment.
+Or configure SPARK_HOME points to the path of spark2.4.7/3.1.1 in the environment.
 
 - Configure MySQL metastore
 
