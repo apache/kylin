@@ -15,6 +15,69 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v4.0.1 - 2022-01-05
+
+__New Feature__
+
+* [KYLIN-5117] - Support percentile function after aggregate sub query
+
+__Bug Fix__
+
+* [KYLIN-5067] - CubeBuildJob build unnecessary snapshot
+* [KYLIN-5071] - kylin.engine.build-base-cuboid-enabled=false and kylin.cube.cubeplanner.enabled=true are conflict on build cube step, and will throw NPE.
+* [KYLIN-5083] - Docker for kylin4 need to check hadoop service before start kylin
+* [KYLIN-5086] - When query pushdown, only measure result is empty
+* [KYLIN-5112] - Use 'return' instead of 'exit' in script prepare_hadoop_dependency.sh
+* [KYLIN-5131] - java.lang.UnsupportedOperationException: API getTableSnapshots is not supported in Kylin 4.0
+
+__Improvement__
+
+* [KYLIN-4864] - Support building and testing Kylin on ARM64 architecture platform
+* [KYLIN-5069] - Remove find-hive-dependency.sh in Kylin 4
+* [KYLIN-5076] - Missing tracking URL in spark standalone mode in kylin4
+* [KYLIN-5082] - Exactly aggregation for percentile function
+* [KYLIN-5084] - Kylin4.0.0 is incompatible with HDP-3.1.5's Hive-3.1.0
+* [KYLIN-5090] - The error message was not printed in class JobWoker
+* [KYLIN-5111] - Record the time spent for each stage of query in kylin4's log
+
+## v3.1.3 - 2022-01-05
+
+__New Feature__
+
+* [KYLIN-4947] - Implement spark engine for cube optimization jobs
+* [KYLIN-4948] - Provide an API to allow users to adjust cuboids manually
+* [KYLIN-4982] - Add special spark-sql conf in create intermediate flat table
+
+__Bug Fix__
+
+* [KYLIN-3996] - postgresql can not to be used to construct the flat hive table in NO.1 step in building cube via datasourcedefaultSdk
+* [KYLIN-4964] - Receiver consumer thread should be stoped while encounting unrecoverable error
+* [KYLIN-4970] - Fix spark.executor.extraJavaOptions args
+* [KYLIN-4974] - Kylin does not handle fucntion CURRENT_TIME().
+* [KYLIN-4978] - NPE: submit refresh request using restful api when there is no segments
+* [KYLIN-4983] - The stream cube will be paused when user append a batch segment first
+* [KYLIN-4992] - Source row count statistics calculated in a wrong way in MergeDictionaryMapper
+* [KYLIN-4995] - Query exception when the query statement contains a single left parenthesis
+* [KYLIN-5003] - Fail to package Kylin due to legacy front end dependencies
+* [KYLIN-5007] - queries with limit clause may fail when string dimension is encoded in integer type
+* [KYLIN-5035] - Fix Merge Cuboid Statistics EOFException
+* [KYLIN-5036] - The hive dependency of directory type is filtered out by mistake
+* [KYLIN-5054] - Kylin_System project and cubes create time is wrong (1970).
+* [KYLIN-5097] - modify hive dict table format from textfile to orc
+
+__Improvement__
+
+* [KYLIN-4554] - Validate "filter condition" on model saving
+* [KYLIN-4864] - Support building and testing Kylin on ARM64 architecture platform
+* [KYLIN-4944] - Upgrade CentOS version, Hadoop version and Spark version for Kylin Docker image
+* [KYLIN-4972] - Don't allow segment merge when use dict.global.SegmentAppendTrieDictBuilder to build bitmap measure
+* [KYLIN-5016] - Avoid potential NPE issue in RDBMS Pushdown case
+
+__Task__
+
+* [KYLIN-4971] - Add new measure bitmap_map for count distinct measure in UI
+* [KYLIN-5053] - Update the website to link to TravisCI and Github Actions instead of Jenkins
+
 ## v3.1.2 - 2021-04-26
 
 __New Feature__
