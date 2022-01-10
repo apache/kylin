@@ -79,7 +79,11 @@ class SparderRexVisitor(
       }
 
       val childFilter = operand.accept(this)
-      children += childFilter
+      if (childFilter.isInstanceOf[Boolean]) {
+        children += lit(childFilter)
+      }else{
+        children += childFilter
+      }
     }
 
     def getOperands: (Column, Column) = {
