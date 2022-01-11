@@ -86,6 +86,8 @@ If you encounter network problem when run "bower install", you may try:
 git config --global url."git://".insteadOf https://
 {% endhighlight %}
 
+If errors occur during installing Kylin's frontend dependencies due to network latency or some packages not obtainable by default registry, please refer to [How to Set up Frontend Registry](/development40/howto_setup_frontend_registry.html)
+
 Note, if on Windows, after install bower, need to add the path of "bower.cmd" to system environment variable 'PATH', and then run:
 
 {% highlight Groff markup %}

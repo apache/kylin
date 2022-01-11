@@ -86,6 +86,8 @@ bower --allow-root install
 git config --global url."git://".insteadOf https://
 {% endhighlight %}
 
+如因网络问题或者包在默认仓库内无法获取导致安装失败，可参考[如何设置Kylin的前端仓库](/cn/development40/howto_setup_frontend_registry.html)配置Kylin前端仓库
+
 注意，如果是在 Windows 上，安装完 bower，需要将 "bower.cmd" 的路径加入系统环境变量 'PATH' 中，然后运行：
 
 {% highlight Groff markup %}
