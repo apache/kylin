@@ -18,6 +18,7 @@
 
 package org.apache.kylin.storage.translate;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -79,6 +80,10 @@ public class DerivedFilterTranslator {
             return new Pair<TupleFilter, Boolean>(newComp, false);
         }
 
+        if (!compf.isEvaluable()) {
+            return new Pair<>(ConstantTupleFilter.TRUE, true);
+        }
+
         assert hostInfo.type == DeriveType.LOOKUP;
         assert hostCols.length == pkCols.length;
 
@@ -114,6 +119,8 @@ public class DerivedFilterTranslator {
             logger.info("Deciding to loosen filter on derived filter as host candidates number {} exceeds threshold {}", //
                     satisfyingHostRecords.size(), KylinConfig.getInstanceFromEnv().getDerivedInThreshold()
             );
+            logger.debug("loosened hostCol is {}",
+                    Arrays.stream(hostCols).map(TblColRef::getCanonicalName).reduce((x1, x2) -> x1 + "," + x2).get());
             translated = buildRangeFilter(hostCols, satisfyingHostRecords);
             loosened = true;
         } else {
