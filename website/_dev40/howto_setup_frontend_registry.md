@@ -10,7 +10,7 @@ If errors occur during installing Kylin's frontend dependencies due to network l
 #### Set up bower repository
 - Make sure package 'bower-nexus3-resolver' has been stalled on your machine, if not, install it by running `npm install -g bower-nexus3-resolver`.
 - Alter the file at `$KYLIN_SOURCE/webapp/.bowerrc` to
-    ```json
+    ```
     {
         "directory":"app/components",
         "registry":{
@@ -27,6 +27,6 @@ If errors occur during installing Kylin's frontend dependencies due to network l
 
 #### Set up npm repository
 Run command below
-```shell script
+```
 npm config set registry http://150.158.20.97:8081/repository/group-npm/
 ```
