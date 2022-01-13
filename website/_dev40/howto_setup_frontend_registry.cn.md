@@ -10,6 +10,7 @@ permalink: /cn/development40/howto_setup_frontend_registry.html
 #### 设置bower仓库
 - 确认包'bower-nexus3-resolver'已安装, 若未装, 使用命令`npm install -g bower-nexus3-resolver`安装.
 - 修改路径为`$KYLIN_SOURCE/webapp/.bowerrc`的配置文件
+    
     ```
     {
         "directory":"app/components",
@@ -27,6 +28,7 @@ permalink: /cn/development40/howto_setup_frontend_registry.html
 
 #### 设置npm仓库
 执行以下命令
+
 ```
 npm config set registry http://150.158.20.97:8081/repository/group-npm/
 ```
