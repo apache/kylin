@@ -9,8 +9,8 @@ permalink: /docs/install/index.html
 
 * Hadoop: cdh5.x, cdh6.x, hdp2.x, EMR5.x, EMR6.x, HDI4.x
 * Hive: 0.13 - 1.2.1+
-* Spark: 2.4.7
-* Mysql: 5.1.17及以上
+* Spark: 2.4.7/3.1.1
+* Mysql: 5.1.7 and above
 * JDK: 1.8+
 * OS: Linux only, CentOS 6.5+ or Ubuntu 16.0.4+
 
@@ -58,7 +58,13 @@ export KYLIN_HOME=`pwd`
 $KYLIN_HOME/bin/download-spark.sh
 ```
 
-Or configure SPARK_HOME points to the path of spark2.4.7/3.1.1 in the environment.
+The script `download-spark.sh` can only download `spark2.4.7`.
+
+If the kylin binary package you use is suffixed with spark3, you need to download `spark3.1.1` binary package from [spark website](https://spark.apache.org/).
+
+It is recommended to unzip the spark binary package and put it into ${KYLIN_HOME} directory, then rename it `spark` to avoid compatibility problems. For details, please check:
+
+If you customize the configuration of `SPARK_HOME` points to spark2.4.7/spark3.1.1 in your environment. Please ensure that your SPARK_HOME in the environment can submit and execute tasks normally.
 
 - Configure MySQL metastore
 
