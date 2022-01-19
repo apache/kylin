@@ -198,7 +198,7 @@ title: Analytical Data Warehouse for Big Data
             </a>
             <!-- 5 -->
             <a class="sponsor" href="https://kyligence.io/"> 
-                <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/kyligence.jpg">
+                <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/kyligence.png">
             </a>
             <a class="sponsor" href="https://www.envision-group.com/cn/"> 
                 <img src="/images/logo/envision.png">
