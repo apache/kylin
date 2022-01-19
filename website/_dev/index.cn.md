@@ -15,7 +15,7 @@ Apache Kylin 一直寻求的不只是代码的贡献，还寻求使用文档，�
 ### 源仓库
 Apache Kylin™ 源码使用 Git version control 进行版本控制：
 Commits [总结](https://github.com/apache/kylin/commits/master)  
-源仓库：[https://github.com/apache/kylin ](https://github.com/apache/kylin )  
+源仓库：[https://github.com/apache/kylin](https://github.com/apache/kylin)
 Gitbox 的镜像：[https://gitbox.apache.org/repos/asf?p=kylin.git ](https://gitbox.apache.org/repos/asf?p=kylin.git )
 
 ### CI 和代码分析

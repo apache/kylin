@@ -9,8 +9,8 @@ permalink: /cn/docs/install/index.html
 
 * Hadoop: cdh5.x, cdh6.x, hdp2.x, EMR5.x, EMR6.x, HDI4.x
 * Hive: 0.13 - 1.2.1+
-* Spark: 2.4.7
-* Mysql: 5.1.17及以上
+* Spark: 2.4.7/3.1.1
+* Mysql: 5.1.17 及以上
 * JDK: 1.8+
 * OS: Linux only, CentOS 6.5+ or Ubuntu 16.0.4+
 
@@ -54,7 +54,9 @@ export KYLIN_HOME=`pwd`
 $KYLIN_HOME/bin/download-spark.sh
 ```
 
-或者配置 SPARK_HOME 指向环境中的 spark2.4.7 的路径。
+download-spark.sh 脚本只能下载 spark2.4.7, 如果您使用的 kylin 二进制包以 spark3 为后缀，您需要从[Spark 官方网站](https://spark.apache.org/)下载 spark3.1.1 的二进制包。
+建议将 spark 二进制包解压后放置在 ${KYLIN_HOME} 目录下，并重命名为 spark，以避免兼容性问题。详情请查看：[Refactor hive and hadoop dependency](https://cwiki.apache.org/confluence/display/KYLIN/KIP+10+refactor+hive+and+hadoop+dependency)
+如果您自定义配置了 ${SPARK_HOME} 指向环境中的 spark2.4.7/spark3.1.1，请保证环境中的 spark 是可以正常提交以及执行任务的。
 
 - 配置 Mysql 元数据
 
@@ -65,7 +67,7 @@ kylin.metadata.url=kylin_metadata@jdbc,driverClassName=com.mysql.jdbc.Driver,url
 kylin.env.zookeeper-connect-string=ip
 ```
 
-你需要修改其中的 Mysql 用户名和密码，以及存储元数据的database和table。并将 mysql jdbc connector 放在 `$KYLIN_HOME/ext` 目录下，没有该目录时请自行创建。
+你需要修改其中的 Mysql 用户名和密码，以及存储元数据的 database 和 table。并将 mysql jdbc connector 放在 `$KYLIN_HOME/ext` 目录下，没有该目录时请自行创建。
 请参考 [配置 Mysql 为 Metastore](/_docs40/tutorial/mysql_metastore.html)  了解 Mysql 作为 Metastore 的详细配置。
 
 ### Kylin tarball 目录
@@ -80,8 +82,8 @@ kylin.env.zookeeper-connect-string=ip
 
 ### 为某些环境执行额外步骤
 对于 CDH6.x, EMR5.x, EMR6.x 的 hadoop 环境，在启动 kylin 之前需要执行一些额外的步骤。
-CDH6.x 环境请查看文档: https://cwiki.apache.org/confluence/display/KYLIN/Deploy+Kylin+4+on+CDH+6
-EMR 环境请查看文档: https://cwiki.apache.org/confluence/display/KYLIN/Deploy+Kylin+4+on+AWS+EMR
+CDH6.x 环境请查看文档: [Deploy Kylin4 on CDH6](https://cwiki.apache.org/confluence/display/KYLIN/Deploy+Kylin+4+on+CDH+6)
+EMR 环境请查看文档: [Deploy Kylin4 on AWS EMR](https://cwiki.apache.org/confluence/display/KYLIN/Deploy+Kylin+4+on+AWS+EMR)
 
 ### 检查运行环境
 
