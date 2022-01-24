@@ -1,0 +1,194 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create Cluster for ec2 instances and deploy related services, prometheus/hivemetastore/jdk/node exporter
+Parameters:
+  # Must passed Parameters
+  SubnetId:
+    Type: String
+  SecurityGroupId:
+    Type: String
+  InstanceProfileId:
+    Type: String
+    Description: Must be created at pre-step
+  DbHost:
+    Type: String
+    Description: Db Host for RDS instance
+
+  DbUser:
+    Type: String
+    Description: Db User for RDS instance
+  DbPassword:
+    Type: String
+    Description: Db password for RDS instance
+  DbPort:
+    Type: String
+    Description: Db port for RDS instance
+
+  EMREc2KeyName:
+    Type: String
+
+#   Optional Parameters
+  Ec2Mode:
+    Type: String
+    Default: test
+    AllowedValues:
+      - test
+      - product
+  AssociatedPublicIp:
+    Type: String
+    Default: false
+    AllowedValues:
+      - false
+      - true
+  BucketFullPath:
+    Type: String
+    Description: example s3://xxx/kylin
+  BucketPath:
+    Type: String
+    Description: example /xxx/kylin which Url without prefix s3:/
+  StaticServicesScriptFileName:
+    Type: String
+    Default: prepare-ec2-env-for-static-services.sh
+  Ec2InstanceTypeForStaticServices:
+    Description: EC2 instance type
+    Type: String
+    ConstraintDescription: must be a valid EC2 instance type.
+    Default: m5.2xlarge
+    AllowedValues:
+      - m5.2xlarge
+      - m5.4xlarge
+  Ec2InstanceTypeForStaticServicesForTest:
+    Description: EC2 instance type
+    Type: String
+    ConstraintDescription: must be a valid EC2 instance type.
+    Default: m5.xlarge
+    AllowedValues:
+      - m5.xlarge
+  Ec2VolumeSizeForStaticServicesNode:
+    Type: Number
+    Default: 20
+    MinValue: 20
+    MaxValue: 30
+  Ec2VolumnTypeForStaticServicesNode:
+    Type: String
+    Default: gp2
+    AllowedValues:
+      - gp2
+      - gp3
+      - io1
+      - io2
+      - sc1
+      - st1
+      - standard
+  Ec2VolumeSizeForStaticServicesNodeForTest:
+    Type: Number
+    Default: 20
+    MinValue: 20
+    MaxValue: 20
+  Ec2VolumnTypeForStaticServicesNodeForTest:
+    Type: String
+    Default: gp2
+    AllowedValues:
+      - gp2
+
+Mappings:
+  AWSRegionArch2AMI:
+    cn-north-1:
+      HVMebs: ami-00ac27054b887ff5c
+    cn-northwest-1:
+      HVMebs: ami-0135cb179d33fbe3e
+
+Conditions:
+  NotNullSubnetId:
+    !Not [!Equals [!Ref SubnetId, ""]]
+  NotNullEc2KeyName:
+    !Not [!Equals [!Ref EMREc2KeyName, ""]]
+  IsProductMode: !Equals [!Ref Ec2Mode, "product"]
+  ValidConfigurationForEc2: !And
+    - !Condition NotNullSubnetId
+    - !Condition NotNullEc2KeyName
+  IsAssociatedPublicIp: !Equals [!Ref AssociatedPublicIp, "true"]
+
+Resources:
+  Ec2InstanceOfStaticServicesNode:
+    Type: AWS::EC2::Instance
+    DeletionPolicy: Delete
+    Condition: ValidConfigurationForEc2
+    Properties:
+      ImageId: !FindInMap
+        - AWSRegionArch2AMI
+        - !Ref 'AWS::Region'
+        - HVMebs
+      Tags:
+        - Key: Project
+          Value: Kylin4
+        - Key: Name
+          Value: StaticServices Node
+      InstanceType:
+        !If
+          - IsProductMode
+          - !Ref Ec2InstanceTypeForStaticServices
+          - !Ref Ec2InstanceTypeForStaticServicesForTest
+      IamInstanceProfile: !Ref InstanceProfileId
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          Description: Auto create for Master node in benchmark
+          AssociatePublicIpAddress: !Ref AssociatedPublicIp
+          DeleteOnTermination: true
+          SubnetId: !Ref SubnetId
+          GroupSet:
+            - !Ref SecurityGroupId
+      BlockDeviceMappings:
+        - !If
+          - IsProductMode
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: !Ref Ec2VolumeSizeForStaticServicesNode
+              VolumeType: !Ref Ec2VolumnTypeForStaticServicesNode
+              DeleteOnTermination: true
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: !Ref Ec2VolumeSizeForStaticServicesNodeForTest
+              VolumeType: !Ref Ec2VolumnTypeForStaticServicesNodeForTest
+              DeleteOnTermination: true
+      KeyName: !Ref EMREc2KeyName
+      UserData:
+        Fn::Base64:
+          Fn::Sub:
+            - |
+              #!/bin/bash -xe
+              cd /home/ec2-user
+              aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateStaticServicesScriptFileName} . --region ${PrivateRegion}
+              bash ${PrivateStaticServicesScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --db-host ${PrivateDbHost} --db-password ${PrivateDbPassword} --db-user ${PrivateDbUser} --db-port ${PrivateDbPort}
+              echo " Static Services are ready ..."
+            - PrivateBucketFullPath: !Ref BucketFullPath
+              PrivateStaticServicesScriptFileName: !Ref StaticServicesScriptFileName
+              PrivateBucketPath: !Ref BucketPath
+              PrivateRegion: !Ref AWS::Region
+              PrivateDbHost: !Ref DbHost
+              PrivateDbPassword: !Ref DbPassword
+              PrivateDbUser: !Ref DbUser
+              PrivateDbPort: !Ref DbPort
+
+Outputs:
+  # Env parameters
+  PublicSubnetIdDependsOnDNode:
+    Description: Public Subnet Id for distribution node
+    Value: !Ref SubnetId
+  SecurityGroupIDDependsOnDNode:
+    Description: Secrurity Group ID for distribution node
+    Value: !Ref SecurityGroupId
+  KeyPairNameDependsOnDNode:
+    Description: KeyPair for distribution node
+    Value: !Ref EMREc2KeyName
+
+  # Instance parameters
+  IdOfInstance:
+    Description: the id of StaticServices Node Instance
+    Value: !Ref Ec2InstanceOfStaticServicesNode
+  StaticServicesNodePrivateIp:
+    Description: StaticServices Private IP
+    Value: !GetAtt Ec2InstanceOfStaticServicesNode.PrivateIp
+  StaticServicesNodePublicIp:
+    Description: StaticServices Public IP
+    Value: !GetAtt Ec2InstanceOfStaticServicesNode.PublicIp
+    Condition: IsAssociatedPublicIp
