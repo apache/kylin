@@ -1,0 +1,322 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create Cluster for ec2 instances and deploy related services, hadoop/spark/zookeeper/hive/jdk/kylin4
+Parameters:
+  # Must passed Parameters
+  SubnetId:
+    Type: String
+  SecurityGroupId:
+    Type: String
+  EMREc2KeyName:
+    Type: String
+  InstanceProfileId:
+    Type: String
+    Description: Must be created at pre-step
+
+#   Optional Parameters
+  Ec2Mode:
+    Type: String
+    Default: test
+    AllowedValues:
+      - test
+      - product
+  AssociatedPublicIp:
+    Type: String
+    Default: false
+    AllowedValues:
+      - false
+      - true
+  BucketFullPath:
+    Type: String
+    Description: example s3://xxx/kylin
+  BucketPath:
+    Type: String
+    Description: example /xxx/kylin which Url without prefix s3:/
+  ZookeeperScriptFileName:
+    Type: String
+    Default: prepare-ec2-env-for-zk.sh
+  Ec2InstanceTypeForZookeeper:
+    Description: EC2 instance type
+    Type: String
+    ConstraintDescription: must be a valid EC2 instance type.
+    Default: m5.xlarge
+    AllowedValues:
+      - m5.xlarge
+      - m5.2xlarge
+  Ec2InstanceTypeForZookeeperForTest:
+    Description: EC2 instance type
+    Type: String
+    ConstraintDescription: must be a valid EC2 instance type.
+    Default: m5.xlarge
+    AllowedValues:
+      - m5.xlarge
+  Ec2VolumeSizeForZookeeperNode:
+    Type: Number
+    Default: 10
+    MinValue: 10
+    MaxValue: 30
+  Ec2VolumnTypeForZookeeperNode:
+    Type: String
+    Default: gp2
+    AllowedValues:
+      - gp2
+      - gp3
+      - io1
+      - io2
+      - sc1
+      - st1
+      - standard
+  Ec2VolumeSizeForZookeeperNodeForTest:
+    Type: Number
+    Default: 10
+    MinValue: 10
+    MaxValue: 10
+  Ec2VolumnTypeForZookeeperNodeForTest:
+    Type: String
+    Default: gp2
+    AllowedValues:
+      - gp2
+
+Mappings:
+  AWSRegionArch2AMI:
+    cn-north-1:
+      HVMebs: ami-00ac27054b887ff5c
+    cn-northwest-1:
+      HVMebs: ami-0135cb179d33fbe3e
+
+Conditions:
+  NotNullSubnetId:
+    !Not [!Equals [!Ref SubnetId, ""]]
+  NotNullEc2KeyName:
+    !Not [!Equals [!Ref EMREc2KeyName, ""]]
+  IsProductMode: !Equals [!Ref Ec2Mode, "product"]
+  ValidConfigurationForEc2: !And
+    - !Condition NotNullSubnetId
+    - !Condition NotNullEc2KeyName
+  IsAssociatedPublicIp: !Equals [!Ref AssociatedPublicIp, "true"]
+
+Resources:
+  Ec2InstanceOfZookeeperNode01:
+    Type: AWS::EC2::Instance
+    DeletionPolicy: Delete
+    Condition: ValidConfigurationForEc2
+    Properties:
+      ImageId: !FindInMap
+        - AWSRegionArch2AMI
+        - !Ref 'AWS::Region'
+        - HVMebs
+      Tags:
+        - Key: Project
+          Value: Kylin4
+        - Key: Name
+          Value: Zookeeper Node 1
+      InstanceType:
+        !If
+          - IsProductMode
+          - !Ref Ec2InstanceTypeForZookeeper
+          - !Ref Ec2InstanceTypeForZookeeperForTest
+      IamInstanceProfile: !Ref InstanceProfileId
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          Description: Auto create for Master node in benchmark
+          AssociatePublicIpAddress: !Ref AssociatedPublicIp
+          DeleteOnTermination: true
+          SubnetId: !Ref SubnetId
+          GroupSet:
+            - !Ref SecurityGroupId
+      BlockDeviceMappings:
+        - !If
+          - IsProductMode
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: !Ref Ec2VolumeSizeForZookeeperNode
+              VolumeType: !Ref Ec2VolumnTypeForZookeeperNode
+              DeleteOnTermination: true
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: !Ref Ec2VolumeSizeForZookeeperNodeForTest
+              VolumeType: !Ref Ec2VolumnTypeForZookeeperNodeForTest
+              DeleteOnTermination: true
+      KeyName: !Ref EMREc2KeyName
+      UserData:
+        Fn::Base64:
+          Fn::Sub:
+            - |
+              #!/bin/bash -xe
+              cd /home/ec2-user
+              aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateZookeeperScriptFileName} . --region ${PrivateRegion}
+              bash ${PrivateZookeeperScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --zk-num ${privateZkNum}
+              echo "Zookeeper is ready ..."
+            - PrivateBucketFullPath: !Ref BucketFullPath
+              PrivateZookeeperScriptFileName: !Ref ZookeeperScriptFileName
+              PrivateBucketPath: !Ref BucketPath
+              PrivateRegion: !Ref AWS::Region
+              privateZkNum: 1
+
+  Ec2InstanceOfZookeeperNode02:
+    Type: AWS::EC2::Instance
+    DeletionPolicy: Delete
+    Condition: ValidConfigurationForEc2
+    Properties:
+      ImageId: !FindInMap
+        - AWSRegionArch2AMI
+        - !Ref 'AWS::Region'
+        - HVMebs
+      Tags:
+        - Key: Project
+          Value: Kylin4
+        - Key: Name
+          Value: Zookeeper Node 2
+      InstanceType:
+        !If
+        - IsProductMode
+        - !Ref Ec2InstanceTypeForZookeeper
+        - !Ref Ec2InstanceTypeForZookeeperForTest
+      IamInstanceProfile: !Ref InstanceProfileId
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          Description: Auto create for Master node in benchmark
+          AssociatePublicIpAddress: !Ref AssociatedPublicIp
+          DeleteOnTermination: true
+          SubnetId: !Ref SubnetId
+          GroupSet:
+            - !Ref SecurityGroupId
+      BlockDeviceMappings:
+        - !If
+          - IsProductMode
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: !Ref Ec2VolumeSizeForZookeeperNode
+              VolumeType: !Ref Ec2VolumnTypeForZookeeperNode
+              DeleteOnTermination: true
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: !Ref Ec2VolumeSizeForZookeeperNodeForTest
+              VolumeType: !Ref Ec2VolumnTypeForZookeeperNodeForTest
+              DeleteOnTermination: true
+      KeyName: !Ref EMREc2KeyName
+      UserData:
+        Fn::Base64:
+          Fn::Sub:
+            - |
+              #!/bin/bash -xe
+              cd /home/ec2-user
+              aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateZookeeperScriptFileName} . --region ${PrivateRegion}
+              bash ${PrivateZookeeperScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --zk-num ${privateZkNum}
+              echo "Zookeeper is ready ..."
+            - PrivateBucketFullPath: !Ref BucketFullPath
+              PrivateZookeeperScriptFileName: !Ref ZookeeperScriptFileName
+              PrivateBucketPath: !Ref BucketPath
+              PrivateRegion: !Ref AWS::Region
+              privateZkNum: 2
+
+  Ec2InstanceOfZookeeperNode03:
+    Type: AWS::EC2::Instance
+    DeletionPolicy: Delete
+    Condition: ValidConfigurationForEc2
+    Properties:
+      ImageId: !FindInMap
+        - AWSRegionArch2AMI
+        - !Ref 'AWS::Region'
+        - HVMebs
+      Tags:
+        - Key: Project
+          Value: Kylin4
+        - Key: Name
+          Value: Zookeeper Node 3
+      InstanceType:
+        !If
+        - IsProductMode
+        - !Ref Ec2InstanceTypeForZookeeper
+        - !Ref Ec2InstanceTypeForZookeeperForTest
+      IamInstanceProfile: !Ref InstanceProfileId
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          Description: Auto create for Master node in benchmark
+          AssociatePublicIpAddress: !Ref AssociatedPublicIp
+          DeleteOnTermination: true
+          SubnetId: !Ref SubnetId
+          GroupSet:
+            - !Ref SecurityGroupId
+      BlockDeviceMappings:
+        - !If
+          - IsProductMode
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: !Ref Ec2VolumeSizeForZookeeperNode
+              VolumeType: !Ref Ec2VolumnTypeForZookeeperNode
+              DeleteOnTermination: true
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: !Ref Ec2VolumeSizeForZookeeperNodeForTest
+              VolumeType: !Ref Ec2VolumnTypeForZookeeperNodeForTest
+              DeleteOnTermination: true
+      KeyName: !Ref EMREc2KeyName
+      UserData:
+        Fn::Base64:
+          Fn::Sub:
+            - |
+              #!/bin/bash -xe
+              cd /home/ec2-user
+              aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateZookeeperScriptFileName} . --region ${PrivateRegion}
+              bash ${PrivateZookeeperScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --zk-num ${privateZkNum}
+              echo "Zookeeper is ready ..."
+            - PrivateBucketFullPath: !Ref BucketFullPath
+              PrivateZookeeperScriptFileName: !Ref ZookeeperScriptFileName
+              PrivateBucketPath: !Ref BucketPath
+              PrivateRegion: !Ref AWS::Region
+              privateZkNum: 3
+
+Outputs:
+  # Instance 01 parameters
+  IdOfInstanceZookeeper01:
+    Description: the id of Zookeeper Node Instance
+    Value: !Ref Ec2InstanceOfZookeeperNode01
+  ZookeeperNode01PrivateIp:
+    Description: Zookeeper Private IP
+    Value: !GetAtt Ec2InstanceOfZookeeperNode01.PrivateIp
+  ZookeeperNode01PublicIp:
+    Description: Zookeeper Public IP
+    Value: !GetAtt Ec2InstanceOfZookeeperNode01.PublicIp
+    Condition: IsAssociatedPublicIp
+
+  # Instance 02 parameters
+  IdOfInstanceZookeeper02:
+    Description: the id of Zookeeper Node Instance
+    Value: !Ref Ec2InstanceOfZookeeperNode02
+  ZookeeperNode02PrivateIp:
+    Description: Zookeeper Private IP
+    Value: !GetAtt Ec2InstanceOfZookeeperNode02.PrivateIp
+  ZookeeperNode02PublicIp:
+    Description: Zookeeper Public IP
+    Value: !GetAtt Ec2InstanceOfZookeeperNode02.PublicIp
+    Condition: IsAssociatedPublicIp
+
+
+  # Instance 03 parameters
+  IdOfInstanceZookeeper03:
+    Description: the id of Zookeeper Node Instance
+    Value: !Ref Ec2InstanceOfZookeeperNode03
+  ZookeeperNode03PrivateIp:
+    Description: Zookeeper Private IP
+    Value: !GetAtt Ec2InstanceOfZookeeperNode03.PrivateIp
+  ZookeeperNode03PublicIp:
+    Description: Zookeeper Public IP
+    Value: !GetAtt Ec2InstanceOfZookeeperNode03.PublicIp
+    Condition: IsAssociatedPublicIp

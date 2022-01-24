@@ -1,0 +1,251 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create Kylin4 nodes for ec2 instances and deploy related services, hadoop/spark/zookeeper/hive/jdk/kylin4
+Parameters:
+  # Must passed Parameters
+  DbHost:
+    Type: String
+    Description: Must be created at pre-step, db from ec2 instance
+  DbUser:
+    Type: String
+    Description: Db user for kylin4 to access RDS
+    Default: root
+  DbPassword:
+    Type: String
+    Description: Db password for kylin4 to access RDS
+  DbPort:
+    Type: String
+    Description: Db port for kylin4 to access RDS
+    Default: 3306
+  ZookeepersHost:
+    Type: String
+    Description: Must be created at pre-step
+  SparkMasterNodeHost:
+    Type: String
+    Description: Spark Master host for kylin 4
+  InstanceProfileId:
+    Type: String
+    Description: Must be created at pre-step
+  SubnetId:
+    Type: String
+  SecurityGroupId:
+    Type: String
+  AssociatedPublicIp:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EMREc2KeyName:
+    Type: String
+
+  ClusterNum:
+    Type: String
+    Default: default
+
+  IsScaled:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+
+  Ec2Mode:
+    Type: String
+    Default: test
+    AllowedValues:
+      - test
+      - product
+    Description: set the flag for Mode, if not test then use product's configuration
+
+#   Optional Parameters
+  LocalCacheSoftAffinity:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+  BucketFullPath:
+    Type: String
+  BucketPath:
+    Type: String
+    Description: Url without prefix s3:/
+  Kylin4ScriptFileName:
+    Type: String
+    Default: prepare-ec2-env-for-kylin4.sh
+  InstanceType:
+    Description: EC2 instance type
+    Type: String
+    ConstraintDescription: must be a valid EC2 instance type.
+    Default: m5.2xlarge
+    AllowedValues:
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+  InstanceTypeForTest:
+    Description: EC2 instance type
+    Type: String
+    ConstraintDescription: must be a valid EC2 instance type.
+    Default: m5.2xlarge
+    AllowedValues:
+      - m5.2xlarge
+  Ec2VolumnTypeForKylin4Node:
+    Type: String
+    Default: gp2
+    AllowedValues:
+      - gp2
+      - gp3
+      - io1
+      - io2
+      - sc1
+      - st1
+      - standard
+  Ec2VolumeSizeForKylin4Node:
+    Type: Number
+    Default: 30
+    MinValue: 30
+    MaxValue: 100
+
+  Ec2VolumnTypeForKylin4NodeForTest:
+    Type: String
+    Default: gp2
+    AllowedValues:
+      - gp2
+
+  Ec2VolumeSizeForKylin4NodeForTest:
+    Type: Number
+    Default: 30
+    MinValue: 30
+    MaxValue: 30
+
+
+Mappings:
+  AWSRegionArch2AMI:
+    cn-north-1:
+      HVMebs: ami-00ac27054b887ff5c
+    cn-northwest-1:
+      HVMebs: ami-0135cb179d33fbe3e
+
+Conditions:
+  NotNullSubnetId:
+    !Not [!Equals [!Ref SubnetId, ""]]
+  NotNullEc2KeyName:
+    !Not [!Equals [!Ref EMREc2KeyName, ""]]
+  NotNullDbHost: !Not [!Equals [!Ref DbHost, ""]]
+  NotNullDbPass: !Not [!Equals [!Ref DbPassword, ""]]
+  NotNullDbUser: !Not [!Equals [!Ref DbUser, ""]]
+  NotNullZkHost: !Not [!Equals [!Ref ZookeepersHost, ""]]
+  NotNullSparkMasterHost: !Not [!Equals [!Ref SparkMasterNodeHost, ""]]
+  IsProductMode: !Equals [!Ref Ec2Mode, "product"]
+  ValidConfigurationForEc2: !And
+    - !Condition NotNullSubnetId
+    - !Condition NotNullEc2KeyName
+    - !Condition NotNullDbHost
+    - !Condition NotNullDbPass
+    - !Condition NotNullDbUser
+    - !Condition NotNullZkHost
+    - !Condition NotNullSparkMasterHost
+  IsAssociatedPublicIp: !Equals [!Ref AssociatedPublicIp, "true"]
+
+Resources:
+  Ec2InstanceOfKylin4:
+    Type: AWS::EC2::Instance
+    DeletionPolicy: Delete
+    Condition: ValidConfigurationForEc2
+    Properties:
+      ImageId: !FindInMap
+        - AWSRegionArch2AMI
+        - !Ref 'AWS::Region'
+        - HVMebs
+      Tags:
+        - Key: Project
+          Value: Kylin4
+        - Key: Name
+          Value: Kylin4 Node for kylin4
+      InstanceType:
+        !If
+          - IsProductMode
+          - !Ref InstanceType
+          - !Ref InstanceTypeForTest
+      IamInstanceProfile: !Ref InstanceProfileId
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          Description: Auto create for Kylin4 node
+          DeleteOnTermination: true
+          AssociatePublicIpAddress: !Ref AssociatedPublicIp
+          SubnetId: !Ref SubnetId
+          GroupSet:
+            - !Ref SecurityGroupId
+      BlockDeviceMappings:
+        - !If
+          - IsProductMode
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: !Ref Ec2VolumeSizeForKylin4Node
+              VolumeType: !Ref Ec2VolumnTypeForKylin4Node
+              DeleteOnTermination: true
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: !Ref Ec2VolumeSizeForKylin4NodeForTest
+              VolumeType: !Ref Ec2VolumnTypeForKylin4NodeForTest
+              DeleteOnTermination: true
+      KeyName: !Ref EMREc2KeyName
+      UserData:
+        Fn::Base64:
+          Fn::Sub:
+            - |
+              #!/bin/bash -xe
+              cd /home/ec2-user
+              aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateKylin4ScriptFileName} . --region ${PrivateRegion}
+              bash ${PrivateKylin4ScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --db-host ${PrivateDbHost} --db-password ${PrivateDbPass} --db-user ${PrivateDbUser} --db-port ${PrivateDbPort} --local-soft ${PrivateLocalCacheSoftAffinity} --cluster-num ${PrivateClusterNum} --is-scaled ${PrivateIsScaled}
+              echo " Kylin4 is ready ..."
+            - PrivateBucketFullPath: !Ref BucketFullPath
+              PrivateKylin4ScriptFileName: !Ref Kylin4ScriptFileName
+              PrivateBucketPath: !Ref BucketPath
+              PrivateRegion: !Ref AWS::Region
+              PrivateDbHost: !Ref DbHost
+              PrivateDbPass: !Ref DbPassword
+              PrivateDbUser: !Ref DbUser
+              PrivateDbPort: !Ref DbPort
+              PrivateLocalCacheSoftAffinity: !Ref LocalCacheSoftAffinity
+              PrivateClusterNum: !Ref ClusterNum
+              PrivateIsScaled: !Ref IsScaled
+
+Outputs:
+  IdOfInstance:
+    Description: the id of Kylin4 Node Innstance
+    Value: !Ref Ec2InstanceOfKylin4
+  Kylin4Ec2InstancePrivateIp:
+    Description: Kylin4 Instance Private IP
+    Value: !GetAtt Ec2InstanceOfKylin4.PrivateIp
+  Kylin4Ec2InstancePublicIp:
+    Description: Kylin4 Instance Public IP to acess
+    Value: !GetAtt Ec2InstanceOfKylin4.PublicIp
+    Condition: IsAssociatedPublicIp
+  Kylin4SubnetIdDependsOnDNode:
+    Description: SubnetId in the vpc for Slave Node
+    Value: !Ref SubnetId
+  Kylin4SecurityGroupIdDependsOnDNode:
+    Value: !Ref SecurityGroupId
+  Kylin4SparkMasterHost:
+    Description: Spark Master host for Kylin 4
+    Value: !Ref SparkMasterNodeHost
+  Kylin4ZookeeperHosts:
+    Description: Zookeeper hosts for Kylin 4
+    Value: !Ref ZookeepersHost

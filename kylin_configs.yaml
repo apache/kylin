@@ -1,0 +1,306 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# ============ AWS Configs ============
+# Example: cn-northwest-1
+# Required
+AWS_REGION: cn-northwest-1
+
+# Note: this role must be created before run deployment
+# Please replace `${IAM_ROLE_NAME}` to a real IAM Role name
+# Required
+IAMRole: &IAM ${IAM_ROLE_NAME}
+
+# Note: this Path must be created before run deployment
+# Example: s3://xxx/kylin
+# Please replace `${S3_URI}` to a real S3 Uri path
+# Required
+S3_URI: ${S3_URI}
+
+# Security key name must not be null
+# Please replace `${KEY_PAIR}` to a real key Pair name
+# Required
+KeyName: &security_key ${KEY_PAIR}
+
+# Security Ingress CIDR_IP must not be null
+#
+# Description:
+#   An inbound rule permits instances to receive traffic from the specified IPv4 or IPv6 CIDR address range,
+#   or from the instances associated with the specified security group.
+# Example: 192.168.1.1/32
+# Please replace `${Cidr Ip}` to a real cidr ip for ingress
+# Required
+CIDR_IP: ${Cidr Ip}
+
+# ============ AWS Configs End ============
+
+# ============ Related Version of Services ============
+# Related Version of Services, Current packages are compatible.
+# Note: Current support these versions, don't modify them.
+KYLIN_VERSION: &KYLIN_VERSION '4.0.0'
+HIVE_VERSION: '2.3.9'
+HADOOP_VERSION: '3.2.0'
+NODE_EXPORTER_VERSION: '1.3.1'
+PROMETHEUS_VERSION: '2.31.1'
+SPARK_VERSION: '3.1.1'
+ZOOKEEPER_VERSION: '3.4.13'
+# ============ Related Version of Services End============
+
+# ============ Debug Configs ============
+# For Debug, null means that cluster on aws need to be created.
+# Optional
+CLOUD_ADDR:
+
+# ============ Debug Configs End ============
+
+# ============ Global Configs ============
+## deploy platform: current only support ec2
+DEPLOY_PLATFORM: &platform ec2
+
+# ============ Global Configs End============
+
+# ============ Tool Configs ============
+## Dangerous !!!
+## Optional: destroy all will delete rds and the vpc and monitor node, please be careful.
+ALWAYS_DESTROY_ALL: false
+
+## Open public Ip on Instances
+ASSOSICATED_PUBLIC_IP: &associated_public_ip 'true'
+
+## Stack Names
+### Note: if need to change stack names please change it in ../utils.py too.
+VPC_STACK: ec2-or-emr-vpc-stack
+RDS_STACK: ec2-rds-stack
+STATIC_SERVICE_STACK: ec2-static-service-stack
+ZOOKEEPERS_STACK: ec2-zookeeper-stack
+KYLIN_STACK: ec2-kylin-stack
+SPARK_MASTER_STACK: ec2-spark-master-stack
+SPARK_WORKER_STACK: ec2-spark-slave-stack
+
+# Scale Cluster
+## The format of Cluster indexes range is `Tuple`.
+## Examples: (1, 3) means that tool will scale up 3 cluster which the number of related stack names suffix will be 1, 2 and 3.
+## Now there is only 1 cluster which contains three zookeepers nodes, one kylin node, one spark master and three spark workers.
+## Specially, if user set range to be (1, 1) that means cluster only scale the one cluster which number is 1.
+CLUSTER_INDEXES: (1, 1)
+
+# Scale Nodes
+## The format of kylin scale nodes range is `Tuple`.
+## Examples:
+##    KYLIN_SCALE_UP_NODES: (1, 3) means that cluster will scale up 3 nodes of kylin which nodes number will be 1, 2 and 3.
+##    Now there are 4 kylin nodes which contains the one kylin node of initialization and scaled up nodes(1,2,3).
+##    Specially, if user set range to be (1, 1) that means cluster only scale the one node which node number is 1.
+##    Same as KYLIN_SCALE_DOWN_NODES is for scaling down the scaled kylin nodes.
+## Note:
+##    1. As followed params is setting for all cluster, So if user want to scale the special cluster with
+##       special range then need to modify these params.
+##    2. ${KYLIN_SCALE_UP_NODES} must contain or equal to ${KYLIN_SCALE_DOWN_NODES}.
+KYLIN_SCALE_UP_NODES: (1, 3)
+KYLIN_SCALE_DOWN_NODES: (1, 3)
+
+## The format of spark worker scale nodes range is `Tuple`.
+## Examples:
+##    SPARK_WORKER_SCALE_UP_NODES:(1, 3) means that cluster will scale up `3` nodes of spark workers which nodes number will be 1, 2 and 3.
+##    Now there are 6 spark worker nodes which contains the `3` spark worker nodes of initialization and scaled up nodes(1,2,3).
+##    Specially, if user set range to be (1, 1) that means cluster only scale the one node which node number is 1.
+##    Same as SPARK_WORKER_SCALE_UP_NODES is for scaling down the scaled spark worker nodes.
+## Note:
+##    1. As followed params is setting for all cluster, So if user want to scale the special cluster with
+##       special range then need to modify these params.
+##    2. ${SPARK_WORKER_SCALE_UP_NODES} must contain or equal to ${SPARK_WORKER_SCALE_DOWN_NODES}.
+SPARK_WORKER_SCALE_UP_NODES: (1, 3)
+SPARK_WORKER_SCALE_DOWN_NODES: (1, 3)
+
+## DB identifier for status check
+DB_IDENTIFIER: &db_instance_id ec2-rds-kylin4
+
+## User must set 'DB_HOST' which will be used to access RDS instance.
+## DB_HOST bind to DB_IDENTIFIER
+DB_PORT: &DbPort '3306'
+
+## User must set 'DB_USER' and 'DB_PASSWORD' which can access RDS instance.
+## This 'DB_USER' and 'DB_PASSWORD' also will initialize the RDS which created by cloudformation templates.
+DB_USER: &DbUser 'root'
+DB_PASSWORD: &DbPassword '123456Test'
+
+## Whether to use Local Cache + Soft Affinity
+## Default is false.
+## Note: this variable will be used in templates which type is str!
+ENABLE_LOCAL_CACHE_SOFT_AFFINITY: &local_cache_soft_affinity 'false'
+# ============ Tool Configs End============
+
+# ============ YAML Params ============
+EC2_VPC_PARAMS:
+  KylinVersion: *KYLIN_VERSION
+  ClusterType: *platform
+  Ec2OperationRole: *IAM
+
+EC2_RDS_PARAMS:
+  Ec2DbIdentifier: *db_instance_id
+  Ec2DbUser: *DbUser
+  Ec2DbPassword: *DbPassword
+  Ec2DbPort: *DbPort
+  Ec2Mode: test
+  RDSEngine: mysql
+  RDSEngineVersion: 5.7.25
+
+EC2_STATIC_SERVICES_PARAMS:
+  # Note: params details check in related yaml file
+  SubnetId:
+  SecurityGroupId:
+  InstanceProfileId:
+  DbHost:
+  EMREc2KeyName: *security_key
+  AssociatedPublicIp: *associated_public_ip
+
+  DbPort: *DbPort
+  DbUser: *DbUser
+  DbPassword: *DbPassword
+
+  StaticServicesScriptFileName: prepare-ec2-env-for-static-services.sh
+  Ec2Mode: product
+  # followed params is invalid if Ec2Mode(which set in the yaml) is 'test'
+  Ec2InstanceTypeForStaticServices: m5.4xlarge
+  Ec2VolumeSizeForStaticServicesNode: '50'
+  Ec2VolumnTypeForStaticServicesNode: standard
+
+EC2_ZOOKEEPERS_PARAMS:
+  # None value can be passed by the pre-step output, so params need to wait pre-step complete.
+  # Note: params details check in related yaml file
+  SubnetId:
+  SecurityGroupId:
+  EMREc2KeyName: *security_key
+  AssociatedPublicIp: *associated_public_ip
+
+  ZookeeperScriptFileName: prepare-ec2-env-for-zk.sh
+  Ec2Mode: test
+  # followed params is invalid if Ec2Mode(which set in the yaml) is 'test'
+  Ec2InstanceTypeForZookeeper: m5.2xlarge
+  Ec2VolumeSizeForZookeeperNode: '20'
+  Ec2VolumnTypeForZookeeperNode: gp2
+
+EC2_SPARK_MASTER_PARAMS:
+  # None value can be passed by the pre-step output, so params need to wait pre-step complete.
+  # Note: params details check in related yaml file
+  InstanceProfileId:
+  SubnetId:
+  SecurityGroupId:
+
+  EMREc2KeyName: *security_key
+  DbPort: *DbPort
+  DbUser: *DbUser
+  DbPassword: *DbPassword
+
+  AssociatedPublicIp: *associated_public_ip
+  SparkMasterScriptFileName: prepare-ec2-env-for-spark-master.sh
+  Ec2Mode: test
+  # followed params is invalid if Ec2Mode(which set in the yaml) is 'test'
+  InstanceType: m5.2xlarge
+  Ec2VolumnTypeForSparkMasterNode: gp2
+  Ec2VolumeSizeForSparkMasterNode: '50'
+  LocalCacheSoftAffinity: *local_cache_soft_affinity
+
+EC2_KYLIN4_PARAMS:
+  # None value can be passed by the pre-step output, so params need to wait pre-step complete.
+  # Note: params details check in related yaml file
+  ZookeepersHost:
+  SparkMasterNodeHost:
+  InstanceProfileId:
+  SubnetId:
+  SecurityGroupId:
+
+  AssociatedPublicIp: *associated_public_ip
+
+  DbPort: *DbPort
+  DbUser: *DbUser
+  DbPassword: *DbPassword
+  # Note: this key pair must be created before run
+  EMREc2KeyName: *security_key
+
+  Kylin4ScriptFileName: prepare-ec2-env-for-kylin4.sh
+  Ec2Mode: test
+  # followed params is invalid if Ec2Mode(which set in the yaml) is 'test'
+  InstanceType: m5.2xlarge
+  Ec2VolumnTypeForKylin4Node: gp2
+  Ec2VolumeSizeForKylin4Node: '50'
+  LocalCacheSoftAffinity: *local_cache_soft_affinity
+
+EC2_SPARK_WORKER_PARAMS:
+  # None value can be passed by the pre-step output, so params need to wait pre-step complete.
+  # Note: params details check in related yaml file
+  SparkMasterNodeHost:
+  InstanceProfileId:
+  SubnetId:
+  SecurityGroupId:
+  EMREc2KeyName: *security_key
+  # set 'true' for test
+  AssociatedPublicIp: *associated_public_ip
+
+  SlaveScriptFileName: prepare-ec2-env-for-spark-slave.sh
+  Ec2Mode: test
+  # followed params is invalid if Ec2Mode(which set in the yaml) is 'test'
+  InstanceType: m5.2xlarge
+  Ec2VolumnTypeForSlaveNode: gp2
+  Ec2VolumeSizeForSlaveNode: '50'
+  LocalCacheSoftAffinity: *local_cache_soft_affinity
+
+EC2_KYLIN4_SCALE_PARAMS:
+  # None value can be passed by the pre-step output, so params need to wait pre-step complete.
+  # Note: params details check in related yaml file
+  ZookeepersHost:
+  SparkMasterNodeHost:
+  InstanceProfileId:
+  SubnetId:
+  SecurityGroupId:
+
+  AssociatedPublicIp: *associated_public_ip
+
+  DbPort: *DbPort
+  DbUser: *DbUser
+  DbPassword: *DbPassword
+  # Note: this key pair must be created before run
+  EMREc2KeyName: *security_key
+
+  Kylin4ScriptFileName: prepare-ec2-env-for-kylin4.sh
+  Ec2Mode: test
+  # followed params is invalid if Ec2Mode(which set in the yaml) is 'test'
+  InstanceType: m5.2xlarge
+  Ec2VolumnTypeForKylin4Node: gp2
+  Ec2VolumeSizeForKylin4Node: '50'
+  LocalCacheSoftAffinity: *local_cache_soft_affinity
+
+EC2_SPARK_SCALE_SLAVE_PARAMS:
+  # None value can be passed by the pre-step output, so params need to wait pre-step complete.
+  # Note: params details check in related yaml file
+  SparkMasterNodeHost:
+  InstanceProfileId:
+  SubnetId:
+  SecurityGroupId:
+  WorkerNum:
+  WaitingTime: '50'
+  EMREc2KeyName: *security_key
+  # set 'true' for test
+  AssociatedPublicIp: *associated_public_ip
+  ScriptFileName: prepare-ec2-env-for-spark-slave.sh
+  Ec2Mode: test
+  # followed params is invalid if Ec2Mode(which set in the yaml) is 'test'
+  InstanceType: m5.2xlarge
+  Ec2VolumnTypeForSlaveNode: gp2
+  Ec2VolumeSizeForSlaveNode: '50'
+  LocalCacheSoftAffinity: *local_cache_soft_affinity
+
+# ============ YAML Params End ============

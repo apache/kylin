@@ -1,0 +1,283 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: create vpc, subnet and security for emr or ec2 's benchmark
+Parameters:
+  # Must passed parameters
+  # Optional Parameters
+  KylinVersion:
+    Type: String
+    Description: this version is for tag
+    Default: 4.0.0
+    AllowedValues:
+      - 4.0.0
+  ClusterType:
+    Type: String
+    Default: ec2
+    Description: this type is for tag
+    AllowedValues:
+      - ec2
+  VpcCidrBlock:
+    Type: String
+    Default: 10.1.0.0/16
+  SubnetCidrBlock:
+    Type: String
+    Default: 10.1.0.0/24
+  Subnet02CidrBlock:
+    Type: String
+    Default: 10.1.1.0/24
+  Ec2OperationRole:
+    Type: String
+    Description: Should be created by pre-step, must not be null !
+  CidrIp:
+    Type: String
+    Description: An inbound rule permits instances to receive traffic from the specified IPv4 or IPv6 CIDR address range, or from the instances associated with the specified security group.
+
+Conditions:
+  NotNullCidrIp:
+    !Not [!Equals [!Ref CidrIp, ""]]
+
+Mappings:
+  Region2Az:
+    cn-northwest-1:
+      '1': cn-northwest-1a
+      '2': cn-northwest-1b
+
+Resources:
+  Ec2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    DeletionPolicy: Delete
+    Properties:
+      Roles:
+        - !Ref Ec2OperationRole
+  Ec2OrEmrBenchMarkVpc:
+    Type: AWS::EC2::VPC
+    Condition: NotNullCidrIp
+    Properties:
+      CidrBlock: !Ref VpcCidrBlock
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Join
+            - ''
+            - - Kylin
+              - !Ref KylinVersion
+              - EmrOrEc2
+              - Vpc
+    DeletionPolicy: Delete
+  Ec2OrEmrBenchMarkSubnet:
+    Type: AWS::EC2::Subnet
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: !Ref Ec2OrEmrBenchMarkVpc
+      CidrBlock: !Ref SubnetCidrBlock
+      AvailabilityZone: !FindInMap
+        - Region2Az
+        - !Ref 'AWS::Region'
+        - '1'
+      Tags:
+        - Key: Name
+          Value: !Join
+            - ''
+            - - Kylin
+              - !Ref KylinVersion
+              - !Ref ClusterType
+              - pub1
+  Ec2OrEmrBenchMarkSubnet02:
+    Type: AWS::EC2::Subnet
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: !Ref Ec2OrEmrBenchMarkVpc
+      CidrBlock: !Ref Subnet02CidrBlock
+      AvailabilityZone: !FindInMap
+        - Region2Az
+        - !Ref 'AWS::Region'
+        - '2'
+      Tags:
+        - Key: Name
+          Value: !Join
+            - ''
+            - - Kylin
+              - !Ref KylinVersion
+              - !Ref ClusterType
+              - pub2
+  Ec2OrEmrBenchMarkDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    DeletionPolicy: Delete
+    Properties:
+      Tags:
+        - Key: Project
+          Value: kylin4
+        - Key: Name
+          Value: subnet group for db instance
+      DBSubnetGroupDescription: subnet for db instance
+      SubnetIds:
+        - !Ref Ec2OrEmrBenchMarkSubnet
+        - !Ref Ec2OrEmrBenchMarkSubnet02
+
+  Ec2OrEmrBenchMarkInternetGateway:
+    DeletionPolicy: Delete
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Join
+            - ''
+            - - Kylin
+              - !Ref KylinVersion
+              - !Ref ClusterType
+              - InternetGateWay
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: !Ref Ec2OrEmrBenchMarkVpc
+      InternetGatewayId: !Ref Ec2OrEmrBenchMarkInternetGateway
+  Ec2OrEmrBenchMarkRoutetable:
+    Type: AWS::EC2::RouteTable
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: !Ref Ec2OrEmrBenchMarkVpc
+      Tags:
+        - Key: Name
+          Value: !Join
+            - ''
+            - - Kylin
+              - !Ref KylinVersion
+              - !Ref ClusterType
+              - Routetable
+  Ec2OrEmrBenchMarkRoute:
+    Type: AWS::EC2::Route
+    DependsOn:
+      - Ec2OrEmrBenchMarkInternetGateway
+      - Ec2OrEmrBenchMarkRoutetable
+    DeletionPolicy: Delete
+    Properties:
+      RouteTableId: !Ref Ec2OrEmrBenchMarkRoutetable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref Ec2OrEmrBenchMarkInternetGateway
+  SubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    DeletionPolicy: Delete
+    Properties:
+      SubnetId: !Ref Ec2OrEmrBenchMarkSubnet
+      RouteTableId: !Ref Ec2OrEmrBenchMarkRoutetable
+  Subnet2RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    DeletionPolicy: Delete
+    Properties:
+      SubnetId: !Ref Ec2OrEmrBenchMarkSubnet02
+      RouteTableId: !Ref Ec2OrEmrBenchMarkRoutetable
+  Ec2OrEmrBenchMarkSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    DependsOn: Ec2OrEmrBenchMarkVpc
+    Properties:
+      VpcId: !Ref Ec2OrEmrBenchMarkVpc
+      GroupDescription: Open up SSH access and specify range of ports to itself
+      Tags:
+        - Key: Name
+          Value: !Join
+            - ''
+            - - Kylin
+              - !Ref KylinVersion
+              - !Ref ClusterType
+              - SecurityGroup
+      SecurityGroupIngress:
+        # For SSH
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref CidrIp
+        # For Grafana
+        - IpProtocol: tcp
+          FromPort: '3000'
+          ToPort: '3000'
+          CidrIp: !Ref CidrIp
+        # For Prometheus
+        - IpProtocol: tcp
+          FromPort: '9090'
+          ToPort: '9100'
+          CidrIp: !Ref CidrIp
+        # For Kylin
+        - IpProtocol: tcp
+          FromPort: '7070'
+          ToPort: '7070'
+          CidrIp: !Ref CidrIp
+        # For Spark Master
+        - IpProtocol: tcp
+          FromPort: '8080'
+          ToPort: '8080'
+          CidrIp: !Ref CidrIp
+        # For Spark Worker/Executor
+        - IpProtocol: tcp
+          FromPort: '4040'
+          ToPort: '4050'
+          CidrIp: !Ref CidrIp
+    DeletionPolicy: Delete
+  Ec2OrEmrBenchMarkSecurityGroupFullTcpIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    DeletionPolicy: Delete
+    Properties:
+      IpProtocol: tcp
+      SourceSecurityGroupId: !Ref Ec2OrEmrBenchMarkSecurityGroup
+      FromPort: 0
+      ToPort: 65535
+      GroupId: !Ref Ec2OrEmrBenchMarkSecurityGroup
+  Ec2OrEmrBenchMarkSecurityGroupFullUdpIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    DeletionPolicy: Delete
+    Properties:
+      IpProtocol: udp
+      SourceSecurityGroupId: !Ref Ec2OrEmrBenchMarkSecurityGroup
+      FromPort: 0
+      ToPort: 65535
+      GroupId: !Ref Ec2OrEmrBenchMarkSecurityGroup
+  Ec2OrEmrBenchMarkSecurityGroupFullIcmpIpv4Ingress:
+    Type: AWS::EC2::SecurityGroupIngress
+    DeletionPolicy: Delete
+    Description: special port range from -1 to -1 that means full
+    Properties:
+      IpProtocol: icmp
+      SourceSecurityGroupId: !Ref Ec2OrEmrBenchMarkSecurityGroup
+      FromPort: -1
+      ToPort: -1
+      GroupId: !Ref Ec2OrEmrBenchMarkSecurityGroup
+
+Outputs:
+  VpcId:
+    Description: the id of VPC
+    Value: !Ref Ec2OrEmrBenchMarkVpc
+  SubnetId:
+    Description: the id of subnet
+    Value: !Ref Ec2OrEmrBenchMarkSubnet
+  CidrIpOfVPC:
+    Description: the cidr block ip of VPC
+    Value: !Ref VpcCidrBlock
+  CidrIpOfSubnet:
+    Description: the cidr block ip of subnet
+    Value: !Ref SubnetCidrBlock
+  SecurityGroupId:
+    Description: the id of security group
+    Value: !Ref Ec2OrEmrBenchMarkSecurityGroup
+  InstanceProfileId:
+    Description: Instance profile for cluster
+    Value: !Ref Ec2InstanceProfile
+  SubnetGroupName:
+    Description: Subnet group name for DB instance
+    Value: !Ref Ec2OrEmrBenchMarkDBSubnetGroup
