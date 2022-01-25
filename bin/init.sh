@@ -40,10 +40,10 @@ function logging() {
     esac
 }
 
-if [[ -z  "$KYLIN_TPCH_HOME" ]]; then
+if [[ -z  "$TOOL_HOME" ]]; then
   dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
-  export KYLIN_TPCH_HOME=`cd "${dir}/../"; pwd`
-  logging info "KYLIN_TPCH_HOME not set, will use $KYLIN_TPCH_HOME as KYLIN_TPCH_HOME."
+  export TOOL_HOME=`cd "${dir}/../"; pwd`
+  logging info "TOOL_HOME not set, will use $TOOL_HOME as TOOL_HOME."
 fi
 
 function check_python_version {
@@ -61,16 +61,16 @@ function check_python_version {
 
 function install_env {
   check_python_version
-  if [[ ! -d $KYLIN_TPCH_HOME/venv ]]; then
-    python3 -m venv $KYLIN_TPCH_HOME/venv
-    source $KYLIN_TPCH_HOME/venv/bin/activate
+  if [[ ! -d $TOOL_HOME/venv ]]; then
+    python3 -m venv $TOOL_HOME/venv
+    source $TOOL_HOME/venv/bin/activate
     logging info "Install dependencies ..."
-    pip3 install -r $KYLIN_TPCH_HOME/requirements.txt
+    pip3 install -r $TOOL_HOME/requirements.txt
   else
-    logging warn "$KYLIN_TPCH_HOME/.venv already existing, skip install again."
+    logging warn "$TOOL_HOME/.venv already existing, skip install again."
   fi
   logging info "Please use 'source venv/bin/activate' to activate venv and execute commands."
-  logging info "Please use 'python ./deploy.py --h[|--help]' to check the usage."
+  logging info "Please use 'python deploy.py --help' to check the usage."
   logging info "Enjoy it and have fun."
 }
 

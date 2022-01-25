@@ -238,9 +238,9 @@ class EngineUtils:
 
     @staticmethod
     def refresh_kylin_properties() -> None:
-        logger.info('Start to refresh kylin.poperties in `kylin-tpch/properties/default`.')
+        logger.info('Start to refresh kylin.poperties in `properties/default`.')
         Utils.refresh_kylin_properties()
-        logger.info('Refresh kylin.poperties in `kylin-tpch/properties/default` successfully.')
+        logger.info('Refresh kylin.poperties in `properties/default` successfully.')
 
     @staticmethod
     def refresh_kylin_properties_in_clusters(cluster_nums: List) -> None:
