@@ -1,6 +1,6 @@
 ## Advanced Configs
 
-### Advaced Params
+### Advanced Params
 
 There are `9` modules params for tools.  Introductions as below:
 
@@ -23,18 +23,18 @@ There are `9` modules params for tools.  Introductions as below:
   > Note:
   >
   > 1. `KYLIN_SCALE_UP_NODES` is for the range of kylin nodes to scale up. 
-  > 1. `KYLIN_SCALE_DOWN_NODES` is for the range of kylin nodes to scale down.
-  > 1. The range of `KYLIN_SCALE_UP_NODES` must be contain the range of `KYLIN_SCALE_DOWN_NODES`.
-  > 1. **They are effective to all clusters which is not only `default cluster` but also other cluster which index is in `${CLUSTER_INDEXES}`.**
+  > 2. `KYLIN_SCALE_DOWN_NODES` is for the range of kylin nodes to scale down.
+  > 3. The range of `KYLIN_SCALE_UP_NODES` must be contain the range of `KYLIN_SCALE_DOWN_NODES`.
+  > 4. **They are effective to all clusters which is not only `default cluster` but also other cluster which index is in `${CLUSTER_INDEXES}`.**
 
 - EC2_SPARK_SCALE_SLAVE_PARAMS: this params of module are for scaling **Spark workers**, the range of **Spark Workers ** is related to `SPARK_WORKER_SCALE_UP_NODES` and `SPARK_WORKER_SCALE_DOWN_NODES`.
 
   > Note:
   >
   > 1. `SPARK_WORKER_SCALE_UP_NODES` is for the range for spark workers to scale up. **It's effective to all clusters which is not only `default cluster` but also other cluster which index is in `${CLUSTER_INDEXES}`.**
-  > 1. `SPARK_WORKER_SCALE_DOWN_NODES` is for the range for spark workers to scale down. **It's effective to all clusters which is not only `default cluster` but also other cluster which index is in `${CLUSTER_INDEXES}`.**
-  > 1. The range of `SPARK_WORKER_SCALE_UP_NODES` must be contain the range of `SPARK_WORKER_SCALE_DOWN_NODES`.
-  > 1. **They are effective to all clusters which is not only `default cluster` but also other cluster which index is in `${CLUSTER_INDEXES}`.**
+  > 2. `SPARK_WORKER_SCALE_DOWN_NODES` is for the range for spark workers to scale down. **It's effective to all clusters which is not only `default cluster` but also other cluster which index is in `${CLUSTER_INDEXES}`.**
+  > 3. The range of `SPARK_WORKER_SCALE_UP_NODES` must be contain the range of `SPARK_WORKER_SCALE_DOWN_NODES`.
+  > 4. **They are effective to all clusters which is not only `default cluster` but also other cluster which index is in `${CLUSTER_INDEXES}`.**
 
 ### Customize Configs
 
@@ -45,8 +45,6 @@ User also can customize the params in `kylin_configs.yaml` to create an expected
 3. So instances can be customized to effect `Monitor Node`(`EC2_STATIC_SERVICES_PARAMS`), `Zookeeper Nodes`(`EC2_ZOOKEEPERS_PARAMS`), `Spark Master Node` ( `EC2_SPARK_MASTER_PARAMS`), `Kylin4 Node`( `EC2_KYLIN4_PARAMS`), `Spark workers `(`EC2_SPARK_WORKER_PARAMS`), `Kylin4 scale nodes`(`EC2_KYLIN4_SCALE_PARAMS`) and `Spark scale workers`(`EC2_SPARK_SCALE_SLAVE_PARAMS`).
 4. Now`Ec2Mode` **only effect** the related params are `Ec2InstanceTypeFor*`,`Ec2VolumeSizeFor*`  and `Ec2VolumnTypeFor`* in the params modules.
 5. If you don't change `ENABLE_LOCAL_CACHE_SOFT_AFFINITY` from `"false"` to `"true"` then cluster will created normally without `Local Cache + Soft Affinity` feature!
-
-
 
 #### Example
 

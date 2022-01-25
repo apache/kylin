@@ -4,8 +4,8 @@
 
 1. Deploy Kylin4 on Ec2 with Spark Standalone mode in `10` minutes.
 2. Support to scale nodes (Kylin & Spark Worker) quickly and conveniently.
-4. Improve performance for query of Kylin4 in using  `Local Cache + Soft Affinity` feature (`Experimental Feature`), please check the [details](https://kylin.apache.org/blog/2021/10/21/Local-Cache-and-Soft-Affinity-Scheduling/).
-5. Support to monitor status of cluster with `prometheus server` and `granfana`.
+3. Improve performance for query of Kylin4 in using  `Local Cache + Soft Affinity` feature (`Experimental Feature`), please check the [details](https://kylin.apache.org/blog/2021/10/21/Local-Cache-and-Soft-Affinity-Scheduling/).
+4. Support to monitor status of cluster with `prometheus server` and `granfana`.
 
 ## Architecture
 
@@ -48,13 +48,13 @@ When cluster created, services and nodes will like below:
    
 4. Init local env.
 
-```She
+```shell
 $ bin/init.sh
 ```
 
 > Note: Following the information into a python virtual env and get the help messages. 
 
-5. Execute commands to deploy a `default` cluster.
+5. Execute commands to deploy a `default` cluster, please check [details](./readme/prerequisites.md#cluster).
 
 ```shell
 $ python deploy.py --type deploy
@@ -72,13 +72,13 @@ Then you can check the `public ip` of Kylin Node.
 
 You can access `Kylin` web by `http://{kylin public ip}:7070/kylin`.
 
+![kylin login](./images/kylinlogin.png)
+
 7. Destroy the `default` cluster.
 
 ```shell
 $ python deploy.py --type destroy
 ```
-
-
 
 ## Notes
 
