@@ -2,7 +2,7 @@
 
 Current tool also support the feature of monitor for cluster.
 
-1. User can execute `python ./deploy.py --type list` to get the `public ip` of `Static Service` .
+1. User can execute `python deploy.py --type list` to get the `public ip` of `Static Service` .
 2. User can access the `public ip` of `Static Service` and the port is `9090` to access `Prometheus` server.
 3. User can access the `public ip` of `Static Service` and the port is `3000` to access `Granfana` server.
 
@@ -42,7 +42,7 @@ More details about `PromQL` for metric exploer, please check [official website](
 
 ![granfana 3](../images/granfana3.png)
 
-> Just config the url with syntax `http://${private ip of static service}:9090` . The `private ip of static service` can be from the `python ./deploy.py --type list` command.
+> Just config the url with syntax `http://${private ip of static service}:9090` . The `private ip of static service` can be from the `python deploy.py --type list` command.
 
 3. Add a new panel.
 

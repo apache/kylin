@@ -3,7 +3,7 @@
 Command:
 
 ```shell
-python ./deploy.py --type [deploy|destroy|list|scale] --scale-type [up|down] --node-type [kylin|spark_worker] [--cluster {1..6}|all|default]
+python deploy.py --type [deploy|destroy|list|scale] --scale-type [up|down] --node-type [kylin|spark_worker] [--cluster {1..6}|all|default]
 ```
 
 - deploy: create cluster(s).
@@ -25,21 +25,21 @@ python ./deploy.py --type [deploy|destroy|list|scale] --scale-type [up|down] --n
 - Deploy default cluster
 
 ```shell
-$ python ./deploy.py --type deploy [--cluster default]
+$ python deploy.py --type deploy [--cluster default]
 ```
 
 - Deploy a cluster with specific cluster index. 
 
 ```shell
-$ python ./deploy.py --type deploy --cluster ${cluster num}
+$ python deploy.py --type deploy --cluster ${cluster num}
 ```
 
 > Note: the `${cluster num}` must be in the range of `CLUSTER_INDEXES`.
 
 - Deploy all cluster which contain default cluster and all cluster which index in the range of `CLUSTER_INDEXES`.
 
-```sHe
-$ python ./deploy.py --type deploy --cluster all
+```shell
+$ python deploy.py --type deploy --cluster all
 ```
 
 ### Command for destroy
@@ -51,13 +51,13 @@ $ python ./deploy.py --type deploy --cluster all
 - Destroy default cluster
 
 ```shell
-$ python ./deploy.py --type destroy [--cluster default]
+$ python deploy.py --type destroy [--cluster default]
 ```
 
 - Destroy a cluster with specific cluster index. 
 
 ```shell
-$ python ./deploy.py --type destroy --cluster ${cluster num}
+$ python deploy.py --type destroy --cluster ${cluster num}
 ```
 
 > Note: the `${cluster num}` must be in the range of `CLUSTER_INDEXES`.
@@ -65,7 +65,7 @@ $ python ./deploy.py --type destroy --cluster ${cluster num}
 - Destroy all cluster which contain default cluster and all cluster which index in the range of `CLUSTER_INDEXES`.
 
 ```shell
-$ python ./deploy.py --type destroy --cluster all
+$ python deploy.py --type destroy --cluster all
 ```
 
 ### Command for list
@@ -73,7 +73,7 @@ $ python ./deploy.py --type destroy --cluster all
 - List nodes which are with **stack name**, **instance id**, **private ip** and **public ip** in **available stacks** .
 
 ```shell
-$ python ./deploy.py --type list
+$ python deploy.py --type list
 ```
 
 ### Command for scale
@@ -86,18 +86,18 @@ $ python ./deploy.py --type list
 > 4. Scale params which are `KYLIN_SCALE_UP_NODES`, `KYLIN_SCALE_DOWN_NODES`, `SPARK_WORKER_SCALE_UP_NODES` and `SPARK_WORKER_SCALE_DOWN_NODES` effect on all cluster. So if user want to scale node for a specify cluster, then modify the scale params before **every run time.**
 > 5. **(Important!!!)** Current cluster is created with default `3` spark workers and `1` kylin node. The `3` spark workers can not be scaled down. The `1`  kylin node also can not be scaled down.
 > 6. **(Important!!!)** Cluster can only scale up or down the range of nodes which is in  `KYLIN_SCALE_UP_NODES`, `KYLIN_SCALE_DOWN_NODES`, `SPARK_WORKER_SCALE_UP_NODES` and `SPARK_WORKER_SCALE_DOWN_NODES` . Not the default `3` spark workers and `1` kylin node in the cluster.
-> 7. **(Important!!!)**  If user don't want to create a cluster with `3` default spark workers, then user can remove the useless node module in the `Ec2InstanceOfSlave0*` of `kylin-tpch/cloudformation_templates/ec2-cluster-spark-slave.yaml`. User need to know about the syntax of cloudformation as also.
+> 7. **(Important!!!)**  If user don't want to create a cluster with `3` default spark workers, then user can remove the useless node module in the `Ec2InstanceOfSlave0*` of `cloudformation_templates/ec2-cluster-spark-slave.yaml`. User need to know about the syntax of cloudformation as also.
 
 - Scale up/down kylin/spark workers in default cluster
 
 ```shell
-python ./deploy.py --type scale --scale-type up[|down] --node-type kylin[|spark_worker] [--cluster default]
+python deploy.py --type scale --scale-type up[|down] --node-type kylin[|spark_worker] [--cluster default]
 ```
 
 - Scale up/down kylin/spark workers in a specific cluster
 
 ```shell
-python ./deploy.py --type scale --scale-type up[|down] --node-type kylin[|spark_worker] --cluster ${cluster num}
+python deploy.py --type scale --scale-type up[|down] --node-type kylin[|spark_worker] --cluster ${cluster num}
 ```
 
 > Note: the `${cluster num}` must be in the range of `CLUSTER_INDEXES`.

@@ -82,7 +82,6 @@ ALWAYS_DESTROY_ALL: false
 ASSOSICATED_PUBLIC_IP: &associated_public_ip 'true'
 
 ## Stack Names
-### Note: if need to change stack names please change it in ../utils.py too.
 VPC_STACK: ec2-or-emr-vpc-stack
 RDS_STACK: ec2-rds-stack
 STATIC_SERVICE_STACK: ec2-static-service-stack

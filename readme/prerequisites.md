@@ -1,11 +1,11 @@
 ## Prerequisites 
 
-### Download source code & checkout to branch of `deploy-kylin-on-aws`
+### Download source code & checkout to branch of `kylin4_on_cloud`
 
 commands:
 
 ```shell
-git clone https://github.com/Kyligence/kylin-tpch.git && cd kylin-tpch && git checkout deploy-kylin-on-aws
+git clone https://github.com/apache/kylin.git && cd kylin && git checkout kylin4_on_cloud
 ```
 
 ### Initiliaze an AWS Account
@@ -16,7 +16,7 @@ git clone https://github.com/Kyligence/kylin-tpch.git && cd kylin-tpch && git ch
 >
 > ​	`IAM` role must have the access  which contains `AmazonEC2RoleforSSM` , `AmazonSSMFullAccess` and `AmazonSSMManagedInstanceCore`.
 >
-> ​	This `IAM` Role will be used to initialize every ec2 instances which are for creating an kylin4 cluster on aws. And it will configure in `Initilize Env of Local Mac` part.
+> ​	This `IAM` Role will be used to initialize every ec2 instances which are for creating an kylin4 cluster on aws. And it will configure in `Initilize Env of Local Machine` part.
 
 #### II. Create a `User` 
 
@@ -49,7 +49,7 @@ git clone https://github.com/Kyligence/kylin-tpch.git && cd kylin-tpch && git ch
 
 > Note: 
 >
-> ​	Please download the generated the csv file of `Access Key`  immediately. Get the `Access Key `  and `Secret Key` to initilize local mac to access aws.
+> ​	Please download the generated the csv file of `Access Key` immediately. Get the `Access Key` and `Secret Key` to initilize local mac to access aws.
 
 ![Access Key](../images/accesskey.png)
 
@@ -104,7 +104,7 @@ Example: make a directory named `kylin4-aws-test` . You can also create a direct
 
 
 
-#### (Optional) III. Upload  `kylin-tpch/backup/jars/*` to the S3 Path which suffix is `*/jars`
+#### (Optional) III. Upload  `backup/jars/*` to the S3 Path which suffix is `*/jars`
 
 > Note:
 >
@@ -127,7 +127,7 @@ Kylin4 needed extra jars
 
 ![jars](../images/jars.png)
 
-#### (Optional) IV. Upload `kylin-tpch/backup/scripts/*` to the S3 Path which suffix is `*/scripts`
+#### (Optional) IV. Upload `backup/scripts/*` to the S3 Path which suffix is `*/scripts`
 
 > Note:
 >
@@ -149,11 +149,11 @@ Scripts:
 
 ![scripts](../images/scripts.png)
 
-### Initilize Env Of Local Mac
+### Initilize Env Of Local Machine
 
-#### I.  Initilize an aws account on local mac to access AWS<a name="localaws"></a>
+#### I. Initilize an aws account on local mac to access AWS<a name="localaws"></a>
 
-> Use `Access Key` and `Secret Key ` above to Initilize a aws account on local mac. 
+> Use `Access Key` and `Secret Key` above to Initialize an aws account on local mac. 
 
 ```shell
 $ aws configure
@@ -173,17 +173,17 @@ Default output format : json
 
 > Note: 
 >
-> ​	Make sure that your mac already has a Python which version is 3.6.6 or later.  
+> ​	Make sure that your machine already has a Python which version is 3.6.6 or later.  
 
 commands: 
 
 ```shell
-$ ./bin/init.sh
+$ bin/init.sh
 ```
 
-> Note: Follow the information after `./bin/init.sh` to activate the python virtual env.
+> Note: Follow the information after `bin/init.sh` to activate the python virtual env.
 
-#### III. Configure the `kylin-tpch/kylin_configs.yaml`
+#### III. Configure the `kylin_configs.yaml`
 
 **Required parameters**:
 
@@ -200,10 +200,10 @@ $ ./bin/init.sh
 #### IV. Configure the `kylin.properties` in `backup/properties` directories.<a name="cluster"></a>
 
 1. The `kylin.properties` is for starting kylin instance in the cluster.
-2. Default cluster will check the `kylin.properties` in the `kylin-tpch/backup/properties/default`, and other specific cluster will check the related num directory such as `1`, `2` and `3`.
-3. User need to create new dir for the cluster num in `kylin-tpch/backup/properties`, and name it to the `${cluster num}`, such as `1`, `2` ,`3`  and so on. The range of cluster num must be in `CLUSTER_INDEXES` which is configured in the `kylin-tpch/kylin_configs.yml`.
-4. Follow the `2.` step, copy the `kylin.properties.template` which is in `kylin-tpch/backup/properties/templates` to the related `${cluster num} ` directories， and rename the template to `kylin.properties`. 
-5. The range of cluster nums must match the the config `CLUSTER_INDEXES`, such as `CLUSTER_INDEXES: (1, 3)` then the directories must be `1`, `2`,`3` in the `kylin-tpch/backup/properties`.
+2. Default cluster will check the `kylin.properties` in the `backup/properties/default`, and other specific cluster will check the related num directory such as `1`, `2` and `3`.
+3. User need to create new dir for the cluster num in `backup/properties`, and name it to the `${cluster num}`, such as `1`, `2` ,`3`  and so on. The range of cluster num must be in `CLUSTER_INDEXES` which is configured in the `kylin_configs.yml`.
+4. Follow the `2.` step, copy the `kylin.properties.template` which is in `backup/properties/templates` to the related `${cluster num} ` directories， and rename the template to `kylin.properties`. 
+5. The range of cluster nums must match the the config `CLUSTER_INDEXES`, such as `CLUSTER_INDEXES: (1, 3)` then the directories must be `1`, `2`,`3` in the `backup/properties`.
 
 ![kylin properties](../images/kylinproperties.png)
 
