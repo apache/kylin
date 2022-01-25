@@ -213,4 +213,4 @@ $ bin/init.sh
 
 ![rendered kylin properties](../images/renderedkylinproperties.png)
 
-7. **(Important !!!)** If you want to re-fill the `kylin.properties` for a `kylin` node in specify cluster,  you need to remove the `.rendered` file and re-copy the `kylin.propertie.template` . Redo steps from `3` to `6`.
+8. **(Important !!!)** If you want to re-fill the `kylin.properties` for a `kylin` node in specify cluster,  you need to remove the `.rendered` file and re-copy the `kylin.propertie.template` . Redo steps from `3` to `6`.
