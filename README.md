@@ -24,7 +24,7 @@ Get started with Kylin in 5 minutes with Docker
 =============
 In order to allow users to try Kylin easily, we provide a docker image for Kylin.
 
-Just run the following commands in your terminal. After 3~5 mins, you can access Kylin WebUI http://127.0.0.1:7070/kylin/login in your browser.
+Just run the following commands in your terminal. After 3~5 mins, you can access Kylin WebUI http://127.0.0.1:7070/kylin/login in your browser with ADMIN/KYLIN.
 
 1. pull docker image
 ```shell
