@@ -1,4 +1,4 @@
-# Welcome !
+# Welcome To Kylin 4 On Cloud Deployment Solution !
 
 **Apache Kylin community** released Kylin 4.0 with a new architecture, which dedicated to building a high-performance and low-cost OLAP engine. The architecture of Kylin 4.0 supports the separation of storage and computing, which enables Kylin users to run Kylin 4.0 by adopting a more flexible and elastically scalable cloud deployment method.
 
@@ -23,8 +23,8 @@ When cluster(s) created, services and nodes will like below:
 - **Read-write separated cluster will be easy created as same as image of architecture above.**
 - Services are created as the number order from 1 to 5.
 - Every machine node is presented by a white box. 
-- `Kylin Node` and `Spark Worker` Node can be easy scaled.
-- Whole clusters will has only one RDS and only one the machine node which contains `Prometheus Server` and `Hive MetaStore` service.
+- `Kylin Node` and `Spark Worker` Node can be easy to scale.
+- Whole clusters will have only one RDS and only one machine node which contains `Prometheus Server` and `Hive MetaStore` service.
 
 
 
