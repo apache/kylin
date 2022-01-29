@@ -19,9 +19,11 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.lang.StringUtils;
@@ -94,6 +96,23 @@ public class ModelController extends BasicController {
             @RequestParam(value = "offset", required = false) Integer offset) {
         try {
             return modelService.getModels(modelName, projectName, limit, offset);
+        } catch (IOException e) {
+            logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage(), e);
+        }
+    }
+
+    @RequestMapping(value = "mdx", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public EnvelopeResponse<List> getModelsForMdx(@RequestParam(value = "modelName", required = false) String modelName,
+                                         @RequestParam(value = "project", required = false) String project,
+                                         @RequestParam(value = "limit", required = false) Integer limit,
+                                         @RequestParam(value = "offset", required = false) Integer offset) {
+        try {
+            List<DataModelDesc> models = modelService.getModels(modelName, project, limit, offset);
+            Map<String, List<DataModelDesc>> data = new HashMap<>();
+            data.put("models", models);
+            return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
         } catch (IOException e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage(), e);

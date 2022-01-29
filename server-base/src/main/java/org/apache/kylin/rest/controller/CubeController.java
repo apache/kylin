@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -170,6 +171,41 @@ public class CubeController extends BasicController {
         }
 
         return response.subList(coffset, coffset + climit);
+    }
+
+    @RequestMapping(value = "mdx", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public EnvelopeResponse getCubesForMdx(@RequestParam(value = "cubeName", required = false) String cubeName,
+                                               @RequestParam(value = "modelName", required = false) String modelName,
+                                               @RequestParam(value = "projectName", required = false) String projectName,
+                                               @RequestParam(value = "limit", required = false) Integer limit,
+                                               @RequestParam(value = "offset", required = false) Integer offset) {
+        List<CubeInstance> cubes = cubeService.listAllCubes(cubeName, projectName, modelName, false);
+
+        List<CubeInstanceResponse> response = Lists.newArrayListWithExpectedSize(cubes.size());
+        for (CubeInstance cube : cubes) {
+            try {
+                response.add(cubeService.createCubeInstanceResponse(cube));
+            } catch (Exception e) {
+                logger.error("Error creating cube instance response, skipping.", e);
+            }
+        }
+
+        int climit = (null == limit) ? response.size() : limit;
+        int coffset = (null == offset) ? 0 : offset;
+        List<CubeInstanceResponse> result = response.subList(coffset, coffset + climit);
+        if (response.size() <= coffset) {
+            result = Collections.emptyList();
+        }
+
+        if ((response.size() - coffset) < climit) {
+            result = response.subList(coffset, response.size());
+        }
+        Map<String, Object> data = new HashMap<>();
+        data.put("size", response.size());
+        data.put("cubes", result);
+
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
 
     @RequestMapping(value = "validEncodings", method = { RequestMethod.GET }, produces = { "application/json" })

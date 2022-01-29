@@ -47,6 +47,8 @@ import org.apache.kylin.rest.request.MetaRequest;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.request.SaveSqlRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.util.ValidateUtil;
@@ -191,6 +193,17 @@ public class QueryController extends BasicController {
     public List<TableMeta> getMetadata(MetaRequest metaRequest) throws IOException {
         try {
             return queryService.getMetadataFilterByUser(metaRequest.getProject());
+        } catch (SQLException e) {
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
+    @RequestMapping(value = "/tables_and_columns/mdx", method = RequestMethod.GET, produces = { "application/json" })
+    @ResponseBody
+    public EnvelopeResponse getMetadataForMdx(MetaRequest metaRequest) throws IOException {
+        try {
+            List<TableMeta> metadata= queryService.getMetadataFilterByUser(metaRequest.getProject());
+            return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, metadata, "");
         } catch (SQLException e) {
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }

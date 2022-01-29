@@ -22,6 +22,8 @@ import java.io.IOException;
 
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.CubeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -64,6 +66,22 @@ public class CubeDescController extends BasicController {
         } else {
             return null;
         }
+    }
+
+    @RequestMapping(value = "/{cubeName}/mdx", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public EnvelopeResponse getCubeForMdx(@PathVariable String cubeName) {
+        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
+
+        if (cubeInstance == null) {
+            return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, null, "");
+        }
+
+        CubeDesc cSchema = cubeInstance.getDescriptor();
+        if (cSchema == null) {
+            return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, null, "");
+        }
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cSchema, "");
     }
 
     /**

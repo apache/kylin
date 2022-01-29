@@ -34,6 +34,8 @@ import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.HiveTableRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.TableACLService;
 import org.apache.kylin.rest.service.TableService;
 import org.slf4j.Logger;
@@ -81,6 +83,19 @@ public class TableController extends BasicController {
             @RequestParam(value = "project", required = true) String project) throws IOException {
         try {
             return tableService.getTableDescByProject(project, withExt);
+        } catch (IOException e) {
+            logger.error("Failed to get Hive Tables", e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
+    @RequestMapping(value = "mdx", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public EnvelopeResponse<List<TableDesc>> getTableDescForMdx(@RequestParam(value = "ext", required = false) boolean withExt,
+                                              @RequestParam(value = "project", required = true) String project) {
+        try {
+            List<TableDesc> tableDescs = tableService.getTableDescByProject(project, withExt);
+            return new EnvelopeResponse<List<TableDesc>>(ResponseCode.CODE_SUCCESS, tableDescs, "");
         } catch (IOException e) {
             logger.error("Failed to get Hive Tables", e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
