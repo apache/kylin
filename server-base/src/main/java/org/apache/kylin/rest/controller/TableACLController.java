@@ -25,6 +25,8 @@ import java.util.Set;
 import static org.apache.kylin.metadata.MetadataConstants.TYPE_USER;
 
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.TableACLService;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.ValidateUtil;
@@ -65,6 +67,22 @@ public class TableACLController extends BasicController {
             allIdentifiers.add(Constant.ROLE_ADMIN);
         }
         return tableACLService.getCanAccessList(project, table, allIdentifiers, type);
+    }
+
+    @RequestMapping(value = "/table/{project}/{type}/{table:.+}/mdx", method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public EnvelopeResponse<List<String>> getUsersOrGroupsCanQueryTheTblForMdx(@PathVariable String project, @PathVariable String type, @PathVariable String table) throws IOException {
+        validateUtil.validateArgs(project, table);
+        validateUtil.validateTable(project, table);
+        Set<String> allIdentifiers = validateUtil.getAllIdentifiersInPrj(project, type);
+        // add global admins
+        if (type.equals(TYPE_USER)) {
+            allIdentifiers.addAll(userService.listAdminUsers());
+        } else {
+            allIdentifiers.add(Constant.ROLE_ADMIN);
+        }
+        List<String> usersOrGroups = tableACLService.getCanAccessList(project, table, allIdentifiers, type);
+        return new EnvelopeResponse<>(ResponseCode.CODE_SUCCESS, usersOrGroups, "");
     }
 
     @RequestMapping(value = "/table/{project}/{type}/black/{table:.+}", method = {RequestMethod.GET}, produces = {"application/json"})

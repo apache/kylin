@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.shaded.com.google.common.base.Preconditions;
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.util.Pair;
@@ -98,6 +100,13 @@ public class AccessController extends BasicController implements InitializingBea
         return accessService.getUserPermissionInPrj(project);
     }
 
+    @RequestMapping(value = "/user/permission/{project}/mdx", method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public EnvelopeResponse getUserPermissionInPrjForMdx(@PathVariable("project") String project) {
+        String permission = accessService.getUserPermissionInPrj(project);
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, permission, "");
+    }
+
     /**
      * Get access entry list of a domain object
      * 
@@ -136,6 +145,40 @@ public class AccessController extends BasicController implements InitializingBea
             Acl acl = accessService.getAcl(ae);
             return accessService.generateAceResponses(acl);
         }
+    }
+
+    @RequestMapping(value = "/{type}/{project}/mdx", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public EnvelopeResponse<List<AccessEntryResponse>> getAccessEntitiesForMdx(@PathVariable String type, @PathVariable String project) throws IOException {
+        String uuid = projectService.getIdOfProject(project);
+        ExternalAclProvider eap = ExternalAclProvider.getInstance();
+        if (uuid == null || eap == null) {
+            AclEntity ae = accessService.getAclEntity(type, uuid);
+            Acl acl = accessService.getAcl(ae);
+            return new EnvelopeResponse<>(ResponseCode.CODE_SUCCESS, accessService.generateAceResponses(acl), "");
+        }
+
+        List<AccessEntryResponse> ret = new ArrayList<>();
+        List<Pair<String, AclPermission>> acl = eap.getAcl(type, uuid);
+        if (acl != null) {
+            for (Pair<String, AclPermission> p : acl) {
+                PrincipalSid sid = new PrincipalSid(p.getFirst());
+                ret.add(new AccessEntryResponse(null, sid, p.getSecond(), true));
+            }
+        } else {
+            // in case getAcl() does not work, try checkPermission() as a fall back
+            for (UserDetails user : userService.listUsers()) {
+                PrincipalSid sid = new PrincipalSid(user.getUsername());
+                List<String> authorities = AclPermissionUtil.transformAuthorities(user.getAuthorities());
+                for (Permission p : AclPermissionFactory.getPermissions()) {
+                    if (!eap.checkPermission(user.getUsername(), authorities, type, uuid, p)) {
+                        continue;
+                    }
+                    ret.add(new AccessEntryResponse(null, sid, p, true));
+                }
+            }
+        }
+        return new EnvelopeResponse<>(ResponseCode.CODE_SUCCESS, ret, "");
     }
 
     /**

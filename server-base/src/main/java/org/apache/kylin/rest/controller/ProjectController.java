@@ -21,8 +21,10 @@ package org.apache.kylin.rest.controller;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.persistence.AclEntity;
@@ -33,6 +35,8 @@ import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.ProjectRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.CubeService;
@@ -91,6 +95,18 @@ public class ProjectController extends BasicController {
     public List<ProjectInstance> getProjects(@RequestParam(value = "limit", required = false) Integer limit,
                                              @RequestParam(value = "offset", required = false) Integer offset) {
         return projectService.listProjects(limit, offset);
+    }
+
+    @RequestMapping(value = "/mdx", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public EnvelopeResponse getProjectsForMdx(@RequestParam(value = "limit", required = false) Integer limit,
+                                              @RequestParam(value = "offset", required = false) Integer offset) {
+        List<ProjectInstance> projects = projectService.listProjects(limit, offset);
+        Map<String, Object> data = new HashMap<>();
+        data.put("projects", projects);
+        data.put("size", projects.size());
+
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
 
     @RequestMapping(value = "/readable", method = { RequestMethod.GET }, produces = { "application/json" })

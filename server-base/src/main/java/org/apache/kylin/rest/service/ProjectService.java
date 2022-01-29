@@ -124,6 +124,18 @@ public class ProjectService extends BasicService {
         return updatedProject;
     }
 
+    public String getIdOfProject(String project) {
+        List<ProjectInstance> projects = listAllProjects(null, null);
+        for (ProjectInstance prj: projects) {
+            if (!prj.getName().equalsIgnoreCase(project)) {
+                continue;
+            }
+            return prj.getId();
+        }
+        return null;
+    }
+
+
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<ProjectInstance> listProjects(final Integer limit, final Integer offset) {
         List<ProjectInstance> projects = listAllProjects(limit, offset);
