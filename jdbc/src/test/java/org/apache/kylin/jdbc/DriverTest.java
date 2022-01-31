@@ -19,18 +19,21 @@
 package org.apache.kylin.jdbc;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Properties;
 
 import org.apache.calcite.avatica.DriverVersion;
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -43,7 +46,7 @@ public class DriverTest {
     public void testVersion() {
         Driver driver = new DummyDriver();
         DriverVersion version = driver.getDriverVersion();
-        Assert.assertNotEquals("unknown version", version.productVersion);
+        assertNotEquals("unknown version", version.productVersion);
     }
 
     @Test
@@ -271,6 +274,24 @@ public class DriverTest {
         assertEquals("BACK_TICK", connProps2.getProperty("kylin.query.calcite.extras-props.quoting"));
         conn.close();
         conn2.close();
+    }
+
+    // fix KYLIN-4382
+    @Test
+    public void testKYLIN_4382() throws SQLException, ParseException {
+        Driver driver = new Driver();
+        Properties info = new Properties();
+        info.put("user", "ADMIN");
+        info.put("password", "KYLIN");
+        Connection conn = driver.connect("jdbc:kylin://localhost:7070/default", info);
+        PreparedStatement state = conn.prepareStatement("select count(*) from test_kylin_fact where cal_dt=?");
+        state.setDate(1, new Date(new SimpleDateFormat("yyyy-MM-dd").parse("2012-01-01").getTime()));
+        ResultSet resultSet = state.executeQuery();
+        assertTrue(resultSet.next());
+        assertNotEquals(0, resultSet.getLong(1));
+        resultSet.close();
+        state.close();
+        conn.close();
     }
 
     private void printResultSet(ResultSet rs) throws SQLException {
