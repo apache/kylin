@@ -57,6 +57,51 @@ Mappings:
     cn-northwest-1:
       '1': cn-northwest-1a
       '2': cn-northwest-1b
+    cn-north-1:
+      '1': cn-north-1a
+      '2': cn-north-1b
+    us-east-1:
+      '1': us-east-1a
+      '2': us-east-1b
+    us-east-2:
+      '1': us-east-2a
+      '2': us-east-2b
+    us-west-2:
+      '1': us-west-2a
+      '2': us-west-2b
+    us-west-1:
+      '1': us-west-1a
+      '2': us-west-1b
+    eu-west-1:
+      '1': eu-west-1a
+      '2': eu-west-1b
+    ca-central-1:
+      '1': ca-central-1a
+      '2': ca-central-1b
+    eu-west-2:
+      '1': eu-west-2a
+      '2': eu-west-2b
+    eu-central-1:
+      '1': eu-central-1a
+      '2': eu-central-1b
+    ap-southeast-1:
+      '1': ap-southeast-1a
+      '2': ap-southeast-1b
+    ap-northeast-2:
+      '1': ap-northeast-2a
+      '2': ap-northeast-2b
+    ap-northeast-1:
+      '1': ap-northeast-1a
+      '2': ap-northeast-1b
+    ap-southeast-2:
+      '1': ap-southeast-2a
+      '2': ap-southeast-2b
+    ap-south-1:
+      '1': ap-south-1a
+      '2': ap-south-1b
+    sa-east-1:
+      '1': sa-east-1a
+      '2': sa-east-1b
 
 Resources:
   Ec2InstanceProfile:

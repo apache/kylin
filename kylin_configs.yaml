@@ -156,6 +156,7 @@ EC2_RDS_PARAMS:
   Ec2Mode: test
   RDSEngine: mysql
   RDSEngineVersion: 5.7.25
+  Zone: cn-northwest-1b
 
 EC2_STATIC_SERVICES_PARAMS:
   # Note: params details check in related yaml file

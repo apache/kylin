@@ -409,6 +409,7 @@ class AWSInstance:
         # update needed params
         params[Params.SUBNET_GROUP_NAME.value] = self.get_subnet_group()
         params[Params.SECURITY_GROUP.value] = self.get_security_group_id()
+        Params[Params.ZONE.value] = self.region + 'b'
         resp = self.create_stack(
             stack_name=self.rds_stack_name,
             file_path=self.path_of_rds_stack,
