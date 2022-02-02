@@ -38,6 +38,7 @@ class Params(Enum):
     SECURITY_GROUP = 'SecurityGroupId'
     INSTANCE_PROFILE = 'InstanceProfileId'
     SUBNET_GROUP_NAME = 'SubnetGroupName'
+    ZONE = 'Zone'
 
     # Rds params
     DB_HOST = 'DbHost'

@@ -123,6 +123,34 @@ Mappings:
       HVMebs: ami-00ac27054b887ff5c
     cn-northwest-1:
       HVMebs: ami-0135cb179d33fbe3e
+    us-east-1:
+      HVMebs: ami-0c6b1d09930fac512
+    us-east-2:
+      HVMebs: ami-0ebbf2179e615c338
+    us-west-2:
+      HVMebs: ami-0cb72367e98845d43
+    us-west-1:
+      HVMebs: ami-015954d5e5548d13b
+    eu-west-1:
+      HVMebs: ami-030dbca661d402413
+    ca-central-1:
+      HVMebs: ami-08a9b721ecc5b0a53
+    eu-west-2:
+      HVMebs: ami-0009a33f033d8b7b6
+    eu-central-1:
+      HVMebs: ami-0ebe657bc328d4e82
+    ap-southeast-1:
+      HVMebs: ami-0b5a47f8865280111
+    ap-northeast-2:
+      HVMebs: ami-08ab3f7e72215fe91
+    ap-northeast-1:
+      HVMebs: ami-00d101850e971728d
+    ap-southeast-2:
+      HVMebs: ami-0fb7513bcdc525c3b
+    ap-south-1:
+      HVMebs: ami-00e782930f1c3dbc7
+    sa-east-1:
+      HVMebs: ami-058141e091292ecf0
 
 Conditions:
   NotNullSubnetId:
