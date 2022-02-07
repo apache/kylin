@@ -29,10 +29,10 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Properties;
 
 import org.apache.calcite.avatica.DriverVersion;
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -286,7 +286,7 @@ public class DriverTest {
         info.put("password", "KYLIN");
         Connection conn = driver.connect("jdbc:kylin://localhost:7070/default", info);
         PreparedStatement state = conn.prepareStatement("select count(*) from test_kylin_fact where cal_dt=?");
-        state.setDate(1, new Date(new SimpleDateFormat("yyyy-MM-dd").parse("2012-01-01").getTime()));
+        state.setDate(1, new Date(FastDateFormat.getInstance("yyyy-MM-dd").parse("2012-01-01").getTime()));
         ResultSet resultSet = state.executeQuery();
         assertTrue(resultSet.next());
         assertTrue(resultSet.getLong(1) > 0);
