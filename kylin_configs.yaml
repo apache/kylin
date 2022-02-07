@@ -156,7 +156,6 @@ EC2_RDS_PARAMS:
   Ec2Mode: test
   RDSEngine: mysql
   RDSEngineVersion: 5.7.25
-  Zone: cn-northwest-1b
 
 EC2_STATIC_SERVICES_PARAMS:
   # Note: params details check in related yaml file
@@ -172,10 +171,10 @@ EC2_STATIC_SERVICES_PARAMS:
   DbPassword: *DbPassword
 
   StaticServicesScriptFileName: prepare-ec2-env-for-static-services.sh
-  Ec2Mode: product
+  Ec2Mode: test
   # followed params is invalid if Ec2Mode(which set in the yaml) is 'test'
-  Ec2InstanceTypeForStaticServices: m5.4xlarge
-  Ec2VolumeSizeForStaticServicesNode: '50'
+  Ec2InstanceTypeForStaticServices: m5.2xlarge
+  Ec2VolumeSizeForStaticServicesNode: '20'
   Ec2VolumnTypeForStaticServicesNode: standard
 
 EC2_ZOOKEEPERS_PARAMS:

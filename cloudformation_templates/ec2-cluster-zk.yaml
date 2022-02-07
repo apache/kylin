@@ -63,9 +63,9 @@ Parameters:
     Description: EC2 instance type
     Type: String
     ConstraintDescription: must be a valid EC2 instance type.
-    Default: m5.xlarge
+    Default: m5.large
     AllowedValues:
-      - m5.xlarge
+      - m5.large
   Ec2VolumeSizeForZookeeperNode:
     Type: Number
     Default: 10

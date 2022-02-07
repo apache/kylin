@@ -170,8 +170,8 @@ class EngineUtils:
         self.aws.destroy_clusters(cluster_nums=[cluster_num])
         self.aws.restart_prometheus_server()
 
-    def destroy_rds_and_vpc(self) -> None:
-        self.aws.destroy_rds_and_vpc()
+    def destroy_monitor_and_rds_and_vpc(self) -> None:
+        self.aws.destroy_monitor_and_rds_and_vpc()
 
     def is_cluster_ready(self) -> bool:
         if self.cloud_address:
@@ -202,12 +202,6 @@ class EngineUtils:
         jars = self.needed_jars()
         for jar in jars:
             Utils.download_jar(jar)
-        if self.config[Config.ENABLE_SOFT_AFFINITY.value] == 'true':
-            assert Utils.files_in_jars() == 4, f"Needed jars must be 4, not {Utils.files_in_jars()}, " \
-                                         f"which contains {jars}."
-        else:
-            assert Utils.files_in_jars() == 2, f"Needed jars must be 2, not {Utils.files_in_jars()}, " \
-                                         f"which contains {jars}."
 
     def upload_needed_files(self) -> None:
         logger.info("Start to uploading tars.")
