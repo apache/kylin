@@ -19,7 +19,6 @@
 package org.apache.kylin.jdbc;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
@@ -34,6 +33,7 @@ import java.text.SimpleDateFormat;
 import java.util.Properties;
 
 import org.apache.calcite.avatica.DriverVersion;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -46,7 +46,7 @@ public class DriverTest {
     public void testVersion() {
         Driver driver = new DummyDriver();
         DriverVersion version = driver.getDriverVersion();
-        assertNotEquals("unknown version", version.productVersion);
+        Assert.assertNotEquals("unknown version", version.productVersion);
     }
 
     @Test
@@ -276,9 +276,10 @@ public class DriverTest {
         conn2.close();
     }
 
-    // fix KYLIN-4382
+    // fix KYLIN-4382 Unable to use DATE type in prepared statements
+    @Ignore("require dev sandbox")
     @Test
-    public void testKYLIN_4382() throws SQLException, ParseException {
+    public void testKYLIN4382() throws SQLException, ParseException {
         Driver driver = new Driver();
         Properties info = new Properties();
         info.put("user", "ADMIN");
@@ -288,7 +289,7 @@ public class DriverTest {
         state.setDate(1, new Date(new SimpleDateFormat("yyyy-MM-dd").parse("2012-01-01").getTime()));
         ResultSet resultSet = state.executeQuery();
         assertTrue(resultSet.next());
-        assertNotEquals(0, resultSet.getLong(1));
+        assertTrue(resultSet.getLong(1) > 0);
         resultSet.close();
         state.close();
         conn.close();
