@@ -80,6 +80,18 @@ class AWS:
         return self.cloud_instance.kylin_stack_name
 
     @property
+    def static_service_stack_name(self) -> str:
+        return self.cloud_instance.static_service_stack_name
+
+    @property
+    def rds_stack_name(self) -> str:
+        return self.cloud_instance.rds_stack_name
+
+    @property
+    def vpc_stack_name(self) -> str:
+        return self.cloud_instance.vpc_stack_name
+
+    @property
     def is_associated_public_ip(self) -> bool:
         return self.config[Params.ASSOSICATED_PUBLIC_IP.value] == 'true'
 
@@ -152,7 +164,7 @@ class AWS:
         self.cloud_instance.terminate_zk_stack()
         logger.info('Cluster terminated useless nodes.')
 
-    def destroy_rds_and_vpc(self) -> None:
+    def destroy_monitor_and_rds_and_vpc(self) -> None:
         if not self.is_destroy_all:
             return
         logger.info('Prepare to destroy RDS and VPC and monitor node.')

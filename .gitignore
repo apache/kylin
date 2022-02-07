@@ -7,3 +7,5 @@ __pycache__/
 /venv/
 .idea
 logs/*.log
+backup/jars
+backup/tars

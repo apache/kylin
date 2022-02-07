@@ -84,9 +84,9 @@ Parameters:
     Description: EC2 instance type
     Type: String
     ConstraintDescription: must be a valid EC2 instance type.
-    Default: m5.2xlarge
+    Default: m5.xlarge
     AllowedValues:
-      - m5.2xlarge
+      - m5.xlarge
   Ec2VolumnTypeForSparkMasterNode:
     Type: String
     Default: gp2

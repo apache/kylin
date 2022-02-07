@@ -79,6 +79,13 @@ Parameters:
       - m5.xlarge
       - m5.2xlarge
       - m5.4xlarge
+  InstanceTypeForTest:
+    Description: EC2 instance type
+    Type: String
+    ConstraintDescription: Must be a valid EC2 instance type.
+    Default: m5.xlarge
+    AllowedValues:
+      - m5.xlarge
   Ec2VolumnTypeForSlaveNode:
     Type: String
     Default: gp2
@@ -175,7 +182,11 @@ Resources:
             - - Slave Scale
               - !Ref WorkerNum
               - Node for kylin4
-      InstanceType: !Ref InstanceType
+      InstanceType:
+        !If
+        - IsProductMode
+        - !Ref InstanceType
+        - !Ref InstanceTypeForTest
       IamInstanceProfile: !Ref InstanceProfileId
       NetworkInterfaces:
         - DeviceIndex: 0

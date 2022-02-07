@@ -394,8 +394,7 @@ class AWSInstance:
         try:
             self.rds_client.describe_db_instances(DBInstanceIdentifier=self.db_identifier)
         except self.rds_client.exceptions.DBInstanceNotFoundFault as ex:
-            logger.warning(ex.response['Error']['Message'])
-            logger.info(f'Now creating {self.db_identifier}.')
+            logger.warning(f'DB {self.db_identifier} is not found.')
             return False
         return True
 
@@ -409,14 +408,12 @@ class AWSInstance:
         # update needed params
         params[Params.SUBNET_GROUP_NAME.value] = self.get_subnet_group()
         params[Params.SECURITY_GROUP.value] = self.get_security_group_id()
-        Params[Params.ZONE.value] = self.region + 'b'
+        params[Params.ZONE.value] = self.region + 'b'
         resp = self.create_stack(
             stack_name=self.rds_stack_name,
             file_path=self.path_of_rds_stack,
             params=params,
         )
-        # Make sure that rds create successfully.
-        assert self.is_stack_complete(self.rds_stack_name), f'Rds {self.db_identifier} create failed, please check.'
         return resp
 
     def terminate_rds_stack(self) -> Optional[Dict]:
@@ -528,7 +525,6 @@ class AWSInstance:
             file_path=self.path_of_zk_stack,
             params=params
         )
-        assert self.is_stack_complete(zk_stack_name), f'{zk_stack_name} create failed, please check.'
         return resp
 
     def terminate_zk_stack(self) -> Optional[Dict]:
@@ -677,7 +673,6 @@ class AWSInstance:
             file_path=self.path_of_kylin_stack,
             params=params
         )
-        assert self.is_stack_complete(kylin_stack_name), f"Create scaled kylin stack not complete, please check."
         return resp
 
     def terminate_kylin_stack(self) -> Optional[Dict]:
@@ -811,7 +806,6 @@ class AWSInstance:
             file_path=self.path_of_kylin_scale_stack,
             params=params
         )
-        assert self.is_stack_complete(stack_name)
         return resp
 
     def scale_down_kylin(self, kylin_num: int, cluster_num: int = None) -> Optional[Dict]:
@@ -889,9 +883,6 @@ class AWSInstance:
             file_path=self.path_of_spark_master_stack,
             params=params
         )
-
-        assert self.is_stack_complete(spark_master_stack_name), \
-            f'Current {spark_master_stack_name} stack not create complete, please check.'
         return resp
 
     def terminate_spark_master_stack(self) -> Optional[Dict]:
@@ -1135,7 +1126,6 @@ class AWSInstance:
             file_path=self.path_of_spark_slave_scaled_stack,
             params=params
         )
-        assert self.is_stack_complete(stack_name)
         return resp
 
     def scale_down_worker(self, worker_num: int, cluster_num: int = None) -> Optional[Dict]:
@@ -1453,6 +1443,7 @@ class AWSInstance:
         return resp
 
     def create_stack(self, stack_name: str, file_path: str, params: Dict, is_capability: bool = False) -> Dict:
+        logger.info(f'Now creating stack: {stack_name}.')
         try:
             if is_capability:
                 resp = self.cf_client.create_stack(
@@ -1470,8 +1461,8 @@ class AWSInstance:
             return resp
         except ParamValidationError as ex:
             logger.error(ex)
-        assert self.is_stack_complete(stack_name=stack_name), \
-            f"Stack {stack_name} not create complete, please check."
+        assert self.is_stack_complete(stack_name=stack_name), f"Stack: {stack_name} not create complete, please check."
+        logger.info(f'Create stack: {stack_name} complete.')
 
     def delete_stack(self, stack_name: str) -> Dict:
         logger.info(f'Current terminating stack: {stack_name}.')
@@ -2006,9 +1997,13 @@ class AWSInstance:
 
     def is_object_exists_on_s3(self, filename: str, bucket: str, bucket_dir: str) -> bool:
         try:
-            self.s3_client.head_object(Bucket=bucket, Key=bucket_dir + filename)
+            response = self.s3_client.head_object(Bucket=bucket, Key=bucket_dir + filename)
+            Utils.is_uploaded_success(filename=filename, size_in_bytes=response['ContentLength'])
         except botocore.exceptions.ClientError as ex:
             assert ex.response['Error']['Code'] == '404'
+            return False
+        except AssertionError as ex:
+            logger.error(ex)
             return False
         return True
 
@@ -2085,9 +2080,23 @@ class AWSInstance:
     def is_stack_delete_complete(self, stack_name: str) -> bool:
         return self._stack_status_check(name_or_id=stack_name, status='DELETE_COMPLETE')
 
+    def is_stack_rollback_complete(self, stack_name: str) -> bool:
+        return self._stack_status_check(name_or_id=stack_name, status='ROLLBACK_COMPLETE')
+
+    def is_stack_rollback_failed(self, stack_name: str) -> bool:
+        return self._stack_status_check(name_or_id=stack_name, status='ROLLBACK_FAILED')
+
+    def is_stack_rollback_in_progress(self, stack_name: str) -> bool:
+        return self._stack_status_check(name_or_id=stack_name, status='ROLLBACK_IN_PROGRESS')
+
     def is_stack_complete(self, stack_name: str) -> bool:
         if self._stack_complete(stack_name):
             return True
+        # before return false, check stack whether is created failed or other failed status.
+        if self.is_stack_rollback_failed(stack_name=stack_name) \
+            or self.is_stack_rollback_complete(stack_name=stack_name) \
+            or self.is_stack_rollback_in_progress(stack_name=stack_name):
+            raise Exception(f'Current stack: {stack_name} is create failed, please check.')
         return False
 
     def _validate_spark_worker_scale(self, stack_name: str) -> None:

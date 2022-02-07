@@ -61,17 +61,27 @@ function check_python_version {
 
 function install_env {
   check_python_version
-  if [[ ! -d $TOOL_HOME/venv ]]; then
+  if [[  ! -f $TOOL_HOME/venv/.installed ]]; then
+    # If not installed `venv` successfully, but `venv` already exists, remove it first.
+    if [[ -d $TOOL_HOME/venv  ]]; then
+      logging warn "Deleting remnant useless venv ..."
+      rm -rf $TOOL_HOME/venv
+      logging warn "Deleted remnant useless venv successfully."
+    fi
+    logging info "Initializing venv ..."
     python3 -m venv $TOOL_HOME/venv
     source $TOOL_HOME/venv/bin/activate
-    logging info "Install dependencies ..."
+    logging info "Installing dependencies ..."
     pip3 install -r $TOOL_HOME/requirements.txt
+    logging info "Installed dependencies successfully."
+    touch $TOOL_HOME/venv/.installed
+    logging info "Init $TOOL_HOME/.venv successfully."
   else
     logging warn "$TOOL_HOME/.venv already existing, skip install again."
   fi
-  logging info "Please use 'source venv/bin/activate' to activate venv and execute commands."
-  logging info "Please use 'python deploy.py --help' to check the usage."
-  logging info "Enjoy it and have fun."
+  logging warn "Please use 'source venv/bin/activate' to activate venv and execute commands."
+  logging warn "Please use 'python deploy.py --help' to check the usage."
+  logging info "Please enjoy it and have fun."
 }
 
 function main {

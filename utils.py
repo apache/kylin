@@ -27,7 +27,10 @@ from constant.path import (
     TARS_PATH,
     JARS_PATH,
     TEMPLATES_PATH,
-    KYLIN_PROPERTIES_TEMPLATE_DIR, KYLIN_PROPERTIES_DIR, RENDERED_FILE, PROPERTIES_TEMPLATE_DIR,
+    KYLIN_PROPERTIES_TEMPLATE_DIR,
+    KYLIN_PROPERTIES_DIR,
+    RENDERED_FILE,
+    PROPERTIES_TEMPLATE_DIR,
     TEMPLATE_OF_KYLIN_PROPERTIES,
 )
 
@@ -36,6 +39,19 @@ logger = logging.getLogger(__name__)
 
 class Utils:
     DOWNLOAD_BASE_URL = 'https://s3.cn-north-1.amazonaws.com.cn/public.kyligence.io/kylin'
+
+    FILES_SIZE_IN_BYTES = {
+        'jdk-8u301-linux-x64.tar.gz': 145520298,
+        'apache-kylin-4.0.0-bin-spark3.tar.gz': 198037626,
+        'apache-hive-2.3.9-bin.tar.gz': 286170958,
+        'hadoop-3.2.0.tar.gz': 345625475,
+        'node_exporter-1.3.1.linux-amd64.tar.gz': 9033415,
+        'prometheus-2.31.1.linux-amd64.tar.gz': 73079452,
+        'spark-3.1.1-bin-hadoop3.2.tgz': 228721937,
+        'zookeeper-3.4.13.tar.gz': 37191810,
+        'commons-configuration-1.3.jar': 232915,
+        'mysql-connector-java-5.1.40.jar': 990924,
+    }
 
     @staticmethod
     def generate_nodes(scale_nodes: Tuple) -> List:
@@ -61,45 +77,49 @@ class Utils:
         base_url = Utils.DOWNLOAD_BASE_URL + '/tar/'
         url = base_url + filename
         Utils.download(url=url, dest_folder=TARS_PATH, filename=filename)
+        Utils.is_downloaded_success(filename=filename, dest_folder=TARS_PATH)
 
     @staticmethod
     def download_jar(filename: str) -> None:
         base_url = Utils.DOWNLOAD_BASE_URL + '/jars/'
         url = base_url + filename
         Utils.download(url=url, dest_folder=JARS_PATH, filename=filename)
+        Utils.is_downloaded_success(filename=filename, dest_folder=JARS_PATH)
 
     @staticmethod
     def download(url: str, dest_folder: str, filename: str) -> None:
-        if not os.path.exists(dest_folder):
+        if not Utils.is_file_exists(dest_folder):
             # create folder if it does not exist
             os.makedirs(dest_folder)
 
         file_path = os.path.join(dest_folder, filename)
-        if os.path.exists(file_path):
+        if Utils.is_file_exists(file_path):
             logger.info(f'{filename} already exists, skip download it.')
             return
         r = requests.get(url, stream=True)
-        if r.ok:
-            logger.info(f"saving to {os.path.abspath(file_path)}.")
-            with open(file_path, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=1024 * 8):
-                    if chunk:
-                        f.write(chunk)
-                        f.flush()
-                        os.fsync(f.fileno())
-        else:  # HTTP status code 4XX/5XX
+        if not r.ok:
+            # HTTP status code 4XX/5XX
             logger.error("Download failed: status code {}\n{}".format(r.status_code, r.text))
+            return
+        logger.info(f"Downloading {os.path.abspath(file_path)}.")
+        with open(file_path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=1024 * 8):
+                if not chunk:
+                    break
+                f.write(chunk)
+                f.flush()
+                os.fsync(f.fileno())
 
     @staticmethod
     def files_in_tar() -> int:
-        if not os.path.exists(TARS_PATH):
+        if not Utils.is_file_exists(TARS_PATH):
             logger.error(f'{TARS_PATH} does exists, please check.')
             return 0
         return sum(1 for _ in Utils.listdir_nohidden(TARS_PATH))
 
     @staticmethod
     def files_in_jars() -> int:
-        if not os.path.exists(JARS_PATH):
+        if not Utils.is_file_exists(JARS_PATH):
             logger.error(f'{JARS_PATH} does exists, please check.')
             return 0
         return sum(1 for _ in Utils.listdir_nohidden(JARS_PATH))
@@ -120,7 +140,7 @@ class Utils:
 
         dest_path = os.path.join(search_path, 'kylin.properties')
         rendered_file = os.path.join(search_path, RENDERED_FILE)
-        if os.path.exists(rendered_file):
+        if Utils.is_file_exists(rendered_file):
             logger.info(f'{dest_path} already rendered. Skip render it again.')
             return
 
@@ -170,13 +190,13 @@ class Utils:
         # refresh default kylin.properties
         default_path = KYLIN_PROPERTIES_TEMPLATE_DIR.format(cluster_num='default')
         mark_file_path = os.path.join(default_path, RENDERED_FILE)
-        if os.path.exists(mark_file_path):
+        if Utils.is_file_exists(mark_file_path):
             logger.info(f'Removing the render file.')
             os.remove(mark_file_path)
             logger.info(f'Removed the render file.')
 
         kylin_properties = os.path.join(default_path, properties_template)
-        if os.path.exists(kylin_properties):
+        if Utils.is_file_exists(kylin_properties):
             logger.info(f'Removing the render file.')
             os.remove(kylin_properties)
             logger.info(f'Removed the render file.')
@@ -186,3 +206,34 @@ class Utils:
         logger.info(f'Copy template from {template} to {kylin_properties}.')
         shutil.copy(template, kylin_properties)
         logger.info(f'Copy done.')
+
+    @staticmethod
+    def is_file_exists(file_with_full_path: str) -> bool:
+        return os.path.exists(file_with_full_path)
+
+    @staticmethod
+    def is_downloaded_success(filename: str, dest_folder: str) -> None:
+        if filename not in Utils.FILES_SIZE_IN_BYTES.keys():
+            logger.warning(f'Current file {filename} is not the matched version, skip check file size.')
+            return
+        assert Utils.FILES_SIZE_IN_BYTES[filename] == Utils.size_in_bytes(dest_folder=dest_folder, filename=filename), \
+            f'{filename} size should be {Utils.FILES_SIZE_IN_BYTES[filename]} bytes' \
+            f'not {Utils.size_in_bytes(dest_folder, filename)} bytes, please check.'
+        logger.info(f'Downloaded file {filename} successfully.')
+
+    @staticmethod
+    def size_in_bytes(filename: str, dest_folder: str) -> int:
+        # return file size in bytes
+        return os.path.getsize(os.path.join(dest_folder,filename))
+
+    @staticmethod
+    def is_uploaded_success(filename: str, size_in_bytes: int) -> None:
+        if filename.endswith('.sh'):
+            # .sh scripts don't need to check file size, because it is in local
+            return
+        if filename not in Utils.FILES_SIZE_IN_BYTES.keys():
+            logger.warning(f'Current uploading file: {filename} is not match version, skip check file size.')
+            return
+        assert Utils.FILES_SIZE_IN_BYTES[filename] == size_in_bytes, \
+            f'Uploaded file {filename} size should be {Utils.FILES_SIZE_IN_BYTES[filename]} bytes, ' \
+            f'not {size_in_bytes} bytes, please check.'

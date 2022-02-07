@@ -52,7 +52,7 @@ class Engine:
         logger.info('Destroy default Kylin Cluster successfully.')
 
     def destroy_rds_and_vpc(self) -> None:
-        self.engine_utils.destroy_rds_and_vpc()
+        self.engine_utils.destroy_monitor_and_rds_and_vpc()
 
     def list_alive_nodes(self) -> None:
         logger.info('Ec2: list alive nodes.')
