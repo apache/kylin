@@ -2,9 +2,14 @@
 
 ![sketch map](../images/sketch.png)
 
+- **Services are created as the number order from 1 to 4.**
+- **A cluster will be easily created as same as the image of architecture above.**
+
+
+
 ## Quick Start
 
-1. Initialize aws account credential on local machine, please check [details](./prerequisites.md#localaws).
+1. Initialize aws account credential on the local machine, please check [details](./prerequisites.md#localaws).
 
 2. Download the source code: 
 
@@ -16,11 +21,11 @@
 
    1. Set the `AWS_REGION`.
 
-   2. Set the `IAMRole`,please check [details](./prerequisites.md#IAM).
+   2. Set the `IAMRole`, please check the [details](./prerequisites.md#IAM).
 
    3. Set the `S3_URI`, please check [details](./prerequisites.md#S3).
 
-   4. Set the `KeyName`,please check [details](./prerequisites.md#keypair).
+   4. Set the `KeyName`, please check [details](./prerequisites.md#keypair).
 
    5. Set the `CIDR_IP`, make sure that the `CIDR_IP` match the pattern `xxx.xxx.xxx.xxx/16[|24|32]`.
 
@@ -28,7 +33,7 @@
       >
       > 1. this `CIDR_IP` is the specified IPv4 or IPv6 CIDR address range which an inbound rule can permit instances to receive traffic from.
       >
-      > 2. In one word, it will let your mac which ip is in the `CIDR_IP` to access instances.
+      > 2. In one word, it will let your mac which IP is in the `CIDR_IP` to access instances.
 
 4. Init local env.
 
@@ -38,21 +43,26 @@ $ bin/init.sh
 
 > Note: Following the information into a python virtual env and get the help messages. 
 
-5. Execute commands to deploy a `default` cluster, please check [details](./prerequisites.md#cluster).
+5. Execute commands to deploy a `default` cluster.
 
 ```shell
 $ python deploy.py --type deploy
 ```
 
-After `default` cluster is ready, you will see the message `Kylin Cluster already start successfully.` in the console. 
+After the `default` cluster is ready, you will see the message `Kylin Cluster already start successfully.` in the console. 
 
-6. Execute commands to list nodes of cluster.
+>  Note: 
+>
+> 1. For details about the properties of kylin4 in a cluster, please check [configure kylin.properties](./prerequisites.md#cluster).
+> 2. For details about the index of the cluster,  please check [Indexes of clusters](./prerequisites.md#indexofcluster).
+
+6. Execute commands to list nodes of the cluster.
 
 ```shell
 $ python deploy.py --type list
 ```
 
-Then you can check the `public ip` of Kylin Node.
+Then you can check the `public IP` of Kylin Node.
 
 You can access `Kylin` web by `http://{kylin public ip}:7070/kylin`.
 
@@ -66,5 +76,5 @@ $ python deploy.py --type destroy
 
 
 
-> Note: If you want to check about quick start for multiple clusters, please referer to [quick start for mutilple clusters](./quick_start_for_multiple_clusters.md).
+> Note: If you want to check about a quick start for multiple clusters, please referer to a [quick start for multiple clusters](./quick_start_for_multiple_clusters.md).
 
