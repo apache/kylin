@@ -46,6 +46,7 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.FileUtils;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.ParameterFilter;
 import org.apache.kylin.common.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1113,7 +1114,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getHiveDatabaseForIntermediateTable() {
-        return CliCommandExecutor.checkHiveProperty(this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT));
+        return ParameterFilter.checkHiveProperty(this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT));
     }
 
     public String getFlatTableStorageFormat() {
