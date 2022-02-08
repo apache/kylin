@@ -89,7 +89,7 @@ public class ProjectController extends BasicController {
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public List<ProjectInstance> getProjects(@RequestParam(value = "limit", required = false) Integer limit,
-            @RequestParam(value = "offset", required = false) Integer offset) {
+                                             @RequestParam(value = "offset", required = false) Integer offset) {
         return projectService.listProjects(limit, offset);
     }
 

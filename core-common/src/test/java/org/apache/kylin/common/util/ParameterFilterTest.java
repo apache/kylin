@@ -17,11 +17,12 @@
  */
 package org.apache.kylin.common.util;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class CliCommandExecutorTest {
+public class ParameterFilterTest {
 
     private String[][] commands = {
             {"nslookup unknown.com &", "nslookupunknown.com"},
@@ -41,24 +42,41 @@ public class CliCommandExecutorTest {
             {"db and 1=2", "dband12"}
     };
 
+    private String[] sparkConf = {"kylin.engine.spark-conf.'`touch /tmp/test`'", "'$(touch /tmp/test)'",
+    "'|touch /tmp/test|'", "';touch /tmp/test;'", "'&touch /tmp/test&'", "'$(|;&touch /tmp/test&;|)'", "default"};
+
     @Test
-    public void testCmd() {
+    public void testParameter() {
         for (String[] pair : commands) {
-            assertEquals(pair[1], CliCommandExecutor.checkParameter(pair[0]));
+            assertEquals(pair[1], ParameterFilter.checkParameter(pair[0]));
         }
     }
 
     @Test
-    public void testCmd2() {
+    public void testURI() {
         for (String[] pair : commands) {
-            assertEquals(pair[1], CliCommandExecutor.checkParameterWhiteList(pair[0]));
+            assertEquals(pair[1], ParameterFilter.checkURI(pair[0]));
         }
     }
 
     @Test
     public void testHiveProperties() {
         for (String[] pair : properties) {
-            assertEquals(pair[1], CliCommandExecutor.checkHiveProperty(pair[0]));
+            assertEquals(pair[1], ParameterFilter.checkHiveProperty(pair[0]));
         }
+    }
+
+    @Test
+    public void testSparkConf() {
+        int exceptionNum = 0;
+        for(String conf : sparkConf) {
+            try {
+                ParameterFilter.checkSparkConf(conf);
+            } catch (Exception exception) {
+                Assert.assertTrue(exception instanceof IllegalArgumentException);
+                exceptionNum++;
+            }
+        }
+        assertEquals(6, exceptionNum);
     }
 }
