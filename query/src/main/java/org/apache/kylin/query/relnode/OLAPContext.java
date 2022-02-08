@@ -59,10 +59,13 @@ import org.apache.kylin.storage.hybrid.HybridInstance;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class OLAPContext {
+    private final static Logger logger = LoggerFactory.getLogger(OLAPContext.class);
 
     public static final String PRM_ACCEPT_PARTIAL_RESULT = "AcceptPartialResult";
     public static final String PRM_USER_AUTHEN_INFO = "UserAuthenInfo";
@@ -335,8 +338,15 @@ public class OLAPContext {
             return value;
         }
 
-        if (column.getType().isDateTimeFamily()){
-            value = String.valueOf(DateFormat.stringToMillis(value));
+        if (column.getType().isDateTimeFamily()) {
+            String oldValue = value;
+            if (column.getType().isDate()) {
+                // It seems the dynamic parameter has been changed to the date integer value
+                value = String.valueOf(Long.parseLong(value) * 86400000L);
+            } else {
+                value = String.valueOf(DateFormat.stringToMillis(value));
+            }
+            logger.debug("Column value changed from {} to {}", oldValue, value);
         }
         return value;
     }

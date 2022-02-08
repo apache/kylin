@@ -22,11 +22,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 import java.util.Properties;
 
 import org.apache.calcite.avatica.DriverVersion;
@@ -271,6 +275,25 @@ public class DriverTest {
         assertEquals("BACK_TICK", connProps2.getProperty("kylin.query.calcite.extras-props.quoting"));
         conn.close();
         conn2.close();
+    }
+
+    // fix KYLIN-4382 Unable to use DATE type in prepared statements
+    @Ignore("require dev sandbox")
+    @Test
+    public void testKYLIN4382() throws SQLException, ParseException {
+        Driver driver = new Driver();
+        Properties info = new Properties();
+        info.put("user", "ADMIN");
+        info.put("password", "KYLIN");
+        Connection conn = driver.connect("jdbc:kylin://localhost:7070/default", info);
+        PreparedStatement state = conn.prepareStatement("select count(*) from test_kylin_fact where cal_dt=?");
+        state.setDate(1, new Date(new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).parse("2012-01-01").getTime()));
+        ResultSet resultSet = state.executeQuery();
+        assertTrue(resultSet.next());
+        assertTrue(resultSet.getLong(1) > 0);
+        resultSet.close();
+        state.close();
+        conn.close();
     }
 
     private void printResultSet(ResultSet rs) throws SQLException {
