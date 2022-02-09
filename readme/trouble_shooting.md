@@ -14,9 +14,9 @@ A:
 
 ### The stack of related services is normal, but services aren't started normally.
 
-#### `Kylin` starts failing.
+#### `Kylin` web can not access.
 
-Q: `Kylin` starts failing.
+Q: `Kylin` web can not access.
 
 A: 
 
@@ -29,9 +29,9 @@ A:
 
 
 
-#### `Prometheus` starts failing.
+#### `Prometheus` can not access.
 
-Q: `Prometheus` starts failing.
+Q:`Prometheus` can not access.
 
 A:
 
@@ -44,9 +44,9 @@ A:
 
 
 
-#### `Granfana` starts failing.
+#### `Granfana` can not access.
 
-Q: `Granfana` starts failing.
+Q: `Granfana` can not access.
 
 A:
 
@@ -60,9 +60,9 @@ A:
 
 
 
-#### `Spark` starts failing.
+#### `Spark` can not access.
 
-Q: `Spark` starts failing.
+Q: `Spark` can not access.
 
 A:
 
@@ -75,9 +75,9 @@ A:
 
 
 
-#### `Kylin starts` failing because can not connect to the Zookeeper.
+#### `Kylin` can not access and exception "Session 0x0 for server null, unexpected error, closing socket connection and attempting reconnect." is in kylin.log.
 
-Q: `Kylin starts` failing because can not connect to the Zookeeper.
+Q: `Kylin` can not access and exception "Session 0x0 for server null, unexpected error, closing socket connection and attempting reconnect." is in kylin.log.
 
 A: 
 

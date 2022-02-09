@@ -52,6 +52,7 @@ def deploy_on_aws(deploy_type: str, scale_type: str, node_type: str, cluster: st
         if not cluster or cluster == Cluster.DEFAULT.value:
             aws_engine.destroy_default_cluster()
             aws_engine.refresh_kylin_properties_in_default()
+            aws_engine.destroy_rds_and_vpc()
 
         if cluster and cluster.isdigit():
             aws_engine.destroy_cluster(cluster_num=int(cluster))

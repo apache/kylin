@@ -75,7 +75,7 @@ git clone https://github.com/apache/kylin.git && cd kylin && git checkout kylin4
 
 > Note: 
 >
-> ​	Please download the generated CSV file of `Access Key` immediately. Get the `Access Key` and `Secret Key` to initialize local mac to access aws.
+> ​	Please download the generated CSV file of `Access Key` immediately. Get the `Access Key` and `Secret Key` to initialize local machine to access aws.
 
 ![Access Key](../images/accesskey.png)
 
@@ -186,9 +186,9 @@ Scripts:
 
 ### Initialize Env Of Local Machine
 
-#### I. Initilize an aws account on local mac to access AWS<a name="localaws"></a>
+#### I. Initilize an aws account on local machine to access AWS<a name="localaws"></a>
 
-> Use `Access Key` and `Secret Key` above to Initialize an AWS account on a local mac. 
+> Use `Access Key` and `Secret Key` above to Initialize an AWS account on a local machine. 
 
 ```shell
 $ aws configure
@@ -241,7 +241,7 @@ $ bin/init.sh
 >    1. User can modify the `CLUSTER_INDEXES` to be `(1, 3)`, then as following steps of this module to modify the `kylin.properties` file for clusters.
 >    2. User can mark the Kylin node of the `default` cluster to be `query` mode and the Kylin node of the cluster whose index is `1` to be `query` mode.  User can mark the Kylin node of the cluster which index is `2` to be `job` mode and the Kylin node of the cluster which index is `3` to job mode.
 >    3. User can also modify the `CLUSTER_INDEXES` to be `(1, 4)`, and mark the Kylin node of clusters whose index is `1` and `2` to be `query` mode and the Kylin node of clusters whose index is `3` and `4` to be `job` mode. Just don't use `default` to mark a cluster and execute exactly deploy cluster commands. For details about commands, please check to [deploy multiple clusters](./Commands.md#deploycluster).
-> 4. The list of mark name for clusters will be [`default`, `{cluster num}` ...] and `{cluster num}` is in the range of `CLUSTER_INDEXES`.
+> 4. The list of mark name for clusters will be [`default`, `{cluster ID}` ...] and `{cluster ID}` is in the range of `CLUSTER_INDEXES`.
 > 5. For example, if `CLUSTER_INDEXES` is (1, 3) means that tool can deploy a cluster and it can be marked as `default` or `1` or `2` or `3`.  And tool can execute to deploy total 1(`default`)  + 3(clusters which mark name can be `1`, `2`, `3`) = 4 clusters.
 > 6. Every cluster contains 3 `Zookeepers Node`, 1 `Kylin Node`, 1 `Spark Master Node,` and 3 `Spark Slaves Node` after deployed and it can scale needed nodes of Kylin and Spark workers. 
 > 7. **The difference between clusters only can be the index or customized configs of EC2 instances or customized properties of Kylin (and spark and zookeeper).**
@@ -250,9 +250,9 @@ $ bin/init.sh
 
 1. The `kylin.properties` is for starting kylin instance in the cluster. 
 2. The default cluster will check the `kylin.properties` in the `backup/properties/default`, and other specific clusters will check the related num directory such as `1`, `2,` and `3`.
-3. User needs to create a new dir for the cluster num in `backup/properties`, and name it to the `${cluster num}`, such as `1`, `2` ,`3` and so on. 
-4. Following the `2.` step, copy the `kylin.properties.template` which is in `backup/properties/templates` to the related `${cluster num} ` directories， and rename the template to `kylin.properties`. 
-5. The range of cluster nums must match the config `CLUSTER_INDEXES`, such as `CLUSTER_INDEXES: (1, 3)` then the directories must be `1`, `2`,`3` in the `backup/properties`.
+3. User needs to create a new dir for the cluster ID in `backup/properties`, and name it to the `${cluster ID}`, such as `1`, `2` ,`3` and so on. 
+4. Following the step `2`, copy the `kylin.properties.template` which is in `backup/properties/templates` to the related `${cluster ID} ` directories， and rename the template to `kylin.properties`. 
+5. The range of cluster IDs must match the config `CLUSTER_INDEXES`, such as `CLUSTER_INDEXES: (1, 3)` then the directories must be `1`, `2`,`3` in the `backup/properties`.
 
 ![kylin properties](../images/kylinproperties.png)
 

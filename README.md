@@ -2,7 +2,7 @@
 
 **Apache Kylin community** released Kylin 4.0 with a new architecture, which is dedicated to building a high-performance and low-cost OLAP engine. The architecture of Kylin 4.0 supports the separation of storage and computing, which enables Kylin users to run Kylin 4.0 by adopting a more flexible and elastically scalable cloud deployment method.
 
-For the best practices of Kylin4 on the cloud,  **Apache Kylin community contributes a **tool** to deploy kylin4 clusters on **AWS** cloud easily and conveniently.
+For the best practices of Kylin4 on the cloud, Apache Kylin community contributes a **tool** to deploy kylin4 clusters on **AWS** cloud easily and conveniently.
 
 # Introduction About This Tool
 
