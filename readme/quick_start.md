@@ -3,8 +3,6 @@
 ![sketch map](../images/sketch.png)
 
 - **Services are created as the number order from 1 to 4.**
-- **A cluster will be easily created as same as the image of architecture above.**
-
 
 
 ## Quick Start
@@ -43,18 +41,18 @@ $ bin/init.sh
 
 > Note: Following the information into a python virtual env and get the help messages. 
 
-5. Execute commands to deploy a `default` cluster.
+5. Execute commands to deploy a cluster quickly.
 
 ```shell
 $ python deploy.py --type deploy
 ```
 
-After the `default` cluster is ready, you will see the message `Kylin Cluster already start successfully.` in the console. 
+After this cluster is ready, you will see the message `Kylin Cluster already start successfully.` in the console. 
 
 >  Note: 
 >
-> 1. For details about the properties of kylin4 in a cluster, please check [configure kylin.properties](./prerequisites.md#cluster).
-> 2. For details about the index of the cluster,  please check [Indexes of clusters](./prerequisites.md#indexofcluster).
+> 1. For more details about the properties of kylin4 in a cluster, please check [configure kylin.properties](./prerequisites.md#cluster).
+> 2. For more details about the index of the clusters,  please check [Indexes of clusters](./prerequisites.md#indexofcluster).
 
 6. Execute commands to list nodes of the cluster.
 
@@ -68,13 +66,14 @@ You can access `Kylin` web by `http://{kylin public ip}:7070/kylin`.
 
 ![kylin login](../images/kylinlogin.png)
 
-7. Destroy the `default` cluster.
+7. Destroy the cluster quickly.
 
 ```shell
 $ python deploy.py --type destroy
 ```
 
-
-
-> Note: If you want to check about a quick start for multiple clusters, please referer to a [quick start for multiple clusters](./quick_start_for_multiple_clusters.md).
+> Note:
+>
+> 1. If you want to check about a quick start for multiple clusters, please referer to a [quick start for multiple clusters](./quick_start_for_multiple_clusters.md).
+> 2. **Current destroy operation will remain some stack which contains `RDS` and so on**. So if user want to destroy clearly, please modify the `ALWAYS_DESTROY_ALL` in `kylin_configs.yml` to be `true` and re-execute `destroy` command. 
 
