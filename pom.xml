@@ -119,6 +119,7 @@
 
     <!-- Calcite deps, keep compatible with calcite.version -->
     <jackson.version>2.6.7</jackson.version>
+    <jackson.databind.version>2.6.7.5</jackson.databind.version>
 
     <!-- Test Dependency versions -->
     <antlr.version>3.4</antlr.version>
@@ -758,7 +759,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>${jackson.version}</version>
+        <version>${jackson.databind.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
