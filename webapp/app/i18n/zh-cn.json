@@ -1,13 +1,11 @@
 {
     "global": {
-        "title": "MyApp",
+        "title": "Kylin",
         "browsehappy": "您目前使用<strong>过于老旧</strong>的浏览器, 建议您<a href=\"http://browsehappy.com/?locale=en\">升级浏览器</a>让您有更佳的上网体验.",
         "menu": {
             "home": "首页",
-            "jhipster-needle-menu-add-element": "JHipster will add additional menu entries here (do not translate!)",
             "entities": {
-                "main": "数据",
-                "jhipster-needle-menu-add-entry": "JHipster will add additional entities here (do not translate!)"
+                "main": "数据"
             },
             "account": {
                 "main": "账号",
@@ -28,8 +26,7 @@
                 "logs": "日志",
                 "audits": "审核",
                 "apidocs": "API",
-                "database": "数据库",
-                "jhipster-needle-menu-add-admin-element": "JHipster will add additional menu entries here (do not translate!)"
+                "database": "数据库"
             },
             "language": "语言"
         },
@@ -120,6 +117,7 @@
         "idexists": "新建的 {{entityName}} 不能包含ID"
     },
     "footer": "这里是页脚",
+    "Kylin": "麒麟",
     "Sign in": "登录",
     "Login": "登录",
     "Log In": "登录",
@@ -129,7 +127,11 @@
     "Profile": "设置",
     "Logout": "退出",
     "-- Choose Project --": "-- 选择项目 --",
-    "Insight": "-- 选择项目 --",
+    "Insight": "洞察",
+    "Model": "模型",
+    "Monitor": "监控",
+    "System": "系统",
+    "Dashboard": "仪表版",
     "page": {
         "header": {
             "Welcome": "欢迎，",

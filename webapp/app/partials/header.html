@@ -22,7 +22,7 @@
       <div class="navbar-header">
         <a class="navbar-brand" href="query" style="padding: 2px 10px 0px 0px"><img src="image/logo.png" height="40px"
                                                                                     width="40px"/>
-          <small> Kylin</small>
+          <small> {{'Kylin' | translate}}</small>
         </a>
       </div>
 
@@ -37,36 +37,32 @@
                     data-placeholder="select a project"
                     class="chosen-select">
               <option ng-if="userService.hasRole('ROLE_ADMIN')" ng-selected="projectModel.selectedProject==null"
-                      value=""> -- Choose Project --
+                      value=""> {{'-- Choose Project --' | translate}}
               </option>
             </select>
           </li>
           <li class="{{activeTab=='query'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-            <a href="query">Insight</a>
+            <a href="query">{{'Insight' | translate}}</a>
           </li>
           <li class="{{activeTab=='models'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-            <a href="models">Model</a>
+            <a href="models">{{'Model' | translate}}</a>
           </li>
           <li class="{{activeTab=='jobs'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-            <a href="jobs">Monitor</a>
+            <a href="jobs">{{'Monitor' | translate}}</a>
           </li>
           <li class="{{activeTab=='admin'?'purple':'green'}}" ng-if="userService.hasRole('ROLE_ADMIN')">
-            <a href="admin">System</a>
+            <a href="admin">{{'System' | translate}}</a>
           </li>
           <li class="{{activeTab=='dashboard'?'purple':'green'}}" ng-if="userService.isAuthorized() && isShowDashboard">
-            <a href="dashboard">Dashboard</a>
+            <a href="dashboard">{{'Dashboard' | translate}}</a>
           </li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
-          <li ui-sref-active="active" uib-dropdown class="dropdown pointer">
-              <a class="dropdown-toggle" uib-dropdown-toggle href="">
-                  <!-- <span> -->
-                      <!-- <span class="glyphicon glyphicon-flag"></span> -->
-                      <span class="hidden-sm" data-translate="global.menu.language">Language</span>
-                      <!-- <b class="caret"></b> -->
-                  <!-- </span> -->
-              </a>
-              <ul class="dropdown-menu" uib-dropdown-menu">
+          <li class="dropdown light-blue">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+              <span class="user-info"> {{'global.menu.language' | translate}}</span>
+              <i class="ace-icon fa fa-caret-down"></i></a>
+              <ul class="user-menu dropdown-menu-right dropdown-menu dropdown-yellow dropdown-caret dropdown-close">
                   <li active-menu="en">
                       <a href="" ng-click="changeLanguage('en');">English</a>
                   </li>

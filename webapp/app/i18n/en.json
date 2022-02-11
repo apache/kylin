@@ -1,13 +1,11 @@
 {
     "global": {
-        "title": "MyApp",
+        "title": "Kylin",
         "browsehappy": "You are using an <strong>outdated</strong> browser. Please <a href=\"http://browsehappy.com/?locale=en\">upgrade your browser</a> to improve your experience.",
         "menu": {
             "home": "Home",
-            "jhipster-needle-menu-add-element": "JHipster will add additional menu entries here (do not translate!)",
             "entities": {
-                "main": "Entities",
-                "jhipster-needle-menu-add-entry": "JHipster will add additional entities here (do not translate!)"
+                "main": "Entities"
             },
             "account": {
                 "main": "Account",
@@ -28,8 +26,7 @@
                 "logs": "Logs",
                 "audits": "Audits",
                 "apidocs": "API",
-                "database": "Database",
-                "jhipster-needle-menu-add-admin-element": "JHipster will add additional menu entries here (do not translate!)"
+                "database": "Database"
             },
             "language": "Language"
         },
@@ -120,9 +117,26 @@
         "idexists": "A new {{ entityName }} cannot already have an ID"
     },
     "footer": "This is your footer",
+    "Kylin": "Kylin",
     "Sign in": "Sign In",
     "Login": "Login",
     "Log In": "Log In",
     "Logging In...": "Logging In...",
-    "Login Issue": "Login Issue"
+    "Login Issue": "Login Issue",
+    "Welcome": "Welcome,",
+    "Profile": "Profile",
+    "Logout": "Logout",
+    "-- Choose Project --": "-- Choose Project --",
+    "Insight": "Insight",
+    "Model": "Model",
+    "Monitor": "Monitor",
+    "System": "System",
+    "Dashboard": "Dashboard",
+    "page": {
+        "header": {
+            "Welcome": "Welcome,",
+            "Profile": "Profile",
+            "Logout": "Logout"
+        }
+    }
 }
