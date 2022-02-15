@@ -396,9 +396,12 @@ public class NSparkExecutable extends AbstractExecutable {
             appendSparkConf(sb, "spark.executor.extraClassPath", Paths.get(kylinJobJar).getFileName().toString());
         }
         // In yarn cluster mode, make sure class SparkDriverHdfsLogAppender will be in NM container's classpath.
-        appendSparkConf(sb, "spark.driver.extraClassPath", isYarnCluster ? //
+        String extraClassPath = sparkConfs.getOrDefault("spark.driver.extraClassPath", "");
+        String parquetJarPath = isYarnCluster ? //
                 String.format(Locale.ROOT, "%s:%s", APP_JAR_NAME,
-                        Paths.get(kylinJobJar).getFileName().toString()) : kylinJobJar);
+                        Paths.get(kylinJobJar).getFileName().toString()) : kylinJobJar;
+        extraClassPath = extraClassPath.equals("") ? parquetJarPath : String.format(Locale.ROOT, "%s:%s", parquetJarPath, extraClassPath);
+        appendSparkConf(sb, "spark.driver.extraClassPath", extraClassPath);
 
         String sparkUploadFiles = config.sparkUploadFiles(isLocalMaster(sparkConfs), isYarnCluster);
         if (StringUtils.isNotBlank(sparkUploadFiles)) {
