@@ -20,8 +20,7 @@ package org.apache.spark.dict
 
 import java.io.IOException
 import java.util
-
-import org.apache.kylin.engine.spark.metadata.{SegmentInfo, ColumnDesc}
+import org.apache.kylin.engine.spark.metadata.{ColumnDesc, SegmentInfo}
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
@@ -54,8 +53,7 @@ object NGlobalDictBuilderAssist extends Logging {
     ss.sparkContext.setJobDescription("Resize dict " + ref.identity)
     existsDictDs
       .repartition(bucketPartitionSize, col(existsDictDs.schema.head.name).cast(StringType))
-      .foreachPartition {
-        iter: Iterator[(String, Long)] =>
+      .mapPartitions { iter =>
           val partitionID = TaskContext.get().partitionId()
           logInfo(s"Rebuild partition dict col: ${ref.identity}, partitionId: $partitionID")
           val d = broadcastDict.value
@@ -64,8 +62,10 @@ object NGlobalDictBuilderAssist extends Logging {
             val dictTuple = iter.next
             bucketDict.addAbsoluteValue(dictTuple._1, dictTuple._2)
           }
-          bucketDict.saveBucketDict(partitionID)
-      }
+        DictHelper.convertToRowIterator(bucketDict)
+      }(DictHelper.rowEncoder)
+      .write.format("org.apache.spark.dict.NGlobalDictionaryWritableDataSource")
+      .save(globalDict.getWorkingDir())
 
     globalDict.writeMetaDict(bucketPartitionSize,
       desc.kylinconf.getGlobalDictV2MaxVersions, desc.kylinconf.getGlobalDictV2VersionTTL)

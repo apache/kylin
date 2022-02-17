@@ -17,21 +17,23 @@
 */
 package org.apache.kylin.engine.spark.builder
 
-import java.io.IOException
-import java.util
+
 import org.apache.kylin.common.KylinConfig
 import org.apache.kylin.common.lock.DistributedLock
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.engine.spark.builder.CubeBuilderHelper._
 import org.apache.kylin.engine.spark.job.NSparkCubingUtil
 import org.apache.kylin.engine.spark.metadata.{ColumnDesc, SegmentInfo}
-import org.apache.spark.dict.{NGlobalDictBuilderAssist, NGlobalDictionary}
+import org.apache.spark.TaskContext
+import org.apache.spark.dict.{DictHelper, NGlobalDictBuilderAssist, NGlobalDictionary}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.functions.{col, expr}
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{Column, Dataset, Row, SparkSession}
 import org.apache.spark.utils.SparkVersionUtils
 
+import java.io.IOException
+import java.util
 import scala.collection.JavaConverters._
 
 class CubeDictionaryBuilder(val dataset: Dataset[Row],
@@ -82,10 +84,15 @@ class CubeDictionaryBuilder(val dataset: Dataset[Row],
     afterDistinct
       .filter(dictCol.isNotNull)
       .repartition(bucketPartitionSize, dictCol)
-      .foreachPartition {
-        iter: Iterator[Row] =>
-          DictHelper.genDict(columnName, broadcastDict, iter)
-      }
+      .mapPartitions { iter =>
+        val partitionID = TaskContext.get().partitionId()
+        val broadcastGlobalDict = broadcastDict.value
+        val bucketDict = broadcastGlobalDict.loadBucketDictionary(partitionID)
+        iter.foreach(dic => bucketDict.addRelativeValue(dic.getString(0)))
+        DictHelper.convertToRowIterator(bucketDict)
+      }(DictHelper.rowEncoder)
+      .write.format("org.apache.spark.dict.NGlobalDictionaryWritableDataSource")
+      .save(globalDict.getWorkingDir())
 
     globalDict.writeMetaDict(bucketPartitionSize, seg.kylinconf.getGlobalDictV2MaxVersions, seg.kylinconf.getGlobalDictV2VersionTTL)
 

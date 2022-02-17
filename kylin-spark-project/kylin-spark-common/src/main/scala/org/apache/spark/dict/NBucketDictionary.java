@@ -18,9 +18,11 @@
 package org.apache.spark.dict;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
+import com.google.common.collect.Iterators;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -98,6 +100,13 @@ public class NBucketDictionary {
     public void saveBucketDict(int bucketId) throws IOException {
         writeBucketCurrDict(bucketId);
         writeBucketPrevDict(bucketId);
+    }
+
+    public Iterator<byte[]> newCurrDictDataProduceIterator() throws IOException {
+        return new DictDataProduceIterator(relativeDictMap);
+    }
+    public Iterator<byte[]> newPreDictDataProduceIterator() throws IOException {
+        return new DictDataProduceIterator(absoluteDictMap);
     }
 
     private void writeBucketPrevDict(int bucketId) throws IOException {
