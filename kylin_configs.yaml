@@ -75,8 +75,8 @@ DEPLOY_PLATFORM: &platform ec2
 
 # ============ Tool Configs ============
 ## Dangerous !!!
-## Optional: destroy all will delete rds and the vpc and monitor node, please be careful.
-ALWAYS_DESTROY_ALL: false
+## Optional: destroy all will delete rds and the vpc and monitor node, and clean all resources, please be careful.
+ALWAYS_DESTROY_VPC_RDS_MONITOR: false
 
 ## Open public Ip on Instances
 ASSOSICATED_PUBLIC_IP: &associated_public_ip 'true'

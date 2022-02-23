@@ -47,7 +47,7 @@ $ python deploy.py --type deploy --cluster all
 
 > Note:
 >
-> ​		Destroy all clusters will not delete vpc, rds, and monitor node. So if user doesn't want to hold the env, please set the `ALWAYS_DESTROY_ALL` to be `'true'`.
+> ​		Destroy all clusters will not delete vpc, rds, and monitor node. So if user doesn't want to hold the env, please set the `ALWAYS_DESTROY_VPC_RDS_MONITOR` to be `'true'`.
 
 - Destroy a default cluster
 

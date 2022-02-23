@@ -102,10 +102,12 @@ class EngineUtils:
             self.aws.after_scale_up(node_type=node_type)
 
         elif scale_type == ScaleType.DOWN.value:
-            self.aws.after_scale_down(node_type=node_type)
+            if not self.aws.is_destroy_all:
+                self.aws.after_scale_down(node_type=node_type)
             self.aws.scale_down(node_type=node_type)
 
-        self.aws.restart_prometheus_server()
+        if not self.aws.is_destroy_all:
+            self.aws.restart_prometheus_server()
 
     def scale_nodes_in_cluster(
             self,
@@ -122,10 +124,12 @@ class EngineUtils:
             self.aws.scale_up(node_type=node_type, cluster_num=cluster_num, is_destroy=is_destroy)
             self.aws.after_scale_up(node_type=node_type, cluster_num=cluster_num)
         else:
-            self.aws.after_scale_down(node_type=node_type, cluster_num=cluster_num)
+            if not self.aws.is_destroy_all:
+                self.aws.after_scale_down(node_type=node_type, cluster_num=cluster_num)
             self.aws.scale_down(node_type=node_type, cluster_num=cluster_num, is_destroy=is_destroy)
 
-        self.aws.restart_prometheus_server()
+        if not self.aws.is_destroy_all:
+            self.aws.restart_prometheus_server()
 
     def prepare_for_cluster(self) -> None:
         # create vpc, rds and monitor node for whole cluster
@@ -154,10 +158,11 @@ class EngineUtils:
                 scale_type=ScaleType.DOWN.value,
                 node_type=NodeType.SPARK_WORKER.value,
                 cluster_num=num, is_destroy=True)
-
-        self.aws.after_destroy_clusters(cluster_nums=cluster_nums)
+        if not self.aws.is_destroy_all:
+            self.aws.after_destroy_clusters(cluster_nums=cluster_nums)
         self.aws.destroy_clusters(cluster_nums=cluster_nums)
-        self.aws.restart_prometheus_server()
+        if not self.aws.is_destroy_all:
+            self.aws.restart_prometheus_server()
 
     def destroy_cluster(self, cluster_num: int) -> None:
         self.scale_nodes_in_cluster(

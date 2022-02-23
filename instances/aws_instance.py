@@ -1846,7 +1846,7 @@ class AWSInstance:
         )
         if not deleted_cost_stacks:
             return False
-        if not self.config['ALWAYS_DESTROY_ALL'] \
+        if not self.config['ALWAYS_DESTROY_VPC_RDS_MONITOR'] \
                 or self.is_stack_deleted_complete(self.vpc_stack_name):
             return True
         return False
