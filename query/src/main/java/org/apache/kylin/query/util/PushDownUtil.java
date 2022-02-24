@@ -65,7 +65,7 @@ public class PushDownUtil {
     public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownNonSelectQuery(String project,
             String sql, String defaultSchema, boolean isPrepare) throws Exception {
         PushDownExecutor executor = new PushDownExecutor();
-        return executor.pushDownQuery(project, sql, defaultSchema, null, true, isPrepare);
+        return executor.pushDownQuery(project, sql, defaultSchema, null, false, isPrepare);
     }
 
     static String schemaCompletion(String inputSql, String schema) throws SqlParseException {
