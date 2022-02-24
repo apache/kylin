@@ -40,9 +40,9 @@
       <td>
         {{node}}
       </td>
-      <td>Query Node</td>
+      <td>{{'Query Node' | translate}}</td>
       <td>
-        <i class="fa fa-check-circle" style="color:green"></i> Active
+        <i class="fa fa-check-circle" style="color:green"></i> {{'Active' | translate}}
       </td>
     </tr>
     <tr ng-repeat="node in jobNodes" style="cursor: pointer">
@@ -52,10 +52,10 @@
       <td>{{getJobNodeType(node)}}</td>
       <td>
         <div ng-if=isJobNodeActive(node)>
-          <i class="fa fa-check-circle" style="color:green"></i> Active
+          <i class="fa fa-check-circle" style="color:green"></i> {{'Active' | translate}}
         </div>
         <div ng-if=!isJobNodeActive(node)>
-          <i class="fa fa-check-circle" style="color:grey"></i> Available
+          <i class="fa fa-check-circle" style="color:grey"></i> {{'Available' | translate}}
         </div>
       </td>
     </tr>

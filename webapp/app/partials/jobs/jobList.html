@@ -27,7 +27,7 @@
         <!--Cube Name: -->
         <div class="job-search-box">
           <form class="" ng-submit="jobList.removeAll();reload()" style="display: inline" >
-            <span><b>Cube Name:</b>
+            <span><b>{{'Cube Name' | translate}}:</b>
               <span class="input-icon input-icon-right nav-search" style="font-size:14px;">
                   <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="cubeName" />
                   <i class="ace-icon fa fa-search blue" ng-click="jobList.removeAll();reload()"></i>
@@ -40,7 +40,7 @@
           <!--STATUS-->
           <div style="text-align:right;margin-top:4px;">
             <!--Job History Time Filter-->
-            <label>Jobs in:
+            <label>{{'Jobs in' | translate}}:
               <select data-ng-model="timeFilter"
                       data-ng-options="s.name for s in jobConfig.timeFilter">
               </select>
@@ -81,7 +81,7 @@
             <i ng-if="state.reverseColumn== theaditem.attr && state.filterReverse"
                class="fa fa-sort-desc"></i>
           </th>
-          <th>Actions</th>
+          <th>{{'Actions' | translate}}</th>
           <th></th>
         </tr>
         </thead>
@@ -99,32 +99,32 @@
           <td>{{ job.related_cube}}</td>
           <td>
             <div ng-switch on="job.job_status">
-              <div ng-switch-when="ERROR" tooltip="ERROR">
+              <div ng-switch-when="ERROR" tooltip="{{'ERROR' | translate}}">
                 <progressbar class="progress-striped" value="job.progress" type="danger">
                   {{job.job_status}}
                 </progressbar>
               </div>
-              <div ng-switch-when="FINISHED" tooltip="FINISHED">
+              <div ng-switch-when="FINISHED" tooltip="{{'FINISHED' | translate}}">
                 <progressbar class="progress-striped" value="job.progress" type="success">
                   {{job.progress}}%
                 </progressbar>
               </div>
-              <div ng-switch-when="PENDING" tooltip="PENDING">
+              <div ng-switch-when="PENDING" tooltip="{{'PENDING' | translate}}">
                 <progressbar class="progress-striped active" value="job.progress"
                              type="pending">{{job.job_status}}
                 </progressbar>
               </div>
-              <div ng-switch-when="RUNNING" tooltip="RUNNING">
+              <div ng-switch-when="RUNNING" tooltip="{{'RUNNING' | translate}}">
                 <progressbar class="progress-striped active" value="job.progress"
                              type="info">{{job.progress | number:2}}%
                 </progressbar>
               </div>
-              <div ng-switch-when="STOPPED" tooltip="STOPPED">
+              <div ng-switch-when="STOPPED" tooltip="{{'STOPPED' | translate}}">
                 <progressbar class="progress-striped" value="job.progress"
                              type="pending">{{job.progress | number:2}}%
                 </progressbar>
               </div>
-              <div ng-switch-when="DISCARDED" tooltip="DISCARDED">
+              <div ng-switch-when="DISCARDED" tooltip="{{'DISCARDED' | translate}}">
                 <progressbar class="progress-striped" value="job.progress" type="inverse">
                   {{job.progress | number:2}}%
                 </progressbar>
@@ -140,21 +140,21 @@
                 Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
               </button>
               <ul class="dropdown-menu" role="menu">
-                <li ng-if="job.job_status=='ERROR' || job.job_status=='STOPPED'"><a ng-click="resume(job)">Resume</a></li>
+                <li ng-if="job.job_status=='ERROR' || job.job_status=='STOPPED'"><a ng-click="resume(job)">{{'Resume' | translate}}</a></li>
                 <li ng-if="job.job_status=='RUNNING' || job.job_status=='NEW' || job.job_status=='PENDING'">
-                  <a ng-click="pause(job)">Pause</a>
+                  <a ng-click="pause(job)">{{'Pause' | translate}}</a>
                 </li>
                 <li ng-if="job.job_status=='RUNNING' || job.job_status=='NEW' || job.job_status=='PENDING' || job.job_status=='ERROR' || job.job_status=='STOPPED'">
-                  <a ng-click="cancel(job)">Discard</a>
+                  <a ng-click="cancel(job)">{{'Discard' | translate}}</a>
                 </li>
                 <li ng-if="job.job_status=='FINISHED' || job.job_status=='DISCARDED'">
-                  <a ng-click="drop(job)">Drop</a>
+                  <a ng-click="drop(job)">{{'Drop' | translate}}</a>
                 </li>
                 <li ng-if="job.job_status=='DISCARDED' && job.name.startsWith('STREAM CUBE')">
-                  <a ng-click="resubmit(job)">Resubmit</a>
+                  <a ng-click="resubmit(job)">{{'Resubmit' | translate}}</a>
                 </li>
                 <li>
-                  <a ng-click="diagnosisJob(job)" tooltip="Download Diagnosis Info For This Job">Diagnosis</a>
+                  <a ng-click="diagnosisJob(job)" tooltip="{{'Download Diagnosis Info For This Job' | translate}}">{{'Diagnosis' | translate}}</a>
                 </li>
               </ul>
             </div>

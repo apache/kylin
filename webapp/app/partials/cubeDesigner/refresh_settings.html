@@ -30,7 +30,7 @@
               <div class="form-group">
                 <div class="row middle-popover">
                   <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default">
-                    <b>Auto Merge Thresholds</b>
+                    <b>{{'Auto Merge Thresholds' | translate}}</b>
                     <i class="fa fa-info-circle" kylinpopover title="Auto Merge Thresholds" template="autoMergeThresholdsTip.html" placement="right"></i>
                   </label>
 
@@ -74,7 +74,7 @@
                       </table>
                       <button class="btn btn-xs btn-info" ng-show="state.mode=='edit'"
                               ng-click="addNewMergeTimeRange()">
-                        New Thresholds <i class="fa fa-plus"></i>
+                        {{'New Thresholds' | translate}} <i class="fa fa-plus"></i>
                       </button>
                     </div>
                     <div class="row" ng-if="state.mode=='view'">
@@ -101,7 +101,7 @@
               <div class="form-group">
                 <div class="row middle-popover">
                   <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default">
-                    <b>Volatile Range</b> <i class="fa fa-info-circle" title="Volatile Range" kylinpopover template="volatileRangeTip.html" placement="right"></i>
+                    <b>{{'Volatile Range' | translate}}</b> <i class="fa fa-info-circle" title="Volatile Range" kylinpopover template="volatileRangeTip.html" placement="right"></i>
                   </label>
 
                   <div class="col-xs-12 col-sm-6">
@@ -122,7 +122,7 @@
               <div class="form-group">
                 <div class="row middle-popover">
                   <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default">
-                    <b>Retention Threshold</b> <i class="fa fa-info-circle" title="Retention Threshold" kylinpopover template="retentionTip.html" placement="right"></i>
+                    <b>{{'Retention Threshold' | translate}}</b> <i class="fa fa-info-circle" title="Retention Threshold" kylinpopover template="retentionTip.html" placement="right"></i>
                   </label>
 
                   <div class="col-xs-12 col-sm-6">
@@ -162,7 +162,7 @@
 
                     <small class="help-block"
                            ng-show="metaModel.model.partition_desc.partition_date_column!=null&& cubeMetaFrame.partition_date_start==null">
-                      Please input start date when partition date column is defined in model.
+                      {{'Please input start date when partition date column is defined in model.' | translate}}
                     </small>
                     <!--view model will convert use filter-->
                     <span ng-if="state.mode=='view' && metaModel.model.partition_desc.partition_date_column">{{(cubeMetaFrame.partition_date_start)|reverseToGMT0 }}</span>

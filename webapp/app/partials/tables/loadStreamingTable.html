@@ -18,16 +18,15 @@
 <div class="modal-body streaming-source" style="height: 360px;">
   <div class="col-xs-5">
     <p class="text-info">
-      Need to input streaming source record here, will detect the source schema and create a table schema for
-      streaming.
+      {{'Need to input streaming source record here, will detect the source schema and create a table schema for streaming.' | translate}}
     </p>
 
     <div style="padding:15px;" class="has-error">
-      <small class="help-block" ng-show="streaming.sourceSchema==''&&form.setStreamingSchema.$submitted">Please
-        input Streaming source record to generate schema.
+      <small class="help-block" ng-show="streaming.sourceSchema==''&&form.setStreamingSchema.$submitted">
+        {{'Please input Streaming source record to generate schema.' | translate}}
       </small>
       <small class="help-block" ng-if="!table.sourceValid&&table.schemaChecked">
-        Source json invalid, Please correct your schema and generate again.
+        {{'Source json invalid, Please correct your schema and generate again.' | translate}}
       </small>
     </div>
     <div style="margin-bottom: 20px;">
@@ -47,20 +46,20 @@
   </div>
   <div class="col-xs-6" ng-show="table.schemaChecked">
     <ol class="text-info" style="margin-bottom: 30px;">
-      <li>Choose 'timestamp' type column for streaming table.</li>
-      <li>By default, system will choose 'Default' as database, you can specify database like this 'database.table'</li>
-      <li>derived time dimensions are calculated from timestamp field to help analysis against different time granularities.</li>
+      <li>{{'Choose timestamp type column for streaming table.' | translate}}</li>
+      <li>{{'By default, system will choose Default as database, you can specify database like this database.table' | translate}}</li>
+      <li>{{'derived time dimensions are calculated from timestamp field to help analysis against different time granularities.' | translate}}</li>
     </ol>
     <form class="form-horizontal" name="form.setStreamingSchema" novalidate>
       <div class="form-group required">
-        <label class="col-xs-4 control-label" style="text-align: left;">Table Name</label>
+        <label class="col-xs-4 control-label" style="text-align: left;">{{'Table Name' | translate}}</label>
 
         <div class="col-xs-8"
              ng-class="{'has-error':form.setStreamingSchema.streamingObject.$invalid && (form.setStreamingSchema.streamingObject.$dirty||form.setStreamingSchema.$submitted)}">
           <input type="text" name="streamingObject" placeholder="database.table" required="" ng-model="table.name" class="form-control"/>
           <small class="help-block"
                  ng-show="form.setStreamingSchema.streamingObject.$error.required&&(form.setStreamingSchema.streamingObject.$dirty||form.setStreamingSchema.$submitted)">
-            Table name is required.
+            {{'Table name is required.' | translate}}
           </small>
         </div>
       </div>
@@ -68,9 +67,9 @@
     <table class="table table-hover table-bordered">
       <tr>
         <th></th>
-        <th>Column</th>
-        <th>Column Type</th>
-        <th>Comment</th>
+        <th>{{'Column' | translate}}</th>
+        <th>{{'Column Type' | translate}}</th>
+        <th>{{'Comment' | translate}}</th>
       </tr>
       <tr ng-repeat="column in columnList">
         <td><label style="width:100%;cursor: pointer;" for="{{column.name}}"><input style="width:1em;height:1em;"
@@ -90,15 +89,15 @@
           </select>
         </td>
         <td>
-          <label ng-if="column.type=='timestamp'&&column.fromSource=='Y'" class="badge badge-info">timestamp</label>
-          <label ng-if="column.fromSource=='N'" class="badge badge-info">derived time dimension</label>
+          <label ng-if="column.type=='timestamp'&&column.fromSource=='Y'" class="badge badge-info">{{'timestamp' | translate}}</label>
+          <label ng-if="column.fromSource=='N'" class="badge badge-info">{{'derived time dimension' | translate}}</label>
         </td>
       </tr>
     </table>
 
     <div class="has-error" ng-if="!rule.timestampColumnExist&&form.setStreamingSchema.$submitted">
       <small class="help-block">
-        You should choose at least one 'timestamp' type column generated from source schema.
+        {{'You should choose at least one timestamp type column generated from source schema.' | translate}}
       </small>
     </div>
   </div>

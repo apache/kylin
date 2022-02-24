@@ -24,10 +24,10 @@
 <div  class="modal-body nav-tabs-custom" height ng-controller="CubeModelCtrl" style="margin-top:40px;">
     <ul ng-show="modelsManager.selectedModel.name" class="nav nav-tabs">
         <li class="{{(!modelsManager.selectedModel.visiblePage || modelsManager.selectedModel.visiblePage=='metadata')? 'active':''}}">
-            <a href="" ng-click="modelsManager.selectedModel.visiblePage='metadata'">Grid</a>
+            <a href="" ng-click="modelsManager.selectedModel.visiblePage='metadata'">{{'Grid' | translate}}</a>
         </li>
         <li class="{{modelsManager.selectedModel.visiblePage=='graph'? 'active':''}}">
-            <a href="" ng-click="modelsManager.selectedModel.visiblePage='graph';buildGraph(modelsManager.selectedModel);$event.stopPropagation();">Visualization</a>
+            <a href="" ng-click="modelsManager.selectedModel.visiblePage='graph';buildGraph(modelsManager.selectedModel);$event.stopPropagation();">{{'Visualization' | translate}}</a>
         </li>
       <li class="{{modelsManager.selectedModel.visiblePage=='json_model'? 'active':''}}">
         <a href="" ng-click="modelsManager.selectedModel.visiblePage='json_model';">JSON</a>
@@ -49,7 +49,7 @@
 </div>
 
   <div class="modal-footer">
-    <button class="btn btn-warning" ng-click="cancel()">Close</button>
+    <button class="btn btn-warning" ng-click="cancel()">{{'Close' | translate}}</button>
   </div>
 
 </script>

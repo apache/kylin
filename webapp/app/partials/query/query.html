@@ -20,8 +20,8 @@
     <!--Project-->
     <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
         <div class="form-group" >
-            <a class="btn btn-xs btn-info" href="projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
-          <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
+            <a class="btn btn-xs btn-info" href="projects" tooltip="{{'Manage Project' | translate}}"><i class="fa fa-gears"></i></a>
+          <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')" style="width: 29px" tooltip="{{'Add Project' | translate}}" ng-click="toCreateProj()">
                 <i class="fa fa-plus"></i>
             </a>
         </div>
@@ -35,13 +35,13 @@
         <div class="nav-tabs-custom">
             <ul class="nav nav-tabs">
                 <li class="{{mainPanel=='query'?'active':''}}">
-                    <a ng-click="mainPanel='query'" style="cursor: pointer">New Query</a>
+                    <a ng-click="mainPanel='query'" style="cursor: pointer">{{'New Query' | translate}}</a>
                 </li>
                 <li class="{{mainPanel=='saved'?'active':''}}">
-                    <a ng-click="mainPanel='saved';listSavedQueries()" style="cursor: pointer">Saved Queries</a>
+                    <a ng-click="mainPanel='saved';listSavedQueries()" style="cursor: pointer">{{'Saved Queries' | translate}}</a>
                 </li>
                 <li class="{{mainPanel=='cached'?'active':''}}">
-                    <a ng-click="mainPanel='cached';listCachedQueries()" style="cursor: pointer">Query History</a>
+                    <a ng-click="mainPanel='cached';listCachedQueries()" style="cursor: pointer">{{'Query History' | translate}}</a>
                 </li>
             </ul>
 
@@ -64,23 +64,23 @@
                     <div class="pull-left">
                         <h4>
                             Project: <span class="label label-info">{{projectModel.getSelectedProject()}}</span>
-                            &nbsp&nbsp Cube:
+                            &nbsp&nbsp {{'Cube' | translate}}:
                             <select chosen ng-model="specifyCube"
                                     ng-options="cube for cube in cubeItems"
                                     style="display: inline-flex; width: 250px"
                                     data-placeholder="Filter ..."
                                     class="chosen-select">
-                              <option value=""> -- Choose Cube -- </option>
+                              <option value=""> -- {{'Choose Cube' | translate}} -- </option>
                             </select>
                             <i class="fa fa-info-circle" title="Specify cube to query"  kylinpopover template="specifyCubeTip.html" placement="right"></i>
                         </h4>
                     </div>
                     <div class="pull-right">
                         <input type="checkbox" ng-model="hasLimit" ng-change="changeLimit()">
-                        <label>LIMIT</label>
+                        <label>{{'LIMIT' | translate}}</label>
                         <input type="text" style="width:100px;" class="inline form-control" ng-model="rowsPerPage" ng-pattern="/^\d+$/" ng-blur="checkLimit()" ng-disabled="!hasLimit" />
                         <button class="btn btn-sm btn-primary" ng-click="submitQuery()" ng-disabled="query_panel.$invalid">
-                            Submit
+                            {{'Submit' | translate}}
                         </button>
                     </div>
                 </form>
@@ -96,15 +96,15 @@
                         class="query-content">
                         <td>
                             <div>
-                                <label>SQL Name:</label>&nbsp;&nbsp;&nbsp;<b style="font-size: 14px">{{query.name}}</b>
+                                <label>{{'SQL Name' | translate}}:</label>&nbsp;&nbsp;&nbsp;<b style="font-size: 14px">{{query.name}}</b>
                                 <!--<span style="color: #808080;line-height: 25px" class="pull-right">Saved At: {{query.createdDate}}</span>-->
                             </div>
                             <div ng-if="query.project">
-                                <label>Project: </label>
+                                <label>{{'Project' | translate}}: </label>
                                 <span style="color: gray">{{query.project}}</span>
                             </div>
                             <div ng-if="query.description">
-                                <label>Description</label>
+                                <label>{{'Description' | translate}}</label>
                                 <blockquote style="font-size: 12px;margin-bottom: 0px;padding: 6px 10px;">
                                     {{query.description}}
                                 </blockquote>
@@ -112,15 +112,15 @@
 
                             <div class="pull-right">
                                 <button class="btn btn-default btn-xs" ng-click="submitQuery(query.sql, query.project)"><i class="fa fa-refresh"></i>
-                                    Resubmit
+                                    {{'Resubmit' | translate}}
                                 </button>
                                 <button class="btn btn-default btn-xs" ng-click="removeSavedQuery(query.id)"><i
                                         class="fa fa-times">
-                                    Remove</i>
+                                    {{'Remove' | translate}}</i>
                                 </button>
                             </div>
                             <div class="form-group" style="margin: 0px">
-                                SQL:
+                                {{'SQL' | translate}}:
                                 <label ng-click="query.show=!query.show" style="padding:5px">
                                     <i ng-if="!query.show" class="fa fa-angle-double-down"></i>
                                     <i ng-if="query.show" class="fa fa-angle-double-right"></i>
@@ -148,24 +148,24 @@
 
             <div ng-show="mainPanel=='cached'">
                 <div ng-if="cachedFilterQueries.length==0">
-                    <div no-result text="No Query History."></div>
+                    <div no-result text="{{'No Query History.' | translate}}"></div>
                 </div>
                 <table class="table table-hover table-striped list">
                     <tr ng-repeat="query in cachedFilterQueries | reverse track by $index"
                         ng-if="$index >= (cachedFilterQueries.curPage-1)*cachedFilterQueries.perPage && $index < cachedFilterQueries.curPage*cachedFilterQueries.perPage">
                         <td>
-                            <span style="color: #808080;line-height: 25px">Queried At: {{query.savedAt | utcToConfigTimeZone}} </span><span ng-if="query.project">in Project: {{query.project}}</span>
+                            <span style="color: #808080;line-height: 25px">{{'Queried At' | translate}}: {{query.savedAt | utcToConfigTimeZone}} </span><span ng-if="query.project">{{'in Project' | translate}}: {{query.project}}</span>
 
                             <div class="pull-right">
                                 <button class="btn btn-default btn-xs" ng-click="submitQuery(query.sql, query.project)"><i class="fa fa-refresh"></i>
-                                    Resubmit
+                                    {{'Resubmit' | translate}}
                                 </button>
                                 <button class="btn btn-default btn-xs" ng-click="removeQuery()"><i class="fa fa-times">
-                                    Remove</i>
+                                    {{'Remove' | translate}}</i>
                                 </button>
                             </div>
                             <div class="form-group" style="margin: 0px">
-                                SQL:
+                                {{'SQL' | translate}}:
                                 <label ng-click="query.show=!query.show" style="padding:5px">
                                     <i ng-if="!query.show" class="fa fa-angle-double-down"></i>
                                     <i ng-if="query.show" class="fa fa-angle-double-right"></i>
@@ -195,7 +195,7 @@
         <div class="hr hr24 hr-dotted"></div>
 
         <h3 class="kylin_title">
-            Results
+            {{'Results' | translate}}
             <div class="nav-tabs-custom">
                 <ul class="nav nav-tabs" style="font-size: 13px;padding: 5px 0px 5px 0px"
                     ng-if="queries.length > 0">
@@ -221,7 +221,7 @@
                     </li>
 
                     <div class="pull-right" style="font-size: 13px">
-                        Status:
+                        {{'Status' | translate}}:
                         <select ng-init="statusFilter=statusList[0].value" ng-model="statusFilter"
                                 ng-options="status.value as status.name for status in statusList"></select>
                     </div>
@@ -240,5 +240,5 @@
 <div ng-include="'partials/projects/project_create.html'"></div>
 
 <script type="text/ng-template" id="specifyCubeTip.html">
-  <p style="font-size: 8px;">Specify the cube to query, other cubes in current project won't be queried.</p>
+  <p style="font-size: 8px;">{{'Specify the cube to query, other cubes in current project won't be queried.' | translate}}</p>
 </script>

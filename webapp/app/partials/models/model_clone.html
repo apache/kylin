@@ -18,7 +18,7 @@
 
 <script type="text/ng-template" id="modelClone.html">
   <div class="modal-header">
-    <h4 tooltip="submit">MODEL CLONE</h4>
+    <h4 tooltip="{{'submit' | translate}}">{{'MODEL CLONE' | translate}}</h4>
   </div>
   <ng-form name="forms.model_clone_form" novalidate="novalidate" class="modal-body" style="background-color: white">
 
@@ -27,7 +27,7 @@
       <div class="col-md-8">
         <div class="row">
           <div class="form-group">
-            <b>Target Project is:</b>
+            <b>{{'Target Project is' | translate}}:</b>
             <br/>
             {{targetObj.targetProject}}
           </div>
@@ -40,11 +40,11 @@
       <div class="col-md-8">
         <div class="row">
           <div class="form-group">
-            <b>New Model Name:</b>
+            <b>{{'New Model Name' | translate}}:</b>
             <br/>
             <input type="text" name="model_name" class="form-control" ng-model="targetObj.modelName" ng-pattern="/^\w+$/"  required  />
-            <small class="help-block red" ng-show="forms.model_clone_form.model_name.$error.required && (forms.model_clone_form.model_name.$dirty)">Model name is required.</small>
-            <small class="help-block red" ng-show="!forms.model_clone_form.model_name.$error.required&&forms.model_clone_form.model_name.$invalid && (forms.model_clone_form.model_name.$dirty)">Model name is invalid.</small>
+            <small class="help-block red" ng-show="forms.model_clone_form.model_name.$error.required && (forms.model_clone_form.model_name.$dirty)">{{'Model name is required' | translate}}.</small>
+            <small class="help-block red" ng-show="!forms.model_clone_form.model_name.$error.required&&forms.model_clone_form.model_name.$invalid && (forms.model_clone_form.model_name.$dirty)">{{'Model name is invalid' | translate}}.</small>
           </div>
         </div>
       </div>
@@ -52,7 +52,7 @@
     </div>
   </ng-form>
   <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="cancel()">Close</button>
-    <button class="btn btn-success" ng-click="cloneModel()" ng-disabled="forms.model_clone_form.$invalid">Submit</button>
+    <button class="btn btn-primary" ng-click="cancel()">{{'Close' | translate}}</button>
+    <button class="btn btn-success" ng-click="cloneModel()" ng-disabled="forms.model_clone_form.$invalid">{{'Submit' | translate}}</button>
   </div>
 </script>

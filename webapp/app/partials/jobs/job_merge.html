@@ -18,7 +18,7 @@
 
 <script type="text/ng-template" id="jobMerge.html">
     <div class="modal-header">
-        <h4 tooltip="merge">CUBE MERGE CONFIRM</h4>
+        <h4 tooltip="merge">{{'CUBE MERGE CONFIRM' | translate}}</h4>
     </div>
     <div class="modal-body" style="background-color: white">
         <div ng-if="metaModel.model.partition_desc.partition_date_column" class="row">
@@ -31,11 +31,11 @@
                     <table class="table table-striped list" >
                         <tbody>
                         <tr>
-                            <td>PARTITION DATE COLUMN</td>
+                            <td>{{'PARTITION DATE COLUMN' | translate}}</td>
                             <td>{{metaModel.model.partition_desc.partition_date_column}}</td>
                         </tr>
                         <tr>
-                            <td>MERGE START SEGMENT</td>
+                            <td>{{'MERGE START SEGMENT' | translate}}</td>
                             <td>
                                 <select ng-model="mergeStartSeg"
                                         ng-init="mergeStartSeg=cube.segments[0];mergeStartSelected(mergeStartSeg)"
@@ -45,7 +45,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>MERGE END SEGMENT</td>
+                            <td>{{'MERGE END SEGMENT' | translate}}</td>
                             <td>
                                 <select ng-model="mergeEndSeg"
                                         ng-init="mergeEndSeg=cube.segments[cube.segments.length-1];mergeEndSelected(mergeEndSeg)"
@@ -55,46 +55,46 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>START SEGMENT DETAIL</td>
+                            <td>{{'START SEGMENT DETAIL' | translate}}</td>
                             <td>
                                 <table class="table table-condensed">
                                     <tr>
-                                        <td>Start Date (Include)</td>
+                                        <td>{{'Start Date (Include)' | translate}}</td>
                                         <td>{{mergeStartSeg.date_range_start | reverseToGMT0}}</td>
                                     </tr>
                                     <tr>
-                                        <td>End Date (Exclude)</td>
+                                        <td>{{'End Date (Exclude)' | translate}}</td>
                                         <td>{{mergeStartSeg.date_range_end | reverseToGMT0}}</td>
                                     </tr>
                                     <tr>
-                                        <td>Last build Time</td>
+                                        <td>{{'Last build Time' | translate}}</td>
                                         <td>{{mergeStartSeg.last_build_time | utcToConfigTimeZone}}</td>
                                     </tr>
                                     <tr>
-                                        <td>Last build ID</td>
+                                        <td>{{'Last build ID' | translate}}</td>
                                         <td>{{mergeStartSeg.last_build_job_id}}</td>
                                     </tr>
                                 </table>
                             </td>
                         </tr>
                         <tr>
-                            <td>END SEGMENT DETAIL</td>
+                            <td>{{'END SEGMENT DETAIL' | translate}}</td>
                             <td>
                                 <table class="table table-condensed">
                                     <tr>
-                                        <td>Start Date (Include)</td>
+                                        <td>{{'Start Date (Include)' | translate}}</td>
                                         <td>{{mergeEndSeg.date_range_start |  reverseToGMT0}}</td>
                                     </tr>
                                     <tr>
-                                        <td>End Date (Exclude)</td>
+                                        <td>{{'End Date (Exclude)' | translate}}</td>
                                         <td>{{mergeEndSeg.date_range_end |  reverseToGMT0}}</td>
                                     </tr>
                                     <tr>
-                                        <td>Last build Time</td>
+                                        <td>{{'Last build Time' | translate}}</td>
                                         <td>{{mergeEndSeg.last_build_time | utcToConfigTimeZone}}</td>
                                     </tr>
                                     <tr>
-                                        <td>Last build ID</td>
+                                        <td>{{'Last build ID' | translate}}</td>
                                         <td>{{mergeEndSeg.last_build_job_id}}</td>
                                     </tr>
                                 </table>
@@ -113,16 +113,16 @@
         <div ng-if="!metaModel.model.partition_desc.partition_date_column" class="row">
             <div class="col-md-2"></div>
             <div class="col-md-8">
-                <span>No partition date column defined.</span>
+                <span>{{'No partition date column defined' | translate}}.</span>
             </div>
             <div class="col-md-2"></div>
         </div>
     </div>
     <div class="modal-footer">
-        <button class="btn btn-primary" ng-click="cancel()">Close</button>
+        <button class="btn btn-primary" ng-click="cancel()">{{'Close' | translate}}</button>
         <button class="btn btn-success" ng-click="rebuild()"
                 ng-disabled="!(jobBuildRequest.startTime >= 0 && jobBuildRequest.endTime > 0)">
-            Submit
+            {{'Submit' | translate}}
         </button>
     </div>
 </script>

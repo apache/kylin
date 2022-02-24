@@ -17,7 +17,7 @@
 -->
 <div ng-controller="AclCtrl">
   <br/>
-  <button type="button" class="btn btn-success" ng-click="addTableAcl()"><span class="fa fa-plus"></span> Grant</button>
+  <button type="button" class="btn btn-success" ng-click="addTableAcl()"><span class="fa fa-plus"></span> {{'Grant' | translate}}</button>
   <table class="table table-hover table-striped list">
     <thead>
     <tr style="cursor: pointer">
@@ -28,7 +28,7 @@
         User / Group name
       </th>
       <th>
-        Actions
+        {{'Actions' | translate}}
       </th>
     </tr>
     </thead>
@@ -43,11 +43,11 @@
       <td>
         <div class="dropdown">
           <button class="btn btn-default btn-xs dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-            Action
+            {{'Action' | translate}}
             <span class="caret"></span>
           </button>
           <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-            <li><a ng-click="delTableAcl('group', groupAcl)">Delete</a></li>
+            <li><a ng-click="delTableAcl('group', groupAcl)">{{'Delete' | translate}}</a></li>
           </ul>
         </div>
       </td>
@@ -67,7 +67,7 @@
             <span class="caret"></span>
           </button>
           <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-            <li><a ng-click="delTableAcl('user', userAcl)">Delete</a></li>
+            <li><a ng-click="delTableAcl('user', userAcl)">{{'Delete' | translate}}</a></li>
           </ul>
         </div>
       </td>
@@ -76,7 +76,7 @@
 
   <script type="text/ng-template" id="addTableAcl.html">
     <div class="modal-header">
-      <h4 tooltip="submit">Add Grant</h4>
+      <h4 tooltip="{{'submit' | translate}}">{{'Add Grant' | translate}}</h4>
     </div>
     <ng-form name="forms.tableAclForm" novalidate="novalidate" class="modal-body" style="background-color: white">
 
@@ -91,14 +91,14 @@
                       style="width: 100% !important;"
                       ng-options="user.value as user.name for user in userType"
                       class="chosen-select">
-                <option value="user">User</option>
-                <option value="group">Group</option>
+                <option value="user">{{'User' | translate}}</option>
+                <option value="group">{{'Group' | translate}}</option>
               </select>
             </div>
           </div>
           <div class="row">
             <div class="form-group" ng-show="newTableAcl.type == 'user'">
-              <b>User / Group name</b>
+              <b>{{'User / Group name' | translate}}</b>
               <br/>
               <select ng-required="true" chosen ng-model="newTableAcl.name"
                       ng-options="black as black for black in tableUserAclBlackList"
@@ -109,7 +109,7 @@
             </div>
 
             <div class="form-group" ng-show="newTableAcl.type == 'group'">
-              <b>User / Group name</b>
+              <b>{{'User / Group name' | translate}}</b>
               <br/>
               <select ng-required="true" chosen ng-model="newTableAcl.name"
                       ng-options="black as black for black in tableGroupAclBlackList"
@@ -126,8 +126,8 @@
       </div>
     </ng-form>
     <div class="modal-footer">
-      <button class="btn btn-primary" ng-click="cancel()">Close</button>
-      <button class="btn btn-success" ng-click="addAcl()" ng-disabled="forms.tableAclForm.$invalid">Submit</button>
+      <button class="btn btn-primary" ng-click="cancel()">{{'Close' | translate}}</button>
+      <button class="btn btn-success" ng-click="addAcl()" ng-disabled="forms.tableAclForm.$invalid">{{'Submit' | translate}}</button>
     </div>
   </script>
 </div>

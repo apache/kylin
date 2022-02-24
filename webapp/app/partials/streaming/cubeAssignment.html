@@ -18,15 +18,15 @@
 
 <script type="text/ng-template" id="cubeAssignment.html">
   <div class="modal-header">
-    <h4>Cube Assignment</h4>
+    <h4>{{'Cube Assignment' | translate}}</h4>
   </div>
   <div ng-if="status==='view'" class="modal-body" style="background-color: white">
     <div ui-grid="assignmentGridOptions" ui-grid-pagination class="grid"></div>
   </div>
   <div ng-if="status==='edit'" class="modal-body" style="background-color: white">
     <div class="row">
-      <div class="col-sm-3 font-color-default text-center" style="font-weight:bolder;">Replica Set ID</div>
-      <div class="col-sm-8 font-color-default text-center" style="font-weight:bolder;">Partition</div>
+      <div class="col-sm-3 font-color-default text-center" style="font-weight:bolder;">{{'Replica Set ID' | translate}}</div>
+      <div class="col-sm-8 font-color-default text-center" style="font-weight:bolder;">{{'Partition' | translate}}</div>
     </div>
     <div ng-repeat="replicaSet in currentAssignment" class="row">
       <div class="col-sm-3 form-group">
@@ -36,7 +36,7 @@
       </div>
       <div class="col-sm-8">
         <ui-select multiple ng-model="replicaSet.partitions" theme="bootstrap" sortable="true" close-on-select="false" class="form-control">
-          <ui-select-match placeholder="Select Partition...">{{$item.partition_id}}</ui-select-match>
+          <ui-select-match placeholder="{{'Select Partition...' | translate}}">{{$item.partition_id}}</ui-select-match>
           <ui-select-choices repeat="partition as partition in cubePartitions | filter:$select.search">
             {{partition.partition_id}}
           </ui-select-choices>
@@ -53,8 +53,8 @@
     </div>
   </div>
   <div class="modal-footer">
-    <button ng-if="status==='view'" class="btn btn-primary" ng-click="editAssignment()">Edit</button>
-    <button ng-if="status==='edit'" class="btn btn-primary" ng-click="reAssignCube()">Save</button>
-    <button class="btn btn-warning" ng-click="cancel()">Close</button>
+    <button ng-if="status==='view'" class="btn btn-primary" ng-click="editAssignment()">{{'Edit' | translate}}</button>
+    <button ng-if="status==='edit'" class="btn btn-primary" ng-click="reAssignCube()">{{'Save' | translate}}</button>
+    <button class="btn btn-warning" ng-click="cancel()">{{'Close' | translate}}</button>
   </div>
 </script>

@@ -18,18 +18,18 @@
 
   <script type="text/ng-template" id="addHiveTable.html">
     <div class="modal-header">
-      <h4>Load Table Metadata</h4>
+      <h4>{{'Load Table Metadata' | translate}}</h4>
     </div>
     <div class="modal-body">
-      <span><strong>Project: </strong>{{ $parent.projectName!=null?$parent.projectName:'NULL'}}</span>
-      <label for="tables"> Table Names:(Separate with comma)</label>
+      <span><strong>{{'Project' | translate}}: </strong>{{ $parent.projectName!=null?$parent.projectName:'NULL'}}</span>
+      <label for="tables"> {{'Table Names:(Separate with comma)' | translate}}</label>
             <textarea ng-model="$parent.tableNames" class="form-control" id="tables"
-                      placeholder="table1,table2  By default,system will choose 'Default' as database,you can specify database like this 'database.table'"></textarea>
-      <label ng-if="sourceType === '0'"> <input type="checkbox" ng-model="isCalculate.val" > Calculate column cardinality</label>
+                      placeholder="{{'placeholderTableNames' | translate}}"></textarea>
+      <label ng-if="sourceType === '0'"> <input type="checkbox" ng-model="isCalculate.val" > {{'Calculate column cardinality' | translate}}</label>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" ng-click="add()">Sync</button>
-      <button class="btn btn-primary" ng-click="cancel()">Cancel</button>
+      <button class="btn btn-primary" ng-click="add()">{{'Sync' | translate}}</button>
+      <button class="btn btn-primary" ng-click="cancel()">{{'Cancel' | translate}}</button>
     </div>
   </script>
 
@@ -37,7 +37,7 @@
 
     <div class="modal-header">
       <div class="box-header">
-        <h3 class="box-title">Streaming Table And Cluster Info</h3>
+        <h3 class="box-title">{{'Streaming Table And Cluster Info' | translate}}</h3>
 
         <div class="box-tools pull-right">
           <button type="button" class="btn btn-box-tool" ng-click="cancel()" data-widget="remove"><i class="fa fa-times"></i></button>
@@ -58,14 +58,14 @@
         <div class="col-xs-4">
           <button class="btn btn-prev" ng-click="previewStep();" ng-show="steps.curStep==2">
             <i class="ace-icon fa fa-arrow-left"></i>
-            Prev
+            {{'Prev' | translate}}
           </button>
           <button id="nextButton" class="btn btn-success btn-next"  ng-click="nextStep();" ng-show="steps.curStep==1">
-            Next
+            {{'Next' | translate}}
             <i class="ace-icon fa fa-arrow-right icon-on-right"></i>
           </button>
           <button class="btn btn-primary" ng-click="syncStreamingSchema()" ng-show="steps.curStep==2">
-            Submit
+            {{'Submit' | translate}}
           </button>
         </div>
       </div>
@@ -85,7 +85,7 @@
 
   <div class="modal-header">
     <div class="box-header">
-      <h3 class="box-title">Streaming Table And Cluster Info</h3>
+      <h3 class="box-title">{{'Streaming Table And Cluster Info' | translate}}</h3>
 
       <div class="box-tools pull-right">
         <button type="button" class="btn btn-box-tool" ng-click="cancel()" data-widget="remove"><i class="fa fa-times"></i></button>
@@ -114,40 +114,40 @@
 
 <script type="text/ng-template" id="reloadTable.html">
   <div class="modal-header">
-    <h4>Reload Table Metadata</h4>
+    <h4>{{'Reload Table Metadata' | translate}}</h4>
   </div>
   <div class="modal-body">
     <span><strong>Project: {{ $parent.projectName!=null?$parent.projectName:'NULL'}}</strong></span><br/>
-    <label for="tables"> Are you sure to reload table {{selectTable}} ?</label><br/>
-    <label ng-if="sourceType === '0'"><input type="checkbox" ng-model="isCalculate.val" > Calculate column cardinality</label>
+    <label for="tables"> {{'Are you sure to reload table' | translate}} {{selectTable}} ?</label><br/>
+    <label ng-if="sourceType === '0'"><input type="checkbox" ng-model="isCalculate.val" > {{'Calculate column cardinality' | translate}}</label>
   </div>
   <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="confirmReload()">Sync</button>
-    <button class="btn btn-primary" ng-click="cancel()">Cancel</button>
+    <button class="btn btn-primary" ng-click="confirmReload()">{{'Sync' | translate}}</button>
+    <button class="btn btn-primary" ng-click="cancel()">{{'Cancel' | translate}}</button>
   </div>
 </script>
 
 <script type="text/ng-template" id="addCsvSource.html">
 
   <div class="modal-header"><button class="close" type="button" data-dismiss="modal" ng-click="cancel()">×</button>
-    <h4>Load Table from Csv File</h4>
+    <h4>{{'Load Table from Csv File' | translate}}</h4>
   </div>
 
   <div class="modal-body">
     <div class="form-group required">
       <div class="clearfix">
         <form method="post" class="vertical-center" enctype="multipart/form-data">
-          <label class="col-xs-2 control-label" style="text-align: left;">Select a Csv File</label><input type="file" class="custom-file-input" file-model="file">
+          <label class="col-xs-2 control-label" style="text-align: left;">{{'Select a Csv File' | translate}}</label><input type="file" class="custom-file-input" file-model="file">
         </form>
         <input type="checkbox" ng-model="tableData.has_header">
-        Is first line of header
+        {{'Is first line of header' | translate}}
         <select id="table_separator" chosen ng-model="tableData.separator" ng-options="separator as separator for separator in separator_list" data-placeholder="select a separator" style="width: 150px !important;" class="chosen-select"></select>
       </div>
       <div class="clearfix">
-        <label for="tableName" class="col-sm-1 control-label font-color-default">Table Name</label>
-        <input type="text" class="form-control" style="width:50%;" id="tableName" ng-model="tableData.name" name="tableName" placeholder="Input Table Name eg. database.table" required>
+        <label for="tableName" class="col-sm-1 control-label font-color-default">{{'Table Name' | translate}}</label>
+        <input type="text" class="form-control" style="width:50%;" id="tableName" ng-model="tableData.name" name="tableName" placeholder="{{'placeholderInputTableName' | translate}}" required>
         <small class="help-block" ng-show="table_data_from.tableName.$error.required && table_data_from.tableName.$dirty">
-          Table Name is empty.
+          {{'Table Name is empty.' | translate}}
         </small>
       </div>
       <div class="col-xs-1" style="text-align:center;">
@@ -157,16 +157,16 @@
 
       <table class="table table-hover table-bordered" ng-show="tableData.loaded">
         <tr>
-          <th>Column</th>
-          <th>Column Type</th>
-          <th>Sample Data</th>
+          <th>{{'Column' | translate}}</th>
+          <th>{{'Column Type' | translate}}</th>
+          <th>{{'Sample Data' | translate}}</th>
         </tr>
         <tr ng-repeat="column in columnList">
           <td><input type="text" ng-model="column.name"></td>
           <td>
             <select chosen ng-model="column.type"
                     ng-options="type as type for type in tableConfig.dataTypes"
-                    data-placeholder="select a column type"
+                    data-placeholder="{{'select a column type' | translate}}"
                     style="width: 120px !important;"
                     class="chosen-select">
             </select>

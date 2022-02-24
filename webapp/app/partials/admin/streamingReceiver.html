@@ -18,8 +18,8 @@
 <div class="container">
   <div class="row" style="margin-top:22px">
     <div class="col-sm-4 col-sm-offset-8 text-right" style="margin-bottom: 10px;">
-      <a ng-href="http://{{receiverServer}}:9090/kylin/api/system/threadDump" target="_blank"><button type="button" class="btn  btn-primary btn-xs"><i tooltip="ThreadDump" class="fa fa-camera"></i> Thread Dump</button></a>
-      <a ng-href="http://{{receiverServer}}:9090/kylin/logs" target="_blank"><button type="button" class="btn btn-primary btn-xs"><i tooltip="log" class="fa fa-history"></i> Logs</button></a>
+      <a ng-href="http://{{receiverServer}}:9090/kylin/api/system/threadDump" target="_blank"><button type="button" class="btn  btn-primary btn-xs"><i tooltip="{{'ThreadDump' | translate}}" class="fa fa-camera"></i> {{'Thread Dump' | translate}}</button></a>
+      <a ng-href="http://{{receiverServer}}:9090/kylin/logs" target="_blank"><button type="button" class="btn btn-primary btn-xs"><i tooltip="{{'log' | translate}}" class="fa fa-history"></i> {{'Logs' | translate}}</button></a>
     </div>
   </div>
 
@@ -38,7 +38,7 @@
           <div class="row" ng-if="receiverStats.cube_stats[cubeName]">
             <div class="col-sm-12" ng-if="receiverStats.cube_stats[cubeName].consumer_stats" ng-init="consumerStats = receiverStats.cube_stats[cubeName].consumer_stats">
               <div class="col-sm-4 text-right">
-                State: 
+                {{'State' | translate}}: 
               </div>
               <div class="col-sm-8">
                 <i ng-if="consumerStats.stopped" class="fa fa-stop"></i>
@@ -50,7 +50,7 @@
           <div class="row">
             <div class="col-sm-12">
               <div class="col-sm-4 text-right">
-                Assignment: 
+                {{'Assignment' | translate}}: 
               </div>
               <div class="col-sm-8">
                 <span class="label label-primary" style="margin-right: 5px; display: inline-block;" ng-repeat="partitionBaseInfo in assignment">{{partitionBaseInfo.partition_id}}</span>
@@ -60,7 +60,7 @@
           <div class="row" ng-if="receiverStats.cube_stats[cubeName]">
             <div class="col-sm-12" ng-if="receiverStats.cube_stats[cubeName].consumer_stats" ng-init="consumerStats = receiverStats.cube_stats[cubeName].consumer_stats">
               <div class="col-sm-4 text-right">
-                Partition:
+                {{'Partition' | translate}}:
               </div>
               <div class="col-sm-8">
                 <a ng-repeat="(partitionId, partitionInfo) in consumerStats.partition_consume_stats" href="javascript:void(0);" kylinpopover placement="left" title="Partition Info" trigger="focus" content="Partition Id: {{partitionId}}</br>Offset Info: {{consumerStats[partitionId]}}</br>1 Minute Rate: {{partitionInfo.one_min_rate | number:0}} msg/s</br>5 Minute Rate: {{partitionInfo.five_min_rate | number:0}} msg/s</br>15 Minute Rate: {{partitionInfo.fifteen_min_rate | number:0}} msg/s</br>AVG Rate: {{partitionInfo.avg_rate | number:0}} msg/s</br>Total Consume: {{partitionInfo.total_consume}}"><i class="fa fa-list-ul" style="color:#3c8dbc; margin-right: 5px;"></i></a>
@@ -70,7 +70,7 @@
           <div class="row" ng-if="receiverStats.cube_stats[cubeName]">
             <div ng-if="receiverStats.cube_stats[cubeName].segment_stats" ng-init="segmentStats = receiverStats.cube_stats[cubeName].segment_stats" class="col-sm-12">
               <div class="col-sm-4 text-right">
-                Segment:
+                {{'Segment' | translate}}:
               </div>
               <div class="col-sm-8">
                 <a href="javascript:void(0);" ng-repeat="(segmentName, segmentInfo) in segmentStats" kylinpopover placement="top" class="segment" title="Segment Info" trigger="focus" content="segment name: {{segmentName}}</br>segment state: {{segmentInfo.segment_state}}</br>fragment number: {{segmentInfo.store_stats.num_fragments}}</br>row number in memory: {{segmentInfo.store_stats.num_rows_in_mem}}</br>last event time: {{segmentInfo.store_stats.latest_event_time | reverseToGMT0}}</br>latest event latency: {{segmentInfo.store_stats.latest_event_latency}}ms"><i class="fa fa-database" style="color: #86bad8; margin-right: 5px;" ng-class="{'active': segmentInfo.segment_state === 'ACTIVE'}"></i></a>
@@ -94,14 +94,14 @@
   <div class="modal-body">
     <div class="row">
       <div class="col-sm-12">
-        Ingest Info:
+        {{'Ingest Info' | translate}}:
       </div>
     </div>
     <hr>
     <div class="row">
       <div class="col-sm-12">
         <div class="col-sm-3 text-right">
-          Total Ingest:
+          {{'Total Ingest' | translate}}:
         </div>
         <div class="col-sm-3">
           {{receiverCubeStats.total_ingest}}
@@ -111,13 +111,13 @@
     <div class="row">
       <div class="col-sm-12">
         <div class="col-sm-3 text-right">
-          Total Exception Events:
+          {{'Total Exception Events' | translate}}:
         </div>
         <div class="col-sm-3">
           {{receiverCubeStats.consumer_stats.total_exception_events}}
         </div>
         <div class="col-sm-3 text-right">
-          Total Incoming Events:
+          {{'Total Incoming Events' | translate}}:
         </div>
         <div class="col-sm-3">
           {{receiverCubeStats.consumer_stats.total_incoming_events}}
@@ -127,13 +127,13 @@
     <div class="row">
       <div class="col-sm-12">
         <div class="col-sm-3 text-right">
-          Latest Event Time:
+          {{'Latest Event Time' | translate}}:
         </div>
         <div class="col-sm-3">
           {{receiverCubeStats.latest_event_time | reverseToGMT0}}
         </div>
         <div class="col-sm-3 text-right">
-          Latest Event Ingest Time:
+          {{'Latest Event Ingest Time' | translate}}:
         </div>
         <div class="col-sm-3">
           {{receiverCubeStats.latest_event_ingest_time | reverseToGMT0}}
@@ -143,14 +143,14 @@
     <hr ng-if="receiverCubeStats.long_latency_info">
     <div class="row" ng-if="receiverCubeStats.long_latency_info">
       <div class="col-sm-12">
-        Latency Info:
+        {{'Latency Info' | translate}}:
       </div>
     </div>
     <hr ng-if="receiverCubeStats.long_latency_info">
     <div class="row" ng-if="receiverCubeStats.long_latency_info" ng-init="longLatencyInfo = receiverCubeStats.long_latency_info">
       <div class="col-sm-12">
         <div class="col-sm-3 text-right">
-          Total Long Latency Events:
+          {{'Total Long Latency Events' | translate}}:
         </div>
         <div class="col-sm-3">
           {{longLatencyInfo.total_long_latency_events}}

@@ -21,19 +21,19 @@
 
 <div class="pull-right">
                         <span style="color: #808080">
-                            <span>Start Time: {{curQuery.startTime | utcToConfigTimeZone}}</span>&nbsp;&nbsp;
+                            <span>{{'Start Time' | translate}}: {{curQuery.startTime | utcToConfigTimeZone}}</span>&nbsp;&nbsp;
                             <span ng-if="curQuery.result.results">Duration: {{curQuery.result.duration/1000 | number: 2}}s</span>&nbsp;&nbsp;
                         </span>
     <button class="btn btn-success btn-xs" ng-click="rerun()">
-        <i class="fa fa-refresh"></i> Rerun
+        <i class="fa fa-refresh"></i> {{'Rerun' | translate}}
     </button>
     <button class="btn btn-grey btn-xs" ng-click="showSavePanel()">
-        <i class="fa fa-floppy-o"></i> Save
+        <i class="fa fa-floppy-o"></i> {{'Save' | translate}}
     </button>
 </div>
 
 <div class="form-group">
-    <label>Query String</label>
+    <label>{{'Query String' | translate}}</label>
     <label ng-click="curQuery.result.show=!curQuery.result.show" style="padding:5px">
         <i ng-if="!curQuery.result.show" class="fa fa-angle-double-down"></i>
         <i ng-if="curQuery.result.show" class="fa fa-angle-double-right"></i>
@@ -53,18 +53,18 @@
 <div class="form-group">
     <ul class="row">
         <li class="col-md-2" style="display: inline">
-            <label>Status: &nbsp;</label>
-            <span class="label label-lg label-danger arrowed" ng-if="curQuery.status=='failed'">Failed</span>
-            <span class="label label-lg label-success arrowed" ng-if="curQuery.status=='success'">Success</span>
+            <label>{{'Status' | translate}}: &nbsp;</label>
+            <span class="label label-lg label-danger arrowed" ng-if="curQuery.status=='failed'">{{'Failed' | translate}}</span>
+            <span class="label label-lg label-success arrowed" ng-if="curQuery.status=='success'">{{'Success' | translate}}</span>
             <span class="label label-lg label-info" ng-if="curQuery.status=='executing'">
-                <i class="fa fa-cog fa-spin"></i> Executing...</span>
+                <i class="fa fa-cog fa-spin"></i> {{'Executing...' | translate}}</span>
         </li>
         <li class="col-md-5 " style="display: inline">
-            <label>Project: &nbsp;</label>
+            <label>{{'Project' | translate}}: &nbsp;</label>
             <span>{{curQuery.project}}</span>
         </li>
         <li class="col-md-5 " style="display: inline">
-            <label>Cubes: &nbsp;</label>
+            <label>{{'Cubes' | translate}}: &nbsp;</label>
             <span>{{curQuery.result.cube | limitTo:30}}<span ng-if="curQuery.result.cube.length > 30">...  <i class="fa fa-list text-aqua" style="cursor: pointer;" popover-placement="left" popover="{{curQuery.result.cube | formatCubeName}}" popover-title="Cube Info Details"></i></span></span>
         </li>
     </ul>
@@ -72,22 +72,22 @@
 
 <div ng-if="curQuery.status!='executing'" ng-class="{true: 'fullscreen-result', false: ''}[ui.fullScreen]"
      style="{{ui.fullScreen ? 'padding: 40px 40px 0px 40px':''}}">
-    <label>Results <span style="vertical-align:middle;color: grey;font-size: 15px"
+    <label>{{'Results' | translate}} <span style="vertical-align:middle;color: grey;font-size: 15px"
                          ng-if="curQuery.status=='success'">(<strong>{{curQuery.result.results.length}})</strong></span></label>
     <span  ng-if="curQuery.result.partial" class="text-warning">
        !Note: Current results are partial, please click 'Show All' button to get all results.
       <button class="btn btn-success btn-xs" ng-click="reset(curQuery);curQuery.acceptPartial=false;query(curQuery)">
         <i class="fa fa-download"></i>
-        Show All
+        {{'Show All' | translate}}
       </button>
       </span>
     <div class="pull-right" ng-if="curQuery.status=='success'">
         <button class="btn btn-default btn-xs"  ng-click="curQuery.graph.show=!curQuery.graph.show;buildGraphMetadata(curQuery);resetGraph(curQuery)">
-            <span ng-if="!curQuery.graph.show"><i class="fa fa-bar-chart-o"></i> Visualization</span>
-            <span ng-if="curQuery.graph.show"><i class="fa fa-list-ul"></i> Grid</span>
+            <span ng-if="!curQuery.graph.show"><i class="fa fa-bar-chart-o"></i> {{'Visualization' | translate}}</span>
+            <span ng-if="curQuery.graph.show"><i class="fa fa-list-ul"></i> {{'Grid' | translate}}</span>
         </button>
         <a class="btn btn-default btn-xs" ng-if="(userService.hasRole('ROLE_ADMIN')&&isAdminExportAllowed)||(!userService.hasRole('ROLE_ADMIN')&&isNonAdminExportAllowed)" href="{{config.service.url}}query/format/csv?sql={{exportSql}}&project={{curQuery.project}}" target="_blank">
-            <i class="fa fa-cloud-download"></i> Export</a>
+            <i class="fa fa-cloud-download"></i> {{'Export' | translate}}</a>
         <a class="btn btn-default btn-xs" ng-click="refreshUi();">
             <i ng-class="{true: 'fa fa-compress', false: 'fa fa-expand'}[ui.fullScreen]"></i>
         </a>
@@ -128,7 +128,7 @@
     <div ng-if="curQuery.graph.show" class="row">
         <div class="col-xs-4">
             <div class="graph_content">
-                <label>Graph Type</label>
+                <label>{{'Graph Type' | translate}}</label>
                 <div>
                     <select chosen style="width: 100%;"
                         ng-model="curQuery.graph.type"
@@ -139,26 +139,26 @@
         </div>
         <div class="col-xs-4">
             <div class="graph_content">
-                <label>Dimensions</label>
+                <label>{{'Dimensions' | translate}}</label>
                 <div>
                     <select chosen style="width: 100%;"
                             ng-model="curQuery.graph.state.dimensions" ng-change="refreshGraphData(curQuery)"
                             ng-options="dimension as dimension.column.label for dimension in curQuery.graph.meta.dimensions | filter: mappingToChartype">
-                        <option value="">-- choose dimension --</option>
+                        <option value="">-- {{'choose dimension' | translate}} --</option>
                     </select>
                 </div>
             </div>
         </div>
         <div class="col-xs-4">
             <div class="graph_content">
-                <label>Metrics</label>
+                <label>{{'Metrics' | translate}}</label>
                 <div>
                   <select chosen style="width: 100%;"
                           data-placeholder="Select Metrics.."
                           ng-model="curQuery.graph.state.metrics"
                           ng-options="metrics as metrics.column.label for metrics in curQuery.graph.meta.metrics"
                           ng-change="refreshGraphData(curQuery)">
-                        <option value="">-- choose metrics --</option>
+                        <option value="">-- {{'choose metrics' | translate}} --</option>
                     </select>
                 </div>
             </div>
@@ -170,7 +170,7 @@
                 <nvd3 options="chart.options" data="chart.data"></nvd3>
             </div>
              <div ng-if="!chart" style="padding-top: 10%">
-                <div no-result text="No Graph Generated."></div>
+                <div no-result text="{{'No Graph Generated.' | translate}}"></div>
             </div>
         </div>
     </div>
@@ -182,36 +182,36 @@
 
 <script type="text/ng-template" id="saveQueryModal.html">
     <div class="modal-header">
-        <h4>Save Query</h4>
+        <h4>{{'Save Query' | translate}}</h4>
     </div>
     <div class="modal-body">
         <form class="form-horizontal" role="form" name="save_query_form">
             <div class="form-group">
-                <label class="col-sm-2 control-label">Project</label>
+                <label class="col-sm-2 control-label">{{'Project' | translate}}</label>
 
                 <div class="col-sm-10">
                     <p class="form-control-static">{{curQuery.project}}</p>
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-2 control-label">Name</label>
+                <label class="col-sm-2 control-label">{{'Name' | translate}}</label>
 
                 <div class="col-sm-10">
-                    <input type="text" class="form-control" placeholder="Name.." ng-model="curQuery.name" required>
+                    <input type="text" class="form-control" placeholder="{{'Name' | translate}}.." ng-model="curQuery.name" required>
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-2 control-label">Description</label>
+                <label class="col-sm-2 control-label">{{'Description' | translate}}</label>
 
                 <div class="col-sm-10">
-                    <textarea class="form-control" placeholder="Description.."
+                    <textarea class="form-control" placeholder="{{'Description' | translate}}.."
                               ng-model="curQuery.description"></textarea>
                 </div>
             </div>
         </form>
     </div>
     <div class="modal-footer">
-        <button class="btn btn-primary" ng-click="cancel()">Close</button>
+        <button class="btn btn-primary" ng-click="cancel()">{{'Close' | translate}}</button>
         <button class="btn btn-success" ng-click="saveQuery(curQuery)" ng-disabled="save_query_form.$invalid">Save
         </button>
     </div>

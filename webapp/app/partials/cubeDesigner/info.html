@@ -23,7 +23,7 @@
             <div class="form-group" ng-class="{'required':state.mode=='edit'}">
                 <div class="row">
                   <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                    <b>Model Name</b>
+                    <b>{{'Model Name' | translate}}</b>
                   </label>
                   <div class="col-xs-12 col-sm-6"   ng-class="{'has-error':forms.cube_info_form.model_name.$invalid && (forms.cube_info_form.model_name.$dirty||forms.cube_info_form.model_name.$submitted)}">
                     <select chosen ng-model="cubeMetaFrame.model_name" ng-if="cubeMode=='addNewCube'"
@@ -34,12 +34,12 @@
                             ng-required="true"
                             data-placeholder="select a model"
                             class="chosen-select">
-                      <option value=""> -- Choose Model -- </option>
+                      <option value=""> -- {{'Choose Model' | translate}} -- </option>
                     </select>
 
                     <input ng-model="cubeMetaFrame.model_name" ng-disabled="true" class="form-control" ng-if="cubeMode=='editExistCube'"/>
 
-                    <small class="help-block" ng-show="forms.cube_info_form.model_name.$error.required && (forms.cube_info_form.model_name.$dirty||forms.cube_info_form.$submitted)">Model name is required.</small>
+                    <small class="help-block" ng-show="forms.cube_info_form.model_name.$error.required && (forms.cube_info_form.model_name.$dirty||forms.cube_info_form.$submitted)">{{'Model name is required.' | translate}}</small>
                     <span ng-if="state.mode=='view'">{{cubeMetaFrame.model_name}}</span>
                   </div>
 
@@ -52,7 +52,7 @@
             <div class="form-group middle-popover required"  ng-if="state.mode=='edit'">
                 <div class="row">
                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                        <b>Cube Name</b> <i class="fa fa-info-circle" kylinpopover placement="right" title="Cube Name" template="cubeNameTip.html"></i>
+                        <b>{{'Cube Name' | translate}}</b> <i class="fa fa-info-circle" kylinpopover placement="right" title="Cube Name" template="cubeNameTip.html"></i>
                     </label>
                     <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.cube_info_form.cube_name.$invalid && (forms.cube_info_form.cube_name.$dirty||forms.cube_info_form.cube_name.$submitted)}">
                         <input ng-if="state.mode=='edit'" ng-disabled="{{isEdit}}"  name="cube_name" type="text" class="form-control"
@@ -71,7 +71,7 @@
             <div class="form-group">
                 <div class="row">
                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                        <b>Notification Email List</b>
+                        <b>{{'Notification Email List' | translate}}</b>
                     </label>
                     <div class="col-xs-12 col-sm-6">
                         <input type="text" class="form-control" placeholder="Comma Separated"
@@ -84,7 +84,7 @@
           <div class="form-group">
             <div class="row middle-popover">
               <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                <b>Notification Events</b> <i class="fa fa-info-circle" kylinpopover placement="right" title="Notification Events" template="notificationEventsTip.html"></i>
+                <b>{{'Notification Events' | translate}}</b> <i class="fa fa-info-circle" kylinpopover placement="right" title="Notification Events" template="notificationEventsTip.html"></i>
               </label>
               <div class="col-xs-12 col-sm-6">
 
@@ -109,7 +109,7 @@
             <div class="form-group">
                 <div class="row">
                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                        <b>Description</b>
+                        <b>{{'Description' | translate}}</b>
                     </label>
                     <div class="col-xs-12 col-sm-6">
                         <textarea ng-if="state.mode=='edit'" class="form-control box-default"  ng-disabled="instance.status=='READY'"
@@ -124,10 +124,10 @@
 </div>
 <script type="text/ng-template" id="cubeNameTip.html">
 <ol>
-  <li>Cube name is unique name of entire system.</li>
-  <li>Can not edit cube name after created.</li>
+  <li>{{'Cube name is unique name of entire system.' | translate}}</li>
+  <li>{{'Can not edit cube name after created.' | translate}}</li>
 </ol>
 </script>
 <script type="text/ng-template" id="notificationEventsTip.html">
-  <p>ERROR status will trigger a notification anyway.</p>
+  <p>{{'ERROR status will trigger a notification anyway.' | translate}}</p>
 </script>

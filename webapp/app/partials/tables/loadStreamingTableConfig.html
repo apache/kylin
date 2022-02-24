@@ -19,8 +19,8 @@
 <form class="form-horizontal" name="table_data_from" novalidate>
   <div class="modal-header">
     <div class="box-header">
-      <h3 class="box-title">Streaming Table</h3>
-      <h5 class="" style="">Map Streaming Schema to Table</h5>
+      <h3 class="box-title">{{'Streaming Table' | translate}}</h3>
+      <h5 class="" style="">{{'Map Streaming Schema to Table' | translate}}</h5>
       <div class="box-tools pull-right">
         <button type="button" class="btn btn-box-tool" ng-click="cancel()"><i class="fa fa-times"></i></button>
       </div>
@@ -33,7 +33,7 @@
     <div class="row">
       <div class="col-xs-5">
         <div class="text-info" ng-if="tableConfig.streamingSourceType.kafka === tableData.source_type">
-          Please input topic record sample, or automatically get it from <i class="fa fa-file-text" style="cursor: pointer;" ng-click="getTemplate()"></i>
+          {{'Please input topic record sample, or automatically get it from' | translate}}<i class="fa fa-file-text" style="cursor: pointer;" ng-click="getTemplate()"></i>
         </div>
         <div style="margin-bottom: 10px;">
           <span class="label label-info">JSON</span>
@@ -50,58 +50,58 @@
       <div class="col-xs-6" ng-show="tableData">
 
         <div class="form-group required">
-          <label for="tableName" class="col-sm-3 control-label font-color-default">Table Name</label>
+          <label for="tableName" class="col-sm-3 control-label font-color-default">{{'Table Name' | translate}}</label>
           <div class="col-sm-6">
-            <input type="text" class="form-control" id="tableName" ng-model="tableData.name" name="tableName" placeholder="Input Table Name eg. database.table" required>
+            <input type="text" class="form-control" id="tableName" ng-model="tableData.name" name="tableName" placeholder="{{'placeholderInputTableName' | translate}}" required>
             <small class="help-block" ng-show="table_data_from.tableName.$error.required && table_data_from.tableName.$dirty">
-              Table Name is empty.
+              {{'Table Name is empty.' | translate}}
             </small>
           </div>
           <div class="form-group col-sm-3">
             <div class="checkbox">
               <label>
                 <input type="checkbox" ng-model="streaming.lambda">
-                Lambda
+                {{'Lambda' | translate}}
               </label>
             </div>
           </div>
         </div>
 
         <div class="form-group required">
-          <label for="TSColumn" class="col-sm-3 control-label font-color-default">TSColumn</label>
+          <label for="TSColumn" class="col-sm-3 control-label font-color-default">{{'TSColumn' | translate}}</label>
           <div class="col-sm-6">
             <select id="TSColumn" chosen ng-model="streaming.TSColumnSelected" ng-options="TSColumn as TSColumn for TSColumn in streaming.TSColumnArr" data-placeholder="select a column name" style="width: 120px !important;" class="chosen-select" ng-change="updateTSColumnOption(streaming.TSColumnSelected)"></select>
           </div>
         </div>
         <div class="form-group">
-          <label for="TSParser" class="col-sm-3 control-label font-color-default">TSParser</label>
+          <label for="TSParser" class="col-sm-3 control-label font-color-default">{{'TSParser' | translate}}</label>
           <div class="col-sm-9">
             <select id="TSParser" chosen ng-model="streaming.TSParser" ng-options="TSParser as TSParser for TSParser in streaming.TSParserArr" data-placeholder="select a time parser" style="width: 360px !important;" class="chosen-select" ng-change="updateDateTimeParserOption(streaming.TSParser)"></select>
           </div>
         </div>
         <div class="form-group">
-          <label for="TSPattern" class="col-sm-3 control-label font-color-default">TSPattern</label>
+          <label for="TSPattern" class="col-sm-3 control-label font-color-default">{{'TSPattern' | translate}}</label>
           <div class="col-sm-9">
             <select id="TSPattern" chosen ng-model="selectedTsPattern" ng-options="TSPattern as TSPattern for TSPattern in streaming.TSPatternArr" data-placeholder="select a time pattern" style="width: 360px !important;" class="chosen-select" ng-change="updateTsPatternOption(selectedTsPattern)"></select>
           </div>
-          <input ng-if="selfDefinedTsPattern" type="text" id="RealTSPattern" ng-model="streaming.TSPattern" name="realTSPattern" style="margin-top:10px;margin-left:200px;width:360px" placeholder="Input Your TSPattern" required autofocus>
+          <input ng-if="selfDefinedTsPattern" type="text" id="RealTSPattern" ng-model="streaming.TSPattern" name="realTSPattern" style="margin-top:10px;margin-left:200px;width:360px" placeholder="{{'Input Your TSPattern' | translate}}" required autofocus>
         </div>
 
         <div>
           <table class="table table-hover table-bordered">
             <tr>
               <th></th>
-              <th>Column</th>
-              <th>Type</th>
-              <th>Mapping</th>
-              <th width="15%">Comment</th>
+              <th>{{'Column' | translate}}</th>
+              <th>{{'Type' | translate}}</th>
+              <th>{{'Mapping' | translate}}</th>
+              <th width="15%">{{'Comment' | translate}}</th>
             </tr>
             <tr ng-repeat="column in tableData.columns">
               <td>
                 <i class="fa fa-minus" style="margin-top:10px;cursor:pointer;" ng-click="removeColumn($index)"></i>
               </td>
               <td>
-                <input type="text" class="form-control" ng-readonly="isDerived(column)" ng-model="column.name" placeholder="Input Column Name" />
+                <input type="text" class="form-control" ng-readonly="isDerived(column)" ng-model="column.name" placeholder="{{'Input Column Name' | translate}}" />
               </td>
               <td>
                 <select chosen ng-model="column.datatype" ng-options="datatype as datatype for datatype in streaming.dataTypeArr" data-placeholder="select a column type" style="width: 120px !important;" class="chosen-select" ng-change="updateTSColumnOption(column)">
@@ -110,7 +110,7 @@
               <td>{{column.field_mapping}}</td>
               <td>
                 {{column.comment}}
-                <label ng-if="isDerived(column)" class="badge badge-info">derived time dimension</label>
+                <label ng-if="isDerived(column)" class="badge badge-info">{{'derived time dimension' | translate}}</label>
               </td>
             </tr>
             <tr>
@@ -118,17 +118,17 @@
                 <i class="fa fa-plus" style="margin-top:10px;cursor:pointer;" ng-click="addColumn()"></i>
               </td>
               <td>
-                <input type="text" class="form-control" ng-model="additionalColumn.name" name="additionalColumnName" placeholder="Input Column Name" ng-change="initFieldMapping()" />
+                <input type="text" class="form-control" ng-model="additionalColumn.name" name="additionalColumnName" placeholder="{{'Input Column Name' | translate}}" ng-change="initFieldMapping()" />
               </td>
               <td>
-                <select chosen ng-model="additionalColumn.datatype" ng-options="datatype as datatype for datatype in streaming.dataTypeArr" data-placeholder="select a column type" style="width: 120px !important;" class="chosen-select">
+                <select chosen ng-model="additionalColumn.datatype" ng-options="datatype as datatype for datatype in streaming.dataTypeArr" data-placeholder="{{'placeholderSelectAColumn' | translate}}" style="width: 120px !important;" class="chosen-select">
                 </select>
               </td>
               <td>
-                <input type="text" class="form-control" ng-model="additionalColumn.field_mapping" name="additionalColumnFieldMapping" placeholder="Input Column Mapping Info" />
+                <input type="text" class="form-control" ng-model="additionalColumn.field_mapping" name="additionalColumnFieldMapping" placeholder="{{'Input Column Mapping Info' | translate}}" />
               </td>
               <td>
-                <input type="text" class="form-control" ng-model="additionalColumn.comment" name="additionalColumnComment" placeholder="Input Column Comments" />
+                <input type="text" class="form-control" ng-model="additionalColumn.comment" name="additionalColumnComment" placeholder="{{'Input Column Comments' | translate}}" />
               </td>
             </tr>
             <tr ng-if="additionalColumn.error">
@@ -144,10 +144,10 @@
     <div class="row">
       <div class="col-sm-4 col-sm-offset-8">
         <button class="btn btn-prev" ng-click="previewStep()">
-          <i class="ace-icon fa fa-arrow-left"></i> Prev
+          <i class="ace-icon fa fa-arrow-left"></i> {{'Prev' | translate}}
         </button>
         <button id="nextButton" class="btn btn-primary"  ng-click="saveStreamingSource()">
-          Submit
+          {{'Submit' | translate}}
         </button>
       </div>
     </div>

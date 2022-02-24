@@ -20,7 +20,7 @@
     <ng-form name="forms.cube_setting_form">
       <div>
         <div class="form-group">
-          <h3 style="margin-left:42px;">Aggregation Groups </h3>
+          <h3 style="margin-left:42px;">{{'Aggregation Groups' | translate}} </h3>
           <div style="margin-left:22px;">
             <div class="box-body">
               <div class="col-xs-12">
@@ -34,10 +34,10 @@
             <tr class="row">
               <th class="col-xs-1">ID</th>
               <th class="col-xs-3">
-                <span>Aggregation Groups</span>
+                <span>{{'Aggregation Groups' | translate}}</span>
                 <span style="margin-left:42px">
                   <i kylinpopover placement="left" title="Max Dimension Combination" template="dimCapTip.html" class="fa fa-info-circle"></i>
-                  Max Dimension Combination:
+                  {{'Max Dimension Combination' | translate}}:
                   <input onInput="this.value=this.value.replace(/[^0-9]/g, '')" type="text" ng-model="dim_cap" ng-change="changeDimCap(dim_cap)" ng-disabled="state.mode !== 'edit'" style="margin-left:5px; width:20px;">
                 </span>
               </th>
@@ -79,7 +79,7 @@
                   </tr>
                   <tr class="row">
                     <td class="col-xs-3">
-                      Mandatory Dimensions
+                      {{'Mandatory Dimensions' | translate}}
                     </td>
                     <td class="col-xs-8">
                       <ui-select
@@ -103,7 +103,7 @@
                   </tr>
                   <tr class="row">
                     <td class="col-xs-3">
-                      Hierarchy Dimensions
+                      {{'Hierarchy Dimensions' | translate}}
                     </td>
                     <td class="col-xs-9">
                       <table class="table">
@@ -134,7 +134,7 @@
                         <tr class="row">
                           <td class="col-xs-12">
                             <button class="btn btn-sm btn-info"     ng-disabled="instance.status=='READY'"
-                                    ng-click="addNewHierarchy(aggregation_group)" ng-show="state.mode=='edit'">New Hierarchy<i class="fa fa-plus"></i>
+                                    ng-click="addNewHierarchy(aggregation_group)" ng-show="state.mode=='edit'">{{'New Hierarchy' | translate}}<i class="fa fa-plus"></i>
                             </button>
                           </td>
                         </tr>
@@ -143,7 +143,7 @@
                   </tr>
                   <tr class="row">
                     <td class="col-xs-3">
-                      Joint Dimensions
+                      {{'Joint Dimensions' | translate}}
                     </td>
                     <td class="col-xs-9">
                       <table class="table">
@@ -175,7 +175,7 @@
                         <tr class="row">
                           <td class="col-xs-12">
                             <button class="btn btn-sm btn-info"      ng-disabled="instance.status=='READY'"
-                                    ng-click="addNewJoint(aggregation_group)" ng-show="state.mode=='edit'">New Joint<i class="fa fa-plus"></i>
+                                    ng-click="addNewJoint(aggregation_group)" ng-show="state.mode=='edit'">{{'New Joint' | translate}}<i class="fa fa-plus"></i>
                             </button>
                           </td>
                         </tr>
@@ -193,13 +193,13 @@
             </tr>
           </table>
           <button class="btn btn-sm btn-info" style="margin-left:42px" ng-click="addNewAggregationGroup()"  ng-disabled="instance.status=='READY'"
-                  ng-show="state.mode=='edit'">New Aggregation Group<i class="fa fa-plus"></i>
+                  ng-show="state.mode=='edit'">{{'New Aggregation Group' | translate}}<i class="fa fa-plus"></i>
           </button>
         </div>
         <div class="form-group large-popover" >
           <h3 style="margin-left:42px">Rowkeys  <i kylinpopover placement="right" title="Rowkey" template="rowkeyTip.html" class="fa fa-info-circle"></i></h3>
           <div style="padding: 0 42px; word-break: normal;">
-            <b>Important: </b>Dimension's position(Rowkey) has impact on query performance. You can drag and drop to adjust the sequence. In short, put filtering dimension before non-filtering dimension, and put high cardinality dimension before low cardinality dimension.
+            <b>{{'Important' | translate}}: </b>{{'Dimension's position(Rowkey) has impact on query performance. You can drag and drop to adjust the sequence. In short, put filtering dimension before non-filtering dimension, and put high cardinality dimension before low cardinality dimension.' | translate}}
           </div>
           <div style="margin-left:42px">
               <div class="box-body">
@@ -211,7 +211,7 @@
                     <th>ID</th>
                     <th class="col-xs-5">Column</th>
                     <th>Shard By</th>
-                    <th>Cardinality</th>
+                    <th>{{'Cardinality' | translate}}</th>
                   </tr>
                   </thead>
 
@@ -253,17 +253,17 @@
                     </td>
                     <td>
                       <!--Column Name -->
-                      <input type="text" class="form-control" placeholder="Column Name.."
+                      <input type="text" class="form-control" placeholder="{{'Column Name' | translate}}.."
                              ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column)"  ng-disabled="true"
-                             tooltip="rowkey column name.." tooltip-trigger="focus"
+                             tooltip="{{'rowkey column name' | translate}}.." tooltip-trigger="focus"
                              ng-model="rowkey_column.column" class="form-control">
                     </td>
 
                     <td>
                       <select  style="width:180px;"
                               chosen ng-model="rowkey_column.isShardBy"
-                              tooltip="false by default"     ng-disabled="instance.status=='READY'"
-                              data-placeholder="false by default"
+                              tooltip="{{'false by default' | translate}}"     ng-disabled="instance.status=='READY'"
+                              data-placeholder="{{'false by default' | translate}}"
                               ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column,true)"
                               ng-options="dt as dt for dt in cubeConfig.rowKeyShardOptions">
                         <option value=""></option>
@@ -282,7 +282,7 @@
         </div>
         <!--Edit Mandatory Cuboids-->
         <div class="form-group large-popover" ng-if="state.mode=='edit' || (cubeMetaFrame.mandatory_dimension_set_list.length > 0 && state.mode!=='edit')">
-          <h3 style="margin-left:42px">Mandatory Cuboids</h3>
+          <h3 style="margin-left:42px">{{'Mandatory Cuboids' | translate}}</h3>
           <div style="margin-left:42px;">
             <div class="box-body">
               <!-- view mode-->
@@ -341,7 +341,7 @@
                     <td colspan="2">
                       <label>Import cuboids from file:</label>
                       <input type="file" name="cuboids" id="cuboids" style="display: inline;"/>
-                      <button class="btn btn-xs btn-info" ng-click="uploadMandatoryDimensionSetList()">Upload</button>
+                      <button class="btn btn-xs btn-info" ng-click="uploadMandatoryDimensionSetList()">{{'Upload' | translate}}</button>
                     </td>
                   </tr>
                 </tbody>
@@ -698,21 +698,21 @@
 <script type="text/ng-template" id="dimCapTip.html">
   <div>
     <ol style="font-size:12px;">
-      <li>Dimension limitations mean max dimensions may be contained within a group of SQL queries.</li>
-      <li>In a set of queries, if each query required the number of dimensions is not more than five, you can set 5 here.</li>
+      <li>{{'Dimension limitations mean max dimensions may be contained within a group of SQL queries.' | translate}}</li>
+      <li>{{'In a set of queries, if each query required the number of dimensions is not more than five, you can set 5 here.' | translate}}</li>
     </ol>
   </div>
 </script>
 <script type="text/ng-template" id="rowkeyTip.html">
   <div>
-    <h4>Shard By this column?</h4>
+    <h4>{{'Shard By this column?' | translate}}</h4>
     <p>
       If specified as "true", cube data will be sharded according to its value.
     </p>
 
-    <h4>Encoding</h4>
+    <h4>{{'Encoding' | translate}}</h4>
     <p>
-        Dimension encoding will be delegated to Parquet.
+        {{'Dimension encoding will be delegated to Parquet.' | translate}}
     </p>
   </div>
 </script>
@@ -742,7 +742,7 @@
 <script type="text/ng-template" id="CubeEngineTip.html" >
   <div>
     <h4>
-       Select cube engine for building cube. In Kylin 4.X, Spark is the only build engine.
+      {{'Select cube engine for building cube. In Kylin 4.X, Spark is the only build engine.' | translate}}
     </h4>
   </div>
 </script>

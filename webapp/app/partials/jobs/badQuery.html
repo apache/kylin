@@ -20,12 +20,12 @@
 
   <!--No Query-->
   <div ng-if="!bqstate.loading && badQueryList.length==0">
-    <div ng-if="projectModel.selectedProject==null" no-result text="No project selected"></div>
-    <div ng-if="projectModel.selectedProject!==null" no-result text="No Slow Query."></div>
+    <div ng-if="projectModel.selectedProject==null" no-result text="{{'No project selected' | translate}}"></div>
+    <div ng-if="projectModel.selectedProject!==null" no-result text="{{'No Slow Query.' | translate}}"></div>
   </div>
   <!--Loading Queries-->
   <div ng-if="bqstate.loading">
-    <loading text="Loading Queries ..."></loading>
+    <loading text="{{'Loading Queries.' | translate}} ..."></loading>
   </div>
   <!--Queries Table Content-->
   <table ng-if="badQueryList.length>0" class="table table-striped table-bordered table-hover dataTable no-footer">

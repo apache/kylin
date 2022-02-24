@@ -18,7 +18,7 @@
 
 <script type="text/ng-template" id="cubeClone.html">
   <div class="modal-header">
-    <h4 tooltip="submit">CUBE CLONE</h4>
+    <h4 tooltip="{{'submit' | translate}}">{{'CUBE CLONE' | translate}}</h4>
   </div>
   <ng-form name="forms.cube_clone_form" novalidate="novalidate" class="modal-body" style="background-color: white">
 
@@ -26,7 +26,7 @@
       <div class="col-md-2"></div>
       <div class="col-md-8">
         <div class="row">
-          <p class="text-info"> Cross project clone is not allowed now,  cube will be cloned into current project.</p>
+          <p class="text-info"> {{'Cross project clone is not allowed now,  cube will be cloned into current project.' | translate}}</p>
         </div>
       </div>
       <div class="col-md-2"></div>
@@ -36,11 +36,11 @@
       <div class="col-md-8">
         <div class="row">
           <div class="form-group">
-            <b>New Cube Name:</b>
+            <b>{{'New Cube Name' | translate}}:</b>
             <br/>
             <input type="text" class="form-control"  name="cube_name" ng-model="targetObj.cubeName" ng-pattern="/^\w+$/"  required  />
-            <small class="help-block red" ng-show="forms.cube_clone_form.cube_name.$error.required && (forms.cube_clone_form.cube_name.$dirty)">Cube name is required.</small>
-            <small class="help-block red" ng-show="!forms.cube_clone_form.cube_name.$error.required&&forms.cube_clone_form.cube_name.$invalid && (forms.cube_clone_form.cube_name.$dirty)">Cube name is invalid.</small>
+            <small class="help-block red" ng-show="forms.cube_clone_form.cube_name.$error.required && (forms.cube_clone_form.cube_name.$dirty)">{{'Cube name is required.' | translate}}</small>
+            <small class="help-block red" ng-show="!forms.cube_clone_form.cube_name.$error.required&&forms.cube_clone_form.cube_name.$invalid && (forms.cube_clone_form.cube_name.$dirty)">{{'Cube name is invalid.' | translate}}</small>
           </div>
         </div>
       </div>
@@ -48,7 +48,7 @@
     </div>
   </ng-form>
   <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="cancel()">Close</button>
-    <button class="btn btn-success" ng-click="cloneCube()" ng-disabled="forms.cube_clone_form.$invalid">Submit</button>
+    <button class="btn btn-primary" ng-click="cancel()">{{'Close' | translate}}</button>
+    <button class="btn btn-success" ng-click="cloneCube()" ng-disabled="forms.cube_clone_form.$invalid">{{'Submit' | translate}}</button>
   </div>
 </script>

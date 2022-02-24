@@ -18,7 +18,7 @@
 <!-- TODO: pagination -->
 <div class="container" style="margin-top:15px;">
   <div class="row">
-    <button type="button" class="btn btn-primary pull-right" style="margin-bottom: 10px;" ng-click="rebalance()">Rebalance</button>
+    <button type="button" class="btn btn-primary pull-right" style="margin-bottom: 10px;" ng-click="rebalance()">{{'Rebalance' | translate}}</button>
   </div>
   <div class="row">
     <div class="box box-primary" ng-repeat="replicaSet in replicaSets | orderBy:'rs_id'">
@@ -49,10 +49,10 @@
   <div class="modal-body">
     <div ng-repeat="cubeInfo in replicaSet.cubeInfos" class="row">
       <div class="col-sm-3" style="margin-top:5px;">
-        <input type="text" class="form-control" ng-model="cubeInfo.cubeName" placeholder="Enter cube name">
+        <input type="text" class="form-control" ng-model="cubeInfo.cubeName" placeholder="{{'Enter cube name' | translate}}">
       </div>
       <div class="col-sm-8">
-        <tags-input class="bootstrap" ng-model="cubeInfo.partitions" display-property="partitionId" placeholder="Add PartitionId" min-length="1" max-length="10" allowed-tags-pattern="^[0-9]+$"></tags-input>
+        <tags-input class="bootstrap" ng-model="cubeInfo.partitions" display-property="partitionId" placeholder="{{'Add PartitionId' | translate}}" min-length="1" max-length="10" allowed-tags-pattern="^[0-9]+$"></tags-input>
       </div>
       <div class="col-sm-1">
         <i class="fa fa-minus" style="margin-top:15px;cursor:pointer;" ng-click="removeCubeInfo($index)"></i>
@@ -66,7 +66,7 @@
     </div>
   </div>
   <div class="modal-footer">
-    <button class="btn btn-default" ng-click="cancel()">Cancel</button>
-    <button class="btn btn-primary" ng-click="saveReplicaSet()">Save</button>
+    <button class="btn btn-default" ng-click="cancel()">{{'Cancel' | translate}}</button>
+    <button class="btn btn-primary" ng-click="saveReplicaSet()">{{'Save' | translate}}</button>
   </div>
 </script>

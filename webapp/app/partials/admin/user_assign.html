@@ -19,7 +19,7 @@
 <script type="text/ng-template" id="assignUser.html">
   <ng-form name="group_create_form">
     <div class="modal-header">
-      <h4>Select User</h4>
+      <h4>{{'Select User' | translate}}</h4>
     </div>
     <div class="modal-body" style="background-color: white">
         <div class="container">
@@ -35,7 +35,7 @@
             </div>
             <div class="row">
               <div class="col-xs-9">
-                <label class="table-header-text">User List</label>
+                <label class="table-header-text">{{'User List' | translate}}</label>
               </div>
               <div class="col-xs-3">
               <form style="float:right;" >
@@ -53,7 +53,7 @@
                   <input type="checkbox" onchange="angular.element(this).scope().selectAllUsers(this)" ng-checked="isAllchecked(selectUsers, users)" >
                 </th>
                 <th >
-                  User Name
+                  {{'User Name' | translate}}
                 </th>
               </tr>
               </thead>
@@ -77,9 +77,9 @@
         </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" ng-click="cancel()">Close</button>
+      <button class="btn btn-primary" ng-click="cancel()">{{'Close' | translate}}</button>
       <button class="btn btn-success" ng-click="saveAssignUser()" ng-disabled="group_create_form.$invalid || dialogActionLoading">
-        Submit
+        {{'Submit' | translate}}
       </button>
     </div>
   </ng-form>

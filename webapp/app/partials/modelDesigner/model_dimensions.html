@@ -27,8 +27,8 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Table Alias</th>
-                        <th>Columns</th>
+                        <th>{{'Table Alias' | translate}}</th>
+                        <th>{{'Columns' | translate}}</th>
                     </tr>
                 </thead>
                 <tbody class="cube-dimension">
@@ -50,14 +50,14 @@
             </table>
         </div>
         <div  ng-if="state.mode=='edit'" class="form-group model-dimension-edit" style="width: 100%">
-            <h4 style="margin-left:42px">Select dimension columns</h4>
+            <h4 style="margin-left:42px">{{'Select dimension columns' | translate}}</h4>
             <table style="margin-left:42px; width:92%"
                    ng-if="modelsManager.selectedModel.dimensions.length > 0"
                    class="table table-hover list">
                 <tr class="row">
                     <th class="col-xs-1">ID</th>
-                    <th class="col-xs-2">Table Alias</th>
-                    <th class="col-xs-9">Columns</th>
+                    <th class="col-xs-2">{{'Table Alias' | translate}}</th>
+                    <th class="col-xs-9">{{'Columns' | translate}}</th>
                 </tr>
 
                 <tr ng-repeat="dimension in modelsManager.selectedModel.dimensions" class="row">

@@ -16,7 +16,7 @@
 * limitations under the License.
 -->
 <div class="container">
-    <div class="row" style="margin-top:15px;" ng-if="!allowUseUserAndGroupModule">User management does not apply to the current security configuration, go to the correct permissions management page for editing.</div>
+    <div class="row" style="margin-top:15px;" ng-if="!allowUseUserAndGroupModule">{{'User management does not apply to the current security configuration, go to the correct permissions management page for editing.' | translate}}</div>
     <div class="row" style="margin-top:15px;" ng-if="allowUseUserAndGroupModule">
     <!--No Instances-->
     <div ng-if="!userloading && usersTotal == 0">
@@ -28,7 +28,7 @@
     </div>
     <div class="row">
       <div class="col-xs-9">
-        <label class="table-header-text">User List</label>
+        <label class="table-header-text">{{'User List' | translate}}</label>
       </div>
       <div class="col-xs-3">
       <form style="float:right;" >
@@ -39,8 +39,8 @@
       </form>
       </div>
     </div>
-    <button class="btn btn-primary btn-sm" ng-click="createUser()"><i class="fa fa-plus"></i> User</button>
-    <span class="label label-success" style="float:right;margin-top:10px;" ng-if="tabData.groupName">Group Name: {{tabData.groupName}} <i class="fa fa-close" style="cursor: pointer;" ng-click="removeGroupFilter()"></i></span>
+    <button class="btn btn-primary btn-sm" ng-click="createUser()"><i class="fa fa-plus"></i> {{'User' | translate}}</button>
+    <span class="label label-success" style="float:right;margin-top:10px;" ng-if="tabData.groupName">{{'Group Name' | translate}}: {{tabData.groupName}} <i class="fa fa-close" style="cursor: pointer;" ng-click="removeGroupFilter()"></i></span>
     <!--Queries Table Content-->
     <table ng-if="usersTotal > 0" style="margin-top:20px;table-layout: fixed;" class="table table-striped table-bordered table-hover  table-condensed dataTable no-footer">
       <thead>
@@ -49,16 +49,16 @@
           ID
         </th>
         <th width="15%">
-          User Name
+          {{'User Name' | translate}}
         </th>
         <th>
-          Group
+          {{'Group' | translate}}
         </th>
         <th width="8%">
-          Status
+          {{'Status' | translate}}
         </th>
         <th width="15%">
-          Actions
+          {{'Actions' | translate}}
         </th>
       </tr>
       </thead>
@@ -74,22 +74,22 @@
           <span class="label label-primary" style="margin-left:4px;display:inline-block" ng-repeat="auth in user.authorities">{{auth.authority}}</span>
         </th>
         <th >
-          <span ng-if="!user.disabled" class="label label-success">Enabled</span>
-          <span ng-if="user.disabled" class="label label-warning">Disabled</span>
+          <span ng-if="!user.disabled" class="label label-success">{{'Enable' | translate}}</span>
+          <span ng-if="user.disabled" class="label label-warning">{{'Disable' | translate}}</span>
         </th>
         <td>
           <div class="btn-group">
-            <button type="button" tooltip="Assign group" class="btn btn-default btn-xs" ng-if="user.username!='ADMIN'" ng-click="assignToGroup(user.username, user.authorities)">
+            <button type="button" tooltip="{{'Assign group' | translate}}" class="btn btn-default btn-xs" ng-if="user.username!='ADMIN'" ng-click="assignToGroup(user.username, user.authorities)">
               <i class="fa fa-group fa-fw"></i>
             </button>
-            <button type="button" tooltip="Delete user" class="btn btn-default btn-xs" ng-if="user.username!='ADMIN'" ng-click="delUser(user.username)">
+            <button type="button" tooltip="{{'Delete user' | translate}}" class="btn btn-default btn-xs" ng-if="user.username!='ADMIN'" ng-click="delUser(user.username)">
               <i class="fa fa-trash-o fa-fw"></i>
             </button>
             <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">Actions<span class="ace-icon fa fa-caret-down icon-on-right"></span></button>
             <ul class="dropdown-menu" role="menu" style="right:0;left:auto;">
-              <li ng-if="user.disabled"><a ng-click="enableUser(user)">Enable</a></li>
-              <li ng-if="!user.disabled"><a ng-click="disableUser(user)">Disable</a></li>
-              <li><a ng-click="changePwd(user)">Change Password</a></li>
+              <li ng-if="user.disabled"><a ng-click="enableUser(user)">{{'Enable' | translate}}</a></li>
+              <li ng-if="!user.disabled"><a ng-click="disableUser(user)">{{'Disable' | translate}}</a></li>
+              <li><a ng-click="changePwd(user)">{{'Change Password' | translate}}</a></li>
             </ul>
           </div>
         </td>

@@ -18,7 +18,7 @@
 
 <script type="text/ng-template" id="lookupRefresh.html">
   <div class="modal-header">
-    <h4 tooltip="refresh">LOOKUP REFRESH CONFIRM</h4>
+    <h4 tooltip="{{'refresh' | translate}}">{{'LOOKUP REFRESH CONFIRM' | translate}}/h4>
   </div>
   <div class="modal-body" style="background-color: white">
     <div ng-if="!!cube.detail.snapshot_table_desc_list" class="row">
@@ -27,7 +27,7 @@
         <table class="table table-striped list">
           <tbody>
             <tr>
-              <td style="width:30%">Lookup Table</td>
+              <td style="width:30%">{{'Lookup Table' | translate}}</td>
               <td style="width:70%" colspan="2">
                 <select style="width:95%" chosen ng-model="lookup.select.table_name"
                   ng-change="updateLookupTable(lookup.select.table_name)"
@@ -37,7 +37,7 @@
               </td>
             </tr>
             <tr ng-if="dispalySegment">
-              <td style="width:30%">Segments</td>
+              <td style="width:30%">{{'Segments' | translate}}</td>
               <td style="width:60%">
                 <ui-select multiple ng-model="lookup.select.segments" theme="bootstrap" sortable="true" close-on-select="false" class="form-control">
                   <ui-select-match placeholder="Select Segments...">{{$item.name}}</ui-select-match>
@@ -58,14 +58,14 @@
     <div ng-if="!cube.detail.snapshot_table_desc_list" class="row">
       <div class="col-md-2"></div>
       <div class="col-md-8">
-        <span>No lookup table defined. Please configurate lookup in model</span>
+        <span>{{'No lookup table defined. Please configurate lookup in model' | translate}}</span>
       </div>
       <div class="col-md-2"></div>
     </div>
   </div>
 
   <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="cancel()">Close</button>
-    <button ng-if="!!cube.detail.snapshot_table_desc_list" class="btn btn-success" ng-click="refresh()">Submit</button>
+    <button class="btn btn-primary" ng-click="cancel()">{{'Close' | translate}}</button>
+    <button ng-if="!!cube.detail.snapshot_table_desc_list" class="btn btn-success" ng-click="refresh()">{{'Submit' | translate}}</button>
   </div>
 </script>

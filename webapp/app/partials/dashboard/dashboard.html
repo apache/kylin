@@ -33,7 +33,7 @@
     <div class="col-sm-2">
       <div class="square-big" tooltip-placement="bottom" tooltip="As of {{cubeMetricsRefreshTime}}">
         <div class="title">
-          TOTAL CUBE COUNT
+          {{'TOTAL CUBE COUNT' | translate}}
         </div>
         <div class="metric" ng-if="cubeMetrics.totalCubes || (cubeMetrics.totalCubes === 0)">
           {{cubeMetrics.totalCubes | number:0}}
@@ -42,12 +42,12 @@
           --
         </div>
         <a class="description" ng-href="model">
-          More Details
+          {{'More Details' | translate}}
         </a>
       </div>
       <div class="square-big" tooltip-placement="bottom" tooltip-html-unsafe="Max: {{cubeMetrics.expansionRate.max | number:2}} | Min: {{cubeMetrics.expansionRate.min | number:2}}</br> As of {{cubeMetricsRefreshTime}}">
         <div class="title">
-          AVG CUBE EXPANSION
+          {{'AVG CUBE EXPANSION' | translate}}
         </div>
         <div class="metric" ng-if="cubeMetrics.expansionRate.avg || (cubeMetrics.expansionRate.avg === 0)">
           {{cubeMetrics.expansionRate.avg | number:2}}
@@ -56,7 +56,7 @@
           --
         </div>
         <a class="description" ng-href="model">
-          More Details
+          {{'More Details' | translate}}
         </a>
       </div>
     </div>
@@ -74,14 +74,14 @@
               --
             </div>
             <a class="description" ng-href="query?queryPanel=cached" ng-click="$event.stopPropagation();">
-              More Details
+              {{'More Details' | translate}}
             </a>
           </div>
         </div>
         <div class="col-sm-3">
           <div class="square" ng-class="{'square-active': currentSquare ==='queryAvg'}"  tooltip-placement="bottom" tooltip="Max: {{queryMetrics.queryLatency.max ? (queryMetrics.queryLatency.max | number:2) : '--'}} sec | Min: {{queryMetrics.queryLatency.min ? (queryMetrics.queryLatency.min| number:2) : '--'}} sec" ng-click="queryAvgChart()">
             <div class="title">
-              AVG QUERY LATENCY
+              {{'AVG QUERY LATENCY' | translate}}
             </div>
             <div class="metric" ng-if="queryMetrics.queryLatency.avg || (queryMetrics.queryLatency.avg === 0)">
               {{queryMetrics.queryLatency.avg | number:2}}<span class="unit"> sec</span>
@@ -90,7 +90,7 @@
               --
             </div>
             <a class="description" ng-href="query?queryPanel=cached" ng-click="$event.stopPropagation();">
-              More Details
+              {{'More Details' | translate}}
             </a>
           </div>
         </div>
@@ -106,14 +106,14 @@
               --
             </div>
             <a class="description" ng-href="jobs" ng-click="$event.stopPropagation();">
-              More Details
+              {{'More Details' | translate}}
             </a>
           </div>
         </div>
         <div class="col-sm-3" >
           <div class="square" ng-class="{'square-active': currentSquare ==='jobBuildTime'}" tooltip-placement="bottom" tooltip="Max: {{jobMetrics.buildingTime.max ? (jobMetrics.buildingTime.max | number:2) : '--'}} sec | Min: {{jobMetrics.buildingTime.min ? ( jobMetrics.buildingTime.min | number:2) : '--'}} sec" ng-click="jobBuildTimeChart()">
             <div class="title">
-              AVG BUILD TIME PER MB
+              {{'AVG BUILD TIME PER MB' | translate}}
             </div>
             <div class="metric" ng-if="jobMetrics.buildingTime.avg || jobMetrics.buildingTime.avg === 0">
               {{jobMetrics.buildingTime.avg | number:2}}<span class="unit"> sec</span>
@@ -122,7 +122,7 @@
                --
             </div>
             <a class="description" ng-href="jobs" ng-click="$event.stopPropagation();">
-              More Details
+              {{'More Details' | translate}}
             </a>
           </div>
         </div>
@@ -131,7 +131,7 @@
         <div class="col-sm-6" ng-if="barChart">
           <div style="border: 2px solid #ddd; margin-top:15px;">
             <div class="form-group" style="width: 96px; position: absolute; right: 15px; bottom: 265px;">
-              Show Value: <input type="checkbox" ng-model="barChart.options.chart.showValues">
+              {{'Show Value' | translate}}: <input type="checkbox" ng-model="barChart.options.chart.showValues">
             </div>
             <nvd3 options="barChart.options" data="barChart.data"></nvd3>
           </div>

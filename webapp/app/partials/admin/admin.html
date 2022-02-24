@@ -19,19 +19,19 @@
 <div class="row"  style="padding-top:10px;padding-left: 5px;">
   <div ng-class="row">
     <tabset active="activeTab">
-      <tab active="active['tab_config']" heading="Configuration" select="getEnv();getConfig();">
+      <tab active="active['tab_config']" heading="{{'Configuration' | translate}}" select="getEnv();getConfig();">
         <div class="col-xs-12" ng-include src="'partials/admin/config.html'"></div>
       </tab>
-      <tab  active="active['tab_instance']" ng-if="isCuratorScheduler()" heading="Instances" select="list()" ng-controller="InstanceCtrl">
+      <tab  active="active['tab_instance']" ng-if="isCuratorScheduler()" heading="{{'Instances' | translate}}" select="list()" ng-controller="InstanceCtrl">
         <div class="col-xs-12" ng-include src="'partials/admin/instances.html'"></div>
       </tab>
 <!--      <tab active="active['tab_streaming']" heading="Streaming" select="listReplicaSet()" ng-controller="AdminStreamingCtrl">-->
 <!--        <div class="col-xs-12" ng-include src="'partials/admin/streaming.html'"></div>-->
 <!--      </tab>-->
-      <tab active="active['tab_users']" heading="User" select="listUsers()" ng-controller="UserGroupCtrl">
+      <tab active="active['tab_users']" heading="{{'User' | translate}}" select="listUsers()" ng-controller="UserGroupCtrl">
         <div class="col-xs-12" ng-include src="'partials/admin/user.html'"></div>
       </tab>
-      <tab active="active['tab_groups']"heading="Group" select="listGroups()" ng-controller="UserGroupCtrl">
+      <tab active="active['tab_groups']"heading="{{'Group' | translate}}" select="listGroups()" ng-controller="UserGroupCtrl">
         <div class="col-xs-12" ng-include src="'partials/admin/group.html'"></div>
       </tab>
     </tabset>

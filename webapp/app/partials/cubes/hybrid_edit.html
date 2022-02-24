@@ -21,10 +21,10 @@
     <!--Project-->
     <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
       <div class="form-group">
-        <a class="btn btn-xs btn-info" href="projects" tooltip="Manage Project">
+        <a class="btn btn-xs btn-info" href="projects" tooltip="{{'Manage Project' | translate}}">
           <i class="fa fa-gears"></i>
         </a>
-        <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
+        <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')" style="width: 29px" tooltip="{{'Add Project' | translate}}" ng-click="toCreateProj()">
           <i class="fa fa-plus"></i>
         </a>
       </div>
@@ -35,15 +35,15 @@
     <div class="col-xs-12">
       <ng-form role="form" name="$validator" novalidate>
 
-        <h1 class="form-title">Hybrid Designer</h1>
+        <h1 class="form-title">{{'Hybrid Designer' | translate}}</h1>
 
         <div class="row">
           <div class="col-xs-5 form-group">
             <div class="row">
-              <label class="col-xs-3 control-label no-padding-right font-color-default" for="hybridName">Hybrid Name</label>
+              <label class="col-xs-3 control-label no-padding-right font-color-default" for="hybridName">{{'Hybrid Name' | translate}}</label>
               <div class="col-xs-9" ng-class="{ 'has-error': $validator.name.$invalid && $validator.name.$dirty }">
                 <input type="text" name="name" class="form-control" id="hybridName" placeholder="Hybrid Name" ng-disabled="isFormDisabled || isEdit" ng-model="form.name" ng-pattern="/^\w+$/">
-                <small class="help-block" ng-show="!$validator.name.$error.required && $validator.name.$invalid && $validator.name.$dirty">Hybrid name is invalid.</small>
+                <small class="help-block" ng-show="!$validator.name.$error.required && $validator.name.$invalid && $validator.name.$dirty">{{'Hybrid name is invalid.' | translate}}</small>
               </div>
             </div>
           </div>
@@ -55,12 +55,12 @@
           <div class="col-xs-5">
             <div class="dataTables_wrapper no-footer">
               <div class="row table-header">
-                <label class="col-xs-2 control-label no-padding-right font-color-default" for="modelName">Model</label>
+                <label class="col-xs-2 control-label no-padding-right font-color-default" for="modelName">{{'Model' | translate}}</label>
                 <div class="col-xs-10">
                   <div ng-show="!isModelSelectDisabled()">
                       <select width="'100%'" chosen ng-model="form.model" ng-change="toggleAll(LEFT, false)" ng-options="model.name as model.name for model in modelsManager.models" ng-disabled="isModelSelectDisabled()"></select>
                   </div>
-                  <div tooltip="If you want to switch model, remove the selected cubes." ng-show="isModelSelectDisabled()">
+                  <div tooltip="{{'If you want to switch model, remove the selected cubes.' | translate}}" ng-show="isModelSelectDisabled()">
                       <select width="'100%'" chosen ng-model="form.model" ng-change="toggleAll(LEFT, false)" ng-options="model.name as model.name for model in modelsManager.models" ng-disabled="isModelSelectDisabled()"></select>
                   </div>
                 </div>
@@ -74,7 +74,7 @@
                         <img ng-if="isCheckAll(LEFT)" src="image/checkbox+.svg" ng-click="toggleAll(LEFT)" />
                       </th>
                       <th>Name</th>
-                      <th class="status-center">Status</th>
+                      <th class="status-center">{{'Status' | translate}}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -95,7 +95,7 @@
               </div>
 
               <div class="data-empty" ng-if="!getFiltedModelCubeCount(LEFT)">
-                Empty
+                {{'Empty' | translate}}
               </div>
 
               <div class="row">
@@ -133,7 +133,7 @@
                         <img ng-if="isCheckAll(RIGHT)" src="image/checkbox+.svg" ng-click="toggleAll(RIGHT)" />
                       </th>
                       <th>Name</th>
-                      <th class="status-center">Status</th>
+                      <th class="status-center">{{'Status' | translate}}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -154,7 +154,7 @@
               </div>
 
               <div class="data-empty" ng-if="!table[RIGHT].dataRows.length">
-                Empty
+                {{'Empty' | translate}}
               </div>
             </div>
           </div>
@@ -165,8 +165,8 @@
         <div class="row">
           <div class="col-xs-12">
             <div class="pull-right">
-                <button class="btn btn-sm btn-default" ng-click="cancel()">Cancel</button>
-                <button class="btn btn-sm btn-primary" ng-click="submit()" ng-disabled="!isFormValid()">Submit</button>
+                <button class="btn btn-sm btn-default" ng-click="cancel()">{{'Cancel' | translate}}</button>
+                <button class="btn btn-sm btn-primary" ng-click="submit()" ng-disabled="!isFormValid()">{{'Submit' | translate}}</button>
             </div>
           </div>
         </div>

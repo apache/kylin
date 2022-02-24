@@ -19,28 +19,28 @@
 <script type="text/ng-template" id="addGroup.html">
   <ng-form name="group_create_form">
     <div class="modal-header">
-      <h4>New Group</h4>
+      <h4>{{'New Group' | translate}}</h4>
     </div>
     <div class="modal-body" style="background-color: white">
       <div class="form-group">
-        <label><b>Group Name</b></label>
+        <label><b>{{'Group Name' | translate}}</b></label>
         <div class="clearfix">
           <input name="name_input" type="text" class="form-control" ng-model="group.name" required
                  placeholder="You can use letters, numbers, and underscore characters '_'"
                  ng-maxlength=100 ng-pattern="groupPattern"/>
                     <span class="text-warning"
                           ng-if="group_create_form.name_input.$error.required  && group_create_form.name_input.$dirty"
-                    >&nbsp;The group name is required</span>
+                    >&nbsp;{{'The group name is required' | translate}}</span>
                     <span class="text-warning"
                           ng-if="group_create_form.name_input.$invalid && group_create_form.name_input.$dirty && !group_create_form.name_input.$error.required"
-                    >&nbsp;The project name is invalid</span>
+                    >&nbsp;{{'The group name is invalid' | translate}}</span>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" ng-click="cancel()">Close</button>
+      <button class="btn btn-primary" ng-click="cancel()">{{'Close' | translate}}</button>
       <button class="btn btn-success" ng-click="saveGroup()" ng-disabled="group_create_form.$invalid || dialogActionLoading">
-        Submit
+        {{'Submit' | translate}}
       </button>
     </div>
   </ng-form>

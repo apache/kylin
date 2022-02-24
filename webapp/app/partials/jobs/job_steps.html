@@ -23,13 +23,13 @@
             <div class="timeline-item">
                 <div class="timeline-header">
                     <i class="ace-icon fa fa-sort-amount-asc"></i>
-                    Detail Information
-                    <i class="fa fa-minus-square fa-lg pull-right" ng-click="state.showSteps= false; refreshJobs()" tooltip="Collapse"></i>
+                    {{'Detail Information' | translate}}
+                    <i class="fa fa-minus-square fa-lg pull-right" ng-click="state.showSteps= false; refreshJobs()" tooltip="{{'Collapse' | translate}}"></i>
                 </div>
                 <div class="timeline-body">
                     <table class="table table-striped table-bordered">
                         <tr>
-                            <td><b>Job Name</b></td>
+                            <td><b>{{'Job Name' | translate}}</b></td>
                             <td style="max-width: 180px;word-wrap: break-word;word-break: normal;">
                                 {{state.selectedJob.name}}
                             </td>
@@ -60,15 +60,15 @@
                             </td>
                         </tr>
                         <tr>
-                          <td><b>Built By</b></td>
+                          <td><b>{{'Built By' | translate}}</b></td>
                           <td>{{state.selectedJob.build_instance}}</td>
                         </tr>
                         <tr>
-                            <td><b>Duration</b></td>
+                            <td><b>{{'Duration' | translate}}</b></td>
                             <td>{{(state.selectedJob.duration/60 | number:2) + ' mins'}}</td>
                         </tr>
                         <tr>
-                            <td><b>MapReduce Waiting</b></td>
+                            <td><b>{{'MapReduce Waiting' | translate}}</b></td>
                             <td>{{(state.selectedJob.mr_waiting/60 | number:2) + ' mins'}}</td>
                         </tr>
                     </table>
@@ -123,22 +123,22 @@
                 <div class="timeline-footer">
                     <a ng-if="step.exec_cmd && userService.hasRole('ROLE_ADMIN')"
                        ng-click="state.selectedStep = step; state.stepAttrToShow = 'cmd'; openModal()"
-                       tooltip="Parameters">
+                       tooltip="{{'Parameters' | translate}}">
                         <i class="ace-icon fa fa-key green bigger-120"></i>
                     </a>
                     <a ng-if="step.step_status!='PENDING'"
                        ng-click="state.selectedStep = step; state.stepAttrToShow = 'output'; openModal()"
-                       tooltip="Log">
+                       tooltip="{{'Log' | translate}}">
                         <i class="ace-icon fa fa-file-text-o blue bigger-120"></i>
                     </a>
 
                     <a ng-if="step.info.yarn_application_tracking_url"
                        href="{{step.info.yarn_application_tracking_url}}" target="_blank"
-                       tooltip="Job">
+                       tooltip="{{'Job' | translate}}">
                         <i class="ace-icon fa fa-tasks yellow bigger-110"></i>
                     </a>
                     <a ng-if="config.reference_links && config.reference_links['diagnostic'].link" href="{{config.reference_links['diagnostic'].link + step.info.mr_job_id}}" target="_blank"
-                       tooltip="Monitoring">
+                       tooltip="{{'Monitoring' | translate}}">
                         <i class="ace-icon fa fa-chain grey bigger-110"></i>
                     </a>
                 </div>
@@ -161,12 +161,12 @@
     <div class="modal-header">
         <h4>{{stepAttrToShow == 'cmd' ? 'Parameters' : 'Output'}}
             <i ng-if="stepAttrToShow == 'output' && step.loadingOp" class="fa fa-spinner fa-spin"></i></h4>
-            The output log shows the first and last 100 lines by default. To view all the output, please click to <a ng-click="downloadAllLogs()">download the log file</a >.
+            {{'The output log shows the first and last 100 lines by default. To view all the output, please click to' | translate}} <a ng-click="downloadAllLogs()">{{'download the log file' | translate}}</a >.
     </div>
     <div class="modal-body">
         <pre>{{stepAttrToShow == 'cmd' ? step.exec_cmd : (step.loadingOp ? "Loading..." : !!(step.cmd_output)?step.cmd_output:'No Data Available')}}</pre>
     </div>
     <div class="modal-footer">
-        <button class="btn btn-primary" ng-click="cancel()">Close</button>
+        <button class="btn btn-primary" ng-click="cancel()">{{'Close' | translate}}</button>
     </div>
 </script>

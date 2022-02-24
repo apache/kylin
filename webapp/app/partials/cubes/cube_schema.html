@@ -18,7 +18,7 @@
 
 <div class="box box-primary box-2px">
     <div class="box-header widget-header-blue widget-header-flat">
-        <h4 class="box-title text-info">Cube Designer</h4>
+        <h4 class="box-title text-info">{{'Cube Designer' | translate}}</h4>
     </div>
     <div class="box-body">
             <div>
@@ -44,16 +44,16 @@
                     <div class="col-xs-4">
                         <button class="btn btn-prev" ng-click="preView()" ng-show="curStep.title!='Cube Info'">
                             <i class="ace-icon fa fa-arrow-left"></i>
-                            Prev
+                            {{'Prev' | translate}}
                         </button>
                         <button id="nextButton" class="btn btn-success btn-next"  ng-click="nextStep($index, nextView)" ng-disabled="forms[curStep.form].$invalid"
                                 ng-show="curStep.title!='Overview'">
-                            Next
+                            {{'Next' | translate}}
                             <i class="ace-icon fa fa-arrow-right icon-on-right"></i>
                         </button>
                         <button class="btn btn-primary" ng-click="prepareCube();saveCube()" ng-disabled="design_form.$invalid"
                                 ng-if="curStep.title=='Overview' && state.mode=='edit'">
-                            Save
+                            {{'Save' | translate}}
                         </button>
                     </div>
                 </div>

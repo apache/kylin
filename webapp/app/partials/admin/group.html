@@ -16,7 +16,7 @@
 * limitations under the License.
 -->
 <div class="container">
-  <div class="row" style="margin-top:15px;" ng-if="!allowUseUserAndGroupModule">User management does not apply to the current security configuration, go to the correct permissions management page for editing.</div>
+  <div class="row" style="margin-top:15px;" ng-if="!allowUseUserAndGroupModule">{{'User management does not apply to the current security configuration, go to the correct permissions management page for editing.' | translate}}</div>
   <div class="row" style="margin-top:15px;" ng-if="allowUseUserAndGroupModule">
     
     <!--No Instances-->
@@ -29,7 +29,7 @@
     </div>
     <div class="row">
       <div class="col-xs-9">
-        <label class="table-header-text">Group List</label>
+        <label class="table-header-text">{{'Group List' | translate}}</label>
       </div>
       <div class="col-xs-3">
       <form style="float:right;" >
@@ -40,7 +40,7 @@
       </form>
       </div>
     </div>
-    <button class="btn btn-primary btn-sm" ng-click="createGroup()"><i class="fa fa-plus"></i> Group</button>
+    <button class="btn btn-primary btn-sm" ng-click="createGroup()"><i class="fa fa-plus"></i> {{'Group' | translate}}</button>
     <!--Queries Table Content-->
     <table ng-if="groupsTotal > 0" style="margin-top:20px;table-layout:fixed;" class="table table-striped table-bordered table-hover dataTable no-footer">
       <thead>
@@ -49,10 +49,10 @@
           ID
         </th>
         <th>
-          Group Name
+          {{'Group Name' | translate}}
         </th>
         <th>
-          User Count
+          {{'User Count' | translate}}
         </th>
         <th width="17%">
           Actions
@@ -71,10 +71,10 @@
           <a ng-click="showUserListByGroup(group)">{{value.length}}</a>
         </td>
         <td>
-          <button type="button" tooltip="Add user to group" class="btn btn-default btn-xs" ng-if="group!=='ALL_USERS'" ng-click="assignToUser(group)">
+          <button type="button" tooltip="{{'Add user to group' | translate}}" class="btn btn-default btn-xs" ng-if="group!=='ALL_USERS'" ng-click="assignToUser(group)">
             <i class="fa fa-user-plus fa-fw"></i>
           </button>
-          <button type="button" tooltip="Delete group" ng-if="group!=='ROLE_ADMIN' && group!=='ALL_USERS'" class="btn btn-default btn-xs" ng-click="delGroup(group)">
+          <button type="button" tooltip="{{'Delete group' | translate}}" ng-if="group!=='ROLE_ADMIN' && group!=='ALL_USERS'" class="btn btn-default btn-xs" ng-click="delGroup(group)">
             <i class="fa fa-trash-o  fa-fw"></i>
           </button>
         </td>

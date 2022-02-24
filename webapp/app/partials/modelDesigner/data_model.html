@@ -23,7 +23,7 @@
     <div class="form-group" ng-class="{'required':state.mode=='edit'}">
         <div class="row">
             <label class="col-xs-12 col-sm-2 control-label concube.detailtrol-label no-padding-right font-color-default">
-                <b>Fact Table</b>
+                <b>{{'Fact Table' | translate}}</b>
             </label>
             <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.data_model_form.table_name.$invalid && (forms.data_model_form.table_name.$dirty||forms.data_model_form.$submitted)}">
               <select chosen ng-model="FactTable.root" ng-if="state.mode=='edit'"
@@ -33,7 +33,7 @@
                       ng-required="true"
                       data-placeholder="Fact Table Name"
                       class="chosen-select">
-                <option value=""> -- Select Fact Table -- </option>
+                <option value=""> -- {{'Select Fact Table' | translate}} -- </option>
               </select>
               <span ng-if="state.mode=='view'">{{VdmUtil.removeNameSpace(modelsManager.selectedModel.fact_table)}}</span>
             </div>
@@ -46,7 +46,7 @@
             <div class="col-xs-6" ng-if="state.mode=='edit'">
                 <button type="button" class="btn btn-primary" ng-disabled="!modelsManager.selectedModel.fact_table.length"
                         ng-click="openLookupModal()">
-                    <i class="fa fa-plus"></i> Add Lookup Table
+                    <i class="fa fa-plus"></i> {{'Add Lookup Table' | translate}}
                 </button>
             </div>
             <div class="col-xs-6" ng-if="state.mode!='edit'">
@@ -63,12 +63,12 @@
             <thead>
             <tr>
                 <th>ID</th>
-                <th>Table Alias</th>
-                <th>Table Name</th>
-                <th>Table Kind</th>
-                <th>Join Type</th>
-                <th>Join Condition</th>
-                <th ng-if="state.mode=='edit'" class="col-xs-1">Actions</th>
+                <th>{{'Table Alias' | translate}}</th>
+                <th>{{'Table Name' | translate}}</th>
+                <th>{{'Table Kind' | translate}}</th>
+                <th>{{'Join Type' | translate}}</th>
+                <th>{{'Join Condition' | translate}}</th>
+                <th ng-if="state.mode=='edit'" class="col-xs-1">{{'Actions' | translate}}</th>
             </tr>
             </thead>
             <tbody>
@@ -86,8 +86,8 @@
                 </td>
                 <!-- Table Kind -->
                 <td>
-                    <span ng-if="lookup.kind=='FACT'">Limited</span>
-                    <span ng-if="lookup.kind=='LOOKUP'">Normal</span>
+                    <span ng-if="lookup.kind=='FACT'">{{'Limited' | translate}}</span>
+                    <span ng-if="lookup.kind=='LOOKUP'">{{'Normal' | translate}}</span>
                 </td>
                 <!-- Join Type -->
                 <td>
@@ -122,7 +122,7 @@
     <!-- Add Lookup Table Form -->
     <script type="text/ng-template" id="dataModelLookupTable.html">
         <div class="modal-header">
-            <h4 class="box-title lighter">{{lookupState.editing ? 'Edit' : 'Add'}} Lookup Table</h4>
+            <h4 class="box-title lighter">{{lookupState.editing ? 'Edit' : 'Add'}} {{'Lookup Table' | translate}}</h4>
         </div>
         <div class="modal-body">
             <div class="row">
@@ -172,7 +172,7 @@
                         <div class="row">
                           <div class="col-sm-5" >
                             <label>
-                              <input type="checkbox" ng-model="newLookup.kind" ng-true-value="FACT" ng-false-value="LOOKUP" >&nbsp;Skip snapshot for this lookup table.
+                              <input type="checkbox" ng-model="newLookup.kind" ng-true-value="FACT" ng-false-value="LOOKUP" >&nbsp;{{'Skip snapshot for this lookup table' | translate}}.
                             </label>
                             <i class="fa fa-info-circle" kylinpopover="" placement="right" title="" template="isLimited.html"></i>
                           </div>
@@ -194,13 +194,13 @@
                                                 ng-options="newLookup.alias+'.'+columns.name as columns.name for columns in getColumnsByTable(newLookup.table)" >
                                             <option value=""></option>
                                         </select>
-                                        <button class="pull-right btn btn-xs btn-danger" style="cursor: pointer" tooltip="Delete"
+                                        <button class="pull-right btn btn-xs btn-danger" style="cursor: pointer" tooltip="{{'Delete' | translate}}"
                                                 ng-click="removeJoin($index);">
                                             <i class="fa fa-trash-o pointer"></i>
                                         </button>
                                     </div>
                                     <div class="space-4"></div>
-                                    <small class="help-block red" ng-show="newLookup.join.isCompatible[$index]==false"><i class="fa fa-exclamation-triangle"></i> <b>Column Type incompatible {{newLookup.join.foreign_key[$index]}}[{{newLookup.join.fk_type[$index]}}], {{newLookup.join.primary_key[$index]}} [{{newLookup.join.pk_type[$index]}}]</b></small>
+                                    <small class="help-block red" ng-show="newLookup.join.isCompatible[$index]==false"><i class="fa fa-exclamation-triangle"></i> <b>{{'Column Type incompatible' | translate}} {{newLookup.join.foreign_key[$index]}}[{{newLookup.join.fk_type[$index]}}], {{newLookup.join.primary_key[$index]}} [{{newLookup.join.pk_type[$index]}}]</b></small>
                                 </div>
                             </div>
                         </div>
@@ -211,7 +211,7 @@
                                 <button class="btn btn-xs btn-info"
                                         ng-if="newLookup.join.type"
                                         ng-click="addNewJoin();">
-                                    <i class="fa fa-plus"></i> New Join Condition</button>
+                                    <i class="fa fa-plus"></i> {{'New Join Condition' | translate}}</button>
                             </div>
                         </div>
                     </div>
@@ -223,15 +223,15 @@
                 <div class="col-xs-4">
                     <div class="box box-solid">
                         <div class="box-header">
-                            <h4 class="box-title">Tips</h4>
+                            <h4 class="box-title">{{'Tips' | translate}}</h4>
                         </div>
                         <div class="box-body">
                             <div class="row">
                                 <div class="col-xs-12">
                                     <ol class="text-info">
-                                      <li>Pick up a table joins another table that already exist.</li>
-                                      <li>Specify join relationship between two tables.</li>
-                                      <li>Join Type have to be same as will be used in query</li>
+                                      <li>{{'Pick up a table joins another table that already exist.' | translate}}</li>
+                                      <li>{{'Specify join relationship between two tables.' | translate}}</li>
+                                      <li>{{'Join Type have to be same as will be used in query' | translate}}</li>
                                     </ol>
                                 </div>
                             </div>
@@ -241,14 +241,14 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn" ng-click="cancel()">Cancel</button>
-            <button class="btn btn-primary" ng-disabled="lookup_form.$invalid || !newLookup.join.primary_key.length" ng-click="checkLookupForm()?ok():''">OK</button>
+            <button class="btn" ng-click="cancel()">{{'Cancel' | translate}}</button>
+            <button class="btn btn-primary" ng-disabled="lookup_form.$invalid || !newLookup.join.primary_key.length" ng-click="checkLookupForm()?ok():''">{{'OK' | translate}}</button>
         </div>
     </script>
 </div>
 <script type="text/ng-template" id="tableInUse.html">
-  <p>This table is in use in Cube.</p>
+  <p>{{'This table is in use in Cube.' | translate}}</p>
 </script>
 <script type="text/ng-template" id="isLimited.html">
-  <p>Some lookup table is too big (e.g. >300 MB) for snapshot, thus must be marked as limited. Limited lookup table cannot be queried directly and does not support derived dimensions.</p>
+  <p>{{'Some lookup table is too big (e.g. >300 MB) for snapshot, thus must be marked as limited. Limited lookup table cannot be queried directly and does not support derived dimensions.' | translate}}</p>
 </script>

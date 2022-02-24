@@ -20,12 +20,12 @@
 <div ng-controller="ModelMeasuresCtrl">
   <ng-form name="forms.model_measure_form" novalidate>
     <div class="dataTables_wrapper form-inline no-footer">
-      <b class="col-xs-6" ng-if="state.mode=='view'&&modelsManager.selectedModel.metrics.length==0">No Measures</b>
+      <b class="col-xs-6" ng-if="state.mode=='view'&&modelsManager.selectedModel.metrics.length==0">{{'No Measures' | translate}}</b>
       <table ng-if="state.mode=='view'&&modelsManager.selectedModel.metrics.length > 0" class="table table-striped table-hover">
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Column</th>
+                <th>{{'Column' | translate}}</th>
             </tr>
         </thead>
         <tbody>
@@ -36,19 +36,19 @@
                 </td>
                 <td>
                     <!--Name -->
-                    <span tooltip="measure name..">{{measure}}</span>
+                    <span tooltip="{{'measure name' | translate}}..">{{measure}}</span>
                 </td>
             </tr>
         </tbody>
       </table>
       <div  ng-if="state.mode=='edit'" class="form-group" style="width: 100%">
-        <h4 style="margin-left:42px">Select measure columns</h4>
+        <h4 style="margin-left:42px">{{'Select measure columns' | translate}}</h4>
         <table style="margin-left:42px; width:92%"
                class="table table-hover list">
           <tr class="row">
-            <th class="col-xs-1">ID</th>
-            <th class="col-xs-2">Table Alias</th>
-            <th class="col-xs-9">Columns</th>
+            <th class="col-xs-1">{{'ID' | translate}}</th>
+            <th class="col-xs-2">{{'Table Alias' | translate}}</th>
+            <th class="col-xs-9">{{'Columns' | translate}}</th>
           </tr>
 
           <tr  class="row" ng-repeat="table in availableFactTables ">

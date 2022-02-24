@@ -20,10 +20,10 @@
     <div class="space-4"></div>
     <div class="pull-right">
         <button class="btn btn-primary btn-xs" ng-click="renewAccess(entity)" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, permissions.ADMINISTRATION.mask) && !newAccess"><i
-                class="fa fa-plus"></i> Grant
+                class="fa fa-plus"></i> {{'Grant' | translate}}
         </button>
         <button class="btn btn-primary btn-xs" ng-click="resetNewAcess()" ng-if="newAccess"><i
-                class="fa fa-minus"></i> Cancel
+                class="fa fa-minus"></i> {{'Cancel' | translate}}
         </button>
         <label tooltip-placement="left" tooltip-html-unsafe="{{accessTooltip}}"><i class="fa fa-question-circle" style="font-size: 16px"></i></label>
     </div>
@@ -35,8 +35,8 @@
             <tr>
                 <td style="width: 20%">
                     <label><b>Type&nbsp;</b> </label>
-                    <input type="radio" ng-model="newAccess.principal" ng-value=true />  <span tooltip="Username">User</span>
-                    <input type="radio" ng-model="newAccess.principal" ng-value=false /> <span tooltip="User Role">Group</span>
+                    <input type="radio" ng-model="newAccess.principal" ng-value=true />  <span tooltip="{{'Username' | translate}}">{{'User' | translate}}</span>
+                    <input type="radio" ng-model="newAccess.principal" ng-value=false /> <span tooltip="{{'User Role' | translate}}">{{'Group' | translate}}</span>
                 </td>
                 <td style="width: 40%" >
                     <label><b>Name&nbsp;</b> </label>
@@ -57,7 +57,7 @@
                 </td>
                 <td>
                     <button class="btn btn-default btn-xs" ng-click="grant(type, entity, newAccess)"
-                            ng-disabled="!newAccess.sid || !newAccess.permission">Grant
+                            ng-disabled="!newAccess.sid || !newAccess.permission">{{'Grant' | translate}}
                     </button>
                 </td>
             </tr>
@@ -72,8 +72,8 @@
             <tr>
                 <th>Name</th>
                 <th>Type</th>
-                <th>Access</th>
-                <th ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, permissions.ADMINISTRATION.mask)">Update</th>
+                <th>{{'Access' | translate}}</th>
+                <th ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, permissions.ADMINISTRATION.mask)">{{'Update' | translate}}</th>
                 <th ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, permissions.ADMINISTRATION.mask)">Revoke</th>
             </tr>
         </thead>
@@ -84,14 +84,14 @@
                     {{accessEntity.sid.grantedAuthority}}
                 </td>
                 <td>
-                    <span ng-if="accessEntity.sid.principal" >User</span>
-                    <span ng-if="accessEntity.sid.grantedAuthority">Group</span>
+                    <span ng-if="accessEntity.sid.principal" >{{'User' | translate}}</span>
+                    <span ng-if="accessEntity.sid.grantedAuthority">{{'Group' | translate}}</span>
                 </td>
                 <td>
-                  <span ng-if="accessEntity.permission.mask == permissions.READ.mask">QUERY</span>
-                  <span ng-if="accessEntity.permission.mask == permissions.OPERATION.mask">OPERATION</span>
-                  <span ng-if="accessEntity.permission.mask == permissions.MANAGEMENT.mask">MANAGEMENT</span>
-                  <span ng-if="accessEntity.permission.mask == permissions.ADMINISTRATION.mask">ADMIN</span>
+                  <span ng-if="accessEntity.permission.mask == permissions.READ.mask">{{'QUERY' | translate}}</span>
+                  <span ng-if="accessEntity.permission.mask == permissions.OPERATION.mask">{{'OPERATION' | translate}}</span>
+                  <span ng-if="accessEntity.permission.mask == permissions.MANAGEMENT.mask">{{'MANAGEMENT' | translate}}</span>
+                  <span ng-if="accessEntity.permission.mask == permissions.ADMINISTRATION.mask">{{'ADMIN' | translate}}</span>
                 </td>
                 <td ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, permissions.ADMINISTRATION.mask)">
                     <select ng-model="accessEntity.newPermission"  ng-init="newAccess.permission=permissions.READ.value"
@@ -99,11 +99,11 @@
                         <option value="">-- select access --</option>
                     </select>
                     <button class="btn btn-default btn-xs" ng-disabled="!accessEntity.newPermission"
-                            ng-click="update(type, entity, accessEntity, accessEntity.newPermission)">Update
+                            ng-click="update(type, entity, accessEntity, accessEntity.newPermission)">{{'Update' | translate}}
                     </button>
                 </td>
                 <td ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, permissions.ADMINISTRATION.mask)">
-                    <button class="btn btn-default btn-xs" ng-click="revoke(type, accessEntity, entity)">Revoke</button>
+                    <button class="btn btn-default btn-xs" ng-click="revoke(type, accessEntity, entity)">{{'Revoke' | translate}}</button>
                 </td>
             </tr>
         </tbody>

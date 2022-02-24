@@ -21,13 +21,13 @@
     <div class="form-group" ng-class="{'required':state.mode=='edit'}">
       <div class="row">
         <label class="col-xs-12 col-sm-3 control-label no-padding-right">
-          <b>Topic</b>
+          <b>{{'Topic' | translate}}</b>
         </label>
         <div class="col-xs-12 col-sm-6"   ng-class="{'has-error':forms.kafka_config_form.topic.$invalid && (forms.kafka_config_form.topic.$dirty||forms.kafka_config_form.topic.$submitted)}">
           <input  ng-if="state.mode=='edit'"  name="name" required ng-model="kafkaMeta.topic" type="text"
                   placeholder="Input kafkaConfig topic"
                   class="form-control"/>
-          <small class="help-block" ng-show="forms.kafka_config_form.topic.$error.required && (forms.kafka_config_form.topic.$dirty||forms.kafka_config_form.$submitted)">Kafka topic is required.</small>
+          <small class="help-block" ng-show="forms.kafka_config_form.topic.$error.required && (forms.kafka_config_form.topic.$dirty||forms.kafka_config_form.$submitted)">{{'Kafka topic is required.' | translate}}</small>
           <span ng-if="state.mode=='view'">{{kafkaMeta.topic}}</span>
         </div>
       </div>
@@ -46,9 +46,9 @@
           <thead>
           <tr>
             <th>ID</th>
-            <th>Host</th>
-            <th>Port</th>
-            <th ng-if="state.mode=='edit'">Actions</th>
+            <th>{{'Host' | translate}}</th>
+            <th>{{'Port' | translate}}</th>
+            <th ng-if="state.mode=='edit'">{{'Actions' | translate}}</th>
           </tr>
           </thead>
           <tbody>
@@ -96,16 +96,16 @@
             <i class="fa fa-plus"></i> Broker
           </button>
           <button class="btn btn-sm btn-info" ng-click="saveNewBroker(cluster)" ng-show="state.mode=='edit'&&cluster.newBroker">
-            <i class="fa fa-saved"></i> Save
+            <i class="fa fa-saved"></i> {{'Save' | translate}}
           </button>
-          <button class="btn btn-link" ng-click="clearNewBroker(cluster)"  ng-show="state.mode=='edit'&&cluster.newBroker">Cancel</button>
+          <button class="btn btn-link" ng-click="clearNewBroker(cluster)"  ng-show="state.mode=='edit'&&cluster.newBroker">{{'Cancel' | translate}}</button>
         </div>
       </div>
     </div>
     <!--Add Measures Button-->
     <div class="form-group">
       <button class="btn btn-sm btn-info" ng-click="addCluster()" ng-show="state.mode=='edit'">
-        <i class="fa fa-plus"></i> Cluster
+        <i class="fa fa-plus"></i> {{'Cluster' | translate}}
       </button>
     </div>
 

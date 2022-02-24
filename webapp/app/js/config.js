@@ -51,7 +51,7 @@ KylinApp
 .constant('LANGUAGES', [
   'zh-cn',
   'en'
-]).config(function ($routeProvider, $httpProvider, $locationProvider, $logProvider, $translateProvider) {
+]).config(function ($routeProvider, $httpProvider, $locationProvider, $logProvider, $translateProvider, tmhDynamicLocaleProvider) {
     //resolve http always use cache data in IE11,IE10
     $httpProvider.defaults.headers.common['Cache-Control'] = 'no-cache';
     $httpProvider.defaults.headers.common['Pragma'] = 'no-cache';
@@ -116,6 +116,10 @@ KylinApp
     });
 
     $translateProvider.preferredLanguage('zh-cn');
+
+	tmhDynamicLocaleProvider.localeLocationPattern('i18n/angular-locale_{{locale}}.js');
+    tmhDynamicLocaleProvider.useCookieStorage();
+    tmhDynamicLocaleProvider.storageKey('NG_TRANSLATE_LANG_KEY');
 	// i18n add 1
   })
   .run(function ($location) {

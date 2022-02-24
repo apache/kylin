@@ -20,8 +20,8 @@
     <!--Project-->
     <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
         <div class="form-group" >
-            <a class="btn btn-xs btn-info" href="projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
-          <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')"  style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
+            <a class="btn btn-xs btn-info" href="projects" tooltip="{{'Manage Project' | translate}}"><i class="fa fa-gears"></i></a>
+          <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')"  style="width: 29px" tooltip="{{'Add Project' | translate}}" ng-click="toCreateProj()">
                 <i class="fa fa-plus"></i>
             </a>
         </div>
@@ -32,10 +32,10 @@
     <!--table_tree-->
     <div class="col-xs-3 cube-models-cntnr" ng-hide="hideSideBar">
         <tabset class="nav-tabs-custom">
-            <tab heading="Models" select="toggleTab(true);">
+            <tab heading="{{'Models' | translate}}" select="toggleTab(true);">
                 <div ng-include src="'partials/models/models_tree.html'"></div>
             </tab>
-            <tab heading="Data Source"  select="toggleTab(false);">
+            <tab heading="{{'Data Source' | translate}}"  select="toggleTab(false);">
                 <div ng-include src="'partials/tables/source_table_tree.html'"></div>
             </tab>
         </tabset>

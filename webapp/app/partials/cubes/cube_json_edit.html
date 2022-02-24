@@ -24,8 +24,8 @@
         <div class="col-xs-9">
             <form role="form" name="cube_form" novalidate>
               <ul class="breadcrumb">
-                <li><a href="#">Model</a></li>
-                <li class="active">Edit CubeDesc</li>
+                <li><a href="#">{{'Model' | translate}}</a></li>
+                <li class="active">{{'Edit CubeDesc' | translate}}</li>
               </ul>
                 <section style="padding-bottom: 20px">
                     <div style="height: 620px; font-size: 14px;" ui-ace="{
@@ -40,7 +40,7 @@
                     </div>
                 </section>
                 <button class="btn btn-primary" style="float:right;margin-bottom: 10px;" ng-disabled="cube_form.$invalid" ng-click="state.project = projectModel.selectedProject;saveCube()">
-                    Save
+                    {{'Save' | translate}}
                 </button>
             </form>
         </div>

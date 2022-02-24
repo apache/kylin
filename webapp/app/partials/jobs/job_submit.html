@@ -18,7 +18,7 @@
 
 <script type="text/ng-template" id="jobSubmit.html">
     <div class="modal-header">
-        <h4 tooltip="submit">CUBE BUILD CONFIRM</h4>
+        <h4 tooltip="{{'submit' | translate}}">{{'CUBE BUILD CONFIRM' | translate}}</h4>
     </div>
     <div class="modal-body" style="background-color: white">
         <div ng-if="metaModel.model.partition_desc.partition_date_column" class="row">
@@ -28,11 +28,11 @@
                     <table class="table table-striped list">
                         <tbody>
                         <tr>
-                            <td>PARTITION DATE COLUMN</td>
+                            <td>{{'PARTITION DATE COLUMN' | translate}}</td>
                             <td>{{metaModel.model.partition_desc.partition_date_column}}</td>
                         </tr>
                         <tr>
-                            <td>Start Date (Include)</td>
+                            <td>{{'Start Date (Include)' | translate}}</td>
                             <td>
 
                               <div class="dropdown" style="width: 98%;">
@@ -50,7 +50,7 @@
                             </td>
                         </tr>
                         <tr>
-                          <td width="50%;">End Date (Exclude)</td>
+                          <td width="50%;">{{'End Date (Exclude)' | translate}}</td>
                           <td width="50%;">
                             <!--<input type="text" datepicker-popup="yyyy-MM-dd" class="input-sm" style="width: 98%" datepicker-timezone-->
                             <!--ng-model="jobBuildRequest.endTime"-->
@@ -80,7 +80,7 @@
         </div>
     </div>
     <div class="modal-footer">
-        <button class="btn btn-success" ng-click="rebuild()" ng-disabled="jobBuildRequest.endTime<=0">Submit</button>
-        <button class="btn btn-primary" ng-click="cancel()">Close</button>
+        <button class="btn btn-success" ng-click="rebuild()" ng-disabled="jobBuildRequest.endTime<=0">{{'Submit' | translate}}</button>
+        <button class="btn btn-primary" ng-click="cancel()">{{'Close' | translate}}</button>
     </div>
 </script>

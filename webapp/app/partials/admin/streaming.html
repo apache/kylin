@@ -66,7 +66,7 @@
     <div class="col-xs-12">
       <div class="box box-solid box-primary">
         <div class="box-header with-border" style="padding:5px">
-          <h3 class="box-title">Available Receiver</h3>
+          <h3 class="box-title">{{'Available Receiver' | translate}}</h3>
         </div>
         <div class="box-body">
           <div class="row">
@@ -80,7 +80,7 @@
               </div>
             </div>
             <div ng-if="!availableReceiver.length" class="col-md-12 text-center">
-              <h4 class="text-gray">There are no available receivers.</h4>
+              <h4 class="text-gray">{{'There are no available receivers.' | translate}}</h4>
             </div>
           </div>
         </div>
@@ -89,12 +89,12 @@
   </div>
   <div class="row">
     <div class="col-sm-8">
-      Receiver State Info:
-      <span class="label label-success">HEALTHY</span>
-      <span class="label label-warning">WARN</span>
-      <span class="label label-danger">DOWN</span>
-      <span class="label label-default">UNREACHABLE</span>
-      <span class="label label-primary">AVAILABLE</span>
+      {{'Receiver State Info' | translate}}:
+      <span class="label label-success">{{'HEALTHY' | translate}}</span>
+      <span class="label label-warning">{{'WARN' | translate}}</span>
+      <span class="label label-danger">{{'DOWN' | translate}}</span>
+      <span class="label label-default">{{'UNREACHABLE' | translate}}</span>
+      <span class="label label-primary">{{'AVAILABLE' | translate}}</span>
     </div>
   </div>
 </div>
@@ -104,7 +104,7 @@
     <button type="button" class="close" data-dismiss="modal" ng-click="cancel()">
       <i class="fa fa-close"></i>
     </button>
-    <h4>Edit Replica Set [{{replicaSet.rs_id}}]</h4>
+    <h4>{{'Edit Replica Set' | translate}} [{{replicaSet.rs_id}}]</h4>
   </div>
   <div class="modal-body">
     <div class="row" ng-repeat="receiver in replicaSet.receiver_states">
@@ -116,7 +116,7 @@
     <div class="row">
       <div class="col-sm-9 col-sm-offset-1 text-center">
         <select class="form-control" ng-model="node.selected">
-          <option value="">Please select Receiver</option>
+          <option value="">{{'Please select Receiver' | translate}}</option>
           <option value="{{node.receiver.host}}_{{node.receiver.port}}" ng-repeat="node in availableNodes">{{node.receiver.host}}:{{node.receiver.port}}</option>
         </select>
       </div>
@@ -129,11 +129,11 @@
 
 <script type="text/ng-template" id="createReplicaSet.html">
   <div class="modal-header">
-    Create Replica Set
+    {{'Create Replica Set' | translate}}
   </div>
   <div class="modal-body">
     <div class="form-group">
-      <label>Nodes:</label>
+      <label>{{'Nodes' | translate}}:</label>
       <ui-select multiple ng-model="node.selected" theme="bootstrap" sortable="true" close-on-select="false" class="form-control">
         <ui-select-match placeholder="Select Node...">{{$item.host}}:{{$item.port}}</ui-select-match>
         <ui-select-choices repeat="node as node in availableNodes | filter:$select.search">
@@ -143,7 +143,7 @@
     </div>
   </div>
   <div class="modal-footer">
-    <button class="btn btn-default" ng-click="saveReplicaSet()">Save</button>
-    <button class="btn btn-default" ng-click="cancel()">Cancel</button>
+    <button class="btn btn-default" ng-click="saveReplicaSet()">{{'Save' | translate}}</button>
+    <button class="btn btn-default" ng-click="cancel()">{{'Cancel' | translate}}</button>
   </div>
 </script>

@@ -20,7 +20,7 @@
     <div class="col-xs-8">
         <ng-form name="forms.cube_overwrite_prop_form" novalidate>
             <div class="row" style="border-top: 1px solid #dddddd; border-bottom: 1px solid #dddddd; margin-bottom: 15px;" ng-show="state.mode=='edit' || convertedProperties">
-              <h4>Kylin Properties</h4>
+              <h4>{{'Kylin Properties' | translate}}</h4>
             </div>
             <!--Project-->
             <div ng-repeat=" prop in convertedProperties track by $index " class="form-group">
@@ -46,13 +46,13 @@
         <!--Add Measures Property-->
         <div class="form-group">
           <button class="btn btn-sm btn-info" ng-click="addNewProperty();" ng-show="state.mode=='edit'">
-            <i class="fa fa-plus"></i> Property
+            <i class="fa fa-plus"></i> {{'Property' | translate}}
           </button>
         </div>
 
         <!-- Stream Properties-->
         <div ng-if="isStreamingCube" class="row" style="border-top: 1px solid #dddddd; border-bottom: 1px solid #dddddd; margin-bottom: 15px;">
-          <h4>Streaming Properties</h4>
+          <h4>{{'Streaming Properties' | translate}}</h4>
         </div>
         <div ng-if="isStreamingCube" class="row form-group">
           <label class="col-xs-12 col-sm-6 control-label no-padding-right" style="word-wrap: break-word;">
@@ -139,7 +139,7 @@
         <div class="row">
           <div class="col-xs-12">
             <ol class="text-info">
-              <li>Cube level properties will overwrite configuration in kylin.properties</li>
+              <li>{{'Cube level properties will overwrite configuration in' | translate}} kylin.properties</li>
             </ol>
           </div>
         </div>

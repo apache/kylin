@@ -19,11 +19,11 @@
 <div ng-controller="CubeCtrl" class="nav-tabs-custom" style="margin-top:40px;">
     <ul class="nav nav-tabs">
         <li class="{{(!cube.visiblePage || cube.visiblePage=='metadata')? 'active':''}}">
-            <a href="" ng-click="cube.visiblePage='metadata'">Grid</a>
+            <a href="" ng-click="cube.visiblePage='metadata'">{{'Grid' | translate}}</a>
         </li>
         <!--</li>-->
         <li class="{{cube.visiblePage=='sql'? 'active':''}}">
-            <a href="" ng-click="cube.visiblePage='sql';getCubeSql(cube)">SQL</a>
+            <a href="" ng-click="cube.visiblePage='sql';getCubeSql(cube)">{{'SQL' | translate}}</a>
         </li>
         <li class="{{cube.visiblePage=='json'? 'active':''}}"
             ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask) && !newAccess">
@@ -35,21 +35,21 @@
         <!--</li>-->
         <li class="{{cube.visiblePage=='notification'? 'active':''}}"
             ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask) && !newAccess">
-            <a href="" ng-click="cube.visiblePage='notification';getNotifyListString(cube);">Notification</a>
+            <a href="" ng-click="cube.visiblePage='notification';getNotifyListString(cube);">{{'Notification' | translate}}</a>
         </li>
         <li class="{{cube.visiblePage=='owner'? 'active':''}}"
             ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask) && !newAccess">
-            <a href="" ng-click="cube.visiblePage='owner';getOwnerString(cube)">Owner</a>
+            <a href="" ng-click="cube.visiblePage='owner';getOwnerString(cube)">{{'Owner' | translate}}</a>
         </li>
         <li class="{{cube.visiblePage=='hbase'? 'active':''}}"
             ng-if="userService.hasRole('ROLE_ADMIN')  || hasPermission('cube' ,cube, permissions.ADMINISTRATION.mask) && !newAccess">
-            <a href="" ng-click="cube.visiblePage='hbase';getStorageInfo(cube)">Storage</a>
+            <a href="" ng-click="cube.visiblePage='hbase';getStorageInfo(cube)">{{'Storage' | translate}}</a>
         </li>
         <li class="{{cube.visiblePage=='planner'? 'active':''}}" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube', cube, permissions.ADMINISTRATION.mask) && !newAccess) && isShowCubeplanner && cube.detail.engine_type != 0">
-            <a href="" ng-click="cube.visiblePage='planner';getCubePlanner(cube);">Planner</a>
+            <a href="" ng-click="cube.visiblePage='planner';getCubePlanner(cube);">{{'Planner' | translate}}</a>
         </li>
         <li class="{{cube.visiblePage=='streaming'? 'active':''}}" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube', cube, permissions.ADMINISTRATION.mask)  && !newAccess) && cube.streamingV2">
-            <a href="" ng-click="cube.visiblePage='streaming';getStreamingInfo(cube)">Streaming</a>
+            <a href="" ng-click="cube.visiblePage='streaming';getStreamingInfo(cube)">{{'Streaming' | translate}}</a>
        </li>
     </ul>
 
@@ -63,7 +63,7 @@
             <pre style="background-color: white;border: 0px">{{cube.sql}}</pre>
         </div>
         <div ng-if="!cube.sql">
-            <span calss="text-info">No SQL GENERATED.</span>
+            <span calss="text-info">{{'No SQL GENERATED.' | translate}}</span>
         </div>
     </div>
 
@@ -97,7 +97,7 @@
                     <input ng-model="cube.notifyListString" class="form-control" placeholder="Notification List..." />
                 </div>
                 <div class="form-group">
-                    <button class="btn btn-primary btn-sm" ng-click="updateNotifyList(cube)">Save</button>
+                    <button class="btn btn-primary btn-sm" ng-click="updateNotifyList(cube)">{{'Save' | translate}}</button>
                 </div>
                 <div class="space-4"></div>
             </form>
@@ -106,12 +106,12 @@
 
     <div class="cube-detail" ng-show="cube.visiblePage=='owner'">
         <div style="margin: 15px;">
-            <h5><b>Owner:</b></h5>
+            <h5><b>{{'Owner' | translate}}:</b></h5>
             <div class="form-group">
-                <input ng-model="cube.newOwner" class="form-control" placeholder="User List..." />
+                <input ng-model="cube.newOwner" class="form-control" placeholder="{{'User List...' | translate}}" />
             </div>
             <div class="form-group">
-                <button class="btn btn-primary btn-sm" ng-click="updateOwner(cube)">Save</button>
+                <button class="btn btn-primary btn-sm" ng-click="updateOwner(cube)">{{'Save' | translate}}</button>
             </div>
             <div class="space-4"></div>
         </div>
@@ -121,23 +121,23 @@
         <div style="margin: 15px; overflow: hidden;">
             <div ng-if="cube.hbase">
               <div class="hr hr8 hr-double hr-dotted"></div>
-              <h5><b>Segment Number:</b> <span class="blue">{{cube.hbase.length}}</span> <b>Total Size:</b> <span class="blue">{{cube.totalSize | bytes}}</span></h5>
+              <h5><b>{{'Segment Number' | translate}}:</b> <span class="blue">{{cube.hbase.length}}</span> <b>{{'Total Size' | translate}}:</b> <span class="blue">{{cube.totalSize | bytes}}</span></h5>
             </div>
             <div ng-repeat="table in cube.hbase" class="cube-segment-list" ng-class="{'cube-broken-segment': (table.storageType === 'hbase' && table.regionCount === 0)}">
-                <h5><b>Segment:</b> {{table.segmentName}}</h5>
+                <h5><b>{{'Segment' | translate}}:</b> {{table.segmentName}}</h5>
                 <ul>
                     <li>Status: <span>{{table.segmentStatus}}</span></li>
-                    <li ng-if="cube.model.partition_desc.partition_date_column">Start Time: <span>{{table.dateRangeStart | reverseToGMT0}}</span></li>
-                    <li ng-if="cube.model.partition_desc.partition_date_column">End Time: <span>{{table.dateRangeEnd | reverseToGMT0}}</span></li>
-                    <li>Source Count: <span>{{table.sourceCount}}</span></li>
-                    <li ng-if="table.storageType === 'parquet'">Parquet Storage : <span>{{table.tableName}}</span></li>
+                    <li ng-if="cube.model.partition_desc.partition_date_column">{{'Start Time' | translate}}: <span>{{table.dateRangeStart | reverseToGMT0}}</span></li>
+                    <li ng-if="cube.model.partition_desc.partition_date_column">{{'End Time' | translate}}: <span>{{table.dateRangeEnd | reverseToGMT0}}</span></li>
+                    <li>{{'Source Count' | translate}}: <span>{{table.sourceCount}}</span></li>
+                    <li ng-if="table.storageType === 'parquet'">{{'Parquet Storage' | translate}} : <span>{{table.tableName}}</span></li>
                     <li ng-if="table.storageType === 'hbase'">HBase Table: <span>{{table.tableName}}</span></li>
-                    <li ng-if="table.storageType === 'hbase'">Region Count: <span ng-class="{'red': table.regionCount == 0}">{{table.regionCount}}</span></li>
-                    <li>Size: <span>{{table.tableSize | bytes}}</span></li>
+                    <li ng-if="table.storageType === 'hbase'">{{'Region Count' | translate}}: <span ng-class="{'red': table.regionCount == 0}">{{table.regionCount}}</span></li>
+                    <li>{{'Size' | translate}}: <span>{{table.tableSize | bytes}}</span></li>
                 </ul>
             </div>
             <div ng-if="cube.hbase.length == 0">
-                <h5>No Storage Info.</h5>
+                <h5>{{'No Storage Info.' | translate}}</h5>
             </div>
         </div>
     </div>
@@ -145,11 +145,11 @@
         <div style="padding: 15px;">
             <div class="row">
                 <div class="col-sm-12">
-                    <h4 style="display: inline;">Cuboid Distribution</h4>
+                    <h4 style="display: inline;">{{'Cuboid Distribution' | translate}}</h4>
                     <button ng-if="enableRecommend" class="btn btn-success btn-sm pull-right" ng-click="getRecommendCuboids(cube)" ng-if="currentData">
-                        Recommend
+                        {{'Recommend' | translate}}
                     </button>
-                    <div ng-if="cube.cuboid_last_optimized" class="pull-right" style="padding: 5px;">Last Optimized Time: {{cube.cuboid_last_optimized | utcToConfigTimeZone}}</div>
+                    <div ng-if="cube.cuboid_last_optimized" class="pull-right" style="padding: 5px;">{{'Last Optimized Time' | translate}}: {{cube.cuboid_last_optimized | utcToConfigTimeZone}}</div>
                 </div>
             </div>
             <div class="row">
@@ -177,17 +177,17 @@
                 <div class="col-sm-12">
                     <div class="dropup pull-right" style="margin-left: 10px;" ng-if="recommendData">
                         <button class="btn btn-default dropdown-toggle" type="button" id="export" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Export
+                            {{'Export' | translate}}
                             <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="export">
-                            <li><a ng-href="{{config.service.url}}cubes/{{cube.name}}/cuboids/export?top=10" target="_blank" >Top 10</a></li>
-                            <li><a ng-href="{{config.service.url}}cubes/{{cube.name}}/cuboids/export?top=50" target="_blank" >Top 50</a></li>
-                            <li><a ng-href="{{config.service.url}}cubes/{{cube.name}}/cuboids/export?top=100" target="_blank" >Top 100</a></li>
+                            <li><a ng-href="{{config.service.url}}cubes/{{cube.name}}/cuboids/export?top=10" target="_blank" >{{'Top' | translate}} 10</a></li>
+                            <li><a ng-href="{{config.service.url}}cubes/{{cube.name}}/cuboids/export?top=50" target="_blank" >{{'Top' | translate}} 50</a></li>
+                            <li><a ng-href="{{config.service.url}}cubes/{{cube.name}}/cuboids/export?top=100" target="_blank" >{{'Top' | translate}} 100</a></li>
                         </ul>
                     </div>
                     <button class="btn btn-success btn-next pull-right" ng-click="optimizeCuboids(cube)" ng-if="recommendData">
-                        Optimize
+                        {{'Optimize' | translate}}
                     </button>
                 </div>
             </div>
@@ -198,7 +198,7 @@
         <div style="padding: 15px; color: #212121;">
             <div class="row" ng-repeat="(rsId, replicaSet) in replicaSets" style="padding-left: 10px; padding-right: 10px;">
                 <div class="col-sm-1" style="text-align: center; background-color: #f5f5f5; border: 1px solid #ffffff; height: 100px; padding-top: 30px; padding-bottom: 30px; color: #455A64;">
-                    <span>Replica Set ID: {{rsId}}</span>
+                    <span>{{'Replica Set ID' | translate}}: {{rsId}}</span>
                 </div>
 
                 <div class="col-sm-11" style="padding-left: 0px; padding-right: 0px;">
@@ -282,15 +282,15 @@
     </div>
     <div class="modal-body">
         <div class="row">
-            <div class="col-md-offset-1 col-md-3 text-right">Latest Event Time</div>
+            <div class="col-md-offset-1 col-md-3 text-right">{{'Latest Event Time' | translate}}</div>
             <div class="col-md-7">{{receiverStats.latest_event_time ?  (receiverStats.latest_event_time | reverseToGMT0) : ''}}</div>
         </div>
         <div class="row">
-            <div class="col-md-offset-1 col-md-3 text-right">Latest Event Ingest Time</div>
+            <div class="col-md-offset-1 col-md-3 text-right">{{'Latest Event Ingest Time' | translate}}</div>
             <div class="col-md-7">{{receiverStats.latest_event_ingest_time ? (receiverStats.latest_event_ingest_time | reverseToGMT0) : ''}}</div>
         </div>
         <div class="row">
-            <div class="col-md-offset-1 col-md-3 text-right">Segments</div>
+            <div class="col-md-offset-1 col-md-3 text-right">{{'Segments' | translate}}</div>
             <div class="col-md-7">
                 <!-- TODO add color for segment & partition-->
                 <a href="javascript:void(0);" ng-repeat="(segmentName, segmentInfo) in receiverStats.segment_stats" kylinpopover placement="top" class="segment" title="Segment Info" trigger="focus" content="segment name: {{segmentName}}</br>segment state: {{segmentInfo.segment_state}}</br>fragment number: {{segmentInfo.store_stats.num_fragments}}</br>row number in memory: {{segmentInfo.store_stats.num_rows_in_mem}}</br>latest event latency: {{segmentInfo.latest_event_latency}}ms</br>latest event time: {{!!segmentInfo.latest_event_time ? (segmentInfo.latest_event_time | reverseToGMT0) : ''}}</br>segement create time: {{segmentInfo.segment_create_time | reverseToGMT0}}</br>last update time: {{segmentInfo.segment_last_update_time | reverseToGMT0}}">
@@ -299,7 +299,7 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-offset-1 col-md-3 text-right">Partitions</div>
+            <div class="col-md-offset-1 col-md-3 text-right">{{'Partitions' | translate}}</div>
             <div class="col-md-7" ng-if="receiverStats.partition_consume_stats">
                 <a href="javascript:void(0);" ng-repeat="partitionInfo in receiverStats.partition_consume_stats" kylinpopover placement="top" title="Partition Info" trigger="focus" content="Partition Id: {{partitionInfo.partition_id}}</br>Offset Info: {{partitionInfo.offset_info}}</br>1 Minute Rate: {{partitionInfo.one_min_rate | number:0}} msg/s</br>5 Minute Rate: {{partitionInfo.five_min_rate | number:0}} msg/s</br>15 Minute Rate: {{partitionInfo.fifteen_min_rate | number:0}} msg/s</br>AVG Rate: {{partitionInfo.avg_rate | number:0}} msg/s</br>Total Consume: {{partitionInfo.total_consume}}<br/>Cosume Lag: {{partitionInfo.consume_lag}}">
                     <i class="fa fa-list-ul" style="font-size:1.5em; color:#3c8dbc; margin-right: 5px;"></i>

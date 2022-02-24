@@ -23,34 +23,34 @@
                 <tbody>
                     <!--Project Name-->
                     <tr>
-                        <th>Model Name</th>
+                        <th>{{'Model Name' | translate}}</th>
                         <td>{{metaModel.model.name}}</td>
                     </tr>
                     <!--Cube Name-->
                     <tr>
-                        <th>Cube Name</th>
+                        <th>{{'Cube Name' | translate}}</th>
                         <td>{{cubeMetaFrame.name}}</td>
                     </tr>
                     <!--Fact Table-->
                     <tr>
-                        <th>Fact Table</th>
+                        <th>{{'Fact Table' | translate}}</th>
                         <td>{{metaModel.model.fact_table}}</td>
                     </tr>
                     <!--Lookup Table-->
                     <tr>
-                        <th>Lookup Table</th>
+                        <th>{{'Lookup Table' | translate}}</th>
                         <td>
                             {{metaModel.model.lookups.length}}
                         </td>
                     </tr>
                     <!--Dimensions-->
                     <tr>
-                        <th>Dimensions</th>
+                        <th>{{'Dimensions' | translate}}</th>
                         <td>{{cubeMetaFrame.dimensions.length}}</td>
                     </tr>
                     <!--Measures-->
                     <tr>
-                        <th>Measures</th>
+                        <th>{{'Measures' | translate}}</th>
                         <td>{{cubeMetaFrame.measures.length}}</td>
                     </tr>
                 </tbody>
@@ -63,7 +63,7 @@
         <div class="box box-solid">
             <div class="box-header">
                 <h4 class="smaller">
-                    Description
+                    {{'Description' | translate}}
                 </h4>
             </div>
             <div class="box-body">

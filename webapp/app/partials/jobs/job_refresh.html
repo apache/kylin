@@ -18,16 +18,16 @@
 
 <script type="text/ng-template" id="jobRefresh.html">
     <div class="modal-header">
-        <h4 tooltip="refresh">CUBE REFRESH CONFIRM</h4>
+        <h4 tooltip="refresh">{{'CUBE REFRESH CONFIRM' | translate}}</h4>
     </div>
     <div class="modal-body">
       <div ng-if="metaModel.model.partition_desc.partition_date_column" class="nav-tabs-custom" style="box-shadow:none">
         <ul class="nav nav-tabs" style="margin-bottom: 40px">
           <li class="{{(!refreshType || refreshType=='normal')? 'active':''}}">
-            <a href="" ng-click="changeRefreshType('normal')">Refresh</a>
+            <a href="" ng-click="changeRefreshType('normal')">{{'Refresh' | translate}}</a>
           </li>
           <li class="{{refreshType=='advance'? 'active':''}}">
-            <a href="" ng-click="changeRefreshType('advance')">Advance Refresh</a>
+            <a href="" ng-click="changeRefreshType('advance')">{{'Advance Refresh' | translate}}</a>
           </li>
         </ul>
         <!-- Refresh -->
@@ -35,17 +35,17 @@
           <div class="col-md-2"></div>
           <div class="col-md-8">
             <div ng-if="!!!(cube.segments) || cube.segments.length == 0">
-              <span class="text-info">No Segment to refresh.</span>
+              <span class="text-info">{{'No Segment to refresh.' | translate}}</span>
             </div>
             <div ng-if="cube.segments.length > 0" class="row">
               <table class="table table-striped list" >
                 <tbody>
                 <tr>
-                  <td>PARTITION DATE COLUMN</td>
+                  <td>{{'PARTITION DATE COLUMN' | translate}}</td>
                   <td>{{metaModel.model.partition_desc.partition_date_column}}</td>
                 </tr>
                 <tr>
-                  <td>REFRESH SEGMENT</td>
+                  <td>{{'REFRESH SEGMENT' | translate}}</td>
                   <td>
                     <select ng-model="selectedSegment"
                             ng-init="selectedSegment=cube.segments[0];segmentSelected(selectedSegment);"
@@ -55,23 +55,23 @@
                   </td>
                 </tr>
                 <tr>
-                  <td>SEGMENT DETAIL</td>
+                  <td>{{'SEGMENT DETAIL' | translate}}</td>
                   <td>
                     <table class="table table-condensed">
                       <tr>
-                        <td>Start Date (Include)</td>
+                        <td>{{'Start Date (Include)' | translate}}</td>
                         <td>{{selectedSegment.date_range_start |  reverseToGMT0}}</td>
                       </tr>
                       <tr>
-                        <td>End Date (Exclude)</td>
+                        <td>{{'End Date (Exclude)' | translate}}</td>
                         <td>{{selectedSegment.date_range_end |  reverseToGMT0}}</td>
                       </tr>
                       <tr>
-                        <td>Last build Time</td>
+                        <td>{{'Last build Time' | translate}}</td>
                         <td>{{selectedSegment.last_build_time | utcToConfigTimeZone}}</td>
                       </tr>
                       <tr>
-                        <td>Last build ID</td>
+                        <td>{{'Last build ID' | translate}}</td>
                         <td>{{selectedSegment.last_build_job_id}}</td>
                       </tr>
                     </table>
@@ -92,17 +92,17 @@
           <div class="col-md-2"></div>
           <div class="col-md-8">
             <div ng-if="!!!(cube.segments) || cube.segments.length == 0">
-              <span class="text-info">No Segment to refresh.</span>
+              <span class="text-info">{{'No Segment to refresh.' | translate}}</span>
             </div>
             <div ng-if="cube.segments.length > 0" class="row">
               <table class="table table-striped list" ng-if="(cube.segments|filter: {status: 'NEW'}).length == 0">
                 <tbody>
                 <tr>
-                  <td>PARTITION DATE COLUMN</td>
+                  <td>{{'PARTITION DATE COLUMN' | translate}}</td>
                   <td>{{metaModel.model.partition_desc.partition_date_column}}</td>
                 </tr>
                 <tr>
-                  <td>START DATE</td>
+                  <td>{{'START DATE' | translate}}</td>
                   <td>
                     <select ng-model="jobBuildRequest.startTime"
                             ng-init="jobBuildRequest.endTime=advRefreshStartTimeOptions[0];"
@@ -111,7 +111,7 @@
                   </td>
                 </tr>
                 <tr>
-                  <td width="30%;">END DATE</td>
+                  <td width="30%;">{{'END DATE' | translate}}</td>
                   <td width="70%;">
                     <select ng-if="!endTimeTypeCustomize" ng-model="jobBuildRequest.endTime"
                             ng-options="endTimeOption | reverseToGMT0 for endTimeOption in advRefreshEndTimeOptions">
@@ -133,7 +133,7 @@
               </table>
 
               <div ng-if="(cube.segments|filter: {status: 'NEW'}).length > 0">
-                <span class="text-warning">There exists a build request of this cube, the job may be running or error. If you need a new build, please wait for its complete or discard it.</span>
+                <span class="text-warning">{{'There exists a build request of this cube, the job may be running or error. If you need a new build, please wait for its complete or discard it.' | translate}}</span>
               </div>
             </div>
             <div ng-if="message">
@@ -146,15 +146,15 @@
       <div ng-if="!metaModel.model.partition_desc.partition_date_column" class="row">
         <div class="col-md-2"></div>
         <div class="col-md-8">
-          <span>No partition date column defined. If you want to rebuild the cube, please click "Build".</span>
+          <span>{{'No partition date column defined. If you want to rebuild the cube, please click' | translate}} "Build".</span>
         </div>
         <div class="col-md-2"></div>
       </div>
     </div>
 
     <div class="modal-footer">
-        <button class="btn btn-primary" ng-click="cancel()">Close</button>
-        <button class="btn btn-success" ng-click="rebuild()" ng-disabled="!(jobBuildRequest.startTime >= 0 && jobBuildRequest.endTime > 0 && jobBuildRequest.startTime < jobBuildRequest.endTime)">Submit
+        <button class="btn btn-primary" ng-click="cancel()">{{'Close' | translate}}</button>
+        <button class="btn btn-success" ng-click="rebuild()" ng-disabled="!(jobBuildRequest.startTime >= 0 && jobBuildRequest.endTime > 0 && jobBuildRequest.startTime < jobBuildRequest.endTime)">{{'Submit' | translate}}
         </button>
     </div>
 </script>

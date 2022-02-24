@@ -25,7 +25,7 @@
             <div class="form-group middle-popover" ng-class="{'required':state.mode=='edit'}">
                 <div class="row">
                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                        <b>Model Name</b> <i class="fa fa-info-circle"  kylinpopover placement="right" title="Model Name" template="modelNameTip.html"></i>
+                        <b>{{'Model Name' | translate}}</b> <i class="fa fa-info-circle"  kylinpopover placement="right" title="Model Name" template="modelNameTip.html"></i>
                     </label>
 
                     <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.model_info_form.model_name.$invalid && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$submitted)}">
@@ -35,8 +35,8 @@
                                ng-model="modelsManager.selectedModel.name" required
                                placeholder="You can use letters, numbers, and '_'"
                                ng-maxlength=100 ng-pattern="/^\w+$/" />
-                        <small style="color:red" class="help-block" ng-show="forms.model_info_form.model_name.$error.required && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$submitted)">Model name is required.</small>
-                        <small class="help-block" ng-show="!forms.model_info_form.model_name.$error.required&&forms.model_info_form.model_name.$invalid && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$submitted)">Model name is invalid.</small>
+                        <small style="color:red" class="help-block" ng-show="forms.model_info_form.model_name.$error.required && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$submitted)">{{'Model name is required' | translate}}.</small>
+                        <small class="help-block" ng-show="!forms.model_info_form.model_name.$error.required&&forms.model_info_form.model_name.$invalid && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$submitted)">{{'Model name is invalid' | translate}}.</small>
 
 
                         <span ng-if="state.mode=='view'">{{modelsManager.selectedModel.name}}</span>
@@ -48,7 +48,7 @@
             <div class="form-group middle-popover" ng-if="state.mode=='view'">
               <div class="row">
                 <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                  <b>Owner</b>
+                  <b>{{'Owner' | translate}}</b>
                 </label>
 
                 <div class="col-xs-12 col-sm-6">
@@ -61,7 +61,7 @@
             <div class="form-group">
                 <div class="row">
                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                        <b>Description</b>
+                        <b>{{'Description' | translate}}</b>
                     </label>
                     <div class="col-xs-12 col-sm-6">
                         <textarea ng-if="state.mode=='edit'" class="form-control box-default"
@@ -81,12 +81,12 @@
     <div class="box box-danger">
         <div class="box-header with-border">
             <i class="fa fa-warning"></i>
-            <h3 class="box-title">Warning!</h3>
+            <h3 class="box-title">{{'Warning' | translate}}!</h3>
         </div>
         <div class="box-body callout callout-warning">
             <ol>
-                <li>Project can't be empty</li>
-                <li>Model Name can't be empty</li>
+                <li>{{'Project can't be empty' | translate}}</li>
+                <li>{{'Model Name can't be empty' | translate}}</li>
             </ol>
         </div><!-- /.box-body -->
     </div>
@@ -95,7 +95,7 @@
 
 <script type="text/ng-template" id="modelNameTip.html">
 <ol>
-  <li>Model name is unique name of entire system.</li>
-  <li>Can not edit model name after created.</li>
+  <li>{{'Model name is unique name of entire system' | translate}}.</li>
+  <li>{{'Can not edit model name after created' | translate}}.</li>
 </ol>
 </script>
