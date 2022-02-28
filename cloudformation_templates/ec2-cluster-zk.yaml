@@ -92,6 +92,9 @@ Parameters:
     Default: gp2
     AllowedValues:
       - gp2
+  ZookeeperVersion:
+    Type: String
+    Default: 3.4.13
 
 Mappings:
   AWSRegionArch2AMI:
@@ -189,13 +192,14 @@ Resources:
               #!/bin/bash -xe
               cd /home/ec2-user
               aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateZookeeperScriptFileName} . --region ${PrivateRegion}
-              bash ${PrivateZookeeperScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --zk-num ${privateZkNum}
+              bash ${PrivateZookeeperScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --zk-num ${PrivateZkNum} --zookeeper-version ${PrivateZkVersion}
               echo "Zookeeper is ready ..."
             - PrivateBucketFullPath: !Ref BucketFullPath
               PrivateZookeeperScriptFileName: !Ref ZookeeperScriptFileName
               PrivateBucketPath: !Ref BucketPath
               PrivateRegion: !Ref AWS::Region
-              privateZkNum: 1
+              PrivateZkNum: 1
+              PrivateZkVersion: !Ref ZookeeperVersion
 
   Ec2InstanceOfZookeeperNode02:
     Type: AWS::EC2::Instance
@@ -246,13 +250,14 @@ Resources:
               #!/bin/bash -xe
               cd /home/ec2-user
               aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateZookeeperScriptFileName} . --region ${PrivateRegion}
-              bash ${PrivateZookeeperScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --zk-num ${privateZkNum}
+              bash ${PrivateZookeeperScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --zk-num ${PrivateZkNum} --zookeeper-version ${PrivateZkVersion}
               echo "Zookeeper is ready ..."
             - PrivateBucketFullPath: !Ref BucketFullPath
               PrivateZookeeperScriptFileName: !Ref ZookeeperScriptFileName
               PrivateBucketPath: !Ref BucketPath
               PrivateRegion: !Ref AWS::Region
-              privateZkNum: 2
+              PrivateZkNum: 2
+              PrivateZkVersion: !Ref ZookeeperVersion
 
   Ec2InstanceOfZookeeperNode03:
     Type: AWS::EC2::Instance
@@ -303,13 +308,14 @@ Resources:
               #!/bin/bash -xe
               cd /home/ec2-user
               aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateZookeeperScriptFileName} . --region ${PrivateRegion}
-              bash ${PrivateZookeeperScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --zk-num ${privateZkNum}
+              bash ${PrivateZookeeperScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --zk-num ${PrivateZkNum} --zookeeper-version ${PrivateZkVersion}
               echo "Zookeeper is ready ..."
             - PrivateBucketFullPath: !Ref BucketFullPath
               PrivateZookeeperScriptFileName: !Ref ZookeeperScriptFileName
               PrivateBucketPath: !Ref BucketPath
               PrivateRegion: !Ref AWS::Region
-              privateZkNum: 3
+              PrivateZkNum: 3
+              PrivateZkVersion: !Ref ZookeeperVersion
 
 Outputs:
   # Instance 01 parameters

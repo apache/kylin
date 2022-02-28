@@ -52,12 +52,12 @@ CIDR_IP: ${Cidr Ip}
 # Related Version of Services, Current packages are compatible.
 # Note: Current support these versions, don't modify them.
 KYLIN_VERSION: &KYLIN_VERSION '4.0.0'
-HIVE_VERSION: '2.3.9'
-HADOOP_VERSION: '3.2.0'
+HIVE_VERSION: &HIVE_VERSION '2.3.9'
+HADOOP_VERSION: &HADOOP_VERSION '3.2.0'
 NODE_EXPORTER_VERSION: '1.3.1'
 PROMETHEUS_VERSION: '2.31.1'
-SPARK_VERSION: '3.1.1'
-ZOOKEEPER_VERSION: '3.4.13'
+SPARK_VERSION: &SPARK_VERSION '3.1.1'
+ZOOKEEPER_VERSION: &ZOOKEEPER_VERSION '3.4.13'
 # ============ Related Version of Services End============
 
 # ============ Debug Configs ============
@@ -184,6 +184,7 @@ EC2_ZOOKEEPERS_PARAMS:
   SecurityGroupId:
   EMREc2KeyName: *security_key
   AssociatedPublicIp: *associated_public_ip
+  ZookeeperVerion: *ZOOKEEPER_VERSION
 
   ZookeeperScriptFileName: prepare-ec2-env-for-zk.sh
   Ec2Mode: test
@@ -203,6 +204,9 @@ EC2_SPARK_MASTER_PARAMS:
   DbPort: *DbPort
   DbUser: *DbUser
   DbPassword: *DbPassword
+  SparkVersion: *SPARK_VERSION
+  HadoopVersion: *HADOOP_VERSION
+  HiveVersion: *HIVE_VERSION
 
   AssociatedPublicIp: *associated_public_ip
   SparkMasterScriptFileName: prepare-ec2-env-for-spark-master.sh
@@ -221,6 +225,11 @@ EC2_KYLIN4_PARAMS:
   InstanceProfileId:
   SubnetId:
   SecurityGroupId:
+
+  KylinVersion: *KYLIN_VERSION
+  SparkVersion: *SPARK_VERSION
+  HadoopVersion: *HADOOP_VERSION
+  HiveVersion: *HIVE_VERSION
 
   AssociatedPublicIp: *associated_public_ip
 
@@ -248,6 +257,9 @@ EC2_SPARK_WORKER_PARAMS:
   EMREc2KeyName: *security_key
   # set 'true' for test
   AssociatedPublicIp: *associated_public_ip
+  KylinVersion: *KYLIN_VERSION
+  SparkVersion: *SPARK_VERSION
+  HadoopVersion: *HADOOP_VERSION
 
   SlaveScriptFileName: prepare-ec2-env-for-spark-slave.sh
   Ec2Mode: test
@@ -265,6 +277,11 @@ EC2_KYLIN4_SCALE_PARAMS:
   InstanceProfileId:
   SubnetId:
   SecurityGroupId:
+
+  KylinVersion: *KYLIN_VERSION
+  SparkVersion: *SPARK_VERSION
+  HadoopVersion: *HADOOP_VERSION
+  HiveVersion: *HIVE_VERSION
 
   AssociatedPublicIp: *associated_public_ip
 
@@ -290,6 +307,11 @@ EC2_SPARK_SCALE_SLAVE_PARAMS:
   SubnetId:
   SecurityGroupId:
   WorkerNum:
+
+  KylinVersion: *KYLIN_VERSION
+  SparkVersion: *SPARK_VERSION
+  HadoopVersion: *HADOOP_VERSION
+
   WaitingTime: '50'
   EMREc2KeyName: *security_key
   # set 'true' for test

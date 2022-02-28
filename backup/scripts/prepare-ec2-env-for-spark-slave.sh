@@ -71,13 +71,12 @@ function help() {
                     --region region-for-s3
                     --waiting-time time-for-start-services
                     --mode cluster-mode-is-product-or-test
-                    --local-soft whether-to-use-local-cache+soft-affinity"
+                    --local-soft whether-to-use-local-cache+soft-affinity
+                    --hadoop-version hadoop-version-for-cluster
+                    --spark-version spark-version-for-cluster
+                    --kylin-version kylin-version-for-cluster"
   exit 0
 }
-
-if [[ $# -ne 14 ]]; then
-  help
-fi
 
 while [[ $# != 0 ]]; do
   if [[ $1 == "--bucket-url" ]]; then
@@ -94,6 +93,12 @@ while [[ $# != 0 ]]; do
       WORKER_MODE=$2
   elif [[ $1 == "--local-soft" ]]; then
     LOCAL_CACHE_SOFT_AFFINITY=$2
+  elif [[ $1 == "--hadoop-version" ]]; then
+    HADOOP_VERSION=$2
+  elif [[ $1 == "--spark-version" ]]; then
+    SPARK_VERSION=$2
+  elif [[ $1 == "--kylin-version" ]]; then
+    KYLIN_VERSION=$2
   else
     help
   fi
@@ -106,9 +111,17 @@ done
 ## Parameter
 ### Parameters for Spark
 #### ${SPARK_VERSION:0:1} get 2 from 2.4.7
-HADOOP_VERSION=3.2.0
-SPARK_VERSION=3.1.1
-KYLIN_VERSION=4.0.0
+if [[ -z "$HADOOP_VERSION" ]]; then
+  HADOOP_VERSION=3.2.0
+fi
+
+if [[ -z "$SPARK_VERSION" ]]; then
+  SPARK_VERSION=3.1.1
+fi
+
+if [[ -z "$KYLIN_VERSION" ]]; then
+  KYLIN_VERSION=4.0.0
+fi
 
 ### Parameter for JDK 1.8
 JDK_PACKAGE=jdk-8u301-linux-x64.tar.gz
@@ -151,7 +164,7 @@ function init_env() {
 
     JAVA_HOME=/usr/local/java
     JRE_HOME=${JAVA_HOME}/jre
-    KYLIN_HOME=${HOME_DIR}/${DECOMPRESSED_KYLIN_PACKAGE}
+    KYLIN_HOME=${HOME_DIR}/kylin
     SPARK_HOME=${HADOOP_DIR}/spark
     OUT_LOG=${HOME_DIR}/shell.stdout
     HADOOP_HOME=${HADOOP_DIR}/hadoop-${HADOOP_VERSION}
@@ -245,6 +258,10 @@ function prepare_hadoop() {
   else
       logging info "Downloading Hadoop package ${HADOOP_PACKAGE} ..."
       aws s3 cp ${PATH_TO_BUCKET}/tar/${HADOOP_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+      if [[ $? -ne 0  ]]; then
+        logging error "Downloading ${HADOOP_PACKAGE} failed, please check."
+        exit 1
+      fi
 #      # wget cost lot time
 #      wget https://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}/${HADOOP_PACKAGE}
   fi
@@ -276,6 +293,10 @@ function prepare_spark() {
   else
       logging warn "Downloading ${SPARK_PACKAGE} ..."
       aws s3 cp ${PATH_TO_BUCKET}/tar/${SPARK_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+      if [[ $? -ne 0  ]]; then
+        logging error "Downloading ${SPARK_PACKAGE} failed, please check."
+        exit 1
+      fi
 #      # wget cost lot time
 #      wget http://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/${SPARK_PACKAGE}
   fi
@@ -351,7 +372,7 @@ EOF
 function start_spark_worker() {
   # TODO: fix hard code for waiting time
   sleep ${WAITING_TIME}
-  if [[ $WORKER_MODE == 'product' ]]; then
+  if [[ $WORKER_MODE == "product" ]]; then
     # product:
     # # ec2 instance type is m5.4xlarge which has 16 cores! Set 15 to Spark master.
     # # Also set 60 GB memory for cluster
@@ -380,16 +401,21 @@ function prepare_kylin() {
   else
       logging info "Kylin-${KYLIN_VERSION} downloading ..."
       aws s3 cp ${PATH_TO_BUCKET}/tar/${KYLIN_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+      if [[ $? -ne 0  ]]; then
+        logging error "Downloading ${KYLIN_PACKAGE} failed, please check."
+        exit 1
+      fi
 #      # wget cost lot time
 #      wget https://archive.apache.org/dist/kylin/apache-kylin-${KYLIN_VERSION}/${KYLIN_PACKAGE}
   fi
 
-  if [[ -d ${HOME_DIR}/${DECOMPRESSED_KYLIN_PACKAGE} ]]; then
+  if [[ -d ${KYLIN_HOME} ]]; then
       logging warn "Kylin package already decompress, skip decompress ..."
   else
       logging warn "Kylin package decompressing ..."
       ### unzip kylin tar file
       tar -zxf ${KYLIN_PACKAGE}
+      sudo mv ${HOME_DIR}/${DECOMPRESSED_KYLIN_PACKAGE} ${KYLIN_HOME}
   fi
 
   logging info "Kylin inited ..."

@@ -135,6 +135,19 @@ Parameters:
     MinValue: 30
     MaxValue: 30
 
+  KylinVersion:
+    Type: String
+    Default: 4.0.0
+  SparkVersion:
+    Type: String
+    Default: 3.1.1
+  HadoopVersion:
+    Type: String
+    Default: 3.2.0
+  HiveVersion:
+    Type: String
+    Default: 2.3.9
+
 
 Mappings:
   AWSRegionArch2AMI:
@@ -242,7 +255,7 @@ Resources:
               #!/bin/bash -xe
               cd /home/ec2-user
               aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateKylin4ScriptFileName} . --region ${PrivateRegion}
-              bash ${PrivateKylin4ScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --db-host ${PrivateDbHost} --db-password ${PrivateDbPass} --db-user ${PrivateDbUser} --db-port ${PrivateDbPort} --local-soft ${PrivateLocalCacheSoftAffinity} --cluster-num ${PrivateClusterNum} --is-scaled ${PrivateIsScaled}
+              bash ${PrivateKylin4ScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --db-host ${PrivateDbHost} --db-password ${PrivateDbPass} --db-user ${PrivateDbUser} --db-port ${PrivateDbPort} --local-soft ${PrivateLocalCacheSoftAffinity} --cluster-num ${PrivateClusterNum} --is-scaled ${PrivateIsScaled} --hadoop-version ${PrivateHadoopVersion} --spark-version ${PrivateSparkVersion} --hive-version ${PrivateHiveVersion} --kylin-version ${PrivateKylinVersion}
               echo " Kylin4 is ready ..."
             - PrivateBucketFullPath: !Ref BucketFullPath
               PrivateKylin4ScriptFileName: !Ref Kylin4ScriptFileName
@@ -255,6 +268,10 @@ Resources:
               PrivateLocalCacheSoftAffinity: !Ref LocalCacheSoftAffinity
               PrivateClusterNum: !Ref ClusterNum
               PrivateIsScaled: !Ref IsScaled
+              PrivateKylinVersion: !Ref KylinVersion
+              PrivateSparkVersion: !Ref SparkVersion
+              PrivateHiveVersion: !Ref HiveVersion
+              PrivateHadoopVersion: !Ref HadoopVersion
 
 Outputs:
   IdOfInstance:

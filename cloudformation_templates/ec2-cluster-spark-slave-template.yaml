@@ -113,6 +113,16 @@ Parameters:
     MinValue: 30
     MaxValue: 30
 
+  KylinVersion:
+    Type: String
+    Default: 4.0.0
+  SparkVersion:
+    Type: String
+    Default: 3.1.1
+  HadoopVersion:
+    Type: String
+    Default: 3.2.0
+
 
 Mappings:
   AWSRegionArch2AMI:
@@ -225,7 +235,7 @@ Resources:
               #!/bin/bash -xe
               cd /home/ec2-user
               aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateSlaveScriptFileName} . --region ${PrivateRegion}
-              bash ${PrivateSlaveScriptFileName} --bucket-url ${PrivateBucketPath} --master-host ${PrivateMasterHost} --worker-number ${WorkerNum} --region ${PrivateRegion} --waiting-time ${PrivateWaitingTime} --mode ${WorkerMode} --local-soft ${PrivateLocalCacheSoftAffinity}
+              bash ${PrivateSlaveScriptFileName} --bucket-url ${PrivateBucketPath} --master-host ${PrivateMasterHost} --worker-number ${WorkerNum} --region ${PrivateRegion} --waiting-time ${PrivateWaitingTime} --mode ${WorkerMode} --local-soft ${PrivateLocalCacheSoftAffinity} --hadoop-version ${PrivateHadoopVersion} --spark-version ${PrivateSparkVersion} --kylin-version ${PrivateKylinVersion}
             - PrivateMasterHost: !Ref SparkMasterNodeHost
               WorkerNum: !Ref WorkerNum
               PrivateBucketFullPath: !Ref BucketFullPath
@@ -235,6 +245,9 @@ Resources:
               PrivateWaitingTime: !Ref WaitingTime
               WorkerMode: !Ref Ec2Mode
               PrivateLocalCacheSoftAffinity: !Ref LocalCacheSoftAffinity
+              PrivateKylinVersion: !Ref KylinVersion
+              PrivateHadoopVersion: !Ref HadoopVersion
+              PrivateSparkVersion: !Ref SparkVersion
 
 Outputs:
   IdOfInstance:

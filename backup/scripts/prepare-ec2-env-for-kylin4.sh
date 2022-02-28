@@ -73,13 +73,13 @@ function help() {
                     --db-user db-user-for-kylin
                     --kylin-mode mode-for-kylin[all|query|job]
                     --local-soft whether-to-use-local-cache+soft-affinity
-                    --cluster-num specify-a-cluster"
+                    --cluster-num specify-a-cluster
+                    --hadoop-version hadoop-version-for-cluster
+                    --spark-version spark-version-for-cluster
+                    --kylin-version kylin-version-for-cluster
+                    --hive-version hive-version-for-cluster"
   exit 0
 }
-
-if [[ $# -ne 18 ]]; then
-  help
-fi
 
 while [[ $# != 0 ]]; do
   if [[ $1 == "--bucket-url" ]]; then
@@ -93,15 +93,23 @@ while [[ $# != 0 ]]; do
     DATABASE_PASSWORD=$2
   elif [[ $1 == "--db-user" ]]; then
     DATABASE_USER=$2
-  elif [[ $1 == '--db-port' ]]; then
+  elif [[ $1 == "--db-port" ]]; then
     DATABASE_PORT=$2
   elif [[ $1 == "--local-soft" ]]; then
     LOCAL_CACHE_SOFT_AFFINITY=$2
-  elif [[ $1 == '--cluster-num' ]]; then
-    # default value is 'default', and cluster num is from 1 to positive infinity.
+  elif [[ $1 == "--cluster-num" ]]; then
+    # default value is "default", and cluster num is from 1 to positive infinity.
     CLUSTER_NUM=$2
-  elif [[ $1 == '--is-scaled' ]]; then
+  elif [[ $1 == "--is-scaled" ]]; then
     IS_SCALED=$2
+  elif [[ $1 == "--hadoop-version" ]]; then
+    HADOOP_VERSION=$2
+  elif [[ $1 == "--spark-version" ]]; then
+    SPARK_VERSION=$2
+  elif [[ $1 == "--kylin-version" ]]; then
+    KYLIN_VERSION=$2
+  elif [[ $1 == "--hive-version" ]]; then
+    HIVE_VERSION=$2
   else
     help
   fi
@@ -113,10 +121,21 @@ done
 # Prepare Steps
 ### Parameters for Spark and Kylin
 #### ${SPARK_VERSION:0:1} get 2 from 2.4.7
-HADOOP_VERSION=3.2.0
-SPARK_VERSION=3.1.1
-KYLIN_VERSION=4.0.0
-HIVE_VERSION=2.3.9
+if [[ -z "$HADOOP_VERSION" ]]; then
+  HADOOP_VERSION=3.2.0
+fi
+
+if [[ -z "$SPARK_VERSION" ]]; then
+  SPARK_VERSION=3.1.1
+fi
+
+if [[ -z "$KYLIN_VERSION" ]]; then
+  KYLIN_VERSION=4.0.0
+fi
+
+if [[ -z "$HIVE_VERSION" ]]; then
+  HIVE_VERSION=2.3.9
+fi
 
 LOCAL_CACHE_DIR=/home/ec2-user/ssd
 
@@ -141,6 +160,7 @@ else
   fi
 
 fi
+
 SPARK_PACKAGE=spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION:0:3}.tgz
 HADOOP_PACKAGE=hadoop-${HADOOP_VERSION}.tar.gz
 HIVE_PACKAGE=apache-hive-${HIVE_VERSION}-bin.tar.gz
@@ -163,7 +183,7 @@ function init_env() {
   HADOOP_HOME=${HADOOP_DIR}/hadoop-${HADOOP_VERSION}
   HIVE_HOME=${HADOOP_DIR}/hive
 
-  KYLIN_HOME=${HOME_DIR}/${DECOMPRESSED_KYLIN_PACKAGE}
+  KYLIN_HOME=${HOME_DIR}/kylin
   SPARK_HOME=${HADOOP_DIR}/spark
   OUT_LOG=${HOME_DIR}/shell.stdout
 
@@ -262,6 +282,10 @@ function prepare_hadoop() {
   else
     logging info "Downloading Hadoop package ${HADOOP_PACKAGE} ..."
     aws s3 cp ${PATH_TO_BUCKET}/tar/${HADOOP_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+    if [[ $? -ne 0  ]]; then
+        logging error "Downloading ${HADOOP_PACKAGE} failed, please check."
+        exit 1
+    fi
     #      # wget cost lot time
     #      wget https://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}/${HADOOP_PACKAGE}
   fi
@@ -332,6 +356,10 @@ function prepare_hive() {
   else
     logging info "Downloading ${HIVE_PACKAGE} ..."
     aws s3 cp ${PATH_TO_BUCKET}/tar/${HIVE_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+    if [[ $? -ne 0  ]]; then
+        logging error "Downloading ${HIVE_PACKAGE} failed, please check."
+        exit 1
+    fi
     #      # wget cost lot time
     #      wget https://downloads.apache.org/hive/hive-${HIVE_VERSION}/${HIVE_PACKAGE}
   fi
@@ -442,6 +470,10 @@ function prepare_spark() {
   else
     logging warn "Downloading ${SPARK_PACKAGE} ..."
     aws s3 cp ${PATH_TO_BUCKET}/tar/${SPARK_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+    if [[ $? -ne 0 ]]; then
+        logging error "Downloading ${SPARK_PACKAGE} failed, please check."
+        exit 1
+    fi
     #      # wget cost lot time
     #      wget http://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/${SPARK_PACKAGE}
   fi
@@ -528,16 +560,22 @@ function prepare_kylin() {
   else
     logging info "Kylin-${KYLIN_VERSION} downloading ..."
     aws s3 cp ${PATH_TO_BUCKET}/tar/${KYLIN_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+    if [[ $? -ne 0  ]]; then
+        logging error "Downloading ${KYLIN_PACKAGE} failed, please check."
+        exit 1
+    fi
     #      # wget cost lot time
     #      wget https://archive.apache.org/dist/kylin/apache-kylin-${KYLIN_VERSION}/${KYLIN_PACKAGE}
   fi
 
-  if [[ -d ${HOME_DIR}/${DECOMPRESSED_KYLIN_PACKAGE} ]]; then
+  if [[ -d ${KYLIN_HOME} ]]; then
     logging warn "Kylin package already decompress, skip decompress ..."
   else
     logging warn "Kylin package decompressing ..."
     ### unzip kylin tar file
     tar -zxf ${KYLIN_PACKAGE}
+    ### make kylin home directory
+    sudo mv ${HOME_DIR}/${DECOMPRESSED_KYLIN_PACKAGE} ${KYLIN_HOME}
   fi
 
   logging info "Kylin inited ..."
@@ -651,13 +689,13 @@ function start_kylin() {
 }
 
 function sample_for_kylin() {
-  if [[ ${IS_SCALED} == 'false' ]]; then
-      ${KYLIN_HOME}/bin/sample.sh
-      if [[ $? -ne 0 ]]; then
-        logging error "Sample for kylin is failed, please check ..."
-      else
-        logging info "Sample for kylin is successful, enjoy it ..."
-      fi
+  if [[ ${IS_SCALED} == "false" ]]; then
+    ${KYLIN_HOME}/bin/sample.sh
+    if [[ $? -ne 0 ]]; then
+      logging error "Sample for kylin is failed, please check ..."
+    else
+      logging info "Sample for kylin is successful, enjoy it ..."
+    fi
   else
     logging info "It is unnecessary to sample data in scaled mode. "
   fi

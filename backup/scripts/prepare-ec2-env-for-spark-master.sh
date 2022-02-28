@@ -71,13 +71,12 @@ function help() {
                     --db-password db-password-for-hive-metadata
                     --db-user db-user-for-hive-metadata
                     --db-port db-port-for-hive-metadata
-                    --local-soft whether-to-use-local-cache+soft-affinity"
+                    --local-soft whether-to-use-local-cache+soft-affinity
+                    --hadoop-version hadoop-version-for-cluster
+                    --spark-version spark-version-for-cluster
+                    --hive-version hive-version-for-cluster"
   exit 0
 }
-
-if [[ $# -ne 14 ]]; then
-  help
-fi
 
 while [[ $# != 0 ]]; do
   if [[ $1 == "--bucket-url" ]]; then
@@ -95,6 +94,12 @@ while [[ $# != 0 ]]; do
     DATABASE_PORT=$2
   elif [[ $1 == "--local-soft" ]]; then
     LOCAL_CACHE_SOFT_AFFINITY=$2
+  elif [[ $1 == "--hadoop-version" ]]; then
+    HADOOP_VERSION=$2
+  elif [[ $1 == "--spark-version" ]]; then
+    SPARK_VERSION=$2
+  elif [[ $1 == "--hive-version" ]]; then
+    HIVE_VERSION=$2
   else
     help
   fi
@@ -106,9 +111,17 @@ done
 # Prepare Steps
 ### Parameters for Spark and Kylin
 #### ${SPARK_VERSION:0:1} get 2 from 2.4.7
-HADOOP_VERSION=3.2.0
-SPARK_VERSION=3.1.1
-HIVE_VERSION=2.3.9
+if [[ -z "$HADOOP_VERSION" ]]; then
+  HADOOP_VERSION=3.2.0
+fi
+
+if [[ -z "$SPARK_VERSION" ]]; then
+  SPARK_VERSION=3.1.1
+fi
+
+if [[ -z "$HIVE_VERSION" ]]; then
+  HIVE_VERSION=2.3.9
+fi
 
 LOCAL_CACHE_DIR=/home/ec2-user/ssd
 
@@ -245,6 +258,10 @@ function prepare_hadoop() {
   else
     logging info "Downloading Hadoop package ${HADOOP_PACKAGE} ..."
     aws s3 cp ${PATH_TO_BUCKET}/tar/${HADOOP_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+    if [[ $? -ne 0  ]]; then
+        logging error "Downloading ${HADOOP_PACKAGE} failed, please check."
+        exit 1
+    fi
     #      # wget cost lot time
     #      wget https://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}/${HADOOP_PACKAGE}
   fi
@@ -315,6 +332,10 @@ function prepare_hive() {
   else
     logging info "Downloading ${HIVE_PACKAGE} ..."
     aws s3 cp ${PATH_TO_BUCKET}/tar/${HIVE_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+    if [[ $? -ne 0  ]]; then
+        logging error "Downloading ${HIVE_PACKAGE} failed, please check."
+        exit 1
+    fi
     #      # wget cost lot time
     #      wget https://downloads.apache.org/hive/hive-${HIVE_VERSION}/${HIVE_PACKAGE}
   fi
@@ -425,6 +446,10 @@ function prepare_spark() {
   else
     logging warn "Downloading ${SPARK_PACKAGE} ..."
     aws s3 cp ${PATH_TO_BUCKET}/tar/${SPARK_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+    if [[ $? -ne 0  ]]; then
+        logging error "Downloading ${SPARK_PACKAGE} failed, please check."
+        exit 1
+    fi
     #      # wget cost lot time
     #      wget http://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/${SPARK_PACKAGE}
   fi
