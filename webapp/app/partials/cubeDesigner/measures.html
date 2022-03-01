@@ -165,7 +165,7 @@
                                   ng-model="newMeasure.function.parameter.value"
                                   required
                                   >
-                                  <ui-select-match placeholder="Select Measure" style="overflow: auto;">{{$select.selected}}</ui-select-match>
+                                  <ui-select-match placeholder="{{'Select Measure' | translate}}" style="overflow: auto;">{{$select.selected}}</ui-select-match>
                                   <ui-select-choices repeat="column in measureParamValueColumn | filter:$select.search" style="word-break:break-all;">
                                     <span ng-bind-html="column | highlight: $select.search"></span>
                                   </ui-select-choices>

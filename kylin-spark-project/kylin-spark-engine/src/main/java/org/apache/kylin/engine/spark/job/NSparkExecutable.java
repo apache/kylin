@@ -27,6 +27,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -34,6 +35,7 @@ import java.util.Set;
 import java.util.Objects;
 import java.util.Map.Entry;
 
+import org.apache.kylin.common.util.ParameterFilter;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
@@ -110,10 +112,20 @@ public class NSparkExecutable extends AbstractExecutable {
 
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-        //context.setLogPath(getSparkDriverLogHdfsPath(context.getConfig()));
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         CubeInstance cube = cubeMgr.getCube(this.getCubeName());
         KylinConfig config = cube.getConfig();
+
+        Map<String, String> overrideKylinProps = new HashMap<>();
+        LinkedHashMap<String, String> cubeConfig = cube.getDescriptor().getOverrideKylinProps();
+        LinkedHashMap<String, String> projectConfig = cube.getProjectInstance().getOverrideKylinProps();
+        overrideKylinProps.putAll(projectConfig);
+        overrideKylinProps.putAll(cubeConfig);
+        for (Map.Entry<String, String> configEntry : overrideKylinProps.entrySet()) {
+            ParameterFilter.checkSparkConf(configEntry.getKey());
+            ParameterFilter.checkSparkConf(configEntry.getValue());
+        }
+
         this.setLogPath(getSparkDriverLogHdfsPath(context.getConfig()));
         config = wrapConfig(config);
 

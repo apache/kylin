@@ -21,6 +21,7 @@ package org.apache.kylin.cube;
 import static org.apache.kylin.shaded.com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.kylin.cube.cuboid.CuboidModeEnum.CURRENT;
 import static org.apache.kylin.cube.cuboid.CuboidModeEnum.RECOMMEND;
+import static org.apache.kylin.cube.cuboid.CuboidModeEnum.CURRENT_WITH_BASE;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -458,9 +459,11 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     public Set<Long> getCuboidsByMode(CuboidModeEnum cuboidMode) {
-        if (cuboidMode == null || cuboidMode == CURRENT) {
-            return getCuboidScheduler().getAllCuboidIds();
+        Set<Long> currentCuboid = getCuboidScheduler().getAllCuboidIds();
+        if (cuboidMode == null || cuboidMode == CURRENT || cuboidMode == CURRENT_WITH_BASE) {
+            return currentCuboid;
         }
+
         Set<Long> cuboidsRecommend = getCuboidsRecommend();
         if (cuboidsRecommend == null || cuboidMode == RECOMMEND) {
             return cuboidsRecommend;

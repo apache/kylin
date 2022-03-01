@@ -22,6 +22,8 @@ import org.apache.calcite.DataContext;
 import org.apache.calcite.linq4j.Enumerable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.kylin.common.QueryContextFacade;
+import org.apache.kylin.common.QueryTrace;
 import org.apache.kylin.query.exec.QueryEngine;
 import org.apache.kylin.query.runtime.plans.ResultPlan;
 import org.apache.kylin.query.runtime.plans.ResultType;
@@ -55,6 +57,7 @@ public class SparkEngine implements QueryEngine {
 
     private Dataset<Row> toSparkPlan(DataContext dataContext, RelNode relNode) {
         log.trace("Begin planning spark plan.");
+        QueryContextFacade.current().getQueryTrace().startSpan(QueryTrace.PREPARE_AND_SUBMIT_JOB);
         long start = System.currentTimeMillis();
         CalciteToSparkPlaner calciteToSparkPlaner = new CalciteToSparkPlaner(dataContext);
         calciteToSparkPlaner.go(relNode);

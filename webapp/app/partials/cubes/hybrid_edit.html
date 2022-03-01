@@ -42,7 +42,7 @@
             <div class="row">
               <label class="col-xs-3 control-label no-padding-right font-color-default" for="hybridName">{{'Hybrid Name' | translate}}</label>
               <div class="col-xs-9" ng-class="{ 'has-error': $validator.name.$invalid && $validator.name.$dirty }">
-                <input type="text" name="name" class="form-control" id="hybridName" placeholder="Hybrid Name" ng-disabled="isFormDisabled || isEdit" ng-model="form.name" ng-pattern="/^\w+$/">
+                <input type="text" name="name" class="form-control" id="hybridName" placeholder="{{'Hybrid Name' | translate}}" ng-disabled="isFormDisabled || isEdit" ng-model="form.name" ng-pattern="/^\w+$/">
                 <small class="help-block" ng-show="!$validator.name.$error.required && $validator.name.$invalid && $validator.name.$dirty">{{'Hybrid name is invalid.' | translate}}</small>
               </div>
             </div>

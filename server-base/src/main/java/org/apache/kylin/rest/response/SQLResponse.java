@@ -95,6 +95,8 @@ public class SQLResponse implements Serializable {
     // indicating the lazy query start time, -1 indicating not enabled
     protected long lazyQueryStartTime = -1L;
 
+    private List<SQLResponseTrace> traces;
+
     public SQLResponse() {
     }
 
@@ -294,6 +296,14 @@ public class SQLResponse implements Serializable {
 
     public void setRealizationTypes(String realizationTypes) {
         this.realizationTypes = realizationTypes;
+    }
+
+    public void setTraces(List<SQLResponseTrace> traces) {
+        this.traces = traces;
+    }
+
+    public List<SQLResponseTrace> getTraces() {
+        return traces;
     }
 
     @JsonIgnore

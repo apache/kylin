@@ -69,12 +69,12 @@ public class QueryContext {
     private boolean isHighPriorityQuery = false;
     private boolean isTableIndex = false;
     private boolean withoutSyntaxError;
+    private QueryTrace queryTrace = new QueryTrace();
 
     private AtomicBoolean isRunning = new AtomicBoolean(true);
     private AtomicReference<Throwable> throwable = new AtomicReference<>();
     private String stopReason;
     private List<QueryStopListener> stopListeners = Lists.newCopyOnWriteArrayList();
-
     private List<RPCStatistics> rpcStatisticsList = Lists.newCopyOnWriteArrayList();
     private Map<Integer, CubeSegmentStatisticsResult> cubeSegmentStatisticsResultMap = Maps.newConcurrentMap();
 
@@ -203,6 +203,14 @@ public class QueryContext {
 
     public long addAndGetMetadataTime(long time) {
         return metadataTime.addAndGet(time);
+    }
+
+    public QueryTrace getQueryTrace() {
+        return queryTrace;
+    }
+
+    public void setQueryTrace(QueryTrace queryTrace) {
+        this.queryTrace = queryTrace;
     }
 
     //Scaned time with Spark

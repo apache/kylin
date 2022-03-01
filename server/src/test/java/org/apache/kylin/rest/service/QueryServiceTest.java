@@ -120,4 +120,10 @@ public class QueryServiceTest extends ServiceTestBase {
             Assert.assertTrue(wrapper == null || wrapper.get() == null);
         }
     }
+
+    @Test
+    public void testClassName() throws ClassNotFoundException {
+        Assert.assertEquals(Class.forName("java.lang.Object"), queryService.getValidClass("java.io.DataInputStream"));
+        Assert.assertEquals(Class.forName("java.lang.String"), queryService.getValidClass("java.lang.String"));
+    }
 }

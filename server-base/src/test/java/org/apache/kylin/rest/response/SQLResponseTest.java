@@ -36,7 +36,7 @@ public class SQLResponseTest {
                 "realizationTypes", "affectedRowCount", "isException",
                 "exceptionMessage", "duration", "partial", "totalScanCount", "hitExceptionCache",
                 "storageCacheUsed", "sparkPool", "pushDown", "traceUrl", "totalScanBytes",
-                "totalScanFiles", "metadataTime", "totalSparkScanTime" };
+                "totalScanFiles", "metadataTime", "totalSparkScanTime", "traces"};
 
         SQLResponse sqlResponse = new SQLResponse(null, null, "learn_cube", 100, false, null, false, false);
         String jsonStr = JsonUtil.writeValueAsString(sqlResponse);

@@ -21,7 +21,6 @@ package org.apache.kylin.engine.spark.utils
 import java.util.concurrent.ConcurrentHashMap
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.scheduler.{SparkListener, SparkListenerEvent}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution._
 import org.apache.spark.sql.execution.aggregate.{HashAggregateExec, ObjectHashAggregateExec, SortAggregateExec}
@@ -33,20 +32,18 @@ object JobMetricsUtils extends Logging {
   private val aggs = List(classOf[HashAggregateExec], classOf[SortAggregateExec], classOf[ObjectHashAggregateExec])
   private val joins = List(classOf[BroadcastHashJoinExec], classOf[ShuffledHashJoinExec], classOf[SortMergeJoinExec],
     classOf[BroadcastNestedLoopJoinExec], classOf[StreamingSymmetricHashJoinExec])
-  var sparkListener : SparkListener = _
+
+  private val executionIdToListener = new ConcurrentHashMap[String, QueryExecutionInterceptListener]()
+
   def collectMetrics(executionId: String): JobMetrics = {
     var metrics = new JobMetrics
-    val execution = QueryExecutionCache.getQueryExecution(executionId)
-    if (execution != null) {
-      metrics = collectOutputRows(execution.executedPlan)
+    val listener = executionIdToListener.getOrDefault(executionId,null)
+    if (listener != null && listener.queryExecution.isDefined) {
+      metrics = collectOutputRows(listener.queryExecution.get.executedPlan)
       logInfo(s"Collect output rows successfully. $metrics")
+    } else {
+      logInfo(s"Collect output rows failed.")
     }
-
-    // comment below source, because it always collect failed when using apache spark.
-
-    // else {
-    // logDebug(s"Collect output rows failed.")
-    //}
     metrics
   }
 
@@ -90,61 +87,17 @@ object JobMetricsUtils extends Logging {
     rowMetrics
   }
 
-  /**
-   * When using a custom spark which sent event which contain QueryExecution belongs to a specific N_EXECUTION_ID_KEY,
-   * kylin can cache QueryExecution object into QueryExecutionCache and collect metrics such as bytes/row count for a cuboid
-   *
-     override def onOtherEvent(event: SparkListenerEvent): Unit = event match {
-        case e: PostQueryExecutionForKylin =>
-          val nExecutionId = e.localProperties.getProperty(QueryExecutionCache.N_EXECUTION_ID_KEY, "")
-          if (nExecutionId != "" && e.queryExecution != null) {
-            QueryExecutionCache.setQueryExecution(nExecutionId, e.queryExecution)
-          } else {
-            logWarning("executionIdStr is null, can't get QueryExecution from SQLExecution.")
-          }
-        case _ => // Ignore
-      }
-   */
-  def registerListener(ss: SparkSession): Unit = {
-    sparkListener = new SparkListener {
-
-      override def onOtherEvent(event: SparkListenerEvent): Unit = event match {
-        case _ => // Ignore
-      }
-    }
-    ss.sparkContext.addSparkListener(sparkListener)
+  def registerQueryExecutionListener(ss: SparkSession, executionId: String): Unit = {
+    val listener = new QueryExecutionInterceptListener(executionId)
+    executionIdToListener.put(executionId, listener)
+    ss.listenerManager.register(listener)
   }
 
-  def unRegisterListener(ss: SparkSession) : Unit = {
-    if (sparkListener != null) {
-      ss.sparkContext.removeSparkListener(sparkListener)
+  def unRegisterQueryExecutionListener(ss: SparkSession, executionId: String) : Unit = {
+    val listener =  executionIdToListener.remove(executionId)
+    if (listener != null) {
+      ss.listenerManager.unregister(listener)
     }
   }
 }
 
-object QueryExecutionCache extends Logging {
-  val N_EXECUTION_ID_KEY = "kylin.query.execution.id"
-
-  private val executionIdToQueryExecution = new ConcurrentHashMap[String, QueryExecution]()
-
-  def getQueryExecution(executionId: String): QueryExecution = {
-    if (executionId != null) {
-      executionIdToQueryExecution.get(executionId)
-    } else {
-      null
-    }
-  }
-
-  def setQueryExecution(executionId: String, queryExecution: QueryExecution): Unit = {
-    if (executionId != null) {
-      executionIdToQueryExecution.put(executionId, queryExecution)
-    } else {
-      logWarning("kylin.query.execution.id is null, don't put QueryExecution into QueryExecutionCache.")
-    }
-  }
-
-  def removeQueryExecution(executionId: String): Unit = {
-    executionIdToQueryExecution.remove(executionId)
-  }
-
-}

@@ -28,7 +28,7 @@
     <div class="form-group required row">
       <label for="topic" class="col-sm-3 control-label font-color-default">Topic</label>
       <div class="col-sm-6">
-        <input type="text" class="form-control" id="topic" ng-model="streamingConfig.properties.topic" name="topic" placeholder="Input Kafka Topic" required autofocus>
+        <input type="text" class="form-control" id="topic" ng-model="streamingConfig.properties.topic" name="topic" placeholder="{{'Input Kafka Topic' | translate}}" required autofocus>
         <small class="help-block" ng-show="kafka_config_from_v2.topic.$error.required && kafka_config_from_v2.topic.$dirty">
           {{'Topic is empty' | translate}}
         </small>

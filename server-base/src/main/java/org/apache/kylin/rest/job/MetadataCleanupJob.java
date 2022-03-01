@@ -27,7 +27,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.spark.job.NSparkCubingJob;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
@@ -106,7 +106,7 @@ public class MetadataCleanupJob {
             ExecutableOutputPO output = executableDao.getJobOutput(jobId);
             String status = output.getStatus();
             String jobType = job.getType();
-            if (jobType.equals(CubingJob.class.getName())
+            if (jobType.equals(NSparkCubingJob.class.getName())
                     || jobType.equals(CheckpointExecutable.class.getName())) {
                 if (StringUtils.equals(status, ExecutableState.SUCCEED.toString())
                         || StringUtils.equals(status, ExecutableState.DISCARDED.toString())) {

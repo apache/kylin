@@ -25,6 +25,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.kylin.common.KylinConfig;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
@@ -42,7 +43,7 @@ public class EncryptUtil {
             InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException, UnsupportedEncodingException {
         Cipher cipher = Cipher.getInstance("AES/CFB/PKCS5Padding");
         final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
-        IvParameterSpec ivSpec = new IvParameterSpec("AAAAAAAAAAAAAAAA".getBytes("UTF-8"));
+        IvParameterSpec ivSpec = new IvParameterSpec(KylinConfig.getInstanceFromEnv().getEncryptCipherIvSpec().getBytes("UTF-8"));
         cipher.init(cipherMode, secretKey, ivSpec);
         return cipher;
     }

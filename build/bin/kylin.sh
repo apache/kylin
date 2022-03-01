@@ -33,11 +33,9 @@ mkdir -p ${KYLIN_HOME}/ext
 source ${dir}/set-java-home.sh
 
 function retrieveDependency() {
-    #retrive $hive_dependency and $hbase_dependency
     if [[ -z $reload_dependency && `ls -1 ${dir}/cached-* 2>/dev/null | wc -l` -eq 6 ]]
     then
         echo "Using cached dependency..."
-        source ${dir}/cached-hive-dependency.sh
         #retrive $hbase_dependency
         metadataUrl=`${dir}/get-properties.sh kylin.metadata.url`
         if [[ "${metadataUrl##*@}" == "hbase" ]]
@@ -45,11 +43,8 @@ function retrieveDependency() {
             source ${dir}/cached-hbase-dependency.sh
         fi
         source ${dir}/cached-hadoop-conf-dir.sh
-        # source ${dir}/cached-kafka-dependency.sh
         source ${dir}/cached-spark-dependency.sh
-        # source ${dir}/cached-flink-dependency.sh
     else
-        source ${dir}/find-hive-dependency.sh
         #retrive $hbase_dependency
         metadataUrl=`${dir}/get-properties.sh kylin.metadata.url`
         if [[ "${metadataUrl##*@}" == "hbase" ]]
@@ -57,13 +52,8 @@ function retrieveDependency() {
             source ${dir}/find-hbase-dependency.sh
         fi
         source ${dir}/find-hadoop-conf-dir.sh
-        # source ${dir}/find-kafka-dependency.sh
         source ${dir}/find-spark-dependency.sh
-        # source ${dir}/find-flink-dependency.sh
     fi
-
-    # Replace jars for different hadoop dist
-    bash ${dir}/replace-jars-under-spark.sh
 
     # get hdp_version
     if [ -z "${hdp_version}" ]; then
@@ -71,58 +61,7 @@ function retrieveDependency() {
         verbose "hdp_version is ${hdp_version}"
     fi
 
-    # Replace jars for HDI
-    KYLIN_SPARK_JARS_HOME="${KYLIN_HOME}/spark/jars"
-    if [[ -d "/usr/hdp/current/hdinsight-zookeeper" && $hdp_version == "2"* ]]
-    then
-       echo "The current Hadoop environment is HDI3, will replace some jars package for ${KYLIN_HOME}/spark/jars"
-       if [[ -f ${KYLIN_HOME}/tomcat/webapps/kylin.war ]]
-       then
-          if [[ ! -d ${KYLIN_HOME}/tomcat/webapps/kylin ]]
-          then
-             mkdir ${KYLIN_HOME}/tomcat/webapps/kylin
-          fi
-          mv ${KYLIN_HOME}/tomcat/webapps/kylin.war ${KYLIN_HOME}/tomcat/webapps/kylin
-          cd ${KYLIN_HOME}/tomcat/webapps/kylin
-          jar -xf ${KYLIN_HOME}/tomcat/webapps/kylin/kylin.war
-          if [[ -f ${KYLIN_HOME}/tomcat/webapps/kylin/WEB-INF/lib/guava-14.0.jar ]]
-          then
-             echo "Remove ${KYLIN_HOME}/tomcat/webapps/kylin/WEB-INF/lib/guava-14.0.jar to avoid version conflicts"
-             rm -rf ${KYLIN_HOME}/tomcat/webapps/kylin/WEB-INF/lib/guava-14.0.jar
-             rm -rf ${KYLIN_HOME}/tomcat/webapps/kylin/kylin.war
-             cd ${KYLIN_HOME}/
-          fi
-       fi
-
-       if [[ -d "${KYLIN_SPARK_JARS_HOME}" ]]
-       then
-          if [[ -f ${KYLIN_HOME}/hdi3_spark_jars_flag ]]
-          then
-          echo "Required jars have been added to ${KYLIN_HOME}/spark/jars, skip this step."
-          else
-             rm -rf ${KYLIN_HOME}/spark/jars/hadoop-*
-             cp /usr/hdp/current/spark2-client/jars/hadoop-* $KYLIN_SPARK_JARS_HOME
-             cp /usr/hdp/current/spark2-client/jars/azure-* $KYLIN_SPARK_JARS_HOME
-             cp /usr/hdp/current/hadoop-client/lib/microsoft-log4j-etwappender-1.0.jar $KYLIN_SPARK_JARS_HOME
-             cp /usr/hdp/current/hadoop-client/lib/hadoop-lzo-0.6.0.${hdp_version}.jar $KYLIN_SPARK_JARS_HOME
-
-             rm -rf $KYLIN_HOME/spark/jars/guava-14.0.1.jar
-             cp /usr/hdp/current/spark2-client/jars/guava-24.1.1-jre.jar $KYLIN_SPARK_JARS_HOME
-
-             echo "Upload spark jars to HDFS"
-             hdfs dfs -test -d /spark2_jars
-             if [ $? -eq 1 ]
-             then
-                hdfs dfs -mkdir /spark2_jars
-             fi
-             hdfs dfs -put $KYLIN_SPARK_JARS_HOME/* /spark2_jars
-
-             touch ${KYLIN_HOME}/hdi3_spark_jars_flag
-          fi
-       else
-          echo "${KYLIN_HOME}/spark/jars dose not exist. You can run ${KYLIN_HOME}/download-spark.sh to download spark."
-       fi
-    fi
+    source ${KYLIN_HOME}/bin/prepare-hadoop-dependency.sh
 
     tomcat_root=${dir}/../tomcat
     export tomcat_root
@@ -141,26 +80,15 @@ function retrieveDependency() {
         spring_profile="${spring_profile},${additional_security_profiles}"
     fi
 
-    # compose hadoop_dependencies
-    hadoop_dependencies=${hadoop_dependencies}:`hadoop classpath`
-    if [ -n "${hive_dependency}" ]; then
-        hadoop_dependencies=${hive_dependency}:${hadoop_dependencies}
-    fi
-    if [ -n "${kafka_dependency}" ]; then
-        hadoop_dependencies=${hadoop_dependencies}:${kafka_dependency}
-    fi
-
     # compose KYLIN_TOMCAT_CLASSPATH
     tomcat_classpath=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*
-    export KYLIN_TOMCAT_CLASSPATH=${tomcat_classpath}:${KYLIN_HOME}/conf:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${hadoop_dependencies}:${flink_dependency}
+    export KYLIN_TOMCAT_CLASSPATH=${tomcat_classpath}:${KYLIN_HOME}/conf:${KYLIN_HOME}/hadoop_conf:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${SPARK_HOME}/jars/*
 
     # compose KYLIN_TOOL_CLASSPATH
-    export KYLIN_TOOL_CLASSPATH=${KYLIN_HOME}/conf:${KYLIN_HOME}/tool/*:${KYLIN_HOME}/ext/*:${hadoop_dependencies}
+    export KYLIN_TOOL_CLASSPATH=${KYLIN_HOME}/conf:${KYLIN_HOME}/tool/*:${KYLIN_HOME}/ext/*:${SPARK_HOME}/jars/*
 
     # compose kylin_common_opts
-    kylin_common_opts="-Dkylin.hive.dependency=${hive_dependency} \
-    -Dkylin.kafka.dependency=${kafka_dependency} \
-    -Dkylin.hadoop.conf.dir=${kylin_hadoop_conf_dir} \
+    kylin_common_opts="-Dkylin.hadoop.conf.dir=${kylin_hadoop_conf_dir} \
     -Dkylin.server.host-address=${KYLIN_REST_ADDRESS} \
     -Dspring.profiles.active=${spring_profile} \
     -Dhdp.version=${hdp_version}"
@@ -212,7 +140,6 @@ function prepareFairScheduler() {
   <pool name="query_pushdown">
     <schedulingMode>FAIR</schedulingMode>
     <weight>1</weight>
-    <minShare>0</minShare>
   </pool>
   <pool name="heavy_tasks">
     <schedulingMode>FAIR</schedulingMode>
@@ -227,7 +154,6 @@ function prepareFairScheduler() {
   <pool name="vip_tasks">
     <schedulingMode>FAIR</schedulingMode>
     <weight>15</weight>
-    <minShare>0</minShare>
   </pool>
 </allocations>
 EOL

@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -66,6 +67,7 @@ import org.apache.kylin.cache.cachemanager.MemcachedCacheManager;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryContextFacade;
+import org.apache.kylin.common.QueryTrace;
 import org.apache.kylin.metrics.QuerySparkMetrics;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
@@ -113,6 +115,7 @@ import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
+import org.apache.kylin.rest.response.SQLResponseTrace;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.QueryRequestLimits;
@@ -219,6 +222,9 @@ public class QueryService extends BasicService {
             badQueryDetector.queryStart(Thread.currentThread(), sqlRequest, user, queryId);
 
             ret = queryWithSqlMassage(sqlRequest);
+            ret.setTraces(QueryContextFacade.current().getQueryTrace().spans().stream()
+                    .map(span -> new SQLResponseTrace(span.getName(), span.getGroup(), span.getDuration()))
+                    .collect(Collectors.toList()));
             return ret;
 
         } finally {
@@ -386,6 +392,11 @@ public class QueryService extends BasicService {
         stringBuilder.append("Used Spark pool: ").append(response.getSparkPool()).append(newLine);
         stringBuilder.append("Trace URL: ").append(response.getTraceUrl()).append(newLine);
         stringBuilder.append("Message: ").append(response.getExceptionMessage()).append(newLine);
+        if (response.getTraces() != null) {
+            stringBuilder.append("Time consuming for each query stage: -----------------").append(newLine);
+            response.getTraces().forEach(trace -> stringBuilder.append(trace.getName() + " : " + trace.getDuration() + "ms").append(newLine));
+            stringBuilder.append("Time consuming for each query stage: -----------------").append(newLine);
+        }
         stringBuilder.append("==========================[QUERY]===============================").append(newLine);
 
         logger.info(stringBuilder.toString());
@@ -408,8 +419,10 @@ public class QueryService extends BasicService {
     public SQLResponse doQueryWithCache(SQLRequest sqlRequest, boolean isQueryInspect) {
         Message msg = MsgPicker.getMsg();
         sqlRequest.setUsername(getUserName());
+        final QueryContext queryContext = QueryContextFacade.current();
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        queryContext.getQueryTrace().startSpan(QueryTrace.SQL_TRANSFORMATION);
         if (!ServerMode.SERVER_MODE.canServeQuery()) {
             throw new BadRequestException(
                     String.format(Locale.ROOT, msg.getQUERY_NOT_ALLOWED(), kylinConfig.getServerMode()));
@@ -429,8 +442,6 @@ public class QueryService extends BasicService {
 
         if (sqlRequest.getBackdoorToggles() != null)
             BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
-
-        final QueryContext queryContext = QueryContextFacade.current();
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
             // force clear the query context before a new query
@@ -1023,6 +1034,7 @@ public class QueryService extends BasicService {
         try {
             stat = conn.createStatement();
             processStatementAttr(stat, sqlRequest);
+            QueryContextFacade.current().getQueryTrace().startSpan(QueryTrace.SQL_PARSE_AND_OPTIMIZE);
             resultSet = stat.executeQuery(correctedSql);
 
             r = createResponseFromResultSet(resultSet);
@@ -1251,12 +1263,7 @@ public class QueryService extends BasicService {
             throws SQLException {
         boolean isNull = (null == param.getValue());
 
-        Class<?> clazz;
-        try {
-            clazz = Class.forName(param.getClassName());
-        } catch (ClassNotFoundException e) {
-            throw new InternalErrorException(e);
-        }
+        Class<?> clazz = getValidClass(param.getClassName());
 
         Rep rep = Rep.of(clazz);
 
@@ -1323,6 +1330,25 @@ public class QueryService extends BasicService {
         } catch (Exception e) {
             return -1;
         }
+    }
+
+    public Class<?> getValidClass(String className) {
+        Class<?> clazz;
+        try {
+            List<String> classList = new ArrayList<>();
+            Rep.VALUE_MAP.keySet().forEach(key -> {
+                classList.add(key.getName());
+            });
+            if (classList.contains(className)) {
+                clazz = Class.forName(className);
+            } else {
+                clazz = Class.forName("java.lang.Object");
+            }
+            logger.debug("Class parameter for sql is: " + clazz.getName());
+        } catch (ClassNotFoundException e) {
+            throw new InternalErrorException(e);
+        }
+        return clazz;
     }
 
     public void setCacheManager(CacheManager cacheManager) {

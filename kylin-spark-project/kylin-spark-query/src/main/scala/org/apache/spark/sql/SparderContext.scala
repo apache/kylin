@@ -54,7 +54,7 @@ object SparderContext extends Logging {
   @volatile
   var master_app_url: String = _
 
-  def getOriginalSparkSession: SparkSession = withClassLoad {
+  def getOriginalSparkSession: SparkSession = {
     if (spark == null || spark.sparkContext.isStopped) {
       logInfo("Init spark.")
       initSpark()
@@ -92,7 +92,7 @@ object SparderContext extends Logging {
     spark != null && !spark.sparkContext.isStopped
   }
 
-  def restartSpark(): Unit = withClassLoad {
+  def restartSpark(): Unit = {
     this.synchronized {
       if (spark != null && !spark.sparkContext.isStopped) {
         Utils.tryWithSafeFinally {
@@ -107,7 +107,7 @@ object SparderContext extends Logging {
     }
   }
 
-  def stopSpark(): Unit = withClassLoad {
+  def stopSpark(): Unit = {
     this.synchronized {
       if (spark != null && !spark.sparkContext.isStopped) {
         Utils.tryWithSafeFinally {
@@ -119,7 +119,7 @@ object SparderContext extends Logging {
     }
   }
 
-  def init(): Unit = withClassLoad {
+  def init(): Unit = {
     getOriginalSparkSession
   }
 
@@ -127,7 +127,7 @@ object SparderContext extends Logging {
     getSparkSession.sparkContext.conf.get(key)
   }
 
-  def initSpark(): Unit = withClassLoad {
+  def initSpark(): Unit = {
     this.synchronized {
       if (initializingThread == null && (spark == null || spark.sparkContext.isStopped)) {
         initializingThread = new Thread(new Runnable {
@@ -248,21 +248,6 @@ object SparderContext extends Logging {
   def validateSql(sqlText: String): LogicalPlan = {
     val logicalPlan: LogicalPlan = getSparkSession.sessionState.sqlParser.parsePlan(sqlText)
     logicalPlan
-  }
-
-  /**
-   * To avoid spark being affected by the environment, we use spark classloader load spark.
-   *
-   * @param body Somewhere if you use spark
-   * @tparam T Action function
-   * @return The body return
-   */
-  def withClassLoad[T](body: => T): T = {
-    // val originClassLoad = Thread.currentThread().getContextClassLoader
-    Thread.currentThread().setContextClassLoader(ClassLoaderUtils.getSparkClassLoader)
-    val t = body
-    // Thread.currentThread().setContextClassLoader(originClassLoad)
-    t
   }
 
   val _isAsyncQuery = new ThreadLocal[JBoolean]

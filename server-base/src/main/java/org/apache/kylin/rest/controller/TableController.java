@@ -34,7 +34,6 @@ import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.HiveTableRequest;
-import org.apache.kylin.rest.response.TableSnapshotResponse;
 import org.apache.kylin.rest.service.TableACLService;
 import org.apache.kylin.rest.service.TableService;
 import org.slf4j.Logger;
@@ -222,9 +221,9 @@ public class TableController extends BasicController {
 
     @RequestMapping(value = "/{project}/{tableName}/snapshots", method = { RequestMethod.GET })
     @ResponseBody
-    public List<TableSnapshotResponse> getTableSnapshots(@PathVariable final String project,
+    public void getTableSnapshots(@PathVariable final String project,
             @PathVariable final String tableName) throws IOException {
-        throw new UnsupportedOperationException("API getTableSnapshots is not supported in Kylin 4.0 .");
+        logger.warn("API getTableSnapshots is not supported in Kylin 4.0 .");
     }
 
     @RequestMapping(value = "/supported_datetime_patterns", method = { RequestMethod.GET })

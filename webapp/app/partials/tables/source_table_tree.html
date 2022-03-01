@@ -56,7 +56,7 @@
   <div class="modal-body">
     <span><strong>Project: </strong>{{ $parent.projectName!=null?$parent.projectName:'NULL'}}</span>
     <div class="form-group searchBox">
-      <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="predicate" />
+      <input type="text" placeholder="{{'Filter' | translate}} ..." class="nav-search-input" ng-model="predicate" />
     </div>
     <loading ng-if="!hiveLoaded" text="Loading Databases..."></loading>
     <treecontrol class="tree-light check" tree-model="treedata" selected-nodes="selectedNodes" filter-expression="predicate" on-selection="showSelected(node)" on-node-toggle="showToggle(node)" options="treeOptions">

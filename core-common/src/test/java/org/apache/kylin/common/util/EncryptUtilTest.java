@@ -18,10 +18,21 @@
 
 package org.apache.kylin.common.util;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
-public class EncryptUtilTest {
+public class EncryptUtilTest extends LocalFileMetadataTestCase {
+    @Before
+    public void setUp() throws Exception {
+        this.createTestMetadata();
+    }
+
+    @After
+    public void after() throws Exception {
+        this.cleanupTestMetadata();
+    }
 
     @Test
     public void testAESEncrypt(){

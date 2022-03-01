@@ -23,10 +23,8 @@ import org.apache.kylin.common.KylinConfig;
 public class HiveClientFactory {
     
     public static IHiveClient getHiveClient() {
-        if ("cli".equals(KylinConfig.getInstanceFromEnv().getHiveClientMode())) {
-            return new CLIHiveClient();
-        } else if ("beeline".equals(KylinConfig.getInstanceFromEnv().getHiveClientMode())) {
-            return new BeelineHiveClient(KylinConfig.getInstanceFromEnv().getHiveBeelineParams());
+        if ("spark_catalog".equals(KylinConfig.getInstanceFromEnv().getHiveClientMode())) {
+            return new SparkHiveClient();
         } else {
             throw new RuntimeException("cannot recognize hive client mode");
         }

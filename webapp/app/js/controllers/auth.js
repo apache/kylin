@@ -88,13 +88,9 @@ KylinApp.controller('LoginCtrl', function ($scope, $rootScope, $location, $base6
       $location.path(UserService.getHomePage());
     }, function (error) {
       $scope.loading = false;
-      /* $scope.error = error.status < 500
+      $scope.error = error.status < 500
         ? "Unable to login, please check your username/password."
-        : "System error, please contact your administrator."; */
-	  const data = {"userDetails":{"username":"ADMIN","password":"$2a$10$o3ktIWsGYxXNuUWQiYlZXOW5hWcqyNAFQsSSCSEWoC/BRVMAUjL32","authorities":[{"authority":"ROLE_ADMIN"},{"authority":"ROLE_ANALYST"},{"authority":"ROLE_MODELER"},{"authority":"ALL_USERS"}],"disabled":false,"defaultPassword":false,"locked":false,"lockedTime":0,"wrongTime":0,"uuid":"1f7f93c3-fc89-07b0-0006-6fa076cfcaba","last_modified":1644311460839,"version":"4.0.0.0"}};
-      $rootScope.$broadcast('event:loginConfirmed');
-      UserService.setCurUser(data);
-      $location.path(UserService.getHomePage());
+        : "System error, please contact your administrator.";
     });
   };
 

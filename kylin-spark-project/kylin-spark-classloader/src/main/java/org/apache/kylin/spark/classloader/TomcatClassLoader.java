@@ -58,7 +58,6 @@ public class TomcatClassLoader extends ParallelWebappClassLoader {
     }
 
     private static Logger logger = LoggerFactory.getLogger(TomcatClassLoader.class);
-    private SparkClassLoader sparkClassLoader;
 
     /**
      * Creates a DynamicClassLoader that can load classes dynamically
@@ -68,8 +67,6 @@ public class TomcatClassLoader extends ParallelWebappClassLoader {
      */
     public TomcatClassLoader(ClassLoader parent) throws IOException {
         super(parent);
-        sparkClassLoader = new SparkClassLoader(this);
-        ClassLoaderUtils.setSparkClassLoader(sparkClassLoader);
         ClassLoaderUtils.setOriginClassLoader(this);
         init();
     }
@@ -104,9 +101,6 @@ public class TomcatClassLoader extends ParallelWebappClassLoader {
         if (name.startsWith("org.apache.kylin.spark.classloader")) {
             return parent.loadClass(name);
         }
-        if (sparkClassLoader.classNeedPreempt(name)) {
-            return sparkClassLoader.loadClass(name);
-        }
         if (isParentCLPrecedent(name)) {
             logger.debug("Skipping exempt class " + name + " - delegating directly to parent");
             return parent.loadClass(name);
@@ -116,9 +110,6 @@ public class TomcatClassLoader extends ParallelWebappClassLoader {
 
     @Override
     public InputStream getResourceAsStream(String name) {
-        if (sparkClassLoader.fileNeedPreempt(name)) {
-            return sparkClassLoader.getResourceAsStream(name);
-        }
         return super.getResourceAsStream(name);
 
     }

@@ -74,7 +74,7 @@
                         autofocus="true"
                         close-on-select="false"
                         ng-model="modelsManager.selectedModel.dimensions[$index].columns" multiple>
-                        <ui-select-match placeholder="Select Column...">{{$item.name}}</ui-select-match>
+                        <ui-select-match placeholder="{{'Select Column' | translate}}...">{{$item.name}}</ui-select-match>
                         <ui-select-choices
                           repeat="column.name as column in getColumnsByAlias(dimension.table) | filter:$select.search|inMeaNotInDim:dimension.table:modelsManager.selectedModel.metrics">
                           {{column.name}}

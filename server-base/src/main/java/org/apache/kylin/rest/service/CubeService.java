@@ -35,6 +35,7 @@ import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.ParameterFilter;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -1152,10 +1153,10 @@ public class CubeService extends BasicService implements InitializingBean {
         String cmd = String.format(Locale.ROOT,
                 stringBuilder,
                 KylinConfig.getKylinHome(),
-                CliCommandExecutor.checkParameterWhiteList(srcCfgUri),
-                CliCommandExecutor.checkParameterWhiteList(dstCfgUri),
+                ParameterFilter.checkURI(srcCfgUri),
+                ParameterFilter.checkURI(dstCfgUri),
                 cube.getName(),
-                CliCommandExecutor.checkParameterWhiteList(projectName),
+                ParameterFilter.checkParameter(projectName),
                 config.isAutoMigrateCubeCopyAcl(),
                 config.isAutoMigrateCubePurge());
 

@@ -27,8 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Locale;
 
-import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ParameterFilter;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
@@ -195,8 +195,8 @@ public class JobController extends BasicController {
         checkRequiredArg("job_id", jobId);
         checkRequiredArg("step_id", stepId);
         checkRequiredArg("project", project);
-        String validatedPrj =  CliCommandExecutor.checkParameter(project);
-        String validatedStepId =  CliCommandExecutor.checkParameter(stepId);
+        String validatedPrj = ParameterFilter.checkParameter(project);
+        String validatedStepId =  ParameterFilter.checkParameter(stepId);
         String downloadFilename = String.format(Locale.ROOT, "%s_%s.log", validatedPrj, validatedStepId);
 
         String jobOutput = jobService.getAllJobStepOutput(jobId, stepId);

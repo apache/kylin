@@ -28,7 +28,7 @@
     <div class="form-group required row">
       <label for="topic" class="col-sm-3 control-label font-color-default">{{'Topic' | translate}}</label>
       <div class="col-sm-6">
-        <input type="text" class="form-control" id="topic" ng-model="streamingConfig.properties.topic" name="topic" placeholder="Input Kafka Topic" required autofocus>
+        <input type="text" class="form-control" id="topic" ng-model="streamingConfig.properties.topic" name="topic" placeholder="{{'Input Kafka Topic' | translate}}" required autofocus>
         <small class="help-block" ng-show="kafka_config_from.topic.$error.required && kafka_config_from.topic.$dirty">
           {{'Topic is empty' | translate}}
         </small>
@@ -50,7 +50,7 @@
             </small>
           </div>
           <div class="col-sm-3">
-            <input type="number" class="form-control" ng-model="bootstrapServer.port" name="port" placeholder="Enter Bootstrap Server Port" required>
+            <input type="number" class="form-control" ng-model="bootstrapServer.port" name="port" placeholder="{{'Enter Bootstrap Server Port' | translate}}" required>
             <small class="help-block" ng-show="kafka_config_from.port.$error.required && kafka_config_from.port.$dirty">
               {{'Port is empty' | translate}}
             </small>

@@ -46,6 +46,7 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.FileUtils;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.ParameterFilter;
 import org.apache.kylin.common.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -796,7 +797,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public double getCubePlannerExpansionRateThreshold() {
-        return Double.parseDouble(getOptional("kylin.cube.cubeplanner.expansion-threshold", "15.0"));
+        return Double.parseDouble(getOptional("kylin.cube.cubeplanner.expansion-threshold", "2.5"));
     }
 
     public int getCubePlannerRecommendCuboidCacheMaxSize() {
@@ -1113,7 +1114,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getHiveDatabaseForIntermediateTable() {
-        return CliCommandExecutor.checkHiveProperty(this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT));
+        return ParameterFilter.checkHiveProperty(this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT));
     }
 
     public String getFlatTableStorageFormat() {
@@ -1129,7 +1130,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getHiveClientMode() {
-        return getOptional("kylin.source.hive.client", "cli");
+        return getOptional("kylin.source.hive.client", "spark_catalog");
     }
 
     public String getHiveBeelineShell() {
@@ -3311,7 +3312,7 @@ public abstract class KylinConfigBase implements Serializable {
      */
     @ConfigTag(ConfigTag.Tag.GLOBAL_LEVEL)
     public boolean isSparderCanaryEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.canary.sparder-context-canary-enabled", TRUE));
+        return Boolean.parseBoolean(this.getOptional("kylin.canary.sparder-context-canary-enabled", FALSE));
     }
 
     /**
@@ -3402,5 +3403,9 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String getKerberosPrincipal() {
         return getOptional("kylin.kerberos.principal");
+    }
+
+    public String getEncryptCipherIvSpec() {
+        return getOptional("kylin.security.encrypt.cipher.ivSpec", "AAAAAAAAAAAAAAAA");
     }
 }

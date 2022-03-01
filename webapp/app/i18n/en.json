@@ -659,5 +659,17 @@
     "Volatile Range": "Volatile Range",
     "WARN": "WARN",
     "Warning": "Warning",
+    "Comma Separated": "Comma Separated",
+    "Enter Bootstrap Server Port": "Enter Bootstrap Server Port",
+    "select a column type": "选择列类型",
+    "Select Column": "选择列",
+    "select a project": "选择一个项目",
+    "Search by group name": "通过组名查询",
+    "Search by name": "通过名字查询",
+    "Search by user name": "通过用户名查询",
+    "Select Measure": "选择度量值",
+    "Input Kafka Topic": "输入Kafka 主题",
+    "Input kafkaConfig topic": "输入KafkaConfig 主题",
+    "Filter": "过滤",
     "You should choose at least one timestamp type column generated from source schema.": "You should choose at least one timestamp type column generated from source schema."
 }

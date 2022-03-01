@@ -34,7 +34,7 @@
                     ng-init="newAccess.permission=permissions.READ.value;"
                     ng-options="project.name as project.name for project in projectModel.projects"
                     style="width: 180px"
-                    data-placeholder="select a project"
+                    data-placeholder="{{'select a project' | translate}}"
                     class="chosen-select">
               <option ng-if="userService.hasRole('ROLE_ADMIN')" ng-selected="projectModel.selectedProject==null"
                       value=""> {{'-- Choose Project --' | translate}}
