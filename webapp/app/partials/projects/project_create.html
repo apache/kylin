@@ -27,7 +27,7 @@
 
         <div class="clearfix">
           <input name="name_input" type="text" class="form-control" ng-model="proj.name" required
-                 placeholder="You can use letters, numbers, and underscore characters '_'"
+                 placeholder="{{'You can use letters, numbers, and underscore characters' | translate}} '_'"
                  ng-maxlength=100 ng-pattern="/^\w+$/"/>
                     <span class="text-warning"
                           ng-if="proj_create_form.name_input.$error.required  && proj_create_form.name_input.$dirty"
@@ -54,7 +54,7 @@
             <label class="col-xs-12 col-sm-6 control-label no-padding-right" ng-class="{'has-error':prop.name==''}">
               <input ng-model="prop.name" placeholder="key" ng-change="refreshProperty(convertedProperties,$index,prop)"
                      class="form-control"/>
-              <small style="font-weight: normal !important;" class="help-block" ng-show="prop.name==''">{{'The project name is required' | translate}}.
+              <small style="font-weight: normal !important;" class="help-block" ng-show="prop.name==''">{{'The Property name is required' | translate}}.
               </small>
             </label>
             <div class="col-xs-12 col-sm-5" ng-class="{'has-error':prop.value==''}">

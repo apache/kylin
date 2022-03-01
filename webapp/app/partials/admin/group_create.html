@@ -26,7 +26,7 @@
         <label><b>{{'Group Name' | translate}}</b></label>
         <div class="clearfix">
           <input name="name_input" type="text" class="form-control" ng-model="group.name" required
-                 placeholder="You can use letters, numbers, and underscore characters '_'"
+                 placeholder="{{'You can use letters, numbers, and underscore characters' | translate}} '_'"
                  ng-maxlength=100 ng-pattern="groupPattern"/>
                     <span class="text-warning"
                           ng-if="group_create_form.name_input.$error.required  && group_create_form.name_input.$dirty"

@@ -19,8 +19,8 @@
 KylinApp.constant('modelConfig', {
 //  models config
     theaditems : [
-    {attr: 'name', name: 'Name'},
-    {attr: 'factTable', name: 'Fact Table'},
-    {attr: 'date_modified', name: 'Date Modified'}
+    {attr: 'name', name: '名字'},
+    {attr: 'factTable', name: '事实数据表'},
+    {attr: 'date_modified', name: '修改日期'}
      ]
     });

@@ -671,5 +671,11 @@
     "Input Kafka Topic": "输入Kafka 主题",
     "Input kafkaConfig topic": "输入KafkaConfig 主题",
     "Filter": "过滤",
+    "You can use letters, numbers, and underscore characters": "你可以用字母数字和下划线",
+    "Your current password": "你当前的密码",
+    "Please enter your custom date format.": "请输入你的自定义日期格式。",
+    "The Property name is required": "属性名需要填写",
+    "First": "首页",
+    "Last": "尾页",
     "You should choose at least one timestamp type column generated from source schema.": "你应该选择至少一个时间戳类型列从源结构生成。"
 }

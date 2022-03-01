@@ -80,14 +80,14 @@ KylinApp.constant('cubeConfig', {
     intEncodingOptions: [1,2,3,4,5,6,7,8],
 //    cubes config
   theaditems: [
-    {attr: 'name', name: 'Name'},
-    {attr: 'status', name: 'Status'},
-    {attr: 'project', name: 'Project'},
-    {attr: 'size_kb', name: 'Cube Size'},
-    {attr: 'input_records_count', name: 'Source Records'},
-    {attr: 'last_build_time', name: 'Last Build Time'},
-    {attr: 'owner', name: 'Owner'},
-    {attr: 'create_time_utc', name: 'Create Time'}
+    {attr: 'name', name: '名字'},
+    {attr: 'status', name: '状态'},
+    {attr: 'project', name: '项目'},
+    {attr: 'size_kb', name: '多维数据集大小'},
+    {attr: 'input_records_count', name: '原纪录'},
+    {attr: 'last_build_time', name: '最后构建时间'},
+    {attr: 'owner', name: '拥有者'},
+    {attr: 'create_time_utc', name: '创建时间'}
   ],
   streamingAutoGenerateMeasure:[
     {name:"year_start",type:"date"},

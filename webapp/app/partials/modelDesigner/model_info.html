@@ -33,7 +33,7 @@
                         <!-- edit -->
                         <input ng-if="state.mode=='edit'" name="model_name" type="text" class="form-control"  ng-disabled="{{modelMode=='editExistModel'}}"
                                ng-model="modelsManager.selectedModel.name" required
-                               placeholder="You can use letters, numbers, and '_'"
+                               placeholder="{{'You can use letters, numbers, and underscore characters' | translate}} '_'"
                                ng-maxlength=100 ng-pattern="/^\w+$/" />
                         <small style="color:red" class="help-block" ng-show="forms.model_info_form.model_name.$error.required && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$submitted)">{{'Model name is required' | translate}}.</small>
                         <small class="help-block" ng-show="!forms.model_info_form.model_name.$error.required&&forms.model_info_form.model_name.$invalid && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$submitted)">{{'Model name is invalid' | translate}}.</small>

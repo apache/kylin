@@ -28,7 +28,7 @@
         <label><b>{{'User Name' | translate}}</b></label>
         <div class="clearfix">
           <input name="name_input" type="text" class="form-control" ng-model="user.name" required
-                 placeholder="You can use letters, numbers, and underscore characters '_'"
+                 placeholder="{{'You can use letters, numbers, and underscore characters' | translate}} '_'"
                  ng-maxlength=100 ng-pattern="userPattern"/>
                     <span class="text-warning"
                           ng-if="user_create_form.name_input.$error.required  && user_create_form.name_input.$dirty"

@@ -126,7 +126,7 @@
             <div ng-repeat="table in cube.hbase" class="cube-segment-list" ng-class="{'cube-broken-segment': (table.storageType === 'hbase' && table.regionCount === 0)}">
                 <h5><b>{{'Segment' | translate}}:</b> {{table.segmentName}}</h5>
                 <ul>
-                    <li>Status: <span>{{table.segmentStatus}}</span></li>
+                    <li>{{'Status' | translate}}: <span>{{table.segmentStatus}}</span></li>
                     <li ng-if="cube.model.partition_desc.partition_date_column">{{'Start Time' | translate}}: <span>{{table.dateRangeStart | reverseToGMT0}}</span></li>
                     <li ng-if="cube.model.partition_desc.partition_date_column">{{'End Time' | translate}}: <span>{{table.dateRangeEnd | reverseToGMT0}}</span></li>
                     <li>{{'Source Count' | translate}}: <span>{{table.sourceCount}}</span></li>

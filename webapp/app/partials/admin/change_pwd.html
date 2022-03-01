@@ -28,7 +28,7 @@
         <label><b>{{'User Name' | translate}}</b></label>
         <div class="clearfix">
           <input name="name_input" type="text" class="form-control" readonly ng-model="changePwdUser.username" required
-                 placeholder="You can use letters, numbers, and underscore characters '_'"
+                 placeholder="{{'You can use letters, numbers, and underscore characters' | translate}} '_'"
                  ng-maxlength=100 ng-pattern="userPattern"/>
                     <span class="text-warning"
                           ng-if="change_pwd_form.name_input.$error.required  && change_pwd_form.name_input.$dirty"
@@ -42,7 +42,7 @@
         <label><b>{{'User Current Password' | translate}}</b></label>
         <div class="clearfix">
           <input required name="curr_pwd_input" type="password" class="form-control" ng-model="changePwdUser.password"
-                 placeholder="Your current password"/>
+                 placeholder="{{'Your current password' | translate}}"/>
           <span class="text-warning"
                 ng-if="change_pwd_form.curr_pwd_input.$error.required && change_pwd_form.curr_pwd_input.$dirty"
           >&nbsp;{{'The password is required' | translate}}</span>

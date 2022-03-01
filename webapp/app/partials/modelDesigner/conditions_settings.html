@@ -127,7 +127,7 @@
                   ng-model="partition_date.format"
                   ng-required="partition_date.format"
                   ng-class="{ 'col-5': partition_date.type === 'other' }"
-                  placeholder="Please enter your custom date format."/>
+                  placeholder="{{'Please enter your custom date format.' | translate}}"/>
                 <span ng-if="state.mode=='view'&&modelsManager.selectedModel.partition_desc.partition_date_column">{{(modelsManager.selectedModel.partition_desc.partition_date_format)}}</span>
               </div>
             </div>
@@ -187,7 +187,7 @@
                   ng-model="partition_time.format"
                   ng-required="partition_time.format"
                   ng-class="{ 'col-5': partition_time.type === 'other' }"
-                  placeholder="Please enter your custom time format."/>
+                  placeholder="{{'Please enter your custom date format.' | translate}}"/>
                 <span ng-if="state.mode=='view'&&modelsManager.selectedModel.partition_desc.partition_time_column">{{(modelsManager.selectedModel.partition_desc.partition_time_format)}}</span>
               </div>
             </div>

@@ -143,7 +143,7 @@
                 </table>
                 <pagination total-items="savedQueries.length" page="savedQueries.curPage"
                     items-per-page="savedQueries.perPage"
-                    max-size="5" class="pull-right" first-text="First" last-text="Last" boundary-links="true" rotate="false"></pagination>
+                    max-size="5" class="pull-right" first-text="{{'First' | translate}}" last-text="{{'Last' | translate}}" boundary-links="true" rotate="false"></pagination>
             </div>
 
             <div ng-show="mainPanel=='cached'">
@@ -187,7 +187,7 @@
                     </tr>
                 </table>
                 <pagination total-items="cachedFilterQueries.length" items-per-page="cachedFilterQueries.perPage" max-size="5"
-                    page="cachedFilterQueries.curPage" class="pull-right" first-text="First" last-text="Last" boundary-links="true" rotate="false"></pagination>
+                    page="cachedFilterQueries.curPage" class="pull-right" first-text="{{'First' | translate}}" last-text="{{'Last' | translate}}" boundary-links="true" rotate="false"></pagination>
             </div>
         </div>
 

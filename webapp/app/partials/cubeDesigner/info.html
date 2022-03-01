@@ -57,7 +57,7 @@
                     <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.cube_info_form.cube_name.$invalid && (forms.cube_info_form.cube_name.$dirty||forms.cube_info_form.cube_name.$submitted)}">
                         <input ng-if="state.mode=='edit'" ng-disabled="{{isEdit}}"  name="cube_name" type="text" class="form-control"
                                ng-model="cubeMetaFrame.name" required
-                               placeholder="You can use letters, numbers, and '_'"
+                               placeholder="{{'You can use letters, numbers, and underscore characters' | translate}} '_'"
                                ng-maxlength=100 ng-pattern="/^\w+$/" />
                         <small class="help-block" ng-show="forms.cube_info_form.cube_name.$error.required && (forms.cube_info_form.cube_name.$dirty||forms.cube_info_form.$submitted)">Cube name is required.</small>
                         <small class="help-block" ng-show="!forms.cube_info_form.cube_name.$error.required&&forms.cube_info_form.cube_name.$invalid && (forms.cube_info_form.cube_name.$dirty||forms.cube_info_form.$submitted)">Cube name is invalid.</small>
