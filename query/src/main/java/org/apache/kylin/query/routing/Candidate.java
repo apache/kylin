@@ -19,8 +19,11 @@
 package org.apache.kylin.query.routing;
 
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -28,7 +31,8 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 
 import com.google.common.collect.Maps;
 
-public class Candidate implements Comparable<Candidate> {
+public class Candidate {
+    public static final CandidateComparator COMPARATOR = new CandidateComparator();
 
     static Map<RealizationType, Integer> DEFAULT_PRIORITIES = Maps.newHashMap();
     static Map<RealizationType, Integer> PRIORITIES = DEFAULT_PRIORITIES;
@@ -36,6 +40,10 @@ public class Candidate implements Comparable<Candidate> {
     static {
         DEFAULT_PRIORITIES.put(RealizationType.HYBRID, 0);
         DEFAULT_PRIORITIES.put(RealizationType.CUBE, 1);
+    }
+
+    /** for test only */
+    Candidate() {
     }
 
     /** for test only */
@@ -82,22 +90,42 @@ public class Candidate implements Comparable<Candidate> {
     }
 
     @Override
-    public int compareTo(Candidate o) {
-        int comp = this.priority - o.priority;
-        if (comp != 0) {
-            return comp;
-        }
-
-        comp = this.capability.cost - o.capability.cost;
-        if (comp != 0) {
-            return comp;
-        }
-
-        return 0;
-    }
-
-    @Override
     public String toString() {
         return realization.toString();
+    }
+
+    public static class CandidateComparator implements Comparator<Candidate> {
+
+        @Override
+        public int compare(Candidate c1, Candidate c2) {
+            IRealization real1 = c1.getRealization();
+            IRealization real2 = c2.getRealization();
+
+            if (QueryContextFacade.current().getCubePriorities().length > 0) {
+
+                Map<String, Integer> priorities = new HashMap<>();
+                for (int i = 0; i < QueryContextFacade.current().getCubePriorities().length; i++) {
+                    priorities.put(QueryContextFacade.current().getCubePriorities()[i], i);
+                }
+
+                int comp = priorities.getOrDefault(real1.getName(), Integer.MAX_VALUE)
+                        - priorities.getOrDefault(real2.getName(), Integer.MAX_VALUE);
+                if (comp != 0) {
+                    return comp;
+                }
+            }
+
+            int comp = real1.getCost() - real2.getCost();
+            if (comp != 0) {
+                return comp;
+            }
+
+            comp = Double.compare(c1.capability.cost, c2.capability.cost);
+            if (comp != 0) {
+                return comp;
+            }
+
+            return 0;
+        }
     }
 }

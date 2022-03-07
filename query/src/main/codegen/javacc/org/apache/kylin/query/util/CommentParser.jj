@@ -64,8 +64,14 @@ PARSER_END(CommentParser)
 
 <DEFAULT>
 SKIP : {
-    "/*" : WITHINCOMMENT
-    | <"--" (~["\n","\r"])*>
+    <"--" (~["\n","\r"])*>
+}
+
+<DEFAULT>
+SKIP :
+{
+    "/**/"
+    | <"/*" ~["+"]> : WITHINCOMMENT
 }
 
 < DEFAULT >
@@ -77,6 +83,9 @@ TOKEN :
 | < DOUBLE_QUOTE: "\"" >
 | < DOUBLE_QUOTE_STRING: <DOUBLE_QUOTE> ( (~["\""]) | ("\"\""))* <DOUBLE_QUOTE> >
 | < ANY : (~[" ", ",", "\t", "\n", "\r", "/", "-" ])+ >
+| < HINT_BEG: "/*+" >
+| < COMMENT_END: "*/" >
+| < HINT: <HINT_BEG> (~["\n", "\r", "*", "/"])* <COMMENT_END> >
 }
 
 <WITHINCOMMENT>
@@ -128,9 +137,20 @@ String Expression() :
     | innerString = DoubleQuoteString()
     | innerString = RemainToken()
     | innerString = Any()
+    | innerString = Hint()
     )
     {
         return innerString + nextString;
+    }
+}
+
+String Hint():
+{}
+{
+    <HINT>
+    {
+        logger.trace("meet token <HINT>");
+        return getToken(0).image;
     }
 }
 
