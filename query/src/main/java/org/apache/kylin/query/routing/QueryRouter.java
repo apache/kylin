@@ -25,6 +25,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -60,6 +61,10 @@ public class QueryRouter {
             String forceHitCubeNameLower = forceHitCubeName.toLowerCase(Locale.ROOT);
             String[] forceHitCubeNames = forceHitCubeNameLower.split(",");
             forceHitCubeNameSet = new HashSet<String>(Arrays.asList(forceHitCubeNames));
+        }
+
+        if (QueryContextFacade.current().getCubePriorities().length != 0) {
+            forceHitCubeNameSet = new HashSet<String>(Arrays.asList(QueryContextFacade.current().getCubePriorities()));
         }
 
         List<Candidate> candidates = Lists.newArrayList();

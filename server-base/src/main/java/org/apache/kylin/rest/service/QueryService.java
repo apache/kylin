@@ -102,6 +102,7 @@ import org.apache.kylin.query.QueryConnection;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryInfoCollector;
+import org.apache.kylin.query.util.QueryModelPriorities;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.query.util.TempStatementUtil;
 import org.apache.kylin.rest.constant.Constant;
@@ -454,6 +455,7 @@ public class QueryService extends BasicService {
             logger.info("Using project: " + project);
             logger.info("The original query:  " + sql);
 
+            QueryContextFacade.current().setCubePriorities(QueryModelPriorities.getCubePrioritiesFromComment(sql));
             sql = QueryUtil.removeCommentInSql(sql);
 
             Pair<Boolean, String> result = TempStatementUtil.handleTempStatement(sql, kylinConfig);

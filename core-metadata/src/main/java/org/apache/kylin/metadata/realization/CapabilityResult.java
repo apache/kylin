@@ -50,6 +50,10 @@ public class CapabilityResult {
      */
     public List<CapabilityInfluence> influences = Lists.newArrayListWithCapacity(1);
 
+    public void setCost(int cost) {
+        this.cost = cost;
+    }
+
     public static interface CapabilityInfluence {
         /**
          * Suggest a multiplier to influence query cost

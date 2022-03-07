@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.util;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -109,5 +110,15 @@ public class DefaultQueryTransformerTest {
         correctSql = transformer.transform(fnConvertSumSql, "", "");
         assertTrue("SELECT CURRENT_TIMESTAMP(0)".equalsIgnoreCase(correctSql));
 
+    }
+
+    @Test
+    public void testReserveHintQuery() throws Exception {
+        String originalSQL = "select /**/ /*+*//*+ some hint */ --test comment will remove\n" +
+                " \"--won't remove in quote, /*test*/\", /* will remove multi line comment*/ { fn count(*) } from tbl";
+        String transformedSQL = new CommentParser(originalSQL).Input();
+
+        String expectedSQL = "select  /*+*//*+ some hint */ \n \"--won't remove in quote, /*test*/\",  { fn count(*) } from tbl";
+        assertEquals(expectedSQL, transformedSQL);
     }
 }

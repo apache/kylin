@@ -77,6 +77,7 @@ public class QueryContext {
     private List<QueryStopListener> stopListeners = Lists.newCopyOnWriteArrayList();
     private List<RPCStatistics> rpcStatisticsList = Lists.newCopyOnWriteArrayList();
     private Map<Integer, CubeSegmentStatisticsResult> cubeSegmentStatisticsResultMap = Maps.newConcurrentMap();
+    private String[] cubePriorities = new String[0];
 
     private Object olapRel;
     private Object resultType;
@@ -282,6 +283,14 @@ public class QueryContext {
 
     public String getStopReason() {
         return stopReason;
+    }
+
+    public String[] getCubePriorities() {
+        return cubePriorities;
+    }
+
+    public void setCubePriorities(String[] cubePriorities) {
+        this.cubePriorities = cubePriorities;
     }
 
     /**
