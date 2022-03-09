@@ -21,7 +21,7 @@ from enum import Enum
 class Params(Enum):
     # global params
     ASSOSICATED_PUBLIC_IP = 'ASSOSICATED_PUBLIC_IP'
-    ALWAYS_DESTROY_ALL = 'ALWAYS_DESTROY_ALL'
+    ALWAYS_DESTROY_VPC_RDS_MONITOR = 'ALWAYS_DESTROY_VPC_RDS_MONITOR'
     S3_URI = 'S3_URI'
     INSTANCE_ID = 'IdOfInstance'
     CLUSTER_NUM = 'ClusterNum'

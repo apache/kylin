@@ -43,6 +43,7 @@ class Utils:
     FILES_SIZE_IN_BYTES = {
         'jdk-8u301-linux-x64.tar.gz': 145520298,
         'apache-kylin-4.0.0-bin-spark3.tar.gz': 198037626,
+        'apache-kylin-4.0.2-bin-spark3.tar.gz': 198051064,
         'apache-hive-2.3.9-bin.tar.gz': 286170958,
         'hadoop-3.2.0.tar.gz': 345625475,
         'node_exporter-1.3.1.linux-amd64.tar.gz': 9033415,
@@ -51,6 +52,9 @@ class Utils:
         'zookeeper-3.4.13.tar.gz': 37191810,
         'commons-configuration-1.3.jar': 232915,
         'mysql-connector-java-5.1.40.jar': 990924,
+        'mysql-connector-java-8.0.24.jar': 2428323,
+        'mdx-kylin-4.0.2-beta.tar.gz': 81935515,
+        'spark-3.1.1-bin-hadoop3.2-aws.tgz': 531069078,
     }
 
     @staticmethod

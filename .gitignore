@@ -6,6 +6,6 @@ __pycache__/
 */.DS_Store
 /venv/
 .idea
-logs/*.log
+logs/
 backup/jars
 backup/tars

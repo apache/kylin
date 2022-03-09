@@ -106,6 +106,9 @@ Parameters:
     Default: gp2
     AllowedValues:
       - gp2
+  SupportGlue:
+    Type: String
+    Default: false
 
 Mappings:
   AWSRegionArch2AMI:
@@ -203,7 +206,7 @@ Resources:
               #!/bin/bash -xe
               cd /home/ec2-user
               aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateStaticServicesScriptFileName} . --region ${PrivateRegion}
-              bash ${PrivateStaticServicesScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --db-host ${PrivateDbHost} --db-password ${PrivateDbPassword} --db-user ${PrivateDbUser} --db-port ${PrivateDbPort}
+              bash ${PrivateStaticServicesScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --db-host ${PrivateDbHost} --db-password ${PrivateDbPassword} --db-user ${PrivateDbUser} --db-port ${PrivateDbPort} --support-glue ${PrivateSupportGlue}
               echo " Static Services are ready ..."
             - PrivateBucketFullPath: !Ref BucketFullPath
               PrivateStaticServicesScriptFileName: !Ref StaticServicesScriptFileName
@@ -213,6 +216,7 @@ Resources:
               PrivateDbPassword: !Ref DbPassword
               PrivateDbUser: !Ref DbUser
               PrivateDbPort: !Ref DbPort
+              PrivateSupportGlue: !Ref SupportGlue
 
 Outputs:
   # Env parameters
@@ -237,3 +241,7 @@ Outputs:
     Description: StaticServices Public IP
     Value: !GetAtt Ec2InstanceOfStaticServicesNode.PublicIp
     Condition: IsAssociatedPublicIp
+
+  SupportGlue:
+    Description: is supported glue ?
+    Value: !Ref SupportGlue

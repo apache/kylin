@@ -111,7 +111,18 @@ Parameters:
     Default: 30
     MinValue: 30
     MaxValue: 30
-
+  KylinVersion:
+    Type: String
+    Default: 4.0.0
+  SparkVersion:
+    Type: String
+    Default: 3.1.1
+  HadoopVersion:
+    Type: String
+    Default: 3.2.0
+  SupportGlue:
+    Type: String
+    Default: false
 
 Mappings:
   AWSRegionArch2AMI:
@@ -221,7 +232,7 @@ Resources:
               #!/bin/bash -xe
               cd /home/ec2-user
               aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateSlaveScriptFileName} . --region ${PrivateRegion}
-              bash ${PrivateSlaveScriptFileName} --bucket-url ${PrivateBucketPath} --master-host ${PrivateMasterHost} --worker-number ${WorkerNum} --region ${PrivateRegion} --waiting-time ${PrivateWaitingTime} --mode ${WorkerMode} --local-soft ${PrivateLocalCacheSoftAffinity}
+              bash ${PrivateSlaveScriptFileName} --bucket-url ${PrivateBucketPath} --master-host ${PrivateMasterHost} --worker-number ${WorkerNum} --region ${PrivateRegion} --waiting-time ${PrivateWaitingTime} --mode ${WorkerMode} --local-soft ${PrivateLocalCacheSoftAffinity} --hadoop-version ${PrivateHadoopVersion} --spark-version ${PrivateSparkVersion} --kylin-version ${PrivateKylinVersion} --support-glue ${PrivateSupportGlue}
             - PrivateMasterHost: !Ref SparkMasterNodeHost
               WorkerNum: 1
               PrivateBucketFullPath: !Ref BucketFullPath
@@ -231,6 +242,10 @@ Resources:
               PrivateWaitingTime: !Ref WaitingTime
               WorkerMode: !Ref Ec2Mode
               PrivateLocalCacheSoftAffinity: !Ref LocalCacheSoftAffinity
+              PrivateKylinVersion: !Ref KylinVersion
+              PrivateHadoopVersion: !Ref HadoopVersion
+              PrivateSparkVersion: !Ref SparkVersion
+              PrivateSupportGlue: !Ref SupportGlue
   Ec2InstanceOfSlave02:
     Type: AWS::EC2::Instance
     DeletionPolicy: Delete
@@ -289,7 +304,7 @@ Resources:
               #!/bin/bash -xe
               cd /home/ec2-user
               aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateSlaveScriptFileName} . --region ${PrivateRegion}
-              bash ${PrivateSlaveScriptFileName} --bucket-url ${PrivateBucketPath} --master-host ${PrivateMasterHost} --worker-number ${WorkerNum} --region ${PrivateRegion} --waiting-time ${PrivateWaitingTime} --mode ${WorkerMode} --local-soft ${PrivateLocalCacheSoftAffinity}
+              bash ${PrivateSlaveScriptFileName} --bucket-url ${PrivateBucketPath} --master-host ${PrivateMasterHost} --worker-number ${WorkerNum} --region ${PrivateRegion} --waiting-time ${PrivateWaitingTime} --mode ${WorkerMode} --local-soft ${PrivateLocalCacheSoftAffinity} --hadoop-version ${PrivateHadoopVersion} --spark-version ${PrivateSparkVersion} --kylin-version ${PrivateKylinVersion} --support-glue ${PrivateSupportGlue}
             - PrivateMasterHost: !Ref SparkMasterNodeHost
               WorkerNum: 2
               PrivateBucketFullPath: !Ref BucketFullPath
@@ -299,6 +314,10 @@ Resources:
               PrivateWaitingTime: !Ref WaitingTime
               WorkerMode: !Ref Ec2Mode
               PrivateLocalCacheSoftAffinity: !Ref LocalCacheSoftAffinity
+              PrivateKylinVersion: !Ref KylinVersion
+              PrivateHadoopVersion: !Ref HadoopVersion
+              PrivateSparkVersion: !Ref SparkVersion
+              PrivateSupportGlue: !Ref SupportGlue
 
   Ec2InstanceOfSlave03:
     Type: AWS::EC2::Instance
@@ -358,7 +377,7 @@ Resources:
               #!/bin/bash -xe
               cd /home/ec2-user
               aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateSlaveScriptFileName} . --region ${PrivateRegion}
-              bash ${PrivateSlaveScriptFileName} --bucket-url ${PrivateBucketPath} --master-host ${PrivateMasterHost} --worker-number ${WorkerNum} --region ${PrivateRegion} --waiting-time ${PrivateWaitingTime} --mode ${WorkerMode} --local-soft ${PrivateLocalCacheSoftAffinity}
+              bash ${PrivateSlaveScriptFileName} --bucket-url ${PrivateBucketPath} --master-host ${PrivateMasterHost} --worker-number ${WorkerNum} --region ${PrivateRegion} --waiting-time ${PrivateWaitingTime} --mode ${WorkerMode} --local-soft ${PrivateLocalCacheSoftAffinity} --hadoop-version ${PrivateHadoopVersion} --spark-version ${PrivateSparkVersion} --kylin-version ${PrivateKylinVersion} --support-glue ${PrivateSupportGlue}
             - PrivateMasterHost: !Ref SparkMasterNodeHost
               WorkerNum: 3
               PrivateBucketFullPath: !Ref BucketFullPath
@@ -368,6 +387,10 @@ Resources:
               PrivateWaitingTime: !Ref WaitingTime
               WorkerMode: !Ref Ec2Mode
               PrivateLocalCacheSoftAffinity: !Ref LocalCacheSoftAffinity
+              PrivateKylinVersion: !Ref KylinVersion
+              PrivateHadoopVersion: !Ref HadoopVersion
+              PrivateSparkVersion: !Ref SparkVersion
+              PrivateSupportGlue: !Ref SupportGlue
 
 
 Outputs:
@@ -403,3 +426,6 @@ Outputs:
     Description: Slave03 Instance Public IP
     Value: !GetAtt Ec2InstanceOfSlave03.PublicIp
     Condition: IsAssociatedPublicIp
+  SupportGlue:
+    Description: is supported glue ?
+    Value: !Ref SupportGlue

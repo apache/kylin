@@ -73,13 +73,13 @@ function help() {
                     --db-user db-user-for-kylin
                     --kylin-mode mode-for-kylin[all|query|job]
                     --local-soft whether-to-use-local-cache+soft-affinity
-                    --cluster-num specify-a-cluster"
+                    --cluster-num specify-a-cluster
+                    --hadoop-version hadoop-version-for-cluster
+                    --spark-version spark-version-for-cluster
+                    --kylin-version kylin-version-for-cluster
+                    --hive-version hive-version-for-cluster"
   exit 0
 }
-
-if [[ $# -ne 18 ]]; then
-  help
-fi
 
 while [[ $# != 0 ]]; do
   if [[ $1 == "--bucket-url" ]]; then
@@ -93,15 +93,27 @@ while [[ $# != 0 ]]; do
     DATABASE_PASSWORD=$2
   elif [[ $1 == "--db-user" ]]; then
     DATABASE_USER=$2
-  elif [[ $1 == '--db-port' ]]; then
+  elif [[ $1 == "--db-port" ]]; then
     DATABASE_PORT=$2
   elif [[ $1 == "--local-soft" ]]; then
     LOCAL_CACHE_SOFT_AFFINITY=$2
-  elif [[ $1 == '--cluster-num' ]]; then
-    # default value is 'default', and cluster num is from 1 to positive infinity.
+  elif [[ $1 == "--cluster-num" ]]; then
+    # default value is "default", and cluster num is from 1 to positive infinity.
     CLUSTER_NUM=$2
-  elif [[ $1 == '--is-scaled' ]]; then
+  elif [[ $1 == "--is-scaled" ]]; then
     IS_SCALED=$2
+  elif [[ $1 == "--hadoop-version" ]]; then
+    HADOOP_VERSION=$2
+  elif [[ $1 == "--spark-version" ]]; then
+    SPARK_VERSION=$2
+  elif [[ $1 == "--kylin-version" ]]; then
+    KYLIN_VERSION=$2
+  elif [[ $1 == "--hive-version" ]]; then
+    HIVE_VERSION=$2
+  elif [[ $1 == "--mdx-version" ]]; then
+    MDX_VERSION=$2
+  elif [[ $1 == "--support-glue" ]]; then
+    SUPPORT_GLUE=$2
   else
     help
   fi
@@ -113,10 +125,33 @@ done
 # Prepare Steps
 ### Parameters for Spark and Kylin
 #### ${SPARK_VERSION:0:1} get 2 from 2.4.7
-HADOOP_VERSION=3.2.0
-SPARK_VERSION=3.1.1
-KYLIN_VERSION=4.0.0
-HIVE_VERSION=2.3.9
+if [[ -z "$HADOOP_VERSION" ]]; then
+  HADOOP_VERSION=3.2.0
+fi
+
+if [[ -z "$SPARK_VERSION" ]]; then
+  SPARK_VERSION=3.1.1
+fi
+
+if [[ -z "$KYLIN_VERSION" ]]; then
+  KYLIN_VERSION=4.0.0
+fi
+
+if [[ -z "$HIVE_VERSION" ]]; then
+  HIVE_VERSION=2.3.9
+fi
+
+if [[ -z "$MDX_VERSION" ]]; then
+  MDX_VERSION=4.0.2-beta
+fi
+
+if [[ -z "$SUPPORT_GLUE" ]]; then
+  SUPPORT_GLUE=false
+fi
+
+if [[ -z "$MDX_DATABASE" ]]; then
+  MDX_DATABASE=kylin_mdx
+fi
 
 LOCAL_CACHE_DIR=/home/ec2-user/ssd
 
@@ -141,10 +176,17 @@ else
   fi
 
 fi
-SPARK_PACKAGE=spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION:0:3}.tgz
+
+if [[ $SUPPORT_GLUE == "true" ]]; then
+  SPARK_PACKAGE=spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION:0:3}-aws.tgz
+else
+  SPARK_PACKAGE=spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION:0:3}.tgz
+fi
+
 HADOOP_PACKAGE=hadoop-${HADOOP_VERSION}.tar.gz
 HIVE_PACKAGE=apache-hive-${HIVE_VERSION}-bin.tar.gz
 NODE_EXPORTER_PACKAGE=node_exporter-1.3.1.linux-amd64.tar.gz
+MDX_PACKAGE=mdx-kylin-${MDX_VERSION}.tar.gz
 
 ### Parameter for JDK 1.8
 JDK_PACKAGE=jdk-8u301-linux-x64.tar.gz
@@ -163,7 +205,8 @@ function init_env() {
   HADOOP_HOME=${HADOOP_DIR}/hadoop-${HADOOP_VERSION}
   HIVE_HOME=${HADOOP_DIR}/hive
 
-  KYLIN_HOME=${HOME_DIR}/${DECOMPRESSED_KYLIN_PACKAGE}
+  KYLIN_HOME=${HOME_DIR}/kylin
+  MDX_HOME=${HOME_DIR}/mdx
   SPARK_HOME=${HADOOP_DIR}/spark
   OUT_LOG=${HOME_DIR}/shell.stdout
 
@@ -193,6 +236,7 @@ export PATH=$HIVE_HOME/bin:$HIVE_HOME/conf:${HADOOP_HOME}/bin:${JAVA_HOME}/bin:$
 export HOME_DIR=${HOME_DIR}
 export KYLIN_HOME=${KYLIN_HOME}
 export SPARK_HOME=${SPARK_HOME}
+export MDX_HOME=${MDX_HOME}
 export OUT_LOG=${OUT_LOG}
 EOF
 }
@@ -262,6 +306,10 @@ function prepare_hadoop() {
   else
     logging info "Downloading Hadoop package ${HADOOP_PACKAGE} ..."
     aws s3 cp ${PATH_TO_BUCKET}/tar/${HADOOP_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+    if [[ $? -ne 0 ]]; then
+      logging error "Downloading ${HADOOP_PACKAGE} failed, please check."
+      exit 1
+    fi
     #      # wget cost lot time
     #      wget https://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}/${HADOOP_PACKAGE}
   fi
@@ -332,6 +380,10 @@ function prepare_hive() {
   else
     logging info "Downloading ${HIVE_PACKAGE} ..."
     aws s3 cp ${PATH_TO_BUCKET}/tar/${HIVE_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+    if [[ $? -ne 0 ]]; then
+      logging error "Downloading ${HIVE_PACKAGE} failed, please check."
+      exit 1
+    fi
     #      # wget cost lot time
     #      wget https://downloads.apache.org/hive/hive-${HIVE_VERSION}/${HIVE_PACKAGE}
   fi
@@ -373,7 +425,19 @@ function init_hive() {
     return
   fi
 
-  cat <<EOF >${HIVE_HOME}/conf/hive-site.xml
+  if [[ $SUPPORT_GLUE == "true" ]]; then
+      cat <<EOF >${HIVE_HOME}/conf/hive-site.xml
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+  <property>
+    <name>hive.metastore.client.factory.class</name>
+    <value>com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory</value>
+  </property>
+</configuration>
+EOF
+  else
+    cat <<EOF >${HIVE_HOME}/conf/hive-site.xml
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
@@ -410,6 +474,7 @@ function init_hive() {
   </property>
 </configuration>
 EOF
+  fi
 
   # resolve jars conflict
   if [[ ! -d $HIVE_HOME/spark_jar ]]; then
@@ -435,14 +500,18 @@ function prepare_spark() {
     return
   fi
 
-  logging info "Downloading Spark-${SPARK_VERSION} ..."
+  logging info "Downloading ${SPARK_PACKAGE} ..."
   ## download spark
   if [[ -f ${HOME_DIR}/${SPARK_PACKAGE} ]]; then
     logging warn "${SPARK_PACKAGE} already download, skip download it."
   else
     logging warn "Downloading ${SPARK_PACKAGE} ..."
     aws s3 cp ${PATH_TO_BUCKET}/tar/${SPARK_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
-    #      # wget cost lot time
+    if [[ $? -ne 0 ]]; then
+      logging error "Downloading ${SPARK_PACKAGE} failed, please check."
+      exit 1
+    fi
+    #      # wget will cost lot time
     #      wget http://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/${SPARK_PACKAGE}
   fi
 
@@ -528,16 +597,22 @@ function prepare_kylin() {
   else
     logging info "Kylin-${KYLIN_VERSION} downloading ..."
     aws s3 cp ${PATH_TO_BUCKET}/tar/${KYLIN_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+    if [[ $? -ne 0 ]]; then
+      logging error "Downloading ${KYLIN_PACKAGE} failed, please check."
+      exit 1
+    fi
     #      # wget cost lot time
     #      wget https://archive.apache.org/dist/kylin/apache-kylin-${KYLIN_VERSION}/${KYLIN_PACKAGE}
   fi
 
-  if [[ -d ${HOME_DIR}/${DECOMPRESSED_KYLIN_PACKAGE} ]]; then
+  if [[ -d ${KYLIN_HOME} ]]; then
     logging warn "Kylin package already decompress, skip decompress ..."
   else
     logging warn "Kylin package decompressing ..."
     ### unzip kylin tar file
     tar -zxf ${KYLIN_PACKAGE}
+    ### make kylin home directory
+    sudo mv ${HOME_DIR}/${DECOMPRESSED_KYLIN_PACKAGE} ${KYLIN_HOME}
   fi
 
   logging info "Kylin inited ..."
@@ -626,6 +701,91 @@ EOF
   logging info "Kylin is ready ..."
 }
 
+function prepare_mdx() {
+  logging info "Preparing MDX ..."
+
+  if [[ -f ${HOME_DIR}/.prepared_mdx ]]; then
+    logging warn "MDX already prepared ..."
+    return
+  fi
+
+  if [[ -f ${HOME_DIR}/${MDX_PACKAGE} ]]; then
+    logging warn "MDX package already downloaded, skip download it ..."
+  else
+    logging info "mdx-kylin-${MDX_VERSION} downloading ..."
+    aws s3 cp ${PATH_TO_BUCKET}/tar/${MDX_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+    if [[ $? -ne 0 ]]; then
+      logging error "Downloading ${MDX_PACKAGE} failed, please check."
+      exit 1
+    fi
+  fi
+
+  if [[ -d ${MDX_HOME} ]]; then
+    logging warn "MDX package already decompress, skip decompress ..."
+  else
+    logging warn "MDX package decompressing ..."
+    ### unzip kylin tar file
+    tar -zxf ${MDX_PACKAGE}
+    ### make mdx home directory
+    sudo mv ${HOME_DIR}/${MDX_PACKAGE%*.tar.gz} ${MDX_HOME}
+  fi
+
+  logging info "MDX inited ..."
+  touch ${HOME_DIR}/.prepared_mdx
+  logging info "MDX prepared ..."
+}
+
+function init_mdx() {
+  if [[ -f ${HOME_DIR}/.inited_mdx ]]; then
+    logging warn "MDX already inited ..."
+    return
+  fi
+
+  if [[ ! -f $MDX_HOME/semantic-mdx/lib/mysql-connector-java-8.0.24.jar ]]; then
+    aws s3 cp ${PATH_TO_BUCKET}/jars/mysql-connector-java-8.0.24.jar $MDX_HOME/semantic-mdx/lib/ --region ${CURRENT_REGION}
+  fi
+
+  if [[ ! -f  $MDX_HOME/semantic-mdx/lib/kylin-jdbc-4.0.0-SNAPSHOT.jar ]]; then
+    logging info "Copy jdbc driver from $KYLIN_HOME to $MDX_HOME/semantic-mdx/lib/ ..."
+    cp -f $KYLIN_HOME/lib/kylin-jdbc-*.jar $MDX_HOME/semantic-mdx/lib/
+  fi
+
+  # Encrypt db password for mdx
+  marker="The encryption string: "
+  ENCRPTED_PASSWORD=$(${MDX_HOME}/bin/mdx.sh encrypt ${DATABASE_PASSWORD} | tail -n 1 | cut -d: -f2)
+  logging info "Encrypted Password is: ${ENCRPTED_PASSWORD}, and Original Password is: ${DATABASE_PASSWORD}."
+
+  logging info "Install mysql client ..."
+  ## install mysql client
+  sudo yum install -y https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
+  sudo rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
+  sudo yum install -y mysql-community-client
+
+  logging info "Create Database ${MDX_DATABASE} ..."
+  sudo mysql -h${DATABASE_HOST} -u${DATABASE_USER} -p${DATABASE_PASSWORD} -e "create database if not exists ${MDX_DATABASE};"
+
+  # Overwrite insight.properties
+  cat <<EOF >>${MDX_HOME}/conf/insight.properties
+insight.kylin.host=$(hostname -I)
+insight.kylin.port=7070
+insight.database.type=mysql
+insight.database.username=${DATABASE_USER}
+insight.database.ip=${DATABASE_HOST}
+insight.database.name=${MDX_DATABASE}
+insight.database.port=${DATABASE_PORT}
+insight.database.password=${ENCRPTED_PASSWORD//[[:blank:]]/}
+insight.mdx.cluster.nodes=127.0.0.1:7080
+insight.semantic.datasource-version=2
+insight.semantic.port=7080
+insight.mdx.jvm.xms=-Xms3g
+insight.mdx.jvm.xmx=-Xmx3g
+EOF
+
+  logging info "MDX inited ..."
+  touch ${HOME_DIR}/.inited_mdx
+  logging info "MDX is ready ..."
+}
+
 function after_start_kylin() {
   KYLIN_WEB_LIB_PATH=$KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/lib
   if [[ ! -f $KYLIN_WEB_LIB_PATH/commons-collections-3.2.2.jar ]]; then
@@ -651,13 +811,17 @@ function start_kylin() {
 }
 
 function sample_for_kylin() {
-  if [[ ${IS_SCALED} == 'false' ]]; then
-      ${KYLIN_HOME}/bin/sample.sh
-      if [[ $? -ne 0 ]]; then
-        logging error "Sample for kylin is failed, please check ..."
-      else
-        logging info "Sample for kylin is successful, enjoy it ..."
-      fi
+  if [[ $SUPPORT_GLUE == "true" ]]; then
+      return
+  fi
+
+  if [[ ${IS_SCALED} == "false" ]]; then
+    ${KYLIN_HOME}/bin/sample.sh
+    if [[ $? -ne 0 ]]; then
+      logging error "Sample for kylin is failed, please check ..."
+    else
+      logging info "Sample for kylin is successful, enjoy it ..."
+    fi
   else
     logging info "It is unnecessary to sample data in scaled mode. "
   fi
@@ -665,6 +829,10 @@ function sample_for_kylin() {
 
 function restart_kylin() {
   ${KYLIN_HOME}/bin/kylin.sh restart
+}
+
+function start_mdx() {
+  ${MDX_HOME}/bin/mdx.sh start
 }
 
 function prepare_node_exporter() {
@@ -735,16 +903,23 @@ function prepare_packages() {
   prepare_kylin
   init_kylin
 
+  prepare_mdx
+  init_mdx
+
   touch ${HOME_DIR}/.prepared_packages
   logging info "All need packages are ready ..."
 }
 
 function start_services_on_kylin() {
   # special step for compatible jars, details in after_start_kylin
-  sample_for_kylin
-  start_kylin
-  after_start_kylin
+  if [[ ! -f ${HOME_DIR}/.first_run ]]; then
+    sample_for_kylin
+    start_kylin
+    after_start_kylin
+    touch ${HOME_DIR}/.first_run
+  fi
   restart_kylin
+  start_mdx
 }
 
 function main() {

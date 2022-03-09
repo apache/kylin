@@ -47,20 +47,34 @@ class EngineUtils:
         hadoop_package = Tar.HADOOP.value.format(HADOOP_VERSION=self.config['HADOOP_VERSION'])
         node_exporter_package = Tar.NODE.value.format(NODE_EXPORTER_VERSION=self.config['NODE_EXPORTER_VERSION'])
         prometheus_package = Tar.PROMETHEUS.value.format(PROMETHEUS_VERSION=self.config['PROMETHEUS_VERSION'])
-        spark_package = Tar.SPARK.value.format(SPARK_VERSION=self.config['SPARK_VERSION'],
-                                               HADOOP_VERSION=self.config['HADOOP_VERSION'])
+        if self.config['SUPPORT_GLUE'] == 'true':
+            spark_package = Tar.SPARK_FOR_GLUE.value.format(
+                SPARK_VERSION=self.config['SPARK_VERSION'],
+                HADOOP_VERSION=self.config['HADOOP_VERSION'])
+        else:
+            spark_package = Tar.SPARK.value.format(
+                SPARK_VERSION=self.config['SPARK_VERSION'],
+                HADOOP_VERSION=self.config['HADOOP_VERSION'])
         zookeeper_package = Tar.ZOOKEEPER.value.format(ZOOKEEPER_VERSION=self.config['ZOOKEEPER_VERSION'])
-        packages = [jdk_package, kylin_package, hive_package, hadoop_package, node_exporter_package,
-                    prometheus_package, spark_package, zookeeper_package]
+        mdx_package = Tar.MDX.value.format(MDX_VERSION=self.config['MDX_VERSION'])
+
+        packages = [
+            jdk_package, kylin_package, hive_package,
+            hadoop_package, node_exporter_package,
+            prometheus_package, spark_package,
+            zookeeper_package, mdx_package]
         return packages
 
     def needed_jars(self) -> List:
         # FIXME: hard version of jars
-        jars = []
         commons_configuration = 'commons-configuration-1.3.jar'
-        mysql_connector = 'mysql-connector-java-5.1.40.jar'
-        jars.append(commons_configuration)
-        jars.append(mysql_connector)
+        mysql_driver = 'mysql-connector-java-5.1.40.jar'
+        mysql_driver_for_mdx = 'mysql-connector-java-8.0.24.jar'
+        jars = [
+            commons_configuration,
+            mysql_driver,
+            mysql_driver_for_mdx,
+        ]
         if self.config[Config.ENABLE_SOFT_AFFINITY.value] == 'true':
             kylin_soft_affinity_cache = 'kylin-soft-affinity-cache-4.0.0-SNAPSHOT.jar'
             alluxio_client = 'alluxio-2.6.1-client.jar'
@@ -102,10 +116,12 @@ class EngineUtils:
             self.aws.after_scale_up(node_type=node_type)
 
         elif scale_type == ScaleType.DOWN.value:
-            self.aws.after_scale_down(node_type=node_type)
+            if not self.aws.is_destroy_all:
+                self.aws.after_scale_down(node_type=node_type)
             self.aws.scale_down(node_type=node_type)
 
-        self.aws.restart_prometheus_server()
+        if not self.aws.is_destroy_all:
+            self.aws.restart_prometheus_server()
 
     def scale_nodes_in_cluster(
             self,
@@ -122,10 +138,12 @@ class EngineUtils:
             self.aws.scale_up(node_type=node_type, cluster_num=cluster_num, is_destroy=is_destroy)
             self.aws.after_scale_up(node_type=node_type, cluster_num=cluster_num)
         else:
-            self.aws.after_scale_down(node_type=node_type, cluster_num=cluster_num)
+            if not self.aws.is_destroy_all:
+                self.aws.after_scale_down(node_type=node_type, cluster_num=cluster_num)
             self.aws.scale_down(node_type=node_type, cluster_num=cluster_num, is_destroy=is_destroy)
 
-        self.aws.restart_prometheus_server()
+        if not self.aws.is_destroy_all:
+            self.aws.restart_prometheus_server()
 
     def prepare_for_cluster(self) -> None:
         # create vpc, rds and monitor node for whole cluster
@@ -154,10 +172,11 @@ class EngineUtils:
                 scale_type=ScaleType.DOWN.value,
                 node_type=NodeType.SPARK_WORKER.value,
                 cluster_num=num, is_destroy=True)
-
-        self.aws.after_destroy_clusters(cluster_nums=cluster_nums)
+        if not self.aws.is_destroy_all:
+            self.aws.after_destroy_clusters(cluster_nums=cluster_nums)
         self.aws.destroy_clusters(cluster_nums=cluster_nums)
-        self.aws.restart_prometheus_server()
+        if not self.aws.is_destroy_all:
+            self.aws.restart_prometheus_server()
 
     def destroy_cluster(self, cluster_num: int) -> None:
         self.scale_nodes_in_cluster(

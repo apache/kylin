@@ -75,5 +75,5 @@ $ python deploy.py --type destroy
 > Note:
 >
 > 1. If you want to check about a quick start for multiple clusters, please referer to a [quick start for multiple clusters](./quick_start_for_multiple_clusters.md).
-> 2. **Current destroy operation will remain some stack which contains `RDS` and so on**. So if user want to destroy clearly, please modify the `ALWAYS_DESTROY_ALL` in `kylin_configs.yml` to be `true` and re-execute `destroy` command. 
+> 2. **Current destroy operation will remain some stack which contains `RDS` and so on**. So if user want to destroy clearly, please modify the `ALWAYS_DESTROY_VPC_RDS_MONITOR` in `kylin_configs.yml` to be `true` and re-execute `destroy` command. 
 

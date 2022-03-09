@@ -116,6 +116,20 @@ Parameters:
     MinValue: 30
     MaxValue: 30
 
+  SparkVersion:
+    Type: String
+    Default: 3.1.1
+  HadoopVersion:
+    Type: String
+    Default: 3.2.0
+  HiveVersion:
+    Type: String
+    Default: 2.3.9
+
+  SupportGlue:
+    Type: String
+    Default: false
+
 
 Mappings:
   AWSRegionArch2AMI:
@@ -213,7 +227,7 @@ Resources:
               #!/bin/bash -xe
               cd /home/ec2-user
               aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateSparkMasterScriptFileName} . --region ${PrivateRegion}
-              bash ${PrivateSparkMasterScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --local-soft ${PrivateLocalCacheSoftAffinity} --db-port ${PrivateDbPort} --db-host ${PrivateDbHost} --db-user ${PrivateDbUser} --db-password ${PrivateDbPassword}
+              bash ${PrivateSparkMasterScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --local-soft ${PrivateLocalCacheSoftAffinity} --db-port ${PrivateDbPort} --db-host ${PrivateDbHost} --db-user ${PrivateDbUser} --db-password ${PrivateDbPassword} --hadoop-version ${PrivateHadoopVersion} --spark-version ${PrivateSparkVersion} --hive-version ${PrivateHiveVersion} --support-glue ${PrivateSupportGlue}
               echo " Spark Master is ready ..."
             - PrivateBucketFullPath: !Ref BucketFullPath
               PrivateSparkMasterScriptFileName: !Ref SparkMasterScriptFileName
@@ -224,6 +238,10 @@ Resources:
               PrivateDbHost: !Ref DbHost
               PrivateDbUser: !Ref DbUser
               PrivateDbPassword: !Ref DbPassword
+              PrivateSparkVersion: !Ref SparkVersion
+              PrivateHiveVersion: !Ref HiveVersion
+              PrivateHadoopVersion: !Ref HadoopVersion
+              PrivateSupportGlue: !Ref SupportGlue
 
 Outputs:
   IdOfInstance:
@@ -245,3 +263,6 @@ Outputs:
     Value: !Ref SubnetId
   SparkMasterSecurityGroupIdDependsOnDNode:
     Value: !Ref SecurityGroupId
+  SupportGlue:
+    Description: is supported glue ?
+    Value: !Ref SupportGlue

@@ -46,18 +46,29 @@ KeyName: &security_key ${KEY_PAIR}
 # Required
 CIDR_IP: ${Cidr Ip}
 
+# Support for Glue on AWS
+#
+# Description:
+#   There is a limitation for supporting glue on AWS which needed a special package of spark by AWS.
+# Note:
+#   If you set `SUPPORT_GLUE` to be `true`, then please make sure that you using Kylin only support `Job` mode, not `Query` as same as `All`.
+#   Because `All` will support `Query`. So you need to change the `kylin.server.mode` in `kylin.properties` to be `Job` or `All`.
+#   If you set `All` mode for Kylin, there will be a error when you query any sql.
+SUPPORT_GLUE: &SUPPORT_GLUE 'false'
+
 # ============ AWS Configs End ============
 
 # ============ Related Version of Services ============
 # Related Version of Services, Current packages are compatible.
 # Note: Current support these versions, don't modify them.
-KYLIN_VERSION: &KYLIN_VERSION '4.0.0'
-HIVE_VERSION: '2.3.9'
-HADOOP_VERSION: '3.2.0'
+KYLIN_VERSION: &KYLIN_VERSION '4.0.2'
+HIVE_VERSION: &HIVE_VERSION '2.3.9'
+HADOOP_VERSION: &HADOOP_VERSION '3.2.0'
 NODE_EXPORTER_VERSION: '1.3.1'
 PROMETHEUS_VERSION: '2.31.1'
-SPARK_VERSION: '3.1.1'
-ZOOKEEPER_VERSION: '3.4.13'
+SPARK_VERSION: &SPARK_VERSION '3.1.1'
+ZOOKEEPER_VERSION: &ZOOKEEPER_VERSION '3.4.13'
+MDX_VERSION: &MDX_VERSION '4.0.2-beta'
 # ============ Related Version of Services End============
 
 # ============ Debug Configs ============
@@ -75,8 +86,8 @@ DEPLOY_PLATFORM: &platform ec2
 
 # ============ Tool Configs ============
 ## Dangerous !!!
-## Optional: destroy all will delete rds and the vpc and monitor node, please be careful.
-ALWAYS_DESTROY_ALL: false
+## Optional: destroy all will delete rds and the vpc and monitor node, and clean all resources, please be careful.
+ALWAYS_DESTROY_VPC_RDS_MONITOR: false
 
 ## Open public Ip on Instances
 ASSOSICATED_PUBLIC_IP: &associated_public_ip 'true'
@@ -166,6 +177,8 @@ EC2_STATIC_SERVICES_PARAMS:
   EMREc2KeyName: *security_key
   AssociatedPublicIp: *associated_public_ip
 
+  SupportGlue: *SUPPORT_GLUE
+
   DbPort: *DbPort
   DbUser: *DbUser
   DbPassword: *DbPassword
@@ -184,6 +197,7 @@ EC2_ZOOKEEPERS_PARAMS:
   SecurityGroupId:
   EMREc2KeyName: *security_key
   AssociatedPublicIp: *associated_public_ip
+  ZookeeperVersion: *ZOOKEEPER_VERSION
 
   ZookeeperScriptFileName: prepare-ec2-env-for-zk.sh
   Ec2Mode: test
@@ -203,6 +217,10 @@ EC2_SPARK_MASTER_PARAMS:
   DbPort: *DbPort
   DbUser: *DbUser
   DbPassword: *DbPassword
+  SparkVersion: *SPARK_VERSION
+  HadoopVersion: *HADOOP_VERSION
+  HiveVersion: *HIVE_VERSION
+  SupportGlue: *SUPPORT_GLUE
 
   AssociatedPublicIp: *associated_public_ip
   SparkMasterScriptFileName: prepare-ec2-env-for-spark-master.sh
@@ -221,6 +239,13 @@ EC2_KYLIN4_PARAMS:
   InstanceProfileId:
   SubnetId:
   SecurityGroupId:
+
+  KylinVersion: *KYLIN_VERSION
+  SparkVersion: *SPARK_VERSION
+  HadoopVersion: *HADOOP_VERSION
+  HiveVersion: *HIVE_VERSION
+  MdxVersion: *MDX_VERSION
+  SupportGlue: *SUPPORT_GLUE
 
   AssociatedPublicIp: *associated_public_ip
 
@@ -248,6 +273,10 @@ EC2_SPARK_WORKER_PARAMS:
   EMREc2KeyName: *security_key
   # set 'true' for test
   AssociatedPublicIp: *associated_public_ip
+  KylinVersion: *KYLIN_VERSION
+  SparkVersion: *SPARK_VERSION
+  HadoopVersion: *HADOOP_VERSION
+  SupportGlue: *SUPPORT_GLUE
 
   SlaveScriptFileName: prepare-ec2-env-for-spark-slave.sh
   Ec2Mode: test
@@ -265,6 +294,13 @@ EC2_KYLIN4_SCALE_PARAMS:
   InstanceProfileId:
   SubnetId:
   SecurityGroupId:
+
+  KylinVersion: *KYLIN_VERSION
+  SparkVersion: *SPARK_VERSION
+  HadoopVersion: *HADOOP_VERSION
+  HiveVersion: *HIVE_VERSION
+  MdxVersion: *MDX_VERSION
+  SupportGlue: *SUPPORT_GLUE
 
   AssociatedPublicIp: *associated_public_ip
 
@@ -290,6 +326,12 @@ EC2_SPARK_SCALE_SLAVE_PARAMS:
   SubnetId:
   SecurityGroupId:
   WorkerNum:
+
+  KylinVersion: *KYLIN_VERSION
+  SparkVersion: *SPARK_VERSION
+  HadoopVersion: *HADOOP_VERSION
+  SupportGlue: *SUPPORT_GLUE
+
   WaitingTime: '50'
   EMREc2KeyName: *security_key
   # set 'true' for test

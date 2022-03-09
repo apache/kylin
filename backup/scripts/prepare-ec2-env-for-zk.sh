@@ -63,12 +63,41 @@ function logging() {
 
 set +e
 
+function help() {
+  logging warn "Invalid input."
+  logging warn "Usage: ${BASH_SOURCE[0]}
+                       --bucket-url /path/to/bucket/without/prefix
+                       --region region-for-current-instance
+                       --zk-num current-zookeeper-number
+                       --zookeeper-version zk-version-for-cluster"
+  exit 0
+}
+
+while [[ $# != 0 ]]; do
+  if [[ $1 == "--bucket-url" ]]; then
+    # url same as: /xxx/kylin
+    BUCKET_SUFFIX=$2
+  elif [[ $1 == "--region" ]]; then
+    CURRENT_REGION=$2
+  elif [[ $1 == "--zk-num" ]]; then
+    ZK_NUM=$2
+  elif [[ $1 == "--zookeeper-version" ]]; then
+    ZOOKEEPER_VERSION=3.4.13
+  else
+    help
+  fi
+  shift
+  shift
+done
+
 # =============== Env Parameters =================
 # Prepare Steps
 ## Parameter
 ### Parameters for Spark and Kylin
 #### ${SPARK_VERSION:0:1} get 2 from 2.4.7
-ZOOKEEPER_VERSION=3.4.13
+if [[ -z $ZOOKEEPER_VERSION ]]; then
+  ZOOKEEPER_VERSION=3.4.13
+fi
 
 ### File name
 ZOOKEEPER_PACKAGE=zookeeper-${ZOOKEEPER_VERSION}.tar.gz
@@ -132,33 +161,6 @@ source ~/.bash_profile
 exec 2>>${OUT_LOG}
 set -o pipefail
 # ================ Main Functions ======================
-function help() {
-  logging warn "Invalid input."
-  logging warn "Usage: ${BASH_SOURCE[0]}
-                       --bucket-url /path/to/bucket/without/prefix
-                       --region region-for-current-instance
-                       --zk-num current-zookeeper-number"
-  exit 0
-}
-
-if [[ $# -ne 6 ]]; then
-  help
-fi
-
-while [[ $# != 0 ]]; do
-  if [[ $1 == "--bucket-url" ]]; then
-    # url same as: /xxx/kylin
-    BUCKET_SUFFIX=$2
-  elif [[ $1 == "--region" ]]; then
-    CURRENT_REGION=$2
-  elif [[ $1 == "--zk-num" ]]; then
-    ZK_NUM=$2
-  else
-    help
-  fi
-  shift
-  shift
-done
 
 PATH_TO_BUCKET=s3:/${BUCKET_SUFFIX}
 
@@ -212,6 +214,10 @@ function prepare_zookeeper() {
   else
     logging info "Downloading Zookeeper package ${ZOOKEEPER_PACKAGE} ..."
     aws s3 cp ${PATH_TO_BUCKET}/tar/${ZOOKEEPER_PACKAGE} ${HOME_DIR} --region ${CURRENT_REGION}
+    if [[ $? -ne 0  ]]; then
+        logging error "Downloading ${ZOOKEEPER_PACKAGE} failed, please check."
+        exit 1
+    fi
     #      # wget cost lot time
     #      wget http://archive.apache.org/dist/zookeeper/zookeeper-${ZOOKEEPER_VERSION}/${ZOOKEEPER_PACKAGE}
   fi

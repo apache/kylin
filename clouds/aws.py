@@ -97,7 +97,7 @@ class AWS:
 
     @property
     def is_destroy_all(self) -> bool:
-        return self.config[Params.ALWAYS_DESTROY_ALL.value] is True
+        return self.config[Params.ALWAYS_DESTROY_VPC_RDS_MONITOR.value] is True
 
     def is_target_cluster_ready(self, cluster_num: int) -> bool:
         if self.is_target_cluster_instances_ready(cluster_num):
