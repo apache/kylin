@@ -32,7 +32,8 @@ object QueryMetricUtils extends Logging {
         case exec: KylinFileSourceScanExec =>
           //(exec.metrics.apply("numOutputRows").value, exec.metrics.apply("readBytes").value)
           (exec.metrics.apply("numOutputRows").value, exec.metrics.apply("numFiles").value,
-                  exec.metrics.apply("metadataTime").value, exec.metrics.apply("scanTime").value, -1l)
+                  exec.metrics.apply("metadataTime").value, exec.metrics.apply("scanTime").value,
+            exec.metrics.apply("bytesRead").value)
         case exec: FileSourceScanExec =>
           //(exec.metrics.apply("numOutputRows").value, exec.metrics.apply("readBytes").value)
           (exec.metrics.apply("numOutputRows").value, exec.metrics.apply("numFiles").value,
