@@ -100,6 +100,8 @@ while [[ $# != 0 ]]; do
     SPARK_VERSION=$2
   elif [[ $1 == "--hive-version" ]]; then
     HIVE_VERSION=$2
+  elif [[ $1 == "--support-glue" ]]; then
+    SUPPORT_GLUE=$2
   else
     help
   fi
@@ -123,6 +125,10 @@ if [[ -z "$HIVE_VERSION" ]]; then
   HIVE_VERSION=2.3.9
 fi
 
+if [[ -z "$SUPPORT_GLUE" ]]; then
+  SUPPORT_GLUE=false
+fi
+
 LOCAL_CACHE_DIR=/home/ec2-user/ssd
 
 ### File name
@@ -137,9 +143,13 @@ if [[ $LOCAL_CACHE_SOFT_AFFINITY == "true" ]]; then
       sudo mkdir -p ${LOCAL_CACHE_DIR}/alluxio-cache-driver
       sudo chmod -R 777 ${LOCAL_CACHE_DIR}/alluxio-cache-driver
   fi
-
 fi
-SPARK_PACKAGE=spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION:0:3}.tgz
+
+if [[ $SUPPORT_GLUE == "true" ]]; then
+  SPARK_PACKAGE=spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION:0:3}-aws.tgz
+else
+  SPARK_PACKAGE=spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION:0:3}.tgz
+fi
 HADOOP_PACKAGE=hadoop-${HADOOP_VERSION}.tar.gz
 HIVE_PACKAGE=apache-hive-${HIVE_VERSION}-bin.tar.gz
 NODE_EXPORTER_PACKAGE=node_exporter-1.3.1.linux-amd64.tar.gz
@@ -377,7 +387,19 @@ function init_hive() {
     return
   fi
 
-  cat <<EOF >${HIVE_HOME}/conf/hive-site.xml
+  if [[ $SUPPORT_GLUE == "true" ]]; then
+      cat <<EOF >${HIVE_HOME}/conf/hive-site.xml
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+  <property>
+    <name>hive.metastore.client.factory.class</name>
+    <value>com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory</value>
+  </property>
+</configuration>
+EOF
+  else
+    cat <<EOF >${HIVE_HOME}/conf/hive-site.xml
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
@@ -414,6 +436,7 @@ function init_hive() {
   </property>
 </configuration>
 EOF
+  fi
 
   # resolve jars conflict
   if [[ ! -d $HIVE_HOME/spark_jar ]]; then

@@ -40,4 +40,6 @@ class Tar(Enum):
     NODE = 'node_exporter-{NODE_EXPORTER_VERSION}.linux-amd64.tar.gz'
     PROMETHEUS = 'prometheus-{PROMETHEUS_VERSION}.linux-amd64.tar.gz'
     SPARK = 'spark-{SPARK_VERSION}-bin-hadoop{HADOOP_VERSION!s:3.3s}.tgz'
+    SPARK_FOR_GLUE = 'spark-{SPARK_VERSION}-bin-hadoop{HADOOP_VERSION!s:3.3s}-aws.tgz'
     ZOOKEEPER = 'zookeeper-{ZOOKEEPER_VERSION}.tar.gz'
+    MDX = 'mdx-kylin-{MDX_VERSION}.tar.gz'

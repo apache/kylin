@@ -147,13 +147,10 @@ function help() {
                        --db-host host-for-hive-to-access-rds
                        --db-user user-for-hive-to-access-rds
                        --db-password password-for-hive-to-access-rds
-                       --db-port port-for-hive-to-access-rds"
+                       --db-port port-for-hive-to-access-rds
+                       --support-glue support-for-glue"
   exit 0
 }
-
-if [[ $# -ne 12 ]]; then
-  help
-fi
 
 while [[ $# != 0 ]]; do
   if [[ $1 == "--bucket-url" ]]; then
@@ -169,12 +166,18 @@ while [[ $# != 0 ]]; do
     DATABASE_USER=$2
   elif [[ $1 == "--db-port" ]]; then
     DATABASE_PORT=$2
+  elif [[ $1 == "--support-glue" ]]; then
+    SUPPORT_GLUE=$2
   else
     help
   fi
   shift
   shift
 done
+
+if [[ -z "$SUPPORT_GLUE" ]]; then
+  SUPPORT_GLUE=false
+fi
 
 PATH_TO_BUCKET=s3:/${BUCKET_SUFFIX}
 CONFIG_PATH_TO_BUCKET=s3a:/${BUCKET_SUFFIX}
@@ -411,6 +414,9 @@ EOF
 }
 
 function start_hive_metastore() {
+  if [[ $SUPPORT_GLUE == "true" ]]; then
+      return
+  fi
   nohup $HIVE_HOME/bin/hive --service metastore >> $HIVE_HOME/logs/hivemetastorelog.log 2>&1 &
   logging info "Hive was logging in $HIVE_HOME/logs, you can check ..."
 }
@@ -469,13 +475,14 @@ function prepare_docker() {
 }
 
 function start_grafana() {
+  logging info "Starting docker ..."
+  start_docker
+
   logging info "Preparing grafana ..."
   if [[ -f ${HOME_DIR}/.prepared_grafana ]]; then
     logging warn "Grafana service already installed, check it."
     return
   fi
-
-  start_docker
 
   if [[ $(sudo docker ps -q -f name=grafana-${GRAFANA_VERSION}) ]]; then
     logging warn "Grafana-${GRAFANA_VERSION} already running, skip this ..."
@@ -603,7 +610,10 @@ function prepare_packages() {
 }
 
 function start_services_on_other() {
-  start_hive_metastore
+  if [[ ! -f ${HOME_DIR}/.first_run ]]; then
+    start_hive_metastore
+    touch ${HOME_DIR}/.first_run
+  fi
 
   # start extra monitor service
   # NOTE: prometheus server will start after all node_exporter on every node started.

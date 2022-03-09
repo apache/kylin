@@ -99,6 +99,8 @@ while [[ $# != 0 ]]; do
     SPARK_VERSION=$2
   elif [[ $1 == "--kylin-version" ]]; then
     KYLIN_VERSION=$2
+  elif [[ $1 == "--support-glue" ]]; then
+    SUPPORT_GLUE=$2
   else
     help
   fi
@@ -121,6 +123,10 @@ fi
 
 if [[ -z "$KYLIN_VERSION" ]]; then
   KYLIN_VERSION=4.0.0
+fi
+
+if [[ -z "$SUPPORT_GLUE" ]]; then
+  SUPPORT_GLUE=false
 fi
 
 ### Parameter for JDK 1.8
@@ -150,7 +156,12 @@ else
   fi
 fi
 
-SPARK_PACKAGE=spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION:0:3}.tgz
+if [[ $SUPPORT_GLUE == "true" ]]; then
+  SPARK_PACKAGE=spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION:0:3}-aws.tgz
+else
+  SPARK_PACKAGE=spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION:0:3}.tgz
+fi
+
 HADOOP_PACKAGE=hadoop-${HADOOP_VERSION}.tar.gz
 NODE_EXPORTER_PACKAGE=node_exporter-1.3.1.linux-amd64.tar.gz
 

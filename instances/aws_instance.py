@@ -139,6 +139,10 @@ class AWSInstance:
         return self.cf_client.get_waiter('stack_exists')
 
     @property
+    def db_available_waiter(self):
+        return self.rds_client.get_waiter('db_instance_available')
+
+    @property
     def db_port(self) -> str:
         return self.config[Config.DB_PORT.value]
 
@@ -391,12 +395,7 @@ class AWSInstance:
         return db_instances[0]
 
     def is_rds_exists(self) -> bool:
-        try:
-            self.rds_client.describe_db_instances(DBInstanceIdentifier=self.db_identifier)
-        except self.rds_client.exceptions.DBInstanceNotFoundFault as ex:
-            logger.warning(f'DB {self.db_identifier} is not found.')
-            return False
-        return True
+        return self.is_db_available(self.db_identifier)
 
     def create_rds_stack(self) -> Optional[Dict]:
         if self.is_stack_complete(self.rds_stack_name):
@@ -414,6 +413,8 @@ class AWSInstance:
             file_path=self.path_of_rds_stack,
             params=params,
         )
+        # make sure that rds stack will create successfully
+        assert self.is_stack_complete(self.rds_stack_name)
         return resp
 
     def terminate_rds_stack(self) -> Optional[Dict]:
@@ -1424,7 +1425,6 @@ class AWSInstance:
 
         return True
 
-
     def update_basic_params(self, params: Dict) -> Dict:
         params[Params.SUBNET_ID.value] = self.get_subnet_id()
         params[Params.SECURITY_GROUP.value] = self.get_security_group_id()
@@ -2099,6 +2099,25 @@ class AWSInstance:
             raise Exception(f'Current stack: {stack_name} is create failed, please check.')
         return False
 
+    def is_db_available(self, db_name: str) -> bool:
+        if self._db_available(db_name):
+            return True
+        return False
+
+    def _db_available(self, db_name: str) -> bool:
+        try:
+            self.db_available_waiter.wait(
+                DBInstanceIdentifier=db_name,
+                MaxRecords=60,
+                WaiterConfig={
+                    'Delay': 30,
+                    'MaxAttempts': 120
+                }
+            )
+        except WaiterError as wx:
+            return False
+        return True
+
     def _validate_spark_worker_scale(self, stack_name: str) -> None:
         if stack_name not in self.scaled_spark_workers_stacks:
             msg = f'{stack_name} not in scaled list, please check.'
@@ -2135,7 +2154,7 @@ class AWSInstance:
             self.create_complete_waiter.wait(
                 StackName=stack_name,
                 WaiterConfig={
-                    'Delay': 30,
+                    'Delay': 60,
                     'MaxAttempts': 120
                 }
             )

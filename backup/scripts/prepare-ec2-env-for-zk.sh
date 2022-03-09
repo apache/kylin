@@ -73,10 +73,6 @@ function help() {
   exit 0
 }
 
-if [[ $# -ne 6 ]]; then
-  help
-fi
-
 while [[ $# != 0 ]]; do
   if [[ $1 == "--bucket-url" ]]; then
     # url same as: /xxx/kylin

@@ -122,7 +122,9 @@ Parameters:
   HadoopVersion:
     Type: String
     Default: 3.2.0
-
+  SupportGlue:
+    Type: String
+    Default: false
 
 Mappings:
   AWSRegionArch2AMI:
@@ -235,7 +237,7 @@ Resources:
               #!/bin/bash -xe
               cd /home/ec2-user
               aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateSlaveScriptFileName} . --region ${PrivateRegion}
-              bash ${PrivateSlaveScriptFileName} --bucket-url ${PrivateBucketPath} --master-host ${PrivateMasterHost} --worker-number ${WorkerNum} --region ${PrivateRegion} --waiting-time ${PrivateWaitingTime} --mode ${WorkerMode} --local-soft ${PrivateLocalCacheSoftAffinity} --hadoop-version ${PrivateHadoopVersion} --spark-version ${PrivateSparkVersion} --kylin-version ${PrivateKylinVersion}
+              bash ${PrivateSlaveScriptFileName} --bucket-url ${PrivateBucketPath} --master-host ${PrivateMasterHost} --worker-number ${WorkerNum} --region ${PrivateRegion} --waiting-time ${PrivateWaitingTime} --mode ${WorkerMode} --local-soft ${PrivateLocalCacheSoftAffinity} --hadoop-version ${PrivateHadoopVersion} --spark-version ${PrivateSparkVersion} --kylin-version ${PrivateKylinVersion} --support-glue ${PrivateSupportGlue}
             - PrivateMasterHost: !Ref SparkMasterNodeHost
               WorkerNum: !Ref WorkerNum
               PrivateBucketFullPath: !Ref BucketFullPath
@@ -248,6 +250,7 @@ Resources:
               PrivateKylinVersion: !Ref KylinVersion
               PrivateHadoopVersion: !Ref HadoopVersion
               PrivateSparkVersion: !Ref SparkVersion
+              PrivateSupportGlue: !Ref SupportGlue
 
 Outputs:
   IdOfInstance:
@@ -260,3 +263,6 @@ Outputs:
     Description: the Slave Instance Public IP
     Value: !GetAtt Ec2InstanceOfSlave.PublicIp
     Condition: IsAssociatedPublicIp
+  SupportGlue:
+    Description: is supported glue ?
+    Value: !Ref SupportGlue

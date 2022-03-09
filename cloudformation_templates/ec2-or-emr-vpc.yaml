@@ -26,6 +26,7 @@ Parameters:
     Default: 4.0.0
     AllowedValues:
       - 4.0.0
+      - 4.0.2
   ClusterType:
     Type: String
     Default: ec2
@@ -273,6 +274,11 @@ Resources:
         - IpProtocol: tcp
           FromPort: '4040'
           ToPort: '4050'
+          CidrIp: !Ref CidrIp
+        # For MDX
+        - IpProtocol: tcp
+          FromPort: '7080'
+          ToPort: '7080'
           CidrIp: !Ref CidrIp
     DeletionPolicy: Delete
   Ec2OrEmrBenchMarkSecurityGroupFullTcpIngress:

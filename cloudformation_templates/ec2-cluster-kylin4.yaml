@@ -146,6 +146,13 @@ Parameters:
   HiveVersion:
     Type: String
     Default: 2.3.9
+  MdxVersion:
+    Type: String
+    Default: 4.0.2-beta
+
+  SupportGlue:
+    Type: String
+    Default: false
 
 Mappings:
   AWSRegionArch2AMI:
@@ -253,7 +260,7 @@ Resources:
               #!/bin/bash -xe
               cd /home/ec2-user
               aws s3 cp ${PrivateBucketFullPath}/scripts/${PrivateKylin4ScriptFileName} . --region ${PrivateRegion}
-              bash ${PrivateKylin4ScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --db-host ${PrivateDbHost} --db-password ${PrivateDbPass} --db-user ${PrivateDbUser} --db-port ${PrivateDbPort} --local-soft ${PrivateLocalCacheSoftAffinity} --cluster-num ${PrivateClusterNum} --is-scaled ${PrivateIsScaled} --hadoop-version ${PrivateHadoopVersion} --spark-version ${PrivateSparkVersion} --hive-version ${PrivateHiveVersion} --kylin-version ${PrivateKylinVersion}
+              bash ${PrivateKylin4ScriptFileName} --bucket-url ${PrivateBucketPath} --region ${PrivateRegion} --db-host ${PrivateDbHost} --db-password ${PrivateDbPass} --db-user ${PrivateDbUser} --db-port ${PrivateDbPort} --local-soft ${PrivateLocalCacheSoftAffinity} --cluster-num ${PrivateClusterNum} --is-scaled ${PrivateIsScaled} --hadoop-version ${PrivateHadoopVersion} --spark-version ${PrivateSparkVersion} --hive-version ${PrivateHiveVersion} --kylin-version ${PrivateKylinVersion} --mdx-version ${PrivateMdxVersion} --support-glue ${PrivateSupportGlue}
               echo " Kylin4 is ready ..."
             - PrivateBucketFullPath: !Ref BucketFullPath
               PrivateKylin4ScriptFileName: !Ref Kylin4ScriptFileName
@@ -270,6 +277,8 @@ Resources:
               PrivateSparkVersion: !Ref SparkVersion
               PrivateHiveVersion: !Ref HiveVersion
               PrivateHadoopVersion: !Ref HadoopVersion
+              PrivateMdxVersion: !Ref MdxVersion
+              PrivateSupportGlue: !Ref SupportGlue
 
 Outputs:
   IdOfInstance:
@@ -293,3 +302,6 @@ Outputs:
   Kylin4ZookeeperHosts:
     Description: Zookeeper hosts for Kylin 4
     Value: !Ref ZookeepersHost
+  SupportGlue:
+    Description: is supported glue ?
+    Value: !Ref SupportGlue
