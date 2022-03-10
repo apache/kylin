@@ -52,6 +52,40 @@ After the container is started, we can enter the container through the `docker e
 - Hdfs NameNode Web UI: [http://127.0.0.1:50070](http://127.0.0.1:50070/)
 - Yarn ResourceManager Web UI: [http://127.0.0.1:8088](http://127.0.0.1:8088/)
 
+## Quickly try MDX for Kylin
+
+We have pushed the MDX for Kylin image for the user to the docker hub. Users do not need to build the image locally, just execute the following command to pull the image from the docker hub:
+
+{% highlight Groff markup %}
+docker pull apachekylin/apache-kylin-standalone:kylin-4.0.1-mondrian
+{% endhighlight %}
+
+After the pull is successful, execute the following command to start the container:
+
+{% highlight Groff markup %}
+docker run -d \
+-m 8G \
+-p 7070:7070 \
+-p 7080:7080 \
+-p 8088:8088 \
+-p 50070:50070 \
+-p 8032:8032 \
+-p 8042:8042 \
+-p 2181:2181 \
+apachekylin/apache-kylin-standalone:kylin-4.0.1-mondrian
+{% endhighlight %}
+
+The extra following service will start based on services of `Quickly try Kylin` started:
+
+- MDX for Kylin
+
+After the container is started, we can enter the container through the `docker exec -it <container_id> bash` command. Of course, since we have mapped the specified port in the container to the local port, we can open the pages of each service directly in the native browser, such as:
+
+- Kylin Web UI: [http://127.0.0.1:7070/kylin/login](http://127.0.0.1:7070/kylin/login)
+- MDX for Kylin Web UI: [http://127.0.0.1:7080](http://127.0.0.1:7080)
+- Hdfs NameNode Web UI: [http://127.0.0.1:50070](http://127.0.0.1:50070/)
+- Yarn ResourceManager Web UI: [http://127.0.0.1:8088](http://127.0.0.1:8088/)
+
 ## Container resource recommendation
 
 In order to allow Kylin to build the cube smoothly, the memory resource we configured for Yarn NodeManager is 6G, plus the memory occupied by each service, please ensure that the memory of the container is not less than 8G, so as to avoid errors due to insufficient memory.

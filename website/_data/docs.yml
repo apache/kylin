@@ -38,6 +38,7 @@
 - title: Tutorial
   docs:
   - tutorial/kylin_sample
+  - tutorial/quick_start_for_mdx
   - tutorial/web
   - tutorial/create_cube
   - tutorial/cube_build_job
