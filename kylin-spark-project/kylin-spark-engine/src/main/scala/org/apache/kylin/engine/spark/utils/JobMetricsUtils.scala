@@ -56,11 +56,15 @@ object JobMetricsUtils extends Logging {
       case plan: UnaryExecNode =>
         if (aggs.contains(plan.getClass) && !afterAgg) {
           afterAgg = true
-          rowMetrics.setMetrics(Metrics.CUBOID_ROWS_CNT, plan.metrics.apply("numOutputRows").value)
+          if (plan.metrics.contains("numOutputRows")) {
+            rowMetrics.setMetrics(Metrics.CUBOID_ROWS_CNT, plan.metrics.apply("numOutputRows").value)
+          }
         }
       case plan: BinaryExecNode =>
         if (joins.contains(plan.getClass) && !afterJoin) {
-          rowMetrics.setMetrics(Metrics.SOURCE_ROWS_CNT, plan.metrics.apply("numOutputRows").value)
+          if (plan.metrics.contains("numOutputRows")) {
+            rowMetrics.setMetrics(Metrics.SOURCE_ROWS_CNT, plan.metrics.apply("numOutputRows").value)
+          }
           afterJoin = true
         }
       case plan: LeafExecNode =>
@@ -72,8 +76,10 @@ object JobMetricsUtils extends Logging {
             rowMetrics.getMetrics(Metrics.SOURCE_ROWS_CNT)
           }
 
-          val rowsCnt = preCnt + plan.metrics.apply("numOutputRows").value
-          rowMetrics.setMetrics(Metrics.SOURCE_ROWS_CNT, rowsCnt)
+          if (plan.metrics.contains("numOutputRows")) {
+            val rowsCnt = preCnt + plan.metrics.apply("numOutputRows").value
+            rowMetrics.setMetrics(Metrics.SOURCE_ROWS_CNT, rowsCnt)
+          }
         }
       case _ =>
     }
