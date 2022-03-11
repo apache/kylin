@@ -210,7 +210,7 @@ permalink: /cn/docs/tutorial/quick_start_for_mdx.html
 1. 选择 **数据 —> 自 Analysis Services**
    <img src="/images/tutorial/4.0/Quick-Start-For-Mdx/mdx_excel_cn.png" alt="mdx excel" style="zoom:50%;" />
 
-2. 接下来您需要在**服务器名称**一栏中填写连接 Kyligence MDX 的地址信息，样例如下：
+2. 接下来您需要在**服务器名称**一栏中填写连接 MDX for Kylin 的地址信息，样例如下：
    ``` http://{host}:{port}/mdx/xmla/{project}```
    MDX for Kylin 默认端口号是 7080，用户名和密码请填写 MDX for Kylin 系统的登录用户名和密码。
    <img src="/images/tutorial/4.0/Quick-Start-For-Mdx/mdx_excel_02_cn.png" alt="mdx excel 02" style="zoom:50%;" />
