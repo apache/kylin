@@ -30,6 +30,7 @@
 - title: 教程
   docs:
   - tutorial/kylin_sample
+  - tutorial/quick_start_for_mdx
   - tutorial/web
   - tutorial/create_cube
   - tutorial/cube_build_job
@@ -57,7 +58,7 @@
 
 
 - title: 帮助
-  docs:  
+  docs:
   - howto/howto_use_restapi
   - howto/howto_build_cube_with_restapi
   - howto/howto_optimize_cubes
