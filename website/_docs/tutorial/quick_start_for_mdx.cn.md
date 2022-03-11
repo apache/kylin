@@ -1,6 +1,6 @@
 ---
 layout: docs-cn
-title: 快速上手 MDX for Kylin 数据集分析
+title: 快速上手 MDX for Kylin
 categories: tutorial
 permalink: /cn/docs/tutorial/quick_start_for_mdx.html
 ---

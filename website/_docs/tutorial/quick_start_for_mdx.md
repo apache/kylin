@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  Quickly Start With MDX Analysis
+title:  Quickly Start With MDX for Kylin
 categories: tutorial
 permalink: /docs/tutorial/quick_start_for_mdx.html
 ---
