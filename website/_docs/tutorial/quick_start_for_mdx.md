@@ -216,9 +216,9 @@ We have completed the definition of the data set, and now we can connect to Exce
 1. Select **Data —> From Analysis Services**
    <img src="/images/tutorial/4.0/Quick-Start-For-Mdx/mdx_excel.png" alt="mdx excel" style="zoom:50%;" />
 
-2. Next you need to fill in the address information of Kyligence MDX in the **Server Name** column. The sample is as follows:
+2. Next you need to fill in the address information of MDX for Kylin in the **Server Name** column. The sample is as follows:
    ```http://{host}:{port}/mdx/xmla/{project}```
-   The default port of Kyligence MDX is 7080.
+   The default port of MDX for Kylin is 7080.
    The username and password are your MDX for Kylin's login username and password.
    <img src="/images/tutorial/4.0/Quick-Start-For-Mdx/mdx_excel_02.png" alt="mdx excel" style="zoom:50%;" />
 
