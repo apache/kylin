@@ -114,6 +114,8 @@ while [[ $# != 0 ]]; do
     MDX_VERSION=$2
   elif [[ $1 == "--support-glue" ]]; then
     SUPPORT_GLUE=$2
+  elif [[ $1 == "--enable-mdx" ]]; then
+    ENABLE_MDX=$2
   else
     help
   fi
@@ -151,6 +153,10 @@ fi
 
 if [[ -z "$MDX_DATABASE" ]]; then
   MDX_DATABASE=kylin_mdx
+fi
+
+if [[ -z "$ENABLE_MDX" ]]; then
+  ENABLE_MDX=false
 fi
 
 LOCAL_CACHE_DIR=/home/ec2-user/ssd
@@ -426,7 +432,7 @@ function init_hive() {
   fi
 
   if [[ $SUPPORT_GLUE == "true" ]]; then
-      cat <<EOF >${HIVE_HOME}/conf/hive-site.xml
+    cat <<EOF >${HIVE_HOME}/conf/hive-site.xml
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
@@ -661,7 +667,7 @@ function init_kylin() {
   aws s3 cp ${PATH_TO_BUCKET}/properties/${CLUSTER_NUM}/kylin.properties ${KYLIN_HOME}/conf/kylin.properties --region ${CURRENT_REGION}
 
   if [[ ${LOCAL_CACHE_SOFT_AFFINITY} == "true" ]]; then
-    cat <<EOF >> ${KYLIN_HOME}/conf/kylin.properties
+    cat <<EOF >>${KYLIN_HOME}/conf/kylin.properties
 kylin.query.spark-conf.spark.executor.extraJavaOptions=-Dhdp.version=current -Dlog4j.configuration=spark-executor-log4j.properties -Dlog4j.debug -Dkylin.hdfs.working.dir=\${kylin.env.hdfs-working-dir} -Dkylin.metadata.identifier=\${kylin.metadata.url.identifier} -Dkylin.spark.category=sparder -Dkylin.spark.identifier={{APP_ID}} -Dalluxio.user.client.cache.dir=${LOCAL_CACHE_DIR}/alluxio-cache-{{APP_ID}}-{{EXECUTOR_ID}}
 
 kylin.query.spark-conf.spark.driver.extraJavaOptions=-Dhdp.version=current -Dalluxio.user.client.cache.dir=${LOCAL_CACHE_DIR}/alluxio-cache-driver
@@ -702,6 +708,9 @@ EOF
 }
 
 function prepare_mdx() {
+  if [[ ${ENABLE_MDX} == "false" ]]; then
+    return
+  fi
   logging info "Preparing MDX ..."
 
   if [[ -f ${HOME_DIR}/.prepared_mdx ]]; then
@@ -736,6 +745,9 @@ function prepare_mdx() {
 }
 
 function init_mdx() {
+  if [[ ${ENABLE_MDX} == "false" ]]; then
+    return
+  fi
   if [[ -f ${HOME_DIR}/.inited_mdx ]]; then
     logging warn "MDX already inited ..."
     return
@@ -745,7 +757,7 @@ function init_mdx() {
     aws s3 cp ${PATH_TO_BUCKET}/jars/mysql-connector-java-8.0.24.jar $MDX_HOME/semantic-mdx/lib/ --region ${CURRENT_REGION}
   fi
 
-  if [[ ! -f  $MDX_HOME/semantic-mdx/lib/kylin-jdbc-4.0.0-SNAPSHOT.jar ]]; then
+  if [[ ! -f $MDX_HOME/semantic-mdx/lib/kylin-jdbc-4.0.0-SNAPSHOT.jar ]]; then
     logging info "Copy jdbc driver from $KYLIN_HOME to $MDX_HOME/semantic-mdx/lib/ ..."
     cp -f $KYLIN_HOME/lib/kylin-jdbc-*.jar $MDX_HOME/semantic-mdx/lib/
   fi
@@ -812,7 +824,7 @@ function start_kylin() {
 
 function sample_for_kylin() {
   if [[ $SUPPORT_GLUE == "true" ]]; then
-      return
+    return
   fi
 
   if [[ ${IS_SCALED} == "false" ]]; then
@@ -832,6 +844,9 @@ function restart_kylin() {
 }
 
 function start_mdx() {
+  if [[ ${ENABLE_MDX} == "false" ]]; then
+    return
+  fi
   ${MDX_HOME}/bin/mdx.sh start
 }
 

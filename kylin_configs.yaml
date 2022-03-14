@@ -56,6 +56,9 @@ CIDR_IP: ${Cidr Ip}
 #   If you set `All` mode for Kylin, there will be a error when you query any sql.
 SUPPORT_GLUE: &SUPPORT_GLUE 'false'
 
+# Enable using MDX
+ENABLE_MDX: &ENABLE_MDX 'false'
+
 # ============ AWS Configs End ============
 
 # ============ Related Version of Services ============
@@ -246,6 +249,7 @@ EC2_KYLIN4_PARAMS:
   HiveVersion: *HIVE_VERSION
   MdxVersion: *MDX_VERSION
   SupportGlue: *SUPPORT_GLUE
+  EnableMDX: *ENABLE_MDX
 
   AssociatedPublicIp: *associated_public_ip
 
@@ -301,6 +305,7 @@ EC2_KYLIN4_SCALE_PARAMS:
   HiveVersion: *HIVE_VERSION
   MdxVersion: *MDX_VERSION
   SupportGlue: *SUPPORT_GLUE
+  EnableMDX: *ENABLE_MDX
 
   AssociatedPublicIp: *associated_public_ip
 
