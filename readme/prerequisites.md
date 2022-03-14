@@ -14,7 +14,7 @@ git clone https://github.com/apache/kylin.git && cd kylin && git checkout kylin4
 
 > Note: 
 >
-> ​	`IAM` role must have the access which contains `AmazonEC2RoleforSSM`, `AmazonSSMFullAccess,` and `AmazonSSMManagedInstanceCore`.
+> ​	`IAM` role must have the access which contains `AmazonEC2RoleforSSM`, `AmazonSSMFullAccess,` and `AmazonSSMManagedInstanceCore`, and `AWSGlueConsoleFullAccess` (this role is needed if you want to use glue).
 >
 > ​	This `IAM` Role will be used to initialize every ec2 instances which is for creating a kylin4 cluster on AWS. And it will configure in `Initialize Env of Local Machine` part.
 
