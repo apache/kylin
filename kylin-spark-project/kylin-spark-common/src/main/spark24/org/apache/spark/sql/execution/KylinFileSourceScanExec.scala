@@ -21,7 +21,7 @@ package org.apache.spark.sql.execution
 import org.apache.hadoop.fs.{BlockLocation, FileStatus, LocatedFileStatus, Path}
 import org.apache.kylin.common.KylinConfig
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.catalyst.expressions.{Ascending, Attribute, Expression, ExpressionUtils, SortOrder}
+import org.apache.spark.sql.catalyst.expressions.{Ascending, Attribute, Expression, ExpressionUtils, SortOrder, UnsafeProjection}
 import org.apache.spark.sql.catalyst.plans.physical.{HashPartitioning, Partitioning, UnknownPartitioning}
 import org.apache.spark.sql.catalyst.{InternalRow, TableIdentifier}
 import org.apache.spark.sql.execution.datasources._
@@ -79,6 +79,34 @@ class KylinFileSourceScanExec(
   override def inputRDDs(): Seq[RDD[InternalRow]] = {
     inputRDD :: Nil
   }
+
+  protected override def doExecute(): RDD[InternalRow] = {
+    if (supportsBatch) {
+      // in the case of fallback, this batched scan should never fail because of:
+      // 1) only primitive types are supported
+      // 2) the number of columns should be smaller than spark.sql.codegen.maxFields
+      WholeStageCodegenExec(this)(codegenStageId = 0).execute()
+    } else {
+      val numOutputRows = longMetric("numOutputRows")
+
+      if (needsUnsafeRowConversion) {
+        inputRDD.mapPartitionsWithIndexInternal { (index, iter) =>
+          val proj = UnsafeProjection.create(schema)
+          proj.initialize(index)
+          iter.map( r => {
+            numOutputRows += 1
+            proj(r)
+          })
+        }
+      } else {
+        inputRDD.map { r =>
+          numOutputRows += 1
+          r
+        }
+      }
+    }
+  }
+
 
   @transient
   private val pushedDownFilters = dataFilters
