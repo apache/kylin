@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,6 +46,8 @@ import org.apache.kylin.rest.request.MetaRequest;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.request.SaveSqlRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.QueryService;
 import org.slf4j.Logger;
@@ -68,7 +70,7 @@ import com.google.common.collect.Maps;
 
 /**
  * Handle query requests.
- * 
+ *
  * @author xduo
  */
 @Controller
@@ -172,6 +174,17 @@ public class QueryController extends BasicController {
     public List<TableMeta> getMetadata(MetaRequest metaRequest) {
         try {
             return queryService.getMetadata(metaRequest.getProject());
+        } catch (SQLException e) {
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
+    @RequestMapping(value = "/tables_and_columns/mdx", method = RequestMethod.GET, produces = { "application/json" })
+    @ResponseBody
+    public EnvelopeResponse getMetadataForMdx(MetaRequest metaRequest) throws IOException {
+        try {
+            List<TableMeta> metadata= queryService.getMetadata(metaRequest.getProject());
+            return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, metadata, "");
         } catch (SQLException e) {
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }

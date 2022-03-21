@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,6 +30,8 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.security.AclEntityType;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.AclPermissionFactory;
@@ -57,7 +59,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * @author xduo
- * 
+ *
  */
 @Controller
 @RequestMapping(value = "/access")
@@ -88,7 +90,7 @@ public class AccessController extends BasicController implements InitializingBea
         // init ExternalAclProvider
         ExternalAclProvider.getInstance();
     }
-    
+
     /**
      * Get current user's permission in the project
      */
@@ -98,9 +100,16 @@ public class AccessController extends BasicController implements InitializingBea
         return accessService.getUserPermissionInPrj(project);
     }
 
+    @RequestMapping(value = "/user/permission/{project}/mdx", method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public EnvelopeResponse getUserPermissionInPrjForMdx(@PathVariable("project") String project) {
+        String permission = accessService.getUserPermissionInPrj(project);
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, permission, "");
+    }
+
     /**
      * Get access entry list of a domain object
-     * 
+     *
      * @param uuid
      * @return
      * @throws IOException
@@ -138,9 +147,43 @@ public class AccessController extends BasicController implements InitializingBea
         }
     }
 
+    @RequestMapping(value = "/{type}/{project}/mdx", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public EnvelopeResponse<List<AccessEntryResponse>> getAccessEntitiesForMdx(@PathVariable String type, @PathVariable String project) throws IOException {
+        String uuid = projectService.getIdOfProject(project);
+        ExternalAclProvider eap = ExternalAclProvider.getInstance();
+        if (uuid == null || eap == null) {
+            AclEntity ae = accessService.getAclEntity(type, uuid);
+            Acl acl = accessService.getAcl(ae);
+            return new EnvelopeResponse<>(ResponseCode.CODE_SUCCESS, accessService.generateAceResponses(acl), "");
+        }
+
+        List<AccessEntryResponse> ret = new ArrayList<>();
+        List<Pair<String, AclPermission>> acl = eap.getAcl(type, uuid);
+        if (acl != null) {
+            for (Pair<String, AclPermission> p : acl) {
+                PrincipalSid sid = new PrincipalSid(p.getFirst());
+                ret.add(new AccessEntryResponse(null, sid, p.getSecond(), true));
+            }
+        } else {
+            // in case getAcl() does not work, try checkPermission() as a fall back
+            for (UserDetails user : userService.listUsers()) {
+                PrincipalSid sid = new PrincipalSid(user.getUsername());
+                List<String> authorities = AclPermissionUtil.transformAuthorities(user.getAuthorities());
+                for (Permission p : AclPermissionFactory.getPermissions()) {
+                    if (!eap.checkPermission(user.getUsername(), authorities, type, uuid, p)) {
+                        continue;
+                    }
+                    ret.add(new AccessEntryResponse(null, sid, p, true));
+                }
+            }
+        }
+        return new EnvelopeResponse<>(ResponseCode.CODE_SUCCESS, ret, "");
+    }
+
     /**
      * Grant a new access on a domain object to a user/role
-     * 
+     *
      * @param accessRequest
      */
     @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.POST }, produces = { "application/json" })
@@ -182,7 +225,7 @@ public class AccessController extends BasicController implements InitializingBea
 
     /**
      * Update a access on a domain object
-     * 
+     *
      * @param accessRequest
      */
     @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.PUT }, produces = { "application/json" })
@@ -197,7 +240,7 @@ public class AccessController extends BasicController implements InitializingBea
 
     /**
      * Revoke access on a domain object from a user/role
-     * 
+     *
      * @param accessRequest
      */
     @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.DELETE }, produces = { "application/json" })

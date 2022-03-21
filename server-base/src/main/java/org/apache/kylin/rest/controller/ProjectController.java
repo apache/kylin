@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,8 +21,10 @@ package org.apache.kylin.rest.controller;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
@@ -31,6 +33,8 @@ import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.ProjectRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.ProjectService;
@@ -81,6 +85,18 @@ public class ProjectController extends BasicController {
     public List<ProjectInstance> getProjects(@RequestParam(value = "limit", required = false) Integer limit,
             @RequestParam(value = "offset", required = false) Integer offset) {
         return projectService.listProjects(limit, offset);
+    }
+
+    @RequestMapping(value = "/mdx", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public EnvelopeResponse getProjectsForMdx(@RequestParam(value = "limit", required = false) Integer limit,
+                                              @RequestParam(value = "offset", required = false) Integer offset) {
+        List<ProjectInstance> projects = projectService.listProjects(limit, offset);
+        Map<String, Object> data = new HashMap<>();
+        data.put("projects", projects);
+        data.put("size", projects.size());
+
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
 
     @RequestMapping(value = "/readable", method = { RequestMethod.GET }, produces = { "application/json" })

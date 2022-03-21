@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,9 +19,11 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -92,6 +94,23 @@ public class ModelController extends BasicController {
         } catch (IOException e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+        }
+    }
+
+    @RequestMapping(value = "mdx", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public EnvelopeResponse<List> getModelsForMdx(@RequestParam(value = "modelName", required = false) String modelName,
+                                                  @RequestParam(value = "project", required = false) String project,
+                                                  @RequestParam(value = "limit", required = false) Integer limit,
+                                                  @RequestParam(value = "offset", required = false) Integer offset) {
+        try {
+            List<DataModelDesc> models = modelService.getModels(modelName, project, limit, offset);
+            Map<String, List<DataModelDesc>> data = new HashMap<>();
+            data.put("models", models);
+            return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
+        } catch (IOException e) {
+            logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage(), e);
         }
     }
 

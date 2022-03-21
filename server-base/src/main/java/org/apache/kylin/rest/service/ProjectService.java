@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,7 +51,7 @@ import com.google.common.collect.Lists;
 
 /**
  * @author xduo
- * 
+ *
  */
 @Component("projectService")
 public class ProjectService extends BasicService {
@@ -107,6 +107,17 @@ public class ProjectService extends BasicService {
 
         logger.debug("Project updated.");
         return updatedProject;
+    }
+
+    public String getIdOfProject(String project) {
+        List<ProjectInstance> projects = listAllProjects(null, null);
+        for (ProjectInstance prj: projects) {
+            if (!prj.getName().equalsIgnoreCase(project)) {
+                continue;
+            }
+            return prj.getId();
+        }
+        return null;
     }
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)

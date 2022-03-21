@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,6 +32,8 @@ import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CardinalityRequest;
 import org.apache.kylin.rest.request.HiveTableRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.response.TableSnapshotResponse;
 import org.apache.kylin.rest.service.TableACLService;
 import org.apache.kylin.rest.service.TableService;
@@ -82,6 +84,19 @@ public class TableController extends BasicController {
         } catch (IOException e) {
             logger.error("Failed to get Hive Tables", e);
             throw new InternalErrorException(e.getLocalizedMessage());
+        }
+    }
+
+    @RequestMapping(value = "mdx", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public EnvelopeResponse<List<TableDesc>> getTableDescForMdx(@RequestParam(value = "ext", required = false) boolean withExt,
+                                                                @RequestParam(value = "project", required = true) String project) {
+        try {
+            List<TableDesc> tableDescs = tableService.getTableDescByProject(project, withExt);
+            return new EnvelopeResponse<List<TableDesc>>(ResponseCode.CODE_SUCCESS, tableDescs, "");
+        } catch (IOException e) {
+            logger.error("Failed to get Hive Tables", e);
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
