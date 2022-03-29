@@ -594,6 +594,19 @@ master.sink.prometheusServlet.path=/metrics/master/prometheus
 applications.sink.prometheusServlet.path=/metrics/applications/prometheus
 EOF
 
+
+  # Support to customize spark-defaults.conf
+  cat <<EOF > ${SPARK_HOME}/conf/spark-defaults.conf
+spark.hadoop.fs.s3.impl       org.apache.hadoop.fs.s3a.S3AFileSystem
+spark.hadoop.fs.s3a.endpoint  s3.${CURRENT_REGION}.amazonaws.com.cn
+spark.master                  spark://${spark_master_node_private_ip}:7077
+spark.driver.cores            1
+spark.driver.memory           8G
+spark.driver.memoryOverhead   1G
+spark.executor.memory         7G
+spark.executor.memoryOverhead 1G
+EOF
+
   logging info "Spark inited ..."
   touch ${HOME_DIR}/.inited_spark
   logging info "Spark is ready ..."
