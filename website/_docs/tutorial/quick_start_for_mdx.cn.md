@@ -23,6 +23,7 @@ permalink: /cn/docs/tutorial/quick_start_for_mdx.html
   - [编辑维度用法](#编辑维度用法)
   - [确定并保存](#确定并保存)
 - [在 Excel 中分析](#在 Excel 中分析)
+- [手册及源码](#手册及源码)
 
 ## 您将掌握的内容<a id="您将掌握的内容"></a>
 
@@ -39,7 +40,7 @@ permalink: /cn/docs/tutorial/quick_start_for_mdx.html
 
 - 本次教程主要以 MDX for Kylin Docker 环境作为演示。
 - 完成 MDX for Kylin Docker 的安装，详见 [快速试用 MDX for Kylin](/cn/docs/install/kylin_docker.html)。
-- 在 MDX for Kylin 对接的 Kylin 中构建 Kylin Sales 数据集。
+- 在 MDX for Kylin 对接的 Kylin 中构建好的 Kylin Sales cube。
 
 ## 准备操作<a id="准备操作"></a>
 
@@ -223,3 +224,9 @@ permalink: /cn/docs/tutorial/quick_start_for_mdx.html
 
 5. 现在，您可以使用 Excel 透视表分析 MDX for Kylin 的数据集了。
    ![mdx excel 05](/images/tutorial/4.0/Quick-Start-For-Mdx/mdx_excel_05_cn.png)
+
+## 手册及源码<a id="手册及源码"></a>
+
+更多详情，请参考 [MDX for Kylin 手册](https://kyligence.github.io/mdx-kylin/)。
+
+MDX for Kylin 源码地址：[https://github.com/Kyligence/mdx-kylin](https://github.com/Kyligence/mdx-kylin)

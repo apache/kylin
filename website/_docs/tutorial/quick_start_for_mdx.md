@@ -26,7 +26,7 @@ Welcome to this tutorial. In this tutorial, we will build an MDX dataset base on
   - [Edit Visibility Restrict](#Edit Visibility Restrict)
   - [Save and Create](#Save and Create)
 - [Analysis in Excel](#Analysis in Excel)
-
+- [Manual & Source Code](#Manual & Source Code)
 
 
 ## What you will know<a id="What you will know"></a>
@@ -44,7 +44,7 @@ To complete all the lessons in this tutorial, you will need to prepare the follo
 
 - This tutorial mainly uses Docker of MDX for Kylin as a demonstration.
 - Complete the installation of Docker of MDX for Kylin, as described in [Quickly try MDX for Kylin](/docs/install/kylin_docker.html).
-- Prepare `Kylin Sales` datasets in Kylin.
+- Prepare `Kylin Sales` cube which status must be ready in Kylin.
 
 ## Preparation<a id="Preparation"></a>
 
@@ -231,3 +231,8 @@ We have completed the definition of the data set, and now we can connect to Exce
 5. Now you can analyze MDX for Kylin's dataset using the Excel PivotTable.
    <img src="/images/tutorial/4.0/Quick-Start-For-Mdx/mdx_excel_05.png" alt="mdx excel" style="zoom:50%;" />
 
+## Manual & Source Code<a id="Manual & Source Code"></a>
+
+More details about usage of MDX for Kylin, please access to [Manual of MDX for Kylin](https://kyligence.github.io/mdx-kylin/).
+
+Please access to [https://github.com/Kyligence/mdx-kylin](https://github.com/Kyligence/mdx-kylin) to get source code.
