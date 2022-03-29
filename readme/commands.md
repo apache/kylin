@@ -19,7 +19,7 @@ python deploy.py --type [deploy|destroy|list|scale] --scale-type [up|down] --nod
   > 1. Current support to scale up/down `kylin` or `spark_worker` for a specific cluster.
   > 2. Before scaling up/down `kylin` or `spark_worker` nodes, Cluster services must be ready.
   > 3. If you want to scale a `kylin` or `spark_worker` node to a specified cluster, please add the `--cluster ${cluster ID}` to specify the expected node add to the cluster `${cluster ID}`.
-  > 4. For details about the index of the cluster,  please check [Indexes of clusters](./prerequisites.md#indexofcluster).
+  > 4. For details about the index of the cluster,  please check [Indexes of clusters](./configs.md#indexofcluster).
 
 ### Command for deploy
 
