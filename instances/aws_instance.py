@@ -1787,17 +1787,39 @@ class AWSInstance:
         return handled_outputs
 
     def alive_nodes(self, cluster_nums: List = None) -> None:
+        msgs = self._get_live_nodes_messages(cluster_nums=cluster_nums)
+        logger.info(f"Fetching messages successfully ...")
+
+        header_msg = '\n=================== List Alive Nodes ===========================\n'
+        result = header_msg + f"Stack Name\t\tInstance ID\t\tPrivate Ip\t\tPublic Ip\t\t\n"
+        for msg in msgs:
+            result += msg + '\n'
+        result += header_msg
+        logger.info(result)
+
+    def _get_live_nodes_messages(self, cluster_nums: List) -> List:
         # default cluster
+        logger.info("Fetching static service node messages ...")
         static_msg = self.get_static_services_basic_msg()
+
+        logger.info(f"Fetching kylin node messages ...")
         kylin_msg = self.get_kylin_basic_msg()
+
+        logger.info(f"Fetching spark master node messages ...")
         spark_master_msg = self.get_spark_master_msg()
 
         msgs = [m for m in [static_msg, kylin_msg, spark_master_msg] if m]
 
+        logger.info(f"Fetching spark worker nodes messages ...")
         spark_slaves_msg = self.get_spark_slaves_basic_msg()
+
+        logger.info(f"Fetching Zookeeper nodes messages ...")
         zks_msg = self.get_zks_basic_msg()
 
+        logger.info(f"Fetching scaled kylin nodes messages ...")
         scaled_kylins_msg = self.get_scaled_kylin_basic_msg()
+
+        logger.info(f"Fetching scaled spark worker nodes messages ...")
         scaled_spark_workers_msg = self.get_scaled_spark_workers_basic_msg()
 
         msgs.extend(zks_msg)
@@ -1809,10 +1831,14 @@ class AWSInstance:
         if cluster_nums is None:
             cluster_nums = []
         for num in cluster_nums:
+            logger.info(f"Fetching zookeepers nodes of cluster {num} messages ...")
             zks_msg_of_target_cluster = self.get_zks_of_target_cluster_msg(num)
             msgs.extend(zks_msg_of_target_cluster)
 
+            logger.info(f"Fetching spark master nodes of cluster {num} messages ...")
             spark_master_msg_of_target_cluster = self.get_spark_master_of_target_cluster_msg(num)
+
+            logger.info(f"Fetching kylin nodes of cluster {num} messages ...")
             kylin_msg_of_target_cluster = self.get_kylin_basic_msg_of_target_cluster(num)
 
             for msg in [spark_master_msg_of_target_cluster, kylin_msg_of_target_cluster]:
@@ -1820,20 +1846,19 @@ class AWSInstance:
                     continue
                 msgs.append(msg)
 
+            logger.info(f"Fetching spark worker nodes of cluster {num} messages ...")
             spark_workers_msgs_of_target_cluster = self.get_spark_workers_of_target_cluster_msg(num)
             msgs.extend(spark_workers_msgs_of_target_cluster)
 
+            logger.info(f"Fetching scaled kylin nodes of cluster {num} messages ...")
             scaled_kylins_msg_of_target_cluster = self.get_scaled_kylin_basic_msg_of_target_cluster(num)
+
+            logger.info(f"Fetching scaled spark worker nodes of cluster {num} messages ...")
             scaled_workers_msg_of_target_cluster = self.get_scaled_spark_workers_basic_msg_of_target_cluster(num)
             msgs.extend(scaled_kylins_msg_of_target_cluster)
             msgs.extend(scaled_workers_msg_of_target_cluster)
 
-        header_msg = '\n=================== List Alive Nodes ===========================\n'
-        result = header_msg + f"Stack Name\t\tInstance ID\t\tPrivate Ip\t\tPublic Ip\t\t\n"
-        for msg in msgs:
-            result += msg + '\n'
-        result += header_msg
-        logger.info(result)
+        return msgs
 
     def is_ec2_stacks_ready(self) -> bool:
         if not (
