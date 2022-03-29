@@ -26,7 +26,7 @@ Welcome to this tutorial. In this tutorial, we will build an MDX dataset base on
   - [Edit Visibility Restrict](#Edit Visibility Restrict)
   - [Save and Create](#Save and Create)
 - [Analysis in Excel](#Analysis in Excel)
-- [Manual & Source Code](#Manual & Source Code)
+- [Source Code](#Source Code)
 
 
 ## What you will know<a id="What you will know"></a>
@@ -37,6 +37,8 @@ In this tutorial you will learn about the following:
 - How to create hierarchies and commonly used calculated measures (eg YTD, QTD, MTD, YOY and MOM) in `MDX for Kylin`'s dataset.
 - How to modify dimension table attributes, dimension attributes, measure attributes, and dimension usage in `MDX for Kylin`'s dataset.
 - How to analysis in Excel.
+
+More details about usage of MDX for Kylin, please access to [Manual of MDX for Kylin](https://kyligence.github.io/mdx-kylin/en/).
 
 ## Prerequisites<a id="Prerequisites"></a>
 
@@ -231,8 +233,6 @@ We have completed the definition of the data set, and now we can connect to Exce
 5. Now you can analyze MDX for Kylin's dataset using the Excel PivotTable.
    <img src="/images/tutorial/4.0/Quick-Start-For-Mdx/mdx_excel_05.png" alt="mdx excel" style="zoom:50%;" />
 
-## Manual & Source Code<a id="Manual & Source Code"></a>
-
-More details about usage of MDX for Kylin, please access to [Manual of MDX for Kylin](https://kyligence.github.io/mdx-kylin/).
+## Source Code<a id="Source Code"></a>
 
 Please access to [https://github.com/Kyligence/mdx-kylin](https://github.com/Kyligence/mdx-kylin) to get source code.
