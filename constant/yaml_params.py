@@ -43,6 +43,9 @@ class Params(Enum):
     # Rds params
     DB_HOST = 'DbHost'
 
+    # Glue params
+    SUPPORT_GLUE = 'SupportGlue'
+
     # Static services params
     STATIC_SERVICES_PRIVATE_IP = 'StaticServicesNodePrivateIp'
     STATIC_SERVICES_PUBLIC_IP = 'StaticServicesNodePublicIp'

@@ -32,7 +32,10 @@ from constant.path import (
     RENDERED_FILE,
     PROPERTIES_TEMPLATE_DIR,
     TEMPLATE_OF_KYLIN_PROPERTIES,
+    KYLIN_PROPERTIES_TEMPLATES_DIR,
+    DEMOS_PATH,
 )
+from constant.server_mode import ServerMode
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +94,13 @@ class Utils:
         Utils.is_downloaded_success(filename=filename, dest_folder=JARS_PATH)
 
     @staticmethod
+    def download_demo(filename: str) -> str:
+        base_url = Utils.DOWNLOAD_BASE_URL + '/kylin_demo/'
+        url = base_url + filename
+        Utils.download(url=url, dest_folder=DEMOS_PATH, filename=filename)
+        Utils.is_downloaded_success(filename=filename, dest_folder=DEMOS_PATH)
+
+    @staticmethod
     def download(url: str, dest_folder: str, filename: str) -> None:
         if not Utils.is_file_exists(dest_folder):
             # create folder if it does not exist
@@ -139,20 +149,26 @@ class Utils:
                 yield f
 
     @staticmethod
-    def render_properties(params: Dict, cluster_num: int = None, properties_template: str = 'kylin.properties') -> None:
-        search_path = KYLIN_PROPERTIES_TEMPLATE_DIR.format(cluster_num=cluster_num if cluster_num else 'default')
+    def render_properties(params: Dict,
+                          cluster_num: int = None,
+                          properties_file: str = 'kylin.properties',
+                          kylin_mode: str = 'all') -> None:
+        target_path = KYLIN_PROPERTIES_TEMPLATE_DIR.format(cluster_num=cluster_num if cluster_num else 'default')
 
-        dest_path = os.path.join(search_path, 'kylin.properties')
-        rendered_file = os.path.join(search_path, RENDERED_FILE)
+        # replace a matched kylin.properties for a kylin in cluster
+        Utils.replace_property_for_kylin(target_path, kylin_mode)
+
+        dest_path = os.path.join(target_path, 'kylin.properties')
+        rendered_file = os.path.join(target_path, RENDERED_FILE)
         if Utils.is_file_exists(rendered_file):
             logger.info(f'{dest_path} already rendered. Skip render it again.')
             return
 
-        env = Environment(loader=FileSystemLoader(searchpath=search_path))
+        env = Environment(loader=FileSystemLoader(searchpath=target_path))
         try:
-            template = env.get_template(properties_template)
+            template = env.get_template(properties_file)
         except TemplateNotFound:
-            raise Exception(f'Properties template: {properties_template} not in the path: {search_path}.\n '
+            raise Exception(f'Properties template: {properties_file} not in the path: {target_path}.\n '
                             f'Please copy the needed kylin.properties template in `backup/properties/templates` '
                             f'to `backup/properties/{cluster_num}`\n. If `backup/properties/{cluster_num}` not exists, '
                             f'please make it and rename the template file to `kylin.properties` in this dir.')
@@ -166,9 +182,19 @@ class Utils:
         logger.info(f'Current {dest_path} rendered.')
 
     @staticmethod
-    def refresh_kylin_properties(properties_template: str = 'kylin.properties') -> None:
+    def replace_property_for_kylin(target_path: str, kylin_mode: str = 'all', properties_file: str = 'kylin.properties'):
+        # default kylin.properties is for 'all' mode to a kylin node
+        if kylin_mode == ServerMode.ALL.value:
+            return
+
+        source_file = os.path.join(KYLIN_PROPERTIES_TEMPLATES_DIR, kylin_mode, properties_file)
+        destination_file = os.path.join(target_path, properties_file)
+        shutil.copy(source_file, destination_file)
+
+    @staticmethod
+    def refresh_kylin_properties(properties_file: str = 'kylin.properties') -> None:
         Utils.refresh_kylin_properties_in_clusters()
-        Utils.refresh_kylin_properties_in_default(properties_template=properties_template)
+        Utils.refresh_kylin_properties_in_default(properties_template=properties_file)
 
     @staticmethod
     def refresh_kylin_properties_in_clusters(cluster_nums: List[int] = None) -> None:
@@ -220,9 +246,11 @@ class Utils:
         if filename not in Utils.FILES_SIZE_IN_BYTES.keys():
             logger.warning(f'Current file {filename} is not the matched version, skip check file size.')
             return
-        assert Utils.FILES_SIZE_IN_BYTES[filename] == Utils.size_in_bytes(dest_folder=dest_folder, filename=filename), \
-            f'{filename} size should be {Utils.FILES_SIZE_IN_BYTES[filename]} bytes' \
-            f'not {Utils.size_in_bytes(dest_folder, filename)} bytes, please check.'
+        expected_size = Utils.FILES_SIZE_IN_BYTES[filename]
+        real_size = Utils.size_in_bytes(dest_folder=dest_folder, filename=filename)
+
+        assert expected_size == real_size, \
+            f'{filename} size should be {expected_size} bytes not {real_size} bytes, please check.'
         logger.info(f'Downloaded file {filename} successfully.')
 
     @staticmethod

@@ -23,7 +23,7 @@ from itertools import repeat
 from typing import Optional, Dict, List
 
 from constant.config import Config
-from constant.deployment import ScaleType, NodeType
+from constant.deployment import ScaleType, NodeType, MODE
 from constant.kylin_properties_params import KylinProperties
 from constant.path import KYLIN_PROPERTIES_TEMPLATE_DIR
 from constant.yaml_params import Params
@@ -38,6 +38,10 @@ class AWS:
     def __init__(self, config) -> None:
         self.cloud_instance = AWSInstance(config)
         self.config = config
+
+    @property
+    def kylin_mode(self):
+        return self.config[MODE.KYLIN.value]
 
     @property
     def is_cluster_ready(self) -> bool:
@@ -376,12 +380,14 @@ class AWS:
             # Spark Master
             KylinProperties.SPARK_MASTER.value: self.cloud_instance.get_target_cluster_spark_master_host(cluster_num),
         }
-        Utils.render_properties(params=params, cluster_num=cluster_num)
 
-    def upload_needed_files(self, tars: List, jars: List, scripts: List) -> None:
+        Utils.render_properties(params=params, cluster_num=cluster_num, kylin_mode=self.kylin_mode)
+
+    def upload_needed_files(self, tars: List, jars: List, scripts: List, demos: List) -> None:
         self.cloud_instance.upload_tars_to_s3(tars)
         self.cloud_instance.upload_jars_to_s3(jars)
         self.cloud_instance.upload_scripts_to_s3(scripts)
+        self.cloud_instance.upload_demos_to_s3(demos)
 
     def check_needed_files(self, tars: List, jars: List, scripts: List) -> None:
         self.cloud_instance.check_tars_on_s3(tars)

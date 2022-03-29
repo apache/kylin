@@ -194,6 +194,10 @@ HIVE_PACKAGE=apache-hive-${HIVE_VERSION}-bin.tar.gz
 NODE_EXPORTER_PACKAGE=node_exporter-1.3.1.linux-amd64.tar.gz
 MDX_PACKAGE=mdx-kylin-${MDX_VERSION}.tar.gz
 
+# Glue needed files
+GLUE_META=meta_backups.tgz
+GLUE_SQL=create_kylin_demo_table.sql
+
 ### Parameter for JDK 1.8
 JDK_PACKAGE=jdk-8u301-linux-x64.tar.gz
 JDK_DECOMPRESS_NAME=jdk1.8.0_301
@@ -204,6 +208,11 @@ function init_env() {
   HADOOP_DIR=${HOME_DIR}/hadoop
   if [[ ! -d $HADOOP_DIR ]]; then
     mkdir ${HADOOP_DIR}
+  fi
+
+  DEMO_DIR=${HOME_DIR}/kylin_demo
+  if [[ ! -d $DEMO_DIR ]]; then
+    mkdir ${DEMO_DIR}
   fi
 
   JAVA_HOME=/usr/local/java
@@ -891,6 +900,23 @@ function start_node_exporter() {
   nohup ${NODE_EXPORTER_HOME}/node_exporter >>${NODE_EXPORTER_HOME}/node.log 2>&1 &
 }
 
+function download_glue_meta() {
+  if [[ ! -f ${DEMO_DIR}/$GLUE_META ]]; then
+    logging info "Glue Meta package ${GLUE_META} not downloaded, downloading it ..."
+    aws s3 cp ${PATH_TO_BUCKET}/kylin_demo/${GLUE_META} ${DEMO_DIR} --region ${CURRENT_REGION}
+  fi
+
+  if [[ ! -d ${HOME_DIR}/kylin_demo/${GLUE_META%*.tgz} ]]; then
+    logging info "Decompressing package ${GLUE_META} ..."
+    tar -zxf ${DEMO_DIR}/${GLUE_META}
+  fi
+
+  if [[ ! -f ${HOME_DIR}/$ ]]; then
+    logging info "Glue Sql file ${GLUE_META} not downloaded, downloading it ..."
+    aws s3 cp ${PATH_TO_BUCKET}/kylin_demo/$GLUE_SQL ${DEMO_DIR} --region ${CURRENT_REGION}
+  fi
+}
+
 function prepare_packages() {
   if [[ -f ${HOME_DIR}/.prepared_packages ]]; then
     logging warn "Packages already prepared, skip prepare ..."
@@ -931,6 +957,7 @@ function start_services_on_kylin() {
     sample_for_kylin
     start_kylin
     after_start_kylin
+    download_glue_meta
     touch ${HOME_DIR}/.first_run
   fi
   restart_kylin

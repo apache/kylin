@@ -23,6 +23,7 @@ class DeployType(Enum):
     LIST = 'list'
     SCALE = 'scale'
     DESTROY = 'destroy'
+    DESTROY_ALL = 'destroy-all'
 
 
 class ScaleType(Enum):
@@ -38,3 +39,7 @@ class NodeType(Enum):
 class Cluster(Enum):
     ALL = 'all'
     DEFAULT = 'default'
+
+
+class MODE(Enum):
+    KYLIN = 'KYLIN_MODE'

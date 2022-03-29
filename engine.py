@@ -32,13 +32,9 @@ logger = logging.getLogger(__name__)
 
 class Engine:
 
-    def __init__(self) -> None:
-        d = os.path.dirname(__file__)
-        with open(os.path.join(d, File.CONFIG_YAML.value)) as stream:
-            config = yaml.safe_load(stream)
+    def __init__(self, config) -> None:
         self.config = config
         self.is_ec2_cluster = self.config[Config.DEPLOY_PLATFORM.value] == Client.EC2.value
-        self.server_mode = None
         self.engine_utils = EngineUtils(self.config)
 
     def launch_default_cluster(self):
@@ -117,6 +113,7 @@ class Engine:
             return
         self.engine_utils.download_tars()
         self.engine_utils.download_jars()
+        self.engine_utils.download_demo()
         self.engine_utils.upload_needed_files()
         # check again
         assert self.is_inited_env()

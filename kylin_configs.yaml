@@ -54,7 +54,9 @@ CIDR_IP: ${Cidr Ip}
 #   If you set `SUPPORT_GLUE` to be `true`, then please make sure that you using Kylin only support `Job` mode, not `Query` as same as `All`.
 #   Because `All` will support `Query`. So you need to change the `kylin.server.mode` in `kylin.properties` to be `Job` or `All`.
 #   If you set `All` mode for Kylin, there will be a error when you query any sql.
-SUPPORT_GLUE: &SUPPORT_GLUE 'false'
+#   This parameter will be set automatically by `kylin_mode`. Such as if `kylin_mode` is 'job', `SUPPORT_GLUE` will be 'true', and other mode(`query` or `all`) will be 'false'.
+#   So user don't need to care about this parameters.
+SUPPORT_GLUE: &SUPPORT_GLUE 'true'
 
 # Enable using MDX
 ENABLE_MDX: &ENABLE_MDX 'false'
