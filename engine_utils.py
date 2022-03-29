@@ -235,7 +235,7 @@ class EngineUtils:
 
     def upload_needed_files(self) -> None:
         logger.info("Start to uploading tars.")
-        self.aws.upload_needed_files(self.needed_tars(), self.needed_jars(), self.needed_scripts())
+        self.aws.upload_needed_files(self.needed_tars(), self.needed_jars(), self.needed_scripts(), self.need_demo_files())
         logger.info("Uploaded tars successfully.")
 
     def check_needed_files(self) -> None:
