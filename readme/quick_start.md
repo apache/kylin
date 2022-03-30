@@ -7,7 +7,7 @@
 
 ## Quick Start
 
-1. Initialize aws account credential on the local machine, please check [details](./prerequisites.md#localaws).
+1. Initialize aws account credential on the local machine according to [prerequisites](./prerequisites.md).
 
 2. Download the source code: 
 
@@ -17,13 +17,13 @@
 
 3. Modify the `kylin_config.yml`.
 
-   1. Set the `AWS_REGION`.
+   1. Set the `AWS_REGION`, such as us-east-1.
 
-   2. Set the `IAMRole`, please check the [details](./prerequisites.md#IAM).
+   2. Set the `IAMRole`, please check [Create an IAM role](./prerequisites.md#IAM).
 
-   3. Set the `S3_URI`, please check [details](./prerequisites.md#S3).
+   3. Set the `S3_URI`, please check [Create a S3 direcotry](./prerequisites.md#S3).
 
-   4. Set the `KeyName`, please check [details](./prerequisites.md#keypair).
+   4. Set the `KeyName`, please check [Create a keypair](./prerequisites.md#keypair).
 
    5. Set the `CIDR_IP`, make sure that the `CIDR_IP` match the pattern `xxx.xxx.xxx.xxx/16[|24|32]`.
 
@@ -33,13 +33,20 @@
       >
       > 2. In one word, it will let your mac which IP is in the `CIDR_IP` to access instances.
 
-4. Init local env.
+4. Init python env.
 
 ```shell
 $ bin/init.sh
+$ source venv/bin/activate
 ```
 
-> Note: Following the information into a python virtual env and get the help messages. 
+Check the python version:
+
+```shell
+$ python --version
+```
+
+> Note: If Python is already installed locally, you need to ensure that the python version is 3.6.6 or later.
 
 5. Execute commands to deploy a cluster quickly.
 
@@ -51,8 +58,8 @@ After this cluster is ready, you will see the message `Kylin Cluster already sta
 
 >  Note: 
 >
-> 1. For more details about the properties of kylin4 in a cluster, please check [configure kylin.properties](./prerequisites.md#cluster).
-> 2. For more details about the index of the clusters,  please check [Indexes of clusters](./prerequisites.md#indexofcluster).
+> 1. For more details about the properties of kylin4 in a cluster, please check [configure kylin.properties](./configs.md#cluster).
+> 2. For more details about the index of the clusters,  please check [Indexes of clusters](./configs.md#indexofcluster).
 
 6. Execute commands to list nodes of the cluster.
 
