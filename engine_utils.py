@@ -82,6 +82,11 @@ class EngineUtils:
             jars.append(alluxio_client)
         return jars
 
+    def need_demo_files(self) -> list:
+        demo_meta = 'meta_backups.tgz'
+        demo_sql = 'create_kylin_demo_table.sql'
+        return [demo_meta, demo_sql]
+
     @staticmethod
     def needed_scripts() -> List:
         kylin = 'prepare-ec2-env-for-kylin4.sh'
@@ -222,9 +227,15 @@ class EngineUtils:
         for jar in jars:
             Utils.download_jar(jar)
 
+    def download_demo(self) -> None:
+        logger.info("Downloading demo files.")
+        files = self.need_demo_files()
+        for file in files:
+            Utils.download_demo(file)
+
     def upload_needed_files(self) -> None:
         logger.info("Start to uploading tars.")
-        self.aws.upload_needed_files(self.needed_tars(), self.needed_jars(), self.needed_scripts())
+        self.aws.upload_needed_files(self.needed_tars(), self.needed_jars(), self.needed_scripts(), self.need_demo_files())
         logger.info("Uploaded tars successfully.")
 
     def check_needed_files(self) -> None:

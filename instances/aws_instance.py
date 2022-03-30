@@ -29,8 +29,9 @@ from botocore.exceptions import ClientError, WaiterError, ParamValidationError
 from constant.client import Client
 from constant.commands import Commands
 from constant.config import Config
-from constant.deployment import NodeType, Cluster
-from constant.path import JARS_PATH, TARS_PATH, SCRIPTS_PATH, KYLIN_PROPERTIES_TEMPLATE_DIR
+from constant.deployment import NodeType, Cluster, MODE
+from constant.path import JARS_PATH, TARS_PATH, SCRIPTS_PATH, KYLIN_PROPERTIES_TEMPLATE_DIR, DEMOS_PATH
+from constant.server_mode import ServerMode
 from constant.yaml_files import File
 from constant.yaml_params import Params
 from utils import Utils
@@ -49,6 +50,14 @@ class AWSInstance:
         self.subnet_group = None
         self.subnet_id = None
         self.db_host = None
+
+    @property
+    def kylin_mode(self) -> str:
+        return self.config[MODE.KYLIN.value]
+
+    @property
+    def is_support_glue(self) -> bool:
+        return self.kylin_mode == ServerMode.JOB.value
 
     @property
     def is_associated_public_ip(self) -> bool:
@@ -287,6 +296,10 @@ class AWSInstance:
     @property
     def bucket_jars_dir(self) -> str:
         return self.bucket_dir + 'jars/'
+
+    @property
+    def bucket_demos_dir(self) -> str:
+        return self.bucket_dir + 'kylin_demo/'
 
     @property
     def iam_role(self) -> str:
@@ -669,6 +682,11 @@ class AWSInstance:
         params[Params.DB_HOST.value] = self.get_db_host()
         params[Params.CLUSTER_NUM.value] = str(cluster_num) if cluster_num else 'default'
 
+        # make that spark master don't need to support glue
+        if not self.is_support_glue:
+            # note: this param must be the type of `str`
+            params[Params.SUPPORT_GLUE.value] = 'false'
+
         resp = self.create_stack(
             stack_name=kylin_stack_name,
             file_path=self.path_of_kylin_stack,
@@ -802,6 +820,11 @@ class AWSInstance:
         params[Params.CLUSTER_NUM.value] = str(cluster_num)
         params[Params.IS_SCALED.value] = 'true'
 
+        # make that spark master don't need to support glue
+        if not self.is_support_glue:
+            # note: this param must be the type of `str`
+            params[Params.SUPPORT_GLUE.value] = 'false'
+
         resp = self.create_stack(
             stack_name=stack_name,
             file_path=self.path_of_kylin_scale_stack,
@@ -879,6 +902,12 @@ class AWSInstance:
         # update needed params
         params = self.update_basic_params(params)
         params[Params.DB_HOST.value] = self.get_db_host()
+
+        # make that spark master don't need to support glue
+        if not self.is_support_glue:
+            # note: this param must be the type of `str`
+            params[Params.SUPPORT_GLUE.value] = 'false'
+
         resp = self.create_stack(
             stack_name=spark_master_stack_name,
             file_path=self.path_of_spark_master_stack,
@@ -955,6 +984,11 @@ class AWSInstance:
         params: Dict = self.config[Config.EC2_SPARK_WORKER_PARAMS.value]
         params = self.update_basic_params(params)
         params[Params.SPARK_MASTER_HOST.value] = self.get_spark_master_host_by_name(spark_master_stack)
+
+        # make that spark master don't need to support glue
+        if not self.is_support_glue:
+            # note: this param must be the type of `str`
+            params[Params.SUPPORT_GLUE.value] = 'false'
 
         resp = self.create_stack(
             stack_name=spark_worker_stack,
@@ -1121,6 +1155,11 @@ class AWSInstance:
         params = self.update_basic_params(params)
         params[Params.SPARK_MASTER_HOST.value] = self.get_spark_master_host_by_name(spark_master_stack)
         params[Params.SPARK_WORKER_NUM.value] = str(worker_num)
+
+        # make that spark master don't need to support glue
+        if not self.is_support_glue:
+            # note: this param must be the type of `str`
+            params[Params.SUPPORT_GLUE.value] = 'false'
 
         resp = self.create_stack(
             stack_name=stack_name,
@@ -1748,17 +1787,39 @@ class AWSInstance:
         return handled_outputs
 
     def alive_nodes(self, cluster_nums: List = None) -> None:
+        msgs = self._get_live_nodes_messages(cluster_nums=cluster_nums)
+        logger.info(f"Fetching messages successfully ...")
+
+        header_msg = '\n=================== List Alive Nodes ===========================\n'
+        result = header_msg + f"Stack Name\t\tInstance ID\t\tPrivate Ip\t\tPublic Ip\t\t\n"
+        for msg in msgs:
+            result += msg + '\n'
+        result += header_msg
+        logger.info(result)
+
+    def _get_live_nodes_messages(self, cluster_nums: List) -> List:
         # default cluster
+        logger.info("Fetching static service node messages ...")
         static_msg = self.get_static_services_basic_msg()
+
+        logger.info(f"Fetching kylin node messages ...")
         kylin_msg = self.get_kylin_basic_msg()
+
+        logger.info(f"Fetching spark master node messages ...")
         spark_master_msg = self.get_spark_master_msg()
 
         msgs = [m for m in [static_msg, kylin_msg, spark_master_msg] if m]
 
+        logger.info(f"Fetching spark worker nodes messages ...")
         spark_slaves_msg = self.get_spark_slaves_basic_msg()
+
+        logger.info(f"Fetching Zookeeper nodes messages ...")
         zks_msg = self.get_zks_basic_msg()
 
+        logger.info(f"Fetching scaled kylin nodes messages ...")
         scaled_kylins_msg = self.get_scaled_kylin_basic_msg()
+
+        logger.info(f"Fetching scaled spark worker nodes messages ...")
         scaled_spark_workers_msg = self.get_scaled_spark_workers_basic_msg()
 
         msgs.extend(zks_msg)
@@ -1770,10 +1831,14 @@ class AWSInstance:
         if cluster_nums is None:
             cluster_nums = []
         for num in cluster_nums:
+            logger.info(f"Fetching zookeepers nodes of cluster {num} messages ...")
             zks_msg_of_target_cluster = self.get_zks_of_target_cluster_msg(num)
             msgs.extend(zks_msg_of_target_cluster)
 
+            logger.info(f"Fetching spark master nodes of cluster {num} messages ...")
             spark_master_msg_of_target_cluster = self.get_spark_master_of_target_cluster_msg(num)
+
+            logger.info(f"Fetching kylin nodes of cluster {num} messages ...")
             kylin_msg_of_target_cluster = self.get_kylin_basic_msg_of_target_cluster(num)
 
             for msg in [spark_master_msg_of_target_cluster, kylin_msg_of_target_cluster]:
@@ -1781,20 +1846,19 @@ class AWSInstance:
                     continue
                 msgs.append(msg)
 
+            logger.info(f"Fetching spark worker nodes of cluster {num} messages ...")
             spark_workers_msgs_of_target_cluster = self.get_spark_workers_of_target_cluster_msg(num)
             msgs.extend(spark_workers_msgs_of_target_cluster)
 
+            logger.info(f"Fetching scaled kylin nodes of cluster {num} messages ...")
             scaled_kylins_msg_of_target_cluster = self.get_scaled_kylin_basic_msg_of_target_cluster(num)
+
+            logger.info(f"Fetching scaled spark worker nodes of cluster {num} messages ...")
             scaled_workers_msg_of_target_cluster = self.get_scaled_spark_workers_basic_msg_of_target_cluster(num)
             msgs.extend(scaled_kylins_msg_of_target_cluster)
             msgs.extend(scaled_workers_msg_of_target_cluster)
 
-        header_msg = '\n=================== List Alive Nodes ===========================\n'
-        result = header_msg + f"Stack Name\t\tInstance ID\t\tPrivate Ip\t\tPublic Ip\t\t\n"
-        for msg in msgs:
-            result += msg + '\n'
-        result += header_msg
-        logger.info(result)
+        return msgs
 
     def is_ec2_stacks_ready(self) -> bool:
         if not (
@@ -2044,6 +2108,13 @@ class AWSInstance:
                 logger.info(f'{script} already exists, skip upload it.')
                 continue
             self.upload_file_to_s3(SCRIPTS_PATH, script, self.bucket, self.bucket_scripts_dir)
+
+    def upload_demos_to_s3(self, demos: List) -> None:
+        for demo in demos:
+            if self.is_object_exists_on_s3(demo, self.bucket, self.bucket_demos_dir):
+                logger.info(f'{demo} already exists, skip upload it.')
+                continue
+            self.upload_file_to_s3(DEMOS_PATH, demo, self.bucket, self.bucket_demos_dir)
 
     def upload_kylin_properties_to_s3(self, cluster_num: int = None, properties_file: str = 'kylin.properties') -> None:
         # Always to upload local kylin.properties

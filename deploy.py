@@ -17,13 +17,33 @@
 
 import argparse
 import logging.config
+import os
+from typing import Dict
 
-from constant.deployment import DeployType, ScaleType, NodeType, Cluster
+import yaml
+
+from constant.deployment import DeployType, ScaleType, NodeType, Cluster, MODE
+from constant.server_mode import ServerMode
+from constant.yaml_files import File
+from constant.yaml_params import Params
 
 
-def deploy_on_aws(deploy_type: str, scale_type: str, node_type: str, cluster: str = None) -> None:
+def deploy_on_aws(deploy_type: str, kylin_mode: str, scale_type: str, node_type: str, cluster: str = None) -> None:
+
+    # check destroy type
+    is_destroy_all = deploy_type == DeployType.DESTROY_ALL.value
+
+    # load config file
+    config = load_config_file(kylin_mode, is_destroy_all)
+
+    # modify the destroy params
+    if is_destroy_all:
+        deploy_type = DeployType.DESTROY.value
+        cluster = Cluster.ALL.value
+
     from engine import Engine
-    aws_engine = Engine()
+    aws_engine = Engine(config)
+
     if not aws_engine.is_ec2_cluster:
         msg = f'Now only supported platform: EC2, please check `DEPLOY_PLATFORM`.'
         raise Exception(msg)
@@ -67,6 +87,19 @@ def deploy_on_aws(deploy_type: str, scale_type: str, node_type: str, cluster: st
         aws_engine.scale_nodes(scale_type, node_type, cluster)
 
 
+def load_config_file(kylin_mode: str, is_destroy_all: bool = False) -> Dict:
+    # load config file
+    d = os.path.dirname(__file__)
+    with open(os.path.join(d, File.CONFIG_YAML.value)) as stream:
+        config = yaml.safe_load(stream)
+    config[MODE.KYLIN.value] = kylin_mode
+
+    # change the default value of `ALWAYS_DESTROY_VPC_RDS_MONITOR`
+    if is_destroy_all:
+        config[Params.ALWAYS_DESTROY_VPC_RDS_MONITOR.value] = 'true'
+    return config
+
+
 if __name__ == '__main__':
     logging.config.fileConfig('logging.ini')
 
@@ -74,7 +107,11 @@ if __name__ == '__main__':
     parser.add_argument("--type", required=False, default=DeployType.LIST.value, dest='type',
                         choices=[e.value for e in DeployType],
                         help="Use 'deploy' to create a cluster or 'destroy' to delete a cluster "
-                             "or 'list' to list alive nodes.")
+                             "or 'list' to list alive nodes or 'destroy-all' to delete everything.")
+    parser.add_argument("--mode", required=False, default=ServerMode.JOB.value, dest='kylin_mode',
+                        choices=[e.value for e in ServerMode],
+                        help="Select a 'mode' for kylin which mode will be in [all, query, job] in a cluster, "
+                             "default mode is all.")
     parser.add_argument("--scale-type", required=False, dest='scale_type',
                         choices=[e.value for e in ScaleType],
                         help="This param must be used with '--type' and '--node-type' "
@@ -96,4 +133,4 @@ if __name__ == '__main__':
                              "This param must be used with '--type', "
                              "`default` is for to deploy or destroy nodes of `default` cluster.")
     args = parser.parse_args()
-    deploy_on_aws(args.type, args.scale_type, args.node_type, args.cluster)
+    deploy_on_aws(args.type, args.kylin_mode, args.scale_type, args.node_type, args.cluster)

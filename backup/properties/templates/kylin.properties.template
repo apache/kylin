@@ -44,6 +44,7 @@ kylin.engine.spark-conf.spark.hadoop.fs.s3.impl=org.apache.hadoop.fs.s3a.S3AFile
 
 ## Query Engine Resource
 kylin.query.spark-conf.spark.master=spark://{{ SPARK_MASTER }}:7077
+kylin.query.spark-conf.spark.cores.max=4
 kylin.query.spark-conf.spark.driver.cores=1
 kylin.query.spark-conf.spark.driver.memory=8GB
 kylin.query.spark-conf.spark.driver.memoryOverhead=1G

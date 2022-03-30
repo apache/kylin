@@ -9,3 +9,4 @@ __pycache__/
 logs/
 backup/jars
 backup/tars
+backup/demos
