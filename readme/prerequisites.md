@@ -21,17 +21,17 @@ Users need the following permissions to ensure that subsequent operations can pr
 | **STS**             | **Limited**: Write                                     | All Resources | None              |
 | **Systems Manager** | **Limited**: Write                                     | All Resources | None              |
 
-##### How to add the required permissions for user
+##### How to add the required permissions for user?
 
-1. Create a permission policy in AWS IAM services:
+###### 1. Create a permission policy in AWS IAM services:
 
 ![create permission policy](../images/create_permission_policy.png)
 
-2. Choose `JSON`:
+###### 2. Choose `JSON`:
 
 ![policy json](../images/policy_json.png)
 
-3. Paste the following content to "statement":
+###### 3. Paste the following content to "statement":
 
 ```json
 {
@@ -157,13 +157,13 @@ Users need the following permissions to ensure that subsequent operations can pr
         }
 ```
 
-If there is a problem with the JSON here, you can manually add permissions in `Visual editor` according to the contents of the required permission list.
+If there is a problem with the `JSON` here, you can manually add permissions in `Visual editor` according to the contents of the required permission list.
 
-4. Review and create policy
+###### 4. Review and create policy
 
 ![review policy](../images/review_create_policy.png)
 
-5. Add the permission policy you just created to your user:
+###### 5. Add the permission policy you just created to your user:
 
 ![add permission](../images/check_user_permission.png)
 
