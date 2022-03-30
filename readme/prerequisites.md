@@ -1,12 +1,14 @@
 ## Prerequisites
 
-### I. Check user permission
+### I. Create `user` and add permission
 
-Login AWS account and check whether the current user has sufficient permissions in AWS IAM service:
+#### 1. Create a `user` in AWS IAM service
 
-![check user permission](../images/check_user_permission.png)
+![create user](../images/create_user.png)
 
-If the current user lacks some permissions listed below, you need to add the permissions to ensure that the current user can carry out subsequent operations smoothly:
+#### 2. Add permission for user
+
+Users need the following permissions to ensure that subsequent operations can proceed smoothly:
 
 | Services            | Access level                                           | Resources     | Request condition |
 | ------------------- | ------------------------------------------------------ | ------------- | ----------------- |
@@ -18,6 +20,154 @@ If the current user lacks some permissions listed below, you need to add the per
 | **SNS**             | **Limited**: List                                      | All Resources | None              |
 | **STS**             | **Limited**: Write                                     | All Resources | None              |
 | **Systems Manager** | **Limited**: Write                                     | All Resources | None              |
+
+##### How to add the required permissions for user?
+
+###### 1. Create a permission policy in AWS IAM services:
+
+![create permission policy](../images/create_permission_policy.png)
+
+###### 2. Choose `JSON`:
+
+![policy json](../images/policy_json.png)
+
+###### 3. Paste the following content to "statement":
+
+```json
+{
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListAccessPointsForObjectLambda",
+                "ec2:AuthorizeSecurityGroupIngress",
+                "ec2:DescribeInstances",
+                "ec2:AttachInternetGateway",
+                "iam:PutRolePolicy",
+                "rds:CreateDBSubnetGroup",
+                "iam:AddRoleToInstanceProfile",
+                "rds:ModifyDBParameterGroup",
+                "cloudformation:DescribeStackEvents",
+                "ec2:CreateRoute",
+                "ec2:CreateInternetGateway",
+                "cloudformation:UpdateStack",
+                "ec2:DescribeKeyPairs",
+                "cloudformation:ListStackResources",
+                "iam:GetRole",
+                "ec2:CreateTags",
+                "ec2:ModifyNetworkInterfaceAttribute",
+                "elasticloadbalancing:CreateTargetGroup",
+                "ec2:RunInstances",
+                "cloudwatch:GetMetricStatistics",
+                "ec2:CreateVpcEndpointServiceConfiguration",
+                "ec2:CreateNetworkInterface",
+                "cloudformation:GetStackPolicy",
+                "elasticloadbalancing:AddTags",
+                "cloudformation:DeleteStack",
+                "ec2:CreateSubnet",
+                "ec2:DescribeSubnets",
+                "iam:GetRolePolicy",
+                "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                "cloudformation:ValidateTemplate",
+                "iam:CreateInstanceProfile",
+                "ec2:CreateNatGateway",
+                "ec2:CreateVpc",
+                "sns:ListTopics",
+                "s3:ListBucket",
+                "cloudformation:CreateStackInstances",
+                "iam:ListInstanceProfilesForRole",
+                "iam:PassRole",
+                "ec2:DescribeAvailabilityZones",
+                "s3:PutBucketTagging",
+                "rds:CreateDBInstance",
+                "sts:DecodeAuthorizationMessage",
+                "rds:DescribeDBInstances",
+                "rds:AddTagsToResource",
+                "s3:ListBucketMultipartUploads",
+                "elasticloadbalancing:CreateLoadBalancer",
+                "ec2:AttachVpnGateway",
+                "iam:ListRoles",
+                "elasticloadbalancing:SetSubnets",
+                "ec2:DescribeSecurityGroups",
+                "iam:CreatePolicy",
+                "iam:CreateServiceLinkedRole",
+                "s3:ListAllMyBuckets",
+                "ec2:DescribeVpcs",
+                "elasticloadbalancing:DescribeTargetGroups",
+                "elasticloadbalancing:RegisterTargets",
+                "iam:CreateRole",
+                "s3:CreateBucket",
+                "rds:DescribeEngineDefaultParameters",
+                "cloudformation:DescribeStackResource",
+                "ec2:AssociateVpcCidrBlock",
+                "ec2:AssociateRouteTable",
+                "ec2:DescribeInternetGateways",
+                "elasticloadbalancing:DescribeLoadBalancers",
+                "elasticloadbalancing:CreateRule",
+                "ec2:DescribeAccountAttributes",
+                "ec2:DescribeRouteTables",
+                "rds:CreateDBParameterGroup",
+                "cloudformation:DescribeStackInstance",
+                "s3:ListJobs",
+                "ec2:CreateRouteTable",
+                "cloudformation:DescribeStackResources",
+                "rds:DescribeDBSecurityGroups",
+                "rds:StartDBInstance",
+                "cloudformation:DescribeStacks",
+                "s3:ListMultipartUploadParts",
+                "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                "cloudformation:GetTemplate",
+                "ec2:AssociateSubnetCidrBlock",
+                "ec2:DescribeInstanceTypes",
+                "rds:DescribeOrderableDBInstanceOptions",
+                "ec2:DescribeVpcEndpoints",
+                "ec2:DescribeAddresses",
+                "rds:DescribeDBSubnetGroups",
+                "ec2:DescribeInstanceAttribute",
+                "s3:ListBucketVersions",
+                "rds:DescribeDBParameterGroups",
+                "elasticloadbalancing:CreateListener",
+                "ec2:DescribeNetworkInterfaces",
+                "elasticloadbalancing:DescribeListeners",
+                "ec2:CreateSecurityGroup",
+                "ec2:ModifyVpcAttribute",
+                "rds:DescribeDBParameters",
+                "ec2:AuthorizeSecurityGroupEgress",
+                "cloudformation:ListStacks",
+                "s3:PutBucketPublicAccessBlock",
+                "iam:GetInstanceProfile",
+                "s3:ListAccessPoints",
+                "ec2:DescribeNatGateways",
+                "s3:ListMultiRegionAccessPoints",
+                "ec2:AllocateAddress",
+                "cloudformation:GetTemplateSummary",
+                "s3:ListStorageLensConfigurations",
+                "cloudformation:CreateStack",
+                "ec2:CreateVpcEndpoint",
+                "elasticloadbalancing:DescribeTargetHealth",
+                "elasticloadbalancing:SetSecurityGroups",
+                "ec2:AttachNetworkInterface"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": "servicequotas:GetServiceQuota",
+            "Resource": "*"
+        }
+```
+
+If there is a problem with the `JSON` here, you can manually add permissions in `Visual editor` according to the contents of the required permission list.
+
+###### 4. Review and create policy
+
+![review policy](../images/review_create_policy.png)
+
+###### 5. Add the permission policy you just created to your user:
+
+![add permission](../images/check_user_permission.png)
+
+![add policy to user](../images/add_policy_to_user.png)
 
 ### II. Create key pair and Access Key<a name="keypair"></a>
 
