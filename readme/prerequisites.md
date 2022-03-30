@@ -31,7 +31,7 @@ Users need the following permissions to ensure that subsequent operations can pr
 
 ![policy json](../images/policy_json.png)
 
-###### 3. Paste the following content to "statement":
+###### 3. Paste the following content to `Statement`:
 
 ```json
 {
