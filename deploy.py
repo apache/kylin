@@ -96,7 +96,7 @@ def load_config_file(kylin_mode: str, is_destroy_all: bool = False) -> Dict:
 
     # change the default value of `ALWAYS_DESTROY_VPC_RDS_MONITOR`
     if is_destroy_all:
-        config[Params.ALWAYS_DESTROY_VPC_RDS_MONITOR.value] = 'true'
+        config[Params.ALWAYS_DESTROY_VPC_RDS_MONITOR.value] = True
     return config
 
 
