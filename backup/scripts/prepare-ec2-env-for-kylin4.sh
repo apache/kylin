@@ -253,6 +253,8 @@ export KYLIN_HOME=${KYLIN_HOME}
 export SPARK_HOME=${SPARK_HOME}
 export MDX_HOME=${MDX_HOME}
 export OUT_LOG=${OUT_LOG}
+
+export S3_DATA_DIR=s3:/${BUCKET_SUFFIX}/data/
 EOF
 }
 
@@ -598,8 +600,8 @@ EOF
   # Support to customize spark-defaults.conf
   cat <<EOF > ${SPARK_HOME}/conf/spark-defaults.conf
 spark.hadoop.fs.s3.impl       org.apache.hadoop.fs.s3a.S3AFileSystem
-spark.hadoop.fs.s3a.endpoint  s3.${CURRENT_REGION}.amazonaws.com.cn
-spark.master                  spark://${spark_master_node_private_ip}:7077
+spark.hadoop.fs.s3a.endpoint  ${S3_ENDPOINT}
+spark.master                  spark://spark_master_node_private_ip:7077
 spark.driver.cores            1
 spark.driver.memory           8G
 spark.driver.memoryOverhead   1G
