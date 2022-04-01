@@ -232,7 +232,7 @@ class AWSInstance:
         return Utils.full_path_of_yaml(File.SPARK_WORKER_SCALE_YAML.value)
 
     @property
-    def s3_path_match(self) -> re.Match:
+    def s3_path_match(self):
         original_path: str = self.config[Params.S3_URI.value]
         match = re.match(pattern=r'^s3://([^/]+)/(.*?([^/]+)/?)$', string=original_path)
         if not match:
