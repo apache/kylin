@@ -40,7 +40,7 @@ When cluster(s) created, services and nodes will be like below:
 1. For more details about `cost` of tool, see document [cost calculation](./readme/cost_calculation.md).
 2. For more details about `commands` of tool, see document [commands](./readme/commands.md).
 3. For more details about the `prerequisites` of tool, see document [prerequisites](./readme/prerequisites.md).
-4. For more details about `advanced configs` of tool, see document [advanced configs](./readme/advanced_configs.md).
+4. For more details about `advanced configs` of tool, see document [configuration](./readme/configuration.md) and [advanced configuration](./readme/advanced_configuration.md).
 5. For more details about `monitor services` supported by tool, see document [monitor](./readme/monitor.md).
 6. For more details about `troubleshooting`, see document [troubleshooting](./readme/trouble_shooting.md).
 7. The current tool has already opened the public port for some services. You can access the service by `public IP` of related EC2 instances.
@@ -49,6 +49,7 @@ When cluster(s) created, services and nodes will be like below:
    3. `Prometheus`:  9090, 9100.
    4. `Kylin`: 7070.
    5. `Spark`: 8080, 4040.
+   6. `MDX for Kylin`: 7080.
 8. More about cloudformation syntax, please check [aws website](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html).
-9. The current Kylin version is 4.0.0.
+9. The current Kylin version is 4.0.1.
 10. The current Spark version is 3.1.1.

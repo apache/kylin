@@ -1808,7 +1808,7 @@ class AWSInstance:
         logger.info(f"Fetching messages successfully ...")
 
         header_msg = '\n=================== List Alive Nodes ===========================\n'
-        result = header_msg + f"Stack Name\t\tInstance ID\t\tPrivate Ip\t\tPublic Ip\t\t\n"
+        result = header_msg + f"Node Name\t\tInstance ID\t\tPrivate Ip\t\tPublic Ip\t\t\n"
         for msg in msgs:
             result += msg + '\n'
         result += header_msg

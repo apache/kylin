@@ -16,7 +16,7 @@ There are `9` modules params for tools.  Introductions as below:
 
 - EC2_KYLIN4_PARAMS: These params of the module are for creating a Kylin4.
 
-- EC2_SPARK_WORKER_PARAMS: These params of the module are for creating **Spark Workers**, the default is **3** spark workers for all clusters.
+- EC2_SPARK_WORKER_PARAMS: These params of the module are for creating **Spark Workers**, the default is **3** spark workers for all of the clusters.
 
 - EC2_KYLIN4_SCALE_PARAMS: these params of the module are for scaling **Kylin4 nodes**, the range of **Kylin4 nodes** is related to `KYLIN_SCALE_UP_NODES` and `KYLIN_SCALE_DOWN_NODES`.
 
@@ -25,16 +25,16 @@ There are `9` modules params for tools.  Introductions as below:
   > 1. `KYLIN_SCALE_UP_NODES` is for the range of Kylin nodes to scale up. 
   > 2. `KYLIN_SCALE_DOWN_NODES` is for the range of Kylin nodes to scale down.
   > 3. The range of `KYLIN_SCALE_UP_NODES` must contain the range of `KYLIN_SCALE_DOWN_NODES`.
-  > 4. **They are effective to all clusters which are not only `default cluster` but also another cluster whose index is in `${CLUSTER_INDEXES}`.**
+  > 4. **They are effective to all of the clusters which are not only `default cluster` but also another cluster whose index is in `${CLUSTER_INDEXES}`.**
 
 - EC2_SPARK_SCALE_SLAVE_PARAMS: these params of the module are for scaling **Spark workers**, the range of **Spark Workers is related to `SPARK_WORKER_SCALE_UP_NODES` and `SPARK_WORKER_SCALE_DOWN_NODES`.
 
   > Note:
   >
-  > 1. `SPARK_WORKER_SCALE_UP_NODES` is for the range for spark workers to scale up. **It's effective to all clusters which are not only `default cluster` but also another cluster whose index is in `${CLUSTER_INDEXES}`.**
-  > 2. `SPARK_WORKER_SCALE_DOWN_NODES` is for the range for spark workers to scale down. **It's effective to all clusters which are not only `default cluster` but also another cluster whose index is in `${CLUSTER_INDEXES}`.**
+  > 1. `SPARK_WORKER_SCALE_UP_NODES` is for the range for spark workers to scale up. **It's effective to all of the clusters which are not only `default cluster` but also another cluster whose index is in `${CLUSTER_INDEXES}`.**
+  > 2. `SPARK_WORKER_SCALE_DOWN_NODES` is for the range for spark workers to scale down. **It's effective to all of the clusters which are not only `default cluster` but also another cluster whose index is in `${CLUSTER_INDEXES}`.**
   > 3. The range of `SPARK_WORKER_SCALE_UP_NODES` must contain the range of `SPARK_WORKER_SCALE_DOWN_NODES`.
-  > 4. **They are effective to all clusters which are not only `default cluster` but also another cluster whose index is in `${CLUSTER_INDEXES}`.**
+  > 4. **They are effective to all of the clusters which are not only `default cluster` but also another cluster whose index is in `${CLUSTER_INDEXES}`.**
 
 ### Customize Configs
 
