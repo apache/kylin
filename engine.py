@@ -16,16 +16,12 @@
 #
 
 import logging
-import os
 from typing import List
-
-import yaml
 
 from constant.client import Client
 from constant.config import Config
 from constant.deployment import ScaleType, NodeType, Cluster
-from constant.yaml_files import File
-from engine_utils import EngineUtils
+from utils.engine_utils import EngineUtils
 
 logger = logging.getLogger(__name__)
 

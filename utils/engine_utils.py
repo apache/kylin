@@ -23,7 +23,7 @@ from constant.config import Config
 from constant.deployment import NodeType, ScaleType
 from constant.yaml_files import Tar
 from instances.kylin_utils import KylinUtils
-from utils import Utils
+from utils.common_utils import Utils
 
 logger = logging.getLogger(__name__)
 

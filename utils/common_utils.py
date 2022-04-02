@@ -18,6 +18,8 @@
 import logging
 import os
 import shutil
+import sys
+from datetime import datetime
 from typing import List, Tuple, Generator, Dict
 
 import requests
@@ -117,10 +119,21 @@ class Utils:
             return
         logger.info(f"Downloading {os.path.abspath(file_path)}.")
         with open(file_path, 'wb') as f:
+            # set downloading bar
+            total_length = int(r.headers.get('content-length'))
+            temp_done = 0
+            start = datetime.now()
             for chunk in r.iter_content(chunk_size=1024 * 8):
                 if not chunk:
                     break
+
+                temp_done += len(chunk)
                 f.write(chunk)
+                end = datetime.now()
+                done = int(50 * temp_done / total_length)
+                sys.stdout.write(f"\r[{'=' * done}{' '* (50 - done)}] % {temp_done} / {total_length} "
+                                 f"- Duration: {end - start}\r")
+                sys.stdout.flush()
                 f.flush()
                 os.fsync(f.fileno())
 
