@@ -28,7 +28,7 @@ from constant.kylin_properties_params import KylinProperties
 from constant.path import KYLIN_PROPERTIES_TEMPLATE_DIR
 from constant.yaml_params import Params
 from instances.aws_instance import AWSInstance
-from utils import Utils
+from utils.common_utils import Utils
 
 logger = logging.getLogger(__name__)
 
