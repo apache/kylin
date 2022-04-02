@@ -8,9 +8,9 @@
    >
    > 1. `CLUSTER_INDEXES` means that cluster index is in the range of `CLUSTER_INDEXES`. 
    > 2. Configs for multiple clusters are also from `kylin_configs.yaml`.
-   > 3. For more details about the index of the clusters,  please check [Indexes of clusters](./configs.md#indexofcluster).
+   > 3. For more details about the index of the clusters,  please check [Indexes of clusters](./configuration.md#indexofcluster).
 
-2. Copy `kylin.properties.template` for expecting clusters to deploy, please check the [details](./configs.md#cluster).
+2. Copy `kylin.properties.template` for expecting clusters to deploy, please check the [details](./configuration.md#cluster).
 
 3. Execute commands to deploy all of the clusters.
 

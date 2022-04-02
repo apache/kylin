@@ -1,18 +1,24 @@
-## Configs
+## Configuration
 
 #### I. Configure the `kylin_configs.yaml`
 
 **Required parameters**:
 
-- `AWS_REGION`: Current region for EC2 instances.
+- `AWS_REGION`: Current region for EC2 instances. Default is `cn-northwest-1`.
 - `IAMRole`: IAM role which has the access to aws authority. This parameter will be set to the created **name** of the IAM role.
 - `S3_URI`: the prefix path of storing `jars/scripts/tar`. For example, this parameter will be set to `s3://.../kylin4-aws-test`.
 - `KeyName`: Security key name is a set of security credentials that you use to prove your identity when connecting to an instance. This parameter will be set to the created **name** of key pair`.
 - `CIDR_IP`:  An inbound rule permits instances to receive traffic from the specified IPv4 or IPv6 CIDR address range, or the instances associated with the specified security group.
+
+**Optional parameters**:
+
 - `DB_IDENTIFIER`: this param should be only one in the `RDS -> Databases`. And it will be the name of created RDS database.
-- `DB_PORT`: this param will be the port of created RDS database, default is `3306`.
-- `DB_USER`: this param will be a login ID for the master user of your DB instance, the default is `root`.
-- `DB_PASSWORD`: this param will be the password of `DB_USER` to access the DB instance. default is `123456test`, it's strongly suggested you change it.
+- `DB_PORT`: this param will be the port of created RDS database. The default value is `3306`.
+- `DB_USER`: this param will be a login ID for the master user of your DB instance. The default value is `root`.
+- `DB_PASSWORD`: this param will be the password of `DB_USER` to access the DB instance. The default value is `123456test`, it's strongly suggested you change it.
+
+- `ENABLE_MDX`: Whether to start the `MDX for Kylin` service when starting the cluster. The default value is `false`.
+- `SUPPORT_GLUE`: Whether to use AWS Glue as the metastore service of hive data source. The default value is `true`, effective only when deploying a kylin node of `job` mode.
 
 #### II. Configure the `kylin.properties` in `backup/properties` directories.<a name="cluster"></a>
 
