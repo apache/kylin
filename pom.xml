@@ -126,7 +126,7 @@
     <mrunit.version>1.1.0</mrunit.version>
     <dbunit.version>2.5.4</dbunit.version>
     <h2.version>2.1.210</h2.version>
-    <jetty.version>9.4.32.v20200930</jetty.version>
+    <jetty.version>9.4.46.v20220331</jetty.version>
     <jamm.version>0.3.1</jamm.version>
     <mockito.version>2.7.14</mockito.version>
     <mockito-all.version>1.9.5</mockito-all.version>
@@ -143,7 +143,7 @@
     <!-- Utility -->
     <log4j.version>1.2.17</log4j.version>
     <slf4j.version>1.7.21</slf4j.version>
-    <xerces.version>2.11.0</xerces.version>
+    <xerces.version>2.12.2</xerces.version>
     <xalan.version>2.7.2</xalan.version>
     <ehcache.version>2.10.2.2.21</ehcache.version>
     <memcached.verion>2.12.3</memcached.verion>
