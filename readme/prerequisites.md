@@ -1,12 +1,12 @@
 ## Prerequisites
 
-### I. Create `user` and add permission
+### I. Check user permission
 
-#### 1. Create a `user` in AWS IAM service
+#### 1. Login AWS account and check whether the current user has sufficient permissions in AWS IAM service
 
-![create user](../images/create_user.png)
+![check user permission](../images/check_user_permission.png)              |
 
-#### 2. Add permission for user
+#### 2. Add permission for current user
 
 Users need the following permissions to ensure that subsequent operations can proceed smoothly:
 
@@ -163,7 +163,7 @@ If there is a problem with the `JSON` here, you can manually add permissions in 
 
 ![review policy](../images/review_create_policy.png)
 
-###### 5. Add the permission policy you just created to your user:
+###### 5. Add the permission policy to current user:
 
 ![add permission](../images/check_user_permission.png)
 
