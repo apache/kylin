@@ -1948,8 +1948,11 @@ class AWSInstance:
             if output['Status'] in ['Delayed', 'Success', 'Cancelled', 'TimedOut', 'Failed']:
                 break
             time.sleep(10)
+        if not output or output['Status'] != 'Success':
+            logger.error(output)
+
         assert output and output['Status'] == 'Success', \
-            f"execute script failed, failed info: {output['StandardErrorContent']}"
+            f"execute script failed, failed details message: {output}"
         return output
 
     def stop_ec2_instance(self, instance_id: str):
@@ -2028,7 +2031,8 @@ class AWSInstance:
         try:
             self.iam_client.get_role(RoleName=self.iam_role)
             return True
-        except self.iam_client.exceptions.NoSuchEntityException:
+        except self.iam_client.exceptions.NoSuchEntityException as err:
+            logger.error(f"check iam role error: {err}")
             return False
 
     def valid_key_pair(self) -> None:
@@ -2045,7 +2049,8 @@ class AWSInstance:
         try:
             self.ec2_client.describe_key_pairs(KeyNames=[self.key_pair])
             return True
-        except ClientError:
+        except ClientError as ce:
+            logger.error(f"check key pair error: {ce}")
             return False
 
     def is_valid_cidr_ip(self) -> bool:
@@ -2064,10 +2069,11 @@ class AWSInstance:
             response = self.s3_client.head_object(Bucket=bucket, Key=bucket_dir + filename)
             Utils.is_uploaded_success(filename=filename, size_in_bytes=response['ContentLength'])
         except botocore.exceptions.ClientError as ex:
+            logger.error(f"check object exists on s3 error:{ex}")
             assert ex.response['Error']['Code'] == '404'
             return False
         except AssertionError as ex:
-            logger.error(ex)
+            logger.error(f"check object exists on s3 error:{ex}")
             return False
         return True
 
@@ -2186,37 +2192,39 @@ class AWSInstance:
                 }
             )
         except WaiterError as wx:
+            logger.error(f"check rds available error: {wx}")
             return False
         return True
 
     def _validate_spark_worker_scale(self, stack_name: str) -> None:
         if stack_name not in self.scaled_spark_workers_stacks:
-            msg = f'{stack_name} not in scaled list, please check.'
+            msg = f'{stack_name} not in scaled list, please check kylin_configs.yml.'
             logger.error(msg)
             raise Exception(msg)
 
     def _validate_spark_worker_of_target_cluster_scale(self, stack_name: str, cluster_num: int) -> None:
         if stack_name not in self.scaled_target_spark_workers_stacks(cluster_num):
-            msg = f'{stack_name} not in scaled list of target cluster {cluster_num}, please check.'
+            msg = f'{stack_name} not in scaled list of target cluster {cluster_num}, please check kylin_configs.yml.'
             logger.error(msg)
             raise Exception(msg)
 
     def _validate_kylin_scale(self, stack_name: str) -> None:
         if stack_name not in self.scaled_kylin_stacks:
-            msg = f'{stack_name} not in scaled list, please check.'
+            msg = f'{stack_name} not in scaled list, please check kylin_configs.yml.'
             logger.error(msg)
             raise Exception(msg)
 
     def _validate_kylin_of_target_cluster_scale(self, stack_name: str, cluster_num: int) -> None:
         if stack_name not in self.scaled_target_kylin_stacks(cluster_num):
-            msg = f'{stack_name} not in scaled list of target cluster {cluster_num}, please check.'
+            msg = f'{stack_name} not in scaled list of target cluster {cluster_num}, please check kylin_configs.yml.'
             logger.error(msg)
             raise Exception(msg)
 
     def _stack_status_check(self, name_or_id: str, status: str) -> bool:
         try:
             resp: Dict = self.cf_client.describe_stacks(StackName=name_or_id)
-        except ClientError:
+        except ClientError as ce:
+            logger.error(f"check stack status error: {ce}")
             return False
         return resp['Stacks'][0]['StackStatus'] == status
 
@@ -2244,6 +2252,7 @@ class AWSInstance:
                 }
             )
         except WaiterError:
+            # logger.error(wx)
             return False
         return True
 
