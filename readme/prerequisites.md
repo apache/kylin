@@ -4,7 +4,7 @@
 
 #### 1. Login AWS account and check whether the current user has sufficient permissions in AWS IAM service
 
-![check user permission](../images/check_user_permission.png)              |
+![check user permission](../images/check_user_permission.png)
 
 #### 2. Add permission for current user
 
@@ -31,7 +31,7 @@ Users need the following permissions to ensure that subsequent operations can pr
 
 ![policy json](../images/policy_json.png)
 
-###### 3. Paste the following content to `Statement`:
+###### 3. Paste the following content into the `[]` of `Statement`:
 
 ```json
 {
@@ -154,6 +154,16 @@ Users need the following permissions to ensure that subsequent operations can pr
             "Effect": "Allow",
             "Action": "servicequotas:GetServiceQuota",
             "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": ["ssm:SendCommand"],
+             "Resource": ["arn:aws-cn:ssm:*:*:document/*"]
+        },
+        {
+            "Effect": "Allow",
+            "Action": ["ssm:SendCommand"],
+            "Resource": ["arn:aws-cn:ec2:*:*:instance/*"]
         }
 ```
 
@@ -163,7 +173,7 @@ If there is a problem with the `JSON` here, you can manually add permissions in 
 
 ![review policy](../images/review_create_policy.png)
 
-###### 5. Add the permission policy to current user:
+###### 5. Add the permission policy just created to current user:
 
 ![add permission](../images/check_user_permission.png)
 

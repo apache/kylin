@@ -4,7 +4,7 @@
 
 **Required parameters**:
 
-- `AWS_REGION`: Current region for EC2 instances. Default is `cn-northwest-1`.
+- `AWS_REGION`: Current region for EC2 instances. The default value is `cn-northwest-1`.
 - `IAMRole`: IAM role which has the access to aws authority. This parameter will be set to the created **name** of the IAM role.
 - `S3_URI`: the prefix path of storing `jars/scripts/tar`. For example, this parameter will be set to `s3://.../kylin4-aws-test`.
 - `KeyName`: Security key name is a set of security credentials that you use to prove your identity when connecting to an instance. This parameter will be set to the created **name** of key pair`.
