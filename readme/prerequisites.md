@@ -22,11 +22,8 @@ Users need the following permissions to ensure that subsequent operations can pr
 | **Systems Manager** | **Limited**: Write                                     | All Resources | None              |
 
 > Note: 
->
-> ​	Please add these access levels to separate policy, and if not, there will be a error `Your policy character exceeds the non-whitespace character limit of 6,144.` in the UI.
->
-> ​	Or you can also paste the following `json` contents of access levels to one policy. It is already tested OK.
-
+> 
+>   [AWS IAM](https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html) is a AWS web service to control who is authenticated (signed in) and authorized (has permissions) to use AWS resources. To make you user account has the sufficient permissions, such as create and destroy EC2 instances, read and write file to s3 buckets, execute command remotely, we use [IAM policies](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html) to manage permissions for AWS account you used.
 
 
 ##### How to add the required permissions for user?
