@@ -2242,8 +2242,7 @@ class AWSInstance:
     def _stack_status_check(self, name_or_id: str, status: str) -> bool:
         try:
             resp: Dict = self.cf_client.describe_stacks(StackName=name_or_id)
-        except ClientError as ce:
-            logger.error(f"check stack status error: {ce}")
+        except ClientError:
             return False
         return resp['Stacks'][0]['StackStatus'] == status
 
