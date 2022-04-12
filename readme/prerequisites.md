@@ -151,7 +151,7 @@ Users need the following permissions to ensure that subsequent operations can pr
                 "ssm:SendCommand"
             ],
             "Resource": [
-                "arn:aws-cn:ssm:*:*:document/*"
+                "*"
             ]
         },
         {
@@ -160,7 +160,7 @@ Users need the following permissions to ensure that subsequent operations can pr
                 "ssm:SendCommand"
             ],
             "Resource": [
-                "arn:aws-cn:ec2:*:*:instance/*"
+                "*"
             ]
         }
 ```
