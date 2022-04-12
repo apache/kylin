@@ -121,7 +121,7 @@ class BasicHttpClient:
                 return data.get('data', data)
             return resp.text
         except requests.exceptions.ReadTimeout as timeout_error:
-            logger.error(timeout_error)
+            logger.warning(timeout_error)
             time.sleep(60)
         except requests.HTTPError as http_error:
             err_msg = f"{str(http_error)} [return code: {data.get('code', '')}]-[{data.get('msg', '')}]\n" \

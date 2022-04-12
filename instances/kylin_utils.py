@@ -34,6 +34,6 @@ class KylinUtils:
                 check_times=3
             )
         except AssertionError:
-            logger.error('Check kylin status failed, please check the public ip whether is opened.')
+            logger.warning('Check kylin status failed, please check the public ip whether is opened.')
             return False
         return True
