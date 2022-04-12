@@ -1967,7 +1967,7 @@ class AWSInstance:
                 break
             time.sleep(10)
         if not output or output['Status'] != 'Success':
-            logger.error(output)
+            logger.warning(output)
 
         assert output and output['Status'] == 'Success', \
             f"execute script failed, failed details message: {output}"
@@ -2050,7 +2050,7 @@ class AWSInstance:
             self.iam_client.get_role(RoleName=self.iam_role)
             return True
         except self.iam_client.exceptions.NoSuchEntityException as err:
-            logger.error(f"check iam role error: {err}")
+            logger.warning(f"check iam role error: {err}")
             return False
 
     def valid_key_pair(self) -> None:
@@ -2068,7 +2068,7 @@ class AWSInstance:
             self.ec2_client.describe_key_pairs(KeyNames=[self.key_pair])
             return True
         except ClientError as ce:
-            logger.error(f"check key pair error: {ce}")
+            logger.warning(f"check key pair error: {ce}")
             return False
 
     def is_valid_cidr_ip(self) -> bool:
@@ -2261,7 +2261,6 @@ class AWSInstance:
                 }
             )
         except WaiterError as wx:
-            # logger.error(wx)
             return False
         return True
 
@@ -2288,7 +2287,6 @@ class AWSInstance:
                 }
             )
         except WaiterError as wx:
-            # logger.error(wx)
             return False
         return True
     # ============ Utils Services End ============
