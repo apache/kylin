@@ -216,7 +216,7 @@ class Utils:
         # delete useless kylin.properties
         kylin_properties_paths = os.listdir(KYLIN_PROPERTIES_DIR)
         for path in kylin_properties_paths:
-            if path in ['default', 'templates']:
+            if path in ['default', 'templates', 'mode_templates']:
                 continue
 
             if not cluster_nums and (cluster_nums and path not in cluster_nums):
