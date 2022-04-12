@@ -2087,11 +2087,11 @@ class AWSInstance:
             response = self.s3_client.head_object(Bucket=bucket, Key=bucket_dir + filename)
             Utils.is_uploaded_success(filename=filename, size_in_bytes=response['ContentLength'])
         except botocore.exceptions.ClientError as ex:
-            logger.error(f"check object exists on s3 error:{ex}")
+            logger.info(f"check object exists on s3 : File {filename} does not exist and will be uploaded locally.")
             assert ex.response['Error']['Code'] == '404'
             return False
-        except AssertionError as ex:
-            logger.error(f"check object exists on s3 error:{ex}")
+        except AssertionError:
+            logger.info(f"check object exists on s3 : File {filename} does not exist and will be uploaded locally.")
             return False
         return True
 
