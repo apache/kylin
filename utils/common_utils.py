@@ -115,8 +115,10 @@ class Utils:
         r = requests.get(url, stream=True)
         if not r.ok:
             # HTTP status code 4XX/5XX
+            msg = "Download failed: status code {}\n{}".format(r.status_code, r.text)
             logger.error("Download failed: status code {}\n{}".format(r.status_code, r.text))
-            return
+            raise Exception(msg)
+
         logger.info(f"Downloading {os.path.abspath(file_path)}.")
         with open(file_path, 'wb') as f:
             # set downloading bar
@@ -214,7 +216,7 @@ class Utils:
         # delete useless kylin.properties
         kylin_properties_paths = os.listdir(KYLIN_PROPERTIES_DIR)
         for path in kylin_properties_paths:
-            if path in ['default', 'templates']:
+            if path in ['default', 'templates', 'mode_templates']:
                 continue
 
             if not cluster_nums and (cluster_nums and path not in cluster_nums):

@@ -20,7 +20,8 @@ from typing import List
 
 from clouds.aws import AWS
 from constant.config import Config
-from constant.deployment import NodeType, ScaleType
+from constant.deployment import NodeType, ScaleType, MODE
+from constant.server_mode import ServerMode
 from constant.yaml_files import Tar
 from instances.kylin_utils import KylinUtils
 from utils.common_utils import Utils
@@ -47,7 +48,7 @@ class EngineUtils:
         hadoop_package = Tar.HADOOP.value.format(HADOOP_VERSION=self.config['HADOOP_VERSION'])
         node_exporter_package = Tar.NODE.value.format(NODE_EXPORTER_VERSION=self.config['NODE_EXPORTER_VERSION'])
         prometheus_package = Tar.PROMETHEUS.value.format(PROMETHEUS_VERSION=self.config['PROMETHEUS_VERSION'])
-        if self.config['SUPPORT_GLUE'] == 'true':
+        if self.config['SUPPORT_GLUE'] == 'true' and self.config[MODE.KYLIN.value] == ServerMode.JOB.value:
             spark_package = Tar.SPARK_FOR_GLUE.value.format(
                 SPARK_VERSION=self.config['SPARK_VERSION'],
                 HADOOP_VERSION=self.config['HADOOP_VERSION'])
