@@ -65,7 +65,7 @@
     <kylin.version>3.0.0</kylin.version>
 
     <!-- Hadoop versions -->
-    <hadoop2.version>2.7.3</hadoop2.version>
+    <hadoop2.version>3.2.3</hadoop2.version>
     <yarn.version>2.7.3</yarn.version>
 
     <!-- Hive versions -->
