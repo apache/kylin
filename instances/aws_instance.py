@@ -376,7 +376,7 @@ class AWSInstance:
 
     # ============ VPC Services Start ============
     def create_vpc_stack(self) -> Optional[Dict]:
-        if self.is_stack_complete(self.vpc_stack_name):
+        if self.is_stack_exists(self.vpc_stack_name) and self.is_stack_complete(self.vpc_stack_name):
             return
         params: Dict = self.config[Config.EC2_VPC_PARAMS.value]
         params[Params.CIDR_IP.value] = self.cidr_ip
@@ -412,9 +412,9 @@ class AWSInstance:
         return self.is_db_available(self.db_identifier)
 
     def create_rds_stack(self) -> Optional[Dict]:
-        if self.is_stack_complete(self.rds_stack_name):
-            return
-        if self.is_rds_exists():
+        if self.is_stack_exists(self.rds_stack_name) \
+                and self.is_stack_complete(self.rds_stack_name)\
+                and self.is_rds_exists():
             logger.warning(f'db {self.db_identifier} already exists.')
             return
         params: Dict = self.config[Config.EC2_RDS_PARAMS.value]
@@ -445,7 +445,7 @@ class AWSInstance:
             logger.warning(msg)
             raise Exception(msg)
 
-        if self.is_stack_complete(self.static_service_stack_name):
+        if self.is_stack_exists(self.static_service_stack_name) and self.is_stack_complete(self.static_service_stack_name):
             return
         params: Dict = self.config[Config.EC2_STATIC_SERVICES_PARAMS.value]
         # update needed params
@@ -529,7 +529,7 @@ class AWSInstance:
         else:
             zk_stack_name = self.zk_stack_name
 
-        if self.is_stack_complete(zk_stack_name):
+        if self.is_stack_exists(zk_stack_name) and self.is_stack_complete(zk_stack_name):
             return
         params: Dict = self.config[Config.EC2_ZOOKEEPERS_PARAMS.value]
         # update needed params
@@ -673,7 +673,7 @@ class AWSInstance:
             zk_stack = self.zk_stack_name
             spark_master_stack = self.spark_master_stack_name
 
-        if self.is_stack_complete(kylin_stack_name):
+        if self.is_stack_exists(kylin_stack_name) and self.is_stack_complete(kylin_stack_name):
             return
 
         params: Dict = self.config[Config.EC2_KYLIN4_PARAMS.value]
@@ -897,7 +897,7 @@ class AWSInstance:
         else:
             spark_master_stack_name = self.spark_master_stack_name
 
-        if self.is_stack_complete(spark_master_stack_name):
+        if self.is_stack_exists(spark_master_stack_name) and self.is_stack_complete(spark_master_stack_name):
             return
 
         params: Dict = self.config[Config.EC2_SPARK_MASTER_PARAMS.value]
@@ -2185,6 +2185,11 @@ class AWSInstance:
     def is_stack_rollback_in_progress(self, stack_name: str) -> bool:
         return self._stack_status_check(name_or_id=stack_name, status='ROLLBACK_IN_PROGRESS')
 
+    def is_stack_exists(self, stack_name: str) -> bool:
+        if self._stack_exists(stack_name=stack_name):
+            return True
+        return False
+
     def is_stack_complete(self, stack_name: str) -> bool:
         if self._stack_complete(stack_name):
             return True
@@ -2265,12 +2270,11 @@ class AWSInstance:
             self.exists_waiter.wait(
                 StackName=stack_name,
                 WaiterConfig={
-                    'Delay': 5,
-                    'MaxAttempts': 2
+                    'Delay': 10,
+                    'MaxAttempts': 3
                 }
             )
         except WaiterError:
-            # logger.error(wx)
             return False
         return True
 
