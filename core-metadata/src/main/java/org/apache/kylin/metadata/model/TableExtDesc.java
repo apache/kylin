@@ -142,8 +142,9 @@ public class TableExtDesc extends RootPersistentEntity {
     }
 
     public void setCardinality(String cardinality) {
-        if (null == cardinality)
+        if (null == cardinality) {
             return;
+        }
 
         String[] cardi = cardinality.split(",");
 
@@ -191,8 +192,9 @@ public class TableExtDesc extends RootPersistentEntity {
     public void init(String project) {
         this.project = project;
 
-        if (this.tableIdentity != null)
+        if (this.tableIdentity != null) {
             this.tableIdentity = this.tableIdentity.toUpperCase(Locale.ROOT);
+        }
     }
 
     public long getLastModifiedTime() {
@@ -215,10 +217,12 @@ public class TableExtDesc extends RootPersistentEntity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
 
         TableExtDesc tableExtDesc = (TableExtDesc) o;
 

@@ -64,13 +64,12 @@ public class TableAnalyzerJob extends SparkApplication implements Serializable {
         analyzeTable(tableDesc, project, (int) rowCount, config, ss);
     }
 
-    void analyzeTable(TableDesc tableDesc, String project, int rowCount, KylinConfig config, SparkSession ss) {
+    private void analyzeTable(TableDesc tableDesc, String project, int rowCount, KylinConfig config, SparkSession ss) {
 
         long start = System.currentTimeMillis();
         TableAnalysisJob tableAnalysisJob = new TableAnalysisJob(tableDesc, project, rowCount, ss, jobId);
         Dataset<Row> sampleTableDataSet = tableAnalysisJob.getSampleTableDataSet();
         Row[] row = tableAnalysisJob.analyzeTable(sampleTableDataSet);
-        Double sparkSampleTableHignFrequency = config.getSparkSampleTableHignFrequency();
         logger.info("sampling rows from table {} takes {}s", tableDesc.getIdentity(),
                 (System.currentTimeMillis() - start) / 1000);
 
@@ -150,7 +149,7 @@ public class TableAnalyzerJob extends SparkApplication implements Serializable {
         try {
             tableMetadataManager.saveTableExt(tableExt, project);
         } catch (IOException e) {
-            logger.error("save {} table found error !", tableExt);
+            logger.error("save {} table ext found error !", tableExt);
             e.printStackTrace();
         }
         logger.info("Table {} analysis finished, update table ext desc done.", tableDesc.getName());

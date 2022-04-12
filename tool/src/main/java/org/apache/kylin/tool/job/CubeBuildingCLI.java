@@ -29,7 +29,7 @@ import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.model.CubeBuildTypeEnum;
+import org.apache.kylin.common.constant.JobTypeEnum;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
@@ -94,24 +94,24 @@ public class CubeBuildingCLI extends AbstractApplication {
     private void run(String cubeName, long startDate, long endDate, String buildType) throws IOException, JobException {
         CubeInstance cube = cubeManager.getCube(cubeName);
         Preconditions.checkArgument(cube != null, "Cube named " + cubeName + " does not exist!!!");
-        CubeBuildTypeEnum buildTypeEnum = CubeBuildTypeEnum.valueOf(buildType);
+        JobTypeEnum buildTypeEnum = JobTypeEnum.valueOf(buildType);
         Preconditions.checkArgument(buildTypeEnum != null, "Build type named " + buildType + " does not exist!!!");
         submitJob(cube, new TSRange(startDate, endDate), buildTypeEnum, false, "SYSTEM");
     }
 
-    private void submitJob(CubeInstance cube, TSRange tsRange, CubeBuildTypeEnum buildType,
+    private void submitJob(CubeInstance cube, TSRange tsRange, JobTypeEnum buildType,
             boolean forceMergeEmptySeg, String submitter) throws IOException, JobException {
         checkCubeDescSignature(cube);
 
         DefaultChainedExecutable job;
 
-        if (buildType == CubeBuildTypeEnum.BUILD) {
+        if (buildType == JobTypeEnum.BUILD) {
             CubeSegment newSeg = cubeManager.appendSegment(cube, tsRange);
             job = EngineFactory.createBatchCubingJob(newSeg, submitter, null);
-        } else if (buildType == CubeBuildTypeEnum.MERGE) {
+        } else if (buildType == JobTypeEnum.MERGE) {
             CubeSegment newSeg = cubeManager.mergeSegments(cube, tsRange, null, forceMergeEmptySeg);
             job = EngineFactory.createBatchMergeJob(newSeg, submitter);
-        } else if (buildType == CubeBuildTypeEnum.REFRESH) {
+        } else if (buildType == JobTypeEnum.REFRESH) {
             CubeSegment refreshSeg = cubeManager.refreshSegment(cube, tsRange, null);
             job = EngineFactory.createBatchCubingJob(refreshSeg, submitter, null);
         } else {

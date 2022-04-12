@@ -74,7 +74,7 @@ class TableAnalysisJob(tableDesc: TableDesc,
   }
 
   def analyzeTable(sampledDataset: Dataset[Row]): Array[Row] = {
-    // todo: use sample data to estimate total info
+    // TODO: use sample data to estimate total info
     // calculate the stats info
     val statsMetrics = buildStatsMetric(sampledDataset)
     val aggData: Array[Row] = sampledDataset.agg(count(lit(1)), statsMetrics: _*).collect()

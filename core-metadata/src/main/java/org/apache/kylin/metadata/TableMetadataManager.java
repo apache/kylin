@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,7 +60,7 @@ public class TableMetadataManager {
     private static final Logger logger = LoggerFactory.getLogger(TableMetadataManager.class);
 
     public static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
-    
+
     private static final Serializer<TableExtDesc> TABLE_EXT_SERIALIZER = new JsonSerializer<TableExtDesc>(
             TableExtDesc.class);
 
@@ -167,7 +167,7 @@ public class TableMetadataManager {
     public Map<String, TableDesc> getAllTablesMap(String prj) {
         // avoid cyclic locks
         ProjectInstance project = (prj == null) ? null : ProjectManager.getInstance(config).getProject(prj);
-        
+
         try (AutoLock lock = srcTableMapLock.lockForWrite()) {
             //TODO prj == null case is now only used by test case and CubeMetaIngester
             //should refactor these test case and tool ASAP and stop supporting null case
@@ -202,7 +202,7 @@ public class TableMetadataManager {
 
     /**
      * Make sure the returned table desc is project-specific.
-     * 
+     *
      * All locks on srcTableMapLock are WRITE LOCKS because of this method!!
      */
     private TableDesc getProjectSpecificTableDesc(String fullTableName, String prj) {
@@ -261,7 +261,7 @@ public class TableMetadataManager {
     public void resetProjectSpecificTableDesc(String prj) throws IOException {
         // avoid cyclic locks
         ProjectInstance project = ProjectManager.getInstance(config).getProject(prj);
-        
+
         try (AutoLock lock = srcTableMapLock.lockForWrite()) {
             for (String tableName : project.getTables()) {
                 String tableIdentity = getTableIdentity(tableName);
@@ -329,7 +329,7 @@ public class TableMetadataManager {
 
     /**
      * Get table extended info. Keys are defined in {@link MetadataConstants}
-     * 
+     *
      * @param tableName
      * @return
      */
@@ -371,10 +371,11 @@ public class TableMetadataManager {
 
             // updating a legacy global table
             if (tableExt.getProject() == null) {
-                if (getTableExt(tableExt.getIdentity(), prj).getProject() != null)
+                if (getTableExt(tableExt.getIdentity(), prj).getProject() != null) {
                     throw new IllegalStateException(
                             "Updating a legacy global TableExtDesc while a project level version exists: "
                                     + tableExt.getIdentity() + ", " + prj);
+                }
                 prj = tableExt.getProject();
             }
 
@@ -384,8 +385,9 @@ public class TableMetadataManager {
             String path = TableExtDesc.concatResourcePath(tableExt.getIdentity(), prj);
             ResourceStore store = getStore();
             TableExtDesc t = store.getResource(path, TABLE_EXT_SERIALIZER);
-            if (t != null && t.getIdentity() == null)
+            if (t != null && t.getIdentity() == null) {
                 store.deleteResource(path);
+            }
 
             srcExtCrud.save(tableExt);
         }

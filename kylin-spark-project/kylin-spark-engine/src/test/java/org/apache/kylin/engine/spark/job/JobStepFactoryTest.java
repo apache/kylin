@@ -19,11 +19,11 @@
 package org.apache.kylin.engine.spark.job;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.constant.JobTypeEnum;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
-import org.apache.kylin.cube.model.validation.JobTypeEnum;
 import org.apache.kylin.engine.spark.LocalWithSparkSessionTest;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.SchedulerException;
@@ -142,11 +142,17 @@ public class JobStepFactoryTest extends LocalWithSparkSessionTest {
         String table = "DEFAULT.TEST_KYLIN_FACT";
         TableMetadataManager tableMetadataManager = TableMetadataManager.getInstance(config);
         final TableDesc tableDesc = tableMetadataManager.getTableDesc(table, getProject());
-        NTableSamplingJob job = NTableSamplingJob.create(tableDesc, getProject(), "ADMIN", 20000);
+        int sampleRows = 20000;
+        int configuredRows = config.getSparkSampleTableMaxRows();
+        if (sampleRows > configuredRows) {
+            sampleRows = configuredRows;
+        }
+        NTableSamplingJob job = NTableSamplingJob.create(tableDesc, getProject(), "ADMIN", sampleRows);
+
         Assert.assertEquals(table, job.getTargetSubject());
         Assert.assertEquals(getProject(), job.getParam(MetadataConstants.P_PROJECT_NAME));
         Assert.assertEquals(tableDesc.getIdentity(), job.getParam(MetadataConstants.TABLE_NAME));
-        Assert.assertEquals("20000", job.getParam(MetadataConstants.TABLE_SAMPLE_MAX_COUNT));
+        Assert.assertEquals(String.valueOf(sampleRows), job.getParam(MetadataConstants.TABLE_SAMPLE_MAX_COUNT));
         Assert.assertEquals(JobTypeEnum.TABLE_SAMPLING, job.getJobTypeEnum());
 
         final NResourceDetectStep resourceDetectStep = job.getResourceDetectStep();
@@ -155,7 +161,7 @@ public class JobStepFactoryTest extends LocalWithSparkSessionTest {
         Assert.assertEquals(config.getJobTmpMetaStoreUrl(getProject(), resourceDetectStep.getId()).toString(),
                 resourceDetectStep.getDistMetaUrl());
 
-        final NTableSamplingJob.SamplingStep samplingStep = job.getSamplingStep();
+        final NTableSamplingStep samplingStep = job.getSamplingStep();
         Assert.assertEquals(TableAnalyzerJob.class.getName(), samplingStep.getSparkSubmitClassName());
         job.getParams().forEach((key, value) -> Assert.assertEquals(value, samplingStep.getParam(key)));
         Assert.assertEquals(config.getJobTmpMetaStoreUrl(getProject(), samplingStep.getId()).toString(),

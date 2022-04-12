@@ -935,8 +935,9 @@ public class ExecutableManager {
     public String findRunningTableSampleJob(String project, String tableName) {
         TableMetadataManager metaMgr = TableMetadataManager.getInstance(config);
         TableExtDesc tableExtDesc = metaMgr.getTableExt(tableName, project);
-        if (tableExtDesc == null)
+        if (tableExtDesc == null) {
             return null;
+        }
 
         String jobID = tableExtDesc.getJodID();
         if (null == jobID || jobID.isEmpty()) {
@@ -949,6 +950,7 @@ public class ExecutableManager {
             job = exeMgt.getJob(jobID);
         } catch (RuntimeException e) {
             /**
+             * TODO: remove this
              * By design, HiveTableExtSampleJob is moved from kap-engine-mr to kap-source-hive in kap2.3,
              * therefore, kap2.3 or higher version can not parse kap2.2 stats job info.
              */

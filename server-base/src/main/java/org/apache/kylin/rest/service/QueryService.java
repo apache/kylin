@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -186,7 +186,7 @@ public class QueryService extends BasicService {
         config.setMaxTotal(kylinConfig.getQueryMaxCacheStatementNum());
         config.setBlockWhenExhausted(false);
         config.setMinEvictableIdleTimeMillis(10 * 60 * 1000L); // cached statement will be evict if idle for 10 minutes
-        config.setTimeBetweenEvictionRunsMillis(60 * 1000L); 
+        config.setTimeBetweenEvictionRunsMillis(60 * 1000L);
         GenericKeyedObjectPool<PreparedContextKey, PreparedContext> pool = new GenericKeyedObjectPool<>(factory,
                 config);
         return pool;
@@ -437,12 +437,14 @@ public class QueryService extends BasicService {
             throw new BadRequestException(
                     String.format(Locale.ROOT, msg.getPROJECT_NOT_FOUND(), sqlRequest.getProject()));
         }
+
         if (StringUtils.isBlank(sqlRequest.getSql())) {
             throw new BadRequestException(msg.getNULL_EMPTY_SQL());
         }
 
-        if (sqlRequest.getBackdoorToggles() != null)
+        if (sqlRequest.getBackdoorToggles() != null) {
             BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
+        }
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
             // force clear the query context before a new query

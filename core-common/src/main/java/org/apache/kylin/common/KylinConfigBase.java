@@ -2753,9 +2753,9 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.engine.spark.sample-class-name", "org.apache.kylin.engine.spark.job.TableAnalyzerJob");
     }
 
-    public Double getSparkSampleTableHignFrequency() {
-        String frequency = getOptional("kylin.engine.spark.sample-high-frequency", "0.1");
-        return Double.parseDouble(frequency);
+    public int getSparkSampleTableMaxRows() {
+        String maxRows = getOptional("kylin.engine.spark.sample-max-rows", "1000");
+        return Integer.parseInt(maxRows);
     }
 
 

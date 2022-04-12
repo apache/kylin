@@ -14,10 +14,41 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+*/
+
+package org.apache.kylin.common.constant;
+
+/**
+ * @author xduo
+ *
  */
-
-package org.apache.kylin.cube.model.validation;
-
 public enum JobTypeEnum {
+    /**
+     * rebuild a segment or incremental build
+     */
+    BUILD,
+    /**
+     * merge segments
+     */
+    MERGE,
+
+    /**
+     * refresh segments
+     */
+    REFRESH,
+
+    /**
+     * optimize segments
+     */
+    OPTIMIZE,
+
+    /**
+     * checkpoint for set of other jobs
+     */
+    CHECKPOINT,
+
+    /**
+     *  job of sampling table
+     */
     TABLE_SAMPLING
 }

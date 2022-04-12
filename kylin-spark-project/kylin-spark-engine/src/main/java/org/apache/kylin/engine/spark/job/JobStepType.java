@@ -34,7 +34,7 @@ public enum JobStepType {
     SAMPLING {
         @Override
         public AbstractExecutable create(DefaultChainedExecutable parent, KylinConfig config) {
-            return new NTableSamplingJob.SamplingStep(config.getSparkSampleTableClassName());
+            return new NTableSamplingStep(config.getSparkSampleTableClassName());
         }
     },
 

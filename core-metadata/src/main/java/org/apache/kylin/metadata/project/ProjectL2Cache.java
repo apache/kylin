@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.project;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -31,6 +32,7 @@ import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc.ColumnStats;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
@@ -92,48 +94,53 @@ class ProjectL2Cache {
 
     public Set<ColumnDesc> listExposedColumns(String project, String table) {
         TableCache tableCache = getCache(project).tables.get(table);
-        if (tableCache == null)
+        if (tableCache == null) {
             return Collections.emptySet();
-        else
+        } else {
             return Collections.unmodifiableSet(tableCache.exposedColumns);
+        }
     }
 
     public boolean isDefinedTable(String project, String table) {
         TableCache tableCache = getCache(project).tables.get(table);
-        if (tableCache == null)
+        if (tableCache == null) {
             return false;
-        else
-            return true;
+        }
+        return true;
     }
 
     public boolean isExposedTable(String project, String table) {
         TableCache tableCache = getCache(project).tables.get(table);
-        if (tableCache == null)
+        if (tableCache == null) {
             return false;
-        else
-            return tableCache.exposed;
+        }
+        return tableCache.exposed;
     }
 
     public boolean isDefinedColumn(String project, String table, String col) {
         TableCache tableCache = getCache(project).tables.get(table);
-        if (tableCache == null)
+        if (tableCache == null) {
             return false;
+        }
 
         for (ColumnDesc colDesc : tableCache.tableDesc.getColumns()) {
-            if (colDesc.getName().equals(col))
+            if (colDesc.getName().equals(col)) {
                 return true;
+            }
         }
         return false;
     }
 
     public boolean isExposedColumn(String project, String table, String col) {
         TableCache tableCache = getCache(project).tables.get(table);
-        if (tableCache == null)
+        if (tableCache == null) {
             return false;
+        }
 
         for (ColumnDesc colDesc : tableCache.exposedColumns) {
-            if (colDesc.getName().equals(col))
+            if (colDesc.getName().equals(col)) {
                 return true;
+            }
         }
         return false;
     }
@@ -145,18 +152,19 @@ class ProjectL2Cache {
 
     public Set<IRealization> getRealizationsByTable(String project, String table) {
         TableCache tableCache = getCache(project).tables.get(table);
-        if (tableCache == null)
+        if (tableCache == null) {
             return Collections.emptySet();
-        else
-            return Collections.unmodifiableSet(tableCache.realizations);
+        }
+        return Collections.unmodifiableSet(tableCache.realizations);
     }
 
     public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String table, boolean onlyRewriteMeasure) {
         Set<IRealization> realizations = getRealizationsByTable(project, table);
         List<MeasureDesc> result = Lists.newArrayList();
         for (IRealization r : realizations) {
-            if (!r.isReady())
+            if (!r.isReady()) {
                 continue;
+            }
 
             for (MeasureDesc m : r.getMeasures()) {
                 FunctionDesc func = m.getFunction();
@@ -200,15 +208,17 @@ class ProjectL2Cache {
 
         ProjectInstance pi = mgr.getProject(project);
 
-        if (pi == null)
+        if (pi == null) {
             throw new IllegalArgumentException("Project '" + project + "' does not exist;");
+        }
 
         TableMetadataManager metaMgr = mgr.getTableManager();
 
         for (String tableName : pi.getTables()) {
             TableDesc tableDesc = metaMgr.getTableDesc(tableName, project);
-            if (tableDesc != null) {
-                projectCache.tables.put(tableDesc.getIdentity(), new TableCache(tableDesc));
+            List<ColumnStats> columnStats = metaMgr.getTableExt(tableName, project).getColumnStats();
+            if (Objects.nonNull(tableDesc) && Objects.nonNull(columnStats)) {
+                projectCache.tables.put(tableDesc.getIdentity(), new TableCache(tableDesc, columnStats));
             } else {
                 logger.warn("Table '" + tableName + "' defined under project '" + project + "' is not found");
             }
@@ -246,8 +256,9 @@ class ProjectL2Cache {
 
     // check all columns reported by realization does exists
     private boolean sanityCheck(ProjectCache prjCache, IRealization realization) {
-        if (realization == null)
+        if (realization == null) {
             return false;
+        }
 
         TableMetadataManager metaMgr = mgr.getTableManager();
 
@@ -274,9 +285,10 @@ class ProjectL2Cache {
                 //computed column may not exit here
             }
 
+            List<ColumnStats> columnStats = metaMgr.getTableExt(col.getTable(), prjCache.project).getColumnStats();
             // auto-define table required by realization for some legacy test case
-            if (prjCache.tables.get(table.getIdentity()) == null) {
-                prjCache.tables.put(table.getIdentity(), new TableCache(table));
+            if (Objects.isNull(prjCache.tables.get(table.getIdentity()))) {
+                prjCache.tables.put(table.getIdentity(), new TableCache(table, columnStats));
                 logger.warn("Realization '" + realization.getCanonicalName() + "' reports column '" + col.getCanonicalName() + "' whose table is not defined in project '" + prjCache.project + "'");
             }
         }
@@ -321,9 +333,11 @@ class ProjectL2Cache {
         private TableDesc tableDesc;
         private Set<ColumnDesc> exposedColumns = Sets.newLinkedHashSet();
         private Set<IRealization> realizations = Sets.newLinkedHashSet();
+        private List<ColumnStats> columnStats;
 
-        TableCache(TableDesc tableDesc) {
+        TableCache(TableDesc tableDesc, List<ColumnStats> columnStats) {
             this.tableDesc = tableDesc;
+            this.columnStats = columnStats;
         }
     }
 

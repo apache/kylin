@@ -25,10 +25,12 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -124,6 +126,24 @@ public class TableService extends BasicService {
         aclEvaluate.checkProjectAdminPermission(project);
         List<Pair<TableDesc, TableExtDesc>> allMeta = extractHiveTableMeta(hiveTables, project);
         return loadTablesToProject(allMeta, project);
+    }
+
+    public String[] excludeLoadedHiveTablesToProject(String[] expectHiveTables, String project, String[] loadedHiveTables)
+            throws Exception {
+        aclEvaluate.checkProjectAdminPermission(project);
+
+        Set<String> allTables = new HashSet<String>();
+        for (String tableName : expectHiveTables) {
+            allTables.add(normalizeHiveTableName(tableName));
+        }
+
+        for (String loadedTableName : loadedHiveTables) {
+            allTables.remove(loadedTableName);
+        }
+
+        String[] unloadedTables = new String[allTables.size()];
+        allTables.toArray(unloadedTables);
+        return unloadedTables;
     }
 
     /**
@@ -242,13 +262,13 @@ public class TableService extends BasicService {
             return false;
         }
 
-        if (!modelService.isTableInModel(desc, project)) {
-            removeTableFromProject(tableName, project);
-            rtn = true;
-        } else {
+        if (modelService.isTableInModel(desc, project)) {
             List<String> models = modelService.getModelsUsingTable(desc, project);
             throw new BadRequestException(String.format(Locale.ROOT, msg.getTABLE_IN_USE_BY_MODEL(), models));
         }
+
+        removeTableFromProject(tableName, project);
+        rtn = true;
 
         // it is a project local table, ready to remove since no model is using it within the project
         TableMetadataManager metaMgr = getTableManager();

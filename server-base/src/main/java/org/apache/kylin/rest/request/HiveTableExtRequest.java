@@ -20,6 +20,8 @@ package org.apache.kylin.rest.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import javax.validation.constraints.Min;
+
 public class HiveTableExtRequest extends HiveTableRequest {
     public HiveTableExtRequest() {
     }
@@ -28,6 +30,7 @@ public class HiveTableExtRequest extends HiveTableRequest {
     @JsonProperty("qualified_table_name")
     private String qualifiedTableName;
 
+    @Min(10)
     private int rows;
 
     public HiveTableExtRequest(String project, String qualifiedTableName, int rows) {

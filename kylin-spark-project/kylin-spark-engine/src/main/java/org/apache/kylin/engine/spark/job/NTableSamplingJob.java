@@ -18,20 +18,19 @@
 
 package org.apache.kylin.engine.spark.job;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.cube.model.validation.JobTypeEnum;
-import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.common.constant.JobTypeEnum;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.job.execution.ExecutableContext;
-import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
@@ -57,13 +56,24 @@ public class NTableSamplingJob extends DefaultChainedExecutable {
     }
 
     public static NTableSamplingJob create(TableDesc tableDesc, String project, String submitter, long rows) {
-        Preconditions.checkArgument(tableDesc != null, //
+        Preconditions.checkArgument(tableDesc != null,
                 "Create table sampling job failed for table not exist!");
 
         logger.info("start creating a table sampling job on table {}", tableDesc.getIdentity());
         NTableSamplingJob job = new NTableSamplingJob();
         job.setId(UUID.randomUUID().toString());
-        job.setName(JobTypeEnum.TABLE_SAMPLING.toString());
+
+        // combine a job name of sampling table
+        SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss", Locale.ROOT);
+        format.setTimeZone(TimeZone.getTimeZone(tableDesc.getConfig().getTimeZone()));
+        StringBuilder builder = new StringBuilder();
+        builder.append(JobTypeEnum.TABLE_SAMPLING)
+                .append(" - ")
+                .append(tableDesc.getIdentity())
+                .append(" - ")
+                .append(format.format(new Date(System.currentTimeMillis())));
+
+        job.setName(builder.toString());
         job.setProject(project);
         job.setJobType(JobTypeEnum.TABLE_SAMPLING);
         job.setTargetSubject(tableDesc.getIdentity());
@@ -72,65 +82,28 @@ public class NTableSamplingJob extends DefaultChainedExecutable {
         job.setParam(MetadataConstants.P_PROJECT_NAME, project);
         job.setParam(MetadataConstants.P_JOB_ID, job.getId());
         job.setParam(MetadataConstants.TABLE_NAME, tableDesc.getIdentity());
-        job.setParam(MetadataConstants.TABLE_SAMPLE_MAX_COUNT, String.valueOf(rows));
         job.setPriority(3);
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
+        long configuredMaxRows = config.getSparkSampleTableMaxRows();
+        if (configuredMaxRows < rows) {
+            logger.info("sampling rows {} exceed configured rows {}, using configured rows {} to sample table!",
+                    rows, configuredMaxRows, configuredMaxRows);
+            rows = configuredMaxRows;
+        }
+        job.setParam(MetadataConstants.TABLE_SAMPLE_MAX_COUNT, String.valueOf(rows));
+
+        JobStepType.RESOURCE_DETECT.createStep(job, config);
         JobStepType.SAMPLING.createStep(job, config);
         logger.info("sampling job create success on table {}", tableDesc.getIdentity());
         return job;
     }
 
-    NResourceDetectStep getResourceDetectStep() {
+    public NResourceDetectStep getResourceDetectStep() {
         return getTask(NResourceDetectStep.class);
     }
 
-    SamplingStep getSamplingStep() {
-        return getTask(SamplingStep.class);
-    }
-
-    public static class SamplingStep extends NSparkExecutable {
-
-        // called by reflection
-        public SamplingStep() {
-        }
-
-        SamplingStep(String sparkSubmitClassName) {
-            this.setSparkSubmitClassName(sparkSubmitClassName);
-            this.setName(ExecutableConstants.STEP_NAME_SAMPLE_TABLE);
-        }
-
-        private String getTableIdentity() {
-            return getParam(MetadataConstants.TABLE_NAME);
-        }
-
-        @Override
-        protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-            return super.doWork(context);
-        }
-
-        @Override
-        protected Set<String> getMetadataDumpList(KylinConfig config) {
-
-            final Set<String> dumpList = Sets.newHashSet();
-            // dump project
-            String project = getParam(MetadataConstants.P_PROJECT_NAME);
-            ProjectInstance instance = ProjectManager.getInstance(config).getProject(project);
-            dumpList.add(instance.getResourcePath());
-
-            // dump table & table ext
-            final TableMetadataManager tableMetadataManager = TableMetadataManager.getInstance(config);
-            final TableExtDesc tableExtDesc = tableMetadataManager
-                    .getTableExt(tableMetadataManager.getTableDesc(getTableIdentity(), project));
-            if (tableExtDesc != null) {
-                dumpList.add(tableExtDesc.getResourcePath());
-            }
-            final TableDesc table = tableMetadataManager.getTableDesc(getTableIdentity(), project);
-            if (table != null) {
-                dumpList.add(table.getResourcePath());
-            }
-
-            return dumpList;
-        }
+    public NTableSamplingStep getSamplingStep() {
+        return getTask(NTableSamplingStep.class);
     }
 }

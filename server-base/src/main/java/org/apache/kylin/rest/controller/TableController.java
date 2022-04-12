@@ -20,7 +20,6 @@ package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,7 +33,6 @@ import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.HiveTableExtRequest;
-import org.apache.kylin.rest.request.HiveTableRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.response.TableSnapshotResponse;
@@ -47,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -56,6 +53,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.validation.Valid;
 
 /**
  * @author xduo
@@ -121,34 +120,31 @@ public class TableController extends BasicController {
     @ResponseBody
     public TableDesc getTableDesc(@PathVariable String tableName, @PathVariable String project) {
         TableDesc table = tableService.getTableDescByName(tableName, false, project);
-        if (table == null)
+        if (table == null) {
             throw new NotFoundException("Could not find Hive table: " + tableName);
+        }
         return table;
     }
 
     @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.POST }, produces = { "application/json" })
     @ResponseBody
     public Map<String, String[]> loadHiveTables(@PathVariable String tables, @PathVariable String project,
-            @RequestBody HiveTableRequest request) throws IOException {
-        String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
+            @Valid @RequestBody HiveTableExtRequest request) throws IOException {
         Map<String, String[]> result = new HashMap<String, String[]>();
         String[] tableNames = StringUtil.splitAndTrim(tables, ",");
         try {
             String[] loaded = tableService.loadHiveTablesToProject(tableNames, project);
             result.put("result.loaded", loaded);
-            Set<String> allTables = new HashSet<String>();
-            for (String tableName : tableNames) {
-                allTables.add(tableService.normalizeHiveTableName(tableName));
-            }
-            for (String loadedTableName : loaded) {
-                allTables.remove(loadedTableName);
-            }
-            String[] unloaded = new String[allTables.size()];
-            allTables.toArray(unloaded);
+            String[] unloaded = tableService.excludeLoadedHiveTablesToProject(tableNames, project, loaded);
             result.put("result.unloaded", unloaded);
-//            if (request.isCalculate()) {
-//                tableService.calculateCardinalityIfNotPresent(loaded, submitter, project);
-//            }
+
+            if (request.isCalculate()) {
+                String submitter = AclPermissionUtil.getCurUser();
+                for (String table: tableNames) {
+                    logger.info("sampling table {}.", table);
+                    jobService.submitSampleTableJob(project, submitter, request.getRows(), table);
+                }
+            }
         } catch (Throwable e) {
             logger.error("Failed to load Hive Table", e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
@@ -297,7 +293,7 @@ public class TableController extends BasicController {
             "application/json" })
     @ResponseBody
     public EnvelopeResponse sample(@PathVariable String project, @PathVariable String tableName,
-            @RequestBody HiveTableExtRequest request) throws IOException {
+            @Valid @RequestBody HiveTableExtRequest request) {
         String jobID = jobService.submitSampleTableJob(project, AclPermissionUtil.getCurUser(), request.getRows(),
                 tableName);
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, jobID, "");
