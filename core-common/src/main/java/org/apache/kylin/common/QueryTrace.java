@@ -34,6 +34,7 @@ public class QueryTrace {
     public static final String WAIT_FOR_EXECUTION = "WAIT_FOR_EXECUTION";
     public static final String EXECUTION = "EXECUTION";
     public static final String FETCH_RESULT = "FETCH_RESULT";
+    public static final String CALCULATE_STAT = "CALCULATE_STAT";
 
     // group name
     static final String PREPARATION = "PREPARATION";
