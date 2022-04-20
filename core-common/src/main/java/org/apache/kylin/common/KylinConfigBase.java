@@ -3339,6 +3339,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.query.auto-sparder-context-enabled", "false"));
     }
 
+    public Integer sparkQueryMetrics() {
+        return Integer.parseInt(this.getOptional("kylin.query.spark.metrics", "2"));
+    }
+
     /**
      * whether to enable sparder monitor function
      */

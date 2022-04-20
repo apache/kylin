@@ -29,7 +29,7 @@ import org.apache.spark.utils.LogEx
 class SparkJobTrace(jobGroup: String,
                     queryTrace: QueryTrace,
                     sparkContext: SparkContext,
-                    startAt: Long = System.currentTimeMillis()) extends LogEx {
+                    startAt: Long = System.currentTimeMillis()) extends AbstractSparkJobTrace {
 
   val appStatus = new AppStatus(sparkContext)
 
@@ -53,7 +53,7 @@ class SparkJobTrace(jobGroup: String,
    * Long, it may imply the executor-core config is not insufficient for the number of tasks,
    * or the cluster is in heavy work load
    */
-  def jobFinished(): Unit = {
+  override def jobFinished(): Unit = {
     try {
       val jobDataSeq = appStatus.getJobData(jobGroup)
 
@@ -114,5 +114,9 @@ class SparkJobTrace(jobGroup: String,
     queryTrace.appendSpan(QueryTrace.EXECUTION, System.currentTimeMillis() - startAt);
     queryTrace.appendSpan(QueryTrace.FETCH_RESULT, 0);
   }
+}
+
+class AbstractSparkJobTrace extends LogEx {
+  def jobFinished(): Unit = {}
 }
 

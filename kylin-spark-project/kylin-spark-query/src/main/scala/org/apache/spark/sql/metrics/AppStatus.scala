@@ -18,12 +18,66 @@
 
 package org.apache.spark.sql.metrics
 
-import org.apache.spark.{SparkContext, SparkStageInfo}
+import org.apache.spark.status.api.v1
 import org.apache.spark.status.{TaskDataWrapper, TaskIndexNames}
 import org.apache.spark.util.Utils
-import org.apache.spark.status.api.v1
+import org.apache.spark.utils.LogEx
+import org.apache.spark.{SparkContext, SparkStageInfo}
 
-class AppStatus(sparkContext: SparkContext) {
+class AppStatus(sparkContext: SparkContext) extends LogEx {
+
+  val defaultUnsortedQuantiles: Array[Double] = Array(0, 0.25, 0.5, 0.75, 1.0)
+
+  def calStageMetrics(stageId: Int, unsortedQuantiles: Array[Double] = defaultUnsortedQuantiles):
+  Seq[Map[String, IndexedSeq[Long]]] = {
+    val stageDataList: Seq[v1.StageData] = sparkContext.statusStore.stageData(stageId)
+    stageDataList.map(s => {
+
+      // 1. Get launch time of first and last task
+      val stageKey = Array(s.stageId, s.attemptId)
+      val taskIterator = sparkContext.statusStore.store.view(classOf[TaskDataWrapper])
+        .parent(stageKey)
+        .index(TaskIndexNames.LAUNCH_TIME)
+        .iterator()
+
+      var firstLaunchTime = -1L
+      var lastLaunchTime = -1L
+      while (taskIterator.hasNext) {
+        val lt = taskIterator.next().launchTime
+        if (firstLaunchTime == -1) {
+          firstLaunchTime = lt
+        } else if (lt < firstLaunchTime) {
+          firstLaunchTime = lt
+        }
+        if (lastLaunchTime == -1) {
+          lastLaunchTime = lt
+        } else if (lt > lastLaunchTime) {
+          lastLaunchTime = lt
+        }
+      }
+
+      // 2. Get distribution of bytesRead & runningTime
+      val metricsDistribution = sparkContext.statusStore.taskSummary(s.stageId, s.attemptId, unsortedQuantiles)
+      val bytesRead: IndexedSeq[Long] = if (metricsDistribution.nonEmpty) {
+        metricsDistribution.get.inputMetrics.bytesRead.map(x => x.toLong)
+      } else {
+        IndexedSeq.empty
+      }
+
+      val runningTime: IndexedSeq[Long] = if (metricsDistribution.nonEmpty) {
+        metricsDistribution.get.executorRunTime.map(x => x.toLong)
+      } else {
+        IndexedSeq.empty
+      }
+
+      Map[String, IndexedSeq[Long]](
+        "stageInfo" -> IndexedSeq(s.stageId, s.attemptId),
+        "launchTime" -> IndexedSeq(firstLaunchTime, lastLaunchTime),
+        "bytesRead" -> bytesRead,
+        "runningTime" -> runningTime
+      )
+    }).seq
+  }
 
   def getTaskLaunchTime(stageId: Int, quantile: Double): Double = {
     scanTasks(stageId, TaskIndexNames.LAUNCH_TIME, quantile) { t => t.launchTime }
