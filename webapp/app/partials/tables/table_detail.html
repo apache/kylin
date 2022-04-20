@@ -27,6 +27,9 @@
           <a data-toggle="tab" href="#column">Columns</a>
         </li>
         <li>
+          <a data-toggle="tab" href="#sampleData">Sample Data</a>
+        </li>
+        <li>
           <a data-toggle="tab" href="#schema">Extend Information</a>
         </li>
         <li>
@@ -152,6 +155,14 @@
                   </td>
                   <td
                     style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
+                    {{ column.min_value || 'N/A'}}
+                  </td>
+                  <td
+                    style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
+                    {{ column.max_value  || 'N/A'}}
+                  </td>
+                  <td
+                    style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
                     {{ column.comment}}
                   </td>
                 </tr>
@@ -164,7 +175,38 @@
             </div>
           </div>
         </div>
+        <!-- Sample Data -->
+        <div id="sampleData" class="tab-pane">
+          <div class="profile-user-info">
+            <div>
+              <label class="table-header-text">Sample Data</label>
+            </div>
+            <div class="space-6"></div>
+            <div ng-if="tableModel.selectedSrcTable.sample_rows && tableModel.selectedSrcTable.sample_rows.length>0" style="overflow-x:auto;">
+              <table class="table table-hover table-striped list">
+                <thead>
+                <tr style="cursor: pointer">
+                  <th ng-repeat="column in tableModel.selectedSrcTable.columns">
+                    {{column.name}}
+                  </th>
+                </tr>
+                </thead>
 
+                <tr ng-repeat="rows in tableModel.selectedSrcTable.sample_rows">
+                  <td
+                    style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}" ng-repeat="item in rows">
+                    {{ item }}
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <div ng-if="!tableModel.selectedSrcTable.sample_rows || tableModel.selectedSrcTable.sample_rows.length == 0" no-result
+                 text="The table hasn't been sampled yet. Statistical information (cardinality, sample data, etc.) gathered by sampling could help design the model."></div>
+            <div ng-if="!!!tableModel.selectedSrcTable.uuid">
+              <div no-result text="No Table Selected."></div>
+            </div>
+          </div>
+        </div>
         <!--streaming-->
         <div id="streaming" ng-show="tableModel.selectedSrcTable.source_type==1" class="tab-pane">
             <div class="col-xs-12 pdb-12 pdt-12" ng-if="userService.hasRole('ROLE_ADMIN')">
