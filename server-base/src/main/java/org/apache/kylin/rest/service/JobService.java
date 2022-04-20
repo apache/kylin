@@ -544,12 +544,12 @@ public class JobService extends BasicService implements InitializingBean {
         result.setName(job.getName());
         result.setProjectName(cubeJob.getProjectName());
         if (cube != null) {
-//            result.setRelatedCube(cube.getName());
+            result.setRelatedCube(cube.getName());
             result.setRelatedObject(cube.getName());
             result.setDisplayCubeName(cube.getDisplayName());
         } else {
             String cubeName = CubingExecutableUtil.getCubeName(cubeJob.getParams());
-//            result.setRelatedCube(cubeName);
+            result.setRelatedCube(cubeName);
             result.setRelatedObject(cube.getName());
             result.setDisplayCubeName(cubeName);
         }
@@ -619,7 +619,7 @@ public class JobService extends BasicService implements InitializingBean {
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setProjectName(job.getProjectName());
-//        result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
+        result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
         result.setRelatedObject(CubingExecutableUtil.getCubeName(job.getParams()));
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(job.getParams()));
         result.setRelatedSegmentName(CubingExecutableUtil.getSegmentName(job.getParams()));
@@ -655,7 +655,7 @@ public class JobService extends BasicService implements InitializingBean {
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setProjectName(checkpointExecutable.getProjectName());
-//        result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
+        result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
         result.setRelatedObject(CubingExecutableUtil.getCubeName(job.getParams()));
         result.setDisplayCubeName(CubingExecutableUtil.getCubeName(job.getParams()));
         result.setLastModified(job.getLastModified());
@@ -718,9 +718,11 @@ public class JobService extends BasicService implements InitializingBean {
 
     public void cancelJob(JobInstance job) throws IOException {
         aclEvaluate.checkProjectOperationPermission(job);
-        if (Objects.isNull(job.getRelatedObject()) || Objects.isNull(getCubeManager().getCube(job.getRelatedObject()))
-                || Objects.isNull(job.getRelatedSegment())) {
-            getExecutableManager().discardJob(job.getId());
+        if (null == job.getRelatedCube()
+                || null == getCubeManager().getCube(job.getRelatedCube())
+                || null == job.getRelatedObject()
+                || null == getCubeManager().getCube(job.getRelatedObject())
+                || null == job.getRelatedSegment()) {
             return;
         }
 

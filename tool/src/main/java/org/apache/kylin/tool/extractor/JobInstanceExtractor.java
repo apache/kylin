@@ -132,12 +132,12 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
         result.setName(cubeJob.getName());
         result.setProjectName(cubeJob.getProjectName());
         if (cube != null) {
-//            result.setRelatedCube(cube.getName());
+            result.setRelatedCube(cube.getName());
             result.setRelatedObject(cube.getName());
             result.setDisplayCubeName(cube.getDisplayName());
         } else {
             String cubeName = CubingExecutableUtil.getCubeName(cubeJob.getParams());
-//            result.setRelatedCube(cubeName);
+            result.setRelatedCube(cubeName);
             result.setRelatedObject(cubeName);
             result.setDisplayCubeName(cubeName);
         }

@@ -35,7 +35,6 @@ import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.HiveTableExtRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
-import org.apache.kylin.rest.response.TableSnapshotResponse;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.TableACLService;
 import org.apache.kylin.rest.service.TableService;
