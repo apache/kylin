@@ -2948,10 +2948,6 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.valueOf(getOptional("kylin.engine.build-base-cuboid-enabled", TRUE));
     }
 
-    public boolean isTrackingUrlIpAddressEnabled() {
-        return Boolean.valueOf(this.getOptional("kylin.job.tracking-url-ip-address-enabled", TRUE));
-    }
-
     // ============================================================================
     // Kylin 4.X Spark resources automatic adjustment strategy configuration
     // ============================================================================
@@ -2979,27 +2975,6 @@ public abstract class KylinConfigBase implements Serializable {
     @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
     public boolean isAutoSetSparkConf() {
         return Boolean.parseBoolean(getOptional("kylin.spark-conf.auto.prior", "true"));
-    }
-
-    public Boolean getSparkEngineTaskImpactInstanceEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.engine.spark.task-impact-instance-enabled", "true"));
-    }
-
-    public int getSparkEngineTaskCoreFactor() {
-        return Integer.parseInt(getOptional("kylin.engine.spark.task-core-factor", "3"));
-    }
-
-    public int getSparkEngineDriverMemoryBase() {
-        return Integer.parseInt(getOptional("kylin.engine.driver-memory-base", "1024"));
-    }
-
-    public int[] getSparkEngineDriverMemoryStrategy() {
-        String[] dft = {"2", "20", "100"};
-        return getOptionalIntArray("kylin.engine.driver-memory-strategy", dft);
-    }
-
-    public int getSparkEngineDriverMemoryMaximum() {
-        return Integer.parseInt(getOptional("kylin.engine.driver-memory-maximum", "4096"));
     }
 
     public double getSparkEngineRetryMemoryGradient() {
