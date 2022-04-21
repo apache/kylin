@@ -1080,6 +1080,7 @@ public class JobService extends BasicService implements InitializingBean {
             return executable instanceof CheckpointExecutable || executable instanceof CubingJob ||
                     executable instanceof NTableSamplingJob;
         case TABLE_SAMPLING:
+        case CARDINALITY_ONLY:
             return executable instanceof NTableSamplingJob;
         case CUBING_ONLY:
         default:
@@ -1177,6 +1178,6 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     public enum JobSearchMode {
-        CUBING_ONLY, CHECKPOINT_ONLY, ALL, TABLE_SAMPLING
+        CUBING_ONLY, CHECKPOINT_ONLY, ALL, TABLE_SAMPLING, CARDINALITY_ONLY
     }
 }

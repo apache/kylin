@@ -319,27 +319,53 @@ public class TableService extends BasicService {
 
         // Clone TableDesc
         TableDescResponse rtableDesc = new TableDescResponse(table);
-        Map<String, Long> cardinality = new HashMap<String, Long>();
+        handleMinMaxValue(tableExtDesc, rtableDesc);
+        handleCardinality(tableExtDesc, rtableDesc);
+        handleSampleRows(tableExtDesc, rtableDesc);
         Map<String, String> dataSourceProp = new HashMap<>();
-        String scard = tableExtDesc.getCardinality();
-        if (!StringUtils.isEmpty(scard)) {
-            String[] cards = StringUtils.split(scard, ",");
-            ColumnDesc[] cdescs = rtableDesc.getColumns();
-            for (int i = 0; i < cdescs.length; i++) {
-                ColumnDesc columnDesc = cdescs[i];
-                if (cards.length > i) {
-                    cardinality.put(columnDesc.getName(), Long.parseLong(cards[i]));
-                } else {
-                    logger.error("The result cardinality is not identical with hive table metadata, cardinality : "
-                            + scard + " column array length: " + cdescs.length);
-                    break;
-                }
-            }
-            rtableDesc.setCardinality(cardinality);
-        }
         dataSourceProp.putAll(tableExtDesc.getDataSourceProp());
         rtableDesc.setDescExd(dataSourceProp);
         return rtableDesc;
+    }
+
+    private void handleSampleRows(TableExtDesc tableExtDesc, TableDescResponse tableDescResponse) {
+        List<String[]> sampleRows = tableExtDesc.getSampleRows();
+        if (sampleRows.isEmpty()) {
+            return;
+        }
+        tableDescResponse.setSampleRows(sampleRows);
+    }
+
+    private void handleMinMaxValue(TableExtDesc tableExtDesc, TableDescResponse tableDescResponse) {
+        List<TableExtDesc.ColumnStats> columnStats = tableExtDesc.getColumnStats();
+        ColumnDesc[] columns = tableDescResponse.getColumns();
+        if (columnStats.isEmpty() || columns.length == 0) {
+            return;
+        }
+        for (int i = 0; i < columns.length; i ++) {
+            columns[i].setMaxValue(columnStats.get(i).getMaxValue());
+            columns[i].setMinValue(columnStats.get(i).getMinValue());
+        }
+    }
+
+    private void handleCardinality(TableExtDesc tableExtDesc, TableDescResponse tableDescResponse) {
+        String cardinality = tableExtDesc.getCardinality();
+        if (StringUtils.isEmpty(cardinality)) {
+            return ;
+        }
+        Map<String, Long> columnToCardinality = new HashMap<String, Long>();
+        String[] cards = StringUtils.split(cardinality, ",");
+        ColumnDesc[] cdescs = tableDescResponse.getColumns();
+        for (int i = 0; i < cdescs.length; i++) {
+            ColumnDesc columnDesc = cdescs[i];
+            if (cards.length <= i) {
+                logger.error("The result cardinality is not identical with hive table metadata, cardinality : "
+                        + cardinality + " column array length: " + cdescs.length);
+                break;
+            }
+            columnToCardinality.put(columnDesc.getName(), Long.parseLong(cards[i]));
+        }
+        tableDescResponse.setCardinality(columnToCardinality);
     }
 
     private List<TableDesc> cloneTableDesc(List<TableDesc> tables, String prj) throws IOException {

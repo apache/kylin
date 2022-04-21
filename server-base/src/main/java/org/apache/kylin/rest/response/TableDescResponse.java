@@ -19,6 +19,8 @@
 package org.apache.kylin.rest.response;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.metadata.model.TableDesc;
@@ -36,6 +38,9 @@ public class TableDescResponse extends TableDesc {
     Map<String, String> descExd = new HashMap<String, String>();
     @JsonProperty("cardinality")
     Map<String, Long> cardinality = new HashMap<String, Long>();
+
+    @JsonProperty("sample_rows")
+    List<String[]> sampleRows = new LinkedList<>();
 
     /**
      * @return the cardinality
@@ -79,4 +84,7 @@ public class TableDescResponse extends TableDesc {
         this.setTableType(table.getTableType());
     }
 
+    public void setSampleRows(List<String[]> sampleRows) {
+        this.sampleRows = sampleRows;
+    }
 }

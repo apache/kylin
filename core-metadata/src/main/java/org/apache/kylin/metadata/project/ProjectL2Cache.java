@@ -32,6 +32,7 @@ import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.model.TableExtDesc.ColumnStats;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -216,8 +217,9 @@ class ProjectL2Cache {
 
         for (String tableName : pi.getTables()) {
             TableDesc tableDesc = metaMgr.getTableDesc(tableName, project);
-            List<ColumnStats> columnStats = metaMgr.getTableExt(tableName, project).getColumnStats();
-            if (Objects.nonNull(tableDesc) && Objects.nonNull(columnStats)) {
+            TableExtDesc tableExtDesc = metaMgr.getTableExt(tableName, project);
+            if (Objects.nonNull(tableDesc) && Objects.nonNull(tableExtDesc)) {
+                List<ColumnStats> columnStats = tableExtDesc.getColumnStats();
                 projectCache.tables.put(tableDesc.getIdentity(), new TableCache(tableDesc, columnStats));
             } else {
                 logger.warn("Table '" + tableName + "' defined under project '" + project + "' is not found");
