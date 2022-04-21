@@ -155,6 +155,9 @@ KylinApp
           isCalculate: function () {
             return $scope.isCalculate;
           },
+          syncRows: function () {
+            return $scope.syncRows;
+          },
           scope: function () {
             return $scope;
           }

@@ -194,7 +194,8 @@
 
                 <tr ng-repeat="rows in tableModel.selectedSrcTable.sample_rows">
                   <td
-                    style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}" ng-repeat="item in rows">
+                    style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}"
+                    ng-repeat="item in rows track by $index">
                     {{ item }}
                   </td>
                 </tr>
