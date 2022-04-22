@@ -87,7 +87,7 @@ KylinApp
             JobList.jobFilter.statusIds = statusIds;
 
             var jobRequest = {
-                cubeName: $scope.cubeName,
+                objectName: $scope.cubeName,
                 projectName: $scope.state.projectName,
                 status: statusIds,
                 offset: offset,
@@ -119,7 +119,7 @@ KylinApp
             statusIds.push(statusObj.value);
           });
           var jobRequest = {
-            cubeName: $scope.cubeName,
+            objectName: $scope.cubeName,
             projectName: $scope.state.projectName,
             status: statusIds,
             timeFilter: $scope.timeFilter.value,
