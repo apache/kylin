@@ -59,12 +59,11 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
             lock.lock(lockPath, Long.MAX_VALUE);
             this.builder = new AppendTrieDictionaryBuilder(baseDir, maxEntriesPerSlice, true);
         } catch (Throwable e) {
-            throw new RuntimeException(
-                    String.format(Locale.ROOT, "Failed to create global dictionary on %s ", sourceColumn), e);
-        } finally {
             if (lock.isLockedByMe(lockPath)) {
                 lock.unlock(lockPath);
             }
+            throw new RuntimeException(
+                    String.format(Locale.ROOT, "Failed to create global dictionary on %s ", sourceColumn), e);
         }
         this.baseId = baseId;
     }
