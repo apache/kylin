@@ -103,6 +103,22 @@ public abstract class KylinConfigBase implements Serializable {
         this.properties = force ? props : BCC.check(props);
     }
 
+    public static String getKylinConfHome() {
+        String kylinConfHome = getKylinConfHomeWithoutWarn();
+        if (StringUtils.isEmpty(kylinConfHome)) {
+            logger.warn("KYLIN_CONF was not set");
+        }
+        return kylinConfHome;
+    }
+
+    public static String getKylinConfHomeWithoutWarn() {
+        String kylinConfHome = System.getenv("KYLIN_CONF");
+        if (StringUtils.isEmpty(kylinConfHome)) {
+            kylinConfHome = System.getProperty("KYLIN_CONF");
+        }
+        return kylinConfHome;
+    }
+
     public static String getKylinHome() {
         String kylinHome = getKylinHomeWithoutWarn();
         if (StringUtils.isEmpty(kylinHome)) {
@@ -279,6 +295,7 @@ public abstract class KylinConfigBase implements Serializable {
         return result;
     }
 
+    @Override
     public String toString() {
         return getMetadataUrl().toString();
     }
@@ -298,8 +315,9 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getHdfsWorkingDirectory() {
-        if (cachedHdfsWorkingDirectory != null)
+        if (cachedHdfsWorkingDirectory != null) {
             return cachedHdfsWorkingDirectory;
+        }
 
         String root = getOptional("kylin.env.hdfs-working-dir", "/kylin");
 
@@ -324,8 +342,9 @@ public abstract class KylinConfigBase implements Serializable {
 
         root = new Path(path, metaId).toString();
 
-        if (!root.endsWith("/"))
+        if (!root.endsWith("/")) {
             root += "/";
+        }
 
         cachedHdfsWorkingDirectory = root;
         if (cachedHdfsWorkingDirectory.startsWith(FILE_SCHEME)) {
@@ -348,9 +367,10 @@ public abstract class KylinConfigBase implements Serializable {
         }
 
         Path path = new Path(root);
-        if (!path.isAbsolute())
+        if (!path.isAbsolute()) {
             throw new IllegalArgumentException(
                     "kylin.env.hdfs-metastore-bigcell-dir must be absolute, but got " + root);
+        }
 
         // make sure path is qualified
         try {
@@ -693,7 +713,7 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isRowKeyEncodingAutoConvert() {
         return Boolean.parseBoolean(getOptional("kylin.cube.kylin.cube.rowkey-encoding-auto-convert", "true"));
     }
-    
+
     public String getSegmentAdvisor() {
         return getOptional("kylin.cube.segment-advisor", "org.apache.kylin.cube.CubeSegmentAdvisor");
     }
@@ -2340,7 +2360,7 @@ public abstract class KylinConfigBase implements Serializable {
     public String getKylinMetricsEventTimeZone() {
         return getOptional("kylin.metrics.event-time-zone", getTimeZone()).toUpperCase(Locale.ROOT);
     }
-    
+
     public boolean isKylinMetricsMonitorEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.metrics.monitor-enabled", FALSE));
     }
@@ -3136,10 +3156,10 @@ public abstract class KylinConfigBase implements Serializable {
     private String getLogPropertyFile(String filename) {
         if (isDevEnv()) {
             return Paths.get(getKylinHomeWithoutWarn(),
-                    "build", "conf").toString() + File.separator + filename;
+                    "build", "conf") + File.separator + filename;
         } else {
             return Paths.get(getKylinHomeWithoutWarn(),
-                    "conf").toString() + File.separator + filename;
+                    "conf") + File.separator + filename;
         }
     }
 

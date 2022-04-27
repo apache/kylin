@@ -354,7 +354,7 @@ public class KylinConfig extends KylinConfigBase {
 
     // should be private; package visible for test only
     static File getSitePropertiesFile() {
-        String kylinConfHome = System.getProperty(KYLIN_CONF);
+        String kylinConfHome = getKylinConfHome();
         if (!StringUtils.isEmpty(kylinConfHome)) {
             logger.info("Use KYLIN_CONF={}", kylinConfHome);
             return existFile(kylinConfHome);
@@ -363,8 +363,9 @@ public class KylinConfig extends KylinConfigBase {
         logger.debug("KYLIN_CONF property was not set, will seek KYLIN_HOME env variable");
 
         String kylinHome = getKylinHome();
-        if (StringUtils.isEmpty(kylinHome))
+        if (StringUtils.isEmpty(kylinHome)) {
             throw new KylinConfigCannotInitException("Didn't find KYLIN_CONF or KYLIN_HOME, please set one of them");
+        }
 
         logger.info("Use KYLIN_HOME={}", kylinHome);
         String path = kylinHome + File.separator + "conf";
@@ -553,7 +554,7 @@ public class KylinConfig extends KylinConfigBase {
                 orderedProperties.setProperty(sysProp, sysPropValue);
             }
         }
-        
+
         final StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
             sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
