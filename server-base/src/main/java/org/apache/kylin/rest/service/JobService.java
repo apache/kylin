@@ -673,7 +673,9 @@ public class JobService extends BasicService implements InitializingBean {
         aclEvaluate.checkProjectOperationPermission(job);
         if (null == job.getRelatedCube() || null == getCubeManager().getCube(job.getRelatedCube())
                 || null == job.getRelatedSegment()) {
-            getExecutableManager().discardJob(job.getId());
+            if (!(getExecutableManager().getJob(job.getId()) instanceof CheckpointExecutable)) {
+                getExecutableManager().discardJob(job.getId());
+            }
             return;
         }
 
