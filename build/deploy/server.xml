@@ -26,7 +26,10 @@
     <!--APR library loader. Documentation at /docs/apr.html -->
     <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
     <!--Initialize Jasper prior to webapps are loaded. Documentation at /docs/jasper-howto.html -->
-    <Listener className="org.apache.catalina.core.JasperListener" />
+
+    <!-- After Tomcat 8.0, JasperListener has been removed. Documentation at
+    https://tomcat.apache.org/tomcat-8.0-doc/changelog.html -->
+    <!-- <Listener className="org.apache.catalina.core.JasperListener" />-->
     <!-- Prevent memory leaks due to use of particular java/javax APIs-->
     <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
     <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />

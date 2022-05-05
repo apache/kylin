@@ -67,6 +67,13 @@ public class StorageCleanupJob extends AbstractApplication {
     private static final String TABLE_SNAPSHOT_PREFIX = "/table_snapshot/";
 
     @SuppressWarnings("static-access")
+    protected static final Option OPTION_HELP = OptionBuilder
+            .hasArg(false)
+            .isRequired(false)
+            .withDescription("Print supported operations.")
+            .create("help");
+
+    @SuppressWarnings("static-access")
     protected static final Option OPTION_DELETE = OptionBuilder.withArgName("delete")
             .hasArg().isRequired(false)
             .withType(Boolean.class.getName())
@@ -130,6 +137,7 @@ public class StorageCleanupJob extends AbstractApplication {
     @Override
     protected Options getOptions() {
         Options options = new Options();
+        options.addOption(OPTION_HELP);
         options.addOption(OPTION_DELETE);
         options.addOption(OPTION_CLEANUP_GLOBAL_DICT);
         options.addOption(OPTION_CLEANUP_TABLE_SNAPSHOT);

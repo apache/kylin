@@ -36,7 +36,7 @@ KylinApp.constant('jobConfig', {
   ],
   theaditems: [
     {attr: 'name', name: 'Job Name'},
-    {attr: 'related_cube', name: 'Cube'},
+    {attr: 'related_object', name: 'Object'},
     {attr: 'progress', name: 'Progress'},
     {attr: 'last_modified', name: 'Last Modified Time'},
     {attr: 'duration', name: 'Duration'}

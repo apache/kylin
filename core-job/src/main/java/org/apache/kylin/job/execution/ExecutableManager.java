@@ -58,6 +58,8 @@ import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.IllegalStateTranferException;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.TableMetadataManager;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -928,5 +930,41 @@ public class ExecutableManager {
         } catch (Exception e) {
             throw new RuntimeException("Failed to instantiate " + clazz, e);
         }
+    }
+
+    public String findRunningTableSampleJob(String project, String tableName) {
+        TableMetadataManager metaMgr = TableMetadataManager.getInstance(config);
+        TableExtDesc tableExtDesc = metaMgr.getTableExt(tableName, project);
+        if (tableExtDesc == null) {
+            return null;
+        }
+
+        String jobID = tableExtDesc.getJodID();
+        if (null == jobID || jobID.isEmpty()) {
+            return null;
+        }
+
+        AbstractExecutable job = null;
+        ExecutableManager exeMgt = ExecutableManager.getInstance(config);
+        try {
+            job = exeMgt.getJob(jobID);
+        } catch (RuntimeException e) {
+            /**
+             * TODO: remove this
+             * By design, HiveTableExtSampleJob is moved from kap-engine-mr to kap-source-hive in kap2.3,
+             * therefore, kap2.3 or higher version can not parse kap2.2 stats job info.
+             */
+            logger.warn("Could not parse old version table stats job. job_id:{}, table_name:{}", jobID, tableName);
+        }
+
+        if (null == job || job instanceof BrokenExecutable) {
+            return null;
+        }
+        ExecutableState state = exeMgt.getOutput(jobID).getState();
+        if (ExecutableState.RUNNING == state || ExecutableState.READY == state || ExecutableState.STOPPED == state
+                || ExecutableState.ERROR == state) {
+            return jobID;
+        }
+        return null;
     }
 }

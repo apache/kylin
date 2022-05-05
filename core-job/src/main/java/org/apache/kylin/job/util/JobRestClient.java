@@ -25,7 +25,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.kylin.common.restclient.RestClient;
-import org.apache.kylin.cube.model.CubeBuildTypeEnum;
+import org.apache.kylin.common.constant.JobTypeEnum;
 import org.apache.kylin.job.JobInstance;
 
 import java.io.IOException;
@@ -42,7 +42,7 @@ public class JobRestClient extends RestClient {
         super(host, port, userName, password, httpConnectionTimeoutMs, httpSocketTimeoutMs);
     }
 
-    public JobInstance buildCubeV2(String cubeName, long startTime, long endTime, CubeBuildTypeEnum buildType) throws IOException {
+    public JobInstance buildCubeV2(String cubeName, long startTime, long endTime, JobTypeEnum buildType) throws IOException {
         String url = baseUrl + CUBES + cubeName + "/build";
         HttpPut put = newPut(url);
         HttpResponse response = null;

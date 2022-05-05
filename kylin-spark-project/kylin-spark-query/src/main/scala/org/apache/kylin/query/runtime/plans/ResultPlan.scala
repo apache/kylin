@@ -27,13 +27,14 @@ import org.apache.kylin.common.{KylinConfig, QueryContext, QueryContextFacade}
 import org.apache.kylin.common.util.HadoopUtil
 import org.apache.kylin.metadata.project.ProjectManager
 import org.apache.kylin.query.runtime.plans.ResultType.ResultType
-import org.apache.kylin.query.util.SparkJobTrace
+import org.apache.kylin.query.util.{AbstractSparkJobTrace, SparkJobTrace, SparkJobTraceV2}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{DataFrame, SparderContext}
 import org.apache.spark.sql.hive.utils.QueryMetricUtils
 import org.apache.spark.sql.utils.SparkTypeUtil
 import org.apache.spark.utils.SparderUtils
 
+import java.util.TimeZone
 import scala.collection.JavaConverters._
 
 // scalastyle:off
@@ -107,7 +108,14 @@ object ResultPlan extends Logging {
       interruptOnCancel = true)
     val currentTrace = QueryContextFacade.current().getQueryTrace
     currentTrace.endLastSpan()
-    val jobTrace = new SparkJobTrace(jobGroup, currentTrace, sparkContext)
+
+    val jobTrace = if(kylinConfig.sparkQueryMetrics == 2) {
+      new SparkJobTraceV2(jobGroup, currentTrace, sparkContext, TimeZone.getTimeZone(kylinConfig.getTimeZone).toZoneId)
+    } else if(kylinConfig.sparkQueryMetrics == 1)  {
+      new SparkJobTrace(jobGroup, currentTrace, sparkContext)
+    } else {
+      new AbstractSparkJobTrace()
+    }
     try {
       val rows = df.collect()
       jobTrace.jobFinished()

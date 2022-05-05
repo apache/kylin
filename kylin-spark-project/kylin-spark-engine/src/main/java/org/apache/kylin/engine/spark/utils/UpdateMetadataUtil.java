@@ -40,7 +40,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.cuboid.CuboidModeEnum;
-import org.apache.kylin.cube.model.CubeBuildTypeEnum;
+import org.apache.kylin.common.constant.JobTypeEnum;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.engine.mr.common.CubeStatsWriter;
@@ -48,7 +48,9 @@ import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.spark.job.NSparkExecutable;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.slf4j.Logger;
@@ -76,10 +78,11 @@ public class UpdateMetadataUtil {
         CubeSegment toUpdateSeg = distCube.getSegmentById(segmentId);
 
         List<CubeSegment> tobeSegments = currentInstanceCopy.calculateToBeSegments(toUpdateSeg);
-        if (!tobeSegments.contains(toUpdateSeg))
+        if (!tobeSegments.contains(toUpdateSeg)) {
             throw new IllegalStateException(
                     String.format(Locale.ROOT, "For cube %s, segment %s is expected but not in the tobe %s",
                             currentInstanceCopy.toString(), toUpdateSeg.toString(), tobeSegments.toString()));
+        }
 
         String resKey = toUpdateSeg.getStatisticsResourcePath();
         String statisticsDir = config.getJobTmpDir(currentInstanceCopy.getProject()) + "/"
@@ -96,14 +99,14 @@ public class UpdateMetadataUtil {
         update.setCuboids(distCube.getCuboids());
         List<CubeSegment> toRemoveSegs = Lists.newArrayList();
 
-        if (String.valueOf(CubeBuildTypeEnum.MERGE).equals(jobType)) {
+        if (String.valueOf(JobTypeEnum.MERGE).equals(jobType)) {
             toUpdateSeg.getSnapshots().clear();
             // update the snapshot table path
             for (Map.Entry<String, String> entry : currentInstanceCopy.getLatestReadySegment().getSnapshots()
                     .entrySet()) {
                 toUpdateSeg.putSnapshotResPath(entry.getKey(), entry.getValue());
             }
-        } else if (String.valueOf(CubeBuildTypeEnum.OPTIMIZE).equals(jobType)) {
+        } else if (String.valueOf(JobTypeEnum.OPTIMIZE).equals(jobType)) {
             CubeSegment origSeg = currentInstanceCopy.getOriginalSegmentToOptimize(toUpdateSeg);
             toUpdateSeg.getDictionaries().putAll(origSeg.getDictionaries());
             toUpdateSeg.getSnapshots().putAll(origSeg.getSnapshots());
@@ -141,8 +144,9 @@ public class UpdateMetadataUtil {
         } else {
             toUpdateSeg.setStatus(SegmentStatusEnum.READY);
             for (CubeSegment segment : currentInstanceCopy.getSegments()) {
-                if (!tobeSegments.contains(segment))
+                if (!tobeSegments.contains(segment)) {
                     toRemoveSegs.add(segment);
+                }
             }
             Collections.sort(toRemoveSegs);
             if (currentInstanceCopy.getConfig().isJobAutoReadyCubeEnabled()) {
@@ -166,18 +170,20 @@ public class UpdateMetadataUtil {
         CubeSegment toUpdateSegs = currentInstanceCopy.getSegmentById(segmentId);
 
         List<CubeSegment> tobeSegments = currentInstanceCopy.calculateToBeSegments(toUpdateSegs);
-        if (!tobeSegments.contains(toUpdateSegs))
+        if (!tobeSegments.contains(toUpdateSegs)) {
             throw new IllegalStateException(
                     String.format(Locale.ROOT, "For cube %s, segment %s is expected but not in the tobe %s",
                             currentInstanceCopy.toString(), toUpdateSegs.toString(), tobeSegments.toString()));
+        }
 
         CubeUpdate update = new CubeUpdate(currentInstanceCopy);
         List<CubeSegment> toRemoveSegs = Lists.newArrayList();
 
         toUpdateSegs.setStatus(SegmentStatusEnum.READY);
         for (CubeSegment segment : currentInstanceCopy.getSegments()) {
-            if (!tobeSegments.contains(segment))
+            if (!tobeSegments.contains(segment)) {
                 toRemoveSegs.add(segment);
+            }
         }
         Collections.sort(toRemoveSegs);
         if (currentInstanceCopy.getConfig().isJobAutoReadyCubeEnabled()) {
@@ -190,6 +196,35 @@ public class UpdateMetadataUtil {
         toUpdateSegs.setLastBuildTime(System.currentTimeMillis());
         update.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[0])).setToUpdateSegs(toUpdateSegs);
         cubeManager.updateCube(update);
+    }
+
+    public static void updateMetadataAfterSamplingTable(KylinConfig config, NSparkExecutable nsparkExecutable)
+            throws IOException {
+        String remoteResourceStore = nsparkExecutable.getDistMetaUrl();
+        String project = nsparkExecutable.getParam(MetadataConstants.P_PROJECT_NAME);
+        String tableIdentity = nsparkExecutable.getParam(MetadataConstants.TABLE_NAME);
+
+        TableMetadataManager tableMetadataManager = TableMetadataManager.getInstance(config);
+        TableExtDesc currentTableExtDesc= tableMetadataManager.getTableExt(tableIdentity, project);
+
+        // load the meta from local meta path of this job
+        KylinConfig kylinDistConfig = MetaDumpUtil.loadKylinConfigFromHdfs(remoteResourceStore);
+        TableExtDesc distTableExtDesc = TableMetadataManager.getInstance(kylinDistConfig)
+                .getTableExt(tableIdentity, project);
+
+        currentTableExtDesc.setCardinality(distTableExtDesc.getCardinality());
+        currentTableExtDesc.setSampleRows(distTableExtDesc.getSampleRows());
+        currentTableExtDesc.setColumnStats(distTableExtDesc.getColumnStats());
+
+        logger.info("Updating table external desc {} of table {} in project {}", distTableExtDesc, tableIdentity,
+                project);
+        try {
+            tableMetadataManager.saveTableExt(currentTableExtDesc, project);
+        } catch (IOException e) {
+            logger.error("save {} table ext found error !", currentTableExtDesc);
+            e.printStackTrace();
+        }
+        logger.info("Table {} update table ext desc done.", tableIdentity);
     }
 
     private static void addFromCubeStatsReader(CubeStatsReader cubeStatsReader, Map<Long, HLLCounter> cuboidHLLMap) {

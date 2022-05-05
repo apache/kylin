@@ -26,6 +26,7 @@
             <textarea ng-model="$parent.tableNames" class="form-control" id="tables"
                       placeholder="table1,table2  By default,system will choose 'Default' as database,you can specify database like this 'database.table'"></textarea>
       <label ng-if="sourceType === '0'"> <input type="checkbox" ng-model="isCalculate.val" > Calculate column cardinality</label>
+      <p>Rows: <input ng-if="sourceType === '0' && isCalculate.val" class="form-control width-20" type="text" ng-model="syncRows.rows" /></p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-primary" ng-click="add()">Sync</button>
@@ -120,6 +121,7 @@
     <span><strong>Project: {{ $parent.projectName!=null?$parent.projectName:'NULL'}}</strong></span><br/>
     <label for="tables"> Are you sure to reload table {{selectTable}} ?</label><br/>
     <label ng-if="sourceType === '0'"><input type="checkbox" ng-model="isCalculate.val" > Calculate column cardinality</label>
+    <p>Rows: <input ng-if="sourceType === '0' && isCalculate.val" class="form-control width-20" type="text" ng-model="syncRows.rows" /></p>
   </div>
   <div class="modal-footer">
     <button class="btn btn-primary" ng-click="confirmReload()">Sync</button>

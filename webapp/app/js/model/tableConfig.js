@@ -22,6 +22,8 @@ KylinApp.constant('tableConfig', {
     {attr: 'name', name: 'Name'},
     {attr: 'datatype', name: 'Data Type'},
     {attr: 'cardinality', name: 'Cardinality'},
+    {attr: 'min', name: 'Min Value'},
+    {attr: 'max', name: 'Max Value'},
     {attr: 'comment', name: 'Comment'}
   ],
   dataTypes:["tinyint","smallint","int","bigint","float","double","decimal","timestamp","date","string","varchar(256)","char","boolean","binary"],

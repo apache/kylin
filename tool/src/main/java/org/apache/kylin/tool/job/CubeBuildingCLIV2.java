@@ -24,7 +24,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.OptionsHelper;
-import org.apache.kylin.cube.model.CubeBuildTypeEnum;
+import org.apache.kylin.common.constant.JobTypeEnum;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.util.JobRestClient;
@@ -140,7 +140,7 @@ public class CubeBuildingCLIV2 extends AbstractApplication {
     }
 
     private JobInstance submitJob(JobRestClient client, String cubeName, long startDate, long endDate, String buildType) throws IOException {
-        CubeBuildTypeEnum buildTypeEnum = CubeBuildTypeEnum.valueOf(buildType);
+        JobTypeEnum buildTypeEnum = JobTypeEnum.valueOf(buildType);
         JobInstance jobInstance = client.buildCubeV2(cubeName, startDate, endDate, buildTypeEnum);
         System.out.println("building cube job:");
         System.out.println(client.JobInstance2JsonString(jobInstance));
