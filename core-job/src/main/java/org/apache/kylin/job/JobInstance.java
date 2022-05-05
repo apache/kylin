@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.constant.JobTypeEnum;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobStepCmdTypeEnum;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
@@ -49,9 +49,11 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
     @JsonProperty("projectName")
     private String projectName;
     @JsonProperty("type")
-    private CubeBuildTypeEnum type; // java implementation
+    private JobTypeEnum type; // java implementation
     @JsonProperty("duration")
     private long duration;
+    @JsonProperty("related_object")
+    private String relatedObject;
     @JsonProperty("related_cube")
     private String relatedCube;
     @JsonProperty("display_cube_name")
@@ -168,11 +170,11 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         this.projectName = projectName;
     }
 
-    public CubeBuildTypeEnum getType() {
+    public JobTypeEnum getType() {
         return type;
     }
 
-    public void setType(CubeBuildTypeEnum type) {
+    public void setType(JobTypeEnum type) {
         this.type = type;
     }
 
@@ -182,6 +184,14 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
     public void setDuration(long duration) {
         this.duration = duration;
+    }
+
+    public String getRelatedObject() {
+        return relatedObject;
+    }
+
+    public void setRelatedObject(String relatedObject) {
+        this.relatedObject = relatedObject;
     }
 
     public String getRelatedCube() { // if model check, return model name.

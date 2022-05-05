@@ -40,7 +40,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler;
-import org.apache.kylin.cube.model.CubeBuildTypeEnum;
+import org.apache.kylin.common.constant.JobTypeEnum;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
@@ -450,7 +450,7 @@ public class CubeController extends BasicController {
 
             checkBuildingSegment(cube);
             return jobService.submitJob(cube, tsRange, segRange, sourcePartitionOffsetStart, sourcePartitionOffsetEnd,
-                    CubeBuildTypeEnum.valueOf(buildType), force, submitter, priorityOffset);
+                    JobTypeEnum.valueOf(buildType), force, submitter, priorityOffset);
         } catch (Throwable e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
@@ -953,7 +953,7 @@ public class CubeController extends BasicController {
         for (CubeSegment hole : holes) {
             if (hole.isOffsetCube()) {
                 JobBuildRequest2 request = new JobBuildRequest2();
-                request.setBuildType(CubeBuildTypeEnum.BUILD.toString());
+                request.setBuildType(JobTypeEnum.BUILD.toString());
                 request.setSourceOffsetStart((Long) hole.getSegRange().start.v);
                 request.setSourceOffsetEnd((Long) hole.getSegRange().end.v);
                 request.setSourcePartitionOffsetStart(hole.getSourcePartitionOffsetStart());
@@ -968,7 +968,7 @@ public class CubeController extends BasicController {
                 }
             } else {
                 JobBuildRequest request = new JobBuildRequest();
-                request.setBuildType(CubeBuildTypeEnum.BUILD.toString());
+                request.setBuildType(JobTypeEnum.BUILD.toString());
                 request.setStartTime(hole.getTSRange().start.v);
                 request.setEndTime(hole.getTSRange().end.v);
 

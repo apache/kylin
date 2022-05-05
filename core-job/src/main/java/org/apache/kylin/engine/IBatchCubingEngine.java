@@ -22,6 +22,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 
 public interface IBatchCubingEngine {
     
@@ -39,6 +40,9 @@ public interface IBatchCubingEngine {
 
     /** Optimize a segment based on the cuboid recommend list produced by the cube planner. */
     public DefaultChainedExecutable createBatchOptimizeJob(CubeSegment optimizeSegment, String submitter);
+
+    public DefaultChainedExecutable createSampleTableJob(String project, String submitter, long maxSampleCount,
+            TableDesc tableDesc);
 
     public Class<?> getSourceInterface();
 

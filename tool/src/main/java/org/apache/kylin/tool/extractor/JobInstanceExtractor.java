@@ -28,7 +28,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.model.CubeBuildTypeEnum;
+import org.apache.kylin.common.constant.JobTypeEnum;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
@@ -133,10 +133,12 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
         result.setProjectName(cubeJob.getProjectName());
         if (cube != null) {
             result.setRelatedCube(cube.getName());
+            result.setRelatedObject(cube.getName());
             result.setDisplayCubeName(cube.getDisplayName());
         } else {
             String cubeName = CubingExecutableUtil.getCubeName(cubeJob.getParams());
             result.setRelatedCube(cubeName);
+            result.setRelatedObject(cubeName);
             result.setDisplayCubeName(cubeName);
         }
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
@@ -144,7 +146,7 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
         result.setLastModified(output.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());
-        result.setType(CubeBuildTypeEnum.BUILD);
+        result.setType(JobTypeEnum.BUILD);
         result.setStatus(parseToJobStatus(output.getState()));
         result.setMrWaiting(AbstractExecutable.getExtraInfoAsLong(output, CubingJob.MAP_REDUCE_WAIT_TIME, 0L) / 1000);
         result.setBuildInstance(AbstractExecutable.getBuildInstance(output));

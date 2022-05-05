@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,9 +21,9 @@ package org.apache.kylin.engine.mr.common;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.constant.JobTypeEnum;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.JobInstance;
@@ -78,13 +78,14 @@ public class JobInfoConverter {
         result.setName(job.getName());
         result.setProjectName(cubeJob.getProjectName());
         result.setRelatedCube(cube != null ? cube.getName() : CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+        result.setRelatedObject(cube != null ? cube.getName() : CubingExecutableUtil.getCubeName(cubeJob.getParams()));
         result.setDisplayCubeName(cube != null ? cube.getDisplayName() : CubingExecutableUtil.getCubeName(cubeJob.getParams()));
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
         result.setRelatedSegmentName(CubingExecutableUtil.getSegmentName(cubeJob.getParams()));
         result.setLastModified(output.getLastModified());
         result.setSubmitter(job.getSubmitter());
         result.setUuid(job.getId());
-        result.setType(CubeBuildTypeEnum.BUILD);
+        result.setType(JobTypeEnum.BUILD);
         result.setStatus(parseToJobStatus(output.getState()));
         result.setBuildInstance(AbstractExecutable.getBuildInstance(output));
         result.setMrWaiting(AbstractExecutable.getExtraInfoAsLong(output, CubingJob.MAP_REDUCE_WAIT_TIME, 0L) / 1000);
@@ -116,11 +117,12 @@ public class JobInfoConverter {
         result.setName(job.getName());
         result.setProjectName(job.getProjectName());
         result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
+        result.setRelatedObject(CubingExecutableUtil.getCubeName(job.getParams()));
         result.setDisplayCubeName(CubingExecutableUtil.getCubeName(job.getParams()));
         result.setLastModified(output.getLastModified());
         result.setSubmitter(job.getSubmitter());
         result.setUuid(job.getId());
-        result.setType(CubeBuildTypeEnum.CHECKPOINT);
+        result.setType(JobTypeEnum.CHECKPOINT);
         result.setStatus(parseToJobStatus(output.getState()));
         result.setBuildInstance(AbstractExecutable.getBuildInstance(output));
         result.setExecStartTime(AbstractExecutable.getStartTime(output));

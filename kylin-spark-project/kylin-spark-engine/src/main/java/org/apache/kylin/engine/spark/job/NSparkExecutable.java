@@ -42,7 +42,6 @@ import org.apache.kylin.engine.spark.utils.MetaDumpUtil;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -55,7 +54,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.ClassUtil;
-
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
@@ -112,22 +110,25 @@ public class NSparkExecutable extends AbstractExecutable {
 
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-        CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-        CubeInstance cube = cubeMgr.getCube(this.getCubeName());
-        KylinConfig config = cube.getConfig();
+        KylinConfig config = context.getConfig();
+        this.setLogPath(getSparkDriverLogHdfsPath(config));
+        if (this.getCubeName() != null) {
+            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+            CubeInstance cube = cubeMgr.getCube(this.getCubeName());
+            config = cube.getConfig();
 
-        Map<String, String> overrideKylinProps = new HashMap<>();
-        LinkedHashMap<String, String> cubeConfig = cube.getDescriptor().getOverrideKylinProps();
-        LinkedHashMap<String, String> projectConfig = cube.getProjectInstance().getOverrideKylinProps();
-        overrideKylinProps.putAll(projectConfig);
-        overrideKylinProps.putAll(cubeConfig);
-        for (Map.Entry<String, String> configEntry : overrideKylinProps.entrySet()) {
-            ParameterFilter.checkSparkConf(configEntry.getKey());
-            ParameterFilter.checkSparkConf(configEntry.getValue());
+            Map<String, String> overrideKylinProps = new HashMap<>();
+            LinkedHashMap<String, String> cubeConfig = cube.getDescriptor().getOverrideKylinProps();
+            LinkedHashMap<String, String> projectConfig = cube.getProjectInstance().getOverrideKylinProps();
+            overrideKylinProps.putAll(projectConfig);
+            overrideKylinProps.putAll(cubeConfig);
+            for (Map.Entry<String, String> configEntry : overrideKylinProps.entrySet()) {
+                ParameterFilter.checkSparkConf(configEntry.getKey());
+                ParameterFilter.checkSparkConf(configEntry.getValue());
+            }
+            config = wrapConfig(config);
         }
 
-        this.setLogPath(getSparkDriverLogHdfsPath(context.getConfig()));
-        config = wrapConfig(config);
 
         String sparkHome = KylinConfig.getSparkHome();
         if (StringUtils.isEmpty(sparkHome) && !config.isUTEnv()) {

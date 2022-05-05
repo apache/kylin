@@ -101,6 +101,9 @@ KylinApp
           isCalculate: function () {
             return $scope.isCalculate;
           },
+          syncRows: function () {
+            return $scope.syncRows;
+          },
           scope: function () {
             return $scope;
           }
@@ -122,6 +125,9 @@ KylinApp
           },
           isCalculate: function () {
             return $scope.isCalculate;
+          },
+          syncRows: function () {
+            return $scope.syncRows;
           },
           scope: function () {
             return $scope;
@@ -149,6 +155,9 @@ KylinApp
           isCalculate: function () {
             return $scope.isCalculate;
           },
+          syncRows: function () {
+            return $scope.syncRows;
+          },
           scope: function () {
             return $scope;
           }
@@ -156,13 +165,19 @@ KylinApp
       });
     };
 
-    $scope.reloadTable = function (tableName, isCalculate) {
+    $scope.reloadTable = function (tableName, isCalculate, rows) {
+      var params = {
+        calculate: isCalculate
+      }
+      if (isCalculate) {
+        params.rows = Number(rows)
+      }
       var delay = $q.defer();
       loadingRequest.show();
       TableService.loadHiveTable({
         tableName: tableName,
         action: $scope.projectModel.selectedProject
-      }, {calculate: isCalculate}, function (result) {
+      }, params, function (result) {
         var loadTableInfo = "";
         angular.forEach(result['result.loaded'], function (table) {
           loadTableInfo += "\n" + table;
@@ -249,13 +264,16 @@ KylinApp
       })
     }
 
-    var ModalInstanceCtrl = function ($scope, $location, $modalInstance, tableNames, MessageService, projectName, isCalculate, scope, kylinConfig) {
+    var ModalInstanceCtrl = function ($scope, $location, $modalInstance, tableNames, MessageService, projectName, isCalculate, syncRows, scope, kylinConfig) {
       $scope.tableNames = "";
       $scope.selectTable = tableNames;
       $scope.projectName = projectName;
       $scope.isCalculate = {
         val: true
       }
+      $scope.syncRows = {
+        rows: 10
+      };
 
       $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
@@ -435,7 +453,7 @@ KylinApp
 
       $scope.confirmReload = function() {
         $scope.cancel();
-        scope.reloadTable($scope.selectTable, $scope.isCalculate.val).then(function() {
+        scope.reloadTable($scope.selectTable, $scope.isCalculate.val, $scope.syncRows.rows).then(function() {
           scope.aceSrcTbLoaded(true);
         })
       }
@@ -462,7 +480,7 @@ KylinApp
         }
 
         $scope.cancel();
-        scope.reloadTable($scope.tableNames, $scope.isCalculate.val).then(function () {
+        scope.reloadTable($scope.tableNames, $scope.isCalculate.val, $scope.syncRows.rows).then(function () {
           scope.aceSrcTbLoaded(true);
         });
       }

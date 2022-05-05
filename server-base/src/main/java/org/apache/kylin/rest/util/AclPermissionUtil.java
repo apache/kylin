@@ -55,4 +55,8 @@ public class AclPermissionUtil {
         }
         return groups;
     }
+
+    public static String getCurUser() {
+        return SecurityContextHolder.getContext().getAuthentication().toString();
+    }
 }

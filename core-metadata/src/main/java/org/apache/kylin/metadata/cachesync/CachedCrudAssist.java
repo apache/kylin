@@ -84,8 +84,9 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
     // Make copy of an entity such that update can apply on the copy.
     // Note cached and shared object MUST NOT be updated directly.
     public T copyForWrite(T entity) {
-        if (entity.isCachedAndShared() == false)
+        if (entity.isCachedAndShared() == false) {
             return entity;
+        }
 
         T copy;
         try {
@@ -130,7 +131,7 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
             if (!path.endsWith(resPathSuffix)) {
                 continue;
             }
-            
+
             T entity = entitySet.getValue();
             try {
                 if (entity == null) {
@@ -191,10 +192,11 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
             entity.setCachedAndShared(true);
             entity = initEntityAfterReload(entity, resourceName(path));
 
-            if (path.equals(resourcePath(entity.resourceName())) == false)
+            if (path.equals(resourcePath(entity.resourceName())) == false) {
                 throw new IllegalStateException("The entity " + entity + " read from " + path
                         + " will save to a different path " + resourcePath(entity.resourceName()));
-            
+            }
+
             cache.putLocal(entity.resourceName(), entity);
             return entity;
         } catch (Exception e) {
@@ -227,7 +229,7 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         logger.debug("Saving {} at {}", entityType.getSimpleName(), path);
 
         store.checkAndPutResource(path, entity, serializer);
-        
+
         // just to trigger the event broadcast, the entity won't stay in cache
         if (isLocal) {
             cache.putLocal(resName, entity);
@@ -259,5 +261,4 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         store.deleteResource(path);
         cache.remove(resName);
     }
-
 }
