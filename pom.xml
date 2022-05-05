@@ -89,6 +89,9 @@
     <!-- mysql versions -->
     <mysql-connector.version>5.1.8</mysql-connector.version>
 
+    <!-- postgre SQL versions -->
+    <postgresql.version>42.3.3</postgresql.version>
+
     <!-- Scala versions -->
     <scala.version>2.12.10</scala.version>
     <scala.binary.version>2.12</scala.binary.version>
@@ -592,6 +595,11 @@
         <artifactId>mysql-connector-java</artifactId>
         <version>${mysql-connector.version}</version>
         <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>${postgresql.version}</version>
       </dependency>
       <!-- Hive dependencies -->
       <dependency>
