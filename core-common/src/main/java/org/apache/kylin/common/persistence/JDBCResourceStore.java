@@ -362,13 +362,13 @@ public class JDBCResourceStore extends PushdownResourceStore {
                     if (existing) {
                         pstat = connection.prepareStatement(sqls.getReplaceSql());
                         pstat.setLong(1, ts);
-                        pstat.setBlob(2, new BufferedInputStream(new ByteArrayInputStream(bytes)));
+                        pstat.setBinaryStream(2, new BufferedInputStream(new ByteArrayInputStream(bytes)));
                         pstat.setString(3, resPath);
                     } else {
                         pstat = connection.prepareStatement(sqls.getInsertSql());
                         pstat.setString(1, resPath);
                         pstat.setLong(2, ts);
-                        pstat.setBlob(3, new BufferedInputStream(new ByteArrayInputStream(bytes)));
+                        pstat.setBinaryStream(3, new BufferedInputStream(new ByteArrayInputStream(bytes)));
                     }
 
                     if (isContentOverflow(bytes, resPath)) {
@@ -383,8 +383,9 @@ public class JDBCResourceStore extends PushdownResourceStore {
                         RollbackablePushdown pushdown = writePushdown(resPath, ContentWriter.create(bytes));
                         try {
                             int result = pstat.executeUpdate();
-                            if (result != 1)
+                            if (result != 1) {
                                 throw new SQLException();
+                            }
                         } catch (Exception e) {
                             pushdown.rollback();
                             throw e;
