@@ -2321,6 +2321,11 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.valueOf(getOptional("kylin.engine.build-base-cuboid-enabled", TRUE));
     }
 
+    @ConfigTag(ConfigTag.Tag.CUBE_LEVEL)
+    public boolean isIgnoringNullInCheckDupKeyEnabled() {
+        return Boolean.valueOf(this.getOptional("kylin.job.ignoring-null-in-check-dup-key-enabled", FALSE));
+    }
+
     // ============================================================================
     // Kylin 4.X Spark resources automatic adjustment strategy configuration
     // ============================================================================
