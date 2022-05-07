@@ -284,11 +284,6 @@
         <artifactId>kylin-core-metadata</artifactId>
         <version>${project.version}</version>
       </dependency>
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-core-dictionary</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
       <dependency>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-core-cube</artifactId>
@@ -314,36 +309,6 @@
         <artifactId>kylin-build-engine</artifactId>
         <version>${project.version}</version>
       </dependency>
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-engine-mr</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-engine-spark</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-engine-flink</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-source-hive</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-source-jdbc</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-source-kafka</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
       <dependency>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-metastore-hbase</artifactId>
@@ -369,11 +334,6 @@
         <artifactId>kylin-jdbc</artifactId>
         <version>${project.version}</version>
       </dependency>
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-assembly</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
       <dependency>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-spark-project</artifactId>
@@ -389,11 +349,6 @@
         <artifactId>kylin-tool-assembly</artifactId>
         <version>${project.version}</version>
       </dependency>
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-it</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
       <dependency>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-core-common</artifactId>
@@ -412,12 +367,6 @@
         <version>${project.version}</version>
         <type>test-jar</type>
       </dependency>
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-storage-hbase</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--        <type>test-jar</type>-->
-<!--      </dependency>-->
       <dependency>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-server-base</artifactId>
@@ -436,51 +385,6 @@
         <version>${project.version}</version>
         <type>test-jar</type>
       </dependency>
-
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-stream-core</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-stream-coordinator</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-stream-source-kafka</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-storage-stream</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-stream-receiver</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
-
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-datasource-sdk</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-datasource-sdk</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--        <classifier>framework</classifier>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>org.apache.kylin</groupId>-->
-<!--        <artifactId>kylin-assembly</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--        <type>test-jar</type>-->
-<!--      </dependency>-->
-
       <dependency>
         <groupId>org.lz4</groupId>
         <artifactId>lz4-java</artifactId>
@@ -1539,18 +1443,13 @@
   </build>
 
   <modules>
-   <!-- <module>external</module>-->
     <module>core-common</module>
     <module>core-metadata</module>
-<!--    <module>core-dictionary</module>-->
     <module>core-cube</module>
     <module>core-job</module>
     <module>core-storage</module>
     <module>build-engine</module>
-<!--    <module>engine-spark</module>-->
     <module>source-hive</module>
-<!--    <module>source-jdbc</module>-->
-<!--    <module>source-kafka</module>-->
     <module>metastore-hbase</module>
     <module>query</module>
     <module>server-base</module>
@@ -1559,18 +1458,10 @@
 <!--    <module>assembly</module>-->
     <module>tool</module>
     <module>tool-assembly</module>
-<!--    <module>kylin-it</module>-->
     <module>core-metrics</module>
     <module>metrics-reporter-hive</module>
     <module>metrics-reporter-kafka</module>
     <module>cache</module>
-<!--    <module>datasource-sdk</module>-->
-<!--    <module>storage-stream</module>-->
-<!--    <module>stream-receiver</module>-->
-<!--    <module>stream-coordinator</module>-->
-<!--    <module>stream-core</module>-->
-<!--    <module>stream-source-kafka</module>-->
-<!--    <module>engine-flink</module>-->
     <module>kylin-spark-project</module>
     <module>parquet-assembly</module>
   </modules>
