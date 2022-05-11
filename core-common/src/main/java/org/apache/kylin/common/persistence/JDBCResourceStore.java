@@ -1,21 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.kylin.common.persistence;
 
 import java.io.BufferedInputStream;
@@ -32,10 +14,12 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.SourceDialect;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.DBUtils;
 import org.slf4j.Logger;
@@ -123,6 +107,9 @@ public class JDBCResourceStore extends PushdownResourceStore {
 
                 try {
                     String indexName = "IDX_" + META_TABLE_TS;
+                    if(SourceDialect.POSTGRESQL.equals(SourceDialect.getDialect(kylinConfig.getMetadataDialect()))) {
+                        indexName = indexName + UUID.randomUUID().toString().substring(0, 8);
+                    }
                     String createIndexSql = sqls.getCreateIndexSql(indexName, tableName, META_TABLE_TS);
                     logger.info("Creating index: {}", createIndexSql);
                     pstat = connection.prepareStatement(createIndexSql);
@@ -171,7 +158,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
 
     @Override
     protected void visitFolderImpl(final String folderPath, final boolean recursive, final VisitFilter filter,
-            final boolean loadContent, final Visitor visitor) throws IOException {
+                                   final boolean loadContent, final Visitor visitor) throws IOException {
 
         try {
             executeSql(new SqlOperation() {
@@ -294,9 +281,10 @@ public class JDBCResourceStore extends PushdownResourceStore {
     }
 
     private RawResource rawResource(ResultSet rs, boolean fetchContent, boolean fetchTime) throws SQLException {
+        logger.info("Raw Resource Get Following Content Key@{} Ts@{}", rs.getString(META_TABLE_KEY),
+                fetchTime ? rs.getLong(META_TABLE_TS) : -1);
         String path = rs.getString(META_TABLE_KEY);
         long ts = fetchTime ? rs.getLong(META_TABLE_TS) : -1;
-
         if (fetchContent) {
             try {
                 return new RawResource(path, ts, getInputStream(path, rs));
@@ -314,14 +302,21 @@ public class JDBCResourceStore extends PushdownResourceStore {
         if (rs == null) {
             return null;
         }
-
-        Blob blob = rs.getBlob(META_TABLE_CONTENT);
-
-        if (blob == null || blob.length() == 0) {
-            return openPushdown(resPath); // empty bytes is pushdown indicator
+        if(SourceDialect.POSTGRESQL.equals(SourceDialect.getDialect(kylinConfig.getMetadataDialect()))) {
+            InputStream binaryStream = rs.getBinaryStream(META_TABLE_CONTENT);
+            if(binaryStream == null){
+                return openPushdown(resPath);
+            }
+            return rs.getBinaryStream(META_TABLE_CONTENT);
         } else {
-            return blob.getBinaryStream();
+            Blob blob = rs.getBlob(META_TABLE_CONTENT);
+            if (blob == null || blob.length() == 0) {
+                return openPushdown(resPath); // empty bytes is pushdown indicator
+            } else {
+                return blob.getBinaryStream();
+            }
         }
+
     }
 
     @Override
@@ -350,29 +345,46 @@ public class JDBCResourceStore extends PushdownResourceStore {
             public void execute(Connection connection) throws SQLException, IOException {
                 byte[] bytes = content.extractAllBytes();
                 synchronized (getConcurrentObject(resPath)) {
+                    boolean autoCommit = connection.getAutoCommit();
+                    if(SourceDialect.POSTGRESQL.equals(SourceDialect.getDialect(kylinConfig.getMetadataDialect()))){
+                        connection.setAutoCommit(false);
+                    }
                     JDBCResourceSQL sqls = getJDBCResourceSQL(getMetaTableName(resPath));
                     boolean existing = existsImpl(resPath);
                     if (existing) {
                         pstat = connection.prepareStatement(sqls.getReplaceSql());
                         pstat.setLong(1, ts);
-                        pstat.setBlob(2, new BufferedInputStream(new ByteArrayInputStream(bytes)));
+                        if(SourceDialect.POSTGRESQL.equals(SourceDialect.getDialect(kylinConfig.getMetadataDialect()))){
+                            pstat.setBinaryStream(2, new BufferedInputStream(new ByteArrayInputStream(bytes)));
+                        } else {
+                            pstat.setBlob(2, new BufferedInputStream(new ByteArrayInputStream(bytes)));
+                        }
                         pstat.setString(3, resPath);
                     } else {
                         pstat = connection.prepareStatement(sqls.getInsertSql());
                         pstat.setString(1, resPath);
                         pstat.setLong(2, ts);
-                        pstat.setBlob(3, new BufferedInputStream(new ByteArrayInputStream(bytes)));
+                        if(SourceDialect.POSTGRESQL.equals(SourceDialect.getDialect(kylinConfig.getMetadataDialect()))){
+                            pstat.setBinaryStream(3, new BufferedInputStream(new ByteArrayInputStream(bytes)));
+                        } else {
+                            pstat.setBlob(3, new BufferedInputStream(new ByteArrayInputStream(bytes)));
+                        }
                     }
 
                     if (isContentOverflow(bytes, resPath)) {
                         logger.debug("Overflow! resource path: {}, content size: {}, timeStamp: {}", resPath,
                                 bytes.length, ts);
                         if (existing) {
+                            if(SourceDialect.POSTGRESQL.equals(SourceDialect.getDialect(kylinConfig.getMetadataDialect()))) {
+                                pstat.setNull(2, Types.BINARY);
+                            }
                             pstat.setNull(2, Types.BLOB);
                         } else {
+                            if(SourceDialect.POSTGRESQL.equals(SourceDialect.getDialect(kylinConfig.getMetadataDialect()))) {
+                                pstat.setNull(3, Types.BINARY);
+                            }
                             pstat.setNull(3, Types.BLOB);
                         }
-
                         RollbackablePushdown pushdown = writePushdown(resPath, ContentWriter.create(bytes));
                         try {
                             int result = pstat.executeUpdate();
@@ -386,6 +398,10 @@ public class JDBCResourceStore extends PushdownResourceStore {
                         }
                     } else {
                         pstat.executeUpdate();
+                    }
+                    if(SourceDialect.POSTGRESQL.equals(SourceDialect.getDialect(kylinConfig.getMetadataDialect()))){
+                        connection.commit();
+                        connection.setAutoCommit(autoCommit);
                     }
                 }
             }
@@ -439,7 +455,11 @@ public class JDBCResourceStore extends PushdownResourceStore {
         executeSql(new SqlOperation() {
             @Override
             public void execute(Connection connection) throws SQLException, IOException {
+                boolean autoCommit = connection.getAutoCommit();
                 synchronized (getConcurrentObject(resPath)) {
+                    if(SourceDialect.POSTGRESQL.equals(SourceDialect.getDialect(kylinConfig.getMetadataDialect()))){
+                        connection.setAutoCommit(false);
+                    }
                     JDBCResourceSQL sqls = getJDBCResourceSQL(getMetaTableName(resPath));
                     if (!existsImpl(resPath)) {
                         if (oldTS != 0) {
@@ -448,7 +468,9 @@ public class JDBCResourceStore extends PushdownResourceStore {
                         }
                         if (isContentOverflow(content, resPath)) {
                             logger.debug("Overflow! resource path: {}, content size: {}", resPath, content.length);
+                            logger.info("autocommit status: {}",connection.getAutoCommit());
                             pstat = connection.prepareStatement(sqls.getInsertSqlWithoutContent());
+                            logger.info("autocommit status: {}",connection.getAutoCommit());
                             pstat.setString(1, resPath);
                             pstat.setLong(2, newTS);
                             RollbackablePushdown pushdown = writePushdown(resPath, ContentWriter.create(content));
@@ -463,10 +485,16 @@ public class JDBCResourceStore extends PushdownResourceStore {
                                 pushdown.close();
                             }
                         } else {
+                            logger.info("autocommit status: {}",connection.getAutoCommit());
                             pstat = connection.prepareStatement(sqls.getInsertSql());
+                            logger.info("autocommit status: {}",connection.getAutoCommit());
                             pstat.setString(1, resPath);
                             pstat.setLong(2, newTS);
-                            pstat.setBlob(3, new BufferedInputStream(new ByteArrayInputStream(content)));
+                            if(SourceDialect.POSTGRESQL.equals(SourceDialect.getDialect(kylinConfig.getMetadataDialect()))){
+                                pstat.setBinaryStream(3, new BufferedInputStream(new ByteArrayInputStream(content)));
+                            } else {
+                                pstat.setBlob(3, new BufferedInputStream(new ByteArrayInputStream(content)));
+                            }
                             pstat.executeUpdate();
                         }
                     } else {
@@ -477,7 +505,11 @@ public class JDBCResourceStore extends PushdownResourceStore {
                         pstat.setString(3, resPath);
                         pstat.setLong(4, oldTS);
                         if (isContentOverflow(content, resPath)) {
-                            pstat.setNull(2, Types.BLOB);
+                            if(SourceDialect.POSTGRESQL.equals(SourceDialect.getDialect(kylinConfig.getMetadataDialect()))){
+                                pstat.setNull(2, Types.BINARY);
+                            } else {
+                                pstat.setNull(2, Types.BLOB);
+                            }
                             RollbackablePushdown pushdown = writePushdown(resPath, ContentWriter.create(content));
                             try {
                                 int result = pstat.executeUpdate();
@@ -499,7 +531,12 @@ public class JDBCResourceStore extends PushdownResourceStore {
                             }
                         }
                     }
+                    if(SourceDialect.POSTGRESQL.equals(SourceDialect.getDialect(kylinConfig.getMetadataDialect()))){
+                        connection.commit();
+                        connection.setAutoCommit(autoCommit);
+                    }
                 }
+
             }
         });
     }
