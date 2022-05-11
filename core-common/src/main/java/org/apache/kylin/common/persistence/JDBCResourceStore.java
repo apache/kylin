@@ -124,6 +124,9 @@ public class JDBCResourceStore extends PushdownResourceStore {
 
                 try {
                     String indexName = "IDX_" + META_TABLE_TS;
+                    if (DIALECT_OF_PG.equals(kylinConfig.getMetadataDialect())) {
+                        indexName += System.currentTimeMillis();
+                    }
                     String createIndexSql = sqls.getCreateIndexSql(indexName, tableName, META_TABLE_TS);
                     logger.info("Creating index: {}", createIndexSql);
                     pstat = connection.prepareStatement(createIndexSql);
