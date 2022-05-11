@@ -56,6 +56,8 @@ apachekylin/apache-kylin-standalone:4.0.0
 
 我们已将面向用户的 MDX for Kylin 镜像上传至 docker 仓库，用户无需在本地构建镜像，直接执行以下命令从 docker 仓库 pull 镜像：
 
+> 注意：当前镜像包含了 `Kylin`，默认会同时启动 `Kylin` 和 `MDX for Kylin`。
+
 {% highlight Groff markup %}
 docker pull apachekylin/apache-kylin-standalone:kylin-4.0.1-mondrian
 {% endhighlight %}

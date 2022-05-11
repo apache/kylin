@@ -56,6 +56,8 @@ After the container is started, we can enter the container through the `docker e
 
 We have pushed the MDX for Kylin image for the user to the docker hub. Users do not need to build the image locally, just execute the following command to pull the image from the docker hub:
 
+> Note: Current docker image contains the `Kylin` and `MDX for Kylin`, so `MDX for Kylin` will start with `Kylin` at the same time.
+
 {% highlight Groff markup %}
 docker pull apachekylin/apache-kylin-standalone:kylin-4.0.1-mondrian
 {% endhighlight %}
