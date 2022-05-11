@@ -62,6 +62,7 @@
     <puppycrawl.version>8.18</puppycrawl.version>
     <spotbugs.version>3.1.1</spotbugs.version>
 
+
     <kylin.version>3.0.0</kylin.version>
 
     <!-- Hadoop versions -->
@@ -160,6 +161,8 @@
     <rocksdb.version>5.18.4</rocksdb.version>
     <lz4.version>1.4.0</lz4.version>
     <mssql-jdbc.version>6.2.2.jre8</mssql-jdbc.version>
+
+    <postgresql.version>42.3.3</postgresql.version>
     <!--metric-->
     <dropwizard.version>3.1.2</dropwizard.version>
     <!-- REST Service, ref https://github.com/spring-projects/spring-boot/blob/v1.3.8.RELEASE/spring-boot-dependencies/pom.xml -->
@@ -662,6 +665,13 @@
         <artifactId>hbase-common</artifactId>
         <version>${hbase-hadoop2.version}</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>${postgresql.version}</version>
+      </dependency>
+
       <dependency>
         <groupId>org.apache.hbase</groupId>
         <artifactId>hbase-client</artifactId>

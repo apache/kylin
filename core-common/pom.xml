@@ -25,6 +25,7 @@
     <name>Apache Kylin - Core Common</name>
     <description>Apache Kylin - Core Common</description>
 
+
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
@@ -66,6 +67,11 @@
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql.version}</version>
         </dependency>
         <dependency>
             <groupId>com.jcraft</groupId>
