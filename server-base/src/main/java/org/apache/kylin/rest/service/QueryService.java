@@ -446,6 +446,10 @@ public class QueryService extends BasicService {
             BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
         }
 
+        if (sqlRequest.getBackdoorToggles() != null && !StringUtil.isEmpty(sqlRequest.getBackdoorToggles().get(BackdoorToggles.CUSTOMIZE_QUERY_ID))) {
+            queryContext.setQueryId(sqlRequest.getBackdoorToggles().get(BackdoorToggles.CUSTOMIZE_QUERY_ID));
+        }
+
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
             // force clear the query context before a new query
             OLAPContext.clearThreadLocalContexts();
@@ -484,7 +488,7 @@ public class QueryService extends BasicService {
                     sqlResponse = queryAndUpdateCache(sqlRequest, isQueryCacheEnabled);
                 }
             }
-
+            sqlResponse.setQueryId(queryContext.getQueryId());
             sqlResponse.setDuration(queryContext.getAccumulatedMillis());
             if (QuerySparkMetrics.getInstance().getQueryExecutionMetrics(queryContext.getQueryId()) != null) {
                 String sqlTraceUrl = SparderContext.appMasterTrackURL() + "/SQL/execution/?id=" +

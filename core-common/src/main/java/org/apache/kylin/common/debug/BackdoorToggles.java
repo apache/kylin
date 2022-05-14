@@ -401,4 +401,9 @@ public class BackdoorToggles {
     public final static String DEBUG_TOGGLE_HIT_CUBE = "DEBUG_TOGGLE_HIT_CUBE";
 
     public final static String DEBUG_TOGGLE_SPARK_POOL = "DEBUG_TOGGLE_SPARK_POOL";
+
+    /**
+     * user customize query id
+     */
+    public final static String CUSTOMIZE_QUERY_ID = "CUSTOMIZE_QUERY_ID";
 }
