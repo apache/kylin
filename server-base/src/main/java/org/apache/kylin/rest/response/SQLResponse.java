@@ -97,6 +97,8 @@ public class SQLResponse implements Serializable {
 
     private List<SQLResponseTrace> traces;
 
+    protected String queryId;
+
     public SQLResponse() {
     }
 
@@ -304,6 +306,14 @@ public class SQLResponse implements Serializable {
 
     public List<SQLResponseTrace> getTraces() {
         return traces;
+    }
+
+    public String getQueryId() {
+        return queryId;
+    }
+
+    public void setQueryId(String queryId) {
+        this.queryId = queryId;
     }
 
     @JsonIgnore

@@ -52,7 +52,7 @@ public class QueryContext {
 
     private long queryStartMillis;
 
-    private final String queryId;
+    private String queryId;
     private String username;
     private Set<String> groups;
     private String project;
@@ -100,6 +100,10 @@ public class QueryContext {
         if (Thread.interrupted()) {
             throw new KylinTimeoutException("Query timeout");
         }
+    }
+
+    public void setQueryId(String queryId) {
+        this.queryId = queryId;
     }
 
     public String getQueryId() {
