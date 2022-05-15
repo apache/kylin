@@ -13,7 +13,7 @@ For more details, see the website [http://kylin.apache.org](http://kylin.apache.
 
 Develop
 =============
-Please refer to [https://github.com/Kyligence/kylin-on-parquet-v2/wiki/Development-document](https://github.com/Kyligence/kylin-on-parquet-v2/wiki/Development-document).
+Please refer to [Development Guide for Kylin 4](https://cwiki.apache.org/confluence/display/KYLIN/Development+Guide+for+Kylin+4) on wiki.
 
 Get started with Kylin in 5 minutes with Docker
 =============
