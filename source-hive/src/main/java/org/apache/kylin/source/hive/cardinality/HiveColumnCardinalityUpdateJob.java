@@ -161,7 +161,9 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
 
                 IOUtils.copy(stream, writer, "UTF-8");
             } finally {
-                stream.close();
+                if (stream != null) {
+                    stream.close();
+                }
             }
             String raw = writer.toString();
             for (String str : StringUtil.split(raw, "\n")) {
