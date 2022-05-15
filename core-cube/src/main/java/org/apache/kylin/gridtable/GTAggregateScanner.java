@@ -723,12 +723,11 @@ public class GTAggregateScanner implements IGTScanner, IGTBypassChecker {
             public void spill() throws IOException {
                 if (spillBuffer == null)
                     return;
-                OutputStream ops = new FileOutputStream(dumpedFile);
-                InputStream ips = new ByteArrayInputStream(spillBuffer);
-                IOUtils.copy(ips, ops);
-                spillBuffer = null;
-                IOUtils.closeQuietly(ips);
-                IOUtils.closeQuietly(ops);
+                try (OutputStream ops = new FileOutputStream(dumpedFile);
+                     InputStream ips = new ByteArrayInputStream(spillBuffer)) {
+                    IOUtils.copy(ips, ops);
+                    spillBuffer = null;
+                }
 
                 logger.info("Spill buffer to disk, location: {}, size = {}.", dumpedFile.getAbsolutePath(),
                         dumpedFile.length());
