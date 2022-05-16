@@ -65,6 +65,7 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.translate.DerivedFilterTranslator;
+import org.apache.kylin.storage.translate.TranslatedFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -333,28 +334,48 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         }
     }
 
+    public TupleFilter translateDerived(TupleFilter filter, Set<TblColRef> collector) {
+        TranslatedFilter translatedFilter = translateDerived(filter, collector, false);
+        if (translatedFilter == null) {
+            return null;
+        }
+        return translatedFilter.getFilter();
+    }
+
     @SuppressWarnings("unchecked")
-    protected TupleFilter translateDerived(TupleFilter filter, Set<TblColRef> collector) {
+    protected TranslatedFilter translateDerived(TupleFilter filter, Set<TblColRef> collector, boolean needLoosen) {
         if (filter == null)
-            return filter;
+            return null;
 
         if (filter instanceof CompareTupleFilter) {
-            return translateDerivedInCompare((CompareTupleFilter) filter, collector);
+            return translateDerivedInCompare((CompareTupleFilter) filter, collector, needLoosen);
         }
 
         List<TupleFilter> children = (List<TupleFilter>) filter.getChildren();
         List<TupleFilter> newChildren = Lists.newArrayListWithCapacity(children.size());
+        Set<TblColRef> allCol = Sets.newHashSet();
         boolean modified = false;
+        boolean hasLoosened = false;
+        boolean childrenNeedLoosen = false;
         for (TupleFilter child : children) {
-            TupleFilter translated = translateDerived(child, collector);
-            newChildren.add(translated);
-            if (child != translated)
+            TranslatedFilter translated = translateDerived(child, collector, childrenNeedLoosen);
+            newChildren.add(translated.getFilter());
+            hasLoosened |= translated.isLoosened();
+            if (translated.isLoosened() && filter.getOperator() == FilterOperatorEnum.OR) {
+                childrenNeedLoosen = true;
+                collector.addAll(allCol);
+            }
+            if (translated.getReferCol() != null) {
+                allCol.addAll(translated.getReferCol());
+            }
+            if (child != translated.getFilter()) {
                 modified = true;
+            }
         }
         if (modified) {
             filter = replaceChildren(filter, newChildren);
         }
-        return filter;
+        return new TranslatedFilter(filter, allCol, hasLoosened);
     }
 
     private TupleFilter replaceChildren(TupleFilter filter, List<TupleFilter> newChildren) {
@@ -371,36 +392,48 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         }
     }
 
-    private TupleFilter translateDerivedInCompare(CompareTupleFilter compf, Set<TblColRef> collector) {
+    private TranslatedFilter translateDerivedInCompare(CompareTupleFilter compf, Set<TblColRef> collector,
+            boolean needLoosen) {
         if (compf.getColumn() == null)
-            return compf;
+            return new TranslatedFilter(compf, null, false);
 
         TblColRef derived = compf.getColumn();
         if (cubeDesc.isExtendedColumn(derived)) {
             throw new CubeDesc.CannotFilterExtendedColumnException(derived);
         }
-        if (!cubeDesc.isDerived(derived))
-            return compf;
-
-        DeriveInfo hostInfo = cubeDesc.getHostInfo(derived);
-        ILookupTable lookup = cubeDesc.getHostInfo(derived).type == CubeDesc.DeriveType.PK_FK ? null
-                : getLookupStringTableForDerived(derived, hostInfo);
-        Pair<TupleFilter, Boolean> translated = DerivedFilterTranslator.translate(lookup, hostInfo, compf);
-        try {
-            if (lookup != null) {
-                lookup.close();
+        Set<TblColRef> sourceCollector = Sets.newHashSet();
+        Set<TblColRef> currentFilterColRefCollector = Sets.newHashSet();
+        TupleFilter.collectColumns(compf, sourceCollector);
+        for (TblColRef colRef : sourceCollector) {
+            if (cubeDesc.isDerived(colRef)) {
+                currentFilterColRefCollector.addAll(Arrays.asList(cubeDesc.getHostInfo(colRef).columns));
+            } else {
+                currentFilterColRefCollector.add(colRef);
             }
-        } catch (IOException e) {
-            logger.error("error when close lookup table.", e);
         }
-        TupleFilter translatedFilter = translated.getFirst();
-        boolean loosened = translated.getSecond();
-        if (loosened) {
-            collectColumnsRecursively(translatedFilter, collector);
+        boolean loosened = false;
+        TupleFilter translatedFilter = compf;
+        if (cubeDesc.isDerived(derived)) {
+            DeriveInfo hostInfo = cubeDesc.getHostInfo(derived);
+            ILookupTable lookup = cubeDesc.getHostInfo(derived).type == CubeDesc.DeriveType.PK_FK ? null
+                    : getLookupStringTableForDerived(derived, hostInfo);
+            Pair<TupleFilter, Boolean> translated = DerivedFilterTranslator.translate(lookup, hostInfo, compf);
+            try {
+                if (lookup != null) {
+                    lookup.close();
+                }
+            } catch (IOException e) {
+                logger.error("error when close lookup table.", e);
+            }
+            translatedFilter = translated.getFirst();
+            loosened = translated.getSecond();
         }
-        return translatedFilter;
+        if (needLoosen || loosened) {
+            collector.addAll(currentFilterColRefCollector);
+        }
+        return new TranslatedFilter(translatedFilter, currentFilterColRefCollector, loosened);
     }
-
+    
     @SuppressWarnings("unchecked")
     protected ILookupTable getLookupStringTableForDerived(TblColRef derived, DeriveInfo hostInfo) {
         CubeManager cubeMgr = CubeManager.getInstance(this.cubeInstance.getConfig());
