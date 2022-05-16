@@ -145,6 +145,21 @@ public final class CubeVisitProtos {
      * <code>optional bool isExactAggregate = 9 [default = false];</code>
      */
     boolean getIsExactAggregate();
+
+    // optional string segName = 10;
+    /**
+     * <code>optional string segName = 10;</code>
+     */
+    boolean hasSegName();
+    /**
+     * <code>optional string segName = 10;</code>
+     */
+    java.lang.String getSegName();
+    /**
+     * <code>optional string segName = 10;</code>
+     */
+    com.google.protobuf.ByteString
+        getSegNameBytes();
   }
   /**
    * Protobuf type {@code CubeVisitRequest}
@@ -243,6 +258,11 @@ public final class CubeVisitProtos {
             case 72: {
               bitField0_ |= 0x00000080;
               isExactAggregate_ = input.readBool();
+              break;
+            }
+            case 82: {
+              bitField0_ |= 0x00000100;
+              segName_ = input.readBytes();
               break;
             }
           }
@@ -619,6 +639,8 @@ public final class CubeVisitProtos {
           maybeForceBuilderInitialization();
         }
         private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
         }
         private static Builder create() {
           return new Builder();
@@ -1028,6 +1050,49 @@ public final class CubeVisitProtos {
       return isExactAggregate_;
     }
 
+    // optional string segName = 10;
+    public static final int SEGNAME_FIELD_NUMBER = 10;
+    private java.lang.Object segName_;
+    /**
+     * <code>optional string segName = 10;</code>
+     */
+    public boolean hasSegName() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional string segName = 10;</code>
+     */
+    public java.lang.String getSegName() {
+      java.lang.Object ref = segName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          segName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string segName = 10;</code>
+     */
+    public com.google.protobuf.ByteString
+        getSegNameBytes() {
+      java.lang.Object ref = segName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        segName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       gtScanRequest_ = com.google.protobuf.ByteString.EMPTY;
       hbaseRawScan_ = com.google.protobuf.ByteString.EMPTY;
@@ -1038,6 +1103,7 @@ public final class CubeVisitProtos {
       spillEnabled_ = true;
       maxScanBytes_ = 0L;
       isExactAggregate_ = false;
+      segName_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1094,6 +1160,9 @@ public final class CubeVisitProtos {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeBool(9, isExactAggregate_);
       }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeBytes(10, getSegNameBytes());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1138,6 +1207,10 @@ public final class CubeVisitProtos {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(9, isExactAggregate_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(10, getSegNameBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1204,6 +1277,11 @@ public final class CubeVisitProtos {
         result = result && (getIsExactAggregate()
             == other.getIsExactAggregate());
       }
+      result = result && (hasSegName() == other.hasSegName());
+      if (hasSegName()) {
+        result = result && getSegName()
+            .equals(other.getSegName());
+      }
       result = result &&
           getUnknownFields().equals(other.getUnknownFields());
       return result;
@@ -1252,6 +1330,10 @@ public final class CubeVisitProtos {
       if (hasIsExactAggregate()) {
         hash = (37 * hash) + ISEXACTAGGREGATE_FIELD_NUMBER;
         hash = (53 * hash) + hashBoolean(getIsExactAggregate());
+      }
+      if (hasSegName()) {
+        hash = (37 * hash) + SEGNAME_FIELD_NUMBER;
+        hash = (53 * hash) + getSegName().hashCode();
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -1385,6 +1467,8 @@ public final class CubeVisitProtos {
         bitField0_ = (bitField0_ & ~0x00000080);
         isExactAggregate_ = false;
         bitField0_ = (bitField0_ & ~0x00000100);
+        segName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -1454,6 +1538,10 @@ public final class CubeVisitProtos {
           to_bitField0_ |= 0x00000080;
         }
         result.isExactAggregate_ = isExactAggregate_;
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.segName_ = segName_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1523,6 +1611,11 @@ public final class CubeVisitProtos {
         }
         if (other.hasIsExactAggregate()) {
           setIsExactAggregate(other.getIsExactAggregate());
+        }
+        if (other.hasSegName()) {
+          bitField0_ |= 0x00000200;
+          segName_ = other.segName_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -2199,6 +2292,80 @@ public final class CubeVisitProtos {
         return this;
       }
 
+      // optional string segName = 10;
+      private java.lang.Object segName_ = "";
+      /**
+       * <code>optional string segName = 10;</code>
+       */
+      public boolean hasSegName() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional string segName = 10;</code>
+       */
+      public java.lang.String getSegName() {
+        java.lang.Object ref = segName_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          segName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string segName = 10;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSegNameBytes() {
+        java.lang.Object ref = segName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          segName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string segName = 10;</code>
+       */
+      public Builder setSegName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000200;
+        segName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string segName = 10;</code>
+       */
+      public Builder clearSegName() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        segName_ = getDefaultInstance().getSegName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string segName = 10;</code>
+       */
+      public Builder setSegNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000200;
+        segName_ = value;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:CubeVisitRequest)
     }
 
@@ -2607,6 +2774,21 @@ public final class CubeVisitProtos {
        * <code>optional int64 filteredRowCount = 12;</code>
        */
       long getFilteredRowCount();
+
+      // optional string segName = 13;
+      /**
+       * <code>optional string segName = 13;</code>
+       */
+      boolean hasSegName();
+      /**
+       * <code>optional string segName = 13;</code>
+       */
+      java.lang.String getSegName();
+      /**
+       * <code>optional string segName = 13;</code>
+       */
+      com.google.protobuf.ByteString
+          getSegNameBytes();
     }
     /**
      * Protobuf type {@code CubeVisitResponse.Stats}
@@ -2717,6 +2899,11 @@ public final class CubeVisitProtos {
               case 96: {
                 bitField0_ |= 0x00000800;
                 filteredRowCount_ = input.readInt64();
+                break;
+              }
+              case 106: {
+                bitField0_ |= 0x00001000;
+                segName_ = input.readBytes();
                 break;
               }
             }
@@ -3005,6 +3192,49 @@ public final class CubeVisitProtos {
         return filteredRowCount_;
       }
 
+      // optional string segName = 13;
+      public static final int SEGNAME_FIELD_NUMBER = 13;
+      private java.lang.Object segName_;
+      /**
+       * <code>optional string segName = 13;</code>
+       */
+      public boolean hasSegName() {
+        return ((bitField0_ & 0x00001000) == 0x00001000);
+      }
+      /**
+       * <code>optional string segName = 13;</code>
+       */
+      public java.lang.String getSegName() {
+        java.lang.Object ref = segName_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            segName_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string segName = 13;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSegNameBytes() {
+        java.lang.Object ref = segName_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          segName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
       private void initFields() {
         serviceStartTime_ = 0L;
         serviceEndTime_ = 0L;
@@ -3018,6 +3248,7 @@ public final class CubeVisitProtos {
         normalComplete_ = 0;
         scannedBytes_ = 0L;
         filteredRowCount_ = 0L;
+        segName_ = "";
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -3066,6 +3297,9 @@ public final class CubeVisitProtos {
         }
         if (((bitField0_ & 0x00000800) == 0x00000800)) {
           output.writeInt64(12, filteredRowCount_);
+        }
+        if (((bitField0_ & 0x00001000) == 0x00001000)) {
+          output.writeBytes(13, getSegNameBytes());
         }
         getUnknownFields().writeTo(output);
       }
@@ -3123,6 +3357,10 @@ public final class CubeVisitProtos {
         if (((bitField0_ & 0x00000800) == 0x00000800)) {
           size += com.google.protobuf.CodedOutputStream
             .computeInt64Size(12, filteredRowCount_);
+        }
+        if (((bitField0_ & 0x00001000) == 0x00001000)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(13, getSegNameBytes());
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -3204,6 +3442,11 @@ public final class CubeVisitProtos {
           result = result && (getFilteredRowCount()
               == other.getFilteredRowCount());
         }
+        result = result && (hasSegName() == other.hasSegName());
+        if (hasSegName()) {
+          result = result && getSegName()
+              .equals(other.getSegName());
+        }
         result = result &&
             getUnknownFields().equals(other.getUnknownFields());
         return result;
@@ -3267,6 +3510,10 @@ public final class CubeVisitProtos {
         if (hasFilteredRowCount()) {
           hash = (37 * hash) + FILTEREDROWCOUNT_FIELD_NUMBER;
           hash = (53 * hash) + hashLong(getFilteredRowCount());
+        }
+        if (hasSegName()) {
+          hash = (37 * hash) + SEGNAME_FIELD_NUMBER;
+          hash = (53 * hash) + getSegName().hashCode();
         }
         hash = (29 * hash) + getUnknownFields().hashCode();
         memoizedHashCode = hash;
@@ -3368,6 +3615,8 @@ public final class CubeVisitProtos {
           maybeForceBuilderInitialization();
         }
         private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
         }
         private static Builder create() {
           return new Builder();
@@ -3399,6 +3648,8 @@ public final class CubeVisitProtos {
           bitField0_ = (bitField0_ & ~0x00000400);
           filteredRowCount_ = 0L;
           bitField0_ = (bitField0_ & ~0x00000800);
+          segName_ = "";
+          bitField0_ = (bitField0_ & ~0x00001000);
           return this;
         }
 
@@ -3475,6 +3726,10 @@ public final class CubeVisitProtos {
             to_bitField0_ |= 0x00000800;
           }
           result.filteredRowCount_ = filteredRowCount_;
+          if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+            to_bitField0_ |= 0x00001000;
+          }
+          result.segName_ = segName_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -3530,6 +3785,11 @@ public final class CubeVisitProtos {
           }
           if (other.hasFilteredRowCount()) {
             setFilteredRowCount(other.getFilteredRowCount());
+          }
+          if (other.hasSegName()) {
+            bitField0_ |= 0x00001000;
+            segName_ = other.segName_;
+            onChanged();
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -4036,6 +4296,80 @@ public final class CubeVisitProtos {
           return this;
         }
 
+        // optional string segName = 13;
+        private java.lang.Object segName_ = "";
+        /**
+         * <code>optional string segName = 13;</code>
+         */
+        public boolean hasSegName() {
+          return ((bitField0_ & 0x00001000) == 0x00001000);
+        }
+        /**
+         * <code>optional string segName = 13;</code>
+         */
+        public java.lang.String getSegName() {
+          java.lang.Object ref = segName_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            segName_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>optional string segName = 13;</code>
+         */
+        public com.google.protobuf.ByteString
+            getSegNameBytes() {
+          java.lang.Object ref = segName_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            segName_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string segName = 13;</code>
+         */
+        public Builder setSegName(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00001000;
+          segName_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string segName = 13;</code>
+         */
+        public Builder clearSegName() {
+          bitField0_ = (bitField0_ & ~0x00001000);
+          segName_ = getDefaultInstance().getSegName();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string segName = 13;</code>
+         */
+        public Builder setSegNameBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00001000;
+          segName_ = value;
+          onChanged();
+          return this;
+        }
+
         // @@protoc_insertion_point(builder_scope:CubeVisitResponse.Stats)
       }
 
@@ -4442,6 +4776,8 @@ public final class CubeVisitProtos {
           maybeForceBuilderInitialization();
         }
         private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
         }
         private static Builder create() {
           return new Builder();
@@ -5690,34 +6026,34 @@ public final class CubeVisitProtos {
     java.lang.String[] descriptorData = {
       "\npstorage-hbase/src/main/java/org/apache" +
       "/kylin/storage/hbase/cube/v2/coprocessor" +
-      "/endpoint/protobuf/CubeVisit.proto\"\246\002\n\020C" +
+      "/endpoint/protobuf/CubeVisit.proto\"\267\002\n\020C" +
       "ubeVisitRequest\022\025\n\rgtScanRequest\030\001 \002(\014\022\024" +
       "\n\014hbaseRawScan\030\002 \002(\014\022\032\n\022rowkeyPreambleSi" +
       "ze\030\003 \002(\005\0223\n\020hbaseColumnsToGT\030\004 \003(\0132\031.Cub" +
       "eVisitRequest.IntList\022\027\n\017kylinProperties" +
       "\030\005 \002(\t\022\017\n\007queryId\030\006 \001(\t\022\032\n\014spillEnabled\030" +
       "\007 \001(\010:\004true\022\024\n\014maxScanBytes\030\010 \001(\003\022\037\n\020isE" +
-      "xactAggregate\030\t \001(\010:\005false\032\027\n\007IntList\022\014\n",
-      "\004ints\030\001 \003(\005\"\305\004\n\021CubeVisitResponse\022\026\n\016com" +
-      "pressedRows\030\001 \002(\014\022\'\n\005stats\030\002 \002(\0132\030.CubeV" +
-      "isitResponse.Stats\022/\n\terrorInfo\030\003 \001(\0132\034." +
-      "CubeVisitResponse.ErrorInfo\032\252\002\n\005Stats\022\030\n" +
-      "\020serviceStartTime\030\001 \001(\003\022\026\n\016serviceEndTim" +
-      "e\030\002 \001(\003\022\027\n\017scannedRowCount\030\003 \001(\003\022\032\n\022aggr" +
-      "egatedRowCount\030\004 \001(\003\022\025\n\rsystemCpuLoad\030\005 " +
-      "\001(\001\022\036\n\026freePhysicalMemorySize\030\006 \001(\001\022\031\n\021f" +
-      "reeSwapSpaceSize\030\007 \001(\001\022\020\n\010hostname\030\010 \001(\t" +
-      "\022\016\n\006etcMsg\030\t \001(\t\022\026\n\016normalComplete\030\n \001(\005",
-      "\022\024\n\014scannedBytes\030\013 \001(\003\022\030\n\020filteredRowCou" +
-      "nt\030\014 \001(\003\032H\n\tErrorInfo\022*\n\004type\030\001 \002(\0162\034.Cu" +
-      "beVisitResponse.ErrorType\022\017\n\007message\030\002 \002" +
-      "(\t\"G\n\tErrorType\022\020\n\014UNKNOWN_TYPE\020\000\022\013\n\007TIM" +
-      "EOUT\020\001\022\033\n\027RESOURCE_LIMIT_EXCEEDED\020\0022F\n\020C" +
-      "ubeVisitService\0222\n\tvisitCube\022\021.CubeVisit" +
-      "Request\032\022.CubeVisitResponseB`\nEorg.apach" +
-      "e.kylin.storage.hbase.cube.v2.coprocesso" +
-      "r.endpoint.generatedB\017CubeVisitProtosH\001\210" +
-      "\001\001\240\001\001"
+      "xactAggregate\030\t \001(\010:\005false\022\017\n\007segName\030\n ",
+      "\001(\t\032\027\n\007IntList\022\014\n\004ints\030\001 \003(\005\"\326\004\n\021CubeVis" +
+      "itResponse\022\026\n\016compressedRows\030\001 \002(\014\022\'\n\005st" +
+      "ats\030\002 \002(\0132\030.CubeVisitResponse.Stats\022/\n\te" +
+      "rrorInfo\030\003 \001(\0132\034.CubeVisitResponse.Error" +
+      "Info\032\273\002\n\005Stats\022\030\n\020serviceStartTime\030\001 \001(\003" +
+      "\022\026\n\016serviceEndTime\030\002 \001(\003\022\027\n\017scannedRowCo" +
+      "unt\030\003 \001(\003\022\032\n\022aggregatedRowCount\030\004 \001(\003\022\025\n" +
+      "\rsystemCpuLoad\030\005 \001(\001\022\036\n\026freePhysicalMemo" +
+      "rySize\030\006 \001(\001\022\031\n\021freeSwapSpaceSize\030\007 \001(\001\022" +
+      "\020\n\010hostname\030\010 \001(\t\022\016\n\006etcMsg\030\t \001(\t\022\026\n\016nor",
+      "malComplete\030\n \001(\005\022\024\n\014scannedBytes\030\013 \001(\003\022" +
+      "\030\n\020filteredRowCount\030\014 \001(\003\022\017\n\007segName\030\r \001" +
+      "(\t\032H\n\tErrorInfo\022*\n\004type\030\001 \002(\0162\034.CubeVisi" +
+      "tResponse.ErrorType\022\017\n\007message\030\002 \002(\t\"G\n\t" +
+      "ErrorType\022\020\n\014UNKNOWN_TYPE\020\000\022\013\n\007TIMEOUT\020\001" +
+      "\022\033\n\027RESOURCE_LIMIT_EXCEEDED\020\0022F\n\020CubeVis" +
+      "itService\0222\n\tvisitCube\022\021.CubeVisitReques" +
+      "t\032\022.CubeVisitResponseB`\nEorg.apache.kyli" +
+      "n.storage.hbase.cube.v2.coprocessor.endp" +
+      "oint.generatedB\017CubeVisitProtosH\001\210\001\001\240\001\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -5729,7 +6065,7 @@ public final class CubeVisitProtos {
           internal_static_CubeVisitRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_CubeVisitRequest_descriptor,
-              new java.lang.String[] { "GtScanRequest", "HbaseRawScan", "RowkeyPreambleSize", "HbaseColumnsToGT", "KylinProperties", "QueryId", "SpillEnabled", "MaxScanBytes", "IsExactAggregate", });
+              new java.lang.String[] { "GtScanRequest", "HbaseRawScan", "RowkeyPreambleSize", "HbaseColumnsToGT", "KylinProperties", "QueryId", "SpillEnabled", "MaxScanBytes", "IsExactAggregate", "SegName", });
           internal_static_CubeVisitRequest_IntList_descriptor =
             internal_static_CubeVisitRequest_descriptor.getNestedTypes().get(0);
           internal_static_CubeVisitRequest_IntList_fieldAccessorTable = new
@@ -5747,7 +6083,7 @@ public final class CubeVisitProtos {
           internal_static_CubeVisitResponse_Stats_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_CubeVisitResponse_Stats_descriptor,
-              new java.lang.String[] { "ServiceStartTime", "ServiceEndTime", "ScannedRowCount", "AggregatedRowCount", "SystemCpuLoad", "FreePhysicalMemorySize", "FreeSwapSpaceSize", "Hostname", "EtcMsg", "NormalComplete", "ScannedBytes", "FilteredRowCount", });
+              new java.lang.String[] { "ServiceStartTime", "ServiceEndTime", "ScannedRowCount", "AggregatedRowCount", "SystemCpuLoad", "FreePhysicalMemorySize", "FreeSwapSpaceSize", "Hostname", "EtcMsg", "NormalComplete", "ScannedBytes", "FilteredRowCount", "SegName", });
           internal_static_CubeVisitResponse_ErrorInfo_descriptor =
             internal_static_CubeVisitResponse_descriptor.getNestedTypes().get(1);
           internal_static_CubeVisitResponse_ErrorInfo_fieldAccessorTable = new

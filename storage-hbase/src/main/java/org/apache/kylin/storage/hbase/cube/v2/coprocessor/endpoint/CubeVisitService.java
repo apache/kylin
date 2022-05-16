@@ -222,10 +222,10 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         sb.append(",");
     }
 
-    private void checkDeadline(long deadline) throws DoNotRetryIOException {
+    private void checkDeadline(long deadline, String segName, String regionName) throws DoNotRetryIOException {
         if (System.currentTimeMillis() > deadline) {
-            logger.info("Deadline has passed, abort now!");
-            throw new DoNotRetryIOException("Coprocessor passed deadline! Maybe server is overloaded");
+            logger.info("Deadline has passed, abort now! segment: " + segName + ",regionName:" + regionName);
+            throw new DoNotRetryIOException("Coprocessor passed deadline! Maybe server is overloaded, segment:" + segName + ",regionName:" + regionName);
         }
     }
 
@@ -262,7 +262,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             final GTScanRequest scanReq = GTScanRequest.serializer
                     .deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getGtScanRequest())));
             final long deadline = scanReq.getStartTime() + scanReq.getTimeout();
-            checkDeadline(deadline);
+            String segName = request.hasSegName() ? request.getSegName() : "UnknowSegName";
+            checkDeadline(deadline, segName, region.getRegionInfo().getRegionNameAsString());
 
             List<List<Integer>> hbaseColumnsToGT = Lists.newArrayList();
             for (IntList intList : request.getHbaseColumnsToGTList()) {
