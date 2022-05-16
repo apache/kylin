@@ -50,15 +50,20 @@ class ParentSourceChooser(
   // build from flatTable.
   var flatTableSource: NBuildSourceInfo = _
 
-  private var needStatistics = false
+  private var needStatistics: Boolean = false
 
   //TODO: MetadataConverter don't have getCubeDesc() now
 
   /*val flatTableDesc = new CubeJoinedFlatTableDesc(
     MetadataConverter.getCubeDesc(segInfo.getCube),
     ParentSourceChooser.needJoinLookupTables(segInfo.getModel, toBuildTree))*/
-  def setNeedStatistics(): Unit =
-    needStatistics = true
+  def toStatistics(): Unit = {
+    this.needStatistics = true
+  }
+
+  def cancelStatistics(): Unit = {
+    this.needStatistics = false
+  }
 
   def getAggInfo : Array[(Long, AggInfo)] = aggInfo
 

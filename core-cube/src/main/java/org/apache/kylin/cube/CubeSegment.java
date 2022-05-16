@@ -18,7 +18,9 @@
 
 package org.apache.kylin.cube;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -30,9 +32,12 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.annotation.Clarification;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.util.CompressionUtils;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
@@ -138,6 +143,12 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     @JsonProperty("dimension_range_info_map")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, DimensionRangeInfo> dimensionRangeInfoMap = Maps.newHashMap();
+
+    @JsonProperty("cuboid_statics_rows_bytes")
+    private byte[] cuboidStaticsRowsBytes;
+
+    @JsonProperty("cuboid_statics_size_bytes")
+    private byte[] cuboidStaticsSizeBytes;
 
     private Map<Long, Short> cuboidBaseShards = Maps.newConcurrentMap(); // cuboid id ==> base(starting) shard for this cuboid
 
@@ -690,6 +701,53 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         copy.dimensionRangeInfoMap = other.dimensionRangeInfoMap == null ? null
                 : Maps.newHashMap(other.dimensionRangeInfoMap);
         copy.binarySignature = other.binarySignature;
+        copy.cuboidStaticsRowsBytes = other.cuboidStaticsRowsBytes;
+        copy.cuboidStaticsSizeBytes = other.cuboidStaticsSizeBytes;
         return copy;
+    }
+
+    public void setCuboidStaticsRowsBytes(Map<Long, Long> staticsOfRows) {
+        this.cuboidStaticsRowsBytes = compressedCuboids(staticsOfRows);
+    }
+
+    public void setCuboidStaticsSizeBytes(Map<Long, Long> staticsOfSize) {
+        this.cuboidStaticsSizeBytes = compressedCuboids(staticsOfSize);
+    }
+
+    public Map<Long, Long> getCuboidStaticsRows() {
+        return this.decompressCuboids(this.cuboidStaticsRowsBytes);
+    }
+
+    public Map<Long, Long> getCuboidStaticsSize() {
+        return this.decompressCuboids(this.cuboidStaticsSizeBytes);
+    }
+
+    private Map<Long, Long> decompressCuboids(byte[] cuboidStaticsBytes) {
+        if (cuboidStaticsBytes == null) {
+            return null;
+        }
+        byte[] uncompressed;
+        try {
+            uncompressed = CompressionUtils.decompress(cuboidStaticsBytes);
+            String str = new String(uncompressed, StandardCharsets.UTF_8);
+            TypeReference<Map<Long, Long>> typeRef = new TypeReference<Map<Long, Long>>() {};
+            Map<Long, Long> cuboids = JsonUtil.readValue(str, typeRef);
+            return cuboids.isEmpty() ? null : cuboids;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private byte[] compressedCuboids(Map<Long, Long> cuboids) {
+        if (cuboids == null || cuboids.isEmpty()) {
+            return null;
+        }
+
+        try {
+            String str = JsonUtil.writeValueAsString(cuboids);
+            return CompressionUtils.compress(str.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
