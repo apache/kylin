@@ -18,6 +18,9 @@
 
 package org.apache.kylin.rest.service;
 
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -29,8 +32,10 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.impl.threadpool.IJobRunner;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.QueryConnection;
+import org.apache.kylin.rest.exception.BadRequestException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +44,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author xduo
@@ -73,6 +80,19 @@ public class JobServiceTest extends ServiceTestBase {
                 Collections.<ExecutableState> emptySet(), 0, Long.MAX_VALUE, Collections.<String, Output> emptyMap(),
                 true, "project");
         Assert.assertEquals(0, jobs.size());
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testOptimizeNotAllowBuild() throws IOException {
+        CubeManager cubeManager = CubeManager.getInstance(jobService.getConfig());
+        CubeInstance cube = cubeManager.getCube("ssb");
+        CubeInstance copy = cube.latestCopyForWrite();
+        Set<Long> testIds = new HashSet<>();
+        testIds.add(3L);
+        copy.setCuboidsRecommend(testIds);
+
+        jobService.submitJobInternal(cube, new SegmentRange.TSRange(1L, 136468L), null, null, null,
+                CubeBuildTypeEnum.BUILD, false, "test", 1);
     }
 
     public static class TestJob extends CubingJob {
