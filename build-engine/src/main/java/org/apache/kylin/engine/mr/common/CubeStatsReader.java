@@ -475,16 +475,19 @@ public class CubeStatsReader {
         String cuboidName = Cuboid.getDisplayName(cuboidID, dimensionCount);
         sb.append("|---- Cuboid ").append(cuboidName);
 
-        long rowCount = cuboidRows.get(cuboidID);
-        double size = cuboidSizes.get(cuboidID);
+        long rowCount = cuboidRows.get(cuboidID) == null ? 0: cuboidRows.get(cuboidID);
+        double size = cuboidSizes.get(cuboidID)== null ? 0.0: cuboidSizes.get(cuboidID);
         String markPreciseOrEstimate =  isPrecise ? "precise" : "est";
         sb.append(", ").append(markPreciseOrEstimate).append(" row: ").append(rowCount)
                 .append(", ").append(markPreciseOrEstimate).append(" MB: ")
                 .append(formatDouble(size));
 
         if (parent != -1) {
-            sb.append(", shrink: ").append(formatDouble(100.0 * cuboidRows.get(cuboidID) / cuboidRows.get(parent)))
-                    .append("%");
+            double shrink = -0.0;
+            if (cuboidRows.get(parent) != null) {
+                shrink = 100.0 * cuboidRows.get(cuboidID) / cuboidRows.get(parent);
+            }
+            sb.append(", shrink: ").append(formatDouble(shrink)).append("%");
         }
         out.println(sb);
     }
