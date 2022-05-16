@@ -65,21 +65,21 @@
     <kylin.version>3.0.0</kylin.version>
 
     <!-- Hadoop versions -->
-    <hadoop2.version>2.7.1</hadoop2.version>
-    <yarn.version>2.7.1</yarn.version>
+    <hadoop2.version>2.7.7</hadoop2.version>
+    <yarn.version>2.7.7</yarn.version>
 
     <!-- Hive versions -->
     <hive.version>1.2.2</hive.version>
     <hive-hcatalog.version>1.2.2</hive-hcatalog.version>
 
     <!-- HBase versions -->
-    <hbase-hadoop2.version>1.1.1</hbase-hadoop2.version>
+    <hbase-hadoop2.version>1.1.13</hbase-hadoop2.version>
 
     <!-- Kafka versions -->
     <kafka.version>2.1.1</kafka.version>
 
     <!-- Spark versions -->
-    <spark.version>2.4.5</spark.version>
+    <spark.version>2.4.7</spark.version>
     <kryo.version>4.0.0</kryo.version>
 
     <!-- Flink versions -->
@@ -144,11 +144,11 @@
     <ehcache.version>2.10.2.2.21</ehcache.version>
     <memcached.verion>2.12.3</memcached.verion>
     <apache-httpclient.version>4.3.6</apache-httpclient.version>
-    <roaring.version>0.6.18</roaring.version>
+    <roaring.version>0.6.66</roaring.version>
     <cglib.version>3.2.4</cglib.version>
     <supercsv.version>2.4.0</supercsv.version>
     <cors.version>2.5</cors.version>
-    <tomcat.version>7.0.100</tomcat.version>
+    <tomcat.version>7.0.107</tomcat.version>
     <t-digest.version>3.1</t-digest.version>
     <freemarker.version>2.3.23</freemarker.version>
     <rocksdb.version>5.18.4</rocksdb.version>
@@ -158,9 +158,9 @@
     <dropwizard.version>3.1.2</dropwizard.version>
     <!-- REST Service, ref https://github.com/spring-projects/spring-boot/blob/v1.3.8.RELEASE/spring-boot-dependencies/pom.xml -->
     <spring.boot.version>1.3.8.RELEASE</spring.boot.version>
-    <spring.framework.version>4.3.26.RELEASE</spring.framework.version>
-    <spring.framework.security.version>4.2.14.RELEASE</spring.framework.security.version>
-    <spring.framework.security.extensions.version>1.0.2.RELEASE</spring.framework.security.extensions.version>
+    <spring.framework.version>4.3.30.RELEASE</spring.framework.version>
+    <spring.framework.security.version>4.2.20.RELEASE</spring.framework.security.version>
+    <spring.framework.security.extensions.version>1.0.10.RELEASE</spring.framework.security.extensions.version>
     <opensaml.version>2.6.6</opensaml.version>
     <aspectj.version>1.8.9</aspectj.version>
     <!-- API forbidden -->
