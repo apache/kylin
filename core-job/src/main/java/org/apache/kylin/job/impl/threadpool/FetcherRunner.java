@@ -86,12 +86,13 @@ public abstract class FetcherRunner implements Runnable {
         } else if (outputDigest.getState() == ExecutableState.STOPPED) {
             nStopped++;
         } else {
-            if (fetchFailed) {
-                getExecutableManager().forceKillJob(id);
-                nError++;
-            } else {
-                nOthers++;
-            }
+//            if (fetchFailed) {
+//                getExecutableManager().forceKillJob(id);
+//                nError++;
+//            } else {
+//                nOthers++;
+//            }
+            nOthers++;
         }
     }
 
