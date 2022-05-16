@@ -88,19 +88,19 @@ public class CubeStatsReader {
     public final long sourceRowCount;
     private boolean isPrecise = false;
 
-    public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig) throws IOException {
-        this(cubeSegment, cubeSegment.getCuboidScheduler(), kylinConfig);
+    public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig, boolean enableHll) throws IOException {
+        this(cubeSegment, cubeSegment.getCuboidScheduler(), kylinConfig, enableHll);
     }
 
     /**
      * @param cuboidScheduler if it's null, part of it's functions will not be supported
      */
-    public CubeStatsReader(CubeSegment cubeSegment, CuboidScheduler cuboidScheduler, KylinConfig kylinConfig)
+    public CubeStatsReader(CubeSegment cubeSegment, CuboidScheduler cuboidScheduler, KylinConfig kylinConfig, boolean enableHll)
             throws IOException {
         this.seg = cubeSegment;
         this.cuboidScheduler = cuboidScheduler;
 
-        if (seg.getCuboidStaticsSize() != null
+        if (!enableHll && seg.getCuboidStaticsSize() != null
                 && !seg.getCuboidStaticsSize().isEmpty()
                 && seg.getCuboidStaticsRows() != null
                 && !seg.getCuboidStaticsRows().isEmpty()) {
@@ -559,7 +559,7 @@ public class CubeStatsReader {
                 new BufferedWriter(new OutputStreamWriter(System.out, StandardCharsets.UTF_8)));
         for (CubeSegment seg : segments) {
             try {
-                new CubeStatsReader(seg, config).print(out);
+                new CubeStatsReader(seg, config, false).print(out);
             } catch (Exception e) {
                 logger.info("CubeStatsReader for Segment {} failed, skip it.", seg.getName());
             }
