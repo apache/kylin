@@ -1658,6 +1658,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.engine.mr.use-local-classpath", TRUE));
     }
 
+    public int getTopNExtraSortRate() {
+        return Integer.parseInt(getOptional("kylin.engine.mr.topn-extra-sort-rate", "1"));
+    }
+
     /**
      * different version hive use different UNION style
      * https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Union
