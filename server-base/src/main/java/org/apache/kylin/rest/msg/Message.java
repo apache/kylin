@@ -65,12 +65,16 @@ public class Message {
         return "Cannot delete segment '%s' as its status is not READY. Discard the on-going job for it.";
     }
 
-    public String getDELETE_READY_SEG_BY_UUID() {
-        return "Cannot delete segment by UUID '%s' as its status is READY or its Cube is READY.";
+    public String getDELETE_NOT_READY_SEG_BY_UUID() {
+        return "Cannot delete segment by UUID '%s' as its status is not READY. Discard the on-going job for it.";
     }
 
     public String getDELETE_SEG_FROM_READY_CUBE() {
         return "Cannot delete segment '%s' from ready cube '%s'. Please disable the cube first.";
+    }
+
+    public String getDELETE_SEG_FROM_READY_CUBE_BY_UUID() {
+        return "Cannot delete segment by UUID '%s' from ready cube '%s'. Please disable the cube first.";
     }
 
     public String getINVALID_BUILD_TYPE() {
