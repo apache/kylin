@@ -708,6 +708,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.dictionary.mr-hive.intermediate.table.suffix", "_distinct_value");
     }
 
+    public String getHiveGlobalDictReplaceEngine() {
+        return getOptional("kylin.dictionary.mr-hive.replace.engine", "mr");
+    }
+  
     public String getMrHiveDictTableFormat() {
         return getOptional("kylin.dictionary.mr-hive.table.format", "TEXTFILE");
     }

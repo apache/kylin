@@ -18,6 +18,7 @@
 
 package org.apache.kylin.source.hive;
 
+import org.apache.kylin.shaded.com.google.common.base.Strings;
 import org.apache.kylin.shaded.com.google.common.collect.ImmutableList;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ContentSummary;
@@ -38,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -268,5 +270,67 @@ public class MRHiveDictUtil {
         FileSystem fs = path.getFileSystem(configuration);
         ContentSummary contentSummary = fs.getContentSummary(path);
         return contentSummary.getLength();
+    }
+
+    public static Map<String, String> generateReplaceSql(IJoinedFlatTableDesc flatDesc, Map<String, String> mrHiveDictColumns, String flatTableDatabase, String globalDictDatabase, String globalDictTable, String dictSuffix) {
+        Map<String, String> dictHqlMap = new HashMap<>();
+        for (String dictColumn : mrHiveDictColumns.keySet()) {
+            StringBuilder insertOverwriteHql = new StringBuilder();
+            TblColRef dictColumnRef = null;
+
+            String flatTable = flatTableDatabase + "." + flatDesc.getTableName();
+            insertOverwriteHql.append("INSERT OVERWRITE TABLE ").append(flatTable).append(" \n");
+            try {
+                insertOverwriteHql.append("SELECT \n");
+                int flatTableColumnSize = flatDesc.getAllColumns().size();
+                for (int i = 0; i < flatTableColumnSize; i++) {
+                    TblColRef tblColRef = flatDesc.getAllColumns().get(i);
+                    String colName = JoinedFlatTable.colName(tblColRef, flatDesc.useAlias());
+
+                    if (i > 0) {
+                        insertOverwriteHql.append(",");
+                    }
+
+                    if (colName.equalsIgnoreCase(dictColumn)) {
+                        // Note: replace original value into encoded integer
+                        insertOverwriteHql.append("b.dict_val \n");
+                        dictColumnRef = tblColRef;
+                    } else {
+                        // Note: keep its original value
+                        insertOverwriteHql.append("a.")
+                                .append(JoinedFlatTable.colName(tblColRef))
+                                .append(" \n");
+                    }
+                }
+
+                if (!Strings.isNullOrEmpty(mrHiveDictColumns.get(dictColumn))) {
+                    // Note: reuse previous hive global dictionary
+                    String[] tableColumn = mrHiveDictColumns.get(dictColumn).split("\\.");
+
+                    String refGlobalDictTable = tableColumn[0] + dictSuffix;
+                    String refDictColumn = tableColumn[1];
+
+                    insertOverwriteHql
+                            .append("FROM ").append(flatTable).append(" a \nLEFT OUTER JOIN \n (")
+                            .append("SELECT dict_key, dict_val FROM ")
+                            .append(globalDictDatabase).append(".").append(refGlobalDictTable)
+                            .append(" WHERE dict_column = '").append(refDictColumn).append("') b \n")
+                            .append("ON a.").append(JoinedFlatTable.colName(dictColumnRef)).append(" = b.dict_key;");
+                    dictHqlMap.put(dictColumn, insertOverwriteHql.toString());
+                } else {
+                    // Note: use hive global dictionary built by current cube
+                    insertOverwriteHql
+                            .append("FROM ").append(flatTable).append(" a \nLEFT OUTER JOIN \n (")
+                            .append("SELECT dict_key, dict_val FROM ")
+                            .append(globalDictDatabase).append(".").append(globalDictTable)
+                            .append(" WHERE dict_column = '").append(dictColumn).append("') b \n")
+                            .append("ON a.").append(JoinedFlatTable.colName(dictColumnRef)).append(" = b.dict_key;");
+                }
+                dictHqlMap.put(dictColumn, insertOverwriteHql.toString());
+            } catch (Exception e) {
+                logger.error("", e);
+            }
+        }
+        return dictHqlMap;
     }
 }

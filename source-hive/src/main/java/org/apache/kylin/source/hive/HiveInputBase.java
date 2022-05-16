@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.Locale;
 import java.util.Collections;
 
+import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.shaded.com.google.common.base.Strings;
 import org.apache.kylin.shaded.com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileSystem;
@@ -141,9 +143,55 @@ public class HiveInputBase {
 
             // replace step
             if (!dictRef.isEmpty()) {
-                jobFlow.addTask(createMrHiveGlobalDictReplaceStep(flatDesc, hiveInitStatements, cubeName,
-                        dictRef, flatTableDatabase, globalDictDatabase, globalDictTable, dictConfig.getMrHiveDictTableSuffix(), jobFlow.getId()));
+                if (dictConfig.getHiveGlobalDictReplaceEngine().equalsIgnoreCase("spark")) {
+                    jobFlow.addTask(createSparkHiveGlobalDictReplaceStep(flatDesc, cubeName,
+                            dictRef, globalDictTable, dictConfig.getMrHiveDictTableSuffix(), jobFlow.getId()));
+                } else {
+                    jobFlow.addTask(createMrHiveGlobalDictReplaceStep(flatDesc, hiveInitStatements, cubeName,
+                            dictRef, flatTableDatabase, globalDictDatabase, globalDictTable, dictConfig.getMrHiveDictTableSuffix(), jobFlow.getId()));
+                }
+
             }
+        }
+
+        protected AbstractExecutable createSparkHiveGlobalDictReplaceStep(IJoinedFlatTableDesc flatDesc, String cubeName, Map<String, String> mrHiveDictColumns, String globalDictTable, String dictSuffix, String jobId) {
+            CubeSegment seg = (CubeSegment) flatDesc.getSegment();
+            KylinConfig config = seg.getConfig();
+
+            SparkExecutable sparkExecutable = new SparkExecutable();
+
+            sparkExecutable.setName(ExecutableConstants.STEP_NAME_GLOBAL_DICT_SPARK_REPLACE_DICTVAL);
+            sparkExecutable.setClassName(SparkHiveDictReplaceStep.class.getName());
+            sparkExecutable.setParam(SparkHiveDictReplaceStep.OPTION_CUBE_NAME.getArgName(), cubeName);
+            sparkExecutable.setParam(SparkHiveDictReplaceStep.OPTION_FLOW_JOB_ID.getArgName(), jobId);
+            sparkExecutable.setParam(SparkHiveDictReplaceStep.OPTION_SEGMENT_ID.getArgName(), seg.getUuid());
+            sparkExecutable.setParam(SparkHiveDictReplaceStep.OPTION_META_URL.getArgName(), getSegmentMetadataUrl(config, seg.getRealization().getName(), jobId));
+            sparkExecutable.setParam(SparkHiveDictReplaceStep.OPTION_WAREHOUSE_DIR.getArgName(), config.getIntermediateTableDatabaseDir());
+            sparkExecutable.setParam(SparkHiveDictReplaceStep.OPTION_GLOBAL_DICT_TABLE.getArgName(), globalDictTable);
+            sparkExecutable.setParam(SparkHiveDictReplaceStep.OPTION_DICT_SUFFIX.getArgName(), dictSuffix);
+
+            List<String> dictColumns = Lists.newArrayList();
+            for (Map.Entry<String, String> entry : mrHiveDictColumns.entrySet()) {
+                if (Strings.isNullOrEmpty(entry.getValue())) {
+                    dictColumns.add(entry.getKey());
+                }
+            }
+
+            sparkExecutable.setParam(SparkHiveDictReplaceStep.OPTION_DICT_COLUMNS.getArgName(), String.join(",", dictColumns));
+            sparkExecutable.setJobId(jobId);
+
+            StringBuilder jars = new StringBuilder();
+            StringUtil.appendWithSeparator(jars, config.getSparkAdditionalJars());
+            sparkExecutable.setJars(jars.toString());
+
+            return sparkExecutable;
+        }
+
+        private String getSegmentMetadataUrl(KylinConfig kylinConfig, String segName, String jobId) {
+            String path = hdfsWorkingDir + "kylin-" + jobId + "/" + segName + "/metadata";
+            Map<String, String> param = new HashMap<>();
+            param.put("path", path);
+            return new StorageURL(kylinConfig.getMetadataUrl().getIdentifier(), "hdfs", param).toString();
         }
 
         /**
