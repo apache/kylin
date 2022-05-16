@@ -18,6 +18,7 @@
 
 package org.apache.kylin.cube.cuboid.algorithm;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +32,8 @@ import org.apache.kylin.shaded.com.google.common.collect.ImmutableMap;
 import org.apache.kylin.shaded.com.google.common.collect.ImmutableSet;
 import org.apache.kylin.shaded.com.google.common.collect.Maps;
 import org.apache.kylin.shaded.com.google.common.collect.Sets;
+
+import static java.lang.Math.sqrt;
 
 public class CuboidStats {
     private static final Logger logger = LoggerFactory.getLogger(CuboidStats.class);
@@ -124,6 +127,19 @@ public class CuboidStats {
                         cuboidHitProbabilityMap, rollingUpCountSourceMap);
 
                 statistics.putAll(srcCuboidsStats);
+
+                Set<Long> cuboidsToRemove = new HashSet<>();
+                for (Long cuboid : statistics.keySet()) {
+                    if (cuboidHitProbabilityMap.containsKey(cuboid)) {
+                        double punishedRowCount = statistics.get(cuboid) / sqrt(cuboidHitProbabilityMap.get(cuboid));
+                        statistics.put(cuboid, Double.valueOf(punishedRowCount).longValue());
+                    } else {
+                        cuboidsToRemove.add(cuboid);
+                    }
+                }
+                for (Long cuboid : cuboidsToRemove) {
+                    statistics.remove(cuboid);
+                }
 
                 Map<Long, Double> estimatedSize = estimateCuboidsSize(statistics);
                 if (estimatedSize != null && !estimatedSize.isEmpty()) {
