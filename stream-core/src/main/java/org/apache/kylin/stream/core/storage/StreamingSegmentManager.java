@@ -450,16 +450,41 @@ public class StreamingSegmentManager implements Closeable {
         return activeSegments.values();
     }
 
+    /**
+     * Find segments which will be remote persisted, the target segments should be older than all the active segments.
+     */
     public Collection<StreamingCubeSegment> getRequireRemotePersistSegments() {
-        Collection<StreamingCubeSegment> allImmutableSegments = immutableSegments.values();
         List<StreamingCubeSegment> result = Lists.newArrayList();
-        for (StreamingCubeSegment cubeSegment : allImmutableSegments) {
-            if (!cubeSegment.isPersistToRemote()) {
-                result.add(cubeSegment);
+        Collection<StreamingCubeSegment> allImmutableSegments = immutableSegments.values();
+        if (allImmutableSegments.size() > 0) {
+            List<StreamingCubeSegment> temp = Lists.newArrayList();
+            temp.addAll(allImmutableSegments);
+            Collections.sort(temp);
+            for (StreamingCubeSegment segment : temp) {
+                if (!segment.isPersistToRemote()) {
+                    result.add(segment);
+                }
             }
-        }
-        if (result.size() > 1) {
-            Collections.sort(result);
+            if (result.size() > 0) {
+                // check whether the previous segment is still active
+                List<Long> activeStartTime = Lists.newArrayList();
+                activeStartTime.addAll(activeSegments.keySet());
+                if (activeStartTime.size() > 0) {
+                    Collections.sort(activeStartTime);
+                    long smallestStartTime = activeStartTime.get(0);
+                    for (int i = 0; i < result.size(); i++) {
+                        StreamingCubeSegment targetSegment = result.get(i);
+                        if (smallestStartTime < targetSegment.getDateRangeStart()) {
+                            List<StreamingCubeSegment> unPeristedSegments = result.subList(i, result.size());
+                            logger.info(
+                                "Streaming cube {}: segments {} can't be persisted, because the active segment {}.",
+                                cubeName, unPeristedSegments, activeSegments.get(smallestStartTime));
+                            result = result.subList(0, i);
+                            break;
+                        }
+                    }
+                }
+            }
         }
         return result;
     }
