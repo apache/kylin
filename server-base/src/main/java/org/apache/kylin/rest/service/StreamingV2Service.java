@@ -107,9 +107,11 @@ public class StreamingV2Service extends BasicService {
         receiverAdminClient = adminClient;
     }
 
-    public void checkStreamingSourceCompatibility(final String prj, final StreamingSourceConfig streamingSourceConfig) throws Exception {
+    public void checkStreamingSourceCompatibility(final String targetProject,
+            final StreamingSourceConfig streamingSourceConfig) throws Exception {
+        // search the streaming source config by the target project
         StreamingSourceConfig existing = getStreamingManagerV2().
-                getConfig(streamingSourceConfig.getName(), streamingSourceConfig.getProjectName());
+                getConfig(streamingSourceConfig.getName(), targetProject);
         if (existing == null) {
             return;
         } else if (!Objects.equals(streamingSourceConfig.getParserInfo(), existing.getParserInfo())) {
