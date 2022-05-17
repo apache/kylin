@@ -85,11 +85,10 @@ public class CubeMergeAssist implements Serializable {
 
             if (mergeDataset == null) {
                 mergeDataset = layoutDataset;
-            } else
+            } else {
                 mergeDataset = mergeDataset.union(layoutDataset);
+            }
         }
         return mergeDataset;
-
     }
-
 }

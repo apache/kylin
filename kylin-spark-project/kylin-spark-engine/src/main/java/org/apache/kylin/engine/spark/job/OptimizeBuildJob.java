@@ -74,12 +74,13 @@ import java.util.stream.Collectors;
 public class OptimizeBuildJob extends SparkApplication {
     private static final Logger logger = LoggerFactory.getLogger(OptimizeBuildJob.class);
 
-    private Map<Long, HLLCounter> cuboidHLLMap = Maps.newHashMap();
     protected static String TEMP_DIR_SUFFIX = "_temp";
 
     private BuildLayoutWithUpdate buildLayoutWithUpdate;
     private Map<Long, Short> cuboidShardNum = Maps.newConcurrentMap();
     private Map<Long, Long> cuboidsRowCount = Maps.newConcurrentMap();
+    Map<Long, Long> cuboidIdToPreciseRows = Maps.newConcurrentMap();
+    Map<Long, Long> cuboidIdToPreciseSize = Maps.newConcurrentMap();
 
     private Configuration conf = HadoopUtil.getCurrentConfiguration();
     private CubeManager cubeManager;
@@ -150,10 +151,11 @@ public class OptimizeBuildJob extends SparkApplication {
         SpanningTree spanningTree;
         ParentSourceChooser sourceChooser;
         try {
-            spanningTree = new ForestSpanningTree(JavaConversions.asJavaCollection(optSegInfo.toBuildLayouts()));
+            Collection<LayoutEntity> cuboids = JavaConversions.asJavaCollection(optSegInfo.toBuildLayouts());
+            spanningTree = new ForestSpanningTree(cuboids);
             logger.info("There are {} cuboids to be built in segment {}.", optSegInfo.toBuildLayouts().size(),
                     optSegInfo.name());
-            for (LayoutEntity cuboid : JavaConversions.asJavaCollection(optSegInfo.toBuildLayouts())) {
+            for (LayoutEntity cuboid : cuboids) {
                 logger.debug("Cuboid {} has row keys: {}", cuboid.getId(),
                         Joiner.on(", ").join(cuboid.getOrderedDimensions().keySet()));
             }
@@ -205,6 +207,10 @@ public class OptimizeBuildJob extends SparkApplication {
         }
         optSeg.setCuboidShardNums(cuboidShardNum);
         optSeg.setInputRecordsSize(originalSeg.getInputRecordsSize());
+
+        optSeg.setCuboidStaticsSizeBytes(cuboidIdToPreciseSize);
+        optSeg.setCuboidStaticsRowsBytes(cuboidIdToPreciseRows);
+
         Map<String, String> additionalInfo = optSeg.getAdditionalInfo();
         additionalInfo.put("storageType", "" + IStorageAware.ID_PARQUET);
         optSeg.setAdditionalInfo(additionalInfo);
@@ -407,6 +413,8 @@ public class OptimizeBuildJob extends SparkApplication {
         cuboidShardNum.put(layoutId, (short) shardNum);
         JobMetricsUtils.unRegisterQueryExecutionListener(ss, queryExecutionId);
         BuildUtils.fillCuboidInfo(layout, path);
+        cuboidIdToPreciseRows.put(layoutId, layout.getRows());
+        cuboidIdToPreciseSize.put(layoutId, layout.getByteSize());
     }
 
     private void updateExistingLayout(LayoutEntity layout, long parentId) throws IOException {
